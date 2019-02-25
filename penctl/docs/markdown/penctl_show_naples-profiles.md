@@ -1,26 +1,24 @@
-## penctl create profiles
+## penctl show naples-profiles
 
-profile object
+Show Available NAPLES Profiles
 
 ### Synopsis
 
 
 
 ----------------------------
- Create NAPLES Profiles 
+ Show NAPLES Profiles 
 ----------------------------
 
 
 ```
-penctl create profiles [flags]
+penctl show naples-profiles [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help             help for profiles
-  -n, --name string      Name of the NAPLES profile
-  -i, --num-lifs int32   Number of LIFs on the eth device. 1 or 16
+  -h, --help   help for naples-profiles
 ```
 
 ### Options inherited from parent commands
@@ -33,5 +31,5 @@ penctl create profiles [flags]
 ```
 
 ### SEE ALSO
-* [penctl create](penctl_create.md)	 - Create Object
+* [penctl show](penctl_show.md)	 - Show Object and Information
 

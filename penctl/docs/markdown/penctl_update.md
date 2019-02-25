@@ -29,7 +29,7 @@ Update Object
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
 * [penctl update interface](penctl_update_interface.md)	 - Create interface
-* [penctl update naples](penctl_update_naples.md)	 - Set NAPLES Modes and Feature Profiles
+* [penctl update naples](penctl_update_naples.md)	 - Set NAPLES Modes and Profiles
 * [penctl update port](penctl_update_port.md)	 - update port object
 * [penctl update qos-class](penctl_update_qos-class.md)	 - qos-class object
 * [penctl update startup-firmware](penctl_update_startup-firmware.md)	 - Set startup firmware on Naples

@@ -73,8 +73,8 @@ message NaplesSpec {
     // Controllers contains the list of controller IPs or Hostnames
     repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
 
-    // Profile captures the smart nic profile that is associated with this Naples
-    string Profile                  = 8 [(gogoproto.jsontag) = "feature-profile,omitempty"];
+    // NaplesProfile captures the smart nic profile that is associated with this Naples
+    string NaplesProfile            = 8 [(gogoproto.jsontag) = "naples-profile,omitempty"];
 }
 
 // NaplesStatus contains current status of a Naples I/O subsystem
@@ -91,18 +91,18 @@ message NaplesStatus {
         REBOOT_PENDING                      = 8;
     }
     // Current phase of the NIC adapter in the system
-    string    AdmissionPhase  = 1 [(gogoproto.jsontag) = "phase,omitempty",
-					        (venice.check) = "StrEnum(cluster.SmartNICStatus.Phase)"];
+    string    AdmissionPhase                = 1 [(gogoproto.jsontag) = "phase,omitempty",
+                                                 (venice.check) = "StrEnum(cluster.SmartNICStatus.Phase)"];
 
-    cluster.IPConfig IPConfig       	            = 2 [(gogoproto.jsontag) = "ip-config"];
+    cluster.IPConfig IPConfig       	    = 2 [(gogoproto.jsontag) = "ip-config"];
 
     // Resolved Controllers/Venice IPs
-    repeated string Controllers                     = 3 [(gogoproto.jsontag) = "controllers,omitempty"];
+    repeated string Controllers             = 3 [(gogoproto.jsontag) = "controllers,omitempty"];
 
-    string TransitionPhase                             = 4 [(gogoproto.jsontag) = "transition-phase,omitempty",
+    string TransitionPhase                  = 4 [(gogoproto.jsontag) = "transition-phase,omitempty",
                                                  (venice.check) = "StrEnum(NaplesStatus.Transition)"];
     // Operational mode of the NIC
-    string Mode                   	    = 5 [(gogoproto.jsontag) = "mode",
+    string Mode                   	        = 5 [(gogoproto.jsontag) = "mode",
                                                  (venice.check) = "StrEnum(Naples.MgmtMode)"];
 
     // Operational mode of the NIC

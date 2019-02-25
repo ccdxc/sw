@@ -5,24 +5,32 @@
 
 .SH NAME
 .PP
-penctl\-show\-profiles \- Show NAPLES
+penctl\-create\-naples\-profile \- naples profile object
 
 
 .SH SYNOPSIS
 .PP
-\fBpenctl show profiles [flags]\fP
+\fBpenctl create naples\-profile [flags]\fP
 
 
 .SH DESCRIPTION
 .ti 0
 \l'\n(.lu'
 
-.SH Show NAPLES Profiles
+.SH Create NAPLES Profiles
 
 .SH OPTIONS
 .PP
 \fB\-h\fP, \fB\-\-help\fP[=false]
-    help for profiles
+    help for naples\-profile
+
+.PP
+\fB\-n\fP, \fB\-\-name\fP=""
+    Name of the NAPLES profile
+
+.PP
+\fB\-i\fP, \fB\-\-num\-lifs\fP=0
+    Number of LIFs on the eth device. 1 or 16
 
 
 .SH OPTIONS INHERITED FROM PARENT COMMANDS
@@ -45,4 +53,4 @@ penctl\-show\-profiles \- Show NAPLES
 
 .SH SEE ALSO
 .PP
-\fBpenctl\-show(3)\fP
+\fBpenctl\-create(3)\fP

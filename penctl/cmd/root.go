@@ -80,7 +80,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "display version of penctl")
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml format")
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", true, "display in json format")
-	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock mode to localhost")
+	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock managedBy to localhost")
 
 	rootCmd.PersistentFlags().MarkHidden("localhost")
 

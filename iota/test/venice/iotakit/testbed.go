@@ -738,11 +738,11 @@ func (tb *TestBed) setupNaplesMode() error {
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 
 			// trigger mode switch
-			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --management-mode network --network-mode oob --controllers %s --hostname %s --primary-mac %s", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, node.NodeName, node.iotaNode.NodeUuid)
+			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --hostname %s --primary-mac %s", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, node.NodeName, node.iotaNode.NodeUuid)
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 		} else if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
 			// trigger mode switch on Naples sim
-			cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib64 /naples/nic/bin/penctl update naples --management-mode network --network-mode oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --hostname %s --localhost", veniceIPs, node.iotaNode.GetNaplesConfig().ControlIp, node.iotaNode.NodeUuid, node.NodeName)
+			cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib64 /naples/nic/bin/penctl update naples --managed-by network --management-network oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --hostname %s --localhost", veniceIPs, node.iotaNode.GetNaplesConfig().ControlIp, node.iotaNode.NodeUuid, node.NodeName)
 			trig.AddCommand(cmd, node.iotaNode.Name+"_naples", node.iotaNode.Name)
 		}
 	}

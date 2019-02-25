@@ -37,7 +37,7 @@ SEE ALSO
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
 * `penctl update interface <penctl_update_interface.rst>`_ 	 - Create interface
-* `penctl update naples <penctl_update_naples.rst>`_ 	 - Set NAPLES Modes and Feature Profiles
+* `penctl update naples <penctl_update_naples.rst>`_ 	 - Set NAPLES Modes and Profiles
 * `penctl update port <penctl_update_port.rst>`_ 	 - update port object
 * `penctl update qos-class <penctl_update_qos-class.rst>`_ 	 - qos-class object
 * `penctl update startup-firmware <penctl_update_startup-firmware.rst>`_ 	 - Set startup firmware on Naples

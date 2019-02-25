@@ -33,10 +33,10 @@ Show Object and Information
 * [penctl show interface](penctl_show_interface.md)	 - Show interface
 * [penctl show logs](penctl_show_logs.md)	 - Show logs from Naples
 * [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
-* [penctl show naples](penctl_show_naples.md)	 - Show NAPLES Modes and Feature Profiles
+* [penctl show naples](penctl_show_naples.md)	 - Show NAPLES Modes and Profiles
+* [penctl show naples-profiles](penctl_show_naples-profiles.md)	 - Show Available NAPLES Profiles
 * [penctl show port](penctl_show_port.md)	 - show port object
 * [penctl show proc-meminfo](penctl_show_proc-meminfo.md)	 - Check /proc/meminfo file on Naples
-* [penctl show profiles](penctl_show_profiles.md)	 - Show NAPLES
 * [penctl show qos-class](penctl_show_qos-class.md)	 - show qos-class object
 * [penctl show running-firmware](penctl_show_running-firmware.md)	 - Show running firmware from Naples
 * [penctl show startup-firmware](penctl_show_startup-firmware.md)	 - Show startup firmware from Naples

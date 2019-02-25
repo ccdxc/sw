@@ -5,7 +5,7 @@
 
 .SH NAME
 .PP
-penctl\-update\-naples \- Set NAPLES Modes and Feature Profiles
+penctl\-update\-naples \- Set NAPLES Modes and Profiles
 
 
 .SH SYNOPSIS
@@ -33,10 +33,6 @@ penctl\-update\-naples \- Set NAPLES Modes and Feature Profiles
     List of DNS servers
 
 .PP
-\fB\-f\fP, \fB\-\-feature\-profile\fP=""
-    Active NAPLES Profile
-
-.PP
 \fB\-h\fP, \fB\-\-help\fP[=false]
     help for naples
 
@@ -45,16 +41,20 @@ penctl\-update\-naples \- Set NAPLES Modes and Feature Profiles
     Host name
 
 .PP
-\fB\-o\fP, \fB\-\-management\-mode\fP="host"
-    host or network managed
+\fB\-o\fP, \fB\-\-managed\-by\fP="host"
+    NAPLES Management. host or network
+
+.PP
+\fB\-k\fP, \fB\-\-management\-network\fP=""
+    Management Network. inband or oob
 
 .PP
 \fB\-m\fP, \fB\-\-mgmt\-ip\fP=""
     Management IP in CIDR format
 
 .PP
-\fB\-k\fP, \fB\-\-network\-mode\fP=""
-    oob or inband
+\fB\-f\fP, \fB\-\-naples\-profile\fP="default"
+    Active NAPLES Profile
 
 .PP
 \fB\-p\fP, \fB\-\-primary\-mac\fP=""

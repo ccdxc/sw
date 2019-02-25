@@ -472,8 +472,8 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 	}
 
 	// Persist HAL Configuration
-	if err := c.nmdState.PersistHALConfiguration(c.nmdState.config.Spec.Profile); err != nil {
-		log.Infof("NIC mode: %v feature profile: %v", c.nmdState.config.Spec.Mode, c.nmdState.config.Spec.Profile)
+	if err := c.nmdState.PersistHALConfiguration(c.nmdState.config.Spec.NaplesProfile); err != nil {
+		log.Infof("NIC mode: %v feature profile: %v", c.nmdState.config.Spec.Mode, c.nmdState.config.Spec.NaplesProfile)
 		return err
 	}
 

@@ -23,7 +23,7 @@ import (
 
 var naplesCmd = &cobra.Command{
 	Use:   "naples",
-	Short: "Set NAPLES Modes and Feature Profiles",
+	Short: "Set NAPLES Modes and Profiles",
 	Long:  "\n----------------------------\n Set NAPLES configuration \n----------------------------\n",
 	RunE:  naplesCmdHandler,
 	Args:  naplesCmdValidator,
@@ -31,29 +31,29 @@ var naplesCmd = &cobra.Command{
 
 var naplesShowCmd = &cobra.Command{
 	Use:   "naples",
-	Short: "Show NAPLES Modes and Feature Profiles",
+	Short: "Show NAPLES Modes and Profiles",
 	Long:  "\n-------------------------------------------------------------------\n Show NAPLES configuration \n-------------------------------------------------------------------\n",
 	RunE:  naplesShowCmdHandler,
 }
 
 var naplesProfileCmd = &cobra.Command{
-	Use:   "profiles",
-	Short: "profile object",
+	Use:   "naples-profile",
+	Short: "naples profile object",
 	Long:  "\n----------------------------\n Create NAPLES Profiles \n----------------------------\n",
 	RunE:  naplesProfileCreateCmdHandler,
 	Args:  naplesProfileCreateCmdValidator,
 }
 
 var naplesProfileShowCmd = &cobra.Command{
-	Use:   "profiles",
-	Short: "Show NAPLES",
+	Use:   "naples-profiles",
+	Short: "Show Available NAPLES Profiles",
 	Long:  "\n----------------------------\n Show NAPLES Profiles \n----------------------------\n",
 	RunE:  naplesProfileShowCmdHandler,
 }
 
 var numLifs int32
 var controllers []string
-var mode, networkMode, priMac, hostname, mgmtIP, defaultGW, featureProfile, profileName string
+var managedBy, managementNetwork, priMac, hostname, mgmtIP, defaultGW, naplesProfile, profileName string
 var dnsServers []string
 
 func init() {
@@ -62,13 +62,13 @@ func init() {
 	createCmd.AddCommand(naplesProfileCmd)
 
 	naplesCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or hostnames")
-	naplesCmd.Flags().StringVarP(&mode, "management-mode", "o", "host", "host or network managed")
-	naplesCmd.Flags().StringVarP(&networkMode, "network-mode", "k", "", "oob or inband")
+	naplesCmd.Flags().StringVarP(&managedBy, "managed-by", "o", "host", "NAPLES Management. host or network")
+	naplesCmd.Flags().StringVarP(&managementNetwork, "management-network", "k", "", "Management Network. inband or oob")
 	naplesCmd.Flags().StringVarP(&priMac, "primary-mac", "p", "", "Primary mac")
 	naplesCmd.Flags().StringVarP(&hostname, "hostname", "n", "", "Host name")
 	naplesCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
-	naplesCmd.Flags().StringVarP(&featureProfile, "feature-profile", "f", "default", "Active NAPLES Profile")
+	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "default", "Active NAPLES Profile")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
 	naplesProfileCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile")
 	naplesProfileCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 0, "Number of LIFs on the eth device. 1 or 16")
@@ -79,11 +79,12 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 	var managementMode nmd.MgmtMode
 	var ok bool
 
-	if mode == "host" {
+	if managedBy == "host" {
 		managementMode = nmd.MgmtMode_HOST
-		networkMode = ""
+		managementNetwork = ""
 
-		//check if profile exists. TODO remove this when penctl can display server sent errors codes. This fails due to revproxy and only on verbose mode gives a non descript 500 Internal Server Error
+		// check if profile exists.
+		// TODO remove this when penctl can display server sent errors codes. This fails due to revproxy and only on verbose mode gives a non descript 500 Internal Server Error
 		baseURL, _ := getNaplesURL()
 		url := fmt.Sprintf("%s/api/v1/naples/profiles/", baseURL)
 
@@ -98,22 +99,22 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 		json.Unmarshal(body, &profiles)
 
 		for _, p := range profiles {
-			if featureProfile == p.Name {
+			if naplesProfile == p.Name {
 				ok = true
 			}
 		}
 
 		if !ok {
-			return fmt.Errorf("invalid profile specified. %v", featureProfile)
+			return fmt.Errorf("invalid profile specified. %v", naplesProfile)
 		}
 
 	} else {
 		managementMode = nmd.MgmtMode_NETWORK
 	}
 
-	if networkMode == "inband" {
+	if managementNetwork == "inband" {
 		networkManagementMode = nmd.NetworkMode_INBAND
-	} else if networkMode == "oob" {
+	} else if managementNetwork == "oob" {
 		networkManagementMode = nmd.NetworkMode_OOB
 	}
 
@@ -126,10 +127,10 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 				DefaultGW:  defaultGW,
 				DNSServers: dnsServers,
 			},
-			Mode:        managementMode.String(),
-			NetworkMode: networkManagementMode.String(),
-			Controllers: controllers,
-			Profile:     featureProfile,
+			Mode:          managementMode.String(),
+			NetworkMode:   networkManagementMode.String(),
+			Controllers:   controllers,
+			NaplesProfile: naplesProfile,
 		},
 	}
 
@@ -140,11 +141,12 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 				fmt.Println("success")
 			}
 		} else {
-			fmt.Println("Unable to set mode.")
+			fmt.Println("Unable to update naples.")
 			fmt.Println("Error:", err.Error())
 		}
 		return err
 	}
+	fmt.Println("Changes applied. Verify that penctl show naples command says REBOOT_PENDING, prior to performing a reboot.")
 	return nil
 }
 
@@ -213,7 +215,7 @@ func naplesProfileCreateCmdHandler(cmd *cobra.Command, args []string) error {
 
 func naplesProfileCreateCmdValidator(cmd *cobra.Command, args []string) (err error) {
 	if len(profileName) == 0 {
-		err = errors.New("must specify a profile name")
+		err = errors.New("must specify a naples profile name")
 		return
 	}
 
@@ -225,15 +227,10 @@ func naplesProfileCreateCmdValidator(cmd *cobra.Command, args []string) (err err
 
 func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 	// Host Mode Validations
-	switch mode {
+	switch managedBy {
 	case "host":
-		if len(featureProfile) == 0 {
-			err = errors.New("host managed mode needs an accompanying feature profile. Specify it with --feature-profile")
-			return
-		}
-
-		if len(networkMode) != 0 || len(controllers) != 0 || len(defaultGW) != 0 || len(dnsServers) != 0 || len(mgmtIP) != 0 || len(priMac) != 0 {
-			err = errors.New("specified options, --networkMode, --controllers, --default-gw, --dns-servers, --mgmt-ip --primary-mac are not applicable when NAPLES is in host managed mode")
+		if len(managementNetwork) != 0 || len(controllers) != 0 || len(defaultGW) != 0 || len(dnsServers) != 0 || len(mgmtIP) != 0 || len(priMac) != 0 {
+			err = errors.New("specified options, --managementNetwork, --controllers, --default-gw, --dns-servers, --mgmt-ip --primary-mac are not applicable when NAPLES is managed by host")
 			return
 		}
 
@@ -244,8 +241,12 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 		return
 
 	case "network":
-		if !(networkMode == "oob" || networkMode == "inband") {
-			err = fmt.Errorf("invalid network management mode %v. Must be either inband or oob", networkMode)
+		if len(managementNetwork) == 0 {
+			err = fmt.Errorf("network management mode needs an accompanying --management-network. Supported values are inband and oob")
+		}
+
+		if !(managementNetwork == "oob" || managementNetwork == "inband") {
+			err = fmt.Errorf("invalid management network %v specified. Must be inband or oob", managementNetwork)
 			return
 		}
 
@@ -278,8 +279,8 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		if len(featureProfile) != 0 && featureProfile != "default" {
-			err = fmt.Errorf("feature profile is not applicable when NAPLES is in network managed mode ")
+		if len(naplesProfile) != 0 && naplesProfile != "default" {
+			err = fmt.Errorf("naples profile is not applicable when NAPLES is manged by network")
 		}
 
 		if len(hostname) != 0 && !vldtor.HostAddr(hostname) {
@@ -289,7 +290,8 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 		return
 
 	default:
-		err = fmt.Errorf("invalid management mode %v. Must be either host or network", mode)
+		err = fmt.Errorf("invalid --managed-by  %v flag specified. Must be either host or network", managedBy)
+		err = fmt.Errorf("invalid --managed-by  %v flag specified. Must be either host or network", managedBy)
 		return
 	}
 }

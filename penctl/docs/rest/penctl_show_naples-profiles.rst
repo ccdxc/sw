@@ -1,9 +1,9 @@
-.. _penctl_show_profiles:
+.. _penctl_show_naples-profiles:
 
-penctl show profiles
---------------------
+penctl show naples-profiles
+---------------------------
 
-Show NAPLES
+Show Available NAPLES Profiles
 
 Synopsis
 ~~~~~~~~
@@ -17,14 +17,14 @@ Synopsis
 
 ::
 
-  penctl show profiles [flags]
+  penctl show naples-profiles [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for profiles
+  -h, --help   help for naples-profiles
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

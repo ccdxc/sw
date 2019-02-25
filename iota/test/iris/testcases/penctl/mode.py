@@ -10,7 +10,7 @@ def_mode_set_error_strs = [
                             "specified options, --networkMode, --controllers, --default-gw, --dns-servers, --mgmt-ip --primary-mac are not applicable when NAPLES is in host managed mode",
                             "invalid controller a:a specified. Must be either IP Addresses or FQDNs",
                             "invalid management mode a. Must be either host or network",
-                            "host managed mode needs an accompanying feature profile. Specify it with --feature-profile",
+                            "host managed mode needs an accompanying feature profile. Specify it with --naples-profile",
                             "invalid management IP a specified. Must be in CIDR Format",
                             "invalid hostname a:",
                             "invalid MAC Address a specified",
@@ -43,7 +43,7 @@ def Verify(tc):
         req = api.Trigger_CreateExecuteCommandsRequest()
         for n in tc.Nodes:
             # TODO Add more negative test cases
-            common.AddPenctlCommand(req, n, "create profiles -n default -i 42")
+            common.AddPenctlCommand(req, n, "create naples-profile -n default -i 42")
             common.AddPenctlCommand(req, n, "update naples -o host -f scale -c a:a")
             common.AddPenctlCommand(req, n, "update naples -o network -k oob -c a:a")
             common.AddPenctlCommand(req, n, "update naples -o network -k inband -c a -c a1 -c a2:1")

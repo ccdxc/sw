@@ -1,9 +1,9 @@
-.. _penctl_create_profiles:
+.. _penctl_create_naples-profile:
 
-penctl create profiles
-----------------------
+penctl create naples-profile
+----------------------------
 
-profile object
+naples profile object
 
 Synopsis
 ~~~~~~~~
@@ -17,14 +17,14 @@ Synopsis
 
 ::
 
-  penctl create profiles [flags]
+  penctl create naples-profile [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help             help for profiles
+  -h, --help             help for naples-profile
   -n, --name string      Name of the NAPLES profile
   -i, --num-lifs int32   Number of LIFs on the eth device. 1 or 16
 

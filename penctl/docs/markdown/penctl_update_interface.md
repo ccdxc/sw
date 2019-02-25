@@ -23,6 +23,8 @@ penctl update interface [flags]
       --mpls-out uint32         Specify outgoing MPLS label
       --name string             Interface name
       --overlay-ip string       Specify overlay IPv4 address in comma separated list (Max of 2 supported). Ex: 1.2.3.4,2.3.4.5
+      --overlay-mac string      Specify overlay MAC address as aabb.ccdd.eeff (optional)
+      --pf-mac string           Specify PF MAC address as aabb.ccdd.eeff (optional)
       --source-gw string        Specify source gateway. Must be IPv4 prefix as a.b.c.d/nn
       --substrate-ip string     Substrate IPv4 address
       --tunnel-dest-ip string   Tunnel destination IPv4 address

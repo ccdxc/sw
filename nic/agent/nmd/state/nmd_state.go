@@ -112,13 +112,13 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 			Kind: "Naples",
 		},
 		Spec: nmd.NaplesSpec{
-			Mode:       naplesMode,
-			PrimaryMAC: macAddr,
-			Hostname:   nodeUUID,
-			Profile:    "default",
+			Mode:          naplesMode,
+			PrimaryMAC:    macAddr,
+			Hostname:      nodeUUID,
+			NaplesProfile: "default",
 		},
 	}
-	// List available naplesProfiles
+	// List available NaplesProfiles
 
 	// check if naples config exists in emdb
 	cfgObj, err := emdb.Read(&config)
@@ -164,7 +164,7 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		completedOps:       make(map[roprotos.SmartNICOpSpec]bool),
 	}
 
-	// check if naples naplesProfiles exist in emdb
+	// check if naples NaplesProfiles exist in emdb
 	p := nmd.NaplesProfile{
 		TypeMeta: api.TypeMeta{Kind: "NaplesProfile"},
 	}

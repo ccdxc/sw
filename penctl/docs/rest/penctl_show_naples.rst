@@ -3,7 +3,7 @@
 penctl show naples
 ------------------
 
-Show NAPLES Modes and Feature Profiles
+Show NAPLES Modes and Profiles
 
 Synopsis
 ~~~~~~~~
