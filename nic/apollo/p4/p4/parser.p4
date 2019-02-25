@@ -58,7 +58,6 @@ header vlan_tag_t ctag_1;
 header ipv4_t ipv4_1;
 header ipv6_t ipv6_1;
 header udp_t udp_1;
-@pragma pa_header_union ingress vxlan_1 gre_1
 header vxlan_t vxlan_1;
 header gre_t gre_1;
 header mpls_t mpls_src;

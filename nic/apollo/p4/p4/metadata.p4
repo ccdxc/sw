@@ -11,19 +11,13 @@ header_type key_metadata_t {
 
 header_type vnic_metadata_t {
     fields {
-        // TODO: padding local_vnic_tag to 16 bits so as to unionize it with
-        // vnic_metadata.local_vnic_tag . Add pragmas to any index tables using
-        // this
         local_vnic_tag      : 16;
-        // TODO: padding vcn_id to 16 bits so as to unionize it with
-        // vnic_metadata.vcn_id . Add pragmas to any index tables using
-        // this
         vcn_id              : 16;
         skip_src_dst_check  : 1;
         vr_mac              : 48;
         overlay_mac         : 48;
         vlan_id             : 12;
-        src_slot_id         : 20;
+        src_slot_id         : 24;
     }
 }
 
@@ -51,7 +45,7 @@ header_type rewrite_metadata_t {
         encap_type              : 1;
         dst_slot_id_valid       : 1;
         tep_index               : 10;
-        dst_slot_id             : 20;
+        dst_slot_id             : 24;
         mytep_ip                : 32;
     }
 }

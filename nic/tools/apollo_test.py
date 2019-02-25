@@ -16,9 +16,11 @@ def dump_pkt(pkt):
         print(', '.join('0x{:02X}'.format(b) for b in chunk), end=",\n")
 
 ###############################################################################
+# golden/main.cc
+###############################################################################
 
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
-apkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+spkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
@@ -34,6 +36,62 @@ grpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         GRE(proto=0x8847) / MPLS(label=200, s=1) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
+
+dump_pkt(spkt)
+dump_pkt(urpkt)
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+spkt = Ether(dst='00:AA:BB:CC:DD:EE', src='00:12:34:56:78:90') / \
+        IP(dst='100.101.102.103', src='12.12.1.1', id=0, ttl=64) / \
+        UDP(sport=0xC0D, dport=6635) / MPLS(label=0x12345, s=1) / \
+        IP(dst='11.11.1.1', src='10.10.1.1') / \
+        TCP(sport=0x5678, dport=0x1234) / payload
+
+rpkt = Ether(dst='00:C1:C2:C3:C4:C5', src='00:01:02:03:04:05') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='11.11.1.1', src='10.10.1.1') / \
+        TCP(sport=0x5678, dport=0x1234) / payload
+
+dump_pkt(spkt)
+dump_pkt(rpkt)
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+spkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.1.2', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+
+rpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64, chksum=0) / \
+        UDP(sport=0x2BA9, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        IP(dst='10.10.1.2', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+
+dump_pkt(spkt)
+dump_pkt(rpkt)
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+spkt = Ether(dst='00:AA:BB:CC:DD:EE', src='00:12:34:56:78:90') / \
+        IP(dst='100.101.102.103', src='12.12.1.1', id=0, ttl=64) / \
+        UDP(sport=0x2BA9, dport=4789, chksum=0) / VXLAN(vni=0x12345) / \
+        Ether(dst='00:C1:C2:C3:C4:C5', src='00:01:02:03:04:05') / \
+        IP(dst='11.11.1.1', src='10.10.1.2') / \
+        TCP(sport=0x5678, dport=0x1234) / payload
+
+rpkt = Ether(dst='00:C1:C2:C3:C4:C5', src='00:01:02:03:04:05') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='11.11.1.1', src='10.10.1.2') / \
+        TCP(sport=0x5678, dport=0x1234) / payload
+
+dump_pkt(spkt)
+dump_pkt(rpkt)
+
+###############################################################################
+# golden/main.cc
+###############################################################################
+
+exit(0)
 
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
 spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \

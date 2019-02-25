@@ -88,7 +88,7 @@ tep_impl::release_resources(api_base *api_obj) {
  * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
-#define tep_tx_udp_action    action_u.tep_tx_udp_tep_tx
+#define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                  ret;
@@ -97,11 +97,11 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     nexthop_tx_actiondata_t    nh_tx_data = { 0 };
 
     tep_spec = &obj_ctxt->api_params->tep_spec;
-    tep_tx_data.action_id = TEP_TX_UDP_TEP_TX_ID;
-    tep_tx_data.tep_tx_udp_action.dipo = tep_spec->key.ip_addr;
+    tep_tx_data.action_id = TEP_TX_MPLS_UDP_TEP_TX_ID;
+    tep_tx_data.tep_tx_mpls_udp_action.dipo = tep_spec->key.ip_addr;
 
     // TODO: fix this when fte plugin is available
-    MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_udp_action.dmac, 0x0E0D0A0B0200);
+    MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_mpls_udp_action.dmac, 0x0E0D0A0B0200);
     ret = tep_impl_db()->tep_tx_tbl()->insert_withid(&tep_tx_data, hw_id_);
     SDK_ASSERT(ret == SDK_RET_OK);
 

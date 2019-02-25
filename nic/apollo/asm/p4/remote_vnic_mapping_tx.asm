@@ -67,8 +67,9 @@ remote_vnic_mapping_tx_miss:
 remote_vnic_mapping_tx_hit:
     phvwr       p.rewrite_metadata_dst_slot_id_valid, \
                     d.remote_vnic_mapping_tx_info_d.dst_slot_id_valid
-    phvwr       p.rewrite_metadata_dst_slot_id, \
-                    d.remote_vnic_mapping_tx_info_d.dst_slot_id
+    or          r1, d.remote_vnic_mapping_tx_info_d.dst_slot_id_sbit20_ebit23, \
+                    d.remote_vnic_mapping_tx_info_d.dst_slot_id_sbit0_ebit19, 4
+    phvwr       p.rewrite_metadata_dst_slot_id, r1
     phvwr.e     p.txdma_to_p4e_header_nexthop_index, \
                     d.remote_vnic_mapping_tx_info_d.nexthop_index
     phvwr       p.egress_service_header_remote_vnic_mapping_tx_done, TRUE

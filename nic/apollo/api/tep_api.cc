@@ -63,8 +63,8 @@ oci_tep_status_fill (tep_entry *entry, tep_tx_actiondata_t *tep_tx_data,
         memcpy(status->dmac, tep_tx_data->action_u.tep_tx_gre_tep_tx.dmac,
                ETH_ADDR_LEN);
         break;
-    case TEP_TX_UDP_TEP_TX_ID:
-        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_udp_tep_tx.dmac,
+    case TEP_TX_MPLS_UDP_TEP_TX_ID:
+        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dmac,
                ETH_ADDR_LEN);
         break;
     default:
@@ -82,11 +82,11 @@ oci_tep_spec_fill (nexthop_tx_actiondata_t *nh_tx_data,
     switch (nh_tx_data->action_u.nexthop_tx_nexthop_info.encap_type) {
     case GW_ENCAP:
         spec->type = OCI_ENCAP_TYPE_GW_ENCAP;
-        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_udp_tep_tx.dipo;
+        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
         break;
     case VNIC_ENCAP:
         spec->type = OCI_ENCAP_TYPE_VNIC;
-        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_udp_tep_tx.dipo;
+        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
         break;
     default:
         return sdk::SDK_RET_ERR;

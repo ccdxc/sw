@@ -70,7 +70,7 @@ action gre_tep_tx(dipo, dmac) {
     }
 }
 
-action udp_tep_tx(dipo, dmac) {
+action mpls_udp_tep_tx(dipo, dmac) {
     // remove headers
     remove_header(ethernet_1);
     remove_header(ctag_1);
@@ -105,7 +105,7 @@ action udp_tep_tx(dipo, dmac) {
     modify_field(ipv4_0.ihl, 5);
     modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
     modify_field(ipv4_0.ttl, 64);
-    modify_field(ipv4_0.protocol, IP_PROTO_GRE);
+    modify_field(ipv4_0.protocol, IP_PROTO_UDP);
     modify_field(ipv4_0.dstAddr, dipo);
     modify_field(ipv4_0.srcAddr, rewrite_metadata.mytep_ip);
 
@@ -122,6 +122,48 @@ action udp_tep_tx(dipo, dmac) {
     }
 }
 
+action vxlan_tep_tx(dipo, dmac) {
+    // remove headers
+    remove_header(ctag_1);
+
+    // add tunnel headers
+    add_header(ethernet_0);
+    add_header(ipv4_0);
+    add_header(udp_0);
+    add_header(vxlan_0);
+
+    modify_field(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len);
+    if (ctag_1.valid == TRUE) {
+        subtract_from_field(scratch_metadata.ip_totallen, 4);
+        modify_field(ethernet_1.etherType, ctag_1.etherType);
+    }
+    // account for new headers that are added
+    // 8 bytes of UDP header, 8 bytes of vxlan header, 20 bytes of IP header
+    add_to_field(scratch_metadata.ip_totallen, 20 + 8 + 8);
+
+    modify_field(ethernet_0.dstAddr, dmac);
+    // mytep_macsa is a table constant
+    modify_field(ethernet_0.srcAddr, scratch_metadata.mytep_macsa);
+    modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
+
+    modify_field(ipv4_0.version, 4);
+    modify_field(ipv4_0.ihl, 5);
+    modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
+    modify_field(ipv4_0.ttl, 64);
+    modify_field(ipv4_0.protocol, IP_PROTO_UDP);
+    modify_field(ipv4_0.dstAddr, dipo);
+    modify_field(ipv4_0.srcAddr, rewrite_metadata.mytep_ip);
+
+    modify_field(udp_0.srcPort, p4e_apollo_i2e.entropy_hash);
+    modify_field(udp_0.dstPort, UDP_PORT_VXLAN);
+    subtract(udp_0.len, scratch_metadata.ip_totallen, 20);
+
+    modify_field(vxlan_0.flags, 0x8);
+    modify_field(vxlan_0.vni, rewrite_metadata.dst_slot_id);
+    modify_field(vxlan_0.reserved, 0);
+    modify_field(vxlan_0.reserved2, 0);
+}
+
 @pragma stage 3
 table tep_tx {
     reads {
@@ -129,7 +171,8 @@ table tep_tx {
     }
     actions {
         gre_tep_tx;
-        udp_tep_tx;
+        mpls_udp_tep_tx;
+        vxlan_tep_tx;
     }
     size : TEP_TABLE_SIZE;
 }

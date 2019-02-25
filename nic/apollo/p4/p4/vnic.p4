@@ -107,7 +107,8 @@ table local_vnic_by_vlan_tx {
 @pragma stage 0
 table local_vnic_by_slot_rx {
     reads {
-        mpls_dst.label : exact;
+        vxlan_1.vni     : exact;
+        mpls_dst.label  : exact;
     }
     actions {
         local_vnic_info_rx;
@@ -119,7 +120,8 @@ table local_vnic_by_slot_rx {
 @pragma overflow_table local_vnic_by_slot_rx
 table local_vnic_by_slot_rx_otcam {
     reads {
-        mpls_dst.label : ternary;
+        vxlan_1.vni     : ternary;
+        mpls_dst.label  : ternary;
     }
     actions {
         local_vnic_info_rx;
@@ -138,23 +140,18 @@ control ingress_vnic_info {
 
 action egress_local_vnic_info_rx(vr_mac, overlay_mac, overlay_vlan_id,
                                  subnet_id) {
-    // Remove headers
-    remove_header(ethernet_1);
-    remove_header(ipv4_1);
-    remove_header(ipv6_1);
-    remove_header(gre_1);
-    remove_header(mpls_src);
-    remove_header(mpls_dst);
-
-    // Add header towards host
-    add_header(ethernet_0);
-
-    modify_field(ethernet_0.dstAddr, overlay_mac);
-    if ((subnet_id == p4e_apollo_i2e.rvpath_subnet_id) and
-        (p4e_apollo_i2e.rvpath_overlay_mac != 0)) {
-        modify_field(ethernet_0.srcAddr, p4e_apollo_i2e.rvpath_overlay_mac);
+    // add header towards host
+    if (ethernet_2.valid == 1) {
+        copy_header(ethernet_0, ethernet_2);
     } else {
-        modify_field(ethernet_0.srcAddr, vr_mac);
+        add_header(ethernet_0);
+        modify_field(ethernet_0.dstAddr, overlay_mac);
+        if ((subnet_id == p4e_apollo_i2e.rvpath_subnet_id) and
+            (p4e_apollo_i2e.rvpath_overlay_mac != 0)) {
+            modify_field(ethernet_0.srcAddr, p4e_apollo_i2e.rvpath_overlay_mac);
+        } else {
+            modify_field(ethernet_0.srcAddr, vr_mac);
+        }
     }
 
     if (overlay_vlan_id != 0) {
@@ -179,6 +176,16 @@ action egress_local_vnic_info_rx(vr_mac, overlay_mac, overlay_vlan_id,
             // TODO: what happens to non-ip packets ?
         }
     }
+
+    // remove headers
+    remove_header(ethernet_1);
+    remove_header(ethernet_2);
+    remove_header(ipv4_1);
+    remove_header(ipv6_1);
+    remove_header(gre_1);
+    remove_header(vxlan_1);
+    remove_header(mpls_src);
+    remove_header(mpls_dst);
 
     // scratch metadata
     modify_field(scratch_metadata.subnet_id, subnet_id);
