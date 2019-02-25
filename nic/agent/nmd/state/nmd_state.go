@@ -683,6 +683,12 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	parts := strings.Fields(req.Opts)
 	if req.Executable == "/bin/date" && req.Opts != "" {
 		parts = strings.SplitN(req.Opts, " ", 2)
+	} else if req.Executable == "pensettimezone" {
+		err := ioutil.WriteFile("/etc/timezone", []byte(req.Opts), 0644)
+		if err != nil {
+			return err.Error(), err
+		}
+		return "", nil
 	}
 	cmd := exec.Command(req.Executable, parts...)
 	stdoutStderr, err := cmd.CombinedOutput()

@@ -6,6 +6,8 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -38,6 +40,44 @@ func init() {
 
 func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 	printRes := true
+	timezone, err := ioutil.ReadFile("/etc/timezone")
+	if err == nil {
+		v := &nmd.NaplesCmdExecute{
+			Executable: "pensettimezone",
+			Opts:       strings.Join([]string{string(timezone)}, ""),
+		}
+		resp, err := restGetWithBody(v, "cmd/v1/naples/")
+		if err != nil && printRes {
+			fmt.Println(err)
+			return err
+		}
+		if len(resp) > 3 {
+			s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+			fmt.Printf("%s", strings.Replace(s, "\\", "", -1))
+		}
+		if verbose {
+			fmt.Println(string(resp))
+		}
+	}
+	symlink, err := filepath.EvalSymlinks("/etc/localtime")
+	if err == nil {
+		v := &nmd.NaplesCmdExecute{
+			Executable: "/bin/ln",
+			Opts:       strings.Join([]string{"-sf", symlink, "/etc/localtime"}, " "),
+		}
+		resp, err := restGetWithBody(v, "cmd/v1/naples/")
+		if err != nil && printRes {
+			fmt.Println(err)
+			return err
+		}
+		if len(resp) > 3 {
+			s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+			fmt.Printf("%s", strings.Replace(s, "\\", "", -1))
+		}
+		if verbose {
+			fmt.Println(string(resp))
+		}
+	}
 	dateString := time.Now().Format("Jan 2 15:04:05 2006")
 	if cmd.Name() != cmdName {
 		printRes = false
