@@ -12,8 +12,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS="kilc:s:t:r:"
-LONGOPTIONS="keep-data,configfile:,run-time:,skip-target:;ignore-errors,modellogs,run-only:,skip-asm-ins-stats"
+OPTIONS="kilc:s:t:r:j:"
+LONGOPTIONS="keep-data,configfile:,run-time:,skip-target:;job-file:;ignore-errors,modellogs,run-only:,skip-asm-ins-stats"
 
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ $? -ne 0 ]]; then
@@ -31,6 +31,7 @@ ignore_errors=0
 enable_model_logs=0
 skip_targets=()
 config_files=()
+jobs_files=()
 while true; do
     case "$1" in
         -k |--keep-data)
@@ -39,6 +40,10 @@ while true; do
             ;;
         -s|--skip-target)
             skip_targets+=($2)
+            shift 2
+            ;;
+        -j|--job-file)
+            jobs_files+=($2)
             shift 2
             ;;
         -c|--config-file)
@@ -137,7 +142,7 @@ export GEN_DIR=$NIC_DIR/gen
 if [ ${#skip_targets[@]} -eq 0 ]; then
     $NIC_DIR/tools/gen_dol_cov_run.py
 else
-    $NIC_DIR/tools/gen_dol_cov_run.py --skip-targets ${skip_targets[@]}
+    $NIC_DIR/tools/gen_dol_cov_run.py --skip-targets ${skip_targets[@]} --job-files ${jobs_files[@]}
 fi
 
 OUT=$?
@@ -155,7 +160,7 @@ sudo pip3 install pandas
 set -o pipefail
 set -ex
 
-/home/asic/tools/eda/bullseye/bin/cov01 -1 
+/home/asic/tools/eda/bullseye/bin/cov01 -1
 python3 $NIC_DIR/tools/gcov/run.py $SKIP_ASM_INS_STATS $IGNORE_ERRORS --config ${config_files[@]}  --max-job-run-time  $max_job_run_time $RUN_ONLY 2>&1 | tee $NIC_DIR/coverage.log
 OUT=$?
 if [ $OUT -ne 0 ];then
