@@ -60,11 +60,12 @@ const char*
 EthLif::lif_state_to_str(enum lif_state state)
 {
     switch(state) {
+        CASE(LIF_STATE_RESETING);
         CASE(LIF_STATE_RESET);
         CASE(LIF_STATE_CREATING);
         CASE(LIF_STATE_CREATED);
         CASE(LIF_STATE_INITING);
-        CASE(LIF_STATE_INITED);
+        CASE(LIF_STATE_INIT);
         CASE(LIF_STATE_UP);
         CASE(LIF_STATE_DOWN);
         default: return "LIF_STATE_INVALID";
@@ -322,7 +323,15 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
                         spec->uplink_port_num);
             return (IONIC_RC_ERROR);
         }
-        // uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+
+        ctl_cosA = 1;
+        ctl_cosB = QosClass::GetTxTrafficClassCos("CONTROL", spec->uplink_port_num);
+        if (ctl_cosB < 0) {
+            NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
+                        hal_lif_info_.name, "CONTROL",
+                        spec->uplink_port_num);
+            return (IONIC_RC_ERROR);
+        }
 
         if (spec->enable_rdma) {
             pd->rdma_lif_init(hal_lif_info_.hw_lif_id, spec->key_count,
@@ -404,8 +413,8 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     }
     dq_qstate.pc_offset = off;
     dq_qstate.cos_sel = 0;
-    dq_qstate.cosA = 0;
-    dq_qstate.cosB = cosB;
+    dq_qstate.cosA = ctl_cosA;
+    dq_qstate.cosB = ctl_cosB;
     dq_qstate.host = 0;
     dq_qstate.total = 1;
     dq_qstate.pid = 0;
@@ -425,16 +434,12 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     // Initialize the ADMINQ service
-    if (!adminq->Init(cosA, cosB)) {
+    if (!adminq->Init(0, ctl_cosA, ctl_cosB)) {
         NIC_LOG_ERR("{}: Failed to initialize AdminQ service", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
 
-    evutil_timer_start(&adminq_timer, AdminQ::Poll, adminq, 0, 0.001);
-    evutil_add_check(&adminq_check, AdminQ::Poll, adminq);
-    evutil_add_prepare(&adminq_prepare, AdminQ::Poll, adminq);
-
-    state = LIF_STATE_INITED;
+    state = LIF_STATE_INIT;
 
     return (IONIC_RC_SUCCESS);
 }
@@ -579,10 +584,6 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
         p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
-    // Disable stats update
-    evutil_timer_stop(&stats_timer);
-    evutil_remove_check(&stats_check);
-
     // Reset EDMA service
     addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID);
     if (addr < 0) {
@@ -597,9 +598,6 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     // Reset ADMINQ service
-    evutil_timer_stop(&adminq_timer);
-    evutil_remove_check(&adminq_check);
-    evutil_remove_prepare(&adminq_prepare);
     adminq->Reset();
 
     state = LIF_STATE_RESET;
@@ -670,8 +668,8 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
-    qstate.cosA = 0;
-    qstate.cosB = cosB;
+    qstate.cosA = ctl_cosA;
+    qstate.cosB = ctl_cosB;
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = cmd->pid;
@@ -961,8 +959,8 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
-    qstate.cosA = 0;
-    qstate.cosB = cmd->cos;
+    qstate.cosA = cosA;
+    qstate.cosB = cosB;
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = cmd->pid;
@@ -1059,8 +1057,8 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
-    qstate.cosA = 0;
-    qstate.cosB = 0;
+    qstate.cosA = cosA;
+    qstate.cosB = cosB;
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = cmd->pid;
@@ -1154,8 +1152,8 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
-    qstate.cosA = 0;
-    qstate.cosB = cosB;
+    qstate.cosA = ctl_cosA;
+    qstate.cosB = ctl_cosB;
     qstate.host = 0;
     qstate.total = 1;
     qstate.pid = cmd->pid;
@@ -2085,7 +2083,7 @@ EthLif::LinkEventHandler(port_status_t *evd)
         return;
     }
 
-    if (state != LIF_STATE_INITED &&
+    if (state != LIF_STATE_INIT &&
         state != LIF_STATE_UP &&
         state != LIF_STATE_DOWN) {
         NIC_LOG_INFO("{}: {} + {} => {}",

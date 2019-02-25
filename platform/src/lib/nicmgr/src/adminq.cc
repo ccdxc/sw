@@ -50,23 +50,27 @@ AdminQ::AdminQ(
 }
 
 bool
-AdminQ::Init(uint8_t cosA, uint8_t cosB)
+AdminQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
 {
-    if (!AdminRequestQInit(cosA, cosB)) {
+    if (!AdminRequestQInit(cos_sel, cosA, cosB)) {
         NIC_LOG_ERR("{}: Failed to initialize request queue", name);
         return false;
     }
 
-    if (!AdminResponseQInit(cosA, cosB)) {
+    if (!AdminResponseQInit(cos_sel, cosA, cosB)) {
         NIC_LOG_ERR("{}: Failed to initialize response queue", name);
         return false;
     }
+
+    evutil_timer_start(&adminq_timer, AdminQ::Poll, this, 0, 0.001);
+    evutil_add_check(&adminq_check, AdminQ::Poll, this);
+    evutil_add_prepare(&adminq_prepare, AdminQ::Poll, this);
 
     return true;
 }
 
 bool
-AdminQ::AdminRequestQInit(uint8_t cosA, uint8_t cosB)
+AdminQ::AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
 {
     nicmgr_req_qstate_t qstate = {0};
 
@@ -118,7 +122,7 @@ AdminQ::AdminRequestQInit(uint8_t cosA, uint8_t cosB)
 }
 
 bool
-AdminQ::AdminResponseQInit(uint8_t cosA, uint8_t cosB)
+AdminQ::AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
 {
     nicmgr_resp_qstate_t qstate = {0};
 
@@ -181,6 +185,10 @@ AdminQ::Reset()
         NIC_LOG_ERR("{}: Failed to reset response queue", name);
         return false;
     }
+
+    evutil_timer_stop(&adminq_timer);
+    evutil_remove_check(&adminq_check);
+    evutil_remove_prepare(&adminq_prepare);
 
     return true;
 }

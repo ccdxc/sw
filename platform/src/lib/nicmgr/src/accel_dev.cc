@@ -842,8 +842,8 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
-    qstate.cosA = 0;
-    qstate.cosB = cosB;
+    qstate.cosA = ctl_cosA;
+    qstate.cosB = ctl_cosB;
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = cmd->pid;
@@ -1825,11 +1825,17 @@ Accel_PF::HalEventHandler(bool status)
 
         cosA = 1;
         cosB = 0;
-        uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+        ctl_cosA = 1;
+        ctl_cosB = QosClass::GetTxTrafficClassCos("CONTROL", 1);
+        if (ctl_cosB < 0) {
+            NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
+                        hal_lif_info_.name, "CONTROL", 1);
+            return;
+        }
 
         // program the queue state
         pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info,
-            &hal_lif_info_, coses);
+            &hal_lif_info_, 0x0);
 
         // acquire rings info as initialized by HAL
         accel_ring_info_get_all();
@@ -1847,15 +1853,11 @@ Accel_PF::HalEventHandler(bool status)
         }
 
         // Initialize AdminQ service
-        if (!adminq->Init(cosA, cosB)) {
+        if (!adminq->Init(0, ctl_cosA, ctl_cosB)) {
             NIC_LOG_ERR("lif-{}: Failed to initialize AdminQ service",
                 hal_lif_info_.hw_lif_id);
             return;
         }
-
-        evutil_timer_start(&adminq_timer, AdminQ::Poll, adminq, 0, 0.001);
-        evutil_add_check(&adminq_check, AdminQ::Poll, adminq);
-        evutil_add_prepare(&adminq_prepare, AdminQ::Poll, adminq);
     }
 }
 

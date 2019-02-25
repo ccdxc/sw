@@ -76,7 +76,7 @@ enum lif_state {
     LIF_STATE_CREATING,
     LIF_STATE_CREATED,
     LIF_STATE_INITING,
-    LIF_STATE_INITED,
+    LIF_STATE_INIT,
     LIF_STATE_UP,
     LIF_STATE_DOWN,
 };
@@ -118,7 +118,7 @@ private:
     // LIF Info
     Lif *lif;
     eth_lif_res_t *res;
-    uint8_t cosA, cosB;
+    uint8_t cosA, cosB, ctl_cosA, ctl_cosB;
     // Spec
     const struct eth_devspec *spec;
     struct queue_info qinfo[NUM_QUEUE_TYPES];
@@ -152,9 +152,6 @@ private:
 
     /* AdminQ Commands */
     AdminQ *adminq;
-    evutil_timer adminq_timer;
-    evutil_check adminq_check;
-    evutil_prepare adminq_prepare;
 
     static void AdminCmdHandler(void *obj,
         void *req, void *req_data, void *resp, void *resp_data);

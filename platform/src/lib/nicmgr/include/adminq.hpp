@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "nic/include/adminq.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
@@ -33,7 +34,7 @@ public:
         adminq_cb_t handler, void *handler_obj
     );
 
-    bool Init(uint8_t cosA, uint8_t cosB);
+    bool Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB);
     bool Reset();
 
     bool PollRequest(struct nicmgr_req_desc *req);
@@ -49,11 +50,15 @@ private:
     uint32_t req_qid, resp_qid;
     uint16_t req_ring_size, resp_ring_size;
 
+    evutil_timer adminq_timer;
+    evutil_check adminq_check;
+    evutil_prepare adminq_prepare;
+
     adminq_cb_t handler;
     void *handler_obj;
 
     // AdminRequestQ
-    bool AdminRequestQInit(uint8_t cosA, uint8_t cosB);
+    bool AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB);
     bool AdminRequestQReset();
     uint16_t req_head;
     uint16_t req_tail;
@@ -63,7 +68,7 @@ private:
     uint8_t req_exp_color;
 
     // AdminResponseQ
-    bool AdminResponseQInit(uint8_t cosA, uint8_t cosB);
+    bool AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB);
     bool AdminResponseQReset();
     uint16_t resp_head;
     uint16_t resp_tail;

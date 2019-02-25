@@ -312,7 +312,7 @@ private:
     // HAL Info
     HalClient                   *hal;
     HalCommonClient             *hal_common_client;
-    uint8_t cosA, cosB;
+    uint8_t cosA, cosB, ctl_cosA, ctl_cosB;
     // PCIe info
     pciehdev_t                  *pdev;
     // Resources
@@ -354,9 +354,6 @@ private:
 
     /* AdminQ Commands */
     AdminQ *adminq;
-    evutil_timer adminq_timer;
-    evutil_check adminq_check;
-    evutil_prepare adminq_prepare;
 
     static void AdminCmdHandler(void *obj,
         void *req, void *req_data, void *resp, void *resp_data);
