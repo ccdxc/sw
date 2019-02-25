@@ -506,7 +506,7 @@ DeviceManager::HalEventHandler(bool status)
 }
 
 void
-DeviceManager::LinkEventHandler(port_status_t *evd)
+DeviceManager::LinkEventHandler(hal_port_status_t *evd)
 {
     NIC_HEADER_TRACE("Link Event");
 

@@ -442,6 +442,7 @@ Eth::opcode_to_str(enum cmd_opcode opcode)
         CASE(CMD_OPCODE_LIF_INIT);
         CASE(CMD_OPCODE_LIF_RESET);
         CASE(CMD_OPCODE_ADMINQ_INIT);
+        CASE(CMD_OPCODE_PORT_CONFIG_SET);
         default: return "DEVCMD_UNKNOWN";
     }
 }
@@ -483,6 +484,10 @@ Eth::CmdHandler(void *req, void *req_data,
         status = _CmdAdminQInit(req, req_data, resp, resp_data);
         break;
 
+    case CMD_OPCODE_PORT_CONFIG_SET:
+        status = _CmdPortConfigSet(req, req_data, resp, resp_data);
+        break;
+
     default:
         // FIXME: Remove Backwards compatibility
         status = AdminCmdHandler(lif_base, req, req_data, resp, resp_data);
@@ -516,7 +521,10 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     readKey(SERIALNUMBER_KEY, sn);
     strncpy0(rsp->dev.serial_num, sn.c_str(), sizeof(rsp->dev.serial_num));
 
-    strncpy0(rsp->dev.fw_version, SW_VERSION, sizeof(rsp->dev.fw_version));
+    boost::property_tree::ptree ver;
+    boost::property_tree::read_json(VERSION_FILE, ver);
+    strncpy0(rsp->dev.fw_version, ver.get<std::string>("sw.version").c_str(),
+        sizeof(rsp->dev.fw_version));
 
     rsp->dev.nlifs = spec->lif_count;
     rsp->dev.nintrs = spec->intr_count;
@@ -730,6 +738,23 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 }
 
 enum status_code
+Eth::_CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct port_config_cmd *cmd = (struct port_config_cmd *)req;
+
+    NIC_LOG_DEBUG("{}: CMD_OPCODE_PORT_CONFIG_SET", spec->name);
+
+    int ret = hal->PortConfigSet(spec->uplink_port_num,
+                (hal_port_config_t &)cmd->config);
+    if (ret < 0) {
+        NIC_LOG_ERR("{}: failed to set port config", spec->name);
+        return (IONIC_RC_ERROR);
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
+enum status_code
 Eth::AdminCmdHandler(uint64_t lif_id,
     void *req, void *req_data,
     void *resp, void *resp_data)
@@ -774,7 +799,7 @@ Eth::HalEventHandler(bool status)
 }
 
 void
-Eth::LinkEventHandler(port_status_t *evd)
+Eth::LinkEventHandler(hal_port_status_t *evd)
 {
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;

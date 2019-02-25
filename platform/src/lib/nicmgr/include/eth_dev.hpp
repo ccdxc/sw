@@ -48,7 +48,7 @@ public:
     enum status_code CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
 
-    void LinkEventHandler(port_status_t *evd);
+    void LinkEventHandler(hal_port_status_t *evd);
     void HalEventHandler(bool status);
 
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
@@ -97,6 +97,7 @@ private:
     enum status_code _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
     enum status_code _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
     enum status_code _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data);
 
     /* AdminCmd Proxy Handler */
     enum status_code AdminCmdHandler(uint64_t lif_id,

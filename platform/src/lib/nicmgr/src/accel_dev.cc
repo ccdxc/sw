@@ -637,7 +637,11 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
 
     readKey(SERIALNUMBER_KEY, sn);
     strncpy0(rsp->dev.serial_num, sn.c_str(), sizeof(rsp->dev.serial_num));
-    strncpy0(rsp->dev.fw_version, SW_VERSION, sizeof(rsp->dev.fw_version));
+
+    boost::property_tree::ptree ver;
+    boost::property_tree::read_json(VERSION_FILE, ver);
+    strncpy0(rsp->dev.fw_version, ver.get<std::string>("sw.version").c_str(),
+        sizeof(rsp->dev.fw_version));
 
     rsp->dev.num_lifs = spec->lif_count;
     memset(&rsp->dev.lif_tbl[0], 0, sizeof(identify_lif_t));

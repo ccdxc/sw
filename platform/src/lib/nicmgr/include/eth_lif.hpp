@@ -96,7 +96,7 @@ public:
     // Event Handlers
     enum status_code CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
-    void LinkEventHandler(port_status_t *evd);
+    void LinkEventHandler(hal_port_status_t *evd);
     void HalEventHandler(bool status);
 
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);

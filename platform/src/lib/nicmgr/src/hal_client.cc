@@ -523,14 +523,83 @@ HalClient::CryptoKeyIndexUpdate(uint32_t key_index,
     return 0;
 }
 
+uint32_t
+HalClient::PortSpeedInMbps(port::PortSpeed speed_enum)
+{
+    uint32_t speed = 0;
+
+    switch (speed_enum) {
+        case PortSpeed::PORT_SPEED_NONE:
+            speed = 0;
+            break;
+        case PortSpeed::PORT_SPEED_1G:
+            speed = 1000;
+            break;
+        case PortSpeed::PORT_SPEED_10G:
+            speed = 10000;
+            break;
+        case PortSpeed::PORT_SPEED_25G:
+            speed = 25000;
+            break;
+        case PortSpeed::PORT_SPEED_40G:
+            speed = 40000;
+            break;
+        case PortSpeed::PORT_SPEED_50G:
+            speed = 50000;
+            break;
+        case PortSpeed::PORT_SPEED_100G:
+            speed = 100000;
+            break;
+        default:
+            NIC_FUNC_ERR("Invalid speed {}", speed);
+            speed = 0;
+    }
+
+    return speed;
+}
+
+port::PortSpeed
+HalClient::PortSpeedEnum(uint32_t speed)
+{
+    port::PortSpeed speed_enum;
+
+    switch (speed) {
+        case 0:
+            speed_enum = port::PortSpeed::PORT_SPEED_NONE;
+            break;
+        case 1000:
+            speed_enum = port::PortSpeed::PORT_SPEED_1G;
+            break;
+        case 10000:
+            speed_enum = port::PortSpeed::PORT_SPEED_10G;
+            break;
+        case 25000:
+            speed_enum = port::PortSpeed::PORT_SPEED_25G;
+            break;
+        case 40000:
+            speed_enum = port::PortSpeed::PORT_SPEED_40G;
+            break;
+        case 50000:
+            speed_enum = port::PortSpeed::PORT_SPEED_50G;
+            break;
+        case 100000:
+            speed_enum = port::PortSpeed::PORT_SPEED_100G;
+            break;
+        default:
+            NIC_FUNC_ERR("Invalid speed_enum {}", speed);
+            speed_enum = port::PortSpeed::PORT_SPEED_NONE;
+    }
+
+    return speed_enum;
+}
+
 int
-HalClient::PortStatusGet(uint32_t portnum, port_status_t &pi)
+HalClient::PortStatusGet(uint8_t portnum, hal_port_status_t &st)
 {
     PortGetRequestMsg       req_msg;
     PortGetResponseMsg      rsp_msg;
     ClientContext           context;
     Status                  status;
-    uint32_t                speed;
 
     auto req = req_msg.add_request();
     req->mutable_key_or_handle()->set_port_id(portnum);
@@ -547,39 +616,122 @@ HalClient::PortStatusGet(uint32_t portnum, port_status_t &pi)
         return -1;
     }
 
-    pi.port_id = port.status().key_or_handle().port_id();
-    pi.oper_status = (port.status().oper_status() == port::PortOperStatus::PORT_OPER_STATUS_UP);
+    st.id = port.status().key_or_handle().port_id();
+    st.status = port.status().oper_status();
+    st.speed = PortSpeedInMbps(port.status().port_speed());
+    NIC_FUNC_DEBUG("{}: port_speed_enum {} port_speed {}", portnum,
+        port.status().port_speed(), st.speed);
+    st.xcvr.state = port.status().xcvr_status().state();
+    st.xcvr.phy = port.status().xcvr_status().cable_type();
+    st.xcvr.pid = port.status().xcvr_status().pid();
+    memcpy(st.xcvr.sprom,
+        port.status().xcvr_status().xcvr_sprom().c_str(),
+        MIN(port.status().xcvr_status().xcvr_sprom().size(), 
+        sizeof (st.xcvr.sprom)));
 
-    speed = port.status().port_speed();
-    if (speed == port::PortSpeed::PORT_SPEED_NONE) {
-        speed = port.spec().port_speed();
+    NIC_FUNC_DEBUG("{}: id {} status {} speed {} "
+        " xcvr.state {} xcvr.phy {} xcvr.pid {}",
+        portnum, st.id, st.status, st.speed,
+        st.xcvr.state, st.xcvr.phy, st.xcvr.pid);
+
+    return 0;
+}
+
+int
+HalClient::PortConfigGet(uint8_t portnum, hal_port_config_t &cfg)
+{
+    PortGetRequestMsg       req_msg;
+    PortGetResponseMsg      rsp_msg;
+    ClientContext           context;
+    Status                  status;
+
+    auto req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_port_id(portnum);
+    status = port_stub_->PortGet(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC update status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
     }
 
-    switch (speed) {
-        case port::PortSpeed::PORT_SPEED_1G:
-            pi.port_speed = 1000;
-            break;
-        case port::PortSpeed::PORT_SPEED_10G:
-            pi.port_speed = 10000;
-            break;
-        case port::PortSpeed::PORT_SPEED_25G:
-            pi.port_speed = 25000;
-            break;
-        case port::PortSpeed::PORT_SPEED_40G:
-            pi.port_speed = 40000;
-            break;
-        case port::PortSpeed::PORT_SPEED_50G:
-            pi.port_speed = 50000;
-            break;
-        case port::PortSpeed::PORT_SPEED_100G:
-            pi.port_speed = 100000;
-            break;
-        default:
-            pi.port_speed = 0;
+    auto port = rsp_msg.response(0);
+    if (port.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} port {}", port.api_status(), portnum);
+        return -1;
     }
 
-    NIC_LOG_DEBUG("PortStatus: port {} status {} speed {}",
-        pi.port_id, pi.oper_status, pi.port_speed);
+    cfg.state = port.spec().admin_state();
+    cfg.speed = PortSpeedInMbps(port.spec().port_speed());
+    NIC_FUNC_DEBUG("{}: port_speed_enum {} port_speed {}", portnum,
+        port.spec().port_speed(), cfg.speed);
+    cfg.mtu = port.spec().mtu();
+    cfg.an_enable = port.spec().auto_neg_enable();
+    cfg.fec_type = port.spec().fec_type();
+    cfg.pause_type = port.spec().pause();
+    cfg.loopback_mode = port.spec().loopback_mode();
+
+    NIC_FUNC_DEBUG("{}: state {} speed {} mtu {} "
+        "an_enable {} fec_type {} pause_type {} loopback_mode {}",
+        portnum, cfg.state, cfg.speed, cfg.mtu,
+        cfg.an_enable, cfg.fec_type, cfg.pause_type, cfg.loopback_mode);
+
+    return 0;
+}
+
+int
+HalClient::PortConfigSet(uint8_t portnum, hal_port_config_t &cfg)
+{
+    PortGetRequestMsg       get_req_msg;
+    PortGetResponseMsg      get_rsp_msg;
+    ClientContext           get_context;
+    Status                  get_status;
+
+    auto get_req = get_req_msg.add_request();
+    get_req->mutable_key_or_handle()->set_port_id(portnum);
+    get_status = port_stub_->PortGet(&get_context, get_req_msg, &get_rsp_msg);
+    if (!get_status.ok()) {
+        NIC_FUNC_ERR("GRPC update status {} {}", get_status.error_code(),
+                     get_status.error_message());
+        return -1;
+    }
+
+    auto port = get_rsp_msg.response(0);
+    if (port.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("PortGet API status {} port {}", port.api_status(), portnum);
+        return -1;
+    }
+
+    PortRequestMsg          req_msg;
+    PortResponseMsg         rsp_msg;
+    ClientContext           context;
+    Status                  status;
+
+    auto req = req_msg.add_request();
+    req->CopyFrom(port.spec());
+    req->set_admin_state((port::PortAdminState)cfg.state);
+    req->set_port_speed(PortSpeedEnum(cfg.speed));
+    req->set_mtu(cfg.mtu);
+    req->set_auto_neg_enable(cfg.an_enable);
+    req->set_fec_type((port::PortFecType)cfg.fec_type);
+    req->set_pause((port::PortPauseType)cfg.pause_type);
+    req->set_loopback_mode((port::PortLoopBackMode)cfg.loopback_mode);
+    status = port_stub_->PortUpdate(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC update status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+
+    auto resp = rsp_msg.response(0);
+    if (resp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("PortUpdate API status {} port {}", resp.api_status(), portnum);
+        return -1;
+    }
+
+    NIC_FUNC_DEBUG("{}: state {} speed {} mtu {} "
+        "an_enable {} fec_type {} pause_type {} loopback_mode {}",
+        portnum, cfg.state, cfg.speed, cfg.mtu,
+        cfg.an_enable, cfg.fec_type, cfg.pause_type, cfg.loopback_mode);
 
     return (0);
 }

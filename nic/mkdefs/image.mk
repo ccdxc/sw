@@ -74,4 +74,4 @@ build-image: build-squashfs
 firmware: build-image
 	cp ${NICDIR}/buildroot/output/images/naples_fw.tar \
 		${NICDIR}/naples_fw_${SW_VERSION}.tar
-	ln -rs ${NICDIR}/naples_fw_${SW_VERSION}.tar ${NICDIR}/naples_fw.tar
+	ln -frs ${NICDIR}/naples_fw_${SW_VERSION}.tar ${NICDIR}/naples_fw.tar

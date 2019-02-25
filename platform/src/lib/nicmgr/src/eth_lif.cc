@@ -300,7 +300,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     admin_qstate_t aq_qstate = {0};
     edma_qstate_t dq_qstate = {0};
 
-    NIC_LOG_DEBUG("{}: CMD_OPCODE_LIF_INIT", hal_lif_info_.name);
+    NIC_LOG_DEBUG("{}: LIF_INIT", hal_lif_info_.name);
 
     if (state == LIF_STATE_CREATED) {
 
@@ -510,9 +510,11 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     admin_qstate_t aq_qstate = {0};
     edma_qstate_t dq_qstate = {0};
 
-    NIC_LOG_DEBUG("{}: CMD_OPCODE_LIF_RESET", hal_lif_info_.name);
+    NIC_LOG_DEBUG("{}: LIF_RESET", hal_lif_info_.name);
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (state == LIF_STATE_CREATED ||
+        state == LIF_STATE_INITING ||
+        state == LIF_STATE_RESET) {
         NIC_LOG_WARN("{}: {} + RESET => {}", hal_lif_info_.name,
             lif_state_to_str(state),
             lif_state_to_str(state));
@@ -1185,10 +1187,14 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     // Init the notify block
     notify_block->eid = 1;
     if (spec->uplink_port_num) {
-        port_status_t port_status;
+        hal_port_config_t port_config = {0};
+        hal_port_status_t port_status = {0};
+        hal->PortConfigGet(spec->uplink_port_num, port_config);
         hal->PortStatusGet(spec->uplink_port_num, port_status);
-        notify_block->link_status = port_status.oper_status;
-        notify_block->link_speed = port_status.oper_status ? port_status.port_speed : 0;
+        notify_block->link_status = port_status.status;
+        notify_block->link_speed =  port_status.speed ? port_status.speed : port_config.speed;
+        memcpy(&notify_block->port_status, &port_status, sizeof (port_status));
+        memcpy(&notify_block->port_config, &port_config, sizeof (port_config));
     } else {
         notify_block->link_status = true;
         notify_block->link_speed = 1000; // 1 Gbps
@@ -2077,9 +2083,9 @@ EthLif::HalEventHandler(bool status)
 }
 
 void
-EthLif::LinkEventHandler(port_status_t *evd)
+EthLif::LinkEventHandler(hal_port_status_t *evd)
 {
-    if (spec->uplink_port_num != evd->port_id) {
+    if (spec->uplink_port_num != evd->id) {
         return;
     }
 
@@ -2089,18 +2095,21 @@ EthLif::LinkEventHandler(port_status_t *evd)
         NIC_LOG_INFO("{}: {} + {} => {}",
             hal_lif_info_.name,
             lif_state_to_str(state),
-            evd->oper_status ? "LINK_UP" : "LINK_DN",
+            (evd->status == 1) ? "LINK_UP" : "LINK_DN",
             lif_state_to_str(state));
         return;
     }
 
     // Update the local notify block
+    hal_port_config_t port_config = {0};
+    hal_port_status_t port_status = {0};
+    hal->PortConfigGet(spec->uplink_port_num, port_config);
+    hal->PortStatusGet(spec->uplink_port_num, port_status);
+    notify_block->link_status = port_status.status;
+    notify_block->link_speed =  port_status.speed ? port_status.speed : port_config.speed;
+    memcpy(&notify_block->port_status, &port_status, sizeof (port_status));
+    memcpy(&notify_block->port_config, &port_config, sizeof (port_config));
     ++notify_block->eid;
-    notify_block->link_status = evd->oper_status;
-    notify_block->link_error_bits = 0;
-    notify_block->phy_type = 0;
-    notify_block->link_speed = evd->oper_status ? evd->port_speed : 0;
-    notify_block->autoneg_status = 0;
     ++notify_block->link_flap_count;
     WRITE_MEM(notify_block_addr, (uint8_t *)notify_block, sizeof(struct notify_block), 0);
 
@@ -2117,10 +2126,10 @@ EthLif::LinkEventHandler(port_status_t *evd)
     struct link_change_event msg = {
         .eid = notify_block->eid,
         .ecode = EVENT_OPCODE_LINK_CHANGE,
-        .link_status = evd->oper_status,
+        .link_status = port_status.status,
         .link_error_bits = 0,
         .phy_type = 0,
-        .link_speed = evd->port_speed,
+        .link_speed = port_status.speed,
         .autoneg_status = 0,
     };
 
@@ -2143,13 +2152,12 @@ EthLif::LinkEventHandler(port_status_t *evd)
 
     // FIXME: Wait for completion
 
+    state = (port_status.status == 1) ? LIF_STATE_UP : LIF_STATE_DOWN;
     NIC_LOG_INFO("{}: {} + {} => {}",
         hal_lif_info_.name,
         lif_state_to_str(state),
-        evd->oper_status ? "LINK_UP" : "LINK_DN",
-        evd->oper_status ? lif_state_to_str(LIF_STATE_UP) : lif_state_to_str(LIF_STATE_DOWN));
-
-    state = evd->oper_status ? LIF_STATE_UP : LIF_STATE_DOWN;
+        (port_status.status == 1) ? "LINK_UP" : "LINK_DN",
+        lif_state_to_str(state));
 }
 
 void

@@ -71,4 +71,37 @@ typedef enum {
     HAL_IRISC_RET_FAIL
 } hal_irisc_ret_t;
 
+/**
+ * Transceiver Status information
+ */
+typedef struct __attribute__((packed)) {
+    uint8_t     state;
+    uint8_t     phy;
+    uint16_t    pid;
+    uint8_t     sprom[256];
+} hal_xcvr_status_t;
+
+/**
+ * Port Config information
+ */
+typedef struct __attribute__((packed)) {
+    uint32_t    speed;
+    uint32_t    mtu;
+    uint8_t     state;
+    uint8_t     an_enable;
+    uint8_t     fec_type;
+    uint8_t     pause_type;
+    uint8_t     loopback_mode;
+} hal_port_config_t;
+
+/**
+ * Port Status information
+ */
+typedef struct __attribute__((packed)) {
+    uint32_t           speed;
+    uint8_t            id;
+    uint8_t            status;
+    hal_xcvr_status_t  xcvr;
+} hal_port_status_t;
+
 #endif  /* __HAL_TYPES_HPP__ */

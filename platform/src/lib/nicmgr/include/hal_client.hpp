@@ -138,15 +138,6 @@ typedef void (*accel_rgroup_rmetrics_rsp_cb_t)(void *user_ctx,
                                                const accel_rgroup_rmetrics_rsp_t& indices);
 
 /**
- * Port Status information
- */
-typedef struct {
-    uint32_t    port_id;
-    uint32_t    port_speed;
-    bool        oper_status;
-} port_status_t;
-
-/**
  * Client for interacting with HAL
  */
 class HalClient {
@@ -197,7 +188,12 @@ public:
                             uint32_t key_size);
 
   /* Port APIs */
-  int PortStatusGet(uint32_t portnum, port_status_t &pi);
+  int PortStatusGet(uint8_t portnum, hal_port_status_t &st);
+  int PortConfigGet(uint8_t portnum, hal_port_config_t &cfg);
+  int PortConfigSet(uint8_t portnum, hal_port_config_t &cfg);  
+
+  static port::PortSpeed PortSpeedEnum(uint32_t speed);
+  static uint32_t PortSpeedInMbps(port::PortSpeed speed_enum);
 
   /* State */
   map<uint64_t, Lif*> eth_lif_map;

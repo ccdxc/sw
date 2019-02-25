@@ -96,39 +96,29 @@ error port_status_handler::update_port_status(PortStatusPtr port) {
     // create port status object
     if (!devmgr) {
         NIC_LOG_ERR("devmgr ptr is null");
-        return error::OK();    // TODO: rameshp, pleaes fix this ???
+        return error::OK();
     }
 
-    port_status_t evd = {0};
-    evd.port_id = port->mutable_key_or_handle()->port_id();
-    evd.oper_status = (port->oper_status() == port::PortOperStatus::PORT_OPER_STATUS_UP);
+    hal_port_status_t st = {0};
 
-    switch (port->port_speed()) {
-        case port::PortSpeed::PORT_SPEED_1G:
-            evd.port_speed = 1000;
-            break;
-        case port::PortSpeed::PORT_SPEED_10G:
-            evd.port_speed = 10000;
-            break;
-        case port::PortSpeed::PORT_SPEED_25G:
-            evd.port_speed = 25000;
-            break;
-        case port::PortSpeed::PORT_SPEED_40G:
-            evd.port_speed = 40000;
-            break;
-        case port::PortSpeed::PORT_SPEED_50G:
-            evd.port_speed = 50000;
-            break;
-        case port::PortSpeed::PORT_SPEED_100G:
-            evd.port_speed = 100000;
-            break;
-        default:
-            evd.port_speed = 0;
-    }
+    st.id = port->key_or_handle().port_id();
+    st.status = port->oper_status();
+    NIC_FUNC_DEBUG("{}: port_speed {}", port->key_or_handle().port_id(), port->port_speed());
+    st.speed = HalClient::PortSpeedInMbps(port->port_speed());
+    st.xcvr.state = port->xcvr_status().state();
+    st.xcvr.pid = port->xcvr_status().pid();
+    st.xcvr.phy = port->xcvr_status().cable_type();
+    memcpy(st.xcvr.sprom,
+        port->xcvr_status().xcvr_sprom().c_str(),
+        MIN(port->xcvr_status().xcvr_sprom().size(),
+        sizeof (st.xcvr.sprom)));
 
-    NIC_LOG_DEBUG("PortStatus: port {} status {} speed {}",
-        evd.port_id, evd.oper_status, evd.port_speed);
-    devmgr->LinkEventHandler(&evd);
+    NIC_FUNC_DEBUG("id {} status {} speed {} "
+        " xcvr.state {} xcvr.phy {} xcvr.pid {}",
+        st.id, st.status, st.speed,
+        st.xcvr.state, st.xcvr.phy, st.xcvr.pid);
+
+    devmgr->LinkEventHandler(&st);
 
     return error::OK();
 }

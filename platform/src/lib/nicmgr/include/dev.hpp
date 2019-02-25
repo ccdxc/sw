@@ -29,6 +29,8 @@
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 
 
+#define VERSION_FILE        "/nic/etc/VERSION.json"
+
 enum {
     NICMGR_THREAD_ID_MIN           = 0,
     NICMGR_THREAD_ID_DELPHI_CLIENT = 1,
@@ -151,7 +153,7 @@ public:
     Device *GetDevice(std::string name);
 
     void HalEventHandler(bool is_up);
-    void LinkEventHandler(port_status_t *evd);
+    void LinkEventHandler(hal_port_status_t *evd);
 
     void CreateUplinkVRFs();
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
