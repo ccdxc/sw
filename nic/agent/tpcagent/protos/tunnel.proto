@@ -11,6 +11,10 @@ import public "gogo.proto";
 import public "meta/meta.proto";
 import public "types/types.proto";
 
+service TunnelSvc {
+  rpc TunnelCreate (TunnelSpec) returns (TunnelStatus) {}
+}
+
 // Encapsulation types
 enum TunnelEncapType {
   TUNNEL_ENCAP_NONE            = 0;

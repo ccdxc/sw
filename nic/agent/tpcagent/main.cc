@@ -6,7 +6,14 @@
 #include <getopt.h>
 #include <limits.h>
 #include <string>
+#include "svc/batch.hpp"
+#include "svc/switch.hpp"
 #include "svc/pcn.hpp"
+#include "svc/subnet.hpp"
+#include "svc/tunnel.hpp"
+#include "svc/route.hpp"
+#include "svc/vnic.hpp"
+#include "svc/mapping.hpp"
 
 using std::string;
 using grpc::Server;
@@ -21,7 +28,15 @@ static void
 svc_reg (void)
 {
     ServerBuilder     *server_builder;
+    BatchSvcImpl      batch_svc;
+    SwitchSvcImpl     switch_svc;
     PCNSvcImpl        pcn_svc;
+    SubnetSvcImpl     subnet_svc;
+    TunnelSvcImpl     tunnel_svc;
+    RouteSvcImpl      route_svc;
+    VnicSvcImpl       vnic_svc;
+    MappingSvcImpl    mapping_svc;
+
 
     // do gRPC initialization
     grpc_init();
@@ -32,7 +47,16 @@ svc_reg (void)
     server_builder->AddListeningPort(g_grpc_server_addr,
                                      grpc::InsecureServerCredentials());
 
+    // register for all the services
+    server_builder->RegisterService(&batch_svc);
+    server_builder->RegisterService(&switch_svc);
     server_builder->RegisterService(&pcn_svc);
+    server_builder->RegisterService(&subnet_svc);
+    server_builder->RegisterService(&tunnel_svc);
+    server_builder->RegisterService(&route_svc);
+    server_builder->RegisterService(&vnic_svc);
+    server_builder->RegisterService(&mapping_svc);
+
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
     server->Wait();
 }

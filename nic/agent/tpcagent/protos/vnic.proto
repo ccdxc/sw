@@ -11,6 +11,10 @@ import public "gogo.proto";
 import "meta/meta.proto";
 import "types/types.proto";
 
+service VnicSvc {
+  rpc VnicCreate (VnicSpec) returns (VnicStatus) {}
+}
+
 // VNIC specification
 // NOTE: Vnic ids are not scoped under PCN or subnet, they are globally
 //       unique across PCNs

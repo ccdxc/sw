@@ -11,6 +11,10 @@ import public "gogo.proto";
 import "meta/meta.proto";
 import "types/types.proto";
 
+service MappingSvc {
+  rpc MappingCreate (MappingSpec) returns (MappingStatus) {}
+}
+
 // MappingKey uniquley identifies the IP in the entire fabric
 message MappingKey {
   // private cloud network mapping belongs to

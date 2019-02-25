@@ -9,6 +9,9 @@ package types;
 
 import "gogo.proto";
 
+// Empty message
+message Empty {}
+
 // IP address families
 enum IPAF {
   IP_AF_NONE  = 0;

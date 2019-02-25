@@ -11,6 +11,10 @@ import public "gogo.proto";
 import "meta/meta.proto";
 import "types/types.proto";
 
+service RouteSvc {
+  rpc RouteTableCreate (RouteTableSpec) returns (RouteTableStatus) {}
+}
+
 // route object
 message Route {
   types.IPPrefix  Prefix  = 1 [(gogoproto.nullable) = false];

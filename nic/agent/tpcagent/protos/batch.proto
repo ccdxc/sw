@@ -9,6 +9,13 @@ package tpc;
 
 import public "gogo.proto";
 import "meta/meta.proto";
+import "types/types.proto";
+
+service BatchSvc {
+  rpc BatchStart (BatchSpec) returns (BatchStatus) {}
+  rpc BatchCommit(types.Empty) returns (types.Empty) {}
+  rpc BatchAbort(types.Empty) returns (types.Empty) {}
+}
 
 // Tunnel configuration
 message BatchSpec {
