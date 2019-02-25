@@ -34,19 +34,55 @@ const char *sonic_bus_info(struct sonic *sonic)
 #ifndef __FreeBSD__
 int sonic_bus_get_irq(struct sonic *sonic, unsigned int num)
 {
-	return pci_irq_vector(sonic->pdev, num);
+#ifdef HAVE_PCI_IRQ_API
+        return pci_irq_vector(sonic->pdev, num);
+#else
+        return sonic->msix[num].vector;
+#endif
+
 }
 
 
 int sonic_bus_alloc_irq_vectors(struct sonic *sonic, unsigned int nintrs)
 {
-	return pci_alloc_irq_vectors(sonic->pdev, nintrs, nintrs,
-				     PCI_IRQ_MSIX);
+
+#ifdef HAVE_PCI_IRQ_API
+        return pci_alloc_irq_vectors(sonic->pdev, nintrs, nintrs,
+                                     PCI_IRQ_MSIX);
+#else
+        int err;
+        int i;
+
+        if (sonic->msix)
+                return -EBUSY;
+
+        sonic->msix = devm_kzalloc(sonic->dev,
+                                   sizeof(*sonic->msix) * nintrs, GFP_KERNEL);
+        if (!sonic->msix)
+                return -ENOMEM;
+        for (i = 0; i < nintrs; i++)
+                sonic->msix[i].entry = i;
+        err = pci_enable_msix_exact(sonic->pdev, sonic->msix, nintrs);
+        if (err < 0) {
+                devm_kfree(sonic->dev, sonic->msix);
+                sonic->msix = NULL;
+                return err;
+        }
+        return nintrs;
+#endif
+
 }
 
 void sonic_bus_free_irq_vectors(struct sonic *sonic)
 {
-	pci_free_irq_vectors(sonic->pdev);
+
+#ifdef HAVE_PCI_IRQ_API
+        pci_free_irq_vectors(sonic->pdev);
+#else
+        pci_disable_msix(sonic->pdev);
+        devm_kfree(sonic->dev, sonic->msix);
+        sonic->msix = NULL;
+#endif
 }
 #else
 int sonic_bus_get_irq(struct sonic *sonic, unsigned int num)

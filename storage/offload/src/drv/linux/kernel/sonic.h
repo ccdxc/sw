@@ -8,6 +8,9 @@
 #define _SONIC_H_
 
 #include <linux/jhash.h>
+#ifndef __FreeBSD__
+#include "kcompat.h"
+#endif
 #include "osal.h"
 #include "sonic_dev.h"
 #include "sonic_debugfs.h"
@@ -90,6 +93,9 @@ struct sonic {
 	unsigned int num_per_core_resources;
 	unsigned int nintrs;
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
+#ifndef HAVE_PCI_IRQ_API
+        struct msix_entry *msix;
+#endif
 #ifdef CONFIG_DEBUG_FS
 #ifdef DEBUGFS_TEST_API
 	void *scratch_bufs[NUM_SCRATCH_BUFS];
