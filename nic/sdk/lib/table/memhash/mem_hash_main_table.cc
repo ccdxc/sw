@@ -319,13 +319,13 @@ mem_hash_main_table::iterate_(mem_hash_api_context *ctx) {
     
     ret = mem_hash_base_table::iterate_(ctx);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("main table iteration failed. ret:%d", ret);
+        MEMHASH_TRACE_ERR("main table iteration failed. ret:%d", ret);
         return ret;
     }
 
     ret = hint_table_->iterate_(ctx);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("hint table iteration failed. ret:%d", ret);
+        MEMHASH_TRACE_ERR("hint table iteration failed. ret:%d", ret);
         return ret;
     }
 

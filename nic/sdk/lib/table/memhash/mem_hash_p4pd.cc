@@ -34,7 +34,7 @@ static struct memhash_p4pd_api_stats_s {
 
 void
 mem_hash_p4pd_stats_print() {
-    SDK_TRACE_DEBUG("hwfield set:%d get:%d "
+    MEMHASH_TRACE_DEBUG("hwfield set:%d get:%d "
                     "appdata set:%d get:%d "
                     "entry read:%d install:%d "
                     "hwkey build:%d",

@@ -203,12 +203,12 @@ mem_hash::genhash_(sdk_table_api_params_t *params) {
                                                params->key, NULL,
                                                g_hw_key, NULL);
     SDK_ASSERT(p4pdret == P4PD_SUCCESS);
-    MEMHASH_TRACE_DEBUG("HW Key: [%s]",
-                        mem_hash_utils_rawstr(g_hw_key, props_->hw_key_len));
     hash_32b = crc32gen_->compute_crc(g_hw_key, props_->hw_key_len,
                                       props_->hash_poly);
     params->hash_32b = hash_32b;
     params->hash_valid = true;
+    MEMHASH_TRACE_PRINT("HW Key: [%s] Hash:%#x",
+                        mem_hash_utils_rawstr(g_hw_key, props_->hw_key_len), hash_32b);
 
     return SDK_RET_OK;
 }
@@ -226,7 +226,7 @@ mem_hash::create_api_context_(sdk_table_api_op_t op,
     if (SDK_TABLE_API_OP_IS_CRUD(op)) {
         ret = genhash_(params);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("failed to generate hash, ret:%d", ret);
+            MEMHASH_TRACE_ERR("failed to generate hash, ret:%d", ret);
             return ret;
         }
     }
@@ -499,13 +499,13 @@ mem_hash::iterate(sdk_table_api_params_t *params) {
     ret = create_api_context_(sdk::table::SDK_TABLE_API_ITERATE,
                               params, (void **)&ctx);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("failed to create api context. ret:%d", ret);
+        MEMHASH_TRACE_ERR("failed to create api context. ret:%d", ret);
         goto iterate_return;
     }
 
     ret = static_cast<mem_hash_main_table*>(main_table_)->iterate_(ctx);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("main table iteration failed. ret:%d", ret);
+        MEMHASH_TRACE_ERR("main table iteration failed. ret:%d", ret);
     }
 
     mem_hash_api_context::destroy(ctx);

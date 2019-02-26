@@ -55,17 +55,17 @@ create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
-    ret = g_flow_test_obj->create_flows(num_tcp, 6);
+    ret = g_flow_test_obj->create_flows(num_tcp, 6, 0, 0);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
-    ret = g_flow_test_obj->create_flows(num_udp, 17);
+    ret = g_flow_test_obj->create_flows(num_udp, 17, 0, 0);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
-    ret = g_flow_test_obj->create_flows(num_icmp, 1);
+    ret = g_flow_test_obj->create_flows(num_icmp, 1, 0, 0);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -76,7 +76,7 @@ create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp)
 
 TEST_F(flow_gtest, flows_create) {
     g_flow_test_obj = new flow_test();
-    g_flow_test_obj->generate_dummy_ep_pairs();
+    g_flow_test_obj->generate_dummy_epdb();
     create_flows(PERF_TEST_SCALE, 0, 0);
     delete g_flow_test_obj;
 }

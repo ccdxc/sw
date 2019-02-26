@@ -453,23 +453,30 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
 }
 
 static sdk_ret_t
-create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp)
+create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp,
+              uint16_t sport_base, uint16_t dport_base)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
-    ret = g_flow_test_obj->create_flows(num_tcp, 6);
-    if (ret != SDK_RET_OK) {
-        return ret;
+    if (num_tcp) {
+        ret = g_flow_test_obj->create_flows(num_tcp, 6, sport_base, dport_base);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
-    ret = g_flow_test_obj->create_flows(num_udp, 17);
-    if (ret != SDK_RET_OK) {
-        return ret;
+    if (num_udp) {
+        ret = g_flow_test_obj->create_flows(num_udp, 17, sport_base, dport_base);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
-    ret = g_flow_test_obj->create_flows(num_icmp, 1);
-    if (ret != SDK_RET_OK) {
-        return ret;
+    if (num_icmp) {
+        ret = g_flow_test_obj->create_flows(num_icmp, 1, 0, 0);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
     return SDK_RET_OK;
 }
@@ -486,7 +493,8 @@ create_objects (void)
     string pfxstr;
     sdk_ret_t ret = SDK_RET_OK;
     uint32_t num_tcp, num_udp, num_icmp;
-
+    uint16_t sport_base, dport_base;
+    
     g_flow_test_obj = new flow_test();
 
     // parse the config and create objects
@@ -521,10 +529,11 @@ create_objects (void)
                 ret = create_teps(num_teps, &teppfx);
             } else if (kind == "route-table") {
                 num_routes = std::stol(obj.second.get<std::string>("count"));
+                num_vcns = std::stol(obj.second.get<std::string>("num_vcns", "1024"));
                 pfxstr = obj.second.get<std::string>("prefix-start");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &routepfx) == 0);
-                ret = create_route_tables(num_teps, 1024, 1, num_routes, &teppfx,
-                                    &routepfx);
+                ret = create_route_tables(num_teps, num_vcns, 1, num_routes, &teppfx,
+                                          &routepfx);
             } else if (kind == "security-policy") {
                 num_rules = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("vcn-prefix");
@@ -558,7 +567,9 @@ create_objects (void)
                 num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
                 num_udp = std::stol(obj.second.get<std::string>("num_udp"));
                 num_icmp = std::stol(obj.second.get<std::string>("num_icmp"));
-                ret = create_flows(num_tcp, num_udp, num_icmp);
+                sport_base = std::stol(obj.second.get<std::string>("sport_base"));
+                dport_base = std::stol(obj.second.get<std::string>("dport_base"));
+                ret = create_flows(num_tcp, num_udp, num_icmp, sport_base, dport_base);
             }
 
             if (ret != SDK_RET_OK) {

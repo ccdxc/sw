@@ -98,8 +98,8 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
         }
     }
 
-    MEMHASH_TRACE_DEBUG("%s: HW Write: TableID:%d TableIndex:%d", ctx->idstr(),
-                    ctx->table_id, ctx->table_index);
+    MEMHASH_TRACE_PRINT("%s: HW Write: TableID:%d TableIndex:%d", ctx->idstr(),
+                        ctx->table_id, ctx->table_index);
     PRINT_SW_ALL(ctx);
 
     p4pdret = mem_hash_p4pd_entry_install(ctx->table_id, ctx->table_index,
