@@ -66,7 +66,7 @@ static int ionic_check_link ( struct net_device *netdev ) {
 	link_up = ionic->ionic_lif->notifyblock->link_status;
 	if (link_up != ionic->link_status) {
 		ionic->link_status = link_up;
-		if (link_up) {
+		if (link_up == PORT_OPER_STATUS_UP) {
 			netdev_link_up ( netdev );
 		} else {
 			netdev_link_down ( netdev );
