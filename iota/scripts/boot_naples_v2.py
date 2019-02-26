@@ -85,13 +85,6 @@ parser.add_argument('--skip-driver-install', dest='skip_driver_install',
                     action='store_true', help='Skips host driver install')
 parser.add_argument('--esx-script', dest='esx_script',
                     default="", help='ESX start up script')
-parser.add_argument('--esx-bld-vm-username', dest='esx_bld_vm_username',
-                    default="root", help='esx build vm username')
-parser.add_argument('--esx-bld-vm-password', dest='esx_bld_vm_password',
-                    default="vmware", help='esx build vm password')
-parser.add_argument('--esx-bld-vm', dest='esx_bld_vm',
-                    default="esx-vib-wb1.pensando.io", help='esx build vm')
-
 
 
 GlobalOptions = parser.parse_args()
@@ -541,14 +534,6 @@ class HostManagement(EntityManagement):
 class EsxHostManagement(HostManagement):
     def __init__(self, ipaddr):
         HostManagement.__init__(self, ipaddr)
-        ssh=paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(GlobalOptions.esx_bld_vm,  '22', GlobalOptions.esx_bld_vm_username,GlobalOptions.esx_bld_vm_password)
-        self.__bld_vm_ssh_handle = ssh
-        self.__bld_vm_ssh_host = "%s@%s" % (GlobalOptions.esx_bld_vm_username, GlobalOptions.esx_bld_vm)
-        self.__bld_vm_scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % GlobalOptions.esx_bld_vm_password
-        self.__bld_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % GlobalOptions.esx_bld_vm_password
-        return
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_COPY_FAILED, "ESX ctrl vm copy failed")
     def ctrl_vm_copyin(self, src_filename, entity_dir, naples_dir = None):
@@ -591,45 +576,6 @@ class EsxHostManagement(HostManagement):
             raise Exception("Cmd run failed "  + cmd)
         return retcode
 
-    @_exceptionWrapper(_errCodes.HOST_ESX_BUILD_VM_COPY_FAILED, "Copy in failed")
-    def bld_vm_copyin(self, src_filename, dst_dir):
-        dest_filename = dst_dir + "/" + os.path.basename(src_filename)
-        cmd = "%s %s %s:%s" % (self.__bld_vm_scp_pfx, src_filename,
-                               self.__bld_vm_ssh_host, dest_filename)
-        print(cmd)
-        ret = os.system(cmd)
-        if ret:
-            raise Exception("Copy to build VM failed")
-
-        self.bld_vm_run("sync")
-        ret = self.bld_vm_run("ls -l %s" % dest_filename)
-        if ret:
-            raise Exception("Copy to build VM failed")
-        return 0
-
-    @_exceptionWrapper(_errCodes.HOST_ESX_BUILD_VM_COPY_FAILED, "Copy out failed")
-    def bld_vm_copyout(self, src_filename, dst_dir):
-        dest_filename = dst_dir + "/" + os.path.basename(src_filename)
-        cmd = "%s %s:%s %s" % (self.__bld_vm_scp_pfx, self.__bld_vm_ssh_host, src_filename,
-                            dst_dir)
-        print(cmd)
-        ret = os.system(cmd)
-        if ret:
-            raise Exception("Copy from build VM failed")
-        return 0
-
-    @_exceptionWrapper(_errCodes.HOST_ESX_BUILD_VM_RUN_FAILED, "Driver build failed")
-    def bld_vm_run(self, command, background = False, ignore_result = False):
-        if background:
-            cmd = "%s -f %s \"%s\"" % (self.__bld_vm_ssh_pfx, self.__bld_vm_ssh_host, command)
-        else:
-            cmd = "%s %s \"%s\"" % (self.__bld_vm_ssh_pfx, self.__bld_vm_ssh_host, command)
-        print(cmd)
-        retcode = os.system(cmd)
-        if retcode and not ignore_result:
-            raise Exception("Running cmd : {} failed".format(cmd))
-        return retcode
-
     def __check_naples_deivce(self):
         ret = self.RunSshCmd("lspci | grep Pensando")
         if ret:
@@ -670,7 +616,6 @@ class EsxHostManagement(HostManagement):
 
     @_exceptionWrapper(_errCodes.HOST_DRIVER_INSTALL_FAILED, "ESX Driver install failed")
     def __install_drivers(self, pkg):
-        pkg = self.__build_drivers(pkg)
         # Install IONIC driver package.
         #ESX removes folder after reboot, add it again
         self.RunSshCmd("rm -rf %s" % HOST_NAPLES_DIR)
@@ -761,55 +706,6 @@ class EsxHostManagement(HostManagement):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(ip,port,username,password)
         self.__ssh_handle = ssh
-
-
-    @_exceptionWrapper(_errCodes.HOST_ESX_DRIVER_BUILD_FAILED, "ESX driver build failed")
-    def __build_drivers(self, pkg):
-        #First copy the driver to tmp location
-        tmp_driver = "/tmp/" + os.path.basename(pkg) + "_" + GlobalOptions.host_ip
-        cp_driver_cmd = ["cp", pkg, tmp_driver]
-        proc_hdl = subprocess.Popen(cp_driver_cmd)
-        proc_hdl.wait()
-        if proc_hdl.returncode:
-            raise Exception("Copy to driver failed")
-        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("find  /opt/vmware/  -type d  -name   nativeddk-6.5*")
-        exit_status = stdout.channel.recv_exit_status()
-        outlines=stdout.readlines()
-        print ("Native DDK dir out ", outlines)
-        if len(outlines) != 1:
-            print ("Invalid output when discovering native ddk", outlines)
-            raise Exception("Invalid output when discovering native ddk")
-        dst_dir = outlines[0].strip("\n") + "/src/" + os.path.basename(tmp_driver) + "_dir"
-
-        self.__bld_vm_ssh_handle.exec_command("rm -rf " + dst_dir + " && mkdir -p " + dst_dir + " && sync ")
-        # Copy the driver package
-        self.bld_vm_copyin(tmp_driver, dst_dir = dst_dir)
-        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + " && tar -xvf " + os.path.basename(tmp_driver))
-        exit_status = stdout.channel.recv_exit_status()
-        outlines=stdout.readlines()
-        if exit_status != 0:
-            print ("Failed to extract drivers", outlines)
-            raise Exception("Failed to extract drivers")
-
-        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + "/drivers-esx-eth && ./build.sh" )
-        exit_status = stdout.channel.recv_exit_status()
-        outlines=stdout.readlines()
-        if exit_status != 0:
-            msg = "Driver build failed " + ''.join(outlines)
-            print (msg)
-            raise Exception(msg)
-
-        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + " && tar -cJf " + os.path.basename(tmp_driver) + " drivers-esx-eth")
-        exit_status = stdout.channel.recv_exit_status()
-        outlines=stdout.readlines()
-        if exit_status != 0:
-            msg = "Failed to create tar file " +  outlines
-            print (msg)
-            raise Exception(msg)
-
-        dst_file = dst_dir + "/" + os.path.basename(tmp_driver)
-        self.bld_vm_copyout(dst_file, dst_dir = os.path.dirname(tmp_driver))
-        return tmp_driver
 
     @_exceptionWrapper(_errCodes.HOST_ESX_REBOOT_FAILED, "ESX reboot failed")
     def Reboot(self, dryrun = False):

@@ -22,6 +22,7 @@ TOP=$(readlink -f "$(dirname "$0")/../..")
 
 # Sources for generation
 : ${SCRIPTS_SRC:="$TOP/platform/tools/drivers-esx"}
+: ${VIB_GEN:="$TOP/platform/tools/gen_esx_vib.py"}
 : ${VIB:="$TOP/platform/drivers/esxi/vib/"}
 
 # Products generated
@@ -75,3 +76,6 @@ rsync -r --delete --delete-excluded --copy-links \
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."
 tar -cJ --exclude=.git -f "$GEN_PKG" "$(basename "$GEN_DIR")"
+
+#Finally generate vib too
+"$VIB_GEN" --drivers-pkg $GEN_PKG
