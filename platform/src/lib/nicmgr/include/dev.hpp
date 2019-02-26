@@ -162,6 +162,7 @@ public:
 
     int GenerateQstateInfoJson(std::string qstate_info_file);
     static string ParseDeviceConf(string input_arg);
+    PdClient *GetPdClient(void) { return pd; }
 
 private:
     static DeviceManager *instance;

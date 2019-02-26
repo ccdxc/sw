@@ -5,8 +5,11 @@
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/sdk/storage/storage_seq_common.h"
+#include "pd_client.hpp"
 
 namespace qstate_if {
+
+PdClient *nicmgr_pd_client;
 
 int get_qstate_addr(int lif, int qtype, int qid, uint64_t *qaddr) {
 
@@ -37,7 +40,8 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   // Get the dst_qaddr only if destination is used in P4+
   if (dst_valid) {
     if (hal_if::get_lif_qstate_addr(dst_lif, dst_qtype, dst_qid, &dst_qaddr) < 0) {
-      printf("Failed to get lif_qstate addr \n");
+      printf("Failed to get lif_qstate addr for lif/qtype/qid %u/%u/%u\n",
+             dst_lif, dst_qtype, dst_qid);
       return -1;
     }
   }
@@ -79,7 +83,8 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   //utils::dump(q_state);
 
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
-    printf("Failed to set lif_qstate addr \n");
+    printf("Failed to set lif_qstate addr for lif/qtype/qid %u/%u/%u\n",
+           src_lif, src_qtype, src_qid);
     return -1;
   }
 
@@ -103,6 +108,8 @@ int setup_seq_q_state(int src_lif, int src_qtype,
   storage_seq_qstate_t q_state;
   uint8_t pc_offset;
   uint64_t next_pc = 0;
+  uint64_t qaddr;
+  int ret;
 
   bzero(&q_state, sizeof(q_state));
 
@@ -143,15 +150,35 @@ int setup_seq_q_state(int src_lif, int src_qtype,
 
   //utils::dump(q_state);
 
-  if (hal_if::set_lif_qstate_size(src_lif, src_qtype, src_qid, (uint8_t *)&q_state, sizeof(q_state)) < 0) {
-    printf("Failed to set lif_qstate addr \n");
-    return -1;
-  }
+  if (nicmgr_pd_client) {
 
-  uint64_t qaddr;
-  if (get_qstate_addr(src_lif, src_qtype, src_qid, &qaddr) < 0) {
-    printf("Failed to get seq q state address \n");
-    return -1;
+    /*
+     * Seq LIF was created thru nicmgr so we must use its PDClient API
+     * to access the qstate. (The HAL itself was not informed about this LIF).
+     */
+    ret = nicmgr_pd_client->lm_->WriteQState(src_lif, src_qtype, src_qid,
+                                             (uint8_t *)&q_state, sizeof(q_state));
+    if (ret < 0) {
+      printf("Failed to WriteQState for lif/qtype/qid %u/%u/%u\n",
+             src_lif, src_qtype, src_qid);
+      return ret;
+    }
+    qaddr = nicmgr_pd_client->lm_->GetLIFQStateAddr(src_lif, src_qtype, src_qid);
+
+  } else {
+    ret = hal_if::set_lif_qstate_size(src_lif, src_qtype, src_qid,
+                                      (uint8_t *)&q_state, sizeof(q_state));
+    if (ret < 0) {
+      printf("Failed to set lif_qstate for lif/qtype/qid %u/%u/%u\n",
+             src_lif, src_qtype, src_qid);
+      return ret;
+    }
+
+    if (get_qstate_addr(src_lif, src_qtype, src_qid, &qaddr) < 0) {
+      printf("Failed to get lif_qstate for lif/qtype/qid %u/%u/%u\n",
+             src_lif, src_qtype, src_qid);
+      return -1;
+    }
   }
   printf("Seq Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
          qaddr, src_lif, src_qtype, src_qid, next_pc, base_addr);
@@ -189,7 +216,8 @@ int setup_pci_q_state(int src_lif, int src_qtype, int src_qid,
   //utils::dump(q_state);
 
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
-    printf("Failed to set lif_qstate addr \n");
+    printf("Failed to set lif_qstate for lif/qtype/qid %u/%u/%u\n",
+           src_lif, src_qtype, src_qid);
     return -1;
   }
 
@@ -301,7 +329,8 @@ int update_pri_q_state(int src_lif, int src_qtype, int src_qid,
 
   // Write the qstate back
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
-    printf("Failed to set lif_qstate addr \n");
+    printf("Failed to set lif_qstate for lif/qtype/qid %u/%u/%u\n",
+           src_lif, src_qtype, src_qid);
     return -1;
   }
   return 0;

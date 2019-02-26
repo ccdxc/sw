@@ -5,8 +5,6 @@
 #ifndef __STORAGE_SEQ_COMMON_H__
 #define __STORAGE_SEQ_COMMON_H__
 
-#define STORAGE_SEQ_SW_LIF_ID                   1932
-
 /**
  * Storage HBM handle as defined in nic/conf/iris/hbm_mem.json
  */

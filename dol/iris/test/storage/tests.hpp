@@ -21,6 +21,7 @@ DECLARE_string(acc_scale_verify_method);
 DECLARE_bool(rtl);
 DECLARE_bool(with_rtl_skipverify);
 DECLARE_bool(combined);
+DECLARE_string(nicmgr_config_file);
 
 #define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))

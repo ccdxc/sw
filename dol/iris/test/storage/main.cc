@@ -72,9 +72,8 @@ DEFINE_uint64(nvme_scale_iters, 64,
 DEFINE_bool(combined, false,
             "Combined run of storage and network tests");
 
-// Default nicmgr LIF
-DEFINE_uint64(nicmgr_lif, 1,
-              "nicmgr software LIF ID");
+DEFINE_string(nicmgr_config_file, "/sw/platform/src/app/nicmgrd/etc/accel.json",
+              "nicmgr json configuration filename (full path)");
 
 bool run_nvme_dp_tests = false;
 bool run_nvme_dp_scale_tests = false;
@@ -434,7 +433,7 @@ int main(int argc, char**argv) {
             << "\nRTL: " << FLAGS_rtl
             << "\nWith RTL --skipverify in effect: " << FLAGS_with_rtl_skipverify
             << "\nWith combined --combined in effect: " << FLAGS_combined
-            << "\nnicmgr software LIF ID: " << FLAGS_nicmgr_lif
+            << "\nnicmgr json config file: " << FLAGS_nicmgr_config_file
             << std::endl;
 
   // Set the test group based on flags. Default is to allow all.

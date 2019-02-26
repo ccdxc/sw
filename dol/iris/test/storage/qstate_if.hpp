@@ -4,7 +4,17 @@
 #include <stdint.h>
 #include "nic/sdk/storage/storage_seq_common.h"
 
+class PdClient;
+
 namespace qstate_if {
+
+extern PdClient *nicmgr_pd_client;
+
+static inline void
+set_nicmgr_pd_client(PdClient *pd)
+{
+    nicmgr_pd_client = pd;
+}
 
 void write_bit_fields(void *ptr, unsigned start_bit_offset,
                       unsigned size_in_bits, uint64_t value);

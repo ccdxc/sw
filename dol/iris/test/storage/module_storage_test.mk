@@ -12,10 +12,25 @@ MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
                   storage_utils storage_r2n storage_ssd_core \
                   storage_encrypt_only storage_nvme_dp \
                   host_mem storage_qstate_if model_client \
-                  halproto sdkp4utils e2e_driver p4pd_pack_storage_seq \
-                  sdkplatformutils shmmgr logger
-MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
-                  ${NIC_COMMON_LDLIBS} gflags
+                  p4pd_pack_storage_seq \
+                  sdkplatformutils shmmgr logger \
+                  nicmgr hal_api mnet \
+                  pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
+                  intrutils pal misc evutils \
+                  ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \
+                  commonproto nicmgrproto halproto \
+                  delphisdk \
+                  upgrade upgrade_app upgradeutils \
+                  sysmgr \
+                  sdkcapri_csrint sdkcapri_asicrw_if \
+                  sdkasicpd pdcapri pdcommon hal_mock \
+                  sdkp4 sdkp4utils sdkxcvrdriver sdkfru p4pd_${PIPELINE} \
+                  p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
+                  asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}}
+MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \
+                    ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
+                    ${NIC_CAPSIM_LDLIBS} gflags
+MODULE_PIPELINE = iris
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/nic/hal/third-party/grpc/include \
                   ${TOPDIR}/nic/hal/third-party/google/include \

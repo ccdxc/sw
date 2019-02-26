@@ -39,6 +39,7 @@ enum {
  * Queue info
  */
 #define ACCEL_ADMINQ_REQ_QTYPE            2
+#define ACCEL_ADMINQ_ADMIN_QID            0
 #define ACCEL_ADMINQ_REQ_QID              1
 #define ACCEL_ADMINQ_REQ_RING_SIZE        16
 
@@ -177,8 +178,6 @@ static_assert((offsetof(dev_cmd_regs_t, data) % 4) == 0);
 
 #endif /* ACCEL_DEV_CMD_ENUMERATE */
 
-#ifndef _NICMGR_IF_HPP_
-
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 
@@ -289,6 +288,8 @@ public:
     void HalEventHandler(bool status);
 
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    uint64_t devcmd_page_get(void) { return devcmd_mem_addr; }
+    uint64_t devcmddb_page_get(void) { return devcmddb_mem_addr; }
 
     virtual void ThreadsWaitJoin(void);
 
@@ -400,7 +401,5 @@ private:
     void delphi_update(void);
     const char*opcode_to_str(enum cmd_opcode opcode);
 };
-
-#endif /* _NICMGR_IF_HPP_ */
 
 #endif

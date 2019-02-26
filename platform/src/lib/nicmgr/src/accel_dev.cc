@@ -149,7 +149,7 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
 #define ACCEL_RGROUP_GET_CB_HANDLE_CHECK(_handle)                               \
     do {                                                                        \
         if (_handle >= ACCEL_RING_ID_MAX) {                                     \
-            NIC_LOG_ERR("lif-{}: unrecognized ring_handle {}",                   \
+            NIC_LOG_ERR("lif-{}: unrecognized ring_handle {}",                  \
                         accel_pf->hal_lif_info_.hw_lif_id, _handle);            \
         }                                                                       \
     } while (false)
@@ -157,12 +157,12 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
 #define ACCEL_RGROUP_GET_RET_CHECK(_ret_val, _num_rings, _name)                 \
     do {                                                                        \
         if (_ret_val != HAL_RET_OK) {                                           \
-            NIC_LOG_ERR("lif-{}: failed to getv" _name " for ring group {}",     \
+            NIC_LOG_ERR("lif-{}: failed to getv" _name " for ring group {}",    \
                         hal_lif_info_.hw_lif_id, accel_pf_rgroup_name);         \
             return _ret_val;                                                    \
         }                                                                       \
         if (_num_rings < accel_pf_ring_vec.size()) {                            \
-            NIC_LOG_ERR("lif-{}: {} too few num_rings {} expected at least {}",  \
+            NIC_LOG_ERR("lif-{}: {} too few num_rings {} expected at least {}", \
                         hal_lif_info_.hw_lif_id, accel_pf_rgroup_name,          \
                         _num_rings, accel_pf_ring_vec.size());                  \
             return HAL_RET_ERR;                                                 \
@@ -635,13 +635,18 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     rsp->dev.asic_type = sta_ver & 0xf;
     rsp->dev.asic_rev  = (sta_ver >> 4) & 0xfff;
 
-    readKey(SERIALNUMBER_KEY, sn);
-    strncpy0(rsp->dev.serial_num, sn.c_str(), sizeof(rsp->dev.serial_num));
+    if (platform_is_hw(pd->platform_)) {
+        readKey(SERIALNUMBER_KEY, sn);
+        strncpy0(rsp->dev.serial_num, sn.c_str(), sizeof(rsp->dev.serial_num));
 
-    boost::property_tree::ptree ver;
-    boost::property_tree::read_json(VERSION_FILE, ver);
-    strncpy0(rsp->dev.fw_version, ver.get<std::string>("sw.version").c_str(),
-        sizeof(rsp->dev.fw_version));
+        boost::property_tree::ptree ver;
+        boost::property_tree::read_json(VERSION_FILE, ver);
+        strncpy0(rsp->dev.fw_version, ver.get<std::string>("sw.version").c_str(),
+                 sizeof(rsp->dev.fw_version));
+    } else {
+        strncpy0(rsp->dev.serial_num, "sim", sizeof(rsp->dev.serial_num));
+        strncpy0(rsp->dev.fw_version, "0.1.0-sim", sizeof(rsp->dev.fw_version));
+    }
 
     rsp->dev.num_lifs = spec->lif_count;
     memset(&rsp->dev.lif_tbl[0], 0, sizeof(identify_lif_t));

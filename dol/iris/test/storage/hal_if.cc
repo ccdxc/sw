@@ -74,24 +74,22 @@ void init_hal_if() {
 }
 
 // Start with a base lif id and count up
-// TODO: Reconcile with other service lifs
-static uint32_t curr_lif_id = 1900;
+#define STORAGE_DOL_SW_LIF_BASE 1900
+static uint64_t curr_lif_id = STORAGE_DOL_SW_LIF_BASE;
 
-int create_lif(lif_params_t *params, uint64_t *lif_id) {
+int create_lif(lif_params_t *params, uint64_t *ret_lif_id) {
   grpc::ClientContext context;
   intf::LifRequestMsg req_msg;
   intf::LifResponseMsg resp_msg;
 
-  if (!params || !lif_id)
+  if (!params || !ret_lif_id)
     return -1;
 
   auto req = req_msg.add_request();
-  if (params->sw_lif_id != 0) {
-    req->mutable_key_or_handle()->set_lif_id(params->sw_lif_id);
-  } else {
-    req->mutable_key_or_handle()->set_lif_id(curr_lif_id);
-    curr_lif_id++;
+  if (!params->sw_lif_id) {
+    params->sw_lif_id = curr_lif_id++;
   }
+  req->mutable_key_or_handle()->set_lif_id(params->sw_lif_id);
 
   for (int i = 0; i < LIF_MAX_TYPES; i++) {
     if (params->type[i].valid) {
@@ -120,7 +118,7 @@ int create_lif(lif_params_t *params, uint64_t *lif_id) {
 
   // TODO: Check number of responses ? 
   // TODO: Check status
-  *lif_id = resp_msg.response(0).status().hw_lif_id();
+  *ret_lif_id = resp_msg.response(0).status().hw_lif_id();
   return 0;
 }
 
@@ -240,8 +238,10 @@ int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid, uint64_t *qa
   }
 
   // TODO: Check number of responses ?
-  if (resp_msg.resps(0).error_code())
+  if (resp_msg.resps(0).error_code()) {
+    printf("get_lif_qstate_addr error: %d\n", resp_msg.resps(0).error_code());
     return -1;
+  }
 
   *qaddr = resp_msg.resps(0).q_addr();
   return 0;

@@ -2,7 +2,6 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libstorage_nicmgr_if.so
 MODULE_PREREQS  = common_p4plus_rxdma.p4bin common_p4plus_txdma.p4bin
-MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/nicmgr_if.cc
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/nic/hal/third-party/grpc/include \
@@ -19,5 +18,6 @@ MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${BLD_P4GEN_DIR}/common_rxdma_actions/include/ \
                   ${BLD_P4GEN_DIR}/common_txdma_actions/include/ \
                   ${TOPDIR}/nic/sdk/include \
+                  ${TOPDIR}/nic/sdk/platform/utils \
                   ${TOPDIR}/nic/include
 include ${MKDEFS}/post.mk

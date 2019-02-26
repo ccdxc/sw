@@ -15,6 +15,7 @@ namespace nicmgr_if {
 
 int nicmgr_if_reset(void);
 int nicmgr_if_init(void);
+void nicmgr_if_fini(void);
 int nicmgr_if_identify(uint64_t *ret_seq_lif,
                        uint32_t *ret_seq_queues_per_lif,
                        accel_ring_t *ret_accel_ring_tbl = nullptr,

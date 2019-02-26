@@ -53,12 +53,12 @@ targets:
   # area:
   # sub-area:
   # feature:
-  #storage/nicmgr:
-  # commands: ["make", "jobd/storage/nicmgr"]
-  # owners: ["email:piraman@pensando.io"]
-  # area:
-  # sub-area:
-  # feature:
+  storage/nicmgr:
+    commands: ["make", "jobd/storage/nicmgr"]
+    owners: ["email:piraman@pensando.io"]
+    area:
+    sub-area:
+    feature:
   #Test running into locking issues - disabling for now
   #storage/combined:
   # commands: ["make", "jobd/storage/combined"]

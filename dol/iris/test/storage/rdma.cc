@@ -64,7 +64,6 @@ const uint32_t kRDMAQStateSize = 4096;
 const uint32_t kSQType = 3;
 const uint32_t kRQType = 4;
 const uint32_t kCQType = 5;
-const uint32_t kLifID = 109;
 const uint32_t kRdmaPD = 1;
 const uint32_t kVrfID = 11;
 const uint32_t kL2SegmentID = 2;
@@ -80,6 +79,7 @@ const uint32_t kVlanId = 2;
 
 uint64_t pvm_roce_tgt_sq_xlate_addr;
 uint64_t pvm_roce_init_sq_xlate_addr;
+uint32_t g_rdma_lif_id;
 uint64_t g_rdma_hw_lif_id;
 uint64_t g_l2seg_handle;
 uint64_t g_enic1_handle, g_enic2_handle;
@@ -117,10 +117,11 @@ void CreateStubs() {
   nwsec_stub = std::move(NwSecurity::NewStub(hal_channel));
 }
 
-int CreateRDMALIF(uint32_t sw_lif_id) {
+int CreateRDMALIF(void) {
   hal_if::lif_params_t params;
+  int ret;
+
   bzero(&params, sizeof(params));
-  params.sw_lif_id = sw_lif_id;
   // RDMA SQ
   params.type[kSQType].valid = true;
   params.type[kSQType].queue_size = (uint16_t)log2(kRDMAQStateSize);
@@ -153,7 +154,12 @@ int CreateRDMALIF(uint32_t sw_lif_id) {
   params.rdma_max_ahs = kMaxRDMAAhs;
   params.rdma_max_pt_entries = kMaxRDMAPTEntries;
 
-  return hal_if::create_lif(&params, &g_rdma_hw_lif_id);
+  ret = hal_if::create_lif(&params, &g_rdma_hw_lif_id);
+  if (ret == 0) {
+    g_rdma_lif_id = params.sw_lif_id;
+  }
+
+  return ret;
 }
 
 int CreateSecurityProfile(uint64_t *handle) {
@@ -290,17 +296,17 @@ int CreateSession(uint32_t ten_id, uint32_t session_id, uint32_t ip_addr1, uint3
 
 int rdma_p4_init() {
   CreateStubs();
-  if (CreateRDMALIF(kLifID) < 0) return -1;
-  printf("RDMA LIF created\n");
+  if (CreateRDMALIF() < 0) return -1;
+  printf("RDMA LIF %u/%lu created\n", g_rdma_lif_id, g_rdma_hw_lif_id);
   if (CreateSecurityProfile(&g_secprof_hdl) < 0) return -1;
   printf("Security Profile created\n");
   if (CreateVrf(kVrfID, g_secprof_hdl) < 0) return -1;
   printf("Vrf created\n");
   if (CreateL2Segment(kVrfID, kL2SegmentID, &g_l2seg_handle) < 0) return -1;
   printf("L2 segment created\n");
-  if (CreateEnicif(kVrfID, kLifID, kInterfaceID1, kL2SegmentID, kVlanId, kMACAddr1, &g_enic1_handle) < 0) return -1;
+  if (CreateEnicif(kVrfID, g_rdma_lif_id, kInterfaceID1, kL2SegmentID, kVlanId, kMACAddr1, &g_enic1_handle) < 0) return -1;
   printf("ENIC IF1 created\n");
-  if (CreateEnicif(kVrfID, kLifID, kInterfaceID2, kL2SegmentID, kVlanId, kMACAddr2, &g_enic2_handle) < 0) return -1;
+  if (CreateEnicif(kVrfID, g_rdma_lif_id, kInterfaceID2, kL2SegmentID, kVlanId, kMACAddr2, &g_enic2_handle) < 0) return -1;
   printf("ENIC IF2 created\n");
   if (CreateEP(kVrfID, g_l2seg_handle, g_enic1_handle, kMACAddr1, kIPAddr1) < 0) return -1;
   printf("EP1 created\n");

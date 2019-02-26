@@ -189,9 +189,9 @@ jobd/storage/nvme: ${JOBD_PREREQS}
 jobd/storage/nvme_perf: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --storage --storage_test nvme_dp_scale
 
-#.PHONY: jobd/storage/nicmgr
-#jobd/storage/nicmgr: ${JOBD_PREREQS}
-#	${NICDIR}/run.py --storage --storage_test nicmgr
+.PHONY: jobd/storage/nicmgr
+jobd/storage/nicmgr: ${JOBD_PREREQS}
+	${NICDIR}/run.py --storage --storage_test nicmgr
 
 .PHONY: jobd/storage/combined
 jobd/storage/combined: ${JOBD_PREREQS}

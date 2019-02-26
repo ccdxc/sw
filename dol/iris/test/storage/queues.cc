@@ -618,7 +618,7 @@ int lifs_setup() {
     printf("can't create nvme lif \n");
     return -1;
   }
-  printf("NVME LIF created\n");
+  printf("NVME LIF %u/%lu created\n", nvme_lif_params.sw_lif_id, nvme_lif);
 
   if (hal_if::set_lif_bdf(nvme_lif, kNvmeLifBdf) < 0) {
     printf("Can't set NVME LIF %lu BDF %u \n", nvme_lif, kNvmeLifBdf);
@@ -634,7 +634,7 @@ int lifs_setup() {
     printf("can't create PVM lif \n");
     return -1;
   }
-  printf("PVM LIF created\n");
+  printf("PVM LIF %u/%lu created\n", pvm_lif_params.sw_lif_id, pvm_lif);
 
   if (hal_if::set_lif_bdf(pvm_lif, kPvmLifBdf) < 0) {
     printf("Can't set PVM LIF %lu BDF %u \n", pvm_lif, kPvmLifBdf);
@@ -645,13 +645,11 @@ int lifs_setup() {
   if (!run_nicmgr_tests) {
       bzero(&seq_lif_params, sizeof(seq_lif_params));
       lif_params_init(&seq_lif_params, SQ_TYPE, kSeqQstateEntrySize, SeqNumSQs);
-      seq_lif_params.sw_lif_id = STORAGE_SEQ_SW_LIF_ID;
-
       if (hal_if::create_lif(&seq_lif_params, &seq_lif) < 0) {
         printf("can't create Sequencer lif \n");
         return -1;
       }
-      printf("Sequencer LIF created\n");
+      printf("Sequencer LIF %u/%lu created\n", seq_lif_params.sw_lif_id, seq_lif);
   }
 
   if (hal_if::set_lif_bdf(seq_lif, kSeqLifBdf) < 0) {
@@ -670,7 +668,7 @@ int lifs_setup() {
     printf("can't create arm lif \n");
     return -1;
   }
-  printf("ARM LIF created\n");
+  printf("ARM LIF %u/%lu created\n", arm_lif_params.sw_lif_id, arm_lif);
 
   if (hal_if::set_lif_bdf(arm_lif, kArmLifBdf) < 0) {
     printf("Can't set ARM LIF %lu BDF %u \n", arm_lif, kArmLifBdf);
@@ -1640,6 +1638,7 @@ void get_capri_doorbell_with_pndx_inc(uint16_t lif, uint8_t qtype, uint32_t qid,
 void queues_shutdown() {
   storage_test::NvmeSsd *ssd_ptr = nvme_e2e_ssd.release();
   delete ssd_ptr;
+  nicmgr_if::nicmgr_if_fini();
   exit_simulation();
 }
 

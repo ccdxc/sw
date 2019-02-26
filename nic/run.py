@@ -398,7 +398,7 @@ def run_nicmgr(args, standalone=False):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
     os.chdir(nic_dir)
-    cmd = [nic_dir + "/../platform/gen/x86_64/bin/nicmgrd", '-c', os.path.join(nic_dir, '../platform/src/app/nicmgrd/etc/accel.json')]
+    cmd = [os.path.join(bin_dir, 'nicmgrd'), "-c", "none", "-p", "sim"]
 
     global nicmgr_process
     nicmgr_process = Popen(cmd)
@@ -458,8 +458,7 @@ def run_storage_dol(port, args):
     if args.rtl:
         cmd.append('--rtl')
     if args.storage_test and args.storage_test == 'nicmgr':
-        cmd.extend(shlex.split('--nicmgr_lif 65'))
-        run_nicmgr(args)
+        cmd.extend(shlex.split('--nicmgr_config_file /sw/platform/src/app/nicmgrd/etc/accel.json'))
 
     #pass additional arguments to storage_test
     os.chdir(bin_dir)
