@@ -26,7 +26,7 @@ vf_properties_uplink:
     phvwr.!c1.e     p.control_metadata_drop_reason[DROP_VF_IP_LABEL_MISMATCH], 1
     phvwr.!c1       p.capri_intrinsic_drop, TRUE
     seq             c1, k.control_metadata_src_class_e, TRUE
-    nop.!c1.e
+    bcf             [!c1], vf_properties_uplink_vf_mac
     seq             c1, k.control_metadata_record_route_inner_dst_ip, r0
     seq.!c1         c1, k.control_metadata_record_route_inner_dst_ip[31:28], 0xE
     add             r1, r0, -1
@@ -36,6 +36,7 @@ vf_properties_uplink:
     sne.!c1         c1, r2[31:0], d.u.vf_properties_d.gw_prefix
     phvwr.c1.e      p.control_metadata_drop_reason[DROP_VF_BAD_RR_DST_IP], 1
     phvwr.c1        p.capri_intrinsic_drop, TRUE
+vf_properties_uplink_vf_mac:
     seq             c1, d.u.vf_properties_d.vf_mac, r0
     phvwr.!c1       p.ethernet_dstAddr, d.u.vf_properties_d.vf_mac
     nop.e
