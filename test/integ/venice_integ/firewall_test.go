@@ -305,7 +305,7 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
-	// ICMP app
+	// DNS app
 	app := security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{

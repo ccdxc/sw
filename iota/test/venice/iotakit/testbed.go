@@ -850,13 +850,15 @@ func (tb *TestBed) CollectLogs() error {
 	for _, node := range tb.Nodes {
 		switch node.Personality {
 		case iota.PersonalityType_PERSONALITY_NAPLES:
-			trig.AddCommand(fmt.Sprintf("tar -cvf /tmp/%s_naples.tar /var/log/", node.NodeName), node.NodeName+"_naples", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("tar -cvf /tmp/%s_host.tar /pensando/iota/*.log", node.NodeName), node.NodeName+"_host", node.NodeName)
+			cmd := fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, node.NodeName)
+			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
 		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
-			trig.AddCommand(fmt.Sprintf("tar -cvf /tmp/%s_naples.tar /pensando/iota/logs /pensando/iota/varlog", node.NodeName), node.NodeName+"_naples", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("tar -cvf /tmp/%s_host.tar /pensando/iota/*.log", node.NodeName), node.NodeName+"_host", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_naples/%s_naples.tar /pensando/iota/logs /pensando/iota/varlog", node.NodeName, node.NodeName), node.NodeName+"_naples", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_host/%s_host.tar /pensando/iota/*.log", node.NodeName, node.NodeName), node.NodeName+"_host", node.NodeName)
 		case iota.PersonalityType_PERSONALITY_VENICE:
-			trig.AddCommand(fmt.Sprintf("tar -cvf /tmp/%s_venice.tar /var/log/pensando /pensando/iota/*.log", node.NodeName), node.NodeName+"_venice", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/entities/%s_venice/", node.NodeName), node.NodeName+"_venice", node.NodeName)
+			trig.AddCommand(fmt.Sprintf("tar -cvf /pensando/iota/entities/%s_venice/%s_venice.tar /var/log/pensando /pensando/iota/*.log", node.NodeName, node.NodeName), node.NodeName+"_venice", node.NodeName)
 		}
 	}
 
@@ -875,18 +877,18 @@ func (tb *TestBed) CollectLogs() error {
 	for _, node := range tb.Nodes {
 		switch node.Personality {
 		case iota.PersonalityType_PERSONALITY_NAPLES:
-			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("/tmp/%s_host.tar", node.NodeName)}, "logs")
-			tb.CopyFromNaples(node.NodeName, []string{fmt.Sprintf("/tmp/%s_naples.tar", node.NodeName)}, "logs")
+			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s_host.tar", node.NodeName)}, "logs")
+			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s-tech-support.tar.gz", node.NodeName)}, "logs")
 		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
-			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("/tmp/%s_host.tar", node.NodeName), fmt.Sprintf("/tmp/%s_naples.tar", node.NodeName)}, "logs")
+			tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s_host.tar", node.NodeName), fmt.Sprintf("%s_naples.tar", node.NodeName)}, "logs")
 		case iota.PersonalityType_PERSONALITY_VENICE:
-			tb.CopyFromVenice(node.NodeName, []string{fmt.Sprintf("/tmp/%s_venice.tar", node.NodeName)}, "logs")
+			tb.CopyFromVenice(node.NodeName, []string{fmt.Sprintf("%s_venice.tar", node.NodeName)}, "logs")
 		}
 
 	}
 
 	// create a tar.gz from all log files
-	cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar *.log && popd", os.Getenv("GOPATH"))
+	cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar *.log *.tar.gz && popd", os.Getenv("GOPATH"))
 	cmd := exec.Command("bash", "-c", cmdStr)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

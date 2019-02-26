@@ -34,10 +34,14 @@ func (act *ActionCtx) PingPairs(wpc *WorkloadPairCollection) error {
 		}
 		cmds = append(cmds, &cmd)
 	}
+	trmode := iota.TriggerMode_TRIGGER_PARALLEL
+	if !act.model.tb.HasNaplesSim() {
+		trmode = iota.TriggerMode_TRIGGER_NODE_PARALLEL
+	}
 
 	trigMsg := &iota.TriggerMsg{
 		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
-		TriggerMode: iota.TriggerMode_TRIGGER_PARALLEL,
+		TriggerMode: trmode,
 		ApiResponse: &iota.IotaAPIResponse{},
 		Commands:    cmds,
 	}
@@ -53,7 +57,8 @@ func (act *ActionCtx) PingPairs(wpc *WorkloadPairCollection) error {
 
 	for _, cmdResp := range triggerResp.Commands {
 		if cmdResp.ExitCode != 0 {
-			return fmt.Errorf("PingPairs trigger failed. code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+			log.Errorf("Ping trigger failed. Resp: %#v", cmdResp)
+			return fmt.Errorf("PingPairs trigger failed on %s. code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 		}
 	}
 
@@ -79,9 +84,14 @@ func (act *ActionCtx) PingFails(wpc *WorkloadPairCollection) error {
 		cmds = append(cmds, &cmd)
 	}
 
+	trmode := iota.TriggerMode_TRIGGER_PARALLEL
+	if !act.model.tb.HasNaplesSim() {
+		trmode = iota.TriggerMode_TRIGGER_NODE_PARALLEL
+	}
+
 	trigMsg := &iota.TriggerMsg{
 		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
-		TriggerMode: iota.TriggerMode_TRIGGER_PARALLEL,
+		TriggerMode: trmode,
 		ApiResponse: &iota.IotaAPIResponse{},
 		Commands:    cmds,
 	}
@@ -103,7 +113,8 @@ func (act *ActionCtx) PingFails(wpc *WorkloadPairCollection) error {
 	// verify ping failed on each pair
 	for _, cmdResp := range triggerResp.Commands {
 		if cmdResp.ExitCode == 0 {
-			return fmt.Errorf("PingFails:ping suceeded while expecting to fail. code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+			log.Errorf("Ping trigger failed. Resp: %#v", cmdResp)
+			return fmt.Errorf("PingFails:ping suceeded while expecting to fail on %s. code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 		}
 	}
 
@@ -111,7 +122,7 @@ func (act *ActionCtx) PingFails(wpc *WorkloadPairCollection) error {
 }
 
 // netcatTrigger runs netcat triggers between pair of workloads
-func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clientOpt string, port int, expClientExitCode int32) error {
+func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clientOpt string, port int, expClientExitCode int32, expOutput string) error {
 	if wpc.err != nil {
 		return wpc.err
 	}
@@ -136,7 +147,7 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 	for _, cmdResp := range srvResp {
 		if cmdResp.ExitCode != 0 {
 			log.Errorf("Netcat server command failed. %+v", cmdResp)
-			return fmt.Errorf("Netcat server command failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+			return fmt.Errorf("Netcat server command failed on %s. exit code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 
 		}
 	}
@@ -145,10 +156,14 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 	var clientErr error
 	for i := 0; i < maxNetcatRetries; i++ {
 		trig = act.model.tb.NewTrigger()
+		var pairNames []string
 		for _, pair := range wpc.pairs {
 			toIP := strings.Split(pair.first.iotaWorkload.IpPrefix, "/")[0]
 			trig.AddCommand(fmt.Sprintf("nc -z %s %s %d", clientOpt, toIP, port), pair.second.iotaWorkload.WorkloadName, pair.second.iotaWorkload.NodeName)
+			pairNames = append(pairNames, fmt.Sprintf("%s -> %s", pair.second.iotaWorkload.WorkloadName, pair.first.iotaWorkload.WorkloadName))
 		}
+
+		log.Infof("Netcat testing workload pairs %v", pairNames)
 
 		// run trigger
 		clientResp, terr := trig.Run()
@@ -162,7 +177,11 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 			for _, cmdResp := range clientResp {
 				if cmdResp.ExitCode != expClientExitCode {
 					log.Errorf("Netcat client command failed. %+v", cmdResp)
-					clientErr = fmt.Errorf("Netcat client command failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+					clientErr = fmt.Errorf("Netcat client command failed on %s. exit code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+				}
+				if expOutput != "" && !strings.Contains(cmdResp.Stdout, expOutput) {
+					log.Errorf("Netcat client command failed. %+v", cmdResp)
+					clientErr = fmt.Errorf("Netcat client command failed on %s. exit code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 				}
 			}
 		}
@@ -195,7 +214,7 @@ func (act *ActionCtx) TCPSession(wpc *WorkloadPairCollection, port int) error {
 		return wpc.err
 	}
 
-	return act.netcatTrigger(wpc, "", "", port, 0)
+	return act.netcatTrigger(wpc, "", "", port, 0, "")
 }
 
 // UDPSession runs UDP session between pair of workloads
@@ -204,7 +223,7 @@ func (act *ActionCtx) UDPSession(wpc *WorkloadPairCollection, port int) error {
 		return wpc.err
 	}
 
-	return act.netcatTrigger(wpc, "-u --sh-exec 'echo test'", "-u", port, 0)
+	return act.netcatTrigger(wpc, "-u --sh-exec 'echo test'", "-u", port, 0, "")
 }
 
 // TCPSessionFails verifies TCP session fails between pair of workloads
@@ -217,7 +236,7 @@ func (act *ActionCtx) TCPSessionFails(wpc *WorkloadPairCollection, port int) err
 		return nil
 	}
 
-	return act.netcatTrigger(wpc, "", "", port, 1)
+	return act.netcatTrigger(wpc, "", "", port, 1, "")
 }
 
 // UDPSessionFails verifies  UDP session fails between pair of workloads
@@ -230,7 +249,7 @@ func (act *ActionCtx) UDPSessionFails(wpc *WorkloadPairCollection, port int) err
 		return nil
 	}
 
-	return act.netcatTrigger(wpc, "-u --sh-exec 'echo test'", "-u", port, 1)
+	return act.netcatTrigger(wpc, "-u --sh-exec 'echo test'", "-u", port, 0, "test")
 }
 
 // VerifyWorkloadStatus verifies workload status in venice

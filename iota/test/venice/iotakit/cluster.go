@@ -178,7 +178,8 @@ func (tb *TestBed) SetupVeniceNodes() error {
 	}
 
 	for _, cmdResp := range triggerResp {
-		if cmdResp.ExitCode != 0 {
+		// 'echo' command sometimes has exit code 1. ignore it
+		if cmdResp.ExitCode != 0 && !strings.HasPrefix(cmdResp.Command, "echo") {
 			return fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 		}
 	}
@@ -272,7 +273,7 @@ func (tb *TestBed) CheckNaplesHealth(node *Naples) error {
 			Profile     string   `protobuf:"varint,8,opt,name=Profile,proto3,enum=nmd.NaplesSpec_FeatureProfile" json:"feature-profile,omitempty"`
 		}
 		Status struct {
-			Phase           int      `protobuf:"varint,1,opt,name=Phase,proto3,enum=cluster.SmartNICStatus_Phase" json:"phase,omitempty"`
+			Phase           string   `protobuf:"varint,1,opt,name=Phase,proto3,enum=cluster.SmartNICStatus_Phase" json:"phase,omitempty"`
 			Controllers     []string `protobuf:"bytes,3,rep,name=Controllers" json:"controllers,omitempty"`
 			TransitionPhase string   `protobuf:"bytes,4,opt,name=TransitionPhase,proto3" json:"transition-phase,omitempty"`
 			Mode            string   `protobuf:"bytes,5,opt,name=Mode,proto3" json:"mode"`

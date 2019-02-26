@@ -507,3 +507,29 @@ func (tb *TestBed) CreateFirewallProfile(fwp *security.FirewallProfile) error {
 
 	return err
 }
+
+// CreateApp creates an app in venice
+func (tb *TestBed) CreateApp(app *security.App) error {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.SecurityV1().App().Create(ctx, app)
+		if err == nil {
+			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.SecurityV1().App().Update(ctx, app)
+			if err == nil {
+				break
+			}
+		}
+	}
+
+	return err
+}

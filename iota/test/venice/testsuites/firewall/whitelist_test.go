@@ -68,9 +68,11 @@ var _ = Describe("firewall whitelist tests", func() {
 		})
 
 		It("Should allow UDP connections with specific permit rules", func() {
-			Skip("Disabling UDP test till HAL issue is debugged")
+			if ts.tb.HasNaplesSim() {
+				Skip("Disabling UDP test on naples sim till traffic issue is debugged")
+			}
 			// add permit rules for workload pairs
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "udp/8000", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 

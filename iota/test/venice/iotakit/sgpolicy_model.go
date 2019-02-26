@@ -155,6 +155,7 @@ func (spc *SGPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollect
 	}
 
 	// walk each workload pair
+	var pairNames []string
 	for _, wpair := range wpc.pairs {
 		fromIP := strings.Split(wpair.second.iotaWorkload.IpPrefix, "/")[0]
 		toIP := strings.Split(wpair.first.iotaWorkload.IpPrefix, "/")[0]
@@ -162,7 +163,10 @@ func (spc *SGPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollect
 		if nspc.err != nil {
 			return nspc
 		}
+		pairNames = append(pairNames, fmt.Sprintf("%s %s %s -> %s", action, port, fromIP, toIP))
 	}
+
+	log.Infof("Adding rules for pairs: %v", pairNames)
 
 	return spc
 }

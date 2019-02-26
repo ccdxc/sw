@@ -175,6 +175,13 @@ func (sm *SysModel) SetupDefaultConfig() error {
 		return err
 	}
 
+	// create default ALGs
+	err = sm.createDefaultAlgs()
+	if err != nil {
+		log.Errorf("Error creating ALGs: %v", err)
+		return err
+	}
+
 	// create default allow policy
 	err = sm.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()
 	if err != nil {
@@ -234,4 +241,104 @@ func (sm *SysModel) createDefaultFwprofile() error {
 	}
 
 	return sm.tb.CreateFirewallProfile(&fwp)
+}
+
+// createDefaultAlgs creates some algs
+func (sm *SysModel) createDefaultAlgs() error {
+	ftpApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "ftp-alg",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "21",
+				},
+			},
+			Timeout: "5m",
+			ALG: &security.ALG{
+				Type: "FTP",
+				Ftp: &security.Ftp{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+
+	// create FTP app
+	err := sm.tb.CreateApp(&ftpApp)
+	if err != nil {
+		return fmt.Errorf("Error creating FTP app. Err: %v", err)
+	}
+
+	// ICMP App
+	icmpApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "icmp-app",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			Timeout: "5m",
+			ALG: &security.ALG{
+				Type: "ICMP",
+				Icmp: &security.Icmp{
+					Type: "1",
+					Code: "2",
+				},
+			},
+		},
+	}
+	// create ICMP app
+	err = sm.tb.CreateApp(&icmpApp)
+	if err != nil {
+		return fmt.Errorf("Error creating FICMPTP app. Err: %v", err)
+	}
+
+	// DNS app
+	dnsApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "dns-app",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "udp",
+					Ports:    "68",
+				},
+			},
+			Timeout: "5m",
+			ALG: &security.ALG{
+				Type: "DNS",
+				Dns: &security.Dns{
+					DropMultiQuestionPackets:   true,
+					DropLargeDomainNamePackets: true,
+					DropLongLabelPackets:       true,
+					MaxMessageLength:           100,
+					QueryResponseTimeout:       "60s",
+				},
+			},
+		},
+	}
+
+	// create DNS app
+	err = sm.tb.CreateApp(&dnsApp)
+	if err != nil {
+		return fmt.Errorf("Error creating DNS app. Err: %v", err)
+	}
+
+	return nil
 }
