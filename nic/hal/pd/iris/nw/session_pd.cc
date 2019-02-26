@@ -19,7 +19,10 @@
 #include "nic/hal/pd/iris/internal/system_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include <string.h>
+#define  STATS_DEBUG 0
 
 namespace hal {
 namespace pd {
@@ -35,6 +38,8 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
     sdk_ret_t sdk_ret;
     directmap *stats_table;
     flow_stats_actiondata_t d = { 0 };
+    hbm_addr_t              stats_mem_addr = 0;
+    uint64_t                zero_val = 0;
 
     SDK_ASSERT(assoc_hw_idx != NULL);
     stats_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
@@ -54,6 +59,23 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
         HAL_TRACE_ERR("flow stats table write failure, err : {}", ret);
         return ret;
     }
+
+    ret = hal_pd_stats_addr_get(P4TBL_ID_FLOW_STATS,
+                                *assoc_hw_idx, &stats_mem_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error getting stats address for hw-id {} ret {}",
+                      *assoc_hw_idx, ret);
+        return ret;
+    }
+
+    p4plus_hbm_write(stats_mem_addr, (uint8_t *)&zero_val,
+                         sizeof(zero_val), P4PLUS_CACHE_ACTION_NONE);
+    p4plus_hbm_write(stats_mem_addr + 8 , (uint8_t *)&zero_val,
+                      sizeof(zero_val), P4PLUS_CACHE_ACTION_NONE);
+    p4plus_hbm_write(stats_mem_addr + 16, (uint8_t *)&zero_val,
+                       sizeof(zero_val), P4PLUS_CACHE_ACTION_NONE);
+    p4plus_hbm_write(stats_mem_addr + 24 , (uint8_t *)&zero_val,
+                        sizeof(zero_val), P4PLUS_CACHE_ACTION_NONE);
 
     return HAL_RET_OK;
 }
@@ -1184,6 +1206,13 @@ pd_session_get (pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
+typedef struct flow_atomic_stats_ {
+    uint64_t permit_bytes:64;
+    uint64_t permit_packets:64;
+    uint64_t drop_bytes:64;
+    uint64_t drop_packets:64;
+} __PACK__ flow_atomic_stats_t;
+
 //------------------------------------------------------------------------------
 // get all flow related information
 //------------------------------------------------------------------------------
@@ -1194,16 +1223,22 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     pd_conv_hw_clock_to_sw_clock_args_t clock_args = {0};
     pd_flow_get_args_t *args = pd_func_args->pd_flow_get;
     sdk_ret_t sdk_ret;
+    hbm_addr_t              stats_addr = 0;
+    flow_atomic_stats_t stats_0 = {0};
+    flow_atomic_stats_t stats_1 = {0};
     flow_stats_actiondata_t d = {0};
     flow_info_actiondata_t f = {0};
     directmap *info_table = NULL;
     directmap *stats_table = NULL;
     pd_flow_t pd_flow;
+    session_t *session = NULL;
 
-    if (args->pd_session == NULL) {
+    if (args->pd_session == NULL || 
+        ((pd_session_t *)args->pd_session)->session == NULL) {
         return HAL_RET_INVALID_ARG;
     }
 
+    session = (session_t *)((pd_session_t *)args->pd_session)->session;
     stats_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     SDK_ASSERT(stats_table != NULL);
 
@@ -1220,20 +1255,73 @@ pd_flow_get (pd_func_args_t *pd_func_args)
             pd_flow = args->pd_session->rflow_aug;
         }
     }
+
+    ret = hal_pd_stats_addr_get(P4TBL_ID_FLOW_STATS,
+                                pd_flow.assoc_hw_id, &stats_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error getting stats address for flow {} hw-id {} ret {}",
+                      session->hal_handle, pd_flow.assoc_hw_id, ret);
+        return ret;
+    }
+
+    sdk_ret = sdk::asic::asic_mem_read(stats_addr, (uint8_t *)&stats_0,
+                                       sizeof(stats_0));
+    if (sdk_ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats for flow {} hw-id {} ret {}",
+                      session->hal_handle, pd_flow.assoc_hw_id, ret);
+        return ret;
+    }
+
+    // read the d-vector
     sdk_ret = stats_table->retrieve(pd_flow.assoc_hw_id, &d);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret == HAL_RET_OK) {
-        args->flow_state->packets = d.action_u.flow_stats_flow_stats.permit_packets;
-        args->flow_state->bytes = d.action_u.flow_stats_flow_stats.permit_bytes;
-        args->flow_state->drop_packets = d.action_u.flow_stats_flow_stats.drop_packets;
-        args->flow_state->drop_bytes = d.action_u.flow_stats_flow_stats.drop_bytes;
-
-        clock_args.hw_tick = d.action_u.flow_stats_flow_stats.last_seen_timestamp;
-        clock_args.hw_tick = (clock_args.hw_tick << 16);
-        clock_args.sw_ns = &args->flow_state->last_pkt_ts;
-        pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
-        pd_conv_hw_clock_to_sw_clock(pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats action entry flow {} hw-id {} ret {}",
+                      session->hal_handle, pd_flow.assoc_hw_id, ret);
+        return ret;
     }
+
+    sdk_ret = sdk::asic::asic_mem_read(stats_addr, (uint8_t *)&stats_1,
+                                       sizeof(stats_1));
+    if (sdk_ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats for flow {} hw-id {} ret {}",
+                      session->hal_handle, pd_flow.assoc_hw_id, ret);
+        return ret;
+    }
+
+#ifdef STATS_DEBUG
+    HAL_TRACE_DEBUG("Flow stats for session {} stats_addr: {:#x} stats_0: permit_packets {},"
+                    "permit_bytes: {}, drop_packets: {}, drop_bytes: {} "
+                    "stats_1: permit_packets {}, permit_bytes: {}, drop_packets: {},"
+                    "drop_bytes: {} P4 table read: permit_packets {}, permit_bytes: {},"
+                    "drop_packets: {}, drop_bytes: {} ", session->hal_handle, stats_addr,  
+                    stats_0.permit_packets, stats_0.permit_bytes, stats_0.drop_packets, 
+                    stats_0.drop_bytes, stats_1.permit_packets, stats_1.permit_bytes,
+                    stats_1.drop_packets, stats_1.drop_bytes, d.action_u.flow_stats_flow_stats.permit_packets,
+                    d.action_u.flow_stats_flow_stats.permit_bytes, d.action_u.flow_stats_flow_stats.drop_packets,
+                    d.action_u.flow_stats_flow_stats.drop_bytes);
+#endif
+                
+    if (stats_0.permit_packets == stats_1.permit_packets) {
+        stats_1.permit_packets += d.action_u.flow_stats_flow_stats.permit_packets;
+        stats_1.permit_bytes += d.action_u.flow_stats_flow_stats.permit_bytes;
+    } 
+  
+    if (stats_0.drop_packets == stats_1.drop_packets) {
+        stats_1.drop_packets += d.action_u.flow_stats_flow_stats.drop_packets;
+        stats_1.drop_bytes += d.action_u.flow_stats_flow_stats.drop_bytes;
+    }
+
+    args->flow_state->packets = stats_1.permit_packets;
+    args->flow_state->bytes = stats_1.permit_bytes;
+    args->flow_state->drop_packets = stats_1.drop_packets;
+    args->flow_state->drop_bytes = stats_1.drop_bytes;
+
+    clock_args.hw_tick = d.action_u.flow_stats_flow_stats.last_seen_timestamp;
+    clock_args.hw_tick = (clock_args.hw_tick << 16);
+    clock_args.sw_ns = &args->flow_state->last_pkt_ts;
+    pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
+    pd_conv_hw_clock_to_sw_clock(pd_func_args);
 
     info_table = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     SDK_ASSERT(info_table != NULL);
