@@ -640,7 +640,7 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     if (args == NULL) {
         return HAL_RET_HW_FAIL;
     }
-    HAL_TRACE_DEBUG("IPSEC Global Stats Addr 0x{:#x}", hwid);
+    HAL_TRACE_DEBUG("IPSEC Global Stats Addr {:#x}", hwid);
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(ipsec_global_stats_cb_t))){
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;

@@ -49,10 +49,10 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_v4_tunnel_n2h_txdma2_increment_global_ci, r5, TABLE_SIZE_512_BITS)
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA2_ENTER_OFFSET, 1)
 
 esp_ipv4_tunnel_n2h_txdma2_initial_table_do_nothing:
-    //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
-    //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA2_ENTER_OFFSET, 1)
     nop.e
     nop
 

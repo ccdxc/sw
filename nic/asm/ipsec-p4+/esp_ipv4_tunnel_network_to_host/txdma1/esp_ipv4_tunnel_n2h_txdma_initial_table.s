@@ -7,11 +7,8 @@ struct tx_table_s0_t0_esp_v4_tunnel_n2h_txdma1_initial_table_d d;
 struct phv_ p;
 
 %%
-        .param esp_ipv4_tunnel_n2h_allocate_barco_req_pindex 
         .param esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex
         .param esp_v4_tunnel_n2h_load_part2
-        .param IPSEC_CB_BASE
-        .param  TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 esp_ipv4_tunnel_n2h_txdma_initial_table:
@@ -27,7 +24,7 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     phvwr p.barco_req_command, d.barco_enc_cmd
     phvwr p.t0_s2s_iv_size, d.iv_size
 
-    phvwri p.{app_header_table0_valid...app_header_table2_valid}, 7 
+    phvwri p.{app_header_table0_valid...app_header_table2_valid}, 5 
     phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex[33:6] 
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 11 
     and r2, d.cb_cindex, IPSEC_CB_RING_INDEX_MASK 
@@ -38,10 +35,6 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     tblwr d.cb_cindex, r7
     tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
     phvwr p.common_te0_phv_table_addr, r2
-
-    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_barco_req_pindex, r5, TABLE_SIZE_512_BITS)
 
     phvwri p.common_te2_phv_table_pc, esp_v4_tunnel_n2h_load_part2[33:6] 
     phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 11 
@@ -56,8 +49,8 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
 
 
 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing:
-    //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
-    //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_ENTER_OFFSET, 1)
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_ENTER_OFFSET, 1)
     nop.e
     nop
 

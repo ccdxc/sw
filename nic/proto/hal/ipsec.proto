@@ -196,6 +196,8 @@ message IPSecGlobalStatisticsGetSpec {
     uint64         decrypt_txdma2_enter_counters = 27;
     uint64         decrypt_txdma1_drop_counters  = 28;
     uint64         decrypt_desc_exhaust_errors   = 29;
+    uint64         decrypt_load_ipsec_int_errors = 30;
+    uint64         decrypt_txdma1_dummy_errors   = 31;
 }
 
   

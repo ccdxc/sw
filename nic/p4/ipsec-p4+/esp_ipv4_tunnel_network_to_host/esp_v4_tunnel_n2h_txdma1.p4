@@ -3,10 +3,10 @@
 #define tx_table_s0_t0_action esp_v4_tunnel_n2h_txdma1_initial_table 
 
 #define tx_table_s1_t0_action esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex
-#define tx_table_s1_t1_action esp_v4_tunnel_n2h_allocate_barco_req_pindex
 #define tx_table_s1_t2_action esp_v4_tunnel_n2h_load_part2
 
 #define tx_table_s2_t0_action esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header
+#define tx_table_s2_t1_action esp_v4_tunnel_n2h_allocate_barco_req_pindex
 
 #define tx_table_s3_t0_action esp_v4_tunnel_n2h_txdma1_write_barco_req
 

@@ -218,12 +218,12 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd)
     ipsec_cb_ring_addr = ntohll(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr);
     cb_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_cindex;
     cb_pindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex;
-    HAL_TRACE_DEBUG("CB Ring Addr 0x{:#x} Pindex {} CIndex {}", ipsec_cb_ring_addr, cb_pindex, cb_cindex);
+    HAL_TRACE_DEBUG("CB Ring Addr {:#x} Pindex {} CIndex {}", ipsec_cb_ring_addr, cb_pindex, cb_cindex);
 
     ipsec_barco_ring_addr = ntohll(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_ring_base_addr);
     cb_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_cindex;
     cb_pindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_pindex;
-    HAL_TRACE_DEBUG("Barco Ring Addr 0x{:#x} Pindex {} CIndex {}", ipsec_barco_ring_addr, barco_pindex, barco_cindex);
+    HAL_TRACE_DEBUG("Barco Ring Addr {:#x} Pindex {} CIndex {}", ipsec_barco_ring_addr, barco_pindex, barco_cindex);
 
     expected_seq_no = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no;
     replay_seq_no_bmp = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.replay_seq_no_bmp;
@@ -344,7 +344,7 @@ pd_ipsec_decrypt_get_base_hw_index(pd_ipsec_t* ipsec_sa_pd)
     // Set qtype and qid as 0 to get the start offset.
     uint64_t base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_IPSEC_ESP, 1, 0);
     uint64_t offset = base + (ipsec_sa_pd->ipsec_sa->sa_id * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
-    HAL_TRACE_DEBUG("received decrypt base 0x{:#x} offset {:#x}", base, offset);
+    HAL_TRACE_DEBUG("received decrypt base {:#x} offset {:#x}", base, offset);
     return offset;
 }
 
@@ -604,7 +604,7 @@ pd_ipsec_decrypt_get (pd_func_args_t *pd_func_args)
 
     // get hw-id for this IPSECCB
     ipsec_sa_pd.hw_id = pd_ipsec_decrypt_get_base_hw_index(&ipsec_sa_pd);
-    HAL_TRACE_DEBUG("Received hw-id 0x{:#x}", ipsec_sa_pd.hw_id);
+    HAL_TRACE_DEBUG("Received hw-id {:#x}", ipsec_sa_pd.hw_id);
 
     // get hw ipsec_sa entry
     ret = p4pd_get_ipsec_decrypt_entry(&ipsec_sa_pd);

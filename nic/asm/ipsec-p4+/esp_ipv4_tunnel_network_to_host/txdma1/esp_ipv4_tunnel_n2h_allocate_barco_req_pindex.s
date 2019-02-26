@@ -2,8 +2,8 @@
 #include "ingress.h"
 #include "ipsec_asm_defines.h"
 
-struct tx_table_s1_t1_k k;
-struct tx_table_s1_t1_esp_v4_tunnel_n2h_allocate_barco_req_pindex_d d;
+struct tx_table_s2_t1_k k;
+struct tx_table_s2_t1_esp_v4_tunnel_n2h_allocate_barco_req_pindex_d d;
 struct phv_ p;
 
 %%
@@ -16,7 +16,6 @@ esp_ipv4_tunnel_n2h_allocate_barco_req_pindex:
     sll r2, r2, BRQ_RING_ENTRY_SIZE_SHIFT
     addui r2, r2, hiword(BRQ_GCM1_BASE)
     addi r2, r2, loword(BRQ_GCM1_BASE)
-    phvwr p.ipsec_to_stage2_barco_req_addr, r2
     phvwr p.ipsec_to_stage3_barco_req_addr, r2
     add r1, d.pi, 1
     and r1, r1, IPSEC_BARCO_RING_INDEX_MASK

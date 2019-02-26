@@ -250,7 +250,9 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         decrypt_txdma2_enter_counters;
     uint64_t         decrypt_txdma1_drop_counters;
     uint64_t         decrypt_desc_exhaust_errors;
-    uint64_t         decrypt_pad[52];
+    uint64_t         decrypt_txdma1_dummy_errors;
+    uint64_t         decrypt_load_ipsec_int_errors;
+    uint64_t         decrypt_pad[50];
 
 } __PACK__ ipsec_global_stats_cb_t;
 

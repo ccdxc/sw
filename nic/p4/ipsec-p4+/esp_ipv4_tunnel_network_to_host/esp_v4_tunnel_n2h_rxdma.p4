@@ -90,7 +90,7 @@ header_type ipsec_rxdma_global_t {
         qid            : 24;
         packet_length  : 16; 
         ipsec_cb_index : 16;
-        icv_size       : 8;
+        flags          : 8;
         cb_pindex      : 16;
         rxdma_pad22    : 32; 
     }
@@ -233,7 +233,7 @@ metadata ipsec_sem_read_t ipsec_sem_read_scratch;
     modify_field(ipsec_global_scratch.qid, ipsec_global.qid); \
     modify_field(ipsec_global_scratch.ipsec_cb_index, ipsec_global.ipsec_cb_index); \
     modify_field(ipsec_global_scratch.packet_length, ipsec_global.packet_length); \
-    modify_field(ipsec_global_scratch.icv_size, ipsec_global.icv_size); \
+    modify_field(ipsec_global_scratch.flags, ipsec_global.flags); \
     modify_field(ipsec_global_scratch.cb_pindex, ipsec_global.cb_pindex); \
     modify_field(ipsec_global_scratch.rxdma_pad22, ipsec_global.rxdma_pad22); \
 
