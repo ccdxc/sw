@@ -1,0 +1,26 @@
+yum install -y make swig  gcc-c++ Judy-devel zlib* libedit-devel
+yum install autoconf automake libtool libtool g++
+yum install -y unzip pkg-config graphviz flex gmp-devel mpfr-devel mpc-devel libmpc-devel bzip2 which
+
+yum install -y python36u python36u-pip
+yum install -y python36u-devel python-pip python-devel python-yaml 
+pip3 install --upgrade  Tenjin enum34 zmq 
+pip install --upgrade ply==3.9 
+yum install -y python-setuptools python-enum34
+
+curl ftp://ftp.gnu.org/pub/gnu/gcc/gcc-6.1.0/gcc-6.1.0.tar.bz2 | tar xj
+cd gcc-6.1.0/
+./configure --enable-languages=c,c++ --disable-multilib --prefix=/usr
+make -j$(grep -c processor /proc/cpuinfo)
+make install
+
+# install zeromq
+cd /tmp
+wget https://github.com/zeromq/zeromq4-x/releases/download/v4.0.0/zeromq-4.0.0-rc1.tar.gz
+tar zxf zeromq-4.0.0-rc1.tar.gz
+cd zeromq-4.0.0
+./configure --prefix=/usr
+make -j$(grep -c processor /proc/cpuinfo)
+make install
+
+
