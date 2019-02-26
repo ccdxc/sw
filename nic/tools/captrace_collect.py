@@ -73,25 +73,25 @@ def collect(ch, args):
         op = sendCmd(ch, 'rm /captrace.cfg', '#')
     op = sendCmd(ch, 'touch /captrace.cfg', '#')
 
-    cmdlist = []
     if (args.rxdma == '1'):
-        cmdlist.append('rxdma,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/rxdma-all.json /captrace.cfg', '[Pp]assword.*')
+        sendCmd(ch, 'docker', '#')
 
     if (args.txdma == '1'):
-        cmdlist.append('txdma,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/txdma-all.json /captrace.cfg', '[Pp]assword.*')
+        sendCmd(ch, 'docker', '#')
 
     if (args.p4ig == '1'):
-        cmdlist.append('p4ig,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/p4ig-all.json /captrace.cfg', '[Pp]assword.*')
+        sendCmd(ch, 'docker', '#')
 
     if (args.p4eg == '1'):
-        cmdlist.append('p4eg,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/p4eg-all.json /captrace.cfg', '[Pp]assword.*')
+        sendCmd(ch, 'docker', '#')
 
     if (args.all == '1'):
-        cmdlist.append('*,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
-
-    for cmd in cmdlist:
-        cmd = 'echo ' + cmd + ' >> /captrace.cfg'
-        op = sendCmd(ch, cmd, '#')
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/pipeline-all.json /captrace.cfg', '[Pp]assword.*')
+        sendCmd(ch, 'docker', '#')
 
     op = sendCmd(ch, 'cat /captrace.cfg', '#')
 
@@ -206,6 +206,14 @@ if __name__ == "__main__":
 
     else:
         logging.info("ping successful through MNIC interface\n")
+
+    logging.info("Copying captrace.cfg to {0}".format(args.host))
+    conf = pwd + '/../conf/captrace/*'
+    cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no ' + conf + ' root@' + args.host + ':/tmp/'
+    ret = os.system(cmd)
+    if (ret != 0):
+        logging.info("ERROR: failed to copy captrace.cfg to {0}".format(args.host))
+        exit()
 
     ch = sshToHost(args.host)
 
