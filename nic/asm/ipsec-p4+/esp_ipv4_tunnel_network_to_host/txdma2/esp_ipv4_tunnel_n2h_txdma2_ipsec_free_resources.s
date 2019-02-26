@@ -7,8 +7,8 @@ struct tx_table_s5_t0_k k;
 struct phv_ p;
 
 %%
-    .param IPSEC_RNMDR_TABLE_BASE
-    .param IPSEC_TNMDR_TABLE_BASE
+    .param IPSEC_RNMPR_TABLE_BASE
+    .param IPSEC_TNMPR_TABLE_BASE
     .align
 esp_ipv4_tunnel_n2h_txdma2_ipsec_free_resources:
     and r2, d.sem_cindex, IPSEC_DESC_RING_INDEX_MASK
@@ -16,14 +16,14 @@ esp_ipv4_tunnel_n2h_txdma2_ipsec_free_resources:
     
     sll r3, r2, 3
 
-    addui r4, r3, hiword(IPSEC_RNMDR_TABLE_BASE)
-    addi r4, r4, loword(IPSEC_RNMDR_TABLE_BASE)
+    addui r4, r3, hiword(IPSEC_RNMPR_TABLE_BASE)
+    addi r4, r4, loword(IPSEC_RNMPR_TABLE_BASE)
     sub r5, k.txdma2_global_in_desc_addr, 64
     phvwr p.txdma2_global_in_desc_addr, r5
     CAPRI_DMA_CMD_PHV2MEM_SETUP(rnmdr_dma_cmd, r4, txdma2_global_in_desc_addr, txdma2_global_in_desc_addr)
 
-    addui r4, r3, hiword(IPSEC_TNMDR_TABLE_BASE)
-    addi r4, r4, loword(IPSEC_TNMDR_TABLE_BASE)
+    addui r4, r3, hiword(IPSEC_TNMPR_TABLE_BASE)
+    addi r4, r4, loword(IPSEC_TNMPR_TABLE_BASE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(tnmdr_dma_cmd, r4, ipsec_to_stage2_out_desc_addr, ipsec_to_stage2_out_desc_addr)
 
     add r2, d.sem_cindex, IPSEC_DESC_RING_SIZE

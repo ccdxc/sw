@@ -13,7 +13,9 @@ struct phv_ p;
 
 esp_ipv4_tunnel_n2h_update_output_desc_aol:
     phvwri p.{app_header_table0_valid...app_header_table1_valid}, 3
-    phvwr p.barco_desc_out_A0_addr, k.{t1_s2s_out_page_addr}.dx 
+    add r6, k.t1_s2s_out_desc_addr, IPSEC_PAGE_OFFSET
+    phvwr p.barco_desc_out_A0_addr, r6.dx 
+    phvwr p.ipsec_int_header_out_page, r6 
     add r2, k.ipsec_to_stage3_payload_size, ESP_FIXED_HDR_SIZE
     phvwr p.barco_desc_out_L0, r2.wx 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc[33:6]

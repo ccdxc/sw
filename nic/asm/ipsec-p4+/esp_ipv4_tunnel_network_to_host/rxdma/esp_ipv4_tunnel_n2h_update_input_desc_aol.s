@@ -16,7 +16,9 @@ struct phv_ p;
 
 esp_ipv4_tunnel_n2h_update_input_desc_aol:
 
-    add r2, k.ipsec_to_stage3_iv_salt_off, k.t0_s2s_in_page_addr
+    add r6, k.t0_s2s_in_desc_addr, IPSEC_PAGE_OFFSET
+    phvwr p.ipsec_int_header_in_page, r6 
+    add r2, k.ipsec_to_stage3_iv_salt_off, r6 
     subi r5, r2, ESP_FIXED_HDR_SIZE 
     phvwr p.barco_desc_in_A0_addr, r5.dx 
     phvwri p.barco_desc_in_L0, ESP_FIXED_HDR_SIZE_LI 
@@ -26,10 +28,10 @@ esp_ipv4_tunnel_n2h_update_input_desc_aol:
     phvwr p.barco_desc_in_L1, k.{ipsec_to_stage3_payload_size}.wx
 
 dma_cmd_to_move_input_pkt_to_mem:
-    add r2, r0, k.t0_s2s_in_page_addr
+    add r2, r0, r6 
     blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma_in_page
 
-    phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, k.t0_s2s_in_page_addr
+    phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r6 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_iv_salt_off
  
     sub r3, r3, k.ipsec_to_stage3_iv_size 
@@ -40,7 +42,7 @@ dma_cmd_to_move_input_pkt_to_mem:
     phvwr p.dma_cmd_pkt2mem2_dma_cmd_size, r5 
 
 dma_cmd_to_write_salt_after_seq_no:
-    add r1, k.ipsec_to_stage3_iv_salt_off, k.t0_s2s_in_page_addr
+    add r1, k.ipsec_to_stage3_iv_salt_off, r6 
     phvwr.e p.dma_cmd_iv_salt_dma_cmd_addr, r1
     nop
 

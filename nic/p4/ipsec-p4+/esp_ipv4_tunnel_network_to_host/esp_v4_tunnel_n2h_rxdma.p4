@@ -358,6 +358,7 @@ action esp_v4_tunnel_n2h_allocate_output_page_index(out_page_index)
     modify_field(t1_s2s.out_page_addr, OUT_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * out_page_index));
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T3_S2S
+    IPSEC_TO_STAGE2_SCRATCH
 }
 
 //stage 2 
@@ -387,6 +388,7 @@ action esp_v4_tunnel_n2h_allocate_output_desc_index(out_desc_index)
     modify_field(t1_s2s.out_desc_addr, OUT_DESC_ADDR_BASE+(DESC_ENTRY_SIZE * out_desc_index));
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
+    IPSEC_TO_STAGE2_SCRATCH
 }
 
 //stage 2 
@@ -401,6 +403,7 @@ action esp_v4_tunnel_n2h_allocate_input_desc_index(in_desc_index)
     modify_field(t0_s2s.in_desc_addr, IN_DESC_ADDR_BASE++(DESC_ENTRY_SIZE* in_desc_index));
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
+    IPSEC_TO_STAGE2_SCRATCH
 }
 
 //stage 1 - table2
@@ -418,7 +421,7 @@ action esp_v4_tunnel_n2h_allocate_input_desc_semaphore(in_desc_ring_index, full)
     modify_field(common_te0_phv.table_pc, 0); 
     modify_field(common_te0_phv.table_raw_table_size, 3);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, IN_DESC_RING_BASE+(DESC_PTR_SIZE * in_desc_ring_index));
+    //modify_field(common_te0_phv.table_addr, IN_DESC_RING_BASE+(DESC_PTR_SIZE * in_desc_ring_index));
     
     modify_field(ipsec_sem_read_scratch.in_desc_index, in_desc_ring_index);
     modify_field(ipsec_sem_read_scratch.full, full);
