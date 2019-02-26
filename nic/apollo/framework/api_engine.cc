@@ -368,7 +368,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     if (ret != SDK_RET_OK) {
         OCI_TRACE_ERR("Failure in program config stage, "
-                      "obj %s, op %u, err %u", api_obj->key2str(),
+                      "obj %s, op %u, err %u", api_obj->key2str().c_str(),
                       obj_ctxt->api_op, ret);
     }
     return ret;

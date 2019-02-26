@@ -1,7 +1,5 @@
 #!/bin/bash -e
-TOOLS_DIR=`dirname $0`
-ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
-NIC_DIR=`dirname $ABS_TOOLS_DIR`
+NIC_DIR=/sw/nic
 export ZMQ_SOC_DIR=${NIC_DIR}
 ${NIC_DIR}/tools/merge_model_debug.py --p4 apollo --rxdma apollo_rxdma --txdma apollo_txdma
 $GDB $NIC_DIR/build/x86_64/apollo/bin/cap_model \

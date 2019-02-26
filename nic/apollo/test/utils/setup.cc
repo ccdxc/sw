@@ -19,10 +19,10 @@
 //  user enabled traces at what level, it always prints the traces
 /// but with a simple header prepended that tells what level the
 /// trace is spwed at ... in reality, you call your favorite logger here
+static char logbuf[2048];
 static int
 trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 {
-    char logbuf[1024];
     va_list args;
 
     va_start(args, format);
