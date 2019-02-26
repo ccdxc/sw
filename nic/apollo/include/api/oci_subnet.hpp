@@ -8,8 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __INCLUDE_API_SUBNET_HPP__
-#define __INCLUDE_API_SUBNET_HPP__
+#ifndef __INCLUDE_API_OCI_SUBNET_HPP__
+#define __INCLUDE_API_OCI_SUBNET_HPP__
 
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -18,18 +18,18 @@
 #include "nic/apollo/include/api/oci_policy.hpp"
 #include "nic/apollo/include/api/oci_route.hpp"
 
-/// \defgroup OCI_SUBNET Subnet
+/// \defgroup OCI_SUBNET Subnet API
 /// @{
 
 // TODO: we have to confirm this number !!!
 #define OCI_MAX_SUBNET (5 * OCI_MAX_VCN)
 
-/// \brief Key
+/// \brief Subnet key
 typedef struct oci_subnet_key_s {
-    oci_subnet_id_t id;    ///< Subnet id
+    oci_subnet_id_t id;    ///< Subnet ID
 } __PACK__ oci_subnet_key_t;
 
-/// \brief Spec
+/// \brief Subnet specification
 typedef struct oci_subnet_spec_s {
     oci_subnet_key_t key;                    ///< Key
     oci_vcn_key_t vcn;                       ///< VCN key
@@ -44,27 +44,27 @@ typedef struct oci_subnet_spec_s {
     oci_policy_key_t egr_v6_policy;          ///< egress IPv6 policy table
 } __PACK__ oci_subnet_spec_t;
 
-/// \brief Status
+/// \brief Subnet status
 typedef struct oci_subnet_status_s {
-    uint16_t hw_id;
-    mem_addr_t policy_base_addr;
+    uint16_t hw_id;                 ///< Hardware ID
+    mem_addr_t policy_base_addr;    ///< Policy base address
 } __PACK__ oci_subnet_status_t;
 
-/// \brief Statistics
+/// \brief Subnet statistics
 typedef struct oci_subnet_stats_s {
     // TODO
 } __PACK__ oci_subnet_stats_t;
 
-/// \brief Info
+/// \brief Subnet information
 typedef struct oci_subnet_info_s {
-    oci_subnet_spec_t spec;
-    oci_subnet_status_t status;
-    oci_subnet_stats_t stats;
+    oci_subnet_spec_t spec;        ///< Specification
+    oci_subnet_status_t status;    ///< Status
+    oci_subnet_stats_t stats;      ///< Statistics
 } __PACK__ oci_subnet_info_t;
 
 /// \brief Create subnet
 ///
-/// \param[in] subnet Subnet specification
+/// \param[in] spec Specification
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
@@ -75,11 +75,12 @@ typedef struct oci_subnet_info_s {
 ///  - Subnet with same id should not be created again
 ///  - Any other validation that is expected on the subnet should be done
 ///    by the caller
-sdk_ret_t oci_subnet_create(oci_subnet_spec_t *subnet);
+sdk_ret_t oci_subnet_create(oci_subnet_spec_t *spec);
 
 /// \brief Read subnet
 ///
-/// \param[in/out] subnet_spec Spec
+/// \param[in] key Key
+/// \param[out] info Information
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
@@ -89,24 +90,24 @@ sdk_ret_t oci_subnet_read(oci_subnet_key_t *key, oci_subnet_info_t *info);
 
 /// \brief Update subnet
 ///
-/// \param[in] subnet_spec Spec
+/// \param[in] spec Specification
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
 ///  - A valid subnet spec should be passed
-sdk_ret_t oci_subnet_update(oci_subnet_spec_t *subnet_spec);
+sdk_ret_t oci_subnet_update(oci_subnet_spec_t *spec);
 
 /// \brief Delete subnet
 ///
-/// \param[in] subnet_key Key
+/// \param[in] key Key
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
 ///  - A valid subnet key should be passed
-sdk_ret_t oci_subnet_delete(oci_subnet_key_t *subnet_key);
+sdk_ret_t oci_subnet_delete(oci_subnet_key_t *key);
 
 /// \@}
 
-#endif    // __INCLUDE_API_SUBNET_HPP__
+#endif    // __INCLUDE_API_OCI_SUBNET_HPP__

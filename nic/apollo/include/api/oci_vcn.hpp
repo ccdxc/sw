@@ -8,22 +8,22 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __INCLUDE_API_VCN_HPP__
-#define __INCLUDE_API_VCN_HPP__
+#ifndef __INCLUDE_API_OCI_VCN_HPP__
+#define __INCLUDE_API_OCI_VCN_HPP__
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/include/api/oci.hpp"
 
-/// \defgroup OCI_VCN Virtual Cloud Network
+/// \defgroup OCI_VCN VCN API
 /// @{
 
 #define OCI_VCN_ID_INVALID 0xFFFF    ///< Invalid substrate ID
 #define OCI_VCN_ID_SUBSTRATE 0       ///< VCN ID reserved for substrate
-#define OCI_MAX_VCN 1024
+#define OCI_MAX_VCN 1024             ///< Max VCN
 
 /// \brief VCN key
 typedef struct oci_vcn_key_s {
-    oci_vcn_id_t id;    /// VCN ID
+    oci_vcn_id_t id;    ///< VCN ID
 } __PACK__ oci_vcn_key_t;
 
 /// \brief VCN type
@@ -49,16 +49,16 @@ typedef struct oci_vcn_stats_s {
     // TODO
 } oci_vcn_stats_t;
 
-/// \brief VCN info
+/// \brief VCN information
 typedef struct oci_vcn_info_s {
-    oci_vcn_spec_t spec;
-    oci_vcn_status_t status;
-    oci_vcn_stats_t stats;
+    oci_vcn_spec_t spec;        ///< Specification
+    oci_vcn_status_t status;    ///< Status
+    oci_vcn_stats_t stats;      ///< Statistics
 } oci_vcn_info_t;
 
 /// \brief Create VCN
 ///
-/// \param[in] spec VCN specification
+/// \param[in] spec Specification
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
@@ -72,10 +72,8 @@ sdk_ret_t oci_vcn_create(oci_vcn_spec_t *spec);
 
 /// \brief Read VCN
 ///
-/// \param[in] key VCN key
-/// \param[out] spec VCN specification
-/// \param[out] status VCN status
-/// \param[out] stats VCN statistics
+/// \param[in] key Key
+/// \param[out] info Information
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
@@ -85,7 +83,7 @@ sdk_ret_t oci_vcn_read(oci_vcn_key_t *key, oci_vcn_info_t *info);
 
 /// \brief Update VCN
 ///
-/// \param[in] spec VCN specification
+/// \param[in] spec Specification
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
@@ -95,7 +93,7 @@ sdk_ret_t oci_vcn_update(oci_vcn_spec_t *spec);
 
 /// \brief Delete VCN
 ///
-/// \param[in] key VCN key
+/// \param[in] key Key
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
@@ -105,4 +103,4 @@ sdk_ret_t oci_vcn_delete(oci_vcn_key_t *key);
 
 /// \@}
 
-#endif    // __INCLUDE_API_VCN_HPP__
+#endif    // __INCLUDE_API_OCI_VCN_HPP__

@@ -88,8 +88,8 @@ oci_switchport_stats_fill (switchport_entry *entry,
                            oci_switchport_stats_t *stats)
 {
     memset(stats, 0, sizeof(oci_switchport_stats_t));
-    oci_get_ingress_drop_stats(&(stats->ingress_drop_stats));
-    oci_get_egress_drop_stats(&(stats->egress_drop_stats));
+    oci_get_ingress_drop_stats(&(stats->idrop_stats));
+    oci_get_egress_drop_stats(&(stats->edrop_stats));
     return sdk::SDK_RET_OK;
 }
 

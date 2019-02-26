@@ -1,42 +1,28 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    oci.hpp
- *
- * @brief   basic enums and macros for OCI APIs
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// Base enums and macros for OCI APIs
+///
+//----------------------------------------------------------------------------
 
-#if !defined (__OCI_HPP__)
-#define __OCI_HPP__
-
-/**
- * @defgroup OCI - base macros, enums etc. for OCI APIs
- *
- * @{
- */
+#ifndef __INCLUDE_API_OCI_HPP__
+#define __INCLUDE_API_OCI_HPP__
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/types.h>
 
-/**
- * @brief    invalid epoch
- */
-#define OCI_EPOCH_INVALID             0x0
+/// \defgroup OCI_BASE Base enums and macros
+/// @{
 
-/**
- * @brief    invalid route table id
- */
-#define OCI_ROUTE_TABLE_ID_INVALID    0x0
+#define OCI_EPOCH_INVALID             0x0    ///< Invalid epoch
+#define OCI_ROUTE_TABLE_ID_INVALID    0x0    ///< Invalid route table ID
+#define OCI_POLICY_ID_INVALID         0x0    ///< Invalid policy ID
 
-/**
- * @brief    invalid policy id
- */
-#define OCI_POLICY_ID_INVALID         0x0
-
-/**
- * @brief    basic OCI data types
- */
+// Basic OCI data types
 typedef uint32_t  oci_vcn_id_t;
 typedef uint32_t  oci_subnet_id_t;
 typedef uint16_t  oci_vnic_id_t;
@@ -48,8 +34,6 @@ typedef uint32_t  oci_mapping_id_t;
 typedef uint32_t  oci_route_table_id_t;
 typedef uint32_t  oci_policy_id_t;
 
-/**
- * @}
- */
+/// \@}
 
-#endif    /** __OCI_HPP__ */
+#endif    // __INCLUDE_API_OCI_HPP__
