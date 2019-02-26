@@ -6,8 +6,8 @@
       "mpu": "1",
       "control": {
         "trace": false,
-        "phv-debug": true,
-        "phv-error": true
+        "phv-debug": false,
+        "phv-error": false
       },
       "capture": {
         "key-data": true,
@@ -24,9 +24,9 @@
       "stage": "1",
       "mpu": "1",
       "control": {
-        "trace": true,
-        "phv-debug": true,
-        "phv-error": true
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false
       },
       "capture": {
         "key-data": true,
@@ -43,9 +43,9 @@
       "stage": ".",
       "mpu": ".",
       "control": {
-        "trace": true,
-        "phv-debug": true,
-        "phv-error": true
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false
       },
       "capture": {
         "key-data": true,
@@ -62,9 +62,9 @@
       "stage": "2",
       "mpu": "2",
       "control": {
-        "trace": true,
-        "phv-debug": true,
-        "phv-error": true
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false
       },
       "capture": {
         "key-data": true,

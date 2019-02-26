@@ -6,8 +6,8 @@
       "mpu": ".*",
       "control": {
         "trace": false,
-        "phv-debug": true,
-        "phv-error": true
+        "phv-debug": false,
+        "phv-error": false
       },
       "capture": {
         "key-data": true,
