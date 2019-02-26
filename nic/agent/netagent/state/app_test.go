@@ -202,6 +202,40 @@ func TestAppUpdateOnNonExistentApp(t *testing.T) {
 	Assert(t, err != nil, "app udpate with non existent app should fail")
 }
 
+func TestAppRepeatedRPC(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	app := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"udp/53"},
+			ALG: &netproto.ALG{
+				SUNRPC: []*netproto.RPC{
+					{
+						ProgramID:        "42",
+						ProgramIDTimeout: "2s",
+					},
+					{
+						ProgramID:        "84",
+						ProgramIDTimeout: "10s",
+					},
+				},
+			},
+		},
+	}
+	// create app
+	err := ag.CreateApp(&app)
+	AssertOk(t, err, "rpc with repeated program IDs must pass")
+}
+
 func TestAppMultipleALGConfig_TwoALG(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
@@ -260,7 +294,7 @@ func TestAppMultipleALGConfig_ThreeALG(t *testing.T) {
 				},
 				SUNRPC: []*netproto.RPC{
 					&netproto.RPC{
-						ProgramID:        42,
+						ProgramID:        "42",
 						ProgramIDTimeout: "2s",
 					},
 				},
@@ -355,6 +389,74 @@ func TestAppBadSIPMediaInActivityTimeout(t *testing.T) {
 	// create app
 	err := ag.CreateApp(&app)
 	Assert(t, err != nil, "app bad sip media inactivity timeout must fail")
+}
+
+func TestAppBadSunRPCProgramIDTimeout(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+	app := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"tcp/13373"},
+			ALG: &netproto.ALG{
+				SUNRPC: []*netproto.RPC{
+					{
+						ProgramID:        "42",
+						ProgramIDTimeout: "2s",
+					},
+					{
+						ProgramID:        "84",
+						ProgramIDTimeout: "bad program id timeout",
+					},
+				},
+			},
+			AppIdleTimeout: "1m",
+		},
+	}
+	// create app
+	err := ag.CreateApp(&app)
+	Assert(t, err != nil, "app bad sun rpc program id timeout must fail")
+}
+
+func TestAppBadMSRPCProgramIDTimeout(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+	app := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"tcp/13373"},
+			ALG: &netproto.ALG{
+				MSRPC: []*netproto.RPC{
+					{
+						ProgramID:        "42",
+						ProgramIDTimeout: "2s",
+					},
+					{
+						ProgramID:        "84",
+						ProgramIDTimeout: "bad program id timeout",
+					},
+				},
+			},
+			AppIdleTimeout: "1m",
+		},
+	}
+	// create app
+	err := ag.CreateApp(&app)
+	Assert(t, err != nil, "app bad msrpc program id timeout must fail")
 }
 
 func TestAppBadSIPMaxCallDuration(t *testing.T) {

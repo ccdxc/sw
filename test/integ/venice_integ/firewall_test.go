@@ -452,7 +452,7 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 	AssertOk(c, err, "Error creating logged in context")
 
 	// ICMP app
-	pgmID := 8000
+	pgmID := "8000"
 	sunapp := security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -472,7 +472,7 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 				Type: "SunRPC",
 				Sunrpc: []*security.Sunrpc{
 					&security.Sunrpc{
-						ProgramID: fmt.Sprintf("%d", pgmID),
+						ProgramID: pgmID,
 						Timeout:   "2s",
 					},
 				},
@@ -498,7 +498,7 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 				Type: "MSRPC",
 				Msrpc: []*security.Msrpc{
 					&security.Msrpc{
-						ProgramUUID: fmt.Sprintf("%d", pgmID),
+						ProgramUUID: pgmID,
 						Timeout:     "2s",
 					},
 				},
@@ -533,13 +533,13 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 		AssertOk(c, cerr, "App not found in agent")
 		AssertEquals(c, napp.Spec.AppIdleTimeout, sunapp.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, sunapp.Spec.ALG.Type, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.SUNRPC[0].ProgramID, uint32(pgmID), "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.SUNRPC[0].ProgramID, pgmID, "invalid alg params")
 
 		napp, cerr = ag.NetworkAgent.FindApp(msapp.ObjectMeta)
 		AssertOk(c, cerr, "App not found in agent")
 		AssertEquals(c, napp.Spec.AppIdleTimeout, msapp.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, msapp.Spec.ALG.Type, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.MSRPC[0].ProgramID, uint32(pgmID), "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.MSRPC[0].ProgramID, pgmID, "invalid alg params")
 	}
 
 	// delete app

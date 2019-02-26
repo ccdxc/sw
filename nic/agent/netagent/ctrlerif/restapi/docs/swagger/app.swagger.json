@@ -594,8 +594,7 @@
       "type": "object",
       "properties": {
         "program-id": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "title": "RPC Program identifier"
         },
         "program-id-timeout": {

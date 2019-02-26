@@ -104,7 +104,7 @@ message SIP {
 // RPC ALG configuration for MSRPC and SunRPC
 message RPC {
     // RPC Program identifier
-    uint32 ProgramID        = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "program-id,omitempty"];
+    string ProgramID        = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "program-id,omitempty"];
     // Timeout is the timeout for the specific program-id
     string ProgramIDTimeout = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "program-id-timeout,omitempty"];
 

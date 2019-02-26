@@ -313,14 +313,24 @@ func convertALG(app *netproto.App) (*halproto.AppData, error) {
 	// MSRPC
 	if algSpec.MSRPC != nil {
 		appData.Alg = halproto.ALGName_APP_SVC_MSFT_RPC
-		/*
-				TBD: this needs to be coordinated with an array of (program-id, timeout) tuples
-			appData.AppOptions = &halproto.AppData_MsrpcOptionInfo{
-				MsrpcOptionInfo: &halproto.AppData_MSRPCOptions{
-					Uuid: algSpec.MSRPC.ProgramID,
-				},
-			}
-		*/
+		appData.AppOptions = &halproto.AppData_MsrpcOptionInfo{
+			MsrpcOptionInfo: &halproto.AppData_MSRPCOptions{
+				Data: convertRPCData(algSpec.MSRPC),
+			},
+		}
+
+		return &appData, nil
+	}
+
+	// SunRPC
+	if algSpec.SUNRPC != nil {
+		appData.Alg = halproto.ALGName_APP_SVC_SUN_RPC
+
+		appData.AppOptions = &halproto.AppData_SunRpcOptionInfo{
+			SunRpcOptionInfo: &halproto.AppData_SunRPCOptions{
+				Data: convertRPCData(algSpec.SUNRPC),
+			},
+		}
 		return &appData, nil
 	}
 
@@ -399,20 +409,6 @@ func convertALG(app *netproto.App) (*halproto.AppData, error) {
 		return &appData, nil
 	}
 
-	// SunRPC
-	if algSpec.SUNRPC != nil {
-		appData.Alg = halproto.ALGName_APP_SVC_SUN_RPC
-		/*
-			TBD: this needs to be coordinated with an array of (program-id, timeout) tuples
-			appData.AppOptions = &halproto.AppData_SunRpcOptionInfo{
-				SunRpcOptionInfo: &halproto.AppData_SunRPCOptions{
-					ProgramNumber: algSpec.SUNRPC.ProgramID,
-				},
-			}
-		*/
-		return &appData, nil
-	}
-
 	// TFTP
 	if algSpec.TFTP != nil {
 		appData.Alg = halproto.ALGName_APP_SVC_TFTP
@@ -420,6 +416,25 @@ func convertALG(app *netproto.App) (*halproto.AppData, error) {
 	}
 
 	return nil, nil
+}
+
+func convertRPCData(rpcData []*netproto.RPC) []*halproto.AppData_RPCData {
+	var halRPC []*halproto.AppData_RPCData
+	for _, r := range rpcData {
+		var h halproto.AppData_RPCData
+		h.ProgramId = r.ProgramID
+		if len(r.ProgramIDTimeout) > 0 {
+			dur, err := time.ParseDuration(r.ProgramIDTimeout)
+			if err != nil {
+				log.Errorf("invalid time duration %s", r.ProgramIDTimeout)
+			}
+			h.IdleTimeout = uint32(dur.Seconds())
+		} else {
+			h.IdleTimeout = constants.DefaultTimeout
+		}
+		halRPC = append(halRPC, &h)
+	}
+	return halRPC
 }
 
 // ------------------------ test utility functions -------------

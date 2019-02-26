@@ -47,8 +47,7 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 	if alg != nil {
 		if alg.DNS != nil {
 			if len(alg.DNS.QueryResponseTimeout) > 0 {
-				err = validateTimeout(alg.DNS.QueryResponseTimeout)
-				if err != nil {
+				if err := validateTimeout(alg.DNS.QueryResponseTimeout); err != nil {
 					log.Errorf("invalid QueryResponseTimeout format in SIP App. %v", alg.DNS.QueryResponseTimeout)
 					return err
 				}
@@ -63,6 +62,12 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 			algMapper = setBit(algMapper, 2)
 		}
 		if alg.MSRPC != nil {
+			for _, r := range alg.MSRPC {
+				if err := validateTimeout(r.ProgramIDTimeout); err != nil {
+					log.Errorf("invalid program ID timeout %v. Err: %v", r.ProgramIDTimeout, err)
+					return err
+				}
+			}
 			algMapper = setBit(algMapper, 3)
 		}
 		if alg.RTSP != nil {
@@ -70,40 +75,35 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 		}
 		if alg.SIP != nil {
 			if len(alg.SIP.CTimeout) > 0 {
-				err = validateTimeout(alg.SIP.CTimeout)
-				if err != nil {
+				if err := validateTimeout(alg.SIP.CTimeout); err != nil {
 					log.Errorf("invalid cTimeout format in SIP App. %v", alg.SIP.CTimeout)
 					return err
 				}
 			}
 
 			if len(alg.SIP.MaxCallDuration) > 0 {
-				err = validateTimeout(alg.SIP.MaxCallDuration)
-				if err != nil {
+				if err := validateTimeout(alg.SIP.MaxCallDuration); err != nil {
 					log.Errorf("invalid MaxCallDuration format in SIP App. %v", alg.SIP.MaxCallDuration)
 					return err
 				}
 			}
 
 			if len(alg.SIP.MediaInactivityTimeout) > 0 {
-				err = validateTimeout(alg.SIP.MediaInactivityTimeout)
-				if err != nil {
+				if err := validateTimeout(alg.SIP.MediaInactivityTimeout); err != nil {
 					log.Errorf("invalid MediaInactivityTimeout format in SIP App. %v", alg.SIP.MediaInactivityTimeout)
 					return err
 				}
 			}
 
 			if len(alg.SIP.T1Timeout) > 0 {
-				err = validateTimeout(alg.SIP.T1Timeout)
-				if err != nil {
+				if err := validateTimeout(alg.SIP.T1Timeout); err != nil {
 					log.Errorf("invalid T1Timeout format in SIP App. %v", alg.SIP.T1Timeout)
 					return err
 				}
 			}
 
 			if len(alg.SIP.T4Timeout) > 0 {
-				err = validateTimeout(alg.SIP.T4Timeout)
-				if err != nil {
+				if err := validateTimeout(alg.SIP.T4Timeout); err != nil {
 					log.Errorf("invalid T4Timeout format in SIP App. %v", alg.SIP.T4Timeout)
 					return err
 				}
@@ -112,6 +112,12 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 		}
 
 		if alg.SUNRPC != nil {
+			for _, r := range alg.SUNRPC {
+				if err := validateTimeout(r.ProgramIDTimeout); err != nil {
+					log.Errorf("invalid program ID timeout %v. Err: %v", r.ProgramIDTimeout, err)
+					return err
+				}
+			}
 			algMapper = setBit(algMapper, 6)
 		}
 		if alg.TFTP != nil {

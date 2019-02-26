@@ -99,19 +99,17 @@ func convertApp(aps *AppState) *netproto.App {
 		}
 	case "SunRPC":
 		for _, sunrpc := range aps.App.Spec.ALG.Sunrpc {
-			pgmID, _ := strconv.Atoi(sunrpc.ProgramID)
 			app.Spec.ALG.SUNRPC = append(app.Spec.ALG.SUNRPC,
 				&netproto.RPC{
-					ProgramID:        uint32(pgmID),
+					ProgramID:        sunrpc.ProgramID,
 					ProgramIDTimeout: sunrpc.Timeout,
 				})
 		}
 	case "MSRPC":
 		for _, msrpc := range aps.App.Spec.ALG.Msrpc {
-			pgmID, _ := strconv.Atoi(msrpc.ProgramUUID)
 			app.Spec.ALG.MSRPC = append(app.Spec.ALG.MSRPC,
 				&netproto.RPC{
-					ProgramID:        uint32(pgmID),
+					ProgramID:        msrpc.ProgramUUID,
 					ProgramIDTimeout: msrpc.Timeout,
 				})
 		}
