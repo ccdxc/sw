@@ -14,6 +14,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	browser "github.com/pensando/sw/api/generated/browser"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
@@ -28,6 +29,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type sbrowserSvc_browserBackend struct {
 	Services map[string]apiserver.Service
@@ -93,6 +95,7 @@ func (s *sbrowserSvc_browserBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := browser.MakeBrowserV1ServerEndpoints(s.endpointsBrowserV1, logger)
 		server := browser.MakeGRPCServerBrowserV1(ctx, endpoints, logger)
 		browser.RegisterBrowserV1Server(grpcserver.GrpcServer, server)
+
 	}
 }
 

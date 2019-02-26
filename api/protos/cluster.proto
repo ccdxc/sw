@@ -53,14 +53,17 @@ message ClusterSpec {
 
     // QuorumNodes contains the list of hostnames for nodes configured to be quorum
     // nodes in the cluster.
-    repeated string QuorumNodes = 1 [(gogoproto.jsontag) = "quorum-nodes,omitempty"];
+    repeated string QuorumNodes = 1 [(gogoproto.jsontag) = "quorum-nodes,omitempty",
+                                     (venice.mutable) = false];
 
     // VirtualIP is the IP address for managing the cluster. It will be hosted by
     // the winner of election between quorum nodes.
-    string VirtualIP            = 2 [(gogoproto.jsontag) = "virtual-ip,omitempty"];
+    string VirtualIP            = 2 [(gogoproto.jsontag) = "virtual-ip,omitempty",
+                                     (venice.mutable) = false];
 
     // NTPServers contains the list of NTP servers for the cluster.
-    repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntp-servers,omitempty"];
+    repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntp-servers,omitempty",
+                                     (venice.mutable) = false];
 
     // AutoAdmitNICs when enabled auto-admits NICs that are validated
     // into Venice Cluster. When it is disabled, NICs validated by CMD are

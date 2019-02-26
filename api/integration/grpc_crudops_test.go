@@ -1507,6 +1507,85 @@ func TestSchemaValidation(t *testing.T) {
 	}
 }
 
+func TestImmutableFields(t *testing.T) {
+	ctx := context.Background()
+
+	// REST Client
+	restClient, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restClient.Close()
+
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	// GRPC Client
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	grpcClient, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer grpcClient.Close()
+
+	tc := bookstore.Customer{
+		ObjectMeta: api.ObjectMeta{
+			Name: "TestCustomer",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Customer",
+		},
+		Spec: bookstore.CustomerSpec{
+			Id: "id",
+			PasswordRecoveryInfo: bookstore.CustomerPersonalInfo{
+				DateOfBirth: "12/20/2016",
+			},
+		},
+	}
+
+	for i, client := range []apiclient.Services{restClient, grpcClient} {
+		_, err = client.BookstoreV1().Customer().Create(ctx, &tc)
+		if err != nil {
+			t.Fatalf("failed to create customer (%s)", err)
+		}
+
+		uc := tc
+		uc.Spec.Id = "newid"
+		_, err = client.BookstoreV1().Customer().Update(ctx, &uc)
+		if err == nil {
+			t.Fatalf("No error while changing immutable field with client %d", i)
+		}
+
+		// change Id back to original, change a mutable field. This time it should go through
+		uc.Spec.Id = tc.Spec.Id
+		uc.Spec.Password = []byte("Test123")
+		_, err = client.BookstoreV1().Customer().Update(ctx, &uc)
+		if err != nil {
+			t.Fatalf("Error for valid update of object with immutable fields: %v, client id: %d", err, i)
+		}
+
+		// change nested immutable field
+		uc.Spec.PasswordRecoveryInfo.DateOfBirth = ""
+		_, err = client.BookstoreV1().Customer().Update(ctx, &uc)
+		if err == nil {
+			t.Fatalf("No error while changing immutable field with client id %d", i)
+		}
+
+		// change nested immutable field back to original, change a nested mutable field. This time it should go through
+		uc.Spec.PasswordRecoveryInfo.DateOfBirth = tc.Spec.PasswordRecoveryInfo.DateOfBirth
+		uc.Spec.PasswordRecoveryInfo.MotherMaidenName = "mom"
+		_, err = client.BookstoreV1().Customer().Update(ctx, &uc)
+		if err != nil {
+			t.Fatalf("Error for valid update of object with immutable fields: %v, client id: %d", err, i)
+		}
+
+		_, err = client.BookstoreV1().Customer().Delete(ctx, &uc.ObjectMeta)
+		if err != nil {
+			t.Fatalf("Error deleting object with immutable fields: %v, client id: %d", err, i)
+		}
+	}
+}
+
 func TestStaging(t *testing.T) {
 	ctx := context.Background()
 

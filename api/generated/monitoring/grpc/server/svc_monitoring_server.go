@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
@@ -34,6 +35,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type smonitoringSvc_monitoringBackend struct {
 	Services map[string]apiserver.Service
@@ -852,6 +854,8 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		endpoints := monitoring.MakeMonitoringV1ServerEndpoints(s.endpointsMonitoringV1, logger)
 		server := monitoring.MakeGRPCServerMonitoringV1(ctx, endpoints, logger)
 		monitoring.RegisterMonitoringV1Server(grpcserver.GrpcServer, server)
+		svcObjs := []string{"EventPolicy", "StatsPolicy", "FwlogPolicy", "FlowExportPolicy", "Alert", "AlertPolicy", "AlertDestination", "MirrorSession", "TroubleshootingSession", "TechSupportRequest"}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("monitoring", "MonitoringV1", svcObjs)
 	}
 }
 

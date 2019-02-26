@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	workload "github.com/pensando/sw/api/generated/workload"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
@@ -34,6 +35,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type sworkloadSvc_workloadBackend struct {
 	Services map[string]apiserver.Service
@@ -236,6 +238,8 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 		endpoints := workload.MakeWorkloadV1ServerEndpoints(s.endpointsWorkloadV1, logger)
 		server := workload.MakeGRPCServerWorkloadV1(ctx, endpoints, logger)
 		workload.RegisterWorkloadV1Server(grpcserver.GrpcServer, server)
+		svcObjs := []string{"Endpoint", "Workload"}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("workload", "WorkloadV1", svcObjs)
 	}
 }
 

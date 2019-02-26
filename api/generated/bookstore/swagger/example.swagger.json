@@ -889,6 +889,28 @@
             "type": "string"
           },
           {
+            "name": "PasswordRecoveryInfo.date-of-birth",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PasswordRecoveryInfo.lucky-numbers",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "Spec.id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "Status.account-status",
             "in": "query",
             "required": false,
@@ -2888,6 +2910,16 @@
         },
         "mother-maiden-name": {
           "type": "string"
+        },
+        "date-of-birth": {
+          "type": "string"
+        },
+        "lucky-numbers": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
         }
       }
     },
@@ -2915,6 +2947,9 @@
         },
         "PasswordRecoveryInfo": {
           "$ref": "#/definitions/bookstoreCustomerPersonalInfo"
+        },
+        "id": {
+          "type": "string"
         }
       }
     },

@@ -1017,7 +1017,7 @@ func TestGetFieldExtensions(t *testing.T) {
 					name: 'msg1fld1'
 					label: LABEL_OPTIONAL
 					type: TYPE_STRING
-					options:<[gogoproto.embed]: true>
+					options:<[gogoproto.embed]: true, [venice.mutable]: false>
 					number: 1
 				>
 				field <
@@ -1090,6 +1090,9 @@ func TestGetFieldExtensions(t *testing.T) {
 			if IsInline(f) {
 				t.Fatalf("expecting inline to be false")
 			}
+			if IsMutable(f) {
+				t.Fatalf("expecting mutable to be false")
+			}
 		case "msg1fld2":
 			if !IsEmbed(f) {
 				t.Fatalf("expecting Embed to be true")
@@ -1099,6 +1102,9 @@ func TestGetFieldExtensions(t *testing.T) {
 			}
 			if IsInline(f) {
 				t.Fatalf("expecting inline to be false")
+			}
+			if !IsMutable(f) {
+				t.Fatalf("expecting mutable to be true")
 			}
 		case "msg1fld3":
 			if !IsEmbed(f) {
@@ -1110,6 +1116,9 @@ func TestGetFieldExtensions(t *testing.T) {
 			if !IsInline(f) {
 				t.Fatalf("expecting inline to be true")
 			}
+			if !IsMutable(f) {
+				t.Fatalf("expecting mutable to be true")
+			}
 		case "msg1fld4":
 			if IsEmbed(f) {
 				t.Fatalf("expecting Embed to be false")
@@ -1119,6 +1128,9 @@ func TestGetFieldExtensions(t *testing.T) {
 			}
 			if !IsInline(f) {
 				t.Fatalf("expecting inline to be true")
+			}
+			if !IsMutable(f) {
+				t.Fatalf("expecting mutable to be true")
 			}
 		}
 

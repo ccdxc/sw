@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	rollout "github.com/pensando/sw/api/generated/rollout"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
@@ -34,6 +35,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type srolloutSvc_rolloutBackend struct {
 	Services map[string]apiserver.Service
@@ -161,6 +163,8 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := rollout.MakeRolloutV1ServerEndpoints(s.endpointsRolloutV1, logger)
 		server := rollout.MakeGRPCServerRolloutV1(ctx, endpoints, logger)
 		rollout.RegisterRolloutV1Server(grpcserver.GrpcServer, server)
+		svcObjs := []string{"Rollout"}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("rollout", "RolloutV1", svcObjs)
 	}
 }
 

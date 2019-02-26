@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	auth "github.com/pensando/sw/api/generated/auth"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
@@ -34,6 +35,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type sauthSvc_authBackend struct {
 	Services map[string]apiserver.Service
@@ -418,6 +420,8 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		endpoints := auth.MakeAuthV1ServerEndpoints(s.endpointsAuthV1, logger)
 		server := auth.MakeGRPCServerAuthV1(ctx, endpoints, logger)
 		auth.RegisterAuthV1Server(grpcserver.GrpcServer, server)
+		svcObjs := []string{"User", "AuthenticationPolicy", "Role", "RoleBinding"}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("auth", "AuthV1", svcObjs)
 	}
 }
 

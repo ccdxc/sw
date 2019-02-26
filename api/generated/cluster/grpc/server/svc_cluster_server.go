@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cluster "github.com/pensando/sw/api/generated/cluster"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
@@ -34,6 +35,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type sclusterSvc_clusterBackend struct {
 	Services map[string]apiserver.Service
@@ -469,6 +471,8 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := cluster.MakeClusterV1ServerEndpoints(s.endpointsClusterV1, logger)
 		server := cluster.MakeGRPCServerClusterV1(ctx, endpoints, logger)
 		cluster.RegisterClusterV1Server(grpcserver.GrpcServer, server)
+		svcObjs := []string{"Cluster", "Node", "Host", "SmartNIC", "Tenant"}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("cluster", "ClusterV1", svcObjs)
 	}
 }
 

@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	staging "github.com/pensando/sw/api/generated/staging"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
@@ -34,6 +35,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type sstagingSvc_stagingBackend struct {
 	Services map[string]apiserver.Service
@@ -177,6 +179,8 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := staging.MakeStagingV1ServerEndpoints(s.endpointsStagingV1, logger)
 		server := staging.MakeGRPCServerStagingV1(ctx, endpoints, logger)
 		staging.RegisterStagingV1Server(grpcserver.GrpcServer, server)
+		svcObjs := []string{"Buffer"}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("staging", "StagingV1", svcObjs)
 	}
 }
 

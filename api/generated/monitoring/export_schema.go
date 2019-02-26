@@ -18,69 +18,69 @@ var typesMapExport = map[string]*api.Struct{
 	"monitoring.AuthConfig": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthConfig{}) },
 		Fields: map[string]api.Field{
-			"Algo": api.Field{Name: "Algo", CLITag: api.CLIInfo{ID: "algo", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algo", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Algo": api.Field{Name: "Algo", CLITag: api.CLIInfo{ID: "algo", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algo", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.ExportConfig": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ExportConfig{}) },
 		Fields: map[string]api.Field{
-			"Destination": api.Field{Name: "Destination", CLITag: api.CLIInfo{ID: "destination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Destination": api.Field{Name: "Destination", CLITag: api.CLIInfo{ID: "destination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Transport": api.Field{Name: "Transport", CLITag: api.CLIInfo{ID: "transport", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "transport", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Transport": api.Field{Name: "Transport", CLITag: api.CLIInfo{ID: "transport", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "transport", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Credentials": api.Field{Name: "Credentials", CLITag: api.CLIInfo{ID: "credentials", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "credentials", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExternalCred"},
+			"Credentials": api.Field{Name: "Credentials", CLITag: api.CLIInfo{ID: "credentials", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "credentials", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExternalCred"},
 		},
 	},
 	"monitoring.ExternalCred": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ExternalCred{}) },
 		Fields: map[string]api.Field{
-			"AuthType": api.Field{Name: "AuthType", CLITag: api.CLIInfo{ID: "auth-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"AuthType": api.Field{Name: "AuthType", CLITag: api.CLIInfo{ID: "auth-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"UserName": api.Field{Name: "UserName", CLITag: api.CLIInfo{ID: "username", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "username", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"UserName": api.Field{Name: "UserName", CLITag: api.CLIInfo{ID: "username", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "username", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"BearerToken": api.Field{Name: "BearerToken", CLITag: api.CLIInfo{ID: "bearer-token", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "bearer-token", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"BearerToken": api.Field{Name: "BearerToken", CLITag: api.CLIInfo{ID: "bearer-token", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "bearer-token", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"CertData": api.Field{Name: "CertData", CLITag: api.CLIInfo{ID: "cert-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cert-data", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+			"CertData": api.Field{Name: "CertData", CLITag: api.CLIInfo{ID: "cert-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cert-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
 
-			"KeyData": api.Field{Name: "KeyData", CLITag: api.CLIInfo{ID: "key-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key-data", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+			"KeyData": api.Field{Name: "KeyData", CLITag: api.CLIInfo{ID: "key-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
 
-			"CaData": api.Field{Name: "CaData", CLITag: api.CLIInfo{ID: "ca-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ca-data", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+			"CaData": api.Field{Name: "CaData", CLITag: api.CLIInfo{ID: "ca-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ca-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
 		},
 	},
 	"monitoring.PrivacyConfig": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PrivacyConfig{}) },
 		Fields: map[string]api.Field{
-			"Algo": api.Field{Name: "Algo", CLITag: api.CLIInfo{ID: "algo", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algo", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Algo": api.Field{Name: "Algo", CLITag: api.CLIInfo{ID: "algo", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algo", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.SNMPTrapServer": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SNMPTrapServer{}) },
 		Fields: map[string]api.Field{
-			"Host": api.Field{Name: "Host", CLITag: api.CLIInfo{ID: "host", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Host": api.Field{Name: "Host", CLITag: api.CLIInfo{ID: "host", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Port": api.Field{Name: "Port", CLITag: api.CLIInfo{ID: "port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "port", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Port": api.Field{Name: "Port", CLITag: api.CLIInfo{ID: "port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "port", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Version": api.Field{Name: "Version", CLITag: api.CLIInfo{ID: "version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Version": api.Field{Name: "Version", CLITag: api.CLIInfo{ID: "version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "version", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"CommunityOrUser": api.Field{Name: "CommunityOrUser", CLITag: api.CLIInfo{ID: "community-or-user", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "community-or-user", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"CommunityOrUser": api.Field{Name: "CommunityOrUser", CLITag: api.CLIInfo{ID: "community-or-user", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "community-or-user", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"AuthConfig": api.Field{Name: "AuthConfig", CLITag: api.CLIInfo{ID: "auth-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AuthConfig"},
+			"AuthConfig": api.Field{Name: "AuthConfig", CLITag: api.CLIInfo{ID: "auth-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AuthConfig"},
 
-			"PrivacyConfig": api.Field{Name: "PrivacyConfig", CLITag: api.CLIInfo{ID: "privacy-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "privacy-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.PrivacyConfig"},
+			"PrivacyConfig": api.Field{Name: "PrivacyConfig", CLITag: api.CLIInfo{ID: "privacy-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "privacy-config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.PrivacyConfig"},
 		},
 	},
 	"monitoring.SyslogExportConfig": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SyslogExportConfig{}) },
 		Fields: map[string]api.Field{
-			"FacilityOverride": api.Field{Name: "FacilityOverride", CLITag: api.CLIInfo{ID: "facility-override", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "facility-override", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"FacilityOverride": api.Field{Name: "FacilityOverride", CLITag: api.CLIInfo{ID: "facility-override", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "facility-override", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Prefix": api.Field{Name: "Prefix", CLITag: api.CLIInfo{ID: "prefix", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "prefix", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Prefix": api.Field{Name: "Prefix", CLITag: api.CLIInfo{ID: "prefix", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "prefix", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

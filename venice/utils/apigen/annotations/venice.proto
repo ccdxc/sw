@@ -131,4 +131,7 @@ extend google.protobuf.FieldOptions {
   // before/after writing/reading to/from persistent storage.
 	// Only available for strings and byte arrays.
   repeated string storageTransformer = 51303;
+	// mutable=false indicates that the field cannot be set after creation time.
+	// Default is mutable=true. Limited to scalar fields.
+	bool mutable = 51304;
 };

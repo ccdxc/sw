@@ -29,6 +29,7 @@ type Field struct {
 	Slice      bool
 	Inline     bool
 	FromInline bool
+	Mutable    bool
 	Map        bool
 	// KeyType is valid only when Map is true
 	KeyType string

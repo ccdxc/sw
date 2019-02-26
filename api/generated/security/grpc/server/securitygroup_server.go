@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	security "github.com/pensando/sw/api/generated/security"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
@@ -33,6 +34,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type ssecuritySecuritygroupBackend struct {
 	Services map[string]apiserver.Service

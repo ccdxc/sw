@@ -2675,53 +2675,53 @@ func TestGetMsgMap(t *testing.T) {
 	exp := map[string]Struct{
 		"example.Struct1": Struct{
 			Fields: map[string]Field{
-				"field1":            {Name: "field1", CLITag: cliInfo{tag: "jsonfield1"}, JSONTag: "jsonfield1", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"repeated_scalar":   {Name: "repeated_scalar", CLITag: cliInfo{tag: "repeated_scalar"}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"repeated_struct":   {Name: "repeated_struct", CLITag: cliInfo{tag: "repeated_struct"}, JSONTag: "", Pointer: true, Slice: true, Map: false, KeyType: "", Type: "example.Struct2"},
-				"enum_field":        {Name: "enum_field", CLITag: cliInfo{tag: "enum_field"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
-				"repeated_enum":     {Name: "repeated_enum", CLITag: cliInfo{tag: "repeated_enum"}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_ENUM"},
-				"map_string_string": {Name: "map_string_string", CLITag: cliInfo{tag: "map-string-string"}, JSONTag: "map-string-string", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
-				"map_string_struct": {Name: "map_string_struct", CLITag: cliInfo{tag: "map_string_struct"}, JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "example.Struct2"},
-				"map_string_enum":   {Name: "map_string_enum", CLITag: cliInfo{tag: "map_string_enum"}, JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_ENUM"},
+				"field1":            {Name: "field1", CLITag: cliInfo{tag: "jsonfield1"}, JSONTag: "jsonfield1", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
+				"repeated_scalar":   {Name: "repeated_scalar", CLITag: cliInfo{tag: "repeated_scalar"}, JSONTag: "", Pointer: false, Slice: true, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
+				"repeated_struct":   {Name: "repeated_struct", CLITag: cliInfo{tag: "repeated_struct"}, JSONTag: "", Pointer: true, Slice: true, Map: false, Mutable: true, KeyType: "", Type: "example.Struct2"},
+				"enum_field":        {Name: "enum_field", CLITag: cliInfo{tag: "enum_field"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_ENUM"},
+				"repeated_enum":     {Name: "repeated_enum", CLITag: cliInfo{tag: "repeated_enum"}, JSONTag: "", Pointer: false, Slice: true, Map: false, Mutable: true, KeyType: "", Type: "TYPE_ENUM"},
+				"map_string_string": {Name: "map_string_string", CLITag: cliInfo{tag: "map-string-string"}, JSONTag: "map-string-string", Pointer: false, Slice: false, Map: true, Mutable: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+				"map_string_struct": {Name: "map_string_struct", CLITag: cliInfo{tag: "map_string_struct"}, JSONTag: "", Pointer: true, Slice: false, Map: true, Mutable: true, KeyType: "TYPE_STRING", Type: "example.Struct2"},
+				"map_string_enum":   {Name: "map_string_enum", CLITag: cliInfo{tag: "map_string_enum"}, JSONTag: "", Pointer: true, Slice: false, Map: true, Mutable: true, KeyType: "TYPE_STRING", Type: "TYPE_ENUM"},
 			},
 		},
 		"example.Struct2": Struct{
 			Fields: map[string]Field{
-				"Struct2Spec": {Name: "Struct2Spec", CLITag: cliInfo{tag: "inline-field", ins: "inline"}, JSONTag: "inline-field", Pointer: true, Slice: false, Map: false, Inline: true, Embed: true, KeyType: "", Type: "example.Struct2Spec"},
-				"field2":      {Name: "field2", CLITag: cliInfo{tag: "field2"}, JSONTag: "", Pointer: false, Slice: false, Map: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-				"field1":      {Name: "field1", CLITag: cliInfo{tag: "field1"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"Spec":        {Name: "Spec", CLITag: cliInfo{tag: "spec", ins: "spec"}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2Spec"},
-				"Status":      {Name: "Status", CLITag: cliInfo{tag: "status", ins: "status"}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2Status"},
+				"Struct2Spec": {Name: "Struct2Spec", CLITag: cliInfo{tag: "inline-field", ins: "inline"}, JSONTag: "inline-field", Pointer: true, Slice: false, Map: false, Inline: true, Embed: true, Mutable: true, KeyType: "", Type: "example.Struct2Spec"},
+				"field2":      {Name: "field2", CLITag: cliInfo{tag: "field2"}, JSONTag: "", Pointer: false, Slice: false, Map: false, FromInline: true, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
+				"field1":      {Name: "field1", CLITag: cliInfo{tag: "field1"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
+				"Spec":        {Name: "Spec", CLITag: cliInfo{tag: "spec", ins: "spec"}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "example.Struct2Spec"},
+				"Status":      {Name: "Status", CLITag: cliInfo{tag: "status", ins: "status"}, JSONTag: "status", Pointer: true, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "example.Struct2Status"},
 			},
 		},
 		"example.Struct2Spec": Struct{
 			Fields: map[string]Field{
-				"field1": {Name: "field1", CLITag: cliInfo{tag: "field1", skip: true, ins: "test", help: "Test string"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"field2": {Name: "field2", CLITag: cliInfo{tag: "TestKey", ins: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"field1": {Name: "field1", CLITag: cliInfo{tag: "field1", skip: true, ins: "test", help: "Test string"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
+				"field2": {Name: "field2", CLITag: cliInfo{tag: "TestKey", ins: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Mutable: true, Type: "TYPE_STRING"},
 			},
 		},
 		"example.Struct2Status": Struct{
 			Fields: map[string]Field{
-				"field1": {Name: "field1", CLITag: cliInfo{tag: "field1", ins: "test", help: "Test Status string"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"field2": {Name: "field2", CLITag: cliInfo{tag: "TestKey2", ins: "test1"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"field1": {Name: "field1", CLITag: cliInfo{tag: "field1", ins: "test", help: "Test Status string"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
+				"field2": {Name: "field2", CLITag: cliInfo{tag: "TestKey2", ins: "test1"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 			},
 		},
 		"example.MapMessageStringString": Struct{
 			Fields: map[string]Field{
-				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
+				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
 			},
 		},
 		"example.MapMessageStringStruct": Struct{
 			Fields: map[string]Field{
-				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2"},
+				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
+				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: true, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "example.Struct2"},
 			},
 		},
 		"example.MapMessageStringEnum": Struct{
 			Fields: map[string]Field{
-				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_STRING"},
+				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: false, Slice: false, Map: false, Mutable: true, KeyType: "", Type: "TYPE_ENUM"},
 			},
 		},
 	}

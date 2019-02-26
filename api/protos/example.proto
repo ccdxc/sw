@@ -149,6 +149,8 @@ message CustomerPersonalInfo {
   string SSN = 1 [(venice.storageTransformer) = "Secret()", (venice.storageTransformer) = "Secret()", // super secret encrypted twice!
                   (gogoproto.jsontag) = "ssn,omitempty"];
   string MotherMaidenName = 2 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "mother-maiden-name,omitempty"];
+	string DateOfBirth = 3 [(venice.mutable) = false, (gogoproto.jsontag) = "date-of-birth"];
+	repeated uint32 LuckyNumbers = 4 [(venice.mutable) = false, (gogoproto.jsontag) = "lucky-numbers"];
 }
 
 message CustomerSpec {
@@ -156,6 +158,7 @@ message CustomerSpec {
   repeated string CreditCardNumbers = 2 [(venice.storageTransformer) = "Secret()", (venice.check) = "StrLen(3,16)"];
   bytes Password = 3 [(venice.storageTransformer) = "Secret()"];
   CustomerPersonalInfo PasswordRecoveryInfo = 4 [(gogoproto.nullable) = false];
+	string Id = 5 [(venice.mutable) = false, (gogoproto.jsontag) = "id"];
 }
 
 message CustomerStatus {

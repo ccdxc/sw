@@ -119,6 +119,27 @@ var CreateCustomerFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "date-of-birth",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "id",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "lucky-numbers",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "mother-maiden-name",
 		Type:   "String",
 		Help:   "",

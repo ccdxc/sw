@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
@@ -38,6 +39,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type sbookstoreExampleBackend struct {
 	Services map[string]apiserver.Service
@@ -2847,6 +2849,8 @@ func (s *sbookstoreExampleBackend) regSvcsFunc(ctx context.Context, logger log.L
 		endpoints := bookstore.MakeBookstoreV1ServerEndpoints(s.endpointsBookstoreV1, logger)
 		server := bookstore.MakeGRPCServerBookstoreV1(ctx, endpoints, logger)
 		bookstore.RegisterBookstoreV1Server(grpcserver.GrpcServer, server)
+		svcObjs := []string{"Order", "Book", "Publisher", "Store", "Coupon", "Customer"}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("bookstore", "BookstoreV1", svcObjs)
 	}
 }
 

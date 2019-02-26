@@ -773,6 +773,19 @@ func IsEmbed(fld *descriptor.Field) bool {
 	return false
 }
 
+// IsMutable returns true if the field is mutable.
+// Only valid for scalar fields. Default is true.
+func IsMutable(fld *descriptor.Field) bool {
+	v, err := reg.GetExtension("venice.mutable", fld)
+	if err != nil {
+		return true
+	}
+	if !fld.IsScalar() && !fld.IsString() {
+		glog.Fatalf("Flag venice.mutable specified for non-scalar field %+v", fld)
+	}
+	return v.(bool)
+}
+
 // Hardcoded path Ids for the types
 const (
 	MsgType        = 4
@@ -836,4 +849,5 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.proxyPrefix", parseProxyEndpoint)
 	reg.RegisterOptionParser("venice.methodActionObject", parseStringOptions)
 	reg.RegisterOptionParser("venice.forceDoc", parseBoolOptions)
+	reg.RegisterOptionParser("venice.mutable", parseBoolOptions)
 }

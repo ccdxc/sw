@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	security "github.com/pensando/sw/api/generated/security"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
@@ -34,6 +35,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type ssecuritySvc_securityBackend struct {
 	Services map[string]apiserver.Service
@@ -552,6 +554,8 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		endpoints := security.MakeSecurityV1ServerEndpoints(s.endpointsSecurityV1, logger)
 		server := security.MakeGRPCServerSecurityV1(ctx, endpoints, logger)
 		security.RegisterSecurityV1Server(grpcserver.GrpcServer, server)
+		svcObjs := []string{"SecurityGroup", "SGPolicy", "App", "FirewallProfile", "Certificate", "TrafficEncryptionPolicy"}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("security", "SecurityV1", svcObjs)
 	}
 }
 

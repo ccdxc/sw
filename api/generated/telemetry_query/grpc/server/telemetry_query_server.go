@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -23,6 +24,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type stelemetry_queryTelemetry_queryBackend struct {
 	Services map[string]apiserver.Service

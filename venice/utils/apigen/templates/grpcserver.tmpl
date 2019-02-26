@@ -29,6 +29,7 @@ import (
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/errors"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/globals"
@@ -40,6 +41,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type s{{$pkgname}}{{$flname}}Backend struct {
 	Services  map[string]apiserver.Service
@@ -410,6 +412,8 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regSvcsFunc(ctx context.Context, logge
 		endpoints := {{$pkgname}}.Make{{$svcname}}ServerEndpoints(s.endpoints{{$svcname}}, logger)
 		server := {{$pkgname}}.MakeGRPCServer{{$svcname}}(ctx, endpoints, logger)
 		{{$pkgname}}.Register{{.Name}}Server(grpcserver.GrpcServer, server)
+		{{if (hasExtension "venice.apiGrpcCrudService" .)}}svcObjs := {{printf "%#v" (getSvcCrudObjects .)}}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("{{$pkgname}}", "{{.Name}}", svcObjs){{end}}
 	}{{end}}
 }
 

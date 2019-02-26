@@ -168,13 +168,17 @@ func TestClusterUpdate(t *testing.T) {
 	}, "error updating TLS config")
 	// update to cluster should not update cert and key
 	AssertEventually(t, func() (bool, interface{}) {
+		preUpdCluster, err := tinfo.apicl.ClusterV1().Cluster().Get(context.TODO(), &api.ObjectMeta{})
+		if err != nil {
+			return false, fmt.Errorf("Error getting cluster: %v", err)
+		}
 		cluster, err := tinfo.restcl.ClusterV1().Cluster().Update(ctx, &cluster.Cluster{
 			TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 			ObjectMeta: api.ObjectMeta{
 				Name: "testCluster",
 			},
 			Spec: cluster.ClusterSpec{
-				QuorumNodes: []string{"node1", "node2"},
+				AutoAdmitNICs: !preUpdCluster.Spec.AutoAdmitNICs,
 			},
 		})
 		if err != nil {

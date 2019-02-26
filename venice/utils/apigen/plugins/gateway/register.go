@@ -1668,6 +1668,7 @@ type Field struct {
 	Inline     bool
 	Embed      bool
 	FromInline bool
+	Mutable    bool
 	Slice      bool
 	Map        bool
 	// KeyType is valid only when Map is true
@@ -1834,6 +1835,7 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 	}
 	inline := common.IsInline(fld)
 	embed := common.IsEmbed(fld)
+	mutable := common.IsMutable(fld)
 	isMap := false
 	typeName := ""
 	keyType := ""
@@ -1891,6 +1893,7 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 		Map:     isMap,
 		Inline:  inline,
 		KeyType: keyType,
+		Mutable: mutable,
 		Type:    typeName,
 	}
 	return ret, nil
@@ -2205,8 +2208,8 @@ func getMsgMap(file *descriptor.File) (string, error) {
 
 		for _, k1 := range s.keys {
 			f := s.Fields[k1]
-			ret = ret + fmt.Sprintf("\n\"%s\":%vField{Name: \"%s\", CLITag: %vCLIInfo{ID: \"%s\", Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"}, JSONTag: \"%s\", Pointer: %v, Slice:%v, Map:%v, Inline: %v, FromInline: %v, KeyType: \"%v\", Type: \"%s\"},\n",
-				f.Name, pkg, f.Name, pkg, f.CLITag.tag, f.CLITag.path, f.CLITag.skip, f.CLITag.ins, f.CLITag.help, f.JSONTag, f.Pointer, f.Slice, f.Map, f.Inline, f.FromInline, f.KeyType, f.Type)
+			ret = ret + fmt.Sprintf("\n\"%s\":%vField{Name: \"%s\", CLITag: %vCLIInfo{ID: \"%s\", Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"}, JSONTag: \"%s\", Pointer: %v, Slice:%v, Mutable: %v, Map:%v, Inline: %v, FromInline: %v, KeyType: \"%v\", Type: \"%s\"},\n",
+				f.Name, pkg, f.Name, pkg, f.CLITag.tag, f.CLITag.path, f.CLITag.skip, f.CLITag.ins, f.CLITag.help, f.JSONTag, f.Pointer, f.Slice, f.Mutable, f.Map, f.Inline, f.FromInline, f.KeyType, f.Type)
 		}
 		ret = ret + "}, \n"
 		if len(s.CLITags) > 0 {

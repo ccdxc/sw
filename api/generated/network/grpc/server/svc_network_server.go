@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	network "github.com/pensando/sw/api/generated/network"
+	fieldhooks "github.com/pensando/sw/api/hooks/apiserver/fields"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
@@ -34,6 +35,7 @@ import (
 var _ api.ObjectMeta
 var _ listerwatcher.WatcherClient
 var _ fmt.Stringer
+var _ fieldhooks.Dummy
 
 type snetworkSvc_networkBackend struct {
 	Services map[string]apiserver.Service
@@ -319,6 +321,8 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := network.MakeNetworkV1ServerEndpoints(s.endpointsNetworkV1, logger)
 		server := network.MakeGRPCServerNetworkV1(ctx, endpoints, logger)
 		network.RegisterNetworkV1Server(grpcserver.GrpcServer, server)
+		svcObjs := []string{"Network", "Service", "LbPolicy"}
+		fieldhooks.RegisterImmutableFieldsServiceHooks("network", "NetworkV1", svcObjs)
 	}
 }
 
