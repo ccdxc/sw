@@ -184,11 +184,12 @@ typedef struct xcvr_sprom_data_t {
 } xcvr_sprom_data_t;
 
 typedef struct xcvr_event_info_s {
-    uint32_t          port_num;
+    uint32_t          xcvr_port;      // transceiver port number
+    uint32_t          port_num;       // front panel port number
     xcvr_state_t      state;
     xcvr_pid_t        pid;
-    cable_type_t      cable_type;
-    port_an_args_t    *port_an_args;
+    cable_type_t      cable_type;     // copper or fiber
+    port_an_args_t    *port_an_args;  // auto-neg params based on cable
     uint8_t           xcvr_sprom[XCVR_SPROM_SIZE];
 } xcvr_event_info_t;
 

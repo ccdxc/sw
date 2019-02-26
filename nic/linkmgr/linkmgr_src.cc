@@ -147,7 +147,8 @@ void linkmgr_log(sdk::lib::sdk_trace_level_e trace_level, const char *buf)
 static bool
 xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 {
-    port_t *port = NULL;
+    port_t *port     = NULL;
+    int    xcvr_port = -1;
 
     port_ht_cb_ctxt_t *ht_cb_ctxt      = (port_ht_cb_ctxt_t*) ctxt;
     xcvr_event_info_t *xcvr_event_info = (xcvr_event_info_t*) ht_cb_ctxt->ctxt;
@@ -156,7 +157,21 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 
     port = (port_t *)hal_handle_get_obj(entry->handle_id);
 
+    xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port->port_num);
+
+    // Ignore transceiver events for non-transceiver ports (MGMT)
+    if (xcvr_port == -1 || xcvr_port != (int)xcvr_event_info->xcvr_port) {
+        return false;
+    }
+
+    // update port PD state
     sdk::linkmgr::port_update_xcvr_event(port->pd_p, xcvr_event_info);
+
+    // update the front panel port number
+    xcvr_event_info->port_num = port->port_num;
+
+    // notify outside
+    xcvr_event_notify(xcvr_event_info);
 
     return false;
 }
@@ -190,7 +205,6 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
     }
 
     xcvr_event_port_enable(xcvr_event_info);
-    xcvr_event_notify(xcvr_event_info);
 }
 
 hal_ret_t
@@ -336,6 +350,7 @@ hal_ret_t
 port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t      ret           = HAL_RET_OK;
+    sdk_ret_t      sdk_ret       = SDK_RET_OK;
     dllist_ctxt_t  *lnode        = NULL;
     dhl_entry_t    *dhl_entry    = NULL;
     port_t         *pi_p         = NULL;
@@ -365,6 +380,30 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // Register for mac metrics
     delphi::objects::MacMetrics::CreateTable();
+
+    // send transceiver notification
+
+    int xcvr_port = 0;
+    xcvr_event_info_t xcvr_event_info;
+
+    memset (&xcvr_event_info, 0, sizeof(xcvr_event_info_t));
+
+    xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(pi_p->port_num);
+
+    if (xcvr_port != -1) {
+        sdk_ret = sdk::platform::xcvr_get(
+                                xcvr_port-1, &xcvr_event_info);
+        if (sdk_ret != SDK_RET_OK) {
+            HAL_TRACE_ERR("Failed to get xcvr for port: {}, err: {}",
+                          xcvr_port, sdk_ret);
+            return ret;
+        }
+
+        // update the front panel port number
+        xcvr_event_info.port_num = pi_p->port_num;
+
+        xcvr_event_notify(&xcvr_event_info);
+    }
 
     return ret;
 }
@@ -924,9 +963,9 @@ port_get_ht_cb (void *ht_entry, void *ctxt)
     }
 
     xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_args.port_num);
-    port_args.xcvr_port_num = xcvr_port;
     if (xcvr_port != -1) {
-        sdk_ret = sdk::platform::xcvr_get(xcvr_port - 1, &port_args);
+        sdk_ret = sdk::platform::xcvr_get(
+                                xcvr_port - 1, &port_args.xcvr_event_info);
         if (sdk_ret != SDK_RET_OK) {
             HAL_TRACE_ERR("Failed to get xcvr for port: {}, err: {}",
                           xcvr_port, sdk_ret);
@@ -982,9 +1021,9 @@ port_get (port_args_t *port_args)
     }
 
     xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_args->port_num);
-    port_args->xcvr_port_num = xcvr_port;
     if (xcvr_port != -1) {
-        sdk_ret = sdk::platform::xcvr_get(xcvr_port - 1, port_args);
+        sdk_ret = sdk::platform::xcvr_get(
+                        xcvr_port - 1, &port_args->xcvr_event_info);
         if (sdk_ret != SDK_RET_OK) {
             HAL_TRACE_ERR("Failed to get xcvr for port: {}, err: {}",
                           xcvr_port, sdk_ret);

@@ -1330,9 +1330,9 @@ port::xcvr_port_mac_addr(uint32_t xcvr_port, mac_addr_t mac_addr) {
     std::string   mac_addr_str;
 
     if (readKey(MACADDRESS_KEY, mac_addr_str) == -1) {
-        SDK_TRACE_ERR("Failed to read MAC addr for xcvr_port %u", xcvr_port);
         return SDK_RET_ERR;
     }
+
     mac_str_to_addr((char *)mac_addr_str.c_str(), mac_addr);
 
     // base mac addr is for first xcvr port, increment the last byte for

@@ -36,6 +36,8 @@ port_event_cb (uint32_t port_num, port_event_t event, port_speed_t port_speed)
 void
 xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 {
+    int xcvr_port = 0;
+
     /**< ignore xcvr events if xcvr valid check is disabled */
     if (!sdk::platform::xcvr_valid_check_enabled()) {
         return;
@@ -53,6 +55,13 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 
     for (int port = 0; port < OCI_MAX_PORT+1; ++port) {
         if (g_port_store[port] != NULL) {
+            xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port);
+
+            if (xcvr_port == -1 ||
+                xcvr_port != (int)xcvr_event_info->xcvr_port) {
+                continue;
+            }
+
             sdk::linkmgr::port_update_xcvr_event(g_port_store[port],
                                                  xcvr_event_info);
         }

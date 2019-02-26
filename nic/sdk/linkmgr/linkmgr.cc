@@ -678,7 +678,7 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
     SDK_TRACE_DEBUG("port: %u, xcvr_port: %u, xcvr_event_port: %u, "
                     "xcvr_state: %u, user_admin: %u, admin: %u, "
                     "AN_cfg: %u, AN_enable: %u, num_lanes_cfg: %u",
-                    port_args.port_num, xcvr_port, xcvr_event_info->port_num,
+                    port_args.port_num, xcvr_port, xcvr_event_info->xcvr_port,
                     static_cast<uint32_t>(xcvr_event_info->state),
                     static_cast<uint32_t>(port_args.user_admin_state),
                     static_cast<uint32_t>(port_args.admin_state),
@@ -686,7 +686,7 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
                     port_args.auto_neg_enable,
                     port_args.num_lanes_cfg);
 
-    if (xcvr_port == -1 || xcvr_port != (int)xcvr_event_info->port_num) {
+    if (xcvr_port == -1 || xcvr_port != (int)xcvr_event_info->xcvr_port) {
         return SDK_RET_OK;
     }
 

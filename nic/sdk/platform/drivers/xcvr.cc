@@ -91,12 +91,16 @@ xcvr_sprom_get (int port, void *xcvr_sprom)
 }
 
 sdk_ret_t
-xcvr_get (int port, port_args_t *port_arg)
+xcvr_get (int port, xcvr_event_info_t *xcvr_event_info)
 {
-    port_arg->xcvr_state = xcvr_state(port);
-    port_arg->xcvr_pid   = xcvr_pid(port);
+    // Front panel ports are 1 based
+    xcvr_event_info->xcvr_port    = port + 1;
+    xcvr_event_info->state        = xcvr_state(port);
+    xcvr_event_info->pid          = xcvr_pid(port);
+    xcvr_event_info->cable_type   = cable_type(port);
+    xcvr_event_info->port_an_args = xcvr_get_an_args(port);
 
-    xcvr_sprom_get(port, port_arg->xcvr_sprom);
+    xcvr_sprom_get (port, xcvr_event_info->xcvr_sprom);
 
     return SDK_RET_OK;
 }
@@ -185,13 +189,7 @@ xcvr_send_notification (int port)
 
     memset(&xcvr_event_info, 0, sizeof(xcvr_event_info_t));
 
-    // Front panel ports are 1 based
-    xcvr_event_info.port_num     = port + 1;
-    xcvr_event_info.state        = xcvr_state(port);
-    xcvr_event_info.cable_type   = cable_type(port);
-    xcvr_event_info.port_an_args = xcvr_get_an_args(port);
-
-    xcvr_sprom_get (port, xcvr_event_info.xcvr_sprom);
+    xcvr_get(port, &xcvr_event_info);
 
     if (g_xcvr_notify_cb) {
         switch (xcvr_state(port)) {
