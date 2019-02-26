@@ -28,19 +28,34 @@
 
 namespace rfc {
 
+typedef void (*rfc_compute_cl_addr_entry_cb_t)(mem_addr_t base_address,
+                                               uint32_t class_block_number,
+                                               uint32_t num_classes_per_block,
+                                               mem_addr_t *next_cl_addr,
+                                               uint16_t *next_entry_num);
+typedef sdk_ret_t (*rfc_action_data_flush_cb_t)(mem_addr_t addr,
+                                                void *action_data);
+typedef sdk_ret_t (*rfc_table_entry_pack_cb_t)(void *action_data,
+                                               uint32_t entry_num,
+                                               uint16_t entry_val);
+typedef uint16_t rfc_compute_entry_val_cb_t(rfc_ctxt_t *rfc_ctxt,
+                                            rfc_table_t *rfc_table,
+                                            rte_bitmap *cbm, uint32_t cbm_size);
 /**
  * @brief    given a classid & entry id, fill the corresponding portion of the
  *           RFC phase 1 table entry action data
- * @param[in] action_data    pointer to the action data
- * @param[in] entry_num      entry idx (0 to 50, inclusive), we can fit 51
- *                           entries, each 10 bits wide
- * @param[in] cid            RFC class id
+ * @param[in] actiondata    pointer to the action data
+ * @param[in] entry_num     entry idx (0 to 50, inclusive), we can fit 51
+ *                          entries, each 10 bits wide
+ * @param[in] cid           RFC class id
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_p1_table_entry_pack (sacl_ip_sport_p1_actiondata_t *action_data,
-                         uint32_t entry_num, uint16_t cid)
+rfc_p1_table_entry_pack (void *actiondata, uint32_t entry_num, uint16_t cid)
 {
+    sacl_ip_sport_p1_actiondata_t    *action_data;
+
+    action_data = (sacl_ip_sport_p1_actiondata_t *)actiondata;
     switch (entry_num) {
     case 0:
         action_data->action_u.sacl_ip_sport_p1_sacl_ip_sport_p1.id00 = cid;
@@ -206,20 +221,21 @@ rfc_p1_table_entry_pack (sacl_ip_sport_p1_actiondata_t *action_data,
 /**
  * @brief    write the current contents of RFC P1 action data buffer to memory
  * @param[in] addr        address to write the action data to
- * @param[in] action_data action data buffer
+ * @param[in] actiondata    action data buffer
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_p1_action_data_flush (mem_addr_t addr,
-                          sacl_ip_sport_p1_actiondata_t *action_data)
+rfc_p1_action_data_flush (mem_addr_t addr, void *actiondata)
 {
-    sdk_ret_t    ret;
+    sdk_ret_t                        ret;
+    sacl_ip_sport_p1_actiondata_t    *action_data;
 
+    action_data = (sacl_ip_sport_p1_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_rxdma_table(addr,
               P4_APOLLO_RXDMA_TBL_ID_SACL_IP_SPORT_P1,
               SACL_IP_SPORT_P1_SACL_IP_SPORT_P1_ID,
               action_data);
-    // reset the action data
+    // reset the action data after flushing it
     memset(action_data, 0, sizeof(*action_data));
     return ret;
 }
@@ -240,7 +256,8 @@ rfc_p1_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 
 /**
  * @brief    compute the cache line address where the given class block
- *           starts from
+ *           starts from and the entry index where the 1st entry should
+ *           be written to
  * @param[in] base_address            RFC phase 1 table's base address
  * @param[in] class_block_number      number of the class block
  * @param[in] num_classes_per_block   number of classes per block
@@ -264,67 +281,6 @@ rfc_compute_p1_next_cl_addr_entry_num (mem_addr_t base_address,
 }
 
 /**
- * @brief    given the class bitmap tables of phase0, compute class
- *           bitmap tables of RFC phase 1
- * @param[in] policy      user specified policy
- * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
- *                        information processed until now
- * @return    SDK_RET_OK on success, failure status code on error
- */
-static inline sdk_ret_t
-rfc_compute_p1_eq_class_tables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
-{
-    uint16_t                      class_id, entry_num = 0, next_entry_num;
-    rfc_table_t                   *rfc_table1, *rfc_table2;
-    rte_bitmap                    *cbm = rfc_ctxt->cbm;
-    sacl_ip_sport_p1_actiondata_t action_data = { 0 };
-    mem_addr_t                    p1_table_base_addr, cl_addr, next_cl_addr;
-
-    p1_table_base_addr = rfc_ctxt->base_addr + SACL_P1_TABLE_OFFSET;
-    rfc_table1 = &rfc_ctxt->port_tree.rfc_table;
-    rfc_table2 = &rfc_ctxt->pfx_tree.rfc_table;
-
-    // do cross product of bitmaps, assign RFC phase 1 table class ids
-    for (uint32_t i = 0; i < rfc_table1->num_classes; i++) {
-        rfc_compute_p1_next_cl_addr_entry_num(p1_table_base_addr, i,
-                                              rfc_table2->max_classes,
-                                              &next_cl_addr, &next_entry_num);
-        if (entry_num) {
-            if (cl_addr != next_cl_addr) {
-                // flush the current partially filled cache line
-                rfc_p1_action_data_flush(cl_addr, &action_data);
-                cl_addr = next_cl_addr;
-                entry_num = next_entry_num;
-            } else {
-                // cache line didn't change, so no need to flush the cache line
-                // but we need to set the entry_num to right value to start the
-                // next class block with
-                entry_num = next_entry_num;
-            }
-        } else {
-            cl_addr = next_cl_addr;
-            entry_num = next_entry_num;
-        }
-
-        for (uint32_t j = 0; i < rfc_table2->num_classes; j++) {
-            rte_bitmap_and(rfc_table1->cbm_table[i], rfc_table2->cbm_table[j],
-                           cbm);
-            class_id = rfc_compute_class_id(policy, &rfc_ctxt->p1_table,
-                                            cbm, rfc_ctxt->cbm_size);
-            rfc_p1_table_entry_pack(&action_data, entry_num, class_id);
-            entry_num++;
-            if (entry_num == SACL_P1_ENTRIES_PER_CACHE_LINE) {
-                // write this full entry to the table
-                rfc_p1_action_data_flush(cl_addr, &action_data);
-                entry_num = 0;
-                cl_addr += CACHE_LINE_SIZE;
-            }
-        }
-    }
-    return SDK_RET_OK;
-}
-
-/**
  * @brief    given two bits of data (stateful rule hit, stateless rule hit) and
  *           the entry id, fill corresponding portion of the RFC phase 2 table
  *           entry action data
@@ -335,9 +291,12 @@ rfc_compute_p1_eq_class_tables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_p2_table_entry_pack (sacl_p2_actiondata_t *action_data,
-                         uint32_t entry_num, uint8_t data)
+rfc_p2_table_entry_pack (void *actiondata, uint32_t entry_num, uint16_t data)
 {
+    sacl_p2_actiondata_t    *action_data;
+
+    action_data = (sacl_p2_actiondata_t *)actiondata;
+    data &= 0x3;    // only last 2 bits of the result are relevant
     switch (entry_num) {
     case 0:
         action_data->action_u.sacl_p2_sacl_p2.id000 = data;
@@ -1116,95 +1075,234 @@ rfc_p2_table_entry_pack (sacl_p2_actiondata_t *action_data,
 /**
  * @brief    write the current contents of RFC P2 action data buffer to memory
  * @param[in] addr        address to write the action data to
- * @param[in] action_data action data buffer
+ * @param[in] actiondata action data buffer
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_p2_action_data_flush (mem_addr_t addr,
-                          sacl_p2_actiondata_t *action_data)
+rfc_p2_action_data_flush (mem_addr_t addr, void *actiondata)
 {
-    return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
-               P4_APOLLO_RXDMA_TBL_ID_SACL_P2,
-               SACL_P2_SACL_P2_ID, action_data);
+    sdk_ret_t               ret;
+    sacl_p2_actiondata_t    *action_data;
+
+    action_data = (sacl_p2_actiondata_t *)actiondata;
+    ret = impl_base::pipeline_impl()->write_to_rxdma_table(addr,
+              P4_APOLLO_RXDMA_TBL_ID_SACL_P2,
+              SACL_P2_SACL_P2_ID, action_data);
+    // reset the action data after flushing it
+    memset(action_data, 0, sizeof(*action_data));
+
+    return ret;
 }
 
 /**
- * @brief    given the class bitmap tables of phase0 & phase1, compute class
- *           bitmap table(s) of RFC phase 2, and set the results bits
- * @param[in] policy      user specified policy
+ * @brief    compute the cache line address where the given class block
+ *           starts from and the entry index where the 1st entry should
+ *           be written to
+ * @param[in] base_address            RFC phase 1 table's base address
+ * @param[in] class_block_number      number of the class block
+ * @param[in] num_classes_per_block   number of classes per block
+ * @param[out] next_cl_addr           next cache line address computed
+ * @param[out] next_entry_num         next entry number computed
+ */
+static inline void
+rfc_compute_p2_next_cl_addr_entry_num (mem_addr_t base_address,
+                                       uint32_t class_block_number,
+                                       uint32_t num_classes_per_block,
+                                       mem_addr_t *next_cl_addr,
+                                       uint16_t *next_entry_num)
+{
+    uint32_t    num_classes, num_cache_lines;
+
+    num_classes = class_block_number * num_classes_per_block;
+    num_cache_lines = num_classes/SACL_P2_ENTRIES_PER_CACHE_LINE;
+    *next_cl_addr = base_address + (num_cache_lines << CACHE_LINE_SIZE_SHIFT);
+    *next_entry_num = num_classes%SACL_P2_ENTRIES_PER_CACHE_LINE;
+}
+
+/**
+ * @brief    given two equivalence class tables, compute the new equivalence
+ *           class table or the result table by doing cross product of class
+ *           bitmaps of the two tables
+ * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
+ *                        information processed until now
+ * @param[in] rfc_table                 result RFC table
+ * @param[in] cbm         class bitmap from which is result is computed from
+ * @param[in] cbm_size  class bitmap size
+ * @return    result bits of P2 table corresponding to the class bitmap provided
+ */
+uint16_t
+rfc_compute_p2_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
+                       rte_bitmap *cbm, uint32_t cbm_size)
+{
+    int         rv;
+    uint16_t    result;
+    uint32_t    posn = 0;
+    uint64_t    slab = 0;
+
+    rv = rte_bitmap_scan(cbm, &posn, &slab);
+    if (rv == 0) {
+        // no bit is set in the bitmap
+        result = 0;
+    } else {
+        do {
+            // TODO: which bit is SL bit, which bit is SF bit ?
+            if (rfc_ctxt->policy->rules[posn].stateful) {
+                RFC_RESULT_SET_STATEFUL_BIT(result);
+            } else {
+                RFC_RESULT_SET_STATEFUL_BIT(result);
+            }
+            if (RFC_RESULT_BOTH_BITS_SET(result)) {
+                break;
+            }
+        } while (rte_bitmap_scan(cbm, &posn, &slab));
+    }
+    return result;
+}
+
+/**
+ * @brief    given two equivalence class tables, compute the new equivalence
+ *           class table or the result table by doing cross product of class
+ *           bitmaps of the two tables
+ * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
+ *                        information processed until now
+ * @param[in] rfc_table1                RFC equivalance class table 1
+ * @param[in] rfc_table2                RFC equivalence class table 2
+ * @param[in] result_table              pointer to the result table
+ * @param[in] result_table_base_addr    base address of the result table
+ * @param[in] action_data               pointer to action data where entries are
+ *                                      computed and packed
+ * @param[in] entries_per_cl            number of entries that can fit in each
+ *                                      cache line
+ * @param[in] cl_addr_entry_cb          callback function that computes next
+ *                                      cacheline address and entry number in
+ *                                      the cache line to write to
+ * @param[in] compute_entry_val_cb      callback function to compute the entry
+ *                                      value
+ * @param[in] entry_pack_cb             callback function to pack each entry
+ *                                      value with in the action data at the
+ *                                      given entry number
+ * @param[in] action_data_flush_cb      callback function to flush the action
+ *                                      data contents
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+static inline sdk_ret_t
+rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
+                             rfc_table_t *rfc_table2, rfc_table_t *result_table,
+                             mem_addr_t result_table_base_addr,
+                             void *action_data, uint32_t entries_per_cl,
+                             rfc_compute_cl_addr_entry_cb_t cl_addr_entry_cb,
+                             rfc_compute_entry_val_cb_t compute_entry_val_cb,
+                             rfc_table_entry_pack_cb_t entry_pack_cb,
+                             rfc_action_data_flush_cb_t action_data_flush_cb)
+{
+    uint16_t      entry_val, entry_num = 0, next_entry_num;
+    mem_addr_t    cl_addr, next_cl_addr;
+
+    // do cross product of bitmaps, compute the entries (e.g., class ids or
+    // final table result etc.), pack them into appropriate cache lines and
+    // flush them
+    for (uint32_t i = 0; i < rfc_table1->num_classes; i++) {
+        cl_addr_entry_cb(result_table_base_addr, i, rfc_table2->max_classes,
+                         &next_cl_addr, &next_entry_num);
+        if (entry_num) {
+            if (cl_addr != next_cl_addr) {
+                // flush the current partially filled cache line
+                action_data_flush_cb(cl_addr, action_data);
+                cl_addr = next_cl_addr;
+                entry_num = next_entry_num;
+            } else {
+                // cache line didn't change, so no need to flush the cache line
+                // but we need to set the entry_num to right value to start the
+                // next class block with
+                entry_num = next_entry_num;
+            }
+        } else {
+            // we filled earlier cache line, need to start on new cache
+            // line and entry number computed
+            cl_addr = next_cl_addr;
+            entry_num = next_entry_num;
+        }
+
+        for (uint32_t j = 0; i < rfc_table2->num_classes; j++) {
+            rte_bitmap_and(rfc_table1->cbm_table[i], rfc_table2->cbm_table[j],
+                           rfc_ctxt->cbm);
+            entry_val = compute_entry_val_cb(rfc_ctxt, result_table,
+                                             rfc_ctxt->cbm, rfc_ctxt->cbm_size);
+            entry_pack_cb(action_data, entry_num, entry_val);
+            entry_num++;
+            if (entry_num == entries_per_cl) {
+                // write this full entry to the table
+                action_data_flush_cb(cl_addr, &action_data);
+                entry_num = 0;
+                cl_addr += CACHE_LINE_SIZE;
+            }
+        }
+    }
+    if (entry_num) {
+        // flush the partially filled last cache line as well
+        action_data_flush_cb(cl_addr, &action_data);
+    }
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    given the class bitmap tables of phase0, compute class
+ *           bitmap tables of RFC phase 1
  * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
  *                        information processed until now
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_compute_p2_tables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
+rfc_compute_p1_eq_class_tables (rfc_ctxt_t *rfc_ctxt)
 {
-    int                      rv;
-    uint8_t                  result;
-    uint16_t                 entry_num = 0;
-    uint32_t                 posn;
-    uint64_t                 slab;
-    rfc_table_t              *rfc_table3;
-    rte_bitmap               *cbm = rfc_ctxt->cbm;
-    sacl_p2_actiondata_t     action_data;
-    mem_addr_t               addr = rfc_ctxt->base_addr + SACL_P2_TABLE_OFFSET;
+    sacl_ip_sport_p1_actiondata_t action_data = { 0 };
 
-    rfc_table3 = &rfc_ctxt->proto_port_tree.rfc_table;
-    for (uint32_t i = 0; i < rfc_ctxt->p1_table.num_classes; i++) {
-        for (uint32_t j = 0; j < rfc_table3->num_classes; j++) {
-            rte_bitmap_and(rfc_ctxt->p1_table.cbm_table[i],
-                           rfc_table3->cbm_table[j], cbm);
-            posn = 0;
-            slab = 0;
-            rv = rte_bitmap_scan(cbm, &posn, &slab);
-            if (rv == 0) {
-                // no bit is set in the bitmap
-                result = 0;
-            } else {
-                do {
-                    // TODO: which bit is SL bit, which bit is SF bit ?
-                    if (policy->rules[posn].stateful) {
-                        RFC_RESULT_SET_STATEFUL_BIT(result);
-                    } else {
-                        RFC_RESULT_SET_STATEFUL_BIT(result);
-                    }
-                    if (RFC_RESULT_BOTH_BITS_SET(result)) {
-                        break;
-                    }
-                } while (rte_bitmap_scan(cbm, &posn, &slab));
-            }
-            rfc_p2_table_entry_pack(&action_data, entry_num, result);
-            entry_num++;
-            if (entry_num == SACL_P2_ENTRIES_PER_CACHE_LINE) {
-                // write this full entry to the table
-                rfc_p2_action_data_flush(addr, &action_data);
-                addr += CACHE_LINE_SIZE;
-                entry_num = 0;
-            }
-        }
-    }
-
-    // write partially filled cache line, if any, at the end
-    if (entry_num) {
-        rfc_p2_action_data_flush(addr, &action_data);
-    }
+    rfc_compute_eq_class_tables(rfc_ctxt, &rfc_ctxt->port_tree.rfc_table,
+                                &rfc_ctxt->pfx_tree.rfc_table,
+                                &rfc_ctxt->p1_table,
+                                rfc_ctxt->base_addr + SACL_P1_TABLE_OFFSET,
+                                &action_data, SACL_P1_ENTRIES_PER_CACHE_LINE,
+                                rfc_compute_p1_next_cl_addr_entry_num,
+                                rfc_compute_class_id, rfc_p1_table_entry_pack,
+                                rfc_p1_action_data_flush);
     return SDK_RET_OK;
 }
 
 /**
  * @brief    given the class bitmap tables of phase0 & phase1, compute class
  *           bitmap table(s) of RFC phase 2, and set the results bits
- * @param[in] policy      user specified policy
+ * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
+ *                        information processed until now
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+static inline sdk_ret_t
+rfc_compute_p2_tables (rfc_ctxt_t *rfc_ctxt)
+{
+    sacl_p2_actiondata_t     action_data = { 0 };
+
+    rfc_compute_eq_class_tables(rfc_ctxt, &rfc_ctxt->p1_table,
+                                &rfc_ctxt->proto_port_tree.rfc_table, NULL,
+                                rfc_ctxt->base_addr + SACL_P2_TABLE_OFFSET,
+                                &action_data, SACL_P2_ENTRIES_PER_CACHE_LINE,
+                                rfc_compute_p2_next_cl_addr_entry_num,
+                                rfc_compute_p2_result, rfc_p2_table_entry_pack,
+                                rfc_p2_action_data_flush);
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    given the class bitmap tables of phase0 & phase1, compute class
+ *           bitmap table(s) of RFC phase 2, and set the results bits
  * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
  *                        information processed until now
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-rfc_build_eqtables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
+rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
 {
-    rfc_compute_p1_eq_class_tables(policy, rfc_ctxt);
+    rfc_compute_p1_eq_class_tables(rfc_ctxt);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
-    rfc_compute_p2_tables(policy, rfc_ctxt);
+    rfc_compute_p2_tables(rfc_ctxt);
     return SDK_RET_OK;
 }
 

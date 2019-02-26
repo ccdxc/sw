@@ -98,7 +98,6 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
 
 /**
  * @brief        for given RFC context, build all the phase 0 LPM trees
- * @param[in] policy    user defined policy
  * @param[in] rfc_ctxt  RFC context carrying all the intermediate state
  * @param[in] rfc_tree_root_addr    address in memory to write the entire
  *                                  RFC policy
@@ -107,7 +106,7 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-rfc_build_lpm_trees (policy_t *policy, rfc_ctxt_t *rfc_ctxt,
+rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
                      mem_addr_t rfc_tree_root_addr, uint32_t mem_sz)
 {
     sdk_ret_t       ret;
@@ -132,7 +131,7 @@ rfc_build_lpm_trees (policy_t *policy, rfc_ctxt_t *rfc_ctxt,
 
     /**< build LPM tree for the prefix portion of the rules */
     itable.tree_type =
-        (policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4 : ITREE_TYPE_IPV6;
+        (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4 : ITREE_TYPE_IPV6;
     itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);

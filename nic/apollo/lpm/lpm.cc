@@ -528,7 +528,7 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
                     lpm_tree_root_addr, lpm_mem_size);
 
     /**< compute the # of stages, required including the def route */
-    nstages = lpm_stages(itable->tree_type, ((max_routes+1)<<1));
+    nstages = lpm_stages(itable->tree_type, ((max_routes + 1) << 1));
     SDK_ASSERT(nstages <= LPM_MAX_STAGES);
 
     /**< initialize all the stage meta */
@@ -550,7 +550,7 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
      * last stage has half as many keys as other stages, so divide
      * lpm_keys_per_table() by 2
      */
-    nkeys_per_table = lpm_keys_per_table(itable->tree_type) << 1;
+    nkeys_per_table = lpm_keys_per_table(itable->tree_type) >> 1;
     last_stage_info = &smeta.stage_info[nstages-1];
     for (uint32_t i = 0; i < itable->num_intervals; i++) {
         lpm_add_key_to_last_stage(smeta.tree_type, last_stage_info,

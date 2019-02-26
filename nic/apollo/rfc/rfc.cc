@@ -79,17 +79,17 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
 
 /**
  * @brief    walk the policy rules and build all phase 0 RFC interval tables
- * @param[in]    policy      policy table
  * @param[in]    rfc_ctxt    pointer to RFC trees
  *               intervals and class ids
  * @param[in]    num_nodes number of nodes in the itables
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_build_itables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
+rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
 {
     rule_t      *rule;
     uint32_t    rule_num = 0;
+    policy_t    *policy = rfc_ctxt->policy;
     itable_t    *addr_itable = &rfc_ctxt->pfx_tree.itable;
     itable_t    *port_itable = &rfc_ctxt->port_tree.itable;
     itable_t    *proto_port_itable = &rfc_ctxt->proto_port_tree.itable;
@@ -120,7 +120,7 @@ rfc_build_itables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
 }
 
 static inline sdk_ret_t
-rfc_compute_p0_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
+rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
 {
     uint32_t    num_intervals;
     itable_t    *addr_itable = &rfc_ctxt->pfx_tree.itable;
@@ -149,7 +149,7 @@ rfc_compute_p0_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
             continue;
         }
         inode->rfc.class_id =
-            rfc_compute_class_id(policy, &rfc_ctxt->pfx_tree.rfc_table,
+            rfc_compute_class_id(rfc_ctxt, &rfc_ctxt->pfx_tree.rfc_table,
                                  rfc_ctxt->cbm, rfc_ctxt->cbm_size);
         addr_itable->nodes[num_intervals++] = *inode;
     }
@@ -188,7 +188,7 @@ rfc_compute_p0_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
             continue;
         }
         inode->rfc.class_id =
-            rfc_compute_class_id(policy, &rfc_ctxt->port_tree.rfc_table,
+            rfc_compute_class_id(rfc_ctxt, &rfc_ctxt->port_tree.rfc_table,
                                  rfc_ctxt->cbm, rfc_ctxt->cbm_size);
         port_itable->nodes[num_intervals++] = *inode;
     }
@@ -227,7 +227,7 @@ rfc_compute_p0_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
             continue;
         }
         inode->rfc.class_id =
-            rfc_compute_class_id(policy, &rfc_ctxt->proto_port_tree.rfc_table,
+            rfc_compute_class_id(rfc_ctxt, &rfc_ctxt->proto_port_tree.rfc_table,
                                  rfc_ctxt->cbm, rfc_ctxt->cbm_size);
         proto_port_itable->nodes[num_intervals++] = *inode;
     }
@@ -313,17 +313,17 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
     }
 
     /**< build all the interval trees with the given policy */
-    rfc_build_itables(policy, &rfc_ctxt);
+    rfc_build_itables(&rfc_ctxt);
 
     /**< sort intervals in all the trees */
-    rfc_sort_itables(&rfc_ctxt, policy);
+    rfc_sort_itables(&rfc_ctxt);
 
     /**< compute equivalence classes for the intervals in the interval trees */
-    rfc_compute_p0_classes(policy, &rfc_ctxt);
+    rfc_compute_p0_classes(&rfc_ctxt);
     rfc_p0_eq_class_tables_dump(&rfc_ctxt);
 
     /**< build LPM trees for phase 0 of RFC */
-    ret = rfc_build_lpm_trees(policy, &rfc_ctxt, rfc_tree_root_addr, mem_size);
+    ret = rfc_build_lpm_trees(&rfc_ctxt, rfc_tree_root_addr, mem_size);
     if (ret != SDK_RET_OK) {
         OCI_TRACE_ERR("Failed to build RFC LPM trees, err %u", ret);
         goto cleanup;
@@ -333,7 +333,7 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
      * build equivalence class index tables and result tables for subsequent
      * phases of RFC
      */
-    rfc_build_eqtables(policy, &rfc_ctxt);
+    rfc_build_eqtables(&rfc_ctxt);
 
 cleanup:
 

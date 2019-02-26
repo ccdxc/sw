@@ -52,18 +52,17 @@ inode_compare_cb (const void *n1, const void *n2, void *ctxt)
  *           LPM trees
  * @param[in]    rfc_ctxt    RFC context carrying all the intermediate state for
  *                           this policy
- * @param[in]    policy      user specified policy
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-rfc_sort_itables (rfc_ctxt_t *rfc_ctxt, policy_t *policy)
+rfc_sort_itables (rfc_ctxt_t *rfc_ctxt)
 {
-    if (policy->af == IP_AF_IPV4) {
+    if (rfc_ctxt->policy->af == IP_AF_IPV4) {
         qsort_r(rfc_ctxt->pfx_tree.itable.nodes,
                 rfc_ctxt->pfx_tree.itable.num_nodes,
                 sizeof(inode_t), inode_compare_cb,
                 (void *)ITREE_TYPE_IPV4);
-    } else if (policy->af == IP_AF_IPV6) {
+    } else if (rfc_ctxt->policy->af == IP_AF_IPV6) {
         qsort_r(rfc_ctxt->pfx_tree.itable.nodes,
                 rfc_ctxt->pfx_tree.itable.num_nodes,
                 sizeof(inode_t), inode_compare_cb,
@@ -84,14 +83,15 @@ rfc_sort_itables (rfc_ctxt_t *rfc_ctxt, policy_t *policy)
  * @brief    given a class bitmap (cbm), check if that exists in the RFC table
  *           already and if not assign new class-id, if it exists already,
  *           use the current class id for that class bitmap
- * @param[in]    policy    user specified policy
+ * @param[in]    rfc_ctxt  RFC context carrying all the intermediate state for
+ *                         this policy
  * @param[in]    rfc_table RFC table to add the class id to
  * @param[in]    cbm       class bitmap that needs class id to be computed for
  * @param[in]    cbm_size  class bitmap size
  * @return    SDK_RET_OK on success, failure status code on error
  */
 uint16_t
-rfc_compute_class_id (policy_t *policy, rfc_table_t *rfc_table,
+rfc_compute_class_id (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                       rte_bitmap *cbm, uint32_t cbm_size)
 {
     uint8_t       *bits;
@@ -106,7 +106,7 @@ rfc_compute_class_id (policy_t *policy, rfc_table_t *rfc_table,
     class_id = rfc_table->num_classes++;
     SDK_ASSERT(class_id < RFC_MAX_EQ_CLASSES);
     posix_memalign((void **)&bits, CACHE_LINE_SIZE, cbm_size);
-    cbm_new = rte_bitmap_init(policy->max_rules, bits, cbm_size);
+    cbm_new = rte_bitmap_init(rfc_ctxt->policy->max_rules, bits, cbm_size);
     rte_bitmap_or(cbm, cbm_new, cbm_new);
     rfc_table->cbm_table[class_id] = cbm_new;
     rfc_table->cbm_map[cbm_new] = class_id;

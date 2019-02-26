@@ -109,6 +109,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     uint32_t    num_nodes = (policy->num_rules << 1) + 1;
 
     memset(rfc_ctxt, 0, sizeof(rfc_ctxt_t));
+    rfc_ctxt->policy = policy;
     rfc_ctxt->pfx_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
     if (rfc_ctxt->pfx_tree.itable.nodes == NULL) {

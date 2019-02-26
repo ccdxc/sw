@@ -65,6 +65,7 @@ typedef struct rfc_tree_s {
 } rfc_tree_t;
 
 typedef struct rfc_ctxt_s {
+    policy_t      *policy;        /**< user configured policy */
     /**< phase 0 information */
     rfc_tree_t    pfx_tree;       /**< RFC tree for prefix */
     rfc_tree_t    port_tree;      /**< RFC tree for port */
