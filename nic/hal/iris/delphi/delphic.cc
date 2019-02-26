@@ -8,6 +8,7 @@
 #include "nic/hal/hal_trace.hpp"
 #include "nic/hal/iris/delphi/delphi.hpp"
 #include "nic/hal/iris/delphi/delphic.hpp"
+#include "nic/hal/iris/delphi/utils/utils.hpp"
 #include "nic/hal/iris/sysmgr/sysmgr.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
@@ -122,46 +123,11 @@ delphi_client::sdk (void)
     return sdk_;
 }
 
-static ::hal::HalState
-hal_state (hal::hal_status_t hal_status)
-{
-    switch (hal_status) {
-    case HAL_STATUS_NONE:
-        return ::hal::HalState::HAL_STATE_NONE;
-    case HAL_STATUS_ASIC_INIT_DONE:
-        return ::hal::HalState::HAL_STATE_ASIC_INIT_DONE;
-    case HAL_STATUS_MEM_INIT_DONE:
-        return ::hal::HalState::HAL_STATE_MEM_INIT_DONE;
-    case HAL_STATUS_PACKET_BUFFER_INIT_DONE:
-        return ::hal::HalState::HAL_STATE_PACKET_BUFFER_INIT_DONE;
-    case HAL_STATUS_DATA_PLANE_INIT_DONE:
-        return ::hal::HalState::HAL_STATE_DATA_PLANE_INIT_DONE;
-    case HAL_STATUS_SCHEDULER_INIT_DONE:
-        return ::hal::HalState::HAL_STATE_SCHEDULER_INIT_DONE;
-    case HAL_STATUS_UP:
-        return ::hal::HalState::HAL_STATE_UP;
-    default:
-        return hal::HalState::HAL_STATE_NONE;
-    }
-}
-
 // API to update HAL status
 void
 set_hal_status (hal::hal_status_t hal_status)
 {
-    dobj::HalStatusPtr    status;
-    ::hal::HalState       state;
-
-    state = hal_state(hal_status);
-    status = dobj::HalStatus::FindObject(g_delphic->sdk());
-    if (status) {
-        status->set_state(state);
-        g_delphic->sdk()->QueueUpdate(status);
-    } else {
-        status = std::make_shared<dobj::HalStatus>();
-        status->set_state(state);
-        g_delphic->sdk()->QueueUpdate(status);
-    }
+    set_hal_status(hal_status, g_delphic->sdk());
 }
 
 }    // namespace svc

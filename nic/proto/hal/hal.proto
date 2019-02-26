@@ -17,7 +17,8 @@ enum HalState {
   HAL_STATE_PACKET_BUFFER_INIT_DONE = 3;  // HAL moves to this state after PB init is done
   HAL_STATE_DATA_PLANE_INIT_DONE    = 4;  // HAL moves to this state after all ports are enabled
   HAL_STATE_SCHEDULER_INIT_DONE     = 5;  // HAL moves to this state once scheduler initialization is done
-  HAL_STATE_UP                      = 6;  // HAL moves to this state after all initialization is done
+  HAL_STATE_INIT_ERR                = 6;  // HAL moves to this state if port create fails
+  HAL_STATE_UP                      = 7;  // HAL moves to this state after all initialization is done
 }
 
 message HalStatus {

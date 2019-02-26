@@ -10,7 +10,7 @@ MODULE_SOLIBS = pal sdkfru linkmgr_test_utils bm_allocator linkmgrdelphi \
                 list shmmgr slab ht timerfd periodic halproto delphisdk \
                 linkmgr_src sdklinkmgr haltrace \
                 linkmgr_libsrc sdklinkmgrcsr \
-                sdkcapri_csrint \
+                sdkcapri_csrint haldelphiutils \
                 logger thread twheel sdkpal catalog utils mtrack trace
 MODULE_LDLIBS = ${NIC_HAL_ALL_LDLIBS}
 MODULE_FLAGS  = -pthread -rdynamic
