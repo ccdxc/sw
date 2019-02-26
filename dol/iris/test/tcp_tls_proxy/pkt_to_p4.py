@@ -259,7 +259,7 @@ def TestCaseVerify(tc):
         if not tc.pvtdata.test_ooo_queue_in_order:
             rcv_next_delta = 0
             num_pkts = 0
-    if not tc.pvtdata.rst and tcpcb_cur.rcv_nxt != tc.pvtdata.flow1_rcv_nxt + rcv_next_delta:
+    if not tc.pvtdata.rst and tcpcb_cur.rcv_nxt != (tc.pvtdata.flow1_rcv_nxt + rcv_next_delta) & 0xffffffff:
         logger.error("rcv_nxt (%d) not as expected (%d)" %
                 (tcpcb_cur.rcv_nxt, tc.pvtdata.flow1_rcv_nxt + rcv_next_delta))
         return False

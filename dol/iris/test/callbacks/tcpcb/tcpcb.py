@@ -147,7 +147,11 @@ def GetAckPktSeqNum (tc, pkt):
     return pktSeqNum
 
 def GetAckPktAckNum (tc, pkt):
-    return tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.flow1_bytes_rxed
+    ack = tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.flow1_bytes_rxed
+    # Make sure the ack returned is 32 bit unsigned, let it wrap around
+    # if required.
+    ack &= 0xffffffff
+    return ack
 
 def GetReverseFlowAckPktSeqNum (tc, pkt):
     return tc.pvtdata.flow2_snd_nxt + tc.packets.Get('PKT1').payloadsize

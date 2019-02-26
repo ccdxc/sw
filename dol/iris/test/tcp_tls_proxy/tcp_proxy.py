@@ -82,6 +82,7 @@ def SetupProxyArgs(tc):
     snd_cwnd = 0
     initial_window = 0
     rcv_mss = 0
+    rcv_nxt = 0
     rcv_wnd = 0
     rcv_scale = 0
     rcv_wup_delta = 0
@@ -166,6 +167,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'rcv_scale'):
         rcv_scale = tc.module.args.rcv_scale
         logger.info("- rcv_scale %s" % tc.module.args.rcv_scale)
+    if hasattr(tc.module.args, 'rcv_nxt'):
+        rcv_nxt = tc.module.args.rcv_nxt
+        logger.info("- rcv_nxt %s" % tc.module.args.rcv_nxt)
     if hasattr(tc.module.args, 'rcv_wup_delta'):
         rcv_wup_delta = tc.module.args.rcv_wup_delta
         logger.info("- rcv_wup_delta %s" % tc.module.args.rcv_wup_delta)
@@ -265,6 +269,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.snd_cwnd = snd_cwnd
     tc.pvtdata.initial_window = initial_window
     tc.pvtdata.rcv_wnd = rcv_wnd
+    tc.pvtdata.rcv_nxt = rcv_nxt
     tc.pvtdata.rcv_scale = rcv_scale
     tc.pvtdata.rcv_mss = rcv_mss
     tc.pvtdata.rcv_wup_delta = rcv_wup_delta
@@ -364,6 +369,10 @@ def init_tcb_inorder(tc, tcb):
         tcb.initial_window = tc.pvtdata.initial_window
     else:
         tcb.initial_window = 10000
+
+    if tc.pvtdata.rcv_nxt:
+        tcb.rcv_nxt = tc.pvtdata.rcv_nxt
+        tc.pvtdata.flow1_rcv_nxt = tcb.rcv_nxt
 
     if tc.pvtdata.rcv_wnd:
         tcb.rcv_wnd = tc.pvtdata.rcv_wnd
@@ -547,6 +556,10 @@ def init_tcb_inorder2(tc, tcb):
         tcb.rcv_wnd = tc.pvtdata.rcv_wnd
     else:
         tcb.rcv_wnd = 1000
+
+    if tc.pvtdata.rcv_nxt:
+        tcb.rcv_nxt = tc.pvtdata.rcv_nxt
+        tc.pvtdata.flow2_rcv_nxt = tcb.rcv_nxt
 
     if tc.pvtdata.rcv_scale:
         tcb.rcv_wscale = tc.pvtdata.rcv_scale
