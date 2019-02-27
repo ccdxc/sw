@@ -35,6 +35,7 @@
 
 #define IPSEC_N2H_GLOBAL_FLAGS 1
 
+#define IPSEC_N2H_GLOBAL_FLAGS_BAD_SIG 1
 
 #define IPSEC_DESC_FULL_DESC_ADDR 0xFFFFFFFF
 
@@ -72,6 +73,7 @@
 #define N2H_DESC_RING_OFFSET          88
 #define N2H_ABORT_TXDMA1_DUMMY_OFFSET 96
 #define N2H_LOAD_IPSEC_INT_OFFSET     112 
+#define N2H_TXDMA2_DUMMY_FREE         120
 
 #define H2N_IN_DESC_OFFSET      0
 #define H2N_OUT_DESC_OFFSET     8
@@ -105,7 +107,7 @@
 #define IPSEC_INT_END_OFFSET    CAPRI_PHV_END_OFFSET(ipsec_int_header_l4_protocol)
  
 #define IPSEC_N2H_INT_START_OFFSET  CAPRI_PHV_START_OFFSET(ipsec_int_header_in_desc) 
-#define IPSEC_N2H_INT_END_OFFSET    CAPRI_PHV_END_OFFSET(ipsec_int_header_spi)
+#define IPSEC_N2H_INT_END_OFFSET    CAPRI_PHV_END_OFFSET(ipsec_int_header_status_addr)
  
 #define IPSEC_IN_DESC_AOL_START CAPRI_PHV_START_OFFSET(barco_desc_in_A0_addr) 
 #define IPSEC_IN_DESC_AOL_END   CAPRI_PHV_END_OFFSET(barco_desc_in_L1) 

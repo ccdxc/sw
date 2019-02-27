@@ -9,8 +9,6 @@ struct phv_ p;
 %%
         .align
 esp_v4_tunnel_n2h_txdma2_increment_global_ci:
-    add r1, d.ci, 1
-    and r1, r1, IPSEC_BARCO_RING_INDEX_MASK
-    tblwr d.ci, r1
+    tblmincri.f d.ci, IPSEC_BARCO_RING_WIDTH, 1
     nop.e
     nop

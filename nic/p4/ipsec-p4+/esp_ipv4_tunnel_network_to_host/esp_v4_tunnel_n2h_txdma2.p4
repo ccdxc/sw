@@ -27,7 +27,7 @@ header_type ipsec_txdma2_global_t {
         in_desc_addr   : ADDRESS_WIDTH;
         ipsec_cb_index : 16;
         iv_size : 8;
-        icv_size : 8;
+        flags : 8;
         pad_size : 8;
         l4_protocol : 8;
         payload_size : 16;
@@ -210,7 +210,7 @@ metadata n2h_stats_header_t ipsec_stats_scratch;
     modify_field(txdma2_global_scratch.in_desc_addr, txdma2_global.in_desc_addr); \
     modify_field(txdma2_global_scratch.ipsec_cb_index, txdma2_global.ipsec_cb_index); \
     modify_field(txdma2_global_scratch.iv_size, txdma2_global.iv_size); \
-    modify_field(txdma2_global_scratch.icv_size, txdma2_global.icv_size); \
+    modify_field(txdma2_global_scratch.flags, txdma2_global.flags); \
     modify_field(txdma2_global_scratch.pad_size, txdma2_global.pad_size); \
     modify_field(txdma2_global_scratch.l4_protocol, txdma2_global.l4_protocol); \
     modify_field(txdma2_global_scratch.payload_size, txdma2_global.payload_size); \
@@ -398,7 +398,6 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
 
     modify_field(txdma2_global.ipsec_cb_index, ipsec_cb_index);
     modify_field(txdma2_global.iv_size, iv_size);
-    modify_field(txdma2_global.icv_size, icv_size);
  
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);

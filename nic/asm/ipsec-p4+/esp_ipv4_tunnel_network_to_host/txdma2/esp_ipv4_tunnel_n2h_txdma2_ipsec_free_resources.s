@@ -9,6 +9,7 @@ struct phv_ p;
 %%
     .param IPSEC_RNMPR_TABLE_BASE
     .param IPSEC_TNMPR_TABLE_BASE
+    .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     .align
 esp_ipv4_tunnel_n2h_txdma2_ipsec_free_resources:
     and r2, d.sem_cindex, IPSEC_DESC_RING_INDEX_MASK
@@ -32,5 +33,20 @@ esp_ipv4_tunnel_n2h_txdma2_ipsec_free_resources:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(sem_cindex_dma_cmd, r1, ipsec_to_stage3_sem_cindex, ipsec_to_stage3_sem_cindex)
     CAPRI_DMA_CMD_STOP_FENCE(sem_cindex_dma_cmd)
 
-    phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
+    seq c1, k.txdma2_global_flags, IPSEC_N2H_GLOBAL_FLAGS_BAD_SIG
+    bcf [c1], disable_pkt_dma_cmds
+    nop
+    nop.e
+    nop
+
+disable_pkt_dma_cmds:
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA2_DUMMY_FREE, 1)
+    phvwri p.dec_pay_load_dma_cmd_pkt_eop, 0
+    phvwri p.eth_hdr_dma_cmd_type, 0 
+    phvwri p.dec_pay_load_dma_cmd_type, 0
+    phvwri p.vrf_vlan_hdr_dma_cmd_type, 0 
+    phvwri p.ipsec_app_hdr_dma_cmd_type, 0
+    phvwri.e p.intrinsic_app_hdr_dma_cmd_type, 0
     nop
