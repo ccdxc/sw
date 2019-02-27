@@ -115,7 +115,7 @@ func TestSyslogEventsExporter(t *testing.T) {
 		temp.ObjectMeta.UUID = uuid.New().String()
 
 		// send events to mock events chan
-		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
+		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, &events.Offset{})
 	}
 
 	wg.Wait()

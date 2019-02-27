@@ -51,6 +51,9 @@ type Dispatcher interface {
 	// removes the exporter identified by given name from the list of registered exporters.
 	UnregisterExporter(name string)
 
+	// unregisters the exporter and deletes the exporter offset file from the system; invoked when event policy is deleted.
+	DeleteExporter(name string)
+
 	// start notifying the writers of the events
 	Start()
 
@@ -61,10 +64,6 @@ type Dispatcher interface {
 
 	// action to be performed by the proxy when an event is received from the recorder.
 	Action(event events.Event) error
-
-	// used to re-play failed events during restarts. Internally, it queries the bookmarked offset
-	// of each exporter, reads and sends the events from that offset.
-	ProcessFailedEvents()
 }
 
 // Chan represents the channel that will be used by the dispatcher to send
@@ -90,7 +89,7 @@ type Batch interface {
 	GetEvents() []*events.Event
 
 	// returns the offset
-	GetOffset() int64
+	GetOffset() *Offset
 }
 
 // Exporter - all the exporters (venice, syslog, etc.) should implement the functions
@@ -115,7 +114,7 @@ type Exporter interface {
 	// returns the last bookmarked offset i.e, the point till where it was successful
 	// when the proxy restarts, it starts processing events from this offset for this exporter to avoid
 	// losing any event.
-	GetLastProcessedOffset() (int64, error)
+	GetLastProcessedOffset() (*Offset, error)
 
 	// adds the given writer to exporter
 	AddWriter(interface{})
@@ -126,27 +125,52 @@ type Exporter interface {
 // OffsetTracker helper to help the exporters update offset.
 type OffsetTracker interface {
 	// updates/bookmarks the offset to the given value
-	UpdateOffset(int64) error
+	UpdateOffset(*Offset) error
 
 	// returns the current bookmarked offset
-	GetOffset() (int64, error)
+	GetOffset() (*Offset, error)
+
+	// deletes the underlying offset file that is tracking the offset values
+	Delete() error
 }
 
 // PersistentStore represents the persistent store for events
 // e.g. file
 type PersistentStore interface {
-	// writes the given data to persistent store
-	Write(data []byte) error
+	// returns the current events file name in use
+	GetFilename() string
+
+	// writes the given data to persistent store and return whether there was a rotation or not
+	// true indicates a file rotation
+	Write(data []byte) (bool, error)
 
 	// returns the current offset of the persistent store; this is used by the exporters to bookmark.
-	GetCurrentOffset() (int64, error)
+	GetCurrentOffset() (*Offset, error)
 
 	// returns the list of events starting from the given offset.
-	GetEventsFromOffset(offset int64) ([]*events.Event, error)
+	GetEventsFromOffset(offset *Offset) ([]*events.Event, error)
 
 	// returns the path of the persistent store
 	GetStorePath() string
 
 	// closes the persistent store connection/handler
 	Close()
+}
+
+// Offset represents file offset data that is tracked for each exporter.
+// Since there can be multiple events files (backed up ones), we need to track the filename
+// to know where exactly the exporter is left processing.
+type Offset struct {
+	Filename  string
+	BytesRead int64
+}
+
+// StoreConfig represents the config for underlying file/persistent store which stores
+// all the events until they are rotated/deleted based on the config policy (max. size and max. num files).
+// Events file(s) will be replayed for each exporter from where they left off during process restarts.
+// And, this way we ensure no events are lost.
+type StoreConfig struct {
+	Dir         string // events store directory where the events (including backups) and exporter offsets are stored
+	MaxFileSize int64  // maximum size of the events
+	MaxNumFiles int    // maximum number of event files to be kept
 }

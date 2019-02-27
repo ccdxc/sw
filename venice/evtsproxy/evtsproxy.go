@@ -73,13 +73,13 @@ type EventsProxy struct {
 
 // NewEventsProxy creates and returns a events proxy instance
 func NewEventsProxy(serverName, serverURL string, resolverClient resolver.Interface, dedupInterval, batchInterval time.Duration,
-	eventsStoreDir string, logger log.Logger) (*EventsProxy, error) {
+	storeConfig *events.StoreConfig, logger log.Logger) (*EventsProxy, error) {
 	if utils.IsEmpty(serverName) || utils.IsEmpty(serverURL) || logger == nil {
 		return nil, errors.New("serverName, serverURL and logger is required")
 	}
 
 	// create the events dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, eventsStoreDir, logger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, storeConfig, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating events proxy RPC server")
 	}
@@ -186,6 +186,14 @@ func (ep *EventsProxy) RegisterEventsExporter(exporterType ExporterType, config 
 // UnregisterEventsExporter unregisters the given exporter from events dispatcher
 func (ep *EventsProxy) UnregisterEventsExporter(name string) {
 	ep.evtsDispatcher.UnregisterExporter(name)
+	ep.Lock()
+	delete(ep.exporters, name)
+	ep.Unlock()
+}
+
+// DeleteEventsExporter deletes the given exporter from events dispatcher
+func (ep *EventsProxy) DeleteEventsExporter(name string) {
+	ep.evtsDispatcher.DeleteExporter(name)
 	ep.Lock()
 	delete(ep.exporters, name)
 	ep.Unlock()

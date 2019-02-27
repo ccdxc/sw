@@ -137,7 +137,7 @@ func (m *ExportMgr) Create(policy *evtsmgrprotos.EventPolicy) error {
 // Delete stops and deletes all the associated writers for the given event policy
 func (m *ExportMgr) Delete(policy *evtsmgrprotos.EventPolicy) error {
 	if policy != nil {
-		return m.delete(policy)
+		return m.delete(policy, false)
 	}
 	return fmt.Errorf("nil event policy")
 }
@@ -147,7 +147,7 @@ func (m *ExportMgr) Delete(policy *evtsmgrprotos.EventPolicy) error {
 func (m *ExportMgr) Update(policy *evtsmgrprotos.EventPolicy) error {
 	if policy != nil {
 		// delete all the old writers
-		if err := m.delete(policy); err != nil {
+		if err := m.delete(policy, true); err != nil {
 			return err
 		}
 
@@ -199,7 +199,7 @@ func (m *ExportMgr) Stop() {
 }
 
 // helper function to delete the exporters and configs associated with the given policy
-func (m *ExportMgr) delete(policy *evtsmgrprotos.EventPolicy) error {
+func (m *ExportMgr) delete(policy *evtsmgrprotos.EventPolicy, update bool) error {
 	m.RLock()
 	exportersInfo, found := m.exporters[policy.GetName()]
 	if !found {
@@ -209,7 +209,12 @@ func (m *ExportMgr) delete(policy *evtsmgrprotos.EventPolicy) error {
 	}
 	m.RUnlock()
 
-	m.evtsProxy.UnregisterEventsExporter(policy.GetName())
+	// TODO: rewrite the code to handle it better. Update should not be calling delete, writers should be updated inline.
+	if update {
+		m.evtsProxy.UnregisterEventsExporter(policy.GetName())
+	} else {
+		m.evtsProxy.DeleteEventsExporter(policy.GetName())
+	}
 	for t, exporterInfo := range exportersInfo {
 		switch t {
 		case evtsproxy.Syslog:

@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -23,7 +24,7 @@ func setup(name string) (*evtsproxy.EventsProxy, *policy.Manager, string, string
 	}
 
 	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, ":0",
-		nil, 100*time.Second, time.Second, proxyEventsStoreDir, logger)
+		nil, 100*time.Second, time.Second, &events.StoreConfig{Dir: proxyEventsStoreDir}, logger)
 	if err != nil {
 		return nil, nil, "", "", nil, err
 	}

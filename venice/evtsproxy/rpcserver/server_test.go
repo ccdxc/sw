@@ -17,6 +17,7 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	epgrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/dispatcher"
 	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/log"
@@ -60,7 +61,7 @@ func setup(t *testing.T, eventsStorePath string, dedupInterval, batchInterval ti
 	*rpckit.RPCClient, *exporters.MockExporter, epgrpc.EventsProxyAPIClient) {
 	tLogger := logger.WithContext("t_name", t.Name())
 	// create dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, eventsStorePath, tLogger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, &events.StoreConfig{Dir: eventsStorePath}, tLogger)
 	AssertOk(t, err, "failed to create dispatcher")
 	evtsDispatcher.Start()
 
@@ -251,7 +252,7 @@ func TestEventsProxyRPCServerInstantiation(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	dispatcher, err := dispatcher.NewDispatcher(time.Second, 10*time.Millisecond, eventsStorePath, tLogger)
+	dispatcher, err := dispatcher.NewDispatcher(time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, tLogger)
 	AssertOk(t, err, "failed to create dispatcher")
 
 	// no listenURL name

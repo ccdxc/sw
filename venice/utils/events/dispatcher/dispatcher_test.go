@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -63,7 +64,7 @@ func TestEventsDispatcher(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	dispatcher.Start() // start the dispatcher again; NO-OP
@@ -76,8 +77,6 @@ func TestEventsDispatcher(t *testing.T) {
 	mockExporter.Start(exporterEventCh, offsetTracker)
 	defer mockExporter.Stop()
 	defer dispatcher.UnregisterExporter(mockExporter.Name())
-
-	dispatcher.ProcessFailedEvents()
 
 	// copy event and set type
 	event := *dummyEvt
@@ -165,7 +164,7 @@ func TestEventsDispatcherShutdown(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -203,10 +202,11 @@ func TestEventsDispatcherFlush(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	// large value to make sure the interval does not kick in before the flush
+	// large value to make sure the interval does not kick in before the flush;
+	// it is possible that events could be flushed before hitting the batch interval if there is a file rotation.
 	interval := 5 * time.Second
 
-	dispatcher, err := NewDispatcher(10*time.Second, interval, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(10*time.Second, interval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -244,17 +244,17 @@ func TestEventsDispatcherFlush(t *testing.T) {
 		AssertOk(t, dispatcher.Action(NICConnectedEvt), "failed to send event")
 	}
 
-	// exporter would have not received any de-duped event because the active internal is not hit
+	// exporter would have not received any de-duped event because the batch internal is not hit
 	temp := mockExporter.GetEventsByType("TestNICConnected")
-	Assert(t, temp == 0, "expected: 0 events, got:%v", temp)
+	Assert(t, temp < 100, "expected: <100 events, got:%v", temp)
 
 	temp = mockExporter.GetEventsByType("TestNICDisconnected")
-	Assert(t, temp == 0, "expected: 0 events, got:%v", temp)
+	Assert(t, temp < 100, "expected: <100 events, got:%v", temp)
 
 	// deduped events from the dispatcher will be flushed to all the exporters
 	dispatcher.Shutdown()
 
-	// exporter would have not received any de-duped event because the active internal is not hit
+	// exporter would have not received any de-duped event because the batch internal is not hit
 	AssertEventually(t, func() (bool, interface{}) {
 		disconnected := mockExporter.GetEventsByType("TestNICDisconnected")
 		connected := mockExporter.GetEventsByType("TestNICConnected")
@@ -267,7 +267,7 @@ func TestEventsDispatcherFlush(t *testing.T) {
 			disconnected, connected)
 	}, "exporter did not receive all the events or flush operation failed", string("5ms"), string("5s"))
 
-	// thus the exporters received the events before the dispatcher could hit active interval
+	// thus the exporters received the events before the dispatcher could hit batch interval
 }
 
 // TestEventsDispatcherRegisterExporter tests dispatcher's register exporter functionality
@@ -276,7 +276,7 @@ func TestEventsDispatcherRegisterExporter(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -353,7 +353,7 @@ func TestEventsDispatcherWithMultipleSourceAndExporters(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -493,7 +493,7 @@ func TestEventsDispatcherWithMultipleSourceAndExporters(t *testing.T) {
 // number of sources.
 func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePath string, logger log.Logger) {
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -588,7 +588,7 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 // number of exporters.
 func testEventDispatcherWithExporters(t *testing.T, numExporters int, eventsStorePath string, logger log.Logger) {
 	// dispatcher sends events to all the registered exporter
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -651,7 +651,7 @@ func testEventDispatcherWithExporters(t *testing.T, numExporters int, eventsStor
 						TestNICDisconnectedEvents = temp
 
 						return true, nil
-					}, "did not receive all the events produced", string("5ms"), string("5s"))
+					}, "did not receive all the events produced", string("10ms"), string("5s"))
 				}
 			}
 		}(mockExporters[i], dispatcher)
@@ -671,7 +671,7 @@ func testEventDispatcherWithExporters(t *testing.T, numExporters int, eventsStor
 			case <-stopSendingEvents:
 				producerWG.Done()
 				return
-			default:
+			case <-time.After(10 * time.Millisecond):
 				creationTime, _ := types.TimestampProto(time.Now())
 				timeNow := api.Timestamp{Timestamp: *creationTime}
 				evt1.ObjectMeta.CreationTime = timeNow
@@ -685,8 +685,6 @@ func testEventDispatcherWithExporters(t *testing.T, numExporters int, eventsStor
 				dispatcher.Action(evt1)
 				dispatcher.Action(evt2)
 			}
-
-			time.Sleep(10 * time.Millisecond)
 		}
 	}()
 
@@ -706,7 +704,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -718,9 +716,6 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	mockExporter.Start(exporterEventCh, offsetTracker)
 	defer mockExporter.Stop()
 	defer dispatcher.UnregisterExporter(mockExporter.Name())
-
-	// process failed events; this will be a NO-OP as there are no events recorded yet
-	dispatcher.ProcessFailedEvents()
 
 	// ensure the mock exporter receive no events
 	Assert(t, mockExporter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockExporter.GetTotalEvents())
@@ -751,7 +746,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	// let us assume proxy restarted at this point
 
 	// create new dispatcher after a restart
-	dispatcher, err = NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
+	dispatcher, err = NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -761,8 +756,6 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	exporterEventCh, offsetTracker, err = dispatcher.RegisterExporter(mockExporter)
 	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
 	mockExporter.Start(exporterEventCh, offsetTracker)
-	defer mockExporter.Stop()
-	defer dispatcher.UnregisterExporter(mockExporter.Name())
 
 	// to test whether the events are replayed during restart; lets reset the offset in the exporter's offset file
 	// open the offset file and update the offset. so that the dispatcher can replay events for this exporter.
@@ -771,18 +764,32 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	AssertOk(t, err, "failed to open offset file")
 	defer fh.Close() // close the file handler
 
-	if _, err := fh.WriteAt([]byte("0"), 0); err != nil {
+	offsetBeforeReset, err := offsetTracker.GetOffset()
+	AssertOk(t, err, "failed to read offset using the offset tracker")
+	offsetMsg := fmt.Sprintf("%s %d", offsetBeforeReset.Filename, 0)
+	if _, err := fh.WriteAt([]byte(offsetMsg), 0); err != nil {
 		log.Errorf("could not write to offset file, err: %v", err)
 	}
 
-	fh.Truncate(1)
+	fh.Truncate(int64(len(offsetMsg)))
 
 	// ensure the exporter received 0 events before processing the failed events (new exporter)
 	Assert(t, mockExporter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockExporter.GetTotalEvents())
 
-	dispatcher.ProcessFailedEvents()
+	// restart the exporter (as the file is reset to 0, it should receive all the events from the beginning as part of the registration)
+	mockExporter.Stop()
+	dispatcher.UnregisterExporter(mockExporter.Name())
+	mockExporter = exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, err = dispatcher.RegisterExporter(mockExporter)
+	mockExporter.Start(exporterEventCh, offsetTracker)
 
 	AssertEventually(t, func() (bool, interface{}) {
+		// it should go back to where it left off (after processing failed events)
+		offsetAfterReset, _ := offsetTracker.GetOffset()
+		if offsetAfterReset.Filename == offsetAfterReset.Filename && offsetBeforeReset.BytesRead == offsetAfterReset.BytesRead {
+			return true, nil
+		}
+
 		totalEvents := mockExporter.GetTotalEvents()
 		if totalEvents >= 100 {
 			return true, nil
@@ -790,6 +797,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 
 		return false, fmt.Sprintf("expected: >=100 events, got: %d", totalEvents)
 	}, "did not receive all the events from the bookmark", string("5ms"), string("5s"))
+	totalEventsAfterReset := mockExporter.GetTotalEvents()
 
 	// once the failed events are processed; the proxy will starts it's normal operation
 	evt = *dummyEvt
@@ -808,11 +816,11 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	// now, the exporter should have replayed events + new events
 	AssertEventually(t, func() (bool, interface{}) {
 		totalEvents := mockExporter.GetTotalEvents()
-		if totalEvents >= 110 {
+		if totalEvents >= totalEventsAfterReset+10 {
 			return true, nil
 		}
 
-		return false, fmt.Sprintf("expected: >=110 events, got: %d", totalEvents)
+		return false, fmt.Sprintf("expected: >=%d events, got: %d", totalEventsAfterReset+10, totalEvents)
 	}, "did not receive all the events from the bookmark", string("5ms"), string("5s"))
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -831,7 +839,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher; all the events should be expired after a second
-	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -916,7 +924,7 @@ func TestDispatcherWithDynamicExporterAndRestart(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher; all the events should be expired after a second
-	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -972,9 +980,6 @@ func TestDispatcherWithDynamicExporterAndRestart(t *testing.T) {
 	defer newMockExporter.Stop()
 	defer dispatcher.UnregisterExporter(newMockExporter.Name())
 
-	// assume a failure/restart here and start processing failed events
-	dispatcher.ProcessFailedEvents()
-
 	time.Sleep(1 * time.Second)
 
 	// check the count of events on the new exporter
@@ -1017,7 +1022,7 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher; all the events should be expired after a second
-	dispatcher, err := NewDispatcher(500*time.Millisecond, 10*time.Millisecond, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(500*time.Millisecond, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -1108,4 +1113,108 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 			}
 		}
 	}
+}
+
+// TestEventsDispatcherWithSlowExporter tests the dispatcher pipeline with slow exporter.
+// Exporter will be way behind in processing the events that were sent due to the slowness. As a result, more events
+// will be piled up in consecutive event files (due to rotation and max. num files). So, where is a restart
+// the exporter should receive all the events that it missed (from where it left off) and this list of events will come
+// different event files.
+func TestEventsDispatcherWithSlowExporter(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
+	eventsStorePath := filepath.Join(eventsDir, t.Name())
+	defer os.RemoveAll(eventsStorePath) // cleanup
+
+	var wg sync.WaitGroup
+
+	// create dispatcher; all the events should be expired after a second
+	dispatcher, err := NewDispatcher(10*time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath, MaxFileSize: 100 * 1000, MaxNumFiles: 50}, logger)
+	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
+	defer dispatcher.Shutdown()
+
+	// create mock exporter
+	oMockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), 10000, logger, exporters.WithSleepBetweenMockReads(100*time.Millisecond))
+	exporterEventCh, offsetTracker, dErr := dispatcher.RegisterExporter(oMockExporter)
+	AssertOk(t, dErr, "failed to register mock exporter with the dispatcher")
+	oMockExporter.Start(exporterEventCh, offsetTracker)
+	defer oMockExporter.Stop()
+
+	// record events
+	wg.Add(1)
+	var count uint32
+	stopSendingEvents := make(chan struct{})
+	go func() {
+		defer wg.Done()
+		evt := *dummyEvt
+
+		for {
+			select {
+			case <-stopSendingEvents:
+				return
+			case <-time.After(1 * time.Millisecond):
+				evtUUID := uuid.New().String()
+				evt.ObjectMeta.UUID = evtUUID
+				evt.Message = fmt.Sprintf("message - %d", atomic.LoadUint32(&count))
+				err := dispatcher.Action(evt)
+				AssertOk(t, err, "failed to send event, err: %v", err)
+				atomic.AddUint32(&count, 1)
+			}
+		}
+	}()
+
+	// meantime, events should be piled up in different event files as the syslog receiver is reading a slow pace.
+	time.Sleep(5 * time.Second)
+
+	// simulate a restart; during this restart, exporter should receive all the events that it missed.
+	oMockExporter.Stop()
+	dispatcher.UnregisterExporter(oMockExporter.Name())
+	nMockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), 10000, logger)
+	exporterEventCh, offsetTracker, dErr = dispatcher.RegisterExporter(nMockExporter)
+	AssertOk(t, dErr, "failed to register mock exporter with the dispatcher")
+	nMockExporter.Start(exporterEventCh, offsetTracker)
+	defer nMockExporter.Stop()
+
+	time.Sleep(4 * time.Second)
+	close(stopSendingEvents)
+
+	// ensure the syslog server receives
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			totalRecieved := uint32(oMockExporter.GetTotalEvents() + nMockExporter.GetTotalEvents())
+			if totalRecieved == atomic.LoadUint32(&count) {
+				return true, nil
+			}
+			return false, fmt.Sprintf("expected: %d, got: %d", count, totalRecieved)
+		}, "did not receive expected messages on the mock exporter", "60ms", "100s")
+}
+
+// TestEventsDispatcherDeleteExporter tests the delete exporter behavior.
+// As part of the delete, offset tracker file should be deleted.
+func TestEventsDispatcherDeleteExporter(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
+	eventsStorePath := filepath.Join(eventsDir, t.Name())
+	defer os.RemoveAll(eventsStorePath) // cleanup
+
+	// create dispatcher; all the events should be expired after a second
+	dispatcher, err := NewDispatcher(500*time.Millisecond, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
+	defer dispatcher.Shutdown()
+
+	// create mock exporter
+	mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, dErr := dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, dErr, "failed to register mock exporter with the dispatcher")
+	mockExporter.Start(exporterEventCh, offsetTracker)
+	defer mockExporter.Stop()
+
+	offsetTrackerFilepath := path.Join(eventsStorePath, "offset", mockExporter.Name())
+	_, err = os.Stat(offsetTrackerFilepath)
+	AssertOk(t, err, "offset tracker file does not exists, err: %v", err) // make sure the offset tracker file exists
+
+	// delete the exporter
+	dispatcher.DeleteExporter(mockExporter.Name())
+	_, err = os.Stat(offsetTrackerFilepath)
+	Assert(t, err != nil && os.IsNotExist(err), "offset tracker file should have been deleted, but still exists. err: %v", err)
 }

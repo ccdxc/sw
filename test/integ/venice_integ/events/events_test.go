@@ -220,13 +220,13 @@ func TestEventsProxyRestart(t *testing.T) {
 
 			// proxy won't be able to accept any events for 2s
 			time.Sleep(1 * time.Second)
-			evtProxyServices, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval, ti.proxyEventsStoreDir)
+			evtProxyServices, evtsProxyURL, storeConfig, err := testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval, ti.storeConfig)
 			if err != nil {
 				log.Errorf("failed to start events proxy, err: %v", err)
 				continue
 			}
 			ti.evtProxyServices = evtProxyServices
-			ti.proxyEventsStoreDir = tmpProxyDir
+			ti.storeConfig = storeConfig
 			ti.updateResolver(globals.EvtsProxy, evtsProxyURL)
 		}
 
@@ -1315,7 +1315,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "default"},
 	})
 	// start TCP server to receive syslog messages
-	ln, receivedMsgsAtTCPServer, err := serviceutils.StartTCPServer(":0")
+	ln, receivedMsgsAtTCPServer, err := serviceutils.StartTCPServer(":0", 100, 0)
 	AssertOk(t, err, "failed to start TCP server, err: %v", err)
 	defer ln.Close()
 	tmp := strings.Split(ln.Addr().String(), ":")
@@ -1760,13 +1760,13 @@ func TestEventsExport(t *testing.T) {
 	tmp1 := strings.Split(pConn1.LocalAddr().String(), ":")
 
 	// start TCP server - 1 to receive syslog messages
-	ln1, receivedMsgsAtTCPServer1, err := serviceutils.StartTCPServer(":0")
+	ln1, receivedMsgsAtTCPServer1, err := serviceutils.StartTCPServer(":0", 100, 0)
 	AssertOk(t, err, "failed to start TCP server, err: %v", err)
 	defer ln1.Close()
 	tmp2 := strings.Split(ln1.Addr().String(), ":")
 
 	// start TCP server - 2 to receive syslog messages
-	ln2, receivedMsgsAtTCPServer2, err := serviceutils.StartTCPServer(":0")
+	ln2, receivedMsgsAtTCPServer2, err := serviceutils.StartTCPServer(":0", 100, 0)
 	AssertOk(t, err, "failed to start TCP server, err: %v", err)
 	defer ln2.Close()
 	tmp3 := strings.Split(ln2.Addr().String(), ":")
@@ -2198,7 +2198,7 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// start TCP server - 1 to receive syslog messages
-	ln1, receiveMsgsAtTCPServer, err := serviceutils.StartTCPServer(fmt.Sprintf("127.0.0.1:%d", port))
+	ln1, receiveMsgsAtTCPServer, err := serviceutils.StartTCPServer(fmt.Sprintf("127.0.0.1:%d", port), 100, 0)
 	AssertOk(t, err, "failed to start TCP server, err: %v", err)
 	defer ln1.Close()
 
@@ -2265,6 +2265,144 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 		}, "syslog server did not receive the expected messages", "20ms", "2s")
 
 	close(stopGoRoutines)
+	wg.Wait()
+}
+
+// TestEventsExportWithSlowExporter tests events file rotation and restart of the exporters without losing events.
+func TestEventsExportWithSlowExporter(t *testing.T) {
+	// setup events pipeline to record and distribute events
+	ti := tInfo{storeConfig: &events.StoreConfig{MaxFileSize: 50 * 1000, MaxNumFiles: 50}}
+	AssertOk(t, ti.setup(t), "failed to setup test")
+	defer ti.teardown()
+
+	var recorders []events.Recorder
+	defer closeRecorders(recorders)
+
+	var wg sync.WaitGroup
+	stopSyslogMessagesReceiver := make(chan struct{})
+	stopEvtsRecorder := make(chan struct{})
+
+	// create API server client
+	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
+	AssertOk(t, err, "failed to create API server client, err: %v", err)
+	defer apiClient.Close()
+	defTenant := &cluster.Tenant{
+		TypeMeta:   api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{Name: "default"},
+	}
+	defTenant, err = apiClient.ClusterV1().Tenant().Create(context.Background(), defTenant)
+	AssertOk(t, err, "failed to create tenant")
+	defer apiClient.ClusterV1().Tenant().Delete(context.Background(), defTenant.GetObjectMeta())
+
+	// start TCP server - 1 to receive syslog messages
+	ln1, receivedMsgsAtTCPServer, err := serviceutils.StartTCPServer(":0", 5000, 10*time.Millisecond)
+	AssertOk(t, err, "failed to start TCP server, err: %v", err)
+	defer ln1.Close()
+	tmp2 := strings.Split(ln1.Addr().String(), ":")
+
+	// add event policy - 1
+	eventPolicy1 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-1",
+		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+		[]*monitoring.ExportConfig{
+			{ // receivedMsgsAtTCPServer
+				Destination: "127.0.0.1",
+				Transport:   fmt.Sprintf("tcp/%s", tmp2[len(tmp2)-1]),
+			},
+		}, nil)
+	eventPolicy1, err = apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
+	AssertOk(t, err, "failed to create event policy, err: %v", err)
+	defer apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
+
+	// record events
+	wg.Add(1)
+	count := 0
+	go func() {
+		defer wg.Done()
+		recorderEventsDir, err := ioutil.TempDir("", t.Name())
+		AssertOk(t, err, "failed to create recorder events directory")
+		defer os.RemoveAll(recorderEventsDir)
+
+		testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: uuid.NewV4().String()}
+		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+			Source:       testEventSource,
+			EvtTypes:     testEventTypes,
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
+		if err != nil {
+			ti.logger.Errorf("failed to create recorder, err: %v", err)
+			return
+		}
+		recorders = append(recorders, evtsRecorder)
+
+		for {
+			count++
+			select {
+			case <-stopEvtsRecorder:
+				return
+			case <-time.After(10 * time.Millisecond):
+				evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("message-%d", count), nil)
+			}
+		}
+	}()
+
+	// receive messages from the syslog server
+	wg.Add(1)
+	receivedMsgs := 0
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-stopSyslogMessagesReceiver:
+				return
+			case msg, ok := <-receivedMsgsAtTCPServer:
+				if !ok {
+					return
+				}
+				if !syslog.ValidateSyslogMessage(monitoring.MonitoringExportFormat_SYSLOG_BSD, msg) {
+					ti.logger.Fatalf("invalid message format, expected: RFC5424, got: %v", msg)
+				}
+				receivedMsgs++
+			}
+		}
+	}()
+
+	time.Sleep(30 * time.Second)
+
+	// restart events proxy
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		proxyURL := ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL()
+
+		time.Sleep(1 * time.Second)
+		ti.evtProxyServices.Stop()
+
+		// proxy won't be able to accept any events for 2s
+		time.Sleep(1 * time.Second)
+		evtProxyServices, evtsProxyURL, storeConfig, err := testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval, ti.storeConfig)
+		if err != nil {
+			log.Fatalf("failed to start events proxy, err: %v", err)
+		}
+
+		ti.evtProxyServices = evtProxyServices
+		ti.storeConfig = storeConfig
+		ti.updateResolver(globals.EvtsProxy, evtsProxyURL)
+
+		// let the recorders send some events after the proxy restart
+		time.Sleep(3 * time.Second)
+		close(stopEvtsRecorder)
+	}()
+
+	// ensure the syslog server receives
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			if receivedMsgs >= count {
+				return true, nil
+			}
+			return false, fmt.Sprintf("expected: %d messages to be received on the TCP syslog server, got: %d", count, receivedMsgs)
+		}, "syslog server did not receive the expected messages", "60ms", "120s")
+
+	close(stopSyslogMessagesReceiver)
 	wg.Wait()
 }
 

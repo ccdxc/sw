@@ -124,7 +124,7 @@ func TestVeniceEventsExporter(t *testing.T) {
 		temp.ObjectMeta.UUID = uuid.New().String()
 
 		// send events to mock exporter
-		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
+		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, &events.Offset{})
 	}
 
 	// make sure the events reached elasticsearch through events manager
@@ -151,7 +151,7 @@ func TestVeniceEventsExporter(t *testing.T) {
 		temp.ObjectMeta.UUID = uuid.New().String()
 
 		// send events to mock exporter
-		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
+		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, &events.Offset{})
 	}
 
 	// make sure the events reached elasticsearch through events manager
@@ -179,7 +179,7 @@ func TestVeniceEventsExporter(t *testing.T) {
 		temp.ObjectMeta.UUID = uuid.New().String()
 		evts = append(evts, &temp)
 	}
-	mockEventsChan.result <- newMockBatch(evts, 0)
+	mockEventsChan.result <- newMockBatch(evts, &events.Offset{})
 
 	// make sure the events reached elasticsearch through events manager
 	AssertEventually(t,
@@ -237,7 +237,7 @@ func TestVeniceExporterWithEvtsMgrRestart(t *testing.T) {
 				temp.ObjectMeta.UUID = uuid.New().String()
 
 				// send events to mock exporter
-				mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
+				mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, &events.Offset{})
 				totalEventsSent++
 			}
 		}

@@ -9,8 +9,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
-
 	"golang.org/x/net/context"
 	check "gopkg.in/check.v1"
 
@@ -34,6 +32,7 @@ import (
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
@@ -67,6 +66,7 @@ import (
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/nodewatcher"
@@ -756,7 +756,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 
 	it.epsDir = tmpDir
 	eps, err := evtsproxy.NewEventsProxy("venice_integ_evtsprxy", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), it.resolverClient,
-		5*time.Second, time.Second, it.epsDir, l)
+		5*time.Second, time.Second, &events.StoreConfig{Dir: it.epsDir}, l)
 	eps.StartDispatch()
 	c.Assert(err, check.IsNil)
 	it.eps = eps

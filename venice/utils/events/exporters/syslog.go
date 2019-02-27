@@ -105,8 +105,11 @@ func (s *SyslogExporter) Stop() {
 		}
 		s.writers.Unlock()
 
-		fileOffset, _ := s.GetLastProcessedOffset()
-		s.logger.Debugf("exporter {%s} stopping at offset: %v", s.name, fileOffset)
+		if fileOffset, err := s.GetLastProcessedOffset(); err != nil {
+			s.logger.Debugf("exporter {%s} stopped", s.name)
+		} else {
+			s.logger.Debugf("exporter {%s} stopping at offset: {%v: %v}", s.name, fileOffset.Filename, fileOffset.BytesRead)
+		}
 	})
 }
 
@@ -159,7 +162,7 @@ func (s *SyslogExporter) WriteEvents(evts []*evtsapi.Event) error {
 }
 
 // GetLastProcessedOffset returns the last bookmarked offset by this exporter
-func (s *SyslogExporter) GetLastProcessedOffset() (int64, error) {
+func (s *SyslogExporter) GetLastProcessedOffset() (*events.Offset, error) {
 	return s.eventsOffsetTracker.GetOffset()
 }
 

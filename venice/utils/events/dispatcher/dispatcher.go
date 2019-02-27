@@ -66,7 +66,7 @@ type evtsExporter struct {
 }
 
 // NewDispatcher creates a new dispatcher instance with the given send interval.
-func NewDispatcher(dedupInterval, sendInterval time.Duration, eventsStorePath string, logger log.Logger) (events.Dispatcher, error) {
+func NewDispatcher(dedupInterval, sendInterval time.Duration, storeConfig *events.StoreConfig, logger log.Logger) (events.Dispatcher, error) {
 	if dedupInterval <= 0 {
 		dedupInterval = defaultDedupInterval
 	}
@@ -75,12 +75,12 @@ func NewDispatcher(dedupInterval, sendInterval time.Duration, eventsStorePath st
 		sendInterval = defaultSendInterval
 	}
 
-	if utils.IsEmpty(eventsStorePath) {
-		return nil, fmt.Errorf("empty events store path")
+	if storeConfig == nil || utils.IsEmpty(storeConfig.Dir) {
+		return nil, fmt.Errorf("empty events store Path")
 	}
 
 	// create persistent event store
-	eventsStore, err := newPersistentStore(eventsStorePath)
+	eventsStore, err := newPersistentStore(storeConfig, logger)
 	if err != nil {
 		logger.Errorf("failed to create dispatcher; could not create events store, err: %v", err)
 		return nil, fmt.Errorf("failed to create dispatcher, err: %v", err)
@@ -103,9 +103,6 @@ func NewDispatcher(dedupInterval, sendInterval time.Duration, eventsStorePath st
 // start notifying writers of the events every send interval
 func (d *dispatcherImpl) Start() {
 	d.start.Do(func() {
-		// start processing failed events
-		d.ProcessFailedEvents()
-
 		// start sending events from the cache
 		d.wg.Add(1)
 		go d.notifyExporters()
@@ -152,59 +149,44 @@ func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 	return nil
 }
 
-// ProcessFailedEvents processes failed events; used to replay events during restarts based on the
-// bookmarked offset of each exporter.
-func (d *dispatcherImpl) ProcessFailedEvents() {
-	d.Lock()
-	defer d.Unlock()
+func (d *dispatcherImpl) processFailedEvents(exporter *evtsExporter, exporterOffset *events.Offset, currentEvtsFileOffset *events.Offset) error {
+	exporterName := exporter.wr.Name()
 
-	d.exporters.Lock()
-	defer d.exporters.Unlock()
+	// nothing to be done; exporter up-to date
+	if exporterOffset.Filename == currentEvtsFileOffset.Filename && exporterOffset.BytesRead == currentEvtsFileOffset.BytesRead {
+		return nil
+	}
 
-	d.logger.Info("processing failed/pending events")
-
-	// get the current offset of the persistent store which will be bookmarked by the exporters once the failed events are processed
-	currentEvtsOffset, err := d.eventsStore.GetCurrentOffset()
+	// get the list of events pending events from persistent store
+	evts, err := d.eventsStore.GetEventsFromOffset(exporterOffset)
 	if err != nil {
-		d.logger.Errorf("couldn't get the current events file offset, err: %v", err)
-		return
+		d.logger.Errorf("cannot process failed/pending events; failed to get the events using offset {%v: %v}, err: %v",
+			exporterOffset.Filename, exporterOffset.BytesRead, err)
+		return err
 	}
 
-	// nothing in the events file to be sent to the exporters
-	if currentEvtsOffset == 0 {
-		d.logger.Debugf("current events file offset is 0; nothing to be sent to the exporters")
-		return
+	// create the batch to be sent
+	batch, err := newBatch(evts, currentEvtsFileOffset)
+	if err != nil {
+		d.logger.Errorf("failed to create batch, err: %v", err)
+		return err
 	}
 
-	for _, w := range d.exporters.list {
-		exporterName := w.wr.Name()
-		exporterOffset, err := w.wr.GetLastProcessedOffset()
-		if err != nil {
-			d.logger.Errorf("cannot process failed/pending events; failed to get the bookmarked offset for exporter {%s}, err: %v", exporterName, err)
-			continue
+	if len(evts) > 0 {
+		d.logger.Infof("sending {%v} number of events to exporter {%s}, offset [%v:%v...%v:%v]", len(evts), exporterName,
+			exporterOffset.Filename, exporterOffset.BytesRead, currentEvtsFileOffset.Filename, currentEvtsFileOffset.BytesRead)
+		select {
+		case <-exporter.eventsCh.Stopped():
+			d.logger.Debugf("event receiver channel for exporter {%s} stopped; cannot deliver events", exporterName)
+		case exporter.eventsCh.Chan() <- batch:
+			d.logger.Infof("sent failed/pending events to the exporter {%s}", exporterName)
+		default: // to avoid blocking
+			d.logger.Debugf("could not send failed/pending events to the exporter {%s}", exporterName)
 		}
-
-		// get the list of events pending events from persistent store
-		evts, err := d.eventsStore.GetEventsFromOffset(exporterOffset)
-		if err != nil {
-			d.logger.Errorf("cannot process failed/pending events; failed to get the events using offset {%v}", exporterOffset)
-			continue
-		}
-
-		if len(evts) > 0 {
-			d.logger.Infof("sending {%v} number of events to exporter {%s}, offset [%v...%v]", len(evts), exporterName, exporterOffset, currentEvtsOffset)
-			select {
-			case <-w.eventsCh.Stopped():
-				d.logger.Debugf("event receiver channel for exporter {%s} stopped; cannot deliver events", exporterName)
-			case w.eventsCh.Chan() <- newBatch(evts, currentEvtsOffset):
-				d.logger.Infof("sent failed/pending events to the exporter {%s}", exporterName)
-			default: // to avoid blocking
-				d.logger.Debugf("could not send failed/pending events to the exporter {%s}", exporterName)
-			}
-		} else {
-			d.logger.Debug("exporter in sync with the proxy; no backlog of events to be sent to the exporter {%s}", exporterName)
-		}
+	} else {
+		d.logger.Debugf("exporter in sync with the proxy; no backlog of events to be sent to the exporter {%s}", exporterName)
 	}
+	return nil
 }
 
 // RegisterExporter creates a watch channel and offset tracker for the caller and returns it.
@@ -221,6 +203,12 @@ func (d *dispatcherImpl) RegisterExporter(w events.Exporter) (events.Chan, event
 	}
 	d.Unlock()
 
+	esCurrOffset, err := d.eventsStore.GetCurrentOffset()
+	if err != nil {
+		d.logger.Errorf("could not read current events store offset, err: %v", err)
+		return nil, nil, errors.Wrap(err, "failed to register exporter")
+	}
+
 	d.exporters.Lock()
 	defer d.exporters.Unlock()
 
@@ -231,7 +219,7 @@ func (d *dispatcherImpl) RegisterExporter(w events.Exporter) (events.Chan, event
 	}
 
 	// to record and manage file offset
-	offsetTracker, err := newOffsetTracker(path.Join(d.eventsStore.GetStorePath(), "offset"), exporterName)
+	offsetTracker, err := newOffsetTracker(path.Join(d.eventsStore.GetStorePath(), "offset"), exporterName, d.logger)
 	if err != nil {
 		d.logger.Errorf("could not create offset tracker, err: %v", err)
 		return nil, nil, errors.Wrap(err, "failed to register exporter")
@@ -246,13 +234,7 @@ func (d *dispatcherImpl) RegisterExporter(w events.Exporter) (events.Chan, event
 	// during restart, it is possible that the new exporter could end up receiving more events than
 	// intended (ones that were generated before the exporter registration). To avoid such issue, new exporter
 	// is given the current events store offset. So, that it starts receiving events from now on(from current offset).
-	if exporterOffset == 0 { // new exporter
-		esCurrOffset, err := d.eventsStore.GetCurrentOffset()
-		if err != nil {
-			d.logger.Errorf("could not read current events store offset, err: %v", err)
-			return nil, nil, errors.Wrap(err, "failed to register exporter")
-		}
-
+	if utils.IsEmpty(exporterOffset.Filename) && exporterOffset.BytesRead == 0 { // new exporter
 		if err := offsetTracker.UpdateOffset(esCurrOffset); err != nil {
 			d.logger.Errorf("could not update the exporter offset, err: %v", err)
 			return nil, nil, errors.Wrap(err, "failed to register exporter")
@@ -260,13 +242,20 @@ func (d *dispatcherImpl) RegisterExporter(w events.Exporter) (events.Chan, event
 
 		exporterOffset = esCurrOffset
 	} else {
-		d.logger.Errorf("exporter {%s} restarting from offset: %v", exporterName, exporterOffset)
+		d.logger.Errorf("exporter {%s} restarting from offset: {%v: %v}", exporterName, exporterOffset.Filename, exporterOffset.BytesRead)
 	}
 
 	e := newEventsChan(w.ChLen())
 	d.exporters.list[exporterName] = &evtsExporter{eventsCh: e, offsetTracker: offsetTracker, wr: w}
-	d.logger.Debugf("exporter {%s} registered with the dispatcher successfully, will start receiving events from offset: %v", exporterName, exporterOffset)
 
+	// for any re-registration; failed events will be processed here
+	if err := d.processFailedEvents(d.exporters.list[exporterName], exporterOffset, esCurrOffset); err != nil {
+		delete(d.exporters.list, exporterName)
+		e.Stop()
+		return nil, nil, errors.Wrap(err, "failed to register exporter")
+	}
+	d.logger.Debugf("exporter {%s} registered with the dispatcher successfully, will start receiving events from offset: {%v: %v}", exporterName,
+		exporterOffset.Filename, exporterOffset.BytesRead)
 	return e, offsetTracker, nil
 }
 
@@ -348,6 +337,21 @@ func (d *dispatcherImpl) Shutdown() {
 	})
 }
 
+// DeleteExporter unregisters the exporter and deletes the offset tracker file associated with it.
+func (d *dispatcherImpl) DeleteExporter(name string) {
+	log.Debugf("deleting exporter {%s}", name)
+	d.exporters.Lock()
+	if w, ok := d.exporters.list[name]; ok {
+		delete(d.exporters.list, name)
+		w.eventsCh.Stop()
+		if err := w.offsetTracker.Delete(); err != nil {
+			d.logger.Debugf("failed to delete offset tracker file for exporter {%s}, err: %v", name, err)
+		}
+		d.logger.Debugf("exporter {%s} unregistered from the dispatcher successfully", name)
+	}
+	d.exporters.Unlock()
+}
+
 // notifyExporters is a daemon which processes the de-duped/cached events every send interval
 // and distributes it to all the exporters. This daemon stops when it receives shutdown
 // signal.
@@ -382,7 +386,7 @@ func (d *dispatcherImpl) notifyExporters() {
 }
 
 // distributeEvents helper function to distribute given event list and offset to all exporters.
-func (d *dispatcherImpl) distributeEvents(evts []*evtsapi.Event, offset int64) {
+func (d *dispatcherImpl) distributeEvents(evts []*evtsapi.Event, offset *events.Offset) {
 	if len(evts) == 0 {
 		return
 	}
@@ -390,7 +394,7 @@ func (d *dispatcherImpl) distributeEvents(evts []*evtsapi.Event, offset int64) {
 	d.exporters.Lock()
 	defer d.exporters.Unlock()
 
-	resp := newBatch(evts, offset)
+	resp, _ := newBatch(evts, offset)
 	// notify all the watchers
 	for _, w := range d.exporters.list {
 		select {
@@ -414,8 +418,23 @@ func (d *dispatcherImpl) writeToEventsStore(event *evtsapi.Event) error {
 		return errors.Wrap(err, "failed to marshal the given event")
 	}
 
-	if err = d.eventsStore.Write(append(evt, '\n')); err != nil {
+	currentOffset, err := d.eventsStore.GetCurrentOffset()
+	if err != nil {
+		return errors.Wrap(err, "failed to get current events offset")
+	}
+
+	fileRotated, err := d.eventsStore.Write(append(evt, '\n'))
+	if err != nil {
 		return errors.Wrap(err, "failed to write event to file")
+	}
+
+	// flush the current batch with the offset obtained before write
+	if fileRotated {
+		evts := d.eventsBatcher.getEvents()
+		if len(evts) != 0 {
+			d.distributeEvents(evts, currentOffset)
+		}
+		d.eventsBatcher.clear()
 	}
 
 	return nil

@@ -3,6 +3,8 @@
 package dispatcher
 
 import (
+	"fmt"
+
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
@@ -11,16 +13,19 @@ import (
 // batch implements `Batch` interface. Dispatcher sends this batch to all the exporters.
 type batch struct {
 	evts   []*evtsapi.Event
-	offset int64
+	offset *events.Offset
 }
 
 // newBatch creates a new batch
-func newBatch(evts []*evtsapi.Event, offset int64) events.Batch {
-	return &batch{evts: evts, offset: offset}
+func newBatch(evts []*evtsapi.Event, offset *events.Offset) (events.Batch, error) {
+	if offset == nil {
+		return nil, fmt.Errorf("cannot create a batch with nil offset")
+	}
+	return &batch{evts: evts, offset: offset}, nil
 }
 
 // GetOffset returns the offset from the this batch
-func (b *batch) GetOffset() int64 {
+func (b *batch) GetOffset() *events.Offset {
 	return b.offset
 }
 

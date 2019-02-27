@@ -54,7 +54,7 @@ var (
 func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.RPCServer,
 	events.Dispatcher, *rpckit.RPCClient, *exporters.MockExporter) {
 	// create events dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(testDedupInterval, testSendInterval, eventsStorePath, logger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(testDedupInterval, testSendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 
 	// create mock writer
@@ -288,7 +288,7 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 	os.RemoveAll(eventsStorePath)
 
 	// create events dispatcher
-	evtsDispatcher, err = dispatcher.NewDispatcher(testDedupInterval, testSendInterval, eventsStorePath, logger)
+	evtsDispatcher, err = dispatcher.NewDispatcher(testDedupInterval, testSendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	if err != nil {
 		log.Errorf("failed to create events dispatcher, err: %v", err)
 		return

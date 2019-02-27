@@ -68,7 +68,7 @@ func (e *mockEventChanImpl) Stopped() <-chan struct{} {
 // mockBatch mock implementation of channel response
 type mockBatch struct {
 	events []*evtsapi.Event
-	offset int64
+	offset *events.Offset
 }
 
 // GetEvents returns list of events from this response
@@ -77,23 +77,23 @@ func (e *mockBatch) GetEvents() []*evtsapi.Event {
 }
 
 // GetOffset returns the offset from this response
-func (e *mockBatch) GetOffset() int64 {
+func (e *mockBatch) GetOffset() *events.Offset {
 	return e.offset
 }
 
 // newMockBatch creates a new chan response which will be sent out to exporter
-func newMockBatch(events []*evtsapi.Event, offset int64) events.Batch {
+func newMockBatch(events []*evtsapi.Event, offset *events.Offset) events.Batch {
 	return &mockBatch{events: events, offset: offset}
 }
 
 // mockOffsetTrackerImpl mock implementation of offset tracker
 type mockOffsetTrackerImpl struct {
 	sync.Mutex
-	offset int64
+	offset *events.Offset
 }
 
 // UpdateOffset updates/bookmarks the offset to given value
-func (e *mockOffsetTrackerImpl) UpdateOffset(offset int64) error {
+func (e *mockOffsetTrackerImpl) UpdateOffset(offset *events.Offset) error {
 	e.Lock() // because multiple workers can do this
 	defer e.Unlock()
 
@@ -102,15 +102,15 @@ func (e *mockOffsetTrackerImpl) UpdateOffset(offset int64) error {
 }
 
 // GetOffset returns the bookmarked offset
-func (e *mockOffsetTrackerImpl) GetOffset() (int64, error) {
+func (e *mockOffsetTrackerImpl) GetOffset() (*events.Offset, error) {
 	e.Lock()
 	defer e.Unlock()
 
 	return e.offset, nil
 }
 
-// Stop stops the offset tracker
-func (e *mockOffsetTrackerImpl) Stop() error {
+// Delete mock impl
+func (e *mockOffsetTrackerImpl) Delete() error {
 	return nil
 }
 
@@ -142,7 +142,7 @@ func TestMockEventsExporter(t *testing.T) {
 	}
 
 	// send events to mock exporter
-	mockEventsChan.result <- newMockBatch(evts, 0)
+	mockEventsChan.result <- newMockBatch(evts, &events.Offset{})
 
 	AssertEventually(t, func() (bool, interface{}) {
 		obtained := mockExporter.GetEventsByType("TEST")
@@ -160,7 +160,7 @@ func TestMockEventsExporter(t *testing.T) {
 	temp.EventAttributes.Count = 10
 	evts = append(evts, &temp)
 
-	mockEventsChan.result <- newMockBatch(evts, 0)
+	mockEventsChan.result <- newMockBatch(evts, &events.Offset{})
 
 	AssertEventually(t, func() (bool, interface{}) {
 		obtained := mockExporter.GetEventByUUID(temp.GetUUID())
@@ -197,7 +197,7 @@ func TestMockEventsExporter(t *testing.T) {
 		}
 	}
 
-	mockEventsChan.result <- newMockBatch(evts, 0)
+	mockEventsChan.result <- newMockBatch(evts, &events.Offset{})
 
 	for i := 0; i < 10; i++ {
 		src := &evtsapi.EventSource{Component: fmt.Sprintf("comp%d", i), NodeName: fmt.Sprintf("node%d", i)}

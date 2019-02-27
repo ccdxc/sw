@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/venice/apiserver"
@@ -70,14 +71,15 @@ func StartAPIServer(serverAddr, clusterName string, logger log.Logger) (apiserve
 // StartTCPServer starts the TCP server on given addr and sends the received messages to the channel.
 // the caller can use the channel to verify the received messages.
 // caller is responsible for closing the channel.
-func StartTCPServer(addr string) (net.Listener, chan string, error) {
-	receivedMessages := make(chan string, 100) // all the messages that are received at this server will be channeled here
+func StartTCPServer(addr string, chanLen int, sleepBetweenReads time.Duration) (net.Listener, chan string, error) {
+	receivedMessages := make(chan string, chanLen) // all the messages that are received at this server will be channeled here
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Infof("listen to %s failed with %s", addr, err)
 		return nil, nil, err
 	}
 
+	closeReceiver := make(chan struct{})
 	// if there are multiple clients, all the received messages will be send to the same channel.
 	go func() {
 		defer close(receivedMessages)
@@ -85,6 +87,7 @@ func StartTCPServer(addr string) (net.Listener, chan string, error) {
 			conn, err := ln.Accept()
 			if err != nil {
 				log.Errorf("connection failed, err: %v", err)
+				close(closeReceiver)
 				return
 			}
 
@@ -96,14 +99,24 @@ func StartTCPServer(addr string) (net.Listener, chan string, error) {
 				defer conn.Close()
 				reader := bufio.NewReader(conn)
 				for {
-					message, err := reader.ReadString('\n')
-					if err != nil {
-						log.Errorf("failed to read the message from conn, err: %v", err)
+					select {
+					case <-closeReceiver:
 						return
+					default:
+						message, err := reader.ReadString('\n')
+						if err != nil {
+							log.Errorf("failed to read the message from conn, err: %v", err)
+							return
+						}
+						message = strings.TrimSpace(message)
+						log.Infof("[tcp server] received message: %s", message)
+						select {
+						case receivedMessages <- message:
+						default:
+							log.Infof("[tcp server] receiver not available; dropping message: %s", message)
+						}
+						time.Sleep(sleepBetweenReads)
 					}
-					message = strings.TrimSpace(message)
-					receivedMessages <- message
-					log.Infof("[tcp server] received message: %s", message)
 				}
 			}(conn)
 		}

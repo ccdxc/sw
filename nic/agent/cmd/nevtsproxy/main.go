@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -191,7 +192,7 @@ func startNetworkModeServices(listenURL, evtsStoreDir, resolverURLs string, dedu
 
 	// create events proxy
 	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, listenURL, resolverClient, dedupInterval,
-		batchInterval, evtsStoreDir, logger)
+		batchInterval, &events.StoreConfig{Dir: evtsStoreDir}, logger)
 	if err != nil {
 		logger.Fatalf("error creating events proxy instance: %v", err)
 	}
@@ -226,7 +227,7 @@ func startHostModeServices(restURL, grpcListenURL, evtsStoreDir string, dedupInt
 
 	// create events proxy
 	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, grpcListenURL, nil, dedupInterval,
-		batchInterval, evtsStoreDir, logger)
+		batchInterval, &events.StoreConfig{Dir: evtsStoreDir}, logger)
 	if err != nil {
 		logger.Fatalf("error creating events proxy instance: %v", err)
 	}

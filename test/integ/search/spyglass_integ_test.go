@@ -47,6 +47,7 @@ import (
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -107,7 +108,7 @@ type testInfo struct {
 	mockResolver      *mockresolver.ResolverClient
 	evtsMgr           *evtsmgr.EventsManager
 	evtProxyServices  *testutils.EvtProxyServices
-	tmpEventsDir      string
+	evtsStoreConfig   *events.StoreConfig
 	pcache            pcache.Interface
 	esClient          elastic.ESClient    // elastic client
 	signer            certs.CSRSigner     // function to sign CSRs for TLS
@@ -118,6 +119,8 @@ var tInfo testInfo
 
 func (tInfo *testInfo) setup(t *testing.T) error {
 	var err error
+
+	tInfo.evtsStoreConfig = &events.StoreConfig{}
 
 	// start certificate server
 	err = testutils.SetupIntegTLSProvider()
@@ -192,13 +195,13 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	tInfo.updateResolver(globals.EvtsMgr, evtsMgrURL)
 
 	// start evtsproxy
-	evtProxyServices, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(":0", tInfo.mockResolver, tInfo.l, 10*time.Second, 100*time.Millisecond, "")
+	evtProxyServices, evtsProxyURL, evtsStoreConfig, err := testutils.StartEvtsProxy(":0", tInfo.mockResolver, tInfo.l, 10*time.Second, 100*time.Millisecond, tInfo.evtsStoreConfig)
 	if err != nil {
 		log.Errorf("failed to start events proxy, err: %v", err)
 		return err
 	}
 	tInfo.evtProxyServices = evtProxyServices
-	tInfo.tmpEventsDir = tmpProxyDir
+	tInfo.evtsStoreConfig = evtsStoreConfig
 	tInfo.updateResolver(globals.EvtsProxy, evtsProxyURL)
 
 	// create API server client
@@ -247,7 +250,7 @@ func (tInfo *testInfo) teardown() {
 	tInfo.evtProxyServices.Stop()
 
 	// delete the tmp events directory
-	os.RemoveAll(tInfo.tmpEventsDir)
+	os.RemoveAll(tInfo.evtsStoreConfig.Dir)
 }
 
 // updateResolver helper function to update mock resolver with the given service and URL
@@ -319,7 +322,7 @@ func TestSpyglass(t *testing.T) {
 	go PolicyGenerator(ctx, tInfo.apiClient, objectCount)
 
 	// generate events
-	go recordEvents(tInfo.mockResolver.GetURLs(globals.EvtsProxy)[0], tInfo.tmpEventsDir, eventCount, logger)
+	go recordEvents(tInfo.mockResolver.GetURLs(globals.EvtsProxy)[0], tInfo.evtsStoreConfig.Dir, eventCount, logger)
 
 	// Validate the index operations counter
 	expectedCount := uint64(3*objectCount+int64(len(Tenants))) + sgPolicyCount

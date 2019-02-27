@@ -25,6 +25,7 @@ import (
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/log"
@@ -258,29 +259,29 @@ func StartEvtsMgr(serverAddr string, mr resolver.Interface, logger log.Logger, e
 
 // StartEvtsProxy helper function to start events proxy
 func StartEvtsProxy(serverAddr string, mr resolver.Interface, logger log.Logger, dedupInterval,
-	batchInterval time.Duration, proxyEventsStoreDir string) (*EvtProxyServices, string, string, error) {
+	batchInterval time.Duration, storeConfig *events.StoreConfig) (*EvtProxyServices, string, *events.StoreConfig, error) {
 	log.Infof("starting events proxy")
 	var err error
 
 	if len(mr.GetURLs(globals.EvtsMgr)) == 0 {
-		return nil, "", "", fmt.Errorf("could not find evtsmgr URL")
+		return nil, "", nil, fmt.Errorf("could not find evtsmgr URL")
 	}
 
-	if utils.IsEmpty(proxyEventsStoreDir) {
-		if proxyEventsStoreDir, err = ioutil.TempDir("", ""); err != nil {
+	if utils.IsEmpty(storeConfig.Dir) {
+		if storeConfig.Dir, err = ioutil.TempDir("", ""); err != nil {
 			log.Errorf("failed to create temp events dir, err: %v", err)
-			return nil, "", "", err
+			return nil, "", nil, err
 		}
 	}
 
 	evtsProxy, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, serverAddr,
-		nil, dedupInterval, batchInterval, proxyEventsStoreDir, logger)
+		nil, dedupInterval, batchInterval, storeConfig, logger)
 	if err != nil {
-		return nil, "", "", fmt.Errorf("failed start events proxy, err: %v", err)
+		return nil, "", nil, fmt.Errorf("failed start events proxy, err: %v", err)
 	}
 	if _, err := evtsProxy.RegisterEventsExporter(evtsproxy.Venice,
 		&exporters.VeniceExporterConfig{EvtsMgrURL: mr.GetURLs(globals.EvtsMgr)[0]}); err != nil {
-		return nil, "", "", fmt.Errorf("failed to register venice writer with events proxy")
+		return nil, "", nil, fmt.Errorf("failed to register venice writer with events proxy")
 	}
 
 	// start events policy manager
@@ -297,7 +298,7 @@ func StartEvtsProxy(serverAddr string, mr resolver.Interface, logger log.Logger,
 
 	evtsProxy.StartDispatch()
 
-	return &EvtProxyServices{evtsProxy, policyMgr, policyWatcher}, evtsProxy.RPCServer.GetListenURL(), proxyEventsStoreDir, nil
+	return &EvtProxyServices{evtsProxy, policyMgr, policyWatcher}, evtsProxy.RPCServer.GetListenURL(), storeConfig, nil
 }
 
 // helper function to parse the port from given address <ip:port>

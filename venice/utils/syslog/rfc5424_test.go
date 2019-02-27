@@ -117,7 +117,7 @@ func TestAppName(t *testing.T) {
 
 // TestSyslogRfc5424WithTCPServer tests syslog with dummy TCP server acting as the syslog server
 func TestSyslogRfc5424WithTCPServer(t *testing.T) {
-	listener, rCh, err := serviceutils.StartTCPServer("127.0.0.1:0")
+	listener, rCh, err := serviceutils.StartTCPServer("127.0.0.1:0", 100, 0)
 	AssertOk(t, err, "failed to start TCP server")
 	defer listener.Close()
 

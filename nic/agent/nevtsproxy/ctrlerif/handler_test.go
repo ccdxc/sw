@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
@@ -41,7 +42,7 @@ func setup(t *testing.T) (*evtsproxy.EventsProxy, *policy.Manager, types.CtrlerI
 	AssertOk(t, err, "failed to create temp directory, err: %v", err)
 
 	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, ":0",
-		nil, 100*time.Second, 500*time.Millisecond, eventsDir, logger)
+		nil, 100*time.Second, 500*time.Millisecond, &events.StoreConfig{Dir: eventsDir}, logger)
 	AssertOk(t, err, "failed to start events proxy, err: %v", err)
 	eps.StartDispatch()
 
@@ -371,7 +372,7 @@ func TestEventPolicy(t *testing.T) {
 	tmp1 := strings.Split(pConn1.LocalAddr().String(), ":")
 
 	// start TCP server - 1 to receive syslog messages
-	ln1, receivedMsgsAtTCPServer1, err := serviceutils.StartTCPServer(":0")
+	ln1, receivedMsgsAtTCPServer1, err := serviceutils.StartTCPServer(":0", 100, 0)
 	AssertOk(t, err, "failed to start TCP server, err: %v", err)
 	defer ln1.Close()
 	tmp2 := strings.Split(ln1.Addr().String(), ":")

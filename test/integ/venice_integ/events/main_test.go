@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
@@ -49,22 +50,22 @@ var (
 
 // tInfo represents test info.
 type tInfo struct {
-	logger              log.Logger
-	mockResolver        *mockresolver.ResolverClient // resolver
-	esClient            elastic.ESClient             // elastic client to verify the results
-	elasticsearchAddr   string                       // elastic address
-	elasticsearchName   string                       // name of the elasticsearch server name; used to stop the server
-	elasticsearchDir    string                       // name of the directory where Elastic credentials and logs are stored
-	apiServer           apiserver.Server             // venice API server
-	apiServerAddr       string                       // API server address
-	evtsMgr             *evtsmgr.EventsManager       // events manager to write events to elastic
-	evtProxyServices    *testutils.EvtProxyServices  // events proxy to receive and distribute events
-	proxyEventsStoreDir string                       // local events store directory
-	dedupInterval       time.Duration                // events dedup interval
-	batchInterval       time.Duration                // events batch interval
-	signer              certs.CSRSigner              // function to sign CSRs for TLS
-	trustRoots          []*x509.Certificate          // trust roots to verify TLS certs
-	apicl               apiclient.Services
+	logger            log.Logger
+	mockResolver      *mockresolver.ResolverClient // resolver
+	esClient          elastic.ESClient             // elastic client to verify the results
+	elasticsearchAddr string                       // elastic address
+	elasticsearchName string                       // name of the elasticsearch server name; used to stop the server
+	elasticsearchDir  string                       // name of the directory where Elastic credentials and logs are stored
+	apiServer         apiserver.Server             // venice API server
+	apiServerAddr     string                       // API server address
+	evtsMgr           *evtsmgr.EventsManager       // events manager to write events to elastic
+	evtProxyServices  *testutils.EvtProxyServices  // events proxy to receive and distribute events
+	storeConfig       *events.StoreConfig          // events store config
+	dedupInterval     time.Duration                // events dedup interval
+	batchInterval     time.Duration                // events batch interval
+	signer            certs.CSRSigner              // function to sign CSRs for TLS
+	trustRoots        []*x509.Certificate          // trust roots to verify TLS certs
+	apicl             apiclient.Services
 }
 
 // setup helper function create evtsmgr, evtsproxy, etc. services
@@ -73,7 +74,8 @@ func (t *tInfo) setup(tst *testing.T) error {
 	var err error
 	logConfig := log.GetDefaultConfig("events_test")
 	logConfig.Format = log.JSONFmt
-	logConfig.Filter = log.AllowInfoFilter
+	logConfig.Filter = log.AllowAllFilter
+	logConfig.Debug = true
 
 	t.logger = log.GetNewLogger(logConfig).WithContext("t_name", tst.Name())
 	t.mockResolver = mockresolver.New()
@@ -96,6 +98,10 @@ func (t *tInfo) setup(tst *testing.T) error {
 
 	if t.batchInterval == 0 {
 		t.batchInterval = 100 * time.Millisecond
+	}
+
+	if t.storeConfig == nil {
+		t.storeConfig = &events.StoreConfig{}
 	}
 
 	// start elasticsearch
@@ -128,13 +134,13 @@ func (t *tInfo) setup(tst *testing.T) error {
 	t.updateResolver(globals.EvtsMgr, evtsMgrURL)
 
 	// start events proxy
-	evtProxyServices, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(testURL, t.mockResolver, t.logger, t.dedupInterval, t.batchInterval, "")
+	evtProxyServices, evtsProxyURL, storeConfig, err := testutils.StartEvtsProxy(testURL, t.mockResolver, t.logger, t.dedupInterval, t.batchInterval, t.storeConfig)
 	if err != nil {
 		t.logger.Errorf("failed to start events proxy, err: %v", err)
 		return err
 	}
 	t.evtProxyServices = evtProxyServices
-	t.proxyEventsStoreDir = tmpProxyDir
+	t.storeConfig = storeConfig
 	t.updateResolver(globals.EvtsProxy, evtsProxyURL)
 
 	// grpc client
@@ -162,9 +168,9 @@ func (t *tInfo) teardown() {
 	testutils.CleanupIntegTLSProvider()
 
 	// remove the local persistent events store
-	t.logger.Infof("removing events store %s", t.proxyEventsStoreDir)
+	t.logger.Infof("removing events store %s", t.storeConfig.Dir)
 
-	os.RemoveAll(t.proxyEventsStoreDir)
+	os.RemoveAll(t.storeConfig.Dir)
 }
 
 // createElasticClient helper function to create elastic client

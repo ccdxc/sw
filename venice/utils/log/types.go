@@ -118,7 +118,7 @@ type FileConfig struct {
 	// MaxSize of a Logfile in MBs
 	MaxSize int
 
-	// MaxBackups indicates #of backup files in rotation
+	// MaxNumFiles indicates #of backup files in rotation
 	MaxBackups int
 
 	// MaxAge indicates log retention period in days

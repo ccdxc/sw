@@ -129,8 +129,11 @@ func (v *VeniceExporter) Stop() {
 			v.eventsMgr.rpcClient.Close()
 		}
 
-		fileOffset, _ := v.GetLastProcessedOffset()
-		v.logger.Debugf("exporter {%s} stopping at offset: %v", v.name, fileOffset)
+		if fileOffset, err := v.GetLastProcessedOffset(); err != nil {
+			v.logger.Debugf("exporter {%s} stopped", v.name)
+		} else {
+			v.logger.Debugf("exporter {%s} stopping at offset: {%v: %v}", v.name, fileOffset.Filename, fileOffset.BytesRead)
+		}
 	})
 }
 
@@ -175,7 +178,7 @@ func (v *VeniceExporter) WriteEvents(events []*evtsapi.Event) error {
 }
 
 // GetLastProcessedOffset returns the last bookmarked offset by this exporter
-func (v *VeniceExporter) GetLastProcessedOffset() (int64, error) {
+func (v *VeniceExporter) GetLastProcessedOffset() (*events.Offset, error) {
 	return v.eventsOffsetTracker.GetOffset()
 }
 

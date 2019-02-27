@@ -26,7 +26,7 @@ func TestSyslogBsd(t *testing.T) {
 
 // TestSyslogBsdWithTCPServer tests syslog with dummy TCP server acting as the syslog server
 func TestSyslogBsdWithTCPServer(t *testing.T) {
-	listener, rCh, err := serviceutils.StartTCPServer("127.0.0.1:0")
+	listener, rCh, err := serviceutils.StartTCPServer("127.0.0.1:0", 100, 0)
 	AssertOk(t, err, "failed to start TCP server")
 	defer listener.Close()
 

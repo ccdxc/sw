@@ -3,6 +3,7 @@
 package exporters
 
 import (
+	"math/rand"
 	"sync"
 	"time"
 
@@ -24,6 +25,7 @@ type MockExporter struct {
 	// to receive events from the proxy (dispatcher)
 	eventsChan          events.Chan          // to watch/stop events from dispatcher
 	eventsOffsetTracker events.OffsetTracker // to track events file offset - bookmark indicating events till this point are processed successfully by this exporter
+	sleepBetweenReads   time.Duration        // to simulate slow exporters
 
 	// for mock operations
 	eventsByUUID          map[string]*evtsapi.Event      // all the events received
@@ -33,10 +35,23 @@ type MockExporter struct {
 	wg       sync.WaitGroup // to wait for the watch channel to close
 	stop     sync.Once      // for stopping the exporter
 	shutdown chan struct{}  // to send shutdown signal to the exporter
+
+	id int
+}
+
+// Option fills the optional parameters for mock exporter
+type Option func(*MockExporter)
+
+// WithSleepBetweenMockReads passes a custom value to sleep between reads from the events channel where the deduped events are
+// sent by the proxy. This is only to simulate slowness in the exporters (applies only for testing).
+func WithSleepBetweenMockReads(duration time.Duration) Option {
+	return func(m *MockExporter) {
+		m.sleepBetweenReads = duration
+	}
 }
 
 // NewMockExporter creates and returns  the mock exporter interface.
-func NewMockExporter(name string, chLen int, logger log.Logger) *MockExporter {
+func NewMockExporter(name string, chLen int, logger log.Logger, opts ...Option) *MockExporter {
 	mockExporter := &MockExporter{
 		name:                  name,
 		chLen:                 chLen,
@@ -44,6 +59,11 @@ func NewMockExporter(name string, chLen int, logger log.Logger) *MockExporter {
 		eventsByUUID:          map[string]*evtsapi.Event{},
 		eventsBySourceAndType: map[string]map[string][]string{},
 		shutdown:              make(chan struct{}, 1),
+		id:                    rand.Int(),
+	}
+
+	for _, o := range opts {
+		o(mockExporter)
 	}
 
 	return mockExporter
@@ -100,7 +120,9 @@ func (m *MockExporter) WriteEvents(evts []*evtsapi.Event) error {
 
 		// update event by UUID
 		evtUUID := evt.GetUUID()
-		m.eventsByUUID[evtUUID] = temp
+		if _, found := m.eventsByUUID[evtUUID]; !found || m.eventsByUUID[evtUUID].GetCount() != evt.GetCount() {
+			m.eventsByUUID[evtUUID] = temp
+		}
 
 		// to update events by source and event type
 		sourceKey := events.GetSourceKey(temp.GetSource())
@@ -125,7 +147,7 @@ func (m *MockExporter) WriteEvents(evts []*evtsapi.Event) error {
 }
 
 // GetLastProcessedOffset returns the last bookmarked offset by this exporter
-func (m *MockExporter) GetLastProcessedOffset() (int64, error) {
+func (m *MockExporter) GetLastProcessedOffset() (*events.Offset, error) {
 	return m.eventsOffsetTracker.GetOffset()
 }
 
@@ -210,6 +232,7 @@ func (m *MockExporter) receiveEvents() {
 					break
 				}
 			}
+			time.Sleep(m.sleepBetweenReads)
 		case <-m.shutdown:
 			return
 		}
