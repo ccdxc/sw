@@ -40,22 +40,22 @@ def GetHping3Cmd(protocol, destination_ip, destination_port):
         
     return cmd
 
-def GetNpingCmd(protocol, destination_ip, destination_port, source_ip = ""):
+def GetNpingCmd(protocol, destination_ip, destination_port, source_ip = "", count = 1):
     if protocol == 'tcp':
         if source_ip != "":
-            cmd = "nping --tcp --source-ip {} -p {} -c 1 {}".format(source_ip, int(destination_port), destination_ip)
+            cmd = "nping --tcp --source-ip {} -p {} -c {} {}".format(source_ip, int(destination_port), int(count), destination_ip)
         else:
-            cmd = "nping --tcp -p {} -c 1 {}".format(int(destination_port), destination_ip)
+            cmd = "nping --tcp -p {} -c {} {}".format(int(destination_port), int(count), destination_ip)
     elif protocol == 'udp':
         if source_ip != "":
-            cmd = "nping --udp --source-ip {} -p {} -c 1 {}".format(source_ip, int(destination_port), destination_ip)
+            cmd = "nping --udp --source-ip {} -p {} -c {} {}".format(source_ip, int(destination_port), int(count), destination_ip)
         else:
-            cmd = "nping --udp -p {} -c 1 {}".format(int(destination_port), destination_ip)
+            cmd = "nping --udp -p {} -c {} {}".format(int(destination_port), int(count), destination_ip)
     else:
         if source_ip != "":
-            cmd = "nping --{} --source-ip {} -c 1 {}".format(protocol.lower(), source_ip, destination_ip)
+            cmd = "nping --{} --source-ip {} -c {} {}".format(protocol.lower(), source_ip, int(count), destination_ip)
         else:
-            cmd = "nping --{} -c 1 {}".format(protocol.lower(), destination_ip)
+            cmd = "nping --{} -c {} {}".format(protocol.lower(), int(count), destination_ip)
 
     return cmd
 

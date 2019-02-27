@@ -64,6 +64,13 @@ def Trigger(tc):
         tc.cmd_cookies.append("Add arp entry for %s" % w1_class_e_addr)
 
         if count % 2  == 0:
+            # Traffic to Verify packet is encapped correctly
+            cmd_cookie = "%s(%s) --> %s(%s)" % (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
+            nping_cmd = utils.GetNpingCmd(proto, w2.ip_address, 2000, w1.ip_address, 1)
+            api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, nping_cmd)
+            api.Logger.info("Send " + proto + " traffic from %s" % cmd_cookie)
+            tc.cmd_cookies.append(proto + " positive test")
+
             # Traffic to Verify packet is encapped and decapped correctly
             cmd_cookie1 = "%s(%s) --> %s(%s) IP Opts Dest IP: %s" % (w1.workload_name, w1_class_e_addr, w2.workload_name, w2.ip_address, w1.ip_address)
             nping_cmd = utils.GetNpingCmd(proto, w2.ip_address, 2000, w1_class_e_addr)
@@ -170,6 +177,22 @@ def Verify(tc):
                                 w1_bad_rr_dst_ip_ctr = int(s)
 
             if result != api.types.status.FAILURE:
+                api.Logger.info("Test Passed")
+        elif "positive test" in tc.cmd_cookies[cookie_idx]:
+            lines = cmd.stdout.split('\n')
+            for line in lines:
+                if "tcp" in tc.cmd_cookies[cookie_idx]:
+                    matchObj = re.findall("RA", line)
+                    if (len(matchObj) != 0):
+                        break
+                else:
+                    matchObj = re.findall("Port unreachable", line)
+                    if (len(matchObj) != 0):
+                        break
+            if len(matchObj) == 0:
+                result = api.types.status.FAILURE
+                api.Logger.info("Test Failed")
+            else:
                 api.Logger.info("Test Passed")
         else:
             api.Logger.info("Test Passed")
