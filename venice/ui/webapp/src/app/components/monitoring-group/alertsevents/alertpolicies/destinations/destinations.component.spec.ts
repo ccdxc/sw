@@ -56,11 +56,6 @@ describe('DestinationpolicyComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(DestinationpolicyComponent);
     component = fixture.componentInstance;
-    component.cols = [
-      { field: 'meta', header: 'Meta' },
-      { field: 'spec', header: 'Spec' },
-      { field: 'status', header: 'Status' }
-    ];
     fixture.detectChanges();
   });
 

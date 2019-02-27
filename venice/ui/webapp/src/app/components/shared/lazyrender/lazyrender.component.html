@@ -1,5 +1,5 @@
 <div class="lazyrender-container">
-  <div *ngIf="hasUpdate" class="lazyrender-table-refresh" fxLayout="row" fxLayoutAlign="center stretch">
+  <div *ngIf="!isFrozen && hasUpdate" class="lazyrender-table-refresh" fxLayout="row" fxLayoutAlign="center stretch">
     <button fxFlex="nogrow" mat-raised-button [disableRipple]="true" (click)="resetTableView()">
       New Data
       <mat-icon>refresh</mat-icon>

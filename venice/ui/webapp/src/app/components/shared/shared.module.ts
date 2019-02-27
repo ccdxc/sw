@@ -26,6 +26,7 @@ import { BasecardComponent } from './basecard/basecard.component';
 import { LinegraphComponent } from './linegraph/linegraph.component';
 import { FlipComponent } from './flip/flip.component';
 import { ErrorTooltipDirective } from './directives/errorTooltip.directive';
+import { TablevieweditHTMLComponent } from './tableviewedit/tableviewedit.component';
 
 @NgModule({
   imports: [
@@ -58,6 +59,7 @@ import { ErrorTooltipDirective } from './directives/errorTooltip.directive';
     LinegraphComponent,
     FlipComponent,
     ErrorTooltipDirective,
+    TablevieweditHTMLComponent,
   ],
   exports: [
     PagebodyComponent,
@@ -80,6 +82,7 @@ import { ErrorTooltipDirective } from './directives/errorTooltip.directive';
     LinegraphComponent,
     FlipComponent,
     ErrorTooltipDirective,
+    TablevieweditHTMLComponent,
   ],
 })
 export class SharedModule { }

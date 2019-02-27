@@ -1,13 +1,12 @@
-import { Component, OnInit, ViewEncapsulation, ViewChild, ChangeDetectorRef, Input, IterableDiffer, IterableDiffers, DoCheck, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
+import { Utility } from '@app/common/Utility';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { Utility } from '@app/common/Utility';
-import { MonitoringFlowExportPolicy, IMonitoringMatchRule } from '@sdk/v1/models/generated/monitoring';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { Table } from 'primeng/table';
+import { IApiStatus, IMonitoringFlowExportPolicy, IMonitoringMatchRule, MonitoringFlowExportPolicy } from '@sdk/v1/models/generated/monitoring';
+import { Observable } from 'rxjs';
+import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 
 @Component({
   selector: 'app-flowexportpolicy',
@@ -16,10 +15,8 @@ import { Table } from 'primeng/table';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class FlowexportpolicyComponent implements OnInit, OnDestroy, DoCheck {
-  @Input() policies: ReadonlyArray<MonitoringFlowExportPolicy> = [];
-  @ViewChild('policiesTable') policytable: Table;
-  subscriptions = [];
+export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoringFlowExportPolicy, MonitoringFlowExportPolicy> {
+  @Input() dataObjects: ReadonlyArray<MonitoringFlowExportPolicy> = [];
 
   headerIcon: Icon = {
     margin: {
@@ -29,47 +26,27 @@ export class FlowexportpolicyComponent implements OnInit, OnDestroy, DoCheck {
     matIcon: 'grid_on'
   };
 
-  arrayDiffers: IterableDiffer<MonitoringFlowExportPolicy>;
-
-  displayedPolicies: ReadonlyArray<MonitoringFlowExportPolicy> = [];
-
-  expandedRowData: any;
-  creatingMode: boolean = false;
-  showEditingForm: boolean = false;
-
-  // If we receive new data, but the display is frozen (user editing),
-  // this should be set to true so that when user exits editing, we can update the display
-  hasNewData: boolean = true;
-
-  // Whether the toolbar buttons should be enabled
-  shouldEnableButtons: boolean = true;
-
-  cols: any[] = [
-    { field: 'meta.name', header: 'Targets', class: 'flowexportpolicy-column-name', sortable: false },
-    { field: 'spec.match-rules', header: 'Match Rules', class: 'flowexportpolicy-column-match-rules', sortable: false },
-    { field: 'spec.exports', header: 'Targets', class: 'flowexportpolicy-column-targets', sortable: false, isLast: true },
+  cols: TableCol[] = [
+    { field: 'meta.name', header: 'Targets', class: 'flowexportpolicy-column-name', sortable: false, width: 25 },
+    { field: 'spec.match-rules', header: 'Match Rules', class: 'flowexportpolicy-column-match-rules', sortable: false, width: 35 },
+    { field: 'spec.exports', header: 'Targets', class: 'flowexportpolicy-column-targets', sortable: false, width: 40 },
   ];
 
-  constructor(protected _controllerService: ControllerService,
-    protected _iterableDiffers: IterableDiffers,
-    private cdr: ChangeDetectorRef,
-    protected _monitoringService: MonitoringService,
-  ) {
-    this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
-  }
+  isTabComponent = false;
 
-  ngOnInit() {
-    this.setDefaultToolbar();
-    this.setTableData();
+  constructor(protected controllerService: ControllerService,
+    protected cdr: ChangeDetectorRef,
+    protected monitoringService: MonitoringService) {
+    super(controllerService, cdr);
   }
 
   setDefaultToolbar() {
-    this._controllerService.setToolbarData({
+    this.controllerService.setToolbarData({
       buttons: [{
         cssClass: 'global-button-primary flowexportpolicy-button',
         text: 'ADD FlOW EXPORT',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-        callback: () => { this.createNewPolicy(); }
+        callback: () => { this.createNewObject(); }
       },
       ],
       breadcrumb: [
@@ -78,112 +55,8 @@ export class FlowexportpolicyComponent implements OnInit, OnDestroy, DoCheck {
     });
   }
 
-  setTableData() {
-    /**
-     * We copy the data so that the table doesn't
-     * automatically update when the input binding is updated
-     * This allows us to freeze the table when a user is doing inline
-     * editing on a row entry
-     */
-    const _ = Utility.getLodash();
-    const policies = _.cloneDeep(this.policies);
-    if (policies == null) {
-      this.displayedPolicies = [];
-      return;
-    }
-    this.displayedPolicies = policies;
-  }
-
-  createNewPolicy() {
-    // If a row is expanded, we shouldnt be able to open a create new policy form
-    if (!this.isInEditMode()) {
-      this.creatingMode = true;
-    }
-  }
-
-  /**
-   * We check if any of the objects in the array have changed
-   * This kind of detection is not automatically done by angular
-   * To improve efficiency, we check only the name and last mod time
-   * (see trackBy function) instead of checking every object field.
-   */
-  ngDoCheck() {
-    const changes = this.arrayDiffers.diff(this.policies);
-    if (changes) {
-      if (this.isInEditMode()) {
-        this.hasNewData = true;
-      } else {
-        this.setTableData();
-      }
-    }
-  }
-
-  /**
-   * Called when a row expand animation finishes
-   * The animation happens when the row expands, and when it collapses
-   * If it is expanding, then we are in ediitng mode (set in onUpdateRecord).
-   * If it is collapsing, then editingMode should be false, (set in onUpdateRecord).
-   * When it is collapsing, we toggle the row on the turbo table
-   *
-   * This is because we must wait for the animation to complete before toggling
-   * the row on the turbo table for a smooth animation.
-   * @param  $event Angular animation end event
-   */
-  rowExpandAnimationComplete($event) {
-    if (!this.showEditingForm) {
-      // we are exiting the row expand
-      this.policytable.toggleRow(this.expandedRowData, event);
-      this.expandedRowData = null;
-      if (this.hasNewData) {
-        this.setTableData();
-      }
-      // Needed to prevent "ExpressionChangedAfterItHasBeenCheckedError"
-      // We force an additional change detection cycle
-      this.cdr.detectChanges();
-    }
-  }
-
-  onUpdateRecord(event, policy) {
-    // If in creation mode, don't allow row expansion
-    if (this.creatingMode) {
-      return;
-    }
-    if (!this.isInEditMode()) {
-      // Entering edit mode
-      this.policytable.toggleRow(policy, event);
-      this.expandedRowData = policy;
-      this.showEditingForm = true;
-      this.shouldEnableButtons = false;
-    } else {
-      this.showEditingForm = false;
-      this.shouldEnableButtons = true;
-      // We don't untoggle the row here, it will happen when rowExpandAnimationComplete
-      // is called.
-    }
-  }
-
-  onDeleteRecord(event, policy: MonitoringFlowExportPolicy) {
-    // Should not be able to delete any record while we are editing
-    if (this.isInEditMode()) {
-      return;
-    }
-
-    const msg = 'Deleted policy ' + policy.meta.name;
-    const sub = this._monitoringService.DeleteFlowExportPolicy(policy.meta.name).subscribe(
-      response => {
-        this._controllerService.invokeSuccessToaster('Delete Successful', msg);
-      },
-      this._controllerService.restErrorHandler('Delete Failed')
-    );
-    this.subscriptions.push(sub);
-  }
-
-  creationFormClose() {
-    this.creatingMode = false;
-  }
-
-  isInEditMode() {
-    return this.expandedRowData != null;
+  getClassName(): string {
+    return this.constructor.name;
   }
 
   displayColumn(exportData, col): any {
@@ -247,15 +120,16 @@ export class FlowexportpolicyComponent implements OnInit, OnDestroy, DoCheck {
     return retArr;
   }
 
-  /**
-   * Component is about to exit
-   */
-  ngOnDestroy() {
-    // publish event that AppComponent is about to be destroyed
-    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'Eventpolicy component', 'state': Eventtypes.COMPONENT_DESTROY });
-    this.subscriptions.forEach(subscription => {
-      subscription.unsubscribe();
-    });
+  deleteRecord(object: MonitoringFlowExportPolicy): Observable<{ body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number }> {
+    return this.monitoringService.DeleteFlowExportPolicy(object.meta.name);
+  }
+
+  generateDeleteConfirmMsg(object: IMonitoringFlowExportPolicy) {
+    return 'Are you sure you want to delete policy ' + object.meta.name;
+  }
+
+  generateDeleteSucessMsg(object: IMonitoringFlowExportPolicy) {
+    return 'Deleted policy ' + object.meta.name;
   }
 
 }

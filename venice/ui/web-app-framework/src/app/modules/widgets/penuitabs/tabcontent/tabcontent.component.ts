@@ -1,5 +1,11 @@
 import { Component, EventEmitter, Input, Output, OnChanges, ChangeDetectorRef, SimpleChanges } from '@angular/core';
 
+export interface TabcontentInterface {
+  isActiveTab: boolean;
+  editMode: EventEmitter<any>
+  ngOnChanges(changes: SimpleChanges): void;
+}
+
 /**
  * Basic tab content component. Any component that is set to be the
  * content of penuitab should inherit this.

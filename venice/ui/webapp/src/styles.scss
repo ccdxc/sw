@@ -202,7 +202,7 @@
         &:hover {
           .global-column-action {
             overflow: visible;
-            z-index: 10;
+            z-index: 15 // Needs to be higher than overlay in tableviewedit;
           }
         }
 
@@ -240,10 +240,11 @@
     height:100%;
     .ui-table {
       .ui-table-tbody > tr {
-        // fixes issue where table would have a height 1px
-        // greater than the tbody, causing a scrollbar to appear
-        display: table;
+        display: flex;
         width: 100%;
+        &:hover {
+          display: table;
+        }
 
         > td {
           height: 100%;
@@ -262,7 +263,9 @@
     }
   }
 
-
+  .global-rowexpand {
+    display: table !important;
+  }
 
   .global-column-date {
     width: 10%;

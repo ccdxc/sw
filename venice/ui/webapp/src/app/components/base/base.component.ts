@@ -222,13 +222,7 @@ export class BaseComponent extends CommonComponent implements OnInit {
 
 
   displayColumn(data, col): any {
-    const fields = col.field.split('.');
-    const value = Utility.getObjectValueByPropertyPath(data, fields);
-    const column = col.field;
-    switch (column) {
-      default:
-        return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
-    }
+    return Utility.displayColumn(data, col);
   }
 
 }

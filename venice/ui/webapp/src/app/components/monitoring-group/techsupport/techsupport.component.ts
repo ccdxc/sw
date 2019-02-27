@@ -1,18 +1,13 @@
-import { Component, OnInit, ViewEncapsulation, OnDestroy, ViewChild } from '@angular/core';
-import { Table } from 'primeng/table';
-import { Subscription } from 'rxjs';
+import { ChangeDetectorRef, Component, ViewEncapsulation, OnInit } from '@angular/core';
 import { Animations } from '@app/animations';
-
-import { ControllerService } from '@app/services/controller.service';
-import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { BaseComponent } from '@app/components/base/base.component';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
-import { MonitoringTechSupportRequest } from '@sdk/v1/models/generated/monitoring';
-import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
-
-
+import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { ControllerService } from '@app/services/controller.service';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { IApiStatus, IMonitoringTechSupportRequest, MonitoringTechSupportRequest } from '@sdk/v1/models/generated/monitoring';
+import { Observable } from 'rxjs';
 
 
 @Component({
@@ -22,18 +17,10 @@ import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrende
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class TechsupportComponent extends BaseComponent implements OnInit, OnDestroy {
+export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechSupportRequest, MonitoringTechSupportRequest> implements OnInit {
+  dataObjects: ReadonlyArray<MonitoringTechSupportRequest> = [];
 
-  @ViewChild('techSupportRequestsTable') techSupportRequestsTable: Table;
-  @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
-
-  selectedTechsupportRequest: MonitoringTechSupportRequest = null;
-  subscriptions: Subscription[] = [];
-
-  // techsupports related variables
   techsupportrequestsEventUtility: HttpEventUtility<MonitoringTechSupportRequest>;
-  techsupportrequestsSubscription: Subscription;
-  techsupportrequests: ReadonlyArray<MonitoringTechSupportRequest> = [];
 
   bodyicon: any = {
     margin: {
@@ -42,22 +29,29 @@ export class TechsupportComponent extends BaseComponent implements OnInit, OnDes
     },
     url: '/assets/images/icons/security/ico-app-black.svg',   // TODO: wait for new svg file
   };
+  headerIcon: Icon = {
+    margin: {
+      top: '0px',
+      left: '10px',
+    },
+    matIcon: 'grid_on'
+  };
 
-  cols: any[] = [
-    { field: 'meta.name', header: 'Name', class: 'techsupportrequests-column-common techsupportrequests-column-name', sortable: true },
-    { field: 'meta.mod-time', header: 'Time', class: 'techsupportrequests-column-common techsupportrequests-column-date', sortable: true },
-    { field: 'spec.node-selector', header: 'Selected Nodes', class: 'techsupportrequests-column-common techsupportrequests-column-node_selector', sortable: false },
-    { field: 'spec.collection-selector', header: 'Collection-Selector', class: 'techsupportrequests-column-common techsupportrequests-column-collection_selector', sortable: false },
-    { field: 'status.status', header: 'Status', class: 'techsupportrequests-column-common techsupportrequests-column-status_status', sortable: true },
-    { field: 'spec.verbosity', header: 'Verbosity', class: 'techsupportrequests-column-common techsupportrequests-column-spec_verbosity', sortable: true }
+  cols: TableCol[] = [
+    { field: 'meta.name', header: 'Name', class: 'techsupportrequests-column-name', sortable: true, width: 15 },
+    { field: 'meta.mod-time', header: 'Time', class: 'techsupportrequests-column-date', sortable: true, width: 15 },
+    { field: 'spec.node-selector', header: 'Selected Nodes', class: ' techsupportrequests-column-node_selector', sortable: false, width: 25 },
+    { field: 'spec.collection-selector', header: 'Collection-Selector', class: ' techsupportrequests-column-collection_selector', sortable: false, width: 25 },
+    { field: 'status.status', header: 'Status', class: ' techsupportrequests-column-status_status', sortable: true, width: 10 },
+    { field: 'spec.verbosity', header: 'Verbosity', class: ' techsupportrequests-column-spec_verbosity', sortable: true, width: 10 }
   ];
 
-  creatingMode: boolean = false;
+  isTabComponent = false;
 
-  constructor(protected _controllerService: ControllerService,
-    protected monitoringService: MonitoringService
-  ) {
-    super(_controllerService, null);
+  constructor(protected controllerService: ControllerService,
+    protected cdr: ChangeDetectorRef,
+    protected monitoringService: MonitoringService) {
+    super(controllerService, cdr);
   }
 
   /**
@@ -68,90 +62,41 @@ export class TechsupportComponent extends BaseComponent implements OnInit, OnDes
     return this.constructor.name;
   }
 
-  ngOnInit() {
-    this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
-      'component': 'TechsupportComponent', 'state':
-        Eventtypes.COMPONENT_INIT
-    });
-    this.setDefaultToolbar();
+  postNgInit() {
     this.getTechSupportRequests();
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach(subscription => {
-      subscription.unsubscribe();
-    });
-    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, {
-      'component': 'TechsupportComponent', 'state':
-        Eventtypes.COMPONENT_DESTROY
-    });
-  }
-
   setDefaultToolbar() {
-    const currToolbar = this._controllerService.getToolbarData();
+    const currToolbar = this.controllerService.getToolbarData();
     currToolbar.buttons = [
       {
         cssClass: 'global-button-primary techsupportrequests-toolbar-button',
         text: 'ADD TECH-SUPPORT REQUEST',
-        callback: () => { this.createNewTechSupprotRequest(); }
+        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        callback: () => { this.createNewObject(); }
       },
     ];
     currToolbar.breadcrumb = [{ label: 'Tech Supports', url: Utility.getBaseUIUrl() + 'monitoring/techsupport' }];
-    this._controllerService.setToolbarData(currToolbar);
-  }
-
-  createNewTechSupprotRequest() {
-    this.creatingMode = true;
-    this.resizeTable(500);
-  }
-
-  private resizeTable(num: number) {
-    if (this.lazyRenderWrapper) {
-      if (num === null) {
-        this.lazyRenderWrapper.resizeTable();
-      } else {
-        this.lazyRenderWrapper.resizeTable(num);
-      }
-    }
-  }
-
-  creationFormClose() {
-    this.creatingMode = false;
-    this.resizeTable(500);
+    this.controllerService.setToolbarData(currToolbar);
   }
 
   getTechSupportRequests() {
     this.techsupportrequestsEventUtility = new HttpEventUtility<MonitoringTechSupportRequest>(MonitoringTechSupportRequest);
-    if (this.techsupportrequestsSubscription) {
-      this.techsupportrequestsSubscription.unsubscribe();
-    }
-    this.techsupportrequestsSubscription = this.monitoringService.WatchTechSupportRequest().subscribe(
+    this.dataObjects = this.techsupportrequestsEventUtility.array;
+    const sub = this.monitoringService.WatchTechSupportRequest().subscribe(
       response => {
         this.techsupportrequestsEventUtility.processEvents(response);
-        this.techsupportrequests = this.techsupportrequestsEventUtility.array;
-          this.resizeTable(500);
       },
-      this._controllerService.restErrorHandler('Failed to get MonitoringTechSupportRequest')
+      this.controllerService.restErrorHandler('Failed to get MonitoringTechSupportRequest')
     );
-    this.subscriptions.push(this.techsupportrequestsSubscription);
-  }
-
-  onTechSupportRequestsTableRowClick(event, rowData: any) {
-    this.selectedTechsupportRequest = rowData;
-    this.techSupportRequestsTable.toggleRow(rowData, event);
-    this.resizeTable(100);
-    return false;
-  }
-
-  onTechSupportRequestsTableHeaderClick(event, col) {
-    this.resizeTable(500);
+    this.subscriptions.push(sub);
   }
 
   /**
    * This API serves html template
    */
   displayTechsupportRequest(): string {
-    return JSON.stringify(this.selectedTechsupportRequest, null, 1);
+    return JSON.stringify(this.expandedRowData, null, 1);
   }
 
   displayColumn(data, col): any {
@@ -164,7 +109,7 @@ export class TechsupportComponent extends BaseComponent implements OnInit, OnDes
       case 'spec.collection-selector':
         return this.displayColumn_collectionselector(fields, value);
       default:
-        return super.displayColumn(data, col);
+        return Utility.displayColumn(data, col);
     }
   }
 
@@ -207,25 +152,16 @@ export class TechsupportComponent extends BaseComponent implements OnInit, OnDes
     return labelselectors.join(',');
   }
 
-  onTableSort($event) {
-    this.resizeTable(500);
+  deleteRecord(object: MonitoringTechSupportRequest): Observable<{ body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number }> {
+    return this.monitoringService.DeleteTechSupportRequest(object.meta.name);
   }
 
-  onDeleteTechSupportRecord($event, techsupportRequest: MonitoringTechSupportRequest) {
-    const r = confirm('Are you sure to delete tech-support-request: ' + techsupportRequest.meta.name);
-    if (r === true ) {
-      this.removeTechSupportRequest(techsupportRequest);
-    }
+  generateDeleteConfirmMsg(object: IMonitoringTechSupportRequest) {
+    return 'Are you sure to delete tech-support-request: ' + object.meta.name;
   }
 
-  removeTechSupportRequest (techsupportRequest: MonitoringTechSupportRequest) {
-      this.monitoringService.DeleteTechSupportRequest(techsupportRequest.meta.name).subscribe(
-        (response) => {
-          this._controllerService.invokeSuccessToaster('Delete Successful', 'Deleted tech-support-request ' + techsupportRequest.meta.name);
-          this.resizeTable(500);
-        },
-        this._controllerService.restErrorHandler('Failed to remove tech-support request: ' + techsupportRequest.meta.name)
-      );
+  generateDeleteSucessMsg(object: IMonitoringTechSupportRequest) {
+    return 'Deleted tech-support-request ' + object.meta.name;
   }
 
 }

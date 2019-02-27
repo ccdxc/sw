@@ -126,7 +126,10 @@ export class ArrayChunkUtility {
     }
   }
 
-  updateData(data, switchNow = false) {
+  updateData(data: any[], switchNow = false) {
+    if (data == null) {
+      data = [];
+    }
     this.newDataArray = Utility.getLodash().cloneDeep(data);
     if (this.instantUpdate || switchNow) {
       this.switchToNewData();

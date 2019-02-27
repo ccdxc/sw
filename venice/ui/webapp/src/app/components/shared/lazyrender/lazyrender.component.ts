@@ -36,7 +36,7 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   @Input() data: any[] = [];
 
   // Primeng needs the height of each row to be fixed and known beforehand
-  @Input() virtualRowHeight: number = 28;
+  @Input() virtualRowHeight: number = 36;
 
   // Number of rows to display in the table
   // Needed since the initial call to load scroll is made
@@ -75,6 +75,10 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   // Differs object for determining if data has changes
   arrayDiffers: IterableDiffer<any>;
 
+  // Flag to determine whether we allow the table to automatically update when
+  // user is scrolled to the top of the table.
+  isFrozen: boolean = false;
+
   constructor(protected elRef: ElementRef,
     protected _iterableDiffers: IterableDiffers) {
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
@@ -84,6 +88,17 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
     this.dataChunkUtility.updateData(this.data, true);
     this.dataLazy = this.dataChunkUtility.requestChunk(0, this.rows * 2);
     this.setTableValues();
+  }
+
+  freezeTable() {
+    this.isFrozen = true;
+  }
+
+  unfreezeTable() {
+    this.isFrozen = false;
+    if (this.viewInitComplete && this.getTableScroll() === 0) {
+      this.resetTableView();
+    }
   }
 
   /**
@@ -98,7 +113,6 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
     }
     const changes = this.arrayDiffers.diff(this.data);
     if (changes) {
-      // this.dataChunkUtility.updateData(this.data, false);
       this.onData(this.data);
     }
   }
@@ -114,13 +128,8 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
     // Auto update array if blank OR if we are at the top of the table (scroll is 0)
     // We skip this if view hasn't been initialized yet
     if (this.viewInitComplete) {
-      if (this.getTableScroll() === 0) {
-        // The last requested chunk should contain the default settings the table wants,
-        // as it should have been called in the virtual scroll event on table load
-        this.dataChunkUtility.switchToNewData();
-        this.dataUpdate.emit(true);
-        this.dataLazy = this.dataChunkUtility.getLastRequestedChunk();
-        this.setTableValues();
+      if (!this.isFrozen && this.getTableScroll() === 0) {
+        this.resetTableView();
       } else {
         this.hasUpdate = true;
       }
@@ -174,8 +183,12 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
     this.resizeTimeout = setTimeout(() => {
       const $ = Utility.getJQuery();
       const containerHeight = $('.lazyrender-container').outerHeight();
-      const headerHeight = $('.lazyrender-container .ui-table-caption').outerHeight();
+      let headerHeight = $('.lazyrender-container .ui-table-caption').outerHeight();
       const tableBodyHeader = $('.lazyrender-container .ui-table-scrollable-header').outerHeight();
+      // If there is no caption element, outerHeight will return undefined
+      if (headerHeight == null) {
+        headerHeight = 0;
+      }
       const newHeight = containerHeight - headerHeight - tableBodyHeader;
       $('.lazyrender-container .ui-table-scrollable-body').css('max-height', newHeight + 'px');
       // Setting height as well since sometimes the auto calculation is off by 1 px
@@ -238,12 +251,17 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   resetTableView() {
     this.dataChunkUtility.switchToNewData();
     this.hasUpdate = false;
-    this.dataUpdate.emit(true);
     // If we are scrolled a lot, the scroll to the top will trigger the table
     // to make a new request. If we are near the top though, it won't trigger so we
     // must load the new values
     this.dataLazy = this.dataChunkUtility.getLastRequestedChunk();
+    this.dataUpdate.emit(true);
     this.setTableValues();
     this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scroll(0, 0);
+  }
+
+  // Returns the data that is currently being displayed in the table
+  getCurrentDataLength(): number {
+    return this.dataChunkUtility.currentDataArray.length;
   }
 }

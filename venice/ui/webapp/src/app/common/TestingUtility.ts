@@ -29,13 +29,18 @@ export class TestingUtility {
       {
         [key: string]:
         (fieldElem: DebugElement, rowData: any, rowIndex: number) => void
-      } = {}) {
+      } = {}, actionColContent = null) {
 
     const rows = tableElem.queryAll(By.css('tr'));
     expect(rows.length).toBe(data.length, 'Data did not match number of entries in the table');
     rows.forEach((row, rowIndex) => {
       const rowData = data[rowIndex];
       row.children.forEach((field, fieldIndex) => {
+        if (fieldIndex === columns.length) {
+          // Action col
+          expect(field.nativeElement.textContent).toBe(actionColContent);
+          return;
+        }
         const colData = columns[fieldIndex];
         if (caseMap[colData.field] != null) {
           // Delegate to supplied function
@@ -65,7 +70,7 @@ export class TestingUtility {
               }
               break;
             default:
-              const fieldData = Utility.getObjectValueByPropertyPath(data[rowIndex], colData.field.split('.'));
+              const fieldData = Utility.getObjectValueByPropertyPath(rowData, colData.field.split('.'));
               expect(field.nativeElement.textContent).toContain(fieldData, colData.header + ' did not match for row ' + rowIndex);
           }
         }

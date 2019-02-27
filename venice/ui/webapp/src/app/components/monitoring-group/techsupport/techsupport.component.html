@@ -1,53 +1,51 @@
 <app-pagebody class="techsupportrequests" header="Tech Support" [icon]="bodyicon">
-  <app-newtechsupport [@slideInOut] (formClose)="creationFormClose()" fxFlex="none" *ngIf="creatingMode"
+  <!-- <app-newtechsupport [@slideInOut] (formClose)="creationFormClose()" fxFlex="none" *ngIf="creatingMode"
   [existingTechSupportRequest]="techsupportrequests" 
   ></app-newtechsupport>
    
   <div fxFlex class="techsupportrequests-table-container">
     <ng-container *ngTemplateOutlet="DataTable"></ng-container>
-  </div>
+  </div> -->
+  <app-tableviewedit fxLayout="column" class="techsupportrequests-widget"
+                    [creatingMode]="creatingMode" 
+                    [showEditingForm]="showEditingForm"
+                    [data]="dataObjects"
+                    [cols]="cols"
+                    [virtualRowHeight]="48"
+                    [expandedRowData]="expandedRowData"
+                    [captionTemplate]="captionTemplate"
+                    [bodyTemplate]="bodyTemplate"
+                    [actionTemplate]="actionTemplate"
+                    [createTemplate]="createTemplate"
+                    (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
+                    >
+  </app-tableviewedit>
 
 </app-pagebody>
 
-<ng-template #DataTable>
-  <app-lazyrender [data]="techsupportrequests" [rows]="28" [runDoCheck]="true" [data]="techsupportrequests" [virtualRowHeight]="48">
-    <p-table #techSupportRequestsTable class="global-primeng-table-lazyload" [columns]="cols" dataKey="meta.uuid"
-      [responsive]="true" (onSort)="onTableSort($event)" sortField="meta.mod-time" [sortOrder]='-1' [resizableColumns]="true"
-      exportFilename="Venice-techsupportrequests">
-      <!-- Table Caption -->
-      <ng-template pTemplate="caption">
-        <app-tableheader title="Tech Supports" [total]="techsupportrequests.length" width="250px">
-        </app-tableheader>
-      </ng-template>
-      <!-- Table Header -->
-      <ng-template pTemplate="header" let-columns>
-        <tr>
-          <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" (click)="onTechSupportRequestsTableHeaderClick($event, col)">
-            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
-          </th>
-          <th class="techsupportrequests-column-status_action">
-          </th>
-        </tr>
-      </ng-template>
-      <!-- Table Body -->
-      <ng-template pTemplate="body" let-rowData let-expanded="expanded">
-        <tr>
-          <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class" (click)="onTechSupportRequestsTableRowClick($event, rowData)">
-            <ng-container *ngSwitchCase="'meta.mod-time'">
-              {{rowData.meta['mod-time'] | PrettyDate }}
-            </ng-container>
-            <ng-container *ngSwitchDefault>
-              <div [innerHTML]="displayColumn(rowData, col)">
-              </div>
-            </ng-container>
-          </td>
-          <td class="techsupportrequests-column-status_action">
-              <mat-icon *ngIf="!creatingMode" matTooltip="Delete this tech-support request" class="global-table-action-icon techsupportrequests-column-status_action-del" (click)="onDeleteTechSupportRecord($event, rowData)">delete</mat-icon>
-            
-          </td>
-        </tr>
-      </ng-template>
+<ng-template #createTemplate>
+  <app-newtechsupport (formClose)="creationFormClose()" fxFlex="none" ></app-newtechsupport>
+</ng-template>
 
-    </p-table>
-  </app-lazyrender>
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="Tech Supports" [total]="count" width="250px">
+  </app-tableheader>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      {{rowData.meta['mod-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      <div [innerHTML]="displayColumn(rowData, col)">
+      </div>
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <mat-icon matTooltip="Delete tech-support" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+  </div>
 </ng-template>

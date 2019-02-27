@@ -40,13 +40,13 @@ export class PenuitabsComponent implements OnInit, OnDestroy, AfterContentInit {
     this.updateIsActiveTab();
   }
 
-  @Input() startingIndex: number;
+  @Input() startingIndex: number = 0;
   @Output() selectedIndexChange: EventEmitter<number> = new EventEmitter<number>();
 
   constructor() { }
 
   ngOnInit() {
-    if (typeof (this.startingIndex) === 'string') {
+    if (typeof (this.startingIndex) !== 'number') {
       throw new Error("staringIndex must be a number");
     }
     this.selectedIndex = this.startingIndex;

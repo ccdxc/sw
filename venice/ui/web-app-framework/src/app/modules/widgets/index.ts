@@ -11,3 +11,4 @@ export { TabcontentComponent } from './penuitabs/tabcontent/tabcontent.component
 
 // Interfaces
 export * from './repeater/index';
+export { TabcontentInterface } from './penuitabs/tabcontent/tabcontent.component';

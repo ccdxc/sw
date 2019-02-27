@@ -1,15 +1,14 @@
-import { Component, OnInit, ViewEncapsulation, ViewChild, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
-import { BaseComponent } from '@app/components/base/base.component';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { Utility } from '@app/common/Utility';
+import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { Utility } from '@app/common/Utility';
-import { MonitoringEventPolicy, FieldsRequirement, FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { Table } from 'primeng/table';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
+import { FieldsRequirement, IApiStatus, IMonitoringEventPolicy, MonitoringEventPolicy } from '@sdk/v1/models/generated/monitoring';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-eventpolicy',
@@ -18,9 +17,8 @@ import { EventsEvent } from '@sdk/v1/models/generated/events';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class EventpolicyComponent extends BaseComponent implements OnInit, OnDestroy {
-  @ViewChild('eventPoliciesTable') policytable: Table;
-  subscriptions = [];
+export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEventPolicy, MonitoringEventPolicy> implements OnInit {
+  dataObjects: ReadonlyArray<MonitoringEventPolicy> = [];
 
   bodyIcon: Icon = {
     margin: {
@@ -40,158 +38,54 @@ export class EventpolicyComponent extends BaseComponent implements OnInit, OnDes
 
   // Used for processing watch events
   policyEventUtility: HttpEventUtility<MonitoringEventPolicy>;
-  policies: ReadonlyArray<MonitoringEventPolicy> = [];
 
-  displayedPolicies: ReadonlyArray<MonitoringEventPolicy> = [];
-
-  expandedRowData: any;
-  creatingMode: boolean = false;
-  showEditingForm: boolean = false;
-
-  // If we receive new data, but the display is frozen (user editing),
-  // this should be set to true so that when user exits editing, we can update the display
-  hasNewData: boolean = true;
-
-  // Whether the toolbar buttons should be enabled
-  shouldEnableButtons: boolean = true;
-
-  cols: any[] = [
-    { field: 'meta.name', header: 'Name', class: 'eventpolicy-column-name', sortable: true },
-    { field: 'spec.selector', header: 'Filters', class: 'eventpolicy-column-name', sortable: false },
-    { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets', sortable: false, isLast: true },
+  cols: TableCol[] = [
+    { field: 'meta.name', header: 'Name', class: 'eventpolicy-column-name', sortable: true, width: 35 },
+    { field: 'spec.selector', header: 'Filters', class: 'eventpolicy-column-name', sortable: false, width: 30 },
+    { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets', sortable: false, width: 35 },
   ];
 
-  constructor(protected _controllerService: ControllerService,
-    private cdr: ChangeDetectorRef,
-    protected _monitoringService: MonitoringService,
-  ) {
-    super(_controllerService);
+  isTabComponent = false;
+
+  constructor(protected controllerService: ControllerService,
+    protected cdr: ChangeDetectorRef,
+    protected monitoringService: MonitoringService) {
+    super(controllerService, cdr);
   }
 
-  ngOnInit() {
-    this._controllerService.setToolbarData({
+  postNgInit() {
+    this.getEventPolicy();
+  }
+
+  getClassName() {
+    return this.constructor.name;
+  }
+
+  setDefaultToolbar() {
+    this.controllerService.setToolbarData({
       buttons: [{
         cssClass: 'global-button-primary eventpolicy-button',
         text: 'ADD EVENT POLICY',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-        callback: () => { this.createNewPolicy(); }
+        callback: () => { this.createNewObject(); }
       },
       ],
       breadcrumb: [{ label: 'Alerts & Events', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents' },
       { label: 'Event Policy', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents/eventpolicy' }
       ]
     });
-    this.getEventPolicy();
   }
 
   getEventPolicy() {
     this.policyEventUtility = new HttpEventUtility<MonitoringEventPolicy>(MonitoringEventPolicy);
-    const sub = this._monitoringService.WatchEventPolicy().subscribe(
+    this.dataObjects = this.policyEventUtility.array;
+    const sub = this.monitoringService.WatchEventPolicy().subscribe(
       (response) => {
-        this.policies = this.policyEventUtility.processEvents(response);
-        if (this.isInEditMode()) {
-          this.hasNewData = true;
-        } else {
-          this.setTableData();
-        }
+        this.policyEventUtility.processEvents(response);
       },
-      this._controllerService.restErrorHandler('Failed to get event policies')
+      this.controllerService.restErrorHandler('Failed to get event policies')
     );
     this.subscriptions.push(sub);
-  }
-
-  setTableData() {
-    /**
-     * We copy the data so that the table doesn't
-     * automatically update when the input binding is updated
-     * This allows us to freeze the table when a user is doing inline
-     * editing on a row entry
-     */
-    if (this.policies == null) {
-      return;
-    }
-    const _ = Utility.getLodash();
-    const policies = _.cloneDeep(this.policies);
-    if (policies == null) {
-      this.displayedPolicies = [];
-      return;
-    }
-    this.displayedPolicies = policies;
-  }
-
-  createNewPolicy() {
-    // If a row is expanded, we shouldnt be able to open a create new policy form
-    if (!this.isInEditMode()) {
-      this.creatingMode = true;
-    }
-  }
-
-  /**
-   * Called when a row expand animation finishes
-   * The animation happens when the row expands, and when it collapses
-   * If it is expanding, then we are in ediitng mode (set in onUpdateRecord).
-   * If it is collapsing, then editingMode should be false, (set in onUpdateRecord).
-   * When it is collapsing, we toggle the row on the turbo table
-   *
-   * This is because we must wait for the animation to complete before toggling
-   * the row on the turbo table for a smooth animation.
-   * @param  $event Angular animation end event
-   */
-  rowExpandAnimationComplete($event) {
-    if (!this.showEditingForm) {
-      // we are exiting the row expand
-      this.policytable.toggleRow(this.expandedRowData, event);
-      this.expandedRowData = null;
-      if (this.hasNewData) {
-        this.setTableData();
-      }
-      // Needed to prevent "ExpressionChangedAfterItHasBeenCheckedError"
-      // We force an additional change detection cycle
-      this.cdr.detectChanges();
-    }
-  }
-
-  onUpdateRecord(event, policy) {
-    // If in creation mode, don't allow row expansion
-    if (this.creatingMode) {
-      return;
-    }
-    if (!this.isInEditMode()) {
-      // Entering edit mode
-      this.policytable.toggleRow(policy, event);
-      this.expandedRowData = policy;
-      this.showEditingForm = true;
-      this.shouldEnableButtons = false;
-    } else {
-      this.showEditingForm = false;
-      this.shouldEnableButtons = true;
-      // We don't untoggle the row here, it will happen when rowExpandAnimationComplete
-      // is called.
-    }
-  }
-
-  onDeleteRecord(event, policy: MonitoringEventPolicy) {
-    // Should not be able to delete any record while we are editing
-    if (this.isInEditMode()) {
-      return;
-    }
-
-    const msg = 'Deleted policy ' + policy.meta.name;
-    const sub = this._monitoringService.DeleteEventPolicy(policy.meta.name).subscribe(
-      response => {
-        this.invokeSuccessToaster('Delete Successful', msg);
-      },
-      this.restErrorHandler('Delete Failed')
-    );
-    this.subscriptions.push(sub);
-  }
-
-  creationFormClose() {
-    this.creatingMode = false;
-  }
-
-  isInEditMode() {
-    return this.expandedRowData != null;
   }
 
   displayColumn(exportData, col): any {
@@ -218,34 +112,7 @@ export class EventpolicyComponent extends BaseComponent implements OnInit, OnDes
     data.forEach((req) => {
       let ret = '';
       ret += req['key'] + ' ';
-      switch (req.operator) {
-        case FieldsRequirement_operator.equals:
-          ret += '=';
-          break;
-        case FieldsRequirement_operator.notEquals:
-          ret += '!=';
-          break;
-        case FieldsRequirement_operator.gt:
-          ret += '>';
-          break;
-        case FieldsRequirement_operator.gte:
-          ret += '>=';
-          break;
-        case FieldsRequirement_operator.lte:
-          ret += '<=';
-          break;
-        case FieldsRequirement_operator.lt:
-          ret += '<';
-          break;
-        case FieldsRequirement_operator.in:
-          ret += '=';
-          break;
-        case FieldsRequirement_operator.notIn:
-          ret += '!=';
-          break;
-        default:
-          ret += req.operator;
-      }
+      ret += Utility.getFieldOperatorSymbol(req.operator);
 
       ret += ' ';
 
@@ -265,15 +132,16 @@ export class EventpolicyComponent extends BaseComponent implements OnInit, OnDes
     return retArr;
   }
 
-  /**
-   * Component is about to exit
-   */
-  ngOnDestroy() {
-    // publish event that AppComponent is about to be destroyed
-    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'Eventpolicy component', 'state': Eventtypes.COMPONENT_DESTROY });
-    this.subscriptions.forEach(subscription => {
-      subscription.unsubscribe();
-    });
+  deleteRecord(object: MonitoringEventPolicy): Observable<{ body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number }> {
+    return this.monitoringService.DeleteEventPolicy(object.meta.name);
+  }
+
+  generateDeleteConfirmMsg(object: IMonitoringEventPolicy) {
+    return 'Are you sure you want to delete policy ' + object.meta.name;
+  }
+
+  generateDeleteSucessMsg(object: IMonitoringEventPolicy) {
+    return 'Deleted policy ' + object.meta.name;
   }
 
 }

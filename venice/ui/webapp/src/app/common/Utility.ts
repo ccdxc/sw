@@ -14,7 +14,7 @@ import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import { Table } from 'primeng/table';
 import { FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
-import { RepeaterComponent} from 'web-app-framework';
+import { RepeaterComponent } from 'web-app-framework';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
 import { SearchExpression } from '@app/components/search/index.ts';
 
@@ -1146,25 +1146,35 @@ export class Utility {
    *
    * [{"keyFormControl":"text","operatorFormControl":"equals","valueFormControl":"1.2","keytextFormName":"version"}]
    */
-    public static convertRepeaterValuesToSearchExpression(repeater: RepeaterComponent): any[] {
-      const data = repeater.getValues();
-      if (data == null) {
-        return null;
-      }
-      let retData = data.filter((item) => {
-        return item[repeater.valueFormName] != null && item[repeater.valueFormName].length !== 0;
-      });
-      // make sure the value field is an array
-      retData = retData.map((item) => {
-        const searchExpression: SearchExpression = {
-          key : item[repeater.keytextFormName],
-          operator: item[repeater.operatorFormName],
-          values: Array.isArray(item[repeater.valueFormName]) ? item[repeater.valueFormName] : item[repeater.valueFormName].trim().split(',')
-        };
-        return searchExpression;
-      });
-      return retData;
+  public static convertRepeaterValuesToSearchExpression(repeater: RepeaterComponent): any[] {
+    const data = repeater.getValues();
+    if (data == null) {
+      return null;
     }
+    let retData = data.filter((item) => {
+      return item[repeater.valueFormName] != null && item[repeater.valueFormName].length !== 0;
+    });
+    // make sure the value field is an array
+    retData = retData.map((item) => {
+      const searchExpression: SearchExpression = {
+        key: item[repeater.keytextFormName],
+        operator: item[repeater.operatorFormName],
+        values: Array.isArray(item[repeater.valueFormName]) ? item[repeater.valueFormName] : item[repeater.valueFormName].trim().split(',')
+      };
+      return searchExpression;
+    });
+    return retData;
+  }
+
+  public static displayColumn(data, col): any {
+    const fields = col.field.split('.');
+    const value = Utility.getObjectValueByPropertyPath(data, fields);
+    const column = col.field;
+    switch (column) {
+      default:
+        return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
+    }
+  }
 
 
 

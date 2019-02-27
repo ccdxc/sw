@@ -1,0 +1,57 @@
+<div fxFlex="auto" fxLayout="column" class="tableviewedit-widget">
+  <div [@slideInOut] *ngIf="creatingMode" fxFlex="none" fxLayout="column">
+    <ng-container table *ngTemplateOutlet="createTemplate"></ng-container>
+  </div>
+  <div fxFlex class="tableviewedit-tablecontainer">
+    <ng-container #table *ngTemplateOutlet="TableTemplate"></ng-container>
+    <div *ngIf="creatingMode || showEditingForm" class="tableviewedit-overlay"></div>
+  </div>
+</div>
+
+<ng-template #TableTemplate>
+  <app-lazyrender [data]="data" [rows]="28" [runDoCheck]="runDoCheck" [virtualRowHeight]="virtualRowHeight" (dataUpdate)='dataUpdated()'>
+    <p-table [columns]="cols" [sortField]="sortField" [dataKey]="dataKey"
+      #primengTable
+      class="global-primeng-table-lazyload"  [responsive]="true" 
+      [loading]="tableLoading" [resizableColumns]="true" rowExpandMode="single"
+     >
+
+      <ng-template pTemplate="caption" *ngIf="captionTemplate != null">
+        <ng-container *ngTemplateOutlet="captionTemplate; context {count: displayedItemCount}"></ng-container>
+      </ng-template>
+
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th *ngFor="let col of cols; let last = last" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" 
+          [style.width]="col.width + '%'"
+          [colSpan]="last && actionTemplate != null ? 2 : 1"
+          >
+            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-rowData>
+        <tr [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData">
+          <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class" 
+          [style.width]="last && actionTemplate != null ? col.width - actionWidth + '%' : col.width + '%'">
+            <ng-container *ngTemplateOutlet="bodyTemplate; context: {col: col, $implicit: rowData}"></ng-container>
+          </td>
+          <td *ngIf="actionTemplate != null" [style.width]="actionWidth + '%'" >
+            <ng-container *ngTemplateOutlet="actionTemplate; context: {$implicit: rowData}"></ng-container>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
+        <tr class="global-rowexpand tableviewedit-rowexpand-tr">
+          <td [attr.colspan]="actionTemplate != null ? columns.length + 1 : columns.length">
+            <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete.emit($event)" *ngIf="showEditingForm" class="tableviewedit-rowexpand">
+              <ng-container *ngTemplateOutlet="expandTemplate; context: {$implicit: rowData, columns: columns}"></ng-container>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </app-lazyrender>
+</ng-template>

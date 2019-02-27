@@ -1,13 +1,13 @@
 <app-pagebody class="alertpolicies">
-  <app-penuitabs>
+  <app-penuitabs [style.height]="'100%'">
     <app-penuitab title="EVENT ALERT POLICIES" [count]="eventPolicies?.length">
       <ng-template>
-        <app-eventalertpolicies #tabContent [policies]="eventPolicies" [destinations]="destinations"></app-eventalertpolicies>
+        <app-eventalertpolicies #tabContent [dataObjects]="eventPolicies" [destinations]="destinations"></app-eventalertpolicies>
       </ng-template>
     </app-penuitab>
     <app-penuitab title="DESTINATIONS" [count]="destinations?.length">
       <ng-template>
-        <app-destinations #tabContent [destinationData]="destinations"></app-destinations>
+        <app-destinations #tabContent [dataObjects]="destinations"></app-destinations>
       </ng-template>
     </app-penuitab>
   </app-penuitabs>
