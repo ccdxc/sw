@@ -74,7 +74,7 @@ public:
             uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data);
 
     int p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
-            uint32_t hw_lif_id, uint8_t index, uint8_t enable, uint8_t qid);
+            uint32_t hw_lif_id, uint8_t index, uint8_t qid);
     int p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
             uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata_t *data);
 

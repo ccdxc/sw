@@ -13,6 +13,9 @@
  *                      table config engine.
  *****************************************************************************/
 
+#include "INGRESS_p.h"
+
+struct phv_ p;
 
 %%
     .param      tcp_rx_read_shared_stage0_start
@@ -33,7 +36,7 @@
 //qstate's pc_offset is not initialized
 .align
 rx_dummy:
-    nop.e
+    phvwr.e     p.p4_intr_global_drop, 1
     nop
 
 //Do not change the order of this entry. 

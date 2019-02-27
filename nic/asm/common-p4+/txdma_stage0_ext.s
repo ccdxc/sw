@@ -14,6 +14,10 @@
  *                      table config engine.
  *****************************************************************************/
 
+#include "INGRESS_p.h"
+
+struct phv_ p;
+
 %%
 
     .param      req_tx_sqcb_process_ext
@@ -24,7 +28,7 @@
 //qstate's pc_offset is not initialized
 .align
 tx_dummy_ext:
-   nop.e
+   phvwr.e     p.p4_intr_global_drop, 1
    nop
 
 //Do not change the order of this entry. 

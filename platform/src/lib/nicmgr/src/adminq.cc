@@ -1,3 +1,6 @@
+/*
+* Copyright (c) 2019, Pensando Systems Inc.
+*/
 
 #include "adminq.hpp"
 
@@ -203,8 +206,7 @@ AdminQ::AdminRequestQReset()
     }
     NIC_LOG_DEBUG("{}: resetting request qstate {:#x}", name, req_qstate_addr);
 
-    MEM_SET(req_qstate_addr, 0, sizeof(nicmgr_req_qstate_t), 0);
-
+    MEM_SET(req_qstate_addr, 0, fldsiz(nicmgr_req_qstate_t, pc_offset), 0);
     PAL_barrier();
     p4plus_invalidate_cache(req_qstate_addr, sizeof(nicmgr_req_qstate_t),
         P4PLUS_CACHE_INVALIDATE_TXDMA);
@@ -225,8 +227,7 @@ AdminQ::AdminResponseQReset()
     }
     NIC_LOG_DEBUG("{}: resetting response qstate {:#x}", name, resp_qstate_addr);
 
-    MEM_SET(resp_qstate_addr, 0, sizeof(nicmgr_resp_qstate_t), 0);
-
+    MEM_SET(resp_qstate_addr, 0, fldsiz(nicmgr_resp_qstate_t, pc_offset), 0);
     PAL_barrier();
     p4plus_invalidate_cache(resp_qstate_addr, sizeof(nicmgr_resp_qstate_t),
         P4PLUS_CACHE_INVALIDATE_TXDMA);

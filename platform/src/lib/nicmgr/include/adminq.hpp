@@ -16,6 +16,7 @@
 
 #include "pd_client.hpp"
 #include "pal_compat.hpp"
+#include "nicmgr_utils.hpp"
 
 
 typedef void (*adminq_cb_t) ( void *obj,

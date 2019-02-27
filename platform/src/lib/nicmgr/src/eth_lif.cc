@@ -294,13 +294,23 @@ EthLif::EthLif(HalClient *hal_client,
 enum status_code
 EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 {
+    int ret;
     uint64_t addr;
-    eth_tx_qstate_t tx_qstate = {0};
-    eth_rx_qstate_t rx_qstate = {0};
-    admin_qstate_t aq_qstate = {0};
     edma_qstate_t dq_qstate = {0};
 
     NIC_LOG_DEBUG("{}: LIF_INIT", hal_lif_info_.name);
+
+    if (state == LIF_STATE_INIT) {
+        NIC_LOG_WARN("{}: {} + INIT => {}", hal_lif_info_.name,
+            lif_state_to_str(state),
+            lif_state_to_str(state));
+        return (IONIC_RC_SUCCESS);
+    }
+
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return (IONIC_RC_EAGAIN);
+    }
 
     if (state == LIF_STATE_CREATED) {
 
@@ -345,8 +355,14 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     rss_type = LifRssType::RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
     memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
+    ret = pd->eth_program_rss(hal_lif_info_.hw_lif_id, rss_type, rss_key, rss_indir,
+                              spec->rxq_count);
+    if (ret != 0) {
+        NIC_LOG_DEBUG("{}: Unable to program hw for RSS HASH", ret);
+        return (IONIC_RC_ERROR);
+    }
 
-    // Clear all non-intrinsic fields
+    // Clear PC to drop all traffic
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
         addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
         if (addr < 0) {
@@ -354,11 +370,9 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        WRITE_MEM(addr + offsetof(eth_rx_qstate_t, p_index0),
-                  (uint8_t *)(&rx_qstate) + offsetof(eth_rx_qstate_t, p_index0),
-                  sizeof(rx_qstate) - offsetof(eth_rx_qstate_t, p_index0), 0);
+        MEM_SET(addr, 0, fldsiz(eth_rx_qstate_t, pc_offset), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
+        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
@@ -368,9 +382,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        WRITE_MEM(addr + offsetof(eth_tx_qstate_t, p_index0),
-                  (uint8_t *)(&tx_qstate) + offsetof(eth_tx_qstate_t, p_index0),
-                  sizeof(tx_qstate) - offsetof(eth_tx_qstate_t, p_index0), 0);
+        MEM_SET(addr, 0, fldsiz(eth_tx_qstate_t, pc_offset), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
@@ -382,9 +394,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        WRITE_MEM(addr + offsetof(admin_qstate_t, p_index0),
-                  (uint8_t *)(&aq_qstate) + offsetof(admin_qstate_t, p_index0),
-                  sizeof(aq_qstate) - offsetof(admin_qstate_t, p_index0), 0);
+        MEM_SET(addr, 0, fldsiz(admin_qstate_t, pc_offset), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
@@ -504,17 +514,12 @@ EthLif::FreeUpMacVlanFilters()
 enum status_code
 EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
 {
+    int ret;
     uint64_t addr;
-    eth_tx_qstate_t tx_qstate = {0};
-    eth_rx_qstate_t rx_qstate = {0};
-    admin_qstate_t aq_qstate = {0};
-    edma_qstate_t dq_qstate = {0};
 
     NIC_LOG_DEBUG("{}: LIF_RESET", hal_lif_info_.name);
 
-    if (state == LIF_STATE_CREATED ||
-        state == LIF_STATE_INITING ||
-        state == LIF_STATE_RESET) {
+    if (state == LIF_STATE_CREATED || state == LIF_STATE_RESET) {
         NIC_LOG_WARN("{}: {} + RESET => {}", hal_lif_info_.name,
             lif_state_to_str(state),
             lif_state_to_str(state));
@@ -542,8 +547,14 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     rss_type = LifRssType::RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
     memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
+    ret = pd->eth_program_rss(hal_lif_info_.hw_lif_id, rss_type, rss_key, rss_indir,
+                              spec->rxq_count);
+    if (ret != 0) {
+        NIC_LOG_DEBUG("{}: Unable to program hw for RSS HASH", ret);
+        return (IONIC_RC_ERROR);
+    }
 
-    // Reset all Host Queues
+    // Clear PC to drop all traffic
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
         addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
         if (addr < 0) {
@@ -551,11 +562,9 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        WRITE_MEM(addr + offsetof(eth_rx_qstate_t, p_index0),
-                  (uint8_t *)(&rx_qstate) + offsetof(eth_rx_qstate_t, p_index0),
-                  sizeof(rx_qstate) - offsetof(eth_rx_qstate_t, p_index0), 0);
+        MEM_SET(addr, 0, fldsiz(eth_rx_qstate_t, pc_offset), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
+        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
@@ -565,9 +574,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        WRITE_MEM(addr + offsetof(eth_tx_qstate_t, p_index0),
-                  (uint8_t *)(&tx_qstate) + offsetof(eth_tx_qstate_t, p_index0),
-                  sizeof(tx_qstate) - offsetof(eth_tx_qstate_t, p_index0), 0);
+        MEM_SET(addr, 0, fldsiz(eth_tx_qstate_t, pc_offset), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
@@ -579,9 +586,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, qid);
             return (IONIC_RC_ERROR);
         }
-        WRITE_MEM(addr + offsetof(admin_qstate_t, p_index0),
-                  (uint8_t *)(&aq_qstate) + offsetof(admin_qstate_t, p_index0),
-                  sizeof(aq_qstate) - offsetof(admin_qstate_t, p_index0), 0);
+        MEM_SET(addr, 0, fldsiz(admin_qstate_t, pc_offset), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
@@ -593,9 +598,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
             hal_lif_info_.name, ETH_EDMAQ_QID);
         return (IONIC_RC_ERROR);
     }
-    WRITE_MEM(addr + offsetof(edma_qstate_t, p_index0),
-                (uint8_t *)(&dq_qstate) + offsetof(edma_qstate_t, p_index0),
-                sizeof(dq_qstate) - offsetof(edma_qstate_t, p_index0), 0);
+    MEM_SET(addr, 0, fldsiz(edma_qstate_t, pc_offset), 0);
     PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
@@ -613,7 +616,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     int64_t addr, nicmgr_qstate_addr;
     struct adminq_init_cmd *cmd = (struct adminq_init_cmd *)req;
     struct adminq_init_comp *comp = (struct adminq_init_comp *)resp;
-    admin_qstate_t qstate;
+    admin_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_ADMINQ_INIT: "
         "queue_index {} ring_base {:#x} ring_size {} intr_index {}",
@@ -835,8 +838,8 @@ enum status_code
 EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
-    eth_rx_qstate_t rx_qstate;
-    eth_tx_qstate_t tx_qstate;
+    eth_rx_qstate_t rx_qstate = {0};
+    eth_tx_qstate_t tx_qstate = {0};
     admin_qstate_t aq_state;
     intr_state_t intr_st;
 
@@ -909,7 +912,7 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     int64_t addr;
     struct txq_init_cmd *cmd = (struct txq_init_cmd *)req;
     struct txq_init_comp *comp = (struct txq_init_comp *)resp;
-    eth_tx_qstate_t qstate;
+    eth_tx_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_TXQ_INIT: "
         "queue_index {} cos {} ring_base {:#x} ring_size {} intr_index {} sg {} {}{}",
@@ -1011,7 +1014,7 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     int64_t addr;
     struct rxq_init_cmd *cmd = (struct rxq_init_cmd *)req;
     struct rxq_init_comp *comp = (struct rxq_init_comp *)resp;
-    eth_rx_qstate_t qstate;
+    eth_rx_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_RXQ_INIT: "
         "index {} cos {} ring_base {:#x} ring_size {} intr_index {} sg {} {}{}",
@@ -1093,7 +1096,7 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_RXDMA);
+    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_BOTH);
 
     comp->qid = cmd->index;
     comp->qtype = ETH_QTYPE_RX;
@@ -1108,7 +1111,7 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
     uint64_t host_ring_base;
-    notify_qstate_t qstate;
+    notify_qstate_t qstate = {0};
     struct notifyq_init_cmd *cmd = (struct notifyq_init_cmd *)req;
     struct notifyq_init_comp *comp = (struct notifyq_init_comp *)resp;
 
@@ -1362,7 +1365,7 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
         rx_cfg.enable = 0x1;
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
+        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
         break;
     case ETH_QTYPE_TX:
         if (cmd->qid >= spec->txq_count) {
@@ -1449,7 +1452,7 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
         rx_cfg.enable = 0x0;
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
+        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
         break;
     case ETH_QTYPE_TX:
         if (cmd->qid >= spec->txq_count) {
@@ -1777,7 +1780,7 @@ EthLif::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
     ret = pd->eth_program_rss(hal_lif_info_.hw_lif_id, rss_type, rss_key, rss_indir,
                               spec->rxq_count);
     if (ret != 0) {
-        NIC_LOG_DEBUG("_CmdRssHashSet:{}: Unable to program hw for RSS HASH", ret);
+        NIC_LOG_DEBUG("{}: Unable to program hw for RSS HASH", ret);
         return (IONIC_RC_ERROR);
     }
 

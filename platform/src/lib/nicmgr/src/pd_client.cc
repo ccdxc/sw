@@ -668,7 +668,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
 
 int
 PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
-        uint32_t hw_lif_id, uint8_t index, uint8_t enable, uint8_t qid)
+        uint32_t hw_lif_id, uint8_t index, uint8_t qid)
 {
     uint64_t tbl_base;
     uint64_t tbl_index;
@@ -682,7 +682,13 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
         return -1;
     };
 
-    data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.enable = enable;
+    // NOTE: Enable value must always be set for ethernet devices, because,
+    // the rss indirection table action uses this field to decide if this
+    // is an ethernet PHV or not. RSS can be enabled/disabled on an ethernet
+    // LIF by just programming the type value in the rss params table.
+    // When RSS is disabled (rss_type == 0) in the param table the indirection
+    // action will not run.
+    data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.enable = 0xff;
     data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.qid = qid;
 
     tbl_index = (hw_lif_id * ETH_RSS_LIF_INDIR_TBL_SZ) +
@@ -735,14 +741,17 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_ke
     assert(hw_lif_id < MAX_LIFS);
     assert(num_queues < ETH_RSS_MAX_QUEUES);
 
-    p4pd_common_p4plus_rxdma_rss_params_table_entry_add(hw_lif_id, rss_type, rss_key);
-
+    // program the indirection table before the params table as it is downstream
+    // from the params table. rss params like should be set after
+    // the indirection table is completely programmed.
     if (num_queues > 0) {
         for (unsigned int index = 0; index < ETH_RSS_LIF_INDIR_TBL_LEN; index++) {
             p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
-                    hw_lif_id, index, rss_type, rss_indir[index]);
+                    hw_lif_id, index, rss_indir[index]);
         }
     }
+
+    p4pd_common_p4plus_rxdma_rss_params_table_entry_add(hw_lif_id, rss_type, rss_key);
 
     return 0;
 }
