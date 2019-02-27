@@ -77,6 +77,11 @@ func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif types.CtrlerAPI) error {
 func (ag *fakeAgent) GetAgentID() string {
 	return "fakeAgent_" + ag.name
 }
+
+func (ag *fakeAgent) GetNetagentUptime() (string, error) {
+	return "", nil
+}
+
 func (ag *fakeAgent) CreateNetwork(nt *netproto.Network) error {
 	ag.netAdded[objectKey(nt.ObjectMeta)] = nt
 	return nil
