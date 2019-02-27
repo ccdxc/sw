@@ -371,6 +371,21 @@ func (n *NMD) NaplesProfileGetHandler(r *http.Request) (interface{}, error) {
 	return profiles, nil
 }
 
+// NaplesProfileDeleteHandler deletes a napels pr
+func (n *NMD) NaplesProfileDeleteHandler(r *http.Request) (interface{}, error) {
+	profileName, _ := mux.Vars(r)["ProfileName"]
+
+	for i, p := range n.profiles {
+		if profileName == p.Name {
+			copy(n.profiles[i:], n.profiles[i+1:])
+			n.profiles[len(n.profiles)-1] = nil
+			n.profiles = n.profiles[:len(n.profiles)-1]
+			break
+		}
+	}
+	return nil, nil
+}
+
 // NaplesRolloutHandler is the REST handler for Naples Config POST operation
 func (n *NMD) NaplesRolloutHandler(r *http.Request) (interface{}, error) {
 	snicRollout := roprotos.SmartNICRollout{}
@@ -499,7 +514,7 @@ func (n *NMD) StartRestServer() error {
 	t2 := router.Methods("GET").Subrouter()
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
 	t2.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileGetHandler))
-	t2.HandleFunc(CmdEXECUrl, httputils.MakeHTTPHandler(NaplesCmdExecHandler))
+	t2.HandleFunc(CmdEXECUrl, NaplesCmdExecHandler)
 	t2.HandleFunc("/api/{*}", unknownAction)
 	t2.HandleFunc("/debug/pprof/", pprof.Index)
 	t2.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -520,6 +535,8 @@ func (n *NMD) StartRestServer() error {
 	router.PathPrefix(MonitoringURL + "events/").Handler(http.StripPrefix(MonitoringURL+"events/", http.FileServer(http.Dir(globals.EventsDir))))
 	router.PathPrefix(CoresURL).Handler(http.StripPrefix(CoresURL, http.FileServer(http.Dir(globals.CoresDir))))
 	router.PathPrefix(UpdateURL).Handler(http.StripPrefix(UpdateURL, http.FileServer(http.Dir(globals.UpdateDir))))
+
+	router.HandleFunc("/api/v1/naples/profiles/{ProfileName}", httputils.MakeHTTPHandler(n.NaplesProfileDeleteHandler))
 
 	// create listener
 	listener, err := net.Listen("tcp", n.listenURL)
@@ -744,22 +761,28 @@ func naplesHostDisruptiveUpgrade(pkgName string) (string, error) {
 }
 
 //NaplesCmdExecHandler is the REST handler to execute any binary on naples and return the output
-func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
+func NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
 	req := nmd.NaplesCmdExecute{}
 	resp := NaplesConfigResp{}
+	defer r.Body.Close()
+
 	content, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorf("Failed to read request: %v", err)
 		resp.ErrorMsg = err.Error()
-		return resp, err
+		fmt.Fprintln(w, resp)
+		return
 	}
 
 	if err = json.Unmarshal(content, &req); err != nil {
 		log.Errorf("Unmarshal err %s", content)
 		resp.ErrorMsg = err.Error()
-		return resp, err
+		fmt.Fprintln(w, resp)
+		return
 	}
 
 	log.Infof("Naples Cmd Execute Request: %+v env: [%s]", req, os.Environ())
-	return naplesExecCmd(&req)
+
+	stdErrOut, _ := naplesExecCmd(&req)
+	fmt.Fprintln(w, stdErrOut)
 }

@@ -14,6 +14,8 @@ def_mode_set_error_strs = [
                             "invalid management IP a specified. Must be in CIDR Format",
                             "invalid hostname a:",
                             "invalid MAC Address a specified",
+                            "deleting default profile is disallowed",
+                            "specified profile nonExistentProfile doesn't exist"
                           ]
 
 
@@ -44,6 +46,8 @@ def Verify(tc):
         for n in tc.Nodes:
             # TODO Add more negative test cases
             common.AddPenctlCommand(req, n, "create naples-profile -n default -i 42")
+            common.AddPenctlCommand(req, n, "delete naples-profile -n default")
+            common.AddPenctlCommand(req, n, "delete naples-profile -n nonExistentProfile")
             common.AddPenctlCommand(req, n, "update naples -o host -f scale -c a:a")
             common.AddPenctlCommand(req, n, "update naples -o network -k oob -c a:a")
             common.AddPenctlCommand(req, n, "update naples -o network -k inband -c a -c a1 -c a2:1")

@@ -36,7 +36,7 @@ var naplesShowCmd = &cobra.Command{
 	RunE:  naplesShowCmdHandler,
 }
 
-var naplesProfileCmd = &cobra.Command{
+var naplesProfileCreateCmd = &cobra.Command{
 	Use:   "naples-profile",
 	Short: "naples profile object",
 	Long:  "\n----------------------------\n Create NAPLES Profiles \n----------------------------\n",
@@ -51,6 +51,14 @@ var naplesProfileShowCmd = &cobra.Command{
 	RunE:  naplesProfileShowCmdHandler,
 }
 
+var naplesProfileDeleteCmd = &cobra.Command{
+	Use:   "naples-profile",
+	Short: "naples profile object",
+	Long:  "\n----------------------------\n Delete NAPLES Profiles \n----------------------------\n",
+	RunE:  naplesProfileDeleteCmdHandler,
+	Args:  naplesProfileDeleteCmdValidator,
+}
+
 var numLifs int32
 var controllers []string
 var managedBy, managementNetwork, priMac, hostname, mgmtIP, defaultGW, naplesProfile, profileName string
@@ -59,7 +67,8 @@ var dnsServers []string
 func init() {
 	updateCmd.AddCommand(naplesCmd)
 	showCmd.AddCommand(naplesShowCmd, naplesProfileShowCmd)
-	createCmd.AddCommand(naplesProfileCmd)
+	createCmd.AddCommand(naplesProfileCreateCmd)
+	deleteCmd.AddCommand(naplesProfileDeleteCmd)
 
 	naplesCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or hostnames")
 	naplesCmd.Flags().StringVarP(&managedBy, "managed-by", "o", "host", "NAPLES Management. host or network")
@@ -70,42 +79,23 @@ func init() {
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
 	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "default", "Active NAPLES Profile")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
-	naplesProfileCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile")
-	naplesProfileCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 0, "Number of LIFs on the eth device. 1 or 16")
+	naplesProfileCreateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be deleted")
+	naplesProfileCreateCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 0, "Maximum number of LIFs on the eth device. 1 or 16")
+
+	naplesProfileDeleteCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be deleted")
 }
 
 func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 	var networkManagementMode nmd.NetworkMode
 	var managementMode nmd.MgmtMode
-	var ok bool
 
 	if managedBy == "host" {
 		managementMode = nmd.MgmtMode_HOST
 		managementNetwork = ""
 
 		// check if profile exists.
-		// TODO remove this when penctl can display server sent errors codes. This fails due to revproxy and only on verbose mode gives a non descript 500 Internal Server Error
-		baseURL, _ := getNaplesURL()
-		url := fmt.Sprintf("%s/api/v1/naples/profiles/", baseURL)
-
-		resp, err := http.Get(url)
-		if err != nil {
-			fmt.Println("Failed to get existing profiles. Err: ", err)
-		}
-		defer resp.Body.Close()
-
-		body, _ := ioutil.ReadAll(resp.Body)
-		var profiles []*nmd.NaplesProfile
-		json.Unmarshal(body, &profiles)
-
-		for _, p := range profiles {
-			if naplesProfile == p.Name {
-				ok = true
-			}
-		}
-
-		if !ok {
-			return fmt.Errorf("invalid profile specified. %v", naplesProfile)
+		if err := checkProfileExists(naplesProfile); err != nil {
+			return err
 		}
 
 	} else {
@@ -146,7 +136,13 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 		}
 		return err
 	}
-	fmt.Println("Changes applied. Verify that penctl show naples command says REBOOT_PENDING, prior to performing a reboot.")
+
+	if managedBy == "host" {
+		fmt.Println("Changes applied. A reboot is required for the mode change to take effect")
+		return nil
+	}
+
+	fmt.Println("Changes applied. A reboot is required for the mode change to take effect. Verify that 'penctl show naples' command says REBOOT_PENDING, prior to performing a reboot.")
 	return nil
 }
 
@@ -210,6 +206,22 @@ func naplesProfileCreateCmdHandler(cmd *cobra.Command, args []string) error {
 		}
 		return err
 	}
+	return err
+}
+
+func naplesProfileDeleteCmdHandler(cmd *cobra.Command, args []string) error {
+	// check if profile exists.
+	if err := checkProfileExists(profileName); err != nil {
+		return err
+	}
+
+	// check if currently attached profile is being deleted
+	if err := checkAttachedProfile(profileName); err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("api/v1/naples/profiles/%s", profileName)
+	_, err := restDelete(url)
 	return err
 }
 
@@ -294,4 +306,68 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 		err = fmt.Errorf("invalid --managed-by  %v flag specified. Must be either host or network", managedBy)
 		return
 	}
+}
+
+func naplesProfileDeleteCmdValidator(cmd *cobra.Command, args []string) error {
+	if len(profileName) == 0 {
+		return errors.New("must specify a naples profile name")
+	}
+
+	if profileName == "default" {
+		return errors.New("deleting default profile is disallowed")
+	}
+	return nil
+}
+
+// TODO remove this when penctl can display server sent errors codes. This fails due to revproxy and only on verbose mode gives a non descript 500 Internal Server Error
+func checkProfileExists(profileName string) error {
+	var ok bool
+	baseURL, _ := getNaplesURL()
+	url := fmt.Sprintf("%s/api/v1/naples/profiles/", baseURL)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("Failed to get existing profiles. Err: ", err)
+		return fmt.Errorf("Failed to get existing profiles. Err: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var profiles []*nmd.NaplesProfile
+	json.Unmarshal(body, &profiles)
+
+	for _, p := range profiles {
+		if profileName == p.Name {
+			ok = true
+			break
+		}
+	}
+
+	if !ok {
+		return fmt.Errorf("specified profile %v doesn't exist", profileName)
+	}
+
+	return nil
+}
+
+func checkAttachedProfile(profileName string) error {
+	baseURL, _ := getNaplesURL()
+	url := fmt.Sprintf("%s/api/v1/naples/", baseURL)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("Failed to get existing profiles. Err: ", err)
+		return fmt.Errorf("failed to get existing profiles. Err: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var naplesCfg nmd.Naples
+	json.Unmarshal(body, &naplesCfg)
+
+	if naplesCfg.Spec.NaplesProfile == profileName {
+		return fmt.Errorf("naples profile %v is currently in use", profileName)
+	}
+
+	return nil
 }

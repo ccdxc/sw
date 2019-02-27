@@ -21,7 +21,7 @@ import (
 )
 
 func isJSONString(s string) bool {
-	var js map[string]interface{}
+	var js interface{}
 	return json.Unmarshal([]byte(s), &js) == nil
 }
 

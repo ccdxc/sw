@@ -36,13 +36,13 @@ const (
 	// UpdateURL is the URL to help with file upload
 	UpdateURL = "/update/"
 
-	// ProfileURL is the URL to create smart nic profiles
+	// ProfileURL is the URL to create naples profiles
 	ProfileURL = "/api/v1/naples/profiles/"
 
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped
 	// at 30min.
-	nicRegMaxInterval = (30 * 60 * time.Second)
+	nicRegMaxInterval = 30 * 60 * time.Second
 )
 
 // CreateNaplesProfile creates a Naples Profile
