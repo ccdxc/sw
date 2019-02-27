@@ -1,6 +1,7 @@
 package tsdb
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"sync/atomic"
@@ -32,7 +33,7 @@ func establishConn() bool {
 			if err == nil {
 				break
 			}
-			log.Errorf("error establishing the connection: %s", err)
+			log.Errorf("[%s]error establishing the connection to %s, %s", global.opts.ClientName, global.opts.Collector, err)
 		}
 
 		select {
@@ -59,12 +60,16 @@ func periodicTransmit() {
 		}
 		select {
 		case <-time.After(global.opts.SendInterval):
-			err := sendAllObjs()
+			err := sendAllObjs(global.context)
 			if err != nil {
 				// Force a reconnection
 				global.mc = nil
 			}
 		case <-global.context.Done():
+			// flush any metrics that are not yet pushed out
+			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
+			defer cancel()
+			sendAllObjs(ctx)
 			log.Infof("aborting tsdb transmit thread: parent context ended")
 			return
 		}
@@ -96,7 +101,7 @@ func (obj *iObj) Push() {
 // it looks for dirty objects (objects that have changed) and deleted objects
 // it creates metric bundles to and use collector library to push metrics to the
 // collector
-func sendAllObjs() error {
+func sendAllObjs(ctx context.Context) error {
 	objs := []*iObj{}
 
 	// fetch dirty objs
@@ -125,7 +130,7 @@ func sendAllObjs() error {
 
 	// push metrics to collector
 	if len(mb.Metrics) > 0 {
-		_, err := global.mc.WriteMetrics(global.context, mb)
+		_, err := global.mc.WriteMetrics(ctx, mb)
 		if err != nil {
 			log.Errorf("sendPoints : WriteMetrics failed with err: %s", err)
 			global.sendErrors++

@@ -6,11 +6,6 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
-	"time"
-
-	"github.com/pensando/sw/nic/agent/ipc"
-
-	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/pensando/sw/nic/agent/tmagent/state"
 	"github.com/pensando/sw/nic/agent/tpa/ctrlerif"
@@ -33,10 +28,12 @@ import (
 
 // reportInterval is how often(in seconds) tmagent sends metrics to TSDB
 const reportInterval = 30
+const fwlogIpcShm = "/fwlog_ipc_shm"
 
 // TelemetryAgent keeps the telementry agent state
 type TelemetryAgent struct {
-	tpCtrler     *state.PolicyState
+	ctx          context.Context
+	tpState      *state.PolicyState
 	tpClient     *ctrlerif.TpClient
 	nodeUUID     string
 	resolverURLs string
@@ -107,33 +104,29 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 
 		// start tsdb export
 		rc := resolver.New(cfg)
-		tsdb.Start(rc)
 
-		s.tmagent.tpClient, err = ctrlerif.NewTpClient(s.tmagent.nodeUUID, s.tmagent.tpCtrler, globals.Tpm, rc)
+		// Init the TSDB
+		if err := s.tmagent.tpState.TsdbInit(rc); err != nil {
+			log.Fatalf("failed to init tsdb, err: %v", err)
+		}
+
+		s.tmagent.tpClient, err = ctrlerif.NewTpClient(s.tmagent.nodeUUID, s.tmagent.tpState, globals.Tpm, rc)
 		if err != nil {
 			log.Fatalf("failed to init tmagent controller client, err: %v", err)
 		}
 
-		mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
-		instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
-		shm, err := ipc.NewSharedMem(mSize, instCount, "/fwlog_ipc_shm")
-		if err != nil {
+		if err := s.tmagent.tpState.FwlogInit(fwlogIpcShm); err != nil {
 			log.Fatal(err)
 		}
 
-		for ix := 0; ix < instCount; ix++ {
-			ipc := shm.IPCInstance()
-			go ipc.Receive(context.Background(), s.tmagent.tpCtrler.ProcessFWEvent)
-		}
-
 		// start reporting metrics
-		if err := s.tmagent.reportMetrics(context.Background(), rc); err != nil {
+		if err := s.tmagent.reportMetrics(rc); err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
-func (ta *TelemetryAgent) reportMetrics(ctx context.Context, rc resolver.Interface) error {
+func (ta *TelemetryAgent) reportMetrics(rc resolver.Interface) error {
 	// report node metrics
 	node := &cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{
@@ -144,7 +137,7 @@ func (ta *TelemetryAgent) reportMetrics(ctx context.Context, rc resolver.Interfa
 		},
 	}
 
-	if err := nodewatcher.NewNodeWatcher(ctx, node, rc, reportInterval, log.WithContext("pkg", "nodewatcher")); err != nil {
+	if err := nodewatcher.NewNodeWatcher(ta.ctx, node, rc, reportInterval, log.WithContext("pkg", "nodewatcher")); err != nil {
 		return err
 	}
 
@@ -203,37 +196,28 @@ func main() {
 		macAddr = mac
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tmAgent := &TelemetryAgent{
+		ctx:          ctx,
 		nodeUUID:     macAddr.String(),
 		resolverURLs: *resolverURLs,
 		mode:         *mode,
 	}
 
 	var delphiService = &service{
-		name:    "tpmagent_" + macAddr.String(),
+		name:    "tmagent_" + macAddr.String(),
 		tmagent: tmAgent,
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	opts := &tsdb.Opts{
-		ClientName:              delphiService.name,
-		Collector:               globals.Collector,
-		DBName:                  "default",
-		SendInterval:            time.Duration(30) * time.Second,
-		ConnectionRetryInterval: 100 * time.Millisecond,
-	}
-	// Init the TSDB
-	tsdb.Init(ctx, opts)
-
-	var err error
-
-	tmAgent.tpCtrler, err = state.NewTpAgent(ctx, globals.AgentRESTPort)
+	tpState, err := state.NewTpAgent(ctx, tmAgent.nodeUUID, globals.AgentRESTPort)
 	if err != nil {
 		log.Fatalf("failed to init tmagent state, err: %v", err)
 	}
-	defer tmAgent.tpCtrler.Close()
+	defer tpState.Close()
+
+	tmAgent.tpState = tpState
 
 	tmAgent.restServer, err = restapi.NewRestServer(ctx, *restURL)
 	if err != nil {

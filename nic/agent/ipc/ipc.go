@@ -58,7 +58,7 @@ func NewSharedMem(size, parts int, name string) (*SharedMem, error) {
 
 	fd, err := syscall.Open(p, syscall.O_RDWR|syscall.O_CREAT, 0666)
 	if err != nil || fd < 0 {
-		return nil, fmt.Errorf("Error %s opening %s", err, name)
+		return nil, fmt.Errorf("Error %s opening %s", err, p)
 	}
 
 	err = syscall.Ftruncate(fd, int64(size))

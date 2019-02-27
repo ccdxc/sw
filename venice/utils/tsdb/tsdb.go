@@ -97,9 +97,6 @@ func Cleanup() {
 		return
 	}
 
-	// flush any metrics that are not yet pushed out
-	sendAllObjs()
-
 	// cancel the context to stop any running go threads
 	global.cancelFunc()
 	global.wg.Wait() // Wait for startLocalRESTServer call to complete ; Also wait for periodic timer Thread to exit

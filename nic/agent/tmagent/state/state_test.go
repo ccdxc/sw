@@ -3,18 +3,24 @@ package state
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
-	"sync"
+	"syscall"
 	"testing"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/gorilla/mux"
 	"github.com/jeromer/syslogparser"
 	"github.com/jeromer/syslogparser/rfc3164"
 	"github.com/jeromer/syslogparser/rfc5424"
+
+	"github.com/pensando/sw/nic/agent/ipc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
@@ -27,7 +33,6 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/syslog"
 	. "github.com/pensando/sw/venice/utils/testutils"
-	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // to mock netagent
@@ -193,22 +198,13 @@ func TestValidateFwLogPolicy(t *testing.T) {
 	AssertOk(t, err, "failed to create mock netagent")
 	defer l.Close()
 
-	/// init tsdb
-	opt := &tsdb.Opts{
-		ClientName:     "netagent-007",
-		ResolverClient: &mock.ResolverClient{},
-	}
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	tsdbCtx, tsdbCancel := context.WithCancel(ctx)
-	tsdb.Init(tsdbCtx, opt)
-	tsdbCancel() //abort tsdb transmit
-
-	ps, err := NewTpAgent(ctx, strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
+	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
-	defer cancel()
 
 	fwPolicy := []struct {
 		name   string
@@ -618,22 +614,13 @@ func TestFwPolicyOps(t *testing.T) {
 	AssertOk(t, err, "failed to create mock netagent")
 	defer l.Close()
 
-	/// init tsdb
-	opt := &tsdb.Opts{
-		ClientName:     "netagent-007",
-		ResolverClient: &mock.ResolverClient{},
-	}
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	tsdbCtx, tsdbCancel := context.WithCancel(ctx)
-	tsdb.Init(tsdbCtx, opt)
-	tsdbCancel() //abort tsdb transmit
-
-	ps, err := NewTpAgent(ctx, strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
+	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
-	defer cancel()
 
 	// create
 	for _, i := range genPolicy {
@@ -690,22 +677,16 @@ func TestProcessFWEvent(t *testing.T) {
 	AssertOk(t, err, "failed to create mock netagent")
 	defer l.Close()
 
-	/// init tsdb
-	opt := &tsdb.Opts{
-		ClientName:     "netagent-007",
-		ResolverClient: &mock.ResolverClient{},
-	}
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	tsdbCtx, tsdbCancel := context.WithCancel(ctx)
-	tsdb.Init(tsdbCtx, opt)
-	tsdbCancel() //abort tsdb transmit
-
-	ps, err := NewTpAgent(ctx, strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
+	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
-	defer cancel()
+
+	err = ps.TsdbInit(&mock.ResolverClient{})
+	AssertOk(t, err, "failed to init tsdb ")
 
 	tcpch1 := make(chan []byte, 1024)
 	tcpAddr1, tcpl1, err := startSyslogServer("tcp", tcpch1)
@@ -808,6 +789,9 @@ func TestProcessFWEvent(t *testing.T) {
 				return false
 			}
 
+			val.Lock()
+			defer val.Unlock()
+
 			if val.syslogFd == nil {
 				// still connecting to syslog
 				return false
@@ -884,22 +868,13 @@ func TestPolicyUpdate(t *testing.T) {
 	AssertOk(t, err, "failed to create mock netagent")
 	defer l.Close()
 
-	/// init tsdb
-	opt := &tsdb.Opts{
-		ClientName:     "netagent-007",
-		ResolverClient: &mock.ResolverClient{},
-	}
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	tsdbCtx, tsdbCancel := context.WithCancel(ctx)
-	tsdb.Init(tsdbCtx, opt)
-	tsdbCancel() //abort tsdb transmit
-
-	ps, err := NewTpAgent(ctx, strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
+	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
-	defer cancel()
 
 	collList := []*tpmprotos.FwlogPolicyEvent{
 		// add
@@ -1098,9 +1073,17 @@ func TestPolicyUpdate(t *testing.T) {
 }
 
 func TestSyslogConnect(t *testing.T) {
-	ps := &PolicyState{
-		fwLogCollectors: sync.Map{},
-	}
+	l, err := startNetagent()
+	AssertOk(t, err, "failed to create mock netagent")
+	defer l.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ps, err := NewTpAgent(ctx, "netagent-007", strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
+	AssertOk(t, err, "failed to create tp agent")
+	Assert(t, ps != nil, "invalid policy state received")
+	defer ps.Close()
 
 	tcpch1 := make(chan []byte, 1024)
 	tcpAddr, tcpl1, err := startSyslogServer("tcp", tcpch1)
@@ -1121,8 +1104,7 @@ func TestSyslogConnect(t *testing.T) {
 			proto:       k,
 		})
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	err = ps.connectSyslog(ctx)
+	err = ps.connectSyslog()
 	AssertOk(t, err, "failed to start recconnect-syslog")
 	time.Sleep(time.Second)
 
@@ -1130,9 +1112,11 @@ func TestSyslogConnect(t *testing.T) {
 		server := map[string]bool{}
 		ps.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
 			if val, ok := v.(*fwlogCollector); ok {
+				val.Lock()
 				if val.syslogFd == nil {
 					server[k.(string)] = true
 				}
+				val.Unlock()
 			}
 			return true
 		})
@@ -1140,8 +1124,6 @@ func TestSyslogConnect(t *testing.T) {
 
 	}, "syslog reconnect failed")
 
-	cancel()
-	ps.wg.Wait()
 }
 
 func TestUnusedCb(t *testing.T) {
@@ -1149,22 +1131,13 @@ func TestUnusedCb(t *testing.T) {
 	AssertOk(t, err, "failed to create mock netagent")
 	defer l.Close()
 
-	/// init tsdb
-	opt := &tsdb.Opts{
-		ClientName:     "netagent-007",
-		ResolverClient: &mock.ResolverClient{},
-	}
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	tsdbCtx, tsdbCancel := context.WithCancel(ctx)
-	tsdb.Init(tsdbCtx, opt)
-	tsdbCancel() //abort tsdb transmit
-
-	ps, err := NewTpAgent(ctx, strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
+	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
-	defer cancel()
 
 	err = ps.CreateFlowExportPolicy(context.Background(), nil)
 	AssertOk(t, err, "CreateFlowExportPolicy failed")
@@ -1178,4 +1151,58 @@ func TestUnusedCb(t *testing.T) {
 	AssertOk(t, err, "DeleteFlowExportPolicy failed")
 	_, err = ps.ListFlowExportPolicy(context.Background())
 	AssertOk(t, err, "ListFlowExportPolicy failed")
+}
+
+func TestTsdbInit(t *testing.T) {
+	l, err := startNetagent()
+	AssertOk(t, err, "failed to create mock netagent")
+	defer l.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
+	AssertOk(t, err, "failed to create tp agent")
+	Assert(t, ps != nil, "invalid policy state received")
+	defer ps.Close()
+
+	err = ps.TsdbInit(&mock.ResolverClient{})
+	AssertOk(t, err, "failed to init tsdb")
+}
+
+func TestFwlogInit(t *testing.T) {
+	l, err := startNetagent()
+	AssertOk(t, err, "failed to create mock netagent")
+	defer l.Close()
+
+	tmpFd, err := ioutil.TempFile("/tmp", t.Name())
+	AssertOk(t, err, "failed to create temp file")
+	defer os.Remove(tmpFd.Name()) // clean up
+	shmPath := tmpFd.Name()
+
+	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
+	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
+	log.Infof("memsize=%d instances=%d", mSize, instCount)
+
+	defer os.Remove(shmPath)
+	fd, err := syscall.Open(shmPath, syscall.O_RDWR|syscall.O_CREAT, 0666)
+	if err != nil || fd < 0 {
+		t.Fatalf("failed to create %s,%s", shmPath, err)
+	}
+	defer syscall.Close(fd)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
+	AssertOk(t, err, "failed to create tp agent")
+	Assert(t, ps != nil, "invalid policy state received")
+	defer ps.Close()
+
+	err = ps.TsdbInit(&mock.ResolverClient{})
+	AssertOk(t, err, "failed to init tsdb")
+	defer tsdb.Cleanup()
+
+	err = ps.FwlogInit(shmPath)
+	AssertOk(t, err, "failed to init fwlog")
 }

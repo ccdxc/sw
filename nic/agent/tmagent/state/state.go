@@ -13,7 +13,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
-	ipcproto "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -29,6 +28,9 @@ const maxCollectorsInVrf = 4
 
 // PolicyState keeps the policy agent state
 type PolicyState struct {
+	ctx             context.Context
+	cancel          context.CancelFunc
+	nodeUUID        string
 	emstore         emstore.Emstore
 	netAgentURL     string
 	fwLogCollectors sync.Map
@@ -51,7 +53,7 @@ type fwlogCollector struct {
 }
 
 // NewTpAgent creates new telemetry policy agent state
-func NewTpAgent(ctx context.Context, agentPort string) (*PolicyState, error) {
+func NewTpAgent(pctx context.Context, nodeUUID string, agentPort string) (*PolicyState, error) {
 
 	s, err := emstore.NewEmstore(emstore.MemStoreType, "")
 	if err != nil {
@@ -59,26 +61,24 @@ func NewTpAgent(ctx context.Context, agentPort string) (*PolicyState, error) {
 		return nil, err
 	}
 
-	//todo: handle host mode
-
-	fwTable, err := tsdb.NewObj("Fwlogs", map[string]string{}, nil, &tsdb.ObjOpts{})
-	if err != nil {
-		return nil, err
-	}
+	ctx, cancel := context.WithCancel(pctx)
 
 	state := &PolicyState{
+		ctx:             ctx,
+		cancel:          cancel,
+		nodeUUID:        nodeUUID,
 		emstore:         s,
 		netAgentURL:     "http://127.0.0.1:" + agentPort,
-		fwTable:         fwTable,
 		fwLogCollectors: sync.Map{},
 	}
 
-	state.connectSyslog(ctx)
+	state.connectSyslog()
 	return state, nil
 }
 
 // Close frees all resources
 func (s *PolicyState) Close() {
+	s.cancel()
 	// stop reconnect thread
 	s.wg.Wait()
 	// close db
@@ -97,12 +97,10 @@ func (s *PolicyState) Close() {
 	for _, k := range vrfList {
 		s.deleteCollectors(k)
 	}
-
-	s.fwTable.Delete()
 }
 
 // reconnect to syslog collectors
-func (s *PolicyState) connectSyslog(ctx context.Context) error {
+func (s *PolicyState) connectSyslog() error {
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -125,7 +123,7 @@ func (s *PolicyState) connectSyslog(ctx context.Context) error {
 					return true
 				})
 
-			case <-ctx.Done():
+			case <-s.ctx.Done():
 				log.Infof("stop connectSyslog thread")
 				return
 
@@ -550,56 +548,6 @@ func (s *PolicyState) sendFwLog(c *fwlogCollector, data map[string]string) {
 			s.closeSyslog(c)
 		}
 	}
-}
-
-// ProcessFWEvent process fwlog event received from ipc
-func (s *PolicyState) ProcessFWEvent(ev *ipcproto.FWEvent, ts time.Time) {
-	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
-	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
-	dPort := fmt.Sprintf("%v", ev.GetDport())
-	sPort := fmt.Sprintf("%v", ev.GetSport())
-	ipProt := fmt.Sprintf("%v", ev.GetIpProt())
-	action := fmt.Sprintf("%v", ev.GetFwaction().String())
-	dir := fmt.Sprintf("%v", ipcproto.FlowDirection_name[int32(ev.GetDirection())])
-	ruleID := fmt.Sprintf("%v", ev.GetRuleId())
-	unixnano := ev.GetTimestamp()
-	if unixnano != 0 {
-		// if a timestamp was specified in the msg, use it
-		ts = time.Unix(0, unixnano)
-	}
-
-	point := &tsdb.Point{
-		Tags:   map[string]string{"src": ipSrc, "dest": ipDest, "src-port": sPort, "dest-port": dPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID},
-		Fields: map[string]interface{}{"flowAction": int64(ev.GetFlowaction())},
-	}
-
-	log.Infof("Fwlog: %+v", point)
-
-	s.fwTable.Points([]*tsdb.Point{point}, ts)
-
-	// set src/dest vrf
-	vrfList := map[uint64]bool{
-		ev.SourceVrf: true,
-		ev.DestVrf:   true,
-	}
-
-	// todo: decide tags & fields in fwlog
-
-	// check dest/src vrf
-	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
-		if col, ok := v.(*fwlogCollector); ok {
-			col.Lock()
-			if _, ok := vrfList[col.vrf]; ok {
-				if col.syslogFd != nil && col.filter&(1<<uint32(ev.Fwaction)) != 0 {
-					s.sendFwLog(col, point.Tags)
-				}
-			} else {
-				log.Errorf("invalid collector")
-			}
-			col.Unlock()
-		}
-		return true
-	})
 }
 
 // dummy functions. these polcies are handled in netagent
