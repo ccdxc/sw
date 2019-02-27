@@ -1311,6 +1311,84 @@ ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 	return (0);
 }
 
+static int
+ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif* lif;
+	struct notify_block *nb;
+	struct xcvr_status *xcvr;
+	struct qsfp_sprom_data *qsfp;
+	struct sfp_sprom_data *sfp;
+
+	lif = oidp->oid_arg1;
+	nb = lif->notifyblock;
+
+	if (nb == NULL)
+		return (EIO);
+
+	if_printf(lif->netdev, "notifyblock eid=0x%lx link_status=0x%x error_bits=0x%x"
+		" link_speed=%d phy_type=0x%x autoneg=0x%x flap=0x%x\n",
+			nb->eid, nb->link_status, nb->link_error_bits, nb->link_speed, nb->phy_type,
+			nb->autoneg_status, nb->link_flap_count);
+	if_printf(lif->netdev, "  port_status id=0x%x status=0x%x speed=0x%x\n",
+			nb->port_status.id, nb->port_status.status, nb->port_status.speed);
+	if_printf(lif->netdev, "  port_config state=0x%x speed=%d mtu=%d an_enable=0x%x"
+		" fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
+			nb->port_config.state,
+			nb->port_config.speed,
+			nb->port_config.mtu,
+			nb->port_config.an_enable,
+			nb->port_config.fec_type,
+			nb->port_config.pause_type,
+			nb->port_config.loopback_mode);
+
+	xcvr = &nb->port_status.xcvr;
+	if_printf(lif->netdev, "    xcvr status state=0x%x phy=0x%x pid=0x%x\n",
+			xcvr->state, xcvr->phy, xcvr->pid);
+	switch (xcvr->pid) {
+		case XCVR_PID_QSFP_100G_CR4:
+		case XCVR_PID_QSFP_40GBASE_CR4:
+		case XCVR_PID_QSFP_100G_AOC:
+		case XCVR_PID_QSFP_100G_ACC:
+		case XCVR_PID_QSFP_100G_SR4:
+		case XCVR_PID_QSFP_100G_LR4:
+		case XCVR_PID_QSFP_100G_ER4:
+		case XCVR_PID_QSFP_40GBASE_ER4:
+		case XCVR_PID_QSFP_40GBASE_SR4:
+		case XCVR_PID_QSFP_40GBASE_LR4:
+		case XCVR_PID_QSFP_40GBASE_AOC:
+			qsfp = (struct qsfp_sprom_data *)xcvr->sprom;
+
+			if_printf(lif->netdev, "    QSFP vendor OUI: %s P/N: %s S/N: %s\n",
+				qsfp->vendor_oui, qsfp->vendor_pn, qsfp->vendor_sn);
+			break;
+
+		case XCVR_PID_SFP_25GBASE_CR_S:
+		case XCVR_PID_SFP_25GBASE_CR_L:
+		case XCVR_PID_SFP_25GBASE_CR_N:
+		case XCVR_PID_SFP_25GBASE_SR:
+		case XCVR_PID_SFP_25GBASE_LR:
+		case XCVR_PID_SFP_25GBASE_ER:
+		case XCVR_PID_SFP_25GBASE_AOC:
+		case XCVR_PID_SFP_10GBASE_SR:
+		case XCVR_PID_SFP_10GBASE_LR:
+		case XCVR_PID_SFP_10GBASE_LRM:
+		case XCVR_PID_SFP_10GBASE_ER:
+		case XCVR_PID_SFP_10GBASE_AOC:
+		case XCVR_PID_SFP_10GBASE_CU:
+			sfp = (struct sfp_sprom_data *)xcvr->sprom;
+			if_printf(lif->netdev, "    SFP vendor OUI: %s P/N: %s S/N: %s\n",
+				sfp->vendor_oui, sfp->vendor_pn, sfp->vendor_sn);
+			break;
+
+		default:
+			if_printf(lif->netdev, "    unknown media\n");
+			break;
+	}
+
+	return (0);
+}
+
 static void
 ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
 					  struct sysctl_oid_list *queue_list)
@@ -1627,6 +1705,8 @@ ionic_setup_device_stats(struct lif *lif)
 			&lif->num_mc_addrs, 0, "Number of MAC filters");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "coal_usecs", CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
 			ionic_intr_coal_handler, "IU", "Interrupt coalescing timeout in usecs");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "media_status", CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
+			ionic_media_sysctl, "IU", "Miscellenious media details");
 
 	ionic_setup_hw_stats(lif, ctx, child);
 	ionic_adminq_sysctl(lif, ctx, child);

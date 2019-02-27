@@ -162,7 +162,7 @@ static void ionic_read_notify_block(struct lif* lif)
 
 	lif->last_eid = nb->eid;
 	lif->link_speed = nb->link_speed;
-	lif->link_up = nb->link_status ? true : false;
+	lif->link_up = nb->link_status  == PORT_OPER_STATUS_UP;
 	lif->link_error_bits = nb->link_error_bits;
 	lif->phy_type = nb->phy_type;
 	lif->autoneg_status = nb->autoneg_status;
@@ -2477,7 +2477,11 @@ static int ionic_lif_rxqs_init(struct lif *lif)
 static void
 ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 {
-	struct lif* lif = ifp->if_softc;
+	struct lif* lif;
+	struct notify_block *nb;
+
+	lif = ifp->if_softc;
+	nb = lif->notifyblock;
 
 	IONIC_CORE_LOCK(lif);
 	ionic_read_notify_block(lif);
@@ -2498,20 +2502,86 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	ifmr->ifm_status |= IFM_ACTIVE;
 	ifmr->ifm_active |= IFM_FDX;
 
-	switch(lif->link_speed) {
-	case IONIC_LINK_SPEED_100G:
-		/* XXX: more media type. */
+	if (nb->port_config.pause_type)
+		ifmr->ifm_active |= IFM_ETH_TXPAUSE | IFM_ETH_RXPAUSE;
+	
+	if (lif->ionic->is_mgmt_nic) {
+		ifmr->ifm_active |= IFM_1000_KX;
+		IONIC_CORE_UNLOCK(lif);
+		return;
+	}
+
+	switch(nb->port_status.xcvr.pid) {
+	/* Copper media. */
+	case XCVR_PID_QSFP_100G_CR4:
 		ifmr->ifm_active |= IFM_100G_CR4;
 		break;
 
-	case IONIC_LINK_SPEED_1G:
-		/* Only for mgmt interface. */
-		if (lif->ionic->is_mgmt_nic)
-			ifmr->ifm_active |= IFM_1000_KX;
-		else
-			ifmr->ifm_active |= IFM_UNKNOWN;
+	case XCVR_PID_QSFP_40GBASE_CR4:
+		ifmr->ifm_active |= IFM_40G_CR4;
 		break;
 
+	case XCVR_PID_SFP_25GBASE_CR_S:
+	case XCVR_PID_SFP_25GBASE_CR_L:
+	case XCVR_PID_SFP_25GBASE_CR_N:
+		ifmr->ifm_active |= IFM_25G_CR;
+		break;
+
+
+	/* Fiber */
+	case XCVR_PID_QSFP_100G_SR4:
+	case XCVR_PID_QSFP_100G_AOC:
+		ifmr->ifm_active |= IFM_100G_SR4;
+		break;
+
+	case XCVR_PID_QSFP_100G_LR4:
+	case XCVR_PID_QSFP_100G_ER4:
+		ifmr->ifm_active |= IFM_100G_LR4;
+		break;
+
+	case XCVR_PID_QSFP_40GBASE_SR4:
+	case XCVR_PID_QSFP_40GBASE_AOC:
+		ifmr->ifm_active |= IFM_40G_SR4;
+		break;
+
+	case XCVR_PID_QSFP_40GBASE_LR4:
+		ifmr->ifm_active |= IFM_40G_LR4;
+		break;
+
+	case XCVR_PID_SFP_25GBASE_SR:
+		ifmr->ifm_active |= IFM_25G_SR;
+		break;
+
+	case XCVR_PID_SFP_25GBASE_LR:
+		ifmr->ifm_active |= IFM_25G_LR;
+		break;
+
+	case XCVR_PID_SFP_25GBASE_AOC:
+		ifmr->ifm_active |= IFM_25G_AOC;
+		break;
+
+	case XCVR_PID_SFP_10GBASE_SR:
+		ifmr->ifm_active |= IFM_10G_SR;
+		break;
+
+	case XCVR_PID_SFP_10GBASE_LR:
+		ifmr->ifm_active |= IFM_10G_LR;
+		break;
+
+	case XCVR_PID_SFP_10GBASE_LRM:
+		ifmr->ifm_active |= IFM_10G_LRM;
+		break;
+
+	case XCVR_PID_SFP_10GBASE_ER:
+		ifmr->ifm_active |= IFM_10G_ER;
+		break;
+
+	case XCVR_PID_QSFP_100G_ACC:
+	case XCVR_PID_QSFP_40GBASE_ER4:
+	case XCVR_PID_SFP_25GBASE_ER:
+	case XCVR_PID_SFP_10GBASE_AOC:
+	case XCVR_PID_SFP_10GBASE_CU:
+	case XCVR_PID_UNKNOWN:
 	default:
 		ifmr->ifm_active |= IFM_UNKNOWN;
 		break;
