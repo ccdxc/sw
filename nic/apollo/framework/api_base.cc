@@ -20,8 +20,8 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     api_base    *obj;
 
     switch (api_ctxt->obj_id) {
-    case OBJ_ID_SWITCHPORT:
-        obj = switchport_entry::factory(&api_ctxt->api_params->switchport_spec);
+    case OBJ_ID_DEVICE:
+        obj = device_entry::factory(&api_ctxt->api_params->device_spec);
         return obj;
 
     case OBJ_ID_VCN:
@@ -67,8 +67,8 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
     api_base    *obj;
 
     switch (api_ctxt->obj_id) {
-    case OBJ_ID_SWITCHPORT:
-        obj = switchport_db()->switchport_find();
+    case OBJ_ID_DEVICE:
+        obj = device_db()->device_find();
         return obj;
 
     case OBJ_ID_VCN:

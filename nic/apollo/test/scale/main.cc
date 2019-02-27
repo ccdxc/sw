@@ -21,7 +21,7 @@
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/include/api/pds_batch.hpp"
-#include "nic/apollo/include/api/pds_switchport.hpp"
+#include "nic/apollo/include/api/pds_device.hpp"
 #include "nic/apollo/include/api/pds_tep.hpp"
 #include "nic/apollo/include/api/pds_vcn.hpp"
 #include "nic/apollo/include/api/pds_subnet.hpp"
@@ -37,7 +37,7 @@ char *g_input_cfg_file = NULL;
 char *g_cfg_file = NULL;
 bool g_daemon_mode = false;
 ip_prefix_t g_vcn_ippfx = {0};
-pds_switchport_spec_t g_swport = {0};
+pds_device_spec_t g_device = {0};
 flow_test *g_flow_test_obj;
 
 uint8_t g_snd_pkt1[] = {
@@ -209,7 +209,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                         (((k - 1) * num_ip_per_vnic) + l);
                     pds_mapping.subnet.id = (i - 1) * num_subnets + j;
                     pds_mapping.slot = vnic_key;
-                    pds_mapping.tep.ip_addr = g_swport.switch_ip_addr;
+                    pds_mapping.tep.ip_addr = g_device.switch_ip_addr;
                     MAC_UINT64_TO_ADDR(pds_mapping.overlay_mac,
                                        (((((uint64_t)i & 0x7FF) << 22) |
                                          ((j & 0x7FF) << 11) | (k & 0x7FF))));
@@ -394,15 +394,15 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 }
 
 static sdk_ret_t
-create_switchport_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
+create_device_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
 {
     sdk_ret_t rv;
 
-    memset(&g_swport, 0, sizeof(g_swport));
-    g_swport.switch_ip_addr = ipaddr;
-    MAC_UINT64_TO_ADDR(g_swport.switch_mac_addr, macaddr);
-    g_swport.gateway_ip_addr = gwip;
-    return pds_switchport_create(&g_swport);
+    memset(&g_device, 0, sizeof(g_device));
+    g_device.switch_ip_addr = ipaddr;
+    MAC_UINT64_TO_ADDR(g_device.switch_mac_addr, macaddr);
+    g_device.gateway_ip_addr = gwip;
+    return pds_device_create(&g_device);
 }
 
 static sdk_ret_t
@@ -505,7 +505,7 @@ create_objects (void)
         BOOST_FOREACH (pt::ptree::value_type &obj,
                        json_pt.get_child("objects")) {
             std::string kind = obj.second.get<std::string>("kind");
-            if (kind == "switchport") {
+            if (kind == "device") {
                 struct in_addr ipaddr, gwip;
                 uint64_t macaddr;
 
@@ -515,7 +515,7 @@ create_objects (void)
                           &ipaddr);
                 inet_aton(obj.second.get<std::string>("gw-ip-addr").c_str(),
                           &gwip);
-                ret = create_switchport_cfg(ntohl(ipaddr.s_addr), macaddr,
+                ret = create_device_cfg(ntohl(ipaddr.s_addr), macaddr,
                                             ntohl(gwip.s_addr));
             } else if (kind == "tep") {
                 num_teps = std::stol(obj.second.get<std::string>("count"));

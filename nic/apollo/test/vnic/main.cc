@@ -11,7 +11,7 @@
 #include <getopt.h>
 #include <gtest/gtest.h>
 #include "nic/apollo/include/api/pds_batch.hpp"
-#include "nic/apollo/include/api/pds_switchport.hpp"
+#include "nic/apollo/include/api/pds_device.hpp"
 #include "nic/apollo/include/api/pds_tep.hpp"
 #include "nic/apollo/include/api/pds_vcn.hpp"
 #include "nic/apollo/include/api/pds_subnet.hpp"

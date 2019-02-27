@@ -35,8 +35,8 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
 {
     PDS_TRACE_VERBOSE("timer %p, slab %u, elem %p", timer, slab_id, elem);
     switch (slab_id) {
-    case PDS_SLAB_ID_SWITCHPORT:
-        switchport_entry::destroy((switchport_entry *)elem);
+    case PDS_SLAB_ID_DEVICE:
+        device_entry::destroy((device_entry *)elem);
         break;
 
     case PDS_SLAB_ID_TEP:

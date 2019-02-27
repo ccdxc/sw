@@ -15,7 +15,7 @@
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/mapping.hpp"
-#include "nic/apollo/test/utils/switchport.hpp"
+#include "nic/apollo/test/utils/device.hpp"
 #include "nic/apollo/test/utils/vcn.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
@@ -120,9 +120,9 @@ TEST_F(mapping_test, mapping_create) {
     batch_params.epoch = 1;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
-    // Create switchport
-    switchport_util swport(my_ip, my_mac, my_gw);
-    ASSERT_TRUE(swport.create() == SDK_RET_OK);
+    // Create device
+    device_util device(my_ip, my_mac, my_gw);
+    ASSERT_TRUE(device.create() == SDK_RET_OK);
 
     // Create VCN
     vcn_util vcn(PDS_VCN_TYPE_TENANT, vcn_id, vcn_cidr);

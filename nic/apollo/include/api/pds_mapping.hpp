@@ -33,7 +33,7 @@ typedef struct pds_mapping_spec_s {
     pds_subnet_key_t subnet;    ///< Subnet this IP is part of
     pds_slot_id_t slot;         ///< Virtual slot (Encap: MPLS Tag)
     pds_tep_key_t tep;          ///< TEP address for this mapping
-                                ///< 1. Switchport IP for local vnic
+                                ///< 1. Device IP for local vnic
                                 ///< 2. Remote TEP for remote vnic
     mac_addr_t overlay_mac;     ///< MAC for this IP
 

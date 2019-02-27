@@ -17,7 +17,7 @@ apollo
 ```
 golden     - Handles basic pipeline tests
 framework  - Handles framework tests
-switchport - Handles switchport tests
+device     - Handles device tests
 vcn        - Handles VCN tests
 subnet     - Handles subnet tests
 vnic       - Handles VNIC tests

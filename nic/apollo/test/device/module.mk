@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = apollo_switchport_test.gtest
+MODULE_TARGET   = apollo_device_test.gtest
 MODULE_PIPELINE = apollo
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl pdstestutils \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \

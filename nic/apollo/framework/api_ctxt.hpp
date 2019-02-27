@@ -16,7 +16,7 @@
 #include "nic/apollo/include/api/pds_policy.hpp"
 #include "nic/apollo/include/api/pds_route.hpp"
 #include "nic/apollo/include/api/pds_subnet.hpp"
-#include "nic/apollo/include/api/pds_switchport.hpp"
+#include "nic/apollo/include/api/pds_device.hpp"
 #include "nic/apollo/include/api/pds_tep.hpp"
 #include "nic/apollo/include/api/pds_vnic.hpp"
 
@@ -24,7 +24,7 @@ namespace api {
 
 /**< API specific parameters */
 typedef union api_params_u {
-    pds_switchport_spec_t switchport_spec;
+    pds_device_spec_t     device_spec;
     pds_tep_key_t         tep_key;
     pds_tep_spec_t        tep_spec;
     pds_vcn_key_t         vcn_key;

@@ -1,9 +1,9 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    switchport.cc
+ * @file    device.cc
  *
- * @brief   switchport entry handling
+ * @brief   device entry handling
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
@@ -11,7 +11,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/impl.hpp"
-#include "nic/apollo/api/switchport.hpp"
+#include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -19,62 +19,62 @@
 namespace api {
 
 /**
- * @defgroup PDS_SWITCHPORT_ENTRY - switchport entry functionality
- * @ingroup PDS_SWITCHPORT
+ * @defgroup PDS_DEVICE_ENTRY - device entry functionality
+ * @ingroup PDS_DEVICE
  * @{
  */
 
 /**
- * @brief    factory method to allocate and initialize a switchport entry
- * @param[in] pds_switchport    switchport information
- * @return    new instance of switchport or NULL, in case of error
+ * @brief    factory method to allocate and initialize a device entry
+ * @param[in] pds_device device information
+ * @return    new instance of device or NULL, in case of error
  */
-switchport_entry *
-switchport_entry::factory(pds_switchport_spec_t *pds_switchport) {
-    switchport_entry    *switchport;
+device_entry *
+device_entry::factory(pds_device_spec_t *pds_device) {
+    device_entry *device;
 
-    switchport = switchport_db()->switchport_alloc();
-    if (switchport) {
-        new (switchport) switchport_entry();
-        switchport->impl_ =
-            impl_base::factory(impl::IMPL_OBJ_ID_SWITCHPORT, pds_switchport);
-        if (switchport->impl_ == NULL) {
-            switchport_entry::destroy(switchport);
+    device = device_db()->device_alloc();
+    if (device) {
+        new (device) device_entry();
+        device->impl_ =
+            impl_base::factory(impl::IMPL_OBJ_ID_DEVICE, pds_device);
+        if (device->impl_ == NULL) {
+            device_entry::destroy(device);
             return NULL;
         }
     }
-    return switchport;
+    return device;
 }
 
 /**
- * @brief    release all the s/w state associate with the given switchport,
+ * @brief    release all the s/w state associate with the given device,
  *           if any, and free the memory
- * @param[in] switchport     switchport to be freed
+ * @param[in] device device to be freed
  * NOTE: h/w entries should have been cleaned up (by calling
  *       impl->cleanup_hw() before calling this
  */
 void
-switchport_entry::destroy(switchport_entry *switchport) {
-    switchport->release_resources();
-    if (switchport->impl_) {
-        impl_base::destroy(impl::IMPL_OBJ_ID_SWITCHPORT, switchport->impl_);
+device_entry::destroy(device_entry *device) {
+    device->release_resources();
+    if (device->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_DEVICE, device->impl_);
     }
-    switchport->~switchport_entry();
-    switchport_db()->switchport_free(switchport);
+    device->~device_entry();
+    device_db()->device_free(device);
 }
 
 /**
- * @brief     initialize switchport entry with the given config
+ * @brief     initialize device entry with the given config
  * @param[in] api_ctxt API context carrying the configuration
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::init_config(api_ctxt_t *api_ctxt) {
-    pds_switchport_spec_t *pds_switchport = &api_ctxt->api_params->switchport_spec;
+device_entry::init_config(api_ctxt_t *api_ctxt) {
+    pds_device_spec_t *pds_device = &api_ctxt->api_params->device_spec;
 
-    ip_addr_ = pds_switchport->switch_ip_addr;
-    memcpy(mac_addr_, pds_switchport->switch_mac_addr, ETH_ADDR_LEN);
-    gw_ip_addr_ = pds_switchport->gateway_ip_addr;
+    ip_addr_ = pds_device->switch_ip_addr;
+    memcpy(mac_addr_, pds_device->switch_mac_addr, ETH_ADDR_LEN);
+    gw_ip_addr_ = pds_device->gateway_ip_addr;
     return SDK_RET_OK;
 }
 
@@ -85,7 +85,7 @@ switchport_entry::init_config(api_ctxt_t *api_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+device_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
@@ -96,8 +96,8 @@ switchport_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming switchport config");
+device_entry::program_config(obj_ctxt_t *obj_ctxt) {
+    PDS_TRACE_DEBUG("Programming device config");
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -106,7 +106,7 @@ switchport_entry::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::release_resources(void) {
+device_entry::release_resources(void) {
     return SDK_RET_OK;
 }
 
@@ -118,7 +118,7 @@ switchport_entry::release_resources(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+device_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
@@ -130,7 +130,7 @@ switchport_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+device_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
@@ -143,10 +143,10 @@ switchport_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
+device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) {
-    // there is no stage 0 programming for switchport cfg, so this is a no-op
-    PDS_TRACE_DEBUG("Activated switchport config");
+    // there is no stage 0 programming for device cfg, so this is a no-op
+    PDS_TRACE_DEBUG("Activated device config");
     return SDK_RET_OK;
 }
 
@@ -158,43 +158,43 @@ switchport_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+device_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // TODO: will address this later !!
     return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
- * @brief add switchport to database
+ * @brief add device to database
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::add_to_db(void) {
-    return switchport_db()->insert(this);
+device_entry::add_to_db(void) {
+    return device_db()->insert(this);
 }
 
 /**
- * @brief delete switchport from database
+ * @brief delete device from database
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::del_from_db(void) {
+device_entry::del_from_db(void) {
     /**< this is a singleton obj, so this is no-op */
     return SDK_RET_OK;
 }
 
-switchport_entry *
-switchport_entry::find_in_db(void) {
-    return switchport_db()->switchport_find();
+device_entry *
+device_entry::find_in_db(void) {
+    return device_db()->device_find();
 }
 
 /**
  * @brief    initiate delay deletion of this object
  */
 sdk_ret_t
-switchport_entry::delay_delete(void) {
-    return delay_delete_to_slab(PDS_SLAB_ID_SWITCHPORT, this);
+device_entry::delay_delete(void) {
+    return delay_delete_to_slab(PDS_SLAB_ID_DEVICE, this);
 }
 
-/** @} */    // end of PDS_SWITCHPORT_ENTRY
+/** @} */    // end of PDS_DEVICE_ENTRY
 
 }    // namespace api

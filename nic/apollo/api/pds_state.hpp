@@ -14,7 +14,7 @@
 #include "nic/sdk/platform/utils/mpartition.hpp"
 //#include "nic/sdk/platform/utils/program.hpp"
 //#include "nic/sdk/platform/capri/capri_lif_manager.hpp"
-#include "nic/apollo/api/switchport_state.hpp"
+#include "nic/apollo/api/device_state.hpp"
 #include "nic/apollo/api/tep_state.hpp"
 #include "nic/apollo/api/vcn_state.hpp"
 #include "nic/apollo/api/subnet_state.hpp"
@@ -65,7 +65,7 @@ public:
         num_data_cores_ = num_cores;
     }
     uint16_t num_data_cores(void) const { return num_data_cores_; }
-    switchport_state *switchport_db(void) { return &switchport_db_; }
+    device_state *device_db(void) { return &device_db_; }
     tep_state *tep_db(void) { return &tep_db_; }
     vcn_state *vcn_db(void) { return &vcn_db_; }
     subnet_state *subnet_db(void) { return &subnet_db_; }
@@ -85,7 +85,7 @@ private:
     uint16_t             num_control_cores_;
     uint64_t             data_cores_mask_;
     uint16_t             num_data_cores_;
-    switchport_state     switchport_db_;
+    device_state         device_db_;
     tep_state            tep_db_;
     vcn_state            vcn_db_;
     subnet_state         subnet_db_;
@@ -102,10 +102,10 @@ extern pds_state g_pds_state;
 
 using api::pds_state;
 
-static inline switchport_state *
-switchport_db (void)
+static inline device_state *
+device_db (void)
 {
-    return api::g_pds_state.switchport_db();
+    return api::g_pds_state.device_db();
 }
 
 static inline tep_state *

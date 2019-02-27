@@ -12,7 +12,7 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/impl/apollo_impl_state.hpp"
-#include "nic/apollo/api/impl/switchport_impl.hpp"
+#include "nic/apollo/api/impl/device_impl.hpp"
 #include "nic/apollo/api/impl/tep_impl_state.hpp"
 #include "nic/apollo/api/impl/vnic_impl_state.hpp"
 #include "nic/apollo/api/impl/mapping_impl_state.hpp"

@@ -1,61 +1,61 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    switchport_impl.hpp
+ * @file    device_impl.hpp
  *
- * @brief   SWITCHPORT implementation in the p4/hw
+ * @brief   DEVICE implementation in the p4/hw
  */
-#if !defined (__SWITCHPORT_IMPL_HPP__)
-#define __SWITCHPORT_IMPL_HPP__
+#if !defined (__DEVICE_IMPL_HPP__)
+#define __DEVICE_IMPL_HPP__
 
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/pds_switchport.hpp"
+#include "nic/apollo/include/api/pds_device.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup PDS_SWITCHPORT_IMPL - switchport functionality
- * @ingroup PDS_SWITCHPORT
+ * @defgroup PDS_DEVICE_IMPL - device functionality
+ * @ingroup PDS_DEVICE
  * @{
  */
 
 /**
- * @brief    SWITCHPORT implementation
+ * @brief    DEVICE implementation
  */
-class switchport_impl : public impl_base {
+class device_impl : public impl_base {
 public:
     /**
-     * @brief    factory method to allocate & initialize switchport impl
+     * @brief    factory method to allocate & initialize device impl
      *           instance
-     * @param[in] pds_switchport    switchport information
-     * @return    new instance of switchport or NULL, in case of error
+     * @param[in] pds_device device information
+     * @return    new instance of device or NULL, in case of error
      */
-    static switchport_impl *factory(pds_switchport_spec_t *pds_switchport);
+    static device_impl *factory(pds_device_spec_t *pds_device);
 
     /**
-     * @brief    release all the s/w state associated with the given switchport,
+     * @brief    release all the s/w state associated with the given device,
      *           if any, and free the memory
-     * @param[in] switchport     switchport to be freed
+     * @param[in] device device to be freed
      * NOTE: h/w entries should have been cleaned up (by calling
      *       impl->cleanup_hw() before calling this
      */
-    static void destroy(switchport_impl *impl);
+    static void destroy(device_impl *impl);
 
     /**< @brief    constructor */
-    switchport_impl() {}
+    device_impl() {}
 
     /**< @brief    destructor */
-    ~switchport_impl() {}
+    ~device_impl() {}
 
     /**
      * @brief read spec, statistics and status from hw tables
-     * @param[out] info pointer to switchport info
+     * @param[out] info pointer to device info
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(pds_switchport_info_t *info);
+    sdk_ret_t read_hw(pds_device_info_t *info);
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -90,18 +90,18 @@ private:
      * @brief Populate specification with hardware information
      * @param[out] spec Specification
      */
-    void fill_spec_(pds_switchport_spec_t *spec);
+    void fill_spec_(pds_device_spec_t *spec);
 
     /**
      * @brief Populate ingress drop stats with hardware information
      * @param[out] idrop_stats Ingress drop statistics
      */
-    void fill_idrop_stats_(pds_switchport_idrop_stats_t *idrop_stats);
+    void fill_idrop_stats_(pds_device_idrop_stats_t *idrop_stats);
 };
 
-/** @} */    // end of PDS_SWITCHPORT_IMPL
+/** @} */    // end of PDS_DEVICE_IMPL
 
 }    // namespace impl
 }    // namespace api
 
-#endif    /** __SWITCHPORT_IMPL_HPP__ */
+#endif    /** __DEVICE_IMPL_HPP__ */

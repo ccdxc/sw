@@ -1,49 +1,49 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    switchport.hpp
+ * @file    device.hpp
  *
  * @brief   switcthport entry handling
  */
 
-#if !defined (__SWITCHPORT_HPP__)
-#define __SWITCHPORT_HPP__
+#if !defined (__DEVICE_HPP__)
+#define __DEVICE_HPP__
 
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/pds_switchport.hpp"
+#include "nic/apollo/include/api/pds_device.hpp"
 
 namespace api {
 
 /**
- * @defgroup PDS_SWITCHPORT_ENTRY - switchport entry functionality
- * @ingroup PDS_SWITCHPORT
+ * @defgroup PDS_DEVICE_ENTRY - device entry functionality
+ * @ingroup PDS_DEVICE
  * @{
  */
 
 /**
- * @brief    switchport entry
+ * @brief    device entry
  */
-class switchport_entry : public api_base {
+class device_entry : public api_base {
 public:
     /**
-     * @brief    factory method to allocate and initialize switchport entry
-     * @param[in] pds_switchport    switchport information
-     * @return    new instance of switchport or NULL, in case of error
+     * @brief    factory method to allocate and initialize device entry
+     * @param[in] pds_device device information
+     * @return    new instance of device or NULL, in case of error
      */
-    static switchport_entry *factory(pds_switchport_spec_t *pds_switchport);
+    static device_entry *factory(pds_device_spec_t *pds_device);
 
     /**
-     * @brief    release all the s/w state associate with the given switchport,
+     * @brief    release all the s/w state associate with the given device,
      *           if any, and free the memory
-     * @param[in] switchport     switchport to be freed
+     * @param[in] device device to be freed
      * NOTE: h/w entries should have been cleaned up (by calling
      *       impl->cleanup_hw() before calling this
      */
-    static void destroy(switchport_entry *switchport);
+    static void destroy(device_entry *device);
 
     /**
-     * @brief     initialize switchport entry with the given config
+     * @brief     initialize device entry with the given config
      * @param[in] api_ctxt API context carrying the configuration
      * @return    SDK_RET_OK on success, failure status code on error
      */
@@ -103,18 +103,18 @@ public:
                                       obj_ctxt_t *obj_ctxt) override;
 
     /**
-     * @brief     add switchport object to the database
+     * @brief     add device object to the database
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t add_to_db(void) override;
 
     /**
-     * @brief    del switchport object from the database
+     * @brief    del device object from the database
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t del_from_db(void) override;
 
-    static switchport_entry *find_in_db(void);
+    static device_entry *find_in_db(void);
 
     /**
      * @brief    this method is called on new object that needs to replace the
@@ -133,7 +133,7 @@ public:
 
     /**< @brief    return stringified key of the object (for debugging) */
     virtual string key2str(void) const override {
-        return "switchport-cfg";
+        return "device-cfg";
     }
 
     /**
@@ -148,12 +148,12 @@ public:
 
 private:
     /**< @brief    constructor */
-    switchport_entry() {
+    device_entry() {
         impl_ = NULL;
     }
 
     /**< @brief    destructor */
-    ~switchport_entry() {}
+    ~device_entry() {}
 
 private:
     ipv4_addr_t    ip_addr_;       /**< physical IP (aka. MyTEP IP) in substrate */
@@ -162,10 +162,10 @@ private:
     impl_base      *impl_;         /**< impl object instance */
 } __PACK__;
 
-/** @} */    // end of PDS_SWITCHPORT_ENTRY
+/** @} */    // end of PDS_DEVICE_ENTRY
 
 }    // namespace api
 
-using api::switchport_entry;
+using api::device_entry;
 
-#endif    /** __SWITCHPORT_HPP__ */
+#endif    /** __DEVICE_HPP__ */

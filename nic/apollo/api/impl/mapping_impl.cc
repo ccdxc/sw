@@ -39,15 +39,15 @@ namespace impl {
  */
 mapping_impl *
 mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
-    mapping_impl        *impl;
-    switchport_entry    *switchport;
+    mapping_impl    *impl;
+    device_entry    *device;
 
     // TODO: move to slab later
     impl = (mapping_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MAPPING_IMPL,
                                       sizeof(mapping_impl));
     new (impl) mapping_impl();
-    switchport = switchport_db()->switchport_find();
-    if (switchport->ip_addr() == pds_mapping->tep.ip_addr) {
+    device = device_db()->device_find();
+    if (device->ip_addr() == pds_mapping->tep.ip_addr) {
         impl->is_local_ = true;
     }
     return impl;

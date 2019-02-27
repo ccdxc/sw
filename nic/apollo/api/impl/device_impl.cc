@@ -1,17 +1,17 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    switchport_impl.cc
+ * @file    device_impl.cc
  *
- * @brief   datapath implementation of switchport
+ * @brief   datapath implementation of device
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/switchport.hpp"
-#include "nic/apollo/api/impl/switchport_impl.hpp"
+#include "nic/apollo/api/device.hpp"
+#include "nic/apollo/api/impl/device_impl.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/utils/utils.hpp"
 
@@ -19,38 +19,38 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup PDS_SWITCHPORT_IMPL - switchport entry datapath implementation
- * @ingroup PDS_SWITCHPORT
+ * @defgroup PDS_DEVICE_IMPL - device entry datapath implementation
+ * @ingroup PDS_DEVICE
  * @{
  */
 
 /**< as there is no state in this impl, single instance is good enough */
-switchport_impl    g_switchport_impl;
+device_impl    g_device_impl;
 
 /**
- * @brief    factory method to allocate & initialize switchport impl instance
- * @param[in] pds_switchport    switchport information
- * @return    new instance of switchport or NULL, in case of error
+ * @brief    factory method to allocate & initialize device impl instance
+ * @param[in] pds_device device information
+ * @return    new instance of device or NULL, in case of error
  */
-switchport_impl *
-switchport_impl::factory(pds_switchport_spec_t *pds_switchport) {
-    return &g_switchport_impl;
+device_impl *
+device_impl::factory(pds_device_spec_t *pds_device) {
+    return &g_device_impl;
 }
 
 /**
- * @brief    release all the s/w state associated with the given switchport,
+ * @brief    release all the s/w state associated with the given device,
  *           if any, and free the memory
- * @param[in] switchport     switchport to be freed
+ * @param[in] device device to be freed
  * NOTE: h/w entries should have been cleaned up (by calling
  *       impl->cleanup_hw() before calling this
  */
 void
-switchport_impl::destroy(switchport_impl *impl) {
+device_impl::destroy(device_impl *impl) {
     return;
 }
 
 void
-switchport_impl::fill_spec_(pds_switchport_spec_t *spec) {
+device_impl::fill_spec_(pds_device_spec_t *spec) {
     uint64_t val;
 
     //TODO read from HW does NOT work
@@ -63,7 +63,7 @@ switchport_impl::fill_spec_(pds_switchport_spec_t *spec) {
 }
 
 void
-switchport_impl::fill_idrop_stats_(pds_switchport_idrop_stats_t *idrop_stats) {
+device_impl::fill_idrop_stats_(pds_device_idrop_stats_t *idrop_stats) {
     p4pd_error_t pd_err = P4PD_SUCCESS;
     uint64_t pkts = 0;
     p4i_drop_stats_swkey_t key = {0};
@@ -86,7 +86,7 @@ switchport_impl::fill_idrop_stats_(pds_switchport_idrop_stats_t *idrop_stats) {
 }
 
 sdk_ret_t
-switchport_impl::read_hw(pds_switchport_info_t *info) {
+device_impl::read_hw(pds_device_info_t *info) {
     fill_spec_(&info->spec);
     fill_idrop_stats_(&info->stats.idrop_stats);
     return sdk::SDK_RET_OK;
@@ -99,20 +99,20 @@ switchport_impl::read_hw(pds_switchport_info_t *info) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    mac_addr_t          tmp;
-    switchport_entry    *switchport = (switchport_entry *)api_obj;
+device_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    mac_addr_t       tmp;
+    device_entry    *device = (device_entry *)api_obj;
 
-    sdk::lib::memrev(tmp, switchport->mac_addr(), ETH_ADDR_LEN);
+    sdk::lib::memrev(tmp, device->mac_addr(), ETH_ADDR_LEN);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
-                                                 switchport->ip_addr());
+                                                 device->ip_addr());
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
-                                                 switchport->ip_addr());
+                                                 device->ip_addr());
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
-                                                 MAC_TO_UINT64(switchport->mac_addr()));
-    PDS_TRACE_DEBUG("Programmed switchport IP %s, MAC %s as table constants",
-                    ipv4addr2str(switchport->ip_addr()),
-                    macaddr2str(switchport->mac_addr()));
+                                                 MAC_TO_UINT64(device->mac_addr()));
+    PDS_TRACE_DEBUG("Programmed device IP %s, MAC %s as table constants",
+                    ipv4addr2str(device->ip_addr()),
+                    macaddr2str(device->mac_addr()));
     return SDK_RET_OK;
 }
 
@@ -123,7 +123,7 @@ switchport_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+device_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX, 0);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, 0);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, 0);
@@ -139,22 +139,22 @@ switchport_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
+device_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                            obj_ctxt_t *obj_ctxt) {
-    switchport_entry *switchport = (switchport_entry *)curr_obj;
+    device_entry *device = (device_entry *)curr_obj;
     mac_addr_t tmp;
-    sdk::lib::memrev(tmp, switchport->mac_addr(), ETH_ADDR_LEN);
+    sdk::lib::memrev(tmp, device->mac_addr(), ETH_ADDR_LEN);
 
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
-                                                 switchport->ip_addr());
+                                                 device->ip_addr());
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
-                                                 switchport->ip_addr());
+                                                 device->ip_addr());
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
                                                  MAC_TO_UINT64(tmp));
     return SDK_RET_OK;
 }
 
-/** @} */    // end of PDS_SWITCHPORT_IMPL
+/** @} */    // end of PDS_DEVICE_IMPL
 
 }    // namespace impl
 }    // namespace api

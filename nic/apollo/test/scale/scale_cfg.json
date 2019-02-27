@@ -2,7 +2,7 @@
     "_comment_" : "the order of the objects listed here should be maintained",
     "objects" : [
         {
-            "kind" : "switchport",
+            "kind" : "device",
             "ip-addr" : "1.0.0.1",
             "mac-addr" : "0x000201000001",
             "gw-ip-addr": "1.0.0.2"

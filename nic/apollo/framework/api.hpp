@@ -31,7 +31,7 @@ typedef enum api_op_e {
  */
 typedef enum obj_id_e {
     OBJ_ID_NONE,
-    OBJ_ID_SWITCHPORT,
+    OBJ_ID_DEVICE,
     OBJ_ID_VCN,
     OBJ_ID_SUBNET,
     OBJ_ID_TEP,
