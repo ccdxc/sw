@@ -29,6 +29,11 @@ feature_cmd_map = {
             "linux"    : { "cmd" : cmd_builder.ethtool_rx_queue_size,     "reloadCmd" : True },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_queue_size, "reloadCmd" : True },
         },
+    "rx_sg_size"      :
+        {
+            "linux"    : { "cmd" : cmd_builder.ethtool_rx_sg_size,     "reloadCmd" : True },
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_sg_size, "reloadCmd" : True },
+        },
     "tx_check_sum"       :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_tx_checksum },

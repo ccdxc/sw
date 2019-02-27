@@ -69,6 +69,22 @@ testcases:
             iperf_threads     :  1
             #capture_pcap : true
 
+    -   name    : UplinkIntf_RX_SGL_SIZE
+        testcase: testcases.drivers.features
+        enable : True
+        iterators :
+            type               : nested
+            rx_sg_size         : [ 2048, 4096]
+            mtu                : [ '9000' ]
+            pktsize            : [ 1024 ]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
+        args    :
+            test-type    : host
+            iperf_threads     :  1
+            #capture_pcap : true
+
     -   name    : UplinkIntf_TX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False

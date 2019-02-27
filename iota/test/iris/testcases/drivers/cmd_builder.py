@@ -52,6 +52,9 @@ def ethtool_tx_ring_size(node, intf,size):
 def ethtool_rx_ring_size(node, intf,size):
     return ethtool_ring_size_cmd(node, intf,"rx", size)
 
+def ethtool_rx_sg_size(node, intf,size):
+    return "echo rx SGL not suported in Linux"
+
 def ethtool_tx_queue_size(node, intf,size):
     return ethtool_queue_size_cmd(node, intf,"tx", size)
 
@@ -179,6 +182,15 @@ def bsd_ethtool_queue_size_cmd(node, intf,queue_type, size):
         return cmds
     return " ".join(["ethtool", "-L", intf, queue_type,  str(size)])
 
+def bsd_ethtool_rx_sg_size_cmd(node, intf, size):
+    args = { }
+    args['hw.ionic.rx_sg_size'] = size
+    if api.IsNaplesNode(node):
+        cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_BSD)
+        cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_BSD, **args))
+        return cmds
+    return " "
+
 def bsd_ip_link_pkt_filter_cmd(node, intf,pkt_filter, on_off):
     return " ".join(["ip", "link", "set", "dev", intf,pkt_filter, on_off])
 
@@ -202,6 +214,9 @@ def bsd_ethtool_tx_queue_size(node, intf,size):
 
 def bsd_ethtool_rx_queue_size(node, intf,size):
     return bsd_ethtool_queue_size_cmd(node, intf,"rx", size)
+
+def bsd_ethtool_rx_sg_size(node, intf,size):
+    return bsd_ethtool_rx_sg_size_cmd(node, intf, size)
 
 def bsd_ethtool_tx_checksum(node, intf,op):
     return " ".join(["ifconfig", intf,"txcsum" if op == "on" else "-txcsum"])
