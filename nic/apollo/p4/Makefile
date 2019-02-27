@@ -3,6 +3,7 @@ TOPDIR = ../..
 SUBDIRS = p4 \
           txdma \
           rxdma \
+          nvme \
           $(NULL)
 
 .PHONY: subdirs $(SUBDIRS)
