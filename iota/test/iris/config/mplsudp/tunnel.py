@@ -5,11 +5,14 @@ import ipaddress
 import iota.harness.api as api
 import iota.test.iris.testcases.penctl.common as common
 import iota.harness.infra.utils.parser as parser
+import iota.test.iris.utils.host as host_utils
 
 class MplsOverUdpTunnel:
-    def __init__(self, spec, ltep, rtep):
+    def __init__(self, spec, ltep, rtep, ltep_node, rtep_node):
         self.ltep = ltep
         self.rtep = rtep
+        self.ltep_node = ltep_node
+        self.rtep_node = rtep_node
         self.label_in = self.__get_label_from_ip(ltep.ip_address)
         self.label_out = self.__get_label_from_ip(rtep.ip_address)
         self.encap = spec.encap
@@ -29,8 +32,10 @@ class MplsOverUdpTunnel:
         return
 
     def Create(self, req):
+        ltep_parent_mac = host_utils.GetMACAddress(self.ltep_node, self.ltep.parent_interface)
+        rtep_parent_mac = host_utils.GetMACAddress(self.rtep_node, self.rtep.parent_interface)
         cmd = "update interface --name %s " % self.ltep.interface
-        cmd += "--gw-mac %s " % self.rtep.mac_address
+        cmd += "--gw-mac %s " % rtep_parent_mac
         cmd += "--substrate-ip %s " % self.ltep.ip_address
         cmd += "--overlay-ip %s " % self.ltep.ip_address
         cmd += "--mpls-in %d " % self.label_in
@@ -40,6 +45,8 @@ class MplsOverUdpTunnel:
         cmd += "--ingress-bw %d " % self.policer.ingress
         cmd += "--egress-bw %d " % self.policer.egress
         cmd += "--encap %s " % self.encap
+        cmd += "--pf-mac %s " % ltep_parent_mac
+        cmd += "--overlay-mac %s " % self.ltep.mac_address
 
         api.Logger.info("Creating Tunnel %s ==> %s" % (self.ltep.workload_name, self.rtep.workload_name))
         api.Logger.info("- command: %s" % cmd)
@@ -95,11 +102,11 @@ class MplsOverUdpTunnelManager:
         tunnels = []
         for wid in range(len(wlpool1)):
             # Create tunnel in local node
-            tunnel = MplsOverUdpTunnel(self.__spec, wlpool1[wid], wlpool2[wid])
+            tunnel = MplsOverUdpTunnel(self.__spec, wlpool1[wid], wlpool2[wid], nodes[0], nodes[1])
             tunnel.Create(req)
             tunnels.append(tunnel)
             # Create tunnel in remote node
-            tunnel = MplsOverUdpTunnel(self.__spec, wlpool2[wid], wlpool1[wid])
+            tunnel = MplsOverUdpTunnel(self.__spec, wlpool2[wid], wlpool1[wid], nodes[1], nodes[0])
             tunnel.Create(req)
             tunnels.append(tunnel)
 
