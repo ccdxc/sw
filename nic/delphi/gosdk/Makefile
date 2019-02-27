@@ -2,7 +2,7 @@
 
 default: all
 
-all: pb build
+all: pb build test
 
 client_test.pb.go: client_test.proto
 	make -C ${GOPATH}/src/github.com/pensando/sw/nic/delphi/messenger/proto && \

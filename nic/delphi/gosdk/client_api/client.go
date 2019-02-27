@@ -50,12 +50,19 @@ type Client interface {
 	// List all the objects in the database of a specific kind
 	List(kind string) []BaseObject
 
+	// GetFromIndex gets an object from an index
+	GetFromIndex(toKind string, fromKind string, fromKeyField string,
+		toKey string) BaseObject
+
 	// Close, as the name suggests, closes the connection to the hub.
 	Close()
 
 	// DumpSubtrees prints the local database state to stderr. It's meant to be
 	// used for debugging purposes.
 	DumpSubtrees()
+
+	// DumpIndex print the local database foreign key index
+	DumpIndex()
 
 	// IsConnected returns true if delphi client is connected to hub
 	IsConnected() bool

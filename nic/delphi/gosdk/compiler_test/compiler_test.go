@@ -65,6 +65,16 @@ func (t *testClient) DumpSubtrees() {
 
 }
 
+func (t *testClient) DumpIndex() {
+
+}
+
+func (t *testClient) GetFromIndex(kind string, field string, toKind string,
+	key string) clientApi.BaseObject {
+
+	return nil
+}
+
 type reactA struct {
 }
 

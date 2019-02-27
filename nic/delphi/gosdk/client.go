@@ -37,6 +37,7 @@ type client struct {
 	globalLock     *sync.Mutex
 	stopChan       chan bool
 	isConnected    bool
+	revIndex       map[string]string
 }
 
 // Mount a kind to get notifications and/or make changes to the objects. Must
@@ -111,6 +112,7 @@ func (c *client) IsConnected() bool {
 // call this explicitly. It is getting called automatically when there is a
 // change in any object.
 func (c *client) SetObject(obj clientApi.BaseObject) error {
+	log.Infof("DelphiGo: Client set object: %v", obj)
 	meta := obj.GetDelphiMeta()
 	if meta == nil {
 		obj.SetDelphiMeta(&delphi.ObjectMeta{
@@ -162,6 +164,7 @@ func (c *client) DeleteObject(obj clientApi.BaseObject) error {
 }
 
 func (c *client) queueChange(change *change) {
+	log.Infof("DelphiGo: Change queued: %v %v", change.op, change.obj)
 	c.changeQueue <- change
 	// update subtree now so a back to back Set/Get will work
 	c.updateSubtree(change.op, change.obj.GetDelphiMeta().Kind,
@@ -184,6 +187,15 @@ func (c *client) WatchKind(kind string, reactor clientApi.BaseReactor) error {
 func (c *client) WatchMount(listener clientApi.MountListener) error {
 	c.mountListeners = append(c.mountListeners, listener)
 	return nil
+}
+
+// GetFromIndex implementation
+func (c *client) GetFromIndex(toKind string, fromKind string,
+	fromKeyField string, toKey string) clientApi.BaseObject {
+
+	key := c.revIndex[toKind+":"+fromKind+":"+fromKeyField+":"+toKey]
+
+	return c.GetObject(fromKind, key)
 }
 
 // Close the connection the the hub
@@ -234,7 +246,9 @@ func (c *client) loop() {
 				pending = make(map[string]*change)
 			}
 		case change := <-c.changeQueue:
-			pending[change.obj.GetDelphiKey()] = change
+			o := change.obj
+			path := o.GetDelphiMeta().GetKind() + ":" + o.GetDelphiKey()
+			pending[path] = change
 			if tRunning == false {
 				t.Reset(time.Millisecond * 5)
 			}
@@ -283,11 +297,21 @@ func (c *client) updateSubtrees(objlist []*delphi_messenger.ObjectData, triggerE
 		if err != nil {
 			log.Fatalf("Error unmarshalling object %+v. Err: %v", obj, err)
 		} else {
-			c.updateSubtree(obj.GetOp(), obj.GetMeta().GetKind(),
-				obj.GetMeta().GetKey(), baseObj)
-			// FIXME: move somewhere else?
+			kind := obj.GetMeta().GetKind()
+			key := obj.GetMeta().GetKey()
+			c.updateSubtree(obj.GetOp(), kind, key, baseObj)
+			// FIXME: update indexes, move somewhere else?
+			index := clientApi.Indexes[kind]
+			if index != nil {
+				for field, toKind := range index {
+					fke := clientApi.ForeignKeyExtractors[kind][field]
+					toKey := fke(baseObj)
+					c.revIndex[toKind+":"+kind+":"+field+":"+toKey] = key
+				}
+			}
+			// FIXME: trigger events, also move somewhere else?
 			if triggerEvents {
-				rl := c.watchers[obj.GetMeta().GetKind()]
+				rl := c.watchers[kind]
 				if rl != nil {
 					start := time.Now()
 					baseObj.TriggerEvent(c, oldObj, obj.GetOp(), rl)
@@ -334,8 +358,15 @@ func (c *client) HandleStatusResp() error {
 func (c *client) DumpSubtrees() {
 	for kind, subtr := range c.subtrees {
 		for key, obj := range subtr {
-			log.Printf("'%v'-'%v' -> '%+v'\n", kind, key, obj)
+			log.Infof("'%v'-'%v' -> '%+v'\n", kind, key, obj)
 		}
+	}
+}
+
+// DumpIndex dumps the indexes
+func (c *client) DumpIndex() {
+	for ck, k := range c.revIndex {
+		log.Infof("'%v' -> '%v'\n", ck, k)
 	}
 }
 
@@ -377,6 +408,7 @@ func NewClient(service clientApi.Service) (clientApi.Client, error) {
 		mountListeners: make([]clientApi.MountListener, 0),
 		globalLock:     &sync.Mutex{},
 		stopChan:       make(chan bool),
+		revIndex:       make(map[string]string),
 	}
 
 	mc, err := messenger.NewClient(client)

@@ -5,9 +5,9 @@ import "delphi.proto";
 
 // Simplest possible message
 message MessageA {
-    delphi.ObjectMeta  Meta  = 1;
-    uint32             Key = 2;
-    string             StringValue = 3;
+    delphi.ObjectMeta Meta        = 1;
+    uint32            Key         = 2;
+    string            StringValue = 3;
 }
 
 // Message with key being a message
@@ -15,9 +15,9 @@ message MessageKey {
     uint32 Value = 1;
 }
 message MessageB {
-    delphi.ObjectMeta  Meta  = 1;
-    MessageKey         Key = 2;
-    string             StringValue = 3;
+    delphi.ObjectMeta Meta        = 1;
+    MessageKey        Key         = 2;
+    string            StringValue = 3;
 }
 
 // Singleton message
@@ -25,4 +25,10 @@ message MessageC {
     option (delphi.singleton) = true;
     delphi.ObjectMeta  Meta  = 1;
     string    StringValue = 3;
+}
+
+message MessageD {
+    delphi.ObjectMeta Meta = 1;
+    uint32            Key  = 2;
+    string            RefA = 3 [(delphi.foreign_key) = {message_name: "MessageA"}];
 }

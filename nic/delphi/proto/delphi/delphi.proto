@@ -71,8 +71,16 @@ extend google.protobuf.MessageOptions {
     bool persist = 70004;
 }
 
+message ForeignKey {
+    string message_name = 1;
+    string file_path    = 2;
+}
+
 // Delphi options applied at the field level
 extend google.protobuf.FieldOptions {
     // event: if this option is enabled, an event handler will be generated for the object
-    bool event = 70000;
+    bool       event       = 70000;
+
+    // delphi: delphi specific options 
+    ForeignKey foreign_key = 70001;
 }

@@ -10,6 +10,8 @@ It is generated from these files:
 It has these top-level messages:
 	IntfIndex
 	TestInterfaceSpec
+	MessageFrom
+	MessageTo
 */
 package gosdk
 
@@ -178,16 +180,318 @@ func (m *TestInterfaceSpec) GetMacAddress() string {
 	return ""
 }
 
+type MessageFrom struct {
+	Meta  *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
+	Key   uint32             `protobuf:"varint,2,opt,name=Key" json:"Key,omitempty"`
+	Ref   string             `protobuf:"bytes,3,opt,name=Ref" json:"Ref,omitempty"`
+	Value string             `protobuf:"bytes,4,opt,name=Value" json:"Value,omitempty"`
+}
+
+func (m *MessageFrom) GetDelphiMessage() proto.Message {
+	return m
+}
+
+func (m *MessageFrom) GetDelphiMeta() *delphi.ObjectMeta {
+	return m.Meta
+}
+
+func (m *MessageFrom) SetDelphiMeta(meta *delphi.ObjectMeta) {
+	m.Meta = meta
+}
+
+func (m *MessageFrom) GetDelphiKey() string {
+	return fmt.Sprintf("%v", m.Key)
+}
+
+func (m *MessageFrom) GetDelphiKind() string {
+	return "MessageFrom"
+}
+
+func (m *MessageFrom) GetDelphiPath() string {
+	return fmt.Sprintf("%s|%s", m.GetDelphiKind(), m.GetDelphiKey())
+}
+
+func (m *MessageFrom) DelphiClone() clientApi.BaseObject {
+	obj, _ := proto.Clone(m).(*MessageFrom)
+	return obj
+}
+
+func MessageFromMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("MessageFrom", mode)
+}
+
+func MessageFromMountKey(client clientApi.Client, key uint32, mode delphi.MountMode) {
+	client.MountKindKey("MessageFrom", fmt.Sprintf("%v", key), mode)
+}
+
+func GetMessageFrom(client clientApi.Client, key uint32) *MessageFrom {
+	o := client.GetObject("MessageFrom", fmt.Sprintf("%v", key))
+	if o == nil {
+		return nil
+	}
+	obj, ok := o.(*MessageFrom)
+	if ok != true {
+		panic("Cast failed")
+	}
+	return obj
+}
+
+func MessageFromFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg MessageFrom
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	return &msg, nil
+}
+
+func MessageFromWatch(client clientApi.Client, reactor MessageFromReactor) {
+	client.WatchKind("MessageFrom", reactor)
+}
+func MessageFromList(client clientApi.Client) []*MessageFrom {
+	bobjs := client.List("MessageFrom")
+	objs := make([]*MessageFrom, 0)
+	for _, bobj := range bobjs {
+		obj, _ := bobj.(*MessageFrom)
+		objs = append(objs, obj)
+	}
+	return objs
+}
+func (m *MessageFrom) TriggerEvent(sdkClient clientApi.Client, old clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(MessageFromReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if old == nil {
+				rctr.OnMessageFromCreate(m)
+			} else {
+				oldObj, ok := old.(*MessageFrom)
+				if ok == false {
+					panic("Not an MessageFrom object")
+				}
+				rctr.OnMessageFromUpdate(oldObj, m)
+			}
+		} else {
+			rctr.OnMessageFromDelete(m)
+		}
+	}
+}
+
+type MessageFromReactor interface {
+	OnMessageFromCreate(obj *MessageFrom)
+	OnMessageFromUpdate(old *MessageFrom, obj *MessageFrom)
+	OnMessageFromDelete(obj *MessageFrom)
+}
+
+func (o *MessageFrom) LinkToRef(f *MessageTo) {
+	o.Ref = f.GetDelphiKey()
+}
+func MessageFromGetRefObj(client clientApi.Client, o *MessageFrom) *MessageTo {
+	obj := client.GetObject("MessageTo", o.Ref)
+	if obj == nil {
+		return nil
+	}
+	cobj, ok := obj.(*MessageTo)
+	if ok != true {
+		panic("Cast failed")
+	}
+	return cobj
+}
+func GetMessageFromFromRef(client clientApi.Client, f *MessageTo) *MessageFrom {
+	o := client.GetFromIndex("MessageTo", "MessageFrom", "Ref", f.GetDelphiKey())
+	if o == nil {
+		return nil
+	}
+	obj, ok := o.(*MessageFrom)
+	if ok != true {
+		panic("Cast failed")
+	}
+	return obj
+}
+func MessageFromRefKeyExtractor(o clientApi.BaseObject) string {
+	obj, _ := o.(*MessageFrom)
+	return obj.Ref
+}
+func (m *MessageFrom) Reset()                    { *m = MessageFrom{} }
+func (m *MessageFrom) String() string            { return proto.CompactTextString(m) }
+func (*MessageFrom) ProtoMessage()               {}
+func (*MessageFrom) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *MessageFrom) GetMeta() *delphi.ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *MessageFrom) GetKey() uint32 {
+	if m != nil {
+		return m.Key
+	}
+	return 0
+}
+
+func (m *MessageFrom) GetRef() string {
+	if m != nil {
+		return m.Ref
+	}
+	return ""
+}
+
+func (m *MessageFrom) GetValue() string {
+	if m != nil {
+		return m.Value
+	}
+	return ""
+}
+
+type MessageTo struct {
+	Meta  *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
+	Key   uint32             `protobuf:"varint,2,opt,name=Key" json:"Key,omitempty"`
+	Value string             `protobuf:"bytes,4,opt,name=Value" json:"Value,omitempty"`
+}
+
+func (m *MessageTo) GetDelphiMessage() proto.Message {
+	return m
+}
+
+func (m *MessageTo) GetDelphiMeta() *delphi.ObjectMeta {
+	return m.Meta
+}
+
+func (m *MessageTo) SetDelphiMeta(meta *delphi.ObjectMeta) {
+	m.Meta = meta
+}
+
+func (m *MessageTo) GetDelphiKey() string {
+	return fmt.Sprintf("%v", m.Key)
+}
+
+func (m *MessageTo) GetDelphiKind() string {
+	return "MessageTo"
+}
+
+func (m *MessageTo) GetDelphiPath() string {
+	return fmt.Sprintf("%s|%s", m.GetDelphiKind(), m.GetDelphiKey())
+}
+
+func (m *MessageTo) DelphiClone() clientApi.BaseObject {
+	obj, _ := proto.Clone(m).(*MessageTo)
+	return obj
+}
+
+func MessageToMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("MessageTo", mode)
+}
+
+func MessageToMountKey(client clientApi.Client, key uint32, mode delphi.MountMode) {
+	client.MountKindKey("MessageTo", fmt.Sprintf("%v", key), mode)
+}
+
+func GetMessageTo(client clientApi.Client, key uint32) *MessageTo {
+	o := client.GetObject("MessageTo", fmt.Sprintf("%v", key))
+	if o == nil {
+		return nil
+	}
+	obj, ok := o.(*MessageTo)
+	if ok != true {
+		panic("Cast failed")
+	}
+	return obj
+}
+
+func MessageToFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg MessageTo
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	return &msg, nil
+}
+
+func MessageToWatch(client clientApi.Client, reactor MessageToReactor) {
+	client.WatchKind("MessageTo", reactor)
+}
+func MessageToList(client clientApi.Client) []*MessageTo {
+	bobjs := client.List("MessageTo")
+	objs := make([]*MessageTo, 0)
+	for _, bobj := range bobjs {
+		obj, _ := bobj.(*MessageTo)
+		objs = append(objs, obj)
+	}
+	return objs
+}
+func (m *MessageTo) TriggerEvent(sdkClient clientApi.Client, old clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(MessageToReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if old == nil {
+				rctr.OnMessageToCreate(m)
+			} else {
+				oldObj, ok := old.(*MessageTo)
+				if ok == false {
+					panic("Not an MessageTo object")
+				}
+				rctr.OnMessageToUpdate(oldObj, m)
+			}
+		} else {
+			rctr.OnMessageToDelete(m)
+		}
+	}
+}
+
+type MessageToReactor interface {
+	OnMessageToCreate(obj *MessageTo)
+	OnMessageToUpdate(old *MessageTo, obj *MessageTo)
+	OnMessageToDelete(obj *MessageTo)
+}
+
+func (m *MessageTo) Reset()                    { *m = MessageTo{} }
+func (m *MessageTo) String() string            { return proto.CompactTextString(m) }
+func (*MessageTo) ProtoMessage()               {}
+func (*MessageTo) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *MessageTo) GetMeta() *delphi.ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *MessageTo) GetKey() uint32 {
+	if m != nil {
+		return m.Key
+	}
+	return 0
+}
+
+func (m *MessageTo) GetValue() string {
+	if m != nil {
+		return m.Value
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*IntfIndex)(nil), "gosdk.IntfIndex")
 	clientApi.RegisterFactory("TestInterfaceSpec", TestInterfaceSpecFactory)
 	proto.RegisterType((*TestInterfaceSpec)(nil), "gosdk.TestInterfaceSpec")
+	clientApi.RegisterFactory("MessageFrom", MessageFromFactory)
+	clientApi.CreateIndex("MessageFrom", "Ref", "MessageTo", MessageFromRefKeyExtractor)
+	proto.RegisterType((*MessageFrom)(nil), "gosdk.MessageFrom")
+	clientApi.RegisterFactory("MessageTo", MessageToFactory)
+	proto.RegisterType((*MessageTo)(nil), "gosdk.MessageTo")
 }
 
 func init() { proto.RegisterFile("client_test.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 195 bytes of a gzipped FileDescriptorProto
+	// 266 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4c, 0xce, 0xc9, 0x4c,
 	0xcd, 0x2b, 0x89, 0x2f, 0x49, 0x2d, 0x2e, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x4d,
 	0xcf, 0x2f, 0x4e, 0xc9, 0x96, 0xe2, 0x49, 0x49, 0xcd, 0x29, 0xc8, 0xc8, 0x84, 0x08, 0x2a, 0x29,
@@ -199,6 +503,10 @@ var fileDescriptor0 = []byte{
 	0x2e, 0x66, 0xef, 0xd4, 0x4a, 0x09, 0x26, 0xb0, 0x32, 0x01, 0x3d, 0xb0, 0x1b, 0xf4, 0xe0, 0x56,
 	0x06, 0x81, 0x24, 0x85, 0xe4, 0xb8, 0xb8, 0x7c, 0x13, 0x93, 0x1d, 0x53, 0x52, 0x8a, 0x52, 0x8b,
 	0x8b, 0x25, 0x98, 0x15, 0x18, 0x35, 0x38, 0x83, 0x90, 0x44, 0xac, 0x58, 0x1a, 0xa6, 0x2b, 0x31,
-	0x26, 0xb1, 0x81, 0x5d, 0x6c, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xac, 0x53, 0xf7, 0xbb, 0xdb,
-	0x00, 0x00, 0x00,
+	0x2a, 0x35, 0x30, 0x72, 0x71, 0xfb, 0xa6, 0x16, 0x17, 0x27, 0xa6, 0xa7, 0xba, 0x15, 0xe5, 0xe7,
+	0x12, 0xed, 0x02, 0x01, 0x84, 0x0b, 0x78, 0x21, 0xf6, 0x29, 0x72, 0x31, 0x07, 0xa5, 0xa6, 0x41,
+	0x2c, 0x72, 0xe2, 0xef, 0x9a, 0xae, 0xc4, 0xcd, 0xc5, 0x09, 0x35, 0x39, 0x24, 0x3f, 0x08, 0x24,
+	0x07, 0x0a, 0x8a, 0xb0, 0xc4, 0x9c, 0xd2, 0x54, 0x09, 0x16, 0xb0, 0x6b, 0x20, 0x1c, 0xa5, 0x68,
+	0x24, 0x75, 0x14, 0xd8, 0x8f, 0xd5, 0xf0, 0x24, 0x36, 0x70, 0x8c, 0x18, 0x03, 0x02, 0x00, 0x00,
+	0xff, 0xff, 0x93, 0x14, 0xff, 0x2b, 0xbb, 0x01, 0x00, 0x00,
 }

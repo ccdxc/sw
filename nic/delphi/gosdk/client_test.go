@@ -61,6 +61,8 @@ func TestClientBasic(t *testing.T) {
 		t.Errorf("NewClient(): %s", err)
 	}
 	c1.MountKind("TestInterfaceSpec", delphi.MountMode_ReadMode)
+	c1.MountKind("MessageFrom", delphi.MountMode_ReadWriteMode)
+	c1.MountKind("MessageTo", delphi.MountMode_ReadWriteMode)
 
 	go c1.Run()
 
@@ -84,8 +86,10 @@ func TestClientBasic(t *testing.T) {
 		name:            "test2",
 	}
 	c2, err := NewClient(s2)
-	c2.MountKind("TestInterfaceSpec", delphi.MountMode_ReadMode)
+	TestInterfaceSpecMount(c2, delphi.MountMode_ReadMode)
 	c2.MountKindKey("Interface", "Intf:20", delphi.MountMode_ReadMode)
+	MessageFromMount(c2, delphi.MountMode_ReadMode)
+	MessageToMount(c2, delphi.MountMode_ReadMode)
 
 	go c2.Run()
 
@@ -141,6 +145,48 @@ func TestClientBasic(t *testing.T) {
 	log.Printf("### Client 1 Got Delete Notify")
 	_ = <-s2.gotDeleteNotify
 	log.Printf("### Client 2 Got Delete Notify")
+
+	fObj := &MessageFrom{
+		Key:   1,
+		Value: "FromObject 1",
+	}
+	tObj := &MessageTo{
+		Key:   1,
+		Value: "ToObject 1",
+	}
+	fObj.LinkToRef(tObj)
+
+	c1.SetObject(fObj)
+	c1.SetObject(tObj)
+	time.Sleep(time.Second * 1)
+
+	tObj2 := GetMessageTo(c2, 1)
+	if tObj2 == nil || tObj2.Value != tObj.Value {
+		t.Errorf(`tObj2 is wrong`)
+	}
+	log.Printf("tObj2: %+v", tObj2)
+
+	fObj2 := GetMessageFromFromRef(c2, tObj2)
+	if fObj2 == nil || fObj2.Value != fObj.Value {
+		t.Errorf(`fObj2 is wrong`)
+	}
+	log.Printf("fObj2: %+v", fObj2)
+
+	tObj3 := MessageFromGetRefObj(c2, fObj2)
+	if tObj3 == nil || tObj3.Value != tObj.Value {
+		t.Errorf("tObj3 is wrong: %v", tObj3)
+	}
+	log.Printf("tObj3: %+v", tObj3)
+
+	log.Printf("Client 2 index:\n")
+	c2.DumpIndex()
+	log.Printf("Client 2 index end\n")
+
+	// Just to reach cover %
+	TestInterfaceSpecList(c2)
+	GetMessageFrom(c2, 1)
+	MessageFromList(c2)
+	MessageToList(c2)
 
 	c1.Close()
 	c2.Close()

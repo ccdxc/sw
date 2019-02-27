@@ -56,6 +56,8 @@ import (
 
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
+
+	delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 
 // generatedCodeVersion indicates a version of the generated code.
@@ -2119,6 +2121,66 @@ func (g *Generator) generateMessage(message *Descriptor) {
 			", obj *" + ccTypeName + ")")
 		g.P("On" + ccTypeName + "Delete(obj *" + ccTypeName + ")")
 		g.P("}")
+
+		// Foreign keys
+		for _, f := range message.Field {
+			if f.Options == nil {
+				continue
+			}
+			ext, _ := proto.GetExtension(f.Options, delphi.E_ForeignKey)
+			if ext == nil {
+				continue
+			}
+			fk := ext.(*delphi.ForeignKey)
+
+			// LinkTo function
+			g.P(`func (o *` + ccTypeName + `) LinkTo` + *f.Name + `(f *` +
+				fk.MessageName + `) {`)
+			g.P(`   o.` + *f.Name + ` = f.GetDelphiKey()`)
+			g.P(`}`)
+
+			// Forward Refernce Function
+			g.P(`func `, ccTypeName, `Get`, *f.Name, `Obj(`,
+				`client clientApi.Client, o *`, ccTypeName, `) *`,
+				fk.MessageName, `{`)
+			g.P(`   obj := client.GetObject("` + fk.MessageName + `", o.` +
+				*f.Name + `)`)
+			g.P(`   if obj == nil {`)
+			g.P(`      return nil`)
+			g.P(`   }`)
+			g.P(`   cobj, ok := obj.(*`, fk.MessageName, `)`)
+			g.P("if ok != true {")
+			g.P(" panic(\"Cast failed\")")
+			g.P("}")
+			g.P(`   return cobj`)
+			g.P(`}`)
+
+			// Reverse Reference Function
+			g.P(`func Get`, ccTypeName, `From`, *f.Name, `(`,
+				`client clientApi.Client, f * `, fk.MessageName, `) *`,
+				ccTypeName, `{`)
+			g.P(`o := client.GetFromIndex("`, fk.MessageName, `", "`,
+				ccTypeName, `", "`, *f.Name, `",`, `f.GetDelphiKey())`)
+			g.P(`if o == nil {`)
+			g.P(` return nil`)
+			g.P(`}`)
+			g.P(`obj, ok := o.(*`, ccTypeName, `)`)
+			g.P("if ok != true {")
+			g.P(" panic(\"Cast failed\")")
+			g.P("}")
+			g.P(`return obj`)
+			g.P(`}`)
+
+			// KeyExtractor Function
+			g.P(`func ` + ccTypeName + *f.Name + `KeyExtractor` +
+				`(o clientApi.BaseObject) string {`)
+			g.P(`   obj, _ := o.(*` + ccTypeName + `)`)
+			g.P(`   return obj.` + *f.Name)
+			g.P(`}`)
+			g.init = append(g.init, `clientApi.CreateIndex("`+
+				ccTypeName+`", "`+*f.Name+`", "`+fk.MessageName+
+				`", `+ccTypeName+*f.Name+`KeyExtractor)`)
+		}
 	}
 
 	// Update g.Buffer to list valid oneof types.

@@ -15,3 +15,18 @@ message TestInterfaceSpec {
     IntfIndex              Key          = 2;
     string                 MacAddress   = 3;
 }
+
+
+message MessageFrom {
+    delphi.ObjectMeta Meta  = 1;
+    uint32            Key   = 2;
+    string            Ref   = 3 [(delphi.foreign_key) = {message_name: "MessageTo"}];
+    string            Value = 4;
+}
+
+
+message MessageTo {
+    delphi.ObjectMeta Meta  = 1;
+    uint32            Key   = 2;
+    string            Value = 4;
+}

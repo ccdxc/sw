@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"net"
 
 	"github.com/golang/protobuf/descriptor"
@@ -114,11 +115,14 @@ func (h *hub) runLoop() {
 }
 
 func (h *hub) handleMessage(conn net.Conn, message *messenger.Message) {
+	log.Printf("Hub: MesssageIn: %v", message)
 	switch message.GetType() {
 	case messenger.MessageType_MountReq:
 		h.sendMountResp(h.clients[conn], message)
 	case messenger.MessageType_ChangeReq:
+		log.Printf("Hub: ChangeReq")
 		for _, c := range h.clients {
+			log.Printf("Hub: Handle Message sending Notify")
 			h.sendNotify(c, message)
 		}
 		h.sendStatus(conn)
@@ -193,6 +197,7 @@ func (h *hub) sendNotify(cl *hubClient, msg *messenger.Message) {
 
 	buffer.EncodeMessage(&message)
 
+	log.Printf("Hub: MesssageOut: %v", message)
 	_, err := cl.connection.Write(buffer.Bytes())
 	if err != nil {
 		panic(err)
