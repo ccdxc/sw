@@ -60,6 +60,7 @@ typedef struct hbm_bw_samples_s {
     asic_hbm_bw_t *hbm_bw;
 } __PACK__ hbm_bw_samples_t;
 
+sdk_ret_t asicpd_read_table_constant(uint32_t tableid, uint64_t *value);
 sdk_ret_t asicpd_program_table_constant(uint32_t tableid, uint64_t const_value);
 sdk_ret_t asicpd_p4plus_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 sdk_ret_t asicpd_program_table_mpu_pc(void);

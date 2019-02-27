@@ -8,10 +8,13 @@
 #if !defined (__TEP_IMPL_HPP__)
 #define __TEP_IMPL_HPP__
 
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/include/api/oci_tep.hpp"
+#include "nic/apollo/p4/include/defines.h"
+#include "gen/p4gen/apollo/include/p4pd.h"
 
 namespace api {
 namespace impl {
@@ -54,6 +57,13 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t release_resources(api_base *api_obj) override;
+
+    /**
+     * @brief read spec, statistics and status from hw tables
+     * @param[out] info pointer to tep info
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read_hw(oci_tep_info_t *info);
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -104,6 +114,23 @@ private:
 
     /**< @brief    destructor */
     ~tep_impl() {}
+
+    /**
+     * @brief Populate specification with hardware information
+     * @param[in] nh_tx_data Nexthop table data
+     * @param[in] tep_tx_data TEP table data
+     * @param[out] spec Specification
+     */
+    void fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
+                    tep_tx_actiondata_t *tep_tx_data, oci_tep_spec_t *spec);
+
+    /**
+     * @brief Populate status with hardware information
+     * @param[in] tep_tx_data TEP table data
+     * @param[out] status Status
+     */
+    void fill_status_(tep_tx_actiondata_t *tep_tx_data,
+                      oci_tep_status_t *status);
 
 private:
     /**< P4 datapath specific state */

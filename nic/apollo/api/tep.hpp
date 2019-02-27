@@ -116,6 +116,8 @@ public:
      */
     virtual sdk_ret_t del_from_db(void) override;
 
+    static tep_entry *find_in_db(oci_tep_key_t *tep_key);
+
     /**
      * @brief    this method is called on new object that needs to replace the
      *           old version of the object in the DBs

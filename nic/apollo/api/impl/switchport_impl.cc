@@ -49,6 +49,49 @@ switchport_impl::destroy(switchport_impl *impl) {
     return;
 }
 
+void
+switchport_impl::fill_spec_(oci_switchport_spec_t *spec) {
+    uint64_t val;
+
+    //TODO read from HW does NOT work
+    sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
+                                              &val);
+    spec->switch_ip_addr = be64toh(val);
+    sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_TEP_TX, &val);
+    val = be64toh(val);
+    MAC_UINT64_TO_ADDR(spec->switch_mac_addr, val);
+}
+
+void
+switchport_impl::fill_idrop_stats_(oci_switchport_idrop_stats_t *idrop_stats) {
+    p4pd_error_t pd_err = P4PD_SUCCESS;
+    uint64_t pkts = 0;
+    p4i_drop_stats_swkey_t key = {0};
+    p4i_drop_stats_swkey_mask_t key_mask = {0};
+    p4i_drop_stats_actiondata_t data = {0};
+
+    for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; ++i) {
+        if (p4pd_entry_read(P4TBL_ID_P4I_DROP_STATS, i,
+                            &key, &key_mask, &data) == P4PD_SUCCESS) {
+            memcpy(&pkts,
+                   data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts,
+                   sizeof(data.action_u.p4i_drop_stats_p4i_drop_stats
+                              .drop_stats_pkts));
+            idrop_stats->drop_stats_pkts[key.control_metadata_p4i_drop_reason] =
+                pkts;
+        }
+    }
+
+    return;
+}
+
+sdk_ret_t
+switchport_impl::read_hw(oci_switchport_info_t *info) {
+    fill_spec_(&info->spec);
+    fill_idrop_stats_(&info->stats.idrop_stats);
+    return sdk::SDK_RET_OK;
+}
+
 /**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any

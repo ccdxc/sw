@@ -114,6 +114,8 @@ public:
      */
     virtual sdk_ret_t del_from_db(void) override;
 
+    static switchport_entry *find_in_db(void);
+
     /**
      * @brief    this method is called on new object that needs to replace the
      *           old version of the object in the DBs
@@ -133,6 +135,12 @@ public:
     virtual string key2str(void) const override {
         return "switchport-cfg";
     }
+
+    /**
+     * @brief     return impl instance of this tep object
+     * @return    impl instance of the tep object
+     */
+    impl_base *impl(void) { return impl_; }
 
     ipv4_addr_t ip_addr(void) const { return ip_addr_; }
     mac_addr_t& mac_addr(void) { return mac_addr_; }

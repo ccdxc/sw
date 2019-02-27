@@ -182,6 +182,11 @@ switchport_entry::del_from_db(void) {
     return SDK_RET_OK;
 }
 
+switchport_entry *
+switchport_entry::find_in_db(void) {
+    return switchport_db()->switchport_find();
+}
+
 /**
  * @brief    initiate delay deletion of this object
  */

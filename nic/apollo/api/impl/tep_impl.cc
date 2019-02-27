@@ -12,9 +12,6 @@
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/impl/tep_impl.hpp"
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
-#include "gen/p4gen/apollo/include/p4pd.h"
-#include "nic/apollo/p4/include/defines.h"
-#include "nic/sdk/lib/p4/p4_api.hpp"
 
 namespace api {
 namespace impl {
@@ -80,6 +77,63 @@ tep_impl::release_resources(api_base *api_obj) {
         tep_impl_db()->tep_tx_tbl()->remove(hw_id_);
     }
     return sdk::SDK_RET_INVALID_OP;
+}
+
+void
+tep_impl::fill_status_(tep_tx_actiondata_t *tep_tx_data,
+                       oci_tep_status_t *status)
+{
+    status->nh_id = nh_id_;
+    status->hw_id = hw_id_;
+
+    switch (tep_tx_data->action_id) {
+    case TEP_TX_GRE_TEP_TX_ID:
+        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_gre_tep_tx.dmac,
+               ETH_ADDR_LEN);
+        break;
+    case TEP_TX_MPLS_UDP_TEP_TX_ID:
+        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dmac,
+               ETH_ADDR_LEN);
+        break;
+    }
+}
+
+void
+tep_impl::fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
+                     tep_tx_actiondata_t *tep_tx_data, oci_tep_spec_t *spec)
+{
+    switch (nh_tx_data->action_u.nexthop_tx_nexthop_info.encap_type) {
+    case GW_ENCAP:
+        spec->type = OCI_ENCAP_TYPE_GW_ENCAP;
+        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
+        break;
+    case VNIC_ENCAP:
+        spec->type = OCI_ENCAP_TYPE_VNIC;
+        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
+        break;
+    }
+}
+
+sdk_ret_t
+tep_impl::read_hw(oci_tep_info_t *info) {
+    nexthop_tx_actiondata_t nh_tx_data;
+    tep_tx_actiondata_t tep_tx_data;
+
+    // TODO p4pd_entry_read does NOT seem to return proper data?
+    if (p4pd_entry_read(P4TBL_ID_NEXTHOP_TX, nh_id_, NULL, NULL,
+                        &nh_tx_data) != P4PD_SUCCESS) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    if (p4pd_entry_read(P4TBL_ID_TEP_TX, hw_id_, NULL, NULL,
+                        &tep_tx_data) != P4PD_SUCCESS) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    fill_spec_(&nh_tx_data, &tep_tx_data, &info->spec);
+    fill_status_(&tep_tx_data, &info->status);
+
+    return sdk::SDK_RET_OK;
 }
 
 /**

@@ -50,6 +50,17 @@ asicpd_copy_capri_table_info (p4_table_mem_layout_t *out,
 }
 
 sdk_ret_t
+asicpd_read_table_constant (uint32_t tableid, uint64_t *value)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    capri_table_constant_read(value, tbl_ctx.stage,
+                              tbl_ctx.stage_tableid,
+                              (tbl_ctx.gress == P4_GRESS_INGRESS));
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 asicpd_program_table_constant (uint32_t tableid, uint64_t const_value)
 {
     p4pd_table_properties_t       tbl_ctx;

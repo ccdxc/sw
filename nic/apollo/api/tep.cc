@@ -212,6 +212,11 @@ tep_entry::del_from_db(void) {
     return SDK_RET_OK;
 }
 
+tep_entry *
+tep_entry::find_in_db(oci_tep_key_t *key) {
+    return tep_db()->tep_find(key);
+}
+
 /**
  * @brief    initiate delay deletion of this object
  */

@@ -33,7 +33,7 @@ typedef struct oci_tep_key_s {
 } __PACK__ oci_tep_key_t;
 
 /// \brief TEP specification
-typedef struct oci_tep_s {
+typedef struct oci_tep_spec_s {
     oci_tep_key_t key;        ///< Key
     oci_encap_type_t type;    ///< Encapsulation Type
 } __PACK__ oci_tep_spec_t;

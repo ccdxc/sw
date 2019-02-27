@@ -51,6 +51,13 @@ public:
     ~switchport_impl() {}
 
     /**
+     * @brief read spec, statistics and status from hw tables
+     * @param[out] info pointer to switchport info
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read_hw(oci_switchport_info_t *info);
+
+    /**
      * @brief    program all h/w tables relevant to this object except stage 0
      *           table(s), if any
      * @param[in] obj_ctxt    transient state associated with this API
@@ -77,6 +84,19 @@ public:
      */
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
                                 obj_ctxt_t *obj_ctxt) override;
+
+private:
+    /**
+     * @brief Populate specification with hardware information
+     * @param[out] spec Specification
+     */
+    void fill_spec_(oci_switchport_spec_t *spec);
+
+    /**
+     * @brief Populate ingress drop stats with hardware information
+     * @param[out] idrop_stats Ingress drop statistics
+     */
+    void fill_idrop_stats_(oci_switchport_idrop_stats_t *idrop_stats);
 };
 
 /** @} */    // end of OCI_SWITCHPORT_IMPL
