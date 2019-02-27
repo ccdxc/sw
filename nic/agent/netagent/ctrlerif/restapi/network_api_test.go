@@ -118,8 +118,8 @@ func TestNetworkDelete(t *testing.T) {
 			Name:      "testDeleteNetwork",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
+			IPv4Subnet:  "10.1.3.0/24",
+			IPv4Gateway: "10.1.3.254",
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/networks/", &deleteData, &resp)

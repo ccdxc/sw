@@ -92,7 +92,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Name:      "preCreatedNetwork",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Subnet:  "10.1.2.0/24",
 			IPv4Gateway: "10.1.1.254",
 		},
 	}

@@ -73,6 +73,155 @@ func TestNetworkCreateDelete(t *testing.T) {
 	Assert(t, err != nil, "deleting non-existing network succeeded", ag)
 }
 
+func TestNetworkDuplicatePrefix(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+			VlanID:      42,
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+	tnt, err := ag.FindNetwork(nt.ObjectMeta)
+	AssertOk(t, err, "Network was not found in DB")
+	Assert(t, (tnt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network subnet did not match", tnt)
+
+	dupNt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "dupNet",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+			VlanID:      42,
+		},
+	}
+
+	// make create network call
+	err = ag.CreateNetwork(&dupNt)
+	Assert(t, err != nil, "Network Create with duplicate prefix succeeded")
+}
+
+func TestNetworkDuplicateEmptyPrefix(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			VlanID: 42,
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+	_, err = ag.FindNetwork(nt.ObjectMeta)
+	AssertOk(t, err, "Network was not found in DB")
+
+	dupNt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "dupNet",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			VlanID: 84,
+		},
+	}
+
+	// make create network call
+	err = ag.CreateNetwork(&dupNt)
+	AssertOk(t, err, "Network Create with empty prefixes should succeed")
+}
+
+func TestNetworkDuplicatePrefixAcrossDifferentNamespaces(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+			VlanID:      42,
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+	tnt, err := ag.FindNetwork(nt.ObjectMeta)
+	AssertOk(t, err, "Network was not found in DB")
+	Assert(t, (tnt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network subnet did not match", tnt)
+
+	ns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "newNamespace",
+		},
+		Spec: netproto.NamespaceSpec{
+			NamespaceType: "CUSTOMER",
+		},
+	}
+	err = ag.CreateNamespace(&ns)
+	AssertOk(t, err, "Namespace creation must be successful")
+
+	dupNt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "newNamespace",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+			VlanID:      42,
+		},
+	}
+
+	// make create network call
+	err = ag.CreateNetwork(&dupNt)
+	AssertOk(t, err, "Network Create with duplicate prefix across different namespaces must succeed")
+}
+
 func TestNetworkUpdate(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)

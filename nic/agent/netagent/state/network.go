@@ -47,6 +47,12 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 		return fmt.Errorf("must specify either vlan-id or vxlan-id, but not both. vlan-id: %v, vxlan-vni: %v", nt.Spec.VlanID, nt.Spec.VxlanVNI)
 	}
 
+	// reject duplicate network prefixes
+	if err = na.validateDuplicateNetworks(nt.Namespace, nt.Spec.IPv4Subnet); err != nil {
+		log.Errorf("Found duplicate network %v", nt.Spec.IPv4Subnet)
+		return err
+	}
+
 	nt.Status.NetworkID, err = na.Store.GetNextID(types.NetworkID)
 	if err != nil {
 		log.Errorf("Could not allocate network id. {%+v}", err)
@@ -202,4 +208,15 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 	err = na.Store.Delete(nt)
 
 	return err
+}
+
+func (na *Nagent) validateDuplicateNetworks(namespace, prefix string) (err error) {
+	for _, net := range na.ListNetwork() {
+		if len(net.Spec.IPv4Subnet) != 0 && net.Spec.IPv4Subnet == prefix && net.Namespace == namespace {
+			err = fmt.Errorf("found an existing network %v with prefix %v", net.Name, prefix)
+			return
+		}
+	}
+
+	return
 }
