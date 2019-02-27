@@ -217,7 +217,8 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
                                            oci_vnic_t *vnic_info,
                                            route_table *v4_route_table,
                                            route_table *v6_route_table,
-                                           policy *v4_policy, policy *v6_policy) {
+                                           policy *v4_policy,
+                                           policy *v6_policy) {
     sdk_ret_t                             ret;
     mem_addr_t                            addr;
     local_vnic_by_vlan_tx_actiondata_t    vnic_by_vlan_data = { 0 };
@@ -279,7 +280,7 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
     if (ret != SDK_RET_OK) {
         OCI_TRACE_ERR("Programming of LOCAL_VNIC_BY_VLAN_TX table failed, "
                       "api op %u, epoch %u, vnic %s , err %u", api_op, epoch,
-                      api_obj->key2str(), ret);
+                      api_obj->key2str().c_str(), ret);
     }
     return ret;
 }
@@ -349,8 +350,8 @@ vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
     if (ret != SDK_RET_OK) {
         OCI_TRACE_ERR("Programming of LOCAL_VNIC_BY_SLOT_RX table failed, "
                       "api op %u, epoch %u, vnic %s , err %u", api_op, epoch,
-                      api_obj->key2str(), ret);
-    }
+                          api_obj->key2str().c_str(), ret);
+        }
     return ret;
 }
 

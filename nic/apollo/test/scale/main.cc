@@ -278,7 +278,7 @@ static sdk_ret_t
 create_vnics (uint32_t num_vcns, uint32_t num_subnets,
               uint32_t num_vnics, uint16_t vlan_start)
 {
-    sdk_ret_t rv;
+    sdk_ret_t rv = SDK_RET_OK;
     oci_vnic_t oci_vnic;
     uint16_t vnic_key = 1;
 

@@ -102,8 +102,11 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     api::tep_entry       *tep;
 
     route_table_info = &obj_ctxt->api_params->route_table_info;
-    SDK_ASSERT_RETURN((route_table_info->num_routes > 0),
-                      sdk::SDK_RET_INVALID_ARG);
+    if (route_table_info->num_routes == 0) {
+        OCI_TRACE_WARN("Route table %u doesn't have any routes",
+                       route_table_info->key.id);
+        return SDK_RET_OK;
+    }
 
     /**< allocate memory for the library to build route table */
     rtable =
