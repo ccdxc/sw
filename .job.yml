@@ -32,6 +32,7 @@ references:
   - iota/test/venice
   - platform/drivers/linux
   - iota/test/venice/hwtest
+
 dependencies:
   test: nic
   test: platform
@@ -48,3 +49,5 @@ dependencies:
   venice: test
   venice: test/ci_targets/e2e
   test: test/ci_targets/e2e
+  nic/apollo: nic
+  nic: nic/apollo

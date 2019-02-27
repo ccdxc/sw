@@ -3,7 +3,7 @@
 * Except for the protobuf generated files, don't use camel case for anything
   including class names, function names, variable names etc.
 * For global variables, use g_ prefix
-* For constants (that are not macros), you can use k_ prefix
+* For constants (that are not macros), you can use k_ prefix.
 * For private variables in classes and structures, use _ as suffix and expose
   get/set methods
 * Don't expose a constructor for a class as is, use factory method instead.
