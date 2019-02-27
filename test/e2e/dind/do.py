@@ -197,13 +197,13 @@ class NaplesNode(Node):
             runCommand("""docker exec -d {} nmd -hostif eth1 -hostname {}-host -mode host -standalone=false  & """.format(self.name, self.name))
             runCommand("""docker exec -d {} make e2e-sanity-hal-bringup""".format(self.name))
             runCommand("""docker exec -d {} bash -c "agent/netagent/scripts/wait-for-hal.sh && netagent -npm pen-npm -resolver-urls {}:9009 -hostif eth1 -datapath hal -mode managed &" """.format(self.name, self.clustervip))
-            runCommand("""docker exec -d {} tmagent -resolver-urls {}:9009 -hostif eth1 -mode network  &""".format(self.name, self.clustervip))
+            runCommand("""docker exec -d {} tmagent -hostif eth1 &""".format(self.name))
         else:
             runCommand("""docker exec -d {} /fakedelphihub  & """.format(self.name))
             time.sleep(3)
             runCommand("""docker exec -d {} /nmd -hostif eth1 -primary-mac 44:44:44:44:00:{:02d} -hostname {}-host -mode host -updinterval 2 -standalone=false & """.format(self.name, self.containerIndex, self.name))
             runCommand("""docker exec -d {} /netagent -datapath mock -disabletsa &""".format(self.name))
-            runCommand("""docker exec -d {} /tmagent -resolver-urls {}:9009 -hostif eth1 -primary-mac 44:44:44:44:00:{:02d} -mode network  &""".format(self.name, self.clustervip, self.containerIndex))
+            runCommand("""docker exec -d {} /tmagent -hostif eth1 -primary-mac 44:44:44:44:00:{:02d} &""".format(self.name, self.containerIndex))
             runCommand("""docker exec -d {} /nevtsproxy -mode network -resolver-urls {}:9009 &""".format(self.name, self.clustervip))
 
 def initCluster(nodeAddr, quorumNodes, clustervip):

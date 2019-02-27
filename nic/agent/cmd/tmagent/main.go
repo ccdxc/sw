@@ -32,13 +32,13 @@ const fwlogIpcShm = "/fwlog_ipc_shm"
 
 // TelemetryAgent keeps the telementry agent state
 type TelemetryAgent struct {
-	ctx          context.Context
-	tpState      *state.PolicyState
-	tpClient     *ctrlerif.TpClient
-	nodeUUID     string
-	resolverURLs string
-	mode         string
-	restServer   *restapi.RestServer
+	ctx            context.Context
+	tpState        *state.PolicyState
+	tpClient       *ctrlerif.TpClient
+	nodeUUID       string
+	resolverConfig *resolver.Config
+	mode           string
+	restServer     *restapi.RestServer
 }
 
 type service struct {
@@ -82,6 +82,7 @@ func (s *service) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
 
 func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 	log.Infof("Tmagent reactor called with %v", obj)
+	s.tmagent.mode = obj.NaplesMode.String()
 	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
 		var controllers []string
 		var err error
@@ -101,6 +102,8 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			Name:    globals.Tmagent,
 			Servers: controllers,
 		}
+
+		s.tmagent.resolverConfig = cfg
 
 		// start tsdb export
 		rc := resolver.New(cfg)
@@ -152,11 +155,9 @@ func main() {
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		primaryMAC      = flag.String("primary-mac", "", "Primary MAC address")
 		hostIf          = flag.String("hostif", "ntrunk0", "Host facing interface")
-		mode            = flag.String("mode", "host", "specify the agent mode either host or network")
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tmagent)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
-		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
-		restURL         = flag.String("rest-url", ":"+globals.TmAGENTRestPort, "specify Agent REST URL")
+		restURL         = flag.String("rest-url", "127.0.0.1:"+globals.TmAGENTRestPort, "specify telemetry agent REST URL")
 	)
 	flag.Parse()
 
@@ -200,10 +201,8 @@ func main() {
 	defer cancel()
 
 	tmAgent := &TelemetryAgent{
-		ctx:          ctx,
-		nodeUUID:     macAddr.String(),
-		resolverURLs: *resolverURLs,
-		mode:         *mode,
+		ctx:      ctx,
+		nodeUUID: macAddr.String(),
 	}
 
 	var delphiService = &service{

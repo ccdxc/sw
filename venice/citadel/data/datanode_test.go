@@ -1646,7 +1646,7 @@ func TestAggQuery(t *testing.T) {
 			}
 		}
 		return true, nil
-	}, "failed to query in replicas", "1s", "30s")
+	}, "failed to query in replicas", "1s", "60s")
 
 	// execute aggregated query
 	cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
