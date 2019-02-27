@@ -20,6 +20,11 @@
 #include "nic/include/fte.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "gen/proto/ftestats/ftestats.delphi.hpp"
 
 using telemetry::MirrorSessionSpec;
 using session::FlowInfo;
@@ -55,7 +60,7 @@ using namespace sdk::lib;
 namespace hal {
 
 thread_local void *t_session_timer;
-session_stats_t  g_session_stats = {};
+session_stats_t  *g_session_stats;
 
 
 #define SESSION_SW_DEFAULT_TIMEOUT                 (3600)
@@ -72,6 +77,8 @@ session_stats_t  g_session_stats = {};
 #define HAL_MAX_SESSION_PER_ENQ                     5
 #define HAL_MAX_DATA_THREAD                        (g_hal_state->oper_db()->max_data_threads())
 #define HAL_MAX_ERRORS                              255
+#define HAL_SESSION_STATS_SHIFT                     7
+#define HAL_SESSION_STATS_PTR(fte)                 (g_session_stats + (fte << HAL_SESSION_STATS_SHIFT))
 
 void *
 session_get_handle_key_func (void *entry)
@@ -1217,12 +1224,12 @@ flow_create_fte (const flow_cfg_t *cfg,
     return flow;
 }
 
-void incr_global_session_tcp_rst_stats (void) {
-    SDK_ATOMIC_INC_UINT64(&g_session_stats.num_tcp_rst_sent, 1);
+void incr_global_session_tcp_rst_stats (uint8_t fte_id) {
+    HAL_SESSION_STATS_PTR(fte_id)->num_tcp_rst_sent += 1;
 }
 
-void incr_global_session_icmp_error_stats (void) {
-    SDK_ATOMIC_INC_UINT64(&g_session_stats.num_icmp_error_sent, 1);
+void incr_global_session_icmp_error_stats (uint8_t fte_id) {
+    HAL_SESSION_STATS_PTR(fte_id)->num_icmp_error_sent += 1;
 }
 
 inline void
@@ -1230,19 +1237,20 @@ update_global_session_stats (session_t *session, bool decr=false)
 {
     flow_key_t key = session->iflow->config.key;
 
-    if (session->iflow->pgm_attrs.drop)
-        SDK_ATOMIC_INC_UINT64(&g_session_stats.drop_sessions, (decr)?(-1):1);
+    if (session->iflow->pgm_attrs.drop) {
+        HAL_SESSION_STATS_PTR(session->fte_id)->drop_sessions += 1;
+    }
 
     if (key.flow_type == FLOW_TYPE_L2) {
-        SDK_ATOMIC_INC_UINT64(&g_session_stats.l2_sessions, (decr)?(-1):1);
+        HAL_SESSION_STATS_PTR(session->fte_id)->l2_sessions += (decr)?(-1):1;
     } else if (key.flow_type == FLOW_TYPE_V4 ||
                key.flow_type == FLOW_TYPE_V6) {
         if (key.proto == types::IPPROTO_TCP) {
-            SDK_ATOMIC_INC_UINT64(&g_session_stats.tcp_sessions, (decr)?(-1):1);
+            HAL_SESSION_STATS_PTR(session->fte_id)->tcp_sessions += (decr)?(-1):1;
         } else if (key.proto == types::IPPROTO_UDP) {
-            SDK_ATOMIC_INC_UINT64(&g_session_stats.udp_sessions, (decr)?(-1):1);
+            HAL_SESSION_STATS_PTR(session->fte_id)->udp_sessions += (decr)?(-1):1;
         } else if (key.proto == types::IPPROTO_ICMP) {
-            SDK_ATOMIC_INC_UINT64(&g_session_stats.icmp_sessions, (decr)?(-1):1);
+            HAL_SESSION_STATS_PTR(session->fte_id)->icmp_sessions += (decr)?(-1):1;
         }
     }
 }
@@ -1369,7 +1377,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     if (session && ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session create failure, err={}", ret);
         session_cleanup(session);
-        SDK_ATOMIC_INC_UINT64(&g_session_stats.num_session_create_err, 1);
+        HAL_SESSION_STATS_PTR(session->fte_id)->num_session_create_err += 1;
     } else {
         update_global_session_stats(session);
     }
@@ -1925,7 +1933,7 @@ build_and_send_tcp_pkt (void *data)
         SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
     }
 
-    SDK_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1);
+    HAL_SESSION_STATS_PTR(session->fte_id)->aged_sessions += 1;
     // time to clean up the session
     ret = fte::session_delete_in_fte(session->hal_handle);
     if (ret != HAL_RET_OK) {
@@ -2058,7 +2066,7 @@ session_age_cb (void *entry, void *ctxt)
             if (args->num_del_sess[session->fte_id] == HAL_SESSIONS_TO_SCAN_PER_INTVL) 
                 return true;
 
-            SDK_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1); 
+            HAL_SESSION_STATS_PTR(session->fte_id)->aged_sessions += 1;
         }
     }
 
@@ -2186,7 +2194,37 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 hal_ret_t
 session_init (hal_cfg_t *hal_cfg)
 {
+    if (hal::is_platform_type_sim()) {
+        // SIM
+        // Libmodel client doesnt have support to map hbm to shared memory today so
+        // we cannot work with virtual address. Hence these stats will not be registered
+        // with delphi until that is done
+        g_session_stats = (session_stats_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESSION_STATS,
+                                   (sizeof(session_stats_t)*hal::g_hal_cfg.num_data_cores));
+        SDK_ASSERT(g_session_stats != NULL);
+         
+    } else {
+        sdk::types::mem_addr_t vaddr;
+        sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_SESSION_SUMMARY_STATS);
+        HAL_TRACE_DEBUG("Start addr: {:p}", start_addr);
+        SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
 
+        for (uint32_t fte = 0; fte < hal::g_hal_cfg.num_data_cores; fte++) {    
+             //Register with Delphi
+             auto session_global_stats =
+                 delphi::objects::SessionSummaryMetrics::NewSessionSummaryMetrics(fte, start_addr);
+             SDK_ASSERT(session_global_stats != NULL);
+    
+             sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
+             SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
+
+             if (!fte)
+                 g_session_stats = (session_stats_t *)vaddr;
+
+             start_addr += 1 << HAL_SESSION_STATS_SHIFT;
+        }
+    }
+     
     g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_cores);
 
     // wait until the periodic thread is ready
@@ -2476,7 +2514,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
         state.rflow_state.state < session::FLOW_TCP_STATE_ESTABLISHED) {
         // session is not in established state yet.
         // Cleanup the session
-        SDK_ATOMIC_INC_UINT64(&g_session_stats.num_cxnsetup_timeout, 1);
+        HAL_SESSION_STATS_PTR(session->fte_id)->num_cxnsetup_timeout += 1;
         ret = fte::session_delete_async(session);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete session {}",
@@ -2686,15 +2724,15 @@ system_fte_stats_get(SystemResponse *rsp)
         per_fte_stats = fte::fte_stats_get(i);
         fte_stats = fte_global_stats->add_fte_stats_info();
 
-        fte_stats->set_conn_per_second(per_fte_stats.cps);
-        fte_stats->set_max_conn_per_sec(per_fte_stats.cps_hwm);
-        fte_stats->set_flow_miss_pkts(per_fte_stats.flow_miss_pkts);
-        fte_stats->set_redir_pkts(per_fte_stats.redirect_pkts);
-        fte_stats->set_cflow_pkts(per_fte_stats.cflow_pkts);
-        fte_stats->set_tcp_close_pkts(per_fte_stats.tcp_close_pkts);
-        fte_stats->set_tls_proxy_pkts(per_fte_stats.tls_proxy_pkts);
-        fte_stats->set_softq_reqs(per_fte_stats.softq_req);
-        fte_stats->set_queued_tx_pkts(per_fte_stats.queued_tx_pkts);
+        fte_stats->set_conn_per_second(per_fte_stats.fte_hbm_stats->cpsstats.cps);
+        fte_stats->set_max_conn_per_sec(per_fte_stats.fte_hbm_stats->cpsstats.cps_hwm);
+        fte_stats->set_flow_miss_pkts(per_fte_stats.fte_hbm_stats->qstats.flow_miss_pkts);
+        fte_stats->set_redir_pkts(per_fte_stats.fte_hbm_stats->qstats.redirect_pkts);
+        fte_stats->set_cflow_pkts(per_fte_stats.fte_hbm_stats->qstats.cflow_pkts);
+        fte_stats->set_tcp_close_pkts(per_fte_stats.fte_hbm_stats->qstats.tcp_close_pkts);
+        fte_stats->set_tls_proxy_pkts(per_fte_stats.fte_hbm_stats->qstats.tls_proxy_pkts);
+        fte_stats->set_softq_reqs(per_fte_stats.fte_hbm_stats->qstats.softq_req);
+        fte_stats->set_queued_tx_pkts(per_fte_stats.fte_hbm_stats->qstats.queued_tx_pkts);
 
         for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
             if (std::strcmp(HAL_RET_ENTRIES_str((hal_ret_t)idx), "unknown")) {
@@ -2727,19 +2765,33 @@ system_fte_stats_get(SystemResponse *rsp)
 hal_ret_t
 system_session_summary_get(SystemResponse *rsp)
 {
+    session_stats_t      session_summary = {0};
     SessionSummaryStats *session_stats = NULL;
 
+    for (uint32_t fte = 0; fte < hal::g_hal_cfg.num_data_cores; fte++) {
+        session_summary.l2_sessions += HAL_SESSION_STATS_PTR(fte)->l2_sessions;
+        session_summary.tcp_sessions += HAL_SESSION_STATS_PTR(fte)->tcp_sessions;
+        session_summary.udp_sessions += HAL_SESSION_STATS_PTR(fte)->udp_sessions;
+        session_summary.icmp_sessions += HAL_SESSION_STATS_PTR(fte)->icmp_sessions;
+        session_summary.drop_sessions += HAL_SESSION_STATS_PTR(fte)->drop_sessions;
+        session_summary.aged_sessions += HAL_SESSION_STATS_PTR(fte)->aged_sessions;
+        session_summary.num_tcp_rst_sent += HAL_SESSION_STATS_PTR(fte)->num_tcp_rst_sent;
+        session_summary.num_icmp_error_sent += HAL_SESSION_STATS_PTR(fte)->num_icmp_error_sent;
+        session_summary.num_cxnsetup_timeout += HAL_SESSION_STATS_PTR(fte)->num_cxnsetup_timeout;
+        session_summary.num_session_create_err += HAL_SESSION_STATS_PTR(fte)->num_session_create_err;
+    }
+
     session_stats = rsp->mutable_stats()->mutable_session_stats();
-    session_stats->set_l2_sessions(g_session_stats.l2_sessions);
-    session_stats->set_tcp_sessions(g_session_stats.tcp_sessions);
-    session_stats->set_udp_sessions(g_session_stats.udp_sessions);
-    session_stats->set_icmp_sessions(g_session_stats.icmp_sessions);
-    session_stats->set_drop_sessions(g_session_stats.drop_sessions);
-    session_stats->set_aged_sessions(g_session_stats.aged_sessions);
-    session_stats->set_num_tcp_reset_sent(g_session_stats.num_tcp_rst_sent);
-    session_stats->set_num_icmp_error_sent(g_session_stats.num_icmp_error_sent);
-    session_stats->set_num_connection_timeout_sessions(g_session_stats.num_cxnsetup_timeout);
-    session_stats->set_num_session_create_errors(g_session_stats.num_session_create_err);
+    session_stats->set_l2_sessions(session_summary.l2_sessions);
+    session_stats->set_tcp_sessions(session_summary.tcp_sessions);
+    session_stats->set_udp_sessions(session_summary.udp_sessions);
+    session_stats->set_icmp_sessions(session_summary.icmp_sessions);
+    session_stats->set_drop_sessions(session_summary.drop_sessions);
+    session_stats->set_aged_sessions(session_summary.aged_sessions);
+    session_stats->set_num_tcp_reset_sent(session_summary.num_tcp_rst_sent);
+    session_stats->set_num_icmp_error_sent(session_summary.num_icmp_error_sent);
+    session_stats->set_num_connection_timeout_sessions(session_summary.num_cxnsetup_timeout);
+    session_stats->set_num_session_create_errors(session_summary.num_session_create_err);
 
     return HAL_RET_OK;
 }

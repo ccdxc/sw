@@ -16,6 +16,15 @@
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "lib/thread/thread.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
+#include "gen/proto/delphi.pb.h"
+#include "gen/proto/ftestats/ftestats.delphi.hpp"
+
+#define FTE_EXPORT_STATS_SIZE     7
+#define FTE_LIFQ_METRICS_OFFSET   16
 
 namespace fte {
 
@@ -248,7 +257,35 @@ inst_t::inst_t(uint8_t fte_id) :
     iflow_(NULL),
     rflow_(NULL)
 {
-    bzero((void *)&stats_, sizeof(fte_stats_t));
+    if (hal::is_platform_type_sim()) {
+        // SIM
+        // Libmodel client doesnt have support to map hbm to shared memory today so
+        // we cannot work with virtual address. Hence these stats will not be registered
+        // with delphi until that is done
+        stats_.fte_hbm_stats = (fte_hbm_stats_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(fte_hbm_stats_t));
+        SDK_ASSERT(stats_.fte_hbm_stats != NULL);
+    } else { 
+        sdk::types::mem_addr_t vaddr;
+        sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_PER_FTE_STATS);
+        HAL_TRACE_DEBUG("Start address: {:p}", (void *)start_addr);
+        SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
+        
+        bzero((void *)&stats_, sizeof(fte_stats_t));
+        start_addr += fte_id << FTE_EXPORT_STATS_SIZE;
+        // Register with Delphi with the physical address
+        auto fte_cps_stats =
+                delphi::objects::FteCPSMetrics::NewFteCPSMetrics(id_, start_addr);
+        SDK_ASSERT(fte_cps_stats != NULL);
+
+        auto fte_lifq_stats =
+                 delphi::objects::FteLifQMetrics::NewFteLifQMetrics(id_, (start_addr + FTE_LIFQ_METRICS_OFFSET));
+        SDK_ASSERT(fte_lifq_stats != NULL);
+
+        sdk::lib::pal_ret_t pal_ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
+        HAL_TRACE_DEBUG("Pal ret: {}", pal_ret);
+        SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
+        stats_.fte_hbm_stats = (fte_hbm_stats_t *)vaddr;
+    } 
 }
 
 //------------------------------------------------------------------------------
@@ -380,7 +417,7 @@ void inst_t::process_softq()
 
     if (softq_->dequeue(&op, &data)) {
         //Increment stats
-        stats_.softq_req++;
+        stats_.fte_hbm_stats->qstats.softq_req++;
         compute_cps();
 
         //HAL_TRACE_DEBUG("fte: softq dequeue fn={:p} data={:p} softq_req={}", op, data, stats_.softq_req);
@@ -485,18 +522,19 @@ void inst_t::incr_fte_error(hal_ret_t rc)
      sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
 
      if (time_diff > TIME_NSECS_PER_SEC) {
-         stats_.cps = t_rx_pkts;
+         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts; 
          t_old_ts = t_cur_ts;
          t_rx_pkts = 1;
      } else if (time_diff == TIME_NSECS_PER_SEC) {
-         stats_.cps = ++t_rx_pkts;
+         stats_.fte_hbm_stats->cpsstats.cps = ++t_rx_pkts;
          t_old_ts = t_cur_ts;
      } else {
          t_rx_pkts++;
      }
 
      // Record the Max. CPS we've done
-     if (stats_.cps > stats_.cps_hwm) stats_.cps_hwm = stats_.cps;
+     if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm) 
+         stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
 
  }
 
@@ -516,19 +554,20 @@ void inst_t::incr_fte_error(hal_ret_t rc)
      sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
 
      if (time_diff > TIME_NSECS_PER_SEC) {
-         stats_.cps = t_rx_pkts;
+         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts; 
          t_old_ts = t_cur_ts;
          t_rx_pkts = pktcount;
      } else if (time_diff == TIME_NSECS_PER_SEC) {
          t_rx_pkts += pktcount;
-         stats_.cps = t_rx_pkts;
+         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts;
          t_old_ts = t_cur_ts;
      } else {
          t_rx_pkts += pktcount;
      }
 
      // Record the Max. CPS we've done
-     if (stats_.cps > stats_.cps_hwm) stats_.cps_hwm = stats_.cps;
+     if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm) 
+         stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
 
  }
 
@@ -543,7 +582,7 @@ void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
      */
     if (bypass_fte_ && !cpu_rxhdr) {
         compute_cps();
-        stats_.flow_miss_pkts++;
+        stats_.fte_hbm_stats->qstats.flow_miss_pkts++;
 	return;
     }
 
@@ -552,17 +591,17 @@ void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
     compute_cps();
 
     if (lifq == FLOW_MISS_LIFQ) {
-        stats_.flow_miss_pkts++;
+        stats_.fte_hbm_stats->qstats.flow_miss_pkts++;
     } else if (lifq == NACL_REDIRECT_LIFQ) {
-        stats_.redirect_pkts++;
+        stats_.fte_hbm_stats->qstats.redirect_pkts++;
     } else if (lifq == ALG_CFLOW_LIFQ) {
-        stats_.cflow_pkts++;
+        stats_.fte_hbm_stats->qstats.cflow_pkts++;
     } else if (lifq == TCP_CLOSE_LIFQ) {
-        stats_.tcp_close_pkts++;
+        stats_.fte_hbm_stats->qstats.tcp_close_pkts++;
     } else if (lifq == TLS_PROXY_LIFQ) {
-        stats_.tls_proxy_pkts++;
+        stats_.fte_hbm_stats->qstats.tls_proxy_pkts++;
     } else if (lifq == FTE_SPAN_LIFQ) {
-        stats_.fte_span_pkts++;
+        stats_.fte_hbm_stats->qstats.fte_span_pkts++;
     }
 }
 
@@ -578,7 +617,7 @@ void inst_t::update_rx_stats_batch(uint16_t pktcount)
     if (!bypass_fte_) return;
 
     compute_cps_batch(pktcount);
-    stats_.flow_miss_pkts += pktcount;
+    stats_.fte_hbm_stats->qstats.flow_miss_pkts += pktcount;
     return;
 }
 
@@ -588,7 +627,7 @@ void inst_t::update_rx_stats_batch(uint16_t pktcount)
 // ----------------------------------------------------------------------------
 void inst_t::update_tx_stats(uint16_t pktcount)
 {
-    stats_.queued_tx_pkts += pktcount;
+    stats_.fte_hbm_stats->qstats.queued_tx_pkts += pktcount;
 }
 
 void free_flow_miss_pkt(uint8_t * pkt)
@@ -864,11 +903,11 @@ fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
     //Fill common data
     fte_txrx_stats_t txrx_stats;
 
-    txrx_stats.flow_miss_pkts = stats_.flow_miss_pkts;
-    txrx_stats.redirect_pkts = stats_.redirect_pkts;
-    txrx_stats.cflow_pkts    = stats_.cflow_pkts;
-    txrx_stats.tcp_close_pkts = stats_.tcp_close_pkts;
-    txrx_stats.tls_proxy_pkts = stats_.tls_proxy_pkts;
+    txrx_stats.flow_miss_pkts = stats_.fte_hbm_stats->qstats.flow_miss_pkts;
+    txrx_stats.redirect_pkts = stats_.fte_hbm_stats->qstats.redirect_pkts;
+    txrx_stats.cflow_pkts    = stats_.fte_hbm_stats->qstats.cflow_pkts;
+    txrx_stats.tcp_close_pkts = stats_.fte_hbm_stats->qstats.tcp_close_pkts;
+    txrx_stats.tls_proxy_pkts = stats_.fte_hbm_stats->qstats.tls_proxy_pkts;
 
     //Get RX stats
     for (uint8_t i = 0; i < ctx->rx.num_queues; i++) {
@@ -960,6 +999,7 @@ done:
     return fn_ctx.fte_stats;
 }
 
+#if 0
 fte_stats_t& fte_stats_t::operator+=(const fte_stats_t& rhs) {
     cps += rhs.cps;
     flow_miss_pkts += rhs.flow_miss_pkts;
@@ -980,17 +1020,18 @@ fte_stats_t& fte_stats_t::operator+=(const fte_stats_t& rhs) {
 
     return *this;
 }
+#endif
 
 std::ostream& operator<<(std::ostream& os, const fte_stats_t& val)
 {
-    os << "{cps=" << val.cps;
-    os << " ,flow_miss_pkts=" << val.flow_miss_pkts;
-    os << " ,redirect_pkts=" << val.redirect_pkts;
-    os << " ,cflow_pkts=" << val.cflow_pkts;
-    os << " ,tcp_close_pkts=" << val.tcp_close_pkts;
-    os << " ,tls_proxy_pkts=" << val.tls_proxy_pkts;
-    os << " ,softq_req=" <<  val.softq_req;
-    os << " ,queued_tx_pkts=" << val.queued_tx_pkts;
+    os << "{cps=" << val.fte_hbm_stats->cpsstats.cps;
+    os << " ,flow_miss_pkts=" << val.fte_hbm_stats->qstats.flow_miss_pkts;
+    os << " ,redirect_pkts=" << val.fte_hbm_stats->qstats.redirect_pkts;
+    os << " ,cflow_pkts=" << val.fte_hbm_stats->qstats.cflow_pkts;
+    os << " ,tcp_close_pkts=" << val.fte_hbm_stats->qstats.tcp_close_pkts;
+    os << " ,tls_proxy_pkts=" << val.fte_hbm_stats->qstats.tls_proxy_pkts;
+    os << " ,softq_req=" <<  val.fte_hbm_stats->qstats.softq_req;
+    os << " ,queued_tx_pkts=" << val.fte_hbm_stats->qstats.queued_tx_pkts;
     os << " { FTE Errors: ";
     for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
         if (val.fte_errors[idx]) {

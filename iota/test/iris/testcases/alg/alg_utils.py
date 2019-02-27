@@ -79,9 +79,8 @@ def get_timeout(timeout):
 
 def get_sess_handle(cmd):
     yaml_out = yaml.load_all(cmd.stdout)
-    print(type(yaml_out))
     for data in yaml_out:
-        if data is not None and isinstance(object, (list,)):
+        if data is not None and isinstance(data, list):
              return data['status']['sessionhandle']
     return 0
 

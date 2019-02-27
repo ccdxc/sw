@@ -107,7 +107,7 @@ TEST_F(fte_session_test, fte_stats)
     uint64_t  softq_req = 0;
 
     stats = fte::fte_stats_get(FTE_ID);
-    softq_req = stats.softq_req;
+    softq_req = stats.fte_hbm_stats->qstats.softq_req;
     cout << "softq req: " << softq_req++ << endl;
 
     for (uint32_t sport = 1; sport <= num_flows; sport++) {
@@ -126,8 +126,8 @@ TEST_F(fte_session_test, fte_stats)
         }
     }
     stats = fte::fte_stats_get(FTE_ID);
-    EXPECT_NE(stats.cps, 0);
-    EXPECT_EQ(stats.softq_req, softq_req+50);
-    cout << "CPS: " << stats.cps << endl;
-    cout << "Max. CPS: " << stats.cps_hwm << endl;
+    EXPECT_NE(stats.fte_hbm_stats->cpsstats.cps, 0);
+    EXPECT_EQ(stats.fte_hbm_stats->qstats.softq_req, softq_req+50);
+    cout << "CPS: " << stats.fte_hbm_stats->cpsstats.cps << endl;
+    cout << "Max. CPS: " << stats.fte_hbm_stats->cpsstats.cps_hwm << endl;
 }

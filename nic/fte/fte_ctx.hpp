@@ -466,21 +466,27 @@ typedef struct fte_txrx_stats_s {
     hal::pd::cpupkt_qinfo_stats_t qinfo[FTE_MAX_CPU_QUEUES];
 } __PACK__ fte_txrx_stats_t;
 
+typedef struct fte_hbm_stats_ {
+    struct {
+        uint64_t          cps;                         // Number of connections per second processed by this FTE
+        uint64_t          cps_hwm;                     // Max. Number of connections per second processed by this FTE at any time
+    } __PACK__ cpsstats;
+    struct {
+        uint64_t          flow_miss_pkts;              // Number of flow miss packets processed by this FTE
+        uint64_t          redirect_pkts;               // Number of NACL redirect packets processed by this FTE
+        uint64_t          cflow_pkts;                  // Number of ALG control flow packets processed by this FTE
+        uint64_t          tcp_close_pkts;              // Number of TCP close packets processed by this FTE
+        uint64_t          tls_proxy_pkts;              // Number of TLS proxy packets processed by this FTE
+        uint64_t          fte_span_pkts;               // Number of FTE Span packets processed by this FTE
+        uint64_t          softq_req;                   // Number of softq requests processed by this FTE
+        uint64_t          queued_tx_pkts;              // Number of packets queued from this FTE to be transmitted
+    } __PACK__ qstats;
+} __PACK__ fte_hbm_stats_t;
+
 struct fte_stats_t {
-    uint64_t              cps;                         // Number of connections per second processed by this FTE
-    uint64_t              cps_hwm;                     // Max. Number of connections per second processed by this FTE at any time
-    uint64_t              flow_miss_pkts;              // Number of flow miss packets processed by this FTE
-    uint64_t              redirect_pkts;               // Number of NACL redirect packets processed by this FTE
-    uint64_t              cflow_pkts;                  // Number of ALG control flow packets processed by this FTE
-    uint64_t              tcp_close_pkts;              // Number of TCP close packets processed by this FTE
-    uint64_t              tls_proxy_pkts;              // Number of TLS proxy packets processed by this FTE
-    uint64_t              fte_span_pkts;               // Number of FTE Span packets processed by this FTE
-    uint64_t              softq_req;                   // Number of softq requests processed by this FTE
-    uint64_t              queued_tx_pkts;              // Number of packets queued from this FTE to be transmitted
+    fte_hbm_stats_t      *fte_hbm_stats;               // FTE CPS & Q stats
     uint64_t              fte_errors[HAL_RET_ERR];     // Number of FTE errors encountered
     fte_feature_stats_t   feature_stats[MAX_FEATURES]; // Number of drops per feature
-public:
-    fte_stats_t& operator+=(const fte_stats_t& rhs);
 };
 std::ostream& operator<<(std::ostream& os, const fte_stats_t& val);
 

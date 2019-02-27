@@ -401,7 +401,7 @@ typedef struct session_stats_ {
     uint64_t    num_icmp_error_sent;       // no. of ICMP errors sent as a result of SFW Reject
     uint64_t    num_cxnsetup_timeout;      // no. of sessions that timed out at connection setup
     uint64_t    num_session_create_err;    // no. of session create errors
-} session_stats_t;
+} __PACK__ session_stats_t;
 
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_SESSIONS                             524288
@@ -456,8 +456,8 @@ hal_ret_t system_fte_txrx_stats_get (SystemResponse *rsp);
 hal_ret_t system_session_summary_get (SystemResponse *rsp);
 hal_ret_t session_delete (session::SessionDeleteRequest& spec,
                       session::SessionDeleteResponseMsg *rsp);
-void incr_global_session_tcp_rst_stats (void);
-void incr_global_session_icmp_error_stats (void);
+void incr_global_session_tcp_rst_stats (uint8_t fte_id);
+void incr_global_session_icmp_error_stats (uint8_t fte_id);
 hal_ret_t session_handle_upgrade (void);
 
 }    // namespace hal

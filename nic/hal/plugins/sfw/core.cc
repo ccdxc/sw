@@ -286,9 +286,9 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
                     net_sfw_free_reject_pkt);
 
     if (ctx.key().proto == IP_PROTO_TCP) {
-        hal::incr_global_session_tcp_rst_stats();
+        hal::incr_global_session_tcp_rst_stats(fte::fte_id());
     } else if (ctx.key().proto == IP_PROTO_UDP) {
-        hal::incr_global_session_icmp_error_stats();
+        hal::incr_global_session_icmp_error_stats(fte::fte_id());
     } 
 }
 

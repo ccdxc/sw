@@ -462,6 +462,16 @@
         {
             "name": "tcp_ooo_queue",
             "size": "8192K"
+        },
+        {
+            "name": "session-summary-stats",
+            "size": "512B",
+            "reset": true
+        },
+        {
+            "name": "fte-stats",
+            "size": "512B",
+            "reset": true
         }
     ]
 }

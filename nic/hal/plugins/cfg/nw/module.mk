@@ -2,4 +2,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = libcfg_plugin_nw.so
 MODULE_PIPELINE = iris gft
+MODULE_INCS    = ${BLD_PROTOGEN_DIR}/
 include ${MKDEFS}/post.mk

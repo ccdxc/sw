@@ -261,6 +261,7 @@ enum {
     HAL_MEM_ALLOC_FTE_STATS,
     HAL_MEM_ALLOC_SESS_UPD_DATA,
     HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN,
+    HAL_MEM_ALLOC_SESSION_STATS,
     HAL_MEM_ALLOC_ALL = 0xFFFFFFFF,    // reserved and shouldn't be used
 };
 
