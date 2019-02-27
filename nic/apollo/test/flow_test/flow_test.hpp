@@ -165,7 +165,7 @@ public:
     }
 
     void add_local_ep(uint32_t vcn_id, uint32_t ipaddr) {
-        assert(vcn_id && vcn_id <= MAX_VCNS);
+        assert(vcn_id && vcn_id < MAX_VCNS);
         assert(epdb[vcn_id].lcount < MAX_LOCAL_EPS);
         epdb[vcn_id].valid = 1;
         epdb[vcn_id].vcn_id = vcn_id;
@@ -175,7 +175,7 @@ public:
     }
 
     void add_remote_ep(uint32_t vcn_id, uint32_t ipaddr) {
-        assert(vcn_id && vcn_id <= MAX_VCNS);
+        assert(vcn_id && vcn_id < MAX_VCNS);
         assert(epdb[vcn_id].rcount < MAX_REMOTE_EPS);
         epdb[vcn_id].valid = 1;
         epdb[vcn_id].vcn_id = vcn_id;
@@ -204,7 +204,7 @@ public:
     }
 
     void generate_dummy_epdb() {
-        for (uint32_t vcn = 1; vcn <= MAX_VCNS; vcn++) {
+        for (uint32_t vcn = 1; vcn < MAX_VCNS; vcn++) {
             epdb[vcn].vcn_id = vcn;
             for (uint32_t lid = 0; lid < MAX_LOCAL_EPS; lid++) {
                 add_local_ep(vcn, 0x0a000001 + lid);
@@ -228,7 +228,7 @@ public:
         memset(&swkey, 0, sizeof(swkey));
         memset(&swappdata, 0, sizeof(swappdata));
         swkey.key_metadata_ktype = 1;
-        for (uint32_t vcn = 1; vcn <= MAX_VCNS; vcn++) {
+        for (uint32_t vcn = 1; vcn < MAX_VCNS; vcn++) {
             generate_ep_pairs(vcn);
             for (i = 0; i < MAX_EP_PAIRS_PER_VCN ; i+=2) {
                 local_port = alloc_sport(proto);
