@@ -239,6 +239,7 @@ func (ros *RolloutState) setServicePhase(name, reason, message string, phase rop
 	ros.saveStatus()
 }
 func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {
+	ros.Mutex.Lock()
 	index := -1
 	for i, curStatus := range ros.Status.SmartNICsStatus {
 		if curStatus.Name == name {
@@ -274,4 +275,5 @@ func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase ro
 	ros.Status.SmartNICsStatus[index].Message = message
 	ros.Status.SmartNICsStatus[index].Phase = phase.String()
 	ros.saveStatus()
+	ros.Mutex.Unlock()
 }
