@@ -909,7 +909,8 @@ port_create (port_args_t *args)
         port_p->set_mac_fns(&mac_mgmt_fns);
     }
 
-    for (uint32_t i = 0; i < args->num_lanes; ++i) {
+    // use the configured num_lanes for setting sbus_addr
+    for (uint32_t i = 0; i < args->num_lanes_cfg; ++i) {
         port_p->sbus_addr_set(i, args->sbus_addr[i]);
     }
 
