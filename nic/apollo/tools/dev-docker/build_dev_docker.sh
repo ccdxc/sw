@@ -2,7 +2,7 @@
 
 # Checkout the repository and submodules
 # Do pull-assets 
-# Goto docker container, and execute below from /sw/ directory.
+# Goto docker container, and execute below from <sw> directory.
 
 DST='/sw/apollo_sw'
 LIBDIR=$DST/nic/sdk/third-party/libs
@@ -29,9 +29,7 @@ copy_files() {
 
     pack_debug='nic/debug_cli nic/tools/p4ctl '
 
-    simf='nic/run.py '
-
-    files="$nicd $nicf $p4d $pkgf $apollod $apollof $simf $pack_apollo $pack_debug"
+    files="$nicd $nicf $p4d $pkgf $apollod $apollof $pack_apollo $pack_debug"
 
     cd /sw
     mkdir -p $DST

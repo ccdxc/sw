@@ -28,7 +28,7 @@ build_fw() {
     if [ ! -d  ./build ];then
         copy_libs
     fi
-    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw firmware PERF=1 "${@:1}"
+    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw PERF=1 firmware  "${@:1}"
 }
 
 print_usage() {
