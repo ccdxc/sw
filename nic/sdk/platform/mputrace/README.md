@@ -1,9 +1,9 @@
 # MPUTRACE
 
-mputrace is a tool to enable tracing on each MPU using the independent trace
+captrace is a tool to enable tracing on each MPU using the independent trace
 facility available for each capri MPU.
 
-mputrace supports the following operations
+captrace supports the following operations
 config <cfg.json>
     It takes a config json file as input. The input file specifies the MPUs that
     need to be enabled for tracing.
@@ -31,7 +31,7 @@ instruction in the p4 program or by watching the pc address using a watch-pc
 address.
 
 The traced logs from the HBM are copied into a binary file when the user intends
-to decode. A separate utility, mputrace.py is provided to decode the binary file
+to decode. A separate utility, captrace.py is provided to decode the binary file
 offline.
 
 When MPU trace is enabled, performance will degrade due to the HBM trace
@@ -41,11 +41,12 @@ enabled for that MPU until the end of the current program is reached.
 ## Usage :
 1. Conf:
 ```
-    # mputrace conf /tmp/mputrace_cfg.json
+    # captrace conf /tmp/captrace_cfg.json
 ```
 
 
-    A sample mputrace_cfg_template.json is explained below.
+    A sample json is explained below. More json samples are provided in
+    /nic/conf/captrace/ on the naples.
 
 ```
  {
@@ -132,7 +133,7 @@ enabled for that MPU until the end of the current program is reached.
       },
 
        // description - this field can be used to label the current json
-       // object based on what it does. This is ignored by the mputrace tool.
+       // object based on what it does. This is ignored by the captrace tool.
 
       "description": "this enables tracing for txdma pipeline, stage 1 and mpu
                       1 with the specified options"
@@ -144,7 +145,7 @@ enabled for that MPU until the end of the current program is reached.
 
     If any field or json sub block is not specified then default values are
     assumed for those.
-Create a mputrace_cfg.json file on NAPLES device specifying the MPUs that
+Create a captrace_cfg.json file on NAPLES device specifying the MPUs that
 require to be traced.
 If two json objects have the same pipeline, stage and mpu combination the
 first one takes effect and the later one is ignored with a warning
@@ -239,12 +240,12 @@ Following is a sample config.json file for reference -
 
 
 2. show
-    'mputrace show'
+    'captrace show'
     This will show the state of each MPU with tracing enable.
 
     For eg.,
 ```
-    # mputrace show
+    # captrace show
 
      pipeline      stage        mpu     enable       wrap      reset      trace  phv_debug  phv_error   watch_pc   table_kd      instr trace_addr trace_nent   trace_sz
          1          0          0          1          1          0          0          0          0 0x00000000          1          1 0x13e690000       1024      65536
@@ -255,36 +256,37 @@ Following is a sample config.json file for reference -
 ```
 
 3. reset
-    'mputrace reset'
+    'captrace reset'
     This will reset the tracing registers for all MPUs.
 ```
-    # mputrace reset
+    # captrace reset
 ```
 
 4. dump
-    'mputrace dump <file path>'
+    'captrace dump <file path>'
     This will dump the contents from HBM (High Bandwidth Memory) into the 
     specified file. The file needs to be copied out and decoded to get 
     the actual instructions executed by the MPUs.
 ```
-    # mputrace dump /tmp/mputrace1.bin
+    # captrace dump /tmp/captrace1.bin
 
-    # ls -l /tmp/mputrace.bin
-    -rw-r--r--    1 root     root       7347200 Jan  5 06:03 /tmp/mputrace.bin
+    # ls -l /tmp/captrace.bin
+    -rw-r--r--    1 root     root       7347200 Jan  5 06:03 /tmp/captrace.bin
 ```
 
-## Steps to decode the dump file -
-    1 Copy the following files out to the server
-        - the dump file from 'mputrace dump' command
+## Steps to decode the dump file in the container -
+    1 Copy the following files into the container
+        - the dump file from 'captrace dump' command
         - /capri_loader.conf file from the naples device
-    2 Generate mputrace.syms symbol file in ws (from sw/nic dir).
-        - /home/neel/tools/mputrace/mputrace.py gen_syms
-    2 Run mputrace.py script on the binary with capri_loader.conf and
-      mputrace.syms files
+    2 Generate captrace.syms symbol file in container (from sw/nic dir).
+        - sdk/platform/mputrace/captrace.py gen_syms
+        - this will generate captrace.syms in nic/
+    2 Run captrace.py script on the binary with capri_loader.conf and
+      captrace.syms files
         To list all packets
-            /home/neel/tools/mputrace/mputrace.py decode mputrace.bin --load=capri_loader.conf --sym=mputrace.syms —list
+            sdk/platform/mputrace/captrace.py decode captrace.bin --load=capri_loader.conf --sym=captrace.syms —list
         To track packet with PHV timestamp “0x1c07a80c” across stages
-            /home/neel/tools/mputrace/mputrace.py decode mputrace.bin --fltr phv_timestamp_capture=0x1c07a80c --load=capri_loader.conf --sym=mputrace.syms > pkt1c07.log
+            sdk/platform/mputrace/captrace.py decode captrace.bin --fltr phv_timestamp_capture=0x1c07a80c --load=capri_loader.conf --sym=captrace.syms > pkt1c07.log
         To dump info about the packet
             grep -e pipeline -e stage -e PROGRAM -e BRANCH -e table_hit pkt1c07.log
 

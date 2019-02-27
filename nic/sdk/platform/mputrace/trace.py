@@ -1,12 +1,19 @@
 
 from ctypes import *
 from pprint import pformat
+import os.path
 
+def libcapisa_so_load():
+    # so_container path will be used if customers run captrace in a container
+    so_container_path = "/sw/nic/sdk/third-party/asic/captrace/x86_64/libcapisa.so"
+    if os.path.exists(so_container_path):
+        libcapisa = cdll.LoadLibrary(so_container_path)
+    else:
+        libcapisa = None
+    return libcapisa
 
-#libcapisa = cdll.LoadLibrary('asic/capri/model/capsim-master/gen/x86_64/lib/libcapisa.so')
-libcapisa = cdll.LoadLibrary('/home/neel/tools/captrace/libcapisa.so')
+libcapisa = libcapisa_so_load()
 libcapisa.c_libcapisa_init()
-
 
 def to_dict(obj):
     if isinstance(obj, Array):
