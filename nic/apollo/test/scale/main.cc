@@ -20,14 +20,14 @@
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/include/api/oci_batch.hpp"
-#include "nic/apollo/include/api/oci_switchport.hpp"
-#include "nic/apollo/include/api/oci_tep.hpp"
-#include "nic/apollo/include/api/oci_vcn.hpp"
-#include "nic/apollo/include/api/oci_subnet.hpp"
-#include "nic/apollo/include/api/oci_vnic.hpp"
-#include "nic/apollo/include/api/oci_mapping.hpp"
-#include "nic/apollo/include/api/oci_policy.hpp"
+#include "nic/apollo/include/api/pds_batch.hpp"
+#include "nic/apollo/include/api/pds_switchport.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
+#include "nic/apollo/include/api/pds_vcn.hpp"
+#include "nic/apollo/include/api/pds_subnet.hpp"
+#include "nic/apollo/include/api/pds_vnic.hpp"
+#include "nic/apollo/include/api/pds_mapping.hpp"
+#include "nic/apollo/include/api/pds_policy.hpp"
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 
 using std::string;
@@ -37,7 +37,7 @@ char *g_input_cfg_file = NULL;
 char *g_cfg_file = NULL;
 bool g_daemon_mode = false;
 ip_prefix_t g_vcn_ippfx = {0};
-oci_switchport_spec_t g_swport = {0};
+pds_switchport_spec_t g_swport = {0};
 flow_test *g_flow_test_obj;
 
 uint8_t g_snd_pkt1[] = {
@@ -118,7 +118,7 @@ uint8_t g_rcv_pkt3[] = {
     0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79
 };
 
-class scale_test : public oci_test_base {
+class scale_test : public pds_test_base {
 protected:
     scale_test() {}
     virtual ~scale_test() {}
@@ -129,7 +129,7 @@ protected:
     /**< called at the beginning of all test cases in this class */
     static void SetUpTestCase() {
         /**< call base class function */
-        oci_test_base::SetUpTestCase(g_cfg_file, false);
+        pds_test_base::SetUpTestCase(g_cfg_file, false);
     }
 };
 
@@ -144,12 +144,12 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     uint32_t ntables = num_vcns * num_subnets;
     uint32_t tep_offset = 3;
     static uint32_t rtnum = 0;
-    oci_route_table_t route_table;
+    pds_route_table_t route_table;
     sdk_ret_t rv = SDK_RET_OK;
 
     route_table.af = IP_AF_IPV4;
     route_table.routes =
-        (oci_route_t *)malloc((num_routes * sizeof(oci_route_t)));
+        (pds_route_t *)malloc((num_routes * sizeof(pds_route_t)));
     route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
         route_table.key.id = i;
@@ -167,10 +167,10 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                 // skip MyTEP and gateway IPs
                 tep_offset += 3;
             }
-            route_table.routes[j].nh_type = OCI_NH_TYPE_REMOTE_TEP;
-            route_table.routes[j].vcn_id = OCI_VCN_ID_INVALID;
+            route_table.routes[j].nh_type = PDS_NH_TYPE_REMOTE_TEP;
+            route_table.routes[j].vcn_id = PDS_VCN_ID_INVALID;
         }
-        rv = oci_route_table_create(&route_table);
+        rv = pds_route_table_create(&route_table);
         if (rv != SDK_RET_OK) {
             return rv;
         }
@@ -189,7 +189,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                  uint32_t num_remote_mappings)
 {
     sdk_ret_t rv;
-    oci_mapping_spec_t oci_mapping;
+    pds_mapping_spec_t pds_mapping;
     uint16_t vnic_key = 1, ip_base, mac_offset = 1025;
     uint32_t ip_offset = 0, remote_slot = 1025, tep_offset = 3;
 
@@ -201,31 +201,31 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
-                    memset(&oci_mapping, 0, sizeof(oci_mapping));
-                    oci_mapping.key.vcn.id = i;
-                    oci_mapping.key.ip_addr.af = IP_AF_IPV4;
-                    oci_mapping.key.ip_addr.addr.v4_addr =
+                    memset(&pds_mapping, 0, sizeof(pds_mapping));
+                    pds_mapping.key.vcn.id = i;
+                    pds_mapping.key.ip_addr.af = IP_AF_IPV4;
+                    pds_mapping.key.ip_addr.addr.v4_addr =
                         (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
-                    oci_mapping.subnet.id = (i - 1) * num_subnets + j;
-                    oci_mapping.slot = vnic_key;
-                    oci_mapping.tep.ip_addr = g_swport.switch_ip_addr;
-                    MAC_UINT64_TO_ADDR(oci_mapping.overlay_mac,
+                    pds_mapping.subnet.id = (i - 1) * num_subnets + j;
+                    pds_mapping.slot = vnic_key;
+                    pds_mapping.tep.ip_addr = g_swport.switch_ip_addr;
+                    MAC_UINT64_TO_ADDR(pds_mapping.overlay_mac,
                                        (((((uint64_t)i & 0x7FF) << 22) |
                                          ((j & 0x7FF) << 11) | (k & 0x7FF))));
-                    oci_mapping.vnic.id = vnic_key;
+                    pds_mapping.vnic.id = vnic_key;
                     if (natpfx) {
-                        oci_mapping.public_ip_valid = true;
-                        oci_mapping.public_ip.addr.v4_addr =
+                        pds_mapping.public_ip_valid = true;
+                        pds_mapping.public_ip.addr.v4_addr =
                             natpfx->addr.addr.v4_addr + ip_offset++;
                     }
-                    rv = oci_mapping_create(&oci_mapping);
+                    rv = pds_mapping_create(&pds_mapping);
                     if (rv != SDK_RET_OK) {
                         return rv;
                     }
 #if 0
-                    g_flow_test_obj->add_local_ep(oci_mapping.key.vcn.id,
-                                         oci_mapping.key.ip_addr.addr.v4_addr);
+                    g_flow_test_obj->add_local_ep(pds_mapping.key.vcn.id,
+                                         pds_mapping.key.ip_addr.addr.v4_addr);
 #endif
                 }
                 vnic_key++;
@@ -239,15 +239,15 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             ip_base = num_vnics * num_ip_per_vnic + 1;
             for (uint32_t k = 1; k <= num_remote_mappings; k++) {
-                memset(&oci_mapping, 0, sizeof(oci_mapping));
-                oci_mapping.key.vcn.id = i;
-                oci_mapping.key.ip_addr.af = IP_AF_IPV4;
-                oci_mapping.key.ip_addr.addr.v4_addr =
+                memset(&pds_mapping, 0, sizeof(pds_mapping));
+                pds_mapping.key.vcn.id = i;
+                pds_mapping.key.ip_addr.af = IP_AF_IPV4;
+                pds_mapping.key.ip_addr.addr.v4_addr =
                     (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
-                oci_mapping.subnet.id = (i - 1) * num_subnets + j;
-                oci_mapping.slot = remote_slot++;
-                oci_mapping.tep.ip_addr =
+                pds_mapping.subnet.id = (i - 1) * num_subnets + j;
+                pds_mapping.slot = remote_slot++;
+                pds_mapping.tep.ip_addr =
                     teppfx->addr.addr.v4_addr + tep_offset++;
                 tep_offset %= num_teps;
                 if (tep_offset == 0) {
@@ -255,16 +255,16 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     tep_offset += 3;
                 }
                 MAC_UINT64_TO_ADDR(
-                    oci_mapping.overlay_mac,
+                    pds_mapping.overlay_mac,
                     (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
                       ((num_vnics + k) & 0x7FF))));
-                rv = oci_mapping_create(&oci_mapping);
+                rv = pds_mapping_create(&pds_mapping);
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
 
-                g_flow_test_obj->add_remote_ep(oci_mapping.key.vcn.id,
-                                     oci_mapping.key.ip_addr.addr.v4_addr);
+                g_flow_test_obj->add_remote_ep(pds_mapping.key.vcn.id,
+                                     pds_mapping.key.ip_addr.addr.v4_addr);
             }
         }
     }
@@ -280,25 +280,25 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
               uint32_t num_vnics, uint16_t vlan_start)
 {
     sdk_ret_t rv = SDK_RET_OK;
-    oci_vnic_spec_t oci_vnic;
+    pds_vnic_spec_t pds_vnic;
     uint16_t vnic_key = 1;
 
     SDK_ASSERT(num_vcns * num_subnets * num_vnics <= 1024);
     for (uint32_t i = 1; i <= (uint64_t)num_vcns; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
-                memset(&oci_vnic, 0, sizeof(oci_vnic));
-                oci_vnic.vcn.id = i;
-                oci_vnic.subnet.id = (i - 1) * num_subnets + j;
-                oci_vnic.key.id = vnic_key;
-                oci_vnic.wire_vlan = vlan_start + vnic_key - 1;
-                oci_vnic.slot = vnic_key;
-                MAC_UINT64_TO_ADDR(oci_vnic.mac_addr,
+                memset(&pds_vnic, 0, sizeof(pds_vnic));
+                pds_vnic.vcn.id = i;
+                pds_vnic.subnet.id = (i - 1) * num_subnets + j;
+                pds_vnic.key.id = vnic_key;
+                pds_vnic.wire_vlan = vlan_start + vnic_key - 1;
+                pds_vnic.slot = vnic_key;
+                MAC_UINT64_TO_ADDR(pds_vnic.mac_addr,
                                    (((((uint64_t)i & 0x7FF) << 22) |
                                      ((j & 0x7FF) << 11) | (k & 0x7FF))));
-                oci_vnic.rsc_pool_id = 1;
-                oci_vnic.src_dst_check = false; //(k & 0x1);
-                rv = oci_vnic_create(&oci_vnic);
+                pds_vnic.rsc_pool_id = 1;
+                pds_vnic.src_dst_check = false; //(k & 0x1);
+                rv = pds_vnic_create(&pds_vnic);
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
@@ -316,27 +316,27 @@ static sdk_ret_t
 create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
 {
     sdk_ret_t rv;
-    oci_subnet_spec_t oci_subnet;
+    pds_subnet_spec_t pds_subnet;
     static uint32_t route_table_id = 1;
     static uint32_t        id = 1;
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
-        memset(&oci_subnet, 0, sizeof(oci_subnet));
-        oci_subnet.key.id = (vcn_id - 1) * num_subnets + i;
-        oci_subnet.vcn.id = vcn_id;
-        oci_subnet.pfx = *vcn_pfx;
-        oci_subnet.pfx.addr.addr.v4_addr =
-            (oci_subnet.pfx.addr.addr.v4_addr) | ((i - 1) << 14);
-        oci_subnet.pfx.len = 18;
-        oci_subnet.vr_ip.af = IP_AF_IPV4;
-        // oci_subnet.vr_ip.addr.v4_addr = oci_subnet.pfx.addr.addr.v4_addr |
+        memset(&pds_subnet, 0, sizeof(pds_subnet));
+        pds_subnet.key.id = (vcn_id - 1) * num_subnets + i;
+        pds_subnet.vcn.id = vcn_id;
+        pds_subnet.pfx = *vcn_pfx;
+        pds_subnet.pfx.addr.addr.v4_addr =
+            (pds_subnet.pfx.addr.addr.v4_addr) | ((i - 1) << 14);
+        pds_subnet.pfx.len = 18;
+        pds_subnet.vr_ip.af = IP_AF_IPV4;
+        // pds_subnet.vr_ip.addr.v4_addr = pds_subnet.pfx.addr.addr.v4_addr |
         // 0x1;
-        oci_subnet.vr_ip.addr.v4_addr = oci_subnet.pfx.addr.addr.v4_addr;
-        MAC_UINT64_TO_ADDR(oci_subnet.vr_mac,
-                           (uint64_t)oci_subnet.vr_ip.addr.v4_addr);
-        oci_subnet.v4_route_table.id = route_table_id++;
-        oci_subnet.egr_v4_policy.id = id++;
-        rv = oci_subnet_create(&oci_subnet);
+        pds_subnet.vr_ip.addr.v4_addr = pds_subnet.pfx.addr.addr.v4_addr;
+        MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
+                           (uint64_t)pds_subnet.vr_ip.addr.v4_addr);
+        pds_subnet.v4_route_table.id = route_table_id++;
+        pds_subnet.egr_v4_policy.id = id++;
+        rv = pds_subnet_create(&pds_subnet);
         if (rv != SDK_RET_OK) {
             return rv;
         }
@@ -348,22 +348,22 @@ static sdk_ret_t
 create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
 {
     sdk_ret_t rv;
-    oci_vcn_spec_t oci_vcn;
+    pds_vcn_spec_t pds_vcn;
 
     SDK_ASSERT(num_vcns <= 1024);
     for (uint32_t i = 1; i <= num_vcns; i++) {
-        memset(&oci_vcn, 0, sizeof(oci_vcn));
-        oci_vcn.type = OCI_VCN_TYPE_TENANT;
-        oci_vcn.key.id = i;
-        oci_vcn.pfx = *ip_pfx;
-        oci_vcn.pfx.len = 8; // fix this to /8
-        oci_vcn.pfx.addr.addr.v4_addr &= 0xFF000000;
-        rv = oci_vcn_create(&oci_vcn);
+        memset(&pds_vcn, 0, sizeof(pds_vcn));
+        pds_vcn.type = PDS_VCN_TYPE_TENANT;
+        pds_vcn.key.id = i;
+        pds_vcn.pfx = *ip_pfx;
+        pds_vcn.pfx.len = 8; // fix this to /8
+        pds_vcn.pfx.addr.addr.v4_addr &= 0xFF000000;
+        rv = pds_vcn_create(&pds_vcn);
         if (rv != SDK_RET_OK) {
             return rv;
         }
         for (uint32_t j = 1; j <= num_subnets; j++) {
-            rv = create_subnets(i, j, &oci_vcn.pfx);
+            rv = create_subnets(i, j, &pds_vcn.pfx);
             if (rv != SDK_RET_OK) {
                 return rv;
             }
@@ -376,16 +376,16 @@ static sdk_ret_t
 create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 {
     sdk_ret_t      rv;
-    oci_tep_spec_t oci_tep;
+    pds_tep_spec_t pds_tep;
 
     // leave the 1st IP in this prefix for MyTEP
     for (uint32_t i = 1; i <= num_teps; i++) {
-        memset(&oci_tep, 0, sizeof(oci_tep));
+        memset(&pds_tep, 0, sizeof(pds_tep));
         // 1st IP in the TEP prefix is local TEP, 2nd is gateway IP,
         // so skip them
-        oci_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
-        oci_tep.type = OCI_ENCAP_TYPE_VNIC;
-        rv = oci_tep_create(&oci_tep);
+        pds_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
+        pds_tep.type = PDS_ENCAP_TYPE_VNIC;
+        rv = pds_tep_create(&pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;
         }
@@ -402,7 +402,7 @@ create_switchport_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
     g_swport.switch_ip_addr = ipaddr;
     MAC_UINT64_TO_ADDR(g_swport.switch_mac_addr, macaddr);
     g_swport.gateway_ip_addr = gwip;
-    return oci_switchport_create(&g_swport);
+    return pds_switchport_create(&g_swport);
 }
 
 static sdk_ret_t
@@ -410,7 +410,7 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
                         uint32_t num_rules, uint32_t ip_af, bool ingress)
 {
     sdk_ret_t       rv;
-    oci_policy_t    policy;
+    pds_policy_t    policy;
     uint32_t        policy_id = 1;
     rule_t          *rule;
 
@@ -442,7 +442,7 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
                 rule->match.l4_match.dport_range.port_hi = 20000;
                 rule->action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
             }
-            rv = oci_policy_create(&policy);
+            rv = pds_policy_create(&policy);
             if (rv != SDK_RET_OK) {
                 printf("Failed to create security policy, vcn %u, subnet %u, "
                        "err %u\n", i, j, rv);
@@ -677,14 +677,14 @@ send_packet (void)
 TEST_F(scale_test, scale_test_create)
 {
     sdk_ret_t rv;
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = 1;
-    rv = oci_batch_start(&batch_params);
+    rv = pds_batch_start(&batch_params);
     ASSERT_TRUE(rv == SDK_RET_OK);
     rv = create_objects();
     ASSERT_TRUE(rv == SDK_RET_OK);
-    rv = oci_batch_commit();
+    rv = pds_batch_commit();
     ASSERT_TRUE(rv == SDK_RET_OK);
 
 #ifdef SIM

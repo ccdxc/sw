@@ -90,7 +90,7 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
     ret = lpm_build_tree(lpm_itable, rfc_tree->rfc_table.num_classes - 1,
                          max_rules, tree_base_addr, mem_size);
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Failed to build RFC tree type %u, err : %u",
+        PDS_TRACE_ERR("Failed to build RFC tree type %u, err : %u",
                       lpm_itable->tree_type, ret);
     }
     return ret;

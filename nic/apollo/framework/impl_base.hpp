@@ -38,7 +38,7 @@ public:
      * @param[in]    asic_cfg    asic configuration parameters
      * @return       SDK_RET_OK on success, failure status code on error
      */
-    static sdk_ret_t init(oci_init_params_t *params, asic_cfg_t *asic_cfg);
+    static sdk_ret_t init(pds_init_params_t *params, asic_cfg_t *asic_cfg);
 
     /**
      * @brief    dump all the debug information to given file
@@ -120,7 +120,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t activate_hw(api_base *api_obj,
-                                  oci_epoch_t epoch,
+                                  pds_epoch_t epoch,
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;

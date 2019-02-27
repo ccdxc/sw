@@ -10,15 +10,15 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/policy.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_POLICY - security policy functionality
- * @ingroup OCI_POLICY
+ * @defgroup PDS_POLICY - security policy functionality
+ * @ingroup PDS_POLICY
  * @{
  */
 
@@ -30,14 +30,14 @@ policy::policy() {
 
 /**
  * @brief    factory method to allocate & initialize a security policy instance
- * @param[in] oci_policy    security policy information
+ * @param[in] pds_policy    security policy information
  * @return    new instance of security policy or NULL, in case of error
  */
 policy *
-policy::factory(oci_policy_t *oci_policy) {
+policy::factory(pds_policy_t *pds_policy) {
     policy    *new_policy;
 
-    if (oci_policy->policy_type != POLICY_TYPE_FIREWALL) {
+    if (pds_policy->policy_type != POLICY_TYPE_FIREWALL) {
         /**< we don't support any other policy type currently */
         return NULL;
     }
@@ -46,7 +46,7 @@ policy::factory(oci_policy_t *oci_policy) {
     if (new_policy) {
         new (new_policy) policy();
         new_policy->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_SECURITY_POLICY,
-                                               oci_policy);
+                                               pds_policy);
         if (new_policy->impl_ == NULL) {
             policy::destroy(new_policy);
             return NULL;
@@ -85,11 +85,11 @@ policy::destroy(policy *policy) {
  */
 sdk_ret_t
 policy::init_config(api_ctxt_t *api_ctxt) {
-    oci_policy_t    *oci_policy;
+    pds_policy_t    *pds_policy;
     
-    oci_policy = &api_ctxt->api_params->policy_info;
-    memcpy(&this->key_, &oci_policy->key,
-           sizeof(oci_policy_key_t));
+    pds_policy = &api_ctxt->api_params->policy_info;
+    memcpy(&this->key_, &pds_policy->key,
+           sizeof(pds_policy_key_t));
     return SDK_RET_OK;
 }
 
@@ -112,7 +112,7 @@ policy::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 policy::program_config(obj_ctxt_t *obj_ctxt) {
-    OCI_TRACE_DEBUG("Programming security policy %u", key_.id);
+    PDS_TRACE_DEBUG("Programming security policy %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -158,9 +158,9 @@ policy::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-policy::activate_config(oci_epoch_t epoch, api_op_t api_op,
+policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
                             obj_ctxt_t *obj_ctxt) {
-    OCI_TRACE_DEBUG("Activating security policy %u config", key_.id);
+    PDS_TRACE_DEBUG("Activating security policy %u config", key_.id);
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
 }
 
@@ -201,8 +201,8 @@ policy::del_from_db(void) {
  */
 sdk_ret_t
 policy::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_ID_POLICY, this);
+    return delay_delete_to_slab(PDS_SLAB_ID_POLICY, this);
 }
-/** @} */    // end of OCI_POLICY
+/** @} */    // end of PDS_POLICY
 
 }    // namespace api

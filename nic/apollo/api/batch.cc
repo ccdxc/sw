@@ -3,15 +3,15 @@
  *
  * @file    batch.cc
  *
- * @brief   This file deals with OCI batch related APIs
+ * @brief   This file deals with PDS batch related APIs
  */
 
-#include "nic/apollo/include/api/oci_batch.hpp"
+#include "nic/apollo/include/api/pds_batch.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
 /**
- * @defgroup OCI_VCN_API - batch API handling
- * @ingroup OCI_VCN
+ * @defgroup PDS_VCN_API - batch API handling
+ * @ingroup PDS_VCN
  * @{
  */
 
@@ -23,19 +23,19 @@
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_batch_start (_In_ oci_batch_params_t *batch_params)
+pds_batch_start (_In_ pds_batch_params_t *batch_params)
 {
     return api::g_api_engine.batch_begin(batch_params);
 }
 
 /**
  * @brief    commit the config corresponding to epoch provided in
- *           oci_batch_start() and activate the datapath to use this epoch
+ *           pds_batch_start() and activate the datapath to use this epoch
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_batch_commit (void)
+pds_batch_commit (void)
 {
     return api::g_api_engine.batch_commit();
 }
@@ -45,9 +45,9 @@ oci_batch_commit (void)
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t oci_batch_abort (void)
+sdk_ret_t pds_batch_abort (void)
 {
     return api::g_api_engine.batch_abort();
 }
 
-/** @} */    // end of OCI_VCN_API
+/** @} */    // end of PDS_VCN_API

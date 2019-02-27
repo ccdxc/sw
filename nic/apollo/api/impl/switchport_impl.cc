@@ -19,8 +19,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_SWITCHPORT_IMPL - switchport entry datapath implementation
- * @ingroup OCI_SWITCHPORT
+ * @defgroup PDS_SWITCHPORT_IMPL - switchport entry datapath implementation
+ * @ingroup PDS_SWITCHPORT
  * @{
  */
 
@@ -29,11 +29,11 @@ switchport_impl    g_switchport_impl;
 
 /**
  * @brief    factory method to allocate & initialize switchport impl instance
- * @param[in] oci_switchport    switchport information
+ * @param[in] pds_switchport    switchport information
  * @return    new instance of switchport or NULL, in case of error
  */
 switchport_impl *
-switchport_impl::factory(oci_switchport_spec_t *oci_switchport) {
+switchport_impl::factory(pds_switchport_spec_t *pds_switchport) {
     return &g_switchport_impl;
 }
 
@@ -50,7 +50,7 @@ switchport_impl::destroy(switchport_impl *impl) {
 }
 
 void
-switchport_impl::fill_spec_(oci_switchport_spec_t *spec) {
+switchport_impl::fill_spec_(pds_switchport_spec_t *spec) {
     uint64_t val;
 
     //TODO read from HW does NOT work
@@ -63,7 +63,7 @@ switchport_impl::fill_spec_(oci_switchport_spec_t *spec) {
 }
 
 void
-switchport_impl::fill_idrop_stats_(oci_switchport_idrop_stats_t *idrop_stats) {
+switchport_impl::fill_idrop_stats_(pds_switchport_idrop_stats_t *idrop_stats) {
     p4pd_error_t pd_err = P4PD_SUCCESS;
     uint64_t pkts = 0;
     p4i_drop_stats_swkey_t key = {0};
@@ -86,7 +86,7 @@ switchport_impl::fill_idrop_stats_(oci_switchport_idrop_stats_t *idrop_stats) {
 }
 
 sdk_ret_t
-switchport_impl::read_hw(oci_switchport_info_t *info) {
+switchport_impl::read_hw(pds_switchport_info_t *info) {
     fill_spec_(&info->spec);
     fill_idrop_stats_(&info->stats.idrop_stats);
     return sdk::SDK_RET_OK;
@@ -110,7 +110,7 @@ switchport_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                                                  switchport->ip_addr());
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
                                                  MAC_TO_UINT64(switchport->mac_addr()));
-    OCI_TRACE_DEBUG("Programmed switchport IP %s, MAC %s as table constants",
+    PDS_TRACE_DEBUG("Programmed switchport IP %s, MAC %s as table constants",
                     ipv4addr2str(switchport->ip_addr()),
                     macaddr2str(switchport->mac_addr()));
     return SDK_RET_OK;
@@ -154,7 +154,7 @@ switchport_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return SDK_RET_OK;
 }
 
-/** @} */    // end of OCI_SWITCHPORT_IMPL
+/** @} */    // end of PDS_SWITCHPORT_IMPL
 
 }    // namespace impl
 }    // namespace api

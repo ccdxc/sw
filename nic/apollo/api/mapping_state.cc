@@ -12,8 +12,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_MAPPING_STATE - mapping database functionality
- * @ingroup OCI_MAPPING
+ * @defgroup PDS_MAPPING_STATE - mapping database functionality
+ * @ingroup PDS_MAPPING
  * @{
  */
 
@@ -21,7 +21,7 @@ namespace api {
  * @brief    constructor
  */
 mapping_state::mapping_state() {
-    mapping_slab_ = slab::factory("mapping", OCI_SLAB_ID_MAPPING,
+    mapping_slab_ = slab::factory("mapping", PDS_SLAB_ID_MAPPING,
                                   sizeof(mapping_entry),
                                   16, true, true, NULL);
     SDK_ASSERT(mapping_slab_ != NULL);
@@ -59,15 +59,15 @@ mapping_state::mapping_free(mapping_entry *mapping) {
  * @return       pointer to the mapping instance found or NULL
  */
 mapping_entry *
-mapping_state::mapping_find(oci_mapping_key_t *mapping_key) const {
+mapping_state::mapping_find(pds_mapping_key_t *mapping_key) const {
     // TODO: if we really need to support this, do
     //       1. impl->find(key)
-    //       2. decode to oci_mapping_key_t
+    //       2. decode to pds_mapping_key_t
     //       3. return the info
     return NULL;
 }
 #endif
 
-/** @} */    // end of OCI_MAPPING_STATE
+/** @} */    // end of PDS_MAPPING_STATE
 
 }    // namespace api

@@ -12,7 +12,7 @@
 #define __TEST_UTILS_SWITCHPORT_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/include/api/oci_switchport.hpp"
+#include "nic/apollo/include/api/pds_switchport.hpp"
 
 namespace api_test {
 
@@ -42,7 +42,7 @@ public:
     /// \brief Read SWITCHPORT
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(oci_switchport_info_t *info);
+    sdk_ret_t read(pds_switchport_info_t *info);
 
     /// \brief Update SWITCHPORT
     ///
@@ -59,7 +59,7 @@ public:
     /// validates the test parameters of this object against info
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t validate(oci_switchport_info_t *info);
+    sdk_ret_t validate(pds_switchport_info_t *info);
 };
 
 }    // namespace api_test

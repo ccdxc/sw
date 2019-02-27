@@ -18,8 +18,8 @@
 
 namespace api {
 
-/// \defgroup OCI_SUBNET_STATE - subnet state functionality
-/// \ingroup OCI_SUBNET
+/// \defgroup PDS_SUBNET_STATE - subnet state functionality
+/// \ingroup PDS_SUBNET
 /// @{
 
 /// \brief    state maintained for subnets
@@ -42,7 +42,7 @@ public:
     /// \brief      lookup a subnet in database given the key
     /// \param[in]  subnet_key subnet key
     /// \return     pointer to the subnet instance found or NULL
-    subnet_entry *subnet_find(oci_subnet_key_t *subnet_key) const;
+    subnet_entry *subnet_find(pds_subnet_key_t *subnet_key) const;
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
@@ -58,7 +58,7 @@ private:
     slab *subnet_slab_;           ///< slab for allocating subnet entry
 };
 
-/// \@}    // end of OCI_SUBNET_ENTRY
+/// \@}    // end of PDS_SUBNET_ENTRY
 
 }    // namespace api
 

@@ -30,23 +30,23 @@ switchport_util::~switchport_util() {}
 
 sdk::sdk_ret_t
 switchport_util::create() {
-    oci_switchport_spec_t oci_switchport;
+    pds_switchport_spec_t pds_switchport;
     ip_prefix_t switchport_ip_pfx, gateway_ip_pfx;
 
     SDK_ASSERT(str2ipv4pfx((char *)this->switchport_ip_str.c_str(),
                            &switchport_ip_pfx) == 0);
     SDK_ASSERT(str2ipv4pfx((char *)this->gateway_ip_str.c_str(),
                            &gateway_ip_pfx) == 0);
-    memset(&oci_switchport, 0, sizeof(oci_switchport_spec_t));
-    oci_switchport.switch_ip_addr = switchport_ip_pfx.addr.addr.v4_addr;
-    oci_switchport.gateway_ip_addr = gateway_ip_pfx.addr.addr.v4_addr;
+    memset(&pds_switchport, 0, sizeof(pds_switchport_spec_t));
+    pds_switchport.switch_ip_addr = switchport_ip_pfx.addr.addr.v4_addr;
+    pds_switchport.gateway_ip_addr = gateway_ip_pfx.addr.addr.v4_addr;
     mac_str_to_addr((char *)this->mac_addr_str.c_str(),
-                    oci_switchport.switch_mac_addr);
-    return (oci_switchport_create(&oci_switchport));
+                    pds_switchport.switch_mac_addr);
+    return (pds_switchport_create(&pds_switchport));
 }
 
 sdk::sdk_ret_t
-switchport_util::validate(oci_switchport_info_t *info) {
+switchport_util::validate(pds_switchport_info_t *info) {
     if (this->switchport_ip_str.compare(
             ipv4addr2str(info->spec.switch_ip_addr)) != 0) {
         return SDK_RET_ERR;
@@ -66,14 +66,14 @@ switchport_util::validate(oci_switchport_info_t *info) {
 }
 
 sdk::sdk_ret_t
-switchport_util::read(oci_switchport_info_t *info) {
-    memset(info, 0, sizeof(oci_switchport_info_t));
-    return (oci_switchport_read(info));
+switchport_util::read(pds_switchport_info_t *info) {
+    memset(info, 0, sizeof(pds_switchport_info_t));
+    return (pds_switchport_read(info));
 }
 
 sdk::sdk_ret_t
 switchport_util::del() {
-    return (oci_switchport_delete());
+    return (pds_switchport_delete());
 }
 
 }    // namespace api_test

@@ -8,10 +8,10 @@
 
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
-#include "nic/apollo/include/api/oci_route.hpp"
+#include "nic/apollo/include/api/pds_route.hpp"
 /**
- * @defgroup OCI_ROUTE_TABLE_API - first level of route table API handling
- * @ingroup OCI_ROUTE
+ * @defgroup PDS_ROUTE_TABLE_API - first level of route table API handling
+ * @ingroup PDS_ROUTE
  * @{
  */
 
@@ -22,7 +22,7 @@
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_route_table_create (_In_ oci_route_table_t *route_table)
+pds_route_table_create (_In_ pds_route_table_t *route_table)
 {
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
@@ -46,7 +46,7 @@ oci_route_table_create (_In_ oci_route_table_t *route_table)
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_route_table_delete (_In_ oci_route_table_key_t *route_table_key)
+pds_route_table_delete (_In_ pds_route_table_key_t *route_table_key)
 {
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
@@ -63,4 +63,4 @@ oci_route_table_delete (_In_ oci_route_table_key_t *route_table_key)
     return sdk::SDK_RET_OOM;
 }
 
-/** @} */ // end of OCI_ROUTE_TABLE_API
+/** @} */ // end of PDS_ROUTE_TABLE_API

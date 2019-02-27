@@ -10,11 +10,11 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/impl/tep_impl.hpp"
 #include "nic/apollo/api/impl/vnic_impl.hpp"
 #include "nic/apollo/api/impl/mapping_impl.hpp"
-#include "nic/apollo/api/impl/oci_impl_state.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
@@ -27,27 +27,27 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_MAPPING_IMPL - mapping entry datapath implementation
- * @ingroup OCI_MAPPING
+ * @defgroup PDS_MAPPING_IMPL - mapping entry datapath implementation
+ * @ingroup PDS_MAPPING
  * @{
  */
 
 /**
  * @brief    factory method to allocate & initialize mapping impl instance
- * @param[in] oci_mapping    mapping information
+ * @param[in] pds_mapping    mapping information
  * @return    new instance of mapping or NULL, in case of error
  */
 mapping_impl *
-mapping_impl::factory(oci_mapping_spec_t *oci_mapping) {
+mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
     mapping_impl        *impl;
     switchport_entry    *switchport;
 
     // TODO: move to slab later
-    impl = (mapping_impl *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_MAPPING_IMPL,
+    impl = (mapping_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MAPPING_IMPL,
                                       sizeof(mapping_impl));
     new (impl) mapping_impl();
     switchport = switchport_db()->switchport_find();
-    if (switchport->ip_addr() == oci_mapping->tep.ip_addr) {
+    if (switchport->ip_addr() == pds_mapping->tep.ip_addr) {
         impl->is_local_ = true;
     }
     return impl;
@@ -63,7 +63,7 @@ mapping_impl::factory(oci_mapping_spec_t *oci_mapping) {
 void
 mapping_impl::destroy(mapping_impl *impl) {
     impl->~mapping_impl();
-    SDK_FREE(SDK_MEM_ALLOC_OCI_MAPPING_IMPL, impl);
+    SDK_FREE(SDK_MEM_ALLOC_PDS_MAPPING_IMPL, impl);
 }
 
 /**
@@ -73,7 +73,7 @@ mapping_impl::destroy(mapping_impl *impl) {
 sdk_ret_t
 mapping_impl::reserve_resources(api_base *api_obj) {
 #if 0
-    oci_mapping_spec_t    *mapping_info;
+    pds_mapping_spec_t    *mapping_info;
 
     mapping_info = &obj_ctxt->api_params->mapping_info;
     if (is_local_) {
@@ -107,7 +107,7 @@ mapping_impl::release_resources(api_base *api_obj) {
  */
 #define nat_action    action_u.nat_nat
 sdk_ret_t
-mapping_impl::add_nat_entries_(oci_mapping_spec_t *mapping_info) {
+mapping_impl::add_nat_entries_(pds_mapping_spec_t *mapping_info) {
     sdk_ret_t           ret;
     nat_actiondata_t    nat_data = { 0 };
 
@@ -147,7 +147,7 @@ error:
  */
 sdk_ret_t
 mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
-                                            oci_mapping_spec_t *mapping_info) {
+                                            pds_mapping_spec_t *mapping_info) {
     sdk_ret_t                   ret;
     vnic_impl                   *vnic_impl_obj;
     local_ip_mapping_swkey_t    local_ip_mapping_key = { 0 };
@@ -213,7 +213,7 @@ error:
 sdk_ret_t
 mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
                                                   subnet_entry *subnet,
-                                                  oci_mapping_spec_t *mapping_info) {
+                                                  pds_mapping_spec_t *mapping_info) {
     sdk_ret_t                         ret;
     remote_vnic_mapping_rx_swkey_t remote_vnic_mapping_rx_key = { 0 };
     remote_vnic_mapping_rx_appdata_t remote_vnic_mapping_rx_data = { 0 };
@@ -245,7 +245,7 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
  */
 sdk_ret_t
 mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
-                                                  oci_mapping_spec_t *mapping_info) {
+                                                  pds_mapping_spec_t *mapping_info) {
     sdk_ret_t ret;
     remote_vnic_mapping_tx_swkey_t remote_vnic_mapping_tx_key = { 0 };
     remote_vnic_mapping_tx_appdata_t remote_vnic_mapping_tx_data = { 0 };
@@ -262,7 +262,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
     remote_vnic_mapping_tx_data.dst_slot_id_valid = 1;
     remote_vnic_mapping_tx_data.dst_slot_id = mapping_info->slot;
 
-    OCI_TRACE_DEBUG("TEP %s, vcn hw id %u, slot %u, nh id %u",
+    PDS_TRACE_DEBUG("TEP %s, vcn hw id %u, slot %u, nh id %u",
                     ipv4addr2str(mapping_info->tep.ip_addr),
                     vcn->hw_id(), mapping_info->slot, tep_impl_obj->nh_id());
 
@@ -280,14 +280,14 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
 void
 mapping_impl::fill_mapping_spec_(
     remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx,
-    oci_mapping_spec_t *spec) {
+    pds_mapping_spec_t *spec) {
     spec->slot = remote_vnic_map_tx->dst_slot_id;
     // TODO fill the remaining
 }
 
 sdk_ret_t
-mapping_impl::read_hw(oci_mapping_key_t *key,
-                      oci_mapping_info_t *info) {
+mapping_impl::read_hw(pds_mapping_key_t *key,
+                      pds_mapping_info_t *info) {
     p4pd_error_t p4pd_ret;
     sdk_ret_t ret;
     vcn_entry *vcn;
@@ -295,7 +295,7 @@ mapping_impl::read_hw(oci_mapping_key_t *key,
     remote_vnic_mapping_tx_appdata_t remote_vnic_mapping_tx_data;
     sdk_table_api_params_t api_params = { 0 };
 
-    OCI_TRACE_DEBUG("vcn %u, ip %s\n", key->vcn.id, ipaddr2str(&key->ip_addr));
+    PDS_TRACE_DEBUG("vcn %u, ip %s\n", key->vcn.id, ipaddr2str(&key->ip_addr));
     vcn = vcn_db()->vcn_find(&key->vcn);
     memcpy(remote_vnic_mapping_tx_key.p4e_apollo_i2e_dst,
            key->ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
@@ -321,14 +321,14 @@ mapping_impl::read_hw(oci_mapping_key_t *key,
 sdk_ret_t
 mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                         ret;
-    oci_mapping_spec_t                *mapping_info;
+    pds_mapping_spec_t                *mapping_info;
     vcn_entry                         *vcn;
     subnet_entry                      *subnet;
 
     mapping_info = &obj_ctxt->api_params->mapping_info;
     vcn = vcn_db()->vcn_find(&mapping_info->key.vcn);
     subnet = subnet_db()->subnet_find(&mapping_info->subnet);
-    OCI_TRACE_DEBUG("Programming mapping (vcn %u, ip %s), subnet %u, tep %s, "
+    PDS_TRACE_DEBUG("Programming mapping (vcn %u, ip %s), subnet %u, tep %s, "
                     "overlay mac %s, slot %u, vnic %u",
                     mapping_info->key.vcn.id,
                     ipaddr2str(&mapping_info->key.ip_addr),
@@ -408,12 +408,12 @@ mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-mapping_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
+mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                           api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/** @} */    // end of OCI_MAPPING_IMPL
+/** @} */    // end of PDS_MAPPING_IMPL
 
 }    // namespace impl
 }    // namespace api

@@ -8,7 +8,7 @@
 
 #include "nic/apollo/framework/impl.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_switchport.hpp"
+#include "nic/apollo/include/api/pds_switchport.hpp"
 #include "nic/apollo/api/impl/switchport_impl.hpp"    // TODO: think how to accomodate a new impl
 #include "nic/apollo/api/impl/tep_impl.hpp"
 #include "nic/apollo/api/impl/vnic_impl.hpp"
@@ -29,7 +29,7 @@ pipeline_impl_base *impl_base::pipeline_impl_  = NULL;
  * @return       SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-impl_base::init(oci_init_params_t *params, asic_cfg_t *asic_cfg) {
+impl_base::init(pds_init_params_t *params, asic_cfg_t *asic_cfg) {
     pipeline_cfg_t        pipeline_cfg;
 
     /**< instanitiate asic implementaiton object */
@@ -73,25 +73,25 @@ impl_base *
 impl_base::factory(impl_obj_id_t obj_id, void *args) {
     switch (obj_id) {
     case IMPL_OBJ_ID_SWITCHPORT:
-        return switchport_impl::factory((oci_switchport_spec_t *)args);
+        return switchport_impl::factory((pds_switchport_spec_t *)args);
 
     case IMPL_OBJ_ID_TEP:
-        return tep_impl::factory((oci_tep_spec_t *)args);
+        return tep_impl::factory((pds_tep_spec_t *)args);
         break;
 
     case IMPL_OBJ_ID_VNIC:
-        return vnic_impl::factory((oci_vnic_spec_t *)args);
+        return vnic_impl::factory((pds_vnic_spec_t *)args);
         break;
 
     case IMPL_OBJ_ID_MAPPING:
-        return mapping_impl::factory((oci_mapping_spec_t *)args);
+        return mapping_impl::factory((pds_mapping_spec_t *)args);
         break;
 
     case IMPL_OBJ_ID_ROUTE_TABLE:
-        return route_table_impl::factory((oci_route_table_t *)args);
+        return route_table_impl::factory((pds_route_table_t *)args);
 
     case IMPL_OBJ_ID_SECURITY_POLICY:
-        return security_policy_impl::factory((oci_policy_t *)args);
+        return security_policy_impl::factory((pds_policy_t *)args);
 
     default:
         break;

@@ -9,7 +9,7 @@
 #if !defined (__UTILS_HPP__)
 #define __UTILS_HPP__
 
-#include "nic/apollo/include/api/oci.hpp"
+#include "nic/apollo/include/api/pds.hpp"
 
 namespace api {
 
@@ -24,9 +24,9 @@ namespace api {
 static inline uint8_t
 pick_older_epoch_idx (uint32_t epoch1, uint32_t epoch2)
 {
-    if (epoch1 == OCI_EPOCH_INVALID) {
+    if (epoch1 == PDS_EPOCH_INVALID) {
         return 0;
-    } else if ((epoch2 == OCI_EPOCH_INVALID) || (epoch2 < epoch1)) {
+    } else if ((epoch2 == PDS_EPOCH_INVALID) || (epoch2 < epoch1)) {
         return 1;
     }
     return 0;

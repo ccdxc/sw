@@ -5,7 +5,7 @@
  *
  * @brief   pipeline global state maintenance
  */
-#include "nic/apollo/include/api/oci_tep.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
 #include "nic/apollo/api/impl/apollo_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
@@ -14,15 +14,15 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_APOLLO_IMPL_STATE - tep database functionality
- * @ingroup OCI_APOLLO
+ * @defgroup PDS_APOLLO_IMPL_STATE - tep database functionality
+ * @ingroup PDS_APOLLO
  * @{
  */
 
 /**
  * @brief    constructor
  */
-apollo_impl_state::apollo_impl_state(oci_state *state) {
+apollo_impl_state::apollo_impl_state(pds_state *state) {
     p4pd_table_properties_t    tinfo;
 
     /**< instantiate P4 tables for bookkeeping */
@@ -71,7 +71,7 @@ apollo_impl_state::~apollo_impl_state() {
     tcam::destroy(egress_drop_stats_tbl_);
 }
 
-/** @} */    // end of OCI_APOLLO_IMPL_STATE
+/** @} */    // end of PDS_APOLLO_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

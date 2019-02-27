@@ -13,21 +13,21 @@
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/include/api/oci_subnet.hpp"
+#include "nic/apollo/include/api/pds_subnet.hpp"
 
 namespace api {
 
-/// \defgroup OCI_SUBNET_ENTRY - subnet entry functionality
-/// \ingroup OCI_SUBNET
+/// \defgroup PDS_SUBNET_ENTRY - subnet entry functionality
+/// \ingroup PDS_SUBNET
 /// @{
 
 /// \brief    subnet entry
 class subnet_entry : public api_base {
 public:
     /// \brief          factory method to allocate and initialize a subnet entry
-    /// \param[in]      oci_subnet    subnet information
+    /// \param[in]      pds_subnet    subnet information
     /// \return         new instance of subnet or NULL, in case of error
-    static subnet_entry *factory(oci_subnet_spec_t *oci_subnet);
+    static subnet_entry *factory(pds_subnet_spec_t *pds_subnet);
 
     /// \brief          release all the s/w state associate with the given
     ///                 subnet, if any, and free the memory
@@ -80,7 +80,7 @@ public:
     /// \param[in]      api_op      api operation
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          add given subnet to the database
@@ -120,7 +120,7 @@ public:
     /// \param[in]      ht_size    hash table size
     /// \return         hash value
     static uint32_t subnet_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(oci_subnet_key_t)) % ht_size;
+        return hash_algo::fnv_hash(key, sizeof(pds_subnet_key_t)) % ht_size;
     }
 
     /// \brief          helper function to compare two subnet keys
@@ -129,7 +129,7 @@ public:
     /// \return         0 if keys are same or else non-zero value
     static bool subnet_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(oci_subnet_key_t)))
+        if (!memcmp(key1, key2, sizeof(pds_subnet_key_t)))
             return true;
 
         return false;
@@ -140,12 +140,12 @@ public:
     /// \brief          return h/w index for this subnet
     /// \return         h/w table index for this subnet
     uint16_t hw_id(void) const { return hw_id_; }
-    oci_route_table_key_t v4_route_table(void) const { return v4_route_table_; }
-    oci_route_table_key_t v6_route_table(void) const { return v6_route_table_; }
-    oci_policy_key_t ing_v4_policy(void) const { return ing_v4_policy_; }
-    oci_policy_key_t ing_v6_policy(void) const { return ing_v6_policy_; }
-    oci_policy_key_t egr_v4_policy(void) const { return egr_v4_policy_; }
-    oci_policy_key_t egr_v6_policy(void) const { return egr_v6_policy_; }
+    pds_route_table_key_t v4_route_table(void) const { return v4_route_table_; }
+    pds_route_table_key_t v6_route_table(void) const { return v6_route_table_; }
+    pds_policy_key_t ing_v4_policy(void) const { return ing_v4_policy_; }
+    pds_policy_key_t ing_v6_policy(void) const { return ing_v6_policy_; }
+    pds_policy_key_t egr_v4_policy(void) const { return egr_v4_policy_; }
+    pds_policy_key_t egr_v6_policy(void) const { return egr_v6_policy_; }
 
 private:
     /// \brief constructor
@@ -155,13 +155,13 @@ private:
     ~subnet_entry();
 
 private:
-    oci_subnet_key_t key_;                    ///< subnet Key
-    oci_route_table_key_t v4_route_table_;    ///< route table id
-    oci_route_table_key_t v6_route_table_;    ///< route table id
-    oci_policy_key_t ing_v4_policy_;          ///< ingress IPv4 policy id
-    oci_policy_key_t ing_v6_policy_;          ///< ingress IPv6 policy id
-    oci_policy_key_t egr_v4_policy_;          ///< ingress IPv4 policy id
-    oci_policy_key_t egr_v6_policy_;          ///< ingress IPv6 policy id
+    pds_subnet_key_t key_;                    ///< subnet Key
+    pds_route_table_key_t v4_route_table_;    ///< route table id
+    pds_route_table_key_t v6_route_table_;    ///< route table id
+    pds_policy_key_t ing_v4_policy_;          ///< ingress IPv4 policy id
+    pds_policy_key_t ing_v6_policy_;          ///< ingress IPv6 policy id
+    pds_policy_key_t egr_v4_policy_;          ///< ingress IPv4 policy id
+    pds_policy_key_t egr_v6_policy_;          ///< ingress IPv6 policy id
     mac_addr_t vr_mac_;                       ///< virtual router MAC
     ht_ctxt_t ht_ctxt_;                       ///< hash table context
 
@@ -170,7 +170,7 @@ private:
     // TODO Statistics for subnet, there arent any as of now
 } __PACK__;
 
-/// \@}    // end of OCI_SUBNET_ENTRY
+/// \@}    // end of PDS_SUBNET_ENTRY
 
 }    // namespace api
 

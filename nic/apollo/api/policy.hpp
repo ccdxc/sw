@@ -12,12 +12,12 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_policy.hpp"
+#include "nic/apollo/include/api/pds_policy.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_POLICY - security policy functionality
+ * @defgroup PDS_POLICY - security policy functionality
  */
 
 /**
@@ -28,10 +28,10 @@ public:
     /**
      * @brief    factory method to allocate & initialize a security policy
      *           instance
-     * @param[in] oci_policy    security policy information
+     * @param[in] pds_policy    security policy information
      * @return    new instance of security policy or NULL, in case of error
      */
-    static policy *factory(oci_policy_t *oci_policy);
+    static policy *factory(pds_policy_t *pds_policy);
 
     /**
      * @brief    release all the s/w state associate with the given security
@@ -98,7 +98,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /**
@@ -152,7 +152,7 @@ public:
     static uint32_t policy_hash_func_compute(void *key,
                                                       uint32_t ht_size) {
         return hash_algo::fnv_hash(key,
-                                   sizeof(oci_policy_key_t)) % ht_size;
+                                   sizeof(pds_policy_key_t)) % ht_size;
     }
 
     /**
@@ -163,7 +163,7 @@ public:
      */
     static bool policy_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(oci_policy_key_t))) {
+        if (!memcmp(key1, key2, sizeof(pds_policy_key_t))) {
             return true;
         }
         return false;
@@ -183,12 +183,12 @@ private:
     ~policy();
 
 private:
-    oci_policy_key_t    key_;        /**< security policy key */
+    pds_policy_key_t    key_;        /**< security policy key */
     ht_ctxt_t           ht_ctxt_;    /**< hash table context */
     impl_base           *impl_;      /**< impl object instance */
 } __PACK__;
 
-/** @} */    // end of OCI_POLICY
+/** @} */    // end of PDS_POLICY
 
 }    // namespace api
 

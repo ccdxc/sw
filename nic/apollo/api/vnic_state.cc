@@ -12,8 +12,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_VNIC_STATE - vnic database functionality
- * @ingroup OCI_VNIC
+ * @defgroup PDS_VNIC_STATE - vnic database functionality
+ * @ingroup PDS_VNIC
  * @{
  */
 
@@ -22,13 +22,13 @@ namespace api {
  */
 vnic_state::vnic_state() {
     // TODO: need to tune multi-threading related params later
-    vnic_ht_ = ht::factory(OCI_MAX_VNIC >> 2,
+    vnic_ht_ = ht::factory(PDS_MAX_VNIC >> 2,
                            vnic_entry::vnic_key_func_get,
                            vnic_entry::vnic_hash_func_compute,
                            vnic_entry::vnic_key_func_compare);
     SDK_ASSERT(vnic_ht_ != NULL);
 
-    vnic_slab_ = slab::factory("vnic", OCI_SLAB_ID_VNIC, sizeof(vnic_entry),
+    vnic_slab_ = slab::factory("vnic", PDS_SLAB_ID_VNIC, sizeof(vnic_entry),
                                16, true, true, true, NULL);
     SDK_ASSERT(vnic_slab_ != NULL);
 }
@@ -65,10 +65,10 @@ vnic_state::vnic_free(vnic_entry *vnic) {
  * @return       pointer to the vnic instance found or NULL
  */
 vnic_entry *
-vnic_state::vnic_find(oci_vnic_key_t *vnic_key) const {
+vnic_state::vnic_find(pds_vnic_key_t *vnic_key) const {
     return (vnic_entry *)(vnic_ht_->lookup(vnic_key));
 }
 
-/** @} */    // end of OCI_VNIC_STATE
+/** @} */    // end of PDS_VNIC_STATE
 
 }    // namespace api

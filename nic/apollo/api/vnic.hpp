@@ -14,21 +14,21 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_vnic.hpp"
+#include "nic/apollo/include/api/pds_vnic.hpp"
 
 namespace api {
 
-/// \defgroup OCI_VNIC_ENTRY - vnic functionality
-/// \ingroup OCI_VNIC
+/// \defgroup PDS_VNIC_ENTRY - vnic functionality
+/// \ingroup PDS_VNIC
 /// @{
 
 /// \brief    vnic entry
 class vnic_entry : public api_base {
 public:
     /// \brief  factory method to allocate and initialize a vnic entry
-    /// \param[in] oci_vnic    vnic information
+    /// \param[in] pds_vnic    vnic information
     /// \return    new instance of vnic or NULL, in case of error
-    static vnic_entry *factory(oci_vnic_spec_t *oci_vnic);
+    static vnic_entry *factory(pds_vnic_spec_t *pds_vnic);
 
     /// \brief  release all the s/w state associate with the given vnic,
     ///         if any, and free the memory
@@ -80,7 +80,7 @@ public:
     /// \param[in] api_op      api operation
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    add given vnic to the database
@@ -119,7 +119,7 @@ public:
     /// \param[in] ht_size    hash table size
     /// \return    hash value
     static uint32_t vnic_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(oci_vnic_key_t)) % ht_size;
+        return hash_algo::fnv_hash(key, sizeof(pds_vnic_key_t)) % ht_size;
     }
 
     /// \brief     helper function to compare two vnic keys
@@ -128,7 +128,7 @@ public:
     /// \return    0 if keys are same or else non-zero value
     static bool vnic_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(oci_vnic_key_t))) {
+        if (!memcmp(key1, key2, sizeof(pds_vnic_key_t))) {
             return true;
         }
         return false;
@@ -146,12 +146,12 @@ private:
     ~vnic_entry();
 
 private:
-    oci_vnic_key_t    key_;        ///< vnic key
+    pds_vnic_key_t    key_;        ///< vnic key
     ht_ctxt_t         ht_ctxt_;    ///< hash table context
     impl_base         *impl_;      ///< impl object instance
 } __PACK__;
 
-/// @}     // end of OCI_VNIC_ENTRY
+/// @}     // end of PDS_VNIC_ENTRY
 
 }    // namespace api
 

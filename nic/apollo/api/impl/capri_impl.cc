@@ -14,8 +14,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_ASIC_IMPL - asic wrapper implementation
- * @ingroup OCI_ASIC
+ * @defgroup PDS_ASIC_IMPL - asic wrapper implementation
+ * @ingroup PDS_ASIC
  * @{
  */
 
@@ -37,12 +37,12 @@ capri_impl *
 capri_impl::factory(asic_cfg_t *asic_cfg) {
     capri_impl    *impl;
 
-    impl = (capri_impl *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_ASIC_IMPL,
+    impl = (capri_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_ASIC_IMPL,
                                     sizeof(capri_impl));
     new (impl) capri_impl();
     if (impl->init_() != SDK_RET_OK) {
         impl->~capri_impl();
-        SDK_FREE(SDK_MEM_ALLOC_OCI_ASIC_IMPL, impl);
+        SDK_FREE(SDK_MEM_ALLOC_PDS_ASIC_IMPL, impl);
         return NULL;
     }
     return impl;
@@ -140,7 +140,7 @@ capri_impl::debug_dump(FILE *fp) {
     fprintf(fp, "\n");
 }
 
-/** @} */    // end of OCI_ASIC_IMPL
+/** @} */    // end of PDS_ASIC_IMPL
 
 }    // namespace impl
 }    // namespace api

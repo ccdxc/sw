@@ -9,12 +9,12 @@
 //----------------------------------------------------------------------------
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/impl/tep_impl.hpp"
 
 static inline sdk_ret_t
-oci_tep_api_handle (api_op_t api_op, oci_tep_key_t *key, oci_tep_spec_t *spec)
+pds_tep_api_handle (api_op_t api_op, pds_tep_key_t *key, pds_tep_spec_t *spec)
 {
     api_ctxt_t api_ctxt;
 
@@ -35,13 +35,13 @@ oci_tep_api_handle (api_op_t api_op, oci_tep_key_t *key, oci_tep_spec_t *spec)
 }
 
 sdk_ret_t
-oci_tep_create (oci_tep_spec_t *spec)
+pds_tep_create (pds_tep_spec_t *spec)
 {
-    return (oci_tep_api_handle(api::API_OP_CREATE, NULL, spec));
+    return (pds_tep_api_handle(api::API_OP_CREATE, NULL, spec));
 }
 
 sdk_ret_t
-oci_tep_read (oci_tep_key_t *key, oci_tep_info_t *info)
+pds_tep_read (pds_tep_key_t *key, pds_tep_info_t *info)
 {
     tep_entry *entry;
     api::impl::tep_impl *impl;
@@ -60,13 +60,13 @@ oci_tep_read (oci_tep_key_t *key, oci_tep_info_t *info)
 }
 
 sdk_ret_t
-oci_tep_update (oci_tep_spec_t *spec)
+pds_tep_update (pds_tep_spec_t *spec)
 {
-    return (oci_tep_api_handle(api::API_OP_UPDATE, NULL, spec));
+    return (pds_tep_api_handle(api::API_OP_UPDATE, NULL, spec));
 }
 
 sdk_ret_t
-oci_tep_delete (oci_tep_key_t *key)
+pds_tep_delete (pds_tep_key_t *key)
 {
-    return (oci_tep_api_handle(api::API_OP_DELETE, key, NULL));
+    return (pds_tep_api_handle(api::API_OP_DELETE, key, NULL));
 }

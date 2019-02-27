@@ -13,7 +13,7 @@
 
 namespace api_test {
 
-subnet_util::subnet_util(oci_vcn_id_t vcn_id, oci_subnet_id_t id,
+subnet_util::subnet_util(pds_vcn_id_t vcn_id, pds_subnet_id_t id,
                          std::string cidr_str) {
     this->vcn.id = vcn_id;
     this->id = id;
@@ -24,23 +24,23 @@ subnet_util::~subnet_util() {}
 
 sdk::sdk_ret_t
 subnet_util::create() {
-    oci_subnet_spec_t oci_subnet;
+    pds_subnet_spec_t pds_subnet;
     ip_prefix_t ip_pfx;
 
     SDK_ASSERT(str2ipv4pfx((char *)this->cidr_str.c_str(), &ip_pfx) == 0);
-    memset(&oci_subnet, 0, sizeof(oci_subnet_spec_t));
-    oci_subnet.vcn.id = this->vcn.id;
-    oci_subnet.key.id = this->id;
-    oci_subnet.pfx = ip_pfx;
-    MAC_UINT64_TO_ADDR(oci_subnet.vr_mac,
-                       (uint64_t)oci_subnet.vr_ip.addr.v4_addr);
-    oci_subnet.v4_route_table.id = this->v4_route_table;
-    oci_subnet.v6_route_table.id = this->v6_route_table;
-    return (oci_subnet_create(&oci_subnet));
+    memset(&pds_subnet, 0, sizeof(pds_subnet_spec_t));
+    pds_subnet.vcn.id = this->vcn.id;
+    pds_subnet.key.id = this->id;
+    pds_subnet.pfx = ip_pfx;
+    MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
+                       (uint64_t)pds_subnet.vr_ip.addr.v4_addr);
+    pds_subnet.v4_route_table.id = this->v4_route_table;
+    pds_subnet.v6_route_table.id = this->v6_route_table;
+    return (pds_subnet_create(&pds_subnet));
 }
 
 sdk::sdk_ret_t
-subnet_util::many_create(uint32_t num_subnet, oci_vcn_id_t vcn_id,
+subnet_util::many_create(uint32_t num_subnet, pds_vcn_id_t vcn_id,
                          std::string pfxstr) {
 #if 0
     sdk::sdk_ret_t rv;
@@ -56,13 +56,13 @@ subnet_util::many_create(uint32_t num_subnet, oci_vcn_id_t vcn_id,
 
 sdk::sdk_ret_t
 subnet_util::del() {
-    oci_subnet_key_t subnet_key = {};
+    pds_subnet_key_t subnet_key = {};
     subnet_key.id = this->id;
-    return (oci_subnet_delete(&subnet_key));
+    return (pds_subnet_delete(&subnet_key));
 }
 
 sdk::sdk_ret_t
-subnet_util::get(oci_vcn_id_t vcn_id, oci_subnet_id_t subnet_id) {
+subnet_util::get(pds_vcn_id_t vcn_id, pds_subnet_id_t subnet_id) {
 
     return sdk::SDK_RET_OK;
 }

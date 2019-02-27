@@ -16,8 +16,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_VNIC_STATE - vnic state functionality
- * @ingroup OCI_VNIC
+ * @defgroup PDS_VNIC_STATE - vnic state functionality
+ * @ingroup PDS_VNIC
  * @{
  */
 
@@ -52,7 +52,7 @@ public:
      * @brief     lookup a vnic in database given the key
      * @param[in] vnic_key vnic key
      */
-    vnic_entry *vnic_find(oci_vnic_key_t *vnic_key) const;
+    vnic_entry *vnic_find(pds_vnic_key_t *vnic_key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
@@ -70,7 +70,7 @@ private:
     slab            *vnic_slab_;    /**< slab to allocate vnic entry */
 };
 
-/** @} */    // end of OCI_VNIC_STATE
+/** @} */    // end of PDS_VNIC_STATE
 
 }    // namespace api
 

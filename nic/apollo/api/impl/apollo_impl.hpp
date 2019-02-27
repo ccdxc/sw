@@ -17,8 +17,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_PIPELINE_IMPL - pipeline wrapper implementation
- * @ingroup OCI_PIPELINE
+ * @defgroup PDS_PIPELINE_IMPL - pipeline wrapper implementation
+ * @ingroup PDS_PIPELINE
  * @{
  */
 
@@ -40,7 +40,7 @@ public:
      * @param[in] asic_cfg       asic configuration to be populated with program
      *                           information
      */
-    virtual void program_config_init(oci_init_params_t *init_params,
+    virtual void program_config_init(pds_init_params_t *init_params,
                                      asic_cfg_t *asic_cfg) override;
 
     /**
@@ -49,7 +49,7 @@ public:
      * @param[in] asic_cfg       asic configuration to be populated with asm
      *                           information
      */
-    virtual void asm_config_init(oci_init_params_t *init_params,
+    virtual void asm_config_init(pds_init_params_t *init_params,
                                  asic_cfg_t *asic_cfg) override;
 
     /**

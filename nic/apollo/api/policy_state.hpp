@@ -16,8 +16,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_POLICY_STATE - security policy state/db functionality
- * @ingroup OCI_POLICY
+ * @defgroup PDS_POLICY_STATE - security policy state/db functionality
+ * @ingroup PDS_POLICY
  * @{
  */
 
@@ -54,7 +54,7 @@ public:
      * @brief     lookup a security policy in database given the key
      * @param[in] policy_key security policy key
      */
-    policy *policy_find(oci_policy_key_t *policy_key) const;
+    policy *policy_find(pds_policy_key_t *policy_key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
@@ -68,7 +68,7 @@ private:
     slab    *policy_slab_;    /**< slab to allocate security policy instance */
 };
 
-/** @} */    // end of OCI_POLICY_STATE
+/** @} */    // end of PDS_POLICY_STATE
 
 }    // namespace api
 

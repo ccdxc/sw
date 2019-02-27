@@ -138,14 +138,14 @@ system_dump (const char *filename) {
     FILE    *fp = NULL;
 
     if ((!filename) || (!(fp = fopen(filename, "w+")))) {
-        OCI_TRACE_ERR("Cannot open output file %s", filename);
+        PDS_TRACE_ERR("Cannot open output file %s", filename);
         return SDK_RET_ERR;
     }
 
     api::port_get(0, port_info_dump, fp);
     impl_base::debug_dump(fp);
     fflush(fp);
-    // oci_state::dump()
+    // pds_state::dump()
 
     return SDK_RET_OK;
 }

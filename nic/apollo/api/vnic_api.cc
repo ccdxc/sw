@@ -12,16 +12,16 @@
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/impl/vnic_impl.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 static sdk_ret_t
-oci_vnic_api_handle (api::api_op_t op, oci_vnic_key_t *key,
-                     oci_vnic_spec_t *spec)
+pds_vnic_api_handle (api::api_op_t op, pds_vnic_key_t *key,
+                     pds_vnic_spec_t *spec)
 {
     sdk::sdk_ret_t rv;
     api_ctxt_t api_ctxt;
 
-    if ((rv = oci_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK)
+    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK)
         return rv;
 
     api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_VNIC, op);
@@ -39,7 +39,7 @@ oci_vnic_api_handle (api::api_op_t op, oci_vnic_key_t *key,
 }
 
 static inline vnic_entry *
-oci_vnic_entry_find (oci_vnic_key_t *key)
+pds_vnic_entry_find (pds_vnic_key_t *key)
 {
     return (vnic_db()->vnic_find(key));
 }
@@ -49,13 +49,13 @@ oci_vnic_entry_find (oci_vnic_key_t *key)
 //----------------------------------------------------------------------------
 
 sdk_ret_t
-oci_vnic_create (oci_vnic_spec_t *spec)
+pds_vnic_create (pds_vnic_spec_t *spec)
 {
-    return (oci_vnic_api_handle(api::API_OP_CREATE, NULL, spec));
+    return (pds_vnic_api_handle(api::API_OP_CREATE, NULL, spec));
 }
 
 sdk::sdk_ret_t
-oci_vnic_read (oci_vnic_key_t *key, oci_vnic_info_t *info)
+pds_vnic_read (pds_vnic_key_t *key, pds_vnic_info_t *info)
 {
     vnic_entry *entry = NULL;
     api::impl::vnic_impl *impl;
@@ -63,7 +63,7 @@ oci_vnic_read (oci_vnic_key_t *key, oci_vnic_info_t *info)
     if (key == NULL || info == NULL)
         return sdk::SDK_RET_INVALID_ARG;
 
-    if ((entry = oci_vnic_entry_find(key)) == NULL)
+    if ((entry = pds_vnic_entry_find(key)) == NULL)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
 
     info->spec.key = *key;
@@ -73,13 +73,13 @@ oci_vnic_read (oci_vnic_key_t *key, oci_vnic_info_t *info)
 }
 
 sdk_ret_t
-oci_vnic_update (oci_vnic_spec_t *spec)
+pds_vnic_update (pds_vnic_spec_t *spec)
 {
-    return (oci_vnic_api_handle(api::API_OP_UPDATE, NULL, spec));
+    return (pds_vnic_api_handle(api::API_OP_UPDATE, NULL, spec));
 }
 
 sdk_ret_t
-oci_vnic_delete (oci_vnic_key_t *key)
+pds_vnic_delete (pds_vnic_key_t *key)
 {
-    return (oci_vnic_api_handle(api::API_OP_UPDATE, key, NULL));
+    return (pds_vnic_api_handle(api::API_OP_UPDATE, key, NULL));
 }

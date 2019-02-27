@@ -14,7 +14,7 @@
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/vcn.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 
@@ -25,7 +25,7 @@ vcn_entry::vcn_entry() {
 }
 
 vcn_entry *
-vcn_entry::factory(oci_vcn_spec_t *oci_vcn) {
+vcn_entry::factory(pds_vcn_spec_t *pds_vcn) {
     vcn_entry *vcn;
 
     // create vcn entry with defaults, if any
@@ -49,9 +49,9 @@ vcn_entry::destroy(vcn_entry *vcn) {
 
 sdk_ret_t
 vcn_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_vcn_spec_t *oci_vcn = &api_ctxt->api_params->vcn_info;
+    pds_vcn_spec_t *pds_vcn = &api_ctxt->api_params->vcn_info;
 
-    memcpy(&this->key_, &oci_vcn->key, sizeof(oci_vcn_key_t));
+    memcpy(&this->key_, &pds_vcn->key, sizeof(pds_vcn_key_t));
     return SDK_RET_OK;
 }
 
@@ -68,9 +68,9 @@ sdk_ret_t
 vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for VCN config but a h/w id is needed so we
     // can use while programming vnics, routes etc.
-    oci_vcn_spec_t *oci_vcn = &obj_ctxt->api_params->vcn_info;
-    OCI_TRACE_DEBUG("Programming vcn %u, type %u, pfx %s", key_.id,
-                    oci_vcn->type, ippfx2str(&oci_vcn->pfx));
+    pds_vcn_spec_t *pds_vcn = &obj_ctxt->api_params->vcn_info;
+    PDS_TRACE_DEBUG("Programming vcn %u, type %u, pfx %s", key_.id,
+                    pds_vcn->type, ippfx2str(&pds_vcn->pfx));
     return SDK_RET_OK;
 }
 
@@ -95,10 +95,10 @@ vcn_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vcn_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
+vcn_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for vcn config, so nothing to activate
-    OCI_TRACE_DEBUG("Created vcn %u", key_.id);
+    PDS_TRACE_DEBUG("Created vcn %u", key_.id);
     return SDK_RET_OK;
 }
 
@@ -115,15 +115,15 @@ vcn_entry::add_to_db(void) {
 
 sdk_ret_t
 vcn_entry::del_from_db(void) {
-    OCI_TRACE_VERBOSE("Deleting vcn %u", key_.id);
+    PDS_TRACE_VERBOSE("Deleting vcn %u", key_.id);
     vcn_db()->vcn_ht()->remove(&key_);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vcn_entry::delay_delete(void) {
-    OCI_TRACE_VERBOSE("Delay delete vcn %u", key_.id);
-    return delay_delete_to_slab(OCI_SLAB_ID_VCN, this);
+    PDS_TRACE_VERBOSE("Delay delete vcn %u", key_.id);
+    return delay_delete_to_slab(PDS_SLAB_ID_VCN, this);
 }
 
 }    // namespace api

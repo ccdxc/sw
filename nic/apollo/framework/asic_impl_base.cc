@@ -13,8 +13,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_ASIC_IMPL - asic wrapper implementation
- * @ingroup OCI_ASIC
+ * @defgroup PDS_ASIC_IMPL - asic wrapper implementation
+ * @ingroup PDS_ASIC
  * @{
  */
 
@@ -35,7 +35,7 @@ asic_impl_base::factory(asic_cfg_t *asic_cfg) {
     return NULL;
 }
 
-/** @} */    // end of OCI_ASIC_IMPL
+/** @} */    // end of PDS_ASIC_IMPL
 
 }    // namespace impl
 }    // namespace api

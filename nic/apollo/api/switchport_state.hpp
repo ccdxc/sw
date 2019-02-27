@@ -16,8 +16,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_SWITCHPORT_STATE - switchport functionality
- * @ingroup OCI_SWITCHPORT
+ * @defgroup PDS_SWITCHPORT_STATE - switchport functionality
+ * @ingroup PDS_SWITCHPORT
  * @{
  */
 
@@ -74,7 +74,7 @@ private:
     switchport_entry    *switchport_cfg_;    /**< user provided config */
 };
 
-/** * @} */    // end of OCI_SWITHCPORT_STATE
+/** * @} */    // end of PDS_SWITHCPORT_STATE
 
 }    // namespace api
 

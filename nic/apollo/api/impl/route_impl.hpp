@@ -11,14 +11,14 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_route.hpp"
+#include "nic/apollo/include/api/pds_route.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_ROUTE_TABLE_IMPL - route table functionality
- * @ingroup OCI_ROUTE
+ * @defgroup PDS_ROUTE_TABLE_IMPL - route table functionality
+ * @ingroup PDS_ROUTE
  * @{
  */
 
@@ -30,10 +30,10 @@ public:
     /**
      * @brief    factory method to allocate & initialize
      *           route table impl instance
-     * @param[in] oci_route_table    route table information
+     * @param[in] pds_route_table    route table information
      * @return    new instance of route table or NULL, in case of error
      */
-    static route_table_impl *factory(oci_route_table_t *oci_route_table);
+    static route_table_impl *factory(pds_route_table_t *pds_route_table);
 
     /**
      * @brief    release all the s/w state associated with the given
@@ -93,7 +93,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t activate_hw(api_base *api_obj,
-                                  oci_epoch_t epoch,
+                                  pds_epoch_t epoch,
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
@@ -113,7 +113,7 @@ private:
     mem_addr_t    lpm_root_addr_;      /**< LPM tree's root node address */
 } __PACK__;
 
-/** @} */    // end of OCI_ROUTE_TABLE_IMPL
+/** @} */    // end of PDS_ROUTE_TABLE_IMPL
 
 }    // namespace impl
 }    // namespace api

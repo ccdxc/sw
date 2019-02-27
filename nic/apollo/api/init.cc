@@ -3,17 +3,17 @@
  *
  * @file    init.cc
  *
- * @brief   This file deals with OCI init/teardown API handling
+ * @brief   This file deals with PDS init/teardown API handling
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/include/api/oci_init.hpp"
+#include "nic/apollo/include/api/pds_init.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/api/impl/oci_impl_state.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/api/debug.hpp"
@@ -21,8 +21,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_INIT_API - init/teardown API handling
- * @ingroup OCI_INIT
+ * @defgroup PDS_INIT_API - init/teardown API handling
+ * @ingroup PDS_INIT
  * @{
  */
 
@@ -32,17 +32,17 @@ namespace api {
  * @param[in] asic_cfg   pointer to asic configuration instance
  */
 static inline void
-asic_global_config_init (oci_init_params_t *params, asic_cfg_t *asic_cfg)
+asic_global_config_init (pds_init_params_t *params, asic_cfg_t *asic_cfg)
 {
-    //asic_cfg->asic_type = api::g_oci_state.catalogue()->asic_type();
+    //asic_cfg->asic_type = api::g_pds_state.catalogue()->asic_type();
     asic_cfg->asic_type = sdk::platform::asic_type_t::SDK_ASIC_TYPE_CAPRI;
-    asic_cfg->cfg_path = g_oci_state.cfg_path();
-    asic_cfg->catalog =  g_oci_state.catalogue();
-    asic_cfg->mempartition = g_oci_state.mempartition();
+    asic_cfg->cfg_path = g_pds_state.cfg_path();
+    asic_cfg->catalog =  g_pds_state.catalogue();
+    asic_cfg->mempartition = g_pds_state.mempartition();
     // TODO: @sai please deprecate capri_loader.conf
     asic_cfg->loader_info_file = "capri_loader.conf";
     asic_cfg->default_config_dir = "2x100_hbm";
-    asic_cfg->platform = g_oci_state.platform_type();
+    asic_cfg->platform = g_pds_state.platform_type();
     asic_cfg->admin_cos = 1;
     asic_cfg->pgm_name = params->pipeline;
     asic_cfg->completion_func = NULL;
@@ -59,7 +59,7 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
     linkmgr_cfg_t    cfg;
 
     memset(&cfg, 0, sizeof(cfg));
-    cfg.platform_type = g_oci_state.platform_type();
+    cfg.platform_type = g_pds_state.platform_type();
     cfg.catalog = catalog;
     cfg.cfg_path = cfg_path;
     cfg.port_event_cb = api::port_event_cb;
@@ -83,19 +83,19 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
 static void
 sig_handler (int sig, siginfo_t *info, void *ptr)
 {
-    OCI_TRACE_DEBUG("Caught signal %d", sig);
+    PDS_TRACE_DEBUG("Caught signal %d", sig);
     debug::system_dump("/tmp/debug.info");
 }
 
 }    // namespace api
 
 /**
- * @brief        initialize OCI HAL
+ * @brief        initialize PDS HAL
  * @param[in]    params init time parameters
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_init (oci_init_params_t *params)
+pds_init (pds_init_params_t *params)
 {
     sdk_ret_t     ret;
     asic_cfg_t    asic_cfg;
@@ -105,23 +105,23 @@ oci_init (oci_init_params_t *params)
     sdk::lib::logger::init(params->trace_cb);
     register_trace_cb(params->trace_cb);
 
-    api::g_oci_state.set_cfg_path(std::string(std::getenv("HAL_CONFIG_PATH")));
-    if (api::g_oci_state.cfg_path().empty()) {
-        api::g_oci_state.set_cfg_path(std::string("./"));
+    api::g_pds_state.set_cfg_path(std::string(std::getenv("HAL_CONFIG_PATH")));
+    if (api::g_pds_state.cfg_path().empty()) {
+        api::g_pds_state.set_cfg_path(std::string("./"));
     } else {
-        api::g_oci_state.set_cfg_path(api::g_oci_state.cfg_path() + "/");
+        api::g_pds_state.set_cfg_path(api::g_pds_state.cfg_path() + "/");
     }
     ret = core::parse_global_config(params->pipeline, params->cfg_file,
-                                    &api::g_oci_state);
+                                    &api::g_pds_state);
     SDK_ASSERT(ret == SDK_RET_OK);
     mpart_json =
-        api::g_oci_state.cfg_path() + "/" + params->pipeline + "/hbm_mem.json";
-    api::g_oci_state.set_mpartition(
+        api::g_pds_state.cfg_path() + "/" + params->pipeline + "/hbm_mem.json";
+    api::g_pds_state.set_mpartition(
         sdk::platform::utils::mpartition::factory(mpart_json.c_str()));
-    api::g_oci_state.set_catalog(catalog::factory(
-        api::g_oci_state.cfg_path() +
-        catalog::catalog_file(api::g_oci_state.platform_type())));
-    ret = core::parse_pipeline_config(params->pipeline, &api::g_oci_state);
+    api::g_pds_state.set_catalog(catalog::factory(
+        api::g_pds_state.cfg_path() +
+        catalog::catalog_file(api::g_pds_state.platform_type())));
+    ret = core::parse_pipeline_config(params->pipeline, &api::g_pds_state);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     /**< setup all asic specific config params */
@@ -129,7 +129,7 @@ oci_init (oci_init_params_t *params)
     SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
     /**< spin all necessary threads in the system */
-    core::thread_spawn(&api::g_oci_state);
+    core::thread_spawn(&api::g_pds_state);
 
     /**< trigger linkmgr initialization */
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
@@ -145,11 +145,11 @@ oci_init (oci_init_params_t *params)
 }
 
 /**
- * @brief    teardown OCI HAL
+ * @brief    teardown PDS HAL
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_teardown (void)
+pds_teardown (void)
 {
     // 1. queiesce the chip
     // 2. flush buffers
@@ -161,4 +161,4 @@ oci_teardown (void)
     return SDK_RET_OK;
 }
 
-/** @} */    // end of OCI_INIT_API
+/** @} */    // end of PDS_INIT_API

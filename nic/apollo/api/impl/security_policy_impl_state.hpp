@@ -11,15 +11,15 @@
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_SECURITY_POLICY_IMPL_STATE - security policy impl state
+ * @defgroup PDS_SECURITY_POLICY_IMPL_STATE - security policy impl state
  *                                            functionality
- * @ingroup OCI_SECURITY_POLICY
+ * @ingroup PDS_SECURITY_POLICY
  * @{
  */
 
@@ -32,7 +32,7 @@ class security_policy_impl;
 class security_policy_impl_state : public obj_base {
 public:
     /**< @brief    constructor */
-    security_policy_impl_state(oci_state *state);
+    security_policy_impl_state(pds_state *state);
 
     /**< @brief    destructor */
     ~security_policy_impl_state();
@@ -58,7 +58,7 @@ private:
     uint32_t      v4_table_size_;   /**< size of each policy table */
 };
 
-/** * @} */    // end of OCI_SECURITY_POLICY_IMPL_STATE
+/** * @} */    // end of PDS_SECURITY_POLICY_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

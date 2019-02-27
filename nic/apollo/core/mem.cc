@@ -3,7 +3,7 @@
  *
  * @file    mem.cc
  *
- * @brief   This file contains generic memory handling for OCI
+ * @brief   This file contains generic memory handling for PDS
  */
 
 #include "nic/sdk/lib/logger/logger.hpp"
@@ -13,7 +13,7 @@
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 sdk_logger::trace_cb_t    g_trace_cb;
 
@@ -33,42 +33,42 @@ static bool g_delay_delete = true;
 void
 slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
 {
-    OCI_TRACE_VERBOSE("timer %p, slab %u, elem %p", timer, slab_id, elem);
+    PDS_TRACE_VERBOSE("timer %p, slab %u, elem %p", timer, slab_id, elem);
     switch (slab_id) {
-    case OCI_SLAB_ID_SWITCHPORT:
+    case PDS_SLAB_ID_SWITCHPORT:
         switchport_entry::destroy((switchport_entry *)elem);
         break;
 
-    case OCI_SLAB_ID_TEP:
+    case PDS_SLAB_ID_TEP:
         tep_entry::destroy((tep_entry *)elem);
         break;
 
-    case OCI_SLAB_ID_VCN:
+    case PDS_SLAB_ID_VCN:
         vcn_entry::destroy((vcn_entry *)elem);
         break;
 
-    case OCI_SLAB_ID_SUBNET:
+    case PDS_SLAB_ID_SUBNET:
         subnet_entry::destroy((subnet_entry *)elem);
         break;
 
-    case OCI_SLAB_ID_VNIC:
+    case PDS_SLAB_ID_VNIC:
         vnic_entry::destroy((vnic_entry *)elem);
         break;
 
-    case OCI_SLAB_ID_MAPPING:
+    case PDS_SLAB_ID_MAPPING:
         mapping_entry::destroy((mapping_entry *)elem);
         break;
 
-    case OCI_SLAB_ID_ROUTE_TABLE:
+    case PDS_SLAB_ID_ROUTE_TABLE:
         route_table::destroy((route_table *)elem);
         break;
 
-    case OCI_SLAB_ID_POLICY:
+    case PDS_SLAB_ID_POLICY:
         policy::destroy((policy *)elem);
         break;
 
     default:
-        OCI_TRACE_ERR("Unknown slab id {}", slab_id);
+        PDS_TRACE_ERR("Unknown slab id {}", slab_id);
         SDK_ASSERT(false);
     }
     return;
@@ -81,25 +81,25 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
  * @param[int]    elem       element to free to the given slab
  * @return #SDK_RET_OK on success, failure status code on error
  *
- * NOTE: currently delay delete timeout is OCI_DELAY_DELETE_MSECS, it is
+ * NOTE: currently delay delete timeout is PDS_DELAY_DELETE_MSECS, it is
  *       expected that other thread(s) using (a pointer to) this object should
  *       be done using this object within this timeout or else this memory can
  *       be freed and allocated for other objects and can result in corruptions.
- *       Essentially, OCI_DELAY_DELETE is assumed to be infinite
+ *       Essentially, PDS_DELAY_DELETE is assumed to be infinite
  */
 sdk_ret_t
 delay_delete_to_slab (uint32_t slab_id, void *elem)
 {
     void    *timer_ctxt;
 
-    OCI_TRACE_VERBOSE("slab %u, elem %p", slab_id, elem);
-    if (slab_id >= OCI_SLAB_ID_MAX) {
-        OCI_TRACE_ERR("Unexpected slab id {}", slab_id);
+    PDS_TRACE_VERBOSE("slab %u, elem %p", slab_id, elem);
+    if (slab_id >= PDS_SLAB_ID_MAX) {
+        PDS_TRACE_ERR("Unexpected slab id {}", slab_id);
         return sdk::SDK_RET_INVALID_ARG;
     }
     if (g_delay_delete && sdk::lib::periodic_thread_is_running()) {
         timer_ctxt =
-            sdk::lib::timer_schedule(slab_id, OCI_DELAY_DELETE_MSECS, elem,
+            sdk::lib::timer_schedule(slab_id, PDS_DELAY_DELETE_MSECS, elem,
                           (sdk::lib::twheel_cb_t)slab_delay_delete_cb, false);
         if (!timer_ctxt) {
             return sdk::SDK_RET_ERR;

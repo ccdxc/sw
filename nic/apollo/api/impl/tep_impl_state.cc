@@ -6,7 +6,7 @@
  * @brief   This file contains Tunnel EndPoint (TEP)
  *          datapath database handling
  */
-#include "nic/apollo/include/api/oci_tep.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
 #include "nic/apollo/api/impl/tep_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
@@ -15,18 +15,18 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_TEP_IMPL_STATE - tep database functionality
- * @ingroup OCI_TEP
+ * @defgroup PDS_TEP_IMPL_STATE - tep database functionality
+ * @ingroup PDS_TEP
  * @{
  */
 
 /**
  * @brief    constructor
  */
-tep_impl_state::tep_impl_state(oci_state *state) {
+tep_impl_state::tep_impl_state(pds_state *state) {
     p4pd_table_properties_t    tinfo;
 
-    tep_idxr_ = indexer::factory(OCI_MAX_TEP);
+    tep_idxr_ = indexer::factory(PDS_MAX_TEP);
     SDK_ASSERT(tep_idxr_ != NULL);
 
     /**< instantiate P4 tables for bookkeeping */
@@ -56,7 +56,7 @@ tep_impl_state::~tep_impl_state() {
     directmap::destroy(nh_tx_tbl_);
 }
 
-/** @} */    // end of OCI_TEP_IMPL_STATE
+/** @} */    // end of PDS_TEP_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

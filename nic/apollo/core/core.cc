@@ -27,7 +27,7 @@ namespace core {
 thread *g_thread_store[THREAD_ID_MAX];
 
 static sdk_ret_t
-parse_cores_config (ptree &pt, oci_state *state)
+parse_cores_config (ptree &pt, pds_state *state)
 {
     state->set_control_cores_mask(
         std::stoul(pt.get<string>("control_cores_mask"), nullptr, 16));
@@ -49,7 +49,7 @@ parse_cores_config (ptree &pt, oci_state *state)
 }
 
 sdk_ret_t
-parse_pipeline_config (string pipeline, oci_state *state)
+parse_pipeline_config (string pipeline, pds_state *state)
 {
     ptree     pt;
     string    cfg_file;
@@ -58,7 +58,7 @@ parse_pipeline_config (string pipeline, oci_state *state)
 
     /**< make sure cfg file exists */
     if (access(cfg_file.c_str(), R_OK) < 0) {
-        OCI_TRACE_ERR("config file %s doesn't exist or not accessible\n",
+        PDS_TRACE_ERR("config file %s doesn't exist or not accessible\n",
                       cfg_file.c_str());
         return SDK_RET_ERR;
     }
@@ -71,7 +71,7 @@ parse_pipeline_config (string pipeline, oci_state *state)
 }
 
 sdk_ret_t
-parse_global_config (string pipeline, string cfg_file, oci_state *state)
+parse_global_config (string pipeline, string cfg_file, pds_state *state)
 {
     ptree     pt;
 
@@ -132,10 +132,10 @@ schedule_timers (void)
                       SESSION_AGE_SCAN_INTVL * TIME_MSECS_PER_SEC,
                       nullptr, session_age_cb, true);
     if (aging_timer == NULL) {
-        OCI_TRACE_ERR("Failed to start session aging timer\n");
+        PDS_TRACE_ERR("Failed to start session aging timer\n");
         return SDK_RET_ERR;
     }
-    OCI_TRACE_DEBUG("Started periodic session aging timer with %us intvl",
+    PDS_TRACE_DEBUG("Started periodic session aging timer with %us intvl",
                     SESSION_AGE_SCAN_INTVL);
 
     // start periodic timer for scanning system interrupts, temparature, power
@@ -145,10 +145,10 @@ schedule_timers (void)
                        SYSTEM_SCAN_INTVL * TIME_MSECS_PER_SEC,
                        nullptr, sysmon_cb, true);
     if (sysmon_timer == NULL) {
-        OCI_TRACE_ERR("Failed to start system monitoring timer\n");
+        PDS_TRACE_ERR("Failed to start system monitoring timer\n");
         return SDK_RET_ERR;
     }
-    OCI_TRACE_DEBUG("Started periodic system scan timer with %us intvl",
+    PDS_TRACE_DEBUG("Started periodic system scan timer with %us intvl",
                     SYSTEM_SCAN_INTVL);
 
     return SDK_RET_OK;
@@ -194,7 +194,7 @@ thread_create (const char *name, uint32_t thread_id,
  * spawn all the necessary threads
  */
 sdk_ret_t
-thread_spawn (oci_state *state)
+thread_spawn (pds_state *state)
 {
     sdk::lib::thread    *new_thread;
 
@@ -226,7 +226,7 @@ sig_init (int signal, sig_handler_t sig_handler)
         return SDK_RET_ERR;
     }
 
-    OCI_TRACE_DEBUG("Installing signal handler for signal %d", signal);
+    PDS_TRACE_DEBUG("Installing signal handler for signal %d", signal);
     memset(&act, 0, sizeof(act));
     act.sa_sigaction = sig_handler;
     act.sa_flags = SA_SIGINFO;

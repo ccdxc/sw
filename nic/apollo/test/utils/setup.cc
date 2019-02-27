@@ -10,8 +10,8 @@
 
 #include <stdarg.h>
 #include "base.hpp"
-#include "nic/apollo/include/api/oci.hpp"
-#include "nic/apollo/include/api/oci_init.hpp"
+#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/include/api/pds_init.hpp"
 
 /// Callback invoked for debug traces
 ///
@@ -56,24 +56,24 @@ trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 }
 
 /// Called at the beginning of all test cases in this class,
-/// initialize OCI HAL
+/// initialize PDS HAL
 void
-oci_test_base::SetUpTestCase(const char *cfg_file, bool enable_fte)
+pds_test_base::SetUpTestCase(const char *cfg_file, bool enable_fte)
 {
-    oci_init_params_t init_params;
+    pds_init_params_t init_params;
 
     memset(&init_params, 0, sizeof(init_params));
-    init_params.init_mode = OCI_INIT_MODE_COLD_START;
+    init_params.init_mode = PDS_INIT_MODE_COLD_START;
     init_params.trace_cb  = trace_cb;
     init_params.pipeline  = "apollo";
     init_params.cfg_file  = std::string(cfg_file);
-    oci_init(&init_params);
+    pds_init(&init_params);
 }
 
 /// Called at the end of all test cases in this class,
-/// cleanup OCI HAL and quit
+/// cleanup PDS HAL and quit
 void
-oci_test_base::TearDownTestCase(void)
+pds_test_base::TearDownTestCase(void)
 {
-    // oci_teardown();
+    // pds_teardown();
 }

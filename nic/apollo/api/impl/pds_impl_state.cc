@@ -1,25 +1,25 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    oci_impl_state.cc
+ * @file    pds_impl_state.cc
  *
- * @brief   This file contains implementation of oci impl state class
+ * @brief   This file contains implementation of pds impl state class
  */
 
-#include "nic/apollo/api/impl/oci_impl_state.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
 
 namespace api {
 namespace impl {
 
-/**< (singleton) instance of all OCI state in one place */
-oci_impl_state g_oci_impl_state;
+/**< (singleton) instance of all PDS state in one place */
+pds_impl_state g_pds_impl_state;
 
 /**
- * @defgroup OCI_IMPL_STATE - Internal state
+ * @defgroup PDS_IMPL_STATE - Internal state
  * @{
  */
 sdk_ret_t
-oci_impl_state::init(oci_state *state) {
+pds_impl_state::init(pds_state *state) {
     apollo_impl_db_ = new apollo_impl_state(state);
     tep_impl_db_ = new tep_impl_state(state);
     vnic_impl_db_ = new vnic_impl_state(state);
@@ -31,7 +31,7 @@ oci_impl_state::init(oci_state *state) {
 }
 
 /**< @brief    constructor */
-oci_impl_state::oci_impl_state() {
+pds_impl_state::pds_impl_state() {
     apollo_impl_db_ = NULL;
     tep_impl_db_ = NULL;
     vnic_impl_db_ = NULL;
@@ -41,7 +41,7 @@ oci_impl_state::oci_impl_state() {
 }
 
 /**< @brief    destructor */
-oci_impl_state::~oci_impl_state() {
+pds_impl_state::~pds_impl_state() {
     delete apollo_impl_db_;
     delete tep_impl_db_;
     delete vnic_impl_db_;
@@ -50,7 +50,7 @@ oci_impl_state::~oci_impl_state() {
     delete security_policy_impl_db_;
 }
 
-/** * @} */    // end of OCI_IMPL_STATE
+/** * @} */    // end of PDS_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

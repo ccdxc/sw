@@ -8,15 +8,15 @@
 
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/mapping.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_MAPPING_ENTRY - mapping entry functionality
- * @ingroup OCI_MAPPING
+ * @defgroup PDS_MAPPING_ENTRY - mapping entry functionality
+ * @ingroup PDS_MAPPING
  * @{
  */
 
@@ -27,11 +27,11 @@ mapping_entry::mapping_entry() {
 
 /**
  * @brief    factory method to allocate and initialize a mapping entry
- * @param[in] oci_mapping    mapping information
+ * @param[in] pds_mapping    mapping information
  * @return    new instance of mapping or NULL, in case of error
  */
 mapping_entry *
-mapping_entry::factory(oci_mapping_spec_t *oci_mapping) {
+mapping_entry::factory(pds_mapping_spec_t *pds_mapping) {
     mapping_entry *mapping;
 
     /**< create mapping entry with defaults, if any */
@@ -39,7 +39,7 @@ mapping_entry::factory(oci_mapping_spec_t *oci_mapping) {
     if (mapping) {
         new (mapping) mapping_entry();
         mapping->impl_ =
-            impl_base::factory(impl::IMPL_OBJ_ID_MAPPING, oci_mapping);
+            impl_base::factory(impl::IMPL_OBJ_ID_MAPPING, pds_mapping);
         if (mapping->impl_ == NULL) {
             mapping_entry::destroy(mapping);
             return NULL;
@@ -144,7 +144,7 @@ mapping_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-mapping_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
+mapping_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 h/w programming for mapping , so nothing to activate
     return SDK_RET_OK;
@@ -192,9 +192,9 @@ mapping_entry::del_from_db(void) {
  */
 sdk_ret_t
 mapping_entry::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_ID_MAPPING, this);
+    return delay_delete_to_slab(PDS_SLAB_ID_MAPPING, this);
 }
 
-/** @} */    // end of OCI_MAPPING_ENTRY
+/** @} */    // end of PDS_MAPPING_ENTRY
 
 }    // namespace api

@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = apollo_vnic_test.gtest
 MODULE_PIPELINE = apollo
-MODULE_SOLIBS   = pal ociframework ocicore ociapi ociapi_impl ocitestutils \
+MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl pdstestutils \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                   sdkp4 sdkp4utils sdkcapri_csrint sdkcapri_asicrw_if sdkcapri \

@@ -11,13 +11,13 @@
 
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_mapping.hpp"
+#include "nic/apollo/include/api/pds_mapping.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_MAPPING_ENTRY - mapping functionality
- * @ingroup OCI_MAPPING
+ * @defgroup PDS_MAPPING_ENTRY - mapping functionality
+ * @ingroup PDS_MAPPING
  * @{
  */
 
@@ -28,10 +28,10 @@ class mapping_entry : public api_base {
 public:
     /**
      * @brief    factory method to allocate and initialize a mapping entry
-     * @param[in] oci_mapping    mapping information
+     * @param[in] pds_mapping    mapping information
      * @return    new instance of mapping or NULL, in case of error
      */
-    static mapping_entry *factory(oci_mapping_spec_t *oci_mapping);
+    static mapping_entry *factory(pds_mapping_spec_t *pds_mapping);
 
     /**
      * @brief    release all the s/w state associate with the given mapping,
@@ -98,7 +98,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
      /**
@@ -158,7 +158,7 @@ private:
 } __PACK__;
 
 
-/** @} */    // end of OCI_MAPPING_ENTRY
+/** @} */    // end of PDS_MAPPING_ENTRY
 
 }    // namespace api
 

@@ -12,7 +12,7 @@
 #define __TEST_UTILS_MAPPING_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/include/api/oci_mapping.hpp"
+#include "nic/apollo/include/api/pds_mapping.hpp"
 
 namespace api_test {
 
@@ -20,16 +20,16 @@ namespace api_test {
 class mapping_util {
 public:
     // Key
-    oci_vcn_id_t vcn_id; ///<  VCN id
+    pds_vcn_id_t vcn_id; ///<  VCN id
     std::string vnic_ip; ///< VNIC ip address
     uint8_t vnic_ip_af;  ///< IP_AF_IPV4/IP_AF_IPV6
     // Spec parameters
-    oci_subnet_id_t sub_id;  ///< Subnet id
-    oci_slot_id_t mpls_slot; ///< MPLS slot
+    pds_subnet_id_t sub_id;  ///< Subnet id
+    pds_slot_id_t mpls_slot; ///< MPLS slot
     std::string tep_ip;      ///< TEP IP address
     std::string vnic_mac;    ///< VNIC mac
     // The below 3 parameters are applicable only for local mapping
-    oci_vnic_id_t vnic_id; ///< VNIC id
+    pds_vnic_id_t vnic_id; ///< VNIC id
     std::string public_ip; ///< Public ip address for the vnic ip
     uint8_t public_ip_af;  ///< IP_AF_IPV4/IP_AF_IPV6
 
@@ -37,12 +37,12 @@ public:
     mapping_util();
 
     /// \brief Parameterized constructor
-    mapping_util(oci_vcn_id_t vcn_id, std::string vnic_ip, std::string vnic_mac,
+    mapping_util(pds_vcn_id_t vcn_id, std::string vnic_ip, std::string vnic_mac,
                  uint8_t vnic_ip_af = IP_AF_IPV4);
 
     /// \brief Parameterized constructor with local vnic params
-    mapping_util(oci_vcn_id_t vcn_id, std::string vnic_ip, std::string vnic_mac,
-                 oci_vnic_id_t vnic_id, uint8_t vnic_ip_af = IP_AF_IPV4);
+    mapping_util(pds_vcn_id_t vcn_id, std::string vnic_ip, std::string vnic_mac,
+                 pds_vnic_id_t vnic_id, uint8_t vnic_ip_af = IP_AF_IPV4);
 
     /// \brief Destructor
     ~mapping_util();
@@ -55,8 +55,8 @@ public:
     /// \brief Read local/remote ip mapping
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(oci_vcn_id_t vcn_id, std::string vnic_ip, uint8_t vnic_ip_af,
-                   oci_mapping_info_t *info);
+    sdk_ret_t read(pds_vcn_id_t vcn_id, std::string vnic_ip, uint8_t vnic_ip_af,
+                   pds_mapping_info_t *info);
 
     /// \brief Update local/remote ip mapping
     ///

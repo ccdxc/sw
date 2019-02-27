@@ -12,7 +12,7 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_tep.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
@@ -20,8 +20,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_TEP_IMPL - tep functionality
- * @ingroup OCI_TEP
+ * @defgroup PDS_TEP_IMPL - tep functionality
+ * @ingroup PDS_TEP
  * @{
  */
 
@@ -32,10 +32,10 @@ class tep_impl : public impl_base {
 public:
     /**
      * @brief    factory method to allocate & initialize tep impl instance
-     * @param[in] oci_tep    tep information
+     * @param[in] pds_tep    tep information
      * @return    new instance of tep or NULL, in case of error
      */
-    static tep_impl *factory(oci_tep_spec_t *oci_tep);
+    static tep_impl *factory(pds_tep_spec_t *pds_tep);
 
     /**
      * @brief    release all the s/w state associated with the given tep,
@@ -63,7 +63,7 @@ public:
      * @param[out] info pointer to tep info
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(oci_tep_info_t *info);
+    sdk_ret_t read_hw(pds_tep_info_t *info);
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -122,7 +122,7 @@ private:
      * @param[out] spec Specification
      */
     void fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
-                    tep_tx_actiondata_t *tep_tx_data, oci_tep_spec_t *spec);
+                    tep_tx_actiondata_t *tep_tx_data, pds_tep_spec_t *spec);
 
     /**
      * @brief Populate status with hardware information
@@ -130,7 +130,7 @@ private:
      * @param[out] status Status
      */
     void fill_status_(tep_tx_actiondata_t *tep_tx_data,
-                      oci_tep_status_t *status);
+                      pds_tep_status_t *status);
 
 private:
     /**< P4 datapath specific state */
@@ -138,7 +138,7 @@ private:
     uint16_t    nh_id_;    /**< nexthop index for this tep */
 } __PACK__;
 
-/** @} */    // end of OCI_TEP_IMPL
+/** @} */    // end of PDS_TEP_IMPL
 
 }    // namespace impl
 }    // namespace api

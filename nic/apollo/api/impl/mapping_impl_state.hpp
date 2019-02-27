@@ -10,14 +10,14 @@
 
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_MAPPING_IMPL_STATE - mapping state functionality
- * @ingroup OCI_MAPPING
+ * @defgroup PDS_MAPPING_IMPL_STATE - mapping state functionality
+ * @ingroup PDS_MAPPING
  * @{
  */
 
@@ -30,7 +30,7 @@ class mapping_impl;
 class mapping_impl_state : public obj_base {
 public:
     /**< @brief    constructor */
-    mapping_impl_state(oci_state *state);
+    mapping_impl_state(pds_state *state);
 
     /**< @brief    destructor */
     ~mapping_impl_state();
@@ -50,7 +50,7 @@ private:
     directmap *nat_tbl_;
 };
 
-/** * @} */    // end of OCI_MAPPING_IMPL_STATE
+/** * @} */    // end of PDS_MAPPING_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

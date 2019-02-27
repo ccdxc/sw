@@ -12,7 +12,7 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/apollo/api/impl/apollo_impl.hpp"
-#include "nic/apollo/api/impl/oci_impl_state.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
@@ -28,8 +28,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_PIPELINE_IMPL - pipeline wrapper implementation
- * @ingroup OCI_PIPELINE
+ * @defgroup PDS_PIPELINE_IMPL - pipeline wrapper implementation
+ * @ingroup PDS_PIPELINE
  * @{
  */
 
@@ -105,12 +105,12 @@ apollo_impl *
 apollo_impl::factory(pipeline_cfg_t *pipeline_cfg) {
     apollo_impl    *impl;
 
-    impl = (apollo_impl *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_PIPELINE_IMPL,
+    impl = (apollo_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_PIPELINE_IMPL,
                                     sizeof(apollo_impl));
     new (impl) apollo_impl();
     if (impl->init_(pipeline_cfg) != SDK_RET_OK) {
         impl->~apollo_impl();
-        SDK_FREE(SDK_MEM_ALLOC_OCI_PIPELINE_IMPL, impl);
+        SDK_FREE(SDK_MEM_ALLOC_PDS_PIPELINE_IMPL, impl);
         return NULL;
     }
     return impl;
@@ -122,7 +122,7 @@ apollo_impl::factory(pipeline_cfg_t *pipeline_cfg) {
  * @param[in] asic_cfg       asic configuration to be populated
  */
 void
-apollo_impl::program_config_init(oci_init_params_t *init_params,
+apollo_impl::program_config_init(pds_init_params_t *init_params,
                                  asic_cfg_t *asic_cfg) {
     asic_cfg->num_pgm_cfgs = 3;
     memset(asic_cfg->pgm_cfg, 0, sizeof(asic_cfg->pgm_cfg));
@@ -137,7 +137,7 @@ apollo_impl::program_config_init(oci_init_params_t *init_params,
  * @param[in] asic_cfg       asic configuration to be populated
  */
 void
-apollo_impl::asm_config_init(oci_init_params_t *init_params,
+apollo_impl::asm_config_init(pds_init_params_t *init_params,
                              asic_cfg_t *asic_cfg) {
     asic_cfg->num_asm_cfgs = 3;
     memset(asic_cfg->asm_cfg, 0, sizeof(asic_cfg->asm_cfg));
@@ -328,7 +328,7 @@ apollo_impl::pipeline_init(void) {
     ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    g_oci_impl_state.init(&api::g_oci_state);
+    g_pds_impl_state.init(&api::g_pds_state);
 
     ret = init_service_lif();
     SDK_ASSERT(ret == SDK_RET_OK);
@@ -429,7 +429,7 @@ apollo_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
 
-/** @} */    // end of OCI_PIPELINE_IMPL
+/** @} */    // end of PDS_PIPELINE_IMPL
 
 }    // namespace impl
 }    // namespace api

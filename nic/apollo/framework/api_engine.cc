@@ -16,8 +16,8 @@ namespace api {
 api_engine    g_api_engine;
 
 /**
- * @defgroup OCI_API_ENGINE - framework for processing APIs
- * @ingroup OCI_VCN
+ * @defgroup PDS_API_ENGINE - framework for processing APIs
+ * @ingroup PDS_VCN
  * @{
  */
 
@@ -57,7 +57,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
             batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
             return SDK_RET_ERR;
         }
-        OCI_TRACE_VERBOSE("allocated api obj %p, api op %u, obj id %u",
+        PDS_TRACE_VERBOSE("allocated api obj %p, api op %u, obj id %u",
                           api_obj, api_ctxt->api_op, api_ctxt->obj_id);
         /**< add it to dirty object list */
         obj_ctxt.api_op = API_OP_CREATE;
@@ -223,7 +223,7 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
     }
 
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Failure in pre-process stage, api op %u, obj id %u, "
+        PDS_TRACE_ERR("Failure in pre-process stage, api op %u, obj id %u, "
                       "err %u", api_ctxt->api_op, api_ctxt->obj_id, ret);
         batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
     }
@@ -290,7 +290,7 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     }
 
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Failure in resource reservation stage, "
+        PDS_TRACE_ERR("Failure in resource reservation stage, "
                       "obj %s, op %u, err %u", api_obj->key2str().c_str(),
                       obj_ctxt->api_op, ret);
     }
@@ -367,7 +367,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     api_obj->set_hw_dirty();
 
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Failure in program config stage, "
+        PDS_TRACE_ERR("Failure in program config stage, "
                       "obj %s, op %u, err %u", api_obj->key2str().c_str(),
                       obj_ctxt->api_op, ret);
     }
@@ -386,7 +386,7 @@ api_engine::program_config_stage_(void) {
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_ARG);
 
-    OCI_TRACE_INFO("Starting resource reservation phase");
+    PDS_TRACE_INFO("Starting resource reservation phase");
     /**< walk over all the dirty objects and reserve resources, if needed */
     batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
@@ -396,10 +396,10 @@ api_engine::program_config_stage_(void) {
             goto error;
         }
     }
-    OCI_TRACE_INFO("Finished resource reservation phase");
+    PDS_TRACE_INFO("Finished resource reservation phase");
 
     /**< walk over all the dirty objects and program hw, if any */
-    OCI_TRACE_INFO("Starting program config phase");
+    PDS_TRACE_INFO("Starting program config phase");
     batch_ctxt_.stage = API_BATCH_STAGE_PROGRAM_CONFIG;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
@@ -408,7 +408,7 @@ api_engine::program_config_stage_(void) {
             goto error;
         }
     }
-    OCI_TRACE_INFO("Finished program config phase");
+    PDS_TRACE_INFO("Finished program config phase");
 
     return SDK_RET_OK;
 
@@ -453,7 +453,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         api_obj->clear_hw_dirty();
         if (api_obj->stateless()) {
             // destroy this object as it is not needed anymore
-            OCI_TRACE_VERBOSE("delay deleting %p", api_obj);
+            PDS_TRACE_VERBOSE("delay deleting %p", api_obj);
             api_obj->delay_delete();
         }
         break;
@@ -639,9 +639,9 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-api_engine::batch_begin(oci_batch_params_t *params) {
+api_engine::batch_begin(pds_batch_params_t *params) {
     SDK_ASSERT_RETURN((params != NULL), sdk::SDK_RET_INVALID_ARG);
-    SDK_ASSERT_RETURN((params->epoch != OCI_EPOCH_INVALID),
+    SDK_ASSERT_RETURN((params->epoch != PDS_EPOCH_INVALID),
                       sdk::SDK_RET_INVALID_ARG);
     batch_ctxt_.epoch = params->epoch;
     batch_ctxt_.stage = API_BATCH_STAGE_INIT;
@@ -662,10 +662,10 @@ api_engine::batch_commit(void) {
      * pre process the APIs by walking over the stashed API contexts to form
      * dirty object list
      */
-    OCI_TRACE_INFO("API context vector size %u", batch_ctxt_.api_ctxts.size());
-    OCI_TRACE_INFO("Starting pre-process stage ...");
+    PDS_TRACE_INFO("API context vector size %u", batch_ctxt_.api_ctxts.size());
+    PDS_TRACE_INFO("Starting pre-process stage ...");
     ret = pre_process_stage_();
-    OCI_TRACE_INFO("Finished pre-process stage");
+    PDS_TRACE_INFO("Finished pre-process stage");
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -675,30 +675,30 @@ api_engine::batch_commit(void) {
      * each object including allocating resources and h/w programming (with the
      * exception of stage 0 programming
      */
-    OCI_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
+    PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
                    batch_ctxt_.dirty_obj_list.size(),
                    batch_ctxt_.dirty_obj_map.size());
-    OCI_TRACE_INFO("Starting program config stage ...");
+    PDS_TRACE_INFO("Starting program config stage ...");
     ret = program_config_stage_();
-    OCI_TRACE_INFO("Finished program config stage");
+    PDS_TRACE_INFO("Finished program config stage");
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
     /**< activate the epoch in h/w & s/w by programming stage0 tables, if any */
-    OCI_TRACE_INFO("Starting activate config stage ...");
+    PDS_TRACE_INFO("Starting activate config stage ...");
     ret = activate_config_stage_();
-    OCI_TRACE_INFO("Finished activate config stage");
+    PDS_TRACE_INFO("Finished activate config stage");
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
     /**< clear all batch related info */
-    batch_ctxt_.epoch = OCI_EPOCH_INVALID;
+    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
 
     /**< walk all API contexts and free the api params allocated */
-    OCI_TRACE_INFO("Clearing API contexts ...");
+    PDS_TRACE_INFO("Clearing API contexts ...");
     for (auto it = batch_ctxt_.api_ctxts.begin();
          it != batch_ctxt_.api_ctxts.end(); ++it) {
         if ((*it).api_params) {
@@ -706,16 +706,16 @@ api_engine::batch_commit(void) {
         }
     }
     batch_ctxt_.api_ctxts.clear();
-    OCI_TRACE_INFO("Finished clearing API contexts ...");
+    PDS_TRACE_INFO("Finished clearing API contexts ...");
 
     /**< walk dirty object map/list & release all stateless object memory */
-    OCI_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
+    PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
                    batch_ctxt_.dirty_obj_list.size(),
                    batch_ctxt_.dirty_obj_map.size());
-    OCI_TRACE_INFO("Clearing dirty object map/list ...");
+    PDS_TRACE_INFO("Clearing dirty object map/list ...");
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
-    OCI_TRACE_INFO("Finished clearing dirty object map/list ...");
+    PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
     return SDK_RET_OK;
 }
 
@@ -733,7 +733,7 @@ api_engine::batch_abort(void) {
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
                       sdk::SDK_RET_INVALID_ARG);
 
-    OCI_TRACE_INFO("Starting rollback config stage");
+    PDS_TRACE_INFO("Starting rollback config stage");
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
          it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
@@ -741,12 +741,12 @@ api_engine::batch_abort(void) {
         SDK_ASSERT(ret == SDK_RET_OK);
         del_from_dirty_list_(it, it->first);
     }
-    OCI_TRACE_INFO("Finished rollback config stage");
+    PDS_TRACE_INFO("Finished rollback config stage");
 
     // clear all batch related info
-    batch_ctxt_.epoch = OCI_EPOCH_INVALID;
+    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
-    OCI_TRACE_INFO("Clearing API contexts ...");
+    PDS_TRACE_INFO("Clearing API contexts ...");
     for (auto it = batch_ctxt_.api_ctxts.begin();
          it != batch_ctxt_.api_ctxts.end(); ++it) {
         if ((*it).api_params) {
@@ -754,10 +754,10 @@ api_engine::batch_abort(void) {
         }
     }
     batch_ctxt_.api_ctxts.clear();
-    OCI_TRACE_INFO("Finished clearing API contexts ...");
+    PDS_TRACE_INFO("Finished clearing API contexts ...");
 
     /**< walk dirty object map/list & release all stateless object memory */
-    OCI_TRACE_INFO("Clearing dirty object map/list ...");
+    PDS_TRACE_INFO("Clearing dirty object map/list ...");
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ) {
         api_obj = it->first;
@@ -769,7 +769,7 @@ api_engine::batch_abort(void) {
     }
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
-    OCI_TRACE_INFO("Finished clearing dirty object map/list ...");
+    PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
 
     return SDK_RET_OK;
 }
@@ -777,7 +777,7 @@ api_engine::batch_abort(void) {
 /**< @brief    constructor */
 api_engine::api_engine() {
     api_params_slab_ =
-        slab::factory("api-params", OCI_SLAB_ID_API_PARAMS,
+        slab::factory("api-params", PDS_SLAB_ID_API_PARAMS,
                       sizeof(api_params_t), 128, true, true, true, NULL);
 }
 
@@ -788,6 +788,6 @@ api_engine::~api_engine() {
     }
 }
 
-/** @} */    // end of OCI_API_ENGINE
+/** @} */    // end of PDS_API_ENGINE
 
 }    // namespace api

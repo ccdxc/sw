@@ -12,13 +12,13 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_route.hpp"
+#include "nic/apollo/include/api/pds_route.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_ROUTE_TABLE - route table functionality
- * @ingroup OCI_ROUTE
+ * @defgroup PDS_ROUTE_TABLE - route table functionality
+ * @ingroup PDS_ROUTE
  * @{
  */
 
@@ -29,10 +29,10 @@ class route_table : public api_base {
 public:
     /**
      * @brief    factory method to allocate & initialize a route table instance
-     * @param[in] oci_route_table    route table information
+     * @param[in] pds_route_table    route table information
      * @return    new instance of route table or NULL, in case of error
      */
-    static route_table *factory(oci_route_table_t *oci_route_table);
+    static route_table *factory(pds_route_table_t *pds_route_table);
 
     /**
      * @brief    release all the s/w state associate with the given route table,
@@ -98,7 +98,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /**
@@ -149,7 +149,7 @@ public:
      * @return    hash value
      */
     static uint32_t route_table_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(oci_route_table_key_t)) % ht_size;
+        return hash_algo::fnv_hash(key, sizeof(pds_route_table_key_t)) % ht_size;
     }
 
     /**
@@ -160,7 +160,7 @@ public:
      */
     static bool route_table_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(oci_route_table_key_t))) {
+        if (!memcmp(key1, key2, sizeof(pds_route_table_key_t))) {
             return true;
         }
         return false;
@@ -180,12 +180,12 @@ private:
     ~route_table();
 
 private:
-    oci_route_table_key_t    key_;        /**< route table key */
+    pds_route_table_key_t    key_;        /**< route table key */
     ht_ctxt_t                ht_ctxt_;    /**< hash table context */
     impl_base                *impl_;      /**< impl object instance */
 } __PACK__;
 
-/** @} */    // end of OCI_ROUTE_TABLE
+/** @} */    // end of PDS_ROUTE_TABLE
 
 }    // namespace api
 

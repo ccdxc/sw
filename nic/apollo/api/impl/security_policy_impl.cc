@@ -11,30 +11,30 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/policy.hpp"
 #include "nic/apollo/api/impl/security_policy_impl.hpp"
-#include "nic/apollo/api/impl/oci_impl_state.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/rfc/rfc.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_SECURITY_POLICY_IMPL - security policy datapath implementation
- * @ingroup OCI_SECURITY_POLICY
+ * @defgroup PDS_SECURITY_POLICY_IMPL - security policy datapath implementation
+ * @ingroup PDS_SECURITY_POLICY
  * @{
  */
 
 /**
  * @brief    factory method to allocate & initialize security policy impl instance
- * @param[in] oci_security_policy    security policy information
+ * @param[in] pds_security_policy    security policy information
  * @return    new instance of security policy or NULL, in case of error
  */
 security_policy_impl *
-security_policy_impl::factory(oci_policy_t *oci_policy) {
+security_policy_impl::factory(pds_policy_t *pds_policy) {
     security_policy_impl    *impl;
 
     // TODO: move to slab later
     impl = (security_policy_impl *)
-               SDK_CALLOC(SDK_MEM_ALLOC_OCI_SECURITY_POLICY_IMPL,
+               SDK_CALLOC(SDK_MEM_ALLOC_PDS_SECURITY_POLICY_IMPL,
                           sizeof(security_policy_impl));
     new (impl) security_policy_impl();
     return impl;
@@ -48,7 +48,7 @@ security_policy_impl::factory(oci_policy_t *oci_policy) {
 void
 security_policy_impl::destroy(security_policy_impl *impl) {
     impl->~security_policy_impl();
-    SDK_FREE(SDK_MEM_ALLOC_OCI_SECURITY_POLICY_IMPL, impl);
+    SDK_FREE(SDK_MEM_ALLOC_PDS_SECURITY_POLICY_IMPL, impl);
 }
 
 /**
@@ -98,7 +98,7 @@ security_policy_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t       ret;
-    oci_policy_t    *policy_info;
+    pds_policy_t    *policy_info;
     rfc::policy_t   policy;
 
     policy_info = &obj_ctxt->api_params->policy_info;
@@ -108,15 +108,15 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     policy.policy_type = policy_info->policy_type;
     policy.af = policy_info->af;
     policy.direction = policy_info->direction;
-    policy.max_rules = OCI_MAX_RULES_PER_SECURITY_POLICY;
+    policy.max_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
     policy.num_rules = policy_info->num_rules;
     policy.rules = policy_info->rules;
-    OCI_TRACE_DEBUG("Processing security policy %u",
+    PDS_TRACE_DEBUG("Processing security policy %u",
                     policy_info->key.id);
     ret = rfc_policy_create(&policy, security_policy_root_addr_,
               security_policy_impl_db()->security_policy_table_size());
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Failed to build RFC policy table, err : %u", ret);
+        PDS_TRACE_ERR("Failed to build RFC policy table, err : %u", ret);
     }
     return ret;
 }
@@ -155,7 +155,7 @@ security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
+security_policy_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                                   api_op_t api_op, obj_ctxt_t *obj_ctxt)
 {
     switch (api_op) {
@@ -183,7 +183,7 @@ security_policy_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     return SDK_RET_OK;
 }
 
-/** @} */    // end of OCI_SECURITY_POLICY_IMPL
+/** @} */    // end of PDS_SECURITY_POLICY_IMPL
 
 }    // namespace impl
 }    // namespace api

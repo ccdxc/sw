@@ -6,7 +6,7 @@
  * @brief   This file contains vnic datapath database handling
  */
 
-#include "nic/apollo/include/api/oci_vnic.hpp"
+#include "nic/apollo/include/api/pds_vnic.hpp"
 #include "nic/apollo/api/impl/vnic_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
@@ -24,18 +24,18 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_VNIC_IMPL_STATE - vnic database functionality
- * @ingroup OCI_VNIC
+ * @defgroup PDS_VNIC_IMPL_STATE - vnic database functionality
+ * @ingroup PDS_VNIC
  * @{
  */
 
 /**
  * @brief    constructor
  */
-vnic_impl_state::vnic_impl_state(oci_state *state) {
+vnic_impl_state::vnic_impl_state(pds_state *state) {
     p4pd_table_properties_t    tinfo, oflow_tinfo;
 
-    vnic_idxr_ = indexer::factory(OCI_MAX_VNIC);
+    vnic_idxr_ = indexer::factory(PDS_MAX_VNIC);
     SDK_ASSERT(vnic_idxr_ != NULL);
 
     /**< instantiate P4 tables for bookkeeping */
@@ -78,7 +78,7 @@ vnic_impl_state::~vnic_impl_state() {
     directmap::destroy(egress_local_vnic_info_rx_tbl_);
 }
 
-/** @} */    // end of OCI_VNIC_IMPL_STATE
+/** @} */    // end of PDS_VNIC_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

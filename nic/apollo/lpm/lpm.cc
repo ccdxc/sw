@@ -521,7 +521,7 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
     uint32_t            nstages, nkeys_per_table;
     uint32_t            curr_default = default_nh;
 
-    OCI_TRACE_DEBUG("Building LPM tree type %u, interval count %u, "
+    PDS_TRACE_DEBUG("Building LPM tree type %u, interval count %u, "
                     "default nh %u, max routes %u, root addr 0x%llx, "
                     "LPM block size %u", itable->tree_type,
                     itable->num_intervals, default_nh, max_routes,

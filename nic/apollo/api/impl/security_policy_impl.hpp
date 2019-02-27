@@ -11,14 +11,14 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_policy.hpp"
+#include "nic/apollo/include/api/pds_policy.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_SECURITY_POLICY_IMPL - security policy functionality
- * @ingroup OCI_SECURITY_POLICY
+ * @defgroup PDS_SECURITY_POLICY_IMPL - security policy functionality
+ * @ingroup PDS_SECURITY_POLICY
  * @{
  */
 
@@ -30,10 +30,10 @@ public:
     /**
      * @brief    factory method to allocate & initialize
      *           security policy impl instance
-     * @param[in] oci_policy    security policy information
+     * @param[in] pds_policy    security policy information
      * @return    new instance of security policy or NULL, in case of error
      */
-    static security_policy_impl *factory(oci_policy_t *oci_policy);
+    static security_policy_impl *factory(pds_policy_t *pds_policy);
 
     /**
      * @brief    release all the s/w state associated with the given
@@ -93,7 +93,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t activate_hw(api_base *api_obj,
-                                  oci_epoch_t epoch,
+                                  pds_epoch_t epoch,
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
@@ -115,7 +115,7 @@ private:
     mem_addr_t    security_policy_root_addr_;   /**< policy root node address */
 } __PACK__;
 
-/** @} */    // end of OCI_SECURITY_POLICY_IMPL
+/** @} */    // end of PDS_SECURITY_POLICY_IMPL
 
 }    // namespace impl
 }    // namespace api

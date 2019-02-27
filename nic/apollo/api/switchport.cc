@@ -12,32 +12,32 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/impl.hpp"
 #include "nic/apollo/api/switchport.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_SWITCHPORT_ENTRY - switchport entry functionality
- * @ingroup OCI_SWITCHPORT
+ * @defgroup PDS_SWITCHPORT_ENTRY - switchport entry functionality
+ * @ingroup PDS_SWITCHPORT
  * @{
  */
 
 /**
  * @brief    factory method to allocate and initialize a switchport entry
- * @param[in] oci_switchport    switchport information
+ * @param[in] pds_switchport    switchport information
  * @return    new instance of switchport or NULL, in case of error
  */
 switchport_entry *
-switchport_entry::factory(oci_switchport_spec_t *oci_switchport) {
+switchport_entry::factory(pds_switchport_spec_t *pds_switchport) {
     switchport_entry    *switchport;
 
     switchport = switchport_db()->switchport_alloc();
     if (switchport) {
         new (switchport) switchport_entry();
         switchport->impl_ =
-            impl_base::factory(impl::IMPL_OBJ_ID_SWITCHPORT, oci_switchport);
+            impl_base::factory(impl::IMPL_OBJ_ID_SWITCHPORT, pds_switchport);
         if (switchport->impl_ == NULL) {
             switchport_entry::destroy(switchport);
             return NULL;
@@ -70,11 +70,11 @@ switchport_entry::destroy(switchport_entry *switchport) {
  */
 sdk_ret_t
 switchport_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_switchport_spec_t *oci_switchport = &api_ctxt->api_params->switchport_spec;
+    pds_switchport_spec_t *pds_switchport = &api_ctxt->api_params->switchport_spec;
 
-    ip_addr_ = oci_switchport->switch_ip_addr;
-    memcpy(mac_addr_, oci_switchport->switch_mac_addr, ETH_ADDR_LEN);
-    gw_ip_addr_ = oci_switchport->gateway_ip_addr;
+    ip_addr_ = pds_switchport->switch_ip_addr;
+    memcpy(mac_addr_, pds_switchport->switch_mac_addr, ETH_ADDR_LEN);
+    gw_ip_addr_ = pds_switchport->gateway_ip_addr;
     return SDK_RET_OK;
 }
 
@@ -97,7 +97,7 @@ switchport_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 switchport_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    OCI_TRACE_DEBUG("Programming switchport config");
+    PDS_TRACE_DEBUG("Programming switchport config");
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -143,10 +143,10 @@ switchport_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
+switchport_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 programming for switchport cfg, so this is a no-op
-    OCI_TRACE_DEBUG("Activated switchport config");
+    PDS_TRACE_DEBUG("Activated switchport config");
     return SDK_RET_OK;
 }
 
@@ -192,9 +192,9 @@ switchport_entry::find_in_db(void) {
  */
 sdk_ret_t
 switchport_entry::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_ID_SWITCHPORT, this);
+    return delay_delete_to_slab(PDS_SLAB_ID_SWITCHPORT, this);
 }
 
-/** @} */    // end of OCI_SWITCHPORT_ENTRY
+/** @} */    // end of PDS_SWITCHPORT_ENTRY
 
 }    // namespace api

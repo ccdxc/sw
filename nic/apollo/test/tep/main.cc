@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 #include <getopt.h>
-#include "nic/apollo/include/api/oci_batch.hpp"
+#include "nic/apollo/include/api/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 
@@ -20,20 +20,20 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
-static oci_epoch_t g_batch_epoch = OCI_EPOCH_INVALID;
+static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 
 //----------------------------------------------------------------------------
 // TEP test class
 //----------------------------------------------------------------------------
 
-class tep_test : public oci_test_base {
+class tep_test : public pds_test_base {
 protected:
     tep_test() {}
     virtual ~tep_test() {}
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        oci_test_base::SetUpTestCase(api_test::g_cfg_file, false);
+        pds_test_base::SetUpTestCase(api_test::g_cfg_file, false);
     }
 };
 
@@ -52,7 +52,7 @@ protected:
 ///
 /// Read a non-existing TEP. First read after table init
 TEST_F(tep_test, tep_invalid_read) {
-    oci_tep_info_t info;
+    pds_tep_info_t info;
     tep_util tunnel_obj("10.1.2.3/8");
     ASSERT_TRUE(tunnel_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
     // ASSERT_TRUE(tunnel_obj.validate(&info) == sdk::SDK_RET_INVALID_ARG);
@@ -62,14 +62,14 @@ TEST_F(tep_test, tep_invalid_read) {
 ///
 /// Delete a TEP before first ever create
 TEST_F(tep_test, tep_invalid_delete) {
-    oci_batch_params_t batch_params = {0};
-    tep_util tep_obj("10.1.1.1/8", OCI_ENCAP_TYPE_VNIC);
+    pds_batch_params_t batch_params = {0};
+    tep_util tep_obj("10.1.1.1/8", PDS_ENCAP_TYPE_VNIC);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // TODO implement tep_impl::cleanup_hw() for del to work
     // ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Delete a non-existing TEP multiple times
@@ -96,35 +96,35 @@ TEST_F(tep_test, tep_invalid_delete_4) {}
 ///
 /// Create a new TEP and delete it
 TEST_F(tep_test, tep_create) {
-    oci_batch_params_t batch_params = {0};
-    oci_tep_info_t info;
-    tep_util tep_obj("10.1.1.1/8", OCI_ENCAP_TYPE_VNIC);
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    tep_util tep_obj("10.1.1.1/8", PDS_ENCAP_TYPE_VNIC);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // TODO implement tep_impl::cleanup_hw() for del to work
     // ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Read an existing TEP
 ///
 /// Create a TEP and then read & validate
 TEST_F(tep_test, tep_read) {
-    oci_batch_params_t batch_params = {0};
-    oci_tep_info_t info;
-    tep_util tep_obj("10.1.1.2/8", OCI_ENCAP_TYPE_VNIC);
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    tep_util tep_obj("10.1.1.2/8", PDS_ENCAP_TYPE_VNIC);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     tep_util tunnel_obj("10.1.1.2/8");
     ASSERT_TRUE(tunnel_obj.read(&info) == sdk::SDK_RET_OK);
@@ -133,32 +133,32 @@ TEST_F(tep_test, tep_read) {
 
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // TODO implement tep_impl::cleanup_hw() for del to work
     // ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Delete an existing TEP
 ///
 /// Create a TEP, delete it and then read & validate
 TEST_F(tep_test, tep_delete) {
-    oci_batch_params_t batch_params = {0};
-    oci_tep_info_t info;
-    tep_util tep_obj("10.1.1.3/8", OCI_ENCAP_TYPE_VNIC);
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    tep_util tep_obj("10.1.1.3/8", PDS_ENCAP_TYPE_VNIC);
 
     // Setup
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Trigger (Delete)
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // TODO implement tep_impl::cleanup_hw() for del to work
     // ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Verify
     tep_util tunnel_obj("10.1.1.3/8");
@@ -208,7 +208,7 @@ TEST_F(tep_test, tep_delete_create_delete_1) {}
 
 /// \brief Create only 1 TEP in a single batch
 ///
-/// Create 1 TEP when table has OCI_MAX_TEP-1 entries
+/// Create 1 TEP when table has PDS_MAX_TEP-1 entries
 TEST_F(tep_test, tep_max_create) {}
 
 /// \brief Create 1 TEP after table full
@@ -220,15 +220,15 @@ TEST_F(tep_test, tep_beyondmax_create) {}
 ///
 /// Create multiple unique TEPs in a single batch
 TEST_F(tep_test, tep_multi_create) {
-    oci_batch_params_t batch_params = {0};
-    oci_tep_info_t info;
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
     uint32_t num_teps = 5;
 
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, "10.1.2.1/8",
-                                      OCI_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+                                      PDS_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // TODO Verify with read
     tep_util tunnel_obj("10.1.2.3/8");
@@ -247,9 +247,9 @@ TEST_F(tep_test, tep_multi_delete) {}
 /// Create max supported no of unique TEPs in a single batch
 TEST_F(tep_test, tep_multi_max_create) {}
 
-/// \brief Create (OCI_MAX_TEP/2) no of TEPs in a single batch
+/// \brief Create (PDS_MAX_TEP/2) no of TEPs in a single batch
 ///
-/// Attempt to create (OCI_MAX_TEP/2) no of TEPs in a single batch
+/// Attempt to create (PDS_MAX_TEP/2) no of TEPs in a single batch
 //  when the table is already half full
 TEST_F(tep_test, tep_multi_max_create_1) {}
 
@@ -258,14 +258,14 @@ TEST_F(tep_test, tep_multi_max_create_1) {}
 /// Delete max supported no of TEPs in a single batch
 TEST_F(tep_test, tep_multi_max_delete) {}
 
-/// \brief Create 1 + OCI_MAX_TEP no of TEPs in a single batch
+/// \brief Create 1 + PDS_MAX_TEP no of TEPs in a single batch
 ///
 /// Attempt to create more than supported no of TEPs in a single batch
 TEST_F(tep_test, tep_multi_beyondmax_create) {}
 
-/// \brief Create 1 + (OCI_MAX_TEP/2) no of TEPs in a single batch
+/// \brief Create 1 + (PDS_MAX_TEP/2) no of TEPs in a single batch
 ///
-/// Attempt to create 1+(OCI_MAX_TEP/2) no of TEPs in a single batch
+/// Attempt to create 1+(PDS_MAX_TEP/2) no of TEPs in a single batch
 //  when the table is already half full
 TEST_F(tep_test, tep_multi_beyondmax_create_1) {}
 

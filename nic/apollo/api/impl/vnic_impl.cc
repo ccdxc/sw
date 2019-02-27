@@ -15,8 +15,8 @@
 #include "nic/apollo/api/impl/route_impl.hpp"
 #include "nic/apollo/api/impl/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/vnic_impl.hpp"
-#include "nic/apollo/api/impl/oci_impl_state.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 
@@ -24,22 +24,22 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_VNIC_IMPL - vnic entry datapath implementation
- * @ingroup OCI_VNIC
+ * @defgroup PDS_VNIC_IMPL - vnic entry datapath implementation
+ * @ingroup PDS_VNIC
  * @{
  */
 
 /**
  * @brief    factory method to allocate & initialize vnic impl instance
- * @param[in] oci_vnic    vnic information
+ * @param[in] pds_vnic    vnic information
  * @return    new instance of vnic or NULL, in case of error
  */
 vnic_impl *
-vnic_impl::factory(oci_vnic_spec_t *oci_vnic) {
+vnic_impl::factory(pds_vnic_spec_t *pds_vnic) {
     vnic_impl *impl;
 
     // TODO: move to slab later
-    impl = (vnic_impl *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_VNIC_IMPL,
+    impl = (vnic_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VNIC_IMPL,
                                   sizeof(vnic_impl));
     new (impl) vnic_impl();
     return impl;
@@ -55,7 +55,7 @@ vnic_impl::factory(oci_vnic_spec_t *oci_vnic) {
 void
 vnic_impl::destroy(vnic_impl *impl) {
     impl->~vnic_impl();
-    SDK_FREE(SDK_MEM_ALLOC_OCI_VNIC_IMPL, impl);
+    SDK_FREE(SDK_MEM_ALLOC_PDS_VNIC_IMPL, impl);
 }
 
 /**
@@ -104,7 +104,7 @@ vnic_impl::release_resources(api_base *api_obj) {
 void
 vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
                     vnic_rx_stats_actiondata_t *rx_stats,
-                    oci_vnic_stats_t *stats)
+                    pds_vnic_stats_t *stats)
 {
     stats->tx_pkts  = *(uint64_t *)tx_stats->vnic_tx_stats_action.out_packets;
     stats->tx_bytes = *(uint64_t *)tx_stats->vnic_tx_stats_action.out_bytes;
@@ -114,7 +114,7 @@ vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
 }
 
 sdk_ret_t
-vnic_impl::read_hw(oci_vnic_key_t *key, oci_vnic_info_t *info) {
+vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
     p4pd_error_t p4pd_ret;
     vnic_tx_stats_actiondata_t vnic_tx_stats_data;
     vnic_rx_stats_actiondata_t vnic_rx_stats_data;
@@ -145,7 +145,7 @@ vnic_impl::read_hw(oci_vnic_key_t *key, oci_vnic_info_t *info) {
 sdk_ret_t
 vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                                 ret;
-    oci_vnic_spec_t                           *vnic_info;
+    pds_vnic_spec_t                           *vnic_info;
     p4pd_error_t                              p4pd_ret;
     subnet_entry                              *subnet;
     egress_local_vnic_info_rx_actiondata_t    egress_vnic_data = { 0 };
@@ -155,7 +155,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vnic_info = &obj_ctxt->api_params->vnic_info;
     subnet = subnet_db()->subnet_find(&vnic_info->subnet);
     if (subnet == NULL) {
-        OCI_TRACE_ERR("Unable to find subnet : %u, vcn : %u",
+        PDS_TRACE_ERR("Unable to find subnet : %u, vcn : %u",
                       vnic_info->subnet.id, vnic_info->vcn.id);
         return sdk::SDK_RET_INVALID_ARG;
     }
@@ -247,9 +247,9 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
  */
 sdk_ret_t
 vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
-                                           oci_epoch_t epoch, vcn_entry *vcn,
+                                           pds_epoch_t epoch, vcn_entry *vcn,
                                            subnet_entry *subnet,
-                                           oci_vnic_spec_t *vnic_info,
+                                           pds_vnic_spec_t *vnic_info,
                                            route_table *v4_route_table,
                                            route_table *v6_route_table,
                                            policy *v4_policy,
@@ -273,13 +273,13 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
         // program the LPM tree base address
         addr =
             ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
-        OCI_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
+        PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v4addr_1,
                                 addr, 5);
         if (v6_route_table) {
             addr =
                 ((impl::route_table_impl *)(v6_route_table->impl()))->lpm_root_addr();
-            OCI_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
+            PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
             MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v6addr_1,
                                     addr, 5);
         }
@@ -287,18 +287,18 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
         // program security policy block's base address
         if (v4_policy) {
             addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
-            OCI_TRACE_DEBUG("Egress IPv4 policy root addr 0x%llx", addr);
+            PDS_TRACE_DEBUG("Egress IPv4 policy root addr 0x%llx", addr);
             MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr_1,
                                     addr, 5);
         }
         if (v6_policy) {
             addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
-            OCI_TRACE_DEBUG("Egress IPv6 policy root addr 0x%llx", addr);
+            PDS_TRACE_DEBUG("Egress IPv6 policy root addr 0x%llx", addr);
             MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v6addr_1,
                                     addr, 5);
         }
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;
-        vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2 = OCI_EPOCH_INVALID;
+        vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2 = PDS_EPOCH_INVALID;
         sdk::lib::memrev(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.overlay_mac,
                          vnic_info->mac_addr, ETH_ADDR_LEN);
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.src_slot_id =
@@ -313,7 +313,7 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
     }
 
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Programming of LOCAL_VNIC_BY_VLAN_TX table failed, "
+        PDS_TRACE_ERR("Programming of LOCAL_VNIC_BY_VLAN_TX table failed, "
                       "api op %u, epoch %u, vnic %s , err %u", api_op, epoch,
                       api_obj->key2str().c_str(), ret);
     }
@@ -335,9 +335,9 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
  */
 sdk_ret_t
 vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
-                                           oci_epoch_t epoch, vcn_entry *vcn,
+                                           pds_epoch_t epoch, vcn_entry *vcn,
                                            subnet_entry *subnet,
-                                           oci_vnic_spec_t *vnic_info,
+                                           pds_vnic_spec_t *vnic_info,
                                            policy *v4_policy,
                                            policy *v6_policy) {
     sdk_ret_t                             ret;
@@ -361,18 +361,18 @@ vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
         // program security policy block's base address
         if (v4_policy) {
             addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
-            OCI_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
+            PDS_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
             MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr_1,
                                     addr, 5);
         }
         if (v6_policy) {
             addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
-            OCI_TRACE_DEBUG("Ingress IPv6 policy root addr 0x%llx", addr);
+            PDS_TRACE_DEBUG("Ingress IPv6 policy root addr 0x%llx", addr);
             MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v6addr_1,
                                     addr, 5);
         }
         vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1 = epoch;
-        vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2 = OCI_EPOCH_INVALID;
+        vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2 = PDS_EPOCH_INVALID;
         ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->insert(&vnic_by_slot_key,
                                                                   &vnic_by_slot_data,
                                                                   (uint32_t *)&vnic_by_slot_hash_idx_);
@@ -383,7 +383,7 @@ vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
         break;
     }
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Programming of LOCAL_VNIC_BY_SLOT_RX table failed, "
+        PDS_TRACE_ERR("Programming of LOCAL_VNIC_BY_SLOT_RX table failed, "
                       "api op %u, epoch %u, vnic %s , err %u", api_op, epoch,
                           api_obj->key2str().c_str(), ret);
         }
@@ -399,15 +399,15 @@ vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
+vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                        api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                ret;
     vcn_entry                *vcn;
     subnet_entry             *subnet;
-    oci_vnic_spec_t          *vnic_info;
-    oci_route_table_key_t    route_table_key;
+    pds_vnic_spec_t          *vnic_info;
+    pds_route_table_key_t    route_table_key;
     route_table              *v4_route_table, *v6_route_table;
-    oci_policy_key_t         policy_key;
+    pds_policy_key_t         policy_key;
     policy                   *ing_v4_policy, *ing_v6_policy;
     policy                   *egr_v4_policy, *egr_v6_policy;
 
@@ -423,7 +423,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     route_table_key = subnet->v4_route_table();
     v4_route_table = route_table_db()->route_table_find(&route_table_key);
     route_table_key = subnet->v4_route_table();
-    if (route_table_key.id != OCI_ROUTE_TABLE_ID_INVALID) {
+    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
         v6_route_table =
             route_table_db()->route_table_find(&route_table_key);
     } else {
@@ -460,7 +460,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     return ret;
 }
 
-/** @} */    // end of OCI_VNIC_IMPL
+/** @} */    // end of PDS_VNIC_IMPL
 
 }    // namespace impl
 }    // namespace api

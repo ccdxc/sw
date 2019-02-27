@@ -74,7 +74,7 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
             rule_str += "unknown";
         }
     }
-    OCI_TRACE_DEBUG_NO_HEADER("%s", rule_str.c_str());
+    PDS_TRACE_DEBUG_NO_HEADER("%s", rule_str.c_str());
 }
 
 /**
@@ -154,18 +154,18 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
         addr_itable->nodes[num_intervals++] = *inode;
     }
     rfc_ctxt->pfx_tree.num_intervals = num_intervals;
-    OCI_TRACE_DEBUG("No. of interval nodes in prefix itree %u", num_intervals);
-    OCI_TRACE_DEBUG("No. of equivalence classes in prefix tree %u",
+    PDS_TRACE_DEBUG("No. of interval nodes in prefix itree %u", num_intervals);
+    PDS_TRACE_DEBUG("No. of equivalence classes in prefix tree %u",
                     rfc_ctxt->pfx_tree.rfc_table.num_classes);
     if (num_intervals > SACL_IPV4_TREE_MAX_NODES) {
-        OCI_TRACE_ERR("No. of interval nodes in prefix itree %u exceeded "
+        PDS_TRACE_ERR("No. of interval nodes in prefix itree %u exceeded "
                       "max supported nodes %u", num_intervals,
                       SACL_IPV4_TREE_MAX_NODES);
         return sdk::SDK_RET_NO_RESOURCE;
     }
     if (rfc_ctxt->pfx_tree.rfc_table.num_classes >
             rfc_ctxt->pfx_tree.rfc_table.max_classes) {
-        OCI_TRACE_ERR("No. of equivalence classes in prefix tree %u exceeded "
+        PDS_TRACE_ERR("No. of equivalence classes in prefix tree %u exceeded "
                       "max supported classes %u",
                       rfc_ctxt->pfx_tree.rfc_table.num_classes,
                       rfc_ctxt->pfx_tree.rfc_table.max_classes);
@@ -193,18 +193,18 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
         port_itable->nodes[num_intervals++] = *inode;
     }
     rfc_ctxt->port_tree.num_intervals = num_intervals;
-    OCI_TRACE_DEBUG("No. of interval nodes in port itree %u", num_intervals);
-    OCI_TRACE_DEBUG("No. of equivalence classes in port tree %u",
+    PDS_TRACE_DEBUG("No. of interval nodes in port itree %u", num_intervals);
+    PDS_TRACE_DEBUG("No. of equivalence classes in port tree %u",
                     rfc_ctxt->port_tree.rfc_table.num_classes);
     if (num_intervals > SACL_SPORT_TREE_MAX_NODES) {
-        OCI_TRACE_ERR("No. of interval nodes in port itree %u exceeded "
+        PDS_TRACE_ERR("No. of interval nodes in port itree %u exceeded "
                       "max supported nodes %u", num_intervals,
                       SACL_SPORT_TREE_MAX_NODES);
         return sdk::SDK_RET_NO_RESOURCE;
     }
     if (rfc_ctxt->port_tree.rfc_table.num_classes >
             rfc_ctxt->port_tree.rfc_table.max_classes) {
-        OCI_TRACE_ERR("No. of equivalence classes in port tree %u exceeded "
+        PDS_TRACE_ERR("No. of equivalence classes in port tree %u exceeded "
                       "max supported classes %u",
                       rfc_ctxt->port_tree.rfc_table.num_classes,
                       rfc_ctxt->port_tree.rfc_table.max_classes);
@@ -232,19 +232,19 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
         proto_port_itable->nodes[num_intervals++] = *inode;
     }
     rfc_ctxt->proto_port_tree.num_intervals = num_intervals;
-    OCI_TRACE_DEBUG("No. of interval nodes in (proto, port) itree %u",
+    PDS_TRACE_DEBUG("No. of interval nodes in (proto, port) itree %u",
                     num_intervals);
-    OCI_TRACE_DEBUG("No. of equivalence classes in (proto, port) tree %u",
+    PDS_TRACE_DEBUG("No. of equivalence classes in (proto, port) tree %u",
                     rfc_ctxt->proto_port_tree.rfc_table.num_classes);
     if (num_intervals > SACL_PROTO_DPORT_TREE_MAX_NODES) {
-        OCI_TRACE_ERR("No. of interval nodes in (proto, port) itree %u "
+        PDS_TRACE_ERR("No. of interval nodes in (proto, port) itree %u "
                       "exceeded max supported nodes %u", num_intervals,
                       SACL_PROTO_DPORT_TREE_MAX_NODES);
         return sdk::SDK_RET_NO_RESOURCE;
     }
     if (rfc_ctxt->proto_port_tree.rfc_table.num_classes >
             rfc_ctxt->proto_port_tree.rfc_table.max_classes) {
-        OCI_TRACE_ERR("No. of equivalence classes in (proto, port) tree %u "
+        PDS_TRACE_ERR("No. of equivalence classes in (proto, port) tree %u "
                       "exceeded max supported classes %u",
                       rfc_ctxt->proto_port_tree.rfc_table.num_classes,
                       rfc_ctxt->proto_port_tree.rfc_table.max_classes);
@@ -265,10 +265,10 @@ rfc_eq_class_table_dump (rfc_table_t *rfc_table)
 {
     std::stringstream    cbm_ss;
 
-    OCI_TRACE_DEBUG("Number of equivalence classes %u", rfc_table->num_classes);
+    PDS_TRACE_DEBUG("Number of equivalence classes %u", rfc_table->num_classes);
     for (uint32_t i = 0; i < rfc_table->num_classes; i++) {
         rte_bitmap2str(rfc_table->cbm_table[i], cbm_ss);
-        OCI_TRACE_DEBUG("class id %u, cbm %s", i, cbm_ss.str().c_str());
+        PDS_TRACE_DEBUG("class id %u, cbm %s", i, cbm_ss.str().c_str());
         cbm_ss.clear();
         cbm_ss.str("");
     }
@@ -277,11 +277,11 @@ rfc_eq_class_table_dump (rfc_table_t *rfc_table)
 static inline void
 rfc_p0_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 {
-    OCI_TRACE_DEBUG("RFC P0 prefix tree equivalence class table dump :");
+    PDS_TRACE_DEBUG("RFC P0 prefix tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->pfx_tree.rfc_table);
-    OCI_TRACE_DEBUG("RFC P0 port tree equivalence class table dump :");
+    PDS_TRACE_DEBUG("RFC P0 port tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->port_tree.rfc_table);
-    OCI_TRACE_DEBUG("RFC P0 (proto, port) tree equivalence class table dump :");
+    PDS_TRACE_DEBUG("RFC P0 (proto, port) tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->proto_port_tree.rfc_table);
 }
 
@@ -325,7 +325,7 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
     /**< build LPM trees for phase 0 of RFC */
     ret = rfc_build_lpm_trees(&rfc_ctxt, rfc_tree_root_addr, mem_size);
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Failed to build RFC LPM trees, err %u", ret);
+        PDS_TRACE_ERR("Failed to build RFC LPM trees, err %u", ret);
         goto cleanup;
     }
 

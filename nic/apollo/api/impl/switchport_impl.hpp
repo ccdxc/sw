@@ -11,14 +11,14 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_switchport.hpp"
+#include "nic/apollo/include/api/pds_switchport.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_SWITCHPORT_IMPL - switchport functionality
- * @ingroup OCI_SWITCHPORT
+ * @defgroup PDS_SWITCHPORT_IMPL - switchport functionality
+ * @ingroup PDS_SWITCHPORT
  * @{
  */
 
@@ -30,10 +30,10 @@ public:
     /**
      * @brief    factory method to allocate & initialize switchport impl
      *           instance
-     * @param[in] oci_switchport    switchport information
+     * @param[in] pds_switchport    switchport information
      * @return    new instance of switchport or NULL, in case of error
      */
-    static switchport_impl *factory(oci_switchport_spec_t *oci_switchport);
+    static switchport_impl *factory(pds_switchport_spec_t *pds_switchport);
 
     /**
      * @brief    release all the s/w state associated with the given switchport,
@@ -55,7 +55,7 @@ public:
      * @param[out] info pointer to switchport info
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(oci_switchport_info_t *info);
+    sdk_ret_t read_hw(pds_switchport_info_t *info);
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -90,16 +90,16 @@ private:
      * @brief Populate specification with hardware information
      * @param[out] spec Specification
      */
-    void fill_spec_(oci_switchport_spec_t *spec);
+    void fill_spec_(pds_switchport_spec_t *spec);
 
     /**
      * @brief Populate ingress drop stats with hardware information
      * @param[out] idrop_stats Ingress drop statistics
      */
-    void fill_idrop_stats_(oci_switchport_idrop_stats_t *idrop_stats);
+    void fill_idrop_stats_(pds_switchport_idrop_stats_t *idrop_stats);
 };
 
-/** @} */    // end of OCI_SWITCHPORT_IMPL
+/** @} */    // end of PDS_SWITCHPORT_IMPL
 
 }    // namespace impl
 }    // namespace api

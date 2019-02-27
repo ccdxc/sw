@@ -11,34 +11,34 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api.hpp"
-#include "nic/apollo/include//api/oci_vcn.hpp"
-#include "nic/apollo/include/api/oci_mapping.hpp"
-#include "nic/apollo/include/api/oci_policy.hpp"
-#include "nic/apollo/include/api/oci_route.hpp"
-#include "nic/apollo/include/api/oci_subnet.hpp"
-#include "nic/apollo/include/api/oci_switchport.hpp"
-#include "nic/apollo/include/api/oci_tep.hpp"
-#include "nic/apollo/include/api/oci_vnic.hpp"
+#include "nic/apollo/include//api/pds_vcn.hpp"
+#include "nic/apollo/include/api/pds_mapping.hpp"
+#include "nic/apollo/include/api/pds_policy.hpp"
+#include "nic/apollo/include/api/pds_route.hpp"
+#include "nic/apollo/include/api/pds_subnet.hpp"
+#include "nic/apollo/include/api/pds_switchport.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
+#include "nic/apollo/include/api/pds_vnic.hpp"
 
 namespace api {
 
 /**< API specific parameters */
 typedef union api_params_u {
-    oci_switchport_spec_t switchport_spec;
-    oci_tep_key_t         tep_key;
-    oci_tep_spec_t        tep_spec;
-    oci_vcn_key_t         vcn_key;
-    oci_vcn_spec_t        vcn_info;
-    oci_subnet_key_t      subnet_key;
-    oci_subnet_spec_t     subnet_info;
-    oci_vnic_key_t        vnic_key;
-    oci_vnic_spec_t       vnic_info;
-    oci_mapping_key_t     mapping_key;
-    oci_mapping_spec_t    mapping_info;
-    oci_route_table_key_t route_table_key;
-    oci_route_table_t     route_table_info;
-    oci_policy_key_t      policy_key;
-    oci_policy_t          policy_info;
+    pds_switchport_spec_t switchport_spec;
+    pds_tep_key_t         tep_key;
+    pds_tep_spec_t        tep_spec;
+    pds_vcn_key_t         vcn_key;
+    pds_vcn_spec_t        vcn_info;
+    pds_subnet_key_t      subnet_key;
+    pds_subnet_spec_t     subnet_info;
+    pds_vnic_key_t        vnic_key;
+    pds_vnic_spec_t       vnic_info;
+    pds_mapping_key_t     mapping_key;
+    pds_mapping_spec_t    mapping_info;
+    pds_route_table_key_t route_table_key;
+    pds_route_table_t     route_table_info;
+    pds_policy_key_t      policy_key;
+    pds_policy_t          policy_info;
 } api_params_t;
 
 /**< @brief    per API context maintained by framework while processing */
@@ -61,7 +61,7 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
     if (obj_id == api::OBJ_ID_ROUTE_TABLE &&
         (api_op == api::API_OP_CREATE || (api_op == api::API_OP_UPDATE))) {
         if (api_params->route_table_info.routes) {
-            SDK_FREE(OCI_MEM_ALLOC_ROUTE_TABLE,
+            SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE,
                      api_params->route_table_info.routes);
         }
     }

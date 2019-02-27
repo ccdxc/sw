@@ -11,7 +11,7 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/impl/route_impl.hpp"
-#include "nic/apollo/api/impl/oci_impl_state.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/impl/tep_impl.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
@@ -20,22 +20,22 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_ROUTE_TABLE_IMPL - route table datapath implementation
- * @ingroup OCI_ROUTE
+ * @defgroup PDS_ROUTE_TABLE_IMPL - route table datapath implementation
+ * @ingroup PDS_ROUTE
  * @{
  */
 
 /**
  * @brief    factory method to allocate & initialize route table impl instance
- * @param[in] oci_route_table    route table information
+ * @param[in] pds_route_table    route table information
  * @return    new instance of route table or NULL, in case of error
  */
 route_table_impl *
-route_table_impl::factory(oci_route_table_t *oci_route_table) {
+route_table_impl::factory(pds_route_table_t *pds_route_table) {
     route_table_impl    *impl;
 
     // TODO: move to slab later
-    impl = (route_table_impl *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_ROUTE_TABLE_IMPL,
+    impl = (route_table_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL,
                                           sizeof(route_table_impl));
     new (impl) route_table_impl();
     return impl;
@@ -49,7 +49,7 @@ route_table_impl::factory(oci_route_table_t *oci_route_table) {
 void
 route_table_impl::destroy(route_table_impl *impl) {
     impl->~route_table_impl();
-    SDK_FREE(SDK_MEM_ALLOC_OCI_ROUTE_TABLE_IMPL, impl);
+    SDK_FREE(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL, impl);
 }
 
 /**
@@ -96,14 +96,14 @@ route_table_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t            ret;
-    oci_route_table_t    *route_table_info;
+    pds_route_table_t    *route_table_info;
     route_table_t        *rtable;
-    oci_tep_key_t        tep_key;
+    pds_tep_key_t        tep_key;
     api::tep_entry       *tep;
 
     route_table_info = &obj_ctxt->api_params->route_table_info;
     if (route_table_info->num_routes == 0) {
-        OCI_TRACE_WARN("Route table %u doesn't have any routes",
+        PDS_TRACE_WARN("Route table %u doesn't have any routes",
                        route_table_info->key.id);
         return SDK_RET_OK;
     }
@@ -111,7 +111,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     /**< allocate memory for the library to build route table */
     rtable =
         (route_table_t *)
-            SDK_MALLOC(OCI_MEM_ALLOC_ROUTE_TABLE,
+            SDK_MALLOC(PDS_MEM_ALLOC_ROUTE_TABLE,
                        sizeof(route_table_t) +
                            (route_table_info->num_routes * sizeof(route_t)));
     if (rtable == NULL) {
@@ -120,7 +120,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     rtable->af = route_table_info->af;
     // TODO: HACK Alert! Remove this when default NH is available
     rtable->default_nhid = 255;
-    rtable->max_routes = OCI_MAX_ROUTE_PER_TABLE;
+    rtable->max_routes = PDS_MAX_ROUTE_PER_TABLE;
     rtable->num_routes = route_table_info->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
         rtable->routes[i].prefix = route_table_info->routes[i].prefix;
@@ -128,7 +128,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         tep = tep_db()->tep_find(&tep_key);
         SDK_ASSERT(tep != NULL);
         rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
-        OCI_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, TEP %s",
+        PDS_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, TEP %s",
                         route_table_info->key.id,
                         ippfx2str(&rtable->routes[i].prefix),
                         rtable->routes[i].nhid,
@@ -137,9 +137,9 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     ret = lpm_tree_create(rtable, lpm_root_addr_,
                           route_table_impl_db()->lpm_table_size());
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Failed to build LPM route table, err : %u", ret);
+        PDS_TRACE_ERR("Failed to build LPM route table, err : %u", ret);
     }
-    SDK_FREE(OCI_MEM_ALLOC_ROUTE_TABLE, rtable);
+    SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE, rtable);
     return ret;
 }
 
@@ -177,7 +177,7 @@ route_table_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-route_table_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
+route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                               api_op_t api_op, obj_ctxt_t *obj_ctxt)
 {
     switch (api_op) {
@@ -205,7 +205,7 @@ route_table_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     return SDK_RET_OK;
 }
 
-/** @} */    // end of OCI_ROUTE_TABLE_IMPL
+/** @} */    // end of PDS_ROUTE_TABLE_IMPL
 
 }    // namespace impl
 }    // namespace api

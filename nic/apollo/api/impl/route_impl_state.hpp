@@ -11,14 +11,14 @@
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_ROUTE_TABLE_IMPL_STATE - route table impl state functionality
- * @ingroup OCI_ROUTE
+ * @defgroup PDS_ROUTE_TABLE_IMPL_STATE - route table impl state functionality
+ * @ingroup PDS_ROUTE
  * @{
  */
 
@@ -31,7 +31,7 @@ class route_table_impl;
 class route_table_impl_state : public obj_base {
 public:
     /**< @brief    constructor */
-    route_table_impl_state(oci_state *state);
+    route_table_impl_state(pds_state *state);
 
     /**< @brief    destructor */
     ~route_table_impl_state();
@@ -53,7 +53,7 @@ private:
     uint32_t      lpm_table_size_;       /**< size of each LPM table */
 };
 
-/** * @} */    // end of OCI_ROUTE_TABLE_IMPL_STATE
+/** * @} */    // end of PDS_ROUTE_TABLE_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

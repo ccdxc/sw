@@ -13,8 +13,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_PIPELINE_IMPL - pipeline wrapper implementation
- * @ingroup OCI_PIPELINE
+ * @defgroup PDS_PIPELINE_IMPL - pipeline wrapper implementation
+ * @ingroup PDS_PIPELINE
  * @{
  */
 
@@ -31,7 +31,7 @@ pipeline_impl_base::factory(pipeline_cfg_t *pipeline_cfg) {
     return NULL;
 }
 
-/** @} */    // end of OCI_PIPELINE_IMPL
+/** @} */    // end of PDS_PIPELINE_IMPL
 
 }    // namespace impl
 }    // namespace api

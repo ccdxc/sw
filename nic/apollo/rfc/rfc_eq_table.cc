@@ -211,7 +211,7 @@ rfc_p1_table_entry_pack (void *actiondata, uint32_t entry_num, uint16_t cid)
         action_data->action_u.sacl_ip_sport_p1_sacl_ip_sport_p1.id50 = cid;
         break;
     default:
-        OCI_TRACE_ERR("Invalid entry number %u while packing RFC P1 table",
+        PDS_TRACE_ERR("Invalid entry number %u while packing RFC P1 table",
                       entry_num);
         break;
     }
@@ -250,7 +250,7 @@ rfc_p1_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 {
     rfc_table_t    *rfc_table = &rfc_ctxt->p1_table;
 
-    OCI_TRACE_DEBUG("RFC P1 equivalence class table dump : ");
+    PDS_TRACE_DEBUG("RFC P1 equivalence class table dump : ");
     rfc_eq_class_table_dump(rfc_table);
 }
 

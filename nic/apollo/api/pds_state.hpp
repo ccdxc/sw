@@ -6,8 +6,8 @@
  * @brief   This file captures all the state maintained in s/w
  */
 
-#if !defined (__OCI_STATE_HPP__)
-#define __OCI_STATE_HPP__
+#if !defined (__PDS_STATE_HPP__)
+#define __PDS_STATE_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
@@ -29,14 +29,14 @@ using std::string;
 namespace api {
 
 /**
- * @defgroup OCI_STATE - Internal state
+ * @defgroup PDS_STATE - Internal state
  * @{
  */
 
-class oci_state {
+class pds_state {
 public:
-    oci_state();
-    ~oci_state();
+    pds_state();
+    ~pds_state();
     void set_cfg_path(string cfg_path) { cfg_path_ = cfg_path; }
     string cfg_path(void) const { return cfg_path_; }
     void set_catalog(catalog *catalog) { catalog_ = catalog; }
@@ -94,60 +94,60 @@ private:
     route_table_state    route_table_db_;
     policy_state         poicy_db_;
 };
-extern oci_state g_oci_state;
+extern pds_state g_pds_state;
 
-/** * @} */    // end of OCI_STATE
+/** * @} */    // end of PDS_STATE
 
 }    // namespace api
 
-using api::oci_state;
+using api::pds_state;
 
 static inline switchport_state *
 switchport_db (void)
 {
-    return api::g_oci_state.switchport_db();
+    return api::g_pds_state.switchport_db();
 }
 
 static inline tep_state *
 tep_db (void)
 {
-    return api::g_oci_state.tep_db();
+    return api::g_pds_state.tep_db();
 }
 
 static inline vcn_state *
 vcn_db (void)
 {
-    return api::g_oci_state.vcn_db();
+    return api::g_pds_state.vcn_db();
 }
 
 static inline subnet_state *
 subnet_db (void)
 {
-    return api::g_oci_state.subnet_db();
+    return api::g_pds_state.subnet_db();
 }
 
 static inline vnic_state *
 vnic_db (void)
 {
-    return api::g_oci_state.vnic_db();
+    return api::g_pds_state.vnic_db();
 }
 
 static inline mapping_state *
 mapping_db (void)
 {
-    return api::g_oci_state.mapping_db();
+    return api::g_pds_state.mapping_db();
 }
 
 static inline route_table_state *
 route_table_db (void)
 {
-    return api::g_oci_state.route_table_db();
+    return api::g_pds_state.route_table_db();
 }
 
 static inline policy_state *
 policy_db (void)
 {
-    return api::g_oci_state.policy_db();
+    return api::g_pds_state.policy_db();
 }
 
-#endif    /** __OCI_STATE_HPP__ */
+#endif    /** __PDS_STATE_HPP__ */

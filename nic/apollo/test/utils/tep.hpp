@@ -12,7 +12,7 @@
 #define __TEST_UTILS_TEP_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/include/api/oci_tep.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
 
 namespace api_test {
 
@@ -21,7 +21,7 @@ class tep_util {
 public:
     // Test parameters
     std::string ip_str;       // TEP IP
-    oci_encap_type_t type;    // TEP type
+    pds_encap_type_t type;    // TEP type
 
     /// \brief default constructor
     tep_util();
@@ -30,7 +30,7 @@ public:
     tep_util(std::string ip_str);
 
     /// \brief parameterized constructor
-    tep_util(std::string ip_str, oci_encap_type_t type);
+    tep_util(std::string ip_str, pds_encap_type_t type);
 
     /// \brief destructor
     ~tep_util();
@@ -43,7 +43,7 @@ public:
     /// \brief Read TEP
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(oci_tep_info_t *info);
+    sdk_ret_t read(pds_tep_info_t *info);
 
     /// \brief Update TEP
     ///
@@ -60,7 +60,7 @@ public:
     /// validates the test parameters of this object against info
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t validate(oci_tep_info_t *info);
+    sdk_ret_t validate(pds_tep_info_t *info);
 
     /// \brief Create multiple TEPs
     ///
@@ -75,7 +75,7 @@ public:
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_create(uint32_t num_tep, std::string ip_str,
-                                 oci_encap_type_t type = OCI_ENCAP_TYPE_VNIC);
+                                 pds_encap_type_t type = PDS_ENCAP_TYPE_VNIC);
 
     /// \brief Get all TEPs configured on the NAPLES
     ///
@@ -83,7 +83,7 @@ public:
     /// \param[out] teps_info list of TEP objects
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t all_get(int *count, oci_tep_info_t *teps_info);
+    static sdk_ret_t all_get(int *count, pds_tep_info_t *teps_info);
 
     /// \brief Update a TEP given its IP and updated spec
     ///
@@ -92,7 +92,7 @@ public:
     /// \param[in] new_tep_spec modified TEP spec
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t update(std::string ip_str, oci_tep_spec_t *new_tep_spec);
+    static sdk_ret_t update(std::string ip_str, pds_tep_spec_t *new_tep_spec);
 
     /// \brief Delete a TEP given its IP
     ///

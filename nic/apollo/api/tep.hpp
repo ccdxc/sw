@@ -3,7 +3,7 @@
  *
  * @file    tep.hpp
  *
- * @brief   This file deals with OCI TEP functionality required internally by
+ * @brief   This file deals with PDS TEP functionality required internally by
  *          other modules
  */
 
@@ -14,13 +14,13 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_tep.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_TEP_ENTRY - tep functionality
- * @ingroup OCI_TEP
+ * @defgroup PDS_TEP_ENTRY - tep functionality
+ * @ingroup PDS_TEP
  * @{
  */
 
@@ -31,10 +31,10 @@ class tep_entry : public api_base {
 public:
     /**
      * @brief    factory method to allocate and initialize a tep entry
-     * @param[in] oci_tep    tep information
+     * @param[in] pds_tep    tep information
      * @return    new instance of tep or NULL, in case of error
      */
-    static tep_entry *factory(oci_tep_spec_t *oci_tep);
+    static tep_entry *factory(pds_tep_spec_t *pds_tep);
 
     /**
      * @brief    release all the s/w state associate with the given tep, if any,
@@ -101,7 +101,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /**
@@ -116,7 +116,7 @@ public:
      */
     virtual sdk_ret_t del_from_db(void) override;
 
-    static tep_entry *find_in_db(oci_tep_key_t *tep_key);
+    static tep_entry *find_in_db(pds_tep_key_t *tep_key);
 
     /**
      * @brief    this method is called on new object that needs to replace the
@@ -154,7 +154,7 @@ public:
      * @return    hash value
      */
     static uint32_t tep_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(oci_tep_key_t)) % ht_size;
+        return hash_algo::fnv_hash(key, sizeof(pds_tep_key_t)) % ht_size;
     }
 
     /**
@@ -165,7 +165,7 @@ public:
      */
     static bool tep_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(oci_tep_key_t))) {
+        if (!memcmp(key1, key2, sizeof(pds_tep_key_t))) {
             return true;
         }
         return false;
@@ -196,12 +196,12 @@ private:
      *       ARP traffic in the substrate, but we don't need to store it in s/w,
      *       we will directly refresh the TEP_TX table
      */
-    oci_tep_key_t    key_;        /**< tep key */
+    pds_tep_key_t    key_;        /**< tep key */
     ht_ctxt_t        ht_ctxt_;    /**< hash table context */
     impl_base        *impl_;      /**< impl object instance */
 } __PACK__;
 
-/** @} */    // end of OCI_TEP_ENTRY
+/** @} */    // end of PDS_TEP_ENTRY
 
 }  /** end namespace api */
 

@@ -8,11 +8,11 @@
 
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
-#include "nic/apollo/include/api/oci_policy.hpp"
+#include "nic/apollo/include/api/pds_policy.hpp"
 
 /**
- * @defgroup OCI_POLICY_API - first level of security policy API handling
- * @ingroup OCI_POLICY
+ * @defgroup PDS_POLICY_API - first level of security policy API handling
+ * @ingroup PDS_POLICY
  * @{
  */
 
@@ -23,7 +23,7 @@
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_policy_create (_In_ oci_policy_t *policy)
+pds_policy_create (_In_ pds_policy_t *policy)
 {
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
@@ -47,7 +47,7 @@ oci_policy_create (_In_ oci_policy_t *policy)
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_policy_delete (_In_ oci_policy_key_t *policy_key)
+pds_policy_delete (_In_ pds_policy_key_t *policy_key)
 {
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
@@ -64,4 +64,4 @@ oci_policy_delete (_In_ oci_policy_key_t *policy_key)
     return sdk::SDK_RET_OOM;
 }
 
-/** @} */ // end of OCI_POLICY_API
+/** @} */ // end of PDS_POLICY_API

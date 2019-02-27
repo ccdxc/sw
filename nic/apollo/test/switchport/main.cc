@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 #include <getopt.h>
-#include "nic/apollo/include/api/oci_batch.hpp"
+#include "nic/apollo/include/api/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/switchport.hpp"
 
@@ -20,7 +20,7 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
-static oci_epoch_t g_batch_epoch = OCI_EPOCH_INVALID;
+static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 
 // Constants
 const std::string k_switchport_ip_str("1.0.0.1");
@@ -31,14 +31,14 @@ const std::string k_mac_addr_str("00:02:01:00:00:01");
 // SwitchPort test class
 //----------------------------------------------------------------------------
 
-class switchport_test : public oci_test_base {
+class switchport_test : public pds_test_base {
 protected:
     switchport_test() {}
     virtual ~switchport_test() {}
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        oci_test_base::SetUpTestCase(api_test::g_cfg_file, false);
+        pds_test_base::SetUpTestCase(api_test::g_cfg_file, false);
     }
 };
 
@@ -58,7 +58,7 @@ protected:
 /// Without creating a switchport, read switchport
 TEST_F(switchport_test, switchport_read_before_create) {
     switchport_util switchport_obj;
-    oci_switchport_info_t info;
+    pds_switchport_info_t info;
 
     // Trigger
     ASSERT_TRUE(switchport_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -68,30 +68,30 @@ TEST_F(switchport_test, switchport_read_before_create) {
 ///
 /// Without creating a switchport, attempt to delete switchport
 TEST_F(switchport_test, switchport_delete_before_create) {
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
 
     // Trigger
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(switchport_util::del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(oci_batch_abort() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }
 
 /// \brief Create SwitchPort
 ///
 /// Create switchport for the first time and verify with read
 TEST_F(switchport_test, switchport_create) {
-    oci_batch_params_t batch_params = {0};
-    oci_switchport_info_t info;
+    pds_batch_params_t batch_params = {0};
+    pds_switchport_info_t info;
     switchport_util switchport_obj(k_switchport_ip_str, k_mac_addr_str,
                                    k_gateway_ip_str);
 
     // Trigger
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(switchport_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Verify with read
     ASSERT_TRUE(switchport_obj.read(&info) == sdk::SDK_RET_OK);
@@ -100,9 +100,9 @@ TEST_F(switchport_test, switchport_create) {
 
     // Tear down
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(switchport_util::del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Create SwitchPort after Create
@@ -124,22 +124,22 @@ TEST_F(switchport_test, switchport_delete) {
     // TODO Even after delete, values are still present in DB.
     // Commenting this test out, until that is fixed.
 #if 0
-    oci_batch_params_t batch_params = {0};
-    oci_switchport_info_t info;
+    pds_batch_params_t batch_params = {0};
+    pds_switchport_info_t info;
     switchport_util    switchport_obj(k_switchport_ip_str, k_mac_addr_str,
                                    k_gateway_ip_str);
 
     // Setup
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     ASSERT_TRUE(switchport_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Trigger
     batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     ASSERT_TRUE(switchport_util::del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(oci_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Verify with read
     ASSERT_TRUE(switchport_obj.read(&info) == sdk::SDK_RET_OK);

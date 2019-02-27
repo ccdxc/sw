@@ -10,13 +10,13 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/include/api/oci_batch.hpp"
-#include "nic/apollo/include/api/oci_switchport.hpp"
-#include "nic/apollo/include/api/oci_tep.hpp"
-#include "nic/apollo/include/api/oci_vcn.hpp"
-#include "nic/apollo/include/api/oci_subnet.hpp"
-#include "nic/apollo/include/api/oci_vnic.hpp"
-#include "nic/apollo/include/api/oci_mapping.hpp"
+#include "nic/apollo/include/api/pds_batch.hpp"
+#include "nic/apollo/include/api/pds_switchport.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
+#include "nic/apollo/include/api/pds_vcn.hpp"
+#include "nic/apollo/include/api/pds_subnet.hpp"
+#include "nic/apollo/include/api/pds_vnic.hpp"
+#include "nic/apollo/include/api/pds_mapping.hpp"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/sdk/include/sdk/base.hpp"
@@ -35,7 +35,7 @@ char                *g_cfg_file = NULL;
 bool                g_daemon_mode = false;
 flow_test           *g_flow_test_obj;
 
-class flow_gtest : public oci_test_base {
+class flow_gtest : public pds_test_base {
 protected:
     flow_gtest() {}
     virtual ~flow_gtest() {}
@@ -46,7 +46,7 @@ protected:
     /**< called at the beginning of all test cases in this class */
     static void SetUpTestCase() {
         /**< call base class function */
-        oci_test_base::SetUpTestCase(g_cfg_file, false);
+        pds_test_base::SetUpTestCase(g_cfg_file, false);
     }
 };
 

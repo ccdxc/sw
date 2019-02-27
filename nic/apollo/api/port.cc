@@ -10,12 +10,12 @@
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 
 /**< port handles indexed by the front panel port number (starting from 1) */
-void *g_port_store[OCI_MAX_PORT + 1];
+void *g_port_store[PDS_MAX_PORT + 1];
 
 /**
  * @brief        Handle link UP/Down events
@@ -53,7 +53,7 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
         return;
     }
 
-    for (int port = 0; port < OCI_MAX_PORT+1; ++port) {
+    for (int port = 0; port < PDS_MAX_PORT+1; ++port) {
         if (g_port_store[port] != NULL) {
             xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port);
 
@@ -78,7 +78,7 @@ create_port (port_args_t *port_args)
 {
     void    *port_handle;
 
-    OCI_TRACE_DEBUG("Creating port %u", port_args->port_num);
+    PDS_TRACE_DEBUG("Creating port %u", port_args->port_num);
 
     /**
      * store user configured admin_state in another variable to be used
@@ -102,7 +102,7 @@ create_port (port_args_t *port_args)
     port_handle = sdk::linkmgr::port_create(port_args);
     g_port_store[port_args->port_num] = port_handle;
     if (port_handle == NULL) {
-        OCI_TRACE_ERR("port %u create failed", port_args->port_num);
+        PDS_TRACE_ERR("port %u create failed", port_args->port_num);
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -120,7 +120,7 @@ populate_port_info (uint32_t fp_port, uint32_t port_num, port_args_t *port_args)
     uint32_t    asic, asic_port;
 
     port_args->port_num = port_num;
-    port_args->port_type = g_oci_state.catalogue()->port_type_fp(fp_port);
+    port_args->port_type = g_pds_state.catalogue()->port_type_fp(fp_port);
     if (port_args->port_type == port_type_t::PORT_TYPE_ETH) {
         port_args->port_speed = port_speed_t::PORT_SPEED_100G;
         port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
@@ -129,13 +129,13 @@ populate_port_info (uint32_t fp_port, uint32_t port_num, port_args_t *port_args)
         port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
     }
     port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
-    port_args->num_lanes = g_oci_state.catalogue()->num_lanes_fp(fp_port);
+    port_args->num_lanes = g_pds_state.catalogue()->num_lanes_fp(fp_port);
     asic = sdk::linkmgr::port::port_num_to_asic_num(port_num);
     asic_port = sdk::linkmgr::port::port_num_to_asic_port(port_num);
     port_args->mac_id =
-        g_oci_state.catalogue()->asic_port_to_mac_id(asic, asic_port);
+        g_pds_state.catalogue()->asic_port_to_mac_id(asic, asic_port);
     port_args->mac_ch =
-        g_oci_state.catalogue()->asic_port_to_mac_ch(asic, asic_port);
+        g_pds_state.catalogue()->asic_port_to_mac_ch(asic, asic_port);
     port_args->auto_neg_enable = false;
     port_args->debounce_time = 0;
     port_args->mtu = 0;    /**< default will be set to max mtu */
@@ -144,10 +144,10 @@ populate_port_info (uint32_t fp_port, uint32_t port_num, port_args_t *port_args)
 
     for (uint32_t i = 0; i < port_args->num_lanes; i++) {
         port_args->sbus_addr[i] =
-            g_oci_state.catalogue()->sbus_addr(asic, asic_port, i);
+            g_pds_state.catalogue()->sbus_addr(asic, asic_port, i);
     }
     port_args->breakout_modes =
-        g_oci_state.catalogue()->breakout_modes(fp_port);
+        g_pds_state.catalogue()->breakout_modes(fp_port);
 
     return SDK_RET_OK;
 }
@@ -162,13 +162,13 @@ create_ports (void)
     uint32_t       num_fp_ports;
     port_args_t    port_args;
 
-    num_fp_ports = g_oci_state.catalogue()->num_fp_ports();
+    num_fp_ports = g_pds_state.catalogue()->num_fp_ports();
     for (uint32_t fp_port = 1, port_num = 1;
          fp_port <= num_fp_ports; fp_port++) {
         memset(&port_args, 0, sizeof(port_args));
         populate_port_info(fp_port, port_num, &port_args);
         create_port(&port_args);
-        port_num += g_oci_state.catalogue()->num_lanes_fp(fp_port);
+        port_num += g_pds_state.catalogue()->num_lanes_fp(fp_port);
     }
     return SDK_RET_OK;
 }
@@ -190,35 +190,35 @@ port_get (uint32_t fp_port, port_get_cb_t port_get_cb, void *ctxt)
     if (fp_port == 0) {
         /**< iterate over all ports */
         for (uint32_t fp_port = 1;
-             fp_port <= g_oci_state.catalogue()->num_fp_ports(); fp_port++) {
+             fp_port <= g_pds_state.catalogue()->num_fp_ports(); fp_port++) {
             if (g_port_store[fp_port] == NULL)  {
-                OCI_TRACE_ERR("Port %u not created, skipping", fp_port);
+                PDS_TRACE_ERR("Port %u not created, skipping", fp_port);
                 continue;
             }
             memset(&port_info, 0, sizeof(port_info));
             port_info.stats_data = stats_data;
             ret = sdk::linkmgr::port_get(g_port_store[fp_port], &port_info);
             if (ret != sdk::SDK_RET_OK) {
-                OCI_TRACE_ERR("Failed to get port %u info", fp_port);
+                PDS_TRACE_ERR("Failed to get port %u info", fp_port);
                 continue;
             }
             /** call the per port callback for this port */
             port_get_cb(&port_info, ctxt);
         }
     } else {
-        if (fp_port > OCI_MAX_PORT) {
-            OCI_TRACE_ERR("Invalid port number %u", fp_port);
+        if (fp_port > PDS_MAX_PORT) {
+            PDS_TRACE_ERR("Invalid port number %u", fp_port);
             return SDK_RET_INVALID_ARG;
         }
         if (g_port_store[fp_port] == NULL)  {
-            OCI_TRACE_ERR("Port %u not created", fp_port);
+            PDS_TRACE_ERR("Port %u not created", fp_port);
             return SDK_RET_INVALID_OP;
         }
         memset(&port_info, 0, sizeof(port_info));
         port_info.stats_data = stats_data;
         ret = sdk::linkmgr::port_get(g_port_store[fp_port], &port_info);
         if (ret != sdk::SDK_RET_OK) {
-            OCI_TRACE_ERR("Failed to get port %u info", fp_port);
+            PDS_TRACE_ERR("Failed to get port %u info", fp_port);
             return ret;
         }
         /** call the per port callback for this port */

@@ -16,8 +16,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_ASIC_IMPL - asic wrapper implementation
- * @ingroup OCI_ASIC
+ * @defgroup PDS_ASIC_IMPL - asic wrapper implementation
+ * @ingroup PDS_ASIC
  * @{
  */
 

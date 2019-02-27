@@ -11,15 +11,15 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/utils.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_VNIC_ENTRY - vnic entry functionality
- * @ingroup OCI_VNIC
+ * @defgroup PDS_VNIC_ENTRY - vnic entry functionality
+ * @ingroup PDS_VNIC
  * @{
  */
 
@@ -31,18 +31,18 @@ vnic_entry::vnic_entry() {
 
 /**
  * @brief    factory method to allocate and initialize a vnic entry
- * @param[in] oci_vnic    vnic information
+ * @param[in] pds_vnic    vnic information
  * @return    new instance of vnic or NULL, in case of error
  */
 vnic_entry *
-vnic_entry::factory(oci_vnic_spec_t *oci_vnic) {
+vnic_entry::factory(pds_vnic_spec_t *pds_vnic) {
     vnic_entry *vnic;
 
     /**< create vnic entry with defaults, if any */
     vnic = vnic_db()->vnic_alloc();
     if (vnic) {
         new (vnic) vnic_entry();
-        vnic->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_VNIC, oci_vnic);
+        vnic->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_VNIC, pds_vnic);
         if (vnic->impl_ == NULL) {
             vnic_entry::destroy(vnic);
             return NULL;
@@ -81,9 +81,9 @@ vnic_entry::destroy(vnic_entry *vnic) {
  */
 sdk_ret_t
 vnic_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_vnic_spec_t *oci_vnic = &api_ctxt->api_params->vnic_info;
+    pds_vnic_spec_t *pds_vnic = &api_ctxt->api_params->vnic_info;
 
-    memcpy(&this->key_, &oci_vnic->key, sizeof(oci_vnic_key_t));
+    memcpy(&this->key_, &pds_vnic->key, sizeof(pds_vnic_key_t));
     return SDK_RET_OK;
 }
 
@@ -106,12 +106,12 @@ vnic_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    oci_vnic_spec_t    *oci_vnic = &obj_ctxt->api_params->vnic_info;
+    pds_vnic_spec_t    *pds_vnic = &obj_ctxt->api_params->vnic_info;
 
-    OCI_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, vlan %u, "
-                    "slot %u", key_.id, oci_vnic->vcn.id, oci_vnic->subnet.id,
-                    macaddr2str(oci_vnic->mac_addr), oci_vnic->wire_vlan,
-                    oci_vnic->slot);
+    PDS_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, vlan %u, "
+                    "slot %u", key_.id, pds_vnic->vcn.id, pds_vnic->subnet.id,
+                    macaddr2str(pds_vnic->mac_addr), pds_vnic->wire_vlan,
+                    pds_vnic->slot);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -157,9 +157,9 @@ vnic_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
+vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
-    OCI_TRACE_DEBUG("Activating vnic %u config", key_.id);
+    PDS_TRACE_DEBUG("Activating vnic %u config", key_.id);
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
 }
 
@@ -200,9 +200,9 @@ vnic_entry::del_from_db(void) {
  */
 sdk_ret_t
 vnic_entry::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_ID_VNIC, this);
+    return delay_delete_to_slab(PDS_SLAB_ID_VNIC, this);
 }
 
-/** @} */    // end of OCI_VNIC_ENTRY
+/** @} */    // end of PDS_VNIC_ENTRY
 
 }    // namespace api

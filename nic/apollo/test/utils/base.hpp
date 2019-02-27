@@ -8,20 +8,20 @@
 ///
 //----------------------------------------------------------------------------
 
-#if !defined(__OCI_BASE_TEST_HPP__)
-#define __OCI_BASE_TEST_HPP__
+#if !defined(__PDS_BASE_TEST_HPP__)
+#define __PDS_BASE_TEST_HPP__
 
 #include <gtest/gtest.h>
 
 /// Base class for all gtests. Implements init and teardown routines common
 /// to all test cases
-class oci_test_base : public ::testing::Test {
+class pds_test_base : public ::testing::Test {
 protected:
     /// constructor
-    oci_test_base() {}
+    pds_test_base() {}
 
     /// destructor
-    virtual ~oci_test_base() {}
+    virtual ~pds_test_base() {}
 
     /// called immediately after the constructor before each test
     virtual void SetUp(void) {}
@@ -36,4 +36,4 @@ protected:
     static void TearDownTestCase(void);
 };
 
-#endif // end define __OCI_BASE_TEST_HPP__
+#endif // end define __PDS_BASE_TEST_HPP__

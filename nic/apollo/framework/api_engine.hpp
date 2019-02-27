@@ -16,8 +16,8 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
-#include "nic/apollo/include/api/oci.hpp"
-#include "nic/apollo/include/api/oci_batch.hpp"
+#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/include/api/pds_batch.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
@@ -82,8 +82,8 @@ typedef list<std::pair<api_base *, obj_ctxt_t>>    dirty_obj_list_t;
  * @brief    per batch context which is a list of all API contexts
  */
 typedef struct api_batch_ctxt_s {
-    oci_epoch_t           epoch;           /**< epoch in progress, passed in
-                                                oci_batch_begin() */
+    pds_epoch_t           epoch;           /**< epoch in progress, passed in
+                                                pds_batch_begin() */
     api_batch_stage_t     stage;           /**< phase of the batch processing */
     vector<api_ctxt_t>    api_ctxts;       /**< API contexts per batch */
     /**
@@ -115,7 +115,7 @@ public:
     /**
      * @brief    handle batch begin by setting up per API batch context
      */
-    sdk_ret_t batch_begin(oci_batch_params_t *batch_params);
+    sdk_ret_t batch_begin(pds_batch_params_t *batch_params);
 
     /**
      * @brief    commit all the APIs in this batch, release any temporary

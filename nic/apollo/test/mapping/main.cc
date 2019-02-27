@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <gtest/gtest.h>
-#include "nic/apollo/include/api/oci_batch.hpp"
-#include "nic/apollo/include/api/oci_subnet.hpp"
+#include "nic/apollo/include/api/pds_batch.hpp"
+#include "nic/apollo/include/api/pds_subnet.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/mapping.hpp"
@@ -55,14 +55,14 @@ uint8_t g_rcv_pkt1[] = {
 // Mapping test class
 //----------------------------------------------------------------------------
 
-class mapping_test : public oci_test_base {
+class mapping_test : public pds_test_base {
 protected:
     mapping_test() {}
     virtual ~mapping_test() {}
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        oci_test_base::SetUpTestCase(g_cfg_file, false);
+        pds_test_base::SetUpTestCase(g_cfg_file, false);
     }
 };
 
@@ -90,12 +90,12 @@ protected:
 ///
 /// Get the stats and make sure the drop counts/with-reason is matching
 TEST_F(mapping_test, mapping_create) {
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
     struct in_addr ipaddr;
-    oci_vcn_id_t vcn_id = 1;
-    oci_subnet_id_t sub_id = 1;
-    oci_route_table_id_t rt_id = 1;
-    oci_vnic_id_t vnic_id = 1;
+    pds_vcn_id_t vcn_id = 1;
+    pds_subnet_id_t sub_id = 1;
+    pds_route_table_id_t rt_id = 1;
+    pds_vnic_id_t vnic_id = 1;
     uint16_t vlan_tag = 100;
     uint16_t mpls_slot = 200;
     uint16_t mpls_rem_slot = 400;
@@ -112,39 +112,39 @@ TEST_F(mapping_test, mapping_create) {
     const char *vnic_rem_ip = "20.1.1.3";
     const char *vnic_rem_mac = "00:00:14:01:01:03";
     const char *sub_rem_gw = "100.0.0.4";    // Part of my-tep subnet
-    oci_vnic_info_t vnic_info;
-    oci_mapping_info_t map_info;
-    oci_route_table_t rt_tbl;
-    oci_subnet_spec_t sub;
+    pds_vnic_info_t vnic_info;
+    pds_mapping_info_t map_info;
+    pds_route_table_t rt_tbl;
+    pds_subnet_spec_t sub;
 
     batch_params.epoch = 1;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
     // Create switchport
     switchport_util swport(my_ip, my_mac, my_gw);
     ASSERT_TRUE(swport.create() == SDK_RET_OK);
 
     // Create VCN
-    vcn_util vcn(OCI_VCN_TYPE_TENANT, vcn_id, vcn_cidr);
+    vcn_util vcn(PDS_VCN_TYPE_TENANT, vcn_id, vcn_cidr);
     ASSERT_TRUE(vcn.create() == SDK_RET_OK);
 
     // Create remote tep
-    tep_util rtep(sub_rem_gw, OCI_ENCAP_TYPE_VNIC);
+    tep_util rtep(sub_rem_gw, PDS_ENCAP_TYPE_VNIC);
     ASSERT_TRUE(rtep.create() == SDK_RET_OK);
 
     // Create route
     rt_tbl.key.id = rt_id;
     rt_tbl.af = IP_AF_IPV4;
     rt_tbl.num_routes = 1;
-    rt_tbl.routes = (oci_route_t *)calloc(1, sizeof(oci_route_t));
+    rt_tbl.routes = (pds_route_t *)calloc(1, sizeof(pds_route_t));
     ASSERT_TRUE(str2ipv4pfx((char *)sub_rem_cidr.c_str(),
                             &rt_tbl.routes[0].prefix) == SDK_RET_OK);
     rt_tbl.routes[0].nh_ip.af = IP_AF_IPV4;
     inet_aton(sub_rem_gw, &ipaddr);
     rt_tbl.routes[0].nh_ip.addr.v4_addr = ntohl(ipaddr.s_addr);
-    rt_tbl.routes[0].nh_type = OCI_NH_TYPE_REMOTE_TEP;
-    rt_tbl.routes[0].vcn_id = OCI_VCN_ID_INVALID;
-    ASSERT_TRUE(oci_route_table_create(&rt_tbl) == SDK_RET_OK);
+    rt_tbl.routes[0].nh_type = PDS_NH_TYPE_REMOTE_TEP;
+    rt_tbl.routes[0].vcn_id = PDS_VCN_ID_INVALID;
+    ASSERT_TRUE(pds_route_table_create(&rt_tbl) == SDK_RET_OK);
 
     // Create Subnet on the VCN
     sub.key.id = sub_id;
@@ -157,7 +157,7 @@ TEST_F(mapping_test, mapping_create) {
     sub.vr_ip.addr.v4_addr = ntohl(ipaddr.s_addr);
     mac_str_to_addr((char *)sub_vr_mac, sub.vr_mac);
     sub.v4_route_table.id = rt_id;
-    ASSERT_TRUE(oci_subnet_create(&sub) == SDK_RET_OK);
+    ASSERT_TRUE(pds_subnet_create(&sub) == SDK_RET_OK);
 
     // Create vnic
     vnic_util vnic(vcn_id, sub_id, vnic_id, vnic_mac);
@@ -182,7 +182,7 @@ TEST_F(mapping_test, mapping_create) {
     ASSERT_TRUE(rmap.create() == SDK_RET_OK);
 
     // Completed the configuration
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
     // Read vnic info and compare the configuration packet count
     vnic.read(vnic_id, &vnic_info);
@@ -224,20 +224,20 @@ TEST_F(mapping_test, mapping_get) {}
 TEST_F(mapping_test, mapping_delete)
 {
 #if 0
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
     const char *vnic_ip             = "10.1.1.3";
-    oci_vcn_id_t vcn_id             = 1;
+    pds_vcn_id_t vcn_id             = 1;
     api_test::mapping_util map;
 
     batch_params.epoch = 2;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
     map.vcn_id     = vcn_id;
     map.vnic_ip    = vnic_ip;
     map.vnic_ip_af = IP_AF_IPV4;
     ASSERT_TRUE(map.destroy() == SDK_RET_OK);
 
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 #endif
 }
 

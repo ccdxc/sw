@@ -10,15 +10,15 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/route.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_ROUTE_TABLE - route table functionality
- * @ingroup OCI_ROUTE
+ * @defgroup PDS_ROUTE_TABLE - route table functionality
+ * @ingroup PDS_ROUTE
  * @{
  */
 
@@ -30,11 +30,11 @@ route_table::route_table() {
 
 /**
  * @brief    factory method to allocate & initialize a route table instance
- * @param[in] oci_route_table    route table information
+ * @param[in] pds_route_table    route table information
  * @return    new instance of route table or NULL, in case of error
  */
 route_table *
-route_table::factory(oci_route_table_t *oci_route_table) {
+route_table::factory(pds_route_table_t *pds_route_table) {
     route_table    *rtable;
 
     /**< create route table instance with defaults, if any */
@@ -42,7 +42,7 @@ route_table::factory(oci_route_table_t *oci_route_table) {
     if (rtable) {
         new (rtable) route_table();
         rtable->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_ROUTE_TABLE,
-                                           oci_route_table);
+                                           pds_route_table);
         if (rtable->impl_ == NULL) {
             route_table::destroy(rtable);
             return NULL;
@@ -81,10 +81,10 @@ route_table::destroy(route_table *rtable) {
  */
 sdk_ret_t
 route_table::init_config(api_ctxt_t *api_ctxt) {
-    oci_route_table_t    *oci_route_table;
+    pds_route_table_t    *pds_route_table;
     
-    oci_route_table = &api_ctxt->api_params->route_table_info;
-    memcpy(&this->key_, &oci_route_table->key, sizeof(oci_route_table_key_t));
+    pds_route_table = &api_ctxt->api_params->route_table_info;
+    memcpy(&this->key_, &pds_route_table->key, sizeof(pds_route_table_key_t));
     return SDK_RET_OK;
 }
 
@@ -107,7 +107,7 @@ route_table::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 route_table::program_config(obj_ctxt_t *obj_ctxt) {
-    OCI_TRACE_DEBUG("Programming route table %u", key_.id);
+    PDS_TRACE_DEBUG("Programming route table %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -153,9 +153,9 @@ route_table::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-route_table::activate_config(oci_epoch_t epoch, api_op_t api_op,
+route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
                             obj_ctxt_t *obj_ctxt) {
-    OCI_TRACE_DEBUG("Activating route table %u config", key_.id);
+    PDS_TRACE_DEBUG("Activating route table %u config", key_.id);
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
 }
 
@@ -196,9 +196,9 @@ route_table::del_from_db(void) {
  */
 sdk_ret_t
 route_table::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_ID_ROUTE_TABLE, this);
+    return delay_delete_to_slab(PDS_SLAB_ID_ROUTE_TABLE, this);
 }
 
-/** @} */    // end of OCI_ROUTE_TABLE
+/** @} */    // end of PDS_ROUTE_TABLE
 
 }    // namespace api

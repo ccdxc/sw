@@ -18,8 +18,8 @@
 
 namespace api {
 
-/// \defgroup OCI_VCN_STATE - vcn state functionality
-/// \ingroup OCI_VCN
+/// \defgroup PDS_VCN_STATE - vcn state functionality
+/// \ingroup PDS_VCN
 /// @{
 
 /// \brief    state maintained for vcns
@@ -42,7 +42,7 @@ public:
     /// \brief      lookup a vcn in database given the key
     /// \param[in]  vcn_key vcn key
     /// \return     pointer to the vcn instance found or NULL
-    vcn_entry *vcn_find(oci_vcn_key_t *vcn_key) const;
+    vcn_entry *vcn_find(pds_vcn_key_t *vcn_key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
@@ -58,7 +58,7 @@ private:
     slab *vcn_slab_;       ///< slab for allocating vcn entry
 };
 
-/// \@}    // end of OCI_VCN_ENTRY
+/// \@}    // end of PDS_VCN_ENTRY
 
 }    // namespace api
 

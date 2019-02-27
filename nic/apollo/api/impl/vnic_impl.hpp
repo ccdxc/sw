@@ -11,7 +11,7 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_vnic.hpp"
+#include "nic/apollo/include/api/pds_vnic.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/route.hpp"
@@ -22,8 +22,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_VNIC_IMPL - vnic functionality
- * @ingroup OCI_VNIC
+ * @defgroup PDS_VNIC_IMPL - vnic functionality
+ * @ingroup PDS_VNIC
  * @{
  */
 
@@ -34,10 +34,10 @@ class vnic_impl : public impl_base {
 public:
     /**
      * @brief    factory method to allocate & initialize vnic impl instance
-     * @param[in] oci_vnic    vnic information
+     * @param[in] pds_vnic    vnic information
      * @return    new instance of vnic or NULL, in case of error
      */
-    static vnic_impl *factory(oci_vnic_spec_t *oci_vnic);
+    static vnic_impl *factory(pds_vnic_spec_t *pds_vnic);
 
     /**
      * @brief    release all the s/w state associated with the given vnic,
@@ -97,7 +97,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t activate_hw(api_base *api_obj,
-                                  oci_epoch_t epoch,
+                                  pds_epoch_t epoch,
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
@@ -107,8 +107,8 @@ public:
      * @param[out] info pointer to vnic info
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(oci_vnic_key_t *key,
-                              oci_vnic_info_t *info) ;
+    sdk_ret_t read_hw(pds_vnic_key_t *key,
+                              pds_vnic_info_t *info) ;
 
     uint16_t hw_id(void) { return hw_id_; }
 
@@ -140,10 +140,10 @@ private:
      */
     sdk_ret_t activate_vnic_by_vlan_tx_table_(api_op_t api_op,
                                               api_base *api_obj,
-                                              oci_epoch_t epoch,
+                                              pds_epoch_t epoch,
                                               vcn_entry *vcn,
                                               subnet_entry *subnet,
-                                              oci_vnic_spec_t *vnic_info,
+                                              pds_vnic_spec_t *vnic_info,
                                               route_table *v4_route_table,
                                               route_table *v6_route_table,
                                               policy *v4_policy,
@@ -163,9 +163,9 @@ private:
      */
     sdk_ret_t activate_vnic_by_slot_rx_table_(api_op_t api_op,
                                               api_base *api_obj,
-                                              oci_epoch_t epoch, vcn_entry *vcn,
+                                              pds_epoch_t epoch, vcn_entry *vcn,
                                               subnet_entry *subnet,
-                                              oci_vnic_spec_t *vnic_info,
+                                              pds_vnic_spec_t *vnic_info,
                                               policy *v4_policy,
                                               policy *v6_policy);
     /**
@@ -175,7 +175,7 @@ private:
      */
     void fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
                          vnic_rx_stats_actiondata_t *rx_stats,
-                         oci_vnic_stats_t *stats);
+                         pds_vnic_stats_t *stats);
 private:
     /**< P4 datapath specific state */
     uint16_t          hw_id_;      /**< hardware id */
@@ -183,7 +183,7 @@ private:
     uint16_t          vnic_by_slot_hash_idx_;
 } __PACK__;
 
-/** @} */    // end of OCI_VNIC_IMPL
+/** @} */    // end of PDS_VNIC_IMPL
 
 }    // namespace impl
 }    // namespace api

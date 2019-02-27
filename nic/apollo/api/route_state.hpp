@@ -16,8 +16,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_ROUTE_TABLE_STATE - route table state/db functionality
- * @ingroup OCI_ROUTE
+ * @defgroup PDS_ROUTE_TABLE_STATE - route table state/db functionality
+ * @ingroup PDS_ROUTE
  * @{
  */
 
@@ -52,7 +52,7 @@ public:
      * @brief     lookup a route table in database given the key
      * @param[in] route_table_key route table key
      */
-    route_table *route_table_find(oci_route_table_key_t *route_table_key) const;
+    route_table *route_table_find(pds_route_table_key_t *route_table_key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
@@ -66,7 +66,7 @@ private:
     slab    *route_table_slab_;    /**< slab to allocate route table instance */
 };
 
-/** @} */    // end of OCI_ROUTE_TABLE_STATE
+/** @} */    // end of PDS_ROUTE_TABLE_STATE
 
 }    // namespace api
 

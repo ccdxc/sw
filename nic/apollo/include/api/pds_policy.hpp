@@ -8,21 +8,21 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __INCLUDE_API_OCI_POLICY_HPP__
-#define __INCLUDE_API_OCI_POLICY_HPP__
+#ifndef __INCLUDE_API_PDS_POLICY_HPP__
+#define __INCLUDE_API_PDS_POLICY_HPP__
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/l4.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
-#include "nic/apollo/include/api/oci.hpp"
+#include "nic/apollo/include/api/pds.hpp"
 
-/// \defgroup OCI_POLICY Policy API
+/// \defgroup PDS_POLICY Policy API
 /// @{
 
-#define OCI_MAX_SECURITY_POLICY                  1024
-#define OCI_MAX_RULES_PER_SECURITY_POLICY        1023
+#define PDS_MAX_SECURITY_POLICY                  1024
+#define PDS_MAX_RULES_PER_SECURITY_POLICY        1023
 
-#define OCI_MAX_POLICY        OCI_MAX_SECURITY_POLICY
+#define PDS_MAX_POLICY        PDS_MAX_SECURITY_POLICY
 
 /// \brief Rule direction
 typedef enum rule_dir_e {
@@ -31,9 +31,9 @@ typedef enum rule_dir_e {
 } rule_dir_t;
 
 /// \brief Policy key
-typedef struct oci_policy_key_s {
-    oci_policy_id_t    id;    ///< Unique ID for the policy
-} __PACK__ oci_policy_key_t;
+typedef struct pds_policy_key_s {
+    pds_policy_id_t    id;    ///< Unique ID for the policy
+} __PACK__ pds_policy_key_t;
 
 /// \brief Rule L3 match criteria
 typedef struct rule_l3_match_s {
@@ -90,22 +90,22 @@ typedef enum policy_type_s {
 } policy_type_t;
 
 /// \brief Generic policy
-typedef struct oci_policy_s    oci_policy_t;
-struct oci_policy_s {
-    oci_policy_key_t    key;            ///< policy key
+typedef struct pds_policy_s    pds_policy_t;
+struct pds_policy_s {
+    pds_policy_key_t    key;            ///< policy key
     policy_type_t       policy_type;    ///< type of policy
     uint8_t             af;             ///< Address family
     rule_dir_t          direction;      ///< Policy enforcement direction
     uint32_t            num_rules;      ///< Number of rules in the list
     rule_t              *rules;         ///< List or rules
 
-    oci_policy_s() { rules = NULL; }
-    ~oci_policy_s() {
+    pds_policy_s() { rules = NULL; }
+    ~pds_policy_s() {
         if (rules) {
-            SDK_FREE(OCI_MEM_ALLOC_SEUCURITY_POLICY, rules);
+            SDK_FREE(PDS_MEM_ALLOC_SEUCURITY_POLICY, rules);
         }
     }
-    oci_policy_t& operator= (const oci_policy_t& policy) {
+    pds_policy_t& operator= (const pds_policy_t& policy) {
         // self-assignment guard
         if (this == &policy) {
             return *this;
@@ -116,10 +116,10 @@ struct oci_policy_s {
         direction = policy.direction;
         num_rules = policy.num_rules;
         if (rules) {
-            SDK_FREE(OCI_MEM_ALLOC_SEUCURITY_POLICY, rules);
+            SDK_FREE(PDS_MEM_ALLOC_SEUCURITY_POLICY, rules);
         }
         rules =
-            (rule_t *)SDK_MALLOC(OCI_MEM_ALLOC_SEUCURITY_POLICY,
+            (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_SEUCURITY_POLICY,
                                           num_rules * sizeof(rule_t));
         memcpy(rules, policy.rules, num_rules * sizeof(rule_t));
         return *this;
@@ -131,15 +131,15 @@ struct oci_policy_s {
 /// \param[in] policy Policy information
 //
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t oci_policy_create(oci_policy_t *policy);
+sdk_ret_t pds_policy_create(pds_policy_t *policy);
 
 /// \brief Delete policy
 ///
 /// \param[in] key Key
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t oci_policy_delete(_In_ oci_policy_key_t *key);
+sdk_ret_t pds_policy_delete(_In_ pds_policy_key_t *key);
 
 /// \@}
 
-#endif    // __INCLUDE_API_OCI_POLICY_HPP__
+#endif    // __INCLUDE_API_PDS_POLICY_HPP__

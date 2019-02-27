@@ -10,7 +10,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
@@ -19,8 +19,8 @@ using sdk::lib::ht;
 namespace api {
 
 /**
- * @defgroup OCI_TEP_ENTRY - tep entry functionality
- * @ingroup OCI_TEP
+ * @defgroup PDS_TEP_ENTRY - tep entry functionality
+ * @ingroup PDS_TEP
  * @{
  */
 
@@ -32,18 +32,18 @@ tep_entry::tep_entry() {
 
 /**
  * @brief    factory method to allocate and initialize a tep entry
- * @param[in] oci_tep    tep information
+ * @param[in] pds_tep    tep information
  * @return    new instance of tep or NULL, in case of error
  */
 tep_entry *
-tep_entry::factory(oci_tep_spec_t *oci_tep) {
+tep_entry::factory(pds_tep_spec_t *pds_tep) {
     tep_entry *tep;
 
     /**< create tep entry with defaults, if any */
     tep = tep_db()->tep_alloc();
     if (tep) {
         new (tep) tep_entry();
-        tep->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_TEP, oci_tep);
+        tep->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_TEP, pds_tep);
         if (tep->impl_ == NULL) {
             tep_entry::destroy(tep);
             return NULL;
@@ -83,9 +83,9 @@ tep_entry::destroy(tep_entry *tep) {
  */
 sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_tep_spec_t *oci_tep = &api_ctxt->api_params->tep_spec;
+    pds_tep_spec_t *pds_tep = &api_ctxt->api_params->tep_spec;
 
-    memcpy(&this->key_, &oci_tep->key, sizeof(oci_tep_key_t));
+    memcpy(&this->key_, &pds_tep->key, sizeof(pds_tep_key_t));
     return SDK_RET_OK;
 }
 
@@ -156,24 +156,24 @@ tep_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-tep_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
+tep_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     switch (api_op) {
     case API_OP_CREATE:
-        OCI_TRACE_DEBUG("Created TEP %s", ipv4addr2str(key_.ip_addr));
+        PDS_TRACE_DEBUG("Created TEP %s", ipv4addr2str(key_.ip_addr));
         break;
 
     case API_OP_DELETE:
-        OCI_TRACE_DEBUG("Deleted TEP %s", ipv4addr2str(key_.ip_addr));
+        PDS_TRACE_DEBUG("Deleted TEP %s", ipv4addr2str(key_.ip_addr));
         break;
 
     case API_OP_UPDATE:
-        OCI_TRACE_DEBUG("Updated TEP %s", ipv4addr2str(key_.ip_addr));
+        PDS_TRACE_DEBUG("Updated TEP %s", ipv4addr2str(key_.ip_addr));
         break;
 
     case API_OP_NONE:
     default:
-        OCI_TRACE_DEBUG("Invalid op %u for TEP %s", api_op,
+        PDS_TRACE_DEBUG("Invalid op %u for TEP %s", api_op,
                         ipv4addr2str(key_.ip_addr));
         return sdk::SDK_RET_INVALID_OP;
     }
@@ -213,7 +213,7 @@ tep_entry::del_from_db(void) {
 }
 
 tep_entry *
-tep_entry::find_in_db(oci_tep_key_t *key) {
+tep_entry::find_in_db(pds_tep_key_t *key) {
     return tep_db()->tep_find(key);
 }
 
@@ -222,9 +222,9 @@ tep_entry::find_in_db(oci_tep_key_t *key) {
  */
 sdk_ret_t
 tep_entry::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_ID_TEP, this);
+    return delay_delete_to_slab(PDS_SLAB_ID_TEP, this);
 }
 
-/** @} */    // end of OCI_TEP_ENTRY
+/** @} */    // end of PDS_TEP_ENTRY
 
 }    // namespace api

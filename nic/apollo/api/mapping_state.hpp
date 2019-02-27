@@ -15,8 +15,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_MAPPING_STATE - mapping state handling
- * @ingroup OCI_MAPPING
+ * @defgroup PDS_MAPPING_STATE - mapping state handling
+ * @ingroup PDS_MAPPING
  * @{
  */
 
@@ -52,7 +52,7 @@ public:
      * @brief     lookup a mapping in database given the key
      * @param[in] mapping_key mapping key
      */
-    mapping_entry *mapping_find(oci_mapping_key_t *mapping_key) const;
+    mapping_entry *mapping_find(pds_mapping_key_t *mapping_key) const;
 #endif
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
@@ -63,7 +63,7 @@ private:
     slab    *mapping_slab_;    /**< slab for allocating mapping entry */
 };
 
-/** @} */    // end of OCI_MAPPING_STATE
+/** @} */    // end of PDS_MAPPING_STATE
 
 }    // namespace api
 

@@ -14,13 +14,13 @@
 #include "nic/apollo/api/mapping.hpp"
 
 static sdk_ret_t
-oci_mapping_api_handle (api::api_op_t op, oci_mapping_key_t *key,
-                        oci_mapping_spec_t *spec)
+pds_mapping_api_handle (api::api_op_t op, pds_mapping_key_t *key,
+                        pds_mapping_spec_t *spec)
 {
     sdk::sdk_ret_t rv;
     api_ctxt_t api_ctxt;
 
-    if ((rv = oci_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK)
+    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK)
         return rv;
 
     api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_MAPPING, op);
@@ -38,9 +38,9 @@ oci_mapping_api_handle (api::api_op_t op, oci_mapping_key_t *key,
 }
 
 static inline mapping_entry *
-oci_mapping_entry_find (oci_mapping_key_t *key)
+pds_mapping_entry_find (pds_mapping_key_t *key)
 {
-    oci_mapping_spec_t spec = {0};
+    pds_mapping_spec_t spec = {0};
     spec.key = *key;
     // Mapping does not have any entry database
     // As the call are single thread, we can use static entry
@@ -57,13 +57,13 @@ oci_mapping_entry_find (oci_mapping_key_t *key)
 //----------------------------------------------------------------------------
 
 sdk_ret_t
-oci_mapping_create (oci_mapping_spec_t *spec)
+pds_mapping_create (pds_mapping_spec_t *spec)
 {
-    return (oci_mapping_api_handle(api::API_OP_CREATE, NULL, spec));
+    return (pds_mapping_api_handle(api::API_OP_CREATE, NULL, spec));
 }
 
 sdk::sdk_ret_t
-oci_mapping_read (oci_mapping_key_t *key, oci_mapping_info_t *info)
+pds_mapping_read (pds_mapping_key_t *key, pds_mapping_info_t *info)
 {
     mapping_entry *entry = NULL;
     api::impl::mapping_impl *impl;
@@ -71,7 +71,7 @@ oci_mapping_read (oci_mapping_key_t *key, oci_mapping_info_t *info)
     if (key == NULL || info == NULL)
         return sdk::SDK_RET_INVALID_ARG;
 
-    if ((entry = oci_mapping_entry_find(key)) == NULL)
+    if ((entry = pds_mapping_entry_find(key)) == NULL)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
 
     info->spec.key = *key;
@@ -81,13 +81,13 @@ oci_mapping_read (oci_mapping_key_t *key, oci_mapping_info_t *info)
 }
 
 sdk_ret_t
-oci_mapping_update (oci_mapping_spec_t *spec)
+pds_mapping_update (pds_mapping_spec_t *spec)
 {
-    return (oci_mapping_api_handle(api::API_OP_UPDATE, NULL, spec));
+    return (pds_mapping_api_handle(api::API_OP_UPDATE, NULL, spec));
 }
 
 sdk_ret_t
-oci_mapping_delete (oci_mapping_key_t *key)
+pds_mapping_delete (pds_mapping_key_t *key)
 {
-    return (oci_mapping_api_handle(api::API_OP_DELETE, key, NULL));
+    return (pds_mapping_api_handle(api::API_OP_DELETE, key, NULL));
 }

@@ -7,8 +7,8 @@
  */
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
-#include "nic/apollo/include/api/oci_mapping.hpp"
-#include "nic/apollo/api/impl/oci_impl_state.hpp"
+#include "nic/apollo/include/api/pds_mapping.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/mapping_impl.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
@@ -19,15 +19,15 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_MAPPING_IMPL_STATE - mapping database functionality
- * @ingroup OCI_MAPPING
+ * @defgroup PDS_MAPPING_IMPL_STATE - mapping database functionality
+ * @ingroup PDS_MAPPING
  * @{
  */
 
 /**
  * @brief    constructor
  */
-mapping_impl_state::mapping_impl_state(oci_state *state) {
+mapping_impl_state::mapping_impl_state(pds_state *state) {
     p4pd_table_properties_t       tinfo;
     sdk_table_factory_params_t    mhparams;
 
@@ -77,7 +77,7 @@ mapping_impl_state::~mapping_impl_state() {
     mem_hash::destroy(remote_vnic_mapping_tx_tbl_);
 }
 
-/** @} */    // end of OCI_MAPPING_IMPL_STATE
+/** @} */    // end of PDS_MAPPING_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

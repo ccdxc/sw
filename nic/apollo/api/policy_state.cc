@@ -12,8 +12,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_POLICY_STATE - security policy database functionality
- * @ingroup OCI_POLICY
+ * @defgroup PDS_POLICY_STATE - security policy database functionality
+ * @ingroup PDS_POLICY
  * @{
  */
 
@@ -23,14 +23,14 @@ namespace api {
 policy_state::policy_state() {
     // TODO: need to tune multi-threading related params later
     policy_ht_ =
-        ht::factory(OCI_MAX_POLICY >> 2,
+        ht::factory(PDS_MAX_POLICY >> 2,
                     policy::policy_key_func_get,
                     policy::policy_hash_func_compute,
                     policy::policy_key_func_compare);
     SDK_ASSERT(policy_ht_ != NULL);
 
     policy_slab_ =
-        slab::factory("security-policy", OCI_SLAB_ID_POLICY,
+        slab::factory("security-policy", PDS_SLAB_ID_POLICY,
                       sizeof(policy), 16, true, true, true, NULL);
     SDK_ASSERT(policy_slab_ != NULL);
 }
@@ -67,10 +67,10 @@ policy_state::policy_free(policy *policy) {
  * @return       pointer to the security policy instance found or NULL
  */
 policy *
-policy_state::policy_find(oci_policy_key_t *policy_key) const {
+policy_state::policy_find(pds_policy_key_t *policy_key) const {
     return (policy *)(policy_ht_->lookup(policy_key));
 }
 
-/** @} */    // end of OCI_POLICY_STATE
+/** @} */    // end of PDS_POLICY_STATE
 
 }    // namespace api

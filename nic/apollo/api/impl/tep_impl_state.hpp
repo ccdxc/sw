@@ -10,14 +10,14 @@
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_TEP_IMPL_STATE - tep state functionality
- * @ingroup OCI_TEP
+ * @defgroup PDS_TEP_IMPL_STATE - tep state functionality
+ * @ingroup PDS_TEP
  * @{
  */
 
@@ -30,7 +30,7 @@ class tep_impl;
 class tep_impl_state : public obj_base {
 public:
     /**< @brief    constructor */
-    tep_impl_state(oci_state *state);
+    tep_impl_state(pds_state *state);
 
     /**< @brief    destructor */
     ~tep_impl_state();
@@ -47,7 +47,7 @@ private:
     directmap    *nh_tx_tbl_;   /**< directmap table for NH_TX */
 };
 
-/** * @} */    // end of OCI_TEP_IMPL_STATE
+/** * @} */    // end of PDS_TEP_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

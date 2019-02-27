@@ -15,7 +15,7 @@
 #include "nic/apollo/framework/api.hpp"
 
 static inline sdk::sdk_ret_t
-oci_obj_api_validate (api::api_op_t op, void *key, void *spec)
+pds_obj_api_validate (api::api_op_t op, void *key, void *spec)
 {
     if (op == api::API_OP_DELETE && key)
         return sdk::SDK_RET_OK;

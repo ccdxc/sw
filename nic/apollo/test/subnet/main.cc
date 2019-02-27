@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/include/api/oci_batch.hpp"
+#include "nic/apollo/include/api/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/vcn.hpp"
@@ -27,21 +27,21 @@ char *g_cfg_file = NULL;
 int g_batch_epoch = 1;
 int g_vcn_id = 1;
 int g_subnet_id = 1;
-oci_subnet_key_t g_key = {0};
-oci_subnet_info_t g_info = {0};
+pds_subnet_key_t g_key = {0};
+pds_subnet_info_t g_info = {0};
 
 //----------------------------------------------------------------------------
 // Subnet test class
 //----------------------------------------------------------------------------
 
-class subnet : public ::oci_test_base {
+class subnet : public ::pds_test_base {
 protected:
     subnet() {}
     virtual ~subnet() {}
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        oci_test_base::SetUpTestCase(g_cfg_file, false);
+        pds_test_base::SetUpTestCase(g_cfg_file, false);
     }
 };
 
@@ -56,15 +56,15 @@ protected:
 ///
 /// Detailed description
 TEST_F(subnet, subnet_create) {
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
-    vcn_util v1 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "10/8");
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10/8");
     v1.create();
     subnet_util s = subnet_util(g_vcn_id, g_subnet_id, "10.1.1.0/16");
     s.create();
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 }
 
 /// \brief Delete a Subnet
@@ -72,14 +72,14 @@ TEST_F(subnet, subnet_create) {
 /// Detailed description
 TEST_F(subnet, subnet_delete) {
 #if 0
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
-    vcn_util v1 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "10/8");
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10/8");
     subnet_util s = subnet_util(g_vcn_id, g_subnet_id, "10.1.1.0/16");
     s.del();
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 #endif
 }
 
@@ -87,19 +87,19 @@ TEST_F(subnet, subnet_delete) {
 ///
 /// Create and delete a subnet in the same batch. It should be a NO-OP
 TEST_F(subnet, create_delete_in_same_batch) {
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
 
     g_vcn_id++;
     g_subnet_id++;
     batch_params.epoch = g_batch_epoch++;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
-    vcn_util v1 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "10/8");
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10/8");
     v1.create();
     subnet_util s = subnet_util(g_vcn_id, g_subnet_id, "10.1.1.0/16");
     s.create();
     // s.del();
     // v1.del();
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 }
 
 /// \brief Create an existing subnet
@@ -115,7 +115,7 @@ TEST_F(subnet, subnet_create_existing) {
 /// Read a subnet
 TEST_F(subnet, subnet_read) {
     g_key.id = 1;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET key:%d status:%d\n", g_key.id, g_info.status.hw_id);
 }
 
@@ -140,14 +140,14 @@ TEST_F(subnet, subnet_read_non_existing) {
 /// Create and Read multiple subnets in a single VCN in a single batch
 TEST_F(subnet, multiple_subnets_single_VCN_single_batch_workflow) {
     // Create
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
     g_vcn_id++;
     g_subnet_id++;
-    vcn_util v1 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "10/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10/8");
     v1.create();
     subnet_util s1 = subnet_util(g_vcn_id, g_subnet_id, "11.1.1.0/16");
     g_subnet_id++;
@@ -158,21 +158,21 @@ TEST_F(subnet, multiple_subnets_single_VCN_single_batch_workflow) {
     s2.create();
     s3.create();
 
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
     // Read
     g_key.id = g_subnet_id--;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_key.id = g_subnet_id--;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_key.id = g_subnet_id--;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
@@ -183,14 +183,14 @@ TEST_F(subnet, multiple_subnets_single_VCN_single_batch_workflow) {
 ///
 /// Create, Read and Delete multiple subnets in multiple VCNS in a single batch
 TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
     g_vcn_id = g_vcn_id + 4;
     g_subnet_id = g_subnet_id + 4;
-    vcn_util v1 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "11/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "11/8");
     subnet_util v1_s1 = subnet_util(g_vcn_id, g_subnet_id, "11.1.1.0/16");
     g_subnet_id++;
     subnet_util v1_s2 = subnet_util(g_vcn_id, g_subnet_id, "11.2.1.0/16");
@@ -199,7 +199,7 @@ TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
     g_subnet_id++;
 
     g_vcn_id++;
-    vcn_util v2 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "12/8");
+    vcn_util v2 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "12/8");
     g_subnet_id++;
     subnet_util v2_s1 = subnet_util(g_vcn_id, g_subnet_id, "12.1.1.0/16");
     g_subnet_id++;
@@ -208,7 +208,7 @@ TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
     subnet_util v2_s3 = subnet_util(g_vcn_id, g_subnet_id, "12.3.1.0/16");
 
     g_vcn_id++;
-    vcn_util v3 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "13/8");
+    vcn_util v3 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "13/8");
     g_subnet_id++;
     subnet_util v3_s1 = subnet_util(g_vcn_id, g_subnet_id, "13.1.1.0/16");
     g_subnet_id++;
@@ -232,67 +232,67 @@ TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
     v3_s2.create();
     v3_s3.create();
 
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
     g_vcn_id = g_vcn_id - 2;
 
     // Read
-    oci_subnet_spec_t g_spec = {0};
-    oci_subnet_status_t status = {0};
-    oci_subnet_stats_t stats = {};
+    pds_subnet_spec_t g_spec = {0};
+    pds_subnet_status_t status = {0};
+    pds_subnet_stats_t stats = {};
     g_subnet_id = g_subnet_id - 9;
 
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_subnet_id++;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_subnet_id++;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
-    printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
-           g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
-
-    g_vcn_id++;
-    g_subnet_id++;
-    g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
-    printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
-           g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
-
-    g_subnet_id++;
-    g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
-    printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
-           g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
-
-    g_subnet_id++;
-    g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_vcn_id++;
     g_subnet_id++;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_subnet_id++;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_subnet_id++;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
+    printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
+           g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
+
+    g_vcn_id++;
+    g_subnet_id++;
+    g_key.id = g_subnet_id;
+    pds_subnet_read(&g_key, &g_info);
+    printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
+           g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
+
+    g_subnet_id++;
+    g_key.id = g_subnet_id;
+    pds_subnet_read(&g_key, &g_info);
+    printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
+           g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
+
+    g_subnet_id++;
+    g_key.id = g_subnet_id;
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, status.hw_id);
 
@@ -304,15 +304,15 @@ TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
 /// Create multiple subnets in a single VCN in multiple batches
 TEST_F(subnet, multiple_subnets_single_VCN_multiple_batches_workflow) {
     // Create
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
     g_vcn_id++;
     g_subnet_id++;
     g_subnet_id++;
-    vcn_util v1 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "21/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "21/8");
     subnet_util v1_s1 = subnet_util(g_vcn_id, g_subnet_id, "21.1.1.0/16");
     g_subnet_id++;
     subnet_util v1_s2 = subnet_util(g_vcn_id, g_subnet_id, "21.2.1.0/16");
@@ -322,34 +322,34 @@ TEST_F(subnet, multiple_subnets_single_VCN_multiple_batches_workflow) {
     v1_s1.create();
     v1_s2.create();
 
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
     batch_params.epoch = g_batch_epoch++;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
     subnet_util v1_s3 = subnet_util(g_vcn_id, g_subnet_id, "21.3.1.0/16");
     g_subnet_id++;
 
     v1_s3.create();
 
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
     // Read
     g_subnet_id = g_subnet_id - 3;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_subnet_id++;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_subnet_id++;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
@@ -360,25 +360,25 @@ TEST_F(subnet, multiple_subnets_single_VCN_multiple_batches_workflow) {
 ///
 /// Create multiple subnets in multiple VCNs in multiple batches
 TEST_F(subnet, multiple_subnets_multiple_vcns_multiple_batches_workflow) {
-    oci_batch_params_t batch_params = {0};
+    pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
     g_vcn_id++;
     g_subnet_id = g_subnet_id + 2;
-    vcn_util v1 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "11/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "11/8");
     subnet_util v1_s1 = subnet_util(g_vcn_id, g_subnet_id, "11.1.1.0/16");
 
     v1.create();
     v1_s1.create();
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
     batch_params.epoch = g_batch_epoch++;
-    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
     g_vcn_id++;
-    vcn_util v2 = vcn_util(OCI_VCN_TYPE_TENANT, g_vcn_id, "12/8");
+    vcn_util v2 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "12/8");
     g_subnet_id++;
     subnet_util v2_s1 = subnet_util(g_vcn_id, g_subnet_id, "12.1.1.0/16");
     g_subnet_id++;
@@ -387,24 +387,24 @@ TEST_F(subnet, multiple_subnets_multiple_vcns_multiple_batches_workflow) {
     v2.create();
     v2_s1.create();
     v2_s2.create();
-    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
     // Read
     g_subnet_id = g_subnet_id - 2;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_subnet_id++;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 
     g_subnet_id++;
     g_key.id = g_subnet_id;
-    oci_subnet_read(&g_key, &g_info);
+    pds_subnet_read(&g_key, &g_info);
     printf("READ SUBNET vcn_id : %u, key : %u, status : %u\n",
            g_info.spec.vcn.id, g_key.id, g_info.status.hw_id);
 }

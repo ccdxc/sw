@@ -3,7 +3,7 @@
  *
  * @file    trace.hpp
  *
- * @brief   trace macros for OCI APIs
+ * @brief   trace macros for PDS APIs
  */
 #if !defined (__TRACE_HPP__)
 #define __TRACE_HPP__
@@ -17,7 +17,7 @@ register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
     g_trace_cb = trace_cb;
 }
 
-#define OCI_TRACE_ERR(fmt, ...)                                           \
+#define PDS_TRACE_ERR(fmt, ...)                                           \
 {                                                                         \
     struct timespec    tp_;                                               \
     clock_gettime(CLOCK_MONOTONIC, &tp_);                                 \
@@ -26,7 +26,7 @@ register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
                ##__VA_ARGS__);                                            \
 }
 
-#define OCI_TRACE_WARN(fmt, ...)                                          \
+#define PDS_TRACE_WARN(fmt, ...)                                          \
 {                                                                         \
     struct timespec    tp_;                                               \
     clock_gettime(CLOCK_MONOTONIC, &tp_);                                 \
@@ -35,7 +35,7 @@ register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
                ##__VA_ARGS__);                                            \
 }
 
-#define OCI_TRACE_INFO(fmt, ...)                                          \
+#define PDS_TRACE_INFO(fmt, ...)                                          \
 {                                                                         \
     struct timespec    tp_;                                               \
     clock_gettime(CLOCK_MONOTONIC, &tp_);                                 \
@@ -44,7 +44,7 @@ register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
                ##__VA_ARGS__);                                            \
 }
 
-#define OCI_TRACE_DEBUG(fmt, ...)                                         \
+#define PDS_TRACE_DEBUG(fmt, ...)                                         \
 {                                                                         \
     struct timespec    tp_;                                               \
     clock_gettime(CLOCK_MONOTONIC, &tp_);                                 \
@@ -53,12 +53,12 @@ register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
                ##__VA_ARGS__);                                            \
 }
 
-#define OCI_TRACE_DEBUG_NO_HEADER(fmt, ...)                               \
+#define PDS_TRACE_DEBUG_NO_HEADER(fmt, ...)                               \
 {                                                                         \
     g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_DEBUG, fmt, ##__VA_ARGS__);      \
 }
 
-#define OCI_TRACE_VERBOSE(fmt, ...)                                       \
+#define PDS_TRACE_VERBOSE(fmt, ...)                                       \
 {                                                                         \
     struct timespec    tp_;                                               \
     clock_gettime(CLOCK_MONOTONIC, &tp_);                                 \

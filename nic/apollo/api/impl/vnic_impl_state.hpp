@@ -11,14 +11,14 @@
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_VNIC_IMPL_STATE - vnic state functionality
- * @ingroup OCI_VNIC
+ * @defgroup PDS_VNIC_IMPL_STATE - vnic state functionality
+ * @ingroup PDS_VNIC
  * @{
  */
 
@@ -31,7 +31,7 @@ class vnic_impl;
 class vnic_impl_state : public obj_base {
 public:
     /**< @brief    constructor */
-    vnic_impl_state(oci_state *state);
+    vnic_impl_state(pds_state *state);
 
     /**< @brief    destructor */
     ~vnic_impl_state();
@@ -56,7 +56,7 @@ private:
     directmap    *egress_local_vnic_info_rx_tbl_;    /**< directmap table for EGRESS_LOCAL_VNIC_INFO_RX */
 };
 
-/** * @} */    // end of OCI_VNIC_IMPL_STATE
+/** * @} */    // end of PDS_VNIC_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

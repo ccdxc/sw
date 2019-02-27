@@ -10,13 +10,13 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <gtest/gtest.h>
-#include "nic/apollo/include/api/oci_batch.hpp"
-#include "nic/apollo/include/api/oci_switchport.hpp"
-#include "nic/apollo/include/api/oci_tep.hpp"
-#include "nic/apollo/include/api/oci_vcn.hpp"
-#include "nic/apollo/include/api/oci_subnet.hpp"
-#include "nic/apollo/include/api/oci_vnic.hpp"
-#include "nic/apollo/include/api/oci_mapping.hpp"
+#include "nic/apollo/include/api/pds_batch.hpp"
+#include "nic/apollo/include/api/pds_switchport.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
+#include "nic/apollo/include/api/pds_vcn.hpp"
+#include "nic/apollo/include/api/pds_subnet.hpp"
+#include "nic/apollo/include/api/pds_vnic.hpp"
+#include "nic/apollo/include/api/pds_mapping.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/mapping.hpp"
@@ -29,14 +29,14 @@ const char *g_cfg_file = "hal.json";
 // VNIC test class
 //----------------------------------------------------------------------------
 
-class vnic_test : public oci_test_base {
+class vnic_test : public pds_test_base {
 protected:
     vnic_test() {}
     virtual ~vnic_test() {}
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        oci_test_base::SetUpTestCase(g_cfg_file, false);
+        pds_test_base::SetUpTestCase(g_cfg_file, false);
     }
 };
 

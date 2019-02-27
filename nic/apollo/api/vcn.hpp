@@ -13,21 +13,21 @@
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/include/api/oci_vcn.hpp"
+#include "nic/apollo/include/api/pds_vcn.hpp"
 
 namespace api {
 
-/// \defgroup OCI_VCN_ENTRY - vcn entry functionality
-/// \ingroup OCI_VCN
+/// \defgroup PDS_VCN_ENTRY - vcn entry functionality
+/// \ingroup PDS_VCN
 /// @{
 
 /// \brief    vcn entry
 class vcn_entry : public api_base {
 public:
     /// \brief          factory method to allocate and initialize a vcn entry
-    /// \param[in]      oci_vcn    vcn information
+    /// \param[in]      pds_vcn    vcn information
     /// \return         new instance of vcn or NULL, in case of error
-    static vcn_entry *factory(oci_vcn_spec_t *oci_vcn);
+    static vcn_entry *factory(pds_vcn_spec_t *pds_vcn);
 
     /// \brief          release all the s/w state associate with the given vcn,
     ///                 if any, and free the memory
@@ -80,7 +80,7 @@ public:
     /// \param[in]      api_op      api operation
     /// \param          obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          add given vcn to the database
@@ -121,7 +121,7 @@ public:
     /// \param[in]      ht_size    hash table size
     /// \return         hash value
     static uint32_t vcn_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(oci_vcn_key_t)) % ht_size;
+        return hash_algo::fnv_hash(key, sizeof(pds_vcn_key_t)) % ht_size;
     }
 
     /// \brief          helper function to compare two vcn keys
@@ -130,7 +130,7 @@ public:
     /// \return         0 if keys are same or else non-zero value
     static bool vcn_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(oci_vcn_key_t))) {
+        if (!memcmp(key1, key2, sizeof(pds_vcn_key_t))) {
             return true;
         }
         return false;
@@ -148,7 +148,7 @@ private:
     ~vcn_entry();
 
 private:
-    oci_vcn_key_t key_;    ///< vcn key
+    pds_vcn_key_t key_;    ///< vcn key
     ht_ctxt_t ht_ctxt_;    ///< hash table context
 
     // P4 datapath specific state
@@ -156,7 +156,7 @@ private:
     // TODO Statistics for vcn, there arent any as of now
 } __PACK__;
 
-/// \@}    // end of OCI_VCN_ENTRY
+/// \@}    // end of PDS_VCN_ENTRY
 
 }    // namespace api
 

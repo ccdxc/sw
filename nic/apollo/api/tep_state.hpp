@@ -18,8 +18,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_TEP_STATE - tep state functionality
- * @ingroup OCI_TEP
+ * @defgroup PDS_TEP_STATE - tep state functionality
+ * @ingroup PDS_TEP
  * @{
  */
 
@@ -54,7 +54,7 @@ public:
      * @brief     lookup a tep in database given the key
      * @param[in] tep_key tep key
      */
-    tep_entry *tep_find(oci_tep_key_t *tep_key) const;
+    tep_entry *tep_find(pds_tep_key_t *tep_key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
@@ -68,7 +68,7 @@ private:
     slab    *tep_slab_;    /**< slab for allocating tep entry */
 };
 
-/** * @} */    // end of OCI_TEP_STATE
+/** * @} */    // end of PDS_TEP_STATE
 
 }  /** end namespace api */
 

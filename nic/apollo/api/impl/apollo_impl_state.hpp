@@ -11,14 +11,14 @@
 #include "nic/sdk/lib/table/tcam/tcam.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
 #include "nic/sdk/lib/table/tcam/tcam.hpp"
-#include "nic/apollo/api/oci_state.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_APOLLO_IMPL_STATE - pipeline global state functionality
- * @ingroup OCI_APOLLO
+ * @defgroup PDS_APOLLO_IMPL_STATE - pipeline global state functionality
+ * @ingroup PDS_APOLLO
  * @{
  */
 
@@ -31,7 +31,7 @@ class apollo_impl;
 class apollo_impl_state : public obj_base {
 public:
     /**< @brief    constructor */
-    apollo_impl_state(oci_state *state);
+    apollo_impl_state(pds_state *state);
 
     /**< @brief    destructor */
     ~apollo_impl_state();
@@ -50,7 +50,7 @@ private:
     tcam    *egress_drop_stats_tbl_;   /**< egress drop stats table */
 };
 
-/** * @} */    // end of OCI_APOLLO_IMPL_STATE
+/** * @} */    // end of PDS_APOLLO_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api

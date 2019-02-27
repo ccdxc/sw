@@ -14,17 +14,17 @@
 namespace api_test {
 
 vnic_util::vnic_util() {
-    this->vcn_id = OCI_MAX_VCN + 1;
-    this->sub_id = OCI_MAX_SUBNET + 1;
-    this->vnic_id = OCI_MAX_VNIC + 1;
+    this->vcn_id = PDS_MAX_VCN + 1;
+    this->sub_id = PDS_MAX_SUBNET + 1;
+    this->vnic_id = PDS_MAX_VNIC + 1;
     this->vlan_tag = -1;
     this->mpls_slot = -1;
     this->rsc_pool_id = -1;
     this->src_dst_check = false;
 }
 
-vnic_util::vnic_util(oci_vcn_id_t vcn_id, oci_subnet_id_t sub_id,
-                     oci_vnic_id_t vnic_id, std::string vnic_mac,
+vnic_util::vnic_util(pds_vcn_id_t vcn_id, pds_subnet_id_t sub_id,
+                     pds_vnic_id_t vnic_id, std::string vnic_mac,
                      bool src_dst_check) {
     this->vcn_id = vcn_id;
     this->sub_id = sub_id;
@@ -37,7 +37,7 @@ vnic_util::~vnic_util() {}
 
 sdk::sdk_ret_t
 vnic_util::create(void) {
-    oci_vnic_spec_t vnic = {0};
+    pds_vnic_spec_t vnic = {0};
 
     vnic.vcn.id = vcn_id;
     vnic.subnet.id = sub_id;
@@ -47,16 +47,16 @@ vnic_util::create(void) {
     mac_str_to_addr((char *)vnic_mac.c_str(), vnic.mac_addr);
     vnic.rsc_pool_id = rsc_pool_id;
     vnic.src_dst_check = src_dst_check;
-    return oci_vnic_create(&vnic);
+    return pds_vnic_create(&vnic);
 }
 
 sdk::sdk_ret_t
-vnic_util::read(oci_vnic_id_t vnic_id, oci_vnic_info_t *info) {
-    oci_vnic_key_t key;
+vnic_util::read(pds_vnic_id_t vnic_id, pds_vnic_info_t *info) {
+    pds_vnic_key_t key;
 
     key.id = vnic_id;
     memset(info, 0, sizeof(*info));
-    return oci_vnic_read(&key, info);
+    return pds_vnic_read(&key, info);
 }
 
 sdk::sdk_ret_t

@@ -11,28 +11,28 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/impl/tep_impl.hpp"
-#include "nic/apollo/api/impl/oci_impl_state.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_TEP_IMPL - tep entry datapath implementation
- * @ingroup OCI_TEP
+ * @defgroup PDS_TEP_IMPL - tep entry datapath implementation
+ * @ingroup PDS_TEP
  * @{
  */
 
 /**
  * @brief    factory method to allocate & initialize tep impl instance
- * @param[in] oci_tep    tep information
+ * @param[in] pds_tep    tep information
  * @return    new instance of tep or NULL, in case of error
  */
 tep_impl *
-tep_impl::factory(oci_tep_spec_t *oci_tep) {
+tep_impl::factory(pds_tep_spec_t *pds_tep) {
     tep_impl *impl;
 
     // TODO: move to slab later
-    impl = (tep_impl *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_TEP_IMPL,
+    impl = (tep_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_TEP_IMPL,
                                   sizeof(tep_impl));
     new (impl) tep_impl();
     return impl;
@@ -48,7 +48,7 @@ tep_impl::factory(oci_tep_spec_t *oci_tep) {
 void
 tep_impl::destroy(tep_impl *impl) {
     impl->~tep_impl();
-    SDK_FREE(SDK_MEM_ALLOC_OCI_TEP_IMPL, impl);
+    SDK_FREE(SDK_MEM_ALLOC_PDS_TEP_IMPL, impl);
 }
 
 /**
@@ -81,7 +81,7 @@ tep_impl::release_resources(api_base *api_obj) {
 
 void
 tep_impl::fill_status_(tep_tx_actiondata_t *tep_tx_data,
-                       oci_tep_status_t *status)
+                       pds_tep_status_t *status)
 {
     status->nh_id = nh_id_;
     status->hw_id = hw_id_;
@@ -100,22 +100,22 @@ tep_impl::fill_status_(tep_tx_actiondata_t *tep_tx_data,
 
 void
 tep_impl::fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
-                     tep_tx_actiondata_t *tep_tx_data, oci_tep_spec_t *spec)
+                     tep_tx_actiondata_t *tep_tx_data, pds_tep_spec_t *spec)
 {
     switch (nh_tx_data->action_u.nexthop_tx_nexthop_info.encap_type) {
     case GW_ENCAP:
-        spec->type = OCI_ENCAP_TYPE_GW_ENCAP;
+        spec->type = PDS_ENCAP_TYPE_GW_ENCAP;
         spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
         break;
     case VNIC_ENCAP:
-        spec->type = OCI_ENCAP_TYPE_VNIC;
+        spec->type = PDS_ENCAP_TYPE_VNIC;
         spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
         break;
     }
 }
 
 sdk_ret_t
-tep_impl::read_hw(oci_tep_info_t *info) {
+tep_impl::read_hw(pds_tep_info_t *info) {
     nexthop_tx_actiondata_t nh_tx_data;
     tep_tx_actiondata_t tep_tx_data;
 
@@ -146,7 +146,7 @@ tep_impl::read_hw(oci_tep_info_t *info) {
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                  ret;
-    oci_tep_spec_t             *tep_spec;
+    pds_tep_spec_t             *tep_spec;
     tep_tx_actiondata_t        tep_tx_data = { 0 };
     nexthop_tx_actiondata_t    nh_tx_data = { 0 };
 
@@ -161,9 +161,9 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     nh_tx_data.action_id = NEXTHOP_TX_NEXTHOP_INFO_ID;
     nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index = hw_id_;
-    if (tep_spec->type == OCI_ENCAP_TYPE_GW_ENCAP) {
+    if (tep_spec->type == PDS_ENCAP_TYPE_GW_ENCAP) {
         nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = GW_ENCAP;
-    } else if (tep_spec->type == OCI_ENCAP_TYPE_VNIC) {
+    } else if (tep_spec->type == PDS_ENCAP_TYPE_VNIC) {
         nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = VNIC_ENCAP;
     }
     // TODO: fix this once p4/asm is fixed
@@ -171,7 +171,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     ret = tep_impl_db()->nh_tx_tbl()->insert(&nh_tx_data, (uint32_t *)&nh_id_);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    OCI_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nh id",
+    PDS_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nh id",
                     ipv4addr2str(tep_spec->key.ip_addr),
                     0x0E0D0A0B0200, hw_id_, nh_id_);
     return ret;
@@ -203,7 +203,7 @@ tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/** @} */    // end of OCI_TEP_IMPL
+/** @} */    // end of PDS_TEP_IMPL
 
 }    // namespace impl
 }    // namespace api

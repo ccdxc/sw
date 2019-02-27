@@ -15,8 +15,8 @@ using sdk::lib::ht;
 namespace api {
 
 /**
- * @defgroup OCI_TEP_STATE - tep database functionality
- * @ingroup OCI_TEP
+ * @defgroup PDS_TEP_STATE - tep database functionality
+ * @ingroup PDS_TEP
  * @{
  */
 
@@ -25,13 +25,13 @@ namespace api {
  */
 tep_state::tep_state() {
     // TODO: need to tune multi-threading related params later
-    tep_ht_ = ht::factory(OCI_MAX_TEP >> 2,
+    tep_ht_ = ht::factory(PDS_MAX_TEP >> 2,
                           tep_entry::tep_key_func_get,
                           tep_entry::tep_hash_func_compute,
                           tep_entry::tep_key_func_compare);
     SDK_ASSERT(tep_ht_ != NULL);
 
-    tep_slab_ = slab::factory("tep", OCI_SLAB_ID_TEP, sizeof(tep_entry),
+    tep_slab_ = slab::factory("tep", PDS_SLAB_ID_TEP, sizeof(tep_entry),
                                16, true, true, true, NULL);
     SDK_ASSERT(tep_slab_ != NULL);
 }
@@ -68,10 +68,10 @@ tep_state::tep_free(tep_entry *tep) {
  * @return       pointer to the tep instance found or NULL
  */
 tep_entry *
-tep_state::tep_find(oci_tep_key_t *tep_key) const {
+tep_state::tep_find(pds_tep_key_t *tep_key) const {
     return (tep_entry *)(tep_ht_->lookup(tep_key));
 }
 
-/** @} */    // end of OCI_TEP_STATE
+/** @} */    // end of PDS_TEP_STATE
 
 }    // namespace api

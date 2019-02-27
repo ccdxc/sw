@@ -11,13 +11,13 @@
 
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_switchport.hpp"
+#include "nic/apollo/include/api/pds_switchport.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_SWITCHPORT_ENTRY - switchport entry functionality
- * @ingroup OCI_SWITCHPORT
+ * @defgroup PDS_SWITCHPORT_ENTRY - switchport entry functionality
+ * @ingroup PDS_SWITCHPORT
  * @{
  */
 
@@ -28,10 +28,10 @@ class switchport_entry : public api_base {
 public:
     /**
      * @brief    factory method to allocate and initialize switchport entry
-     * @param[in] oci_switchport    switchport information
+     * @param[in] pds_switchport    switchport information
      * @return    new instance of switchport or NULL, in case of error
      */
-    static switchport_entry *factory(oci_switchport_spec_t *oci_switchport);
+    static switchport_entry *factory(pds_switchport_spec_t *pds_switchport);
 
     /**
      * @brief    release all the s/w state associate with the given switchport,
@@ -99,7 +99,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
     /**
@@ -162,7 +162,7 @@ private:
     impl_base      *impl_;         /**< impl object instance */
 } __PACK__;
 
-/** @} */    // end of OCI_SWITCHPORT_ENTRY
+/** @} */    // end of PDS_SWITCHPORT_ENTRY
 
 }    // namespace api
 

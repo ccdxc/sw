@@ -12,8 +12,8 @@
 namespace api {
 
 /**
- * @defgroup OCI_ROUTE_TABLE_STATE - route table database functionality
- * @ingroup OCI_ROUTE
+ * @defgroup PDS_ROUTE_TABLE_STATE - route table database functionality
+ * @ingroup PDS_ROUTE
  * @{
  */
 
@@ -22,13 +22,13 @@ namespace api {
  */
 route_table_state::route_table_state() {
     // TODO: need to tune multi-threading related params later
-    route_table_ht_ = ht::factory(OCI_MAX_ROUTE_TABLE >> 2,
+    route_table_ht_ = ht::factory(PDS_MAX_ROUTE_TABLE >> 2,
                            route_table::route_table_key_func_get,
                            route_table::route_table_hash_func_compute,
                            route_table::route_table_key_func_compare);
     SDK_ASSERT(route_table_ht_ != NULL);
 
-    route_table_slab_ = slab::factory("route-table", OCI_SLAB_ID_ROUTE_TABLE,
+    route_table_slab_ = slab::factory("route-table", PDS_SLAB_ID_ROUTE_TABLE,
                                       sizeof(route_table), 16, true, true,
                                       true, NULL);
     SDK_ASSERT(route_table_slab_ != NULL);
@@ -66,10 +66,10 @@ route_table_state::route_table_free(route_table *rtable) {
  * @return       pointer to the route table instance found or NULL
  */
 route_table *
-route_table_state::route_table_find(oci_route_table_key_t *route_table_key) const {
+route_table_state::route_table_find(pds_route_table_key_t *route_table_key) const {
     return (route_table *)(route_table_ht_->lookup(route_table_key));
 }
 
-/** @} */    // end of OCI_ROUTE_TABLE_STATE
+/** @} */    // end of PDS_ROUTE_TABLE_STATE
 
 }    // namespace api

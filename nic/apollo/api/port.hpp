@@ -13,7 +13,7 @@
 
 namespace api {
 
-#define OCI_MAX_PORT        16
+#define PDS_MAX_PORT        16
 
 typedef void (*port_get_cb_t)(sdk::linkmgr::port_args_t *port_info, void *ctxt);
 /**

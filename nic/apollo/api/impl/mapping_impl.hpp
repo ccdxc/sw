@@ -11,7 +11,7 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_mapping.hpp"
+#include "nic/apollo/include/api/pds_mapping.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
@@ -20,8 +20,8 @@ namespace api {
 namespace impl {
 
 /**
- * @defgroup OCI_MAPPING_IMPL - mapping functionality
- * @ingroup OCI_MAPPING
+ * @defgroup PDS_MAPPING_IMPL - mapping functionality
+ * @ingroup PDS_MAPPING
  * @{
  */
 
@@ -32,10 +32,10 @@ class mapping_impl : public impl_base {
 public:
     /**
      * @brief    factory method to allocate & initialize mapping impl instance
-     * @param[in] oci_mapping    mapping information
+     * @param[in] pds_mapping    mapping information
      * @return    new instance of mapping or NULL, in case of error
      */
-    static mapping_impl *factory(oci_mapping_spec_t *oci_mapping);
+    static mapping_impl *factory(pds_mapping_spec_t *pds_mapping);
 
     /**
      * @brief    release all the s/w state associated with the given mapping,
@@ -95,7 +95,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t activate_hw(api_base *api_obj,
-                                  oci_epoch_t epoch,
+                                  pds_epoch_t epoch,
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
@@ -105,8 +105,8 @@ public:
      * @param[out] info pointer to mapping info
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(oci_mapping_key_t *key,
-                              oci_mapping_info_t *info) ;
+    sdk_ret_t read_hw(pds_mapping_key_t *key,
+                              pds_mapping_info_t *info) ;
 
 private:
     /**< @brief    constructor */
@@ -126,7 +126,7 @@ private:
      * @param[in] mapping_info    IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t add_nat_entries_(oci_mapping_spec_t *mapping_info);
+    sdk_ret_t add_nat_entries_(pds_mapping_spec_t *mapping_info);
 
     /**
      * @brief     add necessary entries to LOCAL_IP_MAPPING table
@@ -135,7 +135,7 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t add_local_ip_mapping_entries_(vcn_entry *vcn,
-                                            oci_mapping_spec_t *mapping_info);
+                                            pds_mapping_spec_t *mapping_info);
 
     /**
      * @brief     add necessary entries to REMOTE_VNIC_MAPPING_RX table
@@ -146,7 +146,7 @@ private:
      */
     sdk_ret_t add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
                                                   subnet_entry *subnet,
-                                                  oci_mapping_spec_t *mapping_info);
+                                                  pds_mapping_spec_t *mapping_info);
 
     /**
      * @brief     add necessary entries to REMOTE_VNIC_MAPPING_TX table
@@ -156,7 +156,7 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
-                                                  oci_mapping_spec_t *mapping_info);
+                                                  pds_mapping_spec_t *mapping_info);
 
    /**
      * @brief     Read the configured values from table and fill to the spec
@@ -164,7 +164,7 @@ private:
      * @param[out] spec specification
      */
     void fill_mapping_spec_(remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx,
-                         oci_mapping_spec_t *spec);
+                         pds_mapping_spec_t *spec);
 
 private:
     bool        is_local_;
@@ -175,7 +175,7 @@ private:
     uint32_t    remote_vnic_mapping_tx_idx_;
 };
 
-/** @} */    // end of OCI_MAPPING_IMPL
+/** @} */    // end of PDS_MAPPING_IMPL
 
 }    // namespace impl
 }    // namespace api
