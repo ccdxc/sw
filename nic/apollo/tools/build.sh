@@ -21,18 +21,18 @@ build_arm() {
     if [ ! -d  ./build ];then
         copy_libs
     fi
-    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw "${@:1}"
+    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw PERF=1 "${@:1}"
 }
 
 build_fw() {
     if [ ! -d  ./build ];then
         copy_libs
     fi
-    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw firmware "${@:1}"
+    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw firmware PERF=1 "${@:1}"
 }
 
 print_usage() {
-    echo "./apollo_build.sh <x64/a64/fw/clean> <extra make params>"
+    echo "./apollo_build.sh <x86_64/aarch64/firmware/clean> <extra make params>"
     echo "                   extra make params : V=1, -d etc"
 }
 
@@ -46,11 +46,11 @@ if [ $# -lt 1 ];then
     exit
 fi
 
-if [ $1 == "x64" ];then
+if [ $1 == "x86_64" ];then
     build_x86 "${@:2}"
-elif [ $1 == "a64" ];then
+elif [ $1 == "aarch64" ];then
     build_arm "${@:2}"
-elif [ $1 == "fw" ];then
+elif [ $1 == "firmware" ];then
     build_fw "${@:2}"
 elif [ $1 == "clean" ];then
     clean
