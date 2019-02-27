@@ -28,7 +28,7 @@ pal_init (platform_type_t platform_type)
     switch(platform_type) {
     case platform_type_t::PLATFORM_TYPE_HW:
     case platform_type_t::PLATFORM_TYPE_HAPS:
-        SDK_TRACE_DEBUG("Initializing PAL in HW mode");
+        SDK_TRACE_VERBOSE("Initializing PAL in HW mode");
         return pal_hw_init();
 
     case platform_type_t::PLATFORM_TYPE_SIM:
