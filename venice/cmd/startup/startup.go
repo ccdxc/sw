@@ -193,6 +193,13 @@ func StartQuorumServices(c utils.Cluster) {
 		}
 	}
 
+	// create resolver before creating the services
+	servers := make([]string, 0)
+	for _, jj := range env.QuorumNodes {
+		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
+	}
+	env.ResolverClient = resolver.New(&resolver.Config{Name: c.NodeID, Servers: servers})
+
 	// Create leader service before its users
 	env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, c.NodeID)
 	env.SystemdService = services.NewSystemdService()
@@ -207,12 +214,6 @@ func StartQuorumServices(c utils.Cluster) {
 		services.WithResolverSvcMasterOption(env.ResolverService))
 	env.ServiceTracker = services.NewServiceTracker(env.ResolverService)
 	env.LeaderService.Register(env.ServiceTracker) // call before starting leader service
-
-	servers := make([]string, 0)
-	for _, jj := range env.QuorumNodes {
-		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
-	}
-	env.ResolverClient = resolver.New(&resolver.Config{Name: c.NodeID, Servers: servers})
 
 	env.SystemdService.Start() // must be called before dependent services
 	env.VipService.AddVirtualIPs(c.VirtualIP)

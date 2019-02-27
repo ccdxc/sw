@@ -57,6 +57,21 @@ const (
 	// LogIndexScanInterval is scan interval
 	// for system logs - 24hr interval
 	LogIndexScanInterval = 24 * time.Hour
+
+	// EventsIndexPrefix is the elastic index prefix for events
+	EventsIndexPrefix = "venice.external.*.events.*"
+
+	// EventsIndexRetentionPeriod retention period for events - 30 days
+	EventsIndexRetentionPeriod = 30 * 24 * time.Hour
+
+	// AuditLogsIndexPrefix is the elastic index prefix for audit logs
+	AuditLogsIndexPrefix = "venice.external.*.auditlogs.*"
+
+	// AuditLogsIndexRetentionPeriod retention period for audit logs - 90 days
+	AuditLogsIndexRetentionPeriod = 90 * 24 * time.Hour
+
+	// IndexScanInterval scan interval for elastic indices - 24 hours
+	IndexScanInterval = 24 * time.Hour
 )
 
 // GetIndex returns the Elastic Index based on the data type & tenant name

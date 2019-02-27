@@ -51,10 +51,15 @@ func TestMockElasticServer(t *testing.T) {
 	// create index
 	err = client.CreateIndex(ctx, indexName, "settings")
 	tu.AssertOk(t, err, "failed to create index")
+	defer client.DeleteIndex(ctx, indexName)
 
 	// creating the same index again fails
 	err = client.CreateIndex(ctx, indexName, "settings")
 	tu.Assert(t, elastic.IsIndexExists(err), "expected failure, index exists already")
+
+	indexSettings, err := client.GetIndexSettings(ctx, []string{indexName})
+	tu.AssertOk(t, err, "failed to get index settings")
+	tu.Assert(t, len(indexSettings) == 1, "expected 1 resp, got: %v", len(indexSettings))
 
 	version, err := client.Version()
 	tu.Assert(t, err == nil && !utils.IsEmpty(version), "failed to get elasticsearch version")
@@ -174,6 +179,7 @@ func TestMockElasticServerRestart(t *testing.T) {
 
 	err = client.CreateIndex(ctx, indexName, "settings")
 	tu.AssertOk(t, err, "failed to create index")
+	defer client.DeleteIndex(ctx, indexName)
 
 	err = client.Index(ctx, indexName, indexType, "id3", `{}`)
 	tu.AssertOk(t, err, "failed to perform index operation")

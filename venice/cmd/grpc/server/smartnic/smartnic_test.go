@@ -40,6 +40,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
+	esmock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -123,7 +124,8 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 		cmdsvc.WithLeaderSvcMasterOption(l),
 		cmdsvc.WithSystemdSvcMasterOption(s),
 		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),
-		cmdsvc.WithCfgWatcherMasterOption(cw))
+		cmdsvc.WithCfgWatcherMasterOption(cw),
+		cmdsvc.WithElasticCuratorSvcrOption(esmock.NewMockCurator()))
 	cw.Start()
 
 	// create an RPC server.

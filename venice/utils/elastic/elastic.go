@@ -409,7 +409,9 @@ func (e *Client) GetIndexSettings(ctx context.Context, indices []string) (map[st
 	response := make(map[string]SettingsResponse)
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
-			indexResp, err := es.NewIndicesGetService(e.esClient).Index(indices...).Do(context.TODO())
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+			indexResp, err := es.NewIndicesGetService(e.esClient).Index(indices...).Do(ctxWithDeadline)
 			if err != nil {
 				e.logger.Errorf("get indices failed {%v} resp: %+v err: %+v",
 					indices, indexResp, err)
@@ -466,7 +468,10 @@ func (e *Client) GetIndexSettings(ctx context.Context, indices []string) (map[st
 			continue
 		}
 
-		return rResp.(map[string]SettingsResponse), rErr
+		if rErr != nil {
+			return nil, rErr
+		}
+		return rResp.(map[string]SettingsResponse), nil
 	}
 }
 

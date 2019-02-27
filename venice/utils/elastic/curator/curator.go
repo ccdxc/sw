@@ -15,23 +15,12 @@ import (
 )
 
 var (
-	// maxRetries maximum number of retries for fetching elasticsearch URLs
-	// and creating client.
+	// maxRetries maximum number of retries for fetching elasticsearch URLs and creating client.
 	maxRetries = 60
 
 	// delay between retries
 	retryDelay = 2 * time.Second
 )
-
-// Option fills the optional params for Curator
-type Option func(*Curator)
-
-// WithElasticClient passes a custom client for Elastic
-func WithElasticClient(esClient elastic.ESClient) Option {
-	return func(c *Curator) {
-		c.esClient = esClient
-	}
-}
 
 // Curator represents elastic index manager service for
 //  - handling index retention and expiration (for now)
@@ -39,156 +28,128 @@ func WithElasticClient(esClient elastic.ESClient) Option {
 // Please see testCurator() in test/integ/venice_integ/elastic/client_test.go
 // for sample usage of this service.
 type Curator struct {
-
-	// Config is the configuration for a Curator instance
-	Config
-
-	// Wait group
-	sync.WaitGroup
-
-	// Elastic Client
-	esClient elastic.ESClient
-
-	// Channel to stop service
-	stopCh chan bool
+	sync.Mutex
+	esClient       elastic.ESClient   // elastic search client
+	resolverClient resolver.Interface // resolver client
+	indexConfigs   map[string]*Config // list of indices to be scanned for deletion
+	running        bool               // indicates whether the curator is running or not
+	wg             sync.WaitGroup     // wait group for scanner go routines
+	ctx            context.Context    // to stop the scanners
+	cancelFunc     context.CancelFunc // to stop the scanners
+	logger         log.Logger         // logger
 }
 
-// Config is the config for the Curator
+// Config is the config of a particular index; which will be scanned by the curator
+// and the indices will be deleted.
 type Config struct {
-
-	// Logger
-	Logger log.Logger
-
-	// IndexName is index prefix or index pattern
-	// Eg: venice.internal.default.systemlogs.*
-	//     venice*events*
-	IndexName string
-
-	// RetentionPeriod is index retention period
-	// It is typically in days for a index category
-	// For eg: 90 days for venice log index category
-	RetentionPeriod time.Duration
-
-	// ScanInterval determines scan interval or frequency
-	// For eg: Scan indices every day (24hours)
-	ScanInterval time.Duration
-
-	// ElasticServer Address
-	// This is an optional field, if provided
-	// will be used to setup elastic client
-	ElasticAddr string
-
-	// Resolver client for pen-elastic service
-	// which will be required when curator is used
-	// by CMD and any of Venice controllers
-	Resolver resolver.Interface
+	IndexName       string        // index prefix or pattern e.g. venice.internal.default.systemlogs.* or venice*events*
+	RetentionPeriod time.Duration // retention period for the above index; indices beyond this period will be deleted
+	ScanInterval    time.Duration // scan interval or frequency
 }
 
 // NewCurator returns a new Curator service
-func NewCurator(config *Config, opts ...Option) (Interface, error) {
-
-	// Validate input
-	if config == nil {
-		return nil, fmt.Errorf("Nil config")
-	}
-
-	// Validate config needed for elastic
-	if config.ElasticAddr == "" && config.Resolver == nil {
-		return nil, fmt.Errorf("Invalid elastic-addr and Resolver config")
+func NewCurator(esClient elastic.ESClient, resolverClient resolver.Interface, logger log.Logger) (Interface, error) {
+	if resolverClient == nil && esClient == nil {
+		return nil, fmt.Errorf("resolver or elastic client is required")
 	}
 
 	c := &Curator{
-		Config: *config,
-		stopCh: make(chan bool, 1),
+		esClient:       esClient,
+		resolverClient: resolverClient,
+		indexConfigs:   make(map[string]*Config),
+		logger:         logger,
 	}
 
-	for _, opt := range opts {
-		if opt != nil {
-			opt(c)
-		}
-	}
-
-	log.Debugf("Created curator, cfg: %+v", c.Config)
 	return c, nil
 }
 
-// Start curator
+// Start starts the curator service
 func (c *Curator) Start() {
-	c.Add(1)
-	go c.scanIndices()
-	c.Logger.Infof("Curator started with config: %v", c.Config)
+	c.Lock()
+	defer c.Unlock()
+
+	if !c.running {
+		c.ctx, c.cancelFunc = context.WithCancel(context.Background())
+		c.running = true
+		c.logger.Infof("curator service started")
+	}
 }
 
 // Stop curator
 func (c *Curator) Stop() {
-	c.stopCh <- true
-	c.Wait()
-	c.Logger.Infof("Curator stopped")
+	c.Lock()
+	defer c.Unlock()
+
+	if c.running {
+		c.cancelFunc()
+		c.wg.Wait()
+		c.indexConfigs = make(map[string]*Config)
+		c.running = false
+		c.logger.Infof("curator service stopped")
+	}
 }
 
 // Scan indices and delete older indices that are
 // older than the configured retention period
-func (c *Curator) scanIndices() {
+func (c *Curator) Scan(cfg *Config) {
+	c.Lock()
+	defer c.Unlock()
 
-	defer c.Done()
+	if !c.running { // do not accept scan requests when the curator is stopped
+		return
+	}
 
-	for {
+	if _, ok := c.indexConfigs[cfg.IndexName]; ok {
+		c.logger.Infof("overwriting configs for index {%s}", cfg.IndexName)
+	}
+	c.indexConfigs[cfg.IndexName] = cfg
 
-		select {
-		// Check if scanIndices loop should be stopped
-		case <-c.stopCh:
-			c.Logger.Infof("scanIndices stopped")
-			return
+	c.wg.Add(1)
+	go func() {
+		defer c.wg.Done()
 
-		// Scan indices and delete old indices
-		case <-time.After(c.ScanInterval):
+		c.logger.Infof("{%s} scanning", cfg.IndexName)
+		for {
+			select {
+			case <-c.ctx.Done():
+				c.logger.Infof("{%s} scanning stopped", cfg.IndexName)
+				return
 
-			// Initialize elastic client if required
-			if c.esClient == nil {
-				result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-					return elastic.NewAuthenticatedClient(c.Config.ElasticAddr, c.Config.Resolver, c.Config.Logger)
-				}, retryDelay, maxRetries)
-
-				if err != nil {
-					c.Logger.Errorf("failed to create elastic client, err: %v", err)
-					continue
+			case <-time.After(cfg.ScanInterval): // scan and delete older indices
+				if c.ctx.Err() != nil {
+					c.logger.Infof("{%s} scanning stopped", cfg.IndexName)
+					return
 				}
-				c.esClient = result.(elastic.ESClient)
-			}
+				c.Lock()               // to ensure there is one go routine trying to reset the client
+				if c.esClient == nil { // initialize elastic client if required
+					result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+						return elastic.NewAuthenticatedClient("", c.resolverClient, c.logger)
+					}, retryDelay, maxRetries)
 
-			// Scan indices and delete older indices
-			c.Logger.Debugf("Scanning indices ...")
-			var resp map[string]elastic.SettingsResponse
-			var err error
-			if resp, err = c.esClient.GetIndexSettings(context.Background(), []string{c.IndexName}); err != nil {
-				c.Logger.Errorf("Failed to get index settings, err: %v", err)
-			}
-			for index, settings := range resp {
-				c.Logger.Debugf("Processing index: %s settings: %v", index, settings)
-				if time.Since(settings.CreationDate) > c.RetentionPeriod {
-					c.Logger.Infof("Deleting Index: %s, created-time: %v",
-						index, settings.CreationDate)
-					if err = c.esClient.DeleteIndex(context.Background(), index); err != nil {
-						c.Logger.Errorf("Error deleting index: %s err: %v",
-							index, err)
+					if err != nil {
+						c.logger.Errorf("failed to create elastic client, err: %v", err)
+						c.Unlock()
+						continue
+					}
+					c.esClient = result.(elastic.ESClient)
+				}
+				c.Unlock()
+
+				var resp map[string]elastic.SettingsResponse
+				var err error
+				if resp, err = c.esClient.GetIndexSettings(c.ctx, []string{cfg.IndexName}); err != nil {
+					c.logger.Errorf("{%s} failed to get index settings, err: %v", cfg.IndexName, err)
+				}
+				for index, settings := range resp {
+					c.logger.Debugf("{%s} processing index settings: %v", index, settings)
+					if time.Since(settings.CreationDate) > cfg.RetentionPeriod {
+						c.logger.Infof("{%s} deleting index created at: %v", index, settings.CreationDate)
+						if err = c.esClient.DeleteIndex(c.ctx, index); err != nil {
+							c.logger.Errorf("{%s} error deleting index, err: %v", index, err)
+						}
 					}
 				}
 			}
 		}
-	}
-}
-
-// SetConfig updates the curator config
-func (c *Curator) SetConfig(config *Config) error {
-	c.Config = *config
-
-	// TBD: check if we need stop/start service
-	// for certain config changes
-
-	return nil
-}
-
-// GetConfig return the current curator config
-func (c *Curator) GetConfig() Config {
-	return c.Config
+	}()
 }

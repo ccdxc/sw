@@ -4,10 +4,12 @@ package mock
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -25,8 +27,11 @@ type ElasticServer struct {
 	// to protect the below indexes map; so, that bulk and index operation can share the map
 	sync.RWMutex
 
-	//map of indexes available with the docs indexed
+	// map of indexes available with the docs indexed
 	indexes map[string]map[string][]byte
+
+	// contains the list of indices and it's settings (creation date)
+	indexSettings map[string]interface{}
 
 	logger log.Logger
 }
@@ -68,9 +73,10 @@ type ElasticHTTP struct {
 // NewElasticServer returns the instance of elastic mock server
 func NewElasticServer(logger log.Logger) *ElasticServer {
 	e := &ElasticServer{
-		ms:      tu.NewMockServer(logger),
-		indexes: make(map[string]map[string][]byte),
-		logger:  logger,
+		ms:            tu.NewMockServer(logger),
+		indexes:       make(map[string]map[string][]byte),
+		indexSettings: make(map[string]interface{}),
+		logger:        logger,
 	}
 
 	// all the required handlers for elastic mock server
@@ -166,6 +172,9 @@ func (e *ElasticServer) addHandlers() {
 		indexName := vars["index_name"]
 		e.Lock()
 		e.indexes[indexName] = make(map[string][]byte)
+		e.indexSettings[indexName] = map[string]interface{}{
+			"creation_date": fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond)),
+		}
 		e.Unlock()
 
 		resp := `{
@@ -188,6 +197,43 @@ func (e *ElasticServer) addHandlers() {
 			w.WriteHeader(http.StatusNotFound)
 		}
 		e.RUnlock()
+	})
+
+	// get index (used by GetIndexSettings)
+	e.ms.AddHandler("/{index_name}", "GET", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		indexName := vars["index_name"]
+
+		indices := make(map[string]*es.IndicesGetResponse)
+		e.RLock()
+		if _, ok := e.indexes[indexName]; ok {
+			indexSettings := &es.IndicesGetResponse{Settings: make(map[string]interface{})}
+			indexSettings.Settings["index"] = e.indexSettings[indexName]
+
+			indices[indexName] = indexSettings
+		}
+		e.RUnlock()
+
+		resp, _ := json.Marshal(indices)
+		w.Write([]byte(resp))
+	})
+
+	// delete index
+	e.ms.AddHandler("/{index_name}", "DELETE", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		indexName := vars["index_name"]
+
+		e.Lock()
+		if _, ok := e.indexes[indexName]; ok {
+			delete(e.indexes, indexName)
+			delete(e.indexSettings, indexName)
+		}
+		e.Unlock()
+
+		resp := `{
+			"acknowledged": true
+		}`
+		w.Write([]byte(resp))
 	})
 
 	// index operation - this dummy handler captures the indexed document as a []byte

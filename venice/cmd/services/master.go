@@ -205,20 +205,14 @@ func NewMasterService(options ...MasterOption) types.MasterService {
 
 	// Initialize curator service
 	if m.esCuratorSvc == nil {
+		resolverClient, ok := env.ResolverClient.(resolver.Interface)
+		if !ok {
+			panic("Current implementation of curator service needs a resolver client")
+		}
 		var err error
-		config := curator.Config{
-			IndexName:       elastic.LogIndexPrefix,
-			RetentionPeriod: elastic.LogIndexRetentionPeriod,
-			ScanInterval:    elastic.LogIndexScanInterval,
-			Logger:          env.Logger.WithContext("submodule", "curator"),
-		}
-		if env.ResolverClient != nil {
-			config.Resolver = env.ResolverClient.(resolver.Interface)
-		}
-		if m.esCuratorSvc, err = curator.NewCurator(&config); err != nil {
-			log.Errorf("Error starting curator service cfg: %v err: %v", config, err)
-		} else {
-			log.Infof("Created curator service cfg: %v", config)
+		if m.esCuratorSvc, err = curator.NewCurator(nil, resolverClient,
+			env.Logger.WithContext("submodule", "curator")); err != nil {
+			log.Errorf("Error starting curator service, err: %v", err)
 		}
 	}
 
@@ -281,8 +275,24 @@ func (m *masterService) startLeaderServices() error {
 
 	// Start elastic curator service
 	if m.esCuratorSvc != nil {
-		log.Infof("Starting curator service")
 		m.esCuratorSvc.Start()
+		m.esCuratorSvc.Scan(&curator.Config{
+			IndexName:       elastic.LogIndexPrefix,
+			RetentionPeriod: elastic.LogIndexRetentionPeriod,
+			ScanInterval:    elastic.LogIndexScanInterval,
+		})
+
+		m.esCuratorSvc.Scan(&curator.Config{
+			IndexName:       elastic.EventsIndexPrefix,
+			RetentionPeriod: elastic.EventsIndexRetentionPeriod,
+			ScanInterval:    elastic.IndexScanInterval,
+		})
+
+		m.esCuratorSvc.Scan(&curator.Config{
+			IndexName:       elastic.AuditLogsIndexPrefix,
+			RetentionPeriod: elastic.AuditLogsIndexRetentionPeriod,
+			ScanInterval:    elastic.IndexScanInterval,
+		})
 	}
 
 	go performQuorumDefrag(true)
@@ -301,10 +311,7 @@ func (m *masterService) Stop() {
 	m.resolverSvc.Stop()
 
 	// Stop elastic curator service
-	if m.esCuratorSvc != nil {
-		log.Infof("Stopping curator service")
-		m.esCuratorSvc.Stop()
-	}
+	m.esCuratorSvc.Stop()
 
 	close(m.updateCh)
 	<-m.closeCh

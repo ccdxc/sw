@@ -493,34 +493,29 @@ func indexEventsBulk(ctx context.Context, client elastic.ESClient, c *C) {
 // testCurator tests the index retention and cleanup functionality
 func testCurator(ctx context.Context, client elastic.ESClient, c *C) {
 
-	indices := []string{"testindex.1", "testindex.2"}
+	indices := []string{"test.index.aa.1", "test.index.aa.2"}
 	log.Infof("creating indices: %v", indices)
 
 	for _, index := range indices {
 		Assert(c, client.CreateIndex(ctx, index, "") == nil,
 			"Create index operation failed")
 	}
-	// Initialize curator service
-	config := curator.Config{
-		IndexName:       "testindex.*",
+	// create curator service
+	curatorSvc, err := curator.NewCurator(client, nil, log.GetNewLogger(logConfig))
+	Assert(c, err == nil, "Failed to create curator service")
+	defer curatorSvc.Stop()
+	curatorSvc.Start()
+
+	curatorSvc.Scan(&curator.Config{
+		IndexName:       "test.*.aa*",
 		RetentionPeriod: 15 * time.Second,
 		ScanInterval:    2 * time.Second,
-		Logger:          log.GetNewLogger(logConfig),
-		Resolver:        nil,
-		ElasticAddr:     elasticAddr,
-	}
-
-	log.Infof("creating curator: %v", config)
-	curatorSvc, err := curator.NewCurator(&config, curator.WithElasticClient(client))
-	Assert(c, err == nil, "Failed to create curator service")
-
-	// Start curator service
-	curatorSvc.Start()
+	})
 
 	// Verify older indices are deleted
 	AssertEventually(c,
 		func() (bool, interface{}) {
-			indices := []string{"testindex.*"}
+			indices := []string{"test.*.aa*"}
 			var err error
 			var resp map[string]elastic.SettingsResponse
 			if resp, err = client.GetIndexSettings(ctx, indices); err != nil {
@@ -538,9 +533,6 @@ func testCurator(ctx context.Context, client elastic.ESClient, c *C) {
 		}, "failed to get indices", "100ms", "90s")
 
 	log.Infof("Indices deletion verfied: %v", indices)
-
-	// Stop curator service
-	curatorSvc.Stop()
 }
 
 // indexEventsSequential indexs events in a sequential manner

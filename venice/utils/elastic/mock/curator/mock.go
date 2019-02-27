@@ -8,35 +8,23 @@ import (
 
 // MCurator is mock of elastic curator
 type MCurator struct {
-
-	// Config is the configuration for a Curator instance
-	curator.Config
+	curator.Curator
 }
 
 // NewMockCurator returns a new Curator service
-func NewMockCurator(config *curator.Config) curator.Interface {
-
-	return &MCurator{
-		Config: *config,
-	}
+func NewMockCurator() curator.Interface {
+	return &MCurator{}
 }
 
 // Start curator
 func (c *MCurator) Start() {
 }
 
+// Scan indices
+func (c *MCurator) Scan(cfg *curator.Config) {
+}
+
 // Stop curator
 func (c *MCurator) Stop() {
 
-}
-
-// SetConfig updates the curator config
-func (c *MCurator) SetConfig(config *curator.Config) error {
-	c.Config = *config
-	return nil
-}
-
-// GetConfig return the current curator config
-func (c *MCurator) GetConfig() curator.Config {
-	return c.Config
 }

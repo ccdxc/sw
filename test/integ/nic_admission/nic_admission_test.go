@@ -45,6 +45,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certmgr"
+	esmock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -207,7 +208,8 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 		cmdsvc.WithLeaderSvcMasterOption(l),
 		cmdsvc.WithSystemdSvcMasterOption(s),
 		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),
-		cmdsvc.WithCfgWatcherMasterOption(cw))
+		cmdsvc.WithCfgWatcherMasterOption(cw),
+		cmdsvc.WithElasticCuratorSvcrOption(esmock.NewMockCurator()))
 	cw.Start()
 
 	return regRPCServer, updRPCServer, nil

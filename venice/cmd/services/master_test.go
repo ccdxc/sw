@@ -8,8 +8,7 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types"
-	"github.com/pensando/sw/venice/utils/elastic/curator"
-	esMock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
+	esmock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/testutils"
 )
@@ -24,7 +23,7 @@ func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock
 		WithCfgWatcherMasterOption(&cw),
 		WithK8sSvcMasterOption(&mock.K8sService{}),
 		WithResolverSvcMasterOption(mock.NewResolverService()),
-		WithElasticCuratorSvcrOption(esMock.NewMockCurator(&curator.Config{})))
+		WithElasticCuratorSvcrOption(esmock.NewMockCurator()))
 
 	return l, s, &cw, m
 }
