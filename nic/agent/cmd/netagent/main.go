@@ -101,6 +101,9 @@ func main() {
 	}
 	log.Printf("NetAgent {%+v} instantiated", ag)
 
+	// Set start time
+	ag.NetworkAgent.NetAgentStartTime = time.Now()
+
 	// TODO Remove manual setting up of npm client based on cmdline flag once venice e2e tests are moved to IOTA
 	if agMode == protos.AgentMode_MANAGED {
 		// create the NPM client

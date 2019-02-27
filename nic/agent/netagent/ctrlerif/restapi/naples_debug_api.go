@@ -1,9 +1,12 @@
 package restapi
 
 import (
+	"net/http"
 	"net/http/pprof"
 
 	"github.com/gorilla/mux"
+
+	"github.com/pensando/sw/nic/agent/httputils"
 )
 
 // addSystemDebugRoutes adds App routes
@@ -19,4 +22,9 @@ func addSystemDebugRoutes(r *mux.Router, srv *RestServer) {
 	r.Methods("GET").Subrouter().HandleFunc("/mutex", pprof.Handler("mutex").ServeHTTP)
 	r.Methods("GET").Subrouter().HandleFunc("/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	r.Methods("GET").Subrouter().HandleFunc("/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+	r.Methods("GET").Subrouter().HandleFunc("/uptime", httputils.MakeHTTPHandler(srv.getNetAgentUptime))
+}
+
+func (s *RestServer) getNetAgentUptime(r *http.Request) (interface{}, error) {
+	return s.agent.GetNetagentUptime()
 }

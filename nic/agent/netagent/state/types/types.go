@@ -4,6 +4,7 @@ package types
 
 import (
 	"sync"
+	"time"
 
 	"fmt"
 
@@ -136,6 +137,7 @@ type NetAgent struct {
 	RuleIDAppLUT      sync.Map                             // SGPolicy Rule ID to App Objects look up table.
 	ControllerIPs     []string                             // Controller IPs that NetAgent is using
 	Mode              string                               //Netagent Mode
+	NetAgentStartTime time.Time                            // Time when NetAgent was started
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent
@@ -242,6 +244,7 @@ type CtrlerIntf interface {
 	DeleteApp(app, ns, name string) error                                       // deletes an App
 	GetHwInterfaces() error                                                     // Gets all the uplinks created on the hal by nic mgr
 	GetNaplesInfo() (*NaplesInfo, error)                                        // Returns Naples information
+	GetNetagentUptime() (string, error)                                         // Returns NetAgent Uptime
 }
 
 // PluginIntf is the API provided by the netagent to plugins

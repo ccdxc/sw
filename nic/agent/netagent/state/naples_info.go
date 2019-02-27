@@ -1,6 +1,9 @@
 package state
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 )
 
@@ -12,4 +15,11 @@ func (na *Nagent) GetNaplesInfo() (*types.NaplesInfo, error) {
 	naplesInfo.Mode = na.Mode
 	naplesInfo.IsNpmClientConnected = na.Ctrlerif.IsConnected()
 	return &naplesInfo, nil
+}
+
+// GetNetagentUptime returns uptime of netagent
+func (na *Nagent) GetNetagentUptime() (string, error) {
+	dur := time.Since(na.NetAgentStartTime)
+	uptime := fmt.Sprintf("Netagent up and running for: %s", dur.String())
+	return uptime, nil
 }
