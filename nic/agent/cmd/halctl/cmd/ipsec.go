@@ -259,6 +259,8 @@ func showIpsecGlobalStatistics(resp *halproto.IpsecGlobalStatisticsGetResponse) 
 	fmt.Printf("%-40s : %-6d\n", "encrypt_barco_full_errors", spec.EncryptBarcoFullErrors)
 	fmt.Printf("%-40s : %-6d\n", "encrypt_cb_ring_dma_errors", spec.EncryptCbRingDmaErrors)
 	fmt.Printf("%-40s : %-6d\n", "encrypt_desc_exhaust_errors", spec.EncryptDescExhaustErrors)
+	fmt.Printf("%-40s : %-6d\n", "encrypt_txdma1_enter_counters", spec.EncryptTxdma1EnterCounters)
+	fmt.Printf("%-40s : %-6d\n", "encrypt_txdma2_enter_counters", spec.EncryptTxdma2EnterCounters)
 
 	fmt.Printf("\nDecrypt Global Errors:\n")
 	fmt.Printf("-----------------------\n")

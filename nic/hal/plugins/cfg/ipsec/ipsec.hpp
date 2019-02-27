@@ -236,7 +236,9 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         encrypt_barco_full_errors;
     uint64_t         encrypt_cb_ring_dma_errors;
     uint64_t         encrypt_desc_exhaust_errors;
-    uint64_t         encrypt_pad[47];
+    uint64_t         encrypt_txdma1_enter_counters;
+    uint64_t         encrypt_txdma2_enter_counters;
+    uint64_t         encrypt_pad[45];
 
     uint64_t         decrypt_input_desc_errors;
     uint64_t         decrypt_output_desc_errors;

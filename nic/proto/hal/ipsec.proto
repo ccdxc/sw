@@ -183,22 +183,24 @@ message IPSecGlobalStatisticsGetSpec {
     uint64         encrypt_barco_full_errors     = 15;
     uint64         encrypt_cb_ring_dma_errors    = 16;
     uint64         encrypt_desc_exhaust_errors   = 17;
+    uint64         encrypt_txdma1_enter_counters = 18;
+    uint64         encrypt_txdma2_enter_counters = 19;
 
-    uint64         decrypt_input_desc_errors     = 18;
-    uint64         decrypt_output_desc_errors    = 19;
-    uint64         decrypt_cb_ring_base_errors   = 20;
-    uint64         decrypt_input_page_errors     = 21;
-    uint64         decrypt_barco_req_addr_errors = 22;
-    uint64         decrypt_barco_cb_addr_errors  = 23;
-    uint64         decrypt_stage4_inpage_errors  = 24;
-    uint64         decrypt_output_page_errors    = 25;
-    uint64         decrypt_txdma1_enter_counters = 26;
-    uint64         decrypt_txdma2_enter_counters = 27;
-    uint64         decrypt_txdma1_drop_counters  = 28;
-    uint64         decrypt_desc_exhaust_errors   = 29;
-    uint64         decrypt_load_ipsec_int_errors = 30;
-    uint64         decrypt_txdma1_dummy_errors   = 31;
-    uint64         decrypt_txdma2_dummy_free     = 32;
+    uint64         decrypt_input_desc_errors     = 20;
+    uint64         decrypt_output_desc_errors    = 21;
+    uint64         decrypt_cb_ring_base_errors   = 22;
+    uint64         decrypt_input_page_errors     = 23;
+    uint64         decrypt_barco_req_addr_errors = 24;
+    uint64         decrypt_barco_cb_addr_errors  = 25;
+    uint64         decrypt_stage4_inpage_errors  = 26;
+    uint64         decrypt_output_page_errors    = 27;
+    uint64         decrypt_txdma1_enter_counters = 28;
+    uint64         decrypt_txdma2_enter_counters = 29;
+    uint64         decrypt_txdma1_drop_counters  = 30;
+    uint64         decrypt_desc_exhaust_errors   = 31;
+    uint64         decrypt_load_ipsec_int_errors = 32;
+    uint64         decrypt_txdma1_dummy_errors   = 33;
+    uint64         decrypt_txdma2_dummy_free     = 34;
 }
 
   

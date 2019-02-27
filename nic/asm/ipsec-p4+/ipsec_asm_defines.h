@@ -59,8 +59,8 @@
 #define IPV6_HDR_SIZE 40
 
 
-#define N2H_IN_DESC_OFFSET             0
-#define N2H_OUT_DESC_OFFSET            8
+#define N2H_IN_DESC_OFFSET            0
+#define N2H_OUT_DESC_OFFSET           8
 #define N2H_CB_RING_OFFSET            16
 #define N2H_IN_PAGE_OFFSET            24
 #define N2H_BARCO_REQ_OFFSET          32
@@ -75,23 +75,25 @@
 #define N2H_LOAD_IPSEC_INT_OFFSET     112 
 #define N2H_TXDMA2_DUMMY_FREE         120
 
-#define H2N_IN_DESC_OFFSET      0
-#define H2N_OUT_DESC_OFFSET     8
-#define H2N_CB_RING_OFFSET     16
-#define H2N_IN_PAGE_OFFSET     24
-#define H2N_BARCO_REQ_OFFSET   32
-#define H2N_BARCO_CB_OFFSET    40
-#define H2N_PAD_ADDR_OFFSET    48
-#define H2N_TAIL_BYTES_OFFSET  56
-#define H2N_OUT_PAGE_OFFSET    64
-#define H2N_S4_IN_PAGE_OFFSET  72
-#define H2N_T3_IN_PAGE_OFFSET  80
-#define H2N_T2_IN_PAGE_OFFSET  88 
-#define H2N_T0_IN_PAGE_OFFSET  96
-#define H2N_BAD_BARCO_ADDR_OFF 104
-#define H2N_BARCO_FULL_OFFSET  112
-#define H2N_CB_RING_DMA_OFFSET 120
-#define H2N_DESC_RING_OFFSET   128
+#define H2N_IN_DESC_OFFSET             0
+#define H2N_OUT_DESC_OFFSET            8
+#define H2N_CB_RING_OFFSET            16
+#define H2N_IN_PAGE_OFFSET            24
+#define H2N_BARCO_REQ_OFFSET          32
+#define H2N_BARCO_CB_OFFSET           40
+#define H2N_PAD_ADDR_OFFSET           48
+#define H2N_TAIL_BYTES_OFFSET         56
+#define H2N_OUT_PAGE_OFFSET           64
+#define H2N_S4_IN_PAGE_OFFSET         72
+#define H2N_T3_IN_PAGE_OFFSET         80
+#define H2N_T2_IN_PAGE_OFFSET         88 
+#define H2N_T0_IN_PAGE_OFFSET         96
+#define H2N_BAD_BARCO_ADDR_OFF       104
+#define H2N_BARCO_FULL_OFFSET        112
+#define H2N_CB_RING_DMA_OFFSET       120
+#define H2N_DESC_RING_OFFSET         128
+#define H2N_TXDMA1_ENTER_OFFSET      136 
+#define H2N_TXDMA2_ENTER_OFFSET      144 
 
 
 #define DOT1Q_ETYPE  0x8100

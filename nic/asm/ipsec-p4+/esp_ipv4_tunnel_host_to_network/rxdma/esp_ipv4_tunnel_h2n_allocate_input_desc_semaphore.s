@@ -8,9 +8,7 @@ struct phv_ p;
 
 %%
         .param          esp_ipv4_tunnel_h2n_allocate_input_desc_index 
-        .param          esp_ipv4_tunnel_h2n_allocate_input_page_index
         .param          esp_ipv4_tunnel_h2n_allocate_output_desc_index
-        .param          esp_ipv4_tunnel_h2n_allocate_output_page_index
         .param          IPSEC_RNMPR_TABLE_BASE
         .param          IPSEC_TNMPR_TABLE_BASE
         .param          IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
@@ -20,21 +18,17 @@ esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore:
     phvwri p.p4_rxdma_intr_dma_cmd_ptr, H2N_RXDMA_IPSEC_DMA_COMMANDS_OFFSET
     seq c1, d.full, 1
     bcf [c1], esp_ipv4_tunnel_h2n_desc_ring_full
-    nop
-    phvwri p.{app_header_table0_valid...app_header_table1_valid}, 3 
     and r1, d.{in_desc_ring_index}.wx, IPSEC_DESC_RING_INDEX_MASK
     sll r1, r1, IPSEC_DESC_RING_ENTRY_SHIFT_SIZE 
+
     addui r2, r1, hiword(IPSEC_RNMPR_TABLE_BASE)
     addi r2, r2, loword(IPSEC_RNMPR_TABLE_BASE)
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_input_desc_index[33:6] 
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 3 
-    phvwr p.common_te0_phv_table_addr, r2
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_allocate_input_desc_index, r2, TABLE_SIZE_64_BITS)
 
-    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_output_desc_index[33:6]
-    phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 3 
     addui r4, r1, hiword(IPSEC_TNMPR_TABLE_BASE)
     addi r4, r4, loword(IPSEC_TNMPR_TABLE_BASE)
-    phvwr.e p.common_te1_phv_table_addr, r4
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_allocate_output_desc_index, r4, TABLE_SIZE_64_BITS)
+    nop.e
     nop 
 
 esp_ipv4_tunnel_h2n_desc_ring_full:
