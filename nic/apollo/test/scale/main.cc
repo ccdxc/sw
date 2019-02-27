@@ -223,9 +223,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     if (rv != SDK_RET_OK) {
                         return rv;
                     }
-
+#if 0
                     g_flow_test_obj->add_local_ep(oci_mapping.key.vcn.id,
                                          oci_mapping.key.ip_addr.addr.v4_addr);
+#endif
                 }
                 vnic_key++;
             }
