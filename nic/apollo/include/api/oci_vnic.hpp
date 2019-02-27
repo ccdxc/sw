@@ -1,71 +1,92 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    oci_vnic.hpp
- *
- * @brief   This module defines vnic interface
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This module defines VNIC API
+///
+//----------------------------------------------------------------------------
 
-#if !defined (__OCI_VNIC_HPP__)
-#define __OCI_VNIC_HPP__
+#ifndef __INCLUDE_API_OCI_VNIC_HPP__
+#define __INCLUDE_API_OCI_VNIC_HPP__
 
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/include/api/oci.hpp"
 #include "nic/apollo/include/api/oci_vcn.hpp"
 #include "nic/apollo/include/api/oci_subnet.hpp"
 
-/**
- * @defgroup OCI_VNIC - vnic specific API definitions
- *
- * @{
- */
+/// \defgroup OCI_VNIC VNIC API
+/// @{
 
-#define OCI_MAX_VNIC               1024
+#define OCI_MAX_VNIC 1024
 
-/**
- * @brief VNIC Key
- */
+/// \brief VNIC key
 typedef struct oci_vnic_key_s {
-    oci_vnic_id_t id;             /**< VNIC ID (in the range 0 to 4095)
-                                       NOTE: this id must be locally unique
-                                             across all VCNs */
+    oci_vnic_id_t id;    ///< Unique VNIC ID (in the range 0 to 1024)
 } __PACK__ oci_vnic_key_t;
 
-/**
- * @brief VNIC
- */
-typedef struct oci_vnic_s {
-    oci_vcn_key_t       vcn;              /**< vcn of this vnic */
-    oci_subnet_key_t    subnet;           /**< subnet of this vnic */
-    oci_vnic_key_t      key;              /**< vnic's Key */
-    uint16_t            wire_vlan;        /**< vlan tag assigned to this vnic */
-    oci_slot_id_t       slot;             /**< virtual slot
-                                               (Encap: MPLS Tag) */
-    mac_addr_t          mac_addr;         /**< vnic's overlay mac mac address */
-    oci_rsc_pool_id_t   rsc_pool_id;      /**< resource pool associated
-                                               with this vnic */
-    bool                src_dst_check;    /**< TRUE if source/destination
-                                               check is enabled */
-} __PACK__ oci_vnic_t;
+/// \brief VNIC specification
+typedef struct oci_vnic_spec_s {
+    oci_vcn_key_t vcn;                ///< VCN of this vnic
+    oci_subnet_key_t subnet;          ///< Subnet of this vnic
+    oci_vnic_key_t key;               ///< VNIC's Key
+    uint16_t wire_vlan;               ///< VLAN tag assigned to this vnic
+    oci_slot_id_t slot;               ///< Virtual slot (Encap: MPLS Tag)
+    mac_addr_t mac_addr;              ///< VNIC's overlay mac mac address
+    oci_rsc_pool_id_t rsc_pool_id;    ///< Resource pool
+    bool src_dst_check;               ///< TRUE if src/dst check is enabled
+} __PACK__ oci_vnic_spec_t;
 
-/**
- * @brief Create VNIC
- *
- * @param[in] vnic VNIC information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t oci_vnic_create(_In_ oci_vnic_t *vnic);
+/// \brief VNIC status
+typedef struct oci_vnic_status_s {
+    // TODO
+} oci_vnic_status_t;
 
-/**
- * @brief Delete VNIC
- *
- * @param[in] vnic_key VNIC key
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t oci_vnic_delete(_In_ oci_vnic_key_t *vnic_key);
+/// \brief VNIC statistics
+typedef struct oci_vnic_stats_s {
+    uint64_t rx_pkts;     ///< Received packet count
+    uint64_t rx_bytes;    ///< Received bytes
+    uint64_t tx_pkts;     ///< Transmit packet count
+    uint64_t tx_bytes;    ///< Transmit bytes
+} oci_vnic_stats_t;
 
-/**
- * @}
- */
+/// \brief VNIC information
+typedef struct oci_vnic_info_s {
+    oci_vnic_spec_t spec;        ///< VNIC specification
+    oci_vnic_status_t status;    ///< VNIC status
+    oci_vnic_stats_t stats;      ///< VNIC stats
+} oci_vnic_info_t;
 
-#endif    /** __OCI_VNIC_HPP__ */
+/// \brief Create VNIC
+///
+/// \param[in] spec Specification
+///
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t oci_vnic_create(oci_vnic_spec_t *spec);
+
+/// \brief Read VNIC information
+///
+/// \param[in] key Key
+/// \param[out] info Information
+///
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t oci_vnic_read(oci_vnic_key_t *key, oci_vnic_info_t *info);
+
+/// \brief Update VNIC specification
+///
+/// \param[in] spec Specififcation
+///
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t oci_vnic_update(oci_vnic_spec_t *spec);
+
+/// \brief Delete VNIC
+///
+/// \param[in] key Key
+///
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t oci_vnic_delete(oci_vnic_key_t *key);
+
+/// @}
+
+#endif    ///  __INCLUDE_API_OCI_VNIC_HPP__

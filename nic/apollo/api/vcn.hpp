@@ -25,7 +25,7 @@ namespace api {
 class vcn_entry : public api_base {
 public:
     /// \brief          factory method to allocate and initialize a vcn entry
-    /// /\param[in]     oci_vcn    vcn information
+    /// \param[in]      oci_vcn    vcn information
     /// \return         new instance of vcn or NULL, in case of error
     static vcn_entry *factory(oci_vcn_spec_t *oci_vcn);
 

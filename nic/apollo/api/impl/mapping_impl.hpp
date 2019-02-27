@@ -14,6 +14,7 @@
 #include "nic/apollo/include/api/oci_mapping.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
+#include "gen/p4gen/apollo/include/p4pd.h"
 
 namespace api {
 namespace impl {
@@ -34,7 +35,7 @@ public:
      * @param[in] oci_mapping    mapping information
      * @return    new instance of mapping or NULL, in case of error
      */
-    static mapping_impl *factory(oci_mapping_t *oci_mapping);
+    static mapping_impl *factory(oci_mapping_spec_t *oci_mapping);
 
     /**
      * @brief    release all the s/w state associated with the given mapping,
@@ -98,6 +99,15 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
+    /**
+     * @brief read spec, statistics and status from hw tables
+     * @param[in]  key  pointer to mapping key
+     * @param[out] info pointer to mapping info
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read_hw(oci_mapping_key_t *key,
+                              oci_mapping_info_t *info) ;
+
 private:
     /**< @brief    constructor */
     mapping_impl() {
@@ -116,7 +126,7 @@ private:
      * @param[in] mapping_info    IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t add_nat_entries_(oci_mapping_t *mapping_info);
+    sdk_ret_t add_nat_entries_(oci_mapping_spec_t *mapping_info);
 
     /**
      * @brief     add necessary entries to LOCAL_IP_MAPPING table
@@ -125,7 +135,7 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t add_local_ip_mapping_entries_(vcn_entry *vcn,
-                                            oci_mapping_t *mapping_info);
+                                            oci_mapping_spec_t *mapping_info);
 
     /**
      * @brief     add necessary entries to REMOTE_VNIC_MAPPING_RX table
@@ -136,7 +146,7 @@ private:
      */
     sdk_ret_t add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
                                                   subnet_entry *subnet,
-                                                  oci_mapping_t *mapping_info);
+                                                  oci_mapping_spec_t *mapping_info);
 
     /**
      * @brief     add necessary entries to REMOTE_VNIC_MAPPING_TX table
@@ -146,7 +156,16 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
-                                                  oci_mapping_t *mapping_info);
+                                                  oci_mapping_spec_t *mapping_info);
+
+   /**
+     * @brief     Read the configured values from table and fill to the spec
+     * @param[in] remote_vnic_map_tx Pointer to REMOTE_VNIC_MAPPING_TX table data
+     * @param[out] spec specification
+     */
+    void fill_mapping_spec_(remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx,
+                         oci_mapping_spec_t *spec);
+
 private:
     bool        is_local_;
     uint32_t    nat_idx1_, nat_idx2_;

@@ -31,7 +31,7 @@ public:
      * @param[in] oci_mapping    mapping information
      * @return    new instance of mapping or NULL, in case of error
      */
-    static mapping_entry *factory(oci_mapping_t *oci_mapping);
+    static mapping_entry *factory(oci_mapping_spec_t *oci_mapping);
 
     /**
      * @brief    release all the s/w state associate with the given mapping,
@@ -101,7 +101,7 @@ public:
     virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
-    /**
+     /**
      * @brief     add given mapping to the database
      * @return   SDK_RET_OK on success, failure status code on error
      */
@@ -139,6 +139,12 @@ public:
          */
         return "mapping-";
     }
+
+    /**
+     * @brief     return impl instance of this vnic object
+     * @return    impl instance of the vnic object
+     */
+    impl_base *impl(void) { return impl_; }
 
 private:
     /**< @brief    constructor */

@@ -80,10 +80,12 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
         break;
 
     case IMPL_OBJ_ID_VNIC:
-        return vnic_impl::factory((oci_vnic_t *)args);
+        return vnic_impl::factory((oci_vnic_spec_t *)args);
+        break;
 
     case IMPL_OBJ_ID_MAPPING:
-        return mapping_impl::factory((oci_mapping_t *)args);
+        return mapping_impl::factory((oci_mapping_spec_t *)args);
+        break;
 
     case IMPL_OBJ_ID_ROUTE_TABLE:
         return route_table_impl::factory((oci_route_table_t *)args);

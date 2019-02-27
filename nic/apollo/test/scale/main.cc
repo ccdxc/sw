@@ -189,7 +189,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                  uint32_t num_remote_mappings)
 {
     sdk_ret_t rv;
-    oci_mapping_t oci_mapping;
+    oci_mapping_spec_t oci_mapping;
     uint16_t vnic_key = 1, ip_base, mac_offset = 1025;
     uint32_t ip_offset = 0, remote_slot = 1025, tep_offset = 3;
 
@@ -280,7 +280,7 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
               uint32_t num_vnics, uint16_t vlan_start)
 {
     sdk_ret_t rv = SDK_RET_OK;
-    oci_vnic_t oci_vnic;
+    oci_vnic_spec_t oci_vnic;
     uint16_t vnic_key = 1;
 
     SDK_ASSERT(num_vcns * num_subnets * num_vnics <= 1024);

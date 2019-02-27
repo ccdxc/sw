@@ -13,10 +13,36 @@
 
 namespace api_test {
 
+mapping_util::mapping_util() {
+    this->vcn_id = OCI_MAX_VCN + 1;
+    this->sub_id = OCI_MAX_SUBNET + 1;
+    this->mpls_slot = -1;
+    this->vnic_id = OCI_MAX_VNIC + 1;
+}
+
+mapping_util::mapping_util(oci_vcn_id_t vcn_id, std::string vnic_ip,
+                           std::string vnic_mac, uint8_t vnic_ip_af) {
+    this->vcn_id = vcn_id;
+    this->vnic_ip = vnic_ip;
+    this->vnic_mac = vnic_mac;
+    this->vnic_ip_af = vnic_ip_af;
+}
+
+mapping_util::mapping_util(oci_vcn_id_t vcn_id, std::string vnic_ip,
+                           std::string vnic_mac, oci_vnic_id_t vnic_id,
+                           uint8_t vnic_ip_af) {
+    this->vcn_id = vcn_id;
+    this->vnic_ip = vnic_ip;
+    this->vnic_mac = vnic_mac;
+    this->vnic_ip_af = vnic_ip_af;
+    this->vnic_id = vnic_id;
+}
+
+mapping_util::~mapping_util() {}
+
 sdk::sdk_ret_t
-mapping_util::create()
-{
-    oci_mapping_t map;
+mapping_util::create(void) {
+    oci_mapping_spec_t map = {0};
     struct in_addr ipaddr;
 
     map.key.vcn.id = vcn_id;
@@ -36,6 +62,23 @@ mapping_util::create()
 }
 
 sdk::sdk_ret_t
+mapping_util::read(oci_vcn_id_t vcn_id, std::string vnic_ip, uint8_t vnic_ip_af,
+                   oci_mapping_info_t *info) {
+    oci_mapping_key_t key = {0};
+
+    key.vcn.id = vcn_id;
+    extract_ip_addr(vnic_ip.c_str(), vnic_ip_af, &key.ip_addr);
+    memset(info, 0, sizeof(*info));
+    return oci_mapping_read(&key, info);
+}
+
+sdk::sdk_ret_t
+mapping_util::update(void) {
+    // TODO
+    return SDK_RET_ERR;
+}
+
+sdk::sdk_ret_t
 mapping_util::many_create(uint32_t num_mappings)
 {
     sdk::sdk_ret_t rv;
@@ -49,17 +92,16 @@ mapping_util::many_create(uint32_t num_mappings)
     return SDK_RET_OK;
 }
 
-#if 0
 sdk::sdk_ret_t
-mapping_util::destroy()
-{
+mapping_util::remove(void) {
+#if 0 // TODO
     oci_mapping_key_t key;
 
     key.vcn.id = vcn_id;
     extract_ip_addr(vnic_ip.c_str(), vnic_ip_af, &key.ip_addr);
     return oci_mapping_delete(&key);
-    return SDK_RET_OK;
+#endif
+    return SDK_RET_ERR;
 }
-#endif // TODO
 
 } // namespace api_test

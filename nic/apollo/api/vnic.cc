@@ -35,7 +35,7 @@ vnic_entry::vnic_entry() {
  * @return    new instance of vnic or NULL, in case of error
  */
 vnic_entry *
-vnic_entry::factory(oci_vnic_t *oci_vnic) {
+vnic_entry::factory(oci_vnic_spec_t *oci_vnic) {
     vnic_entry *vnic;
 
     /**< create vnic entry with defaults, if any */
@@ -81,7 +81,7 @@ vnic_entry::destroy(vnic_entry *vnic) {
  */
 sdk_ret_t
 vnic_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_vnic_t *oci_vnic = &api_ctxt->api_params->vnic_info;
+    oci_vnic_spec_t *oci_vnic = &api_ctxt->api_params->vnic_info;
 
     memcpy(&this->key_, &oci_vnic->key, sizeof(oci_vnic_key_t));
     return SDK_RET_OK;
@@ -106,7 +106,7 @@ vnic_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    oci_vnic_t    *oci_vnic = &obj_ctxt->api_params->vnic_info;
+    oci_vnic_spec_t    *oci_vnic = &obj_ctxt->api_params->vnic_info;
 
     OCI_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, vlan %u, "
                     "slot %u", key_.id, oci_vnic->vcn.id, oci_vnic->subnet.id,

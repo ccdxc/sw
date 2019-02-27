@@ -16,6 +16,7 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/policy.hpp"
+#include "gen/p4gen/apollo/include/p4pd.h"
 
 namespace api {
 namespace impl {
@@ -36,7 +37,7 @@ public:
      * @param[in] oci_vnic    vnic information
      * @return    new instance of vnic or NULL, in case of error
      */
-    static vnic_impl *factory(oci_vnic_t *oci_vnic);
+    static vnic_impl *factory(oci_vnic_spec_t *oci_vnic);
 
     /**
      * @brief    release all the s/w state associated with the given vnic,
@@ -100,6 +101,15 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
+    /**
+     * @brief read spec, statistics and status from hw tables
+     * @param[in]  key  pointer to vnic key
+     * @param[out] info pointer to vnic info
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read_hw(oci_vnic_key_t *key,
+                              oci_vnic_info_t *info) ;
+
     uint16_t hw_id(void) { return hw_id_; }
 
 private:
@@ -133,7 +143,7 @@ private:
                                               oci_epoch_t epoch,
                                               vcn_entry *vcn,
                                               subnet_entry *subnet,
-                                              oci_vnic_t *vnic_info,
+                                              oci_vnic_spec_t *vnic_info,
                                               route_table *v4_route_table,
                                               route_table *v6_route_table,
                                               policy *v4_policy,
@@ -155,9 +165,17 @@ private:
                                               api_base *api_obj,
                                               oci_epoch_t epoch, vcn_entry *vcn,
                                               subnet_entry *subnet,
-                                              oci_vnic_t *vnic_info,
+                                              oci_vnic_spec_t *vnic_info,
                                               policy *v4_policy,
                                               policy *v6_policy);
+    /**
+     * @brief Read statistics from the hw table and fill the vnic stats
+     * @param[in] tx_stats Transmit statistics table data
+     * @param[in] rx_stats Receive statistics table data
+     */
+    void fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
+                         vnic_rx_stats_actiondata_t *rx_stats,
+                         oci_vnic_stats_t *stats);
 private:
     /**< P4 datapath specific state */
     uint16_t          hw_id_;      /**< hardware id */

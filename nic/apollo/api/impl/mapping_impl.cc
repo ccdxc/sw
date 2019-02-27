@@ -16,7 +16,6 @@
 #include "nic/apollo/api/impl/mapping_impl.hpp"
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
 #include "nic/apollo/p4/include/defines.h"
-#include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
@@ -39,7 +38,7 @@ namespace impl {
  * @return    new instance of mapping or NULL, in case of error
  */
 mapping_impl *
-mapping_impl::factory(oci_mapping_t *oci_mapping) {
+mapping_impl::factory(oci_mapping_spec_t *oci_mapping) {
     mapping_impl        *impl;
     switchport_entry    *switchport;
 
@@ -74,7 +73,7 @@ mapping_impl::destroy(mapping_impl *impl) {
 sdk_ret_t
 mapping_impl::reserve_resources(api_base *api_obj) {
 #if 0
-    oci_mapping_t    *mapping_info;
+    oci_mapping_spec_t    *mapping_info;
 
     mapping_info = &obj_ctxt->api_params->mapping_info;
     if (is_local_) {
@@ -108,7 +107,7 @@ mapping_impl::release_resources(api_base *api_obj) {
  */
 #define nat_action    action_u.nat_nat
 sdk_ret_t
-mapping_impl::add_nat_entries_(oci_mapping_t *mapping_info) {
+mapping_impl::add_nat_entries_(oci_mapping_spec_t *mapping_info) {
     sdk_ret_t           ret;
     nat_actiondata_t    nat_data = { 0 };
 
@@ -148,7 +147,7 @@ error:
  */
 sdk_ret_t
 mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
-                                            oci_mapping_t *mapping_info) {
+                                            oci_mapping_spec_t *mapping_info) {
     sdk_ret_t                   ret;
     vnic_impl                   *vnic_impl_obj;
     local_ip_mapping_swkey_t    local_ip_mapping_key = { 0 };
@@ -214,7 +213,7 @@ error:
 sdk_ret_t
 mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
                                                   subnet_entry *subnet,
-                                                  oci_mapping_t *mapping_info) {
+                                                  oci_mapping_spec_t *mapping_info) {
     sdk_ret_t                         ret;
     remote_vnic_mapping_rx_swkey_t remote_vnic_mapping_rx_key = { 0 };
     remote_vnic_mapping_rx_appdata_t remote_vnic_mapping_rx_data = { 0 };
@@ -246,7 +245,7 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
  */
 sdk_ret_t
 mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
-                                                  oci_mapping_t *mapping_info) {
+                                                  oci_mapping_spec_t *mapping_info) {
     sdk_ret_t ret;
     remote_vnic_mapping_tx_swkey_t remote_vnic_mapping_tx_key = { 0 };
     remote_vnic_mapping_tx_appdata_t remote_vnic_mapping_tx_data = { 0 };
@@ -278,6 +277,39 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
     return ret;
 }
 
+void
+mapping_impl::fill_mapping_spec_(
+    remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx,
+    oci_mapping_spec_t *spec) {
+    spec->slot = remote_vnic_map_tx->dst_slot_id;
+    // TODO fill the remaining
+}
+
+sdk_ret_t
+mapping_impl::read_hw(oci_mapping_key_t *key,
+                      oci_mapping_info_t *info) {
+    p4pd_error_t p4pd_ret;
+    sdk_ret_t ret;
+    vcn_entry *vcn;
+    remote_vnic_mapping_tx_swkey_t remote_vnic_mapping_tx_key;
+    remote_vnic_mapping_tx_appdata_t remote_vnic_mapping_tx_data;
+    sdk_table_api_params_t api_params = { 0 };
+
+    OCI_TRACE_DEBUG("vcn %u, ip %s\n", key->vcn.id, ipaddr2str(&key->ip_addr));
+    vcn = vcn_db()->vcn_find(&key->vcn);
+    memcpy(remote_vnic_mapping_tx_key.p4e_apollo_i2e_dst,
+           key->ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+    remote_vnic_mapping_tx_key.txdma_to_p4e_header_vcn_id = vcn->hw_id();
+
+    api_params.key = &remote_vnic_mapping_tx_key;
+    api_params.appdata = &remote_vnic_mapping_tx_data;
+    ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->get(&api_params);
+    if (ret == SDK_RET_OK) {
+        fill_mapping_spec_(&remote_vnic_mapping_tx_data, &info->spec);
+    }
+    return ret;
+}
+
 /**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any
@@ -289,7 +321,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
 sdk_ret_t
 mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                         ret;
-    oci_mapping_t                     *mapping_info;
+    oci_mapping_spec_t                *mapping_info;
     vcn_entry                         *vcn;
     subnet_entry                      *subnet;
 

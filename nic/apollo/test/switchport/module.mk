@@ -8,9 +8,9 @@ MODULE_SOLIBS   = pal ociframework ocicore ociapi ociapi_impl ocitestutils \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                   sdkp4 sdkp4utils sdkcapri_csrint sdkcapri_asicrw_if sdkcapri \
                   sdkplatformutils sdkxcvrdriver sdkasicpd lpmitree \
-                  bm_allocator mtrack sdklinkmgr sdklinkmgrcsr memhash
+                  bm_allocator sdklinkmgr sdklinkmgrcsr memhash
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
-		   ${NIC_THIRDPARTY_SSL_LDLIBS} AAPL
+		   AAPL
 MODULE_INCS     = ${NIC_CSR_INCS}
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}

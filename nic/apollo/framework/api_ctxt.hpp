@@ -24,7 +24,7 @@ namespace api {
 
 /**< API specific parameters */
 typedef union api_params_u {
-    oci_switchport_spec_t    switchport_spec;
+    oci_switchport_spec_t switchport_spec;
     oci_tep_key_t         tep_key;
     oci_tep_spec_t        tep_spec;
     oci_vcn_key_t         vcn_key;
@@ -32,9 +32,9 @@ typedef union api_params_u {
     oci_subnet_key_t      subnet_key;
     oci_subnet_spec_t     subnet_info;
     oci_vnic_key_t        vnic_key;
-    oci_vnic_t            vnic_info;
+    oci_vnic_spec_t       vnic_info;
     oci_mapping_key_t     mapping_key;
-    oci_mapping_t         mapping_info;
+    oci_mapping_spec_t    mapping_info;
     oci_route_table_key_t route_table_key;
     oci_route_table_t     route_table_info;
     oci_policy_key_t      policy_key;

@@ -17,7 +17,6 @@
 #include "nic/apollo/api/impl/vnic_impl.hpp"
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
 #include "nic/apollo/api/oci_state.hpp"
-#include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 
@@ -36,7 +35,7 @@ namespace impl {
  * @return    new instance of vnic or NULL, in case of error
  */
 vnic_impl *
-vnic_impl::factory(oci_vnic_t *oci_vnic) {
+vnic_impl::factory(oci_vnic_spec_t *oci_vnic) {
     vnic_impl *impl;
 
     // TODO: move to slab later
@@ -100,6 +99,42 @@ vnic_impl::release_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
+#define vnic_tx_stats_action action_u.vnic_tx_stats_vnic_tx_stats
+#define vnic_rx_stats_action action_u.vnic_rx_stats_vnic_rx_stats
+void
+vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
+                    vnic_rx_stats_actiondata_t *rx_stats,
+                    oci_vnic_stats_t *stats)
+{
+    stats->tx_pkts  = *(uint64_t *)tx_stats->vnic_tx_stats_action.out_packets;
+    stats->tx_bytes = *(uint64_t *)tx_stats->vnic_tx_stats_action.out_bytes;
+    stats->rx_pkts  = *(uint64_t *)rx_stats->vnic_rx_stats_action.in_packets;
+    stats->rx_bytes = *(uint64_t *)rx_stats->vnic_rx_stats_action.in_bytes;
+    return;
+}
+
+sdk_ret_t
+vnic_impl::read_hw(oci_vnic_key_t *key, oci_vnic_info_t *info) {
+    p4pd_error_t p4pd_ret;
+    vnic_tx_stats_actiondata_t vnic_tx_stats_data;
+    vnic_rx_stats_actiondata_t vnic_rx_stats_data;
+    (void)(key); // Not used now
+
+    /* read the current entry in h/w */
+    p4pd_ret = p4pd_entry_read(P4TBL_ID_VNIC_TX_STATS, hw_id_, NULL, NULL,
+                               &vnic_tx_stats_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    p4pd_ret = p4pd_entry_read(P4TBL_ID_VNIC_RX_STATS, hw_id_, NULL, NULL,
+                               &vnic_rx_stats_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    fill_vnic_stats_(&vnic_tx_stats_data, &vnic_rx_stats_data, &info->stats);
+    return SDK_RET_OK;
+}
+
 /**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any
@@ -110,7 +145,7 @@ vnic_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                                 ret;
-    oci_vnic_t                                *vnic_info;
+    oci_vnic_spec_t                           *vnic_info;
     p4pd_error_t                              p4pd_ret;
     subnet_entry                              *subnet;
     egress_local_vnic_info_rx_actiondata_t    egress_vnic_data = { 0 };
@@ -214,7 +249,7 @@ sdk_ret_t
 vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
                                            oci_epoch_t epoch, vcn_entry *vcn,
                                            subnet_entry *subnet,
-                                           oci_vnic_t *vnic_info,
+                                           oci_vnic_spec_t *vnic_info,
                                            route_table *v4_route_table,
                                            route_table *v6_route_table,
                                            policy *v4_policy,
@@ -302,7 +337,7 @@ sdk_ret_t
 vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
                                            oci_epoch_t epoch, vcn_entry *vcn,
                                            subnet_entry *subnet,
-                                           oci_vnic_t *vnic_info,
+                                           oci_vnic_spec_t *vnic_info,
                                            policy *v4_policy,
                                            policy *v6_policy) {
     sdk_ret_t                             ret;
@@ -369,7 +404,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     sdk_ret_t                ret;
     vcn_entry                *vcn;
     subnet_entry             *subnet;
-    oci_vnic_t               *vnic_info;
+    oci_vnic_spec_t          *vnic_info;
     oci_route_table_key_t    route_table_key;
     route_table              *v4_route_table, *v6_route_table;
     oci_policy_key_t         policy_key;

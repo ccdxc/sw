@@ -31,7 +31,7 @@ mapping_entry::mapping_entry() {
  * @return    new instance of mapping or NULL, in case of error
  */
 mapping_entry *
-mapping_entry::factory(oci_mapping_t *oci_mapping) {
+mapping_entry::factory(oci_mapping_spec_t *oci_mapping) {
     mapping_entry *mapping;
 
     /**< create mapping entry with defaults, if any */
@@ -165,6 +165,7 @@ mapping_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
      */
     return sdk::SDK_RET_INVALID_OP;
 }
+
 
 /**
  * @brief add mapping to database

@@ -28,10 +28,35 @@ public:
     oci_rsc_pool_id_t rsc_pool_id; ///< Resource pool id
     bool src_dst_check;            ///< Source destination check
 
+    /// \brief Constructor
+    vnic_util();
+
+    /// \brief Parameterized constructor
+    vnic_util(oci_vcn_id_t vcn_id, oci_subnet_id_t sub_id, oci_vnic_id_t vnic_id,
+              std::string vnic_mac, bool src_dst_check = false);
+
+    /// \brief Destructor
+    ~vnic_util();
+
     /// \brief Create VNIC
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create();
+    sdk_ret_t create(void);
+
+    /// \brief Read VNIC info
+    ///
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(oci_vnic_id_t vnic_id, oci_vnic_info_t *info);
+
+    /// \brief Update VNIC configuration
+    ///
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update(void);
+
+    /// \brief Remove VNIC
+    ///
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t remove(void);
 
     /// \brief Create many VNIC for the given subnet and VCN
     ///

@@ -7,6 +7,23 @@
 /// This file contains the all vnic test cases
 ///
 //----------------------------------------------------------------------------
+#include <stdio.h>
+#include <getopt.h>
+#include <gtest/gtest.h>
+#include "nic/apollo/include/api/oci_batch.hpp"
+#include "nic/apollo/include/api/oci_switchport.hpp"
+#include "nic/apollo/include/api/oci_tep.hpp"
+#include "nic/apollo/include/api/oci_vcn.hpp"
+#include "nic/apollo/include/api/oci_subnet.hpp"
+#include "nic/apollo/include/api/oci_vnic.hpp"
+#include "nic/apollo/include/api/oci_mapping.hpp"
+#include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/vnic.hpp"
+#include "nic/apollo/test/utils/mapping.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
+
+const char *g_cfg_file = "hal.json";
 
 //----------------------------------------------------------------------------
 // VNIC test class
@@ -72,10 +89,41 @@ TEST_F(vnic_test, vnic_get) {}
 /// Get the stats and makesure the drop count/reason are as expected
 TEST_F(vnic_test, vnic_src_dst_check) {}
 
-#if 0
-/// \brief Delete a VNIC
-///
-/// Detailed description
-TEST_F(vnic_test, vnic_delete) {}
-#endif
 /// @}
+
+// print help message showing usage of HAL
+static inline void
+print_usage (char **argv)
+{
+    fprintf(stdout, "Usage : %s -c <hal.json> \n", argv[0]);
+}
+
+int
+main (int argc, char **argv)
+{
+    int oc;
+    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
+                                {"help", no_argument, NULL, 'h'},
+                                {0, 0, 0, 0}};
+
+    // parse CLI options
+    while ((oc = getopt_long(argc, argv, "hc:", longopts, NULL)) != -1) {
+        switch (oc) {
+        case 'c':
+            g_cfg_file = optarg;
+            if (!g_cfg_file) {
+                fprintf(stderr, "HAL config file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        default:
+            // ignore all other options
+            break;
+        }
+    }
+
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}

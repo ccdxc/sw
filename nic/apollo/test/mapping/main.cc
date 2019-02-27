@@ -11,19 +11,19 @@
 #include <getopt.h>
 #include <gtest/gtest.h>
 #include "nic/apollo/include/api/oci_batch.hpp"
-#include "nic/apollo/include/api/oci_switchport.hpp"
-#include "nic/apollo/include/api/oci_tep.hpp"
-#include "nic/apollo/include/api/oci_vcn.hpp"
 #include "nic/apollo/include/api/oci_subnet.hpp"
-#include "nic/apollo/include/api/oci_vnic.hpp"
-#include "nic/apollo/include/api/oci_mapping.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/mapping.hpp"
+#include "nic/apollo/test/utils/switchport.hpp"
+#include "nic/apollo/test/utils/vcn.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/tep.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 
 const char *g_cfg_file = "hal.json";
+
+namespace api_test {
 
 uint8_t g_snd_pkt1[] = {
     0x00, 0x00, 0x14, 0x01, 0x01, 0x03, 0x00, 0x00, 0x0a, 0x01, 0x01,
@@ -112,37 +112,25 @@ TEST_F(mapping_test, mapping_create) {
     const char *vnic_rem_ip = "20.1.1.3";
     const char *vnic_rem_mac = "00:00:14:01:01:03";
     const char *sub_rem_gw = "100.0.0.4";    // Part of my-tep subnet
-
-    oci_vcn_spec_t vcn;
-    oci_subnet_spec_t sub;
-    oci_switchport_spec_t swport;
+    oci_vnic_info_t vnic_info;
+    oci_mapping_info_t map_info;
     oci_route_table_t rt_tbl;
-    oci_tep_spec_t rtep;
-    api_test::vnic_util vnic;
-    api_test::mapping_util lmap, rmap;
+    oci_subnet_spec_t sub;
 
     batch_params.epoch = 1;
     ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
 
     // Create switchport
-    inet_aton(my_ip, &ipaddr);
-    swport.switch_ip_addr = ntohl(ipaddr.s_addr);
-    mac_str_to_addr((char *)my_mac, swport.switch_mac_addr);
-    inet_aton(my_gw, &ipaddr);
-    swport.gateway_ip_addr = ntohl(ipaddr.s_addr);
-    ASSERT_TRUE(oci_switchport_create(&swport) == SDK_RET_OK);
+    switchport_util swport(my_ip, my_mac, my_gw);
+    ASSERT_TRUE(swport.create() == SDK_RET_OK);
 
     // Create VCN
-    vcn.type = OCI_VCN_TYPE_TENANT;
-    vcn.key.id = vcn_id;
-    ASSERT_TRUE(str2ipv4pfx((char *)vcn_cidr.c_str(), &vcn.pfx) == SDK_RET_OK);
-    ASSERT_TRUE(oci_vcn_create(&vcn) == SDK_RET_OK);
+    vcn_util vcn(OCI_VCN_TYPE_TENANT, vcn_id, vcn_cidr);
+    ASSERT_TRUE(vcn.create() == SDK_RET_OK);
 
     // Create remote tep
-    inet_aton(sub_rem_gw, &ipaddr);
-    rtep.key.ip_addr = ntohl(ipaddr.s_addr);
-    rtep.type = OCI_ENCAP_TYPE_VNIC;
-    ASSERT_TRUE(oci_tep_create(&rtep) == SDK_RET_OK);
+    tep_util rtep(sub_rem_gw, OCI_ENCAP_TYPE_VNIC);
+    ASSERT_TRUE(rtep.create() == SDK_RET_OK);
 
     // Create route
     rt_tbl.key.id = rt_id;
@@ -172,42 +160,37 @@ TEST_F(mapping_test, mapping_create) {
     ASSERT_TRUE(oci_subnet_create(&sub) == SDK_RET_OK);
 
     // Create vnic
-    vnic.vcn_id = vcn_id;
-    vnic.sub_id = sub_id;
-    vnic.vnic_id = vnic_id;
+    vnic_util vnic(vcn_id, sub_id, vnic_id, vnic_mac);
     vnic.vlan_tag = vlan_tag;
     vnic.mpls_slot = mpls_slot;
-    vnic.vnic_mac = vnic_mac;
     vnic.rsc_pool_id = 0;
-    vnic.src_dst_check = false;
     ASSERT_TRUE(vnic.create() == SDK_RET_OK);
 
     // Create Local Mappings
-    lmap.vcn_id = vcn_id;
-    lmap.vnic_ip = vnic_ip;
-    lmap.vnic_ip_af = IP_AF_IPV4;
+    mapping_util lmap(vcn_id, vnic_ip, vnic_mac, vnic_id);
     lmap.sub_id = sub_id;
     lmap.mpls_slot = mpls_slot;
     lmap.tep_ip = my_ip;
-    lmap.vnic_mac = vnic_mac;
-    lmap.vnic_id = vnic_id;
     // TODO public IP
     ASSERT_TRUE(lmap.create() == SDK_RET_OK);
 
     // Create Remote mapping
-    rmap.vcn_id = vcn_id;
-    rmap.vnic_ip = vnic_rem_ip;
-    lmap.vnic_ip_af = IP_AF_IPV4;
+    mapping_util rmap(vcn_id, vnic_rem_ip, vnic_rem_mac);
     rmap.sub_id = sub_id;
     rmap.mpls_slot = mpls_rem_slot;
     rmap.tep_ip = sub_rem_gw;
-    rmap.vnic_mac = vnic_rem_mac;
     ASSERT_TRUE(rmap.create() == SDK_RET_OK);
 
     // Completed the configuration
     ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
 
-#ifdef SIM
+    // Read vnic info and compare the configuration packet count
+    vnic.read(vnic_id, &vnic_info);
+
+    // Read mapping info and compare the configuration
+    rmap.read(vcn_id, vnic_rem_ip, IP_AF_IPV4, &map_info);
+
+#if 0
     api_test::send_packet(g_snd_pkt1, sizeof(g_snd_pkt1), TM_PORT_UPLINK_0, g_rcv_pkt1,
                           sizeof(g_rcv_pkt1), TM_PORT_UPLINK_1);
     exit_simulation();
@@ -229,7 +212,6 @@ TEST_F(mapping_test, mapping_many_create) {}
 /// by getting the configured values back
 TEST_F(mapping_test, mapping_get) {}
 
-#if 0
 // \brief Mapping Delete
 //
 // Delete a single ipv4/v6 local/remote mapping and verify the change with
@@ -241,6 +223,7 @@ TEST_F(mapping_test, mapping_get) {}
 // There should not be any traffic hit.
 TEST_F(mapping_test, mapping_delete)
 {
+#if 0
     oci_batch_params_t batch_params = {0};
     const char *vnic_ip             = "10.1.1.3";
     oci_vcn_id_t vcn_id             = 1;
@@ -255,6 +238,7 @@ TEST_F(mapping_test, mapping_delete)
     ASSERT_TRUE(map.destroy() == SDK_RET_OK);
 
     ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+#endif
 }
 
 // \brief Mapping memory utilization
@@ -268,7 +252,6 @@ TEST_F(mapping_test, mapping_delete)
 // after many creation and deletion.
 TEST_F(mapping_test, mapping_memutil) {}
 
-#endif
 
 /// \brief Mapping Public
 ///
@@ -280,10 +263,14 @@ TEST_F(mapping_test, mapping_nat) {}
 
 /// @}
 
+}    // namespace api_test
+
 // print help message showing usage of HAL
 static inline void
 print_usage (char **argv)
-{ fprintf(stdout, "Usage : %s -c <hal.json> \n", argv[0]); }
+{
+    fprintf(stdout, "Usage : %s -c <hal.json> \n", argv[0]);
+}
 
 int
 main (int argc, char **argv)

@@ -1,67 +1,93 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    mapping_api.cc
- *
- * @brief   mapping API handling
- */
-
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This module implements Mapping API
+///
+//----------------------------------------------------------------------------
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/api/obj_api.hpp"
+#include "nic/apollo/api/impl/mapping_impl.hpp"
 #include "nic/apollo/api/mapping.hpp"
 
-/**
- * @defgroup OCI_MAPPING_API - first level of mapping API handling
- * @ingroup OCI_MAPPING
- * @{
- */
-
-/**
- * @brief create mapping
- *
- * @param[in] mapping mapping information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-oci_mapping_create (_In_ oci_mapping_t *mapping)
+static sdk_ret_t
+oci_mapping_api_handle (api::api_op_t op, oci_mapping_key_t *key,
+                        oci_mapping_spec_t *spec)
 {
-    api_ctxt_t    api_ctxt;
-    sdk_ret_t     rv;
+    sdk::sdk_ret_t rv;
+    api_ctxt_t api_ctxt;
 
-    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_MAPPING,
-                                                api::API_OP_CREATE);
+    if ((rv = oci_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK)
+        return rv;
+
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_MAPPING, op);
     if (likely(api_ctxt.api_params != NULL)) {
-        api_ctxt.api_op = api::API_OP_CREATE;
+        api_ctxt.api_op = op;
         api_ctxt.obj_id = api::OBJ_ID_MAPPING;
-        api_ctxt.api_params->mapping_info = *mapping;
+        if (op == api::API_OP_DELETE)
+            api_ctxt.api_params->mapping_key = *key;
+        else
+            api_ctxt.api_params->mapping_info = *spec;
         rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
     }
     return sdk::SDK_RET_OOM;
 }
 
-/**
- * @brief delete mapping
- *
- * @param[in] mapping_key mapping key
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-oci_mapping_delete (_In_ oci_mapping_key_t *mapping_key)
+static inline mapping_entry *
+oci_mapping_entry_find (oci_mapping_key_t *key)
 {
-    api_ctxt_t    api_ctxt;
-    sdk_ret_t     rv;
+    oci_mapping_spec_t spec = {0};
+    spec.key = *key;
+    // Mapping does not have any entry database
+    // As the call are single thread, we can use static entry
+    static mapping_entry *mapping;
 
-    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_MAPPING,
-                                                api::API_OP_DELETE);
-    if (likely(api_ctxt.api_params != NULL)) {
-        api_ctxt.api_op = api::API_OP_DELETE;
-        api_ctxt.obj_id = api::OBJ_ID_MAPPING;
-        api_ctxt.api_params->mapping_key = *mapping_key;
-        rv = api::g_api_engine.process_api(&api_ctxt);
-        return rv;
+    if (mapping == NULL) {
+        mapping  = mapping_entry::factory(&spec);
     }
-    return sdk::SDK_RET_OOM;
+    return mapping;
 }
 
-/** @} */    // end of OCI_MAPPING_API
+//----------------------------------------------------------------------------
+// Mapping API entry point implementation
+//----------------------------------------------------------------------------
+
+sdk_ret_t
+oci_mapping_create (oci_mapping_spec_t *spec)
+{
+    return (oci_mapping_api_handle(api::API_OP_CREATE, NULL, spec));
+}
+
+sdk::sdk_ret_t
+oci_mapping_read (oci_mapping_key_t *key, oci_mapping_info_t *info)
+{
+    mapping_entry *entry = NULL;
+    api::impl::mapping_impl *impl;
+
+    if (key == NULL || info == NULL)
+        return sdk::SDK_RET_INVALID_ARG;
+
+    if ((entry = oci_mapping_entry_find(key)) == NULL)
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+
+    info->spec.key = *key;
+    // Call the mapping hw implementaion directly
+    impl = dynamic_cast<api::impl::mapping_impl*>(entry->impl());
+    return impl->read_hw(key, info);
+}
+
+sdk_ret_t
+oci_mapping_update (oci_mapping_spec_t *spec)
+{
+    return (oci_mapping_api_handle(api::API_OP_UPDATE, NULL, spec));
+}
+
+sdk_ret_t
+oci_mapping_delete (oci_mapping_key_t *key)
+{
+    return (oci_mapping_api_handle(api::API_OP_DELETE, key, NULL));
+}
