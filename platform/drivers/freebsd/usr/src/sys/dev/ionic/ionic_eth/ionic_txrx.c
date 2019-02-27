@@ -145,6 +145,12 @@ TUNABLE_INT("hw.ionic.rx_coalesce_usecs", &ionic_rx_coalesce_usecs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_coalesce_usecs, CTLFLAG_RWTUN,
     &ionic_rx_coalesce_usecs, 0, "Rx coal in usescs.");
 
+/* Size of Rx scatter gather buffers, disabled by default. */
+u32 ionic_rx_sg_size = 0;
+TUNABLE_INT("hw.ionic.rx_sg_size", &ionic_rx_sg_size);
+SYSCTL_INT(_hw_ionic, OID_AUTO, rx_sg_size, CTLFLAG_RDTUN,
+    &ionic_rx_sg_size, 0, "Rx scatter-gather buffer size, disabled by default.");
+
 static void ionic_dump_mbuf(struct mbuf* m)
 {
 	IONIC_INFO("len %u\n", m->m_len);
@@ -251,11 +257,11 @@ static bool ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
 void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	struct rxq_comp *comp, 	struct rxq_desc *desc)
 {
-	struct mbuf *m = rxbuf->m;
+	struct mbuf *mb, *m = rxbuf->m;
 	struct rx_stats *stats = &rxq->stats;
 	struct ifnet *ifp = rxq->lif->netdev;
-	int error;
-	bool is_tcp;
+	int left, error;
+	bool i, is_tcp;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 
@@ -292,8 +298,24 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 
 	prefetch(m->data - NET_IP_ALIGN);
 	m->m_pkthdr.rcvif = rxq->lif->netdev;
+	/* 
+	 * Write the length here, if its chained mbufs for SG list,
+	 * it will be overwritten.
+	 */
 	m->m_pkthdr.len = comp->len;
 	m->m_len = comp->len;
+	left = comp->len;
+	/*
+	 * Go through mbuf chain and adjust the length of chained mbufs depending
+	 * on data length.
+	 */
+	for (mb = m, i = 0; mb->m_next != NULL; mb = mb->m_next, i++) {
+		if (left > 0) {
+			mb->m_len = min(rxbuf->sg_buf_len, left);
+			left -= mb->m_len;
+		} else
+			mb->m_len = 0;
+	}
 
 	// rx checksum offload
 	ionic_rx_checksum(ifp, m, comp, stats);
@@ -346,38 +368,107 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	rxq->lif->netdev->if_input(rxq->lif->netdev, m);
 }
 
+static int
+ionic_split_mbuf(struct rxque *rxq, struct mbuf *m, int len, int size)
+{
+	struct mbuf *newm;
+	int i, remain_len;
+
+	remain_len = len;
+	while (remain_len > 0) {
+		m = m_getm2(m, size, M_NOWAIT,  MT_DATA, 0);
+		if (m == NULL) {
+			return (-1);
+		}
+		remain_len -= size;
+	}
+
+	/* Loop through mbufs and set their size. */
+	for (newm = m, i = 0; newm->m_next != NULL; newm = newm->m_next, i++) 
+		newm->m_len = size;
+
+	return (i);
+}
+
 int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 {
-	bus_dma_segment_t  seg[1];
+	bus_dma_segment_t  seg[IONIC_RX_MAX_SG_ELEMS + 1];
 	struct ionic_rx_buf *rxbuf;
+	struct rxq_desc *desc;
+	struct rxq_sg_desc *sg;
 	struct mbuf *m;
 	struct rx_stats *stats = &rxq->stats;
-	int nsegs, error;
+	int i, nsegs, error, size, num = 0;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	rxbuf = &rxq->rxbuf[index];
-	m = m_getjcl(M_NOWAIT, MT_DATA, M_PKTHDR, len);
+	desc = &rxq->cmd_ring[index];
+	sg = &rxq->sg_ring[index];
+	
+	bzero(desc, sizeof(*desc));
+	KASSERT(rxbuf->m == NULL, ("rxuf %d is not empty", index));
+
+	size = ionic_rx_sg_size ? ionic_rx_sg_size : len;
+	m = m_getjcl(M_NOWAIT, MT_DATA, M_PKTHDR, size);
 	if (m == NULL) {
 		rxbuf->m = NULL;
 		stats->alloc_err++;
 		return (ENOMEM);
 	}
-
-	KASSERT(rxbuf->m == NULL, ("rxuf %d is not empty", index));
-
-	m->m_pkthdr.len = m->m_len = len;
-	rxbuf->m = m;
+	/*
+	 * Set the size of mbuf for non-SG path.
+	 */
+	m->m_len = size;
+	m->m_pkthdr.len = len;
+	
+	if (ionic_rx_sg_size) {
+		rxbuf->sg_buf_len = ionic_rx_sg_size;
+		num = ionic_split_mbuf(rxq, m, len, ionic_rx_sg_size);
+		if (num < 0) {
+			rxbuf->m = NULL;
+			m_freem(m);
+			stats->alloc_err++;
+			return (ENOMEM);
+		}
+	}
+	IONIC_RX_TRACE(rxq, "m(%p) len: %d/%d flags: 0x%x\n", m, m->m_len, len, m->m_flags);
 
 	error = bus_dmamap_load_mbuf_sg(rxq->buf_tag, rxbuf->dma_map, m, seg, &nsegs, BUS_DMA_NOWAIT);
 	if (error) {
+		rxbuf->m = NULL;
+		m_freem(m);
 		stats->dma_map_err++;
 		return (error);
 	}
 
-	bus_dmamap_sync(rxq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_PREREAD);
-	rxbuf->pa_addr = seg[0].ds_addr;
-	rxq->stats.mbuf_alloc++;
+	if (ionic_rx_sg_size && num != nsegs)
+		panic("Number of mbufs(%d) != number of segments(%d)", num, nsegs);
 
+	bus_dmamap_sync(rxq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_PREREAD);
+	rxq->stats.mbuf_alloc++;
+	rxbuf->m = m;
+
+	desc->addr = seg[0].ds_addr;
+	desc->len = seg[0].ds_len;
+	desc->opcode = RXQ_DESC_OPCODE_SIMPLE;
+
+	size = desc->len;	
+	for (i = 0; i < nsegs - 1; i++) {
+		if (!seg[i].ds_len || seg[i].ds_len > ionic_rx_sg_size)
+			panic("seg[%d] 0x%lx %lu > %u\n", i, seg[i].ds_addr, seg[i].ds_len,
+				ionic_rx_sg_size);
+		sg->elems[i].addr = seg[i + 1].ds_addr;
+		sg->elems[i].len = seg[i + 1].ds_len;
+		size += sg->elems[i].len;
+	}
+
+	if (ionic_rx_sg_size && size < len)
+		panic("Rx SG size is not sufficient(%d) != %d", size, len);
+#if 0	
+	IONIC_QUE_DEBUG(rxq, "Desc 0x%lx %hu\n", desc->addr, desc->len);
+	for (i = 0; i< nsegs - 1; i++)
+		IONIC_QUE_DEBUG(rxq, "SG[%d] 0x%lx %hu\n", i, sg->elems[i].addr, sg->elems[i].len);
+#endif
 	return (0);
 }
 

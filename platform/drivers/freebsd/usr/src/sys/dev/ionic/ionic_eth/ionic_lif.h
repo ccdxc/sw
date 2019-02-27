@@ -89,14 +89,14 @@ struct rx_stats {
 struct ionic_rx_buf {
 	struct mbuf *m;
 	bus_dmamap_t dma_map;
-	uint64_t pa_addr; 					/* Cache address to avoid access to command ring. */
+	uint32_t sg_buf_len;	/* If SG is used, its buffer length. */
 };
 
 struct ionic_tx_buf {
 	struct mbuf *m;
 	bus_dmamap_t dma_map;
 	uint64_t timestamp;
-	uint64_t pa_addr; 					/* Cache address to avoid access to command ring. */
+	uint64_t pa_addr; 		/* Cache address to avoid access to command ring. */
 };
 
 struct adminq {
@@ -196,6 +196,7 @@ struct rxque {
 	 */
 	struct rxq_desc *cmd_ring;
 	struct rxq_comp *comp_ring;
+	struct rxq_sg_desc *sg_ring;	/* SG descriptors. */
 };
 
 struct txque {
@@ -401,4 +402,5 @@ int ionic_set_multi(struct lif* lif);
 int ionic_set_mac(struct net_device *netdev);
 
 extern int ionic_devcmd_timeout;
+extern u32 ionic_rx_sg_size;
 #endif /* _IONIC_LIF_H_ */

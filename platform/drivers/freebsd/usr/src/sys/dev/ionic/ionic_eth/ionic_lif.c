@@ -1081,7 +1081,7 @@ static int ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	struct rxque *rxq;
 	struct ionic_rx_buf *rxbuf;
 	int i, error = ENOMEM;
-	uint32_t cmd_ring_size, comp_ring_size, total_size;
+	uint32_t cmd_ring_size, comp_ring_size, sg_ring_size, total_size;
 
 	*prxq = NULL;
 
@@ -1112,7 +1112,9 @@ static int ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	/* Allocate DMA for command and completion rings. They must be consecutive. */
 	cmd_ring_size = sizeof(*rxq->cmd_ring) * num_descs;
 	comp_ring_size = sizeof(*rxq->comp_ring) * num_descs;
-	total_size = ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(cmd_ring_size, PAGE_SIZE);
+	sg_ring_size = sizeof(*rxq->sg_ring) * num_descs;
+	total_size = ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(cmd_ring_size, PAGE_SIZE) +
+			ALIGN(sg_ring_size, PAGE_SIZE);
 
 	if ((error = ionic_dma_alloc(rxq->lif->ionic, total_size, &rxq->cmd_dma, BUS_DMA_NOWAIT))) {
 		IONIC_QUE_ERROR(rxq, "failed to allocated DMA cmd ring, err: %d\n", error);
@@ -1127,6 +1129,8 @@ static int ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	 * We assume that competion ring is next to command ring.
 	 */
 	rxq->comp_ring = (struct rxq_comp *)(rxq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE));
+	rxq->sg_ring = (struct rxq_sg_desc *)(rxq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE) +
+			ALIGN(comp_ring_size, PAGE_SIZE));
 
 	bzero((void *)rxq->cmd_ring, total_size);
 
@@ -1149,8 +1153,8 @@ static int ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	         /*      filter */ NULL,
 	         /*   filterarg */ NULL,
 	         /*     maxsize */ MJUM16BYTES,
-	         /*   nsegments */ 1,
-	         /*  maxsegsize */ MJUM16BYTES,
+	         /*   nsegments */ ionic_rx_sg_size ? IONIC_RX_MAX_SG_ELEMS : 1,
+	         /*  maxsegsize */ ionic_rx_sg_size ? ionic_rx_sg_size : MJUM16BYTES,
 	         /*       flags */ 0,
 	         /*    lockfunc */ NULL,
 	         /* lockfuncarg */ NULL,
@@ -2263,7 +2267,6 @@ static void ionic_rx_ring_doorbell(struct rxque *rxq, int index)
 
 static void ionic_rx_fill(struct rxque *rxq)
 {
-	struct rxq_desc *desc;
 	struct ionic_rx_buf *rxbuf;
 	int error, index;
 	bool db_ring = false, posted = false;
@@ -2275,19 +2278,13 @@ static void ionic_rx_fill(struct rxque *rxq)
 		posted = true;
 		index = rxq->head_index;
 		rxbuf = &rxq->rxbuf[index];
-		desc = &rxq->cmd_ring[index];
 
-		bzero(desc, sizeof(*desc));
 		KASSERT((rxbuf->m == NULL), ("%s: rxbuf not empty for %d", rxq->name, index));
 		if ((error = ionic_rx_mbuf_alloc(rxq, index, rxq->lif->rx_mbuf_size))) {
 			IONIC_QUE_ERROR(rxq, "rx_fill mbuf alloc failed for p_index :%d, error: %d\n",
 				index, error);
 			break;
 		}
-
-		desc->addr = rxbuf->pa_addr;
-		desc->len = rxq->lif->rx_mbuf_size;
-		desc->opcode = RXQ_DESC_OPCODE_SIMPLE;
 
 		rxq->head_index = (rxq->head_index + 1) % rxq->num_descs;
 
@@ -2311,13 +2308,11 @@ static void ionic_rx_fill(struct rxque *rxq)
 static void ionic_rx_refill(struct rxque *rxq)
 {
 	struct ionic_rx_buf *rxbuf;
-	struct rxq_desc *desc;
 	int i, count, error;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	for (i = rxq->tail_index, count = 0; count < rxq->descs; i = (i + 1) % rxq->num_descs, count++) {
 		rxbuf = &rxq->rxbuf[i];
-		desc = &rxq->cmd_ring[i];
 
 		KASSERT(rxbuf->m, ("%s: ionic_rx_refill rxbuf empty for %d", rxq->name, i));
 
@@ -2327,10 +2322,6 @@ static void ionic_rx_refill(struct rxque *rxq)
 				i, error);
 			break;
 		}
-
-		/* Update the descriptors with new mbuf address and length. */
-		desc->addr = rxbuf->pa_addr;
-		desc->len = rxq->lif->rx_mbuf_size;
 	};
 
 	IONIC_RX_TRACE(rxq, "head: %d tail :%d refilled: %d\n",
@@ -2390,8 +2381,10 @@ int ionic_rx_clean(struct rxque* rxq , int rx_limit)
 		if (comp->color != rxq->done_color)
 			break;
 
-		IONIC_RX_TRACE(rxq, "comp index: %d color: %d done_color: %d desc_posted: %d\n",
-			comp_index, comp->color, rxq->done_color, rxq->descs);
+		IONIC_RX_TRACE(rxq, "comp index: %d color: %d done_color: %d nsegs: %d"
+				" len: %d desc_posted: %d\n",
+				comp_index, comp->color, rxq->done_color, comp->num_sg_elems,
+				comp->len, rxq->descs);
 
 		cmd_index = rxq->tail_index;
 		rxbuf = &rxq->rxbuf[cmd_index];
@@ -2432,6 +2425,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct rxque *rxq)
 			.intr_index = rxq->intr.index,
 			.type = RXQ_TYPE_ETHERNET,
 			.index = rxq->index,
+			.sg_enable = 1, /* Always enable SG. */
 			.ring_base = rxq->cmd_ring_pa,
 			.ring_size = ilog2(rxq->num_descs),
 		},
