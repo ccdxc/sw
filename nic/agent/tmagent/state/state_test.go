@@ -1080,7 +1080,7 @@ func TestSyslogConnect(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, "netagent-007", strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
+	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(l.Addr().(*net.TCPAddr).String(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()

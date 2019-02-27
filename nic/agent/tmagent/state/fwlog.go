@@ -42,18 +42,21 @@ func (s *PolicyState) TsdbInit(rc resolver.Interface) error {
 func (s *PolicyState) FwlogInit(path string) error {
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
 	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
-	log.Infof("memsize=%d starting %d routines to process fwlog", mSize, instCount)
+	log.Infof("init fwlog shared memory, total memory: %d instances: %d", mSize, instCount)
 	shm, err := ipc.NewSharedMem(mSize, instCount, path)
 	if err != nil {
 		return err
 	}
 
+	log.Infof("allocated shared memory: %v", shm)
+
 	for ix := 0; ix < instCount; ix++ {
 		ipc := shm.IPCInstance()
+		log.Infof("IPC[%d] %s", ix, ipc)
 		s.wg.Add(1)
 		go func(ix int) {
 			defer s.wg.Done()
-			log.Infof("ProcessFWEvent_%d()", ix)
+			log.Infof("start ProcessFWEvent_%d()", ix)
 			ipc.Receive(s.ctx, s.ProcessFWEvent)
 			log.Infof("exit ProcessFWEvent_%d()", ix)
 		}(ix)

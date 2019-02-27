@@ -73,7 +73,7 @@ func NewSharedMem(size, parts int, name string) (*SharedMem, error) {
 		return nil, err
 	}
 
-	log.Infof("size of ma: %v, specified: %v", len(ma), size)
+	log.Infof("attached shared memory, size: %v, requested: %v", len(ma), size)
 	shm := &SharedMem{
 		mmapSize:  size,
 		mmapAddr:  ma,
@@ -94,6 +94,7 @@ func (sm *SharedMem) IPCInstance() *IPC {
 	ipcSize := sm.mmapSize / sm.maxPart
 	base := sm.mmapAddr[sm.partCount*ipcSize : (sm.partCount+1)*ipcSize]
 	numBufs := (ipcSize - int(C.IPC_OVH_SIZE)) / int(C.IPC_BUF_SIZE)
+	log.Infof("IPC[%d] allocated shared memory %v:%v", sm.partCount, sm.partCount*ipcSize, (sm.partCount+1)*ipcSize)
 	sm.partCount++
 	return &IPC{
 		base:       base,
@@ -101,6 +102,11 @@ func (sm *SharedMem) IPCInstance() *IPC {
 		readIndex:  GetSharedConstant("IPC_READ_OFFSET"),
 		writeIndex: GetSharedConstant("IPC_WRITE_OFFSET"),
 	}
+}
+
+// String prints SharedMem details
+func (sm *SharedMem) String() string {
+	return fmt.Sprintf("size: %v, parts: %v", sm.mmapSize, sm.maxPart)
 }
 
 // Receive processes messages received on the IPC channel
@@ -177,6 +183,12 @@ func (ipc *IPC) readMsg(offset uint32) (*ipcproto.FWEvent, error) {
 	}
 
 	return ev, nil
+}
+
+// String prints IPC details`
+func (ipc *IPC) String() string {
+	return fmt.Sprintf("readIndex: %v writeINdex: %v numbuffer: %v txCountIndex: %v errCountIndex: %v rxErrors: %v rxCount: %v",
+		ipc.readIndex, ipc.writeIndex, ipc.numBufs, ipc.txCountIndex, ipc.errCountIndex, ipc.rxErrors, ipc.rxCount)
 }
 
 // GetSharedConstant gets a shared constant from cgo
