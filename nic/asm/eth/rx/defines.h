@@ -3,9 +3,17 @@
 
 #define BIT(n)                  (1 << n)
 
+#define LG2_RX_QSTATE_SIZE      (6)
+
 #define LG2_RX_DESC_SIZE        (4)
 #define LG2_RX_CMPL_DESC_SIZE   (4)
-#define LG2_RX_QSTATE_SIZE      (6)
+
+#define RX_MAX_SG_ELEMS             (8)
+#define LG2_RX_SG_ELEM_SIZE         (4)
+#define LG2_RX_SG_MAX_READ_SIZE     (6)
+#define RX_SG_MAX_READ_SIZE         (64)    // 4 sg elements
+#define RX_SG_MAX_READ_ELEM         (4)
+#define LG2_RX_SG_DESC_SIZE         (7)
 
 #define L2_PKT_TYPE_UNICAST     0
 #define L2_PKT_TYPE_MULTICAST   1
@@ -90,6 +98,16 @@
 #define STAT_cqe                            30
 #define STAT_intr                           31
 
+
+/*
+ * Descriptor decode Macros
+ */
+
+#define GET_FRAG_ADDR(n, _r) \
+    add         _r, r0, d.{addr_lo##n...addr_hi##n}.dx; \
+    add         _r, r0, _r[59:8];
+
+
 /*
  * DMA Macros
  */
@@ -98,4 +116,8 @@
     or          _r_addr, d.addr_lo, d.addr_hi, sizeof(d.addr_lo); \
     add         _r_addr, r0, _r_addr.dx; \
     or          _r_addr, _r_addr[63:16], _r_addr[11:8], sizeof(d.addr_lo); \
-    DMA_PKT2MEM(_r_ptr, !c0, k.eth_rx_global_host_queue, _r_addr, _gs_len);
+    DMA_PKT2MEM(_r_ptr, _C_FALSE, k.eth_rx_global_host_queue, _r_addr, _gs_len);
+
+#define DMA_FRAG(n, _r_addr, _r_len, _r_ptr) \
+    GET_FRAG_ADDR(n, _r_addr); \
+    DMA_PKT2MEM(_r_ptr, _C_FALSE, k.eth_rx_global_host_queue, _r_addr, _r_len);

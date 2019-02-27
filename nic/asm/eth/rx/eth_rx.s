@@ -20,6 +20,7 @@ struct rx_table_s3_t0_eth_rx_packet_d d;
 
 .param eth_rx_completion
 .param eth_rx_stats
+.param eth_rx_sg_start
 
 .align
 eth_rx:
@@ -33,18 +34,54 @@ eth_rx:
     nop
 
     // Packet length check
-    add             _r_pktlen, r0, k.eth_rx_global_pkt_len
-    add             _r_len, r0, d.{len}.hx
-    blt             _r_len, _r_pktlen, eth_rx_desc_data_error
+    //
+    // if (buf.len < pkt.len && sg_desc_addr == 0)
+    //      goto eth_rx_desc_data_error;
+    //
+    slt             c1, d.{len}.hx, k.eth_rx_global_pkt_len     // c1 = buf.len < pkt.len
+    seq             c2, k.eth_rx_to_s3_sg_desc_addr, 0          // c2 = sg_desc_addr == 0
+    bcf             [c1 & c2], eth_rx_desc_data_error
     nop
+
+    //
+    // if (buf.len < pkt.len)
+    //      dma.len = buf.len
+    // else
+    //      dma.len = pkt.len
+    //
+    cmov            _r_len, c1, d.{len}.hx, k.eth_rx_global_pkt_len
 
     // DMA packet
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_PKT(_r_ptr, _r_addr, k.eth_rx_global_pkt_len)
+    DMA_PKT(_r_ptr, _r_addr, _r_len)
     DMA_CMD_NEXT(_r_index)
 
-    b               eth_rx_done
-    nop
+    //
+    // if ( !(buf.len < pkt.len) )
+    //      goto eth_rx_done
+    // else
+    //      goto eth_rx_sg
+    //
+    bcf            [!c1], eth_rx_done
+
+    // rem_bytes = pkt.len - dma.len
+    sub            _r_len, k.eth_rx_global_pkt_len, _r_len      // branch-delay slot
+
+eth_rx_sg:
+    SAVE_STATS(_r_stats)
+
+    // Launch eth_rx_sg in next stage
+    phvwr           p.eth_rx_t1_s2s_sg_desc_addr, k.eth_rx_to_s3_sg_desc_addr
+    phvwr           p.eth_rx_t1_s2s_rem_sg_elems, RX_MAX_SG_ELEMS
+    phvwr           p.eth_rx_t1_s2s_rem_pkt_bytes, _r_len
+
+    // Save DMA command pointer
+    phvwr           p.eth_rx_global_dma_cur_index, _r_index
+
+    phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 2)
+    phvwri          p.common_te1_phv_table_pc, eth_rx_sg_start[38:6]
+    phvwr.e         p.common_te1_phv_table_addr, k.eth_rx_to_s3_sg_desc_addr
+    phvwr.f         p.common_te1_phv_table_raw_table_size, LG2_RX_SG_MAX_READ_SIZE
 
 eth_rx_desc_addr_error:
     SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)

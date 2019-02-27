@@ -1,6 +1,7 @@
 
 #include "INGRESS_p.h"
-#include "INGRESS_rx_table_s4_t0_k.h"
+#include "ingress.h"
+#include "INGRESS_rx_table_s7_t0_k.h"
 
 #include "defines.h"
 
@@ -11,7 +12,7 @@
 
 
 struct phv_ p;
-struct rx_table_s4_t0_k_ k;
+struct rx_table_s7_t0_k_ k;
 
 
 #define   _r_intr_addr  r1        // Interrupt Assert Address

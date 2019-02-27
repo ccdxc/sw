@@ -14,6 +14,17 @@
     modify_field(QSTATE.p_index0, p_index0); \
     modify_field(QSTATE.c_index0, c_index0);
 
+#define PARAM_SG_ELEM(n) \
+    addr_lo##n, rsvd##n, addr_hi##n, rsvd1##n, len##n, rsvd2##n
+
+#define MODIFY_SG_ELEM(n) \
+    modify_field(eth_sg_desc.addr_lo##n, addr_lo##n); \
+    modify_field(eth_sg_desc.rsvd##n, rsvd##n); \
+    modify_field(eth_sg_desc.addr_hi##n, addr_hi##n); \
+    modify_field(eth_sg_desc.rsvd1##n, rsvd1##n); \
+    modify_field(eth_sg_desc.len##n, len##n); \
+    modify_field(eth_sg_desc.rsvd2##n, rsvd2##n);
+
 /*
  * RXDMA
  */
@@ -33,14 +44,23 @@
 #define MODIFY_ETH_RX_T0_S2S \
     modify_field(eth_rx_t0_s2s_scratch.cq_desc_addr, eth_rx_t0_s2s.cq_desc_addr); \
     modify_field(eth_rx_t0_s2s_scratch.intr_assert_index, eth_rx_t0_s2s.intr_assert_index); \
-    modify_field(eth_rx_t0_s2s_scratch.intr_assert_data, eth_rx_t0_s2s.intr_assert_data);
+    modify_field(eth_rx_t0_s2s_scratch.intr_assert_data, eth_rx_t0_s2s.intr_assert_data); \
+
+#define MODIFY_ETH_RX_T1_S2S \
+    modify_field(eth_rx_t1_s2s_scratch.sg_desc_addr, eth_rx_t1_s2s.sg_desc_addr); \
+    modify_field(eth_rx_t1_s2s_scratch.rem_sg_elems, eth_rx_t1_s2s.rem_sg_elems); \
+    modify_field(eth_rx_t1_s2s_scratch.rem_pkt_bytes, eth_rx_t1_s2s.rem_pkt_bytes);
+
+#define MODIFY_ETH_RX_TO_S3 \
+    modify_field(eth_rx_to_s3_scratch.sg_desc_addr, eth_rx_to_s3.sg_desc_addr);
 
 #define PARAMS_ETH_RX_QSTATE \
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
     p_index0, c_index0, comp_index, \
     color, rsvd1, \
     enable, host_queue, intr_enable, rsvd2, \
-    ring_base, ring_size, cq_ring_base, intr_assert_index
+    ring_base, ring_size, cq_ring_base, intr_assert_index, \
+    sg_ring_base
 
 #define MODIFY_ETH_RX_QSTATE \
     MODIFY_QSTATE_INTRINSIC(eth_rx_qstate) \
@@ -54,7 +74,8 @@
     modify_field(eth_rx_qstate.ring_base, ring_base); \
     modify_field(eth_rx_qstate.ring_size, ring_size); \
     modify_field(eth_rx_qstate.cq_ring_base, cq_ring_base); \
-    modify_field(eth_rx_qstate.intr_assert_index, intr_assert_index);
+    modify_field(eth_rx_qstate.intr_assert_index, intr_assert_index); \
+    modify_field(eth_rx_qstate.sg_ring_base, sg_ring_base);
 
 #define PARAM_RX_DESC(n) \
     addr_lo##n, rsvd0##n, addr_hi##n, rsvd1##n, \
@@ -194,17 +215,6 @@
     modify_field(eth_tx_desc.csum_l4_or_eot##n, csum_l4_or_eot##n); \
     modify_field(eth_tx_desc.csum_l3_or_sot##n, csum_l3_or_sot##n); \
     modify_field(eth_tx_desc.mss_or_csumoff_hi##n, mss_or_csumoff_hi##n);
-
-#define PARAM_TX_SG_ELEM(n) \
-    addr_lo##n, rsvd##n, addr_hi##n, rsvd1##n, len##n, rsvd2##n
-
-#define MODIFY_TX_SG_ELEM(n) \
-    modify_field(eth_tx_sg_desc.addr_lo##n, addr_lo##n); \
-    modify_field(eth_tx_sg_desc.rsvd##n, rsvd##n); \
-    modify_field(eth_tx_sg_desc.addr_hi##n, addr_hi##n); \
-    modify_field(eth_tx_sg_desc.rsvd1##n, rsvd1##n); \
-    modify_field(eth_tx_sg_desc.len##n, len##n); \
-    modify_field(eth_tx_sg_desc.rsvd2##n, rsvd2##n);
 
 #define MODIFY_TX_DESC_KEY(hdr, n) \
     modify_field(eth_tx_##hdr##_scratch.addr_lo##n, eth_tx_##hdr.addr_lo##n); \

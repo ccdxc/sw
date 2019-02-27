@@ -226,13 +226,15 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "color=0x%0x\n"
                "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
                "ring_base=0x%0lx\nring_size=0x%0x\n"
-               "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
+               "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
+               "sg_ring_base=0x%0lx\n",
                qstate_ethrx.pc_offset, qstate_ethrx.rsvd0, qstate_ethrx.cosA, qstate_ethrx.cosB,
                qstate_ethrx.cos_sel, qstate_ethrx.eval_last, qstate_ethrx.host, qstate_ethrx.total,
                qstate_ethrx.pid, qstate_ethrx.p_index0, qstate_ethrx.c_index0,
                qstate_ethrx.comp_index, qstate_ethrx.sta.color, qstate_ethrx.cfg.enable,
                qstate_ethrx.cfg.host_queue, qstate_ethrx.cfg.intr_enable, qstate_ethrx.ring_base,
-               qstate_ethrx.ring_size, qstate_ethrx.cq_ring_base, qstate_ethrx.intr_assert_index);
+               qstate_ethrx.ring_size, qstate_ethrx.cq_ring_base, qstate_ethrx.intr_assert_index,
+               qstate_ethrx.sg_ring_base);
         break;
     case 1:
         sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));

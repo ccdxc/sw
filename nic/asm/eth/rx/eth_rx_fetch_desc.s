@@ -14,7 +14,8 @@ struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 
 #define  _r_desc_addr         r1    // Descriptor address
 #define  _r_cq_desc_addr      r2    // CQ descriptor address
-#define  _r_stats             r3    // Stats
+#define  _r_sg_desc_addr      r3    // SG descriptor address
+#define  _r_stats             r4    // Stats
 
 %%
 
@@ -39,6 +40,11 @@ eth_rx_fetch_desc:
 
   // Compute completion entry address
   add             _r_cq_desc_addr, d.{cq_ring_base}.dx, d.{c_index0}.hx, LG2_RX_CMPL_DESC_SIZE
+
+  // Compute the sg descriptor address
+  sne             c7, d.sg_ring_base, 0
+  add.c7          _r_sg_desc_addr, d.{sg_ring_base}.dx, d.{c_index0}.hx, LG2_RX_SG_DESC_SIZE
+  phvwr.c7        p.eth_rx_to_s3_sg_desc_addr, _r_sg_desc_addr
 
   // Claim the descriptor
   phvwr           p.eth_rx_cq_desc_comp_index, d.c_index0

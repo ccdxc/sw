@@ -92,8 +92,9 @@ typedef struct eth_rx_qstate {
     uint16_t    ring_size;
     uint64_t    cq_ring_base;
     uint16_t    intr_assert_index;
+    uint64_t    sg_ring_base;
 
-    uint8_t     __pad[28];
+    uint8_t     __pad[20];
 
 } eth_rx_qstate_t;
 

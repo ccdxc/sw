@@ -912,13 +912,14 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     eth_tx_qstate_t qstate;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_TXQ_INIT: "
-        "queue_index {} cos {} ring_base {:#x} ring_size {} intr_index {} {}{}",
+        "queue_index {} cos {} ring_base {:#x} ring_size {} intr_index {} sg {} {}{}",
         hal_lif_info_.name,
         cmd->index,
         cmd->cos,
         cmd->ring_base,
         cmd->ring_size,
         cmd->intr_index,
+        cmd->sg_enable,
         cmd->I ? 'I' : '-',
         cmd->E ? 'E' : '-');
 
@@ -987,8 +988,10 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.ring_size = cmd->ring_size;
     qstate.cq_ring_base = roundup(qstate.ring_base + (sizeof(struct txq_desc) << cmd->ring_size), 4096);
     qstate.intr_assert_index = res->intr_base + cmd->intr_index;
+    // TODO: Predicate this on cmd->sg_enable
     qstate.sg_ring_base = roundup(qstate.cq_ring_base + (sizeof(struct txq_comp) << cmd->ring_size), 4096);
     qstate.spurious_db_cnt = 0;
+
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
@@ -1011,12 +1014,14 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     eth_rx_qstate_t qstate;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_RXQ_INIT: "
-        "queue_index {} ring_base {:#x} ring_size {} intr_index {} {}{}",
+        "index {} cos {} ring_base {:#x} ring_size {} intr_index {} sg {} {}{}",
         hal_lif_info_.name,
         cmd->index,
+        cmd->cos,
         cmd->ring_base,
         cmd->ring_size,
         cmd->intr_index,
+        cmd->sg_enable,
         cmd->I ? 'I' : '-',
         cmd->E ? 'E' : '-');
 
@@ -1082,6 +1087,9 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.ring_size = cmd->ring_size;
     qstate.cq_ring_base = roundup(qstate.ring_base + (sizeof(struct rxq_desc) << cmd->ring_size), 4096);
     qstate.intr_assert_index = res->intr_base + cmd->intr_index;
+    if (cmd->sg_enable)
+        qstate.sg_ring_base = roundup(qstate.cq_ring_base + (sizeof(struct rxq_comp) << cmd->ring_size), 4096);
+
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();

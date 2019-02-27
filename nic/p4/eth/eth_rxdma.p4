@@ -12,7 +12,8 @@ header_type eth_rx_cq_desc_p {
     // RX Completion Descriptor
     fields {
         status : 8;
-        rsvd : 8;
+        rsvd : 3;
+        num_sg_elems : 5;
         comp_index : 16;
         rss_hash : 32;
         csum : 16;
@@ -71,6 +72,7 @@ header_type eth_rx_qstate_d {
         ring_size : 16;
         cq_ring_base : 64;
         intr_assert_index : 16;
+        sg_ring_base : 64;
     }
 }
 
@@ -85,6 +87,23 @@ header_type eth_rx_desc_d {
         opcode : 3;
         rsvd3 : 8;
         rsvd4 : 32;
+    }
+}
+
+#define HEADER_SG_ELEM(n) \
+    addr_lo##n : 48; \
+    rsvd##n : 4; \
+    addr_hi##n : 4; \
+    rsvd1##n : 8; \
+    len##n : 16; \
+    rsvd2##n : 48;
+
+header_type eth_sg_desc_d {
+    fields {
+        HEADER_SG_ELEM(0)
+        HEADER_SG_ELEM(1)
+        HEADER_SG_ELEM(2)
+        HEADER_SG_ELEM(3)
     }
 }
 
@@ -115,6 +134,20 @@ header_type eth_rx_t0_s2s_k {
     }
 }
 
+header_type eth_rx_t1_s2s_k {
+    fields {
+        sg_desc_addr : 64;
+        rem_sg_elems : 5;
+        rem_pkt_bytes : 14;
+    }
+}
+
+header_type eth_rx_to_s3_k {
+    fields {
+        sg_desc_addr : 64;
+    }
+}
+
 /*****************************************************************************
  *  D-vector
  *****************************************************************************/
@@ -124,20 +157,14 @@ metadata eth_rx_qstate_d eth_rx_qstate;
 @pragma scratch_metadata
 metadata eth_rx_desc_d eth_rx_desc;
 
+@pragma scratch_metadata
+metadata eth_sg_desc_d eth_sg_desc;
+
 /*****************************************************************************
  *  K-vector
  *****************************************************************************/
 
 // Union with Common-RXDMA PHV headers
-
-// App header (Available in STAGE=0)
-
-/* NOTE: Defined in Common-P4+
-@pragma pa_header_union ingress app_header
-metadata p4_to_p4plus_classic_nic_header_t p4_to_p4plus;
-@pragma scratch_metadata
-metadata p4_to_p4plus_classic_nic_header_t p4_to_p4plus_scratch;
-*/
 
 // Global PHV headers (Available in STAGES=ALL, MPUS=ALL)
 @pragma pa_header_union ingress common_global
@@ -146,64 +173,21 @@ metadata eth_rx_global_k eth_rx_global;
 metadata eth_rx_global_k eth_rx_global_scratch;
 
 // To Stage N PHV headers (Available in STAGE=N, MPUS=ALL)
-/*
-@pragma pa_header_union ingress to_stage_1
-metadata eth_rx_to_stage_1_k eth_rx_to_s1;
-@pragma scratch_metadata
-metadata eth_rx_to_stage_1_k eth_rx_to_s1_scratch;
-
-@pragma pa_header_union ingress to_stage_2
-metadata eth_rx_to_stage_2_k eth_rx_to_s2;
-@pragma scratch_metadata
-metadata eth_rx_to_stage_2_k eth_rx_to_s2_scratch;
-
 @pragma pa_header_union ingress to_stage_3
-metadata eth_rx_to_stage_3_k eth_rx_to_s3;
+metadata eth_rx_to_s3_k eth_rx_to_s3;
 @pragma scratch_metadata
-metadata eth_rx_to_stage_3_k eth_rx_to_s3_scratch;
-
-@pragma pa_header_union ingress to_stage_4
-metadata eth_rx_to_stage_4_k eth_rx_to_s4;
-@pragma scratch_metadata
-metadata eth_rx_to_stage_4_k eth_rx_to_s4_scratch;
-
-@pragma pa_header_union ingress to_stage_5
-metadata eth_rx_to_stage_5_k eth_rx_to_s5;
-@pragma scratch_metadata
-metadata eth_rx_to_stage_5_k eth_rx_to_s5_scratch;
-
-@pragma pa_header_union ingress to_stage_6
-metadata eth_rx_to_stage_6_k eth_rx_to_s6;
-@pragma scratch_metadata
-metadata eth_rx_to_stage_6_k eth_rx_to_s6_scratch;
-
-@pragma pa_header_union ingress to_stage_7
-metadata eth_rx_to_stage_7_k eth_rx_to_s7;
-@pragma scratch_metadata
-metadata eth_rx_to_stage_7_k eth_rx_to_s7_scratch;
-*/
+metadata eth_rx_to_s3_k eth_rx_to_s3_scratch;
 
 // Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
 @pragma pa_header_union ingress common_t0_s2s
 metadata eth_rx_t0_s2s_k eth_rx_t0_s2s;
 @pragma scratch_metadata
 metadata eth_rx_t0_s2s_k eth_rx_t0_s2s_scratch;
-/*
+
 @pragma pa_header_union ingress common_t1_s2s
 metadata eth_rx_t1_s2s_k eth_rx_t1_s2s;
 @pragma scratch_metadata
 metadata eth_rx_t1_s2s_k eth_rx_t1_s2s_scratch;
-
-@pragma pa_header_union ingress common_t2_s2s
-metadata eth_rx_t2_s2s_k eth_rx_t2_s2s;
-@pragma scratch_metadata
-metadata eth_rx_t2_s2s_k eth_rx_t2_s2s_scratch;
-
-@pragma pa_header_union ingress common_t3_s2s
-metadata eth_rx_t3_s2s_k eth_rx_t3_s2s;
-@pragma scratch_metadata
-metadata eth_rx_t3_s2s_k eth_rx_t3_s2s_scratch;
-*/
 
 /*****************************************************************************
  *  P-vector

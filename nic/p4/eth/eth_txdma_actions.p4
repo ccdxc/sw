@@ -75,10 +75,10 @@ action eth_tx()
 }
 
 action eth_tx_sg(
-    PARAM_TX_SG_ELEM(0),
-    PARAM_TX_SG_ELEM(1),
-    PARAM_TX_SG_ELEM(2),
-    PARAM_TX_SG_ELEM(3)
+    PARAM_SG_ELEM(0),
+    PARAM_SG_ELEM(1),
+    PARAM_SG_ELEM(2),
+    PARAM_SG_ELEM(3)
 )
 {
     // K+I
@@ -87,17 +87,17 @@ action eth_tx_sg(
     MODIFY_ETH_TX_TO_S3
 
     // D
-    MODIFY_TX_SG_ELEM(0)
-    MODIFY_TX_SG_ELEM(1)
-    MODIFY_TX_SG_ELEM(2)
-    MODIFY_TX_SG_ELEM(3)
+    MODIFY_SG_ELEM(0)
+    MODIFY_SG_ELEM(1)
+    MODIFY_SG_ELEM(2)
+    MODIFY_SG_ELEM(3)
 }
 
 action eth_tx_tso(
-    PARAM_TX_SG_ELEM(0),
-    PARAM_TX_SG_ELEM(1),
-    PARAM_TX_SG_ELEM(2),
-    PARAM_TX_SG_ELEM(3)
+    PARAM_SG_ELEM(0),
+    PARAM_SG_ELEM(1),
+    PARAM_SG_ELEM(2),
+    PARAM_SG_ELEM(3)
 )
 {
     // K+I
@@ -106,10 +106,10 @@ action eth_tx_tso(
     MODIFY_ETH_TX_TO_S3
 
     // D
-    MODIFY_TX_SG_ELEM(0)
-    MODIFY_TX_SG_ELEM(1)
-    MODIFY_TX_SG_ELEM(2)
-    MODIFY_TX_SG_ELEM(3)
+    MODIFY_SG_ELEM(0)
+    MODIFY_SG_ELEM(1)
+    MODIFY_SG_ELEM(2)
+    MODIFY_SG_ELEM(3)
 }
 
 action eth_tx_completion()

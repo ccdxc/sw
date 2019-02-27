@@ -13,8 +13,9 @@
 #define rx_table_s1_t0_action eth_rx_rss_skip
 #define rx_table_s2_t0_action eth_rx_fetch_desc
 #define rx_table_s3_t0_action eth_rx_packet
-#define rx_table_s4_t0_action eth_rx_completion
-#define rx_table_s4_t3_action eth_rx_stats
+#define rx_table_s4_t1_action eth_rx_sg
+#define rx_table_s7_t0_action eth_rx_completion
+#define rx_table_s7_t3_action eth_rx_stats
 
 #include "../common-p4+/common_rxdma.p4"
 #include "eth_rxdma.p4"
@@ -66,7 +67,6 @@ action eth_rx_app_header(PARAMS_ETH_RX_QSTATE)
 action eth_rx_rss_skip()
 {
     // --- For K+I struct generation
-
     MODIFY_ETH_RX_GLOBAL
     MODIFY_ETH_RX_T0_S2S
 
@@ -76,7 +76,6 @@ action eth_rx_rss_skip()
 action eth_rx_fetch_desc(PARAMS_ETH_RX_QSTATE)
 {
     // --- For K+I struct generation
-
     MODIFY_ETH_RX_GLOBAL
     MODIFY_ETH_RX_T0_S2S
 
@@ -88,18 +87,35 @@ action eth_rx_fetch_desc(PARAMS_ETH_RX_QSTATE)
 action eth_rx_packet(PARAM_RX_DESC())
 {
     // --- For K+I struct generation
-
     MODIFY_ETH_RX_GLOBAL
     MODIFY_ETH_RX_T0_S2S
+    MODIFY_ETH_RX_TO_S3
 
     // --- For D-struct generation
     MODIFY_RX_DESC()
 }
 
+action eth_rx_sg(
+    PARAM_SG_ELEM(0),
+    PARAM_SG_ELEM(1),
+    PARAM_SG_ELEM(2),
+    PARAM_SG_ELEM(3)
+)
+{
+    // K+I
+    MODIFY_ETH_RX_GLOBAL
+    MODIFY_ETH_RX_T1_S2S
+
+    // D
+    MODIFY_SG_ELEM(0)
+    MODIFY_SG_ELEM(1)
+    MODIFY_SG_ELEM(2)
+    MODIFY_SG_ELEM(3)
+}
+
 action eth_rx_completion()
 {
     // --- For K+I struct generation
-
     MODIFY_ETH_RX_GLOBAL
     MODIFY_ETH_RX_T0_S2S
 
@@ -109,7 +125,6 @@ action eth_rx_completion()
 action eth_rx_stats()
 {
     // --- For K+I struct generation
-
     MODIFY_ETH_RX_GLOBAL
 
     // --- For D-struct generation

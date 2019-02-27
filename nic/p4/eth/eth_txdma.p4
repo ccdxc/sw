@@ -131,7 +131,7 @@ header_type eth_tx_desc_d {
     }
 }
 
-#define HEADER_TX_SG_ELEM(n) \
+#define HEADER_SG_ELEM(n) \
     addr_lo##n : 48; \
     rsvd##n : 4; \
     addr_hi##n : 4; \
@@ -139,12 +139,12 @@ header_type eth_tx_desc_d {
     len##n : 16; \
     rsvd2##n : 48;
 
-header_type eth_tx_sg_desc_d {
+header_type eth_sg_desc_d {
     fields {
-        HEADER_TX_SG_ELEM(0)
-        HEADER_TX_SG_ELEM(1)
-        HEADER_TX_SG_ELEM(2)
-        HEADER_TX_SG_ELEM(3)
+        HEADER_SG_ELEM(0)
+        HEADER_SG_ELEM(1)
+        HEADER_SG_ELEM(2)
+        HEADER_SG_ELEM(3)
     }
 }
 
@@ -231,33 +231,6 @@ header_type eth_tx_to_s6_k {
     }
 }
 
-/*header_type eth_tx_t3_s2s_k {
-    fields {
-        // queue stats
-        queue_disabled : 1;
-        queue_scheduled : 1;
-        // descriptor stats
-        desc_addr_error : 1;
-        // descriptor opcode counters
-        desc_opcode_invalid : 1;
-        desc_opcode_csum_none : 1;
-        desc_opcode_csum_partial : 1;
-        desc_opcode_csum_hw : 1;
-        desc_opcode_tso : 1;
-        // operation stats (upto 64 bits combined)
-        oper_sg : 1;
-        oper_tso_sg : 1;
-        oper_tso_sot : 1;
-        oper_tso_eot : 1;
-        oper_csum_hw : 1;
-        oper_csum_hw_inner : 1;
-        oper_vlan_insert : 1;
-        // completion counters
-        cqe : 1;
-        intr : 1;
-    }
-}*/
-
 /*****************************************************************************
  *  D-vector
  *****************************************************************************/
@@ -268,7 +241,7 @@ metadata eth_tx_qstate_d eth_tx_qstate;
 metadata eth_tx_desc_d eth_tx_desc;
 
 @pragma scratch_metadata
-metadata eth_tx_sg_desc_d eth_tx_sg_desc;
+metadata eth_sg_desc_d eth_sg_desc;
 
 /*****************************************************************************
  *  K-vector

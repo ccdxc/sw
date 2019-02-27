@@ -429,6 +429,7 @@ enum txq_type {
  *              ring_size value is 16 for a ring size of 64k
  *              descriptors.  Values of ring_size <2 and >16 are
  *              reserved.
+ * @sg_enable:  Enable SGL support on this queue.
  * @ring_base:  Transmit Queue ring base address.
  */
 struct txq_init_cmd {
@@ -443,7 +444,8 @@ struct txq_init_cmd {
 	u32 rsvd2:8;
 	u32 cos:3;
 	u32 ring_size:8;
-	u32 rsvd3:21;
+	u32 sg_enable:1;
+	u32 rsvd3:20;
 	dma_addr_t ring_base;
 	u32 rsvd4[10];
 };
@@ -606,6 +608,7 @@ struct txq_desc {
 };
 
 #define IONIC_TX_MAX_SG_ELEMS	16
+#define IONIC_RX_MAX_SG_ELEMS	8
 
 /** struct txq_sg_desc - Transmit scatter-gather (SG) list
  * @addr:      DMA address of SG element data buffer
@@ -655,6 +658,7 @@ enum rxq_type {
  *                 0 = Ethernet
  *              All other values of @type are reserved.
  * @index:      LIF-relative receive queue index
+ * @cos:        Class of service for this queue.
  * @ring_size:  Transmit queue ring size, encoded as a log2(size),
  *              in number of descriptors.  The actual ring size is
  *              (1 << ring_size) descriptors.  For example, to
@@ -664,7 +668,8 @@ enum rxq_type {
  *              ring_size value is 16 for a ring size of 64k
  *              descriptors.  Values of ring_size <2 and >16 are
  *              reserved.
- * @ring_base:  Transmit Queue ring base address.
+ * @sg_enable:  Enable SGL support on this queue.
+ * @ring_base:  Receive Queue ring base address.
  */
 struct rxq_init_cmd {
 	u16 opcode;
@@ -677,7 +682,9 @@ struct rxq_init_cmd {
 	u32 index:16;
 	u32 rsvd2:8;
 	u32 ring_size:8;
-	u32 rsvd3:24;
+	u32 cos:3;
+	u32 sg_enable:1;
+	u32 rsvd3:20;
 	dma_addr_t ring_base;
 	u32 rsvd4[10];
 };
@@ -736,6 +743,19 @@ struct rxq_desc {
 	u32 rsvd3;
 };
 
+/** struct rxq_sg_desc - Receive scatter-gather (SG) list
+ * @addr:      DMA address of SG element data buffer
+ * @len:       Length of SG element data buffer, in bytes
+ */
+struct rxq_sg_desc {
+	struct rxq_sg_elem {
+		u64 addr:52;
+		u64 rsvd:12;
+		u16 len;
+		u16 rsvd2[3];
+	} elems[IONIC_RX_MAX_SG_ELEMS];
+};
+
 enum rxq_comp_rss_type {
 	RXQ_COMP_RSS_TYPE_NONE = 0,
 	RXQ_COMP_RSS_TYPE_IPV4,
@@ -752,6 +772,7 @@ enum rxq_comp_rss_type {
 /** struct rxq_comp - Ethernet receive queue completion descriptor
  * @status:       The status of the command.  Values for status are:
  *                   0 = Successful completion
+ * @num_sg_elems: Number of SG elements used by this descriptor
  * @comp_index:   The index in the descriptor ring for which this
  *                is the completion.
  * @rss_hash:     32-bit RSS hash for the @rss_type indicated
@@ -803,7 +824,8 @@ enum rxq_comp_rss_type {
  */
 struct rxq_comp {
 	u32 status:8;
-	u32 rsvd:8;
+	u32 num_sg_elems:5;
+	u32 rsvd:3;
 	u32 comp_index:16;
 	u32 rss_hash;
 	u16 csum;
