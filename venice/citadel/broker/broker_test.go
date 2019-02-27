@@ -251,6 +251,22 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		Assert(t, brokers[idx].IsStopped() == true, "Incorrect broker state")
 	}
 
+	// test broker commands
+	err = brokers[0].CreateDatabase(context.Background(), "db0")
+	Assert(t, err != nil, "create database didn't fail")
+	err = brokers[0].DeleteDatabase(context.Background(), "db0")
+	Assert(t, err != nil, "delete database didn't fail")
+	_, err = brokers[0].ReadDatabases(context.Background())
+	Assert(t, err != nil, "read database didn't fail")
+	err = brokers[0].WritePoints(context.Background(), "db0", []models.Point{})
+	Assert(t, err != nil, "query database didn't fail")
+	_, err = brokers[0].ExecuteQuery(context.Background(), "db0", "SELECT * frpm cpu")
+	Assert(t, err != nil, "query database didn't fail")
+	_, err = brokers[0].ExecuteAggQuery(context.Background(), "db0", "SELECT * frpm cpu")
+	Assert(t, err != nil, "aggquery database didn't fail")
+	_, err = brokers[0].ExecuteShowCmd(context.Background(), "db0", "SHOW mesurements")
+	Assert(t, err != nil, "show commands didn't fail")
+
 	// verify no node is a leader
 	AssertEventually(t, func() (bool, interface{}) {
 		for idx := 0; idx < numNodes; idx++ {
