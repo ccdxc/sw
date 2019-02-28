@@ -12,10 +12,13 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/login"
 	loginctx "github.com/pensando/sw/api/login/context"
 	. "github.com/pensando/sw/test/utils"
 	testutils "github.com/pensando/sw/test/utils"
@@ -24,6 +27,7 @@ import (
 	elasticauditor "github.com/pensando/sw/venice/utils/audit/elastic"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -335,6 +339,95 @@ func TestAuditLogs(t *testing.T) {
 		}
 		return true, nil
 	}, fmt.Sprintf("expected one audit log for [%s] duplicate tenant creation failure", testTenant), "100ms")
+}
+
+func TestAuditAuthz(t *testing.T) {
+	ti := tInfo{}
+	err := ti.setupElastic()
+	AssertOk(t, err, "setupElastic failed")
+	defer ti.teardownElastic()
+	err = ti.startSpyglass()
+	AssertOk(t, err, "failed to start spyglass")
+	defer ti.fdr.Stop()
+	err = ti.startAPIServer()
+	AssertOk(t, err, "failed to start API server")
+	defer ti.apiServer.Stop()
+	err = ti.startAPIGateway()
+	AssertOk(t, err, "failed to start API Gateway")
+	defer ti.apiGw.Stop()
+
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+		t.Fatalf("auth setupElastic failed")
+	}
+	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+
+	_, err = NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+	AssertOk(t, err, "error creating super admin logged in context")
+	MustCreateTenant(ti.apicl, testTenant)
+	defer MustDeleteTenant(ti.apicl, testTenant)
+	MustCreateTestUser(ti.apicl, testUser, testPassword, testTenant)
+	defer MustDeleteUser(ti.apicl, testUser, testTenant)
+	MustCreateRole(ti.apicl, "NoAuditingPerms", testTenant,
+		login.NewPermission(testTenant, string(apiclient.GroupAuth), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+		login.NewPermission(testTenant, string(apiclient.GroupSecurity), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+		login.NewPermission(testTenant, string(apiclient.GroupStaging), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+		login.NewPermission(testTenant, string(apiclient.GroupNetwork), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+		login.NewPermission(testTenant, string(apiclient.GroupWorkload), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+		login.NewPermission(testTenant, "", auth.Permission_Search.String(), "", "", auth.Permission_Read.String()),
+	)
+	defer MustDeleteRole(ti.apicl, "NoAuditingPerms", testTenant)
+	MustCreateRoleBinding(ti.apicl, "NoAuditingPermsRB", testTenant, "NoAuditingPerms", []string{testUser}, nil)
+	defer MustDeleteRoleBinding(ti.apicl, "NoAuditingPermsRB", testTenant)
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	userCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, userCred)
+	AssertOk(t, err, "error creating testtenant user logged in context")
+	// query by category and kind
+	query := &search.SearchRequest{
+		Query: &search.SearchQuery{
+			Categories: []string{search.Category_Monitoring.String()},
+			Kinds:      []string{auth.Permission_AuditEvent.String()},
+		},
+		From:       0,
+		MaxResults: 50,
+	}
+	resp := search.SearchResponse{}
+	AssertEventually(t, func() (bool, interface{}) {
+		if err := Search(userCtx, ti.apiGwAddr, query, &resp); err != nil {
+			return false, err
+		}
+		return true, nil
+	}, "error performing audit log search")
+	Assert(t, resp.ActualHits == 0, fmt.Sprintf("user with no auditing permissions was able to retrieve audit logs: %#v", resp))
+	MustCreateRole(ti.apicl, "AuditingPerms", testTenant,
+		login.NewPermission(testTenant, "", auth.Permission_AuditEvent.String(), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()),
+	)
+	defer MustDeleteRole(ti.apicl, "AuditingPerms", testTenant)
+	MustCreateRoleBinding(ti.apicl, "AuditingPermsRB", testTenant, "AuditingPerms", []string{testUser}, nil)
+	defer MustDeleteRoleBinding(ti.apicl, "AuditingPermsRB", testTenant)
+	resp = search.SearchResponse{}
+	AssertEventually(t, func() (bool, interface{}) {
+		if err := Search(userCtx, ti.apiGwAddr, query, &resp); err != nil {
+			return false, err
+		}
+		if resp.ActualHits == 0 {
+			return false, resp
+		}
+		return true, nil
+	}, "user with auditing permissions should able to retrieve audit logs for its tenant")
+	Assert(t, len(resp.AggregatedEntries.Tenants[testTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries) != 0,
+		fmt.Sprintf("user with auditing permissions should able to retrieve audit logs for its tenant: %#v", resp))
+	_, ok := resp.AggregatedEntries.Tenants[globals.DefaultTenant]
+	Assert(t, !ok, fmt.Sprintf("user should not be able to retrieve audit logs for other tenants: %#v", resp))
 }
 
 // BenchmarkProcessEvents1Rule/auditor.ProcessEvents()-8         	     500	   6800263 ns/op

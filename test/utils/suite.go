@@ -25,7 +25,6 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/search"
-	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -528,24 +527,7 @@ func (tu *TestUtils) NewLoggedInContext(ctx context.Context) context.Context {
 
 // Search sends a search query to API Gateway
 func (tu *TestUtils) Search(ctx context.Context, query *search.SearchRequest, resp *search.SearchResponse) error {
-	searchURL := fmt.Sprintf("https://%s/search/v1/query", tu.APIGwAddr)
-	restcl := netutils.NewHTTPClient()
-	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
-	// get authz header
-	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if !ok {
-		return fmt.Errorf("no authorizaton header in context")
-	}
-	restcl.SetHeader("Authorization", authzHeader)
-	ginkgo.By(fmt.Sprintf("@@@ Search request: %+v\n", query))
-	start := time.Now().UTC()
-	_, err := restcl.Req("POST", searchURL, query, &resp)
-	ginkgo.By(fmt.Sprintf("@@@ Search response time: %+v\n", time.Since(start)))
-	if err != nil {
-		return err
-	}
-	ginkgo.By(fmt.Sprintf("@@@ Search response : %+v\n", resp))
-	return nil
+	return Search(ctx, tu.APIGwAddr, query, resp)
 }
 
 // populates all the venice modules with it's metadata

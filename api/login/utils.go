@@ -105,14 +105,21 @@ func stringToSlice(val string) (ret []string) {
 
 // NewPermission is helper to create a permission for a role
 func NewPermission(tenant, resourceGroup, resourceKind, resourceNamespace, resourceNames, actions string) auth.Permission {
-	return auth.Permission{
-		ResourceTenant:    tenant,
-		ResourceGroup:     resourceGroup,
-		ResourceKind:      resourceKind,
-		ResourceNamespace: resourceNamespace,
-		ResourceNames:     stringToSlice(resourceNames),
-		Actions:           stringToSlice(actions),
+	perm := auth.Permission{}
+	perm.Defaults("all")
+	if tenant != "" {
+		perm.ResourceTenant = tenant
 	}
+	perm.ResourceGroup = resourceGroup
+	perm.ResourceKind = resourceKind
+	if resourceNamespace != "" {
+		perm.ResourceNamespace = resourceNamespace
+	}
+	perm.ResourceNames = stringToSlice(resourceNames)
+	if actions != "" {
+		perm.Actions = stringToSlice(actions)
+	}
+	return perm
 }
 
 // NewRole is a helper to create new role
@@ -207,7 +214,7 @@ func ValidatePerm(permission auth.Permission) error {
 				return fmt.Errorf("invalid API group [%q]", permission.ResourceGroup)
 			}
 		}
-	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String():
+	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_AuditEvent.String():
 		if permission.ResourceGroup != "" {
 			return fmt.Errorf("invalid API group, should be empty instead of [%q]", permission.ResourceGroup)
 		}

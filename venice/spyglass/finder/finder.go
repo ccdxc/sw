@@ -16,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	grpccode "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
@@ -944,7 +945,7 @@ func (fdr *Finder) authzQuery(ctx context.Context, tenants []string) (es.Query, 
 	}
 	if !authorizedTenantsFound && !authorizedClusterKindsFound {
 		fdr.logger.Errorf("user [%s|%s] unauthorized to search any kind", user.Tenant, user.Name)
-		return nil, errors.New("unauthorized to search any objects")
+		return nil, grpcstatus.Error(grpccode.PermissionDenied, "unauthorized to search any objects")
 	}
 	return query, nil
 }
