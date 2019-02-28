@@ -6,10 +6,13 @@ import os.path
 def libcapisa_so_load():
     # so_container path will be used if customers run captrace in a container
     so_container_path = "/sw/nic/sdk/third-party/asic/captrace/x86_64/libcapisa.so"
+    so_rel_path = "/../../third-party/asic/captrace/x86_64/libcapisa.so"
     if os.path.exists(so_container_path):
         libcapisa = cdll.LoadLibrary(so_container_path)
     else:
-        libcapisa = None
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        so_path = dir_path + so_rel_path
+        libcapisa = cdll.LoadLibrary(so_path)
     return libcapisa
 
 libcapisa = libcapisa_so_load()

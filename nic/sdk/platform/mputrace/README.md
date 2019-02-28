@@ -268,7 +268,7 @@ Following is a sample config.json file for reference -
     specified file. The file needs to be copied out and decoded to get 
     the actual instructions executed by the MPUs.
 ```
-    # captrace dump /tmp/captrace1.bin
+    # captrace dump /tmp/captrace.bin
 
     # ls -l /tmp/captrace.bin
     -rw-r--r--    1 root     root       7347200 Jan  5 06:03 /tmp/captrace.bin

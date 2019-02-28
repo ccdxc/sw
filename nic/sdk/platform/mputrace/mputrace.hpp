@@ -140,21 +140,21 @@ extern std::map<int, int> max_stages;
 std::string mputrace_pipeline_str_get(int);
 void mputrace_cfg_trace(int, int, int, mputrace_cfg_inst_t *);
 
-/// Does reset of mputrace registers.
-void mputrace_reset();
+/// Does cfg of mputrace registers as specified in the json file
+///
+/// param[in] cfg_file Json file containing the config for the trace registers
+void mputrace_cfg(const char *cfg_file);
+
+/// Does show of enabled mputrace registers in a tabular format.
+void mputrace_show(void);
 
 /// Dumps the contents of trace info from HBM into the specified dump file
 ///
-/// param dump_file - file name to dump the trace info from HBM
+/// param[in] dump_file File name to dump the trace info from HBM
 void mputrace_dump(const char *dump_file);
 
-/// Does show of enabled mputrace registers in a tabular format.
-void mputrace_show();
-
-/// Does cfg of mputrace registers as specified in the json file
-///
-/// param cfg_file - json file containing the config for the trace registers
-void mputrace_cfg(const char *cfg_file);
+/// Does reset of mputrace registers.
+void mputrace_reset(void);
 
 }    // end namespace platform
 }    // end namespace sdk
