@@ -2087,8 +2087,6 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		if (ifp->if_flags & IFF_UP) {
 			ionic_set_rx_mode(lif->netdev);
 			ionic_set_mac(lif->netdev);
-		} else { /* If not up. */
-			ionic_clear_rx_mode(lif->netdev);
 		}
 		IONIC_CORE_UNLOCK(lif);
 		break;

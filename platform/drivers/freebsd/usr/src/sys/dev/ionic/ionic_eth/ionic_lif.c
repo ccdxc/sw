@@ -535,18 +535,6 @@ void ionic_set_rx_mode(struct net_device *netdev)
 	}
 }
 
-void ionic_clear_rx_mode(struct net_device *netdev)
-{
-	struct lif *lif = netdev_priv(netdev);
-
-	IONIC_NETDEV_INFO(netdev, "Clearing rx mode %d\n", lif->rx_mode);
-
-	if (lif->rx_mode != 0) {
-		lif->rx_mode = 0;
-		ionic_lif_rx_mode(lif, 0);
-	}
-}
-
 /*
  * Program the multicast addresses.
  */
@@ -2662,8 +2650,20 @@ static int ionic_station_set(struct lif *lif)
 	if (lif->ionic->is_mgmt_nic) {
 		ifmedia_add(&lif->media, IFM_ETHER | IFM_1000_KX, 0, NULL);
 	} else {
-		/* XXX: add more media type */
 		ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_CR4, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_SR4, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_LR4, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_CR4, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_SR4, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_40G_LR4, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_CR, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_SR, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_LR, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_AOC, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_SR, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LR, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_LRM, 0, NULL);
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_10G_ER, 0, NULL);
 	}
 
 	ifmedia_add(&lif->media, IFM_ETHER | IFM_AUTO, 0, NULL);
