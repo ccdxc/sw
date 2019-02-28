@@ -123,7 +123,9 @@ func (c *client) SendChangeReq(objlist []*delphi_messenger.ObjectData) error {
 }
 
 func (c *client) Close() {
-	c.connection.Close()
+	if c.connection != nil {
+		c.connection.Close()
+	}
 }
 
 // HandleMessage is responsible for halding messages received from the receiver
