@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -33,6 +34,28 @@ var _ = Describe("events test", func() {
 			esClient, err = elastic.NewAuthenticatedClient(esAddr, nil, log.GetNewLogger(logConfig))
 			return err
 		}, 30, 1).Should(BeNil(), "failed to initialize elastic client")
+	})
+
+	It("evtsproxy should be running on all the venice nodes", func() {
+		nodesList, err := ts.tu.APIClient.ClusterV1().Node().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+		Expect(err).Should(BeNil())
+		for _, node := range nodesList {
+			nodeName := node.GetName()
+			Eventually(func() string {
+				return ts.tu.CommandOutput(ts.tu.NameToIPMap[nodeName], fmt.Sprintf("docker ps -q -f Name=%s", globals.EvtsProxy))
+			}, 10, 1).ShouldNot(BeEmpty(), fmt.Sprintf("%s container should be running on %s", globals.EvtsProxy, ts.tu.NameToIPMap[nodeName]))
+		}
+	})
+
+	It("evtmgr should be running on all the venice nodes", func() {
+		nodesList, err := ts.tu.APIClient.ClusterV1().Node().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+		Expect(err).Should(BeNil())
+		for _, node := range nodesList {
+			nodeName := node.GetName()
+			Eventually(func() string {
+				return ts.tu.CommandOutput(ts.tu.NameToIPMap[nodeName], fmt.Sprintf("docker ps -q -f Name=%s", globals.EvtsMgr))
+			}, 10, 1).ShouldNot(BeEmpty(), fmt.Sprintf("%s container should be running on %s", globals.EvtsMgr, ts.tu.NameToIPMap[nodeName]))
+		}
 	})
 
 	It("Venice services should start recording events once the cluster is up", func() {

@@ -88,6 +88,7 @@ type TestUtils struct {
 	QuorumNodes   []string // names of Quorum Nodes in cluster
 	VeniceNodeIPs []string // IP addresses of venice cluster members
 	NaplesNodes   []string // names of NAPLES Nodes in cluster
+	NaplesNodeIPs []string // IP addresses of NAPLES nodes
 	NameToIPMap   map[string]string
 	IPToNameMap   map[string]string
 
@@ -155,9 +156,19 @@ func New(config *TestBedConfig, configFile string) *TestUtils {
 		}
 	}
 
+	ip := net.ParseIP(ts.FirstNaplesIP).To4()
+	if ip == nil {
+		ginkgo.Fail(fmt.Sprintf("invalid value %s for FirstNaplesIP", ts.FirstNaplesIP))
+	}
 	for n := 1; n <= ts.NumNaplesHosts; n++ {
 		naplesName := fmt.Sprintf("naples%d", n)
+		naplesIP := ip.String()
 		ts.NaplesNodes = append(ts.NaplesNodes, naplesName)
+		ts.NaplesNodeIPs = append(ts.NaplesNodeIPs, naplesIP)
+		ts.NameToIPMap[naplesName] = naplesIP
+		ts.NameToIPMap[naplesIP] = naplesIP // cluster can also be specified using IP addresses
+		ts.IPToNameMap[naplesIP] = naplesName
+		ip[3]++
 	}
 
 	ginkgo.By(fmt.Sprintf("TestBedConfig: %+v", ts.TestBedConfig))
