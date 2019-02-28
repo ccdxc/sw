@@ -33,3 +33,6 @@ $GDB apollo_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ap
 $GDB apollo_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_tep_test.xml"
 $GDB apollo_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mapping_test.xml"
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
+
+MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so
+LD_PRELOAD=${MEMHASH_PRELOADS} $ARGS memhash_test

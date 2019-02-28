@@ -172,6 +172,17 @@ mem_hash_mock_get_valid_count (uint32_t table_id)
     return count;
 }
 
+void
+p4pd_hwentry_query(uint32_t tableid,
+                   uint32_t *hwkey_len,
+                   uint32_t *hwkeymask_len,
+                   uint32_t *hwactiondata_len)
+{
+    *hwkey_len = 512;
+    *hwactiondata_len = 192;
+    return;
+}
+
 int 
 p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwkey,
                   unsigned char *hwkey_y, void *actiondata)

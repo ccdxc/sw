@@ -1,4 +1,6 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+NCPUS=$(shell grep processor /proc/cpuinfo | wc -l)
+MAKEFLAGS += -j${NCPUS}
 
 export NIC_CSR_DEFINES := -DEXCLUDE_PER_FIELD_CNTRL \
     -DCAPRI_HAL -DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024 -DBOOST_EXCEPTION_DISABLE \

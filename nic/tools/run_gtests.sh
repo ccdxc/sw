@@ -109,4 +109,5 @@ LD_PRELOAD=${PRELOADS} tnnl_rw_tbl_test --gtest_output="xml:${GEN_TEST_RESULTS_D
 #    do printf "\nRunning $$i\n" && $$i --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${basename{$$i}}.xml"; \
 #done \
 
-
+MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so
+LD_PRELOAD=${MEMHASH_PRELOADS} $ARGS memhash_test
