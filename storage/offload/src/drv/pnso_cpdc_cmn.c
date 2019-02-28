@@ -952,6 +952,7 @@ cpdc_update_bof_interrupt_params(struct service_info *svc_info)
 pnso_error_t
 cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 {
+	struct cpdc_chain_params *cpdc_chain;
 	pnso_error_t err = PNSO_OK;
 	struct cpdc_desc *cp_desc;
 	struct per_core_resource *pcr;
@@ -983,8 +984,17 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 					err);
 			goto out;
 		}
-
 		cp_desc->cd_otag_data = sonic_intr_get_fire_data32();
+
+		cpdc_chain = &svc_info->si_cpdc_chain;
+		cpdc_chain->ccp_intr_addr =
+			sonic_get_per_core_intr_assert_addr(pcr);
+		cpdc_chain->ccp_intr_data = sonic_get_intr_assert_data();
+		cpdc_chain->ccp_cmd.ccpc_intr_en = 1;
+		err = seq_setup_cpdc_chain_status_desc(svc_info);
+		if (err != PNSO_OK)
+			OSAL_LOG_ERROR("failed setup chain status desc: err %d",
+					err);
 	} else {
 		cp_desc->cd_db_addr = (uint64_t) sonic_intr_get_db_addr(pcr,
 				(uint64_t) poll_ctx);
