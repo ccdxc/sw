@@ -170,6 +170,10 @@ metadata ipsec_to_stage4_t ipsec_to_stage4;
 //RXDMA - IPsec feature specific scratch
 @pragma dont_trim
 metadata ipsec_int_header_t ipsec_int_header;
+
+@pragma dont_trim
+metadata ipsec_int_pad_t ipsec_int_pad;
+
 @pragma dont_trim
 metadata esp_header_t esp_header;
 

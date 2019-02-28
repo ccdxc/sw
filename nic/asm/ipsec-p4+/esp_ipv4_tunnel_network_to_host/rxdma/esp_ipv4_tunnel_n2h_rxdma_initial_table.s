@@ -7,8 +7,9 @@ struct common_p4plus_stage0_app_header_table_k k;
 struct phv_ p;
 
 %%
-.align
-.param esp_ipv4_tunnel_n2h_rxmda_ring_full_error
+    .align
+    .param esp_ipv4_tunnel_n2h_rxmda_ring_full_error
+    .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
     add r1, d.cb_pindex, 1
     andi r1, r1, IPSEC_CB_RING_INDEX_MASK
@@ -49,6 +50,8 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_to_stage3_iv_salt_off, r6
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     phvwr p.ipsec_to_stage2_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_RXDMA_ENTER_OFFSET, 1)
 
     // seq-no logic
     seq c4, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31}, d.expected_seq_no
@@ -61,7 +64,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     nop
     sllv r3, 1, r1
     or r3, r3, d.replay_seq_no_bmp 
-    tblwr  d.replay_seq_no_bmp, r3
+    tblwr.f  d.replay_seq_no_bmp, r3
     nop.e
     nop
 

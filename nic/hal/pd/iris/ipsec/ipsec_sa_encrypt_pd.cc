@@ -354,7 +354,7 @@ p4pd_get_ipsec_rx_stage0_entry_part2(pd_ipsec_t* ipsec_sa_pd)
     }
     ipsec_sa->tunnel_sip4.addr.v4_addr =  ntohl(data.u.eth_ip4_hdr.saddr);
     ipsec_sa->tunnel_dip4.addr.v4_addr =  ntohl(data.u.eth_ip4_hdr.daddr);
-    HAL_TRACE_DEBUG("SIP 0x{:#x} DIP 0x{:#x}", ipsec_sa->tunnel_sip4.addr.v4_addr, ipsec_sa->tunnel_dip4.addr.v4_addr );
+    HAL_TRACE_DEBUG("SIP {:#x} DIP {:#x}", ipsec_sa->tunnel_sip4.addr.v4_addr, ipsec_sa->tunnel_dip4.addr.v4_addr );
 
     return HAL_RET_OK;
 }

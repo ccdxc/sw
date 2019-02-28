@@ -229,9 +229,9 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         encrypt_tail_bytes_errors;
     uint64_t         encrypt_output_page_errors;
     uint64_t         encrypt_stage4_inpage_errors;
-    uint64_t         encrypt_table0_inpage_errors;
-    uint64_t         encrypt_table2_inpage_errors;
     uint64_t         encrypt_table3_inpage_errors;
+    uint64_t         encrypt_table2_inpage_errors;
+    uint64_t         encrypt_table0_inpage_errors;
     uint64_t         encrypt_bad_barco_addr_errors;
     uint64_t         encrypt_barco_full_errors;
     uint64_t         encrypt_cb_ring_dma_errors;
@@ -240,7 +240,8 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         encrypt_txdma2_enter_counters;
     uint64_t         encrypt_txdma1_dummy_errors;
     uint64_t         encrypt_rxdma_dummy_desc_errors;
-    uint64_t         encrypt_pad[43];
+    uint64_t         encrypt_rxdma_enter_counters;
+    uint64_t         encrypt_pad[42];
 
     uint64_t         decrypt_input_desc_errors;
     uint64_t         decrypt_output_desc_errors;
@@ -258,7 +259,8 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         decrypt_load_ipsec_int_errors;
     uint64_t         decrypt_txdma2_dummy_free;
     uint64_t         decrypt_rxdma_dummy_desc_errors;
-    uint64_t         decrypt_pad[48];
+    uint64_t         decrypt_rxdma_enter_counters;
+    uint64_t         decrypt_pad[47];
 
 } __PACK__ ipsec_global_stats_cb_t;
 

@@ -72,9 +72,11 @@
 #define N2H_TXDMA1_ENTER_DROP_OFFSET  80
 #define N2H_DESC_RING_OFFSET          88
 #define N2H_ABORT_TXDMA1_DUMMY_OFFSET 96
-#define N2H_LOAD_IPSEC_INT_OFFSET     112 
-#define N2H_TXDMA2_DUMMY_FREE         120
-#define N2H_RXDMA_DUMMY_DESC_OFFSET   128
+#define N2H_LOAD_IPSEC_INT_OFFSET     104
+#define N2H_TXDMA2_DUMMY_FREE         112
+#define N2H_RXDMA_DUMMY_DESC_OFFSET   120
+#define N2H_RXDMA_ENTER_OFFSET        128
+ 
 
 #define H2N_IN_DESC_OFFSET             0
 #define H2N_OUT_DESC_OFFSET            8
@@ -97,6 +99,8 @@
 #define H2N_TXDMA2_ENTER_OFFSET      144 
 #define H2N_ABORT_TXDMA1_DUMMY_OFFSET 152
 #define H2N_RXDMA_DUMMY_DESC_OFFSET  160
+#define H2N_RXDMA_ENTER_OFFSET       168
+
 
 #define DOT1Q_ETYPE  0x8100
 #define IPV4_ETYPE   0x0800
@@ -108,7 +112,7 @@
 #define IPSEC_SALT_HEADROOM 4
 
 #define IPSEC_INT_START_OFFSET  CAPRI_PHV_START_OFFSET(ipsec_int_header_in_desc) 
-#define IPSEC_INT_END_OFFSET    CAPRI_PHV_END_OFFSET(ipsec_int_header_l4_protocol)
+#define IPSEC_INT_END_OFFSET    CAPRI_PHV_END_OFFSET(ipsec_int_pad_status)
  
 #define IPSEC_N2H_INT_START_OFFSET  CAPRI_PHV_START_OFFSET(ipsec_int_header_in_desc) 
 #define IPSEC_N2H_INT_END_OFFSET    CAPRI_PHV_END_OFFSET(ipsec_int_header_status_addr)

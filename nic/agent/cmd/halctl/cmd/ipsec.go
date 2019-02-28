@@ -263,6 +263,7 @@ func showIpsecGlobalStatistics(resp *halproto.IpsecGlobalStatisticsGetResponse) 
 	fmt.Printf("%-40s : %-6d\n", "encrypt_txdma2_enter_counters", spec.EncryptTxdma2EnterCounters)
 	fmt.Printf("%-40s : %-6d\n", "encrypt_txdma1_dummy_errors", spec.EncryptTxdma1DummyErrors)
 	fmt.Printf("%-40s : %-6d\n", "encrypt_rxdma_dummy_desc_errors", spec.EncryptRxdmaDummyDescErrors)
+	fmt.Printf("%-40s : %-6d\n", "encrypt_rxdma_enter_counters", spec.EncryptRxdmaEnterCounters)
 
 	fmt.Printf("\nDecrypt Global Errors:\n")
 	fmt.Printf("-----------------------\n")
@@ -282,4 +283,5 @@ func showIpsecGlobalStatistics(resp *halproto.IpsecGlobalStatisticsGetResponse) 
 	fmt.Printf("%-40s : %-6d\n", "decrypt_load_ipsec_int_errors", spec.DecryptLoadIpsecIntErrors)
 	fmt.Printf("%-40s : %-6d\n", "decrypt_txdma2_dummy_free", spec.DecryptTxdma2DummyFree)
 	fmt.Printf("%-40s : %-6d\n", "decrypt_rxdma_dummy_desc_errors", spec.DecryptRxdmaDummyDescErrors)
+	fmt.Printf("%-40s : %-6d\n", "decrypt_rxdma_enter_counters", spec.DecryptRxdmaEnterCounters)
 }
