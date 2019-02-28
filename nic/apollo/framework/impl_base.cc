@@ -88,7 +88,7 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
         break;
 
     case IMPL_OBJ_ID_ROUTE_TABLE:
-        return route_table_impl::factory((pds_route_table_t *)args);
+        return route_table_impl::factory((pds_route_table_spec_t *)args);
 
     case IMPL_OBJ_ID_SECURITY_POLICY:
         return security_policy_impl::factory((pds_policy_t *)args);

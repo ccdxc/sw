@@ -30,10 +30,10 @@ public:
     /**
      * @brief    factory method to allocate & initialize
      *           route table impl instance
-     * @param[in] pds_route_table    route table information
+     * @param[in] spec route table configuration
      * @return    new instance of route table or NULL, in case of error
      */
-    static route_table_impl *factory(pds_route_table_t *pds_route_table);
+    static route_table_impl *factory(pds_route_table_spec_t *spec);
 
     /**
      * @brief    release all the s/w state associated with the given

@@ -24,21 +24,21 @@ namespace api {
 
 /**< API specific parameters */
 typedef union api_params_u {
-    pds_device_spec_t     device_spec;
-    pds_tep_key_t         tep_key;
-    pds_tep_spec_t        tep_spec;
-    pds_vcn_key_t         vcn_key;
-    pds_vcn_spec_t        vcn_info;
-    pds_subnet_key_t      subnet_key;
-    pds_subnet_spec_t     subnet_info;
-    pds_vnic_key_t        vnic_key;
-    pds_vnic_spec_t       vnic_info;
-    pds_mapping_key_t     mapping_key;
-    pds_mapping_spec_t    mapping_info;
-    pds_route_table_key_t route_table_key;
-    pds_route_table_t     route_table_info;
-    pds_policy_key_t      policy_key;
-    pds_policy_t          policy_info;
+    pds_device_spec_t         device_spec;
+    pds_tep_key_t             tep_key;
+    pds_tep_spec_t            tep_spec;
+    pds_vcn_key_t             vcn_key;
+    pds_vcn_spec_t            vcn_info;
+    pds_subnet_key_t          subnet_key;
+    pds_subnet_spec_t         subnet_info;
+    pds_vnic_key_t            vnic_key;
+    pds_vnic_spec_t           vnic_info;
+    pds_mapping_key_t         mapping_key;
+    pds_mapping_spec_t        mapping_info;
+    pds_route_table_key_t     route_table_key;
+    pds_route_table_spec_t    route_table_spec;
+    pds_policy_key_t          policy_key;
+    pds_policy_t              policy_info;
 } api_params_t;
 
 /**< @brief    per API context maintained by framework while processing */
@@ -60,9 +60,9 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
 {
     if (obj_id == api::OBJ_ID_ROUTE_TABLE &&
         (api_op == api::API_OP_CREATE || (api_op == api::API_OP_UPDATE))) {
-        if (api_params->route_table_info.routes) {
+        if (api_params->route_table_spec.routes) {
             SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE,
-                     api_params->route_table_info.routes);
+                     api_params->route_table_spec.routes);
         }
     }
     return api_params_slab()->free(api_params);

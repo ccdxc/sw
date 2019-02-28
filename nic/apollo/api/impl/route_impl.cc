@@ -27,11 +27,11 @@ namespace impl {
 
 /**
  * @brief    factory method to allocate & initialize route table impl instance
- * @param[in] pds_route_table    route table information
+ * @param[in] spec route table configuration
  * @return    new instance of route table or NULL, in case of error
  */
 route_table_impl *
-route_table_impl::factory(pds_route_table_t *pds_route_table) {
+route_table_impl::factory(pds_route_table_spec_t *spec) {
     route_table_impl    *impl;
 
     // TODO: move to slab later
@@ -95,16 +95,15 @@ route_table_impl::release_resources(api_base *api_obj) {
  */
 sdk_ret_t
 route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t            ret;
-    pds_route_table_t    *route_table_info;
-    route_table_t        *rtable;
-    pds_tep_key_t        tep_key;
-    api::tep_entry       *tep;
+    sdk_ret_t                 ret;
+    pds_route_table_spec_t    *spec;
+    route_table_t             *rtable;
+    pds_tep_key_t             tep_key;
+    api::tep_entry            *tep;
 
-    route_table_info = &obj_ctxt->api_params->route_table_info;
-    if (route_table_info->num_routes == 0) {
-        PDS_TRACE_WARN("Route table %u doesn't have any routes",
-                       route_table_info->key.id);
+    spec = &obj_ctxt->api_params->route_table_spec;
+    if (spec->num_routes == 0) {
+        PDS_TRACE_WARN("Route table %u doesn't have any routes", spec->key.id);
         return SDK_RET_OK;
     }
 
@@ -113,24 +112,23 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         (route_table_t *)
             SDK_MALLOC(PDS_MEM_ALLOC_ROUTE_TABLE,
                        sizeof(route_table_t) +
-                           (route_table_info->num_routes * sizeof(route_t)));
+                           (spec->num_routes * sizeof(route_t)));
     if (rtable == NULL) {
         return sdk::SDK_RET_OOM;
     }
-    rtable->af = route_table_info->af;
+    rtable->af = spec->af;
     // TODO: HACK Alert! Remove this when default NH is available
     rtable->default_nhid = 255;
     rtable->max_routes = PDS_MAX_ROUTE_PER_TABLE;
-    rtable->num_routes = route_table_info->num_routes;
+    rtable->num_routes = spec->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
-        rtable->routes[i].prefix = route_table_info->routes[i].prefix;
-        tep_key.ip_addr = route_table_info->routes[i].nh_ip.addr.v4_addr;
+        rtable->routes[i].prefix = spec->routes[i].prefix;
+        tep_key.ip_addr = spec->routes[i].nh_ip.addr.v4_addr;
         tep = tep_db()->tep_find(&tep_key);
         SDK_ASSERT(tep != NULL);
         rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
         PDS_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, TEP %s",
-                        route_table_info->key.id,
-                        ippfx2str(&rtable->routes[i].prefix),
+                        spec->key.id, ippfx2str(&rtable->routes[i].prefix),
                         rtable->routes[i].nhid,
                         ipv4addr2str(tep->ip()));
     }

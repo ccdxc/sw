@@ -30,19 +30,18 @@ route_table::route_table() {
 
 /**
  * @brief    factory method to allocate & initialize a route table instance
- * @param[in] pds_route_table    route table information
+ * @param[in] spec route table configuration
  * @return    new instance of route table or NULL, in case of error
  */
 route_table *
-route_table::factory(pds_route_table_t *pds_route_table) {
+route_table::factory(pds_route_table_spec_t *spec) {
     route_table    *rtable;
 
     /**< create route table instance with defaults, if any */
     rtable = route_table_db()->route_table_alloc();
     if (rtable) {
         new (rtable) route_table();
-        rtable->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_ROUTE_TABLE,
-                                           pds_route_table);
+        rtable->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_ROUTE_TABLE, spec);
         if (rtable->impl_ == NULL) {
             route_table::destroy(rtable);
             return NULL;
@@ -81,10 +80,10 @@ route_table::destroy(route_table *rtable) {
  */
 sdk_ret_t
 route_table::init_config(api_ctxt_t *api_ctxt) {
-    pds_route_table_t    *pds_route_table;
+    pds_route_table_spec_t    *spec;
     
-    pds_route_table = &api_ctxt->api_params->route_table_info;
-    memcpy(&this->key_, &pds_route_table->key, sizeof(pds_route_table_key_t));
+    spec = &api_ctxt->api_params->route_table_spec;
+    memcpy(&this->key_, &spec->key, sizeof(pds_route_table_key_t));
     return SDK_RET_OK;
 }
 

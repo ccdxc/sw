@@ -144,7 +144,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     uint32_t ntables = num_vcns * num_subnets;
     uint32_t tep_offset = 3;
     static uint32_t rtnum = 0;
-    pds_route_table_t route_table;
+    pds_route_table_spec_t route_table;
     sdk_ret_t rv = SDK_RET_OK;
 
     route_table.af = IP_AF_IPV4;

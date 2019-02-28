@@ -29,10 +29,10 @@ class route_table : public api_base {
 public:
     /**
      * @brief    factory method to allocate & initialize a route table instance
-     * @param[in] pds_route_table    route table information
+     * @param[in] spec route table configuration
      * @return    new instance of route table or NULL, in case of error
      */
-    static route_table *factory(pds_route_table_t *pds_route_table);
+    static route_table *factory(pds_route_table_spec_t *spec);
 
     /**
      * @brief    release all the s/w state associate with the given route table,

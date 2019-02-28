@@ -18,11 +18,11 @@
 /**
  * @brief create a route table
  *
- * @param[in] route table    route table information
+ * @param[in] spec route table configuration
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-pds_route_table_create (_In_ pds_route_table_t *route_table)
+pds_route_table_create (_In_ pds_route_table_spec_t *spec)
 {
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
@@ -32,7 +32,7 @@ pds_route_table_create (_In_ pds_route_table_t *route_table)
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_CREATE;
         api_ctxt.obj_id = api::OBJ_ID_ROUTE_TABLE;
-        api_ctxt.api_params->route_table_info = *route_table;
+        api_ctxt.api_params->route_table_spec = *spec;
         rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
     }

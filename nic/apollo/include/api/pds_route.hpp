@@ -45,26 +45,26 @@ typedef struct pds_route_table_key_s {
     pds_route_table_id_t    id;    ///< Route table ID
 } __PACK__ pds_route_table_key_t;
 
-/// \brief Route table
-typedef struct pds_route_table_s    pds_route_table_t;
-struct pds_route_table_s {
+/// \brief Route table configuration
+typedef struct pds_route_table_spec_s    pds_route_table_spec_t;
+struct pds_route_table_spec_s {
     pds_route_table_key_t    key;          ///< Key
     uint8_t                  af;           ///< Address family - v4 or v6
     uint32_t                 num_routes;   ///< Number of routes in the list
     pds_route_t              *routes;      ///< List or route rules
 
     /// Constructor
-    pds_route_table_s() { routes = NULL; }
+    pds_route_table_spec_s() { routes = NULL; }
 
     /// Destructor
-    ~pds_route_table_s() {
+    ~pds_route_table_spec_s() {
         if (routes) {
             SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE, routes);
         }
     }
 
     //// Assignment
-    pds_route_table_t& operator= (const pds_route_table_t& route_table) {
+    pds_route_table_spec_t& operator= (const pds_route_table_spec_t& route_table) {
         // self-assignment guard
         if (this == &route_table) {
             return *this;
@@ -84,17 +84,17 @@ struct pds_route_table_s {
 
 /// \brief Create route table
 ///
-/// \param[in] route_table route table information
+/// \param[in] spec route table configuration
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_route_table_create(pds_route_table_t *route_table);
+sdk_ret_t pds_route_table_create(pds_route_table_spec_t *spec);
 
 /// \brief Delete route table
 ///
 /// \param[in] key Key
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_route_table_delete(pds_route_table_key_t *route_table_key);
+sdk_ret_t pds_route_table_delete(pds_route_table_key_t *key);
 
 /// \@}
 

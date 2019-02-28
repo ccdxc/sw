@@ -22,9 +22,12 @@
 
 /// \brief Encapsulation type
 typedef enum pds_encap_type_e {
-    PDS_ENCAP_TYPE_NONE = 0,        ///< No encap
+    PDS_ENCAP_TYPE_NONE     = 0,    ///< No encap
+    ///< MPLSoUDP encap types
     PDS_ENCAP_TYPE_GW_ENCAP = 1,    ///< MPLSoUDP with single mpls label
-    PDS_ENCAP_TYPE_VNIC = 2,        ///< MPLSoUDP with two mpls labels
+    PDS_ENCAP_TYPE_VNIC     = 2,    ///< MPLSoUDP with two mpls labels
+    ///< VxLAN encap
+    PDS_ENCAP_TYPE_VXLAN    = 3,    ///< VxLAN encap
 } pds_encap_type_t;
 
 /// \brief TEP key

@@ -114,7 +114,7 @@ TEST_F(mapping_test, mapping_create) {
     const char *sub_rem_gw = "100.0.0.4";    // Part of my-tep subnet
     pds_vnic_info_t vnic_info;
     pds_mapping_info_t map_info;
-    pds_route_table_t rt_tbl;
+    pds_route_table_spec_t rt_tbl;
     pds_subnet_spec_t sub;
 
     batch_params.epoch = 1;
