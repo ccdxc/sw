@@ -186,8 +186,6 @@ int ionic_open(struct net_device *netdev)
 	if (err)
 		return err;
 
-	netif_set_real_num_tx_queues(netdev, lif->nxqs);
-
 	ionic_link_status_check(lif);
 	if (netif_carrier_ok(netdev))
 		netif_tx_wake_all_queues(netdev);
