@@ -19,6 +19,7 @@ import (
 	pencluster "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	state "github.com/pensando/sw/nic/agent/netagent/protos"
@@ -31,8 +32,6 @@ import (
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	"github.com/pensando/sw/nic/delphi/gosdk"
-
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
@@ -65,6 +64,7 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -479,13 +479,6 @@ func (it *veniceIntegSuite) startCitadel() {
 
 	log.Infof("Datanode %+v and broker %+v are running", dn, br)
 
-	// start the http server
-	hsrv, err := httpserver.NewHTTPServer(httpURL, br, nil)
-	if err != nil {
-		log.Fatalf("Error creating HTTP server. Err: %v", err)
-	}
-	log.Infof("HTTP server is listening on %s", hsrv.GetAddr())
-
 	// start collector, use citadel
 	c := collector.NewCollector(br)
 
@@ -496,6 +489,16 @@ func (it *veniceIntegSuite) startCitadel() {
 	}
 
 	log.Infof("%s is running {%+v}", globals.Citadel, srv)
+
+	// Creating debug instance
+	dbg := debug.New(srv.Debug)
+
+	// start the http server
+	hsrv, err := httpserver.NewHTTPServer(httpURL, br, dbg)
+	if err != nil {
+		log.Fatalf("Error creating HTTP server. Err: %v", err)
+	}
+	log.Infof("HTTP server is listening on %s", hsrv.GetAddr())
 
 	qsrv, err := query.NewQueryService(queryURL, br)
 

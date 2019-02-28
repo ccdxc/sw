@@ -167,7 +167,7 @@ func TestServer(t *testing.T) {
 	// Verify debug info
 	debugInf := tb.srv.Debug()
 	dbgInfo := debugInf.(struct {
-		Collectors map[string]DebugEntry
+		Collectors map[string]*DebugEntry
 	})
 	tu.Assert(t, len(dbgInfo.Collectors) > 0, "Expected debug info to contain last request")
 	for _, v := range dbgInfo.Collectors {
