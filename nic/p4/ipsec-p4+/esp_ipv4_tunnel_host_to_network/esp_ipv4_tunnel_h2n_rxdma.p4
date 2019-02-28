@@ -52,8 +52,9 @@ header_type ipsec_to_stage3_t {
 
 header_type ipsec_to_stage4_t {
     fields {
-        out_desc_addr : ADDRESS_WIDTH; 
-        to_stage_4_pad : 64;
+        out_desc_addr : ADDRESS_WIDTH;
+        flags         : 8; 
+        to_stage_4_pad : 56;
     }
 }
 
@@ -159,6 +160,9 @@ metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
 metadata ipsec_to_stage3_t ipsec_to_stage3;
 @pragma scratch_metadata
 metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_to_stage4_t ipsec_to_stage4_scratch;
 
 @pragma pa_header_union ingress to_stage_4
 metadata ipsec_to_stage4_t ipsec_to_stage4;
@@ -266,7 +270,9 @@ action ipsec_cb_tail_enqueue_input_desc2(pc, rsvd, cosA, cosB, cos_sel,
     IPSEC_CB_SCRATCH_WITH_PC
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T2_S2S
+    modify_field(ipsec_to_stage4_scratch.flags, ipsec_to_stage4.flags); 
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
+    
 }
 
 //stage 4 - table1
@@ -275,6 +281,7 @@ action ipsec_rxdma_stats_update(H2N_STATS_UPDATE_PARAMS)
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
     H2N_STATS_UPDATE_SET
+    modify_field(ipsec_to_stage4_scratch.flags, ipsec_to_stage4.flags); 
 }
 
 //stage 4 - table 0
@@ -301,6 +308,7 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
     // Need to change to out_desc_addr
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
 
+    modify_field(ipsec_to_stage4_scratch.flags, ipsec_to_stage4.flags); 
 
     modify_field(p4_rxdma_intr.dma_cmd_ptr, RXDMA_IPSEC_DMA_COMMANDS_OFFSET);
     // Ring Doorbell for IPSec-CB (svc_lif, type, ipsec-cb-index(qid))
