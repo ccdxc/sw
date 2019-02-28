@@ -27,6 +27,9 @@ var (
 	errInvalidOption  = errors.New("invalid option specification")
 )
 
+// InternalGroups is list of API groups that are not to be exposed to the user
+var InternalGroups = []string{"bookstore"}
+
 // Option Parsers
 
 func parseStringOptions(val interface{}) (interface{}, error) {

@@ -19,6 +19,11 @@ if [ -e ${curdir}/generated/manifest ]; then
     rm -f ${curdir}/generated/manifest
 fi
 
+# Delete the swaggerindex file if already exists.
+if [ -e ${curdir}/generated/swagger/index.json ]; then
+    rm -f ${curdir}/generated/swagger/index.json
+fi
+
 # Delete the relations file if already exists.
 if [ -e ${curdir}/generated/relations.json ]; then
     rm -f ${curdir}/generated/relations.json
@@ -104,6 +109,8 @@ do
         tempdir=$(pwd)&& cd ${curdir}/generated/${pkg}/gateway && rice embed-go && go generate .
         cd $tempdir
 done < ${curdir}/generated/pkgmanifest
+
+cd ${curdir}/generated/swagger && rice embed-go && go generate .
 cd ${curdir}
 echo "++ running goimports"
 # Go format code

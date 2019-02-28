@@ -22,6 +22,8 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
+	// needed to pull in swagger index
+	_ "github.com/pensando/sw/api/generated/swagger"
 )
 
 // makeOverrideMap creates a map from a string. examples for input strings

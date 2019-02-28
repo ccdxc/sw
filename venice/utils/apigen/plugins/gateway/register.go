@@ -459,6 +459,54 @@ func createDir(base string, dirs ...string) error {
 	return nil
 }
 
+type swaggerFile struct {
+	Description string `json:"description,omitempty"`
+	Path        string `json:"path,omitempty"`
+}
+
+func genSwaggerIndex(desc *descriptor.File, path string) (string, error) {
+	var index map[string]swaggerFile
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		glog.V(1).Infof("manifest [%s] not found", path)
+		index = make(map[string]swaggerFile)
+	} else {
+		glog.V(1).Infof("manifest exists, reading from manifest")
+		raw, err := ioutil.ReadFile(path)
+		if err != nil {
+			glog.V(1).Infof("Reading Manifest failed (%s)", err)
+			return "", err
+		}
+		err = json.Unmarshal(raw, &index)
+		if err != nil {
+			glog.Fatalf("unable to parse swagger index file")
+		}
+	}
+
+	internal := false
+	for _, v := range common.InternalGroups {
+		if v == desc.GoPkg.Name {
+			internal = true
+			break
+		}
+	}
+	if !internal {
+		descStr := strings.Title(desc.GoPkg.Name)
+		descStr = strings.Replace(descStr, "_", " ", -1)
+		sf := swaggerFile{
+			Description: descStr + " API reference",
+			Path:        "/swagger/" + desc.GoPkg.Name,
+		}
+		index[desc.GoPkg.Name] = sf
+	}
+
+	out, err := json.MarshalIndent(index, "  ", "  ")
+	if err != nil {
+		glog.Fatalf("unable to marshall swagger index file")
+	}
+	return string(out), nil
+}
+
 type manifestFile struct {
 	Pkg       string
 	APIServer bool
@@ -2589,6 +2637,7 @@ func init() {
 	reg.RegisterFunc("genPkgManifest", genPkgManifest)
 	reg.RegisterFunc("genSvcManifest", genServiceManifest)
 	reg.RegisterFunc("getSvcManifest", getServiceManifest)
+	reg.RegisterFunc("genSwaggerIndex", genSwaggerIndex)
 	reg.RegisterFunc("addRelations", addRelations)
 	reg.RegisterFunc("genRelMap", genRelMap)
 	reg.RegisterFunc("title", strings.Title)

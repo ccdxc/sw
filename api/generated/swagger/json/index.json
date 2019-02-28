@@ -1,0 +1,58 @@
+{
+    "audit": {
+      "description": "Audit API reference",
+      "path": "/swagger/audit"
+    },
+    "auth": {
+      "description": "Auth API reference",
+      "path": "/swagger/auth"
+    },
+    "browser": {
+      "description": "Browser API reference",
+      "path": "/swagger/browser"
+    },
+    "cluster": {
+      "description": "Cluster API reference",
+      "path": "/swagger/cluster"
+    },
+    "events": {
+      "description": "Events API reference",
+      "path": "/swagger/events"
+    },
+    "monitoring": {
+      "description": "Monitoring API reference",
+      "path": "/swagger/monitoring"
+    },
+    "network": {
+      "description": "Network API reference",
+      "path": "/swagger/network"
+    },
+    "objstore": {
+      "description": "Objstore API reference",
+      "path": "/swagger/objstore"
+    },
+    "rollout": {
+      "description": "Rollout API reference",
+      "path": "/swagger/rollout"
+    },
+    "search": {
+      "description": "Search API reference",
+      "path": "/swagger/search"
+    },
+    "security": {
+      "description": "Security API reference",
+      "path": "/swagger/security"
+    },
+    "staging": {
+      "description": "Staging API reference",
+      "path": "/swagger/staging"
+    },
+    "telemetry_query": {
+      "description": "Telemetry query API reference",
+      "path": "/swagger/telemetry_query"
+    },
+    "workload": {
+      "description": "Workload API reference",
+      "path": "/swagger/workload"
+    }
+  }

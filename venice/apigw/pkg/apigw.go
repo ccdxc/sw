@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/GeertJohan/go.rice"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -391,6 +392,19 @@ func (a *apiGw) Run(config apigw.Config) {
 	gwruntime.HTTPError = a.HTTPErrorHandler
 	gwruntime.OtherErrorHandler = a.HTTPOtherErrorHandler
 
+	// register the swagger index file
+	box, err := rice.FindBox("../../../api/generated/swagger/json")
+	if err != nil {
+		panic(fmt.Sprintf("error opening rice.Box for swagger index(%s)", err))
+	}
+	siContents, err := box.Bytes("index.json")
+	if err != nil {
+		panic(fmt.Sprintf("unable to get contnents of swagger index file (%s)", err))
+	}
+	m.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(siContents)
+	})
+
 	// cleanup any events in the doneChannel from previous run (especially in integ tests)
 Loop:
 	for {
@@ -464,6 +478,7 @@ Loop:
 			panic(fmt.Sprintf("Failed to create auditor (%v)", err))
 		}
 	}
+
 	// We are ready to set runstate we have started listening on HTTP port and
 	//  all backends are connected
 	a.runstate.cond.L.Lock()

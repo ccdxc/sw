@@ -327,6 +327,146 @@ func TestGenRelMap(t *testing.T) {
 	}
 }
 
+func TestGenSwaggerIndex(t *testing.T) {
+	var fds []*descriptor.FileDescriptorProto
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		message_type <
+			name: 'RelationObj'
+			field <
+				name: 'relation_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				options:<[venice.objRelation]:<Type:"NamedRef" To:"example/ToObjMsg">>
+			>
+		>
+		syntax: "proto3"
+		`, `
+		name: 'example1.proto'
+		package: 'example1'
+		message_type <
+			name: 'RelationObj'
+			field <
+				name: 'relation_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				options:<[venice.objRelation]:<Type:"NamedRef" To:"example/ToObjMsg">>
+			>
+		>
+		syntax: "proto3"
+		`, `
+		name: 'example2.proto'
+		package: 'bookstore'
+		message_type <
+			name: 'RelationObj'
+			field <
+				name: 'relation_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				options:<[venice.objRelation]:<Type:"NamedRef" To:"example/ToObjMsg">>
+			>
+		>
+		syntax: "proto3"
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		fds = append(fds, &fd)
+	}
+	path := "_test_relations.json"
+	paths := []string{path}
+	defer cleanupTmpFiles(t, paths)
+	r := reg.NewRegistry()
+	var req gogoplugin.CodeGeneratorRequest
+	req.FileToGenerate = []string{"example.proto"}
+	req.ProtoFile = fds
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed (%s)", err)
+	}
+
+	file1, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("file not found example.proto (%s)", err)
+	}
+	file2, err := r.LookupFile("example1.proto")
+	if err != nil {
+		t.Fatalf("file not found example.proto (%s)", err)
+	}
+	file3, err := r.LookupFile("example2.proto")
+	if err != nil {
+		t.Fatalf("file not found example.proto (%s)", err)
+	}
+
+	// cleanup any existing files
+	cleanupTmpFiles(t, paths)
+	out, err := genSwaggerIndex(file1, path)
+	got := make(map[string]swaggerFile)
+	err = json.Unmarshal([]byte(out), &got)
+	if err != nil {
+		t.Fatalf("failed to parse output (%s)", err)
+	}
+	if len(got) != 1 {
+		t.Fatalf("expecting 1 entry  got [%d]", len(got))
+	}
+	if _, ok := got["example"]; !ok {
+		t.Fatalf("expecting entry for example")
+	}
+	// write the file
+	err = ioutil.WriteFile(path, []byte(out), 0644)
+	if err != nil {
+		t.Fatalf("could not write output file (%s)", err)
+	}
+
+	out, err = genSwaggerIndex(file2, path)
+	got = make(map[string]swaggerFile)
+	err = json.Unmarshal([]byte(out), &got)
+	if err != nil {
+		t.Fatalf("failed to parse output (%s)", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("expecting 1 entry  got [%d]", len(got))
+	}
+	if _, ok := got["example"]; !ok {
+		t.Fatalf("expecting entry for example")
+	}
+	if _, ok := got["example1"]; !ok {
+		t.Fatalf("expecting entry for example1")
+	}
+	// write the file
+	err = ioutil.WriteFile(path, []byte(out), 0644)
+	if err != nil {
+		t.Fatalf("could not write output file (%s)", err)
+	}
+
+	// We should not see an entry for the bookstore group
+	out, err = genSwaggerIndex(file3, path)
+	got = make(map[string]swaggerFile)
+	err = json.Unmarshal([]byte(out), &got)
+	if err != nil {
+		t.Fatalf("failed to parse output (%s)", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("expecting 1 entry  got [%d]", len(got))
+	}
+	if _, ok := got["example"]; !ok {
+		t.Fatalf("expecting entry for example")
+	}
+	if _, ok := got["example1"]; !ok {
+		t.Fatalf("expecting entry for example1")
+	}
+	// write the file
+	err = ioutil.WriteFile(path, []byte(out), 0644)
+	if err != nil {
+		t.Fatalf("could not write output file (%s)", err)
+	}
+}
 func TestDetitle(t *testing.T) {
 	var tests = []struct {
 		input    string

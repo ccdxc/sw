@@ -6,3 +6,7 @@ templates:
     outputpath: "pkgmanifest"
   - template: "servicemanifest.tmpl"
     outputpath: "apiclient/svcmanifest.json"
+  - template: "swaggerindex.tmpl"
+    outputpath: "swagger/json/index.json"
+  - template: "commonswagger.tmpl"
+    outputpath: "swagger/common.go"
