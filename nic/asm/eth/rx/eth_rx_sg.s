@@ -47,6 +47,7 @@ eth_rx_sg_continue:
   // dma_len = min(rem_bytes, buf_len)
   slt             c1, _r_rem_bytes, d.{len0}.hx
   cmov            _r_len, c1, _r_rem_bytes, d.{len0}.hx
+  beq             _r_len, r0, eth_rx_sg_error
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_FRAG(0, _r_addr, _r_len, _r_ptr)
@@ -60,6 +61,7 @@ eth_rx_sg_continue:
   // dma_len = min(rem_bytes, buf_len)
   slt             c1, _r_rem_bytes, d.{len1}.hx
   cmov            _r_len, c1, _r_rem_bytes, d.{len1}.hx
+  beq             _r_len, r0, eth_rx_sg_error
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_FRAG(1, _r_addr, _r_len, _r_ptr)
@@ -73,6 +75,7 @@ eth_rx_sg_continue:
   // dma_len = min(rem_bytes, buf_len)
   slt             c1, _r_rem_bytes, d.{len2}.hx
   cmov            _r_len, c1, _r_rem_bytes, d.{len2}.hx
+  beq             _r_len, r0, eth_rx_sg_error
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_FRAG(2, _r_addr, _r_len, _r_ptr)
@@ -86,6 +89,7 @@ eth_rx_sg_continue:
   // dma_len = min(rem_bytes, buf_len)
   slt             c1, _r_rem_bytes, d.{len3}.hx
   cmov            _r_len, c1, _r_rem_bytes, d.{len3}.hx
+  beq             _r_len, r0, eth_rx_sg_error
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_FRAG(3, _r_addr, _r_len, _r_ptr)
