@@ -44,18 +44,7 @@ def get_timeout(timeout):
         api.Logger.error("No security profile objects in store")
         return api.types.status.FAILURE
 
-    #Get will return copy of pushed objects to agent
-    get_config_objects = netagent_cfg_api.GetConfigObjects(store_profile_objects)
-    if len(get_config_objects) == 0:
-        api.Logger.error("Unable to fetch security profile objects")
-        return api.types.status.FAILURE
-
-    if len(get_config_objects) != len(store_profile_objects):
-        api.Logger.error("Config mismatch, Get Objects : %d, Config store Objects : %d"
-        % (len(get_config_objects), len(store_profile_objects)))
-        return api.types.status.FAILURE
-
-    for object in get_config_objects:
+    for object in store_profile_objects:
         if (timeout == 'tcp-timeout'):
             return timetoseconds(object.spec.timeouts.tcp)
         if (timeout == 'udp-timeout'):
@@ -118,17 +107,6 @@ def update_sgpolicy(app_name, allowDefault=False):
         api.Logger.error("No SG Policy objects in store")
         return api.types.status.FAILURE
 
-    #Get will return copy of pushed objects to agent
-    get_config_objects = netagent_cfg_api.GetConfigObjects(store_policy_objects)
-    if len(get_config_objects) == 0:
-        api.Logger.error("Unable to fetch security profile objects")
-        return api.types.status.FAILURE
-
-    if len(get_config_objects) != len(store_policy_objects):
-        api.Logger.error("Config mismatch, Get Objects : %d, Config store Objects : %d"
-        % (len(get_config_objects), len(store_policy_objects)))
-        return api.types.status.FAILURE
-
     for object in store_policy_objects:
         rules = len(object.spec.policy_rules)
         if (rules == 0):
@@ -161,17 +139,6 @@ def update_app(app, timeout, field=None, val=None, isstring=False):
     store_app_objects = netagent_cfg_api.QueryConfigs(kind='App')
     if len(store_app_objects) == 0:
         api.Logger.error("No App objects in store")
-        return api.types.status.FAILURE
-
-    #Get will return copy of pushed objects to agent
-    get_config_objects = netagent_cfg_api.GetConfigObjects(store_app_objects)
-    if len(get_config_objects) == 0:
-        api.Logger.error("Unable to fetch app objects")
-        return api.types.status.FAILURE
-
-    if len(get_config_objects) != len(store_app_objects):
-        api.Logger.error("Config mismatch, Get Objects : %d, Config store Objects : %d"
-        % (len(get_config_objects), len(store_app_objects)))
         return api.types.status.FAILURE
 
     for object in store_app_objects:

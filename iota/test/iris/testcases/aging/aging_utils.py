@@ -36,18 +36,7 @@ def get_timeout(timeout):
         api.Logger.error("No security profile objects in store")
         return api.types.status.FAILURE
 
-    #Get will return copy of pushed objects to agent
-    get_config_objects = netagent_cfg_api.GetConfigObjects(store_profile_objects)
-    if len(get_config_objects) == 0:
-        api.Logger.error("Unable to fetch security profile objects")
-        return api.types.status.FAILURE
-
-    if len(get_config_objects) != len(store_profile_objects):
-        api.Logger.error("Config mismatch, Get Objects : %d, Config store Objects : %d"
-        % (len(get_config_objects), len(store_profile_objects)))
-        return api.types.status.FAILURE
-
-    for object in get_config_objects:
+    for object in store_profile_objects:
         if (timeout == 'tcp-timeout'):
             return timetoseconds(object.spec.timeouts.tcp)
         if (timeout == 'udp-timeout'):
@@ -75,17 +64,6 @@ def update_timeout(timeout, val):
     if len(store_profile_objects) == 0:
         api.Logger.error("No security profile objects in store")
         return api.types.status.FAILURE
-
-    #Get will return copy of pushed objects to agent
-    get_config_objects = netagent_cfg_api.GetConfigObjects(store_profile_objects)
-    if len(get_config_objects) == 0:
-        api.Logger.error("Unable to fetch security profile objects")
-        return api.types.status.FAILURE
-
-    if len(get_config_objects) != len(store_profile_objects):
-        api.Logger.error("Config mismatch, Get Objects : %d, Config store Objects : %d"
-        % (len(get_config_objects), len(store_profile_objects)))
-        return api.types.status.FAILURE    
 
     for object in store_profile_objects:
         if (timeout == 'tcp-timeout'):
@@ -119,17 +97,6 @@ def update_field(field, val):
         api.Logger.error("No security profile objects in store")
         return api.types.status.FAILURE
 
-    #Get will return copy of pushed objects to agent
-    get_config_objects = netagent_cfg_api.GetConfigObjects(store_profile_objects)
-    if len(get_config_objects) == 0:
-        api.Logger.error("Unable to fetch security profile objects")
-        return api.types.status.FAILURE
-
-    if len(get_config_objects) != len(store_profile_objects):
-        api.Logger.error("Config mismatch, Get Objects : %d, Config store Objects : %d"
-        % (len(get_config_objects), len(store_profile_objects)))
-        return api.types.status.FAILURE
-
     for object in store_profile_objects:
         if (field == 'enable-connection-tracking'):
             object.spec.enable_connection_tracking = val
@@ -144,17 +111,6 @@ def update_sgpolicy(src, dst, proto, dport, action="DENY"):
     store_policy_objects = netagent_cfg_api.QueryConfigs(kind='SGPolicy')
     if len(store_policy_objects) == 0:
         api.Logger.error("No security profile objects in store")
-        return api.types.status.FAILURE
-
-    #Get will return copy of pushed objects to agent
-    get_config_objects = netagent_cfg_api.GetConfigObjects(store_policy_objects)
-    if len(get_config_objects) == 0:
-        api.Logger.error("Unable to fetch security profile objects")
-        return api.types.status.FAILURE
-
-    if len(get_config_objects) != len(store_policy_objects):
-        api.Logger.error("Config mismatch, Get Objects : %d, Config store Objects : %d"
-        % (len(get_config_objects), len(store_policy_objects)))
         return api.types.status.FAILURE
 
     for object in store_policy_objects:
