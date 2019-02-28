@@ -11,7 +11,7 @@ License:	GPLv2
 #URL:		
 Source:		ionic-0.0.0.tar.gz
 
-#BuildRequires:	kernel-devel
+BuildRequires:	kernel-devel
 #Requires:	
 
 %description
