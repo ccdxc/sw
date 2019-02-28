@@ -4,6 +4,7 @@ export NIC_DIR='/nic'
 export PLATFORM_DIR='/platform'
 export FWD_MODE="$1"
 export PLATFORM="$2"
+export IMAGE_TYPE="$3"
 
 export LD_LIBRARY_PATH=$NIC_DIR/lib:$PLATFORM_DIR/lib
 export COVFILE=$NIC_DIR/conf/hw_bullseye_hal.cov
@@ -11,9 +12,12 @@ export COVFILE=$NIC_DIR/conf/hw_bullseye_hal.cov
 ulimit -c unlimited
 
 # Set core file pattern
+CORE_MIN_DISK=512
+[[ "$IMAGE_TYPE" = "diag" ]] && CORE_MIN_DISK=1
 mkdir -p /data/core
-echo '|/nic/bin/coremgr -P /data/core -p %p -e %e' > /proc/sys/kernel/core_pattern
+echo "|/nic/bin/coremgr -P /data/core -p %p -e %e -m $CORE_MIN_DISK" > /proc/sys/kernel/core_pattern
 
+# POST
 if [[ -f /sysconfig/config0/post_disable ]]; then
     echo "Skipping Power On Self Test (POST)"
 else
