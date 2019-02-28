@@ -188,3 +188,36 @@ def DisableAllmulti(node, interface):
     if resp.commands[0].exit_code != 0:
         result = api.types.status.FAILURE
     return result
+
+def AddStaticARP(node, interface, hostname, macaddr):
+    result = api.types.status.SUCCESS
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip neigh add " + hostname +" lladdr " + macaddr + " dev " + interface
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "arp -s " + hostname + " " + macaddr
+    else:
+        assert(0)
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result
+
+
+def DeleteARP(node, interface, hostname):
+    result = api.types.status.SUCCESS
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip neigh del " + hostname + " dev " + interface
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "arp -d " + hostname
+    else:
+        assert(0)
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result

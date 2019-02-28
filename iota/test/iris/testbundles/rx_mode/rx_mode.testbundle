@@ -1,0 +1,16 @@
+meta:
+    name    : rx_mode
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    #targetcount : 35
+
+testcases:
+    -   name    : UUC_Single_Promiscuous
+        testcase: testcases.rx_mode.uuc_single_promiscuous
+        disable : False
+        ignore  : False
+
+    -   name    : UUC_Multiple_Promiscuous
+        testcase: testcases.rx_mode.uuc_multi_promiscuous
+        disable : False
+        ignore  : False
