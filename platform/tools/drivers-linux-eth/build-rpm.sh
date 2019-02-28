@@ -35,4 +35,4 @@ tar czf ionic-$VERSION.tar.gz -C $TOPDIR/SOURCES .
 mv ionic-$VERSION.tar.gz $TOPDIR/SOURCES
 
 echo "Building IONIC RPM for version $VERSION"
-rpmbuild -ba --define "_topdir $TOPDIR" ionic.spec 
+rpmbuild -bb --define "_topdir $TOPDIR" ionic.spec 
