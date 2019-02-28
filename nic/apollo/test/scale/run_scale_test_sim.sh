@@ -12,4 +12,9 @@ export HAL_CONFIG_PATH=${NICDIR}/conf
 
 export PATH=${PATH}:${BUILD_DIR}/bin
 $GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_sim.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+
+# Valgrind with XML output
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
+
+# Valgrind with text output
+#valgrind --track-origins=yes apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json

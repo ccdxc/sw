@@ -143,7 +143,7 @@ public:
     uint32_t match_type;
     void *bucket;
     char str[256];
-    char str2[16];
+    char str2[64];
 
     // Parent API Context: used for context nesting.
     // 1st level HintTable: pctx = MainTable context.
@@ -231,17 +231,19 @@ public:
     }
 
     char* inputstr() {
-        sprintf(str, "key:%p,data:%p,hash_valid:%d,hash_32b:%#x,cbdata:%p",
-                in_key, in_appdata, in_hash_valid, in_hash_32b, cbdata);
+        snprintf(str, sizeof(str),
+                 "key:%p,data:%p,hash_valid:%d,hash_32b:%#x,cbdata:%p",
+                 in_key, in_appdata, in_hash_valid, in_hash_32b, cbdata);
         return str;
     }
 
     // Debug string
     char* metastr() {
-        sprintf(str, "id:%d,idx:%d,slot:%d,hint:%d,"
-                "more:%d,pending:%d,hash_msbits:%#x,match_type:%d",
-                table_id, table_index, hint_slot,
-                hint, more_hashs, write_pending, hash_msbits, match_type);
+        snprintf(str, sizeof(str),
+                 "id:%d,idx:%d,slot:%d,hint:%d,"
+                 "more:%d,pending:%d,hash_msbits:%#x,match_type:%d",
+                 table_id, table_index, hint_slot,
+                 hint, more_hashs, write_pending, hash_msbits, match_type);
         return str;
     }
 
@@ -250,7 +252,8 @@ public:
     }
 
     const char* idstr() {
-        sprintf(str2, "%s%d-L%d", is_main() ? "M" : "H", table_index, level);
+        snprintf(str2, sizeof(str2), 
+                 "%s%d-L%d", is_main() ? "M" : "H", table_index, level);
         return str2;
     }
 

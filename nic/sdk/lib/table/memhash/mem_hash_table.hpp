@@ -15,7 +15,6 @@ namespace sdk {
 namespace table {
 namespace memhash {
 
-using sdk::lib::indexer;
 using sdk::table::mem_hash;
 using sdk::table::mem_hash_properties_t;
 
@@ -37,6 +36,10 @@ protected:
     sdk_ret_t   init_(uint32_t id, uint32_t size);
 public:
     mem_hash_base_table() {
+        table_id_ = 0;
+        table_size_ = 0;
+        num_table_index_bits_ = 0;
+        buckets_ = NULL;
     }
 
     ~mem_hash_base_table() {
@@ -70,10 +73,6 @@ private:
 public:
     static mem_hash_hint_table* factory(mem_hash_properties_t *props);
     mem_hash_hint_table() {
-        table_id_ = 0;
-        table_size_ = 0;
-        num_table_index_bits_ = 0;
-        buckets_ = NULL;
         indexer_ = NULL;
     }
 

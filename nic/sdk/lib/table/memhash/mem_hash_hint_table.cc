@@ -86,8 +86,8 @@ mem_hash_hint_table::alloc_(mem_hash_api_context *ctx) {
                       indexer_->get_size());
         return SDK_RET_NO_RESOURCE;
     }
-    MEMHASH_TRACE_VERBOSE("%s: Allocated index:%d Meta:[%s]",
-                      ctx->idstr(), ctx->hint, ctx->metastr());
+    MEMHASH_TRACE_DEBUG("%s: Allocated index:%d Meta:[%s]",
+                        ctx->idstr(), ctx->hint, ctx->metastr());
 
     // Set write pending
     ctx->write_pending = true;
@@ -287,6 +287,8 @@ mem_hash_hint_table::defragment_(mem_hash_api_context *ectx) {
 
     ret = static_cast<mem_hash_table_bucket*>(ectx->bucket)->defragment_(ectx, tctx);
     SDK_ASSERT(ret == SDK_RET_OK);
+
+    SDK_ASSERT(tctx);
 
     // Destroy the all the api contexts of this chain
     if (tctx != ectx) {

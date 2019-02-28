@@ -14,8 +14,6 @@ namespace sdk {
 namespace table {
 namespace memhash {
 
-using sdk::table::mem_hash;
-
 class mem_hash_base_table;
 class mem_hash_main_table;
 class mem_hash_hint_table;

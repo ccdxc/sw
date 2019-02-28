@@ -156,7 +156,7 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
 
     props_->hw_data_len = SDK_TABLE_BITS_TO_BYTES(props_->hw_data_len);
     props_->hw_data_len = SDK_TABLE_ALIGN_TO_64B(props_->hw_data_len);
-    SDK_ASSERT(props_->hw_data_len <= MEMHASH_MAX_HW_KEY_LEN);
+    SDK_ASSERT(props_->hw_data_len <= MEMHASH_MAX_HW_DATA_LEN);
     MEMHASH_TRACE_DEBUG("- key_len:%dBytes data_len:%dBytes ",
                         props_->hw_key_len, props_->hw_data_len);
 

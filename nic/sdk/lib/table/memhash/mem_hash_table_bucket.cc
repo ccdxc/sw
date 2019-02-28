@@ -62,10 +62,14 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
     // Decode the appdata from sw_data
     get_sw_data_appdata_(ctx);
     MEMHASH_TRACE_DEBUG("%s: HW Read: TableID:%d TableIndex:%d", ctx->idstr(),
-                    ctx->table_id, ctx->table_index);
+                        ctx->table_id, ctx->table_index);
     PRINT_SW_ALL(ctx);
 
     ctx->sw_valid = true;
+    if (valid_ != mem_hash_p4pd_get_entry_valid(ctx)) {
+        MEMHASH_TRACE_ERR("SW and HW data are out of sync !!");
+        SDK_ASSERT_RETURN(0, SDK_RET_HW_READ_ERR);
+    }
 
     return SDK_RET_OK;
 }

@@ -916,5 +916,5 @@ class MPLS(Packet):
     ]
 
 bind_layers(UDP, MPLS, dport=6635)
+bind_layers(MPLS, MPLS, bos=0)
 bind_layers(MPLS, IP, bos=1)
-
