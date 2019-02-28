@@ -186,6 +186,78 @@ func TestSGPolicyUpdate(t *testing.T) {
 
 }
 
+func TestSGPolicyALGMatch(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	alg := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "sunrpc_tcp",
+			Tenant:    "default",
+			Namespace: "default",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts:     []string{"tcp/111"},
+			ALGType:        "sunrpc",
+			AppIdleTimeout: "100s",
+			ALG: &netproto.ALG{
+				SUNRPC: []*netproto.RPC{
+					{
+						ProgramID:        "10000",
+						ProgramIDTimeout: "100s",
+					},
+					{
+						ProgramID:        "10024",
+						ProgramIDTimeout: "60s",
+					},
+					{
+						ProgramID:        "10023",
+						ProgramIDTimeout: "90s",
+					},
+				},
+			},
+		},
+	}
+
+	err := ag.CreateApp(&alg)
+	AssertOk(t, err, "App creates must succeed")
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"any"}},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+					},
+					AppName: "sunrpc_tcp",
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err = ag.CreateSGPolicy(&sgPolicy)
+	AssertOk(t, err, "Error creating sg policy")
+	sgp, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "SG Policy was not found in DB")
+	Assert(t, sgp.Name == "testSGPolicy", "SGPolicy names did not match", sgp)
+
+}
+
 func TestSGPolicyMatchAllSrc(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
