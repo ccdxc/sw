@@ -5,6 +5,7 @@
 #include <linux/ipv6.h>
 #include <linux/if_vlan.h>
 #include <net/ip6_checksum.h>
+#include <linux/if_macvlan.h>
 
 #include "ionic.h"
 #include "ionic_lif.h"
@@ -755,6 +756,7 @@ static int ionic_tx_descs_needed(struct queue *q, struct sk_buff *skb)
 	return 1;
 }
 
+#ifndef HAVE_NDO_SELECT_QUEUE_SB_DEV
 u16 ionic_select_queue(struct net_device *netdev, struct sk_buff *skb,
 			void *accel_priv, select_queue_fallback_t fallback)
 {
@@ -775,6 +777,7 @@ u16 ionic_select_queue(struct net_device *netdev, struct sk_buff *skb,
 
 	return index;
 }
+#endif
 
 netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 {

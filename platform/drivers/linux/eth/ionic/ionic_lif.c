@@ -6,6 +6,7 @@
 #include <linux/interrupt.h>
 #include <linux/pci.h>
 #include <linux/cpumask.h>
+#include <linux/if_macvlan.h>
 
 #include "ionic.h"
 #include "ionic_bus.h"
@@ -915,6 +916,8 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 			goto err_out_deinit_slave;
 	}
 
+	netdev_set_sb_channel(upper_dev, index);
+
 	/* bump up the netdev's in-use queue count if needed */
 	if ((master_lif->nxqs + index) > lower_dev->real_num_tx_queues) {
 		int max = lower_dev->real_num_tx_queues + 1;
@@ -925,6 +928,7 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 	netdev_info(lower_dev, "%s: %s %s\n",
 		    __func__, lif->name, lif->upper_dev->name);
 
+#ifndef HAVE_MACVLAN_SB_DEV
 	/* WARNING - UGLY HACK */
 	/* This is to work around a bug in versions of the macvlan
 	 * driver prior to v4.18, where macvlan_open() doesn't call
@@ -965,6 +969,7 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		idx = hash_64(value, MACVLAN_HASH_BITS);
 		hlist_add_head_rcu(&vlan->hlist, &port->vlan_hash[idx]);
 	}
+#endif
 
 	return lif;
 
@@ -981,23 +986,32 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 	struct lif *master_lif = netdev_priv(lower_dev);
 	struct lif *lif = priv;
 	unsigned long index = lif->index;
+#ifndef HAVE_MACVLAN_SB_DEV
+	/* get vlan* now before lif is dismantled */
 	struct macvlan_dev *vlan = netdev_priv(lif->upper_dev);
+#endif
 
 	netdev_info(lower_dev, "%s: %s %s\n",
 		    __func__, lif->name, lif->upper_dev->name);
+	netdev_unbind_sb_channel(lower_dev, lif->netdev);
+
 	ionic_lif_stop(lif);
 	ionic_lif_deinit(lif);
 	ionic_lif_free(lif);
 
 	/* if this was the highest slot, we can decrement
-	 * the number of queues in use
+	 * the number of queues in use and find the next
+	 * highest one in use
 	 */
 	if ((master_lif->nxqs + index) == lower_dev->real_num_tx_queues) {
-		int max = lower_dev->real_num_tx_queues - 1;
+		int max = lower_dev->real_num_tx_queues;
 
+		while (master_lif->txqcqs[max-1].qcq == NULL)
+			max--;
 		netif_set_real_num_tx_queues(lower_dev, max);
 	}
 
+#ifndef HAVE_MACVLAN_SB_DEV
 	/* WARNING - UGLY HACK part deux */
 	/* This is to work around a bug in versions of the macvlan
 	 * driver prior to v4.18, where macvlan_stop() doesn't call
@@ -1007,18 +1021,20 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 	 * The code below is hijacked from the macvlan driver, since
 	 * it is defined static and unaccessible.
 	 */
-//static void macvlan_hash_del(struct macvlan_dev *vlan, bool sync)
 	{
 		hlist_del_rcu(&vlan->hlist);
 		synchronize_rcu();
 	}
+#endif
 }
 
 static const struct net_device_ops ionic_netdev_ops = {
 	.ndo_open               = ionic_open,
 	.ndo_stop               = ionic_stop,
 	.ndo_start_xmit		= ionic_start_xmit,
+#ifndef HAVE_NDO_SELECT_QUEUE_SB_DEV
 	.ndo_select_queue	= ionic_select_queue,
+#endif
 	.ndo_get_stats64	= ionic_get_stats64,
 	.ndo_set_rx_mode	= ionic_set_rx_mode,
 	.ndo_set_mac_address	= ionic_set_mac_address,

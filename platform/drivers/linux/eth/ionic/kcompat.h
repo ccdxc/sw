@@ -6156,6 +6156,7 @@ static inline int _kc_macvlan_release_l2fw_offload(struct net_device *dev)
 #define HAVE_XDP_FRAME_STRUCT
 #define HAVE_NDO_XDP_XMIT_BULK_AND_FLAGS
 #define NO_NDO_XDP_FLUSH
+#define HAVE_MACVLAN_SB_DEV
 #endif /* 4.18.0 */
 
 /*****************************************************************************/
@@ -6171,6 +6172,12 @@ static inline int _kc_macvlan_release_l2fw_offload(struct net_device *dev)
 	ethtool_link_ksettings_test_link_mode(ptr, name, mode)
 #endif /* ETHTOOL_GLINKSETTINGS */
 #define HAVE_NETPOLL_CONTROLLER
+#ifndef netdev_set_sb_channel
+#define netdev_set_sb_channel(x, y) do { } while (0)
+#endif
+#ifndef netdev_unbind_sb_channel
+#define netdev_unbind_sb_channel(x, y) do { } while (0)
+#endif
 #else /* >= 4.19.0 */
 #define HAVE_TCF_BLOCK_CB_REGISTER_EXTACK
 #define NO_NETDEV_BPF_PROG_ATTACHED
