@@ -1,6 +1,26 @@
 import iota.harness.api as api
 import pdb
 
+def debug_dump_interface_info(node, interface):
+    result = api.types.status.SUCCESS
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ifconfig " + interface
+    api.Trigger_AddHostCommand(req, node, cmd)
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip -d link show " + interface
+        api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.critical("debug_dump_interface_info failed - no response")
+        return api.types.status.FAILURE
+    commands = resp.commands
+    for cmd in commands:
+        if cmd.exit_code != 0:
+            api.Logger.critical("debug_dump_interface_info failed for %s" % (cmd))
+            api.PrintCommandResults(cmd)
+            result = api.types.status.FAILURE
+    return result
+
 def GetHostMgmtInterface(node):
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -87,6 +107,33 @@ def SetMACAddress(node, interface, mac_addr):
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
     return resp.commands[0]
+
+def setInterfaceMTU(node, interface, mtu):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip link set dev " + interface + " mtu " + str(mtu)
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "ifconfig " + interface + " mtu " + str(mtu)
+    else:
+        assert(0)
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return resp.commands[0]
+
+def getInterfaceMTU(node, interface):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip -d link show " + interface + " | grep mtu | cut -d'>' -f2 | awk '{print $2}' "
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "ifconfig " + interface +  " | grep mtu | cut -d'>' -f2 | awk '{print $4}'"
+    else:
+        assert(0)
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    mtu = resp.commands[0].stdout.strip("\n")
+    if not mtu:
+        mtu = "0"
+    return int(mtu)
 
 def EnablePromiscuous(node, interface):
     result = api.types.status.SUCCESS
