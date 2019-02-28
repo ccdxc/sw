@@ -111,7 +111,7 @@ func handleACLShowCmd(cmd *cobra.Command, ofile *os.File) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -194,7 +194,7 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	aclShowSpecEthHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, true, false, false, false, false)
@@ -204,7 +204,7 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	aclShowSpecIPHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, false, true, false, false, false)
@@ -214,7 +214,7 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	aclShowSpecTCPHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, false, false, true, false, false)
@@ -224,7 +224,7 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	aclShowSpecUDPHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, false, false, false, true, false)
@@ -234,7 +234,7 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	aclShowSpecIcmpHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, false, false, false, false, true)
@@ -567,7 +567,7 @@ func aclShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		aclShowStatusOneResp(resp)

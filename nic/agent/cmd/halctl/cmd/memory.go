@@ -131,7 +131,7 @@ func slabShowCmdHandler(cmd *cobra.Command, args []string) {
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			if all == false {
-				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 				return
 			}
 			continue
@@ -215,7 +215,7 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			if all == false {
-				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 				return
 			}
 			continue
@@ -274,7 +274,7 @@ func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print mtrack
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		mtrackShowResp(resp)
@@ -337,7 +337,7 @@ func mtrackDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -378,7 +378,7 @@ func hashShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print hash
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		hashShowResp(resp)
@@ -428,7 +428,7 @@ func hashDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print hash table
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -501,7 +501,7 @@ func allMemoryShowHandler(ofile *os.File) {
 
 	for _, mResp := range mRespMsg.Response {
 		if mResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", mResp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", mResp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(mResp)
@@ -525,7 +525,7 @@ func allMemoryShowHandler(ofile *os.File) {
 		// Print hash table
 		for _, hResp := range hRespMsg.Response {
 			if hResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("HAL Returned non OK status. %v\n", hResp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", hResp.ApiStatus)
 				continue
 			}
 			respType := reflect.ValueOf(hResp)

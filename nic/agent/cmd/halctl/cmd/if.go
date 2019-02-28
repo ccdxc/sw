@@ -156,7 +156,7 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			errStr := fmt.Sprintf("HAL Returned non OK status. %v", resp.ApiStatus)
+			errStr := fmt.Sprintf("Operation failed with %v error", resp.ApiStatus)
 			return errors.New(errStr)
 		}
 		fmt.Printf("Interface delete succeeded\n")
@@ -357,7 +357,7 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			errStr := fmt.Sprintf("HAL Returned non OK status. %v", resp.ApiStatus)
+			errStr := fmt.Sprintf("Operation failed with %v error", resp.ApiStatus)
 			return errors.New(errStr)
 		}
 		fmt.Printf("Interface update succeeded. Interface ID is %d\n", intfID)
@@ -420,7 +420,7 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print IFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		ifShowOneResp(resp)
@@ -457,7 +457,7 @@ func ifGetAllStr() map[uint64]string {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			return m
 		}
 
@@ -510,7 +510,7 @@ func ifGetStrFromID(ifID []uint64) (int, []string) {
 	index = 0
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			return -1, nil
 		}
 
@@ -568,7 +568,7 @@ func ifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// Print IFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		ifShowStatusOneResp(resp)
@@ -614,7 +614,7 @@ func handleIfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Print IFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)

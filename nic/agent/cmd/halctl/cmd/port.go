@@ -132,7 +132,7 @@ func handlePortDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -191,7 +191,7 @@ func handlePortStatusShowCmd(cmd *cobra.Command, ofile *os.File) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		adminState := resp.GetSpec().GetAdminState()
@@ -301,7 +301,7 @@ func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		portXcvrShowResp(resp)
@@ -360,7 +360,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		portShowOneResp(resp)
@@ -523,7 +523,7 @@ func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Statistics
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		portShowStatsOneResp(resp)
@@ -668,7 +668,7 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			success = false
 			continue
 		}
@@ -726,7 +726,7 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 		for _, updateResp := range updateRespMsg.Response {
 			if updateResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("HAL Returned non OK status. %v\n", updateResp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", updateResp.ApiStatus)
 				success = false
 				continue
 			}
@@ -898,7 +898,7 @@ func handlePortClearStatsCmd(cmd *cobra.Command, ofile *os.File) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 
@@ -935,7 +935,7 @@ func handlePortClearStatsCmd(cmd *cobra.Command, ofile *os.File) {
 
 		for _, updateResp := range updateRespMsg.Response {
 			if updateResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("HAL Returned non OK status. %v\n", updateResp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", updateResp.ApiStatus)
 				continue
 			}
 		}

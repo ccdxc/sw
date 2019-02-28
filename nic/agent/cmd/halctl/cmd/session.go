@@ -224,7 +224,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Sessions
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		sessionShowOneResp(resp)
@@ -356,7 +356,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Print Sessions
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -794,7 +794,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 	// Sessions
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 	}

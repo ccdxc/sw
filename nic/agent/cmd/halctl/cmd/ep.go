@@ -100,7 +100,7 @@ func filterShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -143,7 +143,7 @@ func epShowBriefCmdHandler(cmd *cobra.Command, args []string) {
 	// Print endpoints
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		epShowBriefOneResp(resp, ifIDToStr)
@@ -197,7 +197,7 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print endpoints
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		epShowOneResp(resp)
@@ -240,7 +240,7 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print EPs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 
@@ -275,7 +275,7 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 
 			for _, hResp := range hRespMsg.Response {
 				if hResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-					fmt.Printf("HAL Returned non OK status. %v\n", hResp.ApiStatus)
+					fmt.Printf("Operation failed with %v error\n", hResp.ApiStatus)
 					continue
 				}
 				uplinkStr = fmt.Sprintf("uplink-%d", hResp.GetSpec().GetKeyOrHandle().GetInterfaceId())
@@ -314,7 +314,7 @@ func handleEpDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Print EPs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)

@@ -115,7 +115,7 @@ func l2segShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	// Print VRFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		l2segShowOneResp(resp)
@@ -171,7 +171,7 @@ func l2segShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		// Print Entries
 		for _, resp := range respMsg.Response {
 			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 				continue
 			}
 			multicastShowOifList(resp.GetStatus().GetBcastLst())
@@ -185,7 +185,7 @@ func l2segShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		// Print VRFs
 		for _, resp := range respMsg.Response {
 			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 				continue
 			}
 			l2segPdShowOneResp(resp)
@@ -231,7 +231,7 @@ func handlel2segDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Print L2Segments
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -486,7 +486,7 @@ func l2segIDGetWireEncap(id uint64) uint32 {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		return resp.GetSpec().GetWireEncap().GetEncapValue()

@@ -341,6 +341,48 @@ hal_prepare_rsp (hal_ret_t ret)
     case HAL_RET_LIF_NOT_FOUND:
         return types:: API_STATUS_NOT_FOUND;
         break;
+    case HAL_RET_QOS_CLASS_MTU_INVALID:
+        return types::API_STATUS_QOS_CLASS_MTU_INVALID;
+        break;
+    case HAL_RET_QOS_CLASS_XON_THRESHOLD_INVALID:
+        return types::API_STATUS_QOS_CLASS_XON_THRESHOLD_INVALID;
+        break;
+    case HAL_RET_QOS_CLASS_XOFF_THRESHOLD_INVALID:
+        return types::API_STATUS_QOS_CLASS_XOFF_THRESHOLD_INVALID;
+        break;
+    case HAL_RET_QOS_CLASS_SCHEDULER_NOT_SET:
+        return types::API_STATUS_QOS_CLASS_SCHEDULER_NOT_SET;
+        break;
+    case HAL_RET_QOS_CLASS_DWRR_INVALID:
+        return types::API_STATUS_QOS_CLASS_DWRR_INVALID;
+        break;
+    case HAL_RET_QOS_CLASS_QOS_GROUP_INVALID:
+        return types::API_STATUS_QOS_CLASS_QOS_GROUP_INVALID;
+        break;
+    case HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_NOT_SET:
+        return types::API_STATUS_QOS_CLASS_UPLINK_CLASS_MAP_NOT_SET;
+        break;
+    case HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_SET:
+        return types::API_STATUS_QOS_CLASS_UPLINK_CLASS_MAP_SET;
+        break;
+    case HAL_RET_QOS_CLASS_DOT1Q_PCP_INVALID:
+        return types::API_STATUS_QOS_CLASS_DOT1Q_PCP_INVALID;
+        break;
+    case HAL_RET_QOS_CLASS_IP_DSCP_INVALID:
+        return types::API_STATUS_QOS_CLASS_IP_DSCP_INVALID;
+        break;
+    case HAL_RET_QOS_CLASS_DOT1Q_PCP_MARKING_INVALID:
+        return types::API_STATUS_QOS_CLASS_DOT1Q_PCP_MARKING_INVALID;
+        break;
+    case HAL_RET_QOS_CLASS_IP_DSCP_MARKING_INVALID:
+        return types::API_STATUS_QOS_CLASS_IP_DSCP_MARKING_INVALID;
+        break;
+    case HAL_RET_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE:
+        return types::API_STATUS_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE;
+        break;
+    case HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE:
+        return types::API_STATUS_QOS_CLASS_IP_DSCP_ALREADY_IN_USE;
+        break;
     default:
         return types::API_STATUS_ERR;
         break;

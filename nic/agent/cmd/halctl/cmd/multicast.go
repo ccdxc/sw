@@ -104,7 +104,7 @@ func multicastShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 		// Print Entries
 		for _, resp := range respMsg.Response {
 			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 				continue
 			}
 			multicastShowOifList(resp.GetStatus().GetOifList())
@@ -116,7 +116,7 @@ func multicastShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 		// Print Entries
 		for _, resp := range respMsg.Response {
 			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 				continue
 			}
 			multicastShowOneResp(resp)
@@ -162,7 +162,7 @@ func handleMulticastDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Print multicasts
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)

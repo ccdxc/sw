@@ -100,7 +100,7 @@ func handleNwsecProfShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Print Security Profiles
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -170,7 +170,7 @@ func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Print Security Policy
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			fmt.Println("Policy Show not ok")
 			continue
 		}
@@ -225,7 +225,7 @@ func nwsecFlowGateShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Security Profiles
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		nwsecFlowGateShowOneResp(resp)

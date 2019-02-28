@@ -436,7 +436,7 @@ qos_class_spec_dump (QosClassSpec& spec)
 }
 
 static hal_ret_t
-validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
+validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group, QosClassResponse *rsp)
 {
     uint32_t mtu = spec.mtu();
     uint32_t xon_threshold;
@@ -451,7 +451,7 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
     if ((mtu < HAL_MIN_MTU) || (mtu > HAL_JUMBO_MTU)) {
         HAL_TRACE_ERR("mtu {} not within {}-{} bytes",
                       mtu, HAL_MIN_MTU, HAL_JUMBO_MTU);
-        return HAL_RET_INVALID_ARG;
+        return HAL_RET_QOS_CLASS_MTU_INVALID;
     }
 
     if (spec.has_pfc()) {
@@ -468,51 +468,51 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
             (xon_threshold > max_xon_threshold)) {
             HAL_TRACE_ERR("xon_threshold {} should be in the range {}-{} bytes",
                           xon_threshold, min_xon_threshold, max_xon_threshold);
-            return HAL_RET_INVALID_ARG;
+            return HAL_RET_QOS_CLASS_XON_THRESHOLD_INVALID;
         }
 
         if ((xoff_threshold < min_xoff_threshold) ||
             (xoff_threshold > max_xoff_threshold)) {
             HAL_TRACE_ERR("xoff_threshold {} should be in the range {}-{} bytes",
                           xoff_threshold, min_xoff_threshold, max_xoff_threshold);
-            return HAL_RET_INVALID_ARG;
+            return HAL_RET_QOS_CLASS_XOFF_THRESHOLD_INVALID;
         }
     }
 
     // Scheduler configuration should be set
     if (!spec.has_sched()) {
         HAL_TRACE_ERR("scheduler not set in request");
-        return HAL_RET_INVALID_ARG;
+        return HAL_RET_QOS_CLASS_SCHEDULER_NOT_SET;
     }
 
     if (spec.sched().has_dwrr() &&
         (spec.sched().dwrr().bw_percentage() > 100)) {
         HAL_TRACE_ERR("bw_percentage {} cannot be more than 100!",
                       spec.sched().dwrr().bw_percentage());
-        return HAL_RET_INVALID_ARG;
+        return HAL_RET_QOS_CLASS_DWRR_INVALID;
     }
 
     if (!valid_qos_group(qos_group)) {
         HAL_TRACE_ERR("Not valid qos group {}",
                       spec.key_or_handle().qos_group());
-        return HAL_RET_INVALID_ARG;
+        return HAL_RET_QOS_CLASS_QOS_GROUP_INVALID;
     }
     // Validate the uplink-class-map
     if (qos_group_is_user_defined(qos_group)) {
         if (!spec.has_class_map()) {
             HAL_TRACE_ERR("uplink class map not set");
-            return HAL_RET_INVALID_ARG;
+            return HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_NOT_SET;
         }
     } else if (spec.has_class_map()) {
         HAL_TRACE_ERR("uplink class map set for internal class");
-        return HAL_RET_INVALID_ARG;
+        return HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_SET;
     }
 
     if (spec.has_class_map()) {
         if (spec.class_map().dot1q_pcp() >= HAL_MAX_DOT1Q_PCP_VALS) {
             HAL_TRACE_ERR("Invalid dot1q_pcp {} in the uplink class map",
                           spec.class_map().dot1q_pcp());
-            return HAL_RET_INVALID_ARG;
+            return HAL_RET_QOS_CLASS_DOT1Q_PCP_INVALID;
         }
 
 
@@ -521,7 +521,7 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
             if (ip_dscp >= HAL_MAX_IP_DSCP_VALS) {
                 HAL_TRACE_ERR("Invalid ip_dscp {} in the uplink class map",
                               ip_dscp);
-                return HAL_RET_INVALID_ARG;
+                return HAL_RET_QOS_CLASS_IP_DSCP_INVALID;
             }
         }
     }
@@ -531,13 +531,13 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
             (spec.marking().dot1q_pcp() >= HAL_MAX_DOT1Q_PCP_VALS)) {
             HAL_TRACE_ERR("Invalid dot1q_pcp {} in marking",
                           spec.marking().dot1q_pcp());
-            return HAL_RET_INVALID_ARG;
+            return HAL_RET_QOS_CLASS_DOT1Q_PCP_MARKING_INVALID;
         }
         if (spec.marking().ip_dscp_rewrite_en() &&
             (spec.marking().ip_dscp() >= HAL_MAX_IP_DSCP_VALS)) {
             HAL_TRACE_ERR("Invalid ip_dscp {} in marking",
                           spec.marking().ip_dscp());
-            return HAL_RET_INVALID_ARG;
+            return HAL_RET_QOS_CLASS_IP_DSCP_MARKING_INVALID;
         }
     }
     return HAL_RET_OK;
@@ -556,7 +556,7 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("qos group not set in request");
+        HAL_TRACE_ERR("qos group not set in request"); 
         return HAL_RET_INVALID_ARG;
     }
 
@@ -573,7 +573,7 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
     }
 
     qos_group = qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
-    ret = validate_qos_class_spec(spec, qos_group);
+    ret = validate_qos_class_spec(spec, qos_group, rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("qos_class spec validation failed ret {}", ret);
         return ret;
@@ -592,7 +592,7 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
             if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.class_map().dot1q_pcp())) {
                 HAL_TRACE_ERR("Dot1q pcp {} is already in use",
                               spec.class_map().dot1q_pcp());
-                return HAL_RET_INVALID_ARG;
+                return HAL_RET_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE;
             }
         }
 
@@ -601,7 +601,7 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
                 if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.class_map().ip_dscp(i))) {
                     HAL_TRACE_ERR("IP dscp {} is already in use",
                                   spec.class_map().ip_dscp(i));
-                    return HAL_RET_INVALID_ARG;
+                    return HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE;
                 }
             }
         }
@@ -1032,7 +1032,7 @@ validate_qos_class_update (QosClassSpec& spec, QosClassResponse *rsp)
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
 
-    ret = validate_qos_class_spec(spec, qos_class->key.qos_group);
+    ret = validate_qos_class_spec(spec, qos_class->key.qos_group, rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("qos_class spec validation failed ret {}", ret);
         return ret;

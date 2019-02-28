@@ -179,7 +179,7 @@ func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		fmt.Printf("Delete qos class succeeded\n")
@@ -322,7 +322,7 @@ func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		fmt.Printf("Create qos class succeeded\n")
@@ -383,7 +383,7 @@ func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 
@@ -543,7 +543,7 @@ func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		for _, resp := range respMsg.Response {
 			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 				continue
 			}
 			fmt.Printf("Update qos class succeeded\n")
@@ -650,7 +650,7 @@ func handleQosStatsCmd(cmd *cobra.Command, args []string, inputQueue bool, outpu
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		qosQueueStatsPrint(resp, bufferOccupancy, peakOccupancy, queueDepth)
@@ -829,7 +829,7 @@ func handleQosShowCmd(cmd *cobra.Command, ofile *os.File) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -909,7 +909,7 @@ func qosShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		qosClassPrintOne(resp.GetSpec())
@@ -1073,7 +1073,7 @@ func handleCoppShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Print copp
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)

@@ -253,7 +253,7 @@ func pbPlatDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 		} else {
 			fmt.Printf("Pause set to: %t\n", pause)
 		}
@@ -300,7 +300,7 @@ func regShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 		} else {
 			fmt.Printf("%-12s%-12s\n",
 				resp.GetData().GetAddress(), resp.GetData().GetValue())
@@ -360,7 +360,7 @@ func regDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 		} else {
 			fmt.Printf("Register write success\n")
 		}
@@ -436,7 +436,7 @@ func datapathCacheDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 		} else {
 			fmt.Printf("HBM cache setup success\n")
 		}
@@ -519,7 +519,7 @@ func traceShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Trace Level
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		traceShowResp(resp)
@@ -567,7 +567,7 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Trace Level
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		traceShowResp(resp)
@@ -640,7 +640,7 @@ func flushLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Response
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
 		if cmd != nil {
@@ -710,7 +710,7 @@ func llcSetupCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 		} else {
 			str := strings.ToLower(strings.Replace(llcType.String(), "LLC_COUNTER_", "", -1))
 			str = strings.Replace(str, "_", "-", -1)
@@ -943,7 +943,7 @@ func testSendFinDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 		}
 	}
 }
