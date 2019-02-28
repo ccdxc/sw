@@ -53,10 +53,10 @@ nic/build/$ARCH/$PIPELINE/lib/libev.so.4                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4loader.so                   /nic/lib/
 nic/hal/third-party/judy/$ARCH/lib/libJudy.so.1                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkxcvrdriver.so                 /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libociapi_impl.so                   /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libociapi.so                        /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libocicore.so                       /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libociframework.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsapi_impl.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsapi.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdscore.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsframework.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblpmitree.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librfc.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
@@ -84,7 +84,7 @@ nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/
 nic/apollo/test/scale/scale_cfg.json                              /nic/conf
 nic/apollo/test/scale/run_scale_test_hw.sh                        /nic/tools/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_flow_test                 /nic/bin/
-nic/build/$ARCH/$PIPELINE/lib/libocitestutils.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdstestutils.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                       /nic/bin/
 
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so              /platform/lib/
