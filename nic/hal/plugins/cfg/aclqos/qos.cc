@@ -1231,7 +1231,7 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
                 if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.class_map().dot1q_pcp())) {
                     HAL_TRACE_ERR("Dot1q pcp {} is already in use",
                                   spec.class_map().dot1q_pcp());
-                    return HAL_RET_INVALID_ARG;
+                    return HAL_RET_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE;
                 }
             } else if (!spec_has_pcp) {
                 app_ctxt->dot1q_pcp_changed = true;
@@ -1251,7 +1251,7 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
                         if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.class_map().ip_dscp(i))) {
                             HAL_TRACE_ERR("IP dscp {} is already in use",
                                           spec.class_map().ip_dscp(i));
-                            return HAL_RET_INVALID_ARG;
+                            return HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE;
                         }
                     }
                 }
@@ -1271,7 +1271,7 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
         HAL_TRACE_ERR("{} class cannot be changed to {} class",
                       qos_class->no_drop ? "No drop" : "Drop",
                       spec.has_pfc() ? "No drop" : "Drop");
-        return HAL_RET_INVALID_ARG;
+        return HAL_RET_QOS_CLASS_DROP_NO_DROP_CHANGE_NOT_ALLOWED;
     }
 
     return HAL_RET_OK;

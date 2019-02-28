@@ -383,6 +383,9 @@ hal_prepare_rsp (hal_ret_t ret)
     case HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE:
         return types::API_STATUS_QOS_CLASS_IP_DSCP_ALREADY_IN_USE;
         break;
+    case HAL_RET_QOS_CLASS_DROP_NO_DROP_CHANGE_NOT_ALLOWED:
+        return types::API_STATUS_QOS_CLASS_DROP_NO_DROP_CHANGE_NOT_ALLOWED;
+        break;
     default:
         return types::API_STATUS_ERR;
         break;

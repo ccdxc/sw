@@ -250,21 +250,22 @@ do {                                                       \
     ENTRY(HAL_RET_INVALID_CTRL_SESSION_OP,    82,  "Invalid op on ALG control session") \
     ENTRY(HAL_RET_FTE_SPAN,                   83,  "fte span packet")                   \
     ENTRY(HAL_RET_SNAKE_TEST_NOT_FOUND,       84,  "snake test not found ")             \
-    ENTRY(HAL_RET_QOS_CLASS_MTU_INVALID,                85, "qos class mtu invalid")                    \
-    ENTRY(HAL_RET_QOS_CLASS_XON_THRESHOLD_INVALID,      86, "qos class xon threshold invalid")          \
-    ENTRY(HAL_RET_QOS_CLASS_XOFF_THRESHOLD_INVALID,     87, "qos class xoff threshold invalid")         \
-    ENTRY(HAL_RET_QOS_CLASS_SCHEDULER_NOT_SET,          88, "qos class scheduler not set")              \
-    ENTRY(HAL_RET_QOS_CLASS_DWRR_INVALID,               89, "qos class dwrr invalid")                   \
-    ENTRY(HAL_RET_QOS_CLASS_QOS_GROUP_INVALID,          90, "qos class qos group invalid")              \
-    ENTRY(HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_NOT_SET,   91, "qos class uplink class map not set")       \
-    ENTRY(HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_SET,       92, "qos class uplink class map set")           \
-    ENTRY(HAL_RET_QOS_CLASS_DOT1Q_PCP_INVALID,          93, "qos class dot1q pcp invalid")              \
-    ENTRY(HAL_RET_QOS_CLASS_IP_DSCP_INVALID,            94, "qos class ip dscp invalid")                \
-    ENTRY(HAL_RET_QOS_CLASS_DOT1Q_PCP_MARKING_INVALID,  95, "qos class dot1q pcp marking invalid")      \
-    ENTRY(HAL_RET_QOS_CLASS_IP_DSCP_MARKING_INVALID,    96, "qos class ip dscp marking invalid")        \
-    ENTRY(HAL_RET_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE,   97, "qos class dot1q pcp already in use")       \
-    ENTRY(HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE,     98, "qos class ip dscp already in use")         \
-    ENTRY(HAL_RET_ERR,                                  255, "catch all generic error")
+    ENTRY(HAL_RET_QOS_CLASS_MTU_INVALID,                        85, "qos class mtu invalid")                        \
+    ENTRY(HAL_RET_QOS_CLASS_XON_THRESHOLD_INVALID,              86, "qos class xon threshold invalid")              \
+    ENTRY(HAL_RET_QOS_CLASS_XOFF_THRESHOLD_INVALID,             87, "qos class xoff threshold invalid")             \
+    ENTRY(HAL_RET_QOS_CLASS_SCHEDULER_NOT_SET,                  88, "qos class scheduler not set")                  \
+    ENTRY(HAL_RET_QOS_CLASS_DWRR_INVALID,                       89, "qos class dwrr invalid")                       \
+    ENTRY(HAL_RET_QOS_CLASS_QOS_GROUP_INVALID,                  90, "qos class qos group invalid")                  \
+    ENTRY(HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_NOT_SET,           91, "qos class uplink class map not set")           \
+    ENTRY(HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_SET,               92, "qos class uplink class map set")               \
+    ENTRY(HAL_RET_QOS_CLASS_DOT1Q_PCP_INVALID,                  93, "qos class dot1q pcp invalid")                  \
+    ENTRY(HAL_RET_QOS_CLASS_IP_DSCP_INVALID,                    94, "qos class ip dscp invalid")                    \
+    ENTRY(HAL_RET_QOS_CLASS_DOT1Q_PCP_MARKING_INVALID,          95, "qos class dot1q pcp marking invalid")          \
+    ENTRY(HAL_RET_QOS_CLASS_IP_DSCP_MARKING_INVALID,            96, "qos class ip dscp marking invalid")            \
+    ENTRY(HAL_RET_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE,           97, "qos class dot1q pcp already in use")           \
+    ENTRY(HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE,             98, "qos class ip dscp already in use")             \
+    ENTRY(HAL_RET_QOS_CLASS_DROP_NO_DROP_CHANGE_NOT_ALLOWED,    99, "qos class drop no-drop change not allowed")    \
+    ENTRY(HAL_RET_ERR,                                          255, "catch all generic error")
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)
 DEFINE_ENUM_TO_STR(hal_ret_t, HAL_RET_ENTRIES)
