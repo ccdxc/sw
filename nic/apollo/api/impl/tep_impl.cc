@@ -143,6 +143,10 @@ tep_impl::read_hw(pds_tep_info_t *info) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 #define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
+#define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
+#define nh_tx_action              action_u.nexthop_tx_nexthop_info
+// TODO: fix this when fte plugin is available
+#define PDS_REMOTE_TEP_MAC        0x0E0D0A0B0200
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                  ret;
@@ -150,30 +154,62 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     tep_tx_actiondata_t        tep_tx_data = { 0 };
     nexthop_tx_actiondata_t    nh_tx_data = { 0 };
 
+    // program TEP Tx table
     tep_spec = &obj_ctxt->api_params->tep_spec;
-    tep_tx_data.action_id = TEP_TX_MPLS_UDP_TEP_TX_ID;
-    tep_tx_data.tep_tx_mpls_udp_action.dipo = tep_spec->key.ip_addr;
+    switch (tep_spec->type) {
+    case PDS_ENCAP_TYPE_GW_ENCAP:
+    case PDS_ENCAP_TYPE_VNIC:
+        tep_tx_data.action_id = TEP_TX_MPLS_UDP_TEP_TX_ID;
+        tep_tx_data.tep_tx_mpls_udp_action.dipo = tep_spec->key.ip_addr;
+        MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_mpls_udp_action.dmac,
+                           PDS_REMOTE_TEP_MAC);
+        break;
 
-    // TODO: fix this when fte plugin is available
-    MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_mpls_udp_action.dmac, 0x0E0D0A0B0200);
+    case PDS_ENCAP_TYPE_VXLAN:
+        tep_tx_data.action_id = TEP_TX_VXLAN_TEP_TX_ID;
+        tep_tx_data.tep_tx_vxlan_action.dipo = tep_spec->key.ip_addr;
+        MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_vxlan_action.dmac,
+                           PDS_REMOTE_TEP_MAC);
+        break;
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
     ret = tep_impl_db()->tep_tx_tbl()->insert_withid(&tep_tx_data, hw_id_);
-    SDK_ASSERT(ret == SDK_RET_OK);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("TEP Tx table programming failed for TEP %s, "
+                      "TEP hw id %u, err %u", api_obj->key2str().c_str(),
+                      hw_id_, ret);
+        return ret;
+    }
 
+    // program nexthop table
     nh_tx_data.action_id = NEXTHOP_TX_NEXTHOP_INFO_ID;
     nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index = hw_id_;
-    if (tep_spec->type == PDS_ENCAP_TYPE_GW_ENCAP) {
-        nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = GW_ENCAP;
-    } else if (tep_spec->type == PDS_ENCAP_TYPE_VNIC) {
-        nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = VNIC_ENCAP;
+    switch (tep_spec->type) {
+    case PDS_ENCAP_TYPE_GW_ENCAP:
+        nh_tx_data.nh_tx_action.encap_type = GW_ENCAP;
+        break;
+    case PDS_ENCAP_TYPE_VNIC:
+        nh_tx_data.nh_tx_action.encap_type = VNIC_ENCAP;
+        break;
+    case PDS_ENCAP_TYPE_VXLAN:
+        nh_tx_data.nh_tx_action.encap_type = 0;    // don't care
+        break;
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
     }
-    // TODO: fix this once p4/asm is fixed
-    //nh_tx_data.action_u.nexthop_tx_nexthop_info.dst_slot_id = 0xAB;
     ret = tep_impl_db()->nh_tx_tbl()->insert(&nh_tx_data, (uint32_t *)&nh_id_);
-    SDK_ASSERT(ret == SDK_RET_OK);
-
-    PDS_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nh id",
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Nexthop Tx table programming failed for TEP %s, "
+                      "nexthop hw id %u, err %u", api_obj->key2str().c_str(),
+                      hw_id_, ret);
+    }
+    PDS_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nexthop id %u",
                     ipv4addr2str(tep_spec->key.ip_addr),
-                    0x0E0D0A0B0200, hw_id_, nh_id_);
+                    PDS_REMOTE_TEP_MAC, hw_id_, nh_id_);
+
     return ret;
 }
 
