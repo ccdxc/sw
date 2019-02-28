@@ -284,6 +284,7 @@ static hal_ret_t parse_dns_questions(sfw_info_t *sfw_info, uint8_t *pkt,
 
         label_len = pkt[name_offset++];
         label = (char *)&pkt[name_offset];
+        HAL_TRACE_DEBUG("Name Len: {} Name offset: {} pkt_len: {}", name_len, name_offset, len);
         name_len += name_offset;
         while (label != NULL && label_len != 0)
         {

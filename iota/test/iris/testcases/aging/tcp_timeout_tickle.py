@@ -114,7 +114,7 @@ def Trigger(tc):
     term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
     tc.resp1 = api.Trigger_AggregateCommandsResponse(trig_resp1, term_resp1)
    
-    if cmd.stdout != '' and (tc.itickles == 0 or tc.rtickles == 0):
+    if cmd.stdout != '' and (tc.itickles == 0 and tc.rtickles == 0):
         req3 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
         api.Trigger_AddNaplesCommand(req3, naples.node_name, "sleep 5", timeout=300)
@@ -153,7 +153,7 @@ def Verify(tc):
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             result = api.types.status.FAILURE
 
-    if tc.itickles == 0 or tc.rtickles == 0:
+    if tc.itickles == 0 and tc.rtickles == 0:
        result = api.types.status.FAILURE
 
     return result        

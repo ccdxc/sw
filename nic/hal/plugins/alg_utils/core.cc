@@ -533,6 +533,14 @@ void alg_state::cleanup_l4_sess(l4_alg_status_t *l4_sess) {
     dllist_del(&l4_sess->l4_sess_lentry);
     if (l4_sess_cleanup_hdlr_)
         l4_sess_cleanup_hdlr_(l4_sess);
+
+    // Cleanup the tcp buffer if we got a buffer
+    // to reassemble (TCP based ALGs)
+    if (l4_sess->tcpbuf[DIR_IFLOW] != NULL)
+        l4_sess->tcpbuf[DIR_IFLOW]->free();
+    if (l4_sess->tcpbuf[DIR_RFLOW] != NULL)
+        l4_sess->tcpbuf[DIR_RFLOW]->free();
+
     l4_sess_slab()->free(l4_sess);
 }
 
