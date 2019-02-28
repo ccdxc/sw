@@ -44,15 +44,9 @@ set_hal_status (hal::hal_status_t hal_status, delphi::SdkPtr sdk)
     ::hal::HalState       state;
 
     state = hal_state(hal_status);
-    status = dobj::HalStatus::FindObject(sdk);
-    if (status) {
-        status->set_state(state);
-        sdk->QueueUpdate(status);
-    } else {
-        status = std::make_shared<dobj::HalStatus>();
-        status->set_state(state);
-        sdk->QueueUpdate(status);
-    }
+    status = std::make_shared<dobj::HalStatus>();
+    status->set_state(state);
+    sdk->QueueUpdate(status);
 }
 
 }    // namespace svc
