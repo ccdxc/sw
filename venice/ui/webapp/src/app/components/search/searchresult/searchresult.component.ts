@@ -4,7 +4,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { Utility } from '@app/common/Utility';
 import { SearchUtil } from '@components/search/SearchUtil';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { SearchResultPayload } from '@app/components/search';
+import { SearchResultPayload , SearchResultCategoryUI} from '@app/components/search';
 
 import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
@@ -32,7 +32,7 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   public static LAYOUT_ROW: string = 'Row';
   public static LAYOUT_GRID: string = 'Grid';
   searchResult: any;
-  categories: any[];
+  categories: SearchResultCategoryUI[];
 
   searchSearchResponse: SearchSearchResponse;
   selectedCategory: any;
@@ -100,7 +100,6 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   }
 
   onLayoutDropDownChange(sbutton: any) {
-    // w
     this.layoutGrid = (sbutton.model === SearchresultComponent.LAYOUT_GRID);
   }
 
@@ -109,6 +108,9 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    * It process the search-result and let UI render data.
    * Structure-wise
    *   tenant -> category -> kind -> entries[]
+   *
+   * We want to build the catetory data structure.  We want to avoid dynamically compute data in html template.  It will cause flickering.
+   *
    */
   getSearchResult() {
     this.categories = [];
@@ -131,17 +133,20 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
         const cat = tenants[tenantKeys[i]].categories;
         const catKeys = Object.keys(cat);
         for (let j = 0; j < catKeys.length; j++) {
-          const catUIObj = {
+          const catUIObj: SearchResultCategoryUI = {
             name: catKeys[j],
             value: cat[catKeys[j]],
             tenant: tenantKeys[i]
           };
+          const catkinds: any = this.getKinds(catUIObj);
+          catUIObj.kinds = catkinds;
+          catUIObj.counts = this.getCategoryCounts(catUIObj);
           this.categories.push(catUIObj);
         }
       }
       // refresh the selected category and selected kind
       this.selectedCategory = this.categories[0];
-      const kinds = this.getKinds(this.selectedCategory);
+      const kinds =  this.selectedCategory.kinds;
       if (kinds && kinds.length > 0) {
         this.selectedKind = kinds[0];
       }
@@ -193,10 +198,10 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   }
 
   /**
-   * This API serves html template.
+   * This API computes the kinds of a category. Don't use it in html template
    * @param category
    */
-  getKinds(category): any {
+  getKinds(category: SearchResultCategoryUI): any {
     const kinds = [];
     const cat = category.value.kinds;
     const kindKeys = Object.keys(cat);
@@ -218,8 +223,8 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    *
    * @param category
    */
-  getCategoryCount(category) {
-    const kinds = this.getKinds(category);
+  getCategoryCounts(category) {
+    const kinds = category.kinds;
     let counts = 0;
     kinds.forEach(kind => {
       counts += kind.value.entries.length;
@@ -258,7 +263,7 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   onTabChange($event) {
     const selectedTabIndex = $event;
     this.selectedCategory = this.categories[selectedTabIndex];
-    const kinds = this.getKinds(this.selectedCategory);
+    const kinds = this.selectedCategory.kinds;
     if (kinds && kinds[0]) {
       this.selectedKind = kinds[0];
     }

@@ -1,5 +1,11 @@
+
+@import 'src/global-mixins';
+
+.searchresult {    
+  @include primary-font();
+}
+
 .searchresult-main-div {
-  font-family: "Fira Sans Condensed";
   color: #676763;
 }
 

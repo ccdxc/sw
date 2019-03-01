@@ -25,13 +25,12 @@
         </div>
     </div>
     <app-penuitabs fxFlex="none" *ngIf="categories && categories.length>0" (selectedIndexChange)="onTabChange($event)">
-        <app-penuitab title="{{getCategoryTitle(category)}}" [count]="getCategoryCount(category)" *ngFor="let category of categories">
+        <app-penuitab title="{{getCategoryTitle(category)}}" [count]="category.counts" *ngFor="let category of categories">
             <ng-template>
                 <div class="searchresult-main-div">
                     <div class="searchresult-filterby-div">Filter by kind</div>
                     <div class="searchresult-button-div">
-
-                        <p-selectButton [options]="getKinds(category)" [(ngModel)]="selectedKind" optionLabel="name"
+                        <p-selectButton [options]="category.kinds" [(ngModel)]="selectedKind" optionLabel="name"
                             dataKey="name">
                             <ng-template let-kind>
                                 <div class="searchresult-kind-template">

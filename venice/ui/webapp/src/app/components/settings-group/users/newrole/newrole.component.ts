@@ -25,6 +25,14 @@ import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging'
  *
  *  When creating a new ROLE, we use commit-buffer to create a role-binding.
  *  Say, user create a "r1" role, a role-binding "r1_binding" will be created along the way. Admin can then edit "r1_binding".
+ *
+ *  role.spec.permission[i] (group and kind have inter-dependencies). Once a group is selected, kind options will chagne accordingly.
+ *  It is like changing a state, the cities options will change.
+ *  To prevent excessive computing kind options,  we introduce role.spec.permission[i][NewroleComponent.KINDOPTIONS]
+ *  see this.onGroupChange($event, permission, index) and htmm template =>
+ *  <p-dropdown class="newrole-severity" fxFlex="170px" formControlName="resource-kind" styleClass="newrole-font"
+ *   [options]="permission.kindOptions" placeholder="kind..."  (onChange)="onKindChange($event,permission)" ></p-dropdown>
+ *
  */
 @Component({
   selector: 'app-newrole',
@@ -35,6 +43,7 @@ import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging'
 })
 export class NewroleComponent extends UsersComponent implements OnInit, OnDestroy, OnChanges {
 
+  static KINDOPTIONS = 'kindOptions';
   newAuthRole: AuthRole;
 
   @Input() selectedAuthRole: AuthRole;
@@ -61,9 +70,6 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   }
 
   ngOnInit() {
-    if (!this.newAuthRole) {
-      this.setupData();
-    }
   }
 
   setupData() {
@@ -75,7 +81,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
 
       const permissions = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
       if (permissions.length === 0) {
-        permissions.insert(0, new AuthPermission().$formGroup);
+        this.addPermission();
       }
     }
   }
@@ -131,7 +137,13 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
         permissions[i]['resource-names'] = rnValues;
       }
     }
-    return new AuthRole(newRole);
+    const newAuthRole = new AuthRole(newRole);
+    // populate permission kind options
+    const permissionControls = newAuthRole.$formGroup.get(['spec', 'permissions'])['controls'];
+    for (let j = 0; j < permissionControls.length ; j++) {
+      permissionControls[j][NewroleComponent.KINDOPTIONS] =  this.getKindOptions(permissionControls[j]);
+    }
+    return newAuthRole;
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -283,7 +295,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    */
   addPermission() {
     const permissionArray = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
-    permissionArray.insert(0, new AuthPermission().$formGroup);
+    const newPermission = new AuthPermission();
+    newPermission[NewroleComponent.KINDOPTIONS] = [];
+    permissionArray.insert(0, newPermission.$formGroup);
   }
 
   /**
@@ -302,7 +316,11 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    * @param permissionIndex
    */
   onGroupChange($event, permission, permissionIndex) {
-    const selectedGroup = $event.value; // per p-dropdown API doc
+    if (!permission[NewroleComponent.KINDOPTIONS]) {
+      permission[NewroleComponent.KINDOPTIONS] = [];
+    }
+    permission[NewroleComponent.KINDOPTIONS].length = 0;
+    permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
   }
   /**
    * This API serves html template

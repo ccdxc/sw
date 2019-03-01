@@ -67,17 +67,17 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   setDefaultToolbar() {
-    const currToolbar = this.controllerService.getToolbarData();
-    currToolbar.buttons = [
-      {
-        cssClass: 'global-button-primary techsupportrequests-toolbar-button',
-        text: 'ADD TECH-SUPPORT REQUEST',
-        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-        callback: () => { this.createNewObject(); }
-      },
-    ];
-    currToolbar.breadcrumb = [{ label: 'Tech Supports', url: Utility.getBaseUIUrl() + 'monitoring/techsupport' }];
-    this.controllerService.setToolbarData(currToolbar);
+    this.controllerService.setToolbarData({
+      buttons: [
+        {
+          cssClass: 'global-button-primary techsupportrequests-toolbar-button',
+          text: 'ADD TECH-SUPPORT REQUEST',
+          computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+          callback: () => { this.createNewObject(); }
+        },
+      ],
+      breadcrumb: [{ label: 'Tech Supports', url: Utility.getBaseUIUrl() + 'monitoring/techsupport' }]
+    });
   }
 
   getTechSupportRequests() {

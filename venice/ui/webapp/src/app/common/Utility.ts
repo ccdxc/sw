@@ -117,7 +117,7 @@ export class Utility {
   }
 
   static getMacAddress(): string {
-    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function() {
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function () {
       return '0123456789ABCDEF'.charAt(Math.floor(Math.random() * 16));
     });
   }
@@ -239,7 +239,7 @@ export class Utility {
 
   // encode(decode) html text into html entity
   static decodeHtmlEntity(str: string) {
-    return str.replace(/&#(\d+);/g, function(match, dec) {
+    return str.replace(/&#(\d+);/g, function (match, dec) {
       return String.fromCharCode(dec);
     });
   }
@@ -253,7 +253,7 @@ export class Utility {
   }
 
   static escape(s): any {
-    return s.replace(/[&"<>]/g, function(c) {
+    return s.replace(/[&"<>]/g, function (c) {
       return {
         '&': '&amp;',
         '"': '&quot;',
@@ -602,14 +602,14 @@ export class Utility {
   public static stringInject(str, data): string {
     if (typeof str === 'string' && (data instanceof Array)) {
 
-      return str.replace(/({\d})/g, function(i) {
+      return str.replace(/({\d})/g, function (i) {
         return data[i.replace(/{/, '').replace(/}/, '')];
       });
     } else if (typeof str === 'string' && (data instanceof Object)) {
 
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
-          return str.replace(/({([^}]+)})/g, function(i) {
+          return str.replace(/({([^}]+)})/g, function (i) {
             i.replace(/{/, '').replace(/}/, '');
             if (!data[key]) {
               return i;
@@ -799,6 +799,16 @@ export class Utility {
         return 'security/securityapps';
       case 'SGPolicy':
         return 'security/sgpolicies';
+      case 'AuditEvent':
+        return 'monitoring/auditevents';
+      case 'FwlogPolicy':
+        return 'monitoring/fwlogs/fwlogpolicies';
+      case 'FlowExportPolicy':
+        return 'monitoring/flowexport';
+      case 'User':
+      case 'Role':
+      case 'RoleBinding':
+        return 'settings/users';
       default:
         return (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }

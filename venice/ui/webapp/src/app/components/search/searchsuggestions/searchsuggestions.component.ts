@@ -18,6 +18,8 @@ export class SearchsuggestionsComponent implements OnInit, OnChanges {
   highlightOption: any;
   highlightOptionChanged = false;
 
+  _lastHighlightOption: any;
+
   constructor() { }
 
   ngOnInit() { }
@@ -125,6 +127,30 @@ export class SearchsuggestionsComponent implements OnInit, OnChanges {
       option: option
     }
     );
+  }
+
+  /**
+   * This API serves HTML template.
+   * Search-Suggestion panel may have option highlighted.
+   * User can simply move mouse out to un-hightlight item.
+   */
+  onMouseOut($event) {
+    if (this.highlightOption) {
+       this._lastHighlightOption = this.highlightOption;
+       this.highlightOption = null;
+    }
+  }
+
+  /**
+   * This API serves HTML template.
+   * Search-Suggestion panel may have option highlighted.
+   * User can simply move mouse over to restore hightlight item.
+   */
+  onMouseOver($event) {
+    if (this._lastHighlightOption) {
+      this.highlightOption = this._lastHighlightOption;
+      this._lastHighlightOption = null;
+   }
   }
 
 }

@@ -84,3 +84,12 @@ export interface ExamineCategoryOrKindResult {
   error: SearchInputErrors;
   type: string;
 }
+
+/** This interface is used in SearchResult. It is a UI model */
+export interface SearchResultCategoryUI {
+  name: string;
+  value: any[any];
+  tenant: string;
+  kinds?: any[];
+  counts?: number;
+}

@@ -89,6 +89,9 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
         this.unbindDocumentClickListener();
       }
     }
+    if (this._suggestionWidget) {
+      this._suggestionWidget.highlightOption = null;
+    }
   }
 
   /**

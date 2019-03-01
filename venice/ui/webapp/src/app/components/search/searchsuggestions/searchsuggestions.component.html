@@ -1,5 +1,5 @@
-<div class="searchsuggestion">
-    <ul class="ui-autocomplete-items ui-autocomplete-list ui-widget-content ui-widget ui-corner-all ui-helper-reset">
+ <div class="searchsuggestion">
+    <ul class="ui-autocomplete-items ui-autocomplete-list ui-widget-content ui-widget ui-corner-all ui-helper-reset" ((mouseover)="onMouseOver($event)" (mouseout)="onMouseOut($event)">
         <li *ngFor="let option of suggestions; let idx = index" class="searchsuggestion-option-li" tabindex="-1"
              (mouseenter)="highlightOption=option" 
             (click)="onOptionClick($event, option)"  
