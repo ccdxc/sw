@@ -16,18 +16,6 @@ func TestInterfacesCreateDelete(t *testing.T) {
 	defer ag.Stop()
 
 	existingIfLen := len(ag.ListInterface())
-	// lif
-	lif := &netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testLif",
-		},
-		Spec: netproto.InterfaceSpec{
-			Type: "LIF",
-		},
-	}
 
 	// ENIC
 	enic := &netproto.Interface{
@@ -42,29 +30,16 @@ func TestInterfacesCreateDelete(t *testing.T) {
 		},
 	}
 
-	// create lif
-	err := ag.CreateInterface(lif)
-	AssertOk(t, err, "Error creating lif")
-	intf, err := ag.FindInterface(lif.ObjectMeta)
-	AssertOk(t, err, "LIF was not found in DB")
-	Assert(t, intf.Name == "testLif", "Lif names did not match", intf)
-
 	// create enic
-	err = ag.CreateInterface(enic)
+	err := ag.CreateInterface(enic)
 	AssertOk(t, err, "Error creating ENIC")
-	intf, err = ag.FindInterface(enic.ObjectMeta)
+	intf, err := ag.FindInterface(enic.ObjectMeta)
 	AssertOk(t, err, "ENIC was not found in DB")
 	Assert(t, intf.Name == "testEnic", "Enic names did not match", intf)
 
 	// verify list api works
 	intfList := ag.ListInterface()
-	Assert(t, len(intfList) == 2+existingIfLen, "Incorrect number of interfaces")
-
-	// delete lif
-	err = ag.DeleteInterface(lif.Tenant, lif.Namespace, lif.Name)
-	AssertOk(t, err, "Error deleting lif")
-	intf, err = ag.FindInterface(lif.ObjectMeta)
-	Assert(t, err != nil, "LIF found despite delete")
+	Assert(t, len(intfList) == 1+existingIfLen, "Incorrect number of interfaces")
 
 	// delete enic
 	err = ag.DeleteInterface(enic.Tenant, enic.Namespace, enic.Name)
@@ -85,23 +60,6 @@ func TestInterfaceUpdate(t *testing.T) {
 
 	existingIfLen := len(ag.ListInterface())
 
-	// lif
-	lif := &netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testLif",
-		},
-		Spec: netproto.InterfaceSpec{
-			Type:        "LIF",
-			AdminStatus: "UP",
-		},
-		Status: netproto.InterfaceStatus{
-			OperStatus: "UP",
-		},
-	}
-
 	// ENIC
 	enic := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
@@ -119,32 +77,12 @@ func TestInterfaceUpdate(t *testing.T) {
 		},
 	}
 
-	// create lif
-	err := ag.CreateInterface(lif)
-	AssertOk(t, err, "Error creating lif")
-	intf, err := ag.FindInterface(lif.ObjectMeta)
-	AssertOk(t, err, "LIF was not found in DB")
-	Assert(t, intf.Name == "testLif", "Lif names did not match", intf)
-
 	// create enic
-	err = ag.CreateInterface(enic)
+	err := ag.CreateInterface(enic)
 	AssertOk(t, err, "Error creating ENIC")
-	intf, err = ag.FindInterface(enic.ObjectMeta)
+	intf, err := ag.FindInterface(enic.ObjectMeta)
 	AssertOk(t, err, "ENIC was not found in DB")
 	Assert(t, intf.Name == "testEnic", "Enic names did not match", intf)
-
-	// update interfaces statuses to be down
-	downLif := &netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testLif",
-		},
-		Spec: netproto.InterfaceSpec{
-			AdminStatus: "DOWN",
-		},
-	}
 
 	downEnic := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
@@ -158,13 +96,6 @@ func TestInterfaceUpdate(t *testing.T) {
 		},
 	}
 
-	// update lif
-	err = ag.UpdateInterface(downLif)
-	AssertOk(t, err, "Error updating lif")
-	intf, err = ag.FindInterface(downLif.ObjectMeta)
-	AssertOk(t, err, "LIF not found in DB")
-	AssertEquals(t, "DOWN", intf.Spec.AdminStatus, "Expected LIF to be down")
-
 	// update enic
 	err = ag.UpdateInterface(downEnic)
 	AssertOk(t, err, "Error updating ENIC")
@@ -174,7 +105,7 @@ func TestInterfaceUpdate(t *testing.T) {
 
 	// verify list api works.
 	intfList := ag.ListInterface()
-	Assert(t, len(intfList) == 2+existingIfLen, "Incorrect number of interfaces")
+	Assert(t, len(intfList) == 1+existingIfLen, "Incorrect number of interfaces")
 }
 
 func TestDuplicateInterfaceCreate(t *testing.T) {
@@ -183,16 +114,16 @@ func TestDuplicateInterfaceCreate(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
-	// lif
-	lif := &netproto.Interface{
+	// enic
+	enic := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testLif",
+			Name:      "testENIC",
 		},
 		Spec: netproto.InterfaceSpec{
-			Type:        "LIF",
+			Type:        "ENIC",
 			AdminStatus: "UP",
 		},
 		Status: netproto.InterfaceStatus{
@@ -201,14 +132,14 @@ func TestDuplicateInterfaceCreate(t *testing.T) {
 	}
 
 	// create lif
-	err := ag.CreateInterface(lif)
-	AssertOk(t, err, "Error creating lif")
-	intf, err := ag.FindInterface(lif.ObjectMeta)
-	AssertOk(t, err, "LIF was not found in DB")
-	Assert(t, intf.Name == "testLif", "Lif names did not match", intf)
+	err := ag.CreateInterface(enic)
+	AssertOk(t, err, "Error creating enic")
+	intf, err := ag.FindInterface(enic.ObjectMeta)
+	AssertOk(t, err, "ENIC was not found in DB")
+	Assert(t, intf.Name == "testENIC", "ENIC names did not match", intf)
 
-	// create lif again
-	err = ag.CreateInterface(lif)
+	// create enic again
+	err = ag.CreateInterface(enic)
 	AssertOk(t, err, "Duplicate interface create failed when we expect it to be successful.")
 
 	// verify duplicate interface name with different content does not succeed
@@ -216,7 +147,7 @@ func TestDuplicateInterfaceCreate(t *testing.T) {
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
-			Name:   "testLif",
+			Name:   "testENIC",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type: "ENIC",

@@ -10,26 +10,31 @@ import (
 )
 
 // CreatePort will create a Port Object in HAL
-func (hd *Datapath) CreatePort(port *netproto.Port) (*netproto.Port, error) {
-	portSpeed, autoNegEnable := hd.convertPortSpeed(port.Spec.Speed)
-	portType, fecType := hd.convertPortTypeFec(port.Spec.Type)
-	portReqMsg := &halproto.PortRequestMsg{
-		Request: []*halproto.PortSpec{
-			{
-				KeyOrHandle: &halproto.PortKeyHandle{
-					KeyOrHandle: &halproto.PortKeyHandle_PortId{
-						PortId: uint32(port.Status.PortID),
-					},
+func (hd *Datapath) CreatePort(ports ...*netproto.Port) error {
+	var req []*halproto.PortSpec
+	for _, p := range ports {
+		portSpeed, autoNegEnable := hd.convertPortSpeed(p.Spec.Speed)
+		portType, fecType := hd.convertPortTypeFec(p.Spec.Type)
+		halPortSpec := halproto.PortSpec{
+			KeyOrHandle: &halproto.PortKeyHandle{
+				KeyOrHandle: &halproto.PortKeyHandle_PortId{
+					PortId: uint32(p.Status.PortID),
 				},
-				AdminState:    halproto.PortAdminState_PORT_ADMIN_STATE_UP,
-				PortSpeed:     portSpeed,
-				PortType:      portType,
-				NumLanes:      port.Spec.Lanes,
-				AutoNegEnable: autoNegEnable,
-				FecType:       fecType,
-				Pause:         halproto.PortPauseType_PORT_PAUSE_TYPE_LINK,
 			},
-		},
+			AdminState:    halproto.PortAdminState_PORT_ADMIN_STATE_UP,
+			PortSpeed:     portSpeed,
+			PortType:      portType,
+			NumLanes:      p.Spec.Lanes,
+			AutoNegEnable: autoNegEnable,
+			FecType:       fecType,
+			Pause:         halproto.PortPauseType_PORT_PAUSE_TYPE_LINK,
+		}
+
+		req = append(req, &halPortSpec)
+
+	}
+	portReqMsg := &halproto.PortRequestMsg{
+		Request: req,
 	}
 
 	// create port object
@@ -37,11 +42,11 @@ func (hd *Datapath) CreatePort(port *netproto.Port) (*netproto.Port, error) {
 		resp, err := hd.Hal.PortClient.PortCreate(context.Background(), portReqMsg)
 		if err != nil {
 			log.Errorf("Error creating port. Err: %v", err)
-			return port, err
+			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
-			return port, fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 		log.Infof("Received RESP from HAL: %v", resp.Response[0])
 		//port.Status.OperStatus = convertPortOperStatus(resp.Response[0].Status.OperStatus)
@@ -49,10 +54,10 @@ func (hd *Datapath) CreatePort(port *netproto.Port) (*netproto.Port, error) {
 		_, err := hd.Hal.PortClient.PortCreate(context.Background(), portReqMsg)
 		if err != nil {
 			log.Errorf("Error creating port. Err: %v", err)
-			return port, err
+			return err
 		}
 	}
-	return port, nil
+	return nil
 }
 
 // UpdatePort updates a port in the datapath

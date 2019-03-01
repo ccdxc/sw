@@ -82,24 +82,8 @@ func (ds *delphidpTestSuite) TestDelphiInterface(t *C) {
 		},
 	}
 
-	// lif
-	lif := &netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testLif",
-		},
-		Spec: netproto.InterfaceSpec{
-			Type: "LIF",
-		},
-		Status: netproto.InterfaceStatus{
-			InterfaceID: 200,
-		},
-	}
-
 	// create an interface
-	err := ds.datapath.CreateInterface(intf, lif, nil, nil)
+	err := ds.datapath.CreateInterface(intf)
 	AssertOk(t, err, "Error creating interface in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -147,22 +131,6 @@ func (ds *delphidpTestSuite) TestDelphiInterface(t *C) {
 }
 
 func (ds *delphidpTestSuite) TestDelphiUplinkInterface(t *C) {
-	// interface
-	intf := &netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testUplink",
-		},
-		Spec: netproto.InterfaceSpec{
-			Type: "UPLINK_ETH",
-		},
-		Status: netproto.InterfaceStatus{
-			InterfaceID: 100,
-		},
-	}
-
 	// lif
 	port := &netproto.Port{
 		TypeMeta: api.TypeMeta{Kind: "Port"},
@@ -179,8 +147,25 @@ func (ds *delphidpTestSuite) TestDelphiUplinkInterface(t *C) {
 		},
 	}
 
+	// interface
+	intf := &netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testUplink",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "UPLINK_ETH",
+		},
+		Status: netproto.InterfaceStatus{
+			InterfaceID:  100,
+			UplinkPortID: uint32(port.Status.PortID),
+		},
+	}
+
 	// create an interface
-	err := ds.datapath.CreateInterface(intf, nil, port, nil)
+	err := ds.datapath.CreateInterface(intf)
 	AssertOk(t, err, "Error creating interface in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {

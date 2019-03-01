@@ -87,7 +87,7 @@ func TestInterfaceDelete(t *testing.T) {
 			Name:      "testDeleteInterface",
 		},
 		Spec: netproto.InterfaceSpec{
-			Type:        "LIF",
+			Type:        "ENIC",
 			AdminStatus: "UP",
 		},
 	}

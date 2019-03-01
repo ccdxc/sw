@@ -35,7 +35,7 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 		return nil
 	}
 
-	ns, err := na.FindNamespace(intf.Tenant, intf.Namespace)
+	_, err = na.FindNamespace(intf.Tenant, intf.Namespace)
 	if err != nil {
 		return err
 	}
@@ -51,22 +51,19 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 	// Perform interface associations, currently only ENIC interfaces supported as
 	switch intf.Spec.Type {
 	case "ENIC":
-		if len(intf.Spec.LifName) != 0 {
-			lif, ok = na.findIntfByName(intf.Spec.LifName)
-		} else {
-			lifCount, err := na.countIntfs("LIF")
-			if err != nil {
-				log.Errorf("could not enumerate lifs created")
-				return err
-			}
-			// lifIndex finds an available lif. Uses % operator to ensure uniform distribution
-			intfOffset := intf.Status.InterfaceID % lifCount
-			// lif ids start from 1
-			if intfOffset == 0 {
-				intfOffset++
-			}
-			lif, ok = na.findIntfByName(fmt.Sprintf("lif%d", intfOffset))
+
+		lifCount, err := na.countIntfs("LIF")
+		if err != nil {
+			log.Errorf("could not enumerate lifs created")
+			return err
 		}
+		// lifIndex finds an available lif. Uses % operator to ensure uniform distribution
+		intfOffset := intf.Status.InterfaceID % lifCount
+		// lif ids start from 1
+		if intfOffset == 0 {
+			intfOffset++
+		}
+		lif, ok = na.findIntfByName(fmt.Sprintf("lif%d", intfOffset))
 
 		if !ok {
 			log.Errorf("could not find user specified lif: {%v}", lif)
@@ -75,7 +72,7 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateInterface(intf, lif, nil, ns)
+	err = na.Datapath.CreateInterface(intf, lif)
 	if err != nil {
 		log.Errorf("Error creating interface in datapath. Interface {%+v}. Err: %v", intf, err)
 		return err
@@ -203,23 +200,23 @@ func (na *Nagent) GetHwInterfaces() error {
 	if err != nil {
 		return err
 	}
+
 	for _, lif := range lifs {
-		key := na.Solver.ObjectKey(lif.ObjectMeta, lif.TypeMeta)
 		na.Lock()
+		key := na.Solver.ObjectKey(lif.ObjectMeta, lif.TypeMeta)
 		na.HwIfDB[key] = lif
 		na.Unlock()
 	}
 
 	// Populate Agent state
+	if err := na.createPortsAndUplinks(ports); err != nil {
+		log.Errorf("could not create {%v} ports. %v", ports, err)
+		return err
+	}
+
 	for _, port := range ports {
-		// Create Ports and Uplinks
-		err = na.createPortAndUplink(port)
-		if err != nil {
-			log.Errorf("could not create {%v} ports. %v", port, err)
-			return err
-		}
-		key := na.Solver.ObjectKey(port.ObjectMeta, port.TypeMeta)
 		na.Lock()
+		key := na.Solver.ObjectKey(port.ObjectMeta, port.TypeMeta)
 		na.PortDB[key] = port
 		na.Unlock()
 	}
@@ -282,55 +279,59 @@ func (na *Nagent) getLifs() (lifs []*netproto.Interface) {
 	return
 }
 
-func (na *Nagent) createPortAndUplink(p *netproto.Port) error {
+func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 	// TODO Use first class port create methods here
 	// TODO support breakout
 
-	var uplinkType string
+	var uplinks []*netproto.Interface
 
-	err := na.CreatePort(p)
-	if err != nil {
-		return err
+	if err := na.Datapath.CreatePort(ports...); err != nil {
+		log.Errorf("Failed to create Ports in Datapath. Err: %v", err)
+		return fmt.Errorf("failed to create Ports in Datapath. Err: %v", err)
 	}
-	id, err := na.Store.GetNextID(types.InterfaceID)
-	if err != nil {
-		log.Errorf("Could not allocate IDs for uplinks. %v", err)
-		return fmt.Errorf("could not allocate IDs for uplinks. %v", err)
-	}
-	id += uint64(types.UplinkOffset)
 
-	if p.Spec.Type == "TYPE_MANAGEMENT" {
-		uplinkType = "UPLINK_MGMT"
-	} else {
-		uplinkType = "UPLINK_ETH"
+	for _, p := range ports {
+		var uplinkType string
+		id, err := na.Store.GetNextID(types.InterfaceID)
+		if err != nil {
+			log.Errorf("Could not allocate IDs for uplinks. %v", err)
+			return fmt.Errorf("could not allocate IDs for uplinks. %v", err)
+		}
+		id += uint64(types.UplinkOffset)
+		if p.Spec.Type == "TYPE_MANAGEMENT" {
+			uplinkType = "UPLINK_MGMT"
+		} else {
+			uplinkType = "UPLINK_ETH"
+		}
+		uplink := &netproto.Interface{
+			TypeMeta: api.TypeMeta{
+				Kind: "Interface",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      fmt.Sprintf("uplink%d", id),
+			},
+			Spec: netproto.InterfaceSpec{
+				Type:        uplinkType,
+				AdminStatus: "UP",
+			},
+			Status: netproto.InterfaceStatus{
+				InterfaceID:  id,
+				UplinkPortID: uint32(p.Status.PortID),
+			},
+		}
+		key := na.Solver.ObjectKey(uplink.ObjectMeta, uplink.TypeMeta)
+
+		na.Lock()
+		na.HwIfDB[key] = uplink
+		na.Unlock()
+		uplinks = append(uplinks, uplink)
 	}
-	uplink := &netproto.Interface{
-		TypeMeta: api.TypeMeta{
-			Kind: "Interface",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      fmt.Sprintf("uplink%d", id),
-		},
-		Spec: netproto.InterfaceSpec{
-			Type:        uplinkType,
-			AdminStatus: "UP",
-		},
-		Status: netproto.InterfaceStatus{
-			InterfaceID: id,
-		},
-	}
-	ns, err := na.FindNamespace(uplink.Tenant, uplink.Namespace)
-	if err != nil {
-		return err
-	}
-	key := na.Solver.ObjectKey(uplink.ObjectMeta, uplink.TypeMeta)
-	na.HwIfDB[key] = uplink
-	err = na.Datapath.CreateInterface(uplink, nil, p, ns)
-	if err != nil {
-		log.Errorf("Failed to create uplinks during init stage. %v", err)
-		return err
+
+	if err := na.Datapath.CreateInterface(uplinks...); err != nil {
+		log.Errorf("Failed to create Uplinks in Datapath. Err: %v", err)
+		return fmt.Errorf("failed to create uplinks in Datapath. Err: %v", err)
 	}
 
 	return nil

@@ -39,7 +39,7 @@ func (na *Nagent) CreatePort(port *netproto.Port) error {
 	}
 
 	// create it in datapath
-	port, err = na.Datapath.CreatePort(port)
+	err = na.Datapath.CreatePort(port)
 	if err != nil {
 		log.Errorf("Error creating port in datapath. Nw {%+v}. Err: %v", port, err)
 		return err

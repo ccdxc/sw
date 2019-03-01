@@ -428,28 +428,12 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		return
 	}
 
-	lif := netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedInterface",
-		},
-		Spec: netproto.InterfaceSpec{
-			Type:        "LIF",
-			AdminStatus: "UP",
-		},
-		Status: netproto.InterfaceStatus{
-			OperStatus: "UP",
-		},
-	}
-
 	enic := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "preCreatedEnic",
+			Name:      "preCreatedInterface",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        "ENIC",
@@ -458,12 +442,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		Status: netproto.InterfaceStatus{
 			OperStatus: "UP",
 		},
-	}
-
-	err = nagent.CreateInterface(&lif)
-	if err != nil {
-		log.Errorf("Failed to create LIF. {%v}", lif)
-		return
 	}
 
 	err = nagent.CreateInterface(&enic)

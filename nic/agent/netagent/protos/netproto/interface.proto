@@ -42,18 +42,14 @@ message InterfaceSpec {
     enum IFType {
         NONE                = 0;
         ENIC                = 1;
-        LIF                 = 2;
-        UPLINK_ETH          = 3;
-        UPLINK_MGMT         = 4;
+        UPLINK_ETH          = 2;
+        UPLINK_MGMT         = 3;
     }
 
     string Type             = 1 [(venice.check) = "StrEnum(InterfaceSpec.IFType)",
                                 (gogoproto.jsontag) = "type,omitempty"];
     string AdminStatus      = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
                                 (gogoproto.jsontag) = "admin-status,omitempty"];
-    // The user need to specify the specific LIF in VSS scenarios. If its is not defined, Agent state will pick
-    // one of the available LIFs with equal distribution
-    string LifName          = 3 [(gogoproto.jsontag) = "lif-name,omitempty"];
 }
 
 // Interface Status
@@ -67,13 +63,13 @@ message InterfaceStatus {
     string OperStatus               = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
                                          (gogoproto.jsontag) = "oper-status,omitempty"];
     EnicStatus EnicStatus           = 3 [(gogoproto.jsontag) = "enic-status,omitempty"];
+    uint32 UplinkPortID             = 4 [(gogoproto.jsontag) = "uplink-port-id,omitempty"];
 }
 
 
 
 // EnicStatus captures enic configurations.
 message EnicStatus {
-    string LifName = 1 [(gogoproto.jsontag) = "lif-name,omitempty"];
     // List of endpoints that this ENIC is mapped to
     repeated string EpName = 2 [(gogoproto.jsontag) = "ep-name,omitempty"];
 }

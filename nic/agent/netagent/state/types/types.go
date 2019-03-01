@@ -271,7 +271,7 @@ type NetDatapathAPI interface {
 	CreateVrf(vrfID uint64, vrfType string) error                                                                                                                    // creates a vrf
 	DeleteVrf(vrfID uint64) error                                                                                                                                    // deletes a vrf
 	UpdateVrf(vrfID uint64) error                                                                                                                                    // updates a vrf
-	CreateInterface(intf *netproto.Interface, lif *netproto.Interface, port *netproto.Port, ns *netproto.Namespace) error                                            // creates an interface
+	CreateInterface(intfs ...*netproto.Interface) error                                                                                                              // creates an interface
 	UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                          // updates an interface
 	DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                          // deletes an interface
 	ListInterfaces() ([]*netproto.Interface, []*netproto.Port, error)                                                                                                // Lists all the lifs and uplinks from the datapath state
@@ -305,7 +305,7 @@ type NetDatapathAPI interface {
 	CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // creates a tcp proxy policy in the datapath
 	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // updates a tcp proxy policy in the datapath
 	DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // deletes a tcp proxy policy in the datapath
-	CreatePort(port *netproto.Port) (*netproto.Port, error)                                                                                                          // Creates a port in the datapath
+	CreatePort(ports ...*netproto.Port) error                                                                                                                        // Creates a port in the datapath
 	UpdatePort(port *netproto.Port) (*netproto.Port, error)                                                                                                          // Updates a port in the datapath
 	DeletePort(port *netproto.Port) error                                                                                                                            // Deletes a port in the datapath
 	CreateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error                                                             // Creates a security profile in the datapath

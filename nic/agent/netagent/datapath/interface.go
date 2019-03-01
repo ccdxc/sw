@@ -12,109 +12,82 @@ import (
 )
 
 // CreateInterface creates an interface
-func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, port *netproto.Port, ns *netproto.Namespace) error {
-	var ifSpec *halproto.InterfaceSpec
-	switch intf.Spec.Type {
-	case "LIF":
-		lifReqMsg := &halproto.LifRequestMsg{
-			Request: []*halproto.LifSpec{
-				{
-					KeyOrHandle: &halproto.LifKeyHandle{
-						KeyOrHandle: &halproto.LifKeyHandle_LifId{
-							LifId: intf.Status.InterfaceID,
+func (hd *Datapath) CreateInterface(intfs ...*netproto.Interface) error {
+	var req []*halproto.InterfaceSpec
+	for _, intf := range intfs {
+		var ifSpec halproto.InterfaceSpec
+		switch intf.Spec.Type {
+		case "LIF":
+			lifReqMsg := &halproto.LifRequestMsg{
+				Request: []*halproto.LifSpec{
+					{
+						KeyOrHandle: &halproto.LifKeyHandle{
+							KeyOrHandle: &halproto.LifKeyHandle_LifId{
+								LifId: intf.Status.InterfaceID,
+							},
 						},
 					},
 				},
-			},
-		}
-		_, err := hd.Hal.Ifclient.LifCreate(context.Background(), lifReqMsg)
-		if err != nil {
-			log.Errorf("Error creating lif. Err: %v", err)
-			return err
-		}
-		//hd.Lock()
-		hd.DB.LifDB[objectKey(&ns.ObjectMeta)] = lifReqMsg
-		//hd.Unlock()
-		return nil
+			}
+			_, err := hd.Hal.Ifclient.LifCreate(context.Background(), lifReqMsg)
+			if err != nil {
+				log.Errorf("Error creating lif. Err: %v", err)
+				return err
+			}
 
-	case "UPLINK_ETH":
-		var portID uint32
-
-		// TODO remove hack once hal/dol is fixed with correct mapping
-		// if port.Status.PortID == 5 {
-		// 	portID = 2
-		// } else {
-		// 	portID = uint32(port.Status.PortID)
-		// }
-		portID = uint32(port.Status.PortID)
-
-		ifSpec = &halproto.InterfaceSpec{
-			KeyOrHandle: &halproto.InterfaceKeyHandle{
-				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: intf.Status.InterfaceID,
-				},
-			},
-			Type: halproto.IfType_IF_TYPE_UPLINK,
-			IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
-				IfUplinkInfo: &halproto.IfUplinkInfo{
-					PortNum: uint32(portID),
-				},
-			},
-		}
-	case "UPLINK_MGMT":
-		var portID uint32
-
-		// TODO remove hack once hal/dol is fixed with correct mapping
-		// if port.Status.PortID == 5 {
-		// 	portID = 2
-		// } else {
-		// 	portID = uint32(port.Status.PortID)
-		// }
-		portID = uint32(port.Status.PortID)
-
-		ifSpec = &halproto.InterfaceSpec{
-			KeyOrHandle: &halproto.InterfaceKeyHandle{
-				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: intf.Status.InterfaceID,
-				},
-			},
-			Type: halproto.IfType_IF_TYPE_UPLINK,
-			IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
-				IfUplinkInfo: &halproto.IfUplinkInfo{
-					PortNum:         uint32(portID),
-					IsOobManagement: true,
-				},
-			},
-		}
-
-	case "ENIC":
-		ifSpec = &halproto.InterfaceSpec{
-			KeyOrHandle: &halproto.InterfaceKeyHandle{
-				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: intf.Status.InterfaceID,
-				},
-			},
-			Type: halproto.IfType_IF_TYPE_ENIC,
-			// associate the lif id
-			IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
-				IfEnicInfo: &halproto.IfEnicInfo{
-					EnicType: halproto.IfEnicType_IF_ENIC_TYPE_USEG,
-					LifKeyOrHandle: &halproto.LifKeyHandle{
-						KeyOrHandle: &halproto.LifKeyHandle_LifId{
-							LifId: lif.Status.InterfaceID,
-						},
+		case "UPLINK_ETH":
+			ifSpec = halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: intf.Status.InterfaceID,
 					},
 				},
-			},
+				Type: halproto.IfType_IF_TYPE_UPLINK,
+				IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+					IfUplinkInfo: &halproto.IfUplinkInfo{
+						PortNum: intf.Status.UplinkPortID,
+					},
+				},
+			}
+		case "UPLINK_MGMT":
+			ifSpec = halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: intf.Status.InterfaceID,
+					},
+				},
+				Type: halproto.IfType_IF_TYPE_UPLINK,
+				IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+					IfUplinkInfo: &halproto.IfUplinkInfo{
+						PortNum:         intf.Status.UplinkPortID,
+						IsOobManagement: true,
+					},
+				},
+			}
+
+		case "ENIC":
+			ifSpec = halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: intf.Status.InterfaceID,
+					},
+				},
+				Type: halproto.IfType_IF_TYPE_ENIC,
+				// associate the lif id
+				IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+					IfEnicInfo: &halproto.IfEnicInfo{
+						EnicType: halproto.IfEnicType_IF_ENIC_TYPE_USEG,
+					},
+				},
+			}
+		default:
+			return errors.New("invalid interface type")
 		}
-	default:
-		return errors.New("invalid interface type")
+		req = append(req, &ifSpec)
 	}
 
 	ifReqMsg := &halproto.InterfaceRequestMsg{
-		Request: []*halproto.InterfaceSpec{
-			ifSpec,
-		},
+		Request: req,
 	}
 
 	if hd.Kind == "hal" {
@@ -134,10 +107,6 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 			return err
 		}
 	}
-
-	//hd.Lock()
-	hd.DB.InterfaceDB[objectKey(&ns.ObjectMeta)] = ifReqMsg
-	//hd.Unlock()
 	return nil
 }
 
@@ -145,34 +114,7 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
 	var ifDelReq *halproto.InterfaceDeleteRequest
 	switch intf.Spec.Type {
-	case "LIF":
-		lifDelReqMsg := &halproto.LifDeleteRequestMsg{
-			Request: []*halproto.LifDeleteRequest{
-				{
-					KeyOrHandle: &halproto.LifKeyHandle{
-						KeyOrHandle: &halproto.LifKeyHandle_LifId{
-							LifId: intf.Status.InterfaceID,
-						},
-					},
-				},
-			},
-		}
-		_, err := hd.Hal.Ifclient.LifDelete(context.Background(), lifDelReqMsg)
-		if err != nil {
-			log.Errorf("Error creating lif. Err: %v", err)
-			return err
-		}
-		// save the lif delete message
-		//hd.Lock()
-		hd.DB.LifDelDB[objectKey(&intf.ObjectMeta)] = lifDelReqMsg
-		delete(hd.DB.LifDB, objectKey(&intf.ObjectMeta))
-		//hd.Unlock()
-
-		return nil
-	case "ENIC":
-		fallthrough
-
-	case "UPLINK":
+	case "UPLINK", "ENIC":
 		ifDelReq = &halproto.InterfaceDeleteRequest{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
@@ -194,11 +136,6 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Names
 		log.Errorf("Error creating lif. Err: %v", err)
 		return err
 	}
-	// save the lif delete message
-	//hd.Lock()
-	hd.DB.InterfaceDelDB[objectKey(&intf.ObjectMeta)] = ifDelReqMsg
-	delete(hd.DB.LifDB, objectKey(&intf.ObjectMeta))
-	//hd.Unlock()
 	return nil
 
 }
@@ -207,28 +144,6 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Names
 func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
 	var ifSpec *halproto.InterfaceSpec
 	switch intf.Spec.Type {
-	case "LIF":
-		lifReqMsg := &halproto.LifRequestMsg{
-			Request: []*halproto.LifSpec{
-				{
-					KeyOrHandle: &halproto.LifKeyHandle{
-						KeyOrHandle: &halproto.LifKeyHandle_LifId{
-							LifId: intf.Status.InterfaceID,
-						},
-					},
-				},
-			},
-		}
-		_, err := hd.Hal.Ifclient.LifUpdate(context.Background(), lifReqMsg)
-		if err != nil {
-			log.Errorf("Error creating lif. Err: %v", err)
-			return err
-		}
-		//hd.Lock()
-		hd.DB.LifDB[objectKey(&ns.ObjectMeta)] = lifReqMsg
-		//hd.Unlock()
-		return nil
-
 	case "UPLINK":
 		ifSpec = &halproto.InterfaceSpec{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{

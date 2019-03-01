@@ -12,63 +12,52 @@ import (
 // ------------------------- Datapath APIs called from netagent ----------------------
 
 // CreateInterface creates an interface
-func (dp *DelphiDatapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, port *netproto.Port, ns *netproto.Namespace) error {
-	switch intf.Spec.Type {
-	case "UPLINK_ETH", "UPLINK_MGMT":
-		var portID uint32
-
-		// TODO remove hack once hal/dol is fixed with correct mapping
-		if port.Status.PortID == 5 {
-			portID = 2
-		} else {
-			portID = uint32(port.Status.PortID)
-		}
-
-		// build interface spec
-		ifSpec := &halproto.InterfaceSpec{
-			KeyOrHandle: &halproto.InterfaceKeyHandle{
-				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: intf.Status.InterfaceID,
-				},
-			},
-			Type: halproto.IfType_IF_TYPE_UPLINK,
-			IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
-				IfUplinkInfo: &halproto.IfUplinkInfo{
-					PortNum: uint32(portID),
-				},
-			},
-		}
-
-		// write it to delphi
-		dp.delphiClient.SetObject(ifSpec)
-
-	case "ENIC":
-		// build the spec
-		ifSpec := &halproto.InterfaceSpec{
-			KeyOrHandle: &halproto.InterfaceKeyHandle{
-				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: intf.Status.InterfaceID,
-				},
-			},
-			Type: halproto.IfType_IF_TYPE_ENIC,
-			// associate the lif id
-			IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
-				IfEnicInfo: &halproto.IfEnicInfo{
-					EnicType: halproto.IfEnicType_IF_ENIC_TYPE_USEG,
-					LifKeyOrHandle: &halproto.LifKeyHandle{
-						KeyOrHandle: &halproto.LifKeyHandle_LifId{
-							LifId: lif.Status.InterfaceID,
-						},
+func (dp *DelphiDatapath) CreateInterface(intfs ...*netproto.Interface) error {
+	for _, intf := range intfs {
+		switch intf.Spec.Type {
+		case "UPLINK_ETH", "UPLINK_MGMT":
+			// build interface spec
+			ifSpec := &halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: intf.Status.InterfaceID,
 					},
 				},
-			},
+				Type: halproto.IfType_IF_TYPE_UPLINK,
+				IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+					IfUplinkInfo: &halproto.IfUplinkInfo{
+						PortNum: intf.Status.UplinkPortID,
+					},
+				},
+			}
+
+			// write it to delphi
+			dp.delphiClient.SetObject(ifSpec)
+
+		case "ENIC":
+			// build the spec
+			ifSpec := &halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: intf.Status.InterfaceID,
+					},
+				},
+				Type: halproto.IfType_IF_TYPE_ENIC,
+				// associate the lif id
+				IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+					IfEnicInfo: &halproto.IfEnicInfo{
+						EnicType: halproto.IfEnicType_IF_ENIC_TYPE_USEG,
+					},
+				},
+			}
+
+			// write it to delphi
+			dp.delphiClient.SetObject(ifSpec)
+
+		default:
+			return errors.New("invalid interface type")
 		}
 
-		// write it to delphi
-		dp.delphiClient.SetObject(ifSpec)
-
-	default:
-		return errors.New("invalid interface type")
 	}
 
 	return nil
