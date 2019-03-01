@@ -128,22 +128,6 @@
     modify_field(eth_tx_t2_s2s_scratch.tso_ipid_delta, eth_tx_t2_s2s.tso_ipid_delta); \
     modify_field(eth_tx_t2_s2s_scratch.tso_seq_delta, eth_tx_t2_s2s.tso_seq_delta);
 
-#define MODIFY_ETH_TX_T3_S2S \
-    modify_field(eth_tx_t3_s2s_scratch.queue_disabled, eth_tx_t3_s2s.queue_disabled); \
-    modify_field(eth_tx_t3_s2s_scratch.queue_sched, eth_tx_t3_s2s.queue_sched); \
-    modify_field(eth_tx_t3_s2s_scratch.desc_error, eth_tx_t3_s2s.desc_error); \
-    modify_field(eth_tx_t3_s2s_scratch.csum_none, eth_tx_t3_s2s.csum_none); \
-    modify_field(eth_tx_t3_s2s_scratch.csum_hw, eth_tx_t3_s2s.csum_hw); \
-    modify_field(eth_tx_t3_s2s_scratch.csum_hw_inner, eth_tx_t3_s2s.csum_hw_inner); \
-    modify_field(eth_tx_t3_s2s_scratch.csum_partial, eth_tx_t3_s2s.csum_partial); \
-    modify_field(eth_tx_t3_s2s_scratch.sg, eth_tx_t3_s2s.sg); \
-    modify_field(eth_tx_t3_s2s_scratch.tso, eth_tx_t3_s2s.tso); \
-    modify_field(eth_tx_t3_s2s_scratch.tso_sot, eth_tx_t3_s2s.tso_sot); \
-    modify_field(eth_tx_t3_s2s_scratch.tso_eot, eth_tx_t3_s2s.tso_eot); \
-    modify_field(eth_tx_t3_s2s_scratch.op_error, eth_tx_t3_s2s.op_error); \
-    modify_field(eth_tx_t3_s2s_scratch.cqe, eth_tx_t3_s2s.cqe); \
-    modify_field(eth_tx_t3_s2s_scratch.intr, eth_tx_t3_s2s.intr);
-
 #define MODIFY_ETH_TX_TO_S1 \
     modify_field(eth_tx_to_s1_scratch.qstate_addr, eth_tx_to_s1.qstate_addr);
 

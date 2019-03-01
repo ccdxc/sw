@@ -13,7 +13,7 @@
 #define tx_table_s3_t1_action eth_tx_sg
 #define tx_table_s3_t2_action eth_tx_tso
 #define tx_table_s7_t0_action eth_tx_completion
-#define tx_table_s7_t3_action eth_tx_stats
+#define tx_table_s7_t1_action eth_tx_stats
 
 #include "../common-p4+/common_txdma.p4"
 #include "eth_txdma.p4"
@@ -123,5 +123,4 @@ action eth_tx_stats()
 {
     // K+I
     MODIFY_ETH_TX_GLOBAL
-    // MODIFY_ETH_TX_T3_S2S
 }

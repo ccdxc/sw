@@ -285,32 +285,18 @@ metadata eth_tx_to_s5_k eth_tx_to_s5_scratch;
 metadata eth_tx_to_s6_k eth_tx_to_s6;
 @pragma scratch_metadata
 metadata eth_tx_to_s6_k eth_tx_to_s6_scratch;
-/*
-@pragma pa_header_union ingress to_stage_7
-metadata eth_tx_to_s7_k eth_tx_to_s7;
-@pragma scratch_metadata
-metadata eth_tx_to_s7_k eth_tx_to_s7_scratch;
-*/
+
 // Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
 @pragma pa_header_union ingress common_t0_s2s
 metadata eth_tx_t0_s2s_k eth_tx_t0_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t0_s2s_k eth_tx_t0_s2s_scratch;
-/*
-@pragma pa_header_union ingress common_t1_s2s
-metadata eth_tx_t1_s2s_k eth_tx_t1_s2s;
-@pragma scratch_metadata
-metadata eth_tx_t1_s2s_k eth_tx_t1_s2s_scratch;
-*/
+
 @pragma pa_header_union ingress common_t2_s2s
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s_scratch;
 
-/*@pragma pa_header_union ingress common_t3_s2s
-metadata eth_tx_t3_s2s_k eth_tx_t3_s2s;
-@pragma scratch_metadata
-metadata eth_tx_t3_s2s_k eth_tx_t3_s2s_scratch;*/
 
 /*****************************************************************************
  * P-vector

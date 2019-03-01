@@ -86,6 +86,6 @@ eth_rx_queue_disabled:
   phvwr           p.p4_intr_global_drop, 1
 
   // Launch eth_rx_stats action
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 1
-  phvwri.e        p.common_te3_phv_table_pc, eth_rx_stats[38:6]
-  phvwri.f        p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 2)
+  phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
+  phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

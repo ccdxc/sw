@@ -15,7 +15,7 @@
 #define rx_table_s3_t0_action eth_rx_packet
 #define rx_table_s4_t1_action eth_rx_sg
 #define rx_table_s7_t0_action eth_rx_completion
-#define rx_table_s7_t3_action eth_rx_stats
+#define rx_table_s7_t1_action eth_rx_stats
 
 #include "../common-p4+/common_rxdma.p4"
 #include "eth_rxdma.p4"

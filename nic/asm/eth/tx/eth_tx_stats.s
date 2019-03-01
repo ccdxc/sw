@@ -1,12 +1,12 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "INGRESS_tx_table_s7_t3_k.h"
+#include "INGRESS_tx_table_s7_t1_k.h"
 
 #include "defines.h"
 
 struct phv_ p;
-struct tx_table_s7_t3_k_ k;
+struct tx_table_s7_t1_k_ k;
 
 #define _r_base                 r1  // Stats base address
 #define _r_lif_offset           r2  // Offset of LIF's stats relative to global stats base

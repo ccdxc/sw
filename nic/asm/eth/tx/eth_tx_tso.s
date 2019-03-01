@@ -116,11 +116,11 @@ eth_tx_tso_done:   // We are done with SG
   // Save DMA command pointer
   phvwr           p.eth_tx_global_dma_cur_index, _r_index
 
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | 1)
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
 
   // Launch eth_tx_stats action
-  phvwri          p.common_te3_phv_table_pc, eth_tx_stats[38:6]
-  phvwri          p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri          p.common_te1_phv_table_pc, eth_tx_stats[38:6]
+  phvwri          p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
   // Launch eth_completion stage
   phvwri.e        p.common_te0_phv_table_pc, eth_tx_completion[38:6]
@@ -140,12 +140,12 @@ eth_tx_tso_error:
   // Reset the DMA command stack to discard existing DMA commands.
   phvwr           p.eth_tx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | 1)
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
 
   // Launch eth_tx_completion stage
   phvwri          p.common_te0_phv_table_pc, eth_tx_completion[38:6]
   phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
   // Launch eth_tx_stats action
-  phvwri.e        p.common_te3_phv_table_pc, eth_tx_stats[38:6]
-  phvwri.f        p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri.e        p.common_te1_phv_table_pc, eth_tx_stats[38:6]
+  phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
