@@ -46,10 +46,7 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	revProxyPort = globals.RevProxyPort
 	naplesURL += ":" + revProxyPort + "/"
 
-	if err := isNaplesReachable(); err != nil {
-		return err
-	}
-	return nil
+	return isNaplesReachable()
 }
 
 func isNaplesReachable() error {
