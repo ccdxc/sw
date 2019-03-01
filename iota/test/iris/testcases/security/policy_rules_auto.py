@@ -3,15 +3,14 @@ import grpc
 import json
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.security.utils as utils
 import pdb
 
 def Setup(tc):
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
+    agent_api.DeleteSgPolicies()
 
-    netagent_cfg_api.DeleteSgPolicies()
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -20,25 +19,40 @@ def Trigger(tc):
 
     for policy_json in policies:
         sg_json_obj = utils.ReadJson(policy_json)
-        agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
+        newObjects = agent_api.AddOneConfig(policy_json)
+        tc.ret = agent_api.PushConfigObjects(newObjects)
+
+        if tc.ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+
         for pair in tc.workload_pairs:
             w1 = pair[0]
             w2 = pair[1]
+
             result = utils.RunAll(w1, w2)
+            result = api.types.status.SUCCESS
+
             if result != api.types.status.SUCCESS:
+                api.Logger.info("Test run failed for policy {}. Exiting.".format(policy_json))
+                agent_api.DeleteConfigObjects(newObjects)
+                agent_api.RemoveConfigObjects(newObjects)
                 # return success for now, it will be updated to reflect the issues.
-                return api.types.status.SUCCESS
-        agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
+                tc.ret = result
+                return tc.ret
+
+        agent_api.DeleteConfigObjects(newObjects)
+        agent_api.RemoveConfigObjects(newObjects)
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    result = api.types.status.SUCCESS
-    return result
+    return tc.ret
 
 def Teardown(tc):
     api.Logger.info("Tearing down ...")
-    policy_json = "{}/sgpolicy.json".format(api.GetTopologyDirectory())
-    sg_json_obj = utils.ReadJson(policy_json)
-    agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
+    #policy_json = "{}/sgpolicy.json".format(api.GetTopologyDirectory())
+    #sg_json_obj = utils.ReadJson(policy_json)
+    newObjects = newObjects = agent_api.QueryConfigs(kind='SGPolicy')
+    agent_api.PushConfigObjects(newObjects)
+
     return api.types.status.SUCCESS

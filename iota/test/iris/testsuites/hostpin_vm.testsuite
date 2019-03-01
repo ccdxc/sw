@@ -31,7 +31,7 @@ testbundles:
         - networking/upgrade.testbundle
         - networking/telemetry.testbundle
         - linktest/linktest.testbundle
-#       - firewall/policy.testbundle
+        - firewall/policy.testbundle
         - aging/aging.testbundle
         - alg/alg.testbundle
         - firewall/conntrack.testbundle

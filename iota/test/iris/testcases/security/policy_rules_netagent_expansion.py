@@ -3,47 +3,47 @@ import grpc
 import json
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.security.utils as utils
 import pdb
 import time
 
-
 def Setup(tc):
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
+    agent_api.DeleteSgPolicies()
 
-    netagent_cfg_api.DeleteSgPolicies()
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    policies = utils.GetTargetJsons("netagent-expansion")
     sg_json_obj = None
-    tc.time_matrix = []
-    tc.policy_json = "{}/{}_expansion_policy.json".format(utils.GetProtocolDirectory("netagent-expansion"), tc.iterators.apps)
 
-    api.Logger.info("Running test for {}".format(tc.policy_json))
-    sg_json_obj = utils.ReadJson(tc.policy_json)
-    start = time.time()
-    agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
-    end = time.time()
-    agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
-    tc.res_time = end - start
+    for policy_json in policies:
+        sg_json_obj = utils.ReadJson(policy_json)
+        newObjects = agent_api.AddOneConfig(policy_json)
+        start = time.time()
+        tc.ret = agent_api.PushConfigObjects(newObjects)
+        end = time.time()
+        diff = end - start
 
-    if tc.res_time > 300 :
-        return api.types.status.FAILURE
+        if diff > 120:
+            api.Logger.info("Time taken to push configs is {} seconds.")
+            tc.ret = api.types.status.FAILURE
+
+        agent_api.DeleteConfigObjects(newObjects)
+        agent_api.RemoveConfigObjects(newObjects)
+
+        if tc.ret == api.types.status.FAILURE:
+            return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    if tc.res_time > 180 :
-        api.Logger.info("Test Failed for config {}. It took {} seconds.".format(tc.policy_json, tc.res_time))
-        return api.types.status.FAILURE
-
-    return api.types.status.SUCCESS 
+    return tc.ret
 
 def Teardown(tc):
     api.Logger.info("Tearing down ...")
-    policy_json = "{}/sgpolicy.json".format(api.GetTopologyDirectory())
-    sg_json_obj = utils.ReadJson(policy_json)
-    agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
+    newObjects = newObjects = agent_api.QueryConfigs(kind='SGPolicy')
+    agent_api.PushConfigObjects(newObjects)
+
     return api.types.status.SUCCESS

@@ -97,43 +97,43 @@ def get_rule(dst_ip, src_ip, protocol, port, action):
 topology_dir = api.GetTopologyDirectory()
 endpoint_file = topology_dir + "/endpoints.json"
 protocols = ["udp", "tcp", "icmp"]
-directories = ["udp", "tcp", "icmp", "mixed", "scale", "halcfg-expansion", "netagent-expansion"]
-ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250", "10000-20000", "65535"]
-generate_expansion = True 
-target_dir = "gen"
-actions = ["PERMIT", "DENY", "REJECT"]
-total_policies = 0
+	directories = ["udp", "tcp", "icmp", "mixed", "scale", "halcfg-expansion", "netagent-expansion"]
+	ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250", "10000-20000", "65535"]
+	generate_expansion = True 
+	target_dir = "gen"
+	actions = ["PERMIT", "DENY", "REJECT"]
+	total_policies = 0
 
-def StripIpMask(ip_address):
-    ret = ""
-    if '/' in ip_address:
-        ret = ip_address[:-3].encode("utf-8")
-    ret = ip_address.encode("utf-8")
-    print("Stripping IP mask {}".format(ret))
-    return str(ret)
+	def StripIpMask(ip_address):
+	    ret = ""
+	    if '/' in ip_address:
+		ret = ip_address[:-3].encode("utf-8")
+	    ret = ip_address.encode("utf-8")
+	    print("Stripping IP mask {}".format(ret))
+	    return str(ret)
 
-def GetIpRange(ip_address):
-    stripped_ip = ip_address[:ip_address.rfind('.')]
-    ret = "{}.1-{}.100".format(stripped_ip, stripped_ip)
-    return str(ret)
+	def GetIpRange(ip_address):
+	    stripped_ip = ip_address[:ip_address.rfind('.')]
+	    ret = "{}.1-{}.100".format(stripped_ip, stripped_ip)
+	    return str(ret)
 
-def GetIpCidr(ip_address):
-    stripped_ip = ip_address[:ip_address.rfind('.')]
-    ret = "{}.0/24".format(stripped_ip)
-    return str(ret)
+	def GetIpCidr(ip_address):
+	    stripped_ip = ip_address[:ip_address.rfind('.')]
+	    ret = "{}.0/24".format(stripped_ip)
+	    return str(ret)
 
-def Main(step):
-    if not api.IsRegression():
-        return api.types.status.SUCCESS
+	def Main(step):
+	    if not api.IsRegression():
+		return api.types.status.SUCCESS
 
-    with open(endpoint_file, 'r') as fp:
-        obj = json.load(fp)
-    EP = [] 
-    FILENAME = []
+	    with open(endpoint_file, 'r') as fp:
+		obj = json.load(fp)
+	    EP = [] 
+	    FILENAME = []
 
-    for i in range(0, len(obj["endpoints"])):
-        print("EP[%d] : %s" % (i, obj["endpoints"][i]["spec"]["ipv4-address"]))
-        EP.append(StripIpMask(obj["endpoints"][i]["spec"]["ipv4-address"]))
+	    for i in range(0, len(obj["endpoints"])):
+		print("EP[%d] : %s" % (i, obj["endpoints"][i]["spec"]["ipv4-address"]))
+		EP.append(StripIpMask(obj["endpoints"][i]["spec"]["ipv4-address"]))
         FILENAME.append("endpoint")
 
     #EP.append(GetIpRange(str(EP[0])))

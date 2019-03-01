@@ -15,9 +15,9 @@ import (
 
 // StartIOTAService starts IOTA Service
 func StartIOTAService(stub bool, grpcPort int) {
-    var IOTAListenURL = fmt.Sprintf(":%d", grpcPort)
+	var IOTAListenURL = fmt.Sprintf(":%d", grpcPort)
 
-	serverSvc, err := common.CreateNewGRPCServer("IOTA Server", IOTAListenURL)
+	serverSvc, err := common.CreateNewGRPCServer("IOTA Server", IOTAListenURL, common.GrpcMaxMsgSize)
 	if err != nil {
 		log.Errorf("Could not start IOTA Service. Err: %v", err)
 	}

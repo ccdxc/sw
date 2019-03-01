@@ -17,7 +17,7 @@ func TestGRPCServer(t *testing.T) {
 	}
 
 	// Start Server
-	s, err := CreateNewGRPCServer("test-svc", testListener.ListenURL.String())
+	s, err := CreateNewGRPCServer("test-svc", testListener.ListenURL.String(), 0)
 	defer s.Stop()
 	if err != nil {
 		t.Fatalf("Could not start a GRPC Server on %v", testListener.ListenURL.String())
@@ -35,7 +35,7 @@ func TestGRPCClient(t *testing.T) {
 	}
 
 	// Start Server
-	s, err := CreateNewGRPCServer("test-svc", testListener.ListenURL.String())
+	s, err := CreateNewGRPCServer("test-svc", testListener.ListenURL.String(), 0)
 	defer s.Stop()
 	if err != nil {
 		t.Fatalf("Could not start a GRPC Server on %v", testListener.ListenURL.String())

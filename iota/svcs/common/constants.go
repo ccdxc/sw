@@ -8,6 +8,7 @@ import (
 
 // global constants
 const (
+	GrpcMaxMsgSize = 1024 * 1024 * 10
 
 	// IotaSvcPort is the default IOTA Server Port
 	IotaSvcPort = 60000

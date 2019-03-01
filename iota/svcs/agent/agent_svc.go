@@ -86,7 +86,7 @@ var IOTAAgentListenURL = fmt.Sprintf(":%d", common.IotaAgentPort)
 
 // StartIOTAAgent starts IOTA Agent
 func StartIOTAAgent(stubMode *bool) {
-	agentSvc, err := common.CreateNewGRPCServer("IOTA Agent", IOTAAgentListenURL)
+	agentSvc, err := common.CreateNewGRPCServer("IOTA Agent", IOTAAgentListenURL, common.GrpcMaxMsgSize)
 	if err != nil {
 		log.Errorf("Could not start IOTA Agent. Err: %v", err)
 	}

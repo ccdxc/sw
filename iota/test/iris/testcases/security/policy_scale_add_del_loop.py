@@ -1,30 +1,41 @@
 #! /usr/bin/python3
-
+import grpc
+import json
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
+import iota.test.iris.config.netagent.api as agent_api
+import iota.test.iris.testcases.security.utils as utils
+import pdb
 
 def Setup(tc):
-    tc.loop_count = tc.args.count
-    api.Logger.info("Loop count set to ", tc.loop_count)
+    tc.workload_pairs = api.GetRemoteWorkloadPairs()
+    agent_api.DeleteSgPolicies()
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    api.Logger.info("Starting add-del loop")
-    for x in range(tc.loop_count):
-        api.Logger.info("Iteration ", x+1)
-        netagent_cfg_api.AddSgPolicies()
-        netagent_cfg_api.DeleteSgPolicies()
-    return api.types.status.SUCCESS
+    newObjects = agent_api.QueryConfigs(kind='SGPolicy')
+    ret = api.types.status.SUCCESS
+
+    for i in range(0,100):
+        ret = agent_api.PushConfigObjects(newObjects)
+        agent_api.DeleteConfigObjects(newObjects)
+
+        if ret != api.types.status.SUCCESS:
+             break        
+
+    agent_api.RemoveConfigObjects(newObjects)
+    tc.ret = ret
+    return ret
 
 def Verify(tc):
-    #if tc.resp is None:
-        #api.Logger.Info("Validating ...")
-        #return api.types.status.FAILURE
-
-    result = api.types.status.SUCCESS
-    return result
+    return tc.ret
 
 def Teardown(tc):
     api.Logger.info("Tearing down ...")
+    policy_json = "{}/sgpolicy.json".format(api.GetTopologyDirectory())
+    sg_json_obj = utils.ReadJson(policy_json)
+    newObjects = agent_api.AddOneConfig(policy_json)
+    agent_api.PushConfigObjects(newObjects)
+
     return api.types.status.SUCCESS

@@ -24,11 +24,17 @@ type GRPCClient struct {
 }
 
 // CreateNewGRPCServer creates a new GRPC Server
-func CreateNewGRPCServer(svcName, URL string) (*GRPCServer, error) {
+func CreateNewGRPCServer(svcName, URL string, maxMsgSize int) (*GRPCServer, error) {
 	log.Infof("Creating a new GRPC Server for service: %v | Listening on %v", svcName, URL)
+
+	sopts := []grpc.ServerOption{}
+
+	if maxMsgSize != 0 {
+		sopts = append(sopts, grpc.MaxRecvMsgSize(maxMsgSize))
+	}
 	s := GRPCServer{
 		SvcName: svcName,
-		Srv:     grpc.NewServer(),
+		Srv:     grpc.NewServer(sopts...),
 	}
 
 	if s.Srv == nil {

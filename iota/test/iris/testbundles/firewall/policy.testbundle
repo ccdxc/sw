@@ -5,17 +5,23 @@ meta:
     targetcount : 7
 
 testcases:
-    -   name    : PolicyLocalToLocal
-        testcase: testcases.security.policy_rules_udp
-
-    -   name    : PolicyLocalToLocal
-        testcase: testcases.security.policy_rules_icmp
-
-    -   name    : PolicyLocalToLocal
-        testcase: testcases.security.policy_rules_tcp
-
     -   name    : PolicyLocalToRemote
         testcase: testcases.security.policy_rules_auto
         iterators :
             type  : simple
-            proto : ["udp", "tcp", "icmp", "mixed"]
+            proto : ["udp"]
+
+    -   name    : PolicyScaleAddDelLoop
+        testcase: testcases.security.policy_scale_add_del_loop
+        args    :
+            count : 1
+
+    -   name    : PolicyScale
+        disable : true
+        testcase: testcases.security.policy_rules_scale
+
+    -   name    : PolicyNetagentExpansion
+        testcase: testcases.security.policy_rules_netagent_expansion
+
+    -   name    : PolicyHalcfgExpansion
+        testcase: testcases.security.policy_rules_halcfg_expansion

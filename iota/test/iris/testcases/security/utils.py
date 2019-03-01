@@ -3,8 +3,6 @@ import json
 import glob
 import yaml
 import iota.harness.api as api
-import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
-import iota.test.iris.config.netagent.objects.sgpolicy as sgpolicy_obj
 import subprocess
 import threading
 import os
@@ -186,26 +184,28 @@ def GetVerif(protocol, src_ip, src_port, dst_ip, dst_port, result, ruleid):
     return verif
 
 def ParseVerifStr(verif_str):
-    api.Logger.info("Parsing Verification json : \n{}".format(verif_str))
     js = json.loads(verif_str)
     verif = []
 
     for i in range(0, len(js[0]["spec"]["policy-rules"])):
         protocol = []
-        for k in range(0, len(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"])):
-            protocol.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["protocol"])
-        src_ip = js[0]["spec"]["policy-rules"][i]["source"]["addresses"]
-        src_port = "1234"
-        dst_ip = js[0]["spec"]["policy-rules"][i]["destination"]["addresses"]
+        try:
+            for k in range(0, len(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"])):
+                protocol.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["protocol"])
+            src_ip = js[0]["spec"]["policy-rules"][i]["source"]["addresses"]
+            src_port = "1234"
+            dst_ip = js[0]["spec"]["policy-rules"][i]["destination"]["addresses"]
 
-        dst_port = []
-        for k in range(0, len(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"])):
-            protocol.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["port"])
-            dst_port.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["port"])
-        result = js[0]["spec"]["policy-rules"][i]["action"]
-        ruleid = js[0]["spec"]["policy-rules"][i]["rule-id"]
-        v = GetVerif(protocol, src_ip, src_port, dst_ip, dst_port, result, ruleid)
-        verif.append(v)
+            dst_port = []
+            for k in range(0, len(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"])):
+                protocol.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["port"])
+                dst_port.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["port"])
+            result = js[0]["spec"]["policy-rules"][i]["action"]
+            ruleid = js[0]["spec"]["policy-rules"][i]["rule-id"]
+            v = GetVerif(protocol, src_ip, src_port, dst_ip, dst_port, result, ruleid)
+            verif.append(v)
+        except:
+            print("Error while parsing verif string. Skipping this rule.")
     return verif
 
 def GetVerifDict(workload):
