@@ -7,8 +7,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -43,6 +45,22 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	naplesIP = strings.TrimPrefix(naplesURL, "http://")
 	revProxyPort = globals.RevProxyPort
 	naplesURL += ":" + revProxyPort + "/"
+
+	if err := isNaplesReachable(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func isNaplesReachable() error {
+	seconds := 5
+	timeOut := time.Duration(seconds) * time.Second
+	_, err := net.DialTimeout("tcp", naplesIP+":"+revProxyPort, timeOut)
+
+	if err != nil {
+		fmt.Printf("Could not reach Naples on %s\n", naplesIP+":"+revProxyPort)
+		return err
+	}
 	return nil
 }
 
