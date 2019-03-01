@@ -450,18 +450,22 @@ static inline struct ionic_qp *to_ionic_srq(struct ib_srq *ibsrq)
 
 static inline struct ionic_ah *to_ionic_ah(struct ib_ah *ibah)
 {
-        return container_of(ibah, struct ionic_ah, ibah);
+	return container_of(ibah, struct ionic_ah, ibah);
 }
 
-static inline u32 ionic_dbid(struct ionic_ibdev *dev,
-					   struct ib_uobject *uobj)
+static inline u32 ionic_ctx_dbid(struct ionic_ibdev *dev,
+				 struct ionic_ctx *ctx)
 {
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(uobj);
-
 	if (!ctx)
 		return dev->dbid;
 
 	return ctx->dbid;
+}
+
+static inline u32 ionic_obj_dbid(struct ionic_ibdev *dev,
+				 struct ib_uobject *uobj)
+{
+	return ionic_ctx_dbid(dev, to_ionic_ctx_uobj(uobj));
 }
 
 enum ionic_intr_bits {

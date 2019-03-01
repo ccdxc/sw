@@ -29,6 +29,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_CQP_RQ_ID k.{rdma_aq_feedback_cqp_rq_id_sbit0_ebit15...rdma_aq_feedback_cqp_rq_id_sbit16_ebit23}
 #define K_CQP_RQ_STRIDE_LOG2 k.{rdma_aq_feedback_cqp_rq_stride_log2}
 #define K_CQP_RQ_DEPTH_LOG2 k.{rdma_aq_feedback_cqp_rq_depth_log2}
+#define K_CQP_PID k.{rdma_aq_feedback_cqp_pid_sbit0_ebit7...rdma_aq_feedback_cqp_pid_sbit8_ebit15}
 
 //modify_qp params
     
@@ -149,6 +150,7 @@ create_qp:
     addi        r4, r0, rdma_resp_rx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     addi        r3, r0, rx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     sub         r4, r4, r3
+    phvwr       p.rqcb0.intrinsic.pid, K_CQP_PID
     phvwr       p.rqcb0.intrinsic.pc, r4
     phvwr       p.rqcb1.pc, r4
 

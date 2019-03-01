@@ -1373,7 +1373,8 @@ struct rdma_aq_feedback_t {
             rq_map_count:  32;
             pd:            32;
             rq_type_state: 8;
-            rsvd:          24;
+            pid:           16;
+            rsvd:          8;
         } create_qp;
         struct {
             ah_len                   :  8;

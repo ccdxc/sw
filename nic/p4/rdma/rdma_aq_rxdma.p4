@@ -364,6 +364,7 @@ action rdma_stage0_aq_feedback_action2 () {
     modify_field(rdma_aq_feedback_cqp_scr.rq_cmb, rdma_aq_feedback_cqp.rq_cmb);
     modify_field(rdma_aq_feedback_cqp_scr.qp_privileged, rdma_aq_feedback_cqp.qp_privileged);
     modify_field(rdma_aq_feedback_cqp_scr.log_pmtu, rdma_aq_feedback_cqp.log_pmtu);
+    modify_field(rdma_aq_feedback_cqp_scr.pid, rdma_aq_feedback_cqp.pid);
 }
 
 

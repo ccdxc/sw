@@ -351,6 +351,7 @@ header_type rdma_aq_completion_feedback_header_create_qp_t {
         rq_map_count        :  32;
         pd                  :  32;
         rq_type_state       :   8;
+        pid                 :  16;
     }
 }
 

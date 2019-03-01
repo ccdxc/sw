@@ -224,6 +224,9 @@ create_cq:
 
    //TODO: Need to find a way to initiali pt_pa and pt_next_pa
 
+    //populate the PID in CQCB
+    phvwr       p.cqcb.intrinsic.pid, d.dbid_flags
+
     //compute the offset of the label of CQ program
     addi        r4, r0, rdma_cq_tx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     addi        r3, r0, tx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
@@ -405,6 +408,9 @@ create_qp:
     //          TODO: Move RSQ/RRQ allocation to modify_qp frm create_qp
     //          TODO: Move pmtu setup to modify_qp
     
+    //populate the PID in SQCB0
+    phvwr       p.sqcb0.intrinsic.pid, d.dbid_flags
+
     //populate the PC in SQCB0, SQCB1
     addi        r4, r0, rdma_req_tx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     addi        r3, r0, tx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
@@ -496,6 +502,7 @@ qp_no_skip_dma_pt:
     phvwr       p.rdma_feedback.create_qp.rq_type_state, d.type_state
     phvwr       p.rdma_feedback.create_qp.rq_map_count, d.{qp.rq_map_count}.wx
     phvwr       p.rdma_feedback.create_qp.rq_tbl_index, d.{qp.rq_tbl_index_srq_id}.wx
+    phvwr       p.rdma_feedback.create_qp.pid, d.dbid_flags
     add         r2, r0, d.{id_ver}.wx  //TODO: Need to optimize
     phvwr p.p4_to_p4plus.create_qp_ext.rq_id, r2[23:0]
 

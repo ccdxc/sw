@@ -84,7 +84,7 @@ MODULE_PARM_DESC(ionic_rdma_xxx_pgidx, "XXX Tell device idx in eight byte blocks
 static bool ionic_xxx_limits = false;
 module_param_named(ionic_rdma_xxx_limits, ionic_xxx_limits, bool, 0444);
 MODULE_PARM_DESC(ionic_rdma_xxx_limits, "XXX Hardcode resource limits.");
-static bool ionic_xxx_kdbid = true;
+static bool ionic_xxx_kdbid = false;
 module_param_named(ionic_rdma_xxx_kdbid, ionic_xxx_kdbid, bool, 0644);
 MODULE_PARM_DESC(ionic_rdma_xxx_kdbid, "XXX Kernel doorbell id in user space.");
 static bool ionic_xxx_udp = true;
@@ -2329,14 +2329,17 @@ static int ionic_dealloc_mw(struct ib_mw *ibmw)
 	return 0;
 }
 
-static int ionic_v1_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
+static int ionic_v1_create_cq_cmd(struct ionic_ibdev *dev,
+                                  struct ionic_ctx *ctx,
+                                  struct ionic_cq *cq,
 				  struct ionic_tbl_buf *buf)
 {
+	const u16 dbid = ionic_ctx_dbid(dev, ctx);
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
 		.wqe = {
 			.op = IONIC_V1_ADMIN_CREATE_CQ,
-			.dbid_flags = cpu_to_le16(ionic_dbid(dev, cq->ibcq.uobject)),
+			.dbid_flags = cpu_to_le16(dbid),
 			.id_ver = cpu_to_le32(cq->cqid),
 			.cq = {
 				.eq_id = cpu_to_le32(cq->eqid),
@@ -2396,13 +2399,15 @@ static int ionic_v1_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 	return rc;
 }
 
-static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
+static int ionic_create_cq_cmd(struct ionic_ibdev *dev,
+			       struct ionic_ctx *ctx,
+			       struct ionic_cq *cq,
 			       struct ionic_tbl_buf *buf)
 {
 	switch (dev->rdma_version) {
 	case 1:
 		if (dev->admin_opcodes > IONIC_V1_ADMIN_CREATE_CQ)
-			return ionic_v1_create_cq_cmd(dev, cq, buf);
+			return ionic_v1_create_cq_cmd(dev, ctx, cq, buf);
 		return -ENOSYS;
 	default:
 		return -ENOSYS;
@@ -2565,6 +2570,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 				     struct ib_udata *udata)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_cq *cq;
 	struct ionic_tbl_buf buf;
 	int rc;
@@ -2575,7 +2581,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 		goto err_cq;
 	}
 
-	rc = ionic_create_cq_cmd(dev, cq, &buf);
+	rc = ionic_create_cq_cmd(dev, ctx, cq, &buf);
 	if (rc)
 		goto err_cmd;
 
@@ -3284,6 +3290,7 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 				  struct ionic_tbl_buf *rq_buf,
 				  struct ib_qp_init_attr *attr)
 {
+	const u16 dbid = ionic_obj_dbid(dev, pd->ibpd.uobject);
 	const u32 flags = to_ionic_qp_flags(0, 0, qp->sq_is_cmb, qp->rq_is_cmb,
 					    pd_local_privileged(&pd->ibpd),
 					    pd_remote_privileged(&pd->ibpd));
@@ -3292,7 +3299,7 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 		.wqe = {
 			.op = IONIC_V1_ADMIN_CREATE_QP,
 			.type_state = to_ionic_qp_type(attr->qp_type),
-			.dbid_flags = cpu_to_le16(ionic_dbid(dev, pd->ibpd.uobject)),
+			.dbid_flags = cpu_to_le16(dbid),
 			.id_ver = cpu_to_le32(qp->qpid),
 			.qp = {
 				.pd_id = cpu_to_le32(pd->pdid),

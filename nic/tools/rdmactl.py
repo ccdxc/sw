@@ -107,7 +107,7 @@ class RdmaAQCB0state(Packet):
         ByteField("eval_last", 0),
         BitField("total", 0, 4),
         BitField("host", 0, 4),
-        ShortField("pid", 0),
+        LEShortField("pid", 0),
 
         LEShortField("p_index0", 0),
         LEShortField("c_index0", 0),
@@ -168,7 +168,7 @@ class RdmaCQstate(Packet):
         ByteField("eval_last", 0),
         BitField("total", 0, 4),
         BitField("host", 0, 4),
-        ShortField("pid", 0),
+        LEShortField("pid", 0),
 
         LEShortField("p_index0", 0),
         LEShortField("c_index0", 0),
@@ -222,7 +222,7 @@ class RdmaEQstate(Packet):
         ByteField("eval_last", 0),
         BitField("total", 0, 4),
         BitField("host", 0, 4),
-        ShortField("pid", 0),
+        LEShortField("pid", 0),
 
         ShortField("p_index0", 0),
         ShortField("c_index0", 0),
@@ -538,7 +538,7 @@ class RdmaRQCB0state(Packet):
         ByteField("eval_last", 0),
         BitField("total", 0, 4),
         BitField("host", 0, 4),
-        ShortField("pid", 0),
+        LEShortField("pid", 0),
 
         LEShortField("p_index0", 0),
         LEShortField("c_index0", 0),
