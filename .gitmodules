@@ -19,6 +19,3 @@
 [submodule "nic/buildroot"]
 	path = nic/buildroot
 	url = git@github.com:/pensando/buildroot
-[submodule "platform/drivers/pxe/ipxe"]
-	path = platform/drivers/pxe/ipxe
-	url = git@github.com:pensando/platform-ipxe.git

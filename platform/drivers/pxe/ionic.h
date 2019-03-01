@@ -40,6 +40,9 @@ typedef u64 dma_addr_t;
 
 #include "ionic_if.h"
 
+#ifndef ERRFILE_ionic
+#define ERRFILE_ionic ( ERRFILE_DRIVER | 0x00cc0000 )
+#endif
 #undef ERRFILE
 #define ERRFILE ERRFILE_ionic
 

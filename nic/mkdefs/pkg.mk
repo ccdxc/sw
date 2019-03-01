@@ -69,8 +69,13 @@ package-esx:
 	@echo "Building ESX IONIC driver package."
 	${TOPDIR}/platform/tools/drivers-esx.sh
 
+.PHONY: package-ipxe
+package-ipxe:
+	@echo "Building IPXE IONIC driver package."
+	make PLATFORM=efi ARCH=x86_64 -C ${TOPDIR}/platform/drivers/pxe ionic-ipxepatch
+
 .PHONY: package-drivers
-package-drivers: package-ionic package-storage-offload package-freebsd package-esx
+package-drivers: package-ionic package-storage-offload package-freebsd package-esx package-ipxe
 
 .PHONY: package-freebsd
 package-freebsd:

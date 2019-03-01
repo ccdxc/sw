@@ -1,0 +1,5 @@
+#Remove IPXE related files.
+ipxe-mod/
+ipxe-org/
+.ipxefiles
+ipxe-133f4c4.tar.gz
