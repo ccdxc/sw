@@ -44,6 +44,7 @@ testbundles:
         - subifs/subifs.testbundle
         - rx_mode/rx_mode.testbundle
         - networking/connectivity.testbundle
+        - vlanoffload/vlanoffload.testbundle
         - multicast/multicast.testbundle
         - linktest/linktest.testbundle
         - mnic/mnic_classic.testbundle

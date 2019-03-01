@@ -36,12 +36,7 @@ def ShowLeakInMemorySlabInNaples(memslab_before, memslab_after, node_name):
             after_slab_vals = memslab_after[slab_name]
 
             b_inuse = before_slab_vals[0]
-            b_allocs = before_slab_vals[1]
-            b_frees = before_slab_vals[2]
-
             a_inuse = after_slab_vals[0]
-            a_allocs = after_slab_vals[1]
-            a_frees = after_slab_vals[2]
 
             if b_inuse != a_inuse:
                 ret_memslab_diff[slab_name] = [before_slab_vals, after_slab_vals]
@@ -50,6 +45,67 @@ def ShowLeakInMemorySlabInNaples(memslab_before, memslab_after, node_name):
                 #api.Logger.info("After: \t (%s, %s, %s)\n" % (a_inuse, a_allocs, a_frees))
 
     return ret_memslab_diff
+
+# Toggele txvlan options based on <enable>
+# <enable> = on/off
+def Toggle_TxVlanOffload(node, interface, enable):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ethtool -K " + interface + " txvlan " + enable
+    elif api.GetNodeOs(node) == "freebsd":
+        if enable == 'on':
+            cmd = "ifconfig " + interface + " vlanhwtag "
+        else:
+            cmd = "ifconfig " + interface + " -vlanhwtag "
+    api.Trigger_AddHostCommand(req, node, cmd)
+    api.Logger.info("Toggle_TxVlanOffload: cmd = %s" % cmd)
+    resp = api.Trigger(req)
+    return resp
+
+# Toggele rxvlan options based on <enable>
+# <enable> = on/off
+def Toggle_RxVlanOffload(node, interface, enable):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ethtool -K " + interface + " rxvlan " + enable
+    elif api.GetNodeOs(node) == "freebsd":
+        if enable == 'on':
+            cmd = "ifconfig " + interface + " vlanhwtag "
+        else:
+            cmd = "ifconfig " + interface + " -vlanhwtag "
+
+    api.Trigger_AddHostCommand(req, node, cmd)
+    api.Logger.info("Toggle_RxVlanOffload: cmd = %s" % cmd)
+    resp = api.Trigger(req)
+    return resp
+
+def Get_RxVlanOffload_Status(node, interface):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+    resp = None
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ethtool -k " + interface + " | grep rx-vlan-offload"
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "ifconfig " + interface + " | grep options"
+
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return resp
+
+def Get_TxVlanOffload_Status(node, interface):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+    resp = None
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ethtool -k " + interface + " | grep tx-vlan-offload"
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "ifconfig " + interface + " | grep options"
+
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return resp
 
 def GetHostInternalMgmtInterfaces(node):
     interface_names = []

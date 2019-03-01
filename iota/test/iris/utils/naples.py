@@ -113,4 +113,5 @@ def DisableAllmulti(node, interface):
     if resp.commands[0].exit_code != 0:
         result = api.types.status.FAILURE
     return result
- 
+
+
