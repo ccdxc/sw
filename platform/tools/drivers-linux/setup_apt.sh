@@ -23,6 +23,7 @@
     sshpass \
     sysfsutils \
     net-tools \
+    tcpdump \
     hping3
 
  else
