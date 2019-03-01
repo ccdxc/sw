@@ -194,7 +194,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     sdk_ret_t rv;
     pds_mapping_spec_t pds_mapping;
     uint16_t vnic_key = 1, ip_base, mac_offset = 1025;
-    uint32_t ip_offset = 0, remote_slot = 1025, tep_offset = 3;
+    uint32_t ip_offset = 0, remote_slot = 1025, tep_offset;
 
     // ensure a max. of 32 IPs per VNIC
     SDK_ASSERT(num_vcns * num_subnets * num_vnics * num_ip_per_vnic <=
@@ -246,6 +246,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     // create remote mappings
     SDK_ASSERT(num_vcns * num_remote_mappings <= (1 << 20));
     for (uint32_t i = 1; i <= num_vcns; i++) {
+        tep_offset = 3;
         for (uint32_t j = 1; j <= num_subnets; j++) {
             ip_base = num_vnics * num_ip_per_vnic + 1;
             for (uint32_t k = 1; k <= num_remote_mappings; k++) {
@@ -266,7 +267,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                 }
                 pds_mapping.tep.ip_addr =
                     teppfx->addr.addr.v4_addr + tep_offset++;
-                tep_offset %= num_teps;
+                tep_offset %= num_teps + 3;
                 if (tep_offset == 0) {
                     // skip MyTEP and gateway IPs
                     tep_offset += 3;
