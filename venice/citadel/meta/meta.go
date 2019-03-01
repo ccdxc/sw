@@ -119,19 +119,21 @@ type NodeList struct {
 
 // ClusterConfig config parameters
 type ClusterConfig struct {
-	EnableKstore       bool          // enable key-value store
-	EnableTstore       bool          // enable time-series store
-	EnableKstoreMeta   bool          // enable kstore metadata mgr (used for testing purposes)
-	EnableTstoreMeta   bool          // enable tstore metadata mgr (used for testing purposes)
-	MetastoreType      string        // metadata store type
-	MetastoreURL       string        // metadata store URL
-	MetaStoreTLSConfig *tls.Config   // tls config for kv store
-	NumShards          uint32        // number of shards in shardmap
-	DesiredReplicas    uint32        // desired number of replicas
-	NodeTTL            uint64        // TTL for the node keepalives
-	DeadInterval       time.Duration // duration after which we declare a node as dead
-	RebalanceInterval  time.Duration // rebalance interval
-	RebalanceDelay     time.Duration // delay before starting rebalance loop
+	EnableKstore        bool          // enable key-value store
+	EnableTstore        bool          // enable time-series store
+	EnableKstoreMeta    bool          // enable kstore metadata mgr (used for testing purposes)
+	EnableTstoreMeta    bool          // enable tstore metadata mgr (used for testing purposes)
+	MetastoreType       string        // metadata store type
+	MetastoreURL        string        // metadata store URL
+	MetaStoreTLSConfig  *tls.Config   // tls config for kv store
+	NumShards           uint32        // number of shards in shardmap
+	DesiredReplicas     uint32        // desired number of replicas
+	NodeTTL             uint64        // TTL for the node keepalives
+	DeadInterval        time.Duration // duration after which we declare a node as dead
+	RebalanceInterval   time.Duration // rebalance interval
+	RebalanceDelay      time.Duration // delay before starting rebalance loop
+	RetentionPeriod     time.Duration // how long TSDB keeps the data
+	RetentionPolicyName string        // retention policy name in TSDB
 }
 
 // metaclient api provided by meta data mgr
@@ -149,10 +151,12 @@ const (
 
 // default values for cluster config
 const (
-	DefaultShardCount       = 8
-	DefaultReplicaCount     = 2
-	DefaultNodeDeadInterval = time.Second * 30
-	DefaultNodeTTL          = 30
+	DefaultShardCount          = 8
+	DefaultReplicaCount        = 2
+	DefaultNodeDeadInterval    = time.Second * 30
+	DefaultNodeTTL             = 30
+	DefaultRetentionPeriod     = 7 * 24 * time.Hour
+	DefaultRetentionPolicyName = "default"
 )
 
 // DefaultClusterConfig returns default cluster config params
@@ -164,19 +168,21 @@ func DefaultClusterConfig() *ClusterConfig {
 	}
 
 	return &ClusterConfig{
-		EnableKstore:       true,
-		EnableTstore:       true,
-		EnableKstoreMeta:   true,
-		EnableTstoreMeta:   true,
-		MetastoreType:      store.KVStoreTypeMemkv,
-		MetastoreURL:       "",
-		MetaStoreTLSConfig: metaStoreTLSConfig,
-		NumShards:          DefaultShardCount,
-		DesiredReplicas:    DefaultReplicaCount,
-		NodeTTL:            DefaultNodeTTL,
-		DeadInterval:       DefaultNodeDeadInterval,
-		RebalanceInterval:  time.Second,
-		RebalanceDelay:     time.Second * 5,
+		EnableKstore:        true,
+		EnableTstore:        true,
+		EnableKstoreMeta:    true,
+		EnableTstoreMeta:    true,
+		MetastoreType:       store.KVStoreTypeMemkv,
+		MetastoreURL:        "",
+		MetaStoreTLSConfig:  metaStoreTLSConfig,
+		NumShards:           DefaultShardCount,
+		DesiredReplicas:     DefaultReplicaCount,
+		NodeTTL:             DefaultNodeTTL,
+		DeadInterval:        DefaultNodeDeadInterval,
+		RebalanceInterval:   time.Second,
+		RebalanceDelay:      time.Second * 5,
+		RetentionPeriod:     DefaultRetentionPeriod,
+		RetentionPolicyName: DefaultRetentionPolicyName,
 	}
 }
 

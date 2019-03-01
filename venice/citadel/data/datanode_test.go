@@ -157,8 +157,8 @@ func TestDataNodeBasic(t *testing.T) {
 	for idx := 0; idx < numNodes; idx++ {
 		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
 
-		data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
-			"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
+		data := fmt.Sprintf("cpu,host=serverB,svc=nginx value1=11,value2=12 %v\n"+
+			"cpu,host=serverC,svc=nginx value1=21,value2=22  %v\n", time.Now().UnixNano(), time.Now().UnixNano())
 
 		req := tproto.PointsWriteReq{
 			ClusterType: meta.ClusterTypeTstore,
@@ -676,8 +676,8 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 				dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
 				AssertOk(t, rerr, "Error getting datanode client")
 
-				data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
-					"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
+				data := fmt.Sprintf("cpu,host=serverB,svc=nginx value1=11,value2=12  %v\n"+
+					"cpu,host=serverC,svc=nginx value1=21,value2=22  %v\n", time.Now().UnixNano(), time.Now().UnixNano())
 
 				req := tproto.PointsWriteReq{
 					ClusterType: meta.ClusterTypeTstore,
@@ -1204,10 +1204,10 @@ func TestSyncBuffer(t *testing.T) {
 	for _, shard := range cl.ShardMap.Shards {
 		// walk all replicas in the shard
 		for _, repl := range shard.Replicas {
-			log.Infof("++++ shard id %d replica id:%d (%v) node:%s replicas %+v len:%d", shard.ShardID, repl.ReplicaID, repl.IsPrimary, repl.NodeUUID, shard.Replicas, len(cl.ShardMap.Shards))
+			log.Infof("shard id %d replica id:%d (%v) node:%s replicas %+v len:%d", shard.ShardID, repl.ReplicaID, repl.IsPrimary, repl.NodeUUID, shard.Replicas, len(cl.ShardMap.Shards))
 			if !repl.IsPrimary {
-				data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
-					"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
+				data := "cpu,host=serverB,svc=nginx value1=11,value2=12 \n" +
+					"cpu,host=serverC,svc=nginx value1=21,value2=22  \n"
 
 				req := tproto.PointsWriteReq{
 					ClusterType: meta.ClusterTypeTstore,

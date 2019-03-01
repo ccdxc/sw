@@ -87,6 +87,18 @@ func (mr *MockInfMockRecorder) CreateDatabase(ctx, database interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDatabase", reflect.TypeOf((*MockInf)(nil).CreateDatabase), ctx, database)
 }
 
+// CreateDatabaseWithRetention mocks base method
+func (m *MockInf) CreateDatabaseWithRetention(ctx context.Context, database string, retention uint64) error {
+	ret := m.ctrl.Call(m, "CreateDatabaseWithRetention", ctx, database, retention)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateDatabaseWithRetention indicates an expected call of CreateDatabaseWithRetention
+func (mr *MockInfMockRecorder) CreateDatabaseWithRetention(ctx, database, retention interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDatabaseWithRetention", reflect.TypeOf((*MockInf)(nil).CreateDatabaseWithRetention), ctx, database, retention)
+}
+
 // DeleteDatabase mocks base method
 func (m *MockInf) DeleteDatabase(ctx context.Context, database string) error {
 	ret := m.ctrl.Call(m, "DeleteDatabase", ctx, database)

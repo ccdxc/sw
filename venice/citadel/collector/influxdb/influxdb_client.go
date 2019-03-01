@@ -72,7 +72,7 @@ func (cl *influxClient) Stop() {
 	cl.Wait()
 }
 
-func (cl *influxClient) CreateDatabase(ctx context.Context, database string) error {
+func (cl *influxClient) CreateDatabaseWithRetention(ctx context.Context, database string, retention uint64) error {
 	var err error
 
 	URL := cl.URL

@@ -3,6 +3,7 @@
 package tstore
 
 import (
+	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
@@ -119,11 +120,9 @@ func newTstore(dbPath string, ts *tsdb.Store) (*Tstore, error) {
 
 // CreateDatabase creates a database
 func (ts *Tstore) CreateDatabase(database string, spec *meta.RetentionPolicySpec) error {
-	// if retention spec was nil, pick a default
+	// if retention spec was nil, return error
 	if spec == nil {
-		spec = &meta.RetentionPolicySpec{
-			Name: "default",
-		}
+		return fmt.Errorf("invalid retention policy")
 	}
 
 	// create the database with retention policy

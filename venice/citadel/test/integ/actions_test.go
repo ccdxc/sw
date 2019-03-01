@@ -438,9 +438,9 @@ func (it *integTestSuite) writePointsPattern(c *C, locator string, params Action
 		case <-time.After(delay):
 			data := ""
 			for i := 0; i < it.numNodes; i++ {
-				data += fmt.Sprintf("%s%d,key1=key1%d,key2=key2%d value1=%d,value2=%d 10%d\n", table, i, iter, iter, iter, iter, iter)
+				data += fmt.Sprintf("%s%d,key1=key1%d,key2=key2%d value1=%d,value2=%d %d\n", table, i, iter, iter, iter, iter, time.Now().UnixNano())
 			}
-			points, err := models.ParsePointsWithPrecision([]byte(data), time.Time{}, "s")
+			points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
 			AssertOk(c, err, "Error parsing points")
 			err = it.writePoints(points)
 			AssertOk(c, err, fmt.Sprintf("%s: Error writing points", locator))

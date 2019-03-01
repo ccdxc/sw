@@ -24,7 +24,7 @@ import (
 )
 
 // createDatabaseInReplica creates the database in replica
-func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, repl *meta.Replica) error {
+func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, retention uint64, repl *meta.Replica) error {
 	var err error
 
 	// retry creation if there are transient errors
@@ -37,10 +37,11 @@ func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, 
 
 		// req message
 		req := tproto.DatabaseReq{
-			ClusterType: meta.ClusterTypeTstore,
-			ReplicaID:   repl.ReplicaID,
-			ShardID:     repl.ShardID,
-			Database:    database,
+			ClusterType:     meta.ClusterTypeTstore,
+			ReplicaID:       repl.ReplicaID,
+			ShardID:         repl.ShardID,
+			Database:        database,
+			RetentionPeriod: retention,
 		}
 
 		// make create database call
@@ -61,6 +62,11 @@ func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, 
 
 // CreateDatabase creates the database
 func (br *Broker) CreateDatabase(ctx context.Context, database string) error {
+	return br.CreateDatabaseWithRetention(ctx, database, 0)
+}
+
+// CreateDatabaseWithRetention creates the database with retention
+func (br *Broker) CreateDatabaseWithRetention(ctx context.Context, database string, retention uint64) error {
 	// get cluster
 	cl := br.GetCluster(meta.ClusterTypeTstore)
 	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
@@ -71,7 +77,7 @@ func (br *Broker) CreateDatabase(ctx context.Context, database string) error {
 	for _, shard := range cl.ShardMap.Shards {
 		// walk all replicas in the shard
 		for _, repl := range shard.Replicas {
-			err := br.createDatabaseInReplica(ctx, database, repl)
+			err := br.createDatabaseInReplica(ctx, database, retention, repl)
 			if err != nil {
 				br.logger.Errorf("Error creating the database in replica %v. Err: %v", repl, err)
 				return err

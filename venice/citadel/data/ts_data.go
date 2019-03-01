@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	meta2 "github.com/influxdata/influxdb/services/meta"
+
 	"github.com/google/uuid"
 	"github.com/influxdata/influxdb/coordinator"
 	"github.com/influxdata/influxdb/models"
@@ -45,8 +47,20 @@ func (dn *DNode) CreateDatabase(ctx context.Context, req *tproto.DatabaseReq) (*
 	}
 	shard := val.(*TshardState)
 
+	retentionPeriod := time.Duration(req.RetentionPeriod)
+
+	// set cluster default if duration is below or unlimited
+	if retentionPeriod < meta2.MinRetentionPolicyDuration {
+		retentionPeriod = dn.clusterCfg.RetentionPeriod
+	}
+
+	rp := &meta2.RetentionPolicySpec{
+		Name:     dn.clusterCfg.RetentionPolicyName,
+		Duration: &retentionPeriod,
+	}
+
 	// create the database in the datastore
-	err := shard.store.CreateDatabase(req.Database, nil)
+	err := shard.store.CreateDatabase(req.Database, rp)
 	if err != nil {
 		dn.logger.Errorf("Error creating the database in %s. Err: %v", req.Database, err)
 		return &resp, err
@@ -127,7 +141,7 @@ func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*
 	}
 
 	// parse the points
-	points, err := models.ParsePointsWithPrecision([]byte(req.Points), time.Time{}, "n")
+	points, err := models.ParsePointsWithPrecision([]byte(req.Points), time.Now().UTC(), "n")
 	if err != nil {
 		dn.logger.Errorf("Error parsing the points. Err: %v", err)
 		resp.Status = err.Error()
@@ -276,7 +290,7 @@ func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq
 	}
 
 	// parse the points
-	points, err := models.ParsePointsWithPrecision([]byte(req.Points), time.Time{}, "n")
+	points, err := models.ParsePointsWithPrecision([]byte(req.Points), time.Now().UTC(), "n")
 	if err != nil {
 		dn.logger.Errorf("Error parsing the points. Err: %v", err)
 		resp.Status = err.Error()
@@ -708,7 +722,14 @@ func (dn *DNode) ExecuteAggQuery(ctx context.Context, req *tproto.QueryReq) (*tp
 	queryDb := req.Database + uuid.New().String()
 
 	// todo: retention policy
-	if err := dn.tsQueryStore.CreateDatabase(queryDb, nil); err != nil {
+	retentionPeriod := time.Duration(meta2.MinRetentionPolicyDuration)
+
+	rp := &meta2.RetentionPolicySpec{
+		Name:     dn.clusterCfg.RetentionPolicyName,
+		Duration: &retentionPeriod,
+	}
+
+	if err := dn.tsQueryStore.CreateDatabase(queryDb, rp); err != nil {
 		return nil, fmt.Errorf("failed to create query db %s", err)
 	}
 	defer dn.tsQueryStore.DeleteDatabase(queryDb)

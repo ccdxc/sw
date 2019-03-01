@@ -96,6 +96,13 @@ func TestBrokerTstoreBasic(t *testing.T) {
 	err = brokers[0].CreateDatabase(context.Background(), "db0")
 	AssertOk(t, err, "Error creating database")
 
+	// create a dummy db
+	err = brokers[0].CreateDatabaseWithRetention(context.Background(), "dummy", 0)
+	AssertOk(t, err, "Error creating database")
+
+	err = brokers[0].DeleteDatabase(context.Background(), "dummy")
+	AssertOk(t, err, "Error deleting database")
+
 	// read databases
 	AssertEventually(t, func() (bool, interface{}) {
 		dbList, err := brokers[0].ReadDatabases(context.Background())
@@ -120,9 +127,9 @@ func TestBrokerTstoreBasic(t *testing.T) {
 	// write some points
 	for idx := 0; idx < numNodes; idx++ {
 		// create some points
-		data := fmt.Sprintf("cpu%d,host=serverB,svc=nginx value1=11,value2=12 10\n", idx) +
-			fmt.Sprintf("cpu%d,host=serverC,svc=nginx value1=21,value2=22  20\n", idx)
-		points, err := models.ParsePointsWithPrecision([]byte(data), time.Time{}, "s")
+		data := fmt.Sprintf("cpu%d,host=serverB,svc=nginx value1=11,value2=12 %v\n", idx, time.Now().UnixNano()) +
+			fmt.Sprintf("cpu%d,host=serverC,svc=nginx value1=21,value2=22  %v\n", idx, time.Now().UnixNano())
+		points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
 		AssertOk(t, err, "Error parsing points")
 
 		// write the points
@@ -507,7 +514,7 @@ func TestBrokerAggQuery(t *testing.T) {
 		// create some points
 		data := fmt.Sprintf("cpu%d,host=serverB,svc=nginx value1=11,value2=12 %v\n", idx, time.Now().UnixNano()) +
 			fmt.Sprintf("cpu%d,host=serverC,svc=nginx value1=21,value2=22  %v\n", idx, time.Now().UnixNano())
-		points, err := models.ParsePointsWithPrecision([]byte(data), time.Time{}, "ns")
+		points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
 		AssertOk(t, err, "Error parsing points")
 
 		// write the points
@@ -604,13 +611,16 @@ func TestBrokerBenchmark(t *testing.T) {
 	// measure how long it takes to parse the points
 	points := make([]models.Points, numIterations)
 	startTime := time.Now()
+	// pick a timestamp in the retention range, chose now() - 6 days
+	pointStartTime := int(startTime.UnixNano() - time.Duration(6*24*time.Hour).Nanoseconds())
+
 	for iter := 0; iter < numIterations; iter++ {
 		// parse some points
 		var data string
 		for i := 0; i < batchSize; i++ {
-			data += fmt.Sprintf("cpu%d,host=server%d,svc=nginx%d value1=%d,value2=%d %d\n", i, i, i, (i + batchSize*iter), (i + batchSize*iter), (i + 20 + batchSize*iter))
+			data += fmt.Sprintf("cpu%d,host=server%d,svc=nginx%d value1=%d,value2=%d %v\n", i, i, i, (i + batchSize*iter), (i + batchSize*iter), pointStartTime+(i+20+batchSize*iter))
 		}
-		points[iter], err = models.ParsePointsWithPrecision([]byte(data), time.Now(), "s")
+		points[iter], err = models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
 		AssertOk(t, err, "Error parsing points")
 	}
 	log.Warnf("%d iterations at batch size %d parsing points took %v ", numIterations, batchSize, time.Since(startTime).String())

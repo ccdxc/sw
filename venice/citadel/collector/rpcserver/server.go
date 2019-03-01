@@ -196,7 +196,7 @@ func (s *CollRPCSrv) convertToPoints(mb *metric.MetricBundle) []models.Point {
 // CreateDatabase implements the RPC method
 func (s *CollRPCSrv) CreateDatabase(c context.Context, req *metric.DatabaseReq) (*metric.StatusResp, error) {
 	var resp metric.StatusResp
-	err := s.c.CreateDatabase(c, req.GetDatabaseName())
+	err := s.c.CreateDatabase(c, req.GetDatabaseName(), req.GetRetentionPeriod())
 	if err != nil {
 		resp.Status = err.Error()
 	}

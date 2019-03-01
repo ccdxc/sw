@@ -30,6 +30,7 @@ type Inf interface {
 
 	// Methods defined in broker_ts
 	CreateDatabase(ctx context.Context, database string) error
+	CreateDatabaseWithRetention(ctx context.Context, database string, retention uint64) error
 	DeleteDatabase(ctx context.Context, database string) error
 	WritePoints(ctx context.Context, database string, points []models.Point) error
 	ExecuteQuery(ctx context.Context, database string, qry string) ([]*query.Result, error)

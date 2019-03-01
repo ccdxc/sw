@@ -53,6 +53,8 @@ message StatusResp {
     string Status = 1; // response status
 }
 
+// DatabaseReq contains database operation parameters
 message DatabaseReq {
     string DatabaseName    = 1;
+    uint64 RetentionPeriod = 2;
 }

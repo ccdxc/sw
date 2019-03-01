@@ -32,6 +32,6 @@ func (c *Collector) WriteLines(ctx context.Context, db string, lines []string) e
 }
 
 // CreateDatabase creates a database in TSDB
-func (c *Collector) CreateDatabase(ctx context.Context, dbName string) error {
-	return c.tsdbClient.CreateDatabase(ctx, dbName)
+func (c *Collector) CreateDatabase(ctx context.Context, dbName string, retention uint64) error {
+	return c.tsdbClient.CreateDatabaseWithRetention(ctx, dbName, retention)
 }

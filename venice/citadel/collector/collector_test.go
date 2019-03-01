@@ -51,7 +51,7 @@ func TestCollectorBasic(t *testing.T) {
 
 	// Create a database
 	dbname := "testDb"
-	err = c.CreateDatabase(context.Background(), dbname)
+	err = c.CreateDatabase(context.Background(), dbname, 0)
 	tu.AssertOk(t, err, "create databse failed err: %v", err)
 	tu.Assert(t, len(s.DatabasesCreated) == 1, "Expected 1 db got ", s.DatabasesCreated)
 	tu.Assert(t, s.DatabasesCreated[0] == dbname, "Expected db to be %s, got %s", dbname, s.DatabasesCreated)

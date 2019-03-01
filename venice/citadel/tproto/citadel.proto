@@ -40,10 +40,11 @@ message ShardReq {
 }
 
 message DatabaseReq {
-    string ClusterType = 1;  // cluster type
-    uint64 ReplicaID   = 2;  // replica id
-    uint64 ShardID     = 3;  // shard id
-    string Database    = 4;  // database name
+    string ClusterType     = 1;  // cluster type
+    uint64 ReplicaID       = 2;  // replica id
+    uint64 ShardID         = 3;  // shard id
+    string Database        = 4;  // database name
+    uint64 RetentionPeriod = 5;  // how long TSDB keeps the data, min 1 Hr
 }
 
 // execute query req

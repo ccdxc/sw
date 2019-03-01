@@ -13,20 +13,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/influxdata/influxdb/toml"
-
-	"github.com/influxdata/influxdb/tsdb"
-
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
+	meta2 "github.com/influxdata/influxdb/services/meta"
+	"github.com/influxdata/influxdb/toml"
+	"github.com/influxdata/influxdb/tsdb"
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
 	"github.com/influxdata/influxql"
 
+	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+var defaultDuration = time.Duration(meta.DefaultRetentionPeriod)
 
 // ReadAllResults reads all results from c and returns as a slice.
 func ReadAllResults(c <-chan *query.Result) []*query.Result {
@@ -49,7 +51,10 @@ func TestTstoreBasic(t *testing.T) {
 	defer ts.Close()
 
 	// create the database
-	err = ts.CreateDatabase("db1", nil)
+	err = ts.CreateDatabase("db1", &meta2.RetentionPolicySpec{
+		Name:     meta.DefaultRetentionPolicyName,
+		Duration: &defaultDuration,
+	})
 	AssertOk(t, err, "Error creatung the database")
 
 	// read db
@@ -57,13 +62,14 @@ func TestTstoreBasic(t *testing.T) {
 	Assert(t, len(dbs) == 1, "invalid database", dbs)
 
 	for _, db := range dbs {
+		log.Infof("found db: %+v", db)
 		Assert(t, db.Name == "db1", "invalid db", db)
 	}
 
 	// parse some points
-	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
-		"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
-	points, err := models.ParsePointsWithPrecision([]byte(data), time.Time{}, "s")
+	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 \n" +
+		"cpu,host=serverC,svc=nginx value1=21,value2=22  \n"
+	points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
 	AssertOk(t, err, "Error parsing points")
 
 	// write the points
@@ -129,13 +135,16 @@ func TestTstoreBackupRetry(t *testing.T) {
 	defer ts.Close()
 
 	// create the database
-	err = ts.CreateDatabase("db1", nil)
+	err = ts.CreateDatabase("db1", &meta2.RetentionPolicySpec{
+		Name:     meta.DefaultRetentionPolicyName,
+		Duration: &defaultDuration,
+	})
 	AssertOk(t, err, "Error creatung the database")
 
 	// parse some points
-	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
-		"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
-	points, err := models.ParsePointsWithPrecision([]byte(data), time.Time{}, "n")
+	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 \n" +
+		"cpu,host=serverC,svc=nginx value1=21,value2=22  \n"
+	points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "n")
 	AssertOk(t, err, "Error parsing points")
 
 	// write the points
@@ -206,13 +215,16 @@ func TestTstoreWithConfig(t *testing.T) {
 	defer ts.Close()
 
 	// create the database
-	err = ts.CreateDatabase("db1", nil)
+	err = ts.CreateDatabase("db1", &meta2.RetentionPolicySpec{
+		Name:     meta.DefaultRetentionPolicyName,
+		Duration: &defaultDuration,
+	})
 	AssertOk(t, err, "Error creatung the database")
 
 	// parse some points
-	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
-		"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
-	points, err := models.ParsePointsWithPrecision([]byte(data), time.Time{}, "s")
+	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 \n" +
+		"cpu,host=serverC,svc=nginx value1=21,value2=22  \n"
+	points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "s")
 	AssertOk(t, err, "Error parsing points")
 
 	// write the points
@@ -278,13 +290,16 @@ func TestTstoreBackupRestore(t *testing.T) {
 	defer ts.Close()
 
 	// create the database
-	err = ts.CreateDatabase("db1", nil)
+	err = ts.CreateDatabase("db1", &meta2.RetentionPolicySpec{
+		Name:     meta.DefaultRetentionPolicyName,
+		Duration: &defaultDuration,
+	})
 	AssertOk(t, err, "Error creatung the database")
 
 	// parse some points
-	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
-		"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
-	points, err := models.ParsePointsWithPrecision([]byte(data), time.Time{}, "n")
+	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 \n" +
+		"cpu,host=serverC,svc=nginx value1=21,value2=22  \n"
+	points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "n")
 	AssertOk(t, err, "Error parsing points")
 
 	// write the points
@@ -396,19 +411,25 @@ func tstoreBebchmark(t *testing.T, ts *Tstore) {
 	var numIterations = 100
 
 	// create the database
-	err := ts.CreateDatabase("db1", nil)
+	err := ts.CreateDatabase("db1", &meta2.RetentionPolicySpec{
+		Name:     meta.DefaultRetentionPolicyName,
+		Duration: &defaultDuration,
+	})
 	AssertOk(t, err, "Error creatung the database")
 
 	// measure how long it takes to parse the points
 	points := make([]models.Points, numIterations)
 	startTime := time.Now()
+	// pick a timestamp in the retention range, chose now() - 6 days
+	pointStartTime := int(startTime.UnixNano() - time.Duration(6*24*time.Hour).Nanoseconds())
+
 	for iter := 0; iter < numIterations; iter++ {
 		// parse some points
 		var data string
 		for i := 0; i < batchSize; i++ {
-			data += fmt.Sprintf("cpu%d,host=server%d,svc=nginx%d value1=%d,value2=%d %d\n", i, i, i, (i + batchSize*iter), (i + batchSize*iter), (i + 20 + batchSize*iter))
+			data += fmt.Sprintf("cpu%d,host=server%d,svc=nginx%d value1=%d,value2=%d %v\n", i, i, i, i+batchSize*iter, i+batchSize*iter, pointStartTime+(i+20+batchSize*iter))
 		}
-		points[iter], err = models.ParsePointsWithPrecision([]byte(data), time.Now(), "s")
+		points[iter], err = models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
 		AssertOk(t, err, "Error parsing points")
 	}
 	log.Infof("%d iterations at batch size %d parsing points took %v ", numIterations, batchSize, time.Since(startTime).String())
@@ -436,4 +457,51 @@ func tstoreBebchmark(t *testing.T, ts *Tstore) {
 	}
 	log.Infof("%d iterations at batch size %d executing query took %v ", numIterations, batchSize, time.Since(startTime).String())
 
+}
+
+func TestRetentionPolicy(t *testing.T) {
+	// create a temp dir
+	path, err := ioutil.TempDir("", "tstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	// create a new tstore
+	ts, err := NewTstore(path)
+	AssertOk(t, err, "Error creating tstore")
+	defer ts.Close()
+
+	// create the database
+	err = ts.CreateDatabase("db1", nil)
+	Assert(t, err != nil, "didn't fail for invalid retention policy")
+
+	duration := time.Duration(100 * time.Hour)
+	err = ts.CreateDatabase("db1", &meta2.RetentionPolicySpec{
+		Name:     meta.DefaultRetentionPolicyName,
+		Duration: &duration,
+	})
+	AssertOk(t, err, "Error creatung the database")
+	dbs := ts.ReadDatabases()
+	Assert(t, len(dbs) == 1, "invalid database", dbs)
+
+	for _, db := range dbs {
+		Assert(t, db.Name == "db1", "invalid db", db)
+		Assert(t, db.RetentionPolicies[0].Duration == time.Duration(100*time.Hour), "invalid duration", db.RetentionPolicies)
+	}
+	ts.DeleteDatabase("db1")
+
+	err = ts.CreateDatabase("db1", &meta2.RetentionPolicySpec{
+		Name:     meta.DefaultRetentionPolicyName,
+		Duration: &defaultDuration,
+	})
+	AssertOk(t, err, "Error creatung the database")
+	defer ts.DeleteDatabase("db1")
+
+	// read db
+	dbs = ts.ReadDatabases()
+	Assert(t, len(dbs) == 1, "invalid database", dbs)
+
+	for _, db := range dbs {
+		Assert(t, db.Name == "db1", "invalid db", db)
+		Assert(t, db.RetentionPolicies[0].Duration == time.Duration(meta.DefaultRetentionPeriod), "invalid duration", db.RetentionPolicies)
+	}
 }
