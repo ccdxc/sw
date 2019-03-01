@@ -24,7 +24,7 @@ type ExportMgr struct {
 	sync.RWMutex
 	evtsProxy  *evtsproxy.EventsProxy
 	logger     log.Logger
-	exporters  map[string]map[evtsproxy.ExporterType]interface{}
+	exporters  map[string]map[exporters.Type]interface{}
 	ctx        context.Context
 	cancelFunc context.CancelFunc
 	wg         sync.WaitGroup
@@ -55,7 +55,7 @@ func NewExportManager(proxy *evtsproxy.EventsProxy, logger log.Logger) (*ExportM
 	m := &ExportMgr{
 		evtsProxy:  proxy,
 		logger:     logger,
-		exporters:  make(map[string]map[evtsproxy.ExporterType]interface{}),
+		exporters:  make(map[string]map[exporters.Type]interface{}),
 		ctx:        ctx,
 		cancelFunc: cancelFunc}
 
@@ -75,15 +75,15 @@ func (m *ExportMgr) reconnect() {
 		case <-time.After(time.Second):
 			var wg sync.WaitGroup
 			m.RLock()
-			for pName, exporters := range m.exporters {
+			for pName, exprs := range m.exporters {
 				if m.ctx.Err() != nil {
 					m.logger.Infof("exiting reconnect")
 					m.RUnlock()
 					return
 				}
-				for exporterType, exporterInfo := range exporters {
+				for exporterType, exporterInfo := range exprs {
 					switch exporterType {
-					case evtsproxy.Syslog:
+					case exporters.Syslog:
 						syslogExpInfo := exporterInfo.(*syslogExporterInfo)
 						syslogExpInfo.Lock()
 						for wKey, w := range syslogExpInfo.writers {
@@ -174,7 +174,7 @@ func (m *ExportMgr) TargetExists(name string, target *monitoring.ExportConfig) b
 	if target != nil {
 		for exporterType, exporterInfo := range m.exporters[name] {
 			switch exporterType {
-			case evtsproxy.Syslog:
+			case exporters.Syslog:
 				syslogExpInfo := exporterInfo.(*syslogExporterInfo)
 				syslogExpInfo.Lock()
 				for writerKey := range syslogExpInfo.writers {
@@ -195,7 +195,7 @@ func (m *ExportMgr) TargetExists(name string, target *monitoring.ExportConfig) b
 func (m *ExportMgr) Stop() {
 	m.cancelFunc()
 	m.wg.Wait()
-	m.exporters = make(map[string]map[evtsproxy.ExporterType]interface{})
+	m.exporters = make(map[string]map[exporters.Type]interface{})
 }
 
 // helper function to delete the exporters and configs associated with the given policy
@@ -217,7 +217,7 @@ func (m *ExportMgr) delete(policy *evtsmgrprotos.EventPolicy, update bool) error
 	}
 	for t, exporterInfo := range exportersInfo {
 		switch t {
-		case evtsproxy.Syslog:
+		case exporters.Syslog:
 			syslogExpInfo := exporterInfo.(*syslogExporterInfo)
 			syslogExpInfo.Lock()
 			syslogExpInfo.exporter.Stop()
@@ -257,15 +257,15 @@ func (m *ExportMgr) create(policy *evtsmgrprotos.EventPolicy) error {
 		}
 
 		// register the exporter with events proxy (so that it can start receiving events and write it to the desired destination)
-		syslogExporter, err := m.evtsProxy.RegisterEventsExporter(evtsproxy.Syslog, &exporters.SyslogExporterConfig{Name: policy.GetName(), Writers: ws})
+		syslogExporter, err := m.evtsProxy.RegisterEventsExporter(exporters.Syslog, &exporters.SyslogExporterConfig{Name: policy.GetName(), Writers: ws})
 		if err != nil {
 			cancelFunc()
 			return err
 		}
 
 		m.Lock() // protect the exporters map
-		m.exporters[policy.GetName()] = map[evtsproxy.ExporterType]interface{}{
-			evtsproxy.Syslog: &syslogExporterInfo{
+		m.exporters[policy.GetName()] = map[exporters.Type]interface{}{
+			exporters.Syslog: &syslogExporterInfo{
 				writers:    syslogWriters,
 				exporter:   syslogExporter,
 				cancelFunc: cancelFunc,

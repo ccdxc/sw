@@ -99,7 +99,7 @@ func createEvtsProxy(listenURL string, resolverClient resolver.Interface, dedupI
 	if err != nil {
 		logger.Fatalf("error creating events proxy instance: %v", err)
 	}
-	if _, err := eps.RegisterEventsExporter(evtsproxy.Venice,
+	if _, err := eps.RegisterEventsExporter(exporters.Venice,
 		&exporters.VeniceExporterConfig{EvtsMgrURL: evtsMgrURL}); err != nil {
 		log.Fatalf("failed to register venice events exporter with events proxy, err: %v", err)
 	}

@@ -140,6 +140,9 @@ type PersistentStore interface {
 	// returns the current events file name in use
 	GetFilename() string
 
+	// returns the oldest filename from the available event files (i.e from the backups)
+	GetOldestFilename() string
+
 	// writes the given data to persistent store and return whether there was a rotation or not
 	// true indicates a file rotation
 	Write(data []byte) (bool, error)

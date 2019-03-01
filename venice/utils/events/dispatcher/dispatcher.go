@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	memcache "github.com/pensando/sw/venice/utils/cache"
 	"github.com/pensando/sw/venice/utils/events"
+	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -235,12 +236,32 @@ func (d *dispatcherImpl) RegisterExporter(w events.Exporter) (events.Chan, event
 	// intended (ones that were generated before the exporter registration). To avoid such issue, new exporter
 	// is given the current events store offset. So, that it starts receiving events from now on(from current offset).
 	if utils.IsEmpty(exporterOffset.Filename) && exporterOffset.BytesRead == 0 { // new exporter
-		if err := offsetTracker.UpdateOffset(esCurrOffset); err != nil {
+		// Whenever venice is getting registered, it should not miss any event that might have been recorded
+		// before the registration. So, if venice is getting registered for the first time, then allow it to receive
+		// all the events starting from offset 0.
+		//
+		// This case holds very well when NIC changes from host to network mode. In the host mode, events are not exported
+		// to venice. when it changes to network mode, it should receive all (possibly) those events that were recorded
+		// in host mode. And, the way to allow this behavior is to let the venice exporter read from offset 0 of
+		// the (oldest) events file.
+		//
+		if w.Name() == exporters.Venice.String() {
+			exporterOffset.Filename = esCurrOffset.Filename
+			exporterOffset.BytesRead = 0
+
+			oldestFilename := d.eventsStore.GetOldestFilename()
+			if !utils.IsEmpty(oldestFilename) {
+				exporterOffset.Filename = oldestFilename
+			}
+		} else { // other exporters e.g. syslog
+			exporterOffset = esCurrOffset
+		}
+
+		// update offset tracker file
+		if err := offsetTracker.UpdateOffset(exporterOffset); err != nil {
 			d.logger.Errorf("could not update the exporter offset, err: %v", err)
 			return nil, nil, errors.Wrap(err, "failed to register exporter")
 		}
-
-		exporterOffset = esCurrOffset
 	} else {
 		d.logger.Errorf("exporter {%s} restarting from offset: {%v: %v}", exporterName, exporterOffset.Filename, exporterOffset.BytesRead)
 	}

@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/events"
+	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -128,6 +129,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 
 		if n.evtServices.running {
 			if reflect.DeepEqual(n.evtServices.resolverURLs, controllers) {
+				n.logger.Debugf("nothing to be done for the NAPLES status change")
 				return // nothing to be done; as the URLs did not change
 			}
 			n.evtServices.stop() // stop the old services; start them with new resolver client
@@ -226,19 +228,17 @@ func main() {
 func (e *evtServices) start(mode string, resolverClient resolver.Interface) {
 	e.logger.Infof("initializing {%s} mode", mode)
 
-	var agentStore emstore.Emstore
 	var err error
-
 	e.ctx, e.cancelCtx = context.WithCancel(context.Background())
 
 	// create agent data store
 	if utils.IsEmpty(e.config.agentDbPath) {
-		agentStore, err = emstore.NewEmstore(emstore.MemStoreType, "")
+		e.agentStore, err = emstore.NewEmstore(emstore.MemStoreType, "")
 	} else {
-		agentStore, err = emstore.NewEmstore(emstore.BoltDBType, e.config.agentDbPath)
+		e.agentStore, err = emstore.NewEmstore(emstore.BoltDBType, e.config.agentDbPath)
 	}
 	if err != nil {
-		log.Fatalf("error opening the embedded db, err: %v", err)
+		e.logger.Fatalf("error opening the embedded db, err: %v", err)
 	}
 
 	// create events proxy
@@ -248,8 +248,8 @@ func (e *evtServices) start(mode string, resolverClient resolver.Interface) {
 	}
 
 	// start events policy manager
-	if e.policyMgr, err = policy.NewManager(e.eps, e.logger, policy.WithStore(agentStore)); err != nil {
-		log.Fatalf("failed to create event policy manager, err: %v", err)
+	if e.policyMgr, err = policy.NewManager(e.eps, e.logger, policy.WithStore(e.agentStore)); err != nil {
+		e.logger.Fatalf("failed to create event policy manager, err: %v", err)
 	}
 
 	// REST server should run on both modes (in network mode, it is used for querying debugs)
@@ -262,13 +262,15 @@ func (e *evtServices) start(mode string, resolverClient resolver.Interface) {
 		// start events policy watcher to watch events from events manager
 		if e.policyWatcher, err = policy.NewWatcher(e.policyMgr, e.logger,
 			policy.WithResolverClient(resolverClient)); err != nil {
-			log.Fatalf("failed to create events policy watcher, err: %v", err)
+			e.logger.Fatalf("failed to create events policy watcher, err: %v", err)
 		}
+		e.logger.Infof("running policy watcher")
 
 		// register venice exporter (exports events to evtsmgr -> elastic)
-		if _, err := e.eps.RegisterEventsExporter(evtsproxy.Venice, nil); err != nil {
+		if _, err := e.eps.RegisterEventsExporter(exporters.Venice, nil); err != nil {
 			e.logger.Fatalf("failed to register venice events exporter with events proxy, err: %v", err)
 		}
+		e.logger.Infof("registered venice exporter")
 	}
 
 	// start dispatching events to its registered exporters
@@ -325,9 +327,7 @@ func (e *evtServices) stop() {
 	}
 
 	if e.eps != nil {
-		if err := e.eps.RPCServer.Stop(); err != nil {
-			e.logger.Errorf("failed to stop RPC server, err %v", err)
-		}
+		e.eps.Stop()
 		e.eps = nil
 	}
 

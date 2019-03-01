@@ -279,7 +279,7 @@ func StartEvtsProxy(serverAddr string, mr resolver.Interface, logger log.Logger,
 	if err != nil {
 		return nil, "", nil, fmt.Errorf("failed start events proxy, err: %v", err)
 	}
-	if _, err := evtsProxy.RegisterEventsExporter(evtsproxy.Venice,
+	if _, err := evtsProxy.RegisterEventsExporter(exporters.Venice,
 		&exporters.VeniceExporterConfig{EvtsMgrURL: mr.GetURLs(globals.EvtsMgr)[0]}); err != nil {
 		return nil, "", nil, fmt.Errorf("failed to register venice writer with events proxy")
 	}

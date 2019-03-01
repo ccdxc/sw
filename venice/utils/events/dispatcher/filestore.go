@@ -242,6 +242,19 @@ func (f *fileImpl) dedupEventsFromFile(filename string, bytesRead int64, dedupCa
 	return nil
 }
 
+// returns the oldest filename from the available event files
+func (f *fileImpl) GetOldestFilename() string {
+	f.eventFiles.RLock()
+	defer f.eventFiles.RUnlock()
+
+	files := f.eventFiles.list
+	sort.Strings(files)
+	if len(files) > 0 {
+		return files[0]
+	}
+	return ""
+}
+
 // GetFilename returns the current events file name
 func (f *fileImpl) GetFilename() string {
 	f.currentEventsFile.RLock()

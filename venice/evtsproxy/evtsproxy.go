@@ -19,27 +19,6 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
-// ExporterType represents different exporter types (venice, syslog, etc.)
-type ExporterType uint
-
-const (
-	// Venice represents the venice events exporter
-	Venice ExporterType = 0
-
-	// Syslog represents the exporter exporting to external syslog server(s)
-	Syslog ExporterType = 1
-)
-
-// String returns the string name of the exporter
-func (w ExporterType) String() string {
-	switch w {
-	case Venice:
-		return "venice"
-	}
-
-	return ""
-}
-
 var (
 	// len of the exporter channel
 	exporterChLen = 1000
@@ -138,9 +117,9 @@ func (ep *EventsProxy) GetEventsDispatcher() events.Dispatcher {
 }
 
 // RegisterEventsExporter creates the exporter of given type and registers it with the dispatcher
-func (ep *EventsProxy) RegisterEventsExporter(exporterType ExporterType, config interface{}) (events.Exporter, error) {
+func (ep *EventsProxy) RegisterEventsExporter(exporterType exporters.Type, config interface{}) (events.Exporter, error) {
 	switch exporterType {
-	case Venice:
+	case exporters.Venice:
 		exporterConfig := &exporters.VeniceExporterConfig{}
 		if config != nil {
 			var ok bool
@@ -159,7 +138,7 @@ func (ep *EventsProxy) RegisterEventsExporter(exporterType ExporterType, config 
 		}
 
 		return veniceExporter, nil
-	case Syslog:
+	case exporters.Syslog:
 		exporterConfig := &exporters.SyslogExporterConfig{}
 		if config != nil {
 			var ok bool
