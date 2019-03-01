@@ -31,7 +31,7 @@ action execute_copp(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
     modify_field(scratch_metadata.policer_tbkt, tbkt);
 }
 
-@pragma stage 4
+@pragma stage 3
 @pragma policer_table two_color
 table copp {
     reads {
@@ -57,7 +57,7 @@ action copp_action(permitted_packets, permitted_bytes,
     }
 }
 
-@pragma stage 5
+@pragma stage 4
 @pragma table_write
 table copp_action {
     reads {

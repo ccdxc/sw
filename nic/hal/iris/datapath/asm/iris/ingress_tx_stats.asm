@@ -88,6 +88,5 @@ ingress_tx_stats:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 ingress_tx_stats_error:
-    phvwr       p.capri_p4_intrinsic_valid, TRUE
     b           tcp_options_fixup
-    phvwr       p.capri_intrinsic_drop, TRUE
+    phvwr       p.capri_p4_intrinsic_valid, TRUE

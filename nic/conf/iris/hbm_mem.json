@@ -49,15 +49,18 @@
             "cc"     : "true"
         },
         {
-            "_comment" : "cache coherent, used for cpu rx packets allocated by P4+, freed by ARM. The size of this region is to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
+            "_comment" : "cache coherent, used for cpu rx packets allocated by",
+            "_comment1": "P4+, freed by ARM. The size of this region is to",
+            "_comment2": "make cache coherent region order of 2 - currently 64MB",
+            "_comment3": "from beg(hbm base) including this region",
             "name" : "cpu-rx-desc-page",
             "size" : "45952K",
             "cc"      : "true"
         },
         {
             "_comment" : "This reserved region is hardcoded to HBM base + 64MB(above cc regions)",
-            "_comment1" : "Used by memtun, pciemgr, and mputrace. Size is 64MB",
-            "_comment2" : "Refer sdk/platform/utils/mpart_rsvd.hpp",
+            "_comment1": "Used by memtun, pciemgr, and mputrace. Size is 64MB",
+            "_comment2": "Refer sdk/platform/utils/mpart_rsvd.hpp",
              "name": "reserved_common",
              "size": "64M"
         },
@@ -65,7 +68,7 @@
             "_comment" : "Storage region address is hereby aligned to 128MB for efficient PCIe BAR mapping,",
             "_comment1": "allowing full use of the region. Please do not add any other regions in between.",
             "_comment2": "If you need to change the size of any of the above mentioned regions, ",
-	    "_comment3": "please talk to Storage team first.",
+            "_comment3": "please talk to Storage team first.",
             "name": "storage",
             "size": "131072K"
         },
@@ -453,11 +456,11 @@
         },
         {
             "name": "tcp_ooo_rx2tx_queue",
-            "size": "16384K" 
+            "size": "16384K"
         },
         {
             "name": "tcp_ooo_qbase_ring",
-            "size": "32K" 
+            "size": "32K"
         },
         {
             "name": "tcp_ooo_queue",
@@ -471,6 +474,11 @@
         {
             "name": "fte-stats",
             "size": "512B",
+            "reset": true
+        },
+        {
+            "name": "p4_hwerr_stats",
+            "size": "1K",
             "reset": true
         }
     ]

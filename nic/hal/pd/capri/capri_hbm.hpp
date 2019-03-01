@@ -104,6 +104,7 @@
 #define CAPRI_HBM_REG_TCP_OOO_RX2TX_QUEUE   "tcp_ooo_rx2tx_queue"
 #define CAPRI_HBM_REG_PER_FTE_STATS         "fte-stats"
 #define CAPRI_HBM_REG_SESSION_SUMMARY_STATS "session-summary-stats"
+#define CAPRI_HBM_REG_P4_HWERR_STATS        "p4_hwerr_stats"
 
 #define CAPRI_NUM_SEMAPHORES            512
 

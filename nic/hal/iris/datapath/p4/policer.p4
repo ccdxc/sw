@@ -35,7 +35,7 @@ action execute_rx_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
     modify_field(scratch_metadata.policer_tbkt, tbkt);
 }
 
-@pragma stage 4
+@pragma stage 3
 @pragma policer_table two_color
 table rx_policer {
     reads {
@@ -60,7 +60,7 @@ action rx_policer_action(permitted_packets, permitted_bytes,
     }
 }
 
-@pragma stage 5
+@pragma stage 4
 @pragma table_write
 table rx_policer_action {
     reads {

@@ -86,3 +86,10 @@ modules:
         iterate :
             - ipopts: SDBM
               flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : OPTS_PROTO255
+        spec    : ip_nopayload.testspec
+        iterate :
+            - ipopts: LSRR,SSRR,RR,ROUTERALERT,TRACEROUTE
+              flow  : filter://type=IPV4,proto=PROTO255,label=NETWORKING

@@ -8,7 +8,7 @@
 /* Defines for writing into a DBG_WR trace for assembly. This is disabled by */
 /* default, to enable write to DBG_HBM_EN                                    */
 /*****************************************************************************/
-#define DBG_HBM_EN      0 
+#define DBG_HBM_EN      0
 #define DBG_HBM_BASE    0x0C0000000
 #define DBG_HBM_COUNT   0x200
 
@@ -33,5 +33,4 @@
   DBG_WR(index + 5, k[191:128]); \
   DBG_WR(index + 6, k[127:64]); \
   DBG_WR(index + 7, k[63:0]); \
-
 

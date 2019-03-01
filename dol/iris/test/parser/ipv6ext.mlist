@@ -57,3 +57,9 @@ modules:
             - ipopts: FRAGMENT
               flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
 
+    - module:
+        name    : OPTS_PROTO255
+        spec    : ip_nopayload.testspec
+        iterate :
+            - ipopts: FRAGMENT
+              flow  : filter://type=IPV6,proto=PROTO255,label=NETWORKING

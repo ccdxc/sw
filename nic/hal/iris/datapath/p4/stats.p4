@@ -211,6 +211,11 @@ action egress_drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
 
     // dummy ops to keep compiler happy
+    modify_field(capri_intrinsic.debug_trace, capri_intrinsic.debug_trace);
+    modify_field(capri_intrinsic.csum_err, capri_intrinsic.csum_err);
+    modify_field(capri_intrinsic.error_bits, capri_intrinsic.error_bits);
+    modify_field(capri_intrinsic.tm_instance_type, capri_intrinsic.tm_instance_type);
+
     modify_field(scratch_metadata.drop_stats_packets, drop_pkts);
     modify_field(scratch_metadata.drop_stats_pad, pad);
     modify_field(scratch_metadata.ingress_mirror_en, mirror_en);

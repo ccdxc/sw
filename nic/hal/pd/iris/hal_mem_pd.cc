@@ -1093,6 +1093,33 @@ hal_pd_lif_stats_region_init (void)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+hal_pd_hwerr_stats_region_init (void)
+{
+    p4pd_table_properties_t     tbl_ctx;
+    p4pd_error_t                rc;
+    uint64_t                    stats_base_addr;
+
+    stats_base_addr = get_mem_addr(CAPRI_HBM_REG_P4_HWERR_STATS);
+    // reset bit 31 (saves one ASM instruction)
+    stats_base_addr &= ~((uint64_t)1 << 31);
+
+    rc = p4pd_table_properties_get(P4TBL_ID_DROP_STATS, &tbl_ctx);
+    SDK_ASSERT(rc == P4PD_SUCCESS);
+    capri_table_constant_write(stats_base_addr,
+                               tbl_ctx.stage, tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+
+    stats_base_addr += 512;
+    rc = p4pd_table_properties_get(P4TBL_ID_EGRESS_DROP_STATS, &tbl_ctx);
+    SDK_ASSERT(rc == P4PD_SUCCESS);
+    capri_table_constant_write(stats_base_addr,
+                               tbl_ctx.stage, tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // one time memory related initialization for HAL
 //------------------------------------------------------------------------------
@@ -1150,6 +1177,7 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     SDK_ASSERT(asicpd_stats_region_init(g_stats_region_arr,
                                         g_stats_region_arrlen) == HAL_RET_OK);
     SDK_ASSERT(hal_pd_lif_stats_region_init() == HAL_RET_OK);
+    SDK_ASSERT(hal_pd_hwerr_stats_region_init() == HAL_RET_OK);
     SDK_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
     SDK_ASSERT(asicpd_p4plus_table_init(hal_cfg) == HAL_RET_OK);
     SDK_ASSERT(sdk::asic::pd::asicpd_p4plus_recirc_init() == SDK_RET_OK);

@@ -2454,9 +2454,8 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             offset_inst['sel']['value'] = str(0)
             offset_inst['muxsel']['value'] = str(0)
             offset_inst['val']['value'] = str(nxt_cs.extract_len + add_off)
-            if (nxt_cs.extract_len + add_off) != 0 or not nxt_cs.is_end:
+            if (nxt_cs.extract_len + add_off) != 0:
                 # enable jump check if moving the offset
-                # or any time are going to non-end-state
                 sram['offset_jump_chk_en']['value'] = str(1)
 
             if (nxt_cs.extract_len + add_off) != 0:
