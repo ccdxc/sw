@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 )
@@ -62,7 +63,7 @@ var _ = Describe("auth tests", func() {
 							{
 								Key:      "action",
 								Operator: "equals",
-								Values:   []string{"login"},
+								Values:   []string{svc.LoginAction},
 							},
 							{
 								Key:      "outcome",

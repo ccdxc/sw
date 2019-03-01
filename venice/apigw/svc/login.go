@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -18,14 +19,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
-
-	"github.com/pensando/sw/api/interfaces"
+	k8snet "k8s.io/apimachinery/pkg/util/net"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
 	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
@@ -49,6 +50,8 @@ const (
 	LoginSvc = "loginV1"
 	// LoginSvcPath is path under which the Login service is registered in API Gateway
 	LoginSvcPath = "login/"
+	// LoginAction for audit log
+	LoginAction = "Login"
 )
 
 var (
@@ -335,7 +338,7 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 			User:        &api.ObjectRef{Kind: string(auth.KindUser), Namespace: user.Namespace, Tenant: user.Tenant, Name: user.Name, URI: user.SelfLink},
 			Resource:    &api.ObjectRef{Kind: string(auth.KindUser), Namespace: user.Namespace, Tenant: user.Tenant, Name: user.Name, URI: user.SelfLink},
 			ClientIPs:   clientIPs,
-			Action:      "login",
+			Action:      LoginAction,
 			Outcome:     auditapi.Outcome_Success.String(),
 			RequestURI:  reqURI,
 			GatewayNode: os.Getenv("HOSTNAME"),
@@ -382,16 +385,20 @@ func createCSRFToken(tokenLen int) (string, error) {
 
 func getClientIPs(req *http.Request) []string {
 	var clientIPs []string
-	ips, ok := req.Header[apigw.XForwardedFor]
-	if ok {
-		clientIPs = append(clientIPs, ips...)
-	} else {
+	ips := k8snet.SourceIPs(req)
+	for _, ip := range ips {
+		clientIPs = append(clientIPs, ip.String())
+	}
+	if len(clientIPs) == 0 {
 		// https://tools.ietf.org/html/rfc7239#section-4
 		ips, ok := req.Header[apigw.Forwarded]
 		if ok {
 			for _, ip := range ips {
 				if strings.HasPrefix(ip, "for=") {
-					clientIPs = append(clientIPs, strings.TrimPrefix(ip, "for="))
+					parsedIP := net.ParseIP(strings.TrimPrefix(ip, "for="))
+					if parsedIP != nil {
+						clientIPs = append(clientIPs, parsedIP.String())
+					}
 				}
 			}
 		}

@@ -31,6 +31,7 @@ func (s *logger) ProcessEvents(events ...*auditapi.Event) error {
 			"request-uri", event.RequestURI,
 			"request-object", event.RequestObject,
 			"response-object", event.ResponseObject,
+			"client-ips", fmt.Sprintf("%v", event.ClientIPs),
 			"gateway-node", event.GatewayNode,
 			"gateway-ip", event.GatewayIP,
 			"service", event.ServiceName,

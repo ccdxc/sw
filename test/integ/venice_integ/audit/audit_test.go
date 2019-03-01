@@ -22,6 +22,7 @@ import (
 	loginctx "github.com/pensando/sw/api/login/context"
 	. "github.com/pensando/sw/test/utils"
 	testutils "github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/audit"
 	elasticauditor "github.com/pensando/sw/venice/utils/audit/elastic"
@@ -212,7 +213,7 @@ func TestAuditLogs(t *testing.T) {
 	loginEventObj := &auditapi.Event{}
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(auth.KindUser)),
-			es.NewTermQuery("action.keyword", "login"),
+			es.NewTermQuery("action.keyword", svc.LoginAction),
 			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Success.String()))
 		resp, err := ti.esClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)

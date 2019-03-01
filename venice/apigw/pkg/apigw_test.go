@@ -905,6 +905,11 @@ func TestGetClientIPs(t *testing.T) {
 			md:       metadata.Pairs(apigw.Forwarded, "for=192.168.30.9", apigw.Forwarded, "for=192.168.30.10"),
 			expected: []string{"192.168.30.9", "192.168.30.10"},
 		},
+		{
+			name:     "X-Real-IP header in metadata",
+			md:       metadata.Pairs(apigw.XRealIP, "192.168.30.9"),
+			expected: []string{"192.168.30.9"},
+		},
 	}
 	for _, test := range tests {
 		ctx := context.TODO()

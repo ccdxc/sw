@@ -25,6 +25,9 @@ const (
 	// XForwardedFor is X-Forwarded-For header. It is used to get client IPs
 	XForwardedFor = "X-Forwarded-For"
 
+	// XRealIP is X-Real-IP header user to get client IP
+	XRealIP = "X-Real-IP"
+
 	// Forwarded is Forwarded header used to get client IPs (rfc7239)
 	Forwarded = "Forwarded"
 

@@ -1020,14 +1020,37 @@ func getClientIPs(ctx context.Context) []string {
 	if ok {
 		ips, ok := md[strings.ToLower(apigw.XForwardedFor)]
 		if ok {
-			clientIPs = append(clientIPs, ips...)
-		} else {
-			// https://tools.ietf.org/html/rfc7239#section-4
-			ips, ok := md[strings.ToLower(apigw.Forwarded)]
-			if ok {
-				for _, ip := range ips {
-					if strings.HasPrefix(ip, "for=") {
-						clientIPs = append(clientIPs, strings.TrimPrefix(ip, "for="))
+			for _, ip := range ips {
+				parsedIP := net.ParseIP(strings.TrimSpace(ip))
+				if parsedIP != nil {
+					clientIPs = append(clientIPs, parsedIP.String())
+				}
+			}
+		}
+		if len(clientIPs) > 0 {
+			return clientIPs
+		}
+		// try X-Real-Ip header
+		ips, ok = md[strings.ToLower(apigw.XRealIP)]
+		if ok {
+			for _, ip := range ips {
+				parsedIP := net.ParseIP(strings.TrimSpace(ip))
+				if parsedIP != nil {
+					clientIPs = append(clientIPs, parsedIP.String())
+				}
+			}
+		}
+		if len(clientIPs) > 0 {
+			return clientIPs
+		}
+		// https://tools.ietf.org/html/rfc7239#section-4
+		ips, ok = md[strings.ToLower(apigw.Forwarded)]
+		if ok {
+			for _, ip := range ips {
+				if strings.HasPrefix(ip, "for=") {
+					parsedIP := net.ParseIP(strings.TrimPrefix(ip, "for="))
+					if parsedIP != nil {
+						clientIPs = append(clientIPs, parsedIP.String())
 					}
 				}
 			}
