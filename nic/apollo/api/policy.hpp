@@ -28,10 +28,10 @@ public:
     /**
      * @brief    factory method to allocate & initialize a security policy
      *           instance
-     * @param[in] pds_policy    security policy information
+     * @param[in] spec    security policy spec
      * @return    new instance of security policy or NULL, in case of error
      */
-    static policy *factory(pds_policy_t *pds_policy);
+    static policy *factory(pds_policy_spec_t *spec);
 
     /**
      * @brief    release all the s/w state associate with the given security

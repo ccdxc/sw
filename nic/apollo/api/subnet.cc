@@ -31,7 +31,7 @@ subnet_entry::subnet_entry() {
 }
 
 subnet_entry *
-subnet_entry::factory(pds_subnet_spec_t *pds_subnet) {
+subnet_entry::factory(pds_subnet_spec_t *spec) {
     subnet_entry *subnet;
 
     // create subnet entry with defaults, if any
@@ -56,16 +56,16 @@ subnet_entry::destroy(subnet_entry *subnet) {
 
 sdk_ret_t
 subnet_entry::init_config(api_ctxt_t *api_ctxt) {
-    pds_subnet_spec_t *pds_subnet = &api_ctxt->api_params->subnet_info;
+    pds_subnet_spec_t *spec = &api_ctxt->api_params->subnet_spec;
 
-    key_.id = pds_subnet->key.id;
-    v4_route_table_.id = pds_subnet->v4_route_table.id;
-    v6_route_table_.id = pds_subnet->v6_route_table.id;
-    ing_v4_policy_.id = pds_subnet->ing_v4_policy.id;
-    ing_v6_policy_.id = pds_subnet->ing_v6_policy.id;
-    egr_v4_policy_.id = pds_subnet->egr_v4_policy.id;
-    egr_v6_policy_.id = pds_subnet->egr_v6_policy.id;
-    memcpy(&vr_mac_, &pds_subnet->vr_mac, sizeof(mac_addr_t));
+    key_.id = spec->key.id;
+    v4_route_table_.id = spec->v4_route_table.id;
+    v6_route_table_.id = spec->v6_route_table.id;
+    ing_v4_policy_.id = spec->ing_v4_policy.id;
+    ing_v6_policy_.id = spec->ing_v6_policy.id;
+    egr_v4_policy_.id = spec->egr_v4_policy.id;
+    egr_v6_policy_.id = spec->egr_v6_policy.id;
+    memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
     this->ht_ctxt_.reset();
     return SDK_RET_OK;
 }
@@ -83,18 +83,18 @@ sdk_ret_t
 subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for subnet config but a h/w id is needed so
     // we can use while programming vnics, routes etc.
-    pds_subnet_spec_t *pds_subnet = &obj_ctxt->api_params->subnet_info;
+    pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
 
     PDS_TRACE_DEBUG(
         "Creating subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
         "vr_mac %s, v4 route table %u, v6 route table %u"
         "ingress v4 policy %u, ingress v6 policy %u"
         "egress v4 policy %u, egress v6 policy %u",
-        pds_subnet->vcn.id, key_.id, ippfx2str(&pds_subnet->pfx),
-        ipaddr2str(&pds_subnet->vr_ip), macaddr2str(pds_subnet->vr_mac),
-        pds_subnet->v4_route_table.id, pds_subnet->v6_route_table.id,
-        pds_subnet->ing_v4_policy.id, pds_subnet->ing_v6_policy.id,
-        pds_subnet->egr_v4_policy.id, pds_subnet->egr_v6_policy.id);
+        spec->vcn.id, key_.id, ippfx2str(&spec->pfx),
+        ipaddr2str(&spec->vr_ip), macaddr2str(spec->vr_mac),
+        spec->v4_route_table.id, spec->v6_route_table.id,
+        spec->ing_v4_policy.id, spec->ing_v6_policy.id,
+        spec->egr_v4_policy.id, spec->egr_v6_policy.id);
     return SDK_RET_OK;
 }
 
@@ -122,10 +122,10 @@ subnet_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
-    pds_subnet_spec_t *pds_subnet = &obj_ctxt->api_params->subnet_info;
+    pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
 
     // there is no h/w programming for subnet config, so nothing to activate
-    PDS_TRACE_DEBUG("Created subnet (vcn %u, subnet %u)", pds_subnet->vcn.id,
+    PDS_TRACE_DEBUG("Created subnet (vcn %u, subnet %u)", spec->vcn.id,
                     key_.id);
     return SDK_RET_OK;
 }

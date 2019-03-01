@@ -28,17 +28,17 @@ typedef union api_params_u {
     pds_tep_key_t             tep_key;
     pds_tep_spec_t            tep_spec;
     pds_vcn_key_t             vcn_key;
-    pds_vcn_spec_t            vcn_info;
+    pds_vcn_spec_t            vcn_spec;
     pds_subnet_key_t          subnet_key;
-    pds_subnet_spec_t         subnet_info;
+    pds_subnet_spec_t         subnet_spec;
     pds_vnic_key_t            vnic_key;
-    pds_vnic_spec_t           vnic_info;
+    pds_vnic_spec_t           vnic_spec;
     pds_mapping_key_t         mapping_key;
     pds_mapping_spec_t        mapping_spec;
     pds_route_table_key_t     route_table_key;
     pds_route_table_spec_t    route_table_spec;
     pds_policy_key_t          policy_key;
-    pds_policy_t              policy_info;
+    pds_policy_spec_t         policy_spec;
 } api_params_t;
 
 /**< @brief    per API context maintained by framework while processing */

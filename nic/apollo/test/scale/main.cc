@@ -438,10 +438,10 @@ static sdk_ret_t
 create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
                         uint32_t num_rules, uint32_t ip_af, bool ingress)
 {
-    sdk_ret_t       rv;
-    pds_policy_t    policy;
-    uint32_t        policy_id = 1;
-    rule_t          *rule;
+    sdk_ret_t            rv;
+    pds_policy_spec_t    policy;
+    uint32_t             policy_id = 1;
+    rule_t               *rule;
 
     if (num_rules == 0) {
         return SDK_RET_OK;

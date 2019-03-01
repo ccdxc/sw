@@ -30,14 +30,14 @@ policy::policy() {
 
 /**
  * @brief    factory method to allocate & initialize a security policy instance
- * @param[in] pds_policy    security policy information
+ * @param[in] spec    security policy spec
  * @return    new instance of security policy or NULL, in case of error
  */
 policy *
-policy::factory(pds_policy_t *pds_policy) {
+policy::factory(pds_policy_spec_t *spec) {
     policy    *new_policy;
 
-    if (pds_policy->policy_type != POLICY_TYPE_FIREWALL) {
+    if (spec->policy_type != POLICY_TYPE_FIREWALL) {
         /**< we don't support any other policy type currently */
         return NULL;
     }
@@ -46,7 +46,7 @@ policy::factory(pds_policy_t *pds_policy) {
     if (new_policy) {
         new (new_policy) policy();
         new_policy->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_SECURITY_POLICY,
-                                               pds_policy);
+                                               spec);
         if (new_policy->impl_ == NULL) {
             policy::destroy(new_policy);
             return NULL;
@@ -85,10 +85,10 @@ policy::destroy(policy *policy) {
  */
 sdk_ret_t
 policy::init_config(api_ctxt_t *api_ctxt) {
-    pds_policy_t    *pds_policy;
+    pds_policy_spec_t    *spec;
     
-    pds_policy = &api_ctxt->api_params->policy_info;
-    memcpy(&this->key_, &pds_policy->key,
+    spec = &api_ctxt->api_params->policy_spec;
+    memcpy(&this->key_, &spec->key,
            sizeof(pds_policy_key_t));
     return SDK_RET_OK;
 }

@@ -90,8 +90,8 @@ typedef enum policy_type_s {
 } policy_type_t;
 
 /// \brief Generic policy
-typedef struct pds_policy_s    pds_policy_t;
-struct pds_policy_s {
+typedef struct pds_policy_spec_s    pds_policy_spec_t;
+struct pds_policy_spec_s {
     pds_policy_key_t    key;            ///< policy key
     policy_type_t       policy_type;    ///< type of policy
     uint8_t             af;             ///< Address family
@@ -99,13 +99,13 @@ struct pds_policy_s {
     uint32_t            num_rules;      ///< Number of rules in the list
     rule_t              *rules;         ///< List or rules
 
-    pds_policy_s() { rules = NULL; }
-    ~pds_policy_s() {
+    pds_policy_spec_s() { rules = NULL; }
+    ~pds_policy_spec_s() {
         if (rules) {
             SDK_FREE(PDS_MEM_ALLOC_SEUCURITY_POLICY, rules);
         }
     }
-    pds_policy_t& operator= (const pds_policy_t& policy) {
+    pds_policy_spec_t& operator= (const pds_policy_spec_t& policy) {
         // self-assignment guard
         if (this == &policy) {
             return *this;
@@ -131,7 +131,7 @@ struct pds_policy_s {
 /// \param[in] policy Policy information
 //
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_create(pds_policy_t *policy);
+sdk_ret_t pds_policy_create(pds_policy_spec_t *policy);
 
 /// \brief Delete policy
 ///

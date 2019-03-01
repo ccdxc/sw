@@ -75,7 +75,7 @@ mapping_impl::reserve_resources(api_base *api_obj) {
 #if 0
     pds_mapping_spec_t    *spec;
 
-    spec = &obj_ctxt->api_params->mapping_info;
+    spec = &obj_ctxt->api_params->mapping_spec;
     if (is_local_) {
         mapping_impl_db()->local_ip_mapping_tbl()->reserve(key,
                                                            &local_ip_mapping_idx_);

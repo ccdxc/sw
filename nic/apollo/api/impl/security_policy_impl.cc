@@ -25,11 +25,11 @@ namespace impl {
 
 /**
  * @brief    factory method to allocate & initialize security policy impl instance
- * @param[in] pds_security_policy    security policy information
+ * @param[in] spec    security policy spec
  * @return    new instance of security policy or NULL, in case of error
  */
 security_policy_impl *
-security_policy_impl::factory(pds_policy_t *pds_policy) {
+security_policy_impl::factory(pds_policy_spec_t *spec) {
     security_policy_impl    *impl;
 
     // TODO: move to slab later
@@ -97,22 +97,22 @@ security_policy_impl::release_resources(api_base *api_obj) {
  */
 sdk_ret_t
 security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t       ret;
-    pds_policy_t    *policy_info;
-    rfc::policy_t   policy;
+    sdk_ret_t            ret;
+    pds_policy_spec_t    *spec;
+    rfc::policy_t        policy;
 
-    policy_info = &obj_ctxt->api_params->policy_info;
-    SDK_ASSERT_RETURN((policy_info->num_rules > 0), sdk::SDK_RET_INVALID_ARG);
+    spec = &obj_ctxt->api_params->policy_spec;
+    SDK_ASSERT_RETURN((spec->num_rules > 0), sdk::SDK_RET_INVALID_ARG);
 
     memset(&policy, 0, sizeof(policy));
-    policy.policy_type = policy_info->policy_type;
-    policy.af = policy_info->af;
-    policy.direction = policy_info->direction;
+    policy.policy_type = spec->policy_type;
+    policy.af = spec->af;
+    policy.direction = spec->direction;
     policy.max_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
-    policy.num_rules = policy_info->num_rules;
-    policy.rules = policy_info->rules;
+    policy.num_rules = spec->num_rules;
+    policy.rules = spec->rules;
     PDS_TRACE_DEBUG("Processing security policy %u",
-                    policy_info->key.id);
+                    spec->key.id);
     ret = rfc_policy_create(&policy, security_policy_root_addr_,
               security_policy_impl_db()->security_policy_table_size());
     if (ret != SDK_RET_OK) {

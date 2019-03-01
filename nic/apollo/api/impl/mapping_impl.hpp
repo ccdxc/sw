@@ -123,40 +123,40 @@ private:
 
     /**
      * @brief     add necessary entries to NAT table
-     * @param[in] mapping_info    IP mapping details
+     * @param[in] spec    IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t add_nat_entries_(pds_mapping_spec_t *mapping_info);
+    sdk_ret_t add_nat_entries_(pds_mapping_spec_t *spec);
 
     /**
      * @brief     add necessary entries to LOCAL_IP_MAPPING table
      * @param[in] vcn             VCN of this IP
-     * @param[in] mapping_info    IP mapping details
+     * @param[in] spec            IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t add_local_ip_mapping_entries_(vcn_entry *vcn,
-                                            pds_mapping_spec_t *mapping_info);
+                                            pds_mapping_spec_t *spec);
 
     /**
      * @brief     add necessary entries to REMOTE_VNIC_MAPPING_RX table
      * @param[in] vcn             VCN of this IP
      * @param[in] subnet          subnet of this IP
-     * @param[in] mapping_info    IP mapping details
+     * @param[in] spec            IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
                                                   subnet_entry *subnet,
-                                                  pds_mapping_spec_t *mapping_info);
+                                                  pds_mapping_spec_t *spec);
 
     /**
      * @brief     add necessary entries to REMOTE_VNIC_MAPPING_TX table
      * @param[in] vcn             VCN of this IP
      * @param[in] subnet          subnet of this IP
-     * @param[in] mapping_info    IP mapping details
+     * @param[in] spec            IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
-                                                  pds_mapping_spec_t *mapping_info);
+                                                  pds_mapping_spec_t *spec);
 
    /**
      * @brief     Read the configured values from table and fill to the spec

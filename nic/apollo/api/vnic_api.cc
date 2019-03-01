@@ -31,7 +31,7 @@ pds_vnic_api_handle (api::api_op_t op, pds_vnic_key_t *key,
         if (op == api::API_OP_DELETE)
             api_ctxt.api_params->vnic_key = *key;
         else
-            api_ctxt.api_params->vnic_info = *spec;
+            api_ctxt.api_params->vnic_spec = *spec;
         rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
     }

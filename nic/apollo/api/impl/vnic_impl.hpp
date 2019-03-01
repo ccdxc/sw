@@ -131,7 +131,7 @@ private:
      * @param[in] epoch          epoch being activated
      * @param[in] vcn            vcn entry
      * @param[in] subnet         subnet entry
-     * @param[in] vnic_info      vnic configuration
+     * @param[in] spec           vnic configuration
      * @param[in] v4_route_table IPv4 routing table entry
      * @param[in] v6_route_table IPv6 routing table entry
      * @param[in] v4_policy      egress IPv4 security policy
@@ -143,7 +143,7 @@ private:
                                               pds_epoch_t epoch,
                                               vcn_entry *vcn,
                                               subnet_entry *subnet,
-                                              pds_vnic_spec_t *vnic_info,
+                                              pds_vnic_spec_t *spec,
                                               route_table *v4_route_table,
                                               route_table *v6_route_table,
                                               policy *v4_policy,
@@ -156,7 +156,7 @@ private:
      * @param[in] epoch          epoch being activated
      * @param[in] vcn            vcn entry
      * @param[in] subnet         subnet entry
-     * @param[in] vnic_info      vnic configuration
+     * @param[in] spec           vnic configuration
      * @param[in] v4_policy      ingress IPv4 security policy
      * @param[in] v6_policy      ingress IPv6 security policy
      * @return   SDK_RET_OK on success, failure status code on error
@@ -165,7 +165,7 @@ private:
                                               api_base *api_obj,
                                               pds_epoch_t epoch, vcn_entry *vcn,
                                               subnet_entry *subnet,
-                                              pds_vnic_spec_t *vnic_info,
+                                              pds_vnic_spec_t *spec,
                                               policy *v4_policy,
                                               policy *v6_policy);
     /**

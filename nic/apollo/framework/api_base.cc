@@ -25,11 +25,11 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return obj;
 
     case OBJ_ID_VCN:
-        obj = vcn_entry::factory(&api_ctxt->api_params->vcn_info);
+        obj = vcn_entry::factory(&api_ctxt->api_params->vcn_spec);
         return obj;
 
     case OBJ_ID_SUBNET:
-        obj = subnet_entry::factory(&api_ctxt->api_params->subnet_info);
+        obj = subnet_entry::factory(&api_ctxt->api_params->subnet_spec);
         return obj;
 
     case OBJ_ID_TEP:
@@ -37,7 +37,7 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return obj;
 
     case OBJ_ID_VNIC:
-        obj = vnic_entry::factory(&api_ctxt->api_params->vnic_info);
+        obj = vnic_entry::factory(&api_ctxt->api_params->vnic_spec);
         return obj;
 
     case OBJ_ID_MAPPING:
@@ -49,7 +49,7 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return obj;
 
     case OBJ_ID_POLICY:
-        obj = policy::factory(&api_ctxt->api_params->policy_info);
+        obj = policy::factory(&api_ctxt->api_params->policy_spec);
         return obj;
 
     default:
@@ -75,7 +75,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         if (api_ctxt->api_op == API_OP_DELETE) {
             obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_key);
         } else {
-            obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_info.key);
+            obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_spec.key);
         }
         return obj;
 
@@ -83,7 +83,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         if (api_ctxt->api_op == API_OP_DELETE) {
             obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_key);
         } else {
-            obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_info.key);
+            obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_spec.key);
         }
         return obj;
 
@@ -100,7 +100,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         if (api_ctxt->api_op == API_OP_DELETE) {
             obj = vnic_db()->vnic_find(&api_ctxt->api_params->vnic_key);
         } else {
-            obj = vnic_db()->vnic_find(&api_ctxt->api_params->vnic_info.key);
+            obj = vnic_db()->vnic_find(&api_ctxt->api_params->vnic_spec.key);
         }
         return obj;
 
@@ -120,7 +120,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         if (api_ctxt->api_op == API_OP_DELETE) {
             obj = policy_db()->policy_find(&api_ctxt->api_params->policy_key);
         } else {
-            obj = policy_db()->policy_find(&api_ctxt->api_params->policy_info.key);
+            obj = policy_db()->policy_find(&api_ctxt->api_params->policy_spec.key);
         }
         break;
 

@@ -32,7 +32,7 @@ pds_subnet_api_handle (api::api_op_t op, pds_subnet_key_t *key,
         if (op == api::API_OP_DELETE)
             api_ctxt.api_params->subnet_key = *key;
         else
-            api_ctxt.api_params->subnet_info = *spec;
+            api_ctxt.api_params->subnet_spec = *spec;
         return (api::g_api_engine.process_api(&api_ctxt));
     }
     return sdk::SDK_RET_OOM;

@@ -19,11 +19,11 @@
 /**
  * @brief create a security policy
  *
- * @param[in] policy security policy information
+ * @param[in] spec security policy spec
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-pds_policy_create (_In_ pds_policy_t *policy)
+pds_policy_create (_In_ pds_policy_spec_t *spec)
 {
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
@@ -33,7 +33,7 @@ pds_policy_create (_In_ pds_policy_t *policy)
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_CREATE;
         api_ctxt.obj_id = api::OBJ_ID_POLICY;
-        api_ctxt.api_params->policy_info = *policy;
+        api_ctxt.api_params->policy_spec = *spec;
         rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
     }
@@ -43,11 +43,11 @@ pds_policy_create (_In_ pds_policy_t *policy)
 /**
  * @brief delete given security policy
  *
- * @param[in] policy_key    security policy key
+ * @param[in] key    security policy key
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-pds_policy_delete (_In_ pds_policy_key_t *policy_key)
+pds_policy_delete (_In_ pds_policy_key_t *key)
 {
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
@@ -57,7 +57,7 @@ pds_policy_delete (_In_ pds_policy_key_t *policy_key)
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_DELETE;
         api_ctxt.obj_id = api::OBJ_ID_POLICY;
-        api_ctxt.api_params->policy_key = *policy_key;
+        api_ctxt.api_params->policy_key = *key;
         rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
     }

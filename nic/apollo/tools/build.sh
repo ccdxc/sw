@@ -4,30 +4,26 @@ set -x
 NICDIR=`pwd`
 copy_libs()
 {
-    mkdir -p build
-    cd sdk/third-party/libs
-    cp -r --parents -u ./* $NICDIR/build
-    cd -
+    if [ ! -d  ./build/$1/apollo ];then
+        mkdir -p build/$1
+        cd sdk/third-party/libs/$1
+        cp -r --parents -u ./* $NICDIR/build/$1
+        cd -
+    fi
 }
 
 build_x86() {
-    if [ ! -d  ./build ];then
-        copy_libs
-    fi
+    copy_libs x86_64
     make PIPELINE=apollo "${@:1}"
 }
 
 build_arm() {
-    if [ ! -d  ./build ];then
-        copy_libs
-    fi
+    copy_libs aarch64
     make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw PERF=1 "${@:1}"
 }
 
 build_fw() {
-    if [ ! -d  ./build ];then
-        copy_libs
-    fi
+    copy_libs aarch64
     make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw PERF=1 firmware  "${@:1}"
 }
 

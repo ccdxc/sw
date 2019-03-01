@@ -31,7 +31,7 @@ pds_vcn_api_handle (api::api_op_t op, pds_vcn_key_t *key, pds_vcn_spec_t *spec)
         if (op == api::API_OP_DELETE)
             api_ctxt.api_params->vcn_key = *key;
         else
-            api_ctxt.api_params->vcn_info = *spec;
+            api_ctxt.api_params->vcn_spec = *spec;
         return (api::g_api_engine.process_api(&api_ctxt));
     }
 

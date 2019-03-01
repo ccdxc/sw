@@ -31,18 +31,18 @@ vnic_entry::vnic_entry() {
 
 /**
  * @brief    factory method to allocate and initialize a vnic entry
- * @param[in] pds_vnic    vnic information
+ * @param[in] spec    vnic spec
  * @return    new instance of vnic or NULL, in case of error
  */
 vnic_entry *
-vnic_entry::factory(pds_vnic_spec_t *pds_vnic) {
+vnic_entry::factory(pds_vnic_spec_t *spec) {
     vnic_entry *vnic;
 
     /**< create vnic entry with defaults, if any */
     vnic = vnic_db()->vnic_alloc();
     if (vnic) {
         new (vnic) vnic_entry();
-        vnic->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_VNIC, pds_vnic);
+        vnic->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_VNIC, spec);
         if (vnic->impl_ == NULL) {
             vnic_entry::destroy(vnic);
             return NULL;
@@ -81,9 +81,9 @@ vnic_entry::destroy(vnic_entry *vnic) {
  */
 sdk_ret_t
 vnic_entry::init_config(api_ctxt_t *api_ctxt) {
-    pds_vnic_spec_t *pds_vnic = &api_ctxt->api_params->vnic_info;
+    pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;
 
-    memcpy(&this->key_, &pds_vnic->key, sizeof(pds_vnic_key_t));
+    memcpy(&this->key_, &spec->key, sizeof(pds_vnic_key_t));
     return SDK_RET_OK;
 }
 
@@ -106,13 +106,13 @@ vnic_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    pds_vnic_spec_t    *pds_vnic = &obj_ctxt->api_params->vnic_info;
+    pds_vnic_spec_t    *spec = &obj_ctxt->api_params->vnic_spec;
 
     PDS_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, vlan %u, "
-                    "encap type %u, encap value %u", key_.id, pds_vnic->vcn.id,
-                    pds_vnic->subnet.id, macaddr2str(pds_vnic->mac_addr),
-                    pds_vnic->wire_vlan, pds_vnic->fabric_encap.type,
-                    pds_vnic->fabric_encap.val.value);
+                    "encap type %u, encap value %u", key_.id, spec->vcn.id,
+                    spec->subnet.id, macaddr2str(spec->mac_addr),
+                    spec->wire_vlan, spec->fabric_encap.type,
+                    spec->fabric_encap.val.value);
     return impl_->program_hw(this, obj_ctxt);
 }
 
