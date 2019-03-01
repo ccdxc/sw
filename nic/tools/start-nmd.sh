@@ -69,4 +69,4 @@ fi
 # Temporary dhclient
 ifconfig bond0 down
 kill -9 $(pidof dhclient)
-exec /nic/bin/nmd -hostif lo -standalone=false -mode host&
+exec /nic/bin/nmd -hostif lo -standalone=false -mode host
