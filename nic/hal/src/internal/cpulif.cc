@@ -10,7 +10,6 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
@@ -46,24 +45,26 @@ service_create_cpucb(void)
     }
 
     return ret;
-                        
+
 }
 hal_ret_t
 program_cpu_lif(void)
 {
     hal_ret_t                         ret = HAL_RET_OK;
+    sdk_ret_t                         sret = SDK_RET_OK;
     intf::LifSpec                     lif_spec;
     intf::LifResponse                 rsp;
     lif_hal_info_t                    lif_hal_info = {0};
     pd::pd_lif_get_lport_id_args_t    args = { 0 };
     pd::pd_func_args_t                pd_func_args = {0};
 
-    if(lif_manager()->LIFRangeAlloc(HAL_LIF_CPU, 1) <= 0)
-    {
+    // if(lif_manager()->LIFRangeAlloc(HAL_LIF_CPU, 1) <= 0)
+    sret = lif_manager()->reserve_id(HAL_LIF_CPU, 1);
+    if (sret != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to reserve service LIF");
         return HAL_RET_NO_RESOURCE;
     }
- 
+
 
     lif_spec.Clear();
 

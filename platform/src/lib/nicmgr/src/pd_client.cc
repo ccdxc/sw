@@ -423,7 +423,8 @@ void PdClient::init(void)
     mp_ = mpartition::factory(mpart_json.c_str());
     assert(mp_);
     NIC_LOG_DEBUG("Initializing LIF Manager ...");
-    lm_ = LIFManager::factory(mp_, NULL, kLif2QstateHBMLabel);
+    // lm_ = LIFManager::factory(mp_, NULL, kLif2QstateHBMLabel);
+    lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);
 
     switch (platform_){
@@ -511,6 +512,65 @@ void PdClient::destroy(PdClient *pdc)
     delete pdc;
 }
 
+
+int
+PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
+                              struct queue_info* queue_info,
+                              uint8_t coses)
+{
+    lif_qstate_t qstate;
+
+    memset(&qstate, 0, sizeof(lif_qstate_t));
+
+    qstate.lif_id = hw_lif_id;
+
+    for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
+        auto & qinfo = queue_info[i];
+        if (qinfo.size < 1) continue;
+
+        if (qinfo.size > 7 || qinfo.entries > 24) {
+            NIC_LOG_ERR("Invalid entry in LifSpec : size={} entries={}",
+                          qinfo.size, qinfo.entries);
+            return -1;
+        }
+
+        if (qinfo.purpose > intf::LifQPurpose_MAX) {
+            NIC_LOG_ERR("Invalid entry in LifSpec : purpose={}", qinfo.purpose);
+            return -1;
+        }
+
+        qstate.type[qinfo.type_num].qtype_info.size = qinfo.size;
+        qstate.type[qinfo.type_num].qtype_info.entries = qinfo.entries;
+
+        // Set both cosA,cosB to admin_cos(cosA) value for admin-qtype.
+        if (qinfo.purpose != LIF_QUEUE_PURPOSE_ADMIN) {
+            qstate.type[qinfo.type_num].qtype_info.cosA = (coses & 0x0f);
+            qstate.type[qinfo.type_num].qtype_info.cosB = (coses & 0xf0) >> 4;
+        } else {
+            qstate.type[qinfo.type_num].qtype_info.cosA =
+                qstate.type[qinfo.type_num].qtype_info.cosB = (coses & 0x0f);
+        }
+    }
+
+    qstate.hint_cos = (coses & 0xf0) >> 4;
+
+    // Reserve lif id
+    lm_->reserve_id(qstate.lif_id, 1);
+
+    // Init the lif
+    lm_->init(&qstate);
+
+    // Zero out qstate
+    lm_->clear_qstate(qstate.lif_id);
+
+    // Program qstate map
+    lm_->enable(qstate.lif_id);
+
+    return 0;
+}
+
+
+#if 0
 int
 PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
                               struct queue_info* queue_info,
@@ -558,10 +618,12 @@ PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
 
     return 0;
 }
+#endif
 
 int
 PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
 {
+    sdk_ret_t ret = SDK_RET_OK;
     uint8_t bzero64[64] = {0};
 
     NIC_FUNC_INFO("lif{}: Started initializing Qstate", hw_lif_id);
@@ -571,12 +633,20 @@ PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
         if (qinfo.size < 1) continue;
 
         for (uint32_t qid = 0; qid < (uint32_t) pow(2, qinfo.entries); qid++) {
+            ret = lm_->write_qstate(hw_lif_id, qtype, qid, bzero64, sizeof(bzero64));
+            if (ret != SDK_RET_OK) {
+                NIC_LOG_ERR("Failed to set LIFQState : {}", ret);
+                return -1;
+            }
+
+#if 0
             int ret = lm_->WriteQState(hw_lif_id, qtype, qid, bzero64,
                 sizeof(bzero64));
             if (ret < 0) {
                 NIC_LOG_ERR("Failed to set LIFQState : {}", ret);
                 return -1;
             }
+#endif
         }
     }
 
@@ -610,7 +680,8 @@ int PdClient::program_qstate(struct queue_info* queue_info,
         auto &qinfo = queue_info[type];
         if (qinfo.size < 1) continue;
 
-        lif_info->qstate_addr[type] = lm_->GetLIFQStateAddr(lif_info->hw_lif_id, type, 0);
+        // lif_info->qstate_addr[type] = lm_->GetLIFQStateAddr(lif_info->hw_lif_id, type, 0);
+        lif_info->qstate_addr[type] = lm_->get_lif_qstate_addr(lif_info->hw_lif_id, type, 0);
         NIC_LOG_DEBUG("lif-{}: qtype: {}, qstate_base: {:#x}",
                      lif_info->hw_lif_id,
                      type, lif_info->qstate_addr[type]);
@@ -1011,7 +1082,9 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
 
     NIC_FUNC_DEBUG("lif-{}: RDMA lif init", lif);
 
-    LIFQState *qstate = lm_->GetLIFQState(lif);
+    // TODO: We may not want to access the pointer from the library.
+    // LIFQState *qstate = lm_->GetLIFQState(lif);
+    lif_qstate_t *qstate = lm_->get_lif_qstate(lif);
     if (qstate == nullptr) {
         NIC_FUNC_ERR("lif-{}: GetLIFQState failed", lif);
         return HAL_RET_ERR;
@@ -1022,7 +1095,8 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     memset(&sram_lif_entry, 0, sizeof(sram_lif_entry_t));
 
     // Fill the CQ info in sram_lif_entry
-    cq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);
+    // cq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);
+    cq_base_addr = lm_->get_lif_qstate_base_addr(lif, Q_TYPE_RDMA_CQ);
     NIC_FUNC_DEBUG("lif-{}: cq_base_addr: {:#x}, max_cqs: {} ",
                   lif, cq_base_addr, roundup_to_pow_2(max_cqs));
     SDK_ASSERT((cq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
@@ -1030,14 +1104,16 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     sram_lif_entry.log_num_cq_entries = log2(roundup_to_pow_2(max_cqs));
 
     // Fill the SQ info in sram_lif_entry
-    sq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
+    // sq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
+    sq_base_addr = lm_->get_lif_qstate_base_addr(lif, Q_TYPE_RDMA_SQ);
     NIC_FUNC_DEBUG("lif-{}: sq_base_addr: {:#x}",
                     lif, sq_base_addr);
     SDK_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
 
     // Fill the RQ info in sram_lif_entry
-    rq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
+    // rq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
+    rq_base_addr = lm_->get_lif_qstate_base_addr(lif, Q_TYPE_RDMA_RQ);
     NIC_FUNC_DEBUG("lif-{}: rq_base_addr: {:#x}",
                     lif, rq_base_addr);
     SDK_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
@@ -1175,5 +1251,27 @@ PdClient::set_program_info()
     pinfo_ = program_info::factory((gen_dir_path_ +
                                     "mpu_prog_info.json").c_str());
     assert(pinfo_);
-    lm_->set_program_info(pinfo_);
+    // lm_->set_program_info(pinfo_);
+}
+
+// TODO: Eventually may have to be moved to SDK
+int32_t
+PdClient::get_pc_offset(const char *prog_name, const char *label,
+                        uint8_t *offset)
+{
+     hbm_addr_t off;
+
+     off = pinfo_->symbol_address((char *)prog_name, (char *)label);
+     if (off == SDK_INVALID_HBM_ADDRESS)
+         return -ENOENT;
+     // 64 byte alignment check
+     if ((off & 0x3F) != 0) {
+         return -EIO;
+     }
+     // offset can be max 14 bits
+     if (off > 0x3FC0) {
+         return -EIO;
+     }
+     *offset = (uint8_t) (off >> 6);
+     return 0;
 }

@@ -6,7 +6,6 @@
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -149,8 +148,13 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     lif_id_t        lif_id = SERVICE_LIF_IPFIX;
     ipfix_qstate_t  qstate = { 0 };
 
+
+    ret = hal_get_pc_offset("txdma_stage0.bin", "ipfix_tx_stage0", &pgm_offset);
+
+#if 0
     ret = lif_manager()->GetPCOffset("p4plus", "txdma_stage0.bin",
                                      "ipfix_tx_stage0", &pgm_offset);
+#endif
     HAL_ABORT(ret == 0);
     qstate.pc = pgm_offset;
     qstate.total_rings = 1;
@@ -177,10 +181,19 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
         qstate.flow_hash_index_max = FLOW_HASH_TABLE_SIZE - 1;
         qstate.flow_hash_overflow_index_max = FLOW_HASH_OVERFLOW_TABLE_SIZE - 1;
     }
+
+    lif_manager()->write_qstate(lif_id, 0, qid,
+                                (uint8_t *)&qstate, sizeof(qstate));
+
+    lif_manager()->write_qstate(lif_id, 0, qid + 16,
+                                (uint8_t *)&qstate, sizeof(qstate));
+
+#if 0
     lif_manager()->WriteQState(lif_id, 0, qid,
                                (uint8_t *)&qstate, sizeof(qstate));
     lif_manager()->WriteQState(lif_id, 0, qid + 16,
                                (uint8_t *)&qstate, sizeof(qstate));
+#endif
     return HAL_RET_OK;
 }
 
@@ -193,7 +206,7 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     uint64_t address, data, qid;
     uint64_t upd = 3;
     uint64_t qtype = 0, pid = 0, ring_id = 0, p_index = 0;
-    
+
     // qid is equal to the exporter id which is encoded in the timer_id
     qid = timer_id - HAL_TIMER_ID_IPFIX_MIN;
     address = DB_ADDR_BASE + (upd << DB_UPD_SHFT) + (SERVICE_LIF_IPFIX << DB_LIF_SHFT) + (qtype << DB_TYPE_SHFT);

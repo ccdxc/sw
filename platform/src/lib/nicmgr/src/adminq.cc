@@ -87,7 +87,7 @@ AdminQ::AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     MEM_SET(req_comp_base, 0, sizeof(struct nicmgr_req_comp_desc) * req_ring_size, 0);
 
     // Init Qstate
-    uint64_t req_qstate_addr = pd->lm_->GetLIFQStateAddr(lif, req_qtype, req_qid);
+    uint64_t req_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, req_qtype, req_qid);
     if (req_qstate_addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for request queue", name);
         throw;
@@ -95,7 +95,7 @@ AdminQ::AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     NIC_LOG_DEBUG("{}: initializing request qstate {:#x}", name, req_qstate_addr);
 
     uint8_t off;
-    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "nicmgr_req_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "nicmgr_req_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_req_stage0");
         return false;
     }
@@ -139,7 +139,7 @@ AdminQ::AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     MEM_SET(resp_comp_base, 0, sizeof(struct nicmgr_resp_comp_desc) * resp_ring_size, 0);
 
     // Init Qstate
-    uint64_t resp_qstate_addr = pd->lm_->GetLIFQStateAddr(lif, resp_qtype, resp_qid);
+    uint64_t resp_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, resp_qtype, resp_qid);
     if (resp_qstate_addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for response queue", name);
         return false;
@@ -147,7 +147,7 @@ AdminQ::AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     NIC_LOG_DEBUG("{}: initializing response qstate {:#x}", name, resp_qstate_addr);
 
     uint8_t off;
-    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "nicmgr_resp_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "nicmgr_resp_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_resp_stage0");
         return false;
     }
@@ -199,7 +199,7 @@ AdminQ::Reset()
 bool
 AdminQ::AdminRequestQReset()
 {
-    uint64_t req_qstate_addr = pd->lm_->GetLIFQStateAddr(lif, req_qtype, req_qid);
+    uint64_t req_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, req_qtype, req_qid);
     if (req_qstate_addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for request queue", name);
         return false;
@@ -220,7 +220,7 @@ AdminQ::AdminRequestQReset()
 bool
 AdminQ::AdminResponseQReset()
 {
-    uint64_t resp_qstate_addr = pd->lm_->GetLIFQStateAddr(lif, resp_qtype, resp_qid);
+    uint64_t resp_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, resp_qtype, resp_qid);
     if (resp_qstate_addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for response queue", name);
         return false;

@@ -8,7 +8,6 @@
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "gen/p4gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h"
 #include "gen/p4gen/cpu_txdma/include/cpu_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -201,8 +200,8 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
             HAL_TRACE_DEBUG("asq base: {:#x}", asq_base);
             data.u.cpu_tx_initial_action_d.asq_base = asq_base;
         }
-        
-        // get ascq address 
+
+        // get ascq address
         wring_hw_id_t   ascq_base;
         ret = wring_pd_get_base_addr(types::WRING_TYPE_ASCQ, cpucb_pd->cpucb->cb_id, &ascq_base);
         if(ret != HAL_RET_OK) {
@@ -211,7 +210,7 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
             HAL_TRACE_DEBUG("ascq base: {:#x}", ascq_base);
             data.u.cpu_tx_initial_action_d.ascq_base = ascq_base;
         }
-        
+
         // get ascq sem address
         HAL_TRACE_DEBUG("ascq sem: {:#x}", CAPRI_SEM_ASCQ_INF_ADDR(cpucb_pd->cpucb->cb_id));
         data.u.cpu_tx_initial_action_d.ascq_sem_inf_addr = CAPRI_SEM_ASCQ_INF_ADDR(cpucb_pd->cpucb->cb_id);
@@ -258,7 +257,7 @@ p4pd_add_or_del_cpucb_txdma_entry(pd_cpucb_t* cpucb_pd, bool del)
     }
 
     // Initialize CPU Descriptor and page rings
-    ret = wring_pd_table_init(types::WRING_TYPE_CPU_TX_DR, 
+    ret = wring_pd_table_init(types::WRING_TYPE_CPU_TX_DR,
                               cpucb_pd->cpucb->cb_id);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to init CPU-TX-DR ring: {}", ret);
@@ -302,7 +301,8 @@ pd_cpucb_get_base_hw_index(pd_cpucb_t* cpucb_pd)
 
     // Get the base address of CPU CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = lif_manager()->GetLIFQStateAddr(HAL_LIF_CPU, 0, 0);
+    // uint64_t offset = lif_manager()->GetLIFQStateAddr(HAL_LIF_CPU, 0, 0);
+    uint64_t offset = lif_manager()->get_lif_qstate_addr(HAL_LIF_CPU, 0, 0);
     HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset + \
         (cpucb_pd->cpucb->cb_id * P4PD_HBM_CPU_CB_ENTRY_SIZE);

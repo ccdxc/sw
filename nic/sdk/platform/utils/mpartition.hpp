@@ -53,7 +53,7 @@ public:
     /**
      * @brief Factory method
      *
-     * @param[in] mpartition_json_file Memory regions info 
+     * @param[in] mpartition_json_file Memory regions info
      * @param[in] mmgr Pointer to the memory manager - optional
      *
      * @return #mpartition pointer on success, NULL on error
@@ -84,8 +84,8 @@ public:
      */
     mem_addr_t addr(mem_addr_t offset) { return base_addr_ + offset; }
 
-    /** 
-     * @brief Get memory partition region start offset 
+    /**
+     * @brief Get memory partition region start offset
      *
      * @param[in] name Name of memory partition region
      *
@@ -93,8 +93,8 @@ public:
      */
     mem_addr_t start_offset(const char *name);
 
-    /** 
-     * @brief Get memory partition region start address 
+    /**
+     * @brief Get memory partition region start address
      *
      * @param[in] name Name of memory partition region
      *
@@ -102,8 +102,8 @@ public:
      */
     mem_addr_t start_addr(const char *name);
 
-    /** 
-     * @brief Get memory partition region size 
+    /**
+     * @brief Get memory partition region size
      *
      * @param[in] name Name of memory partition region
      *
@@ -111,7 +111,7 @@ public:
      */
     uint32_t size(const char *name);
 
-    /** 
+    /**
      * @brief Get size of each element in mpartition region
      *
      * @param[in] name Name of memory partition region
@@ -120,7 +120,7 @@ public:
      */
     uint32_t element_size(const char *name);
 
-    /** 
+    /**
      * @brief Get memory partition region info
      *
      * @param[in] name Name of memory partition region
@@ -129,7 +129,7 @@ public:
      */
     mpartition_region_t *region(const char *name);
 
-    /** 
+    /**
      * @brief Get memory partition region info by address
      *
      * @param[in] addr Memory address
@@ -138,7 +138,7 @@ public:
      */
     mpartition_region_t* region_by_address(mem_addr_t addr);
 
-    /** 
+    /**
      * @brief Get memory partition region info by index
      *
      * @param[in] i Index
@@ -221,5 +221,6 @@ is_region_cache_pipe_p4plus_all(mpartition_region_t *reg)
 }    // namespace sdk
 
 using sdk::platform::utils::mpartition;
+using sdk::platform::utils::mpartition_region_t;
 
 #endif    // __SDK_PLATFORM_MPARTITION_HPP__

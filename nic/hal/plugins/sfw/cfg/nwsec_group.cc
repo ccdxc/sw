@@ -1023,8 +1023,10 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                     SDK_ASSERT(opt->msrpc_opts.uuids != NULL);
                     opt->msrpc_opts.uuid_sz = app.msrpc_option_info().data_size();
                     for (int idx=0; idx<app.msrpc_option_info().data_size(); idx++) {
+                        uint32_t uuid_sz = (app.msrpc_option_info().data(idx).program_id().size() > MAX_UUID_SZ)?\
+                                       MAX_UUID_SZ:app.msrpc_option_info().data(idx).program_id().size();
                         memcpy(opt->msrpc_opts.uuids[idx].program_id, 
-                              (void *)app.msrpc_option_info().data(idx).program_id().c_str(), MAX_UUID_SZ);
+                              (void *)app.msrpc_option_info().data(idx).program_id().c_str(), uuid_sz);
                         opt->msrpc_opts.uuids[idx].timeout = app.msrpc_option_info().data(idx).idle_timeout();
                     }
                 }
@@ -1035,8 +1037,10 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                     SDK_ASSERT(opt->sunrpc_opts.program_ids != NULL);
                     opt->sunrpc_opts.programid_sz = app.sun_rpc_option_info().data_size();
                     for (int idx=0; idx<app.sun_rpc_option_info().data_size(); idx++) {
+                         uint32_t uuid_sz = (app.sun_rpc_option_info().data(idx).program_id().size() > MAX_UUID_SZ)?\
+                                       MAX_UUID_SZ:app.sun_rpc_option_info().data(idx).program_id().size();
                          memcpy(opt->sunrpc_opts.program_ids[idx].program_id, 
-                               (void *)app.sun_rpc_option_info().data(idx).program_id().c_str(), MAX_UUID_SZ);
+                               (void *)app.sun_rpc_option_info().data(idx).program_id().c_str(), uuid_sz);
                          opt->sunrpc_opts.program_ids[idx].timeout = app.sun_rpc_option_info().data(idx).idle_timeout();
                     }
                 }

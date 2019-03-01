@@ -6,7 +6,6 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/internal/eth.hpp"

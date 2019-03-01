@@ -176,6 +176,7 @@ Accel_PF::Accel_PF(HalClient *hal_client,
                    PdClient *pd_client) :
     seq_qid_init_high(0)
 {
+    sdk_ret_t ret = SDK_RET_OK;
     uint32_t    num_keys_max;
 
     hal = hal_client;
@@ -184,9 +185,10 @@ Accel_PF::Accel_PF(HalClient *hal_client,
     pd = pd_client;
 
     // Allocate lifs
-    lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
-    if (lif_base < 0) {
-        NIC_LOG_ERR("{}: Failed to allocate lifs", spec->name);
+    // lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
+    ret = pd->lm_->alloc_id(&lif_base, spec->lif_count);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
         throw;
     }
     NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, lif_base, spec->lif_count);
@@ -397,7 +399,7 @@ Accel_PF::DelphiDeviceInit(void)
         for (qid = 0; qid < seq_created_count; qid++) {
             seq_qkey.set_qid(std::to_string(qid));
 
-            addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id,
+            addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id,
                                              STORAGE_SEQ_QTYPE_SQ, qid);
             if (addr < 0) {
                 NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
@@ -700,7 +702,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
 
     // Disable all sequencer queues
     for (qid = 0; qid < seq_created_count; qid++) {
-        qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
+        qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
         if (qstate_addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
                 hal_lif_info_.hw_lif_id, qid);
@@ -717,7 +719,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
 
     // Disable all adminq
     for (qid = 0; qid < spec->adminq_count; qid++) {
-        qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_ADMIN, qid);
+        qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_ADMIN, qid);
         if (qstate_addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
                 hal_lif_info_.hw_lif_id, qid);
@@ -742,7 +744,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
         storage_seq_qstate_t    seq_qstate;
 
         while (seq_qid_init_high && (qid <= seq_qid_init_high)) {
-            qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
+            qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
             if (qstate_addr < 0) {
                 NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
                     hal_lif_info_.hw_lif_id, qid);
@@ -829,14 +831,14 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
         return (DEVCMD_ERROR);
     }
 
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_ADMIN, cmd->index);
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_ADMIN, cmd->index);
     if (addr < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
             hal_lif_info_.hw_lif_id, cmd->index);
         return (DEVCMD_ERROR);
     }
 
-    nicmgr_qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id,
+    nicmgr_qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id,
         ACCEL_ADMINQ_REQ_QTYPE, ACCEL_ADMINQ_REQ_QID);
     if (nicmgr_qstate_addr < 0) {
         NIC_LOG_ERR("{}: Failed to get request qstate address for ADMIN qid {}",
@@ -845,7 +847,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     }
 
     uint8_t off;
-    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "adminq_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "adminq_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
         return (DEVCMD_ERROR);
     }
@@ -928,7 +930,7 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
         return (DEVCMD_ERROR);
     }
 
-    qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
+    qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
     if (qstate_addr < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
             hal_lif_info_.hw_lif_id, cmd->index);
@@ -954,7 +956,7 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     seq_qid_init_high = std::max(seq_qid_init_high, qid);
 
     uint8_t off;
-    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "storage_seq_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "storage_seq_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: storage_seq_stage0");
         return (DEVCMD_ERROR);
     }
@@ -1102,7 +1104,7 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
                         seq_created_count);
             return (DEVCMD_ERROR);
         }
-        qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (qstate_addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.hw_lif_id, cmd->qid);
@@ -1120,7 +1122,7 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
                         spec->adminq_count);
             return (DEVCMD_ERROR);
         }
-        qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (qstate_addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.hw_lif_id, cmd->qid);

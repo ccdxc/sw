@@ -14,7 +14,6 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/tls_common.h"
@@ -443,7 +442,7 @@ uint64_t tcpcb_pd_serq_prod_ci_addr_get(uint32_t qid)
 {
     uint64_t addr;
 
-    addr = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0,
+    addr = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TCP_PROXY, 0,
             qid) + (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_READ_TX2RX);
     // offsetof does not work on bitfields
     //addr += offsetof(common_p4plus_stage0_app_header_table_read_tx2rx_d, serq_cidx);
@@ -915,7 +914,7 @@ p4pd_get_tcp_ooo_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
         HAL_TRACE_ERR("Failed to get ooq tx: stage0 entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
-    
+
     tcpcb_pd->tcpcb->ooq_rx2tx_pi = ntohs(data.u.load_stage0_d.pi_0);
     tcpcb_pd->tcpcb->ooq_rx2tx_ci = ntohs(data.u.load_stage0_d.ci_0);
     tcpcb_pd->tcpcb->ooo_rx2tx_qbase = htonll(data.u.load_stage0_d.ooo_rx2tx_qbase);
@@ -1038,7 +1037,7 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
                 htonl(tcpcb_pd_serq_prod_ci_addr_get(tcpcb_pd->tcpcb->other_qid));
         } else {
             uint64_t tls_stage0_addr;
-            tls_stage0_addr = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
+            tls_stage0_addr = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TLS_PROXY, 0,
                         tcpcb_pd->tcpcb->other_qid);
             data.sesq_ci_addr =
                 htonl(tls_stage0_addr + pd_tlscb_sesq_ci_offset_get());
@@ -1047,11 +1046,11 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
         // get gc address
         if (tcpcb_pd->tcpcb->bypass_tls) {
-            gc_base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC,
+            gc_base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_GC,
                     CAPRI_HBM_GC_RNMDR_QTYPE,
                     CAPRI_RNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
         } else {
-            gc_base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC,
+            gc_base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_GC,
                     CAPRI_HBM_GC_TNMDR_QTYPE,
                     CAPRI_TNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
         }
@@ -1156,7 +1155,7 @@ hal_ret_t
 p4pd_add_or_del_tcpcb_txdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    
+
     // qtype 1
     ret = p4pd_add_or_del_tcp_ooo_rx2tx_entry(tcpcb_pd, del);
     if(ret != HAL_RET_OK) {
@@ -1424,7 +1423,7 @@ pd_tcpcb_get_base_hw_index(pd_tcpcb_t* tcpcb_pd, uint32_t qtype)
 
     // Get the base address of TCP CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, qtype,
+    uint64_t offset = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TCP_PROXY, qtype,
                     tcpcb_pd->tcpcb->cb_id);
     HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset;

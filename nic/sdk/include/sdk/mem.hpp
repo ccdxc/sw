@@ -22,6 +22,8 @@ enum {
     SDK_MEM_ALLOC_LIB_DIRECTMAP,
     SDK_MEM_ALLOC_LIB_BITMAP,
     SDK_MEM_ALLOC_PD,
+    SDK_MEM_ALLOC_LIF_MGR,
+    SDK_MEM_ALLOC_LIF_QSTATE,
 };
 
 static inline void *

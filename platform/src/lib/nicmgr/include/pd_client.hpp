@@ -9,6 +9,7 @@
 
 #include "platform/capri/capri_lif_manager.hpp"
 #include "platform/utils/mpartition.hpp"
+#include "platform/utils/lif_mgr/lif_mgr.hpp"
 #include "lib/table/directmap/directmap.hpp"
 #include "lib/table/common/table.hpp"
 #include "lib/bm_allocator/bm_allocator.hpp"
@@ -37,6 +38,7 @@
 // Memory bar should be multiple of 8 MB
 #define MEM_BARMAP_SIZE_SHIFT               (23)
 
+const uint32_t kNumMaxLIFs = 2048;
 
 class PdClient {
 public:
@@ -49,7 +51,8 @@ public:
     platform_t platform_;
     sdk::platform::utils::program_info *pinfo_;
     sdk::platform::utils::mpartition *mp_;
-    sdk::platform::capri::LIFManager *lm_;
+    // sdk::platform::capri::LIFManager *lm_;
+    sdk::platform::utils::lif_mgr *lm_;
     directmap    **p4plus_rxdma_dm_tables_;
     directmap    **p4plus_txdma_dm_tables_;
 
@@ -63,6 +66,8 @@ public:
                        hal_lif_info_t *lif_info,
                        uint8_t coses);
     void set_program_info();
+    int32_t get_pc_offset(const char *prog_name, const char *label,
+                          uint8_t *offset);
     int create_dirs();
     int p4plus_rxdma_init_tables();
     int p4plus_txdma_init_tables();

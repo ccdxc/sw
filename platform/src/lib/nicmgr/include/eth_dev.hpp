@@ -66,7 +66,7 @@ private:
     bool hal_status;
     // Resources
     std::map<uint64_t, EthLif *> lif_map;
-    int32_t lif_base;
+    uint32_t lif_base;
     uint32_t intr_base;
     // Devcmd
     struct dev_cmd_regs *devcmd;

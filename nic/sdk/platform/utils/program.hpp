@@ -53,4 +53,6 @@ private:
 }    // namespace platform
 }    // namespace sdk
 
+using sdk::platform::utils::program_info;
+
 #endif // __SDK_PLATFORM_PROGRAM_HPP__

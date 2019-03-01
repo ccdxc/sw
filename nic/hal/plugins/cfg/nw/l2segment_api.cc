@@ -9,7 +9,6 @@
 #include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 
 namespace hal {
 

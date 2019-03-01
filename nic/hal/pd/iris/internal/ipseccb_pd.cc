@@ -10,7 +10,6 @@
 #include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "gen/p4gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h"
 
@@ -366,7 +365,7 @@ p4pd_get_ipsec_cb_stats(pd_ipseccb_encrypt_t* ipseccb_pd)
     ipseccb_pd->ipseccb->h2n_tx_bytes = ntohll(stats_data.h2n_tx_bytes);
     ipseccb_pd->ipseccb->h2n_tx_drops = ntohll(stats_data.h2n_tx_drops);
 
-    HAL_TRACE_DEBUG("Stats: h2n: rx_pkts {} rx_bytes {} rx_drops {} tx_pkts {} tx_bytes {} tx_drops {}", 
+    HAL_TRACE_DEBUG("Stats: h2n: rx_pkts {} rx_bytes {} rx_drops {} tx_pkts {} tx_bytes {} tx_drops {}",
         ipseccb_pd->ipseccb->h2n_rx_pkts, ipseccb_pd->ipseccb->h2n_rx_bytes,
         ipseccb_pd->ipseccb->h2n_rx_drops, ipseccb_pd->ipseccb->h2n_tx_pkts,
         ipseccb_pd->ipseccb->h2n_tx_bytes, ipseccb_pd->ipseccb->h2n_tx_drops);
@@ -388,7 +387,7 @@ p4pd_get_ipseccb_rxdma_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
         HAL_TRACE_ERR("Failed to get ipsec stats entry");
         goto cleanup;
     }
-    
+
     return HAL_RET_OK;
 cleanup:
     /* TODO: CLEANUP */
@@ -438,7 +437,7 @@ pd_ipseccb_get_base_hw_index(pd_ipseccb_encrypt_t* ipseccb_pd)
 
     // Get the base address of IPSEC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_IPSEC_ESP, 0, 0);
+    uint64_t offset = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_IPSEC_ESP, 0, 0);
     HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset + \
         (ipseccb_pd->ipseccb->cb_id * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);

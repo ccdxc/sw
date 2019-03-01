@@ -7,7 +7,6 @@
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "lib/ht/ht.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 
 namespace hal {
 
@@ -393,10 +392,11 @@ end:
 uint32_t
 if_allocate_hwlif_id (void)
 {
-    int32_t hw_lif_id = -1;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t hw_lif_id = INVALID_INDEXER_INDEX;
 
-    hw_lif_id = lif_manager()->LIFRangeAlloc(-1, 1);
-    if (hw_lif_id < 0) {
+    ret = lif_manager()->alloc_id(&hw_lif_id, 1);
+    if (ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to allocate hw_lif_id : {}", hw_lif_id);
         return INVALID_INDEXER_INDEX;
     }
@@ -406,7 +406,8 @@ if_allocate_hwlif_id (void)
 void
 if_free_hwlif_id(uint32_t hwlif_id)
 {
-    lif_manager()->DeleteLIF(hwlif_id);
+    // lif_manager()->DeleteLIF(hwlif_id);
+    lif_manager()->remove(hwlif_id);
 }
 
 //----------------------------------------------------------------------------
@@ -538,12 +539,14 @@ lif_get_total_qcount (uint32_t hw_lif_id)
 {
     uint32_t total_qcount = 0, i = 0;
 
-    LIFQState *qstate = lif_manager()->GetLIFQState(hw_lif_id);
+    // LIFQState *qstate = lif_manager()->GetLIFQState(hw_lif_id);
+    lif_qstate_t *qstate = lif_manager()->get_lif_qstate(hw_lif_id);
 
     if (qstate == NULL)
         goto end;
 
-    for (i = 0; i < kNumQTypes; i++) {
+    // for (i = 0; i < kNumQTypes; i++) {
+    for (i = 0; i < 8; i++) {
         total_qcount += qstate->type[i].num_queues;
     }
 

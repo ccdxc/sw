@@ -61,6 +61,31 @@ typedef struct hbm_bw_samples_s {
 } __PACK__ hbm_bw_samples_t;
 
 sdk_ret_t asicpd_read_table_constant(uint32_t tableid, uint64_t *value);
+typedef struct lif_qtype_info_s {
+    uint8_t entries;
+    uint8_t size;
+    uint8_t cosA;
+    uint8_t cosB;
+} __PACK__ lif_qtype_info_t;
+
+const static uint32_t kNumQTypes = 8;
+const static uint32_t kAllocUnit = 4096;
+typedef struct lif_qstate_s {
+    uint32_t lif_id;
+    uint32_t allocation_size;
+    uint64_t hbm_address;
+    uint8_t hint_cos;
+    uint8_t enable;
+    struct {
+        lif_qtype_info_t qtype_info;
+        uint32_t hbm_offset;
+        uint32_t qsize;
+        uint32_t rsvd;
+        uint32_t num_queues;
+        uint8_t  coses;
+    } type[kNumQTypes];
+} __PACK__ lif_qstate_t;
+
 sdk_ret_t asicpd_program_table_constant(uint32_t tableid, uint64_t const_value);
 sdk_ret_t asicpd_p4plus_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 sdk_ret_t asicpd_program_table_mpu_pc(void);
@@ -103,6 +128,15 @@ sdk_ret_t asic_pd_hbm_bw_get(hbm_bw_samples_t *hbm_bw_samples);
 sdk_ret_t asic_pd_llc_setup(llc_counters_t *llc);
 sdk_ret_t asic_pd_llc_get(llc_counters_t *llc);
 sdk_ret_t asicpd_p4plus_recirc_init(void);
+sdk_ret_t asic_pd_qstate_map_clear(uint32_t lif_id);
+sdk_ret_t asic_pd_qstate_map_write(lif_qstate_t *qstate, uint8_t enable);
+sdk_ret_t asic_pd_qstate_map_read (lif_qstate_t *qstate);
+sdk_ret_t asic_pd_qstate_write (uint64_t addr, const uint8_t *buf, uint32_t size);
+sdk_ret_t asic_pd_qstate_read (uint64_t addr, uint8_t *buf, uint32_t size);
+sdk_ret_t asic_pd_qstate_clear (lif_qstate_t *qstate);
+sdk_ret_t asic_pd_p4plus_invalidate_cache (mpartition_region_t *reg,
+                                           uint64_t q_addr, uint32_t size);
+
 
 }    // namespace pd
 }    // namespace asic
@@ -112,5 +146,10 @@ using sdk::asic::pd::p4_table_mem_layout_t;
 using sdk::asic::pd::llc_counters_t;
 using sdk::asic::pd::scheduler_stats_t;
 using sdk::asic::pd::hbm_bw_samples_t;
+using sdk::asic::pd::lif_qstate_t;
+using sdk::asic::pd::lif_qtype_info_t;
+using sdk::asic::pd::kNumQTypes;
+using sdk::asic::pd::kAllocUnit;
+
 
 #endif    // __SDK_ASIC_PD_HPP__

@@ -8,7 +8,6 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/hal.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "gen/p4gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h"
 
@@ -442,7 +441,8 @@ pd_ipsec_encrypt_get_base_hw_index(pd_ipsec_t* ipsec_sa_pd)
 
     // Get the base address of IPSEC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_IPSEC_ESP, 0, 0);
+    // uint64_t base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_IPSEC_ESP, 0, 0);
+    uint64_t base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_IPSEC_ESP, 0, 0);
     uint64_t offset = (ipsec_sa_pd->ipsec_sa->sa_id * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
     HAL_TRACE_DEBUG("For PD SA ID {} received base {:#x} offset {:#x}", ipsec_sa_pd->ipsec_sa->sa_id, base, offset);
     return (base+offset);
@@ -629,14 +629,14 @@ pd_ipsec_encrypt_delete (pd_func_args_t *pd_func_args)
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t                  ret;
     pd_ipsec_global_stats_get_args_t *args = pd_func_args->pd_ipsec_global_stats_get;
     ipsec_global_stats_cb_t stats;
     uint64_t hwid =  get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
-  
+
     if (args == NULL) {
         return HAL_RET_HW_FAIL;
     }

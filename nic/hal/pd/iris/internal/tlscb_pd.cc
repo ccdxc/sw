@@ -8,7 +8,6 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "gen/p4gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "platform/capri/capri_common.hpp"
@@ -308,7 +307,7 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
 
         uint64_t                gc_base;
         // get gc address
-        gc_base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC, CAPRI_HBM_GC_RNMDR_QTYPE,
+        gc_base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_GC, CAPRI_HBM_GC_RNMDR_QTYPE,
                     CAPRI_RNMDR_GC_TLS_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
         HAL_TRACE_DEBUG("gc_base: {:#x}", gc_base);
         data.u.read_tls_stg0_d.gc_base = htonl(gc_base);
@@ -382,7 +381,7 @@ p4pd_add_or_del_tls_tx_config_entry(pd_tlscb_t* tlscb_pd, bool del)
 
         data.u.tls_rx_serq_d.salt = tlscb_pd->tlscb->salt;
         HAL_TRACE_DEBUG("Salt = 0x{:x}", data.u.tls_rx_serq_d.salt);
-        
+
         data.u.tls_rx_serq_d.cpu_id = tlscb_pd->tlscb->cpu_id;
         HAL_TRACE_DEBUG("CPU-id = {}", data.u.tls_rx_serq_d.cpu_id);
 
@@ -437,7 +436,7 @@ pd_tlscb_get_base_hw_index(pd_tlscb_t* tlscb_pd)
 
     // Get the base address of TLS CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
+    uint64_t offset = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TLS_PROXY, 0,
             tlscb_pd->tlscb->cb_id);
     HAL_TRACE_DEBUG("received offset 0x{:x}", offset);
     return offset;

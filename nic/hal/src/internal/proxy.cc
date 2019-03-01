@@ -11,7 +11,6 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/app_redir_shared.h"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
@@ -587,7 +586,15 @@ hal_ret_t
 hal_proxy_svc_init(void)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    sdk_ret_t       sret = SDK_RET_OK;
 
+    sret = lif_manager()->reserve_id(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START));
+    if (sret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to reserve service LIF");
+        return HAL_RET_NO_RESOURCE;
+    }
+
+#if 0
     // Reserve Service LIFs
     if(lif_manager()->LIFRangeAlloc(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START))
             <= 0)
@@ -595,6 +602,7 @@ hal_proxy_svc_init(void)
         HAL_TRACE_ERR("Failed to reserve service LIF");
         return HAL_RET_NO_RESOURCE;
     }
+#endif
 
     // Initialize meta
     ret = proxy_meta_init();

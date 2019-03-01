@@ -25,9 +25,9 @@ int get_qstate_addr(int lif, int qtype, int qid, uint64_t *qaddr) {
 
 int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                   uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
-                  uint64_t base_addr, uint64_t entry_size, bool dst_valid, 
-                  uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
-                  uint16_t vf_id, uint16_t sq_id, uint64_t ssd_bm_addr, 
+                  uint64_t base_addr, uint64_t entry_size, bool dst_valid,
+                  uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid,
+                  uint16_t vf_id, uint16_t sq_id, uint64_t ssd_bm_addr,
                   uint16_t ssd_q_num, uint16_t ssd_q_size, uint64_t ssd_ci_addr) {
 
   uint8_t q_state[64];
@@ -46,7 +46,7 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     }
   }
 
-  // If no program binary name supplied => no need to set next_pc as 
+  // If no program binary name supplied => no need to set next_pc as
   // it is a host queue
   if (pgm_bin) {
     if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
@@ -93,7 +93,7 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     printf("Failed to get q state address \n");
     return -1;
   }
-  printf("Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
+  printf("Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, next_pc, base_addr);
 
   return 0;
@@ -113,7 +113,7 @@ int setup_seq_q_state(int src_lif, int src_qtype,
 
   bzero(&q_state, sizeof(q_state));
 
-  // If no program binary name supplied => no need to set next_pc as 
+  // If no program binary name supplied => no need to set next_pc as
   // it is a host queue
   if (pgm_bin) {
     if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
@@ -156,14 +156,19 @@ int setup_seq_q_state(int src_lif, int src_qtype,
      * Seq LIF was created thru nicmgr so we must use its PDClient API
      * to access the qstate. (The HAL itself was not informed about this LIF).
      */
+#if 0
     ret = nicmgr_pd_client->lm_->WriteQState(src_lif, src_qtype, src_qid,
+                                             (uint8_t *)&q_state, sizeof(q_state));
+#endif
+    ret = nicmgr_pd_client->lm_->write_qstate(src_lif, src_qtype, src_qid,
                                              (uint8_t *)&q_state, sizeof(q_state));
     if (ret < 0) {
       printf("Failed to WriteQState for lif/qtype/qid %u/%u/%u\n",
              src_lif, src_qtype, src_qid);
       return ret;
     }
-    qaddr = nicmgr_pd_client->lm_->GetLIFQStateAddr(src_lif, src_qtype, src_qid);
+    // qaddr = nicmgr_pd_client->lm_->GetLIFQStateAddr(src_lif, src_qtype, src_qid);
+    qaddr = nicmgr_pd_client->lm_->get_lif_qstate_addr(src_lif, src_qtype, src_qid);
 
   } else {
     ret = hal_if::set_lif_qstate_size(src_lif, src_qtype, src_qid,
@@ -180,15 +185,15 @@ int setup_seq_q_state(int src_lif, int src_qtype,
       return -1;
     }
   }
-  printf("Seq Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
+  printf("Seq Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, next_pc, base_addr);
 
   return 0;
 }
 
 int setup_pci_q_state(int src_lif, int src_qtype, int src_qid,
-                      uint8_t total_rings, uint8_t host_rings, 
-                      uint16_t num_entries, uint64_t base_addr, 
+                      uint8_t total_rings, uint8_t host_rings,
+                      uint16_t num_entries, uint64_t base_addr,
                       uint64_t entry_size, uint64_t push_addr,
                       uint64_t intr_addr, uint32_t intr_data, uint8_t intr_en) {
 
@@ -226,15 +231,15 @@ int setup_pci_q_state(int src_lif, int src_qtype, int src_qid,
     printf("Failed to get q state address \n");
     return -1;
   }
-  printf("PCI Q state addr %lx created with lif %u type %u, qid %u base_addr %lx\n", 
+  printf("PCI Q state addr %lx created with lif %u type %u, qid %u base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, base_addr);
   return 0;
 }
 
 int setup_pri_q_state(int src_lif, int src_qtype, int src_qid,
                       uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
-                      uint64_t base_addr, uint64_t entry_size, bool dst_valid, 
-                      uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
+                      uint64_t base_addr, uint64_t entry_size, bool dst_valid,
+                      uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid,
                       uint16_t vf_id, uint16_t sq_id, uint64_t ssd_bm_addr,
                       bool raise_weights) {
 
@@ -294,7 +299,7 @@ int setup_pri_q_state(int src_lif, int src_qtype, int src_qid,
     printf("Failed to get q state address \n");
     return -1;
   }
-  printf("PRI Q state addr %lx created with lif %u type %u, qid %u base_addr %lx\n", 
+  printf("PRI Q state addr %lx created with lif %u type %u, qid %u base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, base_addr);
 
   return 0;
@@ -308,11 +313,11 @@ int update_pri_q_state(int src_lif, int src_qtype, int src_qid,
 
   // Get the qstate
   if (hal_if::get_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
-    printf("Pri Q state GET FAILED for lif %u type %u, qid %u \n", 
+    printf("Pri Q state GET FAILED for lif %u type %u, qid %u \n",
            src_lif, src_qtype, src_qid);
     return -1;
   } else {
-    printf("Pri Q state GET SUCCEEDED for lif %u type %u, qid %u \n", 
+    printf("Pri Q state GET SUCCEEDED for lif %u type %u, qid %u \n",
            src_lif, src_qtype, src_qid);
     //utils::dump(q_state);
   }
@@ -338,9 +343,9 @@ int update_pri_q_state(int src_lif, int src_qtype, int src_qid,
 
 int setup_roce_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                         uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
-                        uint64_t base_addr, uint64_t entry_size, bool rrq_valid, 
-                        uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid, 
-                        uint16_t rsq_lif, uint8_t rsq_qtype, uint32_t rsq_qid, 
+                        uint64_t base_addr, uint64_t entry_size, bool rrq_valid,
+                        uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid,
+                        uint16_t rsq_lif, uint8_t rsq_qtype, uint32_t rsq_qid,
                         uint64_t rrq_base_pa, uint8_t post_buf) {
 
   uint8_t q_state[64];
@@ -360,7 +365,7 @@ int setup_roce_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     }
   }
 
-  // If no program binary name supplied => no need to set next_pc as 
+  // If no program binary name supplied => no need to set next_pc as
   // it is a host queue
   if (pgm_bin) {
     if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
@@ -407,7 +412,7 @@ int setup_roce_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     printf("Failed to get q state address \n");
     return -1;
   }
-  printf("Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
+  printf("Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, next_pc, base_addr);
 
   return 0;
@@ -426,7 +431,7 @@ int setup_roce_cq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
 
   printf("Setting LIF %u, type %u, qid %u \n", rcq_lif, rcq_qtype, rcq_qid);
 
-  // If no program binary name supplied => no need to set next_pc as 
+  // If no program binary name supplied => no need to set next_pc as
   // it is a host queue
   if (pgm_bin) {
     if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
@@ -465,7 +470,7 @@ int setup_roce_cq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     printf("Failed to get q state address \n");
     return -1;
   }
-  printf("Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
+  printf("Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, next_pc, base_addr);
 
   return 0;
@@ -487,7 +492,7 @@ int update_xlate_entry(int lif, int qtype, int qid, uint64_t hbm_addr, char *pgm
     return -1;
   }
 
-  // If no program binary name supplied => no need to set next_pc as 
+  // If no program binary name supplied => no need to set next_pc as
   // it is a host queue
   if (pgm_bin) {
     if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
@@ -504,16 +509,16 @@ int update_xlate_entry(int lif, int qtype, int qid, uint64_t hbm_addr, char *pgm
   utils::write_bit_fields(data, 66, 34, qaddr);
 
   write_mem(hbm_addr, data, 64);
-  
+
   return 0;
 }
 
 int setup_nvme_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                         uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
-                        uint64_t base_addr, uint64_t entry_size, uint16_t vf_id, 
-                        uint16_t sq_id, uint16_t cq_lif, uint8_t cq_qtype, 
-                        uint32_t cq_qid, uint16_t arm_lif, uint8_t arm_qtype, 
-                        uint32_t arm_base_qid, uint64_t io_map_base_addr, 
+                        uint64_t base_addr, uint64_t entry_size, uint16_t vf_id,
+                        uint16_t sq_id, uint16_t cq_lif, uint8_t cq_qtype,
+                        uint32_t cq_qid, uint16_t arm_lif, uint8_t arm_qtype,
+                        uint32_t arm_base_qid, uint64_t io_map_base_addr,
                         uint16_t io_map_num_entries, uint64_t iob_ring_base_addr) {
 
   uint8_t q_state[64];
@@ -531,13 +536,13 @@ int setup_nvme_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   }
 
   // Get the arm_base_qaddr
-  if (hal_if::get_lif_qstate_addr(arm_lif, arm_qtype, 
+  if (hal_if::get_lif_qstate_addr(arm_lif, arm_qtype,
                                   arm_base_qid, &arm_base_qaddr) < 0) {
     printf("Failed to get arm_base_qstate addr \n");
     return -1;
   }
 
-  // If no program binary name supplied => no need to set next_pc as 
+  // If no program binary name supplied => no need to set next_pc as
   // it is a host queue
   if (pgm_bin) {
     if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
@@ -585,15 +590,15 @@ int setup_nvme_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     printf("Failed to get q state address \n");
     return -1;
   }
-  printf("NVME SQ state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
+  printf("NVME SQ state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, next_pc, base_addr);
 
   return 0;
 }
 
-int setup_nvme_cq_state(int src_lif, int src_qtype, int src_qid, uint8_t total_rings, 
-                        uint8_t host_rings, uint16_t num_entries, uint64_t base_addr, 
-                        uint64_t entry_size, uint64_t intr_addr, uint32_t intr_data, 
+int setup_nvme_cq_state(int src_lif, int src_qtype, int src_qid, uint8_t total_rings,
+                        uint8_t host_rings, uint16_t num_entries, uint64_t base_addr,
+                        uint64_t entry_size, uint64_t intr_addr, uint32_t intr_data,
                         uint8_t intr_en, uint8_t phase) {
 
   uint8_t q_state[64];
@@ -622,7 +627,7 @@ int setup_nvme_cq_state(int src_lif, int src_qtype, int src_qid, uint8_t total_r
     printf("Failed to get q state address \n");
     return -1;
   }
-  printf("NVME CQ state addr %lx created with lif %u type %u, qid %u base_addr %lx\n", 
+  printf("NVME CQ state addr %lx created with lif %u type %u, qid %u base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, base_addr);
   return 0;
 }
@@ -630,8 +635,8 @@ int setup_nvme_cq_state(int src_lif, int src_qtype, int src_qid, uint8_t total_r
 int setup_arm_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                       uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
                       uint64_t base_addr, uint64_t entry_size, bool dst_valid,
-                      uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
-                      uint32_t intr_addr, uint32_t intr_data, uint8_t intr_en, 
+                      uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid,
+                      uint32_t intr_addr, uint32_t intr_data, uint8_t intr_en,
                       uint8_t  phase, uint64_t iob_ring_base_addr) {
 
   uint8_t q_state[64];
@@ -649,7 +654,7 @@ int setup_arm_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     }
   }
 
-  // If no program binary name supplied => no need to set next_pc as 
+  // If no program binary name supplied => no need to set next_pc as
   // it is a host queue
   if (pgm_bin) {
     if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
@@ -696,15 +701,15 @@ int setup_arm_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     printf("Failed to get q state address \n");
     return -1;
   }
-  printf("ARM Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
+  printf("ARM Q state addr %lx created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, next_pc, base_addr);
 
   return 0;
 }
 
 int setup_init_r2n_q_state(int src_lif, int src_qtype, int src_qid,
-                           uint8_t total_rings, uint8_t host_rings, 
-                           uint16_t num_entries, uint64_t base_addr, 
+                           uint8_t total_rings, uint8_t host_rings,
+                           uint16_t num_entries, uint64_t base_addr,
                            uint64_t entry_size) {
 
   uint8_t q_state[64];
@@ -736,24 +741,24 @@ int setup_init_r2n_q_state(int src_lif, int src_qtype, int src_qid,
     printf("Failed to get q state address \n");
     return -1;
   }
-  printf("Init R2N Q state addr %lx created with lif %u type %u, qid %u base_addr %lx\n", 
+  printf("Init R2N Q state addr %lx created with lif %u type %u, qid %u base_addr %lx\n",
          qaddr, src_lif, src_qtype, src_qid, base_addr);
   return 0;
 }
 
 int update_nvme_cq_state(int src_lif, int src_qtype, int src_qid,
-                         uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid, 
+                         uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid,
                          uint64_t rrq_qaddr, int64_t rrq_base_pa) {
 
   uint8_t q_state[64];
 
   // Get the qstate
   if (hal_if::get_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
-    printf("Pri Q state GET FAILED for lif %u type %u, qid %u \n", 
+    printf("Pri Q state GET FAILED for lif %u type %u, qid %u \n",
            src_lif, src_qtype, src_qid);
     return -1;
   } else {
-    printf("Pri Q state GET SUCCEEDED for lif %u type %u, qid %u \n", 
+    printf("Pri Q state GET SUCCEEDED for lif %u type %u, qid %u \n",
            src_lif, src_qtype, src_qid);
     //utils::dump(q_state);
   }

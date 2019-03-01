@@ -4,6 +4,7 @@
 
 #include "platform/capri/capri_lif_manager.hpp"
 #include "platform/capri/capri_state.hpp"
+#include "platform/capri/capri_qstate.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "asic/rw/asicrw.hpp"
 
@@ -13,6 +14,141 @@ namespace sdk {
 namespace platform {
 namespace capri {
 
+template <typename T>
+void
+clear_qstate_entry(T *entry) {
+    entry->vld(1);
+    entry->write();
+}
+
+void
+capri_clear_qstate_map (uint32_t lif_id)
+{
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
+
+    auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[lif_id];
+    clear_qstate_entry(wa_entry);
+    auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[lif_id];
+    clear_qstate_entry(psp_entry);
+    auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[lif_id];
+    clear_qstate_entry(pr_entry);
+}
+
+#define CAPRI_SET_QSTATE_MAP_ENTRY(QID)                                 \
+    entry->length ## QID(qstate->type[QID].qtype_info.entries);         \
+    entry->size ## QID(qstate->type[QID].qtype_info.size);
+
+template <typename T>
+void
+capri_set_qstate_map(lif_qstate_t *qstate, T *entry, uint8_t enable)
+{
+    entry->qstate_base(qstate->hbm_address >> 12);
+    CAPRI_SET_QSTATE_MAP_ENTRY(0);
+    CAPRI_SET_QSTATE_MAP_ENTRY(1);
+    CAPRI_SET_QSTATE_MAP_ENTRY(2);
+    CAPRI_SET_QSTATE_MAP_ENTRY(3);
+    CAPRI_SET_QSTATE_MAP_ENTRY(4);
+    CAPRI_SET_QSTATE_MAP_ENTRY(5);
+    CAPRI_SET_QSTATE_MAP_ENTRY(6);
+    CAPRI_SET_QSTATE_MAP_ENTRY(7);
+    entry->vld(enable);
+    entry->sched_hint_en(1);
+    entry->sched_hint_cos(qstate->hint_cos);
+    entry->write();
+}
+
+void
+capri_program_qstate_map (lif_qstate_t *qstate, uint8_t enable)
+{
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
+
+    auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
+    capri_set_qstate_map(qstate, wa_entry, enable);
+    auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+    capri_set_qstate_map(qstate, psp_entry, enable);
+    auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+    capri_set_qstate_map(qstate, pr_entry, enable);
+}
+
+#define CAPRI_GET_QSTATE_MAP_ENTRY(QID)                                     \
+    qstate->type[QID].qtype_info.entries = (uint8_t)entry->length ## QID(); \
+    qstate->type[QID].qtype_info.size = (uint8_t)entry->size ## QID();
+template <typename T>
+void
+capri_get_qstate_map (lif_qstate_t *qstate, T *entry)
+{
+    entry->read();
+    qstate->enable = (uint8_t)entry->vld();
+    qstate->hbm_address = (uint64_t) (entry->qstate_base() << 12);
+    qstate->hint_cos = (uint8_t) entry->sched_hint_cos();
+    CAPRI_GET_QSTATE_MAP_ENTRY(0);
+    CAPRI_GET_QSTATE_MAP_ENTRY(1);
+    CAPRI_GET_QSTATE_MAP_ENTRY(2);
+    CAPRI_GET_QSTATE_MAP_ENTRY(3);
+    CAPRI_GET_QSTATE_MAP_ENTRY(4);
+    CAPRI_GET_QSTATE_MAP_ENTRY(5);
+    CAPRI_GET_QSTATE_MAP_ENTRY(6);
+    CAPRI_GET_QSTATE_MAP_ENTRY(7);
+}
+
+void
+capri_read_qstate_map (lif_qstate_t *qstate)
+{
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
+
+    auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+    // Since content is going to be same in ASIC across all 3 blocks -
+    // reading from one is enough ??
+    capri_get_qstate_map(qstate, psp_entry);
+}
+
+void
+capri_reprogram_qstate_map(uint32_t lif_id, uint8_t enable)
+{
+    lif_qstate_t qstate;
+    memset(&qstate, 0, sizeof(lif_qstate_t));
+    qstate.lif_id = lif_id;
+    capri_read_qstate_map(&qstate);
+    capri_program_qstate_map(&qstate, enable);
+}
+
+sdk_ret_t
+capri_read_qstate (uint64_t q_addr, uint8_t *buf, uint32_t q_size)
+{
+    return sdk::asic::asic_mem_read(q_addr, buf, q_size);
+}
+
+sdk_ret_t
+capri_write_qstate (uint64_t q_addr, const uint8_t *buf, uint32_t q_size)
+{
+    return sdk::asic::asic_mem_write(q_addr, (uint8_t *)buf, q_size);
+}
+
+sdk_ret_t
+capri_clear_qstate_mem(uint64_t base_addr, uint32_t size) {
+    sdk_ret_t ret = SDK_RET_OK;
+    // qstate is a multiple for 4K So it is safe to assume
+    // 256 byte boundary.
+    static uint8_t zeros[256] = {0};
+    for (uint32_t i = 0; i < (size / sizeof(zeros)); i++) {
+        ret = sdk::asic::asic_mem_write(base_addr + (i * sizeof(zeros)),
+                                        zeros, sizeof(zeros));
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+    return ret;
+}
+
+sdk_ret_t
+capri_clear_qstate(lif_qstate_t *qstate)
+{
+    return capri_clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
+}
+
+
+
+// Deprecated: Cleanup
 template <typename T>
 void set_qstate_entry(LIFQState *qstate, T *entry, int cos) {
     entry->qstate_base(qstate->hbm_address >> 12);
@@ -38,12 +174,6 @@ void set_qstate_entry(LIFQState *qstate, T *entry, int cos) {
     entry->write();
 }
 
-template <typename T>
-void clear_qstate_entry(T *entry) {
-    entry->vld(1);
-    entry->write();
-}
-
 // In case we just need hbm base and nothing else, we can use this
 // Below 2 APIs are for retrieving lif base addr and other params upon upgrade
 // we want to recover state by reading ASIC
@@ -57,6 +187,7 @@ void get_qstate_entry_base_address(T *entry, uint64_t *lif_base_addr) {
     }
 }
 
+// Deprecated: Cleanup
 template <typename T>
 void get_qstate_lif_params(LIFQState *qstate, T *entry, uint32_t *is_valid) {
 
@@ -81,27 +212,12 @@ void get_qstate_lif_params(LIFQState *qstate, T *entry, uint32_t *is_valid) {
     qstate->params_in.type[7].size = (uint8_t) entry->size7();
 }
 
-
-int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
-    // qstate is a multiple for 4K So it is safe to assume
-    // 256 byte boundary.
-    static uint8_t zeros[256] = {0};
-    for (uint32_t i = 0; i < (size / sizeof(zeros)); i++) {
-        sdk_ret_t rc = sdk::asic::asic_mem_write(base_addr + (i * sizeof(zeros)),
-                                                 zeros, sizeof(zeros));
-        if (rc != SDK_RET_OK) {
-            return -EIO;
-        }
-    }
-    return 0;
-}
-
-
+// Deprecated: Cleanup
 void push_qstate_to_capri(LIFQState *qstate, int cos) {
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
     if (!qstate->params_in.dont_zero_memory) {
-        clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
+        capri_clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
     }
     auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
     set_qstate_entry(qstate, wa_entry, cos);
@@ -111,6 +227,7 @@ void push_qstate_to_capri(LIFQState *qstate, int cos) {
     set_qstate_entry(qstate, pr_entry, cos);
 }
 
+// Deprecated: Cleanup
 void clear_qstate(LIFQState *qstate) {
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
@@ -122,6 +239,7 @@ void clear_qstate(LIFQState *qstate) {
     clear_qstate_entry(pr_entry);
 }
 
+// Deprecated: Cleanup
 void read_lif_params_from_capri(LIFQState *qstate) {
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     uint32_t is_valid = 0;

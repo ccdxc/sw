@@ -17,6 +17,7 @@
 -I ../../../../drivers/linux/eth/ionic/
 -I ../../../../../nic/include/
 -I ../../../../../nic/sdk/
+-I ../../../../../nic/sdk/third-party/libev/include
 -I ../../../../../nic/sdk/include/
 -I ../../../../../nic/build/aarch64/iris/gen/proto/
 -I ../../../../../nic/build/aarch64/iris
@@ -31,4 +32,9 @@
 -I ../../../../../nic/asic/capri/model/cap_top/csr_defines
 -I ../../../../../nic/asic/capri/model/cap_he/readonly
 -I ../../../../../nic/asic/capri/design/common
+-I ../../../../../nic/asic/capri/design/common
+-I ../../../../../nic/sdk/third-party/asic/capri/model/cap_top/csr_defines
+-I ../../../../../nic/sdk/third-party/asic/capri/model/cap_top
+-I ../../../../../nic/build/aarch64/iris/gen/p4gen/common_rxdma_actions/include
+-I ../../../../../nic/build/aarch64/iris/gen/p4gen/common_txdma_actions/include
 -std=c++11

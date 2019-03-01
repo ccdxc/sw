@@ -317,7 +317,7 @@ private:
     // PCIe info
     pciehdev_t                  *pdev;
     // Resources
-    int32_t                     lif_base;
+    uint32_t                    lif_base;
     uint32_t                    intr_base;
     // Devcmd
     uint64_t                    devcmd_mem_addr;

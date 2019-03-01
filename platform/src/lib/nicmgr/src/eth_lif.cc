@@ -364,7 +364,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
     // Clear PC to drop all traffic
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.name, qid);
@@ -376,7 +376,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.name, qid);
@@ -388,7 +388,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->adminq_count; qid++) {
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.name, qid);
@@ -400,7 +400,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     // Initialize EDMA service
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID);
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for EDMAQ qid {}",
             hal_lif_info_.name, ETH_EDMAQ_QID);
@@ -417,7 +417,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
     // Initialize the EDMA queue
     uint8_t off;
-    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "edma_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "edma_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: edma_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -532,7 +532,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     state = LIF_STATE_RESETING;
-    
+
     // Update name to the lif-id before doing a reset
     // to avoid name collisions during re-addition of the lifs
     // TODO: Lif delete has to be called here instead of just
@@ -556,7 +556,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
 
     // Clear PC to drop all traffic
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.name, qid);
@@ -568,7 +568,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.name, qid);
@@ -580,7 +580,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->adminq_count; qid++) {
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.name, qid);
@@ -592,7 +592,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     // Reset EDMA service
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID);
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for EDMA qid {}",
             hal_lif_info_.name, ETH_EDMAQ_QID);
@@ -651,14 +651,14 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_EINVAL);
     }
 
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, cmd->index);
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, cmd->index);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
             hal_lif_info_.name, cmd->index);
         return (IONIC_RC_ERROR);
     }
 
-    nicmgr_qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id,
+    nicmgr_qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id,
         ETH_ADMINQ_REQ_QTYPE, ETH_ADMINQ_REQ_QID);
     if (nicmgr_qstate_addr < 0) {
         NIC_LOG_ERR("{}: Failed to get request qstate address for ADMIN qid {}",
@@ -667,7 +667,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     uint8_t off;
-    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "adminq_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "adminq_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -851,7 +851,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.name, qid);
@@ -865,7 +865,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.name, qid);
@@ -879,7 +879,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->adminq_count; qid++) {
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.name, qid);
@@ -951,7 +951,7 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_EINVAL);
     }
 
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, cmd->index);
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, cmd->index);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
             hal_lif_info_.name, cmd->index);
@@ -959,7 +959,7 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     uint8_t off;
-    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "eth_tx_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "eth_tx_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: eth_tx_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -1053,7 +1053,7 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_EINVAL);
     }
 
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, cmd->index);
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, cmd->index);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
             hal_lif_info_.name, cmd->index);
@@ -1061,7 +1061,7 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     uint8_t off;
-    if (pd->lm_->GetPCOffset("p4plus", "rxdma_stage0.bin", "eth_rx_stage0", &off) < 0) {
+    if (pd->get_pc_offset("rxdma_stage0.bin", "eth_rx_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: rxdma_stage0.bin label: eth_rx_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -1149,7 +1149,7 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_EINVAL);
     }
 
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_NOTIFYQ_QTYPE, cmd->index);
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_NOTIFYQ_QTYPE, cmd->index);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for NOTIFYQ qid {}",
             hal_lif_info_.name, cmd->index);
@@ -1159,7 +1159,7 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     notify_ring_head = 0;
 
     uint8_t off;
-    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "notify_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "notify_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to resolve program: txdma_stage0.bin label: notify_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -1355,7 +1355,7 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, cmd->qid);
             return (IONIC_RC_EQID);
         }
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.name, cmd->qid);
@@ -1373,7 +1373,7 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
                    hal_lif_info_.name, cmd->qid);
             return (IONIC_RC_EQID);
         }
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.name, cmd->qid);
@@ -1391,7 +1391,7 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
                    hal_lif_info_.name, cmd->qid);
             return (IONIC_RC_EQID);
         }
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.name, cmd->qid);
@@ -1442,7 +1442,7 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, cmd->qid);
             return (IONIC_RC_EQID);
         }
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.name, cmd->qid);
@@ -1460,7 +1460,7 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, cmd->qid);
             return (IONIC_RC_EQID);
         }
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.name, cmd->qid);
@@ -1478,7 +1478,7 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
                 hal_lif_info_.name, cmd->qid);
             return (IONIC_RC_EQID);
         }
-        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.name, cmd->qid);
@@ -1916,7 +1916,7 @@ EthLif::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
 
     memrev((uint8_t*)&eqcb, sizeof(eqcb_t));
 
-    addr = pd->lm_->GetLIFQStateAddr(lif_id, ETH_QTYPE_EQ, cmd->qid_ver);
+    addr = pd->lm_->get_lif_qstate_addr(lif_id, ETH_QTYPE_EQ, cmd->qid_ver);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for EQ qid {}",
                     lif_id, cmd->qid_ver);
@@ -1980,7 +1980,7 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     /* store  pt_pa & pt_next_pa in little endian. So need an extra memrev */
     memrev((uint8_t*)&cqcb.pt_pa, sizeof(uint64_t));
 
-    ret = pd->lm_->GetPCOffset("p4plus", "rxdma_stage0.bin", "rdma_cq_rx_stage0", &offset);
+    ret = pd->get_pc_offset("rxdma_stage0.bin", "rdma_cq_rx_stage0", &offset);
     if (ret < 0) {
         NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, "rxdma_stage0.bin", "rdma_cq_rx_stage0");
         return (IONIC_RC_ERROR);
@@ -1995,7 +1995,7 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     // Convert data before writting to HBM
     memrev((uint8_t*)&cqcb, sizeof(cqcb_t));
 
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_CQ, cmd->qid_ver);
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_CQ, cmd->qid_ver);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for CQ qid {}",
                     lif_id, cmd->qid_ver);
@@ -2040,7 +2040,7 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
     aqcb.aqcb0.aq_id = cmd->qid_ver;
     aqcb.aqcb0.phy_base_addr = cmd->dma_addr | (1UL << 63) | (lif_id << 52);
     aqcb.aqcb0.cq_id = cmd->cid;
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_CQ, cmd->cid);
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_CQ, cmd->cid);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for CQ qid {}",
                     lif_id, cmd->cid);
@@ -2050,7 +2050,7 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
 
     aqcb.aqcb0.first_pass = 1;
 
-    ret = pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "rdma_aq_tx_stage0", &offset);
+    ret = pd->get_pc_offset("txdma_stage0.bin", "rdma_aq_tx_stage0", &offset);
     if (ret < 0) {
         NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, "txdma_stage0.bin", "rdma_aq_tx_stage0");
         return IONIC_RC_ERROR;
@@ -2068,7 +2068,7 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
     memrev((uint8_t*)&aqcb.aqcb0, sizeof(aqcb0_t));
     memrev((uint8_t*)&aqcb.aqcb1, sizeof(aqcb1_t));
 
-    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, cmd->qid_ver);;
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, cmd->qid_ver);;
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for AQ qid {}",
                     lif_id, cmd->qid_ver);

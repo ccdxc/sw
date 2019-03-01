@@ -34,11 +34,11 @@
 #include "nic/hal/plugins/cfg/accel/accel_rgroup.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "platform/utils/program.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 
 using sdk::platform::capri::tm_port_t;
 

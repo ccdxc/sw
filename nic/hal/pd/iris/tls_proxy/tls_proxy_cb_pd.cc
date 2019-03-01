@@ -8,7 +8,6 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "gen/p4gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/include/app_redir_shared.h"
@@ -373,7 +372,7 @@ p4pd_add_or_del_tls_tx_config_entry(pd_tls_proxy_cb_t* tls_proxy_cb_pd, bool del
 
         data.u.tls_rx_serq_d.salt = tls_proxy_cb_pd->tls_proxy_cb->salt;
         HAL_TRACE_DEBUG("Salt = 0x{:x}", data.u.tls_rx_serq_d.salt);
-        
+
         data.u.tls_rx_serq_d.cpu_id = tls_proxy_cb_pd->tls_proxy_cb->cpu_id;
         HAL_TRACE_DEBUG("CPU-id = {}", data.u.tls_rx_serq_d.cpu_id);
 

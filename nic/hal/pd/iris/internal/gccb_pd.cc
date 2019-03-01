@@ -6,7 +6,6 @@
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "gen/p4gen/gc_txdma/include/gc_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/iris/internal/gccb_pd.hpp"
@@ -48,7 +47,8 @@ p4pd_add_or_del_gc_tx_stage0_entry(int qtype, int qid, uint64_t ring_base,
     uint64_t                                    addr;
 
     // hardware index for this entry
-    addr = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC, qtype, qid);
+    // addr = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC, qtype, qid);
+    addr = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_GC, qtype, qid);
 
     if(!del) {
         // get pc address

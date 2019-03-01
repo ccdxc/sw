@@ -116,7 +116,8 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
 
     // Reserve all the LIF ids used by HAL
     NIC_LOG_DEBUG("Reserving HAL lifs {}-{}", HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
-    int ret = pd->lm_->LIFRangeAlloc(HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
+    // int ret = pd->lm_->LIFRangeAlloc(HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
+    int ret = pd->lm_->reserve_id(HAL_LIF_ID_MIN, (HAL_LIF_ID_MAX - HAL_LIF_ID_MIN + 1));
     if (ret < 0) {
         throw runtime_error("Failed to reserve HAL LIFs");
     }

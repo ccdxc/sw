@@ -8,12 +8,13 @@
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/platform/utils/lif_mgr/lif_mgr.hpp"
 #include "lib/list/list.hpp"
 #include "lib/ht/ht.hpp"
 #include "lib/bitmap/bitmap.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
+#include "nic/sdk/platform/utils/program.hpp"
 
 #include "gen/proto/interface.pb.h"
 
@@ -171,7 +172,8 @@ lif_unlock (lif_t *lif, const char *fname,
     SDK_SPINLOCK_UNLOCK(&lif->slock);
 }
 
-extern sdk::platform::capri::LIFManager *lif_manager();
+extern lif_mgr *lif_manager();
+extern program_info *prog_info();
 
 extern void *lif_id_get_key_func(void *entry);
 extern uint32_t lif_id_compute_hash_func(void *key, uint32_t ht_size);
@@ -205,6 +207,8 @@ hal_ret_t lif_get(LifGetRequest& req, LifGetResponseMsg *rsp);
 lif_t *find_lif_by_hw_lif_id (uint32_t hw_lif_id);
 uint64_t lif_hw_lif_id_get (lif_t *lif);
 hal_ret_t lif_disable_tx_scheduler (void);
+int32_t hal_get_pc_offset(const char *prog_name, const char *label,
+                          uint8_t *offset);
 
 }    // namespace hal
 

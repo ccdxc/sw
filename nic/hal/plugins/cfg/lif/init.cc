@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "platform/capri/capri_lif_manager.hpp"
+#include "platform/utils/lif_mgr/lif_mgr.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -18,12 +18,22 @@ using namespace sdk::platform::utils;
 
 namespace hal {
 
-LIFManager *g_lif_manager = nullptr;
+const uint32_t kNumMaxLIFs = 2048;
 
-LIFManager *
+// LIFManager *g_lif_manager = nullptr;
+class lif_mgr *g_lif_manager = nullptr;
+program_info *g_pinfo = nullptr;
+
+lif_mgr *
 lif_manager()
 {
     return g_lif_manager;
+}
+
+program_info *
+prog_info()
+{
+    return g_pinfo;
 }
 
 namespace nw {
@@ -32,15 +42,16 @@ namespace nw {
 extern "C" hal_ret_t
 lif_init (hal_cfg_t *hal_cfg)
 {
-    program_info *pinfo = program_info::factory((hal_cfg->cfg_path +
-                                                "/gen/mpu_prog_info.json").c_str());
+    g_pinfo = program_info::factory((hal_cfg->cfg_path +
+                                     "/gen/mpu_prog_info.json").c_str());
     std::string mpart_json =
         hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_mem.json";
     mpartition *mp = mpartition::factory(mpart_json.c_str());
 
-    SDK_ASSERT(pinfo && mp);
+    SDK_ASSERT(g_pinfo && mp);
 
-    g_lif_manager = LIFManager::factory(mp, pinfo, "lif2qstate_map");
+    // g_lif_manager = LIFManager::factory(mp, pinfo, "lif2qstate_map");
+    g_lif_manager = lif_mgr::factory(kNumMaxLIFs, mp, "lif2qstate_map");
 
     // Proxy Init
     if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {

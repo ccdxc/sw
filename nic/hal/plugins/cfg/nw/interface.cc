@@ -15,7 +15,6 @@
 #include "nic/include/pd_api.hpp"
 #include "gen/proto/l2segment.pb.h"
 #include "gen/proto/port.grpc.pb.h"
-#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"

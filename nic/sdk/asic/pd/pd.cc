@@ -4,8 +4,10 @@
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_qstate.hpp"
 #include "asic/pd/pd.hpp"
 #include "lib/utils/time_profile.hpp"
+#include "platform/utils/mpartition.hpp"
 
 using namespace sdk::platform::capri;
 
@@ -616,6 +618,72 @@ asic_pd_scheduler_stats_get (scheduler_stats_t *sch_stats)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+asic_pd_qstate_map_clear (uint32_t lif_id)
+{
+    capri_clear_qstate_map(lif_id);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+asic_pd_qstate_map_write (lif_qstate_t *qstate, uint8_t enable)
+{
+    capri_program_qstate_map(qstate, enable);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+asic_pd_qstate_map_rewrite (uint32_t lif_id, uint8_t enable)
+{
+    capri_reprogram_qstate_map(lif_id, enable);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+asic_pd_qstate_map_read (lif_qstate_t *qstate)
+{
+    capri_read_qstate_map(qstate);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+asic_pd_qstate_write (uint64_t addr, const uint8_t *buf, uint32_t size)
+{
+    return capri_write_qstate(addr, buf, size);
+}
+
+sdk_ret_t
+asic_pd_qstate_read (uint64_t addr, uint8_t *buf, uint32_t size)
+{
+    return capri_read_qstate(addr, buf, size);
+}
+
+sdk_ret_t
+asic_pd_qstate_clear (lif_qstate_t *qstate)
+{
+    return capri_clear_qstate(qstate);
+}
+
+sdk_ret_t
+asic_pd_p4plus_invalidate_cache (mpartition_region_t *reg,
+                                 uint64_t q_addr, uint32_t size)
+{
+    p4plus_cache_action_t action = P4PLUS_CACHE_ACTION_NONE;
+
+    if(is_region_cache_pipe_p4plus_all(reg)) {
+        action = P4PLUS_CACHE_INVALIDATE_BOTH;
+    } else if (is_region_cache_pipe_p4plus_rxdma(reg)) {
+        action = P4PLUS_CACHE_INVALIDATE_RXDMA;
+    } else if (is_region_cache_pipe_p4plus_txdma(reg)) {
+        action = P4PLUS_CACHE_INVALIDATE_TXDMA;
+    }
+
+    if (action != P4PLUS_CACHE_ACTION_NONE) {
+        p4plus_invalidate_cache(q_addr, size, action);
+    }
+
+    return SDK_RET_OK;
+}
 
 }    // namespace pd
 }    // namespace asic

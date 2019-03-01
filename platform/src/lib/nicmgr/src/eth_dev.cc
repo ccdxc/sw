@@ -57,15 +57,17 @@ Eth::Eth(HalClient *hal_client,
          void *dev_spec,
          PdClient *pd_client)
 {
+    sdk_ret_t ret = SDK_RET_OK;
     Eth::hal = hal_client;
     Eth::hal_common_client = hal_common_client;
     Eth::spec = (struct eth_devspec *)dev_spec;
     Eth::pd = pd_client;
 
     // Allocate lifs
-    lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
-    if (lif_base < 0) {
-        NIC_LOG_ERR("{}: Failed to allocate lifs", spec->name);
+    // lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
+    ret = pd->lm_->alloc_id(&lif_base, spec->lif_count);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
         throw;
     }
     NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, lif_base, spec->lif_count);
