@@ -26,6 +26,9 @@ esp_ipv4_tunnel_n2h_rxdma_ipsec_update_rx_stats:
     nop
 
 esp_ipv4_tunnel_n2h_rxdma_dummy_desc:
+    phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_type, 0
+    phvwri p.dma_cmd_in_desc_aol_dma_cmd_type, 0
+    phvwri p.dma_cmd_out_desc_aol_dma_cmd_type, 0
     phvwri p.dma_cmd_pkt2mem_dma_cmd_type, 0
     phvwri p.dma_cmd_pkt2mem2_dma_cmd_type, 0
     phvwri.e p.dma_cmd_iv_salt_dma_cmd_type, 0

@@ -115,6 +115,8 @@
 #define RNMPR_SMALL_TABLE_BASE  "hbm_rnmpr_small_table_base"
 #define TNMDR_TABLE_BASE        "hbm_tnmdr_table_base"
 #define TNMPR_TABLE_BASE        "hbm_tnmpr_table_base"
+#define IPSEC_PAGE_ADDR_RX      "hbm_ipsec_page_rx"
+#define IPSEC_PAGE_ADDR_TX      "hbm_ipsec_page_tx"
 #define IPSEC_TNMDR_TABLE_BASE  "hbm_ipsec_tnmdr_table_base"
 #define IPSEC_TNMPR_TABLE_BASE  "hbm_ipsec_tnmpr_table_base"
 #define TNMPR_SMALL_TABLE_BASE  "hbm_tnmpr_small_table_base"

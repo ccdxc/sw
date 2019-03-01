@@ -26,14 +26,15 @@ esp_ipv4_tunnel_h2n_post_to_cb_ring:
     phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_type}, ((IPSEC_H2N_CB_RING_IN_DESC_END << 18) | (IPSEC_H2N_CB_RING_IN_DESC_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     add r7, k.ipsec_global_ipsec_cb_pindex, 1
     andi r7, r7, IPSEC_CB_RING_INDEX_MASK 
-    
-    and r6, k.ipsec_to_stage4_flags, IPSEC_N2H_GLOBAL_FLAGS
-    seq c1, r6, IPSEC_N2H_GLOBAL_FLAGS
-    phvwri.c1 p.ipsec_global_in_desc_addr, IPSEC_DESC_FULL_DESC_ADDR
 
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(doorbell_cmd_dma_cmd, LIF_IPSEC_ESP, 0, k.ipsec_global_ipsec_cb_index, 0, r7, db_data_pid, db_data_index)
     phvwri          p.doorbell_cmd_dma_cmd_eop, 1
-    phvwri.e          p.doorbell_cmd_dma_cmd_wr_fence, 1
+    phvwri          p.doorbell_cmd_dma_cmd_wr_fence, 1
+    and r6, k.ipsec_to_stage4_flags, IPSEC_N2H_GLOBAL_FLAGS
+    seq c1, r6, IPSEC_N2H_GLOBAL_FLAGS
+    bcf [c1], esp_ipv4_tunnel_h2n_stop_pkt_dma
+    nop
+    nop.e
     nop
 
 esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc_illegal_cb_ring_dma:
@@ -43,3 +44,6 @@ esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc_illegal_cb_ring_dma:
     phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop
 
+esp_ipv4_tunnel_h2n_stop_pkt_dma:
+    phvwri.e p.ipsec_global_in_desc_addr, IPSEC_DESC_FULL_DESC_ADDR
+    nop

@@ -386,6 +386,9 @@
 #define IPSEC_TNMPR_TABLE_SIZE                255
 #define IPSEC_TNMPR_TABLE_SIZE_SHFT           8
 
+#define IPSEC_PAGE_ADDR_RX         hbm_ipsec_page_rx
+#define IPSEC_PAGE_ADDR_TX         hbm_ipsec_page_tx
+
 #define RNMDPR_SMALL_TABLE_BASE         hbm_rnmdpr_small_table_base
 #define RNMDPR_SMALL_TABLE_ENTRY_SIZE   8 /* 8B */
 #define RNMDPR_SMALL_TABLE_ENTRY_SIZE_SHFT  3 /* 8B */

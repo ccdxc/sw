@@ -76,6 +76,8 @@
 #define N2H_TXDMA2_DUMMY_FREE         112
 #define N2H_RXDMA_DUMMY_DESC_OFFSET   120
 #define N2H_RXDMA_ENTER_OFFSET        128
+#define N2H_BAD_BARCO_IN_DESC         136
+#define N2H_BAD_BARCO_OUT_DESC        144
  
 
 #define H2N_IN_DESC_OFFSET             0
@@ -100,6 +102,8 @@
 #define H2N_ABORT_TXDMA1_DUMMY_OFFSET 152
 #define H2N_RXDMA_DUMMY_DESC_OFFSET  160
 #define H2N_RXDMA_ENTER_OFFSET       168
+#define H2N_BAD_BARCO_IN_DESC        176
+#define H2N_BAD_BARCO_OUT_DESC       184
 
 
 #define DOT1Q_ETYPE  0x8100

@@ -11,9 +11,6 @@ struct phv_ p;
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_update_tx_stats:
     tbladd.f d.h2n_tx_pkts, 1
-    //add r1, k.txdma2_global_payload_size, IPV4_FIXED_TUNNEL_MODE_GROWTH
-    //add r1, r1, k.txdma2_global_pad_size
-    //tbladd.f d.h2n_tx_bytes, r1 
     add r1, k.ipsec_to_stage4_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET
     phvwr p.eth_hdr_dma_cmd_addr, r1
 
