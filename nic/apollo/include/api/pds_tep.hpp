@@ -21,14 +21,14 @@
 #define PDS_MAX_TEP 1024
 
 /// \brief Encapsulation type
-typedef enum pds_encap_type_e {
-    PDS_ENCAP_TYPE_NONE     = 0,    ///< No encap
+typedef enum pds_tep_encap_type_e {
+    PDS_TEP_ENCAP_TYPE_NONE     = 0,    ///< No encap
     ///< MPLSoUDP encap types
-    PDS_ENCAP_TYPE_GW_ENCAP = 1,    ///< MPLSoUDP with single mpls label
-    PDS_ENCAP_TYPE_VNIC     = 2,    ///< MPLSoUDP with two mpls labels
+    PDS_TEP_ENCAP_TYPE_GW_ENCAP = 1,    ///< MPLSoUDP with single mpls label
+    PDS_TEP_ENCAP_TYPE_VNIC     = 2,    ///< MPLSoUDP with two mpls labels
     ///< VxLAN encap
-    PDS_ENCAP_TYPE_VXLAN    = 3,    ///< VxLAN encap
-} pds_encap_type_t;
+    PDS_TEP_ENCAP_TYPE_VXLAN    = 3,    ///< VxLAN encap
+} pds_tep_encap_type_t;
 
 /// \brief TEP key
 typedef struct pds_tep_key_s {
@@ -37,8 +37,8 @@ typedef struct pds_tep_key_s {
 
 /// \brief TEP specification
 typedef struct pds_tep_spec_s {
-    pds_tep_key_t key;        ///< Key
-    pds_encap_type_t type;    ///< Encapsulation Type
+    pds_tep_key_t key;                  ///< Key
+    pds_tep_encap_type_t encap_type;    ///< Encapsulation Type
 } __PACK__ pds_tep_spec_t;
 
 /// \brief TEP status

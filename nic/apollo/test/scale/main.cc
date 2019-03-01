@@ -208,7 +208,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                         (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
                     pds_mapping.subnet.id = (i - 1) * num_subnets + j;
-                    pds_mapping.slot = vnic_key;
+                    pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                    pds_mapping.fabric_encap.val.value = vnic_key;
                     pds_mapping.tep.ip_addr = g_device.switch_ip_addr;
                     MAC_UINT64_TO_ADDR(pds_mapping.overlay_mac,
                                        (((((uint64_t)i & 0x7FF) << 22) |
@@ -246,7 +247,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
                 pds_mapping.subnet.id = (i - 1) * num_subnets + j;
-                pds_mapping.slot = remote_slot++;
+                pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                pds_mapping.fabric_encap.val.value = remote_slot++;
                 pds_mapping.tep.ip_addr =
                     teppfx->addr.addr.v4_addr + tep_offset++;
                 tep_offset %= num_teps;
@@ -292,7 +294,8 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
                 pds_vnic.subnet.id = (i - 1) * num_subnets + j;
                 pds_vnic.key.id = vnic_key;
                 pds_vnic.wire_vlan = vlan_start + vnic_key - 1;
-                pds_vnic.slot = vnic_key;
+                pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                pds_vnic.fabric_encap.val.mpls_tag = vnic_key;
                 MAC_UINT64_TO_ADDR(pds_vnic.mac_addr,
                                    (((((uint64_t)i & 0x7FF) << 22) |
                                      ((j & 0x7FF) << 11) | (k & 0x7FF))));
@@ -384,7 +387,7 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         // 1st IP in the TEP prefix is local TEP, 2nd is gateway IP,
         // so skip them
         pds_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
-        pds_tep.type = PDS_ENCAP_TYPE_VNIC;
+        pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
         rv = pds_tep_create(&pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;

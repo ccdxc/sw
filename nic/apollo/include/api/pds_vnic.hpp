@@ -32,11 +32,7 @@ typedef struct pds_vnic_spec_s {
     pds_subnet_key_t subnet;          ///< Subnet of this vnic
     pds_vnic_key_t key;               ///< VNIC's Key
     uint16_t wire_vlan;               ///< VLAN tag assigned to this vnic
-    ///< fabric encap for this VNIC
-    union {
-        pds_slot_id_t slot;           ///< Virtual slot (encap : MPLS Tag)
-        pds_vnid_id_t vnid;           ///< VxLAN vnid
-    };
+    pds_encap_t fabric_encap;         ///< fabric encap for this vnic
     mac_addr_t mac_addr;              ///< VNIC's overlay mac mac address
     pds_rsc_pool_id_t rsc_pool_id;    ///< Resource pool
     bool src_dst_check;               ///< TRUE if src/dst check is enabled

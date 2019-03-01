@@ -31,9 +31,31 @@ typedef uint32_t  pds_rsc_pool_id_t;
 typedef uint32_t  pds_epoch_t;
 typedef uint32_t  pds_slot_id_t;
 typedef uint32_t  pds_vnid_id_t;
+typedef uint32_t  pds_mpls_tag_t;
 typedef uint32_t  pds_mapping_id_t;
 typedef uint32_t  pds_route_table_id_t;
 typedef uint32_t  pds_policy_id_t;
+
+/// \brief Encapsulation type
+typedef enum pds_encap_type_e {
+    PDS_ENCAP_TYPE_NONE     = 0,    ///< No encap
+    PDS_ENCAP_TYPE_DOT1Q    = 1,    ///< dot1q encap
+    PDS_ENCAP_TYPE_QINQ     = 2,    ///< QinQ encap
+    PDS_ENCAP_TYPE_MPLSoUDP = 3,    ///< MPLSoUDP
+    PDS_ENCAP_TYPE_VXLAN    = 4,    ///< VxLAN encap
+} pds_encap_type_t;
+
+typedef union pds_encap_val_u {
+    uint16_t          vlan_tag;    ///< 12 bit .1q tag
+    pds_vnid_id_t     vnid;        ///< 24 bit VxLAN vnid
+    pds_mpls_tag_t    mpls_tag;    ///< 20-bit MPLS tag/slot
+    uint32_t          value;       ///< generic value to refer to other values
+} pds_encap_val_t;
+
+typedef struct pds_encap_s {
+    pds_encap_type_t    type;
+    pds_encap_val_t     val;
+} pds_encap_t;
 
 /// \@}
 

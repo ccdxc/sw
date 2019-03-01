@@ -109,9 +109,10 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t    *pds_vnic = &obj_ctxt->api_params->vnic_info;
 
     PDS_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, vlan %u, "
-                    "slot %u", key_.id, pds_vnic->vcn.id, pds_vnic->subnet.id,
-                    macaddr2str(pds_vnic->mac_addr), pds_vnic->wire_vlan,
-                    pds_vnic->slot);
+                    "encap type %u, encap value %u", key_.id, pds_vnic->vcn.id,
+                    pds_vnic->subnet.id, macaddr2str(pds_vnic->mac_addr),
+                    pds_vnic->wire_vlan, pds_vnic->fabric_encap.type,
+                    pds_vnic->fabric_encap.val.value);
     return impl_->program_hw(this, obj_ctxt);
 }
 

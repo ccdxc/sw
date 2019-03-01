@@ -14,15 +14,15 @@ namespace api_test {
 
 tep_util::tep_util() {
     this->ip_str = "0.0.0.0";
-    this->type = PDS_ENCAP_TYPE_NONE;
+    this->type = PDS_TEP_ENCAP_TYPE_NONE;
 }
 
 tep_util::tep_util(std::string ip_str) {
     this->ip_str = ip_str;
-    this->type = PDS_ENCAP_TYPE_NONE;
+    this->type = PDS_TEP_ENCAP_TYPE_NONE;
 }
 
-tep_util::tep_util(std::string ip_str, pds_encap_type_t type) {
+tep_util::tep_util(std::string ip_str, pds_tep_encap_type_t type) {
     this->ip_str = ip_str;
     this->type = type;
 }
@@ -36,14 +36,14 @@ tep_util::create() {
 
     SDK_ASSERT(str2ipv4pfx((char *)this->ip_str.c_str(), &ip_pfx) == 0);
     memset(&pds_tep, 0, sizeof(pds_tep));
-    pds_tep.type = this->type;
+    pds_tep.encap_type = this->type;
     pds_tep.key.ip_addr = ip_pfx.addr.addr.v4_addr;
     return (pds_tep_create(&pds_tep));
 }
 
 sdk::sdk_ret_t
 tep_util::many_create(uint32_t num_tep, std::string pfxstr,
-                      pds_encap_type_t type) {
+                      pds_tep_encap_type_t type) {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
     ip_prefix_t ip_pfx;
     SDK_ASSERT(num_tep <= PDS_MAX_TEP);
@@ -65,7 +65,7 @@ debug_dump_tep_spec (pds_tep_spec_t *spec)
 {
     printf("Spec data : \n");
     printf("Key IPv4 address 0x%x ", spec->key.ip_addr);
-    printf("Encap Type %d", spec->type);
+    printf("Encap Type %d", spec->encap_type);
     printf("\n");
     return;
 }

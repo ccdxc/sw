@@ -104,11 +104,11 @@ tep_impl::fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
 {
     switch (nh_tx_data->action_u.nexthop_tx_nexthop_info.encap_type) {
     case GW_ENCAP:
-        spec->type = PDS_ENCAP_TYPE_GW_ENCAP;
+        spec->encap_type = PDS_TEP_ENCAP_TYPE_GW_ENCAP;
         spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
         break;
     case VNIC_ENCAP:
-        spec->type = PDS_ENCAP_TYPE_VNIC;
+        spec->encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
         spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
         break;
     }
@@ -156,16 +156,16 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     // program TEP Tx table
     tep_spec = &obj_ctxt->api_params->tep_spec;
-    switch (tep_spec->type) {
-    case PDS_ENCAP_TYPE_GW_ENCAP:
-    case PDS_ENCAP_TYPE_VNIC:
+    switch (tep_spec->encap_type) {
+    case PDS_TEP_ENCAP_TYPE_GW_ENCAP:
+    case PDS_TEP_ENCAP_TYPE_VNIC:
         tep_tx_data.action_id = TEP_TX_MPLS_UDP_TEP_TX_ID;
         tep_tx_data.tep_tx_mpls_udp_action.dipo = tep_spec->key.ip_addr;
         MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_mpls_udp_action.dmac,
                            PDS_REMOTE_TEP_MAC);
         break;
 
-    case PDS_ENCAP_TYPE_VXLAN:
+    case PDS_TEP_ENCAP_TYPE_VXLAN:
         tep_tx_data.action_id = TEP_TX_VXLAN_TEP_TX_ID;
         tep_tx_data.tep_tx_vxlan_action.dipo = tep_spec->key.ip_addr;
         MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_vxlan_action.dmac,
@@ -186,14 +186,14 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // program nexthop table
     nh_tx_data.action_id = NEXTHOP_TX_NEXTHOP_INFO_ID;
     nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index = hw_id_;
-    switch (tep_spec->type) {
-    case PDS_ENCAP_TYPE_GW_ENCAP:
+    switch (tep_spec->encap_type) {
+    case PDS_TEP_ENCAP_TYPE_GW_ENCAP:
         nh_tx_data.nh_tx_action.encap_type = GW_ENCAP;
         break;
-    case PDS_ENCAP_TYPE_VNIC:
+    case PDS_TEP_ENCAP_TYPE_VNIC:
         nh_tx_data.nh_tx_action.encap_type = VNIC_ENCAP;
         break;
-    case PDS_ENCAP_TYPE_VXLAN:
+    case PDS_TEP_ENCAP_TYPE_VXLAN:
         nh_tx_data.nh_tx_action.encap_type = 0;    // don't care
         break;
     default:

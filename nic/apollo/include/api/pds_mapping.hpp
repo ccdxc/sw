@@ -29,22 +29,19 @@ typedef struct pds_mapping_key_s {
 
 /// \brief Mapping specification
 typedef struct pds_mapping_spec_s {
-    pds_mapping_key_t key;      ///< Mapping key
-    pds_subnet_key_t subnet;    ///< Subnet this IP is part of
-    union {
-        pds_slot_id_t slot;     ///< Virtual slot (encap : MPLS Tag)
-        pds_vnid_id_t vnid;     ///< VxLAN vnid
-    };
-    pds_tep_key_t tep;          ///< TEP address for this mapping
-                                ///< 1. Device IP for local vnic
-                                ///< 2. Remote TEP for remote vnic
-    mac_addr_t overlay_mac;     ///< MAC for this IP
+    pds_mapping_key_t key;            ///< Mapping key
+    pds_subnet_key_t subnet;          ///< Subnet this IP is part of
+    pds_encap_t fabric_encap;         ///< fabric encap for this mapping
+    pds_tep_key_t tep;                ///< TEP address for this mapping
+                                      ///< 1. Device IP for local vnic
+                                      ///< 2. Remote TEP for remote vnic
+    mac_addr_t overlay_mac;           ///< MAC for this IP
 
     ///< Information specific to local IP mappings
     struct {
-        pds_vnic_key_t vnic;    ///< VNIC for local IP
-        bool public_ip_valid;   ///< TRUE if public IP is valid
-        ip_addr_t public_ip;    ///< Public IP address
+        pds_vnic_key_t vnic;          ///< VNIC for local IP
+        bool public_ip_valid;         ///< TRUE if public IP is valid
+        ip_addr_t public_ip;          ///< Public IP address
     };
 } pds_mapping_spec_t;
 

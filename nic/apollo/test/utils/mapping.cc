@@ -48,7 +48,8 @@ mapping_util::create(void) {
     map.key.vcn.id = vcn_id;
     extract_ip_addr(vnic_ip.c_str(), vnic_ip_af, &map.key.ip_addr);
     map.subnet.id     = sub_id;
-    map.slot          = mpls_slot;
+    map.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+    map.fabric_encap.val.mpls_tag = mpls_slot;
     inet_aton(tep_ip.c_str(), &ipaddr);
     map.tep.ip_addr = ntohl(ipaddr.s_addr);
     mac_str_to_addr((char *)vnic_mac.c_str(), map.overlay_mac);

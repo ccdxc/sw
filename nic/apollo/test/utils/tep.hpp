@@ -21,7 +21,7 @@ class tep_util {
 public:
     // Test parameters
     std::string ip_str;       // TEP IP
-    pds_encap_type_t type;    // TEP type
+    pds_tep_encap_type_t type;    // TEP type
 
     /// \brief default constructor
     tep_util();
@@ -30,7 +30,7 @@ public:
     tep_util(std::string ip_str);
 
     /// \brief parameterized constructor
-    tep_util(std::string ip_str, pds_encap_type_t type);
+    tep_util(std::string ip_str, pds_tep_encap_type_t type);
 
     /// \brief destructor
     ~tep_util();
@@ -75,7 +75,7 @@ public:
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_create(uint32_t num_tep, std::string ip_str,
-                                 pds_encap_type_t type = PDS_ENCAP_TYPE_VNIC);
+                                 pds_tep_encap_type_t type = PDS_TEP_ENCAP_TYPE_VNIC);
 
     /// \brief Get all TEPs configured on the NAPLES
     ///

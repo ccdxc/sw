@@ -41,7 +41,7 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return obj;
 
     case OBJ_ID_MAPPING:
-        obj = mapping_entry::factory(&api_ctxt->api_params->mapping_info);
+        obj = mapping_entry::factory(&api_ctxt->api_params->mapping_spec);
         return obj;
 
     case OBJ_ID_ROUTE_TABLE:

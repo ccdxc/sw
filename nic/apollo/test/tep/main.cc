@@ -63,7 +63,7 @@ TEST_F(tep_test, tep_invalid_read) {
 /// Delete a TEP before first ever create
 TEST_F(tep_test, tep_invalid_delete) {
     pds_batch_params_t batch_params = {0};
-    tep_util tep_obj("10.1.1.1/8", PDS_ENCAP_TYPE_VNIC);
+    tep_util tep_obj("10.1.1.1/8", PDS_TEP_ENCAP_TYPE_VNIC);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
@@ -98,7 +98,7 @@ TEST_F(tep_test, tep_invalid_delete_4) {}
 TEST_F(tep_test, tep_create) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
-    tep_util tep_obj("10.1.1.1/8", PDS_ENCAP_TYPE_VNIC);
+    tep_util tep_obj("10.1.1.1/8", PDS_TEP_ENCAP_TYPE_VNIC);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
@@ -119,7 +119,7 @@ TEST_F(tep_test, tep_create) {
 TEST_F(tep_test, tep_read) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
-    tep_util tep_obj("10.1.1.2/8", PDS_ENCAP_TYPE_VNIC);
+    tep_util tep_obj("10.1.1.2/8", PDS_TEP_ENCAP_TYPE_VNIC);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
@@ -145,7 +145,7 @@ TEST_F(tep_test, tep_read) {
 TEST_F(tep_test, tep_delete) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
-    tep_util tep_obj("10.1.1.3/8", PDS_ENCAP_TYPE_VNIC);
+    tep_util tep_obj("10.1.1.3/8", PDS_TEP_ENCAP_TYPE_VNIC);
 
     // Setup
     batch_params.epoch = ++api_test::g_batch_epoch;
@@ -227,7 +227,7 @@ TEST_F(tep_test, tep_multi_create) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, "10.1.2.1/8",
-                                      PDS_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // TODO Verify with read

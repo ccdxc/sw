@@ -43,7 +43,8 @@ vnic_util::create(void) {
     vnic.subnet.id = sub_id;
     vnic.key.id = vnic_id;
     vnic.wire_vlan = vlan_tag;
-    vnic.slot = mpls_slot;
+    vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+    vnic.fabric_encap.val.mpls_tag = mpls_slot;
     mac_str_to_addr((char *)vnic_mac.c_str(), vnic.mac_addr);
     vnic.rsc_pool_id = rsc_pool_id;
     vnic.src_dst_check = src_dst_check;

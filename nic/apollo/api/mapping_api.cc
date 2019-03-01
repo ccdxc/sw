@@ -30,7 +30,7 @@ pds_mapping_api_handle (api::api_op_t op, pds_mapping_key_t *key,
         if (op == api::API_OP_DELETE)
             api_ctxt.api_params->mapping_key = *key;
         else
-            api_ctxt.api_params->mapping_info = *spec;
+            api_ctxt.api_params->mapping_spec = *spec;
         rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
     }

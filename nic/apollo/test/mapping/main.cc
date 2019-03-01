@@ -129,7 +129,7 @@ TEST_F(mapping_test, mapping_create) {
     ASSERT_TRUE(vcn.create() == SDK_RET_OK);
 
     // Create remote tep
-    tep_util rtep(sub_rem_gw, PDS_ENCAP_TYPE_VNIC);
+    tep_util rtep(sub_rem_gw, PDS_TEP_ENCAP_TYPE_VNIC);
     ASSERT_TRUE(rtep.create() == SDK_RET_OK);
 
     // Create route
