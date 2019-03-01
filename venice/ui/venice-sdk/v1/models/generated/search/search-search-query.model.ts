@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchTextRequirement, ISearchTextRequirement } from './search-text-requirement.model';
@@ -34,24 +34,29 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     'labels': LabelsSelector = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'texts': {
+            required: false,
             type: 'object'
         },
         'categories': {
             enum: SearchSearchQuery_categories,
             default: 'Cluster',
             description:  'length of string should be between 0 and 64 ',
+            required: false,
             type: 'Array<string>'
         },
         'kinds': {
             enum: SearchSearchQuery_kinds,
             default: 'Cluster',
             description:  'length of string should be between 0 and 64 ',
+            required: false,
             type: 'Array<string>'
         },
         'fields': {
+            required: false,
             type: 'object'
         },
         'labels': {
+            required: false,
             type: 'object'
         },
     }
@@ -69,8 +74,7 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     */
     public static hasDefaultValue(prop) {
         return (SearchSearchQuery.propInfo[prop] != null &&
-                        SearchSearchQuery.propInfo[prop].default != null &&
-                        SearchSearchQuery.propInfo[prop].default != '');
+                        SearchSearchQuery.propInfo[prop].default != null);
     }
 
     /**
@@ -129,13 +133,28 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'texts': new FormArray([]),
-                'categories': CustomFormControl(new FormControl(this['categories']), SearchSearchQuery.propInfo['categories'].description),
-                'kinds': CustomFormControl(new FormControl(this['kinds']), SearchSearchQuery.propInfo['kinds'].description),
-                'fields': this['fields'].$formGroup,
-                'labels': this['labels'].$formGroup,
+                'categories': CustomFormControl(new FormControl(this['categories']), SearchSearchQuery.propInfo['categories']),
+                'kinds': CustomFormControl(new FormControl(this['kinds']), SearchSearchQuery.propInfo['kinds']),
+                'fields': CustomFormGroup(this['fields'].$formGroup, SearchSearchQuery.propInfo['fields'].required),
+                'labels': CustomFormGroup(this['labels'].$formGroup, SearchSearchQuery.propInfo['labels'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<SearchTextRequirement>('texts', this['texts'], SearchTextRequirement);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('texts') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('texts').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('fields') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('fields').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('labels') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('labels').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-rule.model';
@@ -25,15 +25,19 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
     'enable-mirroring': boolean = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'flow-selector': {
+            required: false,
             type: 'object'
         },
         'time-window': {
+            required: false,
             type: 'object'
         },
         'repeat-every': {
+            required: false,
             type: 'string'
         },
         'enable-mirroring': {
+            required: false,
             type: 'boolean'
         },
     }
@@ -51,8 +55,7 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
     */
     public static hasDefaultValue(prop) {
         return (MonitoringTroubleshootingSessionSpec.propInfo[prop] != null &&
-                        MonitoringTroubleshootingSessionSpec.propInfo[prop].default != null &&
-                        MonitoringTroubleshootingSessionSpec.propInfo[prop].default != '');
+                        MonitoringTroubleshootingSessionSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -102,10 +105,20 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'flow-selector': this['flow-selector'].$formGroup,
-                'time-window': this['time-window'].$formGroup,
-                'repeat-every': CustomFormControl(new FormControl(this['repeat-every']), MonitoringTroubleshootingSessionSpec.propInfo['repeat-every'].description),
-                'enable-mirroring': CustomFormControl(new FormControl(this['enable-mirroring']), MonitoringTroubleshootingSessionSpec.propInfo['enable-mirroring'].description),
+                'flow-selector': CustomFormGroup(this['flow-selector'].$formGroup, MonitoringTroubleshootingSessionSpec.propInfo['flow-selector'].required),
+                'time-window': CustomFormGroup(this['time-window'].$formGroup, MonitoringTroubleshootingSessionSpec.propInfo['time-window'].required),
+                'repeat-every': CustomFormControl(new FormControl(this['repeat-every']), MonitoringTroubleshootingSessionSpec.propInfo['repeat-every']),
+                'enable-mirroring': CustomFormControl(new FormControl(this['enable-mirroring']), MonitoringTroubleshootingSessionSpec.propInfo['enable-mirroring']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('flow-selector') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('flow-selector').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('time-window') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('time-window').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

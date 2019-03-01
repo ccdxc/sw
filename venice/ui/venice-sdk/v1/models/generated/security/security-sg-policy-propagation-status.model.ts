@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -24,16 +24,20 @@ export class SecuritySGPolicyPropagationStatus extends BaseModel implements ISec
     'min-version': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'generation-id': {
+            required: false,
             type: 'string'
         },
         'updated': {
+            required: false,
             type: 'number'
         },
         'pending': {
             description:  'Number of Naples pending. If this is 0 it can be assumed that everything is up to date.',
+            required: false,
             type: 'number'
         },
         'min-version': {
+            required: false,
             type: 'string'
         },
     }
@@ -51,8 +55,7 @@ export class SecuritySGPolicyPropagationStatus extends BaseModel implements ISec
     */
     public static hasDefaultValue(prop) {
         return (SecuritySGPolicyPropagationStatus.propInfo[prop] != null &&
-                        SecuritySGPolicyPropagationStatus.propInfo[prop].default != null &&
-                        SecuritySGPolicyPropagationStatus.propInfo[prop].default != '');
+                        SecuritySGPolicyPropagationStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -104,10 +107,10 @@ export class SecuritySGPolicyPropagationStatus extends BaseModel implements ISec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'generation-id': CustomFormControl(new FormControl(this['generation-id']), SecuritySGPolicyPropagationStatus.propInfo['generation-id'].description),
-                'updated': CustomFormControl(new FormControl(this['updated']), SecuritySGPolicyPropagationStatus.propInfo['updated'].description),
-                'pending': CustomFormControl(new FormControl(this['pending']), SecuritySGPolicyPropagationStatus.propInfo['pending'].description),
-                'min-version': CustomFormControl(new FormControl(this['min-version']), SecuritySGPolicyPropagationStatus.propInfo['min-version'].description),
+                'generation-id': CustomFormControl(new FormControl(this['generation-id']), SecuritySGPolicyPropagationStatus.propInfo['generation-id']),
+                'updated': CustomFormControl(new FormControl(this['updated']), SecuritySGPolicyPropagationStatus.propInfo['updated']),
+                'pending': CustomFormControl(new FormControl(this['pending']), SecuritySGPolicyPropagationStatus.propInfo['pending']),
+                'min-version': CustomFormControl(new FormControl(this['min-version']), SecuritySGPolicyPropagationStatus.propInfo['min-version']),
             });
         }
         return this._formGroup;

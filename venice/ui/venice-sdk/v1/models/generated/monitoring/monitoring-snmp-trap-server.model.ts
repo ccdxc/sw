@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSNMPTrapServer_version,  } from './enums';
@@ -36,28 +36,34 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'host': {
             description:  'Host where the trap needs to be sent.',
+            required: false,
             type: 'string'
         },
         'port': {
             default: '162',
             description:  'Port on the Host where the trap needs to be sent, default is 162.',
+            required: false,
             type: 'string'
         },
         'version': {
             enum: MonitoringSNMPTrapServer_version,
             default: 'V2C',
+            required: true,
             type: 'string'
         },
         'community-or-user': {
             description:  'CommunityOrUser contains community string for v2c, user for v3.',
+            required: false,
             type: 'string'
         },
         'auth-config': {
             description:  'AuthConfig contains the configuration for authentication, valid only for v3.',
+            required: false,
             type: 'object'
         },
         'privacy-config': {
             description:  'PrivacyConfig contains the configuration for encryption, valid only for v3.',
+            required: false,
             type: 'object'
         },
     }
@@ -75,8 +81,7 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
     */
     public static hasDefaultValue(prop) {
         return (MonitoringSNMPTrapServer.propInfo[prop] != null &&
-                        MonitoringSNMPTrapServer.propInfo[prop].default != null &&
-                        MonitoringSNMPTrapServer.propInfo[prop].default != '');
+                        MonitoringSNMPTrapServer.propInfo[prop].default != null);
     }
 
     /**
@@ -140,12 +145,22 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'host': CustomFormControl(new FormControl(this['host']), MonitoringSNMPTrapServer.propInfo['host'].description),
-                'port': CustomFormControl(new FormControl(this['port']), MonitoringSNMPTrapServer.propInfo['port'].description),
-                'version': CustomFormControl(new FormControl(this['version'], [required, enumValidator(MonitoringSNMPTrapServer_version), ]), MonitoringSNMPTrapServer.propInfo['version'].description),
-                'community-or-user': CustomFormControl(new FormControl(this['community-or-user']), MonitoringSNMPTrapServer.propInfo['community-or-user'].description),
-                'auth-config': this['auth-config'].$formGroup,
-                'privacy-config': this['privacy-config'].$formGroup,
+                'host': CustomFormControl(new FormControl(this['host']), MonitoringSNMPTrapServer.propInfo['host']),
+                'port': CustomFormControl(new FormControl(this['port']), MonitoringSNMPTrapServer.propInfo['port']),
+                'version': CustomFormControl(new FormControl(this['version'], [required, enumValidator(MonitoringSNMPTrapServer_version), ]), MonitoringSNMPTrapServer.propInfo['version']),
+                'community-or-user': CustomFormControl(new FormControl(this['community-or-user']), MonitoringSNMPTrapServer.propInfo['community-or-user']),
+                'auth-config': CustomFormGroup(this['auth-config'].$formGroup, MonitoringSNMPTrapServer.propInfo['auth-config'].required),
+                'privacy-config': CustomFormGroup(this['privacy-config'].$formGroup, MonitoringSNMPTrapServer.propInfo['privacy-config'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('auth-config') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('auth-config').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('privacy-config') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('privacy-config').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

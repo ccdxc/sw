@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -20,6 +20,7 @@ export class ObjstoreObjectSpec extends BaseModel implements IObjstoreObjectSpec
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'content-type': {
             description:  'Content-Type for the stored object. Can either be specified when uploading.  or the backend guesses one if possible.',
+            required: false,
             type: 'string'
         },
     }
@@ -37,8 +38,7 @@ export class ObjstoreObjectSpec extends BaseModel implements IObjstoreObjectSpec
     */
     public static hasDefaultValue(prop) {
         return (ObjstoreObjectSpec.propInfo[prop] != null &&
-                        ObjstoreObjectSpec.propInfo[prop].default != null &&
-                        ObjstoreObjectSpec.propInfo[prop].default != '');
+                        ObjstoreObjectSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -69,7 +69,7 @@ export class ObjstoreObjectSpec extends BaseModel implements IObjstoreObjectSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'content-type': CustomFormControl(new FormControl(this['content-type']), ObjstoreObjectSpec.propInfo['content-type'].description),
+                'content-type': CustomFormControl(new FormControl(this['content-type']), ObjstoreObjectSpec.propInfo['content-type']),
             });
         }
         return this._formGroup;

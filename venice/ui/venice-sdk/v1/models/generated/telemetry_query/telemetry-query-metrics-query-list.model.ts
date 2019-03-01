@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec } from './telemetry-query-metrics-query-spec.model';
@@ -22,12 +22,15 @@ export class Telemetry_queryMetricsQueryList extends BaseModel implements ITelem
     'queries': Array<Telemetry_queryMetricsQuerySpec> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tenant': {
+            required: false,
             type: 'string'
         },
         'namespace': {
+            required: false,
             type: 'string'
         },
         'queries': {
+            required: false,
             type: 'object'
         },
     }
@@ -45,8 +48,7 @@ export class Telemetry_queryMetricsQueryList extends BaseModel implements ITelem
     */
     public static hasDefaultValue(prop) {
         return (Telemetry_queryMetricsQueryList.propInfo[prop] != null &&
-                        Telemetry_queryMetricsQueryList.propInfo[prop].default != null &&
-                        Telemetry_queryMetricsQueryList.propInfo[prop].default != '');
+                        Telemetry_queryMetricsQueryList.propInfo[prop].default != null);
     }
 
     /**
@@ -90,12 +92,17 @@ export class Telemetry_queryMetricsQueryList extends BaseModel implements ITelem
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tenant': CustomFormControl(new FormControl(this['tenant']), Telemetry_queryMetricsQueryList.propInfo['tenant'].description),
-                'namespace': CustomFormControl(new FormControl(this['namespace']), Telemetry_queryMetricsQueryList.propInfo['namespace'].description),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), Telemetry_queryMetricsQueryList.propInfo['tenant']),
+                'namespace': CustomFormControl(new FormControl(this['namespace']), Telemetry_queryMetricsQueryList.propInfo['namespace']),
                 'queries': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<Telemetry_queryMetricsQuerySpec>('queries', this['queries'], Telemetry_queryMetricsQuerySpec);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('queries') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('queries').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

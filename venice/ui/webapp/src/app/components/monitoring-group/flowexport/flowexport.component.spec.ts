@@ -12,6 +12,7 @@ import { SharedModule } from '@app/components/shared/shared.module';
  Venice web-app imports
  ------------------*/
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
@@ -50,6 +51,7 @@ describe('FlowexportComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MonitoringService,

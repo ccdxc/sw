@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -22,10 +22,12 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'user': {
             description:  'Name of the user performed some action.',
+            required: false,
             type: 'string'
         },
         'time': {
             description:  'Time at which the action was performed.',
+            required: false,
             type: 'Date'
         },
     }
@@ -43,8 +45,7 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAuditInfo.propInfo[prop] != null &&
-                        MonitoringAuditInfo.propInfo[prop].default != null &&
-                        MonitoringAuditInfo.propInfo[prop].default != '');
+                        MonitoringAuditInfo.propInfo[prop].default != null);
     }
 
     /**
@@ -82,8 +83,8 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'user': CustomFormControl(new FormControl(this['user']), MonitoringAuditInfo.propInfo['user'].description),
-                'time': CustomFormControl(new FormControl(this['time']), MonitoringAuditInfo.propInfo['time'].description),
+                'user': CustomFormControl(new FormControl(this['user']), MonitoringAuditInfo.propInfo['user']),
+                'time': CustomFormControl(new FormControl(this['time']), MonitoringAuditInfo.propInfo['time']),
             });
         }
         return this._formGroup;

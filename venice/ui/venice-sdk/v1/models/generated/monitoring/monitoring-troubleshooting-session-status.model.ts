@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTroubleshootingSessionStatus_state,  MonitoringTroubleshootingSessionStatus_state_uihint  } from './enums';
@@ -23,9 +23,11 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
         'state': {
             enum: MonitoringTroubleshootingSessionStatus_state_uihint,
             default: 'TS_RUNNING',
+            required: true,
             type: 'string'
         },
         'troubleshooting-results': {
+            required: false,
             type: 'object'
         },
     }
@@ -43,8 +45,7 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
     */
     public static hasDefaultValue(prop) {
         return (MonitoringTroubleshootingSessionStatus.propInfo[prop] != null &&
-                        MonitoringTroubleshootingSessionStatus.propInfo[prop].default != null &&
-                        MonitoringTroubleshootingSessionStatus.propInfo[prop].default != '');
+                        MonitoringTroubleshootingSessionStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -81,11 +82,16 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'state': CustomFormControl(new FormControl(this['state'], [required, enumValidator(MonitoringTroubleshootingSessionStatus_state), ]), MonitoringTroubleshootingSessionStatus.propInfo['state'].description),
+                'state': CustomFormControl(new FormControl(this['state'], [required, enumValidator(MonitoringTroubleshootingSessionStatus_state), ]), MonitoringTroubleshootingSessionStatus.propInfo['state']),
                 'troubleshooting-results': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringTsResult>('troubleshooting-results', this['troubleshooting-results'], MonitoringTsResult);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('troubleshooting-results') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('troubleshooting-results').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

@@ -8,6 +8,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 ----------------------------------------------------- */
 import { WorkloadModalComponent } from './workloadmodal.component';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { MatIconRegistry } from '@angular/material';
 /* ---------------------------------------------------
     Third-party libraries
@@ -50,6 +51,7 @@ describe('WorkloadModalComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTechSupportRequestStatus_status,  } from './enums';
@@ -24,17 +24,21 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
     'smartnic-node-results': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'instance-id': {
+            required: false,
             type: 'string'
         },
         'status': {
             enum: MonitoringTechSupportRequestStatus_status,
             default: 'Scheduled',
+            required: true,
             type: 'string'
         },
         'ctrlr-node-results': {
+            required: false,
             type: 'object'
         },
         'smartnic-node-results': {
+            required: false,
             type: 'object'
         },
     }
@@ -52,8 +56,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
     */
     public static hasDefaultValue(prop) {
         return (MonitoringTechSupportRequestStatus.propInfo[prop] != null &&
-                        MonitoringTechSupportRequestStatus.propInfo[prop].default != null &&
-                        MonitoringTechSupportRequestStatus.propInfo[prop].default != '');
+                        MonitoringTechSupportRequestStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -105,10 +108,10 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'instance-id': CustomFormControl(new FormControl(this['instance-id']), MonitoringTechSupportRequestStatus.propInfo['instance-id'].description),
-                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportRequestStatus_status), ]), MonitoringTechSupportRequestStatus.propInfo['status'].description),
-                'ctrlr-node-results': CustomFormControl(new FormControl(this['ctrlr-node-results']), MonitoringTechSupportRequestStatus.propInfo['ctrlr-node-results'].description),
-                'smartnic-node-results': CustomFormControl(new FormControl(this['smartnic-node-results']), MonitoringTechSupportRequestStatus.propInfo['smartnic-node-results'].description),
+                'instance-id': CustomFormControl(new FormControl(this['instance-id']), MonitoringTechSupportRequestStatus.propInfo['instance-id']),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportRequestStatus_status), ]), MonitoringTechSupportRequestStatus.propInfo['status']),
+                'ctrlr-node-results': CustomFormControl(new FormControl(this['ctrlr-node-results']), MonitoringTechSupportRequestStatus.propInfo['ctrlr-node-results']),
+                'smartnic-node-results': CustomFormControl(new FormControl(this['smartnic-node-results']), MonitoringTechSupportRequestStatus.propInfo['smartnic-node-results']),
             });
         }
         return this._formGroup;

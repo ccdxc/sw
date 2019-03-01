@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -23,15 +23,19 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
     'processor': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
+            required: false,
             type: 'string'
         },
         'kernel-relase': {
+            required: false,
             type: 'string'
         },
         'kernel-version': {
+            required: false,
             type: 'string'
         },
         'processor': {
+            required: false,
             type: 'string'
         },
     }
@@ -49,8 +53,7 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
     */
     public static hasDefaultValue(prop) {
         return (ClusterOsInfo.propInfo[prop] != null &&
-                        ClusterOsInfo.propInfo[prop].default != null &&
-                        ClusterOsInfo.propInfo[prop].default != '');
+                        ClusterOsInfo.propInfo[prop].default != null);
     }
 
     /**
@@ -102,10 +105,10 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type']), ClusterOsInfo.propInfo['type'].description),
-                'kernel-relase': CustomFormControl(new FormControl(this['kernel-relase']), ClusterOsInfo.propInfo['kernel-relase'].description),
-                'kernel-version': CustomFormControl(new FormControl(this['kernel-version']), ClusterOsInfo.propInfo['kernel-version'].description),
-                'processor': CustomFormControl(new FormControl(this['processor']), ClusterOsInfo.propInfo['processor'].description),
+                'type': CustomFormControl(new FormControl(this['type']), ClusterOsInfo.propInfo['type']),
+                'kernel-relase': CustomFormControl(new FormControl(this['kernel-relase']), ClusterOsInfo.propInfo['kernel-relase']),
+                'kernel-version': CustomFormControl(new FormControl(this['kernel-version']), ClusterOsInfo.propInfo['kernel-version']),
+                'processor': CustomFormControl(new FormControl(this['processor']), ClusterOsInfo.propInfo['processor']),
             });
         }
         return this._formGroup;

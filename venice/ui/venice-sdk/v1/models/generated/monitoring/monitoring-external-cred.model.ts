@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringExternalCred_auth_type,  MonitoringExternalCred_auth_type_uihint  } from './enums';
@@ -34,26 +34,33 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
         'auth-type': {
             enum: MonitoringExternalCred_auth_type_uihint,
             default: 'AUTHTYPE_NONE',
+            required: true,
             type: 'string'
         },
         'username': {
+            required: false,
             type: 'string'
         },
         'password': {
+            required: false,
             type: 'string'
         },
         'bearer-token': {
+            required: false,
             type: 'string'
         },
         'cert-data': {
             description:  'CertData holds PEM-encoded bytes (typically read from a client certificate file).',
+            required: false,
             type: 'string'
         },
         'key-data': {
+            required: false,
             type: 'string'
         },
         'ca-data': {
             description:  'CaData holds PEM-encoded bytes (typically read from a root certificates bundle).',
+            required: false,
             type: 'string'
         },
     }
@@ -71,8 +78,7 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
     */
     public static hasDefaultValue(prop) {
         return (MonitoringExternalCred.propInfo[prop] != null &&
-                        MonitoringExternalCred.propInfo[prop].default != null &&
-                        MonitoringExternalCred.propInfo[prop].default != '');
+                        MonitoringExternalCred.propInfo[prop].default != null);
     }
 
     /**
@@ -145,13 +151,13 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'auth-type': CustomFormControl(new FormControl(this['auth-type'], [required, enumValidator(MonitoringExternalCred_auth_type), ]), MonitoringExternalCred.propInfo['auth-type'].description),
-                'username': CustomFormControl(new FormControl(this['username']), MonitoringExternalCred.propInfo['username'].description),
-                'password': CustomFormControl(new FormControl(this['password']), MonitoringExternalCred.propInfo['password'].description),
-                'bearer-token': CustomFormControl(new FormControl(this['bearer-token']), MonitoringExternalCred.propInfo['bearer-token'].description),
-                'cert-data': CustomFormControl(new FormControl(this['cert-data']), MonitoringExternalCred.propInfo['cert-data'].description),
-                'key-data': CustomFormControl(new FormControl(this['key-data']), MonitoringExternalCred.propInfo['key-data'].description),
-                'ca-data': CustomFormControl(new FormControl(this['ca-data']), MonitoringExternalCred.propInfo['ca-data'].description),
+                'auth-type': CustomFormControl(new FormControl(this['auth-type'], [required, enumValidator(MonitoringExternalCred_auth_type), ]), MonitoringExternalCred.propInfo['auth-type']),
+                'username': CustomFormControl(new FormControl(this['username']), MonitoringExternalCred.propInfo['username']),
+                'password': CustomFormControl(new FormControl(this['password']), MonitoringExternalCred.propInfo['password']),
+                'bearer-token': CustomFormControl(new FormControl(this['bearer-token']), MonitoringExternalCred.propInfo['bearer-token']),
+                'cert-data': CustomFormControl(new FormControl(this['cert-data']), MonitoringExternalCred.propInfo['cert-data']),
+                'key-data': CustomFormControl(new FormControl(this['key-data']), MonitoringExternalCred.propInfo['key-data']),
+                'ca-data': CustomFormControl(new FormControl(this['ca-data']), MonitoringExternalCred.propInfo['ca-data']),
             });
         }
         return this._formGroup;

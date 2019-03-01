@@ -9,6 +9,7 @@
 import { async, ComponentFixture, TestBed, inject } from '@angular/core/testing';
 import { WidgetsModule } from 'web-app-framework';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng'
 import { WorkloadService } from '@app/services/workload.service';
 
 import { Observable } from 'rxjs/Observable';
@@ -72,6 +73,7 @@ describe('WorkloadwidgetComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         { provide: WorkloadService, useClass: MockWorkloadService }
       ]
     })

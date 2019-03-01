@@ -8,6 +8,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
@@ -30,6 +31,7 @@ describe('NaplesComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         ClusterService,
         LogService,
         LogPublishersService,

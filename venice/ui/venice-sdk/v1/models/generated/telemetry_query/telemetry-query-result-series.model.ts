@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiInterfaceSlice, IApiInterfaceSlice } from './api-interface-slice.model';
@@ -24,15 +24,19 @@ export class Telemetry_queryResultSeries extends BaseModel implements ITelemetry
     'values': Array<ApiInterfaceSlice> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
+            required: false,
             type: 'string'
         },
         'tags': {
+            required: false,
             type: 'object'
         },
         'columns': {
+            required: false,
             type: 'Array<string>'
         },
         'values': {
+            required: false,
             type: 'object'
         },
     }
@@ -50,8 +54,7 @@ export class Telemetry_queryResultSeries extends BaseModel implements ITelemetry
     */
     public static hasDefaultValue(prop) {
         return (Telemetry_queryResultSeries.propInfo[prop] != null &&
-                        Telemetry_queryResultSeries.propInfo[prop].default != null &&
-                        Telemetry_queryResultSeries.propInfo[prop].default != '');
+                        Telemetry_queryResultSeries.propInfo[prop].default != null);
     }
 
     /**
@@ -103,13 +106,18 @@ export class Telemetry_queryResultSeries extends BaseModel implements ITelemetry
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': CustomFormControl(new FormControl(this['name']), Telemetry_queryResultSeries.propInfo['name'].description),
-                'tags': CustomFormControl(new FormControl(this['tags']), Telemetry_queryResultSeries.propInfo['tags'].description),
-                'columns': CustomFormControl(new FormControl(this['columns']), Telemetry_queryResultSeries.propInfo['columns'].description),
+                'name': CustomFormControl(new FormControl(this['name']), Telemetry_queryResultSeries.propInfo['name']),
+                'tags': CustomFormControl(new FormControl(this['tags']), Telemetry_queryResultSeries.propInfo['tags']),
+                'columns': CustomFormControl(new FormControl(this['columns']), Telemetry_queryResultSeries.propInfo['columns']),
                 'values': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<ApiInterfaceSlice>('values', this['values'], ApiInterfaceSlice);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('values') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('values').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

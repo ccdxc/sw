@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -28,18 +28,22 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
     'trusted-certs': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'start-tls': {
+            required: false,
             type: 'boolean'
         },
         'skip-server-cert-verification': {
             description:  'SkipServerCertVerification controls whether a client verifies the server&#x27;s certificate chain and host name. If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate. In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.',
+            required: false,
             type: 'boolean'
         },
         'server-name': {
             description:  'ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true.',
+            required: false,
             type: 'string'
         },
         'trusted-certs': {
             description:  'TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates.',
+            required: false,
             type: 'string'
         },
     }
@@ -57,8 +61,7 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
     */
     public static hasDefaultValue(prop) {
         return (AuthTLSOptions.propInfo[prop] != null &&
-                        AuthTLSOptions.propInfo[prop].default != null &&
-                        AuthTLSOptions.propInfo[prop].default != '');
+                        AuthTLSOptions.propInfo[prop].default != null);
     }
 
     /**
@@ -110,10 +113,10 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'start-tls': CustomFormControl(new FormControl(this['start-tls']), AuthTLSOptions.propInfo['start-tls'].description),
-                'skip-server-cert-verification': CustomFormControl(new FormControl(this['skip-server-cert-verification']), AuthTLSOptions.propInfo['skip-server-cert-verification'].description),
-                'server-name': CustomFormControl(new FormControl(this['server-name']), AuthTLSOptions.propInfo['server-name'].description),
-                'trusted-certs': CustomFormControl(new FormControl(this['trusted-certs']), AuthTLSOptions.propInfo['trusted-certs'].description),
+                'start-tls': CustomFormControl(new FormControl(this['start-tls']), AuthTLSOptions.propInfo['start-tls']),
+                'skip-server-cert-verification': CustomFormControl(new FormControl(this['skip-server-cert-verification']), AuthTLSOptions.propInfo['skip-server-cert-verification']),
+                'server-name': CustomFormControl(new FormControl(this['server-name']), AuthTLSOptions.propInfo['server-name']),
+                'trusted-certs': CustomFormControl(new FormControl(this['trusted-certs']), AuthTLSOptions.propInfo['trusted-certs']),
             });
         }
         return this._formGroup;

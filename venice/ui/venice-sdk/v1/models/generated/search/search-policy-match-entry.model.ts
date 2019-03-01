@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
@@ -20,9 +20,11 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
     'index': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'rule': {
+            required: false,
             type: 'object'
         },
         'index': {
+            required: false,
             type: 'number'
         },
     }
@@ -40,8 +42,7 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
     */
     public static hasDefaultValue(prop) {
         return (SearchPolicyMatchEntry.propInfo[prop] != null &&
-                        SearchPolicyMatchEntry.propInfo[prop].default != null &&
-                        SearchPolicyMatchEntry.propInfo[prop].default != '');
+                        SearchPolicyMatchEntry.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,13 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'rule': this['rule'].$formGroup,
-                'index': CustomFormControl(new FormControl(this['index']), SearchPolicyMatchEntry.propInfo['index'].description),
+                'rule': CustomFormGroup(this['rule'].$formGroup, SearchPolicyMatchEntry.propInfo['rule'].required),
+                'index': CustomFormControl(new FormControl(this['index']), SearchPolicyMatchEntry.propInfo['index']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('rule') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('rule').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

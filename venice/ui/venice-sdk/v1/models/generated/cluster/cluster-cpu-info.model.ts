@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -23,15 +23,19 @@ export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
     'num-threads': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'speed': {
+            required: false,
             type: 'string'
         },
         'num-sockets': {
+            required: false,
             type: 'number'
         },
         'num-cores': {
+            required: false,
             type: 'number'
         },
         'num-threads': {
+            required: false,
             type: 'number'
         },
     }
@@ -49,8 +53,7 @@ export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
     */
     public static hasDefaultValue(prop) {
         return (ClusterCPUInfo.propInfo[prop] != null &&
-                        ClusterCPUInfo.propInfo[prop].default != null &&
-                        ClusterCPUInfo.propInfo[prop].default != '');
+                        ClusterCPUInfo.propInfo[prop].default != null);
     }
 
     /**
@@ -102,10 +105,10 @@ export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'speed': CustomFormControl(new FormControl(this['speed']), ClusterCPUInfo.propInfo['speed'].description),
-                'num-sockets': CustomFormControl(new FormControl(this['num-sockets']), ClusterCPUInfo.propInfo['num-sockets'].description),
-                'num-cores': CustomFormControl(new FormControl(this['num-cores']), ClusterCPUInfo.propInfo['num-cores'].description),
-                'num-threads': CustomFormControl(new FormControl(this['num-threads']), ClusterCPUInfo.propInfo['num-threads'].description),
+                'speed': CustomFormControl(new FormControl(this['speed']), ClusterCPUInfo.propInfo['speed']),
+                'num-sockets': CustomFormControl(new FormControl(this['num-sockets']), ClusterCPUInfo.propInfo['num-sockets']),
+                'num-cores': CustomFormControl(new FormControl(this['num-cores']), ClusterCPUInfo.propInfo['num-cores']),
+                'num-threads': CustomFormControl(new FormControl(this['num-threads']), ClusterCPUInfo.propInfo['num-threads']),
             });
         }
         return this._formGroup;

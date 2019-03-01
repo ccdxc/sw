@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -37,32 +37,41 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     'count': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
         'severity': {
             enum: EventsEvent_severity_uihint,
             default: 'INFO',
+            required: false,
             type: 'string'
         },
         'type': {
+            required: false,
             type: 'string'
         },
         'message': {
+            required: false,
             type: 'string'
         },
         'object-ref': {
+            required: false,
             type: 'object'
         },
         'source': {
+            required: false,
             type: 'object'
         },
         'count': {
+            required: false,
             type: 'number'
         },
     }
@@ -80,8 +89,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     */
     public static hasDefaultValue(prop) {
         return (EventsEvent.propInfo[prop] != null &&
-                        EventsEvent.propInfo[prop].default != null &&
-                        EventsEvent.propInfo[prop].default != '');
+                        EventsEvent.propInfo[prop].default != null);
     }
 
     /**
@@ -165,15 +173,30 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), EventsEvent.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), EventsEvent.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
-                'severity': CustomFormControl(new FormControl(this['severity'], [enumValidator(EventsEvent_severity), ]), EventsEvent.propInfo['severity'].description),
-                'type': CustomFormControl(new FormControl(this['type']), EventsEvent.propInfo['type'].description),
-                'message': CustomFormControl(new FormControl(this['message']), EventsEvent.propInfo['message'].description),
-                'object-ref': this['object-ref'].$formGroup,
-                'source': this['source'].$formGroup,
-                'count': CustomFormControl(new FormControl(this['count']), EventsEvent.propInfo['count'].description),
+                'kind': CustomFormControl(new FormControl(this['kind']), EventsEvent.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), EventsEvent.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, EventsEvent.propInfo['meta'].required),
+                'severity': CustomFormControl(new FormControl(this['severity'], [enumValidator(EventsEvent_severity), ]), EventsEvent.propInfo['severity']),
+                'type': CustomFormControl(new FormControl(this['type']), EventsEvent.propInfo['type']),
+                'message': CustomFormControl(new FormControl(this['message']), EventsEvent.propInfo['message']),
+                'object-ref': CustomFormGroup(this['object-ref'].$formGroup, EventsEvent.propInfo['object-ref'].required),
+                'source': CustomFormGroup(this['source'].$formGroup, EventsEvent.propInfo['source'].required),
+                'count': CustomFormControl(new FormControl(this['count']), EventsEvent.propInfo['count']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('object-ref') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('object-ref').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('source') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('source').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

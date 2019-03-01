@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class ClusterTenantStatus extends BaseModel implements IClusterTenantStat
     */
     public static hasDefaultValue(prop) {
         return (ClusterTenantStatus.propInfo[prop] != null &&
-                        ClusterTenantStatus.propInfo[prop].default != null &&
-                        ClusterTenantStatus.propInfo[prop].default != '');
+                        ClusterTenantStatus.propInfo[prop].default != null);
     }
 
     /**

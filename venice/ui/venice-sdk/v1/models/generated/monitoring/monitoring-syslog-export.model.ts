@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSyslogExport_format,  MonitoringSyslogExport_format_uihint  } from './enums';
@@ -26,12 +26,15 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
         'format': {
             enum: MonitoringSyslogExport_format_uihint,
             default: 'SYSLOG_BSD',
+            required: true,
             type: 'string'
         },
         'targets': {
+            required: false,
             type: 'object'
         },
         'config': {
+            required: false,
             type: 'object'
         },
     }
@@ -49,8 +52,7 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
     */
     public static hasDefaultValue(prop) {
         return (MonitoringSyslogExport.propInfo[prop] != null &&
-                        MonitoringSyslogExport.propInfo[prop].default != null &&
-                        MonitoringSyslogExport.propInfo[prop].default != '');
+                        MonitoringSyslogExport.propInfo[prop].default != null);
     }
 
     /**
@@ -93,12 +95,22 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringSyslogExport_format), ]), MonitoringSyslogExport.propInfo['format'].description),
+                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringSyslogExport_format), ]), MonitoringSyslogExport.propInfo['format']),
                 'targets': new FormArray([]),
-                'config': this['config'].$formGroup,
+                'config': CustomFormGroup(this['config'].$formGroup, MonitoringSyslogExport.propInfo['config'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringExportConfig>('targets', this['targets'], MonitoringExportConfig);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('targets') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('targets').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('config') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('config').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

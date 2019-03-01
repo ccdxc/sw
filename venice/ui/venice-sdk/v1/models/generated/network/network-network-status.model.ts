@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     'allocated-ipv4-addrs': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workloads': {
+            required: false,
             type: 'Array<string>'
         },
         'allocated-ipv4-addrs': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     */
     public static hasDefaultValue(prop) {
         return (NetworkNetworkStatus.propInfo[prop] != null &&
-                        NetworkNetworkStatus.propInfo[prop].default != null &&
-                        NetworkNetworkStatus.propInfo[prop].default != '');
+                        NetworkNetworkStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -79,8 +80,8 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': CustomFormControl(new FormControl(this['workloads']), NetworkNetworkStatus.propInfo['workloads'].description),
-                'allocated-ipv4-addrs': CustomFormControl(new FormControl(this['allocated-ipv4-addrs']), NetworkNetworkStatus.propInfo['allocated-ipv4-addrs'].description),
+                'workloads': CustomFormControl(new FormControl(this['workloads']), NetworkNetworkStatus.propInfo['workloads']),
+                'allocated-ipv4-addrs': CustomFormControl(new FormControl(this['allocated-ipv4-addrs']), NetworkNetworkStatus.propInfo['allocated-ipv4-addrs']),
             });
         }
         return this._formGroup;

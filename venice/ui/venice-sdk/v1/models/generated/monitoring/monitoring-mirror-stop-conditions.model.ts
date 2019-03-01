@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,12 +21,14 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
     'expiry-duration': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'max-packets': {
+            required: false,
             type: 'number'
         },
         'expiry-duration': {
             default: '2h',
             description:  'should be a valid time duration of at most 2h0m0s ',
             hint:  '2h',
+            required: true,
             type: 'string'
         },
     }
@@ -44,8 +46,7 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
     */
     public static hasDefaultValue(prop) {
         return (MonitoringMirrorStopConditions.propInfo[prop] != null &&
-                        MonitoringMirrorStopConditions.propInfo[prop].default != null &&
-                        MonitoringMirrorStopConditions.propInfo[prop].default != '');
+                        MonitoringMirrorStopConditions.propInfo[prop].default != null);
     }
 
     /**
@@ -83,8 +84,8 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'max-packets': CustomFormControl(new FormControl(this['max-packets']), MonitoringMirrorStopConditions.propInfo['max-packets'].description),
-                'expiry-duration': CustomFormControl(new FormControl(this['expiry-duration'], [required, ]), MonitoringMirrorStopConditions.propInfo['expiry-duration'].description),
+                'max-packets': CustomFormControl(new FormControl(this['max-packets']), MonitoringMirrorStopConditions.propInfo['max-packets']),
+                'expiry-duration': CustomFormControl(new FormControl(this['expiry-duration'], [required, ]), MonitoringMirrorStopConditions.propInfo['expiry-duration']),
             });
         }
         return this._formGroup;

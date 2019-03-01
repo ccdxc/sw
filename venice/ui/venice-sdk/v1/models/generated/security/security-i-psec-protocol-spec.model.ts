@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
     'integrity-transform': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'encryption-transform': {
+            required: false,
             type: 'string'
         },
         'integrity-transform': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
     */
     public static hasDefaultValue(prop) {
         return (SecurityIPsecProtocolSpec.propInfo[prop] != null &&
-                        SecurityIPsecProtocolSpec.propInfo[prop].default != null &&
-                        SecurityIPsecProtocolSpec.propInfo[prop].default != '');
+                        SecurityIPsecProtocolSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'encryption-transform': CustomFormControl(new FormControl(this['encryption-transform']), SecurityIPsecProtocolSpec.propInfo['encryption-transform'].description),
-                'integrity-transform': CustomFormControl(new FormControl(this['integrity-transform']), SecurityIPsecProtocolSpec.propInfo['integrity-transform'].description),
+                'encryption-transform': CustomFormControl(new FormControl(this['encryption-transform']), SecurityIPsecProtocolSpec.propInfo['encryption-transform']),
+                'integrity-transform': CustomFormControl(new FormControl(this['integrity-transform']), SecurityIPsecProtocolSpec.propInfo['integrity-transform']),
             });
         }
         return this._formGroup;

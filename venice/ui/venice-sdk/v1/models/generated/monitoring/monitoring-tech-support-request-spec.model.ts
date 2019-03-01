@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
@@ -23,12 +23,15 @@ export class MonitoringTechSupportRequestSpec extends BaseModel implements IMoni
     'verbosity': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'collection-selector': {
+            required: false,
             type: 'object'
         },
         'node-selector': {
+            required: false,
             type: 'object'
         },
         'verbosity': {
+            required: false,
             type: 'number'
         },
     }
@@ -46,8 +49,7 @@ export class MonitoringTechSupportRequestSpec extends BaseModel implements IMoni
     */
     public static hasDefaultValue(prop) {
         return (MonitoringTechSupportRequestSpec.propInfo[prop] != null &&
-                        MonitoringTechSupportRequestSpec.propInfo[prop].default != null &&
-                        MonitoringTechSupportRequestSpec.propInfo[prop].default != '');
+                        MonitoringTechSupportRequestSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -90,9 +92,19 @@ export class MonitoringTechSupportRequestSpec extends BaseModel implements IMoni
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'collection-selector': this['collection-selector'].$formGroup,
-                'node-selector': this['node-selector'].$formGroup,
-                'verbosity': CustomFormControl(new FormControl(this['verbosity']), MonitoringTechSupportRequestSpec.propInfo['verbosity'].description),
+                'collection-selector': CustomFormGroup(this['collection-selector'].$formGroup, MonitoringTechSupportRequestSpec.propInfo['collection-selector'].required),
+                'node-selector': CustomFormGroup(this['node-selector'].$formGroup, MonitoringTechSupportRequestSpec.propInfo['node-selector'].required),
+                'verbosity': CustomFormControl(new FormControl(this['verbosity']), MonitoringTechSupportRequestSpec.propInfo['verbosity']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('collection-selector') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('collection-selector').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('node-selector') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('node-selector').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

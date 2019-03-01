@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFlowExportPolicySpec_format,  } from './enums';
@@ -32,18 +32,22 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
             default: '10s',
             description:  'should be a valid time duration between 1s and 24h0m0s ',
             hint:  '2h',
+            required: true,
             type: 'string'
         },
         'format': {
             enum: MonitoringFlowExportPolicySpec_format,
             default: 'Ipfix',
+            required: true,
             type: 'string'
         },
         'match-rules': {
+            required: false,
             type: 'object'
         },
         'exports': {
             description:  'Export contains export parameters.',
+            required: false,
             type: 'object'
         },
     }
@@ -61,8 +65,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     */
     public static hasDefaultValue(prop) {
         return (MonitoringFlowExportPolicySpec.propInfo[prop] != null &&
-                        MonitoringFlowExportPolicySpec.propInfo[prop].default != null &&
-                        MonitoringFlowExportPolicySpec.propInfo[prop].default != '');
+                        MonitoringFlowExportPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -112,8 +115,8 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'interval': CustomFormControl(new FormControl(this['interval'], [required, ]), MonitoringFlowExportPolicySpec.propInfo['interval'].description),
-                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFlowExportPolicySpec_format), ]), MonitoringFlowExportPolicySpec.propInfo['format'].description),
+                'interval': CustomFormControl(new FormControl(this['interval'], [required, ]), MonitoringFlowExportPolicySpec.propInfo['interval']),
+                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFlowExportPolicySpec_format), ]), MonitoringFlowExportPolicySpec.propInfo['format']),
                 'match-rules': new FormArray([]),
                 'exports': new FormArray([]),
             });
@@ -121,6 +124,16 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
             this.fillFormArray<MonitoringMatchRule>('match-rules', this['match-rules'], MonitoringMatchRule);
             // generate FormArray control elements
             this.fillFormArray<MonitoringExportConfig>('exports', this['exports'], MonitoringExportConfig);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('match-rules') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('match-rules').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('exports') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('exports').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

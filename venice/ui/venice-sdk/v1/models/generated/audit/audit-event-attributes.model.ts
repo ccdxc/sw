@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuditEventAttributes_stage,  } from './enums';
@@ -55,53 +55,67 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
         'stage': {
             enum: AuditEventAttributes_stage,
             default: 'RequestAuthorization',
+            required: true,
             type: 'string'
         },
         'level': {
             enum: AuditEventAttributes_level,
             default: 'Basic',
+            required: true,
             type: 'string'
         },
         'user': {
             description:  'User who initiated an action on the referred object (resource) User role and group is part of user status. User object in login response will be logged in ResponseObject field.',
+            required: false,
             type: 'object'
         },
         'client-ips': {
+            required: false,
             type: 'Array<string>'
         },
         'resource': {
+            required: false,
             type: 'object'
         },
         'action': {
+            required: false,
             type: 'string'
         },
         'outcome': {
             enum: AuditEventAttributes_outcome,
             default: 'Unknown',
+            required: true,
             type: 'string'
         },
         'request-uri': {
             description:  'should be a valid URI ',
             hint:  'https://10.1.1.1, ldap://10.1.1.1:800, /path/to/x',
+            required: true,
             type: 'string'
         },
         'request-object': {
+            required: false,
             type: 'string'
         },
         'response-object': {
+            required: false,
             type: 'string'
         },
         'gateway-node': {
+            required: false,
             type: 'string'
         },
         'gateway-ip': {
+            required: false,
             type: 'string'
         },
         'service-name': {
+            required: false,
             type: 'string'
         },
         'data': {
             description:  'Data is unstructured key value map stored with audit log that may be set by hooks in API Gateway. We can store Signature in JWS compact serialization format in this map. Data in this map will not be signed.',
+            required: false,
             type: 'object'
         },
     }
@@ -119,8 +133,7 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
     */
     public static hasDefaultValue(prop) {
         return (AuditEventAttributes.propInfo[prop] != null &&
-                        AuditEventAttributes.propInfo[prop].default != null &&
-                        AuditEventAttributes.propInfo[prop].default != '');
+                        AuditEventAttributes.propInfo[prop].default != null);
     }
 
     /**
@@ -241,20 +254,30 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'stage': CustomFormControl(new FormControl(this['stage'], [required, enumValidator(AuditEventAttributes_stage), ]), AuditEventAttributes.propInfo['stage'].description),
-                'level': CustomFormControl(new FormControl(this['level'], [required, enumValidator(AuditEventAttributes_level), ]), AuditEventAttributes.propInfo['level'].description),
-                'user': this['user'].$formGroup,
-                'client-ips': CustomFormControl(new FormControl(this['client-ips']), AuditEventAttributes.propInfo['client-ips'].description),
-                'resource': this['resource'].$formGroup,
-                'action': CustomFormControl(new FormControl(this['action']), AuditEventAttributes.propInfo['action'].description),
-                'outcome': CustomFormControl(new FormControl(this['outcome'], [required, enumValidator(AuditEventAttributes_outcome), ]), AuditEventAttributes.propInfo['outcome'].description),
-                'request-uri': CustomFormControl(new FormControl(this['request-uri'], [required, ]), AuditEventAttributes.propInfo['request-uri'].description),
-                'request-object': CustomFormControl(new FormControl(this['request-object']), AuditEventAttributes.propInfo['request-object'].description),
-                'response-object': CustomFormControl(new FormControl(this['response-object']), AuditEventAttributes.propInfo['response-object'].description),
-                'gateway-node': CustomFormControl(new FormControl(this['gateway-node']), AuditEventAttributes.propInfo['gateway-node'].description),
-                'gateway-ip': CustomFormControl(new FormControl(this['gateway-ip']), AuditEventAttributes.propInfo['gateway-ip'].description),
-                'service-name': CustomFormControl(new FormControl(this['service-name']), AuditEventAttributes.propInfo['service-name'].description),
-                'data': CustomFormControl(new FormControl(this['data']), AuditEventAttributes.propInfo['data'].description),
+                'stage': CustomFormControl(new FormControl(this['stage'], [required, enumValidator(AuditEventAttributes_stage), ]), AuditEventAttributes.propInfo['stage']),
+                'level': CustomFormControl(new FormControl(this['level'], [required, enumValidator(AuditEventAttributes_level), ]), AuditEventAttributes.propInfo['level']),
+                'user': CustomFormGroup(this['user'].$formGroup, AuditEventAttributes.propInfo['user'].required),
+                'client-ips': CustomFormControl(new FormControl(this['client-ips']), AuditEventAttributes.propInfo['client-ips']),
+                'resource': CustomFormGroup(this['resource'].$formGroup, AuditEventAttributes.propInfo['resource'].required),
+                'action': CustomFormControl(new FormControl(this['action']), AuditEventAttributes.propInfo['action']),
+                'outcome': CustomFormControl(new FormControl(this['outcome'], [required, enumValidator(AuditEventAttributes_outcome), ]), AuditEventAttributes.propInfo['outcome']),
+                'request-uri': CustomFormControl(new FormControl(this['request-uri'], [required, ]), AuditEventAttributes.propInfo['request-uri']),
+                'request-object': CustomFormControl(new FormControl(this['request-object']), AuditEventAttributes.propInfo['request-object']),
+                'response-object': CustomFormControl(new FormControl(this['response-object']), AuditEventAttributes.propInfo['response-object']),
+                'gateway-node': CustomFormControl(new FormControl(this['gateway-node']), AuditEventAttributes.propInfo['gateway-node']),
+                'gateway-ip': CustomFormControl(new FormControl(this['gateway-ip']), AuditEventAttributes.propInfo['gateway-ip']),
+                'service-name': CustomFormControl(new FormControl(this['service-name']), AuditEventAttributes.propInfo['service-name']),
+                'data': CustomFormControl(new FormControl(this['data']), AuditEventAttributes.propInfo['data']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('user') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('user').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('resource') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('resource').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

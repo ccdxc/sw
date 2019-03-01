@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -22,10 +22,12 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'component': {
             description:  'Component from which the event is generated.',
+            required: false,
             type: 'string'
         },
         'node-name': {
             description:  'Name of the venice or workload node which is generating the event.',
+            required: false,
             type: 'string'
         },
     }
@@ -43,8 +45,7 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
     */
     public static hasDefaultValue(prop) {
         return (EventsEventSource.propInfo[prop] != null &&
-                        EventsEventSource.propInfo[prop].default != null &&
-                        EventsEventSource.propInfo[prop].default != '');
+                        EventsEventSource.propInfo[prop].default != null);
     }
 
     /**
@@ -82,8 +83,8 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'component': CustomFormControl(new FormControl(this['component']), EventsEventSource.propInfo['component'].description),
-                'node-name': CustomFormControl(new FormControl(this['node-name']), EventsEventSource.propInfo['node-name'].description),
+                'component': CustomFormControl(new FormControl(this['component']), EventsEventSource.propInfo['component']),
+                'node-name': CustomFormControl(new FormControl(this['node-name']), EventsEventSource.propInfo['node-name']),
             });
         }
         return this._formGroup;

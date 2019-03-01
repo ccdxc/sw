@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,12 +21,15 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
     'error': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'uri': {
+            required: false,
             type: 'string'
         },
         'method': {
+            required: false,
             type: 'string'
         },
         'error': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -44,8 +47,7 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
     */
     public static hasDefaultValue(prop) {
         return (StagingValidationError.propInfo[prop] != null &&
-                        StagingValidationError.propInfo[prop].default != null &&
-                        StagingValidationError.propInfo[prop].default != '');
+                        StagingValidationError.propInfo[prop].default != null);
     }
 
     /**
@@ -91,9 +93,9 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'uri': CustomFormControl(new FormControl(this['uri']), StagingValidationError.propInfo['uri'].description),
-                'method': CustomFormControl(new FormControl(this['method']), StagingValidationError.propInfo['method'].description),
-                'error': CustomFormControl(new FormControl(this['error']), StagingValidationError.propInfo['error'].description),
+                'uri': CustomFormControl(new FormControl(this['uri']), StagingValidationError.propInfo['uri']),
+                'method': CustomFormControl(new FormControl(this['method']), StagingValidationError.propInfo['method']),
+                'error': CustomFormControl(new FormControl(this['error']), StagingValidationError.propInfo['error']),
             });
         }
         return this._formGroup;

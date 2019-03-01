@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { StagingCommitActionStatus_status,  } from './enums';
@@ -22,9 +22,11 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
         'status': {
             enum: StagingCommitActionStatus_status,
             default: 'SUCCESS',
+            required: true,
             type: 'string'
         },
         'reason': {
+            required: false,
             type: 'string'
         },
     }
@@ -42,8 +44,7 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
     */
     public static hasDefaultValue(prop) {
         return (StagingCommitActionStatus.propInfo[prop] != null &&
-                        StagingCommitActionStatus.propInfo[prop].default != null &&
-                        StagingCommitActionStatus.propInfo[prop].default != '');
+                        StagingCommitActionStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -81,8 +82,8 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(StagingCommitActionStatus_status), ]), StagingCommitActionStatus.propInfo['status'].description),
-                'reason': CustomFormControl(new FormControl(this['reason']), StagingCommitActionStatus.propInfo['reason'].description),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(StagingCommitActionStatus_status), ]), StagingCommitActionStatus.propInfo['status']),
+                'reason': CustomFormControl(new FormControl(this['reason']), StagingCommitActionStatus.propInfo['reason']),
             });
         }
         return this._formGroup;

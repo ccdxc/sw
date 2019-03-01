@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRadiusServer, IAuthRadiusServer } from './auth-radius-server.model';
@@ -22,12 +22,15 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     'servers': Array<AuthRadiusServer> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'enabled': {
+            required: false,
             type: 'boolean'
         },
         'nas-id': {
+            required: false,
             type: 'string'
         },
         'servers': {
+            required: false,
             type: 'object'
         },
     }
@@ -45,8 +48,7 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     */
     public static hasDefaultValue(prop) {
         return (AuthRadius.propInfo[prop] != null &&
-                        AuthRadius.propInfo[prop].default != null &&
-                        AuthRadius.propInfo[prop].default != '');
+                        AuthRadius.propInfo[prop].default != null);
     }
 
     /**
@@ -90,12 +92,17 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthRadius.propInfo['enabled'].description),
-                'nas-id': CustomFormControl(new FormControl(this['nas-id']), AuthRadius.propInfo['nas-id'].description),
+                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthRadius.propInfo['enabled']),
+                'nas-id': CustomFormControl(new FormControl(this['nas-id']), AuthRadius.propInfo['nas-id']),
                 'servers': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<AuthRadiusServer>('servers', this['servers'], AuthRadiusServer);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('servers') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('servers').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

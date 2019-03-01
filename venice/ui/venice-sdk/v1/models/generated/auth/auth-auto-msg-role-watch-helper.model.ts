@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthAutoMsgRoleWatchHelperWatchEvent, IAuthAutoMsgRoleWatchHelperWatchEvent } from './auth-auto-msg-role-watch-helper-watch-event.model';
@@ -18,6 +18,7 @@ export class AuthAutoMsgRoleWatchHelper extends BaseModel implements IAuthAutoMs
     'events': Array<AuthAutoMsgRoleWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'events': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class AuthAutoMsgRoleWatchHelper extends BaseModel implements IAuthAutoMs
     */
     public static hasDefaultValue(prop) {
         return (AuthAutoMsgRoleWatchHelper.propInfo[prop] != null &&
-                        AuthAutoMsgRoleWatchHelper.propInfo[prop].default != null &&
-                        AuthAutoMsgRoleWatchHelper.propInfo[prop].default != '');
+                        AuthAutoMsgRoleWatchHelper.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class AuthAutoMsgRoleWatchHelper extends BaseModel implements IAuthAutoMs
             });
             // generate FormArray control elements
             this.fillFormArray<AuthAutoMsgRoleWatchHelperWatchEvent>('events', this['events'], AuthAutoMsgRoleWatchHelperWatchEvent);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('events') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('events').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

@@ -29,7 +29,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { AbstractService } from '@app/services/abstract.service';
 import { AuthService } from '@app/services/auth.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
-import { StagingService  } from '@app/services/generated/staging.service';
+import { StagingService } from '@app/services/generated/staging.service';
 import { WorkloadService } from '@app/services/workload.service';
 import { WorkloadService as WorkloadServiceGen } from '@app/services/generated/workload.service';
 import { SearchService } from '@app/services/generated/search.service';
@@ -67,7 +67,7 @@ import { RouteGuard } from '@app/services/routeguard.service';
 import { AppcontentComponent } from '@app/appcontent.component';
 import { SecurityService } from '@app/services/generated/security.service';
 import { EventsService } from '@app/services/events.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService, ConfirmationService, DomHandler } from 'primeng/primeng';
 import { ToasterComponent, ToasterItemComponent } from './widgets/toaster/toaster.component';
 import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
 
@@ -166,6 +166,7 @@ import { MissingpageComponent } from './widgets/missingpage/missingpage.componen
     UIConfigsResolver,
     EventsService,
     MessageService,
+    ConfirmationService,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true },

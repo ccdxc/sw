@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -42,10 +42,12 @@ export class GoogleprotobufAny extends BaseModel implements IGoogleprotobufAny {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type_url': {
             description:  'A URL/resource name whose content describes the type of the serialized protocol buffer message.  For URLs which use the scheme &#x60;http&#x60;, &#x60;https&#x60;, or no scheme, the following restrictions and interpretations apply:  * If no scheme is provided, &#x60;https&#x60; is assumed. * The last segment of the URL&#x27;s path must represent the fully   qualified name of the type (as in &#x60;path/google.protobuf.Duration&#x60;).   The name should be in a canonical form (e.g., leading &quot;.&quot; is   not accepted). * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.)  Schemes other than &#x60;http&#x60;, &#x60;https&#x60; (or the empty scheme) might be used with implementation specific semantics.',
+            required: false,
             type: 'string'
         },
         'value': {
             description:  'Must be a valid serialized protocol buffer of the above specified type.',
+            required: false,
             type: 'string'
         },
     }
@@ -63,8 +65,7 @@ export class GoogleprotobufAny extends BaseModel implements IGoogleprotobufAny {
     */
     public static hasDefaultValue(prop) {
         return (GoogleprotobufAny.propInfo[prop] != null &&
-                        GoogleprotobufAny.propInfo[prop].default != null &&
-                        GoogleprotobufAny.propInfo[prop].default != '');
+                        GoogleprotobufAny.propInfo[prop].default != null);
     }
 
     /**
@@ -102,8 +103,8 @@ export class GoogleprotobufAny extends BaseModel implements IGoogleprotobufAny {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type_url': CustomFormControl(new FormControl(this['type_url']), GoogleprotobufAny.propInfo['type_url'].description),
-                'value': CustomFormControl(new FormControl(this['value']), GoogleprotobufAny.propInfo['value'].description),
+                'type_url': CustomFormControl(new FormControl(this['type_url']), GoogleprotobufAny.propInfo['type_url']),
+                'value': CustomFormControl(new FormControl(this['value']), GoogleprotobufAny.propInfo['value']),
             });
         }
         return this._formGroup;

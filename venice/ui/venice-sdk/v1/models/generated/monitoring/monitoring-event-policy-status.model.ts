@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class MonitoringEventPolicyStatus extends BaseModel implements IMonitorin
     */
     public static hasDefaultValue(prop) {
         return (MonitoringEventPolicyStatus.propInfo[prop] != null &&
-                        MonitoringEventPolicyStatus.propInfo[prop].default != null &&
-                        MonitoringEventPolicyStatus.propInfo[prop].default != '');
+                        MonitoringEventPolicyStatus.propInfo[prop].default != null);
     }
 
     /**

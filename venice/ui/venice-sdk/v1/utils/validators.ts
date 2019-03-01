@@ -3,17 +3,25 @@
  * Do not edit.
 */
 /* tslint:disable */
+import * as _ from 'lodash';
 
-import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, ValidationErrors, ValidatorFn, Validators, FormArray } from '@angular/forms';
 
 function isEmptyInputValue(value: any): boolean {
     // we don't check for string here so it also works with arrays
     return value == null || value.length === 0;
 }
 
+export interface AbstractCustomControl extends AbstractControl {
+    _venice_sdk: {
+        description: string,
+        default: string
+    }
+}
+
 export const maxValueValidator = (required: number) => {
     return (control: AbstractControl) => {
-        if (control.value !== undefined) {
+        if (control.value != undefined) {
             var actual = Number(control.value);
             if (isNaN(actual) || actual > required) {
                 return {
@@ -32,7 +40,7 @@ export const maxValueValidator = (required: number) => {
 
 export const minValueValidator = (required: number) => {
     return (control: AbstractControl) => {
-        if (control.value !== undefined) {
+        if (control.value != undefined) {
             var actual = Number(control.value);
             if (isNaN(actual) || actual < required) {
                 return {
@@ -56,8 +64,8 @@ export const minLengthValidator = (required: number) => {
         }
         const length: number = control.value ? control.value.length : 0;
         if (length < required) {
-            return {                
-'minlength': {
+            return {
+                'minlength': {
                     'requiredLength': required,
                     'actualLength': length,
                     message: "Value must be at least " + required + " characters"
@@ -87,7 +95,71 @@ export const maxLengthValidator = (required: number) => {
     };
 };
 
+// export const requiredValidatorCreator = (parentControlName: string, nullParentItem: any, defaultParentItem: any): ValidatorFn => {
+//     return (control: AbstractControl): ValidationErrors | null => {
+//         // If a control has a parent control, we check if the parent control requires that the child is filled.
+//         // If not, we check if the child is actually filled ( not null/ defaults)
+//         if (control.parent != null && control.parent.parent != null) {
+//             const grandParent: any = control.parent.parent
+//             if (grandParent._venice_sdk_propInfo != null) {
+//                 // constparentControlName = Object.keys(grandParent.controls).find(name => control.parent === grandParent.controls[name])
+
+//                 grandParent._venice_sdk_propInfo[grandParent] != null
+//                 && grandParent._venice_sdk_propInfo[parentControlName].required === false) {
+//                     // Check if we have null/defaults
+//                     const currVal = control.parent.value
+//                     if (_.isEqual(currVal, nullParentItem) || _.isEqual(defaultParentItem)) {
+//                         // Item is not filled out and not required by parent
+//                         return null;
+//                     }
+//             }
+//         }
+//         return isEmptyInputValue(control.value) ? { required: { 'required': true, message: "This field is required" } } : null;
+//     }
+// }
+// }
+
+/**
+ * This control is modified to simulate how objects are validated
+ * in golang. Since some object fields are pointers to 
+ * other objects, it's possible to have a not required pointer
+ * to an object that then has required fields.
+ * Ex. Query spec -> Pagination spec -> count
+ * 
+ * If pagination spec is povided as null, then no further validation is done
+ * However, in our venice-sdk we create all nested objects.
+ * This control skips required validation if the control above is not required, and all sibling level forms are untouched.
+ * 
+ * @param control 
+ */
 export const required = (control: AbstractControl): ValidationErrors | null => {
+    if (control.parent == null || control.parent instanceof FormArray) {
+        return isEmptyInputValue(control.value) ? { required: { 'required': true, message: "This field is required" } } : null;
+    }
+    const parent: any = control.parent;
+    if (parent._venice_sdk == null || parent._venice_sdk.required) {
+        return isEmptyInputValue(control.value) ? { required: { 'required': true, message: "This field is required" } } : null;
+    }
+    // Check if all controls under the parent are either null or they're default value
+    const isModified = Object.keys(control.parent.controls).some((key) => {
+
+        const c: any = control.parent.controls[key]
+        if (c.value == null || c.value.length === 0) {
+            // empty values
+            return false
+        } else if (c._venice_sdk != null && c.value == c._venice_sdk.default) {
+            // default value
+            return false
+        }
+        return true
+    })
+    if (!isModified) {
+        return null;
+    }
+
+    // if (customControl.parent != null || customControl.parent._venice_sdk != null) {
+    //     customControl._venice_sdk.required
+    // }
     return isEmptyInputValue(control.value) ? { required: { 'required': true, message: "This field is required" } } : null;
 }
 
@@ -144,7 +216,18 @@ export const patternValidator = (pattern: string | RegExp, message: string): Val
     };
 }
 
-export const CustomFormControl = (formControl, desc) => {
-    formControl.description = desc
+export const CustomFormControl = (formControl, propInfo) => {
+    formControl._venice_sdk = {
+        description: propInfo.description,
+        default: propInfo.default,
+    }
     return formControl
 }
+
+export const CustomFormGroup = (formGroup, isRequired) => {
+    formGroup._venice_sdk = {
+        required: isRequired,
+    }
+    return formGroup
+}
+

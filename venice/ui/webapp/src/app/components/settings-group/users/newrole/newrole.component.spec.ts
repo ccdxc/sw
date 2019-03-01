@@ -5,6 +5,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
@@ -27,7 +28,7 @@ describe('NewroleComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [NewroleComponent,  UsersComponent, NewuserComponent, NewrolebindingComponent],
+      declarations: [NewroleComponent, UsersComponent, NewuserComponent, NewrolebindingComponent],
       imports: [
         FormsModule,
         ReactiveFormsModule,
@@ -40,6 +41,7 @@ describe('NewroleComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,
@@ -48,7 +50,7 @@ describe('NewroleComponent', () => {
         StagingService
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

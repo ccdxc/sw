@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class ApiAny extends BaseModel implements IApiAny {
     'value': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type_url': {
+            required: false,
             type: 'string'
         },
         'value': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class ApiAny extends BaseModel implements IApiAny {
     */
     public static hasDefaultValue(prop) {
         return (ApiAny.propInfo[prop] != null &&
-                        ApiAny.propInfo[prop].default != null &&
-                        ApiAny.propInfo[prop].default != '');
+                        ApiAny.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class ApiAny extends BaseModel implements IApiAny {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type_url': CustomFormControl(new FormControl(this['type_url']), ApiAny.propInfo['type_url'].description),
-                'value': CustomFormControl(new FormControl(this['value']), ApiAny.propInfo['value'].description),
+                'type_url': CustomFormControl(new FormControl(this['type_url']), ApiAny.propInfo['type_url']),
+                'value': CustomFormControl(new FormControl(this['value']), ApiAny.propInfo['value']),
             });
         }
         return this._formGroup;

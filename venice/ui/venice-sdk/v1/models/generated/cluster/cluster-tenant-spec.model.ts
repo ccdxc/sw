@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
     'admin-user': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admin-user': {
+            required: false,
             type: 'string'
         },
     }
@@ -34,8 +35,7 @@ export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
     */
     public static hasDefaultValue(prop) {
         return (ClusterTenantSpec.propInfo[prop] != null &&
-                        ClusterTenantSpec.propInfo[prop].default != null &&
-                        ClusterTenantSpec.propInfo[prop].default != '');
+                        ClusterTenantSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,7 @@ export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admin-user': CustomFormControl(new FormControl(this['admin-user']), ClusterTenantSpec.propInfo['admin-user'].description),
+                'admin-user': CustomFormControl(new FormControl(this['admin-user']), ClusterTenantSpec.propInfo['admin-user']),
             });
         }
         return this._formGroup;

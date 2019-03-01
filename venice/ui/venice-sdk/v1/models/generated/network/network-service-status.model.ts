@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class NetworkServiceStatus extends BaseModel implements INetworkServiceSt
     'workloads': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workloads': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -34,8 +35,7 @@ export class NetworkServiceStatus extends BaseModel implements INetworkServiceSt
     */
     public static hasDefaultValue(prop) {
         return (NetworkServiceStatus.propInfo[prop] != null &&
-                        NetworkServiceStatus.propInfo[prop].default != null &&
-                        NetworkServiceStatus.propInfo[prop].default != '');
+                        NetworkServiceStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -67,7 +67,7 @@ export class NetworkServiceStatus extends BaseModel implements INetworkServiceSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': CustomFormControl(new FormControl(this['workloads']), NetworkServiceStatus.propInfo['workloads'].description),
+                'workloads': CustomFormControl(new FormControl(this['workloads']), NetworkServiceStatus.propInfo['workloads']),
             });
         }
         return this._formGroup;

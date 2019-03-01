@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertPolicySpec_severity,  MonitoringAlertPolicySpec_severity_uihint  } from './enums';
@@ -47,36 +47,45 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'resource': {
             description:  'Resource type - target resource to run this policy. e.g. Network, Endpoint - object based alert policy      Event - event based alert policy      EndpointMetrics - metric based alert policy based on the resource type, the policy gets interpreted.',
+            required: false,
             type: 'string'
         },
         'severity': {
             enum: MonitoringAlertPolicySpec_severity_uihint,
             default: 'INFO',
+            required: true,
             type: 'string'
         },
         'message': {
             description:  'Message to be used while generating the alert XXX: Event based alerts should not carry a message. It will be derived from the event.',
+            required: false,
             type: 'string'
         },
         'requirements': {
+            required: false,
             type: 'object'
         },
         'persistence-duration': {
+            required: false,
             type: 'string'
         },
         'clear-duration': {
+            required: false,
             type: 'string'
         },
         'enable': {
             default: 'true',
             description:  'User can disable the policy by setting this field. Disabled policies will not generate any more alerts but the outstanding ones will remain as is.',
+            required: false,
             type: 'boolean'
         },
         'auto-resolve': {
+            required: false,
             type: 'boolean'
         },
         'destinations': {
             description:  'name of the alert destinations to be used to send out notification when an alert gets generated.',
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -94,8 +103,7 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAlertPolicySpec.propInfo[prop] != null &&
-                        MonitoringAlertPolicySpec.propInfo[prop].default != null &&
-                        MonitoringAlertPolicySpec.propInfo[prop].default != '');
+                        MonitoringAlertPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -182,18 +190,23 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'resource': CustomFormControl(new FormControl(this['resource']), MonitoringAlertPolicySpec.propInfo['resource'].description),
-                'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(MonitoringAlertPolicySpec_severity), ]), MonitoringAlertPolicySpec.propInfo['severity'].description),
-                'message': CustomFormControl(new FormControl(this['message']), MonitoringAlertPolicySpec.propInfo['message'].description),
+                'resource': CustomFormControl(new FormControl(this['resource']), MonitoringAlertPolicySpec.propInfo['resource']),
+                'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(MonitoringAlertPolicySpec_severity), ]), MonitoringAlertPolicySpec.propInfo['severity']),
+                'message': CustomFormControl(new FormControl(this['message']), MonitoringAlertPolicySpec.propInfo['message']),
                 'requirements': new FormArray([]),
-                'persistence-duration': CustomFormControl(new FormControl(this['persistence-duration']), MonitoringAlertPolicySpec.propInfo['persistence-duration'].description),
-                'clear-duration': CustomFormControl(new FormControl(this['clear-duration']), MonitoringAlertPolicySpec.propInfo['clear-duration'].description),
-                'enable': CustomFormControl(new FormControl(this['enable']), MonitoringAlertPolicySpec.propInfo['enable'].description),
-                'auto-resolve': CustomFormControl(new FormControl(this['auto-resolve']), MonitoringAlertPolicySpec.propInfo['auto-resolve'].description),
-                'destinations': CustomFormControl(new FormControl(this['destinations']), MonitoringAlertPolicySpec.propInfo['destinations'].description),
+                'persistence-duration': CustomFormControl(new FormControl(this['persistence-duration']), MonitoringAlertPolicySpec.propInfo['persistence-duration']),
+                'clear-duration': CustomFormControl(new FormControl(this['clear-duration']), MonitoringAlertPolicySpec.propInfo['clear-duration']),
+                'enable': CustomFormControl(new FormControl(this['enable']), MonitoringAlertPolicySpec.propInfo['enable']),
+                'auto-resolve': CustomFormControl(new FormControl(this['auto-resolve']), MonitoringAlertPolicySpec.propInfo['auto-resolve']),
+                'destinations': CustomFormControl(new FormControl(this['destinations']), MonitoringAlertPolicySpec.propInfo['destinations']),
             });
             // generate FormArray control elements
             this.fillFormArray<FieldsRequirement>('requirements', this['requirements'], FieldsRequirement);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('requirements') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('requirements').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

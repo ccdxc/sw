@@ -17,6 +17,7 @@ import { SharedModule } from '@app/components/shared/shared.module';
  Venice web-app imports
  ------------------*/
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { SearchService } from '@app/services/generated/search.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
@@ -224,6 +225,7 @@ describe('SgpolicydetailComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

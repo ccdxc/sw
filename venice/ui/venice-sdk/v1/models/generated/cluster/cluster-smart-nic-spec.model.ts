@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
@@ -34,29 +34,36 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     'controllers': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admit': {
+            required: false,
             type: 'boolean'
         },
         'hostname': {
+            required: false,
             type: 'string'
         },
         'ip-config': {
+            required: false,
             type: 'object'
         },
         'mgmt-mode': {
             enum: ClusterSmartNICSpec_mgmt_mode_uihint,
             default: 'HOST',
+            required: true,
             type: 'string'
         },
         'network-mode': {
             enum: ClusterSmartNICSpec_network_mode_uihint,
             default: 'OOB',
+            required: true,
             type: 'string'
         },
         'mgmt-vlan': {
             description:  'value should be between 0 and 4095 ',
+            required: true,
             type: 'number'
         },
         'controllers': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -74,8 +81,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     */
     public static hasDefaultValue(prop) {
         return (ClusterSmartNICSpec.propInfo[prop] != null &&
-                        ClusterSmartNICSpec.propInfo[prop].default != null &&
-                        ClusterSmartNICSpec.propInfo[prop].default != '');
+                        ClusterSmartNICSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -148,13 +154,18 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admit': CustomFormControl(new FormControl(this['admit']), ClusterSmartNICSpec.propInfo['admit'].description),
-                'hostname': CustomFormControl(new FormControl(this['hostname']), ClusterSmartNICSpec.propInfo['hostname'].description),
-                'ip-config': this['ip-config'].$formGroup,
-                'mgmt-mode': CustomFormControl(new FormControl(this['mgmt-mode'], [required, enumValidator(ClusterSmartNICSpec_mgmt_mode), ]), ClusterSmartNICSpec.propInfo['mgmt-mode'].description),
-                'network-mode': CustomFormControl(new FormControl(this['network-mode'], [required, enumValidator(ClusterSmartNICSpec_network_mode), ]), ClusterSmartNICSpec.propInfo['network-mode'].description),
-                'mgmt-vlan': CustomFormControl(new FormControl(this['mgmt-vlan'], [required, maxValueValidator(4095), ]), ClusterSmartNICSpec.propInfo['mgmt-vlan'].description),
-                'controllers': CustomFormControl(new FormControl(this['controllers']), ClusterSmartNICSpec.propInfo['controllers'].description),
+                'admit': CustomFormControl(new FormControl(this['admit']), ClusterSmartNICSpec.propInfo['admit']),
+                'hostname': CustomFormControl(new FormControl(this['hostname']), ClusterSmartNICSpec.propInfo['hostname']),
+                'ip-config': CustomFormGroup(this['ip-config'].$formGroup, ClusterSmartNICSpec.propInfo['ip-config'].required),
+                'mgmt-mode': CustomFormControl(new FormControl(this['mgmt-mode'], [required, enumValidator(ClusterSmartNICSpec_mgmt_mode), ]), ClusterSmartNICSpec.propInfo['mgmt-mode']),
+                'network-mode': CustomFormControl(new FormControl(this['network-mode'], [required, enumValidator(ClusterSmartNICSpec_network_mode), ]), ClusterSmartNICSpec.propInfo['network-mode']),
+                'mgmt-vlan': CustomFormControl(new FormControl(this['mgmt-vlan'], [required, maxValueValidator(4095), ]), ClusterSmartNICSpec.propInfo['mgmt-vlan']),
+                'controllers': CustomFormControl(new FormControl(this['controllers']), ClusterSmartNICSpec.propInfo['controllers']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('ip-config') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('ip-config').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

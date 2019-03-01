@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -33,28 +33,36 @@ export class BrowserBrowseResponse extends BaseModel implements IBrowserBrowseRe
     'objects': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
         'root-uri': {
+            required: false,
             type: 'string'
         },
         'query-type': {
+            required: false,
             type: 'string'
         },
         'max-depth': {
+            required: false,
             type: 'number'
         },
         'total-count': {
+            required: false,
             type: 'number'
         },
         'objects': {
             description:  'map of results. Key to the map is the URI of the  Object.',
+            required: false,
             type: 'object'
         },
     }
@@ -72,8 +80,7 @@ export class BrowserBrowseResponse extends BaseModel implements IBrowserBrowseRe
     */
     public static hasDefaultValue(prop) {
         return (BrowserBrowseResponse.propInfo[prop] != null &&
-                        BrowserBrowseResponse.propInfo[prop].default != null &&
-                        BrowserBrowseResponse.propInfo[prop].default != '');
+                        BrowserBrowseResponse.propInfo[prop].default != null);
     }
 
     /**
@@ -152,14 +159,19 @@ export class BrowserBrowseResponse extends BaseModel implements IBrowserBrowseRe
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), BrowserBrowseResponse.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), BrowserBrowseResponse.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
-                'root-uri': CustomFormControl(new FormControl(this['root-uri']), BrowserBrowseResponse.propInfo['root-uri'].description),
-                'query-type': CustomFormControl(new FormControl(this['query-type']), BrowserBrowseResponse.propInfo['query-type'].description),
-                'max-depth': CustomFormControl(new FormControl(this['max-depth']), BrowserBrowseResponse.propInfo['max-depth'].description),
-                'total-count': CustomFormControl(new FormControl(this['total-count']), BrowserBrowseResponse.propInfo['total-count'].description),
-                'objects': CustomFormControl(new FormControl(this['objects']), BrowserBrowseResponse.propInfo['objects'].description),
+                'kind': CustomFormControl(new FormControl(this['kind']), BrowserBrowseResponse.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), BrowserBrowseResponse.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, BrowserBrowseResponse.propInfo['meta'].required),
+                'root-uri': CustomFormControl(new FormControl(this['root-uri']), BrowserBrowseResponse.propInfo['root-uri']),
+                'query-type': CustomFormControl(new FormControl(this['query-type']), BrowserBrowseResponse.propInfo['query-type']),
+                'max-depth': CustomFormControl(new FormControl(this['max-depth']), BrowserBrowseResponse.propInfo['max-depth']),
+                'total-count': CustomFormControl(new FormControl(this['total-count']), BrowserBrowseResponse.propInfo['total-count']),
+                'objects': CustomFormControl(new FormControl(this['objects']), BrowserBrowseResponse.propInfo['objects']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

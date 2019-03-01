@@ -6,13 +6,14 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ControllerService } from './controller.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService, ConfirmationService } from 'primeng/primeng';
 
 
 describe('ControllerService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

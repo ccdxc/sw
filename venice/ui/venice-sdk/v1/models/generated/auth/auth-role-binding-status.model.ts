@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class AuthRoleBindingStatus extends BaseModel implements IAuthRoleBinding
     */
     public static hasDefaultValue(prop) {
         return (AuthRoleBindingStatus.propInfo[prop] != null &&
-                        AuthRoleBindingStatus.propInfo[prop].default != null &&
-                        AuthRoleBindingStatus.propInfo[prop].default != '');
+                        AuthRoleBindingStatus.propInfo[prop].default != null);
     }
 
     /**

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class SecurityTrafficEncryptionPolicyStatus extends BaseModel implements 
     */
     public static hasDefaultValue(prop) {
         return (SecurityTrafficEncryptionPolicyStatus.propInfo[prop] != null &&
-                        SecurityTrafficEncryptionPolicyStatus.propInfo[prop].default != null &&
-                        SecurityTrafficEncryptionPolicyStatus.propInfo[prop].default != '');
+                        SecurityTrafficEncryptionPolicyStatus.propInfo[prop].default != null);
     }
 
     /**

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
@@ -22,12 +22,15 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     'rules': Array<SecuritySGRule> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'attach-groups': {
+            required: false,
             type: 'Array<string>'
         },
         'attach-tenant': {
+            required: false,
             type: 'boolean'
         },
         'rules': {
+            required: false,
             type: 'object'
         },
     }
@@ -45,8 +48,7 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     */
     public static hasDefaultValue(prop) {
         return (SecuritySGPolicySpec.propInfo[prop] != null &&
-                        SecuritySGPolicySpec.propInfo[prop].default != null &&
-                        SecuritySGPolicySpec.propInfo[prop].default != '');
+                        SecuritySGPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -91,12 +93,17 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'attach-groups': CustomFormControl(new FormControl(this['attach-groups']), SecuritySGPolicySpec.propInfo['attach-groups'].description),
-                'attach-tenant': CustomFormControl(new FormControl(this['attach-tenant']), SecuritySGPolicySpec.propInfo['attach-tenant'].description),
+                'attach-groups': CustomFormControl(new FormControl(this['attach-groups']), SecuritySGPolicySpec.propInfo['attach-groups']),
+                'attach-tenant': CustomFormControl(new FormControl(this['attach-tenant']), SecuritySGPolicySpec.propInfo['attach-tenant']),
                 'rules': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<SecuritySGRule>('rules', this['rules'], SecuritySGRule);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('rules') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('rules').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

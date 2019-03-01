@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthAuthenticators, IAuthAuthenticators } from './auth-authenticators.model';
@@ -24,15 +24,18 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
     'token-expiry': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'authenticators': {
+            required: false,
             type: 'object'
         },
         'secret': {
+            required: false,
             type: 'string'
         },
         'token-expiry': {
             default: '144h',
             description:  'TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as &quot;300ms&quot; or &quot;2h45m&quot;. Valid time units are &quot;ns&quot;, &quot;us&quot; (or &quot;µs&quot;), &quot;ms&quot;, &quot;s&quot;, &quot;m&quot;, &quot;h&quot;.',
             hint:  '2h',
+            required: true,
             type: 'string'
         },
     }
@@ -50,8 +53,7 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
     */
     public static hasDefaultValue(prop) {
         return (AuthAuthenticationPolicySpec.propInfo[prop] != null &&
-                        AuthAuthenticationPolicySpec.propInfo[prop].default != null &&
-                        AuthAuthenticationPolicySpec.propInfo[prop].default != '');
+                        AuthAuthenticationPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -95,9 +97,14 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'authenticators': this['authenticators'].$formGroup,
-                'secret': CustomFormControl(new FormControl(this['secret']), AuthAuthenticationPolicySpec.propInfo['secret'].description),
-                'token-expiry': CustomFormControl(new FormControl(this['token-expiry'], [required, ]), AuthAuthenticationPolicySpec.propInfo['token-expiry'].description),
+                'authenticators': CustomFormGroup(this['authenticators'].$formGroup, AuthAuthenticationPolicySpec.propInfo['authenticators'].required),
+                'secret': CustomFormControl(new FormControl(this['secret']), AuthAuthenticationPolicySpec.propInfo['secret']),
+                'token-expiry': CustomFormControl(new FormControl(this['token-expiry'], [required, ]), AuthAuthenticationPolicySpec.propInfo['token-expiry']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('authenticators') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('authenticators').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

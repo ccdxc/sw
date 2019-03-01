@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsRequirement_operator,  LabelsRequirement_operator_uihint  } from './enums';
@@ -28,16 +28,19 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'key': {
             description:  'The label key that the condition applies to.',
+            required: false,
             type: 'string'
         },
         'operator': {
             enum: LabelsRequirement_operator_uihint,
             default: 'equals',
             description:  'Condition checked for the key.',
+            required: true,
             type: 'string'
         },
         'values': {
             description:  'Values contains one or more values corresponding to the label key. &quot;equals&quot; and &quot;notEquals&quot; operators need a single Value. &quot;in&quot; and &quot;notIn&quot; operators can have one or more values.',
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -55,8 +58,7 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     */
     public static hasDefaultValue(prop) {
         return (LabelsRequirement.propInfo[prop] != null &&
-                        LabelsRequirement.propInfo[prop].default != null &&
-                        LabelsRequirement.propInfo[prop].default != '');
+                        LabelsRequirement.propInfo[prop].default != null);
     }
 
     /**
@@ -102,9 +104,9 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'key': CustomFormControl(new FormControl(this['key']), LabelsRequirement.propInfo['key'].description),
-                'operator': CustomFormControl(new FormControl(this['operator'], [required, enumValidator(LabelsRequirement_operator), ]), LabelsRequirement.propInfo['operator'].description),
-                'values': CustomFormControl(new FormControl(this['values']), LabelsRequirement.propInfo['values'].description),
+                'key': CustomFormControl(new FormControl(this['key']), LabelsRequirement.propInfo['key']),
+                'operator': CustomFormControl(new FormControl(this['operator'], [required, enumValidator(LabelsRequirement_operator), ]), LabelsRequirement.propInfo['operator']),
+                'values': CustomFormControl(new FormControl(this['values']), LabelsRequirement.propInfo['values']),
             });
         }
         return this._formGroup;

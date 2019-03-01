@@ -7,6 +7,7 @@ import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
@@ -59,6 +60,7 @@ describe('SearchboxComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

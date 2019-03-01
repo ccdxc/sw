@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTimeWindow, IMonitoringTimeWindow } from './monitoring-time-window.model';
@@ -20,9 +20,11 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
     'report-url': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'time-window': {
+            required: false,
             type: 'object'
         },
         'report-url': {
+            required: false,
             type: 'string'
         },
     }
@@ -40,8 +42,7 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
     */
     public static hasDefaultValue(prop) {
         return (MonitoringTsResult.propInfo[prop] != null &&
-                        MonitoringTsResult.propInfo[prop].default != null &&
-                        MonitoringTsResult.propInfo[prop].default != '');
+                        MonitoringTsResult.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,13 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'time-window': this['time-window'].$formGroup,
-                'report-url': CustomFormControl(new FormControl(this['report-url']), MonitoringTsResult.propInfo['report-url'].description),
+                'time-window': CustomFormGroup(this['time-window'].$formGroup, MonitoringTsResult.propInfo['time-window'].required),
+                'report-url': CustomFormControl(new FormControl(this['report-url']), MonitoringTsResult.propInfo['report-url']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('time-window') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('time-window').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

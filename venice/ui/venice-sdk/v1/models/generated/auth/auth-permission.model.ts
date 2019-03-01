@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthPermission_actions,  AuthPermission_actions_uihint  } from './enums';
@@ -38,27 +38,33 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
         'resource-tenant': {
             default: 'default',
             description:  'ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant to which role object belongs. Exception are roles in &quot;default&quot; tenant. Role in &quot;default&quot; tenant can include permissions for resources in other tenants. Specifying &quot;_All_&quot; will match all tenants.',
+            required: false,
             type: 'string'
         },
         'resource-group': {
             description:  'ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint. Specifying &quot;_All_&quot; will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum.',
+            required: false,
             type: 'string'
         },
         'resource-kind': {
             description:  'ResourceKind is a resource kind for which permission is defined. It can be an API Server object kind or kinds defined in ResrcKind enum. Specifying &quot;_All_&quot; will match all resource kinds.',
+            required: false,
             type: 'string'
         },
         'resource-namespace': {
             default: '_All_',
             description:  'ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is &quot;_All_&quot; which matches all namespaces.',
+            required: false,
             type: 'string'
         },
         'resource-names': {
+            required: false,
             type: 'Array<string>'
         },
         'actions': {
             enum: AuthPermission_actions_uihint,
             default: 'AllActions',
+            required: true,
             type: 'Array<string>'
         },
     }
@@ -76,8 +82,7 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
     */
     public static hasDefaultValue(prop) {
         return (AuthPermission.propInfo[prop] != null &&
-                        AuthPermission.propInfo[prop].default != null &&
-                        AuthPermission.propInfo[prop].default != '');
+                        AuthPermission.propInfo[prop].default != null);
     }
 
     /**
@@ -145,12 +150,12 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'resource-tenant': CustomFormControl(new FormControl(this['resource-tenant']), AuthPermission.propInfo['resource-tenant'].description),
-                'resource-group': CustomFormControl(new FormControl(this['resource-group']), AuthPermission.propInfo['resource-group'].description),
-                'resource-kind': CustomFormControl(new FormControl(this['resource-kind']), AuthPermission.propInfo['resource-kind'].description),
-                'resource-namespace': CustomFormControl(new FormControl(this['resource-namespace']), AuthPermission.propInfo['resource-namespace'].description),
-                'resource-names': CustomFormControl(new FormControl(this['resource-names']), AuthPermission.propInfo['resource-names'].description),
-                'actions': CustomFormControl(new FormControl(this['actions']), AuthPermission.propInfo['actions'].description),
+                'resource-tenant': CustomFormControl(new FormControl(this['resource-tenant']), AuthPermission.propInfo['resource-tenant']),
+                'resource-group': CustomFormControl(new FormControl(this['resource-group']), AuthPermission.propInfo['resource-group']),
+                'resource-kind': CustomFormControl(new FormControl(this['resource-kind']), AuthPermission.propInfo['resource-kind']),
+                'resource-namespace': CustomFormControl(new FormControl(this['resource-namespace']), AuthPermission.propInfo['resource-namespace']),
+                'resource-names': CustomFormControl(new FormControl(this['resource-names']), AuthPermission.propInfo['resource-names']),
+                'actions': CustomFormControl(new FormControl(this['actions']), AuthPermission.propInfo['actions']),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class MonitoringEmailExport extends BaseModel implements IMonitoringEmail
     'email-list': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'email-list': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -34,8 +35,7 @@ export class MonitoringEmailExport extends BaseModel implements IMonitoringEmail
     */
     public static hasDefaultValue(prop) {
         return (MonitoringEmailExport.propInfo[prop] != null &&
-                        MonitoringEmailExport.propInfo[prop].default != null &&
-                        MonitoringEmailExport.propInfo[prop].default != '');
+                        MonitoringEmailExport.propInfo[prop].default != null);
     }
 
     /**
@@ -67,7 +67,7 @@ export class MonitoringEmailExport extends BaseModel implements IMonitoringEmail
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'email-list': CustomFormControl(new FormControl(this['email-list']), MonitoringEmailExport.propInfo['email-list'].description),
+                'email-list': CustomFormControl(new FormControl(this['email-list']), MonitoringEmailExport.propInfo['email-list']),
             });
         }
         return this._formGroup;

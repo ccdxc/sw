@@ -6,6 +6,7 @@ import { SystemcapacitywidgetComponent } from './systemcapacity.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -35,6 +36,7 @@ describe('SystemcapacitywidgetComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         ClusterService,

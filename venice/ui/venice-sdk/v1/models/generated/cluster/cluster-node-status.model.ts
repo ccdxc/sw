@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterNodeStatus_phase,  ClusterNodeStatus_phase_uihint  } from './enums';
@@ -28,13 +28,16 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
             enum: ClusterNodeStatus_phase_uihint,
             default: 'UNKNOWN',
             description:  'Current lifecycle phase of the node.',
+            required: true,
             type: 'string'
         },
         'quorum': {
             description:  'Quorum node or not.',
+            required: false,
             type: 'boolean'
         },
         'conditions': {
+            required: false,
             type: 'object'
         },
     }
@@ -52,8 +55,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     */
     public static hasDefaultValue(prop) {
         return (ClusterNodeStatus.propInfo[prop] != null &&
-                        ClusterNodeStatus.propInfo[prop].default != null &&
-                        ClusterNodeStatus.propInfo[prop].default != '');
+                        ClusterNodeStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -97,12 +99,17 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'phase': CustomFormControl(new FormControl(this['phase'], [required, enumValidator(ClusterNodeStatus_phase), ]), ClusterNodeStatus.propInfo['phase'].description),
-                'quorum': CustomFormControl(new FormControl(this['quorum']), ClusterNodeStatus.propInfo['quorum'].description),
+                'phase': CustomFormControl(new FormControl(this['phase'], [required, enumValidator(ClusterNodeStatus_phase), ]), ClusterNodeStatus.propInfo['phase']),
+                'quorum': CustomFormControl(new FormControl(this['quorum']), ClusterNodeStatus.propInfo['quorum']),
                 'conditions': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterNodeCondition>('conditions', this['conditions'], ClusterNodeCondition);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('conditions') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('conditions').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

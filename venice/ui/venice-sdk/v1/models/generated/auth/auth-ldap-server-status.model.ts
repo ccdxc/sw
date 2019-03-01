@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthLdapServerStatus_result,  } from './enums';
@@ -25,12 +25,15 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
         'result': {
             enum: AuthLdapServerStatus_result,
             default: 'Connect_Success',
+            required: true,
             type: 'string'
         },
         'message': {
+            required: false,
             type: 'string'
         },
         'server': {
+            required: false,
             type: 'object'
         },
     }
@@ -48,8 +51,7 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
     */
     public static hasDefaultValue(prop) {
         return (AuthLdapServerStatus.propInfo[prop] != null &&
-                        AuthLdapServerStatus.propInfo[prop].default != null &&
-                        AuthLdapServerStatus.propInfo[prop].default != '');
+                        AuthLdapServerStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -93,9 +95,14 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'result': CustomFormControl(new FormControl(this['result'], [required, enumValidator(AuthLdapServerStatus_result), ]), AuthLdapServerStatus.propInfo['result'].description),
-                'message': CustomFormControl(new FormControl(this['message']), AuthLdapServerStatus.propInfo['message'].description),
-                'server': this['server'].$formGroup,
+                'result': CustomFormControl(new FormControl(this['result'], [required, enumValidator(AuthLdapServerStatus_result), ]), AuthLdapServerStatus.propInfo['result']),
+                'message': CustomFormControl(new FormControl(this['message']), AuthLdapServerStatus.propInfo['message']),
+                'server': CustomFormGroup(this['server'].$formGroup, AuthLdapServerStatus.propInfo['server'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('server') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('server').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

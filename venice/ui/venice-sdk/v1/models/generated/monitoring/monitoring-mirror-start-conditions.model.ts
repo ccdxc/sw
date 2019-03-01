@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class MonitoringMirrorStartConditions extends BaseModel implements IMonit
     'schedule-time': Date = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'schedule-time': {
+            required: false,
             type: 'Date'
         },
     }
@@ -34,8 +35,7 @@ export class MonitoringMirrorStartConditions extends BaseModel implements IMonit
     */
     public static hasDefaultValue(prop) {
         return (MonitoringMirrorStartConditions.propInfo[prop] != null &&
-                        MonitoringMirrorStartConditions.propInfo[prop].default != null &&
-                        MonitoringMirrorStartConditions.propInfo[prop].default != '');
+                        MonitoringMirrorStartConditions.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,7 @@ export class MonitoringMirrorStartConditions extends BaseModel implements IMonit
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'schedule-time': CustomFormControl(new FormControl(this['schedule-time']), MonitoringMirrorStartConditions.propInfo['schedule-time'].description),
+                'schedule-time': CustomFormControl(new FormControl(this['schedule-time']), MonitoringMirrorStartConditions.propInfo['schedule-time']),
             });
         }
         return this._formGroup;

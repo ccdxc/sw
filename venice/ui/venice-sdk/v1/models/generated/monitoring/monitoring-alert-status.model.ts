@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertStatus_severity,  MonitoringAlertStatus_severity_uihint  } from './enums';
@@ -40,28 +40,36 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
         'severity': {
             enum: MonitoringAlertStatus_severity_uihint,
             default: 'INFO',
+            required: true,
             type: 'string'
         },
         'source': {
+            required: false,
             type: 'object'
         },
         'event-uri': {
+            required: false,
             type: 'string'
         },
         'object-ref': {
+            required: false,
             type: 'object'
         },
         'message': {
+            required: false,
             type: 'string'
         },
         'reason': {
             description:  'Captures all the requirements from the alert policy rule with matched value. All these requirements must be cleared to auto-resolve an alert.',
+            required: false,
             type: 'object'
         },
         'acknowledged': {
+            required: false,
             type: 'object'
         },
         'resolved': {
+            required: false,
             type: 'object'
         },
     }
@@ -79,8 +87,7 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAlertStatus.propInfo[prop] != null &&
-                        MonitoringAlertStatus.propInfo[prop].default != null &&
-                        MonitoringAlertStatus.propInfo[prop].default != '');
+                        MonitoringAlertStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -155,14 +162,39 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(MonitoringAlertStatus_severity), ]), MonitoringAlertStatus.propInfo['severity'].description),
-                'source': this['source'].$formGroup,
-                'event-uri': CustomFormControl(new FormControl(this['event-uri']), MonitoringAlertStatus.propInfo['event-uri'].description),
-                'object-ref': this['object-ref'].$formGroup,
-                'message': CustomFormControl(new FormControl(this['message']), MonitoringAlertStatus.propInfo['message'].description),
-                'reason': this['reason'].$formGroup,
-                'acknowledged': this['acknowledged'].$formGroup,
-                'resolved': this['resolved'].$formGroup,
+                'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(MonitoringAlertStatus_severity), ]), MonitoringAlertStatus.propInfo['severity']),
+                'source': CustomFormGroup(this['source'].$formGroup, MonitoringAlertStatus.propInfo['source'].required),
+                'event-uri': CustomFormControl(new FormControl(this['event-uri']), MonitoringAlertStatus.propInfo['event-uri']),
+                'object-ref': CustomFormGroup(this['object-ref'].$formGroup, MonitoringAlertStatus.propInfo['object-ref'].required),
+                'message': CustomFormControl(new FormControl(this['message']), MonitoringAlertStatus.propInfo['message']),
+                'reason': CustomFormGroup(this['reason'].$formGroup, MonitoringAlertStatus.propInfo['reason'].required),
+                'acknowledged': CustomFormGroup(this['acknowledged'].$formGroup, MonitoringAlertStatus.propInfo['acknowledged'].required),
+                'resolved': CustomFormGroup(this['resolved'].$formGroup, MonitoringAlertStatus.propInfo['resolved'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('source') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('source').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('object-ref') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('object-ref').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('reason') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('reason').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('acknowledged') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('acknowledged').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('resolved') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('resolved').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -30,20 +30,25 @@ export class SecuritySecurityGroup extends BaseModel implements ISecuritySecurit
     'status': SecuritySecurityGroupStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
         'spec': {
             description:  'Spec contains the configuration of the security group.',
+            required: false,
             type: 'object'
         },
         'status': {
             description:  'Status contains the current state of the security group.',
+            required: false,
             type: 'object'
         },
     }
@@ -61,8 +66,7 @@ export class SecuritySecurityGroup extends BaseModel implements ISecuritySecurit
     */
     public static hasDefaultValue(prop) {
         return (SecuritySecurityGroup.propInfo[prop] != null &&
-                        SecuritySecurityGroup.propInfo[prop].default != null &&
-                        SecuritySecurityGroup.propInfo[prop].default != '');
+                        SecuritySecurityGroup.propInfo[prop].default != null);
     }
 
     /**
@@ -118,11 +122,26 @@ export class SecuritySecurityGroup extends BaseModel implements ISecuritySecurit
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), SecuritySecurityGroup.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), SecuritySecurityGroup.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
-                'spec': this['spec'].$formGroup,
-                'status': this['status'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), SecuritySecurityGroup.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), SecuritySecurityGroup.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, SecuritySecurityGroup.propInfo['meta'].required),
+                'spec': CustomFormGroup(this['spec'].$formGroup, SecuritySecurityGroup.propInfo['spec'].required),
+                'status': CustomFormGroup(this['status'].$formGroup, SecuritySecurityGroup.propInfo['status'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('spec') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('spec').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

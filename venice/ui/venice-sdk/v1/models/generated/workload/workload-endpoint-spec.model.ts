@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
     */
     public static hasDefaultValue(prop) {
         return (WorkloadEndpointSpec.propInfo[prop] != null &&
-                        WorkloadEndpointSpec.propInfo[prop].default != null &&
-                        WorkloadEndpointSpec.propInfo[prop].default != '');
+                        WorkloadEndpointSpec.propInfo[prop].default != null);
     }
 
     /**

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkTLSServerPolicySpec, INetworkTLSServerPolicySpec } from './network-tls-server-policy-spec.model';
@@ -29,21 +29,27 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     'tls-client-policy': NetworkTLSClientPolicySpec = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workload-labels': {
+            required: false,
             type: 'Array<string>'
         },
         'virtual-ip': {
+            required: false,
             type: 'string'
         },
         'ports': {
+            required: false,
             type: 'string'
         },
         'lb-policy': {
+            required: false,
             type: 'string'
         },
         'tls-server-policy': {
+            required: false,
             type: 'object'
         },
         'tls-client-policy': {
+            required: false,
             type: 'object'
         },
     }
@@ -61,8 +67,7 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     */
     public static hasDefaultValue(prop) {
         return (NetworkServiceSpec.propInfo[prop] != null &&
-                        NetworkServiceSpec.propInfo[prop].default != null &&
-                        NetworkServiceSpec.propInfo[prop].default != '');
+                        NetworkServiceSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -127,12 +132,22 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workload-labels': CustomFormControl(new FormControl(this['workload-labels']), NetworkServiceSpec.propInfo['workload-labels'].description),
-                'virtual-ip': CustomFormControl(new FormControl(this['virtual-ip']), NetworkServiceSpec.propInfo['virtual-ip'].description),
-                'ports': CustomFormControl(new FormControl(this['ports']), NetworkServiceSpec.propInfo['ports'].description),
-                'lb-policy': CustomFormControl(new FormControl(this['lb-policy']), NetworkServiceSpec.propInfo['lb-policy'].description),
-                'tls-server-policy': this['tls-server-policy'].$formGroup,
-                'tls-client-policy': this['tls-client-policy'].$formGroup,
+                'workload-labels': CustomFormControl(new FormControl(this['workload-labels']), NetworkServiceSpec.propInfo['workload-labels']),
+                'virtual-ip': CustomFormControl(new FormControl(this['virtual-ip']), NetworkServiceSpec.propInfo['virtual-ip']),
+                'ports': CustomFormControl(new FormControl(this['ports']), NetworkServiceSpec.propInfo['ports']),
+                'lb-policy': CustomFormControl(new FormControl(this['lb-policy']), NetworkServiceSpec.propInfo['lb-policy']),
+                'tls-server-policy': CustomFormGroup(this['tls-server-policy'].$formGroup, NetworkServiceSpec.propInfo['tls-server-policy'].required),
+                'tls-client-policy': CustomFormGroup(this['tls-client-policy'].$formGroup, NetworkServiceSpec.propInfo['tls-client-policy'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('tls-server-policy') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('tls-server-policy').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('tls-client-policy') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('tls-client-policy').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

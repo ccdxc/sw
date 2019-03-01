@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
     'nanos': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'seconds': {
+            required: false,
             type: 'string'
         },
         'nanos': {
+            required: false,
             type: 'number'
         },
     }
@@ -39,8 +41,7 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
     */
     public static hasDefaultValue(prop) {
         return (ApiTimestamp.propInfo[prop] != null &&
-                        ApiTimestamp.propInfo[prop].default != null &&
-                        ApiTimestamp.propInfo[prop].default != '');
+                        ApiTimestamp.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'seconds': CustomFormControl(new FormControl(this['seconds']), ApiTimestamp.propInfo['seconds'].description),
-                'nanos': CustomFormControl(new FormControl(this['nanos']), ApiTimestamp.propInfo['nanos'].description),
+                'seconds': CustomFormControl(new FormControl(this['seconds']), ApiTimestamp.propInfo['seconds']),
+                'nanos': CustomFormControl(new FormControl(this['nanos']), ApiTimestamp.propInfo['nanos']),
             });
         }
         return this._formGroup;

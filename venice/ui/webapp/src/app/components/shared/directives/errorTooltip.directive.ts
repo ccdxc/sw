@@ -71,9 +71,9 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
     }
 
     const customControl: any = this.control.control;
-    if (customControl != null && customControl.description != null) {
+    if (customControl != null && customControl._venice_sdk != null && customControl._venice_sdk.description != null) {
       this.tooltipClass = 'global-info-tooltip';
-      return customControl.description;
+      return customControl._venice_sdk.description;
     }
   }
 }

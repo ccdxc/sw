@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterSmartNICStatus_admission_phase,  ClusterSmartNICStatus_admission_phase_uihint  } from './enums';
@@ -48,30 +48,39 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             enum: ClusterSmartNICStatus_admission_phase_uihint,
             default: 'UNKNOWN',
             description:  'Current admission phase of the SmartNIC. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.',
+            required: true,
             type: 'string'
         },
         'conditions': {
+            required: false,
             type: 'object'
         },
         'serial-num': {
+            required: false,
             type: 'string'
         },
         'primary-mac': {
+            required: false,
             type: 'string'
         },
         'ip-config': {
+            required: false,
             type: 'object'
         },
         'system-info': {
+            required: false,
             type: 'object'
         },
         'interfaces': {
+            required: false,
             type: 'Array<string>'
         },
         'smartNicVersion': {
+            required: false,
             type: 'string'
         },
         'smartNicSku': {
+            required: false,
             type: 'string'
         },
     }
@@ -89,8 +98,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     */
     public static hasDefaultValue(prop) {
         return (ClusterSmartNICStatus.propInfo[prop] != null &&
-                        ClusterSmartNICStatus.propInfo[prop].default != null &&
-                        ClusterSmartNICStatus.propInfo[prop].default != '');
+                        ClusterSmartNICStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -175,18 +183,33 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admission-phase': CustomFormControl(new FormControl(this['admission-phase'], [required, enumValidator(ClusterSmartNICStatus_admission_phase), ]), ClusterSmartNICStatus.propInfo['admission-phase'].description),
+                'admission-phase': CustomFormControl(new FormControl(this['admission-phase'], [required, enumValidator(ClusterSmartNICStatus_admission_phase), ]), ClusterSmartNICStatus.propInfo['admission-phase']),
                 'conditions': new FormArray([]),
-                'serial-num': CustomFormControl(new FormControl(this['serial-num']), ClusterSmartNICStatus.propInfo['serial-num'].description),
-                'primary-mac': CustomFormControl(new FormControl(this['primary-mac']), ClusterSmartNICStatus.propInfo['primary-mac'].description),
-                'ip-config': this['ip-config'].$formGroup,
-                'system-info': this['system-info'].$formGroup,
-                'interfaces': CustomFormControl(new FormControl(this['interfaces']), ClusterSmartNICStatus.propInfo['interfaces'].description),
-                'smartNicVersion': CustomFormControl(new FormControl(this['smartNicVersion']), ClusterSmartNICStatus.propInfo['smartNicVersion'].description),
-                'smartNicSku': CustomFormControl(new FormControl(this['smartNicSku']), ClusterSmartNICStatus.propInfo['smartNicSku'].description),
+                'serial-num': CustomFormControl(new FormControl(this['serial-num']), ClusterSmartNICStatus.propInfo['serial-num']),
+                'primary-mac': CustomFormControl(new FormControl(this['primary-mac']), ClusterSmartNICStatus.propInfo['primary-mac']),
+                'ip-config': CustomFormGroup(this['ip-config'].$formGroup, ClusterSmartNICStatus.propInfo['ip-config'].required),
+                'system-info': CustomFormGroup(this['system-info'].$formGroup, ClusterSmartNICStatus.propInfo['system-info'].required),
+                'interfaces': CustomFormControl(new FormControl(this['interfaces']), ClusterSmartNICStatus.propInfo['interfaces']),
+                'smartNicVersion': CustomFormControl(new FormControl(this['smartNicVersion']), ClusterSmartNICStatus.propInfo['smartNicVersion']),
+                'smartNicSku': CustomFormControl(new FormControl(this['smartNicSku']), ClusterSmartNICStatus.propInfo['smartNicSku']),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterSmartNICCondition>('conditions', this['conditions'], ClusterSmartNICCondition);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('conditions') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('conditions').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('ip-config') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('ip-config').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('system-info') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('system-info').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

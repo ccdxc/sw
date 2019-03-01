@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class SecurityIcmp extends BaseModel implements ISecurityIcmp {
     'code': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
+            required: false,
             type: 'string'
         },
         'code': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class SecurityIcmp extends BaseModel implements ISecurityIcmp {
     */
     public static hasDefaultValue(prop) {
         return (SecurityIcmp.propInfo[prop] != null &&
-                        SecurityIcmp.propInfo[prop].default != null &&
-                        SecurityIcmp.propInfo[prop].default != '');
+                        SecurityIcmp.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class SecurityIcmp extends BaseModel implements ISecurityIcmp {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type']), SecurityIcmp.propInfo['type'].description),
-                'code': CustomFormControl(new FormControl(this['code']), SecurityIcmp.propInfo['code'].description),
+                'type': CustomFormControl(new FormControl(this['type']), SecurityIcmp.propInfo['type']),
+                'code': CustomFormControl(new FormControl(this['code']), SecurityIcmp.propInfo['code']),
             });
         }
         return this._formGroup;

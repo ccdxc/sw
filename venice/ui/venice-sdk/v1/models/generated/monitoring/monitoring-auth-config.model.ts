@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAuthConfig_algo,  } from './enums';
@@ -23,10 +23,12 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
         'algo': {
             enum: MonitoringAuthConfig_algo,
             default: 'MD5',
+            required: true,
             type: 'string'
         },
         'password': {
             description:  'Password contains the authentication password.',
+            required: false,
             type: 'string'
         },
     }
@@ -44,8 +46,7 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAuthConfig.propInfo[prop] != null &&
-                        MonitoringAuthConfig.propInfo[prop].default != null &&
-                        MonitoringAuthConfig.propInfo[prop].default != '');
+                        MonitoringAuthConfig.propInfo[prop].default != null);
     }
 
     /**
@@ -83,8 +84,8 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'algo': CustomFormControl(new FormControl(this['algo'], [required, enumValidator(MonitoringAuthConfig_algo), ]), MonitoringAuthConfig.propInfo['algo'].description),
-                'password': CustomFormControl(new FormControl(this['password']), MonitoringAuthConfig.propInfo['password'].description),
+                'algo': CustomFormControl(new FormControl(this['algo'], [required, enumValidator(MonitoringAuthConfig_algo), ]), MonitoringAuthConfig.propInfo['algo']),
+                'password': CustomFormControl(new FormControl(this['password']), MonitoringAuthConfig.propInfo['password']),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
@@ -25,15 +25,19 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
     'items': Array<MonitoringFwlogPolicy> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'list-meta': {
+            required: false,
             type: 'object'
         },
         'items': {
+            required: false,
             type: 'object'
         },
     }
@@ -51,8 +55,7 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
     */
     public static hasDefaultValue(prop) {
         return (MonitoringFwlogPolicyList.propInfo[prop] != null &&
-                        MonitoringFwlogPolicyList.propInfo[prop].default != null &&
-                        MonitoringFwlogPolicyList.propInfo[prop].default != '');
+                        MonitoringFwlogPolicyList.propInfo[prop].default != null);
     }
 
     /**
@@ -102,13 +105,23 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), MonitoringFwlogPolicyList.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringFwlogPolicyList.propInfo['api-version'].description),
-                'list-meta': this['list-meta'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), MonitoringFwlogPolicyList.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringFwlogPolicyList.propInfo['api-version']),
+                'list-meta': CustomFormGroup(this['list-meta'].$formGroup, MonitoringFwlogPolicyList.propInfo['list-meta'].required),
                 'items': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringFwlogPolicy>('items', this['items'], MonitoringFwlogPolicy);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('list-meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('list-meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('items') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('items').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

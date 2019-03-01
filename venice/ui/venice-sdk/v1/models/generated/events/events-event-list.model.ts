@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { EventsEvent, IEventsEvent } from './events-event.model';
@@ -24,15 +24,19 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     'items': Array<EventsEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'resource-version': {
+            required: false,
             type: 'string'
         },
         'items': {
+            required: false,
             type: 'object'
         },
     }
@@ -50,8 +54,7 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     */
     public static hasDefaultValue(prop) {
         return (EventsEventList.propInfo[prop] != null &&
-                        EventsEventList.propInfo[prop].default != null &&
-                        EventsEventList.propInfo[prop].default != '');
+                        EventsEventList.propInfo[prop].default != null);
     }
 
     /**
@@ -102,13 +105,18 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), EventsEventList.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), EventsEventList.propInfo['api-version'].description),
-                'resource-version': CustomFormControl(new FormControl(this['resource-version']), EventsEventList.propInfo['resource-version'].description),
+                'kind': CustomFormControl(new FormControl(this['kind']), EventsEventList.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), EventsEventList.propInfo['api-version']),
+                'resource-version': CustomFormControl(new FormControl(this['resource-version']), EventsEventList.propInfo['resource-version']),
                 'items': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<EventsEvent>('items', this['items'], EventsEvent);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('items') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('items').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

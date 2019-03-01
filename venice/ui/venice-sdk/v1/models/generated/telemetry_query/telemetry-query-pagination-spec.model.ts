@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -23,12 +23,14 @@ export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemet
     'count': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'offset': {
-            default: '0',
+            default: parseInt('0'),
             description:  'value should be at least 0 ',
+            required: true,
             type: 'number'
         },
         'count': {
             description:  'value should be at least 1 ',
+            required: true,
             type: 'number'
         },
     }
@@ -46,8 +48,7 @@ export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemet
     */
     public static hasDefaultValue(prop) {
         return (Telemetry_queryPaginationSpec.propInfo[prop] != null &&
-                        Telemetry_queryPaginationSpec.propInfo[prop].default != null &&
-                        Telemetry_queryPaginationSpec.propInfo[prop].default != '');
+                        Telemetry_queryPaginationSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -85,8 +86,8 @@ export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemet
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'offset': CustomFormControl(new FormControl(this['offset'], [required, ]), Telemetry_queryPaginationSpec.propInfo['offset'].description),
-                'count': CustomFormControl(new FormControl(this['count'], [required, minValueValidator(1), ]), Telemetry_queryPaginationSpec.propInfo['count'].description),
+                'offset': CustomFormControl(new FormControl(this['offset'], [required, ]), Telemetry_queryPaginationSpec.propInfo['offset']),
+                'count': CustomFormControl(new FormControl(this['count'], [required, minValueValidator(1), ]), Telemetry_queryPaginationSpec.propInfo['count']),
             });
         }
         return this._formGroup;

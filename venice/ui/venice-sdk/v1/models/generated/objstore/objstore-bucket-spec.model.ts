@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class ObjstoreBucketSpec extends BaseModel implements IObjstoreBucketSpec
     'description': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'description': {
+            required: false,
             type: 'string'
         },
     }
@@ -34,8 +35,7 @@ export class ObjstoreBucketSpec extends BaseModel implements IObjstoreBucketSpec
     */
     public static hasDefaultValue(prop) {
         return (ObjstoreBucketSpec.propInfo[prop] != null &&
-                        ObjstoreBucketSpec.propInfo[prop].default != null &&
-                        ObjstoreBucketSpec.propInfo[prop].default != '');
+                        ObjstoreBucketSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,7 @@ export class ObjstoreBucketSpec extends BaseModel implements IObjstoreBucketSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'description': CustomFormControl(new FormControl(this['description']), ObjstoreBucketSpec.propInfo['description'].description),
+                'description': CustomFormControl(new FormControl(this['description']), ObjstoreBucketSpec.propInfo['description']),
             });
         }
         return this._formGroup;

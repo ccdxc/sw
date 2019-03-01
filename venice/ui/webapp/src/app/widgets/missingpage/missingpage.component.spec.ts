@@ -2,6 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MissingpageComponent } from './missingpage.component';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MatIconRegistry } from '@angular/material';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
@@ -22,6 +23,7 @@ describe('MissingpageComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

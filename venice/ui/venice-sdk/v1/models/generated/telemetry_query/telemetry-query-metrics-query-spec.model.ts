@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
@@ -45,43 +45,54 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
     'pagination': Telemetry_queryPaginationSpec = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'name': {
             description:  'Name is the name of the API object.',
+            required: false,
             type: 'string'
         },
         'selector': {
+            required: false,
             type: 'object'
         },
         'fields': {
             description:  'must start and end with alpha numeric and can have alphanumeric, -, _, ., :',
+            required: false,
             type: 'Array<string>'
         },
         'function': {
             enum: Telemetry_queryMetricsQuerySpec_function,
             default: 'NONE',
+            required: true,
             type: 'string'
         },
         'start-time': {
+            required: false,
             type: 'Date'
         },
         'end-time': {
+            required: false,
             type: 'Date'
         },
         'group-by-time': {
             description:  'should be a valid time duration ',
             hint:  '2h',
+            required: false,
             type: 'string'
         },
         'group-by-field': {
             description:  'must start and end with alpha numeric and can have alphanumeric, -, _, ., :',
+            required: false,
             type: 'string'
         },
         'pagination': {
+            required: false,
             type: 'object'
         },
     }
@@ -99,8 +110,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
     */
     public static hasDefaultValue(prop) {
         return (Telemetry_queryMetricsQuerySpec.propInfo[prop] != null &&
-                        Telemetry_queryMetricsQuerySpec.propInfo[prop].default != null &&
-                        Telemetry_queryMetricsQuerySpec.propInfo[prop].default != '');
+                        Telemetry_queryMetricsQuerySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -200,17 +210,27 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), Telemetry_queryMetricsQuerySpec.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), Telemetry_queryMetricsQuerySpec.propInfo['api-version'].description),
-                'name': CustomFormControl(new FormControl(this['name'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'Name is the name of the API object.'), ]), Telemetry_queryMetricsQuerySpec.propInfo['name'].description),
-                'selector': this['selector'].$formGroup,
-                'fields': CustomFormControl(new FormControl(this['fields']), Telemetry_queryMetricsQuerySpec.propInfo['fields'].description),
-                'function': CustomFormControl(new FormControl(this['function'], [required, enumValidator(Telemetry_queryMetricsQuerySpec_function), ]), Telemetry_queryMetricsQuerySpec.propInfo['function'].description),
-                'start-time': CustomFormControl(new FormControl(this['start-time']), Telemetry_queryMetricsQuerySpec.propInfo['start-time'].description),
-                'end-time': CustomFormControl(new FormControl(this['end-time']), Telemetry_queryMetricsQuerySpec.propInfo['end-time'].description),
-                'group-by-time': CustomFormControl(new FormControl(this['group-by-time']), Telemetry_queryMetricsQuerySpec.propInfo['group-by-time'].description),
-                'group-by-field': CustomFormControl(new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, ., :'), ]), Telemetry_queryMetricsQuerySpec.propInfo['group-by-field'].description),
-                'pagination': this['pagination'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), Telemetry_queryMetricsQuerySpec.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), Telemetry_queryMetricsQuerySpec.propInfo['api-version']),
+                'name': CustomFormControl(new FormControl(this['name'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'Name is the name of the API object.'), ]), Telemetry_queryMetricsQuerySpec.propInfo['name']),
+                'selector': CustomFormGroup(this['selector'].$formGroup, Telemetry_queryMetricsQuerySpec.propInfo['selector'].required),
+                'fields': CustomFormControl(new FormControl(this['fields']), Telemetry_queryMetricsQuerySpec.propInfo['fields']),
+                'function': CustomFormControl(new FormControl(this['function'], [required, enumValidator(Telemetry_queryMetricsQuerySpec_function), ]), Telemetry_queryMetricsQuerySpec.propInfo['function']),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), Telemetry_queryMetricsQuerySpec.propInfo['start-time']),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), Telemetry_queryMetricsQuerySpec.propInfo['end-time']),
+                'group-by-time': CustomFormControl(new FormControl(this['group-by-time']), Telemetry_queryMetricsQuerySpec.propInfo['group-by-time']),
+                'group-by-field': CustomFormControl(new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, ., :'), ]), Telemetry_queryMetricsQuerySpec.propInfo['group-by-field']),
+                'pagination': CustomFormGroup(this['pagination'].$formGroup, Telemetry_queryMetricsQuerySpec.propInfo['pagination'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('selector') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('selector').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('pagination') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('pagination').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

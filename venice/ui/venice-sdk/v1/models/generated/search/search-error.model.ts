@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class SearchError extends BaseModel implements ISearchError {
     'reason': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
+            required: false,
             type: 'string'
         },
         'reason': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class SearchError extends BaseModel implements ISearchError {
     */
     public static hasDefaultValue(prop) {
         return (SearchError.propInfo[prop] != null &&
-                        SearchError.propInfo[prop].default != null &&
-                        SearchError.propInfo[prop].default != '');
+                        SearchError.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class SearchError extends BaseModel implements ISearchError {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type']), SearchError.propInfo['type'].description),
-                'reason': CustomFormControl(new FormControl(this['reason']), SearchError.propInfo['reason'].description),
+                'type': CustomFormControl(new FormControl(this['type']), SearchError.propInfo['type']),
+                'reason': CustomFormControl(new FormControl(this['reason']), SearchError.propInfo['reason']),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -23,15 +23,19 @@ export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
     'fw-minor-ver': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'vendor': {
+            required: false,
             type: 'string'
         },
         'version': {
+            required: false,
             type: 'string'
         },
         'fw-major-ver': {
+            required: false,
             type: 'string'
         },
         'fw-minor-ver': {
+            required: false,
             type: 'string'
         },
     }
@@ -49,8 +53,7 @@ export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
     */
     public static hasDefaultValue(prop) {
         return (ClusterBiosInfo.propInfo[prop] != null &&
-                        ClusterBiosInfo.propInfo[prop].default != null &&
-                        ClusterBiosInfo.propInfo[prop].default != '');
+                        ClusterBiosInfo.propInfo[prop].default != null);
     }
 
     /**
@@ -102,10 +105,10 @@ export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'vendor': CustomFormControl(new FormControl(this['vendor']), ClusterBiosInfo.propInfo['vendor'].description),
-                'version': CustomFormControl(new FormControl(this['version']), ClusterBiosInfo.propInfo['version'].description),
-                'fw-major-ver': CustomFormControl(new FormControl(this['fw-major-ver']), ClusterBiosInfo.propInfo['fw-major-ver'].description),
-                'fw-minor-ver': CustomFormControl(new FormControl(this['fw-minor-ver']), ClusterBiosInfo.propInfo['fw-minor-ver'].description),
+                'vendor': CustomFormControl(new FormControl(this['vendor']), ClusterBiosInfo.propInfo['vendor']),
+                'version': CustomFormControl(new FormControl(this['version']), ClusterBiosInfo.propInfo['version']),
+                'fw-major-ver': CustomFormControl(new FormControl(this['fw-major-ver']), ClusterBiosInfo.propInfo['fw-major-ver']),
+                'fw-minor-ver': CustomFormControl(new FormControl(this['fw-minor-ver']), ClusterBiosInfo.propInfo['fw-minor-ver']),
             });
         }
         return this._formGroup;

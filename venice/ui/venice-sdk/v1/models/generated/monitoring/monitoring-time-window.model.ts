@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,9 +21,11 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'start-time': {
             description:  'Start/Stop Time - when start time is not specified, it implies start NOW.',
+            required: false,
             type: 'Date'
         },
         'stop-time': {
+            required: false,
             type: 'Date'
         },
     }
@@ -41,8 +43,7 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
     */
     public static hasDefaultValue(prop) {
         return (MonitoringTimeWindow.propInfo[prop] != null &&
-                        MonitoringTimeWindow.propInfo[prop].default != null &&
-                        MonitoringTimeWindow.propInfo[prop].default != '');
+                        MonitoringTimeWindow.propInfo[prop].default != null);
     }
 
     /**
@@ -80,8 +81,8 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'start-time': CustomFormControl(new FormControl(this['start-time']), MonitoringTimeWindow.propInfo['start-time'].description),
-                'stop-time': CustomFormControl(new FormControl(this['stop-time']), MonitoringTimeWindow.propInfo['stop-time'].description),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), MonitoringTimeWindow.propInfo['start-time']),
+                'stop-time': CustomFormControl(new FormControl(this['stop-time']), MonitoringTimeWindow.propInfo['stop-time']),
             });
         }
         return this._formGroup;

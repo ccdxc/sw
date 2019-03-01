@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityTLSProtocolSpec, ISecurityTLSProtocolSpec } from './security-tls-protocol-spec.model';
@@ -25,15 +25,19 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     'key-rotation-interval-secs': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'mode': {
+            required: false,
             type: 'string'
         },
         'tls': {
+            required: false,
             type: 'object'
         },
         'ipsec': {
+            required: false,
             type: 'object'
         },
         'key-rotation-interval-secs': {
+            required: false,
             type: 'number'
         },
     }
@@ -51,8 +55,7 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     */
     public static hasDefaultValue(prop) {
         return (SecurityTrafficEncryptionPolicySpec.propInfo[prop] != null &&
-                        SecurityTrafficEncryptionPolicySpec.propInfo[prop].default != null &&
-                        SecurityTrafficEncryptionPolicySpec.propInfo[prop].default != '');
+                        SecurityTrafficEncryptionPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -102,10 +105,20 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'mode': CustomFormControl(new FormControl(this['mode']), SecurityTrafficEncryptionPolicySpec.propInfo['mode'].description),
-                'tls': this['tls'].$formGroup,
-                'ipsec': this['ipsec'].$formGroup,
-                'key-rotation-interval-secs': CustomFormControl(new FormControl(this['key-rotation-interval-secs']), SecurityTrafficEncryptionPolicySpec.propInfo['key-rotation-interval-secs'].description),
+                'mode': CustomFormControl(new FormControl(this['mode']), SecurityTrafficEncryptionPolicySpec.propInfo['mode']),
+                'tls': CustomFormGroup(this['tls'].$formGroup, SecurityTrafficEncryptionPolicySpec.propInfo['tls'].required),
+                'ipsec': CustomFormGroup(this['ipsec'].$formGroup, SecurityTrafficEncryptionPolicySpec.propInfo['ipsec'].required),
+                'key-rotation-interval-secs': CustomFormControl(new FormControl(this['key-rotation-interval-secs']), SecurityTrafficEncryptionPolicySpec.propInfo['key-rotation-interval-secs']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('tls') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('tls').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('ipsec') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('ipsec').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

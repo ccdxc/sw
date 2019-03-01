@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryFwlogsQuerySpec_actions,  Telemetry_queryFwlogsQuerySpec_actions_uihint  } from './enums';
@@ -52,47 +52,59 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
         'source-ips': {
             description:  'should be a valid v4 or v6 IP address ',
             hint:  '10.1.1.1, ff02::5 ',
+            required: true,
             type: 'Array<string>'
         },
         'dest-ips': {
             description:  'should be a valid v4 or v6 IP address ',
             hint:  '10.1.1.1, ff02::5 ',
+            required: true,
             type: 'Array<string>'
         },
         'source-ports': {
             description:  'value should be between 0 and 65535 ',
+            required: true,
             type: 'Array<number>'
         },
         'dest-ports': {
             description:  'value should be between 0 and 65535 ',
+            required: true,
             type: 'Array<number>'
         },
         'protocols': {
+            required: false,
             type: 'Array<string>'
         },
         'actions': {
             enum: Telemetry_queryFwlogsQuerySpec_actions_uihint,
             default: 'ALL',
+            required: true,
             type: 'Array<string>'
         },
         'directions': {
             enum: Telemetry_queryFwlogsQuerySpec_directions_uihint,
             default: 'DIRECTION_ALL',
+            required: true,
             type: 'Array<string>'
         },
         'rule-ids': {
+            required: false,
             type: 'Array<string>'
         },
         'policy-names': {
+            required: false,
             type: 'Array<string>'
         },
         'start-time': {
+            required: false,
             type: 'Date'
         },
         'end-time': {
+            required: false,
             type: 'Date'
         },
         'pagination': {
+            required: false,
             type: 'object'
         },
     }
@@ -110,8 +122,7 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
     */
     public static hasDefaultValue(prop) {
         return (Telemetry_queryFwlogsQuerySpec.propInfo[prop] != null &&
-                        Telemetry_queryFwlogsQuerySpec.propInfo[prop].default != null &&
-                        Telemetry_queryFwlogsQuerySpec.propInfo[prop].default != '');
+                        Telemetry_queryFwlogsQuerySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -227,18 +238,23 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'source-ips': CustomFormControl(new FormControl(this['source-ips']), Telemetry_queryFwlogsQuerySpec.propInfo['source-ips'].description),
-                'dest-ips': CustomFormControl(new FormControl(this['dest-ips']), Telemetry_queryFwlogsQuerySpec.propInfo['dest-ips'].description),
-                'source-ports': CustomFormControl(new FormControl(this['source-ports']), Telemetry_queryFwlogsQuerySpec.propInfo['source-ports'].description),
-                'dest-ports': CustomFormControl(new FormControl(this['dest-ports']), Telemetry_queryFwlogsQuerySpec.propInfo['dest-ports'].description),
-                'protocols': CustomFormControl(new FormControl(this['protocols']), Telemetry_queryFwlogsQuerySpec.propInfo['protocols'].description),
-                'actions': CustomFormControl(new FormControl(this['actions']), Telemetry_queryFwlogsQuerySpec.propInfo['actions'].description),
-                'directions': CustomFormControl(new FormControl(this['directions']), Telemetry_queryFwlogsQuerySpec.propInfo['directions'].description),
-                'rule-ids': CustomFormControl(new FormControl(this['rule-ids']), Telemetry_queryFwlogsQuerySpec.propInfo['rule-ids'].description),
-                'policy-names': CustomFormControl(new FormControl(this['policy-names']), Telemetry_queryFwlogsQuerySpec.propInfo['policy-names'].description),
-                'start-time': CustomFormControl(new FormControl(this['start-time']), Telemetry_queryFwlogsQuerySpec.propInfo['start-time'].description),
-                'end-time': CustomFormControl(new FormControl(this['end-time']), Telemetry_queryFwlogsQuerySpec.propInfo['end-time'].description),
-                'pagination': this['pagination'].$formGroup,
+                'source-ips': CustomFormControl(new FormControl(this['source-ips']), Telemetry_queryFwlogsQuerySpec.propInfo['source-ips']),
+                'dest-ips': CustomFormControl(new FormControl(this['dest-ips']), Telemetry_queryFwlogsQuerySpec.propInfo['dest-ips']),
+                'source-ports': CustomFormControl(new FormControl(this['source-ports']), Telemetry_queryFwlogsQuerySpec.propInfo['source-ports']),
+                'dest-ports': CustomFormControl(new FormControl(this['dest-ports']), Telemetry_queryFwlogsQuerySpec.propInfo['dest-ports']),
+                'protocols': CustomFormControl(new FormControl(this['protocols']), Telemetry_queryFwlogsQuerySpec.propInfo['protocols']),
+                'actions': CustomFormControl(new FormControl(this['actions']), Telemetry_queryFwlogsQuerySpec.propInfo['actions']),
+                'directions': CustomFormControl(new FormControl(this['directions']), Telemetry_queryFwlogsQuerySpec.propInfo['directions']),
+                'rule-ids': CustomFormControl(new FormControl(this['rule-ids']), Telemetry_queryFwlogsQuerySpec.propInfo['rule-ids']),
+                'policy-names': CustomFormControl(new FormControl(this['policy-names']), Telemetry_queryFwlogsQuerySpec.propInfo['policy-names']),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), Telemetry_queryFwlogsQuerySpec.propInfo['start-time']),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), Telemetry_queryFwlogsQuerySpec.propInfo['end-time']),
+                'pagination': CustomFormGroup(this['pagination'].$formGroup, Telemetry_queryFwlogsQuerySpec.propInfo['pagination'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('pagination') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('pagination').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

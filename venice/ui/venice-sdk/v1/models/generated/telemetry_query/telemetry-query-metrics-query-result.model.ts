@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryResultSeries, ITelemetry_queryResultSeries } from './telemetry-query-result-series.model';
@@ -20,9 +20,11 @@ export class Telemetry_queryMetricsQueryResult extends BaseModel implements ITel
     'series': Array<Telemetry_queryResultSeries> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'statement_id': {
+            required: false,
             type: 'number'
         },
         'series': {
+            required: false,
             type: 'object'
         },
     }
@@ -40,8 +42,7 @@ export class Telemetry_queryMetricsQueryResult extends BaseModel implements ITel
     */
     public static hasDefaultValue(prop) {
         return (Telemetry_queryMetricsQueryResult.propInfo[prop] != null &&
-                        Telemetry_queryMetricsQueryResult.propInfo[prop].default != null &&
-                        Telemetry_queryMetricsQueryResult.propInfo[prop].default != '');
+                        Telemetry_queryMetricsQueryResult.propInfo[prop].default != null);
     }
 
     /**
@@ -78,11 +79,16 @@ export class Telemetry_queryMetricsQueryResult extends BaseModel implements ITel
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'statement_id': CustomFormControl(new FormControl(this['statement_id']), Telemetry_queryMetricsQueryResult.propInfo['statement_id'].description),
+                'statement_id': CustomFormControl(new FormControl(this['statement_id']), Telemetry_queryMetricsQueryResult.propInfo['statement_id']),
                 'series': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<Telemetry_queryResultSeries>('series', this['series'], Telemetry_queryResultSeries);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('series') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('series').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

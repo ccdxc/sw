@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,12 +21,15 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
     'dns-servers': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'ip-address': {
+            required: false,
             type: 'string'
         },
         'default-gw': {
+            required: false,
             type: 'string'
         },
         'dns-servers': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -44,8 +47,7 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
     */
     public static hasDefaultValue(prop) {
         return (ClusterIPConfig.propInfo[prop] != null &&
-                        ClusterIPConfig.propInfo[prop].default != null &&
-                        ClusterIPConfig.propInfo[prop].default != '');
+                        ClusterIPConfig.propInfo[prop].default != null);
     }
 
     /**
@@ -91,9 +93,9 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ip-address': CustomFormControl(new FormControl(this['ip-address']), ClusterIPConfig.propInfo['ip-address'].description),
-                'default-gw': CustomFormControl(new FormControl(this['default-gw']), ClusterIPConfig.propInfo['default-gw'].description),
-                'dns-servers': CustomFormControl(new FormControl(this['dns-servers']), ClusterIPConfig.propInfo['dns-servers'].description),
+                'ip-address': CustomFormControl(new FormControl(this['ip-address']), ClusterIPConfig.propInfo['ip-address']),
+                'default-gw': CustomFormControl(new FormControl(this['default-gw']), ClusterIPConfig.propInfo['default-gw']),
+                'dns-servers': CustomFormControl(new FormControl(this['dns-servers']), ClusterIPConfig.propInfo['dns-servers']),
             });
         }
         return this._formGroup;

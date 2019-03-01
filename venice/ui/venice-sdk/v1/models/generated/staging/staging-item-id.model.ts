@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class StagingItemId extends BaseModel implements IStagingItemId {
     'method': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'uri': {
+            required: false,
             type: 'string'
         },
         'method': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class StagingItemId extends BaseModel implements IStagingItemId {
     */
     public static hasDefaultValue(prop) {
         return (StagingItemId.propInfo[prop] != null &&
-                        StagingItemId.propInfo[prop].default != null &&
-                        StagingItemId.propInfo[prop].default != '');
+                        StagingItemId.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class StagingItemId extends BaseModel implements IStagingItemId {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'uri': CustomFormControl(new FormControl(this['uri']), StagingItemId.propInfo['uri'].description),
-                'method': CustomFormControl(new FormControl(this['method']), StagingItemId.propInfo['method'].description),
+                'uri': CustomFormControl(new FormControl(this['uri']), StagingItemId.propInfo['uri']),
+                'method': CustomFormControl(new FormControl(this['method']), StagingItemId.propInfo['method']),
             });
         }
         return this._formGroup;

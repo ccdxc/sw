@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -37,24 +37,30 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'quorum-nodes': {
             description:  'QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster.',
+            required: false,
             type: 'Array<string>'
         },
         'virtual-ip': {
             description:  'VirtualIP is the IP address for managing the cluster. It will be hosted by the winner of election between quorum nodes.',
+            required: false,
             type: 'string'
         },
         'ntp-servers': {
             description:  'NTPServers contains the list of NTP servers for the cluster.',
+            required: false,
             type: 'Array<string>'
         },
         'auto-admit-nics': {
             description:  'AutoAdmitNICs when enabled auto-admits NICs that are validated into Venice Cluster. When it is disabled, NICs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.',
+            required: false,
             type: 'boolean'
         },
         'certs': {
+            required: false,
             type: 'string'
         },
         'key': {
+            required: false,
             type: 'string'
         },
     }
@@ -72,8 +78,7 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     */
     public static hasDefaultValue(prop) {
         return (ClusterClusterSpec.propInfo[prop] != null &&
-                        ClusterClusterSpec.propInfo[prop].default != null &&
-                        ClusterClusterSpec.propInfo[prop].default != '');
+                        ClusterClusterSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -141,12 +146,12 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'quorum-nodes': CustomFormControl(new FormControl(this['quorum-nodes']), ClusterClusterSpec.propInfo['quorum-nodes'].description),
-                'virtual-ip': CustomFormControl(new FormControl(this['virtual-ip']), ClusterClusterSpec.propInfo['virtual-ip'].description),
-                'ntp-servers': CustomFormControl(new FormControl(this['ntp-servers']), ClusterClusterSpec.propInfo['ntp-servers'].description),
-                'auto-admit-nics': CustomFormControl(new FormControl(this['auto-admit-nics']), ClusterClusterSpec.propInfo['auto-admit-nics'].description),
-                'certs': CustomFormControl(new FormControl(this['certs']), ClusterClusterSpec.propInfo['certs'].description),
-                'key': CustomFormControl(new FormControl(this['key']), ClusterClusterSpec.propInfo['key'].description),
+                'quorum-nodes': CustomFormControl(new FormControl(this['quorum-nodes']), ClusterClusterSpec.propInfo['quorum-nodes']),
+                'virtual-ip': CustomFormControl(new FormControl(this['virtual-ip']), ClusterClusterSpec.propInfo['virtual-ip']),
+                'ntp-servers': CustomFormControl(new FormControl(this['ntp-servers']), ClusterClusterSpec.propInfo['ntp-servers']),
+                'auto-admit-nics': CustomFormControl(new FormControl(this['auto-admit-nics']), ClusterClusterSpec.propInfo['auto-admit-nics']),
+                'certs': CustomFormControl(new FormControl(this['certs']), ClusterClusterSpec.propInfo['certs']),
+                'key': CustomFormControl(new FormControl(this['key']), ClusterClusterSpec.propInfo['key']),
             });
         }
         return this._formGroup;

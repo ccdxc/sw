@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -28,18 +28,23 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     'status': MonitoringMirrorSessionStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
         'mirror-session-spec': {
+            required: false,
             type: 'object'
         },
         'status': {
+            required: false,
             type: 'object'
         },
     }
@@ -57,8 +62,7 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     */
     public static hasDefaultValue(prop) {
         return (MonitoringMirrorSession.propInfo[prop] != null &&
-                        MonitoringMirrorSession.propInfo[prop].default != null &&
-                        MonitoringMirrorSession.propInfo[prop].default != '');
+                        MonitoringMirrorSession.propInfo[prop].default != null);
     }
 
     /**
@@ -114,11 +118,26 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), MonitoringMirrorSession.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringMirrorSession.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
-                'mirror-session-spec': this['mirror-session-spec'].$formGroup,
-                'status': this['status'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), MonitoringMirrorSession.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringMirrorSession.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, MonitoringMirrorSession.propInfo['meta'].required),
+                'mirror-session-spec': CustomFormGroup(this['mirror-session-spec'].$formGroup, MonitoringMirrorSession.propInfo['mirror-session-spec'].required),
+                'status': CustomFormGroup(this['status'].$formGroup, MonitoringMirrorSession.propInfo['status'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('mirror-session-spec') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('mirror-session-spec').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

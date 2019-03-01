@@ -7,6 +7,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { CoreModule } from '@app/core';
 import { AuthService } from '@app/services/auth.service';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 
 import { SettingsComponent } from './settings.component';
@@ -39,6 +40,7 @@ describe('SettingsComponent', () => {
         providers: [
           AuthService,
           ControllerService,
+          ConfirmationService,
           LogService,
           LogPublishersService,
           MatIconRegistry,

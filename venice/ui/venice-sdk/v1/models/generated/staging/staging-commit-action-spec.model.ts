@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class StagingCommitActionSpec extends BaseModel implements IStagingCommit
     */
     public static hasDefaultValue(prop) {
         return (StagingCommitActionSpec.propInfo[prop] != null &&
-                        StagingCommitActionSpec.propInfo[prop].default != null &&
-                        StagingCommitActionSpec.propInfo[prop].default != '');
+                        StagingCommitActionSpec.propInfo[prop].default != null);
     }
 
     /**

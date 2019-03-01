@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,24 +29,31 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
     'fullname': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'user': {
+            required: false,
             type: 'string'
         },
         'user-object-class': {
+            required: false,
             type: 'string'
         },
         'tenant': {
+            required: false,
             type: 'string'
         },
         'group': {
+            required: false,
             type: 'string'
         },
         'group-object-class': {
+            required: false,
             type: 'string'
         },
         'email': {
+            required: false,
             type: 'string'
         },
         'fullname': {
+            required: false,
             type: 'string'
         },
     }
@@ -64,8 +71,7 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
     */
     public static hasDefaultValue(prop) {
         return (AuthLdapAttributeMapping.propInfo[prop] != null &&
-                        AuthLdapAttributeMapping.propInfo[prop].default != null &&
-                        AuthLdapAttributeMapping.propInfo[prop].default != '');
+                        AuthLdapAttributeMapping.propInfo[prop].default != null);
     }
 
     /**
@@ -138,13 +144,13 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'user': CustomFormControl(new FormControl(this['user']), AuthLdapAttributeMapping.propInfo['user'].description),
-                'user-object-class': CustomFormControl(new FormControl(this['user-object-class']), AuthLdapAttributeMapping.propInfo['user-object-class'].description),
-                'tenant': CustomFormControl(new FormControl(this['tenant']), AuthLdapAttributeMapping.propInfo['tenant'].description),
-                'group': CustomFormControl(new FormControl(this['group']), AuthLdapAttributeMapping.propInfo['group'].description),
-                'group-object-class': CustomFormControl(new FormControl(this['group-object-class']), AuthLdapAttributeMapping.propInfo['group-object-class'].description),
-                'email': CustomFormControl(new FormControl(this['email']), AuthLdapAttributeMapping.propInfo['email'].description),
-                'fullname': CustomFormControl(new FormControl(this['fullname']), AuthLdapAttributeMapping.propInfo['fullname'].description),
+                'user': CustomFormControl(new FormControl(this['user']), AuthLdapAttributeMapping.propInfo['user']),
+                'user-object-class': CustomFormControl(new FormControl(this['user-object-class']), AuthLdapAttributeMapping.propInfo['user-object-class']),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), AuthLdapAttributeMapping.propInfo['tenant']),
+                'group': CustomFormControl(new FormControl(this['group']), AuthLdapAttributeMapping.propInfo['group']),
+                'group-object-class': CustomFormControl(new FormControl(this['group-object-class']), AuthLdapAttributeMapping.propInfo['group-object-class']),
+                'email': CustomFormControl(new FormControl(this['email']), AuthLdapAttributeMapping.propInfo['email']),
+                'fullname': CustomFormControl(new FormControl(this['fullname']), AuthLdapAttributeMapping.propInfo['fullname']),
             });
         }
         return this._formGroup;

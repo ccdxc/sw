@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -25,18 +25,23 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
     'query-response-timeout': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'drop-multi-question-packets': {
+            required: false,
             type: 'boolean'
         },
         'drop-large-domain-name-packets': {
+            required: false,
             type: 'boolean'
         },
         'drop-long-label-packets': {
+            required: false,
             type: 'boolean'
         },
         'max-message-length': {
+            required: false,
             type: 'number'
         },
         'query-response-timeout': {
+            required: false,
             type: 'string'
         },
     }
@@ -54,8 +59,7 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
     */
     public static hasDefaultValue(prop) {
         return (SecurityDns.propInfo[prop] != null &&
-                        SecurityDns.propInfo[prop].default != null &&
-                        SecurityDns.propInfo[prop].default != '');
+                        SecurityDns.propInfo[prop].default != null);
     }
 
     /**
@@ -114,11 +118,11 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'drop-multi-question-packets': CustomFormControl(new FormControl(this['drop-multi-question-packets']), SecurityDns.propInfo['drop-multi-question-packets'].description),
-                'drop-large-domain-name-packets': CustomFormControl(new FormControl(this['drop-large-domain-name-packets']), SecurityDns.propInfo['drop-large-domain-name-packets'].description),
-                'drop-long-label-packets': CustomFormControl(new FormControl(this['drop-long-label-packets']), SecurityDns.propInfo['drop-long-label-packets'].description),
-                'max-message-length': CustomFormControl(new FormControl(this['max-message-length']), SecurityDns.propInfo['max-message-length'].description),
-                'query-response-timeout': CustomFormControl(new FormControl(this['query-response-timeout']), SecurityDns.propInfo['query-response-timeout'].description),
+                'drop-multi-question-packets': CustomFormControl(new FormControl(this['drop-multi-question-packets']), SecurityDns.propInfo['drop-multi-question-packets']),
+                'drop-large-domain-name-packets': CustomFormControl(new FormControl(this['drop-large-domain-name-packets']), SecurityDns.propInfo['drop-large-domain-name-packets']),
+                'drop-long-label-packets': CustomFormControl(new FormControl(this['drop-long-label-packets']), SecurityDns.propInfo['drop-long-label-packets']),
+                'max-message-length': CustomFormControl(new FormControl(this['max-message-length']), SecurityDns.propInfo['max-message-length']),
+                'query-response-timeout': CustomFormControl(new FormControl(this['query-response-timeout']), SecurityDns.propInfo['query-response-timeout']),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { EventsEventAttributes_severity,  EventsEventAttributes_severity_uihint  } from './enums';
@@ -32,21 +32,27 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         'severity': {
             enum: EventsEventAttributes_severity_uihint,
             default: 'INFO',
+            required: true,
             type: 'string'
         },
         'type': {
+            required: false,
             type: 'string'
         },
         'message': {
+            required: false,
             type: 'string'
         },
         'object-ref': {
+            required: false,
             type: 'object'
         },
         'source': {
+            required: false,
             type: 'object'
         },
         'count': {
+            required: false,
             type: 'number'
         },
     }
@@ -64,8 +70,7 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
     */
     public static hasDefaultValue(prop) {
         return (EventsEventAttributes.propInfo[prop] != null &&
-                        EventsEventAttributes.propInfo[prop].default != null &&
-                        EventsEventAttributes.propInfo[prop].default != '');
+                        EventsEventAttributes.propInfo[prop].default != null);
     }
 
     /**
@@ -129,12 +134,22 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(EventsEventAttributes_severity), ]), EventsEventAttributes.propInfo['severity'].description),
-                'type': CustomFormControl(new FormControl(this['type']), EventsEventAttributes.propInfo['type'].description),
-                'message': CustomFormControl(new FormControl(this['message']), EventsEventAttributes.propInfo['message'].description),
-                'object-ref': this['object-ref'].$formGroup,
-                'source': this['source'].$formGroup,
-                'count': CustomFormControl(new FormControl(this['count']), EventsEventAttributes.propInfo['count'].description),
+                'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(EventsEventAttributes_severity), ]), EventsEventAttributes.propInfo['severity']),
+                'type': CustomFormControl(new FormControl(this['type']), EventsEventAttributes.propInfo['type']),
+                'message': CustomFormControl(new FormControl(this['message']), EventsEventAttributes.propInfo['message']),
+                'object-ref': CustomFormGroup(this['object-ref'].$formGroup, EventsEventAttributes.propInfo['object-ref'].required),
+                'source': CustomFormGroup(this['source'].$formGroup, EventsEventAttributes.propInfo['source'].required),
+                'count': CustomFormControl(new FormControl(this['count']), EventsEventAttributes.propInfo['count']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('object-ref') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('object-ref').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('source') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('source').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

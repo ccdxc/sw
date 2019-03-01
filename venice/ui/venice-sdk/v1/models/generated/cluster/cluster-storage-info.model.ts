@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterStorageDeviceInfo, IClusterStorageDeviceInfo } from './cluster-storage-device-info.model';
@@ -18,6 +18,7 @@ export class ClusterStorageInfo extends BaseModel implements IClusterStorageInfo
     'devices': Array<ClusterStorageDeviceInfo> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'devices': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class ClusterStorageInfo extends BaseModel implements IClusterStorageInfo
     */
     public static hasDefaultValue(prop) {
         return (ClusterStorageInfo.propInfo[prop] != null &&
-                        ClusterStorageInfo.propInfo[prop].default != null &&
-                        ClusterStorageInfo.propInfo[prop].default != '');
+                        ClusterStorageInfo.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class ClusterStorageInfo extends BaseModel implements IClusterStorageInfo
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterStorageDeviceInfo>('devices', this['devices'], ClusterStorageDeviceInfo);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('devices') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('devices').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

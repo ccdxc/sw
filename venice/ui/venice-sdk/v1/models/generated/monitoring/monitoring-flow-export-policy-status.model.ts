@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class MonitoringFlowExportPolicyStatus extends BaseModel implements IMoni
     */
     public static hasDefaultValue(prop) {
         return (MonitoringFlowExportPolicyStatus.propInfo[prop] != null &&
-                        MonitoringFlowExportPolicyStatus.propInfo[prop].default != null &&
-                        MonitoringFlowExportPolicyStatus.propInfo[prop].default != '');
+                        MonitoringFlowExportPolicyStatus.propInfo[prop].default != null);
     }
 
     /**

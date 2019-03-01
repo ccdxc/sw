@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringEventPolicySpec_format,  MonitoringEventPolicySpec_format_uihint  } from './enums';
@@ -29,15 +29,19 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
         'format': {
             enum: MonitoringEventPolicySpec_format_uihint,
             default: 'SYSLOG_BSD',
+            required: true,
             type: 'string'
         },
         'selector': {
+            required: false,
             type: 'object'
         },
         'targets': {
+            required: false,
             type: 'object'
         },
         'config': {
+            required: false,
             type: 'object'
         },
     }
@@ -55,8 +59,7 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     */
     public static hasDefaultValue(prop) {
         return (MonitoringEventPolicySpec.propInfo[prop] != null &&
-                        MonitoringEventPolicySpec.propInfo[prop].default != null &&
-                        MonitoringEventPolicySpec.propInfo[prop].default != '');
+                        MonitoringEventPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -105,13 +108,28 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringEventPolicySpec_format), ]), MonitoringEventPolicySpec.propInfo['format'].description),
-                'selector': this['selector'].$formGroup,
+                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringEventPolicySpec_format), ]), MonitoringEventPolicySpec.propInfo['format']),
+                'selector': CustomFormGroup(this['selector'].$formGroup, MonitoringEventPolicySpec.propInfo['selector'].required),
                 'targets': new FormArray([]),
-                'config': this['config'].$formGroup,
+                'config': CustomFormGroup(this['config'].$formGroup, MonitoringEventPolicySpec.propInfo['config'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringExportConfig>('targets', this['targets'], MonitoringExportConfig);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('selector') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('selector').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('targets') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('targets').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('config') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('config').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

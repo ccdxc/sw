@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,12 +21,15 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
     'role': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'users': {
+            required: false,
             type: 'Array<string>'
         },
         'user-groups': {
+            required: false,
             type: 'Array<string>'
         },
         'role': {
+            required: false,
             type: 'string'
         },
     }
@@ -44,8 +47,7 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
     */
     public static hasDefaultValue(prop) {
         return (AuthRoleBindingSpec.propInfo[prop] != null &&
-                        AuthRoleBindingSpec.propInfo[prop].default != null &&
-                        AuthRoleBindingSpec.propInfo[prop].default != '');
+                        AuthRoleBindingSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -92,9 +94,9 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'users': CustomFormControl(new FormControl(this['users']), AuthRoleBindingSpec.propInfo['users'].description),
-                'user-groups': CustomFormControl(new FormControl(this['user-groups']), AuthRoleBindingSpec.propInfo['user-groups'].description),
-                'role': CustomFormControl(new FormControl(this['role']), AuthRoleBindingSpec.propInfo['role'].description),
+                'users': CustomFormControl(new FormControl(this['users']), AuthRoleBindingSpec.propInfo['users']),
+                'user-groups': CustomFormControl(new FormControl(this['user-groups']), AuthRoleBindingSpec.propInfo['user-groups']),
+                'role': CustomFormControl(new FormControl(this['role']), AuthRoleBindingSpec.propInfo['role']),
             });
         }
         return this._formGroup;

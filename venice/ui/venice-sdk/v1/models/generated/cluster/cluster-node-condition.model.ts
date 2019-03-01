@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterNodeCondition_type,  ClusterNodeCondition_type_uihint  } from './enums';
@@ -30,21 +30,26 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
         'type': {
             enum: ClusterNodeCondition_type_uihint,
             default: 'LEADER',
+            required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterNodeCondition_status_uihint,
             default: 'UNKNOWN',
+            required: true,
             type: 'string'
         },
         'last-transition-time': {
+            required: false,
             type: 'string'
         },
         'reason': {
+            required: false,
             type: 'string'
         },
         'message': {
             description:  'A detailed message indicating details about the transition.',
+            required: false,
             type: 'string'
         },
     }
@@ -62,8 +67,7 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     */
     public static hasDefaultValue(prop) {
         return (ClusterNodeCondition.propInfo[prop] != null &&
-                        ClusterNodeCondition.propInfo[prop].default != null &&
-                        ClusterNodeCondition.propInfo[prop].default != '');
+                        ClusterNodeCondition.propInfo[prop].default != null);
     }
 
     /**
@@ -122,11 +126,11 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterNodeCondition_type), ]), ClusterNodeCondition.propInfo['type'].description),
-                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(ClusterNodeCondition_status), ]), ClusterNodeCondition.propInfo['status'].description),
-                'last-transition-time': CustomFormControl(new FormControl(this['last-transition-time']), ClusterNodeCondition.propInfo['last-transition-time'].description),
-                'reason': CustomFormControl(new FormControl(this['reason']), ClusterNodeCondition.propInfo['reason'].description),
-                'message': CustomFormControl(new FormControl(this['message']), ClusterNodeCondition.propInfo['message'].description),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterNodeCondition_type), ]), ClusterNodeCondition.propInfo['type']),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(ClusterNodeCondition_status), ]), ClusterNodeCondition.propInfo['status']),
+                'last-transition-time': CustomFormControl(new FormControl(this['last-transition-time']), ClusterNodeCondition.propInfo['last-transition-time']),
+                'reason': CustomFormControl(new FormControl(this['reason']), ClusterNodeCondition.propInfo['reason']),
+                'message': CustomFormControl(new FormControl(this['message']), ClusterNodeCondition.propInfo['message']),
             });
         }
         return this._formGroup;

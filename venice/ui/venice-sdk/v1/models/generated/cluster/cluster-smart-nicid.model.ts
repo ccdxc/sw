@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     'mac-address': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
+            required: false,
             type: 'string'
         },
         'mac-address': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     */
     public static hasDefaultValue(prop) {
         return (ClusterSmartNICID.propInfo[prop] != null &&
-                        ClusterSmartNICID.propInfo[prop].default != null &&
-                        ClusterSmartNICID.propInfo[prop].default != '');
+                        ClusterSmartNICID.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': CustomFormControl(new FormControl(this['name']), ClusterSmartNICID.propInfo['name'].description),
-                'mac-address': CustomFormControl(new FormControl(this['mac-address']), ClusterSmartNICID.propInfo['mac-address'].description),
+                'name': CustomFormControl(new FormControl(this['name']), ClusterSmartNICID.propInfo['name']),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address']), ClusterSmartNICID.propInfo['mac-address']),
             });
         }
         return this._formGroup;

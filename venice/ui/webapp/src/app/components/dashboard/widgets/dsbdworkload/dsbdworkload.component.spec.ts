@@ -6,6 +6,7 @@ import { DsbdwidgetheaderComponent } from '@app/components/shared/dsbdwidgethead
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { WorkloadService } from '@app/services/workload.service';
 import { WidgetsModule } from 'web-app-framework';
 
@@ -38,6 +39,7 @@ describe('DsbdworkloadComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         WorkloadService,

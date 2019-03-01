@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthLdapAttributeMapping, IAuthLdapAttributeMapping } from './auth-ldap-attribute-mapping.model';
@@ -29,21 +29,27 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     'servers': Array<AuthLdapServer> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'enabled': {
+            required: false,
             type: 'boolean'
         },
         'base-dn': {
+            required: false,
             type: 'string'
         },
         'bind-dn': {
+            required: false,
             type: 'string'
         },
         'bind-password': {
+            required: false,
             type: 'string'
         },
         'attribute-mapping': {
+            required: false,
             type: 'object'
         },
         'servers': {
+            required: false,
             type: 'object'
         },
     }
@@ -61,8 +67,7 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     */
     public static hasDefaultValue(prop) {
         return (AuthLdap.propInfo[prop] != null &&
-                        AuthLdap.propInfo[prop].default != null &&
-                        AuthLdap.propInfo[prop].default != '');
+                        AuthLdap.propInfo[prop].default != null);
     }
 
     /**
@@ -126,15 +131,25 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthLdap.propInfo['enabled'].description),
-                'base-dn': CustomFormControl(new FormControl(this['base-dn']), AuthLdap.propInfo['base-dn'].description),
-                'bind-dn': CustomFormControl(new FormControl(this['bind-dn']), AuthLdap.propInfo['bind-dn'].description),
-                'bind-password': CustomFormControl(new FormControl(this['bind-password']), AuthLdap.propInfo['bind-password'].description),
-                'attribute-mapping': this['attribute-mapping'].$formGroup,
+                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthLdap.propInfo['enabled']),
+                'base-dn': CustomFormControl(new FormControl(this['base-dn']), AuthLdap.propInfo['base-dn']),
+                'bind-dn': CustomFormControl(new FormControl(this['bind-dn']), AuthLdap.propInfo['bind-dn']),
+                'bind-password': CustomFormControl(new FormControl(this['bind-password']), AuthLdap.propInfo['bind-password']),
+                'attribute-mapping': CustomFormGroup(this['attribute-mapping'].$formGroup, AuthLdap.propInfo['attribute-mapping'].required),
                 'servers': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<AuthLdapServer>('servers', this['servers'], AuthLdapServer);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('attribute-mapping') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('attribute-mapping').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('servers') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('servers').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

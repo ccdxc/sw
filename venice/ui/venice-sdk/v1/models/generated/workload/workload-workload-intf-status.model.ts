@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     'endpoint': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'ip-addresses': {
+            required: false,
             type: 'Array<string>'
         },
         'endpoint': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     */
     public static hasDefaultValue(prop) {
         return (WorkloadWorkloadIntfStatus.propInfo[prop] != null &&
-                        WorkloadWorkloadIntfStatus.propInfo[prop].default != null &&
-                        WorkloadWorkloadIntfStatus.propInfo[prop].default != '');
+                        WorkloadWorkloadIntfStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -79,8 +80,8 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), WorkloadWorkloadIntfStatus.propInfo['ip-addresses'].description),
-                'endpoint': CustomFormControl(new FormControl(this['endpoint']), WorkloadWorkloadIntfStatus.propInfo['endpoint'].description),
+                'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), WorkloadWorkloadIntfStatus.propInfo['ip-addresses']),
+                'endpoint': CustomFormControl(new FormControl(this['endpoint']), WorkloadWorkloadIntfStatus.propInfo['endpoint']),
             });
         }
         return this._formGroup;

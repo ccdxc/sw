@@ -18,7 +18,7 @@ import { Subject, Subscription } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { LogService } from '@app/services/logging/log.service';
 import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
-import { MessageService } from 'primeng/primeng';
+import { MessageService, ConfirmationService, Confirmation } from 'primeng/primeng';
 
 interface Message {
   type: Eventtypes;
@@ -84,6 +84,7 @@ export class ControllerService {
     protected matIconRegistry: MatIconRegistry,
     protected logger: LogService,
     protected messageService: MessageService,
+    protected confirmService: ConfirmationService,
   ) {
     this._subscribeToEvents();
     this._registerSVGIcons();
@@ -422,5 +423,9 @@ export class ControllerService {
       summary: summary,
       detail: errorMsg
     });
+  }
+
+  invokeConfirm(confirmMessage: Confirmation) {
+    this.confirmService.confirm(confirmMessage);
   }
 }

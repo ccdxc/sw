@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorStartConditions, IMonitoringMirrorStartConditions } from './monitoring-mirror-start-conditions.model';
@@ -32,23 +32,29 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'packet-size': {
+            required: false,
             type: 'number'
         },
         'start-condition': {
+            required: false,
             type: 'object'
         },
         'stop-condition': {
+            required: false,
             type: 'object'
         },
         'collectors': {
+            required: false,
             type: 'object'
         },
         'match-rules': {
+            required: false,
             type: 'object'
         },
         'packet-filters': {
             enum: MonitoringMirrorSessionSpec_packet_filters_uihint,
             default: 'ALL_PKTS',
+            required: true,
             type: 'Array<string>'
         },
     }
@@ -66,8 +72,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     */
     public static hasDefaultValue(prop) {
         return (MonitoringMirrorSessionSpec.propInfo[prop] != null &&
-                        MonitoringMirrorSessionSpec.propInfo[prop].default != null &&
-                        MonitoringMirrorSessionSpec.propInfo[prop].default != '');
+                        MonitoringMirrorSessionSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -130,17 +135,37 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'packet-size': CustomFormControl(new FormControl(this['packet-size']), MonitoringMirrorSessionSpec.propInfo['packet-size'].description),
-                'start-condition': this['start-condition'].$formGroup,
-                'stop-condition': this['stop-condition'].$formGroup,
+                'packet-size': CustomFormControl(new FormControl(this['packet-size']), MonitoringMirrorSessionSpec.propInfo['packet-size']),
+                'start-condition': CustomFormGroup(this['start-condition'].$formGroup, MonitoringMirrorSessionSpec.propInfo['start-condition'].required),
+                'stop-condition': CustomFormGroup(this['stop-condition'].$formGroup, MonitoringMirrorSessionSpec.propInfo['stop-condition'].required),
                 'collectors': new FormArray([]),
                 'match-rules': new FormArray([]),
-                'packet-filters': CustomFormControl(new FormControl(this['packet-filters']), MonitoringMirrorSessionSpec.propInfo['packet-filters'].description),
+                'packet-filters': CustomFormControl(new FormControl(this['packet-filters']), MonitoringMirrorSessionSpec.propInfo['packet-filters']),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringMirrorCollector>('collectors', this['collectors'], MonitoringMirrorCollector);
             // generate FormArray control elements
             this.fillFormArray<MonitoringMatchRule>('match-rules', this['match-rules'], MonitoringMatchRule);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('start-condition') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('start-condition').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('stop-condition') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('stop-condition').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('collectors') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('collectors').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('match-rules') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('match-rules').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

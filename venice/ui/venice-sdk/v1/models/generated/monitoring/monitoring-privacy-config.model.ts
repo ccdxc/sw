@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringPrivacyConfig_algo,  } from './enums';
@@ -23,10 +23,12 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
         'algo': {
             enum: MonitoringPrivacyConfig_algo,
             default: 'DES56',
+            required: true,
             type: 'string'
         },
         'password': {
             description:  'Password contains the privacy password.',
+            required: false,
             type: 'string'
         },
     }
@@ -44,8 +46,7 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     */
     public static hasDefaultValue(prop) {
         return (MonitoringPrivacyConfig.propInfo[prop] != null &&
-                        MonitoringPrivacyConfig.propInfo[prop].default != null &&
-                        MonitoringPrivacyConfig.propInfo[prop].default != '');
+                        MonitoringPrivacyConfig.propInfo[prop].default != null);
     }
 
     /**
@@ -83,8 +84,8 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'algo': CustomFormControl(new FormControl(this['algo'], [required, enumValidator(MonitoringPrivacyConfig_algo), ]), MonitoringPrivacyConfig.propInfo['algo'].description),
-                'password': CustomFormControl(new FormControl(this['password']), MonitoringPrivacyConfig.propInfo['password'].description),
+                'algo': CustomFormControl(new FormControl(this['algo'], [required, enumValidator(MonitoringPrivacyConfig_algo), ]), MonitoringPrivacyConfig.propInfo['algo']),
+                'password': CustomFormControl(new FormControl(this['password']), MonitoringPrivacyConfig.propInfo['password']),
             });
         }
         return this._formGroup;

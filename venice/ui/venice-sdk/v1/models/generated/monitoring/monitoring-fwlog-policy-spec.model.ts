@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
@@ -27,19 +27,23 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
     'config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'targets': {
+            required: false,
             type: 'object'
         },
         'format': {
             enum: MonitoringFwlogPolicySpec_format_uihint,
             default: 'SYSLOG_BSD',
+            required: true,
             type: 'string'
         },
         'filter': {
             enum: MonitoringFwlogPolicySpec_filter_uihint,
             default: 'FIREWALL_ACTION_ALL',
+            required: true,
             type: 'Array<string>'
         },
         'config': {
+            required: false,
             type: 'object'
         },
     }
@@ -57,8 +61,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
     */
     public static hasDefaultValue(prop) {
         return (MonitoringFwlogPolicySpec.propInfo[prop] != null &&
-                        MonitoringFwlogPolicySpec.propInfo[prop].default != null &&
-                        MonitoringFwlogPolicySpec.propInfo[prop].default != '');
+                        MonitoringFwlogPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -110,12 +113,22 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'targets': new FormArray([]),
-                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFwlogPolicySpec_format), ]), MonitoringFwlogPolicySpec.propInfo['format'].description),
-                'filter': CustomFormControl(new FormControl(this['filter']), MonitoringFwlogPolicySpec.propInfo['filter'].description),
-                'config': this['config'].$formGroup,
+                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFwlogPolicySpec_format), ]), MonitoringFwlogPolicySpec.propInfo['format']),
+                'filter': CustomFormControl(new FormControl(this['filter']), MonitoringFwlogPolicySpec.propInfo['filter']),
+                'config': CustomFormGroup(this['config'].$formGroup, MonitoringFwlogPolicySpec.propInfo['config'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringExportConfig>('targets', this['targets'], MonitoringExportConfig);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('targets') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('targets').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('config') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('config').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

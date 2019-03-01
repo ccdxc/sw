@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
@@ -22,12 +22,15 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
     'match-prefixes': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workload-selector': {
+            required: false,
             type: 'object'
         },
         'service-labels': {
+            required: false,
             type: 'Array<string>'
         },
         'match-prefixes': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -45,8 +48,7 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
     */
     public static hasDefaultValue(prop) {
         return (SecuritySecurityGroupSpec.propInfo[prop] != null &&
-                        SecuritySecurityGroupSpec.propInfo[prop].default != null &&
-                        SecuritySecurityGroupSpec.propInfo[prop].default != '');
+                        SecuritySecurityGroupSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -92,9 +94,14 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workload-selector': this['workload-selector'].$formGroup,
-                'service-labels': CustomFormControl(new FormControl(this['service-labels']), SecuritySecurityGroupSpec.propInfo['service-labels'].description),
-                'match-prefixes': CustomFormControl(new FormControl(this['match-prefixes']), SecuritySecurityGroupSpec.propInfo['match-prefixes'].description),
+                'workload-selector': CustomFormGroup(this['workload-selector'].$formGroup, SecuritySecurityGroupSpec.propInfo['workload-selector'].required),
+                'service-labels': CustomFormControl(new FormControl(this['service-labels']), SecuritySecurityGroupSpec.propInfo['service-labels']),
+                'match-prefixes': CustomFormControl(new FormControl(this['match-prefixes']), SecuritySecurityGroupSpec.propInfo['match-prefixes']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('workload-selector') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('workload-selector').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

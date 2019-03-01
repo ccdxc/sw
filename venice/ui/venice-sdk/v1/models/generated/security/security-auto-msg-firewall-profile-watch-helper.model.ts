@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityAutoMsgFirewallProfileWatchHelperWatchEvent, ISecurityAutoMsgFirewallProfileWatchHelperWatchEvent } from './security-auto-msg-firewall-profile-watch-helper-watch-event.model';
@@ -18,6 +18,7 @@ export class SecurityAutoMsgFirewallProfileWatchHelper extends BaseModel impleme
     'events': Array<SecurityAutoMsgFirewallProfileWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'events': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class SecurityAutoMsgFirewallProfileWatchHelper extends BaseModel impleme
     */
     public static hasDefaultValue(prop) {
         return (SecurityAutoMsgFirewallProfileWatchHelper.propInfo[prop] != null &&
-                        SecurityAutoMsgFirewallProfileWatchHelper.propInfo[prop].default != null &&
-                        SecurityAutoMsgFirewallProfileWatchHelper.propInfo[prop].default != '');
+                        SecurityAutoMsgFirewallProfileWatchHelper.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class SecurityAutoMsgFirewallProfileWatchHelper extends BaseModel impleme
             });
             // generate FormArray control elements
             this.fillFormArray<SecurityAutoMsgFirewallProfileWatchHelperWatchEvent>('events', this['events'], SecurityAutoMsgFirewallProfileWatchHelperWatchEvent);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('events') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('events').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

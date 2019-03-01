@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class SearchKindAggregation extends BaseModel implements ISearchKindAggre
     'kinds': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kinds': {
+            required: false,
             type: 'object'
         },
     }
@@ -34,8 +35,7 @@ export class SearchKindAggregation extends BaseModel implements ISearchKindAggre
     */
     public static hasDefaultValue(prop) {
         return (SearchKindAggregation.propInfo[prop] != null &&
-                        SearchKindAggregation.propInfo[prop].default != null &&
-                        SearchKindAggregation.propInfo[prop].default != '');
+                        SearchKindAggregation.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,7 @@ export class SearchKindAggregation extends BaseModel implements ISearchKindAggre
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kinds': CustomFormControl(new FormControl(this['kinds']), SearchKindAggregation.propInfo['kinds'].description),
+                'kinds': CustomFormControl(new FormControl(this['kinds']), SearchKindAggregation.propInfo['kinds']),
             });
         }
         return this._formGroup;

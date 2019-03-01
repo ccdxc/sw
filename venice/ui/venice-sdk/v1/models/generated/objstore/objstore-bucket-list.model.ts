@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
@@ -25,15 +25,19 @@ export class ObjstoreBucketList extends BaseModel implements IObjstoreBucketList
     'items': Array<ObjstoreBucket> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'list-meta': {
+            required: false,
             type: 'object'
         },
         'items': {
+            required: false,
             type: 'object'
         },
     }
@@ -51,8 +55,7 @@ export class ObjstoreBucketList extends BaseModel implements IObjstoreBucketList
     */
     public static hasDefaultValue(prop) {
         return (ObjstoreBucketList.propInfo[prop] != null &&
-                        ObjstoreBucketList.propInfo[prop].default != null &&
-                        ObjstoreBucketList.propInfo[prop].default != '');
+                        ObjstoreBucketList.propInfo[prop].default != null);
     }
 
     /**
@@ -102,13 +105,23 @@ export class ObjstoreBucketList extends BaseModel implements IObjstoreBucketList
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), ObjstoreBucketList.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), ObjstoreBucketList.propInfo['api-version'].description),
-                'list-meta': this['list-meta'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), ObjstoreBucketList.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ObjstoreBucketList.propInfo['api-version']),
+                'list-meta': CustomFormGroup(this['list-meta'].$formGroup, ObjstoreBucketList.propInfo['list-meta'].required),
                 'items': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<ObjstoreBucket>('items', this['items'], ObjstoreBucket);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('list-meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('list-meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('items') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('items').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

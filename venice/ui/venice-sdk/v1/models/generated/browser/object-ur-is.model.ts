@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ObjectURIs_ref_type,  } from './enums';
@@ -23,9 +23,11 @@ export class ObjectURIs extends BaseModel implements IObjectURIs {
         'ref-type': {
             enum: ObjectURIs_ref_type,
             default: 'NamedReference',
+            required: true,
             type: 'string'
         },
         'uri': {
+            required: false,
             type: 'object'
         },
     }
@@ -43,8 +45,7 @@ export class ObjectURIs extends BaseModel implements IObjectURIs {
     */
     public static hasDefaultValue(prop) {
         return (ObjectURIs.propInfo[prop] != null &&
-                        ObjectURIs.propInfo[prop].default != null &&
-                        ObjectURIs.propInfo[prop].default != '');
+                        ObjectURIs.propInfo[prop].default != null);
     }
 
     /**
@@ -81,11 +82,16 @@ export class ObjectURIs extends BaseModel implements IObjectURIs {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ref-type': CustomFormControl(new FormControl(this['ref-type'], [required, enumValidator(ObjectURIs_ref_type), ]), ObjectURIs.propInfo['ref-type'].description),
+                'ref-type': CustomFormControl(new FormControl(this['ref-type'], [required, enumValidator(ObjectURIs_ref_type), ]), ObjectURIs.propInfo['ref-type']),
                 'uri': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<ApiObjectRef>('uri', this['uri'], ApiObjectRef);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('uri') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('uri').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

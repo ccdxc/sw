@@ -171,8 +171,12 @@ export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, O
     if (this.isActiveTab) {
       this.setDefaultToolbar();
     }
+    this.postNgInit();
   }
 
+
+  // Hook to add logic to the initialization for classes extending this component
+  postNgInit() { }
 
   isInEditMode() {
     return this.expandedRowData != null;
@@ -250,25 +254,28 @@ export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, O
     if (this.isInEditMode()) {
       return;
     }
-    const r = confirm(this.generateDeleteConfirmMsg(object));
-    if (r === false) {
-      return;
-    }
-    const sub = this.deleteRecord(object).subscribe(
-      (response) => {
-        this.controllerService.invokeSuccessToaster('Delete Successful', this.generateDeleteSucessMsg(object));
-      },
-      (error) => {
-        if (error.body instanceof Error) {
-          console.error('Service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.error('Service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-        const errorMsg = error.body != null ? error.body.message : '';
-        this.controllerService.invokeErrorToaster('Delete Failed', errorMsg);
+    this.controllerService.invokeConfirm({
+      header: this.generateDeleteConfirmMsg(object),
+      message: 'This action cannot be reversed',
+      acceptLabel: 'Delete',
+      accept: () => {
+        const sub = this.deleteRecord(object).subscribe(
+          (response) => {
+            this.controllerService.invokeSuccessToaster('Delete Successful', this.generateDeleteSucessMsg(object));
+          },
+          (error) => {
+            if (error.body instanceof Error) {
+              console.error('Service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+            } else {
+              console.error('Service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+            }
+            const errorMsg = error.body != null ? error.body.message : '';
+            this.controllerService.invokeErrorToaster('Delete Failed', errorMsg);
+          }
+        );
+        this.subscriptions.push(sub);
       }
-    );
-    this.subscriptions.push(sub);
+    });
   }
 
   ngOnDestroy() {

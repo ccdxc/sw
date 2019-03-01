@@ -16,6 +16,7 @@ import { Store } from '@ngrx/store';
 ----------------------------------------------------- */
 import { AppComponent } from '@app/app.component';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
@@ -68,6 +69,7 @@ describe('AppComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         AlerttableService,
         AuthService,
         LogService,

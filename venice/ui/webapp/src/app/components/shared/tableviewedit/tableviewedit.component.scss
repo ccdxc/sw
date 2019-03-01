@@ -19,55 +19,9 @@
   @include primary-font();
 }
 
-// .eventalertpolicies-button {
-//     padding-left: 10px;
-//     padding-right: 10px;
-// }
-
-// .eventalertpolicies-search {
-//   @include primary-font(16px, #484848);
-//   margin-left: 15px;
-
-//   mat-form-field {
-//     @include global-mat-form-field;
-//   }
-// }
-
-// .eventalertpolicies-icon {
-//   position: absolute;
-//   top: 8px;
-//   font-size: 18px;
-// }
-
-// .eventalertpolicies-column-action-div {
-//   display: inline-flex;
-// }
-
-// .eventalertpolicies-column-action {
-//   width: 100px !important;
-// }
-
-// .eventalertpolicies-column-name {
-//   width: 20%;
-// }
-
-// .eventalertpolicies-column-severity {
-//   width: 150px !important;
-// }
-
-// .eventalertpolicies-column-totalhits,
-// .eventalertpolicies-column-openalerts {
-//   width: 10%
-// }
-
-// .eventalertpolicies-column-acknowledgedalerts {
-//   width: 100px;
-// }
-
-// // This column also includes the action items so we add an extra 100 px
-// th.eventalertpolicies-column-acknowledgedalerts {
-//   width: 200px !important;
-// }
+.tableviewedit-actiontd {
+  overflow: visible !important;
+}
 
 .tableviewedit-rowexpand {
   overflow: hidden;

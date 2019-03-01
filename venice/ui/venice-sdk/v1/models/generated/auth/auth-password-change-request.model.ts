@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -30,20 +30,25 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
     'new-password': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
         'old-password': {
             description:  'length of string should be at least 1 ',
+            required: true,
             type: 'string'
         },
         'new-password': {
             description:  'length of string should be at least 1 ',
+            required: true,
             type: 'string'
         },
     }
@@ -61,8 +66,7 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
     */
     public static hasDefaultValue(prop) {
         return (AuthPasswordChangeRequest.propInfo[prop] != null &&
-                        AuthPasswordChangeRequest.propInfo[prop].default != null &&
-                        AuthPasswordChangeRequest.propInfo[prop].default != '');
+                        AuthPasswordChangeRequest.propInfo[prop].default != null);
     }
 
     /**
@@ -120,11 +124,16 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), AuthPasswordChangeRequest.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), AuthPasswordChangeRequest.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
-                'old-password': CustomFormControl(new FormControl(this['old-password'], [required, minLengthValidator(1), ]), AuthPasswordChangeRequest.propInfo['old-password'].description),
-                'new-password': CustomFormControl(new FormControl(this['new-password'], [required, minLengthValidator(1), ]), AuthPasswordChangeRequest.propInfo['new-password'].description),
+                'kind': CustomFormControl(new FormControl(this['kind']), AuthPasswordChangeRequest.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), AuthPasswordChangeRequest.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, AuthPasswordChangeRequest.propInfo['meta'].required),
+                'old-password': CustomFormControl(new FormControl(this['old-password'], [required, minLengthValidator(1), ]), AuthPasswordChangeRequest.propInfo['old-password']),
+                'new-password': CustomFormControl(new FormControl(this['new-password'], [required, minLengthValidator(1), ]), AuthPasswordChangeRequest.propInfo['new-password']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

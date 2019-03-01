@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryFwlog, ITelemetry_queryFwlog } from './telemetry-query-fwlog.model';
@@ -20,9 +20,11 @@ export class Telemetry_queryFwlogsQueryResult extends BaseModel implements ITele
     'logs': Array<Telemetry_queryFwlog> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'statement_id': {
+            required: false,
             type: 'number'
         },
         'logs': {
+            required: false,
             type: 'object'
         },
     }
@@ -40,8 +42,7 @@ export class Telemetry_queryFwlogsQueryResult extends BaseModel implements ITele
     */
     public static hasDefaultValue(prop) {
         return (Telemetry_queryFwlogsQueryResult.propInfo[prop] != null &&
-                        Telemetry_queryFwlogsQueryResult.propInfo[prop].default != null &&
-                        Telemetry_queryFwlogsQueryResult.propInfo[prop].default != '');
+                        Telemetry_queryFwlogsQueryResult.propInfo[prop].default != null);
     }
 
     /**
@@ -78,11 +79,16 @@ export class Telemetry_queryFwlogsQueryResult extends BaseModel implements ITele
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'statement_id': CustomFormControl(new FormControl(this['statement_id']), Telemetry_queryFwlogsQueryResult.propInfo['statement_id'].description),
+                'statement_id': CustomFormControl(new FormControl(this['statement_id']), Telemetry_queryFwlogsQueryResult.propInfo['statement_id']),
                 'logs': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<Telemetry_queryFwlog>('logs', this['logs'], Telemetry_queryFwlog);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('logs') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('logs').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

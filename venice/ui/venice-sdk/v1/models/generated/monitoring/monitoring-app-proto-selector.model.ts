@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -23,9 +23,11 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
         'ports': {
             description:  'should be a valid layer3 or layer 4 protocol and port/type ',
             hint:  'tcp/1234, arp',
+            required: true,
             type: 'Array<string>'
         },
         'applications': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -43,8 +45,7 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAppProtoSelector.propInfo[prop] != null &&
-                        MonitoringAppProtoSelector.propInfo[prop].default != null &&
-                        MonitoringAppProtoSelector.propInfo[prop].default != '');
+                        MonitoringAppProtoSelector.propInfo[prop].default != null);
     }
 
     /**
@@ -84,8 +85,8 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ports': CustomFormControl(new FormControl(this['ports']), MonitoringAppProtoSelector.propInfo['ports'].description),
-                'applications': CustomFormControl(new FormControl(this['applications']), MonitoringAppProtoSelector.propInfo['applications'].description),
+                'ports': CustomFormControl(new FormControl(this['ports']), MonitoringAppProtoSelector.propInfo['ports']),
+                'applications': CustomFormControl(new FormControl(this['applications']), MonitoringAppProtoSelector.propInfo['applications']),
             });
         }
         return this._formGroup;

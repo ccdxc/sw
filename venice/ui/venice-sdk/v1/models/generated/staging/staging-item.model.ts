@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiAny, IApiAny } from './api-any.model';
@@ -22,12 +22,15 @@ export class StagingItem extends BaseModel implements IStagingItem {
     'object': ApiAny = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'uri': {
+            required: false,
             type: 'string'
         },
         'method': {
+            required: false,
             type: 'string'
         },
         'object': {
+            required: false,
             type: 'object'
         },
     }
@@ -45,8 +48,7 @@ export class StagingItem extends BaseModel implements IStagingItem {
     */
     public static hasDefaultValue(prop) {
         return (StagingItem.propInfo[prop] != null &&
-                        StagingItem.propInfo[prop].default != null &&
-                        StagingItem.propInfo[prop].default != '');
+                        StagingItem.propInfo[prop].default != null);
     }
 
     /**
@@ -90,9 +92,14 @@ export class StagingItem extends BaseModel implements IStagingItem {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'uri': CustomFormControl(new FormControl(this['uri']), StagingItem.propInfo['uri'].description),
-                'method': CustomFormControl(new FormControl(this['method']), StagingItem.propInfo['method'].description),
-                'object': this['object'].$formGroup,
+                'uri': CustomFormControl(new FormControl(this['uri']), StagingItem.propInfo['uri']),
+                'method': CustomFormControl(new FormControl(this['method']), StagingItem.propInfo['method']),
+                'object': CustomFormGroup(this['object'].$formGroup, StagingItem.propInfo['object'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('object') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('object').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

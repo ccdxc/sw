@@ -7,6 +7,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
@@ -21,7 +22,7 @@ describe('SecurityappsComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SecurityappsComponent ],
+      declarations: [SecurityappsComponent],
       imports: [
         RouterTestingModule,
         NoopAnimationsModule,
@@ -31,6 +32,7 @@ describe('SecurityappsComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,
@@ -39,7 +41,7 @@ describe('SecurityappsComponent', () => {
         MessageService
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

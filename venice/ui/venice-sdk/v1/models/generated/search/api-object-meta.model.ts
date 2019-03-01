@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -51,40 +51,50 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     'self-link': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
+            required: false,
             type: 'string'
         },
         'tenant': {
+            required: false,
             type: 'string'
         },
         'namespace': {
+            required: false,
             type: 'string'
         },
         'generation-id': {
             description:  'GenerationID is the generation Id for the object. This is incremented anytime there  is an update to the user intent, including Spec update and any update to ObjectMeta.  System generated and updated, not updatable by user.',
+            required: false,
             type: 'string'
         },
         'resource-version': {
             description:  'Resource version in the object store. This is updated anytime there is any change to the object.  System generated and updated, not updatable by user.',
+            required: false,
             type: 'string'
         },
         'uuid': {
             description:  'UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.',
+            required: false,
             type: 'string'
         },
         'labels': {
             description:  'Labels are arbitrary (key,value) pairs associated with any object.',
+            required: false,
             type: 'object'
         },
         'creation-time': {
             description:  'CreationTime is the creation time of the object  System generated and updated, not updatable by user.',
+            required: false,
             type: 'Date'
         },
         'mod-time': {
             description:  'ModTime is the Last Modification time of the object  System generated and updated, not updatable by user.',
+            required: false,
             type: 'Date'
         },
         'self-link': {
             description:  'SelfLink is a link for accessing this object. When the object is served from the API-GW it is the  URI path. Example:    - &quot;/v1/tenants/tenants/tenant2&quot;   System generated and updated, not updatable by user.',
+            required: false,
             type: 'string'
         },
     }
@@ -102,8 +112,7 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     */
     public static hasDefaultValue(prop) {
         return (ApiObjectMeta.propInfo[prop] != null &&
-                        ApiObjectMeta.propInfo[prop].default != null &&
-                        ApiObjectMeta.propInfo[prop].default != '');
+                        ApiObjectMeta.propInfo[prop].default != null);
     }
 
     /**
@@ -197,16 +206,16 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': CustomFormControl(new FormControl(this['name']), ApiObjectMeta.propInfo['name'].description),
-                'tenant': CustomFormControl(new FormControl(this['tenant']), ApiObjectMeta.propInfo['tenant'].description),
-                'namespace': CustomFormControl(new FormControl(this['namespace']), ApiObjectMeta.propInfo['namespace'].description),
-                'generation-id': CustomFormControl(new FormControl(this['generation-id']), ApiObjectMeta.propInfo['generation-id'].description),
-                'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiObjectMeta.propInfo['resource-version'].description),
-                'uuid': CustomFormControl(new FormControl(this['uuid']), ApiObjectMeta.propInfo['uuid'].description),
-                'labels': CustomFormControl(new FormControl(this['labels']), ApiObjectMeta.propInfo['labels'].description),
-                'creation-time': CustomFormControl(new FormControl(this['creation-time']), ApiObjectMeta.propInfo['creation-time'].description),
-                'mod-time': CustomFormControl(new FormControl(this['mod-time']), ApiObjectMeta.propInfo['mod-time'].description),
-                'self-link': CustomFormControl(new FormControl(this['self-link']), ApiObjectMeta.propInfo['self-link'].description),
+                'name': CustomFormControl(new FormControl(this['name']), ApiObjectMeta.propInfo['name']),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), ApiObjectMeta.propInfo['tenant']),
+                'namespace': CustomFormControl(new FormControl(this['namespace']), ApiObjectMeta.propInfo['namespace']),
+                'generation-id': CustomFormControl(new FormControl(this['generation-id']), ApiObjectMeta.propInfo['generation-id']),
+                'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiObjectMeta.propInfo['resource-version']),
+                'uuid': CustomFormControl(new FormControl(this['uuid']), ApiObjectMeta.propInfo['uuid']),
+                'labels': CustomFormControl(new FormControl(this['labels']), ApiObjectMeta.propInfo['labels']),
+                'creation-time': CustomFormControl(new FormControl(this['creation-time']), ApiObjectMeta.propInfo['creation-time']),
+                'mod-time': CustomFormControl(new FormControl(this['mod-time']), ApiObjectMeta.propInfo['mod-time']),
+                'self-link': CustomFormControl(new FormControl(this['self-link']), ApiObjectMeta.propInfo['self-link']),
             });
         }
         return this._formGroup;

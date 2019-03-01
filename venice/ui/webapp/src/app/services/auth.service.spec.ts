@@ -7,13 +7,14 @@ import { AuthService } from './auth.service';
 import { ControllerService } from './controller.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService, ConfirmationService } from 'primeng/primeng';
 
 describe('AuthService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [AuthService,
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

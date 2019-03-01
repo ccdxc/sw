@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -28,12 +28,14 @@ export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringS
             default: '48h',
             description:  'RetentionTime defines for how long to keep the stats data before it is deleted The value is specified as a string format to be hours, days, or months etc. e.g. &#x27;24hrs&#x27;, &#x27;72hours&#x27;, &#x27;4days&#x27;, &#x27;6d&#x27;, &#x27;2months&#x27;, &#x27;4mo&#x27;, &#x27;1yr&#x27; Default is 48h.',
             hint:  '2h',
+            required: true,
             type: 'string'
         },
         'downsample-retention-time': {
             default: '168h',
             description:  'should be a valid time duration ',
             hint:  '2h',
+            required: true,
             type: 'string'
         },
     }
@@ -51,8 +53,7 @@ export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringS
     */
     public static hasDefaultValue(prop) {
         return (MonitoringStatsPolicySpec.propInfo[prop] != null &&
-                        MonitoringStatsPolicySpec.propInfo[prop].default != null &&
-                        MonitoringStatsPolicySpec.propInfo[prop].default != '');
+                        MonitoringStatsPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -90,8 +91,8 @@ export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'retention-time': CustomFormControl(new FormControl(this['retention-time'], [required, ]), MonitoringStatsPolicySpec.propInfo['retention-time'].description),
-                'downsample-retention-time': CustomFormControl(new FormControl(this['downsample-retention-time'], [required, ]), MonitoringStatsPolicySpec.propInfo['downsample-retention-time'].description),
+                'retention-time': CustomFormControl(new FormControl(this['retention-time'], [required, ]), MonitoringStatsPolicySpec.propInfo['retention-time']),
+                'downsample-retention-time': CustomFormControl(new FormControl(this['downsample-retention-time'], [required, ]), MonitoringStatsPolicySpec.propInfo['downsample-retention-time']),
             });
         }
         return this._formGroup;

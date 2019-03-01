@@ -9,6 +9,7 @@ import { TestingUtility } from '@app/common/TestingUtility';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from 'primeng/primeng';
@@ -184,6 +185,7 @@ describe('TablevieweditComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,
@@ -285,10 +287,19 @@ describe('TablevieweditComponent', () => {
     TestingUtility.verifyTable(newItems, component.cols, getTable(), {}, 'Action Template');
 
     // delete an object and check for confirm messages
-    const confirmSpy = spyOn(window, 'confirm').and.returnValue(true);
+
+    const confirmSpy = spyOn(TestBed.get(ConfirmationService), 'confirm');
+    // const confirmSpy = spyOn(window, 'confirm').and.returnValue(true);
     const toasterSpy = spyOn(TestBed.get(ControllerService), 'invokeSuccessToaster');
     component.onDeleteRecord(null, newItems[0]);
-    expect(confirmSpy).toHaveBeenCalledWith(component.generateDeleteConfirmMsg(newItems[0]));
+    expect(confirmSpy).toHaveBeenCalled();
+    const confirmArgs = confirmSpy.calls.mostRecent().args;
+    TestBed.get(ConfirmationService);
+    confirmArgs[0].header = component.generateDeleteConfirmMsg(newItems[0]);
+
+    // Triggering accept
+    confirmArgs[0].accept();
+
     expect(toasterSpy).toHaveBeenCalledWith('Delete Successful', component.generateDeleteSucessMsg(newItems[0]));
     discardPeriodicTasks();
     tick(2000);

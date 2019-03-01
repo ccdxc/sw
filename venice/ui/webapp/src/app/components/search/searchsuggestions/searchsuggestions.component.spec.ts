@@ -13,6 +13,7 @@ import { MatIconRegistry } from '@angular/material';
  Venice UI -  imports
  ------------------*/
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
@@ -47,6 +48,7 @@ describe('SearchsuggestionsComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { StagingItemId, IStagingItemId } from './staging-item-id.model';
@@ -18,6 +18,7 @@ export class StagingClearActionSpec extends BaseModel implements IStagingClearAc
     'items': Array<StagingItemId> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'items': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class StagingClearActionSpec extends BaseModel implements IStagingClearAc
     */
     public static hasDefaultValue(prop) {
         return (StagingClearActionSpec.propInfo[prop] != null &&
-                        StagingClearActionSpec.propInfo[prop].default != null &&
-                        StagingClearActionSpec.propInfo[prop].default != '');
+                        StagingClearActionSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class StagingClearActionSpec extends BaseModel implements IStagingClearAc
             });
             // generate FormArray control elements
             this.fillFormArray<StagingItemId>('items', this['items'], StagingItemId);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('items') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('items').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

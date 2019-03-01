@@ -7,6 +7,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
@@ -40,6 +41,7 @@ describe('SgpoliciesComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

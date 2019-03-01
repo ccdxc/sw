@@ -8,6 +8,7 @@ import { LocalComponent } from '@app/components/settings-group/authpolicy/local/
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { AuthService } from '@app/services/generated/auth.service';
@@ -98,6 +99,7 @@ describe('AuthpolicyComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MessageService,

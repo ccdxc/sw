@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -20,6 +20,7 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'text': {
             description:  'length of string should be between 0 and 256 ',
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -37,8 +38,7 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
     */
     public static hasDefaultValue(prop) {
         return (SearchTextRequirement.propInfo[prop] != null &&
-                        SearchTextRequirement.propInfo[prop].default != null &&
-                        SearchTextRequirement.propInfo[prop].default != '');
+                        SearchTextRequirement.propInfo[prop].default != null);
     }
 
     /**
@@ -70,7 +70,7 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'text': CustomFormControl(new FormControl(this['text']), SearchTextRequirement.propInfo['text'].description),
+                'text': CustomFormControl(new FormControl(this['text']), SearchTextRequirement.propInfo['text']),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -31,22 +31,27 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tenant': {
             description:  'Tenant of the object.',
+            required: false,
             type: 'string'
         },
         'namespace': {
             description:  'Namespace of the object, for scoped objects.',
+            required: false,
             type: 'string'
         },
         'kind': {
             description:  'Kind represents the type of the API object.',
+            required: false,
             type: 'string'
         },
         'name': {
             description:  'Name of the object, unique within a Namespace for scoped objects.',
+            required: false,
             type: 'string'
         },
         'uri': {
             description:  'URI is a link to accessing the referenced object.',
+            required: false,
             type: 'string'
         },
     }
@@ -64,8 +69,7 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     */
     public static hasDefaultValue(prop) {
         return (ApiObjectRef.propInfo[prop] != null &&
-                        ApiObjectRef.propInfo[prop].default != null &&
-                        ApiObjectRef.propInfo[prop].default != '');
+                        ApiObjectRef.propInfo[prop].default != null);
     }
 
     /**
@@ -124,11 +128,11 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tenant': CustomFormControl(new FormControl(this['tenant']), ApiObjectRef.propInfo['tenant'].description),
-                'namespace': CustomFormControl(new FormControl(this['namespace']), ApiObjectRef.propInfo['namespace'].description),
-                'kind': CustomFormControl(new FormControl(this['kind']), ApiObjectRef.propInfo['kind'].description),
-                'name': CustomFormControl(new FormControl(this['name']), ApiObjectRef.propInfo['name'].description),
-                'uri': CustomFormControl(new FormControl(this['uri']), ApiObjectRef.propInfo['uri'].description),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), ApiObjectRef.propInfo['tenant']),
+                'namespace': CustomFormControl(new FormControl(this['namespace']), ApiObjectRef.propInfo['namespace']),
+                'kind': CustomFormControl(new FormControl(this['kind']), ApiObjectRef.propInfo['kind']),
+                'name': CustomFormControl(new FormControl(this['name']), ApiObjectRef.propInfo['name']),
+                'uri': CustomFormControl(new FormControl(this['uri']), ApiObjectRef.propInfo['uri']),
             });
         }
         return this._formGroup;

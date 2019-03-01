@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiStatusResult, IApiStatusResult } from './api-status-result.model';
@@ -33,25 +33,31 @@ export class ApiStatus extends BaseModel implements IApiStatus {
     'object-ref': ApiObjectRef = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'result': {
             description:  'Result contains the status of the operation, success or failure.',
+            required: false,
             type: 'object'
         },
         'message': {
             description:  'Message contains human readable form of the error.',
+            required: false,
             type: 'Array<string>'
         },
         'code': {
             description:  'Code is the HTTP status code.',
+            required: false,
             type: 'number'
         },
         'object-ref': {
             description:  'Reference to the object (optional) for which this status is being sent.',
+            required: false,
             type: 'object'
         },
     }
@@ -69,8 +75,7 @@ export class ApiStatus extends BaseModel implements IApiStatus {
     */
     public static hasDefaultValue(prop) {
         return (ApiStatus.propInfo[prop] != null &&
-                        ApiStatus.propInfo[prop].default != null &&
-                        ApiStatus.propInfo[prop].default != '');
+                        ApiStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -135,12 +140,22 @@ export class ApiStatus extends BaseModel implements IApiStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), ApiStatus.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), ApiStatus.propInfo['api-version'].description),
-                'result': this['result'].$formGroup,
-                'message': CustomFormControl(new FormControl(this['message']), ApiStatus.propInfo['message'].description),
-                'code': CustomFormControl(new FormControl(this['code']), ApiStatus.propInfo['code'].description),
-                'object-ref': this['object-ref'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), ApiStatus.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ApiStatus.propInfo['api-version']),
+                'result': CustomFormGroup(this['result'].$formGroup, ApiStatus.propInfo['result'].required),
+                'message': CustomFormControl(new FormControl(this['message']), ApiStatus.propInfo['message']),
+                'code': CustomFormControl(new FormControl(this['code']), ApiStatus.propInfo['code']),
+                'object-ref': CustomFormGroup(this['object-ref'].$formGroup, ApiStatus.propInfo['object-ref'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('result') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('result').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('object-ref') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('object-ref').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

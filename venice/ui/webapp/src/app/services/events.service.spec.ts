@@ -2,6 +2,7 @@ import { TestBed, inject, fakeAsync, tick } from '@angular/core/testing';
 
 import { EventsService } from './events.service';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
@@ -17,6 +18,7 @@ describe('EventsService', () => {
     TestBed.configureTestingModule({
       providers: [EventsService,
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

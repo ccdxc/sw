@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,12 +21,15 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
     'acknowledged-alerts': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'total-hits': {
+            required: false,
             type: 'number'
         },
         'open-alerts': {
+            required: false,
             type: 'number'
         },
         'acknowledged-alerts': {
+            required: false,
             type: 'number'
         },
     }
@@ -44,8 +47,7 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAlertPolicyStatus.propInfo[prop] != null &&
-                        MonitoringAlertPolicyStatus.propInfo[prop].default != null &&
-                        MonitoringAlertPolicyStatus.propInfo[prop].default != '');
+                        MonitoringAlertPolicyStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -90,9 +92,9 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'total-hits': CustomFormControl(new FormControl(this['total-hits']), MonitoringAlertPolicyStatus.propInfo['total-hits'].description),
-                'open-alerts': CustomFormControl(new FormControl(this['open-alerts']), MonitoringAlertPolicyStatus.propInfo['open-alerts'].description),
-                'acknowledged-alerts': CustomFormControl(new FormControl(this['acknowledged-alerts']), MonitoringAlertPolicyStatus.propInfo['acknowledged-alerts'].description),
+                'total-hits': CustomFormControl(new FormControl(this['total-hits']), MonitoringAlertPolicyStatus.propInfo['total-hits']),
+                'open-alerts': CustomFormControl(new FormControl(this['open-alerts']), MonitoringAlertPolicyStatus.propInfo['open-alerts']),
+                'acknowledged-alerts': CustomFormControl(new FormControl(this['acknowledged-alerts']), MonitoringAlertPolicyStatus.propInfo['acknowledged-alerts']),
             });
         }
         return this._formGroup;

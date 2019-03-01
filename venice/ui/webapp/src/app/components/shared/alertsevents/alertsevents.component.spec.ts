@@ -13,6 +13,7 @@ import { AlerttableService } from '@app/services/alerttable.service';
  Venice web-app imports
  ------------------*/
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
@@ -94,6 +95,7 @@ describe('AlertseventsComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         AlerttableService,

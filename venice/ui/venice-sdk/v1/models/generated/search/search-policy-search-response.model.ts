@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchPolicySearchResponse_status,  } from './enums';
@@ -23,10 +23,12 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
         'status': {
             enum: SearchPolicySearchResponse_status,
             default: 'MATCH',
+            required: true,
             type: 'string'
         },
         'results': {
             description:  'Result is Map of &lt;SGPolicy object name, PolicyMatch Entry&gt;.',
+            required: false,
             type: 'object'
         },
     }
@@ -44,8 +46,7 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
     */
     public static hasDefaultValue(prop) {
         return (SearchPolicySearchResponse.propInfo[prop] != null &&
-                        SearchPolicySearchResponse.propInfo[prop].default != null &&
-                        SearchPolicySearchResponse.propInfo[prop].default != '');
+                        SearchPolicySearchResponse.propInfo[prop].default != null);
     }
 
     /**
@@ -83,8 +84,8 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(SearchPolicySearchResponse_status), ]), SearchPolicySearchResponse.propInfo['status'].description),
-                'results': CustomFormControl(new FormControl(this['results']), SearchPolicySearchResponse.propInfo['results'].description),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(SearchPolicySearchResponse_status), ]), SearchPolicySearchResponse.propInfo['status']),
+                'results': CustomFormControl(new FormControl(this['results']), SearchPolicySearchResponse.propInfo['results']),
             });
         }
         return this._formGroup;

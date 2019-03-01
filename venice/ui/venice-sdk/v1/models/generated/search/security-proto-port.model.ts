@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,9 +21,11 @@ export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'protocol': {
             description:  'protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc.',
+            required: false,
             type: 'string'
         },
         'ports': {
+            required: false,
             type: 'string'
         },
     }
@@ -41,8 +43,7 @@ export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
     */
     public static hasDefaultValue(prop) {
         return (SecurityProtoPort.propInfo[prop] != null &&
-                        SecurityProtoPort.propInfo[prop].default != null &&
-                        SecurityProtoPort.propInfo[prop].default != '');
+                        SecurityProtoPort.propInfo[prop].default != null);
     }
 
     /**
@@ -80,8 +81,8 @@ export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'protocol': CustomFormControl(new FormControl(this['protocol']), SecurityProtoPort.propInfo['protocol'].description),
-                'ports': CustomFormControl(new FormControl(this['ports']), SecurityProtoPort.propInfo['ports'].description),
+                'protocol': CustomFormControl(new FormControl(this['protocol']), SecurityProtoPort.propInfo['protocol']),
+                'ports': CustomFormControl(new FormControl(this['ports']), SecurityProtoPort.propInfo['ports']),
             });
         }
         return this._formGroup;

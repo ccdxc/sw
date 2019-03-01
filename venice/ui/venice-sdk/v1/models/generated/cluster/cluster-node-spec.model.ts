@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
     */
     public static hasDefaultValue(prop) {
         return (ClusterNodeSpec.propInfo[prop] != null &&
-                        ClusterNodeSpec.propInfo[prop].default != null &&
-                        ClusterNodeSpec.propInfo[prop].default != '');
+                        ClusterNodeSpec.propInfo[prop].default != null);
     }
 
     /**

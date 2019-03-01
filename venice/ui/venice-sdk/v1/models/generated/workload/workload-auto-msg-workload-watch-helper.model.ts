@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { WorkloadAutoMsgWorkloadWatchHelperWatchEvent, IWorkloadAutoMsgWorkloadWatchHelperWatchEvent } from './workload-auto-msg-workload-watch-helper-watch-event.model';
@@ -18,6 +18,7 @@ export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWo
     'events': Array<WorkloadAutoMsgWorkloadWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'events': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWo
     */
     public static hasDefaultValue(prop) {
         return (WorkloadAutoMsgWorkloadWatchHelper.propInfo[prop] != null &&
-                        WorkloadAutoMsgWorkloadWatchHelper.propInfo[prop].default != null &&
-                        WorkloadAutoMsgWorkloadWatchHelper.propInfo[prop].default != '');
+                        WorkloadAutoMsgWorkloadWatchHelper.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWo
             });
             // generate FormArray control elements
             this.fillFormArray<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>('events', this['events'], WorkloadAutoMsgWorkloadWatchHelperWatchEvent);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('events') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('events').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

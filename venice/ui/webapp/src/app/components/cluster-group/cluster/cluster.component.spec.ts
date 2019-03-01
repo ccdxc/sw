@@ -14,6 +14,7 @@ import { MatIconRegistry } from '@angular/material';
  ------------------*/
 import { ClusterComponent } from './cluster.component';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
@@ -58,6 +59,7 @@ describe('ClusterComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         ClusterService,

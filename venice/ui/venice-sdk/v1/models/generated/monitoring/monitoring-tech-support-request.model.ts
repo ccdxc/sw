@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -28,18 +28,23 @@ export class MonitoringTechSupportRequest extends BaseModel implements IMonitori
     'status': MonitoringTechSupportRequestStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
         'spec': {
+            required: false,
             type: 'object'
         },
         'status': {
+            required: false,
             type: 'object'
         },
     }
@@ -57,8 +62,7 @@ export class MonitoringTechSupportRequest extends BaseModel implements IMonitori
     */
     public static hasDefaultValue(prop) {
         return (MonitoringTechSupportRequest.propInfo[prop] != null &&
-                        MonitoringTechSupportRequest.propInfo[prop].default != null &&
-                        MonitoringTechSupportRequest.propInfo[prop].default != '');
+                        MonitoringTechSupportRequest.propInfo[prop].default != null);
     }
 
     /**
@@ -114,11 +118,26 @@ export class MonitoringTechSupportRequest extends BaseModel implements IMonitori
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), MonitoringTechSupportRequest.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringTechSupportRequest.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
-                'spec': this['spec'].$formGroup,
-                'status': this['status'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), MonitoringTechSupportRequest.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringTechSupportRequest.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, MonitoringTechSupportRequest.propInfo['meta'].required),
+                'spec': CustomFormGroup(this['spec'].$formGroup, MonitoringTechSupportRequest.propInfo['spec'].required),
+                'status': CustomFormGroup(this['status'].$formGroup, MonitoringTechSupportRequest.propInfo['status'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('spec') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('spec').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

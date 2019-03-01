@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { FieldsRequirement, IFieldsRequirement } from './fields-requirement.model';
@@ -20,6 +20,7 @@ export class FieldsSelector extends BaseModel implements IFieldsSelector {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'requirements': {
             description:  'Requirements are ANDed.',
+            required: false,
             type: 'object'
         },
     }
@@ -37,8 +38,7 @@ export class FieldsSelector extends BaseModel implements IFieldsSelector {
     */
     public static hasDefaultValue(prop) {
         return (FieldsSelector.propInfo[prop] != null &&
-                        FieldsSelector.propInfo[prop].default != null &&
-                        FieldsSelector.propInfo[prop].default != '');
+                        FieldsSelector.propInfo[prop].default != null);
     }
 
     /**
@@ -72,6 +72,11 @@ export class FieldsSelector extends BaseModel implements IFieldsSelector {
             });
             // generate FormArray control elements
             this.fillFormArray<FieldsRequirement>('requirements', this['requirements'], FieldsRequirement);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('requirements') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('requirements').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

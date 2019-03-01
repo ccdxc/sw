@@ -19,9 +19,11 @@ export class Telemetry_queryMetricsQueryResult extends BaseModel implements ITel
     'series': Array<Telemetry_queryMetricsResultSeries> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'statement_id': {
+            required: true,
             type: 'number'
         },
         'series': {
+            required: false,
             type: 'object'
         },
     }

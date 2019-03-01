@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,9 +21,11 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             description:  'Kind represents the type of the API object.',
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
     }
@@ -41,8 +43,7 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     */
     public static hasDefaultValue(prop) {
         return (ApiTypeMeta.propInfo[prop] != null &&
-                        ApiTypeMeta.propInfo[prop].default != null &&
-                        ApiTypeMeta.propInfo[prop].default != '');
+                        ApiTypeMeta.propInfo[prop].default != null);
     }
 
     /**
@@ -80,8 +81,8 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), ApiTypeMeta.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), ApiTypeMeta.propInfo['api-version'].description),
+                'kind': CustomFormControl(new FormControl(this['kind']), ApiTypeMeta.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ApiTypeMeta.propInfo['api-version']),
             });
         }
         return this._formGroup;

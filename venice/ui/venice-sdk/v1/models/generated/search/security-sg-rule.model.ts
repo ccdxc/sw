@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityProtoPort, ISecurityProtoPort } from './security-proto-port.model';
@@ -31,26 +31,33 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     'to-security-groups': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'apps': {
+            required: false,
             type: 'Array<string>'
         },
         'proto-ports': {
+            required: false,
             type: 'object'
         },
         'action': {
             enum: SecuritySGRule_action,
             default: 'PERMIT',
+            required: true,
             type: 'string'
         },
         'from-ip-addresses': {
+            required: false,
             type: 'Array<string>'
         },
         'to-ip-addresses': {
+            required: false,
             type: 'Array<string>'
         },
         'from-security-groups': {
+            required: false,
             type: 'Array<string>'
         },
         'to-security-groups': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -68,8 +75,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     */
     public static hasDefaultValue(prop) {
         return (SecuritySGRule.propInfo[prop] != null &&
-                        SecuritySGRule.propInfo[prop].default != null &&
-                        SecuritySGRule.propInfo[prop].default != '');
+                        SecuritySGRule.propInfo[prop].default != null);
     }
 
     /**
@@ -146,16 +152,21 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'apps': CustomFormControl(new FormControl(this['apps']), SecuritySGRule.propInfo['apps'].description),
+                'apps': CustomFormControl(new FormControl(this['apps']), SecuritySGRule.propInfo['apps']),
                 'proto-ports': new FormArray([]),
-                'action': CustomFormControl(new FormControl(this['action'], [required, enumValidator(SecuritySGRule_action), ]), SecuritySGRule.propInfo['action'].description),
-                'from-ip-addresses': CustomFormControl(new FormControl(this['from-ip-addresses']), SecuritySGRule.propInfo['from-ip-addresses'].description),
-                'to-ip-addresses': CustomFormControl(new FormControl(this['to-ip-addresses']), SecuritySGRule.propInfo['to-ip-addresses'].description),
-                'from-security-groups': CustomFormControl(new FormControl(this['from-security-groups']), SecuritySGRule.propInfo['from-security-groups'].description),
-                'to-security-groups': CustomFormControl(new FormControl(this['to-security-groups']), SecuritySGRule.propInfo['to-security-groups'].description),
+                'action': CustomFormControl(new FormControl(this['action'], [required, enumValidator(SecuritySGRule_action), ]), SecuritySGRule.propInfo['action']),
+                'from-ip-addresses': CustomFormControl(new FormControl(this['from-ip-addresses']), SecuritySGRule.propInfo['from-ip-addresses']),
+                'to-ip-addresses': CustomFormControl(new FormControl(this['to-ip-addresses']), SecuritySGRule.propInfo['to-ip-addresses']),
+                'from-security-groups': CustomFormControl(new FormControl(this['from-security-groups']), SecuritySGRule.propInfo['from-security-groups']),
+                'to-security-groups': CustomFormControl(new FormControl(this['to-security-groups']), SecuritySGRule.propInfo['to-security-groups']),
             });
             // generate FormArray control elements
             this.fillFormArray<SecurityProtoPort>('proto-ports', this['proto-ports'], SecurityProtoPort);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('proto-ports') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('proto-ports').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

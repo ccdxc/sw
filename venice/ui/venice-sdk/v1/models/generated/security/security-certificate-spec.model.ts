@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityCertificateSpec_usages,  } from './enums';
@@ -34,19 +34,23 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
     'trust-chain': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'description': {
+            required: false,
             type: 'string'
         },
         'usages': {
             enum: SecurityCertificateSpec_usages,
             default: 'Server',
             description:  'Usage can be &quot;client&quot;, &quot;server&quot; or &quot;trust-root&quot; in any combination. A &quot;server&quot; certificate is used by a server to authenticate itself to the client A &quot;client&quot; certificate is used by a client to authenticate itself to a server A &quot;trust-root&quot; certificate is self-signed and is only used to validate certificates presented by peers. &quot;client&quot; and &quot;server&quot; certificates are always accompanied by a private key, whereas &quot;trust-root&quot;-only certificates are not.',
+            required: true,
             type: 'Array<string>'
         },
         'body': {
+            required: false,
             type: 'string'
         },
         'trust-chain': {
             description:  'Trust chain of the certificate in PEM encoding. These certificates are treated opaquely. We do not process them in any way other than decoding them for informational purposes.',
+            required: false,
             type: 'string'
         },
     }
@@ -64,8 +68,7 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
     */
     public static hasDefaultValue(prop) {
         return (SecurityCertificateSpec.propInfo[prop] != null &&
-                        SecurityCertificateSpec.propInfo[prop].default != null &&
-                        SecurityCertificateSpec.propInfo[prop].default != '');
+                        SecurityCertificateSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -118,10 +121,10 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'description': CustomFormControl(new FormControl(this['description']), SecurityCertificateSpec.propInfo['description'].description),
-                'usages': CustomFormControl(new FormControl(this['usages']), SecurityCertificateSpec.propInfo['usages'].description),
-                'body': CustomFormControl(new FormControl(this['body']), SecurityCertificateSpec.propInfo['body'].description),
-                'trust-chain': CustomFormControl(new FormControl(this['trust-chain']), SecurityCertificateSpec.propInfo['trust-chain'].description),
+                'description': CustomFormControl(new FormControl(this['description']), SecurityCertificateSpec.propInfo['description']),
+                'usages': CustomFormControl(new FormControl(this['usages']), SecurityCertificateSpec.propInfo['usages']),
+                'body': CustomFormControl(new FormControl(this['body']), SecurityCertificateSpec.propInfo['body']),
+                'trust-chain': CustomFormControl(new FormControl(this['trust-chain']), SecurityCertificateSpec.propInfo['trust-chain']),
             });
         }
         return this._formGroup;

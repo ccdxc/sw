@@ -7,7 +7,7 @@ import { ControllerService } from '../../services/controller.service';
 import { BaseComponent } from './base.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService, ConfirmationService } from 'primeng/primeng';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 describe('BaseComponent', () => {
@@ -23,6 +23,7 @@ describe('BaseComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

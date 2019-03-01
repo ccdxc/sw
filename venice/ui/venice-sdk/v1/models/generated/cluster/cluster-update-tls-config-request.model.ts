@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -26,18 +26,23 @@ export class ClusterUpdateTLSConfigRequest extends BaseModel implements ICluster
     'key': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
         'certs': {
+            required: false,
             type: 'string'
         },
         'key': {
+            required: false,
             type: 'string'
         },
     }
@@ -55,8 +60,7 @@ export class ClusterUpdateTLSConfigRequest extends BaseModel implements ICluster
     */
     public static hasDefaultValue(prop) {
         return (ClusterUpdateTLSConfigRequest.propInfo[prop] != null &&
-                        ClusterUpdateTLSConfigRequest.propInfo[prop].default != null &&
-                        ClusterUpdateTLSConfigRequest.propInfo[prop].default != '');
+                        ClusterUpdateTLSConfigRequest.propInfo[prop].default != null);
     }
 
     /**
@@ -114,11 +118,16 @@ export class ClusterUpdateTLSConfigRequest extends BaseModel implements ICluster
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), ClusterUpdateTLSConfigRequest.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterUpdateTLSConfigRequest.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
-                'certs': CustomFormControl(new FormControl(this['certs']), ClusterUpdateTLSConfigRequest.propInfo['certs'].description),
-                'key': CustomFormControl(new FormControl(this['key']), ClusterUpdateTLSConfigRequest.propInfo['key'].description),
+                'kind': CustomFormControl(new FormControl(this['kind']), ClusterUpdateTLSConfigRequest.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterUpdateTLSConfigRequest.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, ClusterUpdateTLSConfigRequest.propInfo['meta'].required),
+                'certs': CustomFormControl(new FormControl(this['certs']), ClusterUpdateTLSConfigRequest.propInfo['certs']),
+                'key': CustomFormControl(new FormControl(this['key']), ClusterUpdateTLSConfigRequest.propInfo['key']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

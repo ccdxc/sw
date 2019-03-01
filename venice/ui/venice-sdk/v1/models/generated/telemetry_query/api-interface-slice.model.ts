@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiInterface, IApiInterface } from './api-interface.model';
@@ -18,6 +18,7 @@ export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
     'Values': Array<ApiInterface> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Values': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
     */
     public static hasDefaultValue(prop) {
         return (ApiInterfaceSlice.propInfo[prop] != null &&
-                        ApiInterfaceSlice.propInfo[prop].default != null &&
-                        ApiInterfaceSlice.propInfo[prop].default != '');
+                        ApiInterfaceSlice.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
             });
             // generate FormArray control elements
             this.fillFormArray<ApiInterface>('Values', this['Values'], ApiInterface);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('Values') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('Values').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

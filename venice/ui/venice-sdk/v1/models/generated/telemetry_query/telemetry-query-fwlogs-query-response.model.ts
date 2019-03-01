@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryFwlogsQueryResult, ITelemetry_queryFwlogsQueryResult } from './telemetry-query-fwlogs-query-result.model';
@@ -22,12 +22,15 @@ export class Telemetry_queryFwlogsQueryResponse extends BaseModel implements ITe
     'results': Array<Telemetry_queryFwlogsQueryResult> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tenant': {
+            required: false,
             type: 'string'
         },
         'namespace': {
+            required: false,
             type: 'string'
         },
         'results': {
+            required: false,
             type: 'object'
         },
     }
@@ -45,8 +48,7 @@ export class Telemetry_queryFwlogsQueryResponse extends BaseModel implements ITe
     */
     public static hasDefaultValue(prop) {
         return (Telemetry_queryFwlogsQueryResponse.propInfo[prop] != null &&
-                        Telemetry_queryFwlogsQueryResponse.propInfo[prop].default != null &&
-                        Telemetry_queryFwlogsQueryResponse.propInfo[prop].default != '');
+                        Telemetry_queryFwlogsQueryResponse.propInfo[prop].default != null);
     }
 
     /**
@@ -90,12 +92,17 @@ export class Telemetry_queryFwlogsQueryResponse extends BaseModel implements ITe
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tenant': CustomFormControl(new FormControl(this['tenant']), Telemetry_queryFwlogsQueryResponse.propInfo['tenant'].description),
-                'namespace': CustomFormControl(new FormControl(this['namespace']), Telemetry_queryFwlogsQueryResponse.propInfo['namespace'].description),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), Telemetry_queryFwlogsQueryResponse.propInfo['tenant']),
+                'namespace': CustomFormControl(new FormControl(this['namespace']), Telemetry_queryFwlogsQueryResponse.propInfo['namespace']),
                 'results': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<Telemetry_queryFwlogsQueryResult>('results', this['results'], Telemetry_queryFwlogsQueryResult);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('results') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('results').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

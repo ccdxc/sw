@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { WorkloadWorkloadIntfStatus, IWorkloadWorkloadIntfStatus } from './workload-workload-intf-status.model';
@@ -18,6 +18,7 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     'interfaces': Array<WorkloadWorkloadIntfStatus> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interfaces': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     */
     public static hasDefaultValue(prop) {
         return (WorkloadWorkloadStatus.propInfo[prop] != null &&
-                        WorkloadWorkloadStatus.propInfo[prop].default != null &&
-                        WorkloadWorkloadStatus.propInfo[prop].default != '');
+                        WorkloadWorkloadStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
             });
             // generate FormArray control elements
             this.fillFormArray<WorkloadWorkloadIntfStatus>('interfaces', this['interfaces'], WorkloadWorkloadIntfStatus);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('interfaces') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('interfaces').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

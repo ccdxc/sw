@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { WorkloadWorkloadIntfSpec, IWorkloadWorkloadIntfSpec } from './workload-workload-intf-spec.model';
@@ -24,9 +24,11 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
         'host-name': {
             description:  'should be a valid host address, IP address or hostname ',
             hint:  '10.1.1.1, ff02::5, localhost, example.domain.com ',
+            required: true,
             type: 'string'
         },
         'interfaces': {
+            required: false,
             type: 'object'
         },
     }
@@ -44,8 +46,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     */
     public static hasDefaultValue(prop) {
         return (WorkloadWorkloadSpec.propInfo[prop] != null &&
-                        WorkloadWorkloadSpec.propInfo[prop].default != null &&
-                        WorkloadWorkloadSpec.propInfo[prop].default != '');
+                        WorkloadWorkloadSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -82,11 +83,16 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'host-name': CustomFormControl(new FormControl(this['host-name'], [required, ]), WorkloadWorkloadSpec.propInfo['host-name'].description),
+                'host-name': CustomFormControl(new FormControl(this['host-name'], [required, ]), WorkloadWorkloadSpec.propInfo['host-name']),
                 'interfaces': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<WorkloadWorkloadIntfSpec>('interfaces', this['interfaces'], WorkloadWorkloadIntfSpec);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('interfaces') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('interfaces').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

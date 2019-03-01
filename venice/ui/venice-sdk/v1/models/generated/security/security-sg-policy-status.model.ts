@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySGPolicyPropagationStatus, ISecuritySGPolicyPropagationStatus } from './security-sg-policy-propagation-status.model';
@@ -18,6 +18,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     'propagation-status': SecuritySGPolicyPropagationStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'propagation-status': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     */
     public static hasDefaultValue(prop) {
         return (SecuritySGPolicyStatus.propInfo[prop] != null &&
-                        SecuritySGPolicyStatus.propInfo[prop].default != null &&
-                        SecuritySGPolicyStatus.propInfo[prop].default != '');
+                        SecuritySGPolicyStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,12 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'propagation-status': this['propagation-status'].$formGroup,
+                'propagation-status': CustomFormGroup(this['propagation-status'].$formGroup, SecuritySGPolicyStatus.propInfo['propagation-status'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('propagation-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('propagation-status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,6 +19,7 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'resource-version': {
             description:  'Resource version of object store at the time of list generation.',
+            required: false,
             type: 'string'
         },
     }
@@ -36,8 +37,7 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
     */
     public static hasDefaultValue(prop) {
         return (ApiListMeta.propInfo[prop] != null &&
-                        ApiListMeta.propInfo[prop].default != null &&
-                        ApiListMeta.propInfo[prop].default != '');
+                        ApiListMeta.propInfo[prop].default != null);
     }
 
     /**
@@ -68,7 +68,7 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiListMeta.propInfo['resource-version'].description),
+                'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiListMeta.propInfo['resource-version']),
             });
         }
         return this._formGroup;

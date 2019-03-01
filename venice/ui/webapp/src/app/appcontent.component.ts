@@ -54,12 +54,12 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   idleDialogRef: any;
 
   // alerts related variables
-   alertsEventUtility: HttpEventUtility<MonitoringAlert>;
-   alertSubscription: Subscription;
-   alerts: ReadonlyArray<MonitoringAlert> = [];
-   alertNumbers = 0;
+  alertsEventUtility: HttpEventUtility<MonitoringAlert>;
+  alertSubscription: Subscription;
+  alerts: ReadonlyArray<MonitoringAlert> = [];
+  alertNumbers = 0;
 
-   alertQuery = {};
+  alertQuery = {};
 
   protected sidenavmenu: any = [
     {
@@ -278,9 +278,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   private _subscribeToEvents() {
 
 
-    this.subscriptions[Eventtypes.IDLE_CHANGE] = this._controllerService.subscribe(Eventtypes.IDLE_CHANGE, (payload) => {
-      this.handleIdleChange(payload);
-    });
+    // this.subscriptions[Eventtypes.IDLE_CHANGE] = this._controllerService.subscribe(Eventtypes.IDLE_CHANGE, (payload) => {
+    //   this.handleIdleChange(payload);
+    // });
 
     this.subscriptions[Eventtypes.LOGOUT] = this._controllerService.subscribe(Eventtypes.LOGOUT, (payload) => {
       this.onLogout(payload);
@@ -313,7 +313,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       this.getAlerts();
     }
     this._boolInitApp = true;
-    this._setupIdle();
+    // Idle currently doesn't work. Commenting out for now.
+    // this._setupIdle();
   }
 
   _setupIdle() {
@@ -431,7 +432,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   /**
    * Call server to fetch all alerts to populate RHS alert-list
    */
-   getAlerts() {
+  getAlerts() {
     this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
     if (this.alertSubscription) {
       this.alertSubscription.unsubscribe();
@@ -440,10 +441,10 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       response => {
         this.alertsEventUtility.processEvents(response);
         // this.alertQuery is empty. So we will get all alerts. We only need the alerts that are in open state. Alert table can update alerts. This will reflect the changes of alerts.
-        this.alerts = this.alertsEventUtility.array.filter( (alert: MonitoringAlert) => {
+        this.alerts = this.alertsEventUtility.array.filter((alert: MonitoringAlert) => {
           return (this.isAlertInOpenState(alert));
-        } );
-         // We are watching alerts. So when there are new alerts coming in, we display a toaster.
+        });
+        // We are watching alerts. So when there are new alerts coming in, we display a toaster.
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {
           const diff = this.alerts.length - this.alertNumbers;
           const alertMsg = (diff === 1) ? diff + ' new alert arrived' : diff + 'new alerts arrived';

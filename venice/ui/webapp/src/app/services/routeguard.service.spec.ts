@@ -3,6 +3,7 @@ import { async, inject, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from 'primeng/primeng';
@@ -31,6 +32,7 @@ describe('RouteGuardService', () => {
       ],
       providers: [RouteGuard,
         ControllerService,
+        ConfirmationService,
         { provide: UIConfigsService, useClass: MockUIConfigService },
         MessageService
       ],

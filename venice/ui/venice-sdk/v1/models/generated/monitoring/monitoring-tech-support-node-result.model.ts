@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTechSupportNodeResult_status,  } from './enums';
@@ -24,17 +24,21 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
     'uri': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'start-time': {
+            required: false,
             type: 'Date'
         },
         'end-time': {
+            required: false,
             type: 'Date'
         },
         'status': {
             enum: MonitoringTechSupportNodeResult_status,
             default: 'Scheduled',
+            required: true,
             type: 'string'
         },
         'uri': {
+            required: false,
             type: 'string'
         },
     }
@@ -52,8 +56,7 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
     */
     public static hasDefaultValue(prop) {
         return (MonitoringTechSupportNodeResult.propInfo[prop] != null &&
-                        MonitoringTechSupportNodeResult.propInfo[prop].default != null &&
-                        MonitoringTechSupportNodeResult.propInfo[prop].default != '');
+                        MonitoringTechSupportNodeResult.propInfo[prop].default != null);
     }
 
     /**
@@ -105,10 +108,10 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'start-time': CustomFormControl(new FormControl(this['start-time']), MonitoringTechSupportNodeResult.propInfo['start-time'].description),
-                'end-time': CustomFormControl(new FormControl(this['end-time']), MonitoringTechSupportNodeResult.propInfo['end-time'].description),
-                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportNodeResult_status), ]), MonitoringTechSupportNodeResult.propInfo['status'].description),
-                'uri': CustomFormControl(new FormControl(this['uri']), MonitoringTechSupportNodeResult.propInfo['uri'].description),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), MonitoringTechSupportNodeResult.propInfo['start-time']),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), MonitoringTechSupportNodeResult.propInfo['end-time']),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportNodeResult_status), ]), MonitoringTechSupportNodeResult.propInfo['status']),
+                'uri': CustomFormControl(new FormControl(this['uri']), MonitoringTechSupportNodeResult.propInfo['uri']),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryFwlog_action,  Telemetry_queryFwlog_action_uihint  } from './enums';
@@ -39,40 +39,51 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
     'timestamp': Date = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tenant': {
+            required: false,
             type: 'string'
         },
         'src': {
+            required: false,
             type: 'string'
         },
         'dest': {
+            required: false,
             type: 'string'
         },
         'src-port': {
+            required: false,
             type: 'number'
         },
         'dest-port': {
+            required: false,
             type: 'number'
         },
         'protocol': {
+            required: false,
             type: 'string'
         },
         'action': {
             enum: Telemetry_queryFwlog_action_uihint,
             default: 'ALLOW',
+            required: true,
             type: 'string'
         },
         'direction': {
             enum: Telemetry_queryFwlog_direction_uihint,
             default: 'FROM_HOST',
+            required: true,
             type: 'string'
         },
         'rule-id': {
+            required: false,
             type: 'string'
         },
         'policy-name': {
+            required: false,
             type: 'string'
         },
         'timestamp': {
+            required: false,
             type: 'Date'
         },
     }
@@ -90,8 +101,7 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
     */
     public static hasDefaultValue(prop) {
         return (Telemetry_queryFwlog.propInfo[prop] != null &&
-                        Telemetry_queryFwlog.propInfo[prop].default != null &&
-                        Telemetry_queryFwlog.propInfo[prop].default != '');
+                        Telemetry_queryFwlog.propInfo[prop].default != null);
     }
 
     /**
@@ -192,17 +202,17 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tenant': CustomFormControl(new FormControl(this['tenant']), Telemetry_queryFwlog.propInfo['tenant'].description),
-                'src': CustomFormControl(new FormControl(this['src']), Telemetry_queryFwlog.propInfo['src'].description),
-                'dest': CustomFormControl(new FormControl(this['dest']), Telemetry_queryFwlog.propInfo['dest'].description),
-                'src-port': CustomFormControl(new FormControl(this['src-port']), Telemetry_queryFwlog.propInfo['src-port'].description),
-                'dest-port': CustomFormControl(new FormControl(this['dest-port']), Telemetry_queryFwlog.propInfo['dest-port'].description),
-                'protocol': CustomFormControl(new FormControl(this['protocol']), Telemetry_queryFwlog.propInfo['protocol'].description),
-                'action': CustomFormControl(new FormControl(this['action'], [required, enumValidator(Telemetry_queryFwlog_action), ]), Telemetry_queryFwlog.propInfo['action'].description),
-                'direction': CustomFormControl(new FormControl(this['direction'], [required, enumValidator(Telemetry_queryFwlog_direction), ]), Telemetry_queryFwlog.propInfo['direction'].description),
-                'rule-id': CustomFormControl(new FormControl(this['rule-id']), Telemetry_queryFwlog.propInfo['rule-id'].description),
-                'policy-name': CustomFormControl(new FormControl(this['policy-name']), Telemetry_queryFwlog.propInfo['policy-name'].description),
-                'timestamp': CustomFormControl(new FormControl(this['timestamp']), Telemetry_queryFwlog.propInfo['timestamp'].description),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), Telemetry_queryFwlog.propInfo['tenant']),
+                'src': CustomFormControl(new FormControl(this['src']), Telemetry_queryFwlog.propInfo['src']),
+                'dest': CustomFormControl(new FormControl(this['dest']), Telemetry_queryFwlog.propInfo['dest']),
+                'src-port': CustomFormControl(new FormControl(this['src-port']), Telemetry_queryFwlog.propInfo['src-port']),
+                'dest-port': CustomFormControl(new FormControl(this['dest-port']), Telemetry_queryFwlog.propInfo['dest-port']),
+                'protocol': CustomFormControl(new FormControl(this['protocol']), Telemetry_queryFwlog.propInfo['protocol']),
+                'action': CustomFormControl(new FormControl(this['action'], [required, enumValidator(Telemetry_queryFwlog_action), ]), Telemetry_queryFwlog.propInfo['action']),
+                'direction': CustomFormControl(new FormControl(this['direction'], [required, enumValidator(Telemetry_queryFwlog_direction), ]), Telemetry_queryFwlog.propInfo['direction']),
+                'rule-id': CustomFormControl(new FormControl(this['rule-id']), Telemetry_queryFwlog.propInfo['rule-id']),
+                'policy-name': CustomFormControl(new FormControl(this['policy-name']), Telemetry_queryFwlog.propInfo['policy-name']),
+                'timestamp': CustomFormControl(new FormControl(this['timestamp']), Telemetry_queryFwlog.propInfo['timestamp']),
             });
         }
         return this._formGroup;

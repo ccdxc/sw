@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterBiosInfo, IClusterBiosInfo } from './cluster-bios-info.model';
@@ -30,18 +30,23 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
     'storage-info': ClusterStorageInfo = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'bios-info': {
+            required: false,
             type: 'object'
         },
         'os-info': {
+            required: false,
             type: 'object'
         },
         'cpu-info': {
+            required: false,
             type: 'object'
         },
         'memory-info': {
+            required: false,
             type: 'object'
         },
         'storage-info': {
+            required: false,
             type: 'object'
         },
     }
@@ -59,8 +64,7 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
     */
     public static hasDefaultValue(prop) {
         return (ClusterSmartNICInfo.propInfo[prop] != null &&
-                        ClusterSmartNICInfo.propInfo[prop].default != null &&
-                        ClusterSmartNICInfo.propInfo[prop].default != '');
+                        ClusterSmartNICInfo.propInfo[prop].default != null);
     }
 
     /**
@@ -114,11 +118,36 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'bios-info': this['bios-info'].$formGroup,
-                'os-info': this['os-info'].$formGroup,
-                'cpu-info': this['cpu-info'].$formGroup,
-                'memory-info': this['memory-info'].$formGroup,
-                'storage-info': this['storage-info'].$formGroup,
+                'bios-info': CustomFormGroup(this['bios-info'].$formGroup, ClusterSmartNICInfo.propInfo['bios-info'].required),
+                'os-info': CustomFormGroup(this['os-info'].$formGroup, ClusterSmartNICInfo.propInfo['os-info'].required),
+                'cpu-info': CustomFormGroup(this['cpu-info'].$formGroup, ClusterSmartNICInfo.propInfo['cpu-info'].required),
+                'memory-info': CustomFormGroup(this['memory-info'].$formGroup, ClusterSmartNICInfo.propInfo['memory-info'].required),
+                'storage-info': CustomFormGroup(this['storage-info'].$formGroup, ClusterSmartNICInfo.propInfo['storage-info'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('bios-info') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('bios-info').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('os-info') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('os-info').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('cpu-info') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('cpu-info').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('memory-info') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('memory-info').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('storage-info') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('storage-info').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

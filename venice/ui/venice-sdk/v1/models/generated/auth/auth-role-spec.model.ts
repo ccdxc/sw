@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthPermission, IAuthPermission } from './auth-permission.model';
@@ -18,6 +18,7 @@ export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
     'permissions': Array<AuthPermission> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'permissions': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
     */
     public static hasDefaultValue(prop) {
         return (AuthRoleSpec.propInfo[prop] != null &&
-                        AuthRoleSpec.propInfo[prop].default != null &&
-                        AuthRoleSpec.propInfo[prop].default != '');
+                        AuthRoleSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
             });
             // generate FormArray control elements
             this.fillFormArray<AuthPermission>('permissions', this['permissions'], AuthPermission);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('permissions') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('permissions').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

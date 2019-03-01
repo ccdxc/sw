@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class StagingBufferSpec extends BaseModel implements IStagingBufferSpec {
     'Contact': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Contact': {
+            required: false,
             type: 'string'
         },
     }
@@ -34,8 +35,7 @@ export class StagingBufferSpec extends BaseModel implements IStagingBufferSpec {
     */
     public static hasDefaultValue(prop) {
         return (StagingBufferSpec.propInfo[prop] != null &&
-                        StagingBufferSpec.propInfo[prop].default != null &&
-                        StagingBufferSpec.propInfo[prop].default != '');
+                        StagingBufferSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,7 @@ export class StagingBufferSpec extends BaseModel implements IStagingBufferSpec {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Contact': CustomFormControl(new FormControl(this['Contact']), StagingBufferSpec.propInfo['Contact'].description),
+                'Contact': CustomFormControl(new FormControl(this['Contact']), StagingBufferSpec.propInfo['Contact']),
             });
         }
         return this._formGroup;

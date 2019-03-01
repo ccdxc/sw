@@ -46,6 +46,9 @@ export class PenuitabsComponent implements OnInit, OnDestroy, AfterContentInit {
   constructor() { }
 
   ngOnInit() {
+    if (this.startingIndex == null) {
+      this.startingIndex = 0;
+    }
     if (typeof (this.startingIndex) !== 'number') {
       throw new Error("staringIndex must be a number");
     }

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterMemInfo_type,  } from './enums';
@@ -22,9 +22,11 @@ export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
         'type': {
             enum: ClusterMemInfo_type,
             default: 'UNKNOWN',
+            required: true,
             type: 'string'
         },
         'size': {
+            required: false,
             type: 'string'
         },
     }
@@ -42,8 +44,7 @@ export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
     */
     public static hasDefaultValue(prop) {
         return (ClusterMemInfo.propInfo[prop] != null &&
-                        ClusterMemInfo.propInfo[prop].default != null &&
-                        ClusterMemInfo.propInfo[prop].default != '');
+                        ClusterMemInfo.propInfo[prop].default != null);
     }
 
     /**
@@ -81,8 +82,8 @@ export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterMemInfo_type), ]), ClusterMemInfo.propInfo['type'].description),
-                'size': CustomFormControl(new FormControl(this['size']), ClusterMemInfo.propInfo['size'].description),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterMemInfo_type), ]), ClusterMemInfo.propInfo['type']),
+                'size': CustomFormControl(new FormControl(this['size']), ClusterMemInfo.propInfo['size']),
             });
         }
         return this._formGroup;

@@ -3,6 +3,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { Router, RouterStateSnapshot } from '@angular/router';
 import { AuthGuard } from '@app/services/authguard.service';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { MatIconRegistry } from '@angular/material';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
@@ -24,6 +25,7 @@ describe('AuthGuardService', () => {
     TestBed.configureTestingModule({
       providers: [AuthGuard,
         { provide: ControllerService, useClass: MockControllerService },
+        ConfirmationService,
         MatIconRegistry,
         LogService,
         LogPublishersService,

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthLdapServerStatus, IAuthLdapServerStatus } from './auth-ldap-server-status.model';
@@ -21,9 +21,11 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
     'radius-servers': Array<AuthRadiusServerStatus> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'ldap-servers': {
+            required: false,
             type: 'object'
         },
         'radius-servers': {
+            required: false,
             type: 'object'
         },
     }
@@ -41,8 +43,7 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
     */
     public static hasDefaultValue(prop) {
         return (AuthAuthenticationPolicyStatus.propInfo[prop] != null &&
-                        AuthAuthenticationPolicyStatus.propInfo[prop].default != null &&
-                        AuthAuthenticationPolicyStatus.propInfo[prop].default != '');
+                        AuthAuthenticationPolicyStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -85,6 +86,16 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
             this.fillFormArray<AuthLdapServerStatus>('ldap-servers', this['ldap-servers'], AuthLdapServerStatus);
             // generate FormArray control elements
             this.fillFormArray<AuthRadiusServerStatus>('radius-servers', this['radius-servers'], AuthRadiusServerStatus);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('ldap-servers') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('ldap-servers').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('radius-servers') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('radius-servers').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

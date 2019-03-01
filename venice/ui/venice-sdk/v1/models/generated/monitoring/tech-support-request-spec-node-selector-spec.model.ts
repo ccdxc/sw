@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
@@ -20,9 +20,11 @@ export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements
     'labels': LabelsSelector = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'names': {
+            required: false,
             type: 'Array<string>'
         },
         'labels': {
+            required: false,
             type: 'object'
         },
     }
@@ -40,8 +42,7 @@ export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements
     */
     public static hasDefaultValue(prop) {
         return (TechSupportRequestSpecNodeSelectorSpec.propInfo[prop] != null &&
-                        TechSupportRequestSpecNodeSelectorSpec.propInfo[prop].default != null &&
-                        TechSupportRequestSpecNodeSelectorSpec.propInfo[prop].default != '');
+                        TechSupportRequestSpecNodeSelectorSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -79,8 +80,13 @@ export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'names': CustomFormControl(new FormControl(this['names']), TechSupportRequestSpecNodeSelectorSpec.propInfo['names'].description),
-                'labels': this['labels'].$formGroup,
+                'names': CustomFormControl(new FormControl(this['names']), TechSupportRequestSpecNodeSelectorSpec.propInfo['names']),
+                'labels': CustomFormGroup(this['labels'].$formGroup, TechSupportRequestSpecNodeSelectorSpec.propInfo['labels'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('labels') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('labels').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

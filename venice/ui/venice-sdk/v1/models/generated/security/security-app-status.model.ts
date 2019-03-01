@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
     'attached-policies': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'attached-policies': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -34,8 +35,7 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
     */
     public static hasDefaultValue(prop) {
         return (SecurityAppStatus.propInfo[prop] != null &&
-                        SecurityAppStatus.propInfo[prop].default != null &&
-                        SecurityAppStatus.propInfo[prop].default != '');
+                        SecurityAppStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -67,7 +67,7 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'attached-policies': CustomFormControl(new FormControl(this['attached-policies']), SecurityAppStatus.propInfo['attached-policies'].description),
+                'attached-policies': CustomFormControl(new FormControl(this['attached-policies']), SecurityAppStatus.propInfo['attached-policies']),
             });
         }
         return this._formGroup;

@@ -23,7 +23,7 @@ import { PolicyhealthComponent } from './widgets/policyhealth/policyhealth.compo
 import { DsbdworkloadComponent } from './widgets/dsbdworkload/dsbdworkload.component';
 
 import { MatIconRegistry } from '@angular/material';
-import { MessageService } from 'primeng/primeng';
+import { MessageService, ConfirmationService } from 'primeng/primeng';
 import { WorkloadsComponent } from './workloads/workloads.component';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -66,6 +66,7 @@ describe('DashboardComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         MatIconRegistry,
         LogService,
         LogPublishersService,

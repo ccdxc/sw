@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkHealthCheckSpec, INetworkHealthCheckSpec } from './network-health-check-spec.model';
@@ -24,15 +24,19 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     'health-check': NetworkHealthCheckSpec = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
+            required: false,
             type: 'string'
         },
         'algorithm': {
+            required: false,
             type: 'string'
         },
         'session-affinity': {
+            required: false,
             type: 'string'
         },
         'health-check': {
+            required: false,
             type: 'object'
         },
     }
@@ -50,8 +54,7 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     */
     public static hasDefaultValue(prop) {
         return (NetworkLbPolicySpec.propInfo[prop] != null &&
-                        NetworkLbPolicySpec.propInfo[prop].default != null &&
-                        NetworkLbPolicySpec.propInfo[prop].default != '');
+                        NetworkLbPolicySpec.propInfo[prop].default != null);
     }
 
     /**
@@ -102,10 +105,15 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type']), NetworkLbPolicySpec.propInfo['type'].description),
-                'algorithm': CustomFormControl(new FormControl(this['algorithm']), NetworkLbPolicySpec.propInfo['algorithm'].description),
-                'session-affinity': CustomFormControl(new FormControl(this['session-affinity']), NetworkLbPolicySpec.propInfo['session-affinity'].description),
-                'health-check': this['health-check'].$formGroup,
+                'type': CustomFormControl(new FormControl(this['type']), NetworkLbPolicySpec.propInfo['type']),
+                'algorithm': CustomFormControl(new FormControl(this['algorithm']), NetworkLbPolicySpec.propInfo['algorithm']),
+                'session-affinity': CustomFormControl(new FormControl(this['session-affinity']), NetworkLbPolicySpec.propInfo['session-affinity']),
+                'health-check': CustomFormGroup(this['health-check'].$formGroup, NetworkLbPolicySpec.propInfo['health-check'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('health-check') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('health-check').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

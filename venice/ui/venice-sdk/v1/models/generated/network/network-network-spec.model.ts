@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,24 +29,31 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     'vxlan-vni': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
+            required: false,
             type: 'string'
         },
         'ipv4-subnet': {
+            required: false,
             type: 'string'
         },
         'ipv4-gateway': {
+            required: false,
             type: 'string'
         },
         'ipv6-subnet': {
+            required: false,
             type: 'string'
         },
         'ipv6-gateway': {
+            required: false,
             type: 'string'
         },
         'vlan-id': {
+            required: false,
             type: 'number'
         },
         'vxlan-vni': {
+            required: false,
             type: 'number'
         },
     }
@@ -64,8 +71,7 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     */
     public static hasDefaultValue(prop) {
         return (NetworkNetworkSpec.propInfo[prop] != null &&
-                        NetworkNetworkSpec.propInfo[prop].default != null &&
-                        NetworkNetworkSpec.propInfo[prop].default != '');
+                        NetworkNetworkSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -138,13 +144,13 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type']), NetworkNetworkSpec.propInfo['type'].description),
-                'ipv4-subnet': CustomFormControl(new FormControl(this['ipv4-subnet']), NetworkNetworkSpec.propInfo['ipv4-subnet'].description),
-                'ipv4-gateway': CustomFormControl(new FormControl(this['ipv4-gateway']), NetworkNetworkSpec.propInfo['ipv4-gateway'].description),
-                'ipv6-subnet': CustomFormControl(new FormControl(this['ipv6-subnet']), NetworkNetworkSpec.propInfo['ipv6-subnet'].description),
-                'ipv6-gateway': CustomFormControl(new FormControl(this['ipv6-gateway']), NetworkNetworkSpec.propInfo['ipv6-gateway'].description),
-                'vlan-id': CustomFormControl(new FormControl(this['vlan-id']), NetworkNetworkSpec.propInfo['vlan-id'].description),
-                'vxlan-vni': CustomFormControl(new FormControl(this['vxlan-vni']), NetworkNetworkSpec.propInfo['vxlan-vni'].description),
+                'type': CustomFormControl(new FormControl(this['type']), NetworkNetworkSpec.propInfo['type']),
+                'ipv4-subnet': CustomFormControl(new FormControl(this['ipv4-subnet']), NetworkNetworkSpec.propInfo['ipv4-subnet']),
+                'ipv4-gateway': CustomFormControl(new FormControl(this['ipv4-gateway']), NetworkNetworkSpec.propInfo['ipv4-gateway']),
+                'ipv6-subnet': CustomFormControl(new FormControl(this['ipv6-subnet']), NetworkNetworkSpec.propInfo['ipv6-subnet']),
+                'ipv6-gateway': CustomFormControl(new FormControl(this['ipv6-gateway']), NetworkNetworkSpec.propInfo['ipv6-gateway']),
+                'vlan-id': CustomFormControl(new FormControl(this['vlan-id']), NetworkNetworkSpec.propInfo['vlan-id']),
+                'vxlan-vni': CustomFormControl(new FormControl(this['vxlan-vni']), NetworkNetworkSpec.propInfo['vxlan-vni']),
             });
         }
         return this._formGroup;

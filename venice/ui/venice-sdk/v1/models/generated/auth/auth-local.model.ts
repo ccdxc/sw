@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
     'enabled': boolean = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'enabled': {
+            required: false,
             type: 'boolean'
         },
     }
@@ -34,8 +35,7 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
     */
     public static hasDefaultValue(prop) {
         return (AuthLocal.propInfo[prop] != null &&
-                        AuthLocal.propInfo[prop].default != null &&
-                        AuthLocal.propInfo[prop].default != '');
+                        AuthLocal.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,7 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthLocal.propInfo['enabled'].description),
+                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthLocal.propInfo['enabled']),
             });
         }
         return this._formGroup;

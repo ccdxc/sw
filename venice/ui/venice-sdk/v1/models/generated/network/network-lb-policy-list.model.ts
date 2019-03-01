@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
@@ -25,15 +25,19 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
     'items': Array<NetworkLbPolicy> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'list-meta': {
+            required: false,
             type: 'object'
         },
         'items': {
+            required: false,
             type: 'object'
         },
     }
@@ -51,8 +55,7 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
     */
     public static hasDefaultValue(prop) {
         return (NetworkLbPolicyList.propInfo[prop] != null &&
-                        NetworkLbPolicyList.propInfo[prop].default != null &&
-                        NetworkLbPolicyList.propInfo[prop].default != '');
+                        NetworkLbPolicyList.propInfo[prop].default != null);
     }
 
     /**
@@ -102,13 +105,23 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), NetworkLbPolicyList.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), NetworkLbPolicyList.propInfo['api-version'].description),
-                'list-meta': this['list-meta'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), NetworkLbPolicyList.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), NetworkLbPolicyList.propInfo['api-version']),
+                'list-meta': CustomFormGroup(this['list-meta'].$formGroup, NetworkLbPolicyList.propInfo['list-meta'].required),
                 'items': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<NetworkLbPolicy>('items', this['items'], NetworkLbPolicy);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('list-meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('list-meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('items') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('items').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

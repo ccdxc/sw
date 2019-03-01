@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRadiusServer_auth_method,  } from './enums';
@@ -24,17 +24,21 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
     'trusted-certs': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'url': {
+            required: false,
             type: 'string'
         },
         'secret': {
+            required: false,
             type: 'string'
         },
         'auth-method': {
             enum: AuthRadiusServer_auth_method,
             default: 'PAP',
+            required: true,
             type: 'string'
         },
         'trusted-certs': {
+            required: false,
             type: 'string'
         },
     }
@@ -52,8 +56,7 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
     */
     public static hasDefaultValue(prop) {
         return (AuthRadiusServer.propInfo[prop] != null &&
-                        AuthRadiusServer.propInfo[prop].default != null &&
-                        AuthRadiusServer.propInfo[prop].default != '');
+                        AuthRadiusServer.propInfo[prop].default != null);
     }
 
     /**
@@ -105,10 +108,10 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'url': CustomFormControl(new FormControl(this['url']), AuthRadiusServer.propInfo['url'].description),
-                'secret': CustomFormControl(new FormControl(this['secret']), AuthRadiusServer.propInfo['secret'].description),
-                'auth-method': CustomFormControl(new FormControl(this['auth-method'], [required, enumValidator(AuthRadiusServer_auth_method), ]), AuthRadiusServer.propInfo['auth-method'].description),
-                'trusted-certs': CustomFormControl(new FormControl(this['trusted-certs']), AuthRadiusServer.propInfo['trusted-certs'].description),
+                'url': CustomFormControl(new FormControl(this['url']), AuthRadiusServer.propInfo['url']),
+                'secret': CustomFormControl(new FormControl(this['secret']), AuthRadiusServer.propInfo['secret']),
+                'auth-method': CustomFormControl(new FormControl(this['auth-method'], [required, enumValidator(AuthRadiusServer_auth_method), ]), AuthRadiusServer.propInfo['auth-method']),
+                'trusted-certs': CustomFormControl(new FormControl(this['trusted-certs']), AuthRadiusServer.propInfo['trusted-certs']),
             });
         }
         return this._formGroup;

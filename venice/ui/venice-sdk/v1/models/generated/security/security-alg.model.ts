@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityALG_type,  } from './enums';
@@ -35,21 +35,27 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
         'type': {
             enum: SecurityALG_type,
             default: 'ICMP',
+            required: true,
             type: 'string'
         },
         'icmp': {
+            required: false,
             type: 'object'
         },
         'dns': {
+            required: false,
             type: 'object'
         },
         'ftp': {
+            required: false,
             type: 'object'
         },
         'sunrpc': {
+            required: false,
             type: 'object'
         },
         'msrpc': {
+            required: false,
             type: 'object'
         },
     }
@@ -67,8 +73,7 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     */
     public static hasDefaultValue(prop) {
         return (SecurityALG.propInfo[prop] != null &&
-                        SecurityALG.propInfo[prop].default != null &&
-                        SecurityALG.propInfo[prop].default != '');
+                        SecurityALG.propInfo[prop].default != null);
     }
 
     /**
@@ -129,10 +134,10 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(SecurityALG_type), ]), SecurityALG.propInfo['type'].description),
-                'icmp': this['icmp'].$formGroup,
-                'dns': this['dns'].$formGroup,
-                'ftp': this['ftp'].$formGroup,
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(SecurityALG_type), ]), SecurityALG.propInfo['type']),
+                'icmp': CustomFormGroup(this['icmp'].$formGroup, SecurityALG.propInfo['icmp'].required),
+                'dns': CustomFormGroup(this['dns'].$formGroup, SecurityALG.propInfo['dns'].required),
+                'ftp': CustomFormGroup(this['ftp'].$formGroup, SecurityALG.propInfo['ftp'].required),
                 'sunrpc': new FormArray([]),
                 'msrpc': new FormArray([]),
             });
@@ -140,6 +145,31 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
             this.fillFormArray<SecuritySunrpc>('sunrpc', this['sunrpc'], SecuritySunrpc);
             // generate FormArray control elements
             this.fillFormArray<SecurityMsrpc>('msrpc', this['msrpc'], SecurityMsrpc);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('icmp') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('icmp').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('dns') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('dns').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('ftp') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('ftp').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('sunrpc') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('sunrpc').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('msrpc') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('msrpc').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

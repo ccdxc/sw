@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { StagingBufferStatus_validation_result,  StagingBufferStatus_validation_result_uihint  } from './enums';
@@ -26,12 +26,15 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
         'validation-result': {
             enum: StagingBufferStatus_validation_result_uihint,
             default: 'SUCCESS',
+            required: true,
             type: 'string'
         },
         'errors': {
+            required: false,
             type: 'object'
         },
         'items': {
+            required: false,
             type: 'object'
         },
     }
@@ -49,8 +52,7 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
     */
     public static hasDefaultValue(prop) {
         return (StagingBufferStatus.propInfo[prop] != null &&
-                        StagingBufferStatus.propInfo[prop].default != null &&
-                        StagingBufferStatus.propInfo[prop].default != '');
+                        StagingBufferStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -93,7 +95,7 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'validation-result': CustomFormControl(new FormControl(this['validation-result'], [required, enumValidator(StagingBufferStatus_validation_result), ]), StagingBufferStatus.propInfo['validation-result'].description),
+                'validation-result': CustomFormControl(new FormControl(this['validation-result'], [required, enumValidator(StagingBufferStatus_validation_result), ]), StagingBufferStatus.propInfo['validation-result']),
                 'errors': new FormArray([]),
                 'items': new FormArray([]),
             });
@@ -101,6 +103,16 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
             this.fillFormArray<StagingValidationError>('errors', this['errors'], StagingValidationError);
             // generate FormArray control elements
             this.fillFormArray<StagingItem>('items', this['items'], StagingItem);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('errors') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('errors').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('items') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('items').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

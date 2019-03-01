@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthAuthenticators_authenticator_order,  AuthAuthenticators_authenticator_order_uihint  } from './enums';
@@ -29,15 +29,19 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
         'authenticator-order': {
             enum: AuthAuthenticators_authenticator_order_uihint,
             default: 'LOCAL',
+            required: true,
             type: 'Array<string>'
         },
         'ldap': {
+            required: false,
             type: 'object'
         },
         'local': {
+            required: false,
             type: 'object'
         },
         'radius': {
+            required: false,
             type: 'object'
         },
     }
@@ -55,8 +59,7 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     */
     public static hasDefaultValue(prop) {
         return (AuthAuthenticators.propInfo[prop] != null &&
-                        AuthAuthenticators.propInfo[prop].default != null &&
-                        AuthAuthenticators.propInfo[prop].default != '');
+                        AuthAuthenticators.propInfo[prop].default != null);
     }
 
     /**
@@ -106,10 +109,25 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'authenticator-order': CustomFormControl(new FormControl(this['authenticator-order']), AuthAuthenticators.propInfo['authenticator-order'].description),
-                'ldap': this['ldap'].$formGroup,
-                'local': this['local'].$formGroup,
-                'radius': this['radius'].$formGroup,
+                'authenticator-order': CustomFormControl(new FormControl(this['authenticator-order']), AuthAuthenticators.propInfo['authenticator-order']),
+                'ldap': CustomFormGroup(this['ldap'].$formGroup, AuthAuthenticators.propInfo['ldap'].required),
+                'local': CustomFormGroup(this['local'].$formGroup, AuthAuthenticators.propInfo['local'].required),
+                'radius': CustomFormGroup(this['radius'].$formGroup, AuthAuthenticators.propInfo['radius'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('ldap') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('ldap').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('local') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('local').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('radius') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('radius').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

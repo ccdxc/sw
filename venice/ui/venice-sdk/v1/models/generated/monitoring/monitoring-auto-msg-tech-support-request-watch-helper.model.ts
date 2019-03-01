@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent, IMonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent } from './monitoring-auto-msg-tech-support-request-watch-helper-watch-event.model';
@@ -18,6 +18,7 @@ export class MonitoringAutoMsgTechSupportRequestWatchHelper extends BaseModel im
     'events': Array<MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'events': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class MonitoringAutoMsgTechSupportRequestWatchHelper extends BaseModel im
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAutoMsgTechSupportRequestWatchHelper.propInfo[prop] != null &&
-                        MonitoringAutoMsgTechSupportRequestWatchHelper.propInfo[prop].default != null &&
-                        MonitoringAutoMsgTechSupportRequestWatchHelper.propInfo[prop].default != '');
+                        MonitoringAutoMsgTechSupportRequestWatchHelper.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class MonitoringAutoMsgTechSupportRequestWatchHelper extends BaseModel im
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent>('events', this['events'], MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('events') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('events').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

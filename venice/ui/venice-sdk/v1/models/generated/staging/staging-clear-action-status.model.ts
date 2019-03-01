@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { StagingClearActionStatus_status,  } from './enums';
@@ -22,9 +22,11 @@ export class StagingClearActionStatus extends BaseModel implements IStagingClear
         'status': {
             enum: StagingClearActionStatus_status,
             default: 'SUCCESS',
+            required: true,
             type: 'string'
         },
         'reason': {
+            required: false,
             type: 'string'
         },
     }
@@ -42,8 +44,7 @@ export class StagingClearActionStatus extends BaseModel implements IStagingClear
     */
     public static hasDefaultValue(prop) {
         return (StagingClearActionStatus.propInfo[prop] != null &&
-                        StagingClearActionStatus.propInfo[prop].default != null &&
-                        StagingClearActionStatus.propInfo[prop].default != '');
+                        StagingClearActionStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -81,8 +82,8 @@ export class StagingClearActionStatus extends BaseModel implements IStagingClear
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(StagingClearActionStatus_status), ]), StagingClearActionStatus.propInfo['status'].description),
-                'reason': CustomFormControl(new FormControl(this['reason']), StagingClearActionStatus.propInfo['reason'].description),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(StagingClearActionStatus_status), ]), StagingClearActionStatus.propInfo['status']),
+                'reason': CustomFormControl(new FormControl(this['reason']), StagingClearActionStatus.propInfo['reason']),
             });
         }
         return this._formGroup;

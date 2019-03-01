@@ -21,12 +21,15 @@ export class Telemetry_queryMetricsQueryResponse extends BaseModel implements IT
     'results': Array<Telemetry_queryMetricsQueryResult> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tenant': {
+            required: false,
             type: 'string'
         },
         'namespace': {
+            required: false,
             type: 'string'
         },
         'results': {
+            required: false,
             type: 'object'
         },
     }

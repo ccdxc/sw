@@ -10,6 +10,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 ----------------------------------------------------- */
 import { ToolbarComponent } from './toolbar.component';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { MatIconRegistry } from '@angular/material';
 /* ---------------------------------------------------
     Third-party libraries
@@ -39,6 +40,7 @@ describe('ToolbarComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

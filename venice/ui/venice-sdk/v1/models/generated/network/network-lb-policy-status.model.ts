@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicy
     'type': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -34,8 +35,7 @@ export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicy
     */
     public static hasDefaultValue(prop) {
         return (NetworkLbPolicyStatus.propInfo[prop] != null &&
-                        NetworkLbPolicyStatus.propInfo[prop].default != null &&
-                        NetworkLbPolicyStatus.propInfo[prop].default != '');
+                        NetworkLbPolicyStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -67,7 +67,7 @@ export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicy
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type']), NetworkLbPolicyStatus.propInfo['type'].description),
+                'type': CustomFormControl(new FormControl(this['type']), NetworkLbPolicyStatus.propInfo['type']),
             });
         }
         return this._formGroup;

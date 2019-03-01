@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthUserStatus_authenticators,  AuthUserStatus_authenticators_uihint  } from './enums';
@@ -24,17 +24,21 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     'authenticators': Array<AuthUserStatus_authenticators> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'roles': {
+            required: false,
             type: 'Array<string>'
         },
         'user-groups': {
+            required: false,
             type: 'Array<string>'
         },
         'last-successful-login': {
+            required: false,
             type: 'Date'
         },
         'authenticators': {
             enum: AuthUserStatus_authenticators_uihint,
             default: 'LOCAL',
+            required: true,
             type: 'Array<string>'
         },
     }
@@ -52,8 +56,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     */
     public static hasDefaultValue(prop) {
         return (AuthUserStatus.propInfo[prop] != null &&
-                        AuthUserStatus.propInfo[prop].default != null &&
-                        AuthUserStatus.propInfo[prop].default != '');
+                        AuthUserStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -108,10 +111,10 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'roles': CustomFormControl(new FormControl(this['roles']), AuthUserStatus.propInfo['roles'].description),
-                'user-groups': CustomFormControl(new FormControl(this['user-groups']), AuthUserStatus.propInfo['user-groups'].description),
-                'last-successful-login': CustomFormControl(new FormControl(this['last-successful-login']), AuthUserStatus.propInfo['last-successful-login'].description),
-                'authenticators': CustomFormControl(new FormControl(this['authenticators']), AuthUserStatus.propInfo['authenticators'].description),
+                'roles': CustomFormControl(new FormControl(this['roles']), AuthUserStatus.propInfo['roles']),
+                'user-groups': CustomFormControl(new FormControl(this['user-groups']), AuthUserStatus.propInfo['user-groups']),
+                'last-successful-login': CustomFormControl(new FormControl(this['last-successful-login']), AuthUserStatus.propInfo['last-successful-login']),
+                'authenticators': CustomFormControl(new FormControl(this['authenticators']), AuthUserStatus.propInfo['authenticators']),
             });
         }
         return this._formGroup;

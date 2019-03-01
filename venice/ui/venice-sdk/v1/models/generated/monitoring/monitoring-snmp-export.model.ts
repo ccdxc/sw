@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSNMPTrapServer, IMonitoringSNMPTrapServer } from './monitoring-snmp-trap-server.model';
@@ -18,6 +18,7 @@ export class MonitoringSNMPExport extends BaseModel implements IMonitoringSNMPEx
     'snmp-trap-servers': Array<MonitoringSNMPTrapServer> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'snmp-trap-servers': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class MonitoringSNMPExport extends BaseModel implements IMonitoringSNMPEx
     */
     public static hasDefaultValue(prop) {
         return (MonitoringSNMPExport.propInfo[prop] != null &&
-                        MonitoringSNMPExport.propInfo[prop].default != null &&
-                        MonitoringSNMPExport.propInfo[prop].default != '');
+                        MonitoringSNMPExport.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class MonitoringSNMPExport extends BaseModel implements IMonitoringSNMPEx
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringSNMPTrapServer>('snmp-trap-servers', this['snmp-trap-servers'], MonitoringSNMPTrapServer);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('snmp-trap-servers') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('snmp-trap-servers').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

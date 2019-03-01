@@ -12,6 +12,7 @@ export interface PropInfoItem {
     default?: any,
     description?: string,
     hint?: string,
+    required: boolean,
     type: string
 }
 

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorCollector_type,  MonitoringMirrorCollector_type_uihint  } from './enums';
@@ -23,9 +23,11 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
         'type': {
             enum: MonitoringMirrorCollector_type_uihint,
             default: 'VENICE',
+            required: true,
             type: 'string'
         },
         'export-config': {
+            required: false,
             type: 'object'
         },
     }
@@ -43,8 +45,7 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     */
     public static hasDefaultValue(prop) {
         return (MonitoringMirrorCollector.propInfo[prop] != null &&
-                        MonitoringMirrorCollector.propInfo[prop].default != null &&
-                        MonitoringMirrorCollector.propInfo[prop].default != '');
+                        MonitoringMirrorCollector.propInfo[prop].default != null);
     }
 
     /**
@@ -81,8 +82,13 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(MonitoringMirrorCollector_type), ]), MonitoringMirrorCollector.propInfo['type'].description),
-                'export-config': this['export-config'].$formGroup,
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(MonitoringMirrorCollector_type), ]), MonitoringMirrorCollector.propInfo['type']),
+                'export-config': CustomFormGroup(this['export-config'].$formGroup, MonitoringMirrorCollector.propInfo['export-config'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('export-config') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('export-config').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

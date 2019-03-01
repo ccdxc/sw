@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class SearchCategoryPreview extends BaseModel implements ISearchCategoryP
     'categories': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'categories': {
+            required: false,
             type: 'object'
         },
     }
@@ -34,8 +35,7 @@ export class SearchCategoryPreview extends BaseModel implements ISearchCategoryP
     */
     public static hasDefaultValue(prop) {
         return (SearchCategoryPreview.propInfo[prop] != null &&
-                        SearchCategoryPreview.propInfo[prop].default != null &&
-                        SearchCategoryPreview.propInfo[prop].default != '');
+                        SearchCategoryPreview.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,7 @@ export class SearchCategoryPreview extends BaseModel implements ISearchCategoryP
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'categories': CustomFormControl(new FormControl(this['categories']), SearchCategoryPreview.propInfo['categories'].description),
+                'categories': CustomFormControl(new FormControl(this['categories']), SearchCategoryPreview.propInfo['categories']),
             });
         }
         return this._formGroup;

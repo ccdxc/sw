@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class AuthRoleStatus extends BaseModel implements IAuthRoleStatus {
     */
     public static hasDefaultValue(prop) {
         return (AuthRoleStatus.propInfo[prop] != null &&
-                        AuthRoleStatus.propInfo[prop].default != null &&
-                        AuthRoleStatus.propInfo[prop].default != '');
+                        AuthRoleStatus.propInfo[prop].default != null);
     }
 
     /**

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     'admitted-smart-nics': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admitted-smart-nics': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -34,8 +35,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     */
     public static hasDefaultValue(prop) {
         return (ClusterHostStatus.propInfo[prop] != null &&
-                        ClusterHostStatus.propInfo[prop].default != null &&
-                        ClusterHostStatus.propInfo[prop].default != '');
+                        ClusterHostStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -67,7 +67,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admitted-smart-nics': CustomFormControl(new FormControl(this['admitted-smart-nics']), ClusterHostStatus.propInfo['admitted-smart-nics'].description),
+                'admitted-smart-nics': CustomFormControl(new FormControl(this['admitted-smart-nics']), ClusterHostStatus.propInfo['admitted-smart-nics']),
             });
         }
         return this._formGroup;

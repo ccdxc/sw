@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -30,20 +30,25 @@ export class MonitoringEventPolicy extends BaseModel implements IMonitoringEvent
     'status': MonitoringEventPolicyStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
         'spec': {
             description:  'Spec contains the configuration of an event policy.',
+            required: false,
             type: 'object'
         },
         'status': {
             description:  'Status contains the current state of an event policy.',
+            required: false,
             type: 'object'
         },
     }
@@ -61,8 +66,7 @@ export class MonitoringEventPolicy extends BaseModel implements IMonitoringEvent
     */
     public static hasDefaultValue(prop) {
         return (MonitoringEventPolicy.propInfo[prop] != null &&
-                        MonitoringEventPolicy.propInfo[prop].default != null &&
-                        MonitoringEventPolicy.propInfo[prop].default != '');
+                        MonitoringEventPolicy.propInfo[prop].default != null);
     }
 
     /**
@@ -118,11 +122,26 @@ export class MonitoringEventPolicy extends BaseModel implements IMonitoringEvent
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), MonitoringEventPolicy.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringEventPolicy.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
-                'spec': this['spec'].$formGroup,
-                'status': this['status'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), MonitoringEventPolicy.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringEventPolicy.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, MonitoringEventPolicy.propInfo['meta'].required),
+                'spec': CustomFormGroup(this['spec'].$formGroup, MonitoringEventPolicy.propInfo['spec'].required),
+                'status': CustomFormGroup(this['status'].$formGroup, MonitoringEventPolicy.propInfo['status'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('spec') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('spec').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

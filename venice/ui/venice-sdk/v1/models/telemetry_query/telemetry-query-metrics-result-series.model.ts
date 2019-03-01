@@ -22,15 +22,19 @@ export class Telemetry_queryMetricsResultSeries extends BaseModel implements ITe
     'values': Array<Array<any>> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
+            required: true,
             type: 'string'
         },
         'tags': {
+            required: true,
             type: 'object'
         },
         'columns': {
+            required: true,
             type: 'Array<string>'
         },
         'values': {
+            required: true,
             type: 'object'
         },
     }

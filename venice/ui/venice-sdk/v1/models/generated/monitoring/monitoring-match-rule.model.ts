@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMatchSelector, IMonitoringMatchSelector } from './monitoring-match-selector.model';
@@ -23,12 +23,15 @@ export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRu
     'app-protocol-selectors': MonitoringAppProtoSelector = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'source': {
+            required: false,
             type: 'object'
         },
         'destination': {
+            required: false,
             type: 'object'
         },
         'app-protocol-selectors': {
+            required: false,
             type: 'object'
         },
     }
@@ -46,8 +49,7 @@ export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRu
     */
     public static hasDefaultValue(prop) {
         return (MonitoringMatchRule.propInfo[prop] != null &&
-                        MonitoringMatchRule.propInfo[prop].default != null &&
-                        MonitoringMatchRule.propInfo[prop].default != '');
+                        MonitoringMatchRule.propInfo[prop].default != null);
     }
 
     /**
@@ -89,9 +91,24 @@ export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRu
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'source': this['source'].$formGroup,
-                'destination': this['destination'].$formGroup,
-                'app-protocol-selectors': this['app-protocol-selectors'].$formGroup,
+                'source': CustomFormGroup(this['source'].$formGroup, MonitoringMatchRule.propInfo['source'].required),
+                'destination': CustomFormGroup(this['destination'].$formGroup, MonitoringMatchRule.propInfo['destination'].required),
+                'app-protocol-selectors': CustomFormGroup(this['app-protocol-selectors'].$formGroup, MonitoringMatchRule.propInfo['app-protocol-selectors'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('source') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('source').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('destination') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('destination').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('app-protocol-selectors') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('app-protocol-selectors').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

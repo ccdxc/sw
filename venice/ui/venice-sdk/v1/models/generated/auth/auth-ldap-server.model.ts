@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthTLSOptions, IAuthTLSOptions } from './auth-tls-options.model';
@@ -20,9 +20,11 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     'tls-options': AuthTLSOptions = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'url': {
+            required: false,
             type: 'string'
         },
         'tls-options': {
+            required: false,
             type: 'object'
         },
     }
@@ -40,8 +42,7 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     */
     public static hasDefaultValue(prop) {
         return (AuthLdapServer.propInfo[prop] != null &&
-                        AuthLdapServer.propInfo[prop].default != null &&
-                        AuthLdapServer.propInfo[prop].default != '');
+                        AuthLdapServer.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,13 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'url': CustomFormControl(new FormControl(this['url']), AuthLdapServer.propInfo['url'].description),
-                'tls-options': this['tls-options'].$formGroup,
+                'url': CustomFormControl(new FormControl(this['url']), AuthLdapServer.propInfo['url']),
+                'tls-options': CustomFormGroup(this['tls-options'].$formGroup, AuthLdapServer.propInfo['tls-options'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('tls-options') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('tls-options').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

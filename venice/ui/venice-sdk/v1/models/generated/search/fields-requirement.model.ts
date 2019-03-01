@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { FieldsRequirement_operator,  FieldsRequirement_operator_uihint  } from './enums';
@@ -28,16 +28,19 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'key': {
             description:  'The label key that the condition applies to.',
+            required: false,
             type: 'string'
         },
         'operator': {
             enum: FieldsRequirement_operator_uihint,
             default: 'equals',
             description:  'Condition checked for the key.',
+            required: true,
             type: 'string'
         },
         'values': {
             description:  'Values contains one or more values corresponding to the label key. &quot;equals&quot; and &quot;notEquals&quot; operators need a single Value. &quot;in&quot; and &quot;notIn&quot; operators can have one or more values.',
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -55,8 +58,7 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
     */
     public static hasDefaultValue(prop) {
         return (FieldsRequirement.propInfo[prop] != null &&
-                        FieldsRequirement.propInfo[prop].default != null &&
-                        FieldsRequirement.propInfo[prop].default != '');
+                        FieldsRequirement.propInfo[prop].default != null);
     }
 
     /**
@@ -102,9 +104,9 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'key': CustomFormControl(new FormControl(this['key']), FieldsRequirement.propInfo['key'].description),
-                'operator': CustomFormControl(new FormControl(this['operator'], [required, enumValidator(FieldsRequirement_operator), ]), FieldsRequirement.propInfo['operator'].description),
-                'values': CustomFormControl(new FormControl(this['values']), FieldsRequirement.propInfo['values'].description),
+                'key': CustomFormControl(new FormControl(this['key']), FieldsRequirement.propInfo['key']),
+                'operator': CustomFormControl(new FormControl(this['operator'], [required, enumValidator(FieldsRequirement_operator), ]), FieldsRequirement.propInfo['operator']),
+                'values': CustomFormControl(new FormControl(this['values']), FieldsRequirement.propInfo['values']),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -41,30 +41,38 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
         'tenant': {
             default: 'default',
             description:  'Tenant Name, to perform query within a Tenant&#x27;s scope. The default tenant is &quot;default&quot;. In the backend this field gets auto-filled &amp; validated by apigw-hook based on user login context.',
+            required: false,
             type: 'string'
         },
         'namespace': {
             default: 'default',
             description:  'Namespace is optional. If provided policy-search will be limited to the specified namespace.',
+            required: false,
             type: 'string'
         },
         'sg-policy': {
             description:  'SGPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object name.',
+            required: false,
             type: 'string'
         },
         'app': {
+            required: false,
             type: 'string'
         },
         'from-ip-address': {
+            required: false,
             type: 'string'
         },
         'to-ip-address': {
+            required: false,
             type: 'string'
         },
         'from-security-group': {
+            required: false,
             type: 'string'
         },
         'to-security-group': {
+            required: false,
             type: 'string'
         },
     }
@@ -82,8 +90,7 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
     */
     public static hasDefaultValue(prop) {
         return (SearchPolicySearchRequest.propInfo[prop] != null &&
-                        SearchPolicySearchRequest.propInfo[prop].default != null &&
-                        SearchPolicySearchRequest.propInfo[prop].default != '');
+                        SearchPolicySearchRequest.propInfo[prop].default != null);
     }
 
     /**
@@ -163,14 +170,14 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tenant': CustomFormControl(new FormControl(this['tenant']), SearchPolicySearchRequest.propInfo['tenant'].description),
-                'namespace': CustomFormControl(new FormControl(this['namespace']), SearchPolicySearchRequest.propInfo['namespace'].description),
-                'sg-policy': CustomFormControl(new FormControl(this['sg-policy']), SearchPolicySearchRequest.propInfo['sg-policy'].description),
-                'app': CustomFormControl(new FormControl(this['app']), SearchPolicySearchRequest.propInfo['app'].description),
-                'from-ip-address': CustomFormControl(new FormControl(this['from-ip-address']), SearchPolicySearchRequest.propInfo['from-ip-address'].description),
-                'to-ip-address': CustomFormControl(new FormControl(this['to-ip-address']), SearchPolicySearchRequest.propInfo['to-ip-address'].description),
-                'from-security-group': CustomFormControl(new FormControl(this['from-security-group']), SearchPolicySearchRequest.propInfo['from-security-group'].description),
-                'to-security-group': CustomFormControl(new FormControl(this['to-security-group']), SearchPolicySearchRequest.propInfo['to-security-group'].description),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), SearchPolicySearchRequest.propInfo['tenant']),
+                'namespace': CustomFormControl(new FormControl(this['namespace']), SearchPolicySearchRequest.propInfo['namespace']),
+                'sg-policy': CustomFormControl(new FormControl(this['sg-policy']), SearchPolicySearchRequest.propInfo['sg-policy']),
+                'app': CustomFormControl(new FormControl(this['app']), SearchPolicySearchRequest.propInfo['app']),
+                'from-ip-address': CustomFormControl(new FormControl(this['from-ip-address']), SearchPolicySearchRequest.propInfo['from-ip-address']),
+                'to-ip-address': CustomFormControl(new FormControl(this['to-ip-address']), SearchPolicySearchRequest.propInfo['to-ip-address']),
+                'from-security-group': CustomFormControl(new FormControl(this['from-security-group']), SearchPolicySearchRequest.propInfo['from-security-group']),
+                'to-security-group': CustomFormControl(new FormControl(this['to-security-group']), SearchPolicySearchRequest.propInfo['to-security-group']),
             });
         }
         return this._formGroup;

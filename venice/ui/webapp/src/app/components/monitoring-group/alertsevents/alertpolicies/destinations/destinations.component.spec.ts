@@ -12,6 +12,7 @@ import { SharedModule } from '@app/components/shared/shared.module';
  Venice web-app imports
  ------------------*/
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
@@ -43,6 +44,7 @@ describe('DestinationpolicyComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

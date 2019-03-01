@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class AuditEventRequest extends BaseModel implements IAuditEventRequest {
     'uuid': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'uuid': {
+            required: false,
             type: 'string'
         },
     }
@@ -34,8 +35,7 @@ export class AuditEventRequest extends BaseModel implements IAuditEventRequest {
     */
     public static hasDefaultValue(prop) {
         return (AuditEventRequest.propInfo[prop] != null &&
-                        AuditEventRequest.propInfo[prop].default != null &&
-                        AuditEventRequest.propInfo[prop].default != '');
+                        AuditEventRequest.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,7 @@ export class AuditEventRequest extends BaseModel implements IAuditEventRequest {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'uuid': CustomFormControl(new FormControl(this['uuid']), AuditEventRequest.propInfo['uuid'].description),
+                'uuid': CustomFormControl(new FormControl(this['uuid']), AuditEventRequest.propInfo['uuid']),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { RolloutRolloutPhase_phase,  RolloutRolloutPhase_phase_uihint  } from './enums';
@@ -31,25 +31,31 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
     'message': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
+            required: false,
             type: 'string'
         },
         'phase': {
             enum: RolloutRolloutPhase_phase_uihint,
             default: 'PRE_CHECK',
+            required: true,
             type: 'string'
         },
         'start-time': {
             description:  'The time of starting the rollout for this node/service.  This does not include the pre-check which can happen way before the actual rollout.',
+            required: false,
             type: 'Date'
         },
         'end-time': {
+            required: false,
             type: 'Date'
         },
         'reason': {
+            required: false,
             type: 'string'
         },
         'message': {
             description:  'A detailed message indicating details about the transition.',
+            required: false,
             type: 'string'
         },
     }
@@ -67,8 +73,7 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
     */
     public static hasDefaultValue(prop) {
         return (RolloutRolloutPhase.propInfo[prop] != null &&
-                        RolloutRolloutPhase.propInfo[prop].default != null &&
-                        RolloutRolloutPhase.propInfo[prop].default != '');
+                        RolloutRolloutPhase.propInfo[prop].default != null);
     }
 
     /**
@@ -134,12 +139,12 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': CustomFormControl(new FormControl(this['name']), RolloutRolloutPhase.propInfo['name'].description),
-                'phase': CustomFormControl(new FormControl(this['phase'], [required, enumValidator(RolloutRolloutPhase_phase), ]), RolloutRolloutPhase.propInfo['phase'].description),
-                'start-time': CustomFormControl(new FormControl(this['start-time']), RolloutRolloutPhase.propInfo['start-time'].description),
-                'end-time': CustomFormControl(new FormControl(this['end-time']), RolloutRolloutPhase.propInfo['end-time'].description),
-                'reason': CustomFormControl(new FormControl(this['reason']), RolloutRolloutPhase.propInfo['reason'].description),
-                'message': CustomFormControl(new FormControl(this['message']), RolloutRolloutPhase.propInfo['message'].description),
+                'name': CustomFormControl(new FormControl(this['name']), RolloutRolloutPhase.propInfo['name']),
+                'phase': CustomFormControl(new FormControl(this['phase'], [required, enumValidator(RolloutRolloutPhase_phase), ]), RolloutRolloutPhase.propInfo['phase']),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), RolloutRolloutPhase.propInfo['start-time']),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), RolloutRolloutPhase.propInfo['end-time']),
+                'reason': CustomFormControl(new FormControl(this['reason']), RolloutRolloutPhase.propInfo['reason']),
+                'message': CustomFormControl(new FormControl(this['message']), RolloutRolloutPhase.propInfo['message']),
             });
         }
         return this._formGroup;

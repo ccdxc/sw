@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
     'cipher-suite': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'version': {
+            required: false,
             type: 'string'
         },
         'cipher-suite': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
     */
     public static hasDefaultValue(prop) {
         return (SecurityTLSProtocolSpec.propInfo[prop] != null &&
-                        SecurityTLSProtocolSpec.propInfo[prop].default != null &&
-                        SecurityTLSProtocolSpec.propInfo[prop].default != '');
+                        SecurityTLSProtocolSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'version': CustomFormControl(new FormControl(this['version']), SecurityTLSProtocolSpec.propInfo['version'].description),
-                'cipher-suite': CustomFormControl(new FormControl(this['cipher-suite']), SecurityTLSProtocolSpec.propInfo['cipher-suite'].description),
+                'version': CustomFormControl(new FormControl(this['version']), SecurityTLSProtocolSpec.propInfo['version']),
+                'cipher-suite': CustomFormControl(new FormControl(this['cipher-suite']), SecurityTLSProtocolSpec.propInfo['cipher-suite']),
             });
         }
         return this._formGroup;

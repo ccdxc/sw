@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -27,17 +27,21 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     'ip-addresses': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'mac-address': {
+            required: false,
             type: 'string'
         },
         'micro-seg-vlan': {
             description:  'value should be between 1 and 4095 ',
+            required: true,
             type: 'number'
         },
         'external-vlan': {
             description:  'value should be between 1 and 4095 ',
+            required: true,
             type: 'number'
         },
         'ip-addresses': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -55,8 +59,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     */
     public static hasDefaultValue(prop) {
         return (WorkloadWorkloadIntfSpec.propInfo[prop] != null &&
-                        WorkloadWorkloadIntfSpec.propInfo[prop].default != null &&
-                        WorkloadWorkloadIntfSpec.propInfo[prop].default != '');
+                        WorkloadWorkloadIntfSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -109,10 +112,10 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'mac-address': CustomFormControl(new FormControl(this['mac-address']), WorkloadWorkloadIntfSpec.propInfo['mac-address'].description),
-                'micro-seg-vlan': CustomFormControl(new FormControl(this['micro-seg-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['micro-seg-vlan'].description),
-                'external-vlan': CustomFormControl(new FormControl(this['external-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['external-vlan'].description),
-                'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), WorkloadWorkloadIntfSpec.propInfo['ip-addresses'].description),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address']), WorkloadWorkloadIntfSpec.propInfo['mac-address']),
+                'micro-seg-vlan': CustomFormControl(new FormControl(this['micro-seg-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['micro-seg-vlan']),
+                'external-vlan': CustomFormControl(new FormControl(this['external-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['external-vlan']),
+                'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), WorkloadWorkloadIntfSpec.propInfo['ip-addresses']),
             });
         }
         return this._formGroup;

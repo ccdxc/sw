@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterSmartNICCondition_type,  ClusterSmartNICCondition_type_uihint  } from './enums';
@@ -30,21 +30,26 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
         'type': {
             enum: ClusterSmartNICCondition_type_uihint,
             default: 'HEALTHY',
+            required: true,
             type: 'string'
         },
         'status': {
             enum: ClusterSmartNICCondition_status_uihint,
             default: 'UNKNOWN',
+            required: true,
             type: 'string'
         },
         'last-transition-time': {
+            required: false,
             type: 'string'
         },
         'reason': {
+            required: false,
             type: 'string'
         },
         'message': {
             description:  'A detailed message indicating details about the transition.',
+            required: false,
             type: 'string'
         },
     }
@@ -62,8 +67,7 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
     */
     public static hasDefaultValue(prop) {
         return (ClusterSmartNICCondition.propInfo[prop] != null &&
-                        ClusterSmartNICCondition.propInfo[prop].default != null &&
-                        ClusterSmartNICCondition.propInfo[prop].default != '');
+                        ClusterSmartNICCondition.propInfo[prop].default != null);
     }
 
     /**
@@ -122,11 +126,11 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterSmartNICCondition_type), ]), ClusterSmartNICCondition.propInfo['type'].description),
-                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(ClusterSmartNICCondition_status), ]), ClusterSmartNICCondition.propInfo['status'].description),
-                'last-transition-time': CustomFormControl(new FormControl(this['last-transition-time']), ClusterSmartNICCondition.propInfo['last-transition-time'].description),
-                'reason': CustomFormControl(new FormControl(this['reason']), ClusterSmartNICCondition.propInfo['reason'].description),
-                'message': CustomFormControl(new FormControl(this['message']), ClusterSmartNICCondition.propInfo['message'].description),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterSmartNICCondition_type), ]), ClusterSmartNICCondition.propInfo['type']),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(ClusterSmartNICCondition_status), ]), ClusterSmartNICCondition.propInfo['status']),
+                'last-transition-time': CustomFormControl(new FormControl(this['last-transition-time']), ClusterSmartNICCondition.propInfo['last-transition-time']),
+                'reason': CustomFormControl(new FormControl(this['reason']), ClusterSmartNICCondition.propInfo['reason']),
+                'message': CustomFormControl(new FormControl(this['message']), ClusterSmartNICCondition.propInfo['message']),
             });
         }
         return this._formGroup;

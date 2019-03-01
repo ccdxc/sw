@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,11 +21,13 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
     'timeout': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'program-uuid': {
+            required: false,
             type: 'string'
         },
         'timeout': {
             description:  'should be a valid time duration ',
             hint:  '2h',
+            required: false,
             type: 'string'
         },
     }
@@ -43,8 +45,7 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
     */
     public static hasDefaultValue(prop) {
         return (SecurityMsrpc.propInfo[prop] != null &&
-                        SecurityMsrpc.propInfo[prop].default != null &&
-                        SecurityMsrpc.propInfo[prop].default != '');
+                        SecurityMsrpc.propInfo[prop].default != null);
     }
 
     /**
@@ -82,8 +83,8 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'program-uuid': CustomFormControl(new FormControl(this['program-uuid']), SecurityMsrpc.propInfo['program-uuid'].description),
-                'timeout': CustomFormControl(new FormControl(this['timeout']), SecurityMsrpc.propInfo['timeout'].description),
+                'program-uuid': CustomFormControl(new FormControl(this['program-uuid']), SecurityMsrpc.propInfo['program-uuid']),
+                'timeout': CustomFormControl(new FormControl(this['timeout']), SecurityMsrpc.propInfo['timeout']),
             });
         }
         return this._formGroup;

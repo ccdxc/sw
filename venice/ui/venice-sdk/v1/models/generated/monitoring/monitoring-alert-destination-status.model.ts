@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -17,6 +17,7 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
     'total-notifications-sent': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'total-notifications-sent': {
+            required: false,
             type: 'number'
         },
     }
@@ -34,8 +35,7 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAlertDestinationStatus.propInfo[prop] != null &&
-                        MonitoringAlertDestinationStatus.propInfo[prop].default != null &&
-                        MonitoringAlertDestinationStatus.propInfo[prop].default != '');
+                        MonitoringAlertDestinationStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -66,7 +66,7 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'total-notifications-sent': CustomFormControl(new FormControl(this['total-notifications-sent']), MonitoringAlertDestinationStatus.propInfo['total-notifications-sent'].description),
+                'total-notifications-sent': CustomFormControl(new FormControl(this['total-notifications-sent']), MonitoringAlertDestinationStatus.propInfo['total-notifications-sent']),
             });
         }
         return this._formGroup;

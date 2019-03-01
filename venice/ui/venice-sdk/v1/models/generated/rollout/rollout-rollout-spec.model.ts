@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { RolloutRolloutSpec_strategy,  RolloutRolloutSpec_strategy_uihint  } from './enums';
@@ -47,44 +47,55 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     'upgrade-type': RolloutRolloutSpec_upgrade_type = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'version': {
+            required: false,
             type: 'string'
         },
         'scheduled-start-time': {
+            required: false,
             type: 'Date'
         },
         'duration': {
             description:  'should be a valid time duration ',
             hint:  '2h',
+            required: false,
             type: 'string'
         },
         'strategy': {
             enum: RolloutRolloutSpec_strategy_uihint,
             default: 'LINEAR',
+            required: true,
             type: 'string'
         },
         'max-parallel': {
             description:  'MaxParallel is the maximum number of nodes getting updated at any time This setting is applicable only to SmartNICs. Controller nodes are always upgraded one after another.',
+            required: false,
             type: 'number'
         },
         'max-nic-failures-before-abort': {
+            required: false,
             type: 'number'
         },
         'order-constraints': {
+            required: false,
             type: 'object'
         },
         'suspend': {
             description:  'When Set to true, the current rollout is suspended. Existing Nodes/Services/SmartNICs in the middle of rollout continue  rollout execution but any Nodes/Services/SmartNICs which has not started Rollout will not be scheduled one.',
+            required: false,
             type: 'boolean'
         },
         'smartnics-only': {
+            required: false,
             type: 'boolean'
         },
         'smartnic-must-match-constraint': {
+            required: false,
             type: 'boolean'
         },
         'upgrade-type': {
             enum: RolloutRolloutSpec_upgrade_type_uihint,
             default: 'Disruptive',
+            required: true,
             type: 'string'
         },
     }
@@ -102,8 +113,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     */
     public static hasDefaultValue(prop) {
         return (RolloutRolloutSpec.propInfo[prop] != null &&
-                        RolloutRolloutSpec.propInfo[prop].default != null &&
-                        RolloutRolloutSpec.propInfo[prop].default != '');
+                        RolloutRolloutSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -203,20 +213,25 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'version': CustomFormControl(new FormControl(this['version']), RolloutRolloutSpec.propInfo['version'].description),
-                'scheduled-start-time': CustomFormControl(new FormControl(this['scheduled-start-time']), RolloutRolloutSpec.propInfo['scheduled-start-time'].description),
-                'duration': CustomFormControl(new FormControl(this['duration']), RolloutRolloutSpec.propInfo['duration'].description),
-                'strategy': CustomFormControl(new FormControl(this['strategy'], [required, enumValidator(RolloutRolloutSpec_strategy), ]), RolloutRolloutSpec.propInfo['strategy'].description),
-                'max-parallel': CustomFormControl(new FormControl(this['max-parallel']), RolloutRolloutSpec.propInfo['max-parallel'].description),
-                'max-nic-failures-before-abort': CustomFormControl(new FormControl(this['max-nic-failures-before-abort']), RolloutRolloutSpec.propInfo['max-nic-failures-before-abort'].description),
+                'version': CustomFormControl(new FormControl(this['version']), RolloutRolloutSpec.propInfo['version']),
+                'scheduled-start-time': CustomFormControl(new FormControl(this['scheduled-start-time']), RolloutRolloutSpec.propInfo['scheduled-start-time']),
+                'duration': CustomFormControl(new FormControl(this['duration']), RolloutRolloutSpec.propInfo['duration']),
+                'strategy': CustomFormControl(new FormControl(this['strategy'], [required, enumValidator(RolloutRolloutSpec_strategy), ]), RolloutRolloutSpec.propInfo['strategy']),
+                'max-parallel': CustomFormControl(new FormControl(this['max-parallel']), RolloutRolloutSpec.propInfo['max-parallel']),
+                'max-nic-failures-before-abort': CustomFormControl(new FormControl(this['max-nic-failures-before-abort']), RolloutRolloutSpec.propInfo['max-nic-failures-before-abort']),
                 'order-constraints': new FormArray([]),
-                'suspend': CustomFormControl(new FormControl(this['suspend']), RolloutRolloutSpec.propInfo['suspend'].description),
-                'smartnics-only': CustomFormControl(new FormControl(this['smartnics-only']), RolloutRolloutSpec.propInfo['smartnics-only'].description),
-                'smartnic-must-match-constraint': CustomFormControl(new FormControl(this['smartnic-must-match-constraint']), RolloutRolloutSpec.propInfo['smartnic-must-match-constraint'].description),
-                'upgrade-type': CustomFormControl(new FormControl(this['upgrade-type'], [required, enumValidator(RolloutRolloutSpec_upgrade_type), ]), RolloutRolloutSpec.propInfo['upgrade-type'].description),
+                'suspend': CustomFormControl(new FormControl(this['suspend']), RolloutRolloutSpec.propInfo['suspend']),
+                'smartnics-only': CustomFormControl(new FormControl(this['smartnics-only']), RolloutRolloutSpec.propInfo['smartnics-only']),
+                'smartnic-must-match-constraint': CustomFormControl(new FormControl(this['smartnic-must-match-constraint']), RolloutRolloutSpec.propInfo['smartnic-must-match-constraint']),
+                'upgrade-type': CustomFormControl(new FormControl(this['upgrade-type'], [required, enumValidator(RolloutRolloutSpec_upgrade_type), ]), RolloutRolloutSpec.propInfo['upgrade-type']),
             });
             // generate FormArray control elements
             this.fillFormArray<LabelsSelector>('order-constraints', this['order-constraints'], LabelsSelector);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('order-constraints') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('order-constraints').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

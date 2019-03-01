@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRadiusServerStatus_result,  } from './enums';
@@ -25,12 +25,15 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
         'result': {
             enum: AuthRadiusServerStatus_result,
             default: 'Connect_Success',
+            required: true,
             type: 'string'
         },
         'message': {
+            required: false,
             type: 'string'
         },
         'server': {
+            required: false,
             type: 'object'
         },
     }
@@ -48,8 +51,7 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
     */
     public static hasDefaultValue(prop) {
         return (AuthRadiusServerStatus.propInfo[prop] != null &&
-                        AuthRadiusServerStatus.propInfo[prop].default != null &&
-                        AuthRadiusServerStatus.propInfo[prop].default != '');
+                        AuthRadiusServerStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -93,9 +95,14 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'result': CustomFormControl(new FormControl(this['result'], [required, enumValidator(AuthRadiusServerStatus_result), ]), AuthRadiusServerStatus.propInfo['result'].description),
-                'message': CustomFormControl(new FormControl(this['message']), AuthRadiusServerStatus.propInfo['message'].description),
-                'server': this['server'].$formGroup,
+                'result': CustomFormControl(new FormControl(this['result'], [required, enumValidator(AuthRadiusServerStatus_result), ]), AuthRadiusServerStatus.propInfo['result']),
+                'message': CustomFormControl(new FormControl(this['message']), AuthRadiusServerStatus.propInfo['message']),
+                'server': CustomFormGroup(this['server'].$formGroup, AuthRadiusServerStatus.propInfo['server'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('server') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('server').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

@@ -9,6 +9,7 @@ import { SharedModule } from '@app/components/shared/shared.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -87,6 +88,7 @@ describe('NaplesComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         ClusterService,

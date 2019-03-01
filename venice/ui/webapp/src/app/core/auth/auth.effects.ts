@@ -61,8 +61,8 @@ export class AuthEffects {
   }
 
   protected onLoginFailure(err: any) {
-    sessionStorage.setItem(AUTH_KEY, null);
-    sessionStorage.setItem(AUTH_BODY, null);
+    sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(AUTH_BODY);
     this._store.dispatch(authReducer.login_failure(err));
     this._controllerService.publish(Eventtypes.LOGIN_FAILURE, { 'ajax': 'end', 'name': 'login', 'message': err });
   }

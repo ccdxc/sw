@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorSessionStatus_oper_state,  MonitoringMirrorSessionStatus_oper_state_uihint  } from './enums';
@@ -24,12 +24,15 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         'oper-state': {
             enum: MonitoringMirrorSessionStatus_oper_state_uihint,
             default: 'NONE',
+            required: true,
             type: 'string'
         },
         'pcap-file-url': {
+            required: false,
             type: 'string'
         },
         'started-at': {
+            required: false,
             type: 'Date'
         },
     }
@@ -47,8 +50,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     */
     public static hasDefaultValue(prop) {
         return (MonitoringMirrorSessionStatus.propInfo[prop] != null &&
-                        MonitoringMirrorSessionStatus.propInfo[prop].default != null &&
-                        MonitoringMirrorSessionStatus.propInfo[prop].default != '');
+                        MonitoringMirrorSessionStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -93,9 +95,9 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'oper-state': CustomFormControl(new FormControl(this['oper-state'], [required, enumValidator(MonitoringMirrorSessionStatus_oper_state), ]), MonitoringMirrorSessionStatus.propInfo['oper-state'].description),
-                'pcap-file-url': CustomFormControl(new FormControl(this['pcap-file-url']), MonitoringMirrorSessionStatus.propInfo['pcap-file-url'].description),
-                'started-at': CustomFormControl(new FormControl(this['started-at']), MonitoringMirrorSessionStatus.propInfo['started-at'].description),
+                'oper-state': CustomFormControl(new FormControl(this['oper-state'], [required, enumValidator(MonitoringMirrorSessionStatus_oper_state), ]), MonitoringMirrorSessionStatus.propInfo['oper-state']),
+                'pcap-file-url': CustomFormControl(new FormControl(this['pcap-file-url']), MonitoringMirrorSessionStatus.propInfo['pcap-file-url']),
+                'started-at': CustomFormControl(new FormControl(this['started-at']), MonitoringMirrorSessionStatus.propInfo['started-at']),
             });
         }
         return this._formGroup;

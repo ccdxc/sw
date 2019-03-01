@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { RolloutRolloutPhase, IRolloutRolloutPhase } from './rollout-rollout-phase.model';
@@ -35,30 +35,38 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
     'prev-version': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'controller-nodes-status': {
+            required: false,
             type: 'object'
         },
         'controller-services-status': {
+            required: false,
             type: 'object'
         },
         'smartnics-status': {
             description:  'Rollout status of SmartNICs in the cluster. Has entries for SmartNICs on Controller nodes as well as workload nodes The entries are group by parallelism based on the order-constraints and max-parallel specified by the user.',
+            required: false,
             type: 'object'
         },
         'state': {
             enum: RolloutRolloutStatus_state,
             default: 'PROGRESSING',
+            required: true,
             type: 'string'
         },
         'completion-percent': {
+            required: false,
             type: 'number'
         },
         'start-time': {
+            required: false,
             type: 'Date'
         },
         'end-time': {
+            required: false,
             type: 'Date'
         },
         'prev-version': {
+            required: false,
             type: 'string'
         },
     }
@@ -76,8 +84,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
     */
     public static hasDefaultValue(prop) {
         return (RolloutRolloutStatus.propInfo[prop] != null &&
-                        RolloutRolloutStatus.propInfo[prop].default != null &&
-                        RolloutRolloutStatus.propInfo[prop].default != '');
+                        RolloutRolloutStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -157,11 +164,11 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
                 'controller-nodes-status': new FormArray([]),
                 'controller-services-status': new FormArray([]),
                 'smartnics-status': new FormArray([]),
-                'state': CustomFormControl(new FormControl(this['state'], [required, enumValidator(RolloutRolloutStatus_state), ]), RolloutRolloutStatus.propInfo['state'].description),
-                'completion-percent': CustomFormControl(new FormControl(this['completion-percent']), RolloutRolloutStatus.propInfo['completion-percent'].description),
-                'start-time': CustomFormControl(new FormControl(this['start-time']), RolloutRolloutStatus.propInfo['start-time'].description),
-                'end-time': CustomFormControl(new FormControl(this['end-time']), RolloutRolloutStatus.propInfo['end-time'].description),
-                'prev-version': CustomFormControl(new FormControl(this['prev-version']), RolloutRolloutStatus.propInfo['prev-version'].description),
+                'state': CustomFormControl(new FormControl(this['state'], [required, enumValidator(RolloutRolloutStatus_state), ]), RolloutRolloutStatus.propInfo['state']),
+                'completion-percent': CustomFormControl(new FormControl(this['completion-percent']), RolloutRolloutStatus.propInfo['completion-percent']),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), RolloutRolloutStatus.propInfo['start-time']),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), RolloutRolloutStatus.propInfo['end-time']),
+                'prev-version': CustomFormControl(new FormControl(this['prev-version']), RolloutRolloutStatus.propInfo['prev-version']),
             });
             // generate FormArray control elements
             this.fillFormArray<RolloutRolloutPhase>('controller-nodes-status', this['controller-nodes-status'], RolloutRolloutPhase);
@@ -169,6 +176,21 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
             this.fillFormArray<RolloutRolloutPhase>('controller-services-status', this['controller-services-status'], RolloutRolloutPhase);
             // generate FormArray control elements
             this.fillFormArray<RolloutRolloutPhase>('smartnics-status', this['smartnics-status'], RolloutRolloutPhase);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('controller-nodes-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('controller-nodes-status').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('controller-services-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('controller-services-status').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('smartnics-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('smartnics-status').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

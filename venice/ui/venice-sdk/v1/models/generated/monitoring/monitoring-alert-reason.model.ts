@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMatchedRequirement, IMonitoringMatchedRequirement } from './monitoring-matched-requirement.model';
@@ -20,9 +20,11 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
     'alert-policy-id': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'matched-requirements': {
+            required: false,
             type: 'object'
         },
         'alert-policy-id': {
+            required: false,
             type: 'string'
         },
     }
@@ -40,8 +42,7 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAlertReason.propInfo[prop] != null &&
-                        MonitoringAlertReason.propInfo[prop].default != null &&
-                        MonitoringAlertReason.propInfo[prop].default != '');
+                        MonitoringAlertReason.propInfo[prop].default != null);
     }
 
     /**
@@ -79,10 +80,15 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'matched-requirements': new FormArray([]),
-                'alert-policy-id': CustomFormControl(new FormControl(this['alert-policy-id']), MonitoringAlertReason.propInfo['alert-policy-id'].description),
+                'alert-policy-id': CustomFormControl(new FormControl(this['alert-policy-id']), MonitoringAlertReason.propInfo['alert-policy-id']),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringMatchedRequirement>('matched-requirements', this['matched-requirements'], MonitoringMatchedRequirement);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('matched-requirements') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('matched-requirements').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

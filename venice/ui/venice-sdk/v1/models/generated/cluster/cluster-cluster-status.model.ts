@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,21 +29,27 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'leader': {
             description:  'Leader contains the node name of the cluster leader.',
+            required: false,
             type: 'string'
         },
         'last-leader-transition-time': {
+            required: false,
             type: 'Date'
         },
         'build-version': {
+            required: false,
             type: 'string'
         },
         'vcs-commit': {
+            required: false,
             type: 'string'
         },
         'build-date': {
+            required: false,
             type: 'string'
         },
         'auth-bootstrapped': {
+            required: false,
             type: 'boolean'
         },
     }
@@ -61,8 +67,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     */
     public static hasDefaultValue(prop) {
         return (ClusterClusterStatus.propInfo[prop] != null &&
-                        ClusterClusterStatus.propInfo[prop].default != null &&
-                        ClusterClusterStatus.propInfo[prop].default != '');
+                        ClusterClusterStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -128,12 +133,12 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'leader': CustomFormControl(new FormControl(this['leader']), ClusterClusterStatus.propInfo['leader'].description),
-                'last-leader-transition-time': CustomFormControl(new FormControl(this['last-leader-transition-time']), ClusterClusterStatus.propInfo['last-leader-transition-time'].description),
-                'build-version': CustomFormControl(new FormControl(this['build-version']), ClusterClusterStatus.propInfo['build-version'].description),
-                'vcs-commit': CustomFormControl(new FormControl(this['vcs-commit']), ClusterClusterStatus.propInfo['vcs-commit'].description),
-                'build-date': CustomFormControl(new FormControl(this['build-date']), ClusterClusterStatus.propInfo['build-date'].description),
-                'auth-bootstrapped': CustomFormControl(new FormControl(this['auth-bootstrapped']), ClusterClusterStatus.propInfo['auth-bootstrapped'].description),
+                'leader': CustomFormControl(new FormControl(this['leader']), ClusterClusterStatus.propInfo['leader']),
+                'last-leader-transition-time': CustomFormControl(new FormControl(this['last-leader-transition-time']), ClusterClusterStatus.propInfo['last-leader-transition-time']),
+                'build-version': CustomFormControl(new FormControl(this['build-version']), ClusterClusterStatus.propInfo['build-version']),
+                'vcs-commit': CustomFormControl(new FormControl(this['vcs-commit']), ClusterClusterStatus.propInfo['vcs-commit']),
+                'build-date': CustomFormControl(new FormControl(this['build-date']), ClusterClusterStatus.propInfo['build-date']),
+                'auth-bootstrapped': CustomFormControl(new FormControl(this['auth-bootstrapped']), ClusterClusterStatus.propInfo['auth-bootstrapped']),
             });
         }
         return this._formGroup;

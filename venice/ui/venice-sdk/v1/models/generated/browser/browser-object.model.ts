@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -33,27 +33,34 @@ export class BrowserObject extends BaseModel implements IBrowserObject {
     'links': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
         'uri': {
+            required: false,
             type: 'string'
         },
         'reverse': {
+            required: false,
             type: 'string'
         },
         'query-type': {
             enum: BrowserObject_query_type,
             default: 'Dependencies',
+            required: true,
             type: 'string'
         },
         'links': {
             description:  'Links points to the relations of the object. The key for the map is the path to the filed which   is causing the relation.',
+            required: false,
             type: 'object'
         },
     }
@@ -71,8 +78,7 @@ export class BrowserObject extends BaseModel implements IBrowserObject {
     */
     public static hasDefaultValue(prop) {
         return (BrowserObject.propInfo[prop] != null &&
-                        BrowserObject.propInfo[prop].default != null &&
-                        BrowserObject.propInfo[prop].default != '');
+                        BrowserObject.propInfo[prop].default != null);
     }
 
     /**
@@ -144,13 +150,18 @@ export class BrowserObject extends BaseModel implements IBrowserObject {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), BrowserObject.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), BrowserObject.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
-                'uri': CustomFormControl(new FormControl(this['uri']), BrowserObject.propInfo['uri'].description),
-                'reverse': CustomFormControl(new FormControl(this['reverse']), BrowserObject.propInfo['reverse'].description),
-                'query-type': CustomFormControl(new FormControl(this['query-type'], [required, enumValidator(BrowserObject_query_type), ]), BrowserObject.propInfo['query-type'].description),
-                'links': CustomFormControl(new FormControl(this['links']), BrowserObject.propInfo['links'].description),
+                'kind': CustomFormControl(new FormControl(this['kind']), BrowserObject.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), BrowserObject.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, BrowserObject.propInfo['meta'].required),
+                'uri': CustomFormControl(new FormControl(this['uri']), BrowserObject.propInfo['uri']),
+                'reverse': CustomFormControl(new FormControl(this['reverse']), BrowserObject.propInfo['reverse']),
+                'query-type': CustomFormControl(new FormControl(this['query-type'], [required, enumValidator(BrowserObject_query_type), ]), BrowserObject.propInfo['query-type']),
+                'links': CustomFormControl(new FormControl(this['links']), BrowserObject.propInfo['links']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityProtoPort, ISecurityProtoPort } from './security-proto-port.model';
@@ -24,14 +24,17 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
     'alg': SecurityALG = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'proto-ports': {
+            required: false,
             type: 'object'
         },
         'timeout': {
             description:  'Timeout specifies for how long the connection be kept before removing the flow entry, specified in string as &#x27;200s&#x27;, &#x27;5m&#x27;, etc.',
             hint:  '2h',
+            required: false,
             type: 'string'
         },
         'alg': {
+            required: false,
             type: 'object'
         },
     }
@@ -49,8 +52,7 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
     */
     public static hasDefaultValue(prop) {
         return (SecurityAppSpec.propInfo[prop] != null &&
-                        SecurityAppSpec.propInfo[prop].default != null &&
-                        SecurityAppSpec.propInfo[prop].default != '');
+                        SecurityAppSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -94,11 +96,21 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'proto-ports': new FormArray([]),
-                'timeout': CustomFormControl(new FormControl(this['timeout']), SecurityAppSpec.propInfo['timeout'].description),
-                'alg': this['alg'].$formGroup,
+                'timeout': CustomFormControl(new FormControl(this['timeout']), SecurityAppSpec.propInfo['timeout']),
+                'alg': CustomFormGroup(this['alg'].$formGroup, SecurityAppSpec.propInfo['alg'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<SecurityProtoPort>('proto-ports', this['proto-ports'], SecurityProtoPort);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('proto-ports') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('proto-ports').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('alg') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('alg').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

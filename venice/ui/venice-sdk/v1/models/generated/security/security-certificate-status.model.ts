@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityCertificateStatus_validity,  } from './enums';
@@ -26,9 +26,11 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
             enum: SecurityCertificateStatus_validity,
             default: 'Unknown',
             description:  'Status of the certificate: &quot;valid&quot;, &quot;invalid&quot;, &quot;expired&quot; &quot;invalid&quot; means that the signature of the certificate does not match or there are inconsistencies in the trust chain.',
+            required: true,
             type: 'string'
         },
         'workloads': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -46,8 +48,7 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
     */
     public static hasDefaultValue(prop) {
         return (SecurityCertificateStatus.propInfo[prop] != null &&
-                        SecurityCertificateStatus.propInfo[prop].default != null &&
-                        SecurityCertificateStatus.propInfo[prop].default != '');
+                        SecurityCertificateStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -86,8 +87,8 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'validity': CustomFormControl(new FormControl(this['validity'], [required, enumValidator(SecurityCertificateStatus_validity), ]), SecurityCertificateStatus.propInfo['validity'].description),
-                'workloads': CustomFormControl(new FormControl(this['workloads']), SecurityCertificateStatus.propInfo['workloads'].description),
+                'validity': CustomFormControl(new FormControl(this['validity'], [required, enumValidator(SecurityCertificateStatus_validity), ]), SecurityCertificateStatus.propInfo['validity']),
+                'workloads': CustomFormControl(new FormControl(this['workloads']), SecurityCertificateStatus.propInfo['workloads']),
             });
         }
         return this._formGroup;

@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { SecurityComponent } from './security.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
@@ -28,6 +29,7 @@ describe('SecurityComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

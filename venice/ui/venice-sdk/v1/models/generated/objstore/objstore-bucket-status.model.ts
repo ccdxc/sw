@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class ObjstoreBucketStatus extends BaseModel implements IObjstoreBucketSt
     'total-size': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'num-objects': {
+            required: false,
             type: 'number'
         },
         'total-size': {
+            required: false,
             type: 'number'
         },
     }
@@ -39,8 +41,7 @@ export class ObjstoreBucketStatus extends BaseModel implements IObjstoreBucketSt
     */
     public static hasDefaultValue(prop) {
         return (ObjstoreBucketStatus.propInfo[prop] != null &&
-                        ObjstoreBucketStatus.propInfo[prop].default != null &&
-                        ObjstoreBucketStatus.propInfo[prop].default != '');
+                        ObjstoreBucketStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class ObjstoreBucketStatus extends BaseModel implements IObjstoreBucketSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'num-objects': CustomFormControl(new FormControl(this['num-objects']), ObjstoreBucketStatus.propInfo['num-objects'].description),
-                'total-size': CustomFormControl(new FormControl(this['total-size']), ObjstoreBucketStatus.propInfo['total-size'].description),
+                'num-objects': CustomFormControl(new FormControl(this['num-objects']), ObjstoreBucketStatus.propInfo['num-objects']),
+                'total-size': CustomFormControl(new FormControl(this['total-size']), ObjstoreBucketStatus.propInfo['total-size']),
             });
         }
         return this._formGroup;

@@ -15,6 +15,7 @@ import { WidgetsModule } from 'web-app-framework';
  Venice UI -  imports
  ------------------*/
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { WorkloadService as WorkloadServiceGen } from '@app/services/generated/workload.service';
 import { WorkloadService } from '@app/services/workload.service';
 
@@ -175,6 +176,7 @@ describe('WorkloadComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         WorkloadServiceGen,

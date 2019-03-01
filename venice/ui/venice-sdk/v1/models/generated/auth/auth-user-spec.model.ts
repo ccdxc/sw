@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthUserSpec_type,  AuthUserSpec_type_uihint  } from './enums';
@@ -24,17 +24,21 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     'type': AuthUserSpec_type = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'fullname': {
+            required: false,
             type: 'string'
         },
         'email': {
+            required: false,
             type: 'string'
         },
         'password': {
+            required: false,
             type: 'string'
         },
         'type': {
             enum: AuthUserSpec_type_uihint,
             default: 'Local',
+            required: true,
             type: 'string'
         },
     }
@@ -52,8 +56,7 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     */
     public static hasDefaultValue(prop) {
         return (AuthUserSpec.propInfo[prop] != null &&
-                        AuthUserSpec.propInfo[prop].default != null &&
-                        AuthUserSpec.propInfo[prop].default != '');
+                        AuthUserSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -105,10 +108,10 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'fullname': CustomFormControl(new FormControl(this['fullname']), AuthUserSpec.propInfo['fullname'].description),
-                'email': CustomFormControl(new FormControl(this['email']), AuthUserSpec.propInfo['email'].description),
-                'password': CustomFormControl(new FormControl(this['password']), AuthUserSpec.propInfo['password'].description),
-                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(AuthUserSpec_type), ]), AuthUserSpec.propInfo['type'].description),
+                'fullname': CustomFormControl(new FormControl(this['fullname']), AuthUserSpec.propInfo['fullname']),
+                'email': CustomFormControl(new FormControl(this['email']), AuthUserSpec.propInfo['email']),
+                'password': CustomFormControl(new FormControl(this['password']), AuthUserSpec.propInfo['password']),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(AuthUserSpec_type), ]), AuthUserSpec.propInfo['type']),
             });
         }
         return this._formGroup;

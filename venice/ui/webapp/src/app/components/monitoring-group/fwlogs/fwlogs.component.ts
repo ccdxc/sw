@@ -70,7 +70,7 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
           cssClass: 'global-button-primary fwlogs-button',
           text: 'FIREWALL LOG POLICIES',
           callback: () => { this.controllerService.navigate(['/monitoring', 'fwlogs', 'fwlogpolicies']); }
-        },],
+        }, ],
       breadcrumb: [{ label: 'Firewall Logs', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs' }]
     });
     this.getFwlogs();

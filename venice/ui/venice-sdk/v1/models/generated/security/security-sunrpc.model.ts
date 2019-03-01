@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,11 +21,13 @@ export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
     'timeout': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'program-id': {
+            required: false,
             type: 'string'
         },
         'timeout': {
             description:  'should be a valid time duration ',
             hint:  '2h',
+            required: false,
             type: 'string'
         },
     }
@@ -43,8 +45,7 @@ export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
     */
     public static hasDefaultValue(prop) {
         return (SecuritySunrpc.propInfo[prop] != null &&
-                        SecuritySunrpc.propInfo[prop].default != null &&
-                        SecuritySunrpc.propInfo[prop].default != '');
+                        SecuritySunrpc.propInfo[prop].default != null);
     }
 
     /**
@@ -82,8 +83,8 @@ export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'program-id': CustomFormControl(new FormControl(this['program-id']), SecuritySunrpc.propInfo['program-id'].description),
-                'timeout': CustomFormControl(new FormControl(this['timeout']), SecuritySunrpc.propInfo['timeout'].description),
+                'program-id': CustomFormControl(new FormControl(this['program-id']), SecuritySunrpc.propInfo['program-id']),
+                'timeout': CustomFormControl(new FormControl(this['timeout']), SecuritySunrpc.propInfo['timeout']),
             });
         }
         return this._formGroup;

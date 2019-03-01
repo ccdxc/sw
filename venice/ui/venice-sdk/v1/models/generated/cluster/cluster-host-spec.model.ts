@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterSmartNICID, IClusterSmartNICID } from './cluster-smart-nicid.model';
@@ -18,6 +18,7 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     'smart-nics': Array<ClusterSmartNICID> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'smart-nics': {
+            required: false,
             type: 'object'
         },
     }
@@ -35,8 +36,7 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     */
     public static hasDefaultValue(prop) {
         return (ClusterHostSpec.propInfo[prop] != null &&
-                        ClusterHostSpec.propInfo[prop].default != null &&
-                        ClusterHostSpec.propInfo[prop].default != '');
+                        ClusterHostSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -70,6 +70,11 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterSmartNICID>('smart-nics', this['smart-nics'], ClusterSmartNICID);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('smart-nics') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('smart-nics').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

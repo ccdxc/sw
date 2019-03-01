@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -25,18 +25,23 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
     'declare-healthy-count': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interval': {
+            required: false,
             type: 'number'
         },
         'probes-per-interval': {
+            required: false,
             type: 'number'
         },
         'probe-port-or-url': {
+            required: false,
             type: 'string'
         },
         'max-timeouts': {
+            required: false,
             type: 'number'
         },
         'declare-healthy-count': {
+            required: false,
             type: 'number'
         },
     }
@@ -54,8 +59,7 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
     */
     public static hasDefaultValue(prop) {
         return (NetworkHealthCheckSpec.propInfo[prop] != null &&
-                        NetworkHealthCheckSpec.propInfo[prop].default != null &&
-                        NetworkHealthCheckSpec.propInfo[prop].default != '');
+                        NetworkHealthCheckSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -114,11 +118,11 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'interval': CustomFormControl(new FormControl(this['interval']), NetworkHealthCheckSpec.propInfo['interval'].description),
-                'probes-per-interval': CustomFormControl(new FormControl(this['probes-per-interval']), NetworkHealthCheckSpec.propInfo['probes-per-interval'].description),
-                'probe-port-or-url': CustomFormControl(new FormControl(this['probe-port-or-url']), NetworkHealthCheckSpec.propInfo['probe-port-or-url'].description),
-                'max-timeouts': CustomFormControl(new FormControl(this['max-timeouts']), NetworkHealthCheckSpec.propInfo['max-timeouts'].description),
-                'declare-healthy-count': CustomFormControl(new FormControl(this['declare-healthy-count']), NetworkHealthCheckSpec.propInfo['declare-healthy-count'].description),
+                'interval': CustomFormControl(new FormControl(this['interval']), NetworkHealthCheckSpec.propInfo['interval']),
+                'probes-per-interval': CustomFormControl(new FormControl(this['probes-per-interval']), NetworkHealthCheckSpec.propInfo['probes-per-interval']),
+                'probe-port-or-url': CustomFormControl(new FormControl(this['probe-port-or-url']), NetworkHealthCheckSpec.propInfo['probe-port-or-url']),
+                'max-timeouts': CustomFormControl(new FormControl(this['max-timeouts']), NetworkHealthCheckSpec.propInfo['max-timeouts']),
+                'declare-healthy-count': CustomFormControl(new FormControl(this['declare-healthy-count']), NetworkHealthCheckSpec.propInfo['declare-healthy-count']),
             });
         }
         return this._formGroup;

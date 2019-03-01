@@ -11,6 +11,7 @@ import { Component } from '@angular/core';
  ------------------*/
 import { SettingsGroupComponent } from './settings-group.component';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 
 /**-----
  Third-parties imports
@@ -43,6 +44,7 @@ describe('SettingsGroupComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

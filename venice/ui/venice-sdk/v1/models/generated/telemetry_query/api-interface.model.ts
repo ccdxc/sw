@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiInterfaceSlice, IApiInterfaceSlice } from './api-interface-slice.model';
@@ -26,18 +26,23 @@ export class ApiInterface extends BaseModel implements IApiInterface {
     'Interfaces': ApiInterfaceSlice = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Str': {
+            required: false,
             type: 'string'
         },
         'Int64': {
+            required: false,
             type: 'string'
         },
         'Bool': {
+            required: false,
             type: 'boolean'
         },
         'Float': {
+            required: false,
             type: 'number'
         },
         'Interfaces': {
+            required: false,
             type: 'object'
         },
     }
@@ -55,8 +60,7 @@ export class ApiInterface extends BaseModel implements IApiInterface {
     */
     public static hasDefaultValue(prop) {
         return (ApiInterface.propInfo[prop] != null &&
-                        ApiInterface.propInfo[prop].default != null &&
-                        ApiInterface.propInfo[prop].default != '');
+                        ApiInterface.propInfo[prop].default != null);
     }
 
     /**
@@ -114,11 +118,16 @@ export class ApiInterface extends BaseModel implements IApiInterface {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Str': CustomFormControl(new FormControl(this['Str']), ApiInterface.propInfo['Str'].description),
-                'Int64': CustomFormControl(new FormControl(this['Int64']), ApiInterface.propInfo['Int64'].description),
-                'Bool': CustomFormControl(new FormControl(this['Bool']), ApiInterface.propInfo['Bool'].description),
-                'Float': CustomFormControl(new FormControl(this['Float']), ApiInterface.propInfo['Float'].description),
-                'Interfaces': this['Interfaces'].$formGroup,
+                'Str': CustomFormControl(new FormControl(this['Str']), ApiInterface.propInfo['Str']),
+                'Int64': CustomFormControl(new FormControl(this['Int64']), ApiInterface.propInfo['Int64']),
+                'Bool': CustomFormControl(new FormControl(this['Bool']), ApiInterface.propInfo['Bool']),
+                'Float': CustomFormControl(new FormControl(this['Float']), ApiInterface.propInfo['Float']),
+                'Interfaces': CustomFormGroup(this['Interfaces'].$formGroup, ApiInterface.propInfo['Interfaces'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('Interfaces') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('Interfaces').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

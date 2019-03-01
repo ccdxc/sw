@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
@@ -25,15 +25,19 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
     'items': Array<ClusterCluster> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'list-meta': {
+            required: false,
             type: 'object'
         },
         'items': {
+            required: false,
             type: 'object'
         },
     }
@@ -51,8 +55,7 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
     */
     public static hasDefaultValue(prop) {
         return (ClusterClusterList.propInfo[prop] != null &&
-                        ClusterClusterList.propInfo[prop].default != null &&
-                        ClusterClusterList.propInfo[prop].default != '');
+                        ClusterClusterList.propInfo[prop].default != null);
     }
 
     /**
@@ -102,13 +105,23 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), ClusterClusterList.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterClusterList.propInfo['api-version'].description),
-                'list-meta': this['list-meta'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), ClusterClusterList.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterClusterList.propInfo['api-version']),
+                'list-meta': CustomFormGroup(this['list-meta'].$formGroup, ClusterClusterList.propInfo['list-meta'].required),
                 'items': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterCluster>('items', this['items'], ClusterCluster);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('list-meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('list-meta').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('items') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('items').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchSearchRequest_mode,  } from './enums';
@@ -47,31 +47,38 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'query-string': {
             description:  'length of string should be between 0 and 256 ',
+            required: false,
             type: 'string'
         },
         'from': {
             description:  'value should be between 0 and 1023 ',
+            required: true,
             type: 'number'
         },
         'max-results': {
-            default: '50',
+            default: parseInt('50'),
             description:  'value should be between 0 and 8192 ',
+            required: true,
             type: 'number'
         },
         'sort-by': {
             description:  'SortyBy is an optional parameter and contains the field name  to be sorted by, For eg: &quot;meta.name&quot; This can be specified as URI parameter.',
+            required: false,
             type: 'string'
         },
         'mode': {
             enum: SearchSearchRequest_mode,
             default: 'Full',
+            required: true,
             type: 'string'
         },
         'query': {
             description:  'Search query contains the search requirements This is intended for advanced query use cases involving boolean query, structured term query and supports various combinations of text, phrase strings and search modifiers for specific categories, kinds, fields and labels. This cannot be specified as URI parameter.',
+            required: false,
             type: 'object'
         },
         'tenants': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -89,8 +96,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     */
     public static hasDefaultValue(prop) {
         return (SearchSearchRequest.propInfo[prop] != null &&
-                        SearchSearchRequest.propInfo[prop].default != null &&
-                        SearchSearchRequest.propInfo[prop].default != '');
+                        SearchSearchRequest.propInfo[prop].default != null);
     }
 
     /**
@@ -163,13 +169,18 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'query-string': CustomFormControl(new FormControl(this['query-string'], [maxLengthValidator(256), ]), SearchSearchRequest.propInfo['query-string'].description),
-                'from': CustomFormControl(new FormControl(this['from'], [required, maxValueValidator(1023), ]), SearchSearchRequest.propInfo['from'].description),
-                'max-results': CustomFormControl(new FormControl(this['max-results'], [required, maxValueValidator(8192), ]), SearchSearchRequest.propInfo['max-results'].description),
-                'sort-by': CustomFormControl(new FormControl(this['sort-by'], [maxLengthValidator(256), ]), SearchSearchRequest.propInfo['sort-by'].description),
-                'mode': CustomFormControl(new FormControl(this['mode'], [required, enumValidator(SearchSearchRequest_mode), ]), SearchSearchRequest.propInfo['mode'].description),
-                'query': this['query'].$formGroup,
-                'tenants': CustomFormControl(new FormControl(this['tenants']), SearchSearchRequest.propInfo['tenants'].description),
+                'query-string': CustomFormControl(new FormControl(this['query-string'], [maxLengthValidator(256), ]), SearchSearchRequest.propInfo['query-string']),
+                'from': CustomFormControl(new FormControl(this['from'], [required, maxValueValidator(1023), ]), SearchSearchRequest.propInfo['from']),
+                'max-results': CustomFormControl(new FormControl(this['max-results'], [required, maxValueValidator(8192), ]), SearchSearchRequest.propInfo['max-results']),
+                'sort-by': CustomFormControl(new FormControl(this['sort-by'], [maxLengthValidator(256), ]), SearchSearchRequest.propInfo['sort-by']),
+                'mode': CustomFormControl(new FormControl(this['mode'], [required, enumValidator(SearchSearchRequest_mode), ]), SearchSearchRequest.propInfo['mode']),
+                'query': CustomFormGroup(this['query'].$formGroup, SearchSearchRequest.propInfo['query'].required),
+                'tenants': CustomFormControl(new FormControl(this['tenants']), SearchSearchRequest.propInfo['tenants']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('query') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('query').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

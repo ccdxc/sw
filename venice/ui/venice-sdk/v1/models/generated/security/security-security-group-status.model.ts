@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
     'Policies': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workloads': {
+            required: false,
             type: 'Array<string>'
         },
         'Policies': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -39,8 +41,7 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
     */
     public static hasDefaultValue(prop) {
         return (SecuritySecurityGroupStatus.propInfo[prop] != null &&
-                        SecuritySecurityGroupStatus.propInfo[prop].default != null &&
-                        SecuritySecurityGroupStatus.propInfo[prop].default != '');
+                        SecuritySecurityGroupStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -80,8 +81,8 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': CustomFormControl(new FormControl(this['workloads']), SecuritySecurityGroupStatus.propInfo['workloads'].description),
-                'Policies': CustomFormControl(new FormControl(this['Policies']), SecuritySecurityGroupStatus.propInfo['Policies'].description),
+                'workloads': CustomFormControl(new FormControl(this['workloads']), SecuritySecurityGroupStatus.propInfo['workloads']),
+                'Policies': CustomFormControl(new FormControl(this['Policies']), SecuritySecurityGroupStatus.propInfo['Policies']),
             });
         }
         return this._formGroup;

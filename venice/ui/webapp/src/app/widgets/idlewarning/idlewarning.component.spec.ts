@@ -8,6 +8,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 ----------------------------------------------------- */
 import { IdleWarningComponent } from './idlewarning.component';
 import { ControllerService } from '@app/services/controller.service';
+import { ConfirmationService } from 'primeng/primeng';
 import { MatIconRegistry } from '@angular/material';
 /* ---------------------------------------------------
     Third-party libraries
@@ -44,6 +45,7 @@ describe('IdleWarningComponent', () => {
       ],
       providers: [
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

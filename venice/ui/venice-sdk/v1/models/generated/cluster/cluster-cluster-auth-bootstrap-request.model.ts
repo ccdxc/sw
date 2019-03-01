@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -22,12 +22,15 @@ export class ClusterClusterAuthBootstrapRequest extends BaseModel implements ICl
     'meta': ApiObjectMeta = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
+            required: false,
             type: 'string'
         },
         'api-version': {
+            required: false,
             type: 'string'
         },
         'meta': {
+            required: false,
             type: 'object'
         },
     }
@@ -45,8 +48,7 @@ export class ClusterClusterAuthBootstrapRequest extends BaseModel implements ICl
     */
     public static hasDefaultValue(prop) {
         return (ClusterClusterAuthBootstrapRequest.propInfo[prop] != null &&
-                        ClusterClusterAuthBootstrapRequest.propInfo[prop].default != null &&
-                        ClusterClusterAuthBootstrapRequest.propInfo[prop].default != '');
+                        ClusterClusterAuthBootstrapRequest.propInfo[prop].default != null);
     }
 
     /**
@@ -90,9 +92,14 @@ export class ClusterClusterAuthBootstrapRequest extends BaseModel implements ICl
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), ClusterClusterAuthBootstrapRequest.propInfo['kind'].description),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterClusterAuthBootstrapRequest.propInfo['api-version'].description),
-                'meta': this['meta'].$formGroup,
+                'kind': CustomFormControl(new FormControl(this['kind']), ClusterClusterAuthBootstrapRequest.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterClusterAuthBootstrapRequest.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, ClusterClusterAuthBootstrapRequest.propInfo['meta'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('meta').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

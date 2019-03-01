@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -20,10 +20,12 @@ export class ObjstoreObjectStatus extends BaseModel implements IObjstoreObjectSt
     'digest': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'size': {
+            required: false,
             type: 'string'
         },
         'digest': {
             description:  'Digest is a hash digest of the object content.',
+            required: false,
             type: 'string'
         },
     }
@@ -41,8 +43,7 @@ export class ObjstoreObjectStatus extends BaseModel implements IObjstoreObjectSt
     */
     public static hasDefaultValue(prop) {
         return (ObjstoreObjectStatus.propInfo[prop] != null &&
-                        ObjstoreObjectStatus.propInfo[prop].default != null &&
-                        ObjstoreObjectStatus.propInfo[prop].default != '');
+                        ObjstoreObjectStatus.propInfo[prop].default != null);
     }
 
     /**
@@ -80,8 +81,8 @@ export class ObjstoreObjectStatus extends BaseModel implements IObjstoreObjectSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'size': CustomFormControl(new FormControl(this['size']), ObjstoreObjectStatus.propInfo['size'].description),
-                'digest': CustomFormControl(new FormControl(this['digest']), ObjstoreObjectStatus.propInfo['digest'].description),
+                'size': CustomFormControl(new FormControl(this['size']), ObjstoreObjectStatus.propInfo['size']),
+                'digest': CustomFormControl(new FormControl(this['digest']), ObjstoreObjectStatus.propInfo['digest']),
             });
         }
         return this._formGroup;

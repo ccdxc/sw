@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -19,9 +19,11 @@ export class MonitoringAlertSource extends BaseModel implements IMonitoringAlert
     'node-name': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'component': {
+            required: false,
             type: 'string'
         },
         'node-name': {
+            required: false,
             type: 'string'
         },
     }
@@ -39,8 +41,7 @@ export class MonitoringAlertSource extends BaseModel implements IMonitoringAlert
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAlertSource.propInfo[prop] != null &&
-                        MonitoringAlertSource.propInfo[prop].default != null &&
-                        MonitoringAlertSource.propInfo[prop].default != '');
+                        MonitoringAlertSource.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,8 @@ export class MonitoringAlertSource extends BaseModel implements IMonitoringAlert
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'component': CustomFormControl(new FormControl(this['component']), MonitoringAlertSource.propInfo['component'].description),
-                'node-name': CustomFormControl(new FormControl(this['node-name']), MonitoringAlertSource.propInfo['node-name'].description),
+                'component': CustomFormControl(new FormControl(this['component']), MonitoringAlertSource.propInfo['component']),
+                'node-name': CustomFormControl(new FormControl(this['node-name']), MonitoringAlertSource.propInfo['node-name']),
             });
         }
         return this._formGroup;

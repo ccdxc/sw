@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -23,15 +23,19 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
     'capacity': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'serial-num': {
+            required: false,
             type: 'string'
         },
         'type': {
+            required: false,
             type: 'string'
         },
         'vendor': {
+            required: false,
             type: 'string'
         },
         'capacity': {
+            required: false,
             type: 'string'
         },
     }
@@ -49,8 +53,7 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
     */
     public static hasDefaultValue(prop) {
         return (ClusterStorageDeviceInfo.propInfo[prop] != null &&
-                        ClusterStorageDeviceInfo.propInfo[prop].default != null &&
-                        ClusterStorageDeviceInfo.propInfo[prop].default != '');
+                        ClusterStorageDeviceInfo.propInfo[prop].default != null);
     }
 
     /**
@@ -102,10 +105,10 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'serial-num': CustomFormControl(new FormControl(this['serial-num']), ClusterStorageDeviceInfo.propInfo['serial-num'].description),
-                'type': CustomFormControl(new FormControl(this['type']), ClusterStorageDeviceInfo.propInfo['type'].description),
-                'vendor': CustomFormControl(new FormControl(this['vendor']), ClusterStorageDeviceInfo.propInfo['vendor'].description),
-                'capacity': CustomFormControl(new FormControl(this['capacity']), ClusterStorageDeviceInfo.propInfo['capacity'].description),
+                'serial-num': CustomFormControl(new FormControl(this['serial-num']), ClusterStorageDeviceInfo.propInfo['serial-num']),
+                'type': CustomFormControl(new FormControl(this['type']), ClusterStorageDeviceInfo.propInfo['type']),
+                'vendor': CustomFormControl(new FormControl(this['vendor']), ClusterStorageDeviceInfo.propInfo['vendor']),
+                'capacity': CustomFormControl(new FormControl(this['capacity']), ClusterStorageDeviceInfo.propInfo['capacity']),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -29,8 +29,7 @@ export class SecurityFirewallProfileStatus extends BaseModel implements ISecurit
     */
     public static hasDefaultValue(prop) {
         return (SecurityFirewallProfileStatus.propInfo[prop] != null &&
-                        SecurityFirewallProfileStatus.propInfo[prop].default != null &&
-                        SecurityFirewallProfileStatus.propInfo[prop].default != '');
+                        SecurityFirewallProfileStatus.propInfo[prop].default != null);
     }
 
     /**

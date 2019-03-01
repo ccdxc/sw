@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -21,12 +21,15 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     'mac-addresses': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'endpoints': {
+            required: false,
             type: 'Array<string>'
         },
         'ip-addresses': {
+            required: false,
             type: 'Array<string>'
         },
         'mac-addresses': {
+            required: false,
             type: 'Array<string>'
         },
     }
@@ -44,8 +47,7 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     */
     public static hasDefaultValue(prop) {
         return (MonitoringMatchSelector.propInfo[prop] != null &&
-                        MonitoringMatchSelector.propInfo[prop].default != null &&
-                        MonitoringMatchSelector.propInfo[prop].default != '');
+                        MonitoringMatchSelector.propInfo[prop].default != null);
     }
 
     /**
@@ -93,9 +95,9 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'endpoints': CustomFormControl(new FormControl(this['endpoints']), MonitoringMatchSelector.propInfo['endpoints'].description),
-                'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), MonitoringMatchSelector.propInfo['ip-addresses'].description),
-                'mac-addresses': CustomFormControl(new FormControl(this['mac-addresses']), MonitoringMatchSelector.propInfo['mac-addresses'].description),
+                'endpoints': CustomFormControl(new FormControl(this['endpoints']), MonitoringMatchSelector.propInfo['endpoints']),
+                'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), MonitoringMatchSelector.propInfo['ip-addresses']),
+                'mac-addresses': CustomFormControl(new FormControl(this['mac-addresses']), MonitoringMatchSelector.propInfo['mac-addresses']),
             });
         }
         return this._formGroup;

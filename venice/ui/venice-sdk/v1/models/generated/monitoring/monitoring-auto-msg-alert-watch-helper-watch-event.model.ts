@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlert, IMonitoringAlert } from './monitoring-alert.model';
@@ -20,9 +20,11 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
     'object': MonitoringAlert = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
+            required: false,
             type: 'string'
         },
         'object': {
+            required: false,
             type: 'object'
         },
     }
@@ -40,8 +42,7 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo[prop] != null &&
-                        MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo[prop].default != null &&
-                        MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo[prop].default != '');
+                        MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo[prop].default != null);
     }
 
     /**
@@ -78,8 +79,13 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': CustomFormControl(new FormControl(this['type']), MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo['type'].description),
-                'object': this['object'].$formGroup,
+                'type': CustomFormControl(new FormControl(this['type']), MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo['type']),
+                'object': CustomFormGroup(this['object'].$formGroup, MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo['object'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('object') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('object').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

@@ -17,7 +17,7 @@ import { WorkloadService } from './workload.service';
 import { MatIconRegistry } from '@angular/material';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService, ConfirmationService } from 'primeng/primeng';
 
 /**
  * workload.service.spec.ts
@@ -36,6 +36,7 @@ describe('WorkloadService', () => {
     TestBed.configureTestingModule({
       providers: [WorkloadService,
         ControllerService,
+        ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,

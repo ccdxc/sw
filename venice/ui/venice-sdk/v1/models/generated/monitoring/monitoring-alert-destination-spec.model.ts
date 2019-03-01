@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { FieldsSelector, IFieldsSelector } from './fields-selector.model';
@@ -27,15 +27,19 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
     'syslog-export': MonitoringSyslogExport = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'selector': {
+            required: false,
             type: 'object'
         },
         'email-export': {
+            required: false,
             type: 'object'
         },
         'snmp-export': {
+            required: false,
             type: 'object'
         },
         'syslog-export': {
+            required: false,
             type: 'object'
         },
     }
@@ -53,8 +57,7 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
     */
     public static hasDefaultValue(prop) {
         return (MonitoringAlertDestinationSpec.propInfo[prop] != null &&
-                        MonitoringAlertDestinationSpec.propInfo[prop].default != null &&
-                        MonitoringAlertDestinationSpec.propInfo[prop].default != '');
+                        MonitoringAlertDestinationSpec.propInfo[prop].default != null);
     }
 
     /**
@@ -102,10 +105,30 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'selector': this['selector'].$formGroup,
-                'email-export': this['email-export'].$formGroup,
-                'snmp-export': this['snmp-export'].$formGroup,
-                'syslog-export': this['syslog-export'].$formGroup,
+                'selector': CustomFormGroup(this['selector'].$formGroup, MonitoringAlertDestinationSpec.propInfo['selector'].required),
+                'email-export': CustomFormGroup(this['email-export'].$formGroup, MonitoringAlertDestinationSpec.propInfo['email-export'].required),
+                'snmp-export': CustomFormGroup(this['snmp-export'].$formGroup, MonitoringAlertDestinationSpec.propInfo['snmp-export'].required),
+                'syslog-export': CustomFormGroup(this['syslog-export'].$formGroup, MonitoringAlertDestinationSpec.propInfo['syslog-export'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('selector') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('selector').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('email-export') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('email-export').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('snmp-export') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('snmp-export').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('syslog-export') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('syslog-export').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

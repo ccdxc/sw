@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringExternalCred, IMonitoringExternalCred } from './monitoring-external-cred.model';
@@ -27,14 +27,17 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'destination': {
             description:  'length of string should be between 1 and 2048 ',
+            required: true,
             type: 'string'
         },
         'transport': {
             description:  'should be a valid layer3 or layer 4 protocol and port/type ',
             hint:  'tcp/1234, arp',
+            required: true,
             type: 'string'
         },
         'credentials': {
+            required: false,
             type: 'object'
         },
     }
@@ -52,8 +55,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     */
     public static hasDefaultValue(prop) {
         return (MonitoringExportConfig.propInfo[prop] != null &&
-                        MonitoringExportConfig.propInfo[prop].default != null &&
-                        MonitoringExportConfig.propInfo[prop].default != '');
+                        MonitoringExportConfig.propInfo[prop].default != null);
     }
 
     /**
@@ -97,9 +99,14 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'destination': CustomFormControl(new FormControl(this['destination'], [required, minLengthValidator(1), maxLengthValidator(2048), ]), MonitoringExportConfig.propInfo['destination'].description),
-                'transport': CustomFormControl(new FormControl(this['transport'], [required, ]), MonitoringExportConfig.propInfo['transport'].description),
-                'credentials': this['credentials'].$formGroup,
+                'destination': CustomFormControl(new FormControl(this['destination'], [required, minLengthValidator(1), maxLengthValidator(2048), ]), MonitoringExportConfig.propInfo['destination']),
+                'transport': CustomFormControl(new FormControl(this['transport'], [required, ]), MonitoringExportConfig.propInfo['transport']),
+                'credentials': CustomFormGroup(this['credentials'].$formGroup, MonitoringExportConfig.propInfo['credentials'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('credentials') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('credentials').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;

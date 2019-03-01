@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchError, ISearchError } from './search-error.model';
@@ -33,24 +33,31 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     'aggregated-entries': SearchTenantAggregation = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'total-hits': {
+            required: false,
             type: 'string'
         },
         'actual-hits': {
+            required: false,
             type: 'string'
         },
         'time-taken-msecs': {
+            required: false,
             type: 'string'
         },
         'error': {
+            required: false,
             type: 'object'
         },
         'entries': {
+            required: false,
             type: 'object'
         },
         'preview-entries': {
+            required: false,
             type: 'object'
         },
         'aggregated-entries': {
+            required: false,
             type: 'object'
         },
     }
@@ -68,8 +75,7 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     */
     public static hasDefaultValue(prop) {
         return (SearchSearchResponse.propInfo[prop] != null &&
-                        SearchSearchResponse.propInfo[prop].default != null &&
-                        SearchSearchResponse.propInfo[prop].default != '');
+                        SearchSearchResponse.propInfo[prop].default != null);
     }
 
     /**
@@ -138,16 +144,36 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'total-hits': CustomFormControl(new FormControl(this['total-hits']), SearchSearchResponse.propInfo['total-hits'].description),
-                'actual-hits': CustomFormControl(new FormControl(this['actual-hits']), SearchSearchResponse.propInfo['actual-hits'].description),
-                'time-taken-msecs': CustomFormControl(new FormControl(this['time-taken-msecs']), SearchSearchResponse.propInfo['time-taken-msecs'].description),
-                'error': this['error'].$formGroup,
+                'total-hits': CustomFormControl(new FormControl(this['total-hits']), SearchSearchResponse.propInfo['total-hits']),
+                'actual-hits': CustomFormControl(new FormControl(this['actual-hits']), SearchSearchResponse.propInfo['actual-hits']),
+                'time-taken-msecs': CustomFormControl(new FormControl(this['time-taken-msecs']), SearchSearchResponse.propInfo['time-taken-msecs']),
+                'error': CustomFormGroup(this['error'].$formGroup, SearchSearchResponse.propInfo['error'].required),
                 'entries': new FormArray([]),
-                'preview-entries': this['preview-entries'].$formGroup,
-                'aggregated-entries': this['aggregated-entries'].$formGroup,
+                'preview-entries': CustomFormGroup(this['preview-entries'].$formGroup, SearchSearchResponse.propInfo['preview-entries'].required),
+                'aggregated-entries': CustomFormGroup(this['aggregated-entries'].$formGroup, SearchSearchResponse.propInfo['aggregated-entries'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<SearchEntry>('entries', this['entries'], SearchEntry);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('error') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('error').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('entries') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('entries').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('preview-entries') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('preview-entries').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('aggregated-entries') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('aggregated-entries').get(field);
+                control.updateValueAndValidity();
+            });
         }
         return this._formGroup;
     }

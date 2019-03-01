@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from '../../../utils/validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMatchedRequirement_operator,  MonitoringMatchedRequirement_operator_uihint  } from './enums';
@@ -24,17 +24,21 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     'observed-value': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'key': {
+            required: false,
             type: 'string'
         },
         'operator': {
             enum: MonitoringMatchedRequirement_operator_uihint,
             default: 'equals',
+            required: false,
             type: 'string'
         },
         'values': {
+            required: false,
             type: 'Array<string>'
         },
         'observed-value': {
+            required: false,
             type: 'string'
         },
     }
@@ -52,8 +56,7 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     */
     public static hasDefaultValue(prop) {
         return (MonitoringMatchedRequirement.propInfo[prop] != null &&
-                        MonitoringMatchedRequirement.propInfo[prop].default != null &&
-                        MonitoringMatchedRequirement.propInfo[prop].default != '');
+                        MonitoringMatchedRequirement.propInfo[prop].default != null);
     }
 
     /**
@@ -106,10 +109,10 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'key': CustomFormControl(new FormControl(this['key']), MonitoringMatchedRequirement.propInfo['key'].description),
-                'operator': CustomFormControl(new FormControl(this['operator'], [enumValidator(MonitoringMatchedRequirement_operator), ]), MonitoringMatchedRequirement.propInfo['operator'].description),
-                'values': CustomFormControl(new FormControl(this['values']), MonitoringMatchedRequirement.propInfo['values'].description),
-                'observed-value': CustomFormControl(new FormControl(this['observed-value']), MonitoringMatchedRequirement.propInfo['observed-value'].description),
+                'key': CustomFormControl(new FormControl(this['key']), MonitoringMatchedRequirement.propInfo['key']),
+                'operator': CustomFormControl(new FormControl(this['operator'], [enumValidator(MonitoringMatchedRequirement_operator), ]), MonitoringMatchedRequirement.propInfo['operator']),
+                'values': CustomFormControl(new FormControl(this['values']), MonitoringMatchedRequirement.propInfo['values']),
+                'observed-value': CustomFormControl(new FormControl(this['observed-value']), MonitoringMatchedRequirement.propInfo['observed-value']),
             });
         }
         return this._formGroup;
