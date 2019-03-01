@@ -82,6 +82,7 @@ func init() {
 }
 
 func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
+	jsonFormat = false
 	v := &nmd.NaplesCmdExecute{
 		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-l"}, ""),
@@ -93,8 +94,8 @@ func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", strings.Replace(s, "\\", "", -1))
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(strings.Replace(s, "\\", "", -1))
 	}
 	if verbose {
 		fmt.Println(string(resp))
@@ -114,8 +115,8 @@ func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 	if verbose {
 		fmt.Println(string(resp))
@@ -135,8 +136,8 @@ func showStartupFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 	if verbose {
 		fmt.Println(string(resp))
@@ -156,8 +157,8 @@ func setStartupFirmwareMainfwaCmdHandler(cmd *cobra.Command, args []string) erro
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 	if verbose {
 		fmt.Println(string(resp))
@@ -177,8 +178,8 @@ func setStartupFirmwareMainfwbCmdHandler(cmd *cobra.Command, args []string) erro
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 	if verbose {
 		fmt.Println(string(resp))
@@ -239,8 +240,8 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if len(resp) > 3 {
-			s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-			fmt.Printf("%s", s)
+			s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+			fmt.Println(s)
 		}
 		if verbose {
 			fmt.Println(string(resp))
@@ -249,8 +250,8 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Unable to install firmware " + firmware)
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 	if verbose {
 		fmt.Println(string(resp))
@@ -267,8 +268,8 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 	if verbose {
 		fmt.Println(string(resp))
@@ -285,8 +286,8 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 	if verbose {
 		fmt.Println(string(resp))

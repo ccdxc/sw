@@ -120,6 +120,7 @@ func getLogs(subDir string, url string) error {
 }
 
 func showTechCmdHandler(cmd *cobra.Command, args []string) error {
+	jsonFormat = false
 	timeStr := time.Now().Format(time.UnixDate)
 	timeStr = strings.Replace(timeStr, " ", "-", -1)
 
@@ -210,7 +211,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		}
 		if len(resp) > 3 {
 			fmt.Printf(".")
-			s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+			s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
 			s = strings.Replace(s, "\\", "", -1)
 			file = cmdDestDir + "/" + naplesCmd.Outputfile
 			out, err := os.Create(file)

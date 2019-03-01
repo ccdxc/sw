@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package venice;
+
+import "google/protobuf/descriptor.proto";
+
+message PenCtlCmd {
+    string                 Cmd       = 1;
+    string                 HelpStr   = 2;
+    string                 RootCmd   = 3;
+}
+
+// Venice Option extensions applicable to messages
+extend google.protobuf.MessageOptions {
+  PenCtlCmd penctlCmd = 81400;
+  // penctlParentCmd: this is used to specify the information for penctl parent command
+  repeated PenCtlCmd penctlParentCmd = 81401;
+};

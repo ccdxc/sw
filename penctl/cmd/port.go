@@ -87,8 +87,8 @@ func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 
 	return
@@ -113,8 +113,8 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 
 	return
@@ -139,8 +139,8 @@ func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 
 	return
@@ -219,8 +219,8 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 
 	return

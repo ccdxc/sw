@@ -128,8 +128,8 @@ func handleIfShowCmd(intf bool, tunnel bool, mpls bool) {
 	}
 
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 }
 
@@ -165,8 +165,8 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 
 	return nil
@@ -208,8 +208,8 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
 	}
 
 	return nil

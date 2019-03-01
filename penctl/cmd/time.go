@@ -52,8 +52,8 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if len(resp) > 3 {
-			s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-			fmt.Printf("%s", strings.Replace(s, "\\", "", -1))
+			s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+			fmt.Println(strings.Replace(s, "\\", "", -1))
 		}
 		if verbose {
 			fmt.Println(string(resp))
@@ -71,8 +71,8 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if len(resp) > 3 {
-			s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-			fmt.Printf("%s", strings.Replace(s, "\\", "", -1))
+			s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+			fmt.Println(strings.Replace(s, "\\", "", -1))
 		}
 		if verbose {
 			fmt.Println(string(resp))
@@ -93,8 +93,8 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", strings.Replace(s, "\\", "", -1))
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(strings.Replace(s, "\\", "", -1))
 	}
 	if verbose {
 		fmt.Println(string(resp))
@@ -110,8 +110,8 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", strings.Replace(s, "\\", "", -1))
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(strings.Replace(s, "\\", "", -1))
 	}
 	if verbose {
 		fmt.Println(string(resp))
@@ -130,8 +130,8 @@ func showSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", strings.Replace(s, "\\", "", -1))
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(strings.Replace(s, "\\", "", -1))
 	}
 	if verbose {
 		fmt.Println(string(resp))

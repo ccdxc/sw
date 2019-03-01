@@ -137,6 +137,7 @@ nic/build/aarch64/iris/lib/libdelphi*.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libsysmgr.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libpenlog.so                             /nic/lib/
 nic/build/aarch64/iris/lib/*upgrade*                                /nic/lib/
+nic/build/aarch64/iris/lib/libpenctlproto.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libsdkp4loader.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libsdkcapri_asicrw_if.so                 /nic/lib/
 nic/build/aarch64/iris/lib/libsdkcapri_csrint.so                    /nic/lib/

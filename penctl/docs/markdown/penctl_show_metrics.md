@@ -51,6 +51,8 @@ penctl show metrics [flags]
 * [penctl show metrics dprintreg1](penctl_show_metrics_dprintreg1.md)	 - Show Dprintreg1Metrics from Naples
 * [penctl show metrics dprintreg2](penctl_show_metrics_dprintreg2.md)	 - Show Dprintreg2Metrics from Naples
 * [penctl show metrics dprintsramsecc](penctl_show_metrics_dprintsramsecc.md)	 - Show DprintsramseccMetrics from Naples
+* [penctl show metrics ftecps](penctl_show_metrics_ftecps.md)	 - Show FteCPSMetrics from Naples
+* [penctl show metrics ftelifq](penctl_show_metrics_ftelifq.md)	 - Show FteLifQMetrics from Naples
 * [penctl show metrics inteccdesc](penctl_show_metrics_inteccdesc.md)	 - Show InteccdescMetrics from Naples
 * [penctl show metrics intspare](penctl_show_metrics_intspare.md)	 - Show IntspareMetrics from Naples
 * [penctl show metrics lif](penctl_show_metrics_lif.md)	 - Show LifMetrics from Naples
@@ -68,6 +70,7 @@ penctl show metrics [flags]
 * [penctl show metrics pbpbcintpbusviolation](penctl_show_metrics_pbpbcintpbusviolation.md)	 - Show PbpbcintpbusviolationMetrics from Naples
 * [penctl show metrics pbpbcintrpl](penctl_show_metrics_pbpbcintrpl.md)	 - Show PbpbcintrplMetrics from Naples
 * [penctl show metrics pbpbcintwrite](penctl_show_metrics_pbpbcintwrite.md)	 - Show PbpbcintwriteMetrics from Naples
+* [penctl show metrics sessionsummary](penctl_show_metrics_sessionsummary.md)	 - Show SessionSummaryMetrics from Naples
 * [penctl show metrics sgempuinterr](penctl_show_metrics_sgempuinterr.md)	 - Show SgempuinterrMetrics from Naples
 * [penctl show metrics sgempuintinfo](penctl_show_metrics_sgempuintinfo.md)	 - Show SgempuintinfoMetrics from Naples
 * [penctl show metrics sgeteinterr](penctl_show_metrics_sgeteinterr.md)	 - Show SgeteinterrMetrics from Naples
@@ -75,5 +78,5 @@ penctl show metrics [flags]
 * [penctl show metrics ssepicsintbadaddr](penctl_show_metrics_ssepicsintbadaddr.md)	 - Show SsepicsintbadaddrMetrics from Naples
 * [penctl show metrics ssepicsintbg](penctl_show_metrics_ssepicsintbg.md)	 - Show SsepicsintbgMetrics from Naples
 * [penctl show metrics ssepicsintpics](penctl_show_metrics_ssepicsintpics.md)	 - Show SsepicsintpicsMetrics from Naples
-* [penctl show metrics upgrade](penctl_show_metrics_upgrade.md)	 - Show UpgradeMetrics from Naples
+* [penctl show metrics upgrade](penctl_show_metrics_upgrade.md)	 - Metrics for Upgrade
 

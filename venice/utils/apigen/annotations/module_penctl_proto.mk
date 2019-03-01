@@ -1,9 +1,9 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET       = upgrade.proto
+MODULE_TARGET       = penctl.proto
 MODULE_PIPELINE     = iris gft
-MODULE_GEN_TYPES    = CC DELPHI GOMETRICS PENMETRICS
+MODULE_GEN_TYPES    = CC
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \
                       ${TOPDIR}/nic/hal/third-party/google/include \
@@ -12,6 +12,7 @@ MODULE_INCS         = ${MODULE_DIR} \
                       /usr/local/include
 MODULE_LDLIBS       = pthread
 MODULE_POSTGEN_MK   = module_protolib.mk
-MODULE_PREREQS      = protoc-gen-delphi.gobin penctl.proto
+MODULE_PREREQS      = protoc-gen-delphi.gobin
+MODULE_SRCS         = ${TOPDIR}/venice/utils/apigen/annotations/penctl.proto
 
 include ${MKDEFS}/post.mk

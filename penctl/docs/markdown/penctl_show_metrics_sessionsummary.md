@@ -1,20 +1,24 @@
-## penctl show metrics upgrade
+## penctl show metrics sessionsummary
 
-Metrics for Upgrade
+Show SessionSummaryMetrics from Naples
 
 ### Synopsis
 
 
 
 ---------------------------------
- Metrics for Upgrade
+ Show SessionSummaryMetrics From Naples 
 ---------------------------------
 
+
+```
+penctl show metrics sessionsummary [flags]
+```
 
 ### Options
 
 ```
-  -h, --help   help for upgrade
+  -h, --help   help for sessionsummary
 ```
 
 ### Options inherited from parent commands
@@ -28,5 +32,4 @@ Metrics for Upgrade
 
 ### SEE ALSO
 * [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
-* [penctl show metrics upgrade stats](penctl_show_metrics_upgrade_stats.md)	 - Upgrade Stats
 

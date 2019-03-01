@@ -13,8 +13,53 @@ import (
 
  {{$msgs := .Messages}}
  {{range $msgs}}
+ {{$name := .GetName}}
+    {{if (HasSuffix .GetName "PenctlRootCmd")}}
+      {{if (hasExtension "venice.penctlParentCmd" .) }}
+        {{$params := (getPenctlParentCmdOptions .)}}
+        {{range $params}}
+          {{$cmd := .Cmd}}
+          {{$rootCmd := .RootCmd}}
+          {{$helpStr:= .HelpStr}}
+//cmd - {{$cmd}}
+//rootCmd = {{$rootCmd}}
+//helpStr = {{$helpStr}}
+        var {{ToLower $cmd}}ShowCmd = &cobra.Command{
+                Use:   "{{ToLower $cmd}}",
+                Short: "{{$helpStr}}",
+                Long:  "\n---------------------------------\n {{$helpStr}}\n---------------------------------\n",
+        }
+        {{end}}
+      {{end}}
+    {{else if (HasSuffix .GetName "Metrics")}}
+      {{if (hasExtension "venice.penctlCmd" .) }}
+        {{$param := (getPenctlCmdOptions .)}}
+        {{$cmd := $param.Cmd}}
+        {{$rootCmd := $param.RootCmd}}
+        {{$helpStr:= $param.HelpStr}}
+//cmd - {{$cmd}}
+//rootCmd = {{$rootCmd}}
+//helpStr = {{$helpStr}}
+        var {{ToLower $cmd}}ShowCmd = &cobra.Command{
+                Use:   "{{ToLower $cmd}}",
+                Short: "{{$helpStr}}",
+                Long:  "\n---------------------------------\n {{$helpStr}}\n---------------------------------\n",
+                RunE:  {{ToLower $cmd}}ShowCmdHandler,
+        }
 
-    {{if (HasSuffix .GetName "Metrics")}}
+        func {{ToLower $cmd}}ShowCmdHandler(cmd *cobra.Command, args []string) error {
+                jsonFormat = true
+                bodyBytes, err := restGet("telemetry/v1/metrics/{{ToLower .GetName}}/")
+                if err != nil {
+                        fmt.Println(err)
+                        return err
+                }
+                if bodyBytes == nil {
+                        fmt.Println("No {{ToLower .GetName}} object(s) found")
+                }
+                return nil
+        }
+      {{else}}
 	var {{ToLower .GetName}}ShowCmd = &cobra.Command{
 		{{$cli := TrimSuffix .GetName "Metrics"}}
 		Use:   "{{ToLower $cli}}",
@@ -35,12 +80,39 @@ import (
 		}
 		return nil
 	}
+      {{end}}
     {{end}}
  {{end}}
         func init() {
  {{range $msgs}}
-    {{if (HasSuffix .GetName "Metrics")}}
+ {{$name := .GetName}}
+    {{if (HasSuffix .GetName "PenctlRootCmd")}}
+      {{if (hasExtension "venice.penctlParentCmd" .) }}
+          {{$params := (getPenctlParentCmdOptions .)}}
+          {{range $params}}
+            {{$cmd := .Cmd}}
+            {{$rootCmd := .RootCmd}}
+            {{$helpStr:= .HelpStr}}
+//cmd - {{$cmd}}
+//rootCmd = {{$rootCmd}}
+//helpStr = {{$helpStr}}
+            {{if strEq $rootCmd ""}}
+               metricsShowCmd.AddCommand({{ToLower $cmd}}ShowCmd)
+            {{else}}
+              {{ToLower $rootCmd}}ShowCmd.AddCommand({{ToLower $cmd}}ShowCmd)
+            {{end}}
+          {{end}}
+      {{end}}
+    {{else if (HasSuffix .GetName "Metrics")}}
+      {{if (hasExtension "venice.penctlCmd" .) }}
+        {{$param := (getPenctlCmdOptions .)}}
+        {{$cmd := $param.Cmd}}
+        {{$rootCmd := $param.RootCmd}}
+        {{$helpStr:= $param.HelpStr}}
+        {{ToLower $rootCmd}}ShowCmd.AddCommand({{ToLower $cmd}}ShowCmd)
+       {{else}}
                 metricsShowCmd.AddCommand({{ToLower .GetName}}ShowCmd)
+       {{end}}
     {{end}}
  {{end}}
         }

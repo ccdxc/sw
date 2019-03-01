@@ -2,6 +2,7 @@ syntax = "proto3";
 package upgrade;
 
 import "delphi.proto";
+import "penctl.proto";
 
 enum UpgReqType {
     InvalidCmd       = 0;
@@ -129,7 +130,20 @@ message UpgApp {
     string                 Key               = 2;
 }
 
+message UpgradeMetricsPenctlRootCmd {
+    option (venice.penctlParentCmd) = {
+        Cmd:     "upgrade",
+        HelpStr: "Metrics for Upgrade"
+    };
+}
+
 message UpgradeMetrics {
+    //command: penctl show metrics upgrade stats
+    option (venice.penctlCmd) = {
+        Cmd:     "stats",
+        HelpStr: "Upgrade Stats",
+        RootCmd: "upgrade"
+    };
     delphi.ObjectMeta      Meta                     = 1;
     uint32                 Key                      = 2;
     delphi.Counter         IsUpgPossible            = 3;

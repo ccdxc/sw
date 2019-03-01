@@ -12,15 +12,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var upgrademetricsShowCmd = &cobra.Command{
-
-	Use:   "upgrade",
-	Short: "Show UpgradeMetrics from Naples",
-	Long:  "\n---------------------------------\n Show UpgradeMetrics From Naples \n---------------------------------\n",
-	RunE:  upgrademetricsShowCmdHandler,
+//cmd - stats
+//rootCmd = upgrade
+//helpStr = Upgrade Stats
+var statsShowCmd = &cobra.Command{
+	Use:   "stats",
+	Short: "Upgrade Stats",
+	Long:  "\n---------------------------------\n Upgrade Stats\n---------------------------------\n",
+	RunE:  statsShowCmdHandler,
 }
 
-func upgrademetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
+func statsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/upgrademetrics/")
 	if err != nil {
@@ -28,13 +30,28 @@ func upgrademetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if bodyBytes == nil {
-		fmt.Println("No upgrade object(s) found")
+		fmt.Println("No upgrademetrics object(s) found")
 	}
 	return nil
 }
 
+//cmd - upgrade
+//rootCmd =
+//helpStr = Metrics for Upgrade
+var upgradeShowCmd = &cobra.Command{
+	Use:   "upgrade",
+	Short: "Metrics for Upgrade",
+	Long:  "\n---------------------------------\n Metrics for Upgrade\n---------------------------------\n",
+}
+
 func init() {
 
-	metricsShowCmd.AddCommand(upgrademetricsShowCmd)
+	upgradeShowCmd.AddCommand(statsShowCmd)
+
+	//cmd - upgrade
+	//rootCmd =
+	//helpStr = Metrics for Upgrade
+
+	metricsShowCmd.AddCommand(upgradeShowCmd)
 
 }

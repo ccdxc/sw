@@ -96,6 +96,22 @@ func parseGoogleAPIHTTP(val interface{}) (interface{}, error) {
 	return c, nil
 }
 
+func parsePenctlCmd(val interface{}) (interface{}, error) {
+	c, ok := val.(*venice.PenCtlCmd)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return c, nil
+}
+
+func parsePenctlParentCmd(val interface{}) (interface{}, error) {
+	c, ok := val.([]*venice.PenCtlCmd)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return c, nil
+}
+
 func parseNaplesRestService(val interface{}) (interface{}, error) {
 	c, ok := val.([]*venice.RestEndpoint)
 	if !ok {
@@ -844,6 +860,8 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("gogoproto.embed", parseBoolOptions)
 	reg.RegisterOptionParser("gogoproto.jsontag", parseStringOptions)
 	reg.RegisterOptionParser("venice.naplesRestService", parseNaplesRestService)
+	reg.RegisterOptionParser("venice.penctlCmd", parsePenctlCmd)
+	reg.RegisterOptionParser("venice.penctlParentCmd", parsePenctlParentCmd)
 	reg.RegisterOptionParser("venice.fileApiServerBacked", parseBoolOptions)
 	reg.RegisterOptionParser("venice.apiAction", parseAPIActions)
 	reg.RegisterOptionParser("venice.default", parseStringSliceOptions)

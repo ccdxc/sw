@@ -1,9 +1,9 @@
-.. _penctl_show_metrics_upgrade:
+.. _penctl_show_metrics_upgrade_stats:
 
-penctl show metrics upgrade
----------------------------
+penctl show metrics upgrade stats
+---------------------------------
 
-Metrics for Upgrade
+Upgrade Stats
 
 Synopsis
 ~~~~~~~~
@@ -11,16 +11,20 @@ Synopsis
 
 
 ---------------------------------
- Metrics for Upgrade
+ Upgrade Stats
 ---------------------------------
 
+
+::
+
+  penctl show metrics upgrade stats [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for upgrade
+  -h, --help   help for stats
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,6 +39,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
-* `penctl show metrics upgrade stats <penctl_show_metrics_upgrade_stats.rst>`_ 	 - Upgrade Stats
+* `penctl show metrics upgrade <penctl_show_metrics_upgrade.rst>`_ 	 - Metrics for Upgrade
 

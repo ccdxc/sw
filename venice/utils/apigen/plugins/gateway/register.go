@@ -86,6 +86,13 @@ type ServiceParams struct {
 	StagingPath string
 }
 
+// PenctlCmdOpts holds raw PenctlCmd options data from .proto files
+type PenctlCmdOpts struct {
+	Cmd     string
+	HelpStr string
+	RootCmd string
+}
+
 // RestServiceOptions holds raw REST options data from .proto files
 type RestServiceOptions struct {
 	CrudObject string
@@ -354,7 +361,6 @@ func getSvcParams(s *descriptor.Service) (ServiceParams, error) {
 	if params.Prefix, ok = i.(string); err != nil || !ok {
 		params.Prefix = ""
 	}
-	glog.V(1).Infof("Looking for File category")
 	category := globals.ConfigURIPrefix
 	if i, err = reg.GetExtension("venice.fileCategory", s.File); err == nil {
 		if category, ok = i.(string); !ok {
@@ -377,6 +383,29 @@ func getSvcParams(s *descriptor.Service) (ServiceParams, error) {
 	return params, nil
 }
 
+func getPenctlParentCmdOptions(m *descriptor.Message) ([]PenctlCmdOpts, error) {
+	var penctlCmdOpts []PenctlCmdOpts
+	i, _ := reg.GetExtension("venice.penctlParentCmd", m)
+	for _, r := range i.([]*venice.PenCtlCmd) {
+		var penctlCmdOpt PenctlCmdOpts
+		penctlCmdOpt.Cmd = r.Cmd
+		penctlCmdOpt.RootCmd = r.RootCmd
+		penctlCmdOpt.HelpStr = r.HelpStr
+		penctlCmdOpts = append(penctlCmdOpts, penctlCmdOpt)
+	}
+	return penctlCmdOpts, nil
+}
+
+func getPenctlCmdOptions(m *descriptor.Message) (PenctlCmdOpts, error) {
+	var penctlCmdOpts PenctlCmdOpts
+	i, _ := reg.GetExtension("venice.penctlCmd", m)
+	r := i.(*venice.PenCtlCmd)
+	penctlCmdOpts.Cmd = r.Cmd
+	penctlCmdOpts.RootCmd = r.RootCmd
+	penctlCmdOpts.HelpStr = r.HelpStr
+	return penctlCmdOpts, nil
+}
+
 // getRestSvcOptions returns the ServiceOptions for the service. This call will ensure that the raw venice.naplesRestService
 // is passed to the templating logic for customization. This will also avoid generating the *.pb.gw files if we don't
 // want them.
@@ -390,7 +419,6 @@ func getRestSvcOptions(s *descriptor.Service) ([]RestServiceOptions, error) {
 		restService.Pattern = r.Pattern
 		restOptions = append(restOptions, restService)
 	}
-	glog.V(1).Infof("RestAPIParsing yielded : %#v", restOptions)
 	return restOptions, nil
 }
 
@@ -537,7 +565,6 @@ func genManifest(desc *descriptor.File, path, pkg, file string) (map[string]mani
 		glog.V(1).Infof("manifest [%s] not found", path)
 		manifest = make(map[string]manifestFile)
 	} else {
-		glog.V(1).Infof("manifest exists, reading from manifest")
 		raw, err := ioutil.ReadFile(path)
 		if err != nil {
 			glog.V(1).Infof("Reading Manifest failed (%s)", err)
@@ -589,7 +616,6 @@ func genPkgManifest(desc *descriptor.File, path, pkg, file string) (map[string]p
 		glog.V(1).Infof("manifest [%s] not found", path)
 		manifest = make(map[string]pkgManifest)
 	} else {
-		glog.V(1).Infof("manifest exists, reading from manifest")
 		raw, err := ioutil.ReadFile(path)
 		if err != nil {
 			glog.V(1).Infof("Reading Manifest failed (%s)", err)
@@ -637,7 +663,6 @@ func getServiceManifest(filenm string) (map[string]packageDef, error) {
 		glog.V(1).Infof("manifest [%s] not found", filenm)
 		return manifest, nil
 	}
-	glog.V(1).Infof("manifest exists, reading from manifest")
 	raw, err := ioutil.ReadFile(filenm)
 	if err != nil {
 		glog.V(1).Infof("Reading Manifest failed (%s)", err)
@@ -1351,7 +1376,6 @@ func genRelMap(path string) (string, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		glog.V(1).Infof("relationRef [%s] not found", path)
 	} else {
-		glog.V(1).Infof("relationRef exists, reading from manifest")
 		raw, err := ioutil.ReadFile(path)
 		if err != nil {
 			glog.V(1).Infof("Reading Relation failed (%s)", err)
@@ -2534,7 +2558,6 @@ func getProxyPaths(svc *descriptor.Service) ([]ProxyPath, error) {
 	}
 	opts, ok := i.([]*venice.ProxyEndpoint)
 	if !ok {
-		glog.V(1).Infof("could not parse option")
 		return ret, fmt.Errorf("could not parse proxy option for service [%s] [%+v]", *svc.Name, opts)
 	}
 	glog.V(1).Infof("found proxy options on service [%s] [%+v]", *svc.Name, opts)
@@ -2628,6 +2651,8 @@ func init() {
 	reg.RegisterFunc("getURIKey", getURIKey)
 	reg.RegisterFunc("getMsgURIKey", getMsgURIKey)
 	reg.RegisterFunc("getSvcParams", getSvcParams)
+	reg.RegisterFunc("getPenctlCmdOptions", getPenctlCmdOptions)
+	reg.RegisterFunc("getPenctlParentCmdOptions", getPenctlParentCmdOptions)
 	reg.RegisterFunc("getRestSvcOptions", getRestSvcOptions)
 	reg.RegisterFunc("getMethodParams", getMethodParams)
 	reg.RegisterFunc("getCWD2", getCWD2)

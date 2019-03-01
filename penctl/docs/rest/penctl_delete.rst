@@ -38,5 +38,6 @@ SEE ALSO
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
 * `penctl delete core-dump <penctl_delete_core-dump.rst>`_ 	 - Delete a core dump from Naples
 * `penctl delete interface <penctl_delete_interface.rst>`_ 	 - Delete interface
+* `penctl delete naples-profile <penctl_delete_naples-profile.rst>`_ 	 - naples profile object
 * `penctl delete qos-class <penctl_delete_qos-class.rst>`_ 	 - qos-class object
 

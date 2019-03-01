@@ -1,9 +1,9 @@
-.. _penctl_show_metrics_upgrade:
+.. _penctl_show_metrics_ftecps:
 
-penctl show metrics upgrade
----------------------------
+penctl show metrics ftecps
+--------------------------
 
-Metrics for Upgrade
+Show FteCPSMetrics from Naples
 
 Synopsis
 ~~~~~~~~
@@ -11,16 +11,20 @@ Synopsis
 
 
 ---------------------------------
- Metrics for Upgrade
+ Show FteCPSMetrics From Naples 
 ---------------------------------
 
+
+::
+
+  penctl show metrics ftecps [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for upgrade
+  -h, --help   help for ftecps
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,5 +40,4 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
-* `penctl show metrics upgrade stats <penctl_show_metrics_upgrade_stats.rst>`_ 	 - Upgrade Stats
 

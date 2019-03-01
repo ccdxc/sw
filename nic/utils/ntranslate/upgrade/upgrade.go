@@ -15,8 +15,8 @@ type upgradeTranslatorFns struct{}
 
 // KeyToMeta converts network key to meta
 func (n *upgradeTranslatorFns) KeyToMeta(key interface{}) *api.ObjectMeta {
-	if str, ok := key.(string); ok {
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: str}
+	if val, ok := key.(uint32); ok {
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: string(val)}
 	}
 	return nil
 }

@@ -1,9 +1,9 @@
-.. _penctl_show_metrics_upgrade:
+.. _penctl_show_metrics_ftelifq:
 
-penctl show metrics upgrade
+penctl show metrics ftelifq
 ---------------------------
 
-Metrics for Upgrade
+Show FteLifQMetrics from Naples
 
 Synopsis
 ~~~~~~~~
@@ -11,16 +11,20 @@ Synopsis
 
 
 ---------------------------------
- Metrics for Upgrade
+ Show FteLifQMetrics From Naples 
 ---------------------------------
 
+
+::
+
+  penctl show metrics ftelifq [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for upgrade
+  -h, --help   help for ftelifq
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,5 +40,4 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
-* `penctl show metrics upgrade stats <penctl_show_metrics_upgrade_stats.rst>`_ 	 - Upgrade Stats
 

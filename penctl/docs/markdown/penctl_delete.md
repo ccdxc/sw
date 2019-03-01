@@ -30,5 +30,6 @@ Delete Object
 * [penctl](penctl.md)	 - Pensando CLIs
 * [penctl delete core-dump](penctl_delete_core-dump.md)	 - Delete a core dump from Naples
 * [penctl delete interface](penctl_delete_interface.md)	 - Delete interface
+* [penctl delete naples-profile](penctl_delete_naples-profile.md)	 - naples profile object
 * [penctl delete qos-class](penctl_delete_qos-class.md)	 - qos-class object
 

@@ -261,7 +261,6 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 			return nil, nil
 		}
 		if jsonFormat {
-			fmt.Println("PRINTING PRETTY JSON")
 			fmt.Println(string(prettyJSON.Bytes()))
 		} else if yamlFormat {
 			b, err := yaml.JSONToYAML(bodyBytes)

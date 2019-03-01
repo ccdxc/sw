@@ -1,4 +1,4 @@
-## penctl create naples-profile
+## penctl delete naples-profile
 
 naples profile object
 
@@ -7,20 +7,19 @@ naples profile object
 
 
 ----------------------------
- Create NAPLES Profiles 
+ Delete NAPLES Profiles 
 ----------------------------
 
 
 ```
-penctl create naples-profile [flags]
+penctl delete naples-profile [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help             help for naples-profile
-  -n, --name string      Name of the NAPLES profile to be deleted
-  -i, --num-lifs int32   Maximum number of LIFs on the eth device. 1 or 16
+  -h, --help          help for naples-profile
+  -n, --name string   Name of the NAPLES profile to be deleted
 ```
 
 ### Options inherited from parent commands
@@ -33,5 +32,5 @@ penctl create naples-profile [flags]
 ```
 
 ### SEE ALSO
-* [penctl create](penctl_create.md)	 - Create Object
+* [penctl delete](penctl_delete.md)	 - Delete Object
 
