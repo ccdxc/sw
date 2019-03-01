@@ -208,7 +208,6 @@ ionic_hex_dump(char *desc,                                         // IN
         vmk_uint32 i;
         unsigned char *pc = (unsigned char*)addr;
 
-        // Output description if given.
         if (desc != NULL) {
                 ionic_print ("%s:\n", desc);
         }
@@ -222,7 +221,6 @@ ionic_hex_dump(char *desc,                                         // IN
                 return;
         }
 
-        // Process every byte in the data.
         for (i = 0; i < len; i++) {
                 if ((i % 16) == 0) {
                         ionic_print ("\n");
@@ -230,7 +228,6 @@ ionic_hex_dump(char *desc,                                         // IN
                 ionic_print (" %02x", pc[i]);
         }
 
-        // Pad out last line if not exactly 16 characters.
         while ((i % 16) != 0) {
                 ionic_print ("   ");
                 i++;

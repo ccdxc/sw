@@ -19,6 +19,8 @@
 #ifndef _IONIC_LIF_H_
 #define _IONIC_LIF_H_
 
+#define NOTIFYQ_LENGTH  64      /* must be a power of two */
+
 #include "ionic_rx_filter.h"
 #include "ionic_en_uplink.h"
 
@@ -51,6 +53,7 @@ struct rx_stats {
 #define QCQ_F_INTR              BIT(2)
 #define QCQ_F_TX_STATS          BIT(3)
 #define QCQ_F_RX_STATS          BIT(4)
+#define QCQ_F_NOTIFYQ           BIT(5)
 
 struct qcq {
         vmk_uint32 ring_idx;
@@ -66,6 +69,8 @@ struct qcq {
         struct intr intr;
 //        struct napi_struct napi;
         vmk_NetPoll netpoll;
+        vmk_Bool is_netpoll_created;
+        vmk_Bool is_netpoll_enabled;
         union {
                 struct tx_stats tx;
                 struct rx_stats rx;
@@ -118,8 +123,10 @@ struct lif {
         unsigned int kern_pid;
         spinlock_t adminq_lock;
         struct qcq *adminqcq;
+        struct qcq *notifyqcq;
         struct qcq **txqcqs;
         struct qcq **rxqcqs;
+        u64 last_eid;
         unsigned int neqs;
         unsigned int ntxqcqs;
         unsigned int nrxqcqs;
@@ -138,19 +145,34 @@ struct lif {
         void *api_private;
         u32 flags;
         //struct dentry *debugfs;
+        u32 notifyblock_sz;
+        struct notify_block *notifyblock;
+        dma_addr_t notifyblock_pa;
 };
 
 #define lif_to_txq(lif, i)      (&lif->txqcqs[i]->q)
 #define lif_to_rxq(lif, i)      (&lif->rxqcqs[i]->q)
 
 VMK_ReturnStatus
+ionic_dev_recover_world(void *data);
+
+VMK_ReturnStatus
 ionic_lifs_alloc(struct ionic *ionic);
-void ionic_lifs_free(struct ionic *ionic);
-void ionic_lifs_deinit(struct ionic *ionic);
+
+void
+ionic_lifs_free(struct ionic *ionic);
+
+void
+ionic_lifs_deinit(struct ionic *ionic);
+
 VMK_ReturnStatus
 ionic_lifs_init(struct ionic *ionic);
-int ionic_lifs_register(struct ionic *ionic);
-void ionic_lifs_unregister(struct ionic *ionic);
+
+int
+ionic_lifs_register(struct ionic *ionic);
+
+void
+ionic_lifs_unregister(struct ionic *ionic);
 
 VMK_ReturnStatus
 ionic_station_set(struct lif *lif);
@@ -187,6 +209,13 @@ ionic_vlan_rx_add_vid(struct lif *lif,
 VMK_ReturnStatus
 ionic_vlan_rx_kill_vid(struct lif *lif,
                        u16 vid);
+
+VMK_ReturnStatus
+ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir);
+
+VMK_ReturnStatus
+ionic_rss_hash_key_set(struct lif *lif, const u8 *key);
+
 
 #endif /* _IONIC_LIF_H_ */
 

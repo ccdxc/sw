@@ -44,8 +44,8 @@ VMK_ASSERT_LIST(ionic_types,
 )
 
 
-typedef vmk_uint8 u8;
-typedef vmk_uint16 u16;
+typedef vmk_uint8 u8, uint8_t;
+typedef vmk_uint16 u16, uint16_t;
 typedef vmk_uint32 u32, uint32_t;
 typedef vmk_uint64 u64, size_t, uint64_t;
 typedef vmk_IOA dma_addr_t;

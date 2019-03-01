@@ -23,17 +23,23 @@
 #include "ionic_lif.h"
 
 #define IONIC_MAX_TX_BUF_SIZE                   (1 << 14)
+#define IONIC_TXD_NEEDED(size) (((size) + IONIC_MAX_TX_BUF_SIZE - 1) / \
+                                IONIC_MAX_TX_BUF_SIZE)
+
 #define IONIC_MAX_CSUM_OFFSET                   1024
 #define IONIC_EN_ETH_HLEN                       sizeof(vmk_EthHdr)
 #define IONIC_EN_VLAN_HLEN                      sizeof(vmk_VLANHdr)
 #define IONIC_EN_MAX_FILTERS_PER_RX_Q           32
-#define IONIC_NUM_RX_RINGS_PER_RSS_QUEUE        1
+#define IONIC_MAX_NUM_RX_RINGS_PER_RSS_QUEUE    16
+#define IONIC_EN_WAKE_QUEUE_THRESHOLD           IONIC_MIN(64, ntxq_descs >> 1)
+
 
 struct ionic_en_priv_data;
 struct ionic_en_uplink_handle;
 
 enum ionic_en_ring_type{
         IONIC_EN_ADMIN_RING,
+        IONIC_EN_NOTIFY_RING,
         IONIC_EN_TX_RING,
         IONIC_EN_RX_RING,
 };
@@ -65,7 +71,7 @@ struct ionic_en_rx_rss_ring {
         vmk_uint32                      ring_idx;
         vmk_uint32                      shared_q_data_idx;
         struct ionic_en_priv_data       *priv_data;
-        struct ionic_en_rx_ring         *p_attached_rx_rings[IONIC_NUM_RX_RINGS_PER_RSS_QUEUE];
+        struct ionic_en_rx_ring         *p_attached_rx_rings[IONIC_MAX_NUM_RX_RINGS_PER_RSS_QUEUE];
         vmk_uint32                      num_attached_rx_rings;
 
         vmk_UplinkQueueMACFilterInfo    mac_filter[IONIC_EN_MAX_FILTERS_PER_RX_Q];
@@ -151,20 +157,19 @@ ionic_en_rx_ring_init(vmk_uint32 ring_idx,
                       vmk_uint32 shared_q_data_idx,
                       struct ionic_en_priv_data *priv_data,
                       struct lif *lif);
+                     
 
 inline void
 ionic_en_rx_ring_deinit(vmk_uint32 ring_idx,
                         struct ionic_en_priv_data *priv_data);
 
 void
-ionic_en_rx_rss_ring_init(vmk_uint32 ring_idx,
-                          vmk_uint32 shared_q_data_idx,
-                          struct ionic_en_priv_data *priv_data,
-                          struct lif *lif);
+ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
+                     struct lif *lif);
 
 void
-ionic_en_rx_rss_ring_deinit(vmk_uint32 ring_idx,
-                            struct ionic_en_priv_data *priv_data);
+ionic_en_rx_rss_deinit(struct ionic_en_priv_data *priv_data,
+                       struct lif *lif);
 
 
 #endif /* _IONIC_TXRX_H_ */

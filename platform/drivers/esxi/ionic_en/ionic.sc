@@ -94,6 +94,7 @@ module_def = {
                      ],
     "includes"       : [
                          "../common/include",
+                         "../../common",
                      ],
     "cc flags"       : [
                          "-Wall -Werror",

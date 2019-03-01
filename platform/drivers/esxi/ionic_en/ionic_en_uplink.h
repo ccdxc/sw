@@ -30,9 +30,10 @@
 // TODO: Figure out the max
 #define IONIC_MAX_NUM_TX_QUEUE                  32
 #define IONIC_MAX_NUM_RX_QUEUE                  32
-#define IONIC_NUM_RX_RSS_QUEUES                 0
+#define IONIX_MAX_NUM_RX_RSS_QUEUE               1
 
 #define IONIC_EN_DEFAULT_MTU_SIZE               1500
+#define IONIC_EN_MAX_BUF_SIZE_PRIV_STATS        4096 * 2
 
 #define IONIC_EN_TX_COAL_USECS                  64
 #define IONIC_EN_RX_COAL_USECS                  64
@@ -81,13 +82,14 @@ struct ionic_en_uplink_handle {
 
         struct ionic_en_tx_ring         tx_rings[IONIC_MAX_NUM_TX_QUEUE];
         struct ionic_en_rx_ring         rx_rings[IONIC_MAX_NUM_RX_QUEUE];
-        struct ionic_en_rx_rss_ring     rx_rss_rings[IONIC_NUM_RX_RSS_QUEUES];
+        struct ionic_en_rx_rss_ring     rx_rss_ring;
 
         vmk_EthAddress                  vmk_mac_addr;
         vmk_uint64                      mac_uint64;
         
         vmk_Lock                        link_status_lock;
         vmk_LinkStatus                  link_status;
+        vmk_LinkStatus                  cur_hw_link_status;
         vmk_WorldID                     link_check_world;
 
         vmk_Lock                        admin_status_lock;

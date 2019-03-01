@@ -27,42 +27,6 @@
 /*
  ******************************************************************************
  *
- * ionic_get_num_queues_supported --
- *
- *    Get number of queues that device driver should expose to vmkernel,
- *
- *  Parameters:
- *     max_tx_queues      - IN (number of TX queues device can support)
- *     max_rx_queues      - IN (number of RX queues device can support)
- *
- *  Results:
- *     Return maxium number of queues we should use. 
- *
- *  Side-effects:
- *     None
- *
- ******************************************************************************
- */
-
-vmk_uint32
-ionic_get_num_queues_supported(vmk_uint32 numTxQueues,                     //IN
-                               vmk_uint32 numRxQueues)                     //IN
-{
-        vmk_uint32 max_tx_queues;
-        vmk_uint32 max_rx_queues;
-
-        vmk_UplinkQueueGetNumQueuesSupported(numTxQueues,
-                                             numRxQueues,
-                                             &max_tx_queues,
-                                             &max_rx_queues);
-
-        return IONIC_MIN(max_tx_queues, max_rx_queues);
-}
-
-
-/*
- ******************************************************************************
- *
  *   ionic_en_is_rss_q_idx
  *
  *      Check if index is of queue that supports RSS
@@ -154,7 +118,7 @@ ionic_en_convert_shared_q_idx(struct ionic_en_priv_data *priv_data,     // IN
 {
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_info("ionic_en_convert_shared_q_idx() called");
+        ionic_dbg("ionic_en_convert_shared_q_idx() called");
 
         /* Normal rx ring index */
         if (shared_q_data_idx < uplink_handle->max_rx_normal_queues) {
@@ -176,51 +140,6 @@ ionic_en_convert_shared_q_idx(struct ionic_en_priv_data *priv_data,     // IN
         }
 
         return IONIC_EN_INVALID_SHARED_QUEUE_DATA_INDEX;
-}
-
-
-/*
- ******************************************************************************
- *
- *  ionic_en_convert_attached_rss_ring_idx 
- *
- *      Convert from attached rss ring index to rx ring index.
- *
- *  Parameters:
- *    priv_data                 - IN (struct ionic_en_priv_data handler)
- *    rss_ring_idx              - IN (rss ring index)
- *    num_attached_rx_rings     - IN (number of attached rx rings to this
- *                                    rx rss ring)
- *    cur_rx_ring_idx           - IN (current index of attached rx ring
- *                                    of this rx rss ring)
- *
- *  Results:
- *     index of the dedicated rx_ring from the array.
- *
- *
- *  Side effects:
- *     None
- *
- ******************************************************************************
- */
-
-inline vmk_uint32
-ionic_en_convert_attached_rss_ring_idx(struct ionic_en_priv_data *priv_data,     // IN
-                                       vmk_uint32 rss_ring_idx,                  // IN
-                                       vmk_uint32 num_attached_rx_rings,         // IN
-                                       vmk_uint32 cur_rx_ring_idx)               // IN
-{
-        vmk_uint32 idx;
-        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
-
-        idx = uplink_handle->max_rx_normal_queues +
-              rss_ring_idx * num_attached_rx_rings +
-              cur_rx_ring_idx;
-
-        VMK_ASSERT(idx >= uplink_handle->max_rx_normal_queues &&
-                   idx < uplink_handle->max_rx_queues);
-
-        return idx;
 }
 
 
@@ -264,7 +183,7 @@ ionic_en_rxq_alloc(struct ionic_en_priv_data *priv_data,          // IN
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
         vmk_UplinkSharedQueueData *uplink_q_data     = uplink_handle->uplink_q_data;
 
-        ionic_info("ionic_en_rxq_alloc() called");
+        ionic_dbg("ionic_en_rxq_alloc() called");
 
         IONIC_EN_FOR_EACH_RX_SHARED_QUEUE_DATA_INDEX(priv_data, i) {
                 if ((uplink_q_data[i].flags & VMK_UPLINK_QUEUE_FLAG_IN_USE) == 0) {
@@ -303,7 +222,7 @@ ionic_en_rxq_alloc(struct ionic_en_priv_data *priv_data,          // IN
 
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
 
-        ionic_info("RX queue %d is allocated", rx_ring_idx);
+        ionic_dbg("RX queue %d is allocated", rx_ring_idx);
 
         return status;
 }
@@ -337,7 +256,7 @@ ionic_en_rxq_free(struct ionic_en_priv_data *priv_data,           // IN
         vmk_uint32 uplink_q_data_idx;
         vmk_UplinkSharedQueueData *uplink_q_data;
 
-        ionic_info("ionic_en_rxq_free() called");
+        ionic_dbg("ionic_en_rxq_free() called");
 
         uplink_q_data_idx = vmk_UplinkQueueIDQueueDataIndex(uplink_qid);
 
@@ -354,8 +273,8 @@ ionic_en_rxq_free(struct ionic_en_priv_data *priv_data,           // IN
 
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
 
-        ionic_info("RX queue %d is freed",
-                   vmk_UplinkQueueIDUserVal(uplink_qid));
+        ionic_dbg("RX queue %d is freed",
+                  vmk_UplinkQueueIDUserVal(uplink_qid));
 
         return VMK_OK;
 }
@@ -397,7 +316,7 @@ ionic_en_txq_alloc(struct ionic_en_priv_data *priv_data,          // IN
         vmk_UplinkSharedQueueData *uplink_q_data     = uplink_handle->uplink_q_data;
         vmk_uint32 flags, found_idx, tx_ring_idx, i;
 
-        ionic_info("ionic_en_txq_alloc() called");
+        ionic_dbg("ionic_en_txq_alloc() called");
 
         IONIC_EN_FOR_EACH_TX_SHARED_QUEUE_DATA_INDEX(priv_data, i) {
                 if ((uplink_q_data[i].flags & VMK_UPLINK_QUEUE_FLAG_IN_USE) == 0) {
@@ -408,7 +327,7 @@ ionic_en_txq_alloc(struct ionic_en_priv_data *priv_data,          // IN
         }
 
         if (!is_found) {
-                ionic_info("Failed to allocate TX queue, status: VMK_NOT_FOUND");
+                ionic_warn("Failed to allocate TX queue, status: VMK_NOT_FOUND");
                 return  VMK_NOT_FOUND;
         }
 
@@ -434,7 +353,7 @@ ionic_en_txq_alloc(struct ionic_en_priv_data *priv_data,          // IN
 
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
 
-        ionic_info("TX queue %d is allocated", tx_ring_idx);
+        ionic_dbg("TX queue %d is allocated", tx_ring_idx);
 
         return status;
 }
@@ -468,7 +387,7 @@ ionic_en_txq_free(struct ionic_en_priv_data *priv_data,           // IN
         vmk_uint32 uplink_q_data_idx;
         vmk_UplinkSharedQueueData *uplink_q_data;
 
-        ionic_info("ionic_en_txq_free() called");
+        ionic_dbg("ionic_en_txq_free() called");
 
         uplink_q_data_idx = vmk_UplinkQueueIDQueueDataIndex(uplink_qid);
 
@@ -485,8 +404,8 @@ ionic_en_txq_free(struct ionic_en_priv_data *priv_data,           // IN
 
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
 
-        ionic_info("TX queue %d is freed",
-                   vmk_UplinkQueueIDUserVal(uplink_qid));
+        ionic_dbg("TX queue %d is freed",
+                  vmk_UplinkQueueIDUserVal(uplink_qid));
 
         return VMK_OK;
 }
@@ -610,8 +529,8 @@ ionic_en_queue_alloc(vmk_AddrCookie driver_data,                  // IN
         priv_data = (struct ionic_en_priv_data *) driver_data.ptr;
         uplink_handle = &priv_data->uplink_handle;
 
-        ionic_info("mq: ionic_en_queue_alloc() called, queue type: %d",
-                   q_type);
+        ionic_dbg("mq: ionic_en_queue_alloc() called, queue type: %d",
+                  q_type);
 
         VMK_ASSERT(uplink_qid);
         VMK_ASSERT(netpoll);
@@ -623,12 +542,12 @@ ionic_en_queue_alloc(vmk_AddrCookie driver_data,                  // IN
                         status = ionic_en_rxq_alloc(priv_data,
                                                     uplink_qid,
                                                     netpoll);
-                        ionic_info("multi-queue rx");
+                        ionic_dbg("multi-queue rx");
                         break;
                 case VMK_UPLINK_QUEUE_TYPE_TX:
                         status = ionic_en_txq_alloc(priv_data,
                                                     uplink_qid);
-                        ionic_info("multi-queue tx");
+                        ionic_dbg("multi-queue tx");
                         break;
                 default:
                         ionic_err("Unknown queue type: %d", q_type);
@@ -668,7 +587,7 @@ ionic_en_queue_alloc(vmk_AddrCookie driver_data,                  // IN
 
 VMK_ReturnStatus
 ionic_en_rx_rss_q_alloc(struct ionic_en_priv_data *priv_data,                      //IN
-                     vmk_UplinkQueueID *uplink_qid)                      //OUT
+                        vmk_UplinkQueueID *uplink_qid)                      //OUT
 {
         VMK_ReturnStatus status                       = VMK_OK;
         struct ionic_en_uplink_handle *uplink_handle  = &priv_data->uplink_handle;
@@ -676,11 +595,11 @@ ionic_en_rx_rss_q_alloc(struct ionic_en_priv_data *priv_data,                   
         vmk_Bool is_found                             = VMK_FALSE;
         vmk_uint32 i, found_idx, rss_ring_idx;
 
-        ionic_info("ionic_en_rx_rss_q_alloc() called");
+        ionic_dbg("ionic_en_rx_rss_q_alloc() called");
 
         IONIC_EN_FOR_EACH_RX_RSS_SHARED_QUEUE_DATA_INDEX(priv_data, i) {
                 VMK_ASSERT(shared_queue_data[i].supportedFeatures &
-                           VMK_UPLINK_QUEUE_FEAT_RSS);
+                           VMK_UPLINK_QUEUE_FEAT_RSS_DYN);
 
                 if ((shared_queue_data[i].flags & VMK_UPLINK_QUEUE_FLAG_IN_USE) == 0) {
                         is_found = VMK_TRUE;
@@ -713,7 +632,7 @@ ionic_en_rx_rss_q_alloc(struct ionic_en_priv_data *priv_data,                   
         shared_queue_data[found_idx].qid = *uplink_qid;
 
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
-        ionic_info("RX RSS queue is allocated, index: %d", rss_ring_idx);
+        ionic_dbg("RX RSS queue is allocated, index: %d", rss_ring_idx);
 
 out:
         return status;
@@ -746,7 +665,7 @@ ionic_en_get_rx_sup_feat(struct ionic_en_priv_data *priv_data)
         vmk_uint32 i;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_info("ionic_en_get_rx_sup_feat() called");
+        ionic_dbg("ionic_en_get_rx_sup_feat() called");
 
         IONIC_EN_SHARED_AREA_BEGIN_READ(uplink_handle);
 
@@ -798,8 +717,8 @@ ionic_en_queue_alloc_with_attr(vmk_AddrCookie driver_data,        // IN
         struct ionic_en_priv_data *priv_data = (struct ionic_en_priv_data *)driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_info("ionic_en_queue_alloc_with_attr() called,"
-                   " queue type: %d", q_type);
+        ionic_dbg("ionic_en_queue_alloc_with_attr() called,"
+                  " queue type: %d", q_type);
 
         vmk_SemaLock(&uplink_handle->mq_binary_sema);
 
@@ -828,12 +747,12 @@ ionic_en_queue_alloc_with_attr(vmk_AddrCookie driver_data,        // IN
                                         goto out; 
                                 }    
 
-                                if (features & VMK_UPLINK_QUEUE_FEAT_RSS) {
+                                if (features & VMK_UPLINK_QUEUE_FEAT_RSS_DYN) {
                                         status = ionic_en_rx_rss_q_alloc(priv_data,
                                                                          uplink_qid);
                                 }
 
-                                if (!(features & VMK_UPLINK_QUEUE_FEAT_RSS) ||
+                                if (!(features & VMK_UPLINK_QUEUE_FEAT_RSS_DYN) ||
                                     (status == VMK_NOT_FOUND)) {
                                         goto alloc_normal_rx_q;
                                 }
@@ -891,7 +810,7 @@ VMK_ReturnStatus
 ionic_en_queue_realloc_with_attr(vmk_AddrCookie driver_data,              // IN
                                  vmk_UplinkQueueReallocParams *params)    // IN
 {
-        ionic_info("ionic_en_queue_realloc_with_attr() called");
+        ionic_dbg("ionic_en_queue_realloc_with_attr() called");
 
         return VMK_NOT_SUPPORTED;
 }
@@ -929,8 +848,8 @@ ionic_en_queue_free(vmk_AddrCookie driver_data,                   // IN
         priv_data = (struct ionic_en_priv_data *) driver_data.ptr;
         uplink_handle = &priv_data->uplink_handle;
 
-        ionic_info("mq: ionic_en_queue_free() called, queue type: %d",
-                   q_type);
+        ionic_dbg("mq: ionic_en_queue_free() called, queue type: %d",
+                  q_type);
 
         VMK_ASSERT(uplink_qid);
 
@@ -1024,8 +943,8 @@ ionic_en_rxq_start(struct ionic_en_uplink_handle *uplink_handle,  // IN
 {
         vmk_UplinkSharedQueueData *shared_q_data;
 
-        ionic_info("ionic_en_rxq_start() called, shared_q_data_idx: %d",
-                   shared_q_data_idx);
+        ionic_dbg("ionic_en_rxq_start() called, shared_q_data_idx: %d",
+                  shared_q_data_idx);
 
         IONIC_EN_VALIDATE_SHARED_QUEUE_IDX(uplink_handle,
                                            shared_q_data_idx,
@@ -1055,7 +974,7 @@ ionic_en_rxq_start(struct ionic_en_uplink_handle *uplink_handle,  // IN
 
         (uplink_handle->uplink_q_info.activeRxQueues)++;
 
-        ionic_info("shared idx: %d is actived", shared_q_data_idx);
+        ionic_dbg("shared idx: %d is actived", shared_q_data_idx);
 out:
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
 }
@@ -1087,8 +1006,8 @@ ionic_en_rxq_quiesce(struct ionic_en_uplink_handle *uplink_handle,   // IN
 {
         vmk_UplinkSharedQueueData *shared_q_data;
 
-        ionic_info("ionic_en_rxq_quiesce() called, shared_q_data_idx: %d",
-                   shared_q_data_idx);
+        ionic_dbg("ionic_en_rxq_quiesce() called, shared_q_data_idx: %d",
+                  shared_q_data_idx);
 
         IONIC_EN_VALIDATE_SHARED_QUEUE_IDX(uplink_handle,
                                            shared_q_data_idx,
@@ -1109,7 +1028,7 @@ ionic_en_rxq_quiesce(struct ionic_en_uplink_handle *uplink_handle,   // IN
         shared_q_data->state = VMK_UPLINK_QUEUE_STATE_STOPPED;
         (uplink_handle->uplink_q_info.activeRxQueues)--;
 
-        ionic_info("shared idx: %d is quiesced", shared_q_data_idx);
+        ionic_dbg("shared idx: %d is quiesced", shared_q_data_idx);
 
 out:
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
@@ -1144,8 +1063,8 @@ ionic_en_txq_start(struct ionic_en_uplink_handle *uplink_handle,  // IN
 {
         vmk_UplinkSharedQueueData *shared_q_data;
 
-        ionic_info("ionic_en_txq_start() called, shared_idx: %d",
-                   shared_q_data_idx);
+        ionic_dbg("ionic_en_txq_start() called, shared_idx: %d",
+                  shared_q_data_idx);
 
         IONIC_EN_VALIDATE_SHARED_QUEUE_IDX(uplink_handle,
                                            shared_q_data_idx,
@@ -1173,7 +1092,7 @@ ionic_en_txq_start(struct ionic_en_uplink_handle *uplink_handle,  // IN
 
         (uplink_handle->uplink_q_info.activeTxQueues)++;
 
-        ionic_info("shared idx: %d is actived", shared_q_data_idx);
+        ionic_dbg("shared idx: %d is actived", shared_q_data_idx);
 
 out:
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
@@ -1213,8 +1132,8 @@ ionic_en_txq_quiesce(struct ionic_en_uplink_handle *uplink_handle,    // IN
 {
         vmk_UplinkSharedQueueData *shared_q_data;
 
-        ionic_info("ionic_en_txq_quiesce() called, shared_q_data_idx: %d",
-                   shared_q_data_idx);
+        ionic_dbg("ionic_en_txq_quiesce() called, shared_q_data_idx: %d",
+                  shared_q_data_idx);
 
         IONIC_EN_VALIDATE_SHARED_QUEUE_IDX(uplink_handle,
                                            shared_q_data_idx,
@@ -1236,7 +1155,7 @@ ionic_en_txq_quiesce(struct ionic_en_uplink_handle *uplink_handle,    // IN
         shared_q_data->state = VMK_UPLINK_QUEUE_STATE_STOPPED;
         (uplink_handle->uplink_q_info.activeTxQueues)--;
 
-        ionic_info("shared_q_data_idx: %d is quiesced", shared_q_data_idx);
+        ionic_dbg("shared_q_data_idx: %d is quiesced", shared_q_data_idx);
 out:
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
 
@@ -1281,8 +1200,8 @@ ionic_en_queue_quiesce(vmk_AddrCookie driver_data,                // IN
         uplink_handle = &priv_data->uplink_handle;
         shared_q_data_idx = vmk_UplinkQueueIDQueueDataIndex(uplink_qid);
 
-        ionic_info("mq: ionic_en_queue_quiesce() called, queue type: %d",
-                   q_type);
+        ionic_dbg("mq: ionic_en_queue_quiesce() called, queue type: %d",
+                  q_type);
 
         vmk_SemaLock(&uplink_handle->mq_binary_sema);
 
@@ -1342,8 +1261,8 @@ ionic_en_queue_start(vmk_AddrCookie driver_data,                          //IN
         uplink_handle = &priv_data->uplink_handle;
         shared_q_data_idx = vmk_UplinkQueueIDQueueDataIndex(uplink_qid);
 
-        ionic_info("mq: ionic_en_queue_start() called, queue type: %d",
-                   q_type);
+        ionic_dbg("mq: ionic_en_queue_start() called, queue type: %d",
+                  q_type);
 
         vmk_SemaLock(&uplink_handle->mq_binary_sema);
 
@@ -1481,7 +1400,7 @@ ionic_en_is_req_exists(struct ionic_en_priv_data *priv_data,      // IN
         struct ionic_en_rx_rss_ring *rx_rss_ring;
         vmk_Bool res = VMK_FALSE;
 
-        ionic_info("ionic_en_is_req_exists() called");
+        ionic_dbg("ionic_en_is_req_exists() called");
 
         if (filter_info->filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY) {
                 IONIC_EN_FOR_EACH_RX_NORMAL_RING_IDX(priv_data, i) {
@@ -1497,18 +1416,12 @@ ionic_en_is_req_exists(struct ionic_en_priv_data *priv_data,      // IN
                         }
                 }
 
-                IONIC_EN_FOR_EACH_RX_RSS_RING_IDX(priv_data, i) {
-                        rx_rss_ring = &priv_data->uplink_handle.rx_rss_rings[i];
-                        if (!rx_rss_ring->is_init) {
-                                continue;
-                        }
-
-                        res = ionic_en_is_mac_filter_exists(rx_rss_ring->mac_filter,
-                                        IONIC_EN_MAX_FILTERS_PER_RX_Q,
-                                        filter_info->mac_filter_info->mac);
-                        if (res) {
-                                goto out;
-                        }
+                rx_rss_ring = &priv_data->uplink_handle.rx_rss_ring;
+                res = ionic_en_is_mac_filter_exists(rx_rss_ring->mac_filter,
+                                                    IONIC_EN_MAX_FILTERS_PER_RX_Q,
+                                                    filter_info->mac_filter_info->mac);
+                if (res) {
+                        goto out;
                 }
         } else if (filter_info->filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY) {
                 IONIC_EN_FOR_EACH_RX_NORMAL_RING_IDX(priv_data, i) {
@@ -1524,18 +1437,12 @@ ionic_en_is_req_exists(struct ionic_en_priv_data *priv_data,      // IN
                         }
                 }
 
-                IONIC_EN_FOR_EACH_RX_RSS_RING_IDX(priv_data, i) {
-                        rx_rss_ring = &priv_data->uplink_handle.rx_rss_rings[i];
-                        if (!rx_rss_ring->is_init) {
-                                continue;
-                        }
-
-                        res = ionic_en_is_vlan_filter_exists(rx_rss_ring->vlan_filter,
-                                        IONIC_EN_MAX_FILTERS_PER_RX_Q,
-                                        filter_info->vlan_filter_info);
-                        if (res) {
-                                goto out;
-                        }
+                rx_rss_ring = &priv_data->uplink_handle.rx_rss_ring;
+                res = ionic_en_is_vlan_filter_exists(rx_rss_ring->vlan_filter,
+                                                     IONIC_EN_MAX_FILTERS_PER_RX_Q,
+                                                     filter_info->vlan_filter_info);
+                if (res) {
+                        goto out;
                 }
         }
 
@@ -1615,7 +1522,7 @@ ionic_en_rx_validate_filter_attrs(struct ionic_en_priv_data *priv_data,    // IN
         VMK_ReturnStatus status = VMK_BAD_PARAM;
         vmk_Bool is_rss;
 
-        ionic_info("ionic_en_rx_validate_filter_attrs() called");
+        ionic_dbg("ionic_en_rx_validate_filter_attrs() called");
 
         q_type            = vmk_UplinkQueueIDType(uplink_qid);
         ring_index        = vmk_UplinkQueueIDUserVal(uplink_qid);
@@ -1697,7 +1604,7 @@ ionic_en_rx_filter_register(struct ionic_en_priv_data *priv_data,      // IN
         vmk_EthAddress mac_addr;
         vmk_uint32 vlan_id = 0;
 
-        ionic_info("ionic_en_rx_filter_register() called");
+        ionic_dbg("ionic_en_rx_filter_register() called");
 
         VMK_ASSERT(filter_info->filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY ||
                    filter_info->filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY);
@@ -1775,7 +1682,7 @@ ionic_en_rx_filter_unregister(struct ionic_en_priv_data *priv_data,       // IN
         vmk_EthAddress mac_addr;
         vmk_uint32 vlan_id = 0;
 
-        ionic_info("ionic_en_rx_filter_unregister() called");
+        ionic_dbg("ionic_en_rx_filter_unregister() called");
 
         VMK_ASSERT(filter_info->filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY ||
                    filter_info->filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY);
@@ -1866,7 +1773,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
         vmk_UplinkQueueType q_type;
         vmk_Bool is_rss;
 
-        ionic_info("ionic_en_queue_apply_filter() called");
+        ionic_dbg("ionic_en_queue_apply_filter() called");
 
         status = ionic_en_rx_validate_filter_attrs(priv_data, uplink_qid, q_filter);
         if (status == VMK_IGNORE) {
@@ -1891,12 +1798,12 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
                 filter_info.mac_filter_info =
                         (vmk_UplinkQueueMACFilterInfo *)(q_filter->filterInfo.ptr);
                 // TODO: Add RSS case
-                mac_filters = is_rss? priv_data->uplink_handle.rx_rss_rings[rx_ring_idx].mac_filter :
+                mac_filters = is_rss? priv_data->uplink_handle.rx_rss_ring.mac_filter :
                           priv_data->uplink_handle.rx_rings[rx_ring_idx].mac_filter;
         } else if (class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY) {
                 filter_info.vlan_filter_info =
                         (vmk_UplinkQueueVLANFilterInfo *)(q_filter->filterInfo.ptr);
-                vlan_filters = is_rss? priv_data->uplink_handle.rx_rss_rings[rx_ring_idx].vlan_filter :
+                vlan_filters = is_rss? priv_data->uplink_handle.rx_rss_ring.vlan_filter :
                                priv_data->uplink_handle.rx_rings[rx_ring_idx].vlan_filter;
         } else {
                 ionic_err("Unexpected filter class: %d", class);
@@ -1992,7 +1899,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
 
         if (shared_queue_data->activeFeatures & VMK_UPLINK_QUEUE_FEAT_PAIR) {
                 VMK_ASSERT((shared_queue_data->activeFeatures &
-                           VMK_UPLINK_QUEUE_FEAT_RSS) == 0);
+                           VMK_UPLINK_QUEUE_FEAT_RSS_DYN) == 0);
                 *pair_hw_qid = rx_ring_idx;
         }
 
@@ -2073,7 +1980,7 @@ ionic_en_queue_remove_filter(vmk_AddrCookie driver_data,          // IN
         vmk_Bool is_rss;
         struct ionic_en_filter_info filter_info;
 
-        ionic_info("ionic_en_queue_remove_filter() called");
+        ionic_dbg("ionic_en_queue_remove_filter() called");
 
         status = ionic_en_rx_validate_filter_attrs(priv_data,
                                                    uplink_qid,
@@ -2108,7 +2015,7 @@ ionic_en_queue_remove_filter(vmk_AddrCookie driver_data,          // IN
                 filter_info.filter_class = VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY;
 
                 filter_info.mac_filter_info = is_rss?
-                        &priv_data->uplink_handle.rx_rss_rings[rx_ring_idx].mac_filter[filter_idx] :
+                        &priv_data->uplink_handle.rx_rss_ring.mac_filter[filter_idx] :
                         &priv_data->uplink_handle.rx_rings[rx_ring_idx].mac_filter[filter_idx];
 
                 vmk_Memset(zero_mac_addr, 0, VMK_ETH_ADDR_LENGTH); 
@@ -2129,7 +2036,7 @@ ionic_en_queue_remove_filter(vmk_AddrCookie driver_data,          // IN
                 filter_info.filter_class = VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY;
 
                 filter_info.vlan_filter_info = is_rss?
-                        &priv_data->uplink_handle.rx_rss_rings[rx_ring_idx].vlan_filter[vlan_filter_idx] :
+                        &priv_data->uplink_handle.rx_rss_ring.vlan_filter[vlan_filter_idx] :
                         &priv_data->uplink_handle.rx_rings[rx_ring_idx].vlan_filter[vlan_filter_idx];
                 if (filter_info.vlan_filter_info->vlanID == 0) {
                         ionic_err("Failed to remove RX filter on %s ring %u. "
@@ -2224,9 +2131,35 @@ ionic_en_queue_get_stats(vmk_AddrCookie driver_data,              // IN
                          vmk_UplinkQueueID qid,                   // IN
                          struct vmk_UplinkStats *stats)           // OUT
 {
-        ionic_info("ionic_en_queue_get_stats() called");
+        vmk_UplinkQueueType q_type;
+        vmk_uint32 ring_idx;
+        struct rx_stats *rx_stats;
+        struct tx_stats *tx_stats;
+        struct ionic_en_priv_data *priv_data = (struct ionic_en_priv_data *)driver_data.ptr;
+        struct lif *lif = NULL;
 
-        return VMK_NOT_SUPPORTED;
+        ionic_dbg("ionic_en_queue_get_stats() called");
+
+        q_type = vmk_UplinkQueueIDType(qid);
+        ring_idx = vmk_UplinkQueueIDUserVal(qid);
+
+        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                             struct lif, list);
+
+        if (q_type == VMK_UPLINK_QUEUE_TYPE_RX) {
+                rx_stats = &lif->rxqcqs[ring_idx]->stats.rx;
+                stats->rxPkts += rx_stats->pkts;
+                stats->rxBytes += rx_stats->bytes;
+        } else if (q_type == VMK_UPLINK_QUEUE_TYPE_TX) {
+                tx_stats = &lif->txqcqs[ring_idx]->stats.tx;
+                stats->txPkts += tx_stats->pkts;
+                stats->txBytes += tx_stats->bytes;
+        } else {
+                ionic_err("Unknown q_type: %d", q_type);
+        }
+
+
+        return VMK_OK;
 }
 
 
@@ -2258,7 +2191,7 @@ ionic_en_queue_toggle_feature(vmk_AddrCookie driver_data,         // IN
                               vmk_UplinkQueueFeature q_feature,   // IN
                               vmk_Bool is_set)                    // IN
 {
-        ionic_info("ionic_en_queue_toggle_feature() called");
+        ionic_dbg("ionic_en_queue_toggle_feature() called");
 
         return VMK_NOT_SUPPORTED;
 }
@@ -2290,7 +2223,7 @@ ionic_en_queue_set_priority(vmk_AddrCookie driver_data,           // IN
                             vmk_UplinkQueueID qid,                // IN
                             vmk_UplinkQueuePriority priority)     // IN
 {
-        ionic_info("ionic_en_queue_set_priority() called");
+        ionic_dbg("ionic_en_queue_set_priority() called");
 
         return VMK_NOT_SUPPORTED;
 }
@@ -2322,7 +2255,7 @@ ionic_en_queue_set_coalesce_params(vmk_AddrCookie driver_data,         // IN
                                    vmk_UplinkQueueID qid,              // IN
                                    vmk_UplinkCoalesceParams *params)   // IN
 {
-        ionic_info("ionic_en_queue_set_coalesce_params() called");
+        ionic_dbg("ionic_en_queue_set_coalesce_params() called");
 
         return VMK_NOT_SUPPORTED;
 }

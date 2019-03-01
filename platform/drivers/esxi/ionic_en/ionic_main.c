@@ -26,11 +26,13 @@
 
 struct ionic_driver ionic_driver;
 
-unsigned int ntxq_descs = 1024;
+unsigned int ntxq_descs = 1024 * 8;
 unsigned int nrxq_descs = 1024;
 unsigned int ntxqs = 32;
 unsigned int nrxqs = 32;
+unsigned int DRSS = 0;
 unsigned int devcmd_timeout = 50;
+
 
 VMK_MODPARAM(ntxq_descs,
              uint,
@@ -44,6 +46,9 @@ VMK_MODPARAM(ntxqs,
 VMK_MODPARAM(nrxqs,
              uint,
              "Hard set the number of Rx queues per LIF");
+VMK_MODPARAM(DRSS,
+             uint,
+             "Number of HW queues for Device RSS");
 
 VMK_MODPARAM(devcmd_timeout,
              uint,
@@ -75,6 +80,7 @@ ionic_adminq_check_err(struct lif *lif,
 		{ CMD_OPCODE_FEATURES, "CMD_OPCODE_FEATURES" },
 		{ CMD_OPCODE_Q_ENABLE, "CMD_OPCODE_Q_ENABLE" },
 		{ CMD_OPCODE_Q_DISABLE, "CMD_OPCODE_Q_DISABLE" },
+                { CMD_OPCODE_NOTIFYQ_INIT, "CMD_OPCODE_NOTIFYQ_INIT" },
 		{ CMD_OPCODE_STATION_MAC_ADDR_GET,
 			"CMD_OPCODE_STATION_MAC_ADDR_GET" },
 		{ CMD_OPCODE_MTU_SET, "CMD_OPCODE_MTU_SET" },
@@ -88,7 +94,7 @@ ionic_adminq_check_err(struct lif *lif,
 	};
         int list_len = ARRAY_SIZE(cmds);
         struct cmds *cmd = cmds;
-	char *name = "UNKNOWN";
+	char *name = "UNKNOWN cmd opcode";
         int i;
 
 	if (ctx->comp.comp.status || is_timeout) {
@@ -325,10 +331,9 @@ ionic_dev_cmd_work(vmk_AddrCookie data)
 //        spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
         vmk_SpinlockUnlock(ionic->cmd_lock);
 
-//        dev_dbg(ionic->dev, "post admin dev command:\n");
-        ionic_dbg("post admin dev command:\n");
-//        print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-//                             &ctx->cmd, sizeof(ctx->cmd), true);
+        ionic_hex_dump("post admin dev command:",
+                       &ctx->cmd,
+                       sizeof(ctx->cmd));
 
         if (ctx->side_data) {
 //                dynamic_hex_dump("data ", DUMP_PREFIX_OFFSET, 16, 1,
@@ -359,10 +364,8 @@ ionic_dev_cmd_work(vmk_AddrCookie data)
                         goto err_out;
         }
 
-//        dev_dbg(ionic->dev, "comp admin dev command:\n");
-        ionic_dbg("comp admin dev command:\n");
-//        print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
-//                             &ctx->comp, sizeof(ctx->comp), true);
+        ionic_hex_dump("comp admin dev command:",
+                       &ctx->comp, sizeof(ctx->comp));
 
 err_out:
         if (IONIC_WARN_ON(status))
@@ -383,15 +386,12 @@ err_out:
 #endif
 
 
-
-
-
 static VMK_ReturnStatus
 ionic_setup(struct ionic *ionic)
 {
         VMK_ReturnStatus status;
 
-	ionic_info("ionic_setup() called");
+	ionic_dbg("ionic_setup() called");
 
         status = ionic_dev_setup(&ionic->en_dev.idev,
                                  ionic->bars,
@@ -485,7 +485,7 @@ ionic_reset(struct ionic *ionic)
 {
         struct ionic_dev *idev = &ionic->en_dev.idev;
 
-	ionic_info("ionic_reset() called");
+	ionic_dbg("ionic_reset() called");
 
         ionic_dev_cmd_reset(idev);
 
@@ -518,14 +518,14 @@ ionic_identify(struct ionic *ionic)
         if (dma_mapping_error(dev, ident_pa))
                 return -EIO;
 */
-	ionic_info("ionic_identify() called");
+	ionic_dbg("ionic_identify() called");
 
         priv_data = IONIC_CONTAINER_OF(ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
 
         ident = ionic_dma_zalloc_align(ionic_driver.heap_id,
-                                       priv_data->dma_engine_streaming,
+                                       priv_data->dma_engine_coherent,
                                        sizeof(union identity),
                                        VMK_PAGE_SIZE,
                                        &ident_pa);
@@ -579,7 +579,7 @@ ionic_identify(struct ionic *ionic)
 //        err = ionic_debugfs_add_ident(ionic);
 //        if (err)
 //                goto err_out_unmap;
-	ionic_info("ionic_identify() completed successfully!");
+	ionic_dbg("ionic_identify() completed successfully!");
 
         return status;
 
@@ -590,8 +590,6 @@ dev_cmd_wait_err:
                        ident,
                        ident_pa);              
 
-//err_out_unmap:
-//        dma_unmap_single(dev, ident_pa, sizeof(*ident), DMA_BIDIRECTIONAL);
         return status;
 }
 
@@ -651,7 +649,7 @@ ionic_en_attach(vmk_Device device)                                // IN
         VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data;
 
-	ionic_info("ionic_en_attach() called");
+	ionic_dbg("ionic_en_attach() called");
 
         priv_data = ionic_heap_zalign(ionic_driver.heap_id,
                                       sizeof(struct ionic_en_priv_data),
@@ -787,7 +785,7 @@ ionic_en_scan(vmk_Device device)                                  // IN
         VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data;
 
-	ionic_info("ionic_en_scan() called");
+	ionic_dbg("ionic_en_scan() called");
 
         status = vmk_DeviceGetAttachedDriverData(device, 
                                                  (vmk_AddrCookie *) &priv_data);
@@ -882,7 +880,7 @@ ionic_en_detach(vmk_Device device)                                // IN
 	VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data;
 
-	ionic_info("ionic_en_detach() called");
+	ionic_dbg("ionic_en_detach() called");
 
 	status = vmk_DeviceGetAttachedDriverData(device,
 						 (vmk_AddrCookie *) &priv_data);
@@ -937,7 +935,7 @@ ionic_en_quiesce(vmk_Device device)                               // IN
         VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data;
 
-	ionic_info("ionic_en_quiesce() called");
+	ionic_dbg("ionic_en_quiesce() called");
 
         status = vmk_DeviceGetAttachedDriverData(device, 
                                                  (vmk_AddrCookie *) &priv_data);
@@ -979,7 +977,7 @@ ionic_en_quiesce(vmk_Device device)                               // IN
 static VMK_ReturnStatus
 ionic_en_start(vmk_Device device)                                 // IN
 {
-	ionic_info("ionic_en_start() called");
+	ionic_dbg("ionic_en_start() called");
 	return VMK_OK;
 }
 
@@ -1006,7 +1004,7 @@ ionic_en_start(vmk_Device device)                                 // IN
 static void
 ionic_en_forget(vmk_Device device)                                // IN
 {
-	ionic_info("ionic_en_forget() called");
+	ionic_dbg("ionic_en_forget() called");
 }
 
 
@@ -1177,6 +1175,3 @@ cleanup_module()
 	ionic_heap_destroy(ionic_driver.heap_id);
 	ionic_mem_pool_destroy(ionic_driver.mem_pool);
 }
-
-
-

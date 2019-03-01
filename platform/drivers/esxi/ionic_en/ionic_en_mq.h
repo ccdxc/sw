@@ -29,6 +29,12 @@
 
 #define IONIC_EN_INVALID_SHARED_QUEUE_DATA_INDEX                  ((vmk_uint32)-1)
 
+#define IONIC_EN_FOR_EACH_SHARED_QUEUE_DATA_INDEX(priv_data, i)                  \
+   for (i = 0;                                                                   \
+        i < priv_data->uplink_handle.max_rx_queues +                             \
+            priv_data->uplink_handle.max_tx_queues;                              \
+        i++)
+
 #define IONIC_EN_FOR_EACH_RX_SHARED_QUEUE_DATA_INDEX(priv_data, i)               \
    for (i = 0; i < priv_data->uplink_handle.max_rx_queues; i++)
 
@@ -41,12 +47,6 @@
 
 #define IONIC_EN_FOR_EACH_TX_SHARED_QUEUE_DATA_INDEX(priv_data, i)               \
    for (i = priv_data->uplink_handle.max_rx_queues;                              \
-        i < priv_data->uplink_handle.max_rx_queues +                             \
-            priv_data->uplink_handle.max_tx_queues;                              \
-        i++)
-
-#define IONIC_EN_FOR_EACH_SHARED_QUEUE_DATA_INDEX(priv_data, i)                  \
-   for (i = 0;                                                                   \
         i < priv_data->uplink_handle.max_rx_queues +                             \
             priv_data->uplink_handle.max_tx_queues;                              \
         i++)
@@ -83,19 +83,9 @@ struct ionic_en_filter_info {
    };  
 };
 
-vmk_uint32
-ionic_get_num_queues_supported(vmk_uint32 numTxQueues,
-                               vmk_uint32 numRxQueues);
-
 inline vmk_Bool
 ionic_en_is_rss_q_idx(struct ionic_en_priv_data *priv_data,
                       vmk_uint32 idx);
-
-inline vmk_uint32
-ionic_en_convert_attached_rss_ring_idx(struct ionic_en_priv_data *priv_data,
-                                       vmk_uint32 rss_ring_idx,
-                                       vmk_uint32 num_attached_rx_rings,
-                                       vmk_uint32 cur_rx_ring_idx);
 
 VMK_ReturnStatus
 ionic_en_default_q_alloc(struct ionic_en_priv_data *priv_data);

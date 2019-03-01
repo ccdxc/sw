@@ -26,8 +26,8 @@
 #ifndef _IONIC_DEV_H_
 #define _IONIC_DEV_H_
 
-#include "ionic_if.h"
 #include "ionic_types.h"
+#include "ionic_if.h"
 
 #define IONIC_MIN_MTU           1500 
 #define IONIC_MAX_MTU           9000
@@ -224,6 +224,15 @@ static inline void ionic_struct_size_checks(void)
         VMK_ASSERT_ON_COMPILE(sizeof(q_enable_comp) == 16);
         VMK_ASSERT_ON_COMPILE(sizeof(struct q_disable_cmd) == 64);
         VMK_ASSERT_ON_COMPILE(sizeof(q_disable_comp) == 16);
+        VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_init_cmd) == 64);
+        VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_init_comp) == 16);
+        VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_event) == 64);
+        VMK_ASSERT_ON_COMPILE(sizeof(struct link_change_event) == 64);
+        VMK_ASSERT_ON_COMPILE(sizeof(struct reset_event) == 64);
+        VMK_ASSERT_ON_COMPILE(sizeof(struct heartbeat_event) == 64);
+        VMK_ASSERT_ON_COMPILE(sizeof(struct log_event) == 64);
+        VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_cmd) == 4);
+        VMK_ASSERT_ON_COMPILE(sizeof(union notifyq_comp) == 64);
         VMK_ASSERT_ON_COMPILE(sizeof(struct station_mac_addr_get_cmd) == 64);
         VMK_ASSERT_ON_COMPILE(sizeof(struct station_mac_addr_get_comp) == 16);
         VMK_ASSERT_ON_COMPILE(sizeof(struct rx_mode_set_cmd) == 64);

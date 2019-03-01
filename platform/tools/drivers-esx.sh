@@ -29,7 +29,7 @@ TOP=$(readlink -f "$(dirname "$0")/../..")
 : ${GEN_DIR:="$TOP/platform/gen/drivers-esx-eth"}
 #This has to be updated once ESX version is built
 : ${DRIVERS_SRC:="$TOP/platform/drivers/"}
-: ${ESXI_VIB_SRC:="$TOP/platform/drivers/esxi/"}
+: ${ESXI_VIB_SRC:="$TOP/platform/drivers/"}
 : ${COMMON_GEN_DIR:="$GEN_DIR/common/"}
 : ${GEN_PKG:="$GEN_DIR.tar.xz"}
 
@@ -71,7 +71,11 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude="modules.order" \
   --exclude="Module.symvers" \
   --exclude=".tmp_versions/" \
+  --exclude="freebsd/" \
+  --exclude="linux/" \
+  --exclude="pxe/" \
   "$ESXI_VIB_SRC/" "$GEN_DIR/drivers"
+  
 
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."

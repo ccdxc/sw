@@ -62,6 +62,7 @@ extern unsigned int ntxq_descs;
 extern unsigned int nrxq_descs;
 extern unsigned int ntxqs;
 extern unsigned int nrxqs;
+extern unsigned int DRSS;
 extern unsigned int devcmd_timeout;
 extern struct ionic_driver ionic_driver;
 
@@ -115,6 +116,7 @@ struct ionic {
         vmk_Lock lifs_lock;
         vmk_ListLinks lifs;
         vmk_Bool is_mgmt_nic;
+        unsigned int nnqs_per_lif;
         unsigned int neqs_per_lif;
         unsigned int ntxqs_per_lif;
         unsigned int nrxqs_per_lif;
@@ -161,7 +163,7 @@ struct ionic_en_priv_data {
         vmk_LockDomainID              lock_domain;
         vmk_MemPool                   mem_pool;
         vmk_IntrCookie                *intr_cookie_array;
-
+        vmk_WorldID                   dev_recover_world;
         vmk_Bool                      is_lifs_size_compl;
 };
 
@@ -183,6 +185,12 @@ int ionic_netpoll(int budget, ionic_cq_cb cb, void *cb_arg);
 VMK_ReturnStatus
 ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
 
+VMK_ReturnStatus
+ionic_reset(struct ionic *ionic);
+
+VMK_ReturnStatus
+ionic_identify(struct ionic *ionic);
+
 #if 0
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
@@ -191,9 +199,7 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
 int ionic_set_dma_mask(struct ionic *ionic);
 int ionic_setup(struct ionic *ionic);
-int ionic_identify(struct ionic *ionic);
 void ionic_forget_identity(struct ionic *ionic);
-int ionic_reset(struct ionic *ionic);
 #endif
 
 #endif /* End of _IONIC_H_ */

@@ -48,7 +48,6 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         struct rx_stats *stats = q_to_rx_stats(q);
         dma_addr_t dma_addr;
         vmk_PktRssType hash_type = VMK_PKT_RSS_TYPE_NONE;
-        vmk_NetPollState poll_state;
 #ifdef HAPS
         vmk_uint32 mtu = 0;
 //        __sum16 csum;
@@ -158,25 +157,13 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 }
         }
 
-
-        status = vmk_NetPollCheckState(qcq->netpoll,
-                                       &poll_state);
-        if (VMK_UNLIKELY(status != VMK_OK)) {
-                ionic_err("vmk_NetPollCheckState() failed, status: %s",
+        status = vmk_NetPollRxPktQueue(qcq->netpoll,
+                                       pkt);
+        if (status != VMK_OK) {
+                ionic_err("vmk_NetPollRxPktQueue() failed, status: %s",
                           vmk_StatusToString(status));
-                VMK_ASSERT(0);
-        }
-
-        if (VMK_LIKELY(poll_state == VMK_NETPOLL_ACTIVE)) {
-                status = vmk_NetPollRxPktQueue(qcq->netpoll,
-                                               pkt);
-                if (status != VMK_OK) {
-                        ionic_err("vmk_NetPollRxPktQueue() failed, status: %s",
-                                  vmk_StatusToString(status));
-                        VMK_ASSERT(0);
-                }
-        } else {
                 ionic_en_pkt_release(pkt, NULL);
+                VMK_ASSERT(0);
         }
 }
 
@@ -483,17 +470,20 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
                 ionic_tx_unmap_frag(q,
                                     elem->len,
                                     (vmk_IOA) elem->addr);
-
         if (VMK_LIKELY(pkt)) {
-                if (VMK_UNLIKELY(ionic_en_is_queue_stop(tx_ring->uplink_handle,
-                                                        tx_ring->shared_q_data_idx))) {
-                        ionic_en_txq_start(tx_ring->uplink_handle,
-                                           tx_ring->shared_q_data_idx,
-                                           VMK_TRUE);
-                        stats->wake++;
+                if (ionic_q_has_space(q, IONIC_EN_WAKE_QUEUE_THRESHOLD)) {
+                        vmk_CPUMemFenceReadWrite();
+
+                        if (VMK_UNLIKELY(ionic_en_is_queue_stop(tx_ring->uplink_handle,
+                                                                tx_ring->shared_q_data_idx))) {
+                                ionic_en_txq_start(tx_ring->uplink_handle,
+                                                   tx_ring->shared_q_data_idx,
+                                                   VMK_TRUE);
+                                stats->wake++;
+                        }
+                        ionic_en_pkt_release(pkt, NULL);
+                        stats->clean++;
                 }
-                ionic_en_pkt_release(pkt, NULL);
-                stats->clean++;
         }
 }
 
@@ -712,7 +702,9 @@ ionic_tx_tso(struct queue *q,
 
         while (left > 0) {
                 len = IONIC_MIN(seglen, left);
+
                 frag_left = seglen - len;
+                
                 desc->addr = ionic_tx_map_single(q,
                                                  vmk_PktFrameMappedPointerGet(pkt) + offset,
                                                  len);
@@ -727,11 +719,13 @@ ionic_tx_tso(struct queue *q,
                         nfrags--;
                         stats->frags++;
                         done = VMK_TRUE;
+
                         goto done_pkt;
                 }
 
-                if (nfrags > 0 && frag_left > 0)
+                if (nfrags > 0 && frag_left > 0) {
                         continue;
+                }
 
                 done = (nfrags == 0 && left == 0);
 
@@ -745,17 +739,20 @@ done_pkt:
                 seglen = mss;
         }
 
-        for (i = 0; len_left && nfrags; i++) { 
+
+        if (nfrags > 1) {
+                nfrags--;
+        }
+
+
+        for (i = 1; len_left && nfrags; i++) { 
                 frag = vmk_PktSgElemGet(pkt, i);
-//                offset = 0;
-//                left = skb_frag_size(frag);
+                offset = 0;
                 left = frag->length - offset;
                 len_left -= left;
                 nfrags--;
                 stats->frags++;
 
-                ionic_info("ww: left: %d, len_left: %d, nfrags: %d",
-                           left, len_left, nfrags);
                 while (left > 0) {
                         if (frag_left > 0) {
                                 len = IONIC_MIN(frag_left, left);
@@ -770,13 +767,9 @@ done_pkt:
                                 left -= len;
                                 offset += len;
 
-                                ionic_info("ccc:len: %d, frag_left: %d, left: %d, offset: %d, nfrags: %d",
-                                           len, frag_left, left, offset, nfrags);
-
                                 if (nfrags > 0 && frag_left > 0)
                                         continue;
                                 done = (nfrags == 0 && left == 0);
-                                ionic_err("uiuiuui: done111: %d", done);
                                 ionic_tx_tso_post(q, desc, pkt, hdrlen, mss,
                                                   vlan_tci, has_vlan,
                                                   outer_csum, start, done);
@@ -796,13 +789,9 @@ done_pkt:
                                 left -= len;
                                 offset += len;
 
-                                ionic_info("uuuu: len: %d, frag_left: %d, left: %d, offset: %d, nfrags: %d",
-                                           len, frag_left, left, offset, nfrags);
-
                                 if (nfrags > 0 && frag_left > 0)
                                         continue;
                                 done = (nfrags == 0 && left == 0);
-                                ionic_err("uiuiuui: done222: %d", done);
                                 ionic_tx_tso_post(q, desc, pkt, hdrlen, mss,
                                                   vlan_tci, has_vlan,
                                                   outer_csum, start, done);
@@ -855,7 +844,7 @@ ionic_tx_calc_csum(struct queue *q,
                          VMK_TRUE : VMK_FALSE;
 
         desc->opcode = TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP;
-        desc->num_sg_elems = 0;//ctx->nr_frags - 1;
+        desc->num_sg_elems = ctx->nr_frags - 1; // 0
         desc->len = ctx->mapped_len;
         desc->addr = addr;
         desc->vlan_tci = is_insert_vlan ? ctx->vlan_id : 0;
@@ -946,7 +935,7 @@ static int ionic_tx_pkt_frags(struct queue *q,
                         stats->dma_map_err++;
                         goto map_err;
                 }
-
+                          
                 elem->len = sg_elem->length;
                 elem->addr = dma_addr;
                 len_left -= elem->len;
@@ -974,7 +963,6 @@ ionic_tx(struct queue *q,
         VMK_ReturnStatus status;
 
         struct tx_stats *stats = q_to_tx_stats(q);
-        ctx->frame_len = vmk_PktFrameLenGet(pkt);
 
         if (ctx->offload_flags & IONIC_TX_CSO) {
                 status  = ionic_tx_calc_csum(q, pkt, ctx);
@@ -1100,46 +1088,53 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
 
 static VMK_ReturnStatus
 ionic_tx_descs_needed(struct queue *q,
-                      vmk_PktHandle *pkt,
+                      vmk_PktHandle **pkt,
                       vmk_uint32 *num_tx_descs,
                       ionic_tx_ctx *ctx)
 {
         VMK_ReturnStatus status = VMK_OK;
         struct tx_stats *stats = q_to_tx_stats(q);
         vmk_PktHandle *flat_pkt = NULL;
+        vmk_PktHandle *orig_pkt = *pkt;
 
-        ctx->is_tso_needed = vmk_PktIsLargeTcpPacket(pkt);
-        ctx->nr_frags = vmk_PktSgArrayGet(pkt)->numElems;
+        ctx->is_tso_needed = vmk_PktIsLargeTcpPacket(orig_pkt);
+        ctx->nr_frags = vmk_PktSgArrayGet(orig_pkt)->numElems;
+
+        ctx->frame_len = vmk_PktFrameLenGet(orig_pkt);
 
         /* If TSO, need roundup(len/mss) descs */
         if (ctx->is_tso_needed) {
-                ctx->frame_len = vmk_PktFrameLenGet(pkt);
-                ctx->mss = vmk_PktGetLargeTcpPacketMss(pkt);
+                ctx->mss = vmk_PktGetLargeTcpPacketMss(orig_pkt);
                 *num_tx_descs = (ctx->frame_len / ctx->mss) + 1;
-                goto out;
-        }
 
-        /* If non-TSO, just need 1 desc and nr_frags sg elems */
-        if (ctx->nr_frags <= IONIC_TX_MAX_SG_ELEMS + 1) {
-                *num_tx_descs = 1;
-                goto out;
-        } else {
-                /*
-                 * Try to linearize the packet as non-TSO packets
-                 * must not use more than IONIC_TX_MAX_SG_ELEMS entries.
-                 */ 
-                status = vmk_PktCopy(pkt, &flat_pkt);
-                if (VMK_UNLIKELY(status != VMK_OK)) {
-                        ionic_err("Failed to linearize non-TSO pkt");
-                        *num_tx_descs = 0;
+                if (ctx->nr_frags > IONIC_TX_MAX_SG_ELEMS) {
+                        goto linearize;
+                } else {
                         goto out;
                 }
-
-                ionic_en_pkt_release(pkt, NULL);
-                pkt = flat_pkt;
-                stats->linearize++;
-                *num_tx_descs = 1;
         }
+
+        *num_tx_descs = 1;
+
+        /* If non-TSO, just need 1 desc and nr_frags sg elems */
+        if (ctx->nr_frags <= IONIC_TX_MAX_SG_ELEMS) {
+                goto out;
+        }
+
+linearize:
+
+        status = vmk_PktCopy(orig_pkt, &flat_pkt);
+        if (VMK_UNLIKELY(status != VMK_OK)) {
+                ionic_err("Failed to linearize non-TSO pkt");
+                *num_tx_descs = 0;
+                goto out;
+        }
+
+        ctx->nr_frags = 1;
+
+        ionic_en_pkt_release(orig_pkt, NULL);
+        *pkt = flat_pkt;
+        stats->linearize++;
 
 out:
         return status;
@@ -1154,7 +1149,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         struct queue *q = &(tx_ring->txqcq->q);
         struct tx_stats *stats = q_to_tx_stats(q);
         ionic_tx_ctx ctx;
-        int ndescs;
+        int ndescs = 0;
 
         VMK_ASSERT(pkt);
         VMK_ASSERT(uplink_handle);
@@ -1169,7 +1164,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
 
         vmk_Memset(&ctx, 0, sizeof(ionic_tx_ctx));
         status = ionic_tx_descs_needed(q,
-                                       pkt,
+                                       &pkt,
                                        &ndescs,
                                        &ctx);
         if (status != VMK_OK) {
@@ -1179,11 +1174,6 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         }
 
         if (VMK_UNLIKELY(!ionic_q_has_space(q, ndescs))) {
-                ionic_en_txq_quiesce(uplink_handle,
-                                     tx_ring->shared_q_data_idx,
-                                     VMK_TRUE);
-                stats->stop++;
-
                 /* Might race with ionic_tx_clean, check again */
                 vmk_CPUMemFenceReadWrite();
 
@@ -1193,6 +1183,11 @@ ionic_start_xmit(vmk_PktHandle *pkt,
                                            tx_ring->shared_q_data_idx,
                                            VMK_TRUE);
                 } else {
+                        ionic_en_txq_quiesce(uplink_handle,
+                                             tx_ring->shared_q_data_idx,
+                                             VMK_TRUE);
+                        stats->stop++;
+
                         return VMK_BUSY;
                 }
         }
@@ -1355,8 +1350,10 @@ ionic_en_rx_ring_init(vmk_uint32 ring_idx,
                       struct ionic_en_priv_data *priv_data,
                       struct lif *lif)
 {
+        VMK_ReturnStatus status;
         struct ionic_en_rx_ring *rx_ring;
         struct ionic_en_uplink_handle *uplink_handle;
+        vmk_Name netpoll_name;
 
         uplink_handle = &priv_data->uplink_handle;
 
@@ -1373,7 +1370,22 @@ ionic_en_rx_ring_init(vmk_uint32 ring_idx,
 
         lif->rxqcqs[ring_idx]->ring = rx_ring;
 
-        ionic_en_rxq_start(uplink_handle, shared_q_data_idx);
+        if (shared_q_data_idx == uplink_handle->max_rx_normal_queues) {
+                vmk_NameFormat(&netpoll_name,
+                               "rx-rss-%d",
+                               ring_idx - uplink_handle->max_rx_normal_queues);
+                status = vmk_NetPollRegisterUplink(rx_ring->netpoll,
+                                                   uplink_handle->uplink_dev,
+                                                   netpoll_name,
+                                                   VMK_TRUE);
+                VMK_ASSERT(status == VMK_OK);
+                if (!rx_ring->rxqcq->is_netpoll_enabled) {
+                        vmk_NetPollEnable(rx_ring->netpoll);
+                        rx_ring->rxqcq->is_netpoll_enabled = VMK_TRUE;
+                }
+        } else {
+                ionic_en_rxq_start(uplink_handle, shared_q_data_idx);
+        }
 }
 
 
@@ -1403,31 +1415,40 @@ ionic_en_rx_ring_deinit(vmk_uint32 ring_idx,
                         struct ionic_en_priv_data *priv_data)
 {
         struct ionic_en_rx_ring *rx_ring;
+        struct ionic_en_uplink_handle *uplink_handle;
 
-        rx_ring = &priv_data->uplink_handle.rx_rings[ring_idx];
+        uplink_handle = &priv_data->uplink_handle;
+
+        rx_ring = &uplink_handle->rx_rings[ring_idx];
 
         VMK_ASSERT(rx_ring->is_init == VMK_TRUE);
-
-//        vmk_NetPollFlushRx(rx_ring->netpoll);
 
         rx_ring->is_init           = VMK_FALSE;
         rx_ring->is_actived        = VMK_FALSE;
 
-        ionic_en_rxq_quiesce(&priv_data->uplink_handle,
-                             rx_ring->shared_q_data_idx);
+        if (rx_ring->shared_q_data_idx == uplink_handle->max_rx_normal_queues) {
+/*                if (rx_ring->rxqcq->is_netpoll_enabled) {
+                        vmk_NetPollDisable(rx_ring->rxqcq->netpoll);
+                        rx_ring->rxqcq->is_netpoll_enabled = VMK_FALSE;
+                        vmk_NetPollFlushRx(rx_ring->rxqcq->netpoll);
+                }
+*/
+                vmk_NetPollUnregisterUplink(rx_ring->netpoll);
+        } else {
+                ionic_en_rxq_quiesce(&priv_data->uplink_handle,
+                                     rx_ring->shared_q_data_idx);
+        }
 }
 
 
 /*
  ******************************************************************************
  *
- *   ionic_en_rx_rss_ring_init
+ *   ionic_en_rx_rss_init
  *
- *   Initialize the given rx rss ring      
+ *   Initialize the rss queue and associated rx rss rings
  *
  *  Parameters:
- *    ring_idx           - IN (rx rss ring index)
- *    shared_q_data_idx  - IN (index of uplink_q_data of uplink_handle)
  *    priv_data          - IN (driver private data)
  *    lif                - IN (pointer to lif struct)
  *
@@ -1441,10 +1462,8 @@ ionic_en_rx_ring_deinit(vmk_uint32 ring_idx,
  */
 
 void
-ionic_en_rx_rss_ring_init(vmk_uint32 ring_idx,
-                          vmk_uint32 shared_q_data_idx,
-                          struct ionic_en_priv_data *priv_data,
-                          struct lif *lif)
+ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
+                     struct lif *lif)
 {
         vmk_uint32 i, attached_rx_ring_idx, num_attached_rings;
         struct ionic_en_rx_rss_ring *rx_rss_ring;
@@ -1452,23 +1471,27 @@ ionic_en_rx_rss_ring_init(vmk_uint32 ring_idx,
 
         uplink_handle = &priv_data->uplink_handle;
 
-        rx_rss_ring = &uplink_handle->rx_rss_rings[ring_idx];
+        rx_rss_ring = &uplink_handle->rx_rss_ring;
         num_attached_rings = uplink_handle->rx_rings_per_rss_queue;
 
-        ionic_info("ionic_en_rx_rss_ring_init() called");
+        ionic_dbg("ionic_en_rx_rss_ring_init() called");
 
-        rx_rss_ring->ring_idx              = ring_idx;
-        rx_rss_ring->shared_q_data_idx     = shared_q_data_idx;
+        /* We only have one rx rss ring */
+        rx_rss_ring->ring_idx              = 0;
+        rx_rss_ring->shared_q_data_idx     = uplink_handle->max_rx_normal_queues;
         rx_rss_ring->priv_data             = priv_data;
         rx_rss_ring->num_attached_rx_rings = num_attached_rings; 
 
         for (i = 0; i < num_attached_rings; i++) {
-                attached_rx_ring_idx = ionic_en_convert_attached_rss_ring_idx(priv_data,
-                                                                              ring_idx,
-                                                                              num_attached_rings,
-                                                                              i);
+                attached_rx_ring_idx = uplink_handle->max_rx_normal_queues + i;
+ 
+                ionic_dbg("INIT rx rss, ring_idx: %d, shared_q_idx: %d, "
+                          "attached rx ring idx: %d",
+                          i, rx_rss_ring->shared_q_data_idx,
+                          attached_rx_ring_idx);
+
                 ionic_en_rx_ring_init(attached_rx_ring_idx,
-                                      attached_rx_ring_idx,
+                                      rx_rss_ring->shared_q_data_idx,
                                       priv_data,
                                       lif);
                 rx_rss_ring->p_attached_rx_rings[i] =
@@ -1484,13 +1507,13 @@ ionic_en_rx_rss_ring_init(vmk_uint32 ring_idx,
 /*
  ******************************************************************************
  *
- *   ionic_en_rx_rss_ring_deinit
+ *   ionic_en_rx_rss_deinit
  *
- *   De-initialize the given rx rss ring      
+ *   De-initialize the rx rss ring
  *
  *  Parameters:
- *    ring_idx           - IN (rx rss ring index)
  *    priv_data          - IN (driver private data)
+ *    lif                - IN (pointer to lif struct)
  *
  *  Results:
  *     None
@@ -1503,23 +1526,29 @@ ionic_en_rx_rss_ring_init(vmk_uint32 ring_idx,
 
 
 void
-ionic_en_rx_rss_ring_deinit(vmk_uint32 ring_idx,
-                            struct ionic_en_priv_data *priv_data)
+ionic_en_rx_rss_deinit(struct ionic_en_priv_data *priv_data,
+                       struct lif *lif)
 {
         vmk_uint32 i, attached_rx_ring_idx, num_attached_rings;
         struct ionic_en_rx_rss_ring *rx_rss_ring;
+        struct ionic_en_uplink_handle *uplink_handle;
 
-        rx_rss_ring = &priv_data->uplink_handle.rx_rss_rings[ring_idx];
+        uplink_handle = &priv_data->uplink_handle;
+
+        rx_rss_ring = &uplink_handle->rx_rss_ring;
 
         VMK_ASSERT(rx_rss_ring->is_init == VMK_TRUE);
 
-        num_attached_rings = rx_rss_ring->num_attached_rx_rings;
+        num_attached_rings = uplink_handle->rx_rings_per_rss_queue;
 
         for (i = 0; i < num_attached_rings; i++) {
-                attached_rx_ring_idx = ionic_en_convert_attached_rss_ring_idx(priv_data,
-                                                                              ring_idx,
-                                                                              num_attached_rings,
-                                                                              i);
+                attached_rx_ring_idx = uplink_handle->max_rx_normal_queues + i;
+ 
+                ionic_dbg("DEINIT rx rss, ring_idx: %d, shared_q_idx: %d"
+                          "attached rx ring idx: %d",
+                          i, rx_rss_ring->shared_q_data_idx,
+                          attached_rx_ring_idx);
+                       
                 ionic_en_rx_ring_deinit(attached_rx_ring_idx,
                                         priv_data);
 
