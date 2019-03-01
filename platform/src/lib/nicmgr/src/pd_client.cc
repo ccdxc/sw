@@ -1259,7 +1259,7 @@ int32_t
 PdClient::get_pc_offset(const char *prog_name, const char *label,
                         uint8_t *offset)
 {
-     hbm_addr_t off;
+     mem_addr_t off;
 
      off = pinfo_->symbol_address((char *)prog_name, (char *)label);
      if (off == SDK_INVALID_HBM_ADDRESS)
