@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -403,6 +404,17 @@ func TestLdapLogin(t *testing.T) {
 	ldapConf := &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
+			// incorrect config
+			{
+				Url: config.URL,
+				TLSOptions: &auth.TLSOptions{
+					StartTLS:                   true,
+					SkipServerCertVerification: false,
+					ServerName:                 "incorrect",
+					TrustedCerts:               config.TrustedCerts,
+				},
+			},
+			// correct config
 			{
 				Url: config.URL,
 				TLSOptions: &auth.TLSOptions{
@@ -636,11 +648,20 @@ func TestRadiusLogin(t *testing.T) {
 	}
 	radiusConf := &auth.Radius{
 		Enabled: true,
-		Servers: []*auth.RadiusServer{{
-			Url:        config.URL,
-			Secret:     config.NasSecret,
-			AuthMethod: auth.Radius_PAP.String(),
-		}},
+		Servers: []*auth.RadiusServer{
+			// incorrect config
+			{
+				Url:        "10.11.100.101:1812",
+				Secret:     "incorrect",
+				AuthMethod: auth.Radius_PAP.String(),
+			},
+			// correct config
+			{
+				Url:        config.URL,
+				Secret:     config.NasSecret,
+				AuthMethod: auth.Radius_PAP.String(),
+			},
+		},
 		NasID: config.NasID,
 	}
 	// create tenant and admin user
@@ -657,7 +678,7 @@ func TestRadiusLogin(t *testing.T) {
 	restcl := tinfo.restcl
 	MustCreateRoleBinding(tinfo.apicl, "RadiusAdminRoleBinding", config.Tenant, globals.AdminRole, nil, config.UserGroups)
 	defer MustDeleteRoleBinding(tinfo.apicl, "RadiusAdminRoleBinding", config.Tenant)
-	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, radiusUserCred)
+	ctx, err := NewLoggedInContextWithTimeout(context.TODO(), tinfo.apiGwAddr, radiusUserCred, 9*time.Second)
 	AssertOk(t, err, "unable to get logged in context")
 	// test GET user
 	var user *auth.User
@@ -815,4 +836,35 @@ func TestPasswordReset(t *testing.T) {
 	userCred.Password = testPassword
 	_, _, err = login.UserLogin(context.TODO(), tinfo.apiGwAddr, userCred)
 	Assert(t, err != nil, "shouldn't be able to get login with old password")
+}
+
+func TestAuthOrder(t *testing.T) {
+	config := getACSConfig()
+	localUserCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   config.Tenant,
+	}
+	radiusConf := &auth.Radius{
+		Enabled: true,
+		Servers: []*auth.RadiusServer{{
+			Url:        "10.11.100.101:1812",
+			Secret:     "incorrect",
+			AuthMethod: auth.Radius_PAP.String(),
+		}},
+		NasID: config.NasID,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, radiusConf, localUserCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
+	radiusUserCred := &auth.PasswordCredential{
+		Username: config.User,
+		Password: config.Password,
+	}
+	_, err := login.NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, radiusUserCred)
+	Assert(t, err != nil && strings.Contains(err.Error(), "401"), "expected radius login to fail")
+	_, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, localUserCred)
+	AssertOk(t, err, "expected local user login to succeed")
 }

@@ -94,12 +94,18 @@ func Login(apiGW string, in *auth.PasswordCredential) (*http.Response, error) {
 // NewLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT.
 // Returns original context in case of error.
 func NewLoggedInContext(ctx context.Context, apiGW string, in *auth.PasswordCredential) (context.Context, error) {
+	// When doing operations, we want to keep retrying every 2 seconds till we succeed (or)
+	// till the calling context is Done
+	return NewLoggedInContextWithTimeout(ctx, apiGW, in, 2*time.Second)
+}
+
+// NewLoggedInContextWithTimeout authenticates user and returns a new context derived from given context with Authorization header set to JWT.
+// Returns original context in case of error.
+func NewLoggedInContextWithTimeout(ctx context.Context, apiGW string, in *auth.PasswordCredential, d time.Duration) (context.Context, error) {
 	var err error
 	var nctx context.Context
 	if testutils.CheckEventually(func() (bool, interface{}) {
-		// When doing operations, we want to keep retrying every 2 seconds till we succeed (or)
-		// till the calling context is Done
-		tctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		tctx, cancel := context.WithTimeout(ctx, d)
 		defer cancel()
 		nctx, err = login.NewLoggedInContext(tctx, apiGW, in)
 		if err == nil {
