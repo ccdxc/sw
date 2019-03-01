@@ -120,6 +120,53 @@ func TestNetworkDuplicatePrefix(t *testing.T) {
 	Assert(t, err != nil, "Network Create with duplicate prefix succeeded")
 }
 
+func TestNetworkDuplicateVLanID(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+			VlanID:      42,
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+	tnt, err := ag.FindNetwork(nt.ObjectMeta)
+	AssertOk(t, err, "Network was not found in DB")
+	Assert(t, (tnt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network subnet did not match", tnt)
+
+	dupNt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "dupNet",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.2.0/24",
+			IPv4Gateway: "10.1.2.254",
+			VlanID:      42,
+		},
+	}
+
+	// make create network call
+	err = ag.CreateNetwork(&dupNt)
+	Assert(t, err != nil, "Network Create with duplicate vlan id succeeded")
+}
+
 func TestNetworkDuplicateEmptyPrefix(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)

@@ -48,8 +48,8 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	}
 
 	// reject duplicate network prefixes
-	if err = na.validateDuplicateNetworks(nt.Namespace, nt.Spec.IPv4Subnet); err != nil {
-		log.Errorf("Found duplicate network %v", nt.Spec.IPv4Subnet)
+	if err = na.validateDuplicateNetworks(nt.Namespace, nt.Spec.IPv4Subnet, nt.Spec.VlanID); err != nil {
+		log.Errorf("Invalid network parameters for network %v. Err: %v", nt.Name, err)
 		return err
 	}
 
@@ -210,13 +210,22 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 	return err
 }
 
-func (na *Nagent) validateDuplicateNetworks(namespace, prefix string) (err error) {
+func (na *Nagent) validateDuplicateNetworks(namespace, prefix string, vlanID uint32) (err error) {
 	for _, net := range na.ListNetwork() {
-		if len(net.Spec.IPv4Subnet) != 0 && net.Spec.IPv4Subnet == prefix && net.Namespace == namespace {
-			err = fmt.Errorf("found an existing network %v with prefix %v", net.Name, prefix)
-			return
+		if net.Namespace == namespace {
+			switch {
+			// Dup prefixes
+			case len(net.Spec.IPv4Subnet) != 0 && net.Spec.IPv4Subnet == prefix:
+				err = fmt.Errorf("found an existing network %v with prefix %v", net.Name, prefix)
+				return
+			// Dup VLANs
+			case net.Spec.VlanID != 0 && net.Spec.VlanID == vlanID:
+				err = fmt.Errorf("found an existing network %v with vlan-id %v", net.Name, vlanID)
+				return
+			default:
+				return
+			}
 		}
 	}
-
 	return
 }
