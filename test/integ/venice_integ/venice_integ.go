@@ -522,7 +522,7 @@ func (it *veniceIntegSuite) startEventsAndSearch() {
 	testutils.StopElasticsearch(it.config.ElasticSearchName, "")
 
 	// start new elastic container
-	it.elasticsearchAddr, it.elasticsearchDir, err = testutils.StartElasticsearch(it.config.ElasticSearchName, it.signer, it.trustRoots)
+	it.elasticsearchAddr, it.elasticsearchDir, err = testutils.StartElasticsearch(it.config.ElasticSearchName, it.elasticsearchDir, it.signer, it.trustRoots)
 	if err != nil {
 		log.Fatalf("Error Starting elastic search. Err: %v", err)
 	}

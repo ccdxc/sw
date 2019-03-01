@@ -160,7 +160,7 @@ func (t *tInfo) startElasticSearch() error {
 	log.Infof("starting Elastic Search")
 
 	t.elasticSearchName = uuid.NewV4().String()
-	t.elasticSearchAddr, t.elasticSearchDir, err = testutils.StartElasticsearch(t.elasticSearchName, t.signer, t.trustRoots)
+	t.elasticSearchAddr, t.elasticSearchDir, err = testutils.StartElasticsearch(t.elasticSearchName, t.elasticSearchDir, t.signer, t.trustRoots)
 	if err != nil {
 		return fmt.Errorf("failed to start elasticsearch, err: %v", err)
 	}

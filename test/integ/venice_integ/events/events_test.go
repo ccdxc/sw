@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -2404,6 +2405,118 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 
 	close(stopSyslogMessagesReceiver)
 	wg.Wait()
+}
+
+// TestEventsMgrWithElasticRestart test evtsmgr behavior with elastic restarts. evtsmgr should be intact
+// and ES client connection should be reset automatically.
+func TestEventsMgrWithElasticRestart(t *testing.T) {
+	ti := tInfo{}
+	AssertOk(t, ti.setup(t), "failed to setup test")
+	defer ti.teardown()
+
+	var recorders []events.Recorder
+	defer closeRecorders(recorders)
+
+	numRecorders := 3
+
+	stopEventRecorders := make(chan struct{})
+	wg := new(sync.WaitGroup)
+	wg.Add(numRecorders + 1) // +1 for elastic restart go routine
+
+	// uuid to make each source unique
+	componentID := uuid.NewV4().String()
+	totalEventsSentBySrc := make([]int, numRecorders)
+
+	// create recorder events directory
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+	for i := 0; i < numRecorders; i++ {
+		go func(i int) {
+			testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
+			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+				Source:       testEventSource,
+				EvtTypes:     testEventTypes,
+				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+				BackupDir:    recorderEventsDir}, ti.logger)
+			if err != nil {
+				log.Errorf("failed to create recorder for source %v", i)
+				return
+			}
+			recorders = append(recorders, evtsRecorder)
+
+			ticker := time.NewTicker(10 * time.Millisecond)
+			for {
+				select {
+				case <-stopEventRecorders:
+					wg.Done()
+					return
+				case <-ticker.C:
+					evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
+					totalEventsSentBySrc[i]++
+
+					evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_WARNING, "test event - 2", nil)
+					totalEventsSentBySrc[i]++
+
+					evtsRecorder.Event(eventType3, evtsapi.SeverityLevel_CRITICAL, "test event - 3", nil)
+					totalEventsSentBySrc[i]++
+				}
+			}
+		}(i)
+	}
+
+	// restart elasticsearch multiple times
+	go func() {
+		defer wg.Done()
+
+		for i := 0; i < 3; i++ {
+			time.Sleep(3 * time.Second)
+			testutils.StopElasticsearch(ti.elasticsearchName, ti.elasticsearchDir)
+
+			// let elasticsearch come up on the same port as before.
+			// so, wait for the port to become available
+			AssertEventually(t,
+				func() (bool, interface{}) {
+					temp := strings.Split(ti.elasticsearchAddr, ":")
+					if len(temp) != 2 {
+						return false, fmt.Sprintf("invalid elastic addr: %v", ti.elasticsearchAddr)
+					}
+
+					port, err := strconv.Atoi(temp[1])
+					if err != nil {
+						return false, fmt.Sprintf("invalid elastic port: %v", temp[1])
+
+					}
+					if getAvailablePort(port, port) == port {
+						return true, nil
+					}
+
+					return false, fmt.Sprintf("elastic port not yet available")
+				}, "port not available to start elasticsearch", "50ms", "5s")
+
+			ti.elasticsearchAddr, ti.elasticsearchDir, err = testutils.StartElasticsearch(ti.elasticsearchName, ti.elasticsearchDir, ti.signer, ti.trustRoots)
+			AssertOk(t, err, "failed to start elasticsearch, err: %v", err)
+			ti.updateResolver(globals.ElasticSearch, ti.elasticsearchAddr)
+		}
+
+		time.Sleep(5 * time.Second)
+		close(stopEventRecorders) // stop all the recorders
+	}()
+
+	wg.Wait()
+
+	//total events sent by all the recorders
+	totalEventsSent := 0
+	for _, val := range totalEventsSentBySrc {
+		totalEventsSent += val
+	}
+
+	// total number of events received at elastic should match the total events sent
+	// query all the events received from this source.component
+	query := es.NewRegexpQuery("source.component.keyword", fmt.Sprintf("%v-.*", componentID))
+	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "120s")
+	ti.assertElasticTotalEvents(t, query, true, totalEventsSent, "120s")
+	Assert(t, ti.esClient.GetResetCount() > 0, "client should have restarted")
 }
 
 // closes all the given recorders

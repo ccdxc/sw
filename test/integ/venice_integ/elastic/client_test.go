@@ -592,7 +592,7 @@ func setup(c *C, name string, signer certs.CSRSigner, trustRoots []*x509.Certifi
 
 	// spin up a single node elasticsearch with the given name; running separate elasticsearch for
 	// each test helps to run the tests in parallel.
-	elasticAddr, elasticDir, err = testutils.StartElasticsearch(name, signer, trustRoots)
+	elasticAddr, elasticDir, err = testutils.StartElasticsearch(name, "", signer, trustRoots)
 	Assert(c, err == nil, fmt.Sprintf("failed to start elasticsearch container, err: %v", err))
 }
 

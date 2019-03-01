@@ -176,7 +176,7 @@ func (t *tInfo) teardown() {
 // createElasticClient helper function to create elastic client
 func (t *tInfo) createElasticClient() error {
 	var err error
-	t.esClient, err = testutils.CreateElasticClient(t.elasticsearchAddr, nil, t.logger, t.signer, t.trustRoots)
+	t.esClient, err = testutils.CreateElasticClient(t.elasticsearchAddr, t.mockResolver, t.logger, t.signer, t.trustRoots)
 	return err
 }
 
@@ -184,7 +184,7 @@ func (t *tInfo) createElasticClient() error {
 func (t *tInfo) startElasticsearch() error {
 	var err error
 	t.elasticsearchName = uuid.NewV4().String()
-	t.elasticsearchAddr, t.elasticsearchDir, err = testutils.StartElasticsearch(t.elasticsearchName, t.signer, t.trustRoots)
+	t.elasticsearchAddr, t.elasticsearchDir, err = testutils.StartElasticsearch(t.elasticsearchName, t.elasticsearchDir, t.signer, t.trustRoots)
 	if err != nil {
 		return fmt.Errorf("failed to start elasticsearch, err: %v", err)
 	}

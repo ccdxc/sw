@@ -10,12 +10,15 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pensando/sw/venice/cmd/credentials"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
@@ -26,6 +29,8 @@ var (
 	elasticImage        = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2"
 	elasticClusterImage = "registry.test.pensando.io:5000/elasticsearch-cluster:v0.7"
 	elasticHost         = "127.0.0.1"
+
+	helpMsgOnce sync.Once
 )
 
 // CreateElasticClient helper function to create elastic client
@@ -44,20 +49,23 @@ func CreateElasticClient(elasticsearchAddr string, resolverClient resolver.Inter
 }
 
 // StartElasticsearch starts elasticsearch service
-func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.Certificate) (string, string, error) {
+func StartElasticsearch(name, dir string, signer certs.CSRSigner, trustRoots []*x509.Certificate) (string, string, error) {
 	setMaxMapCount()
+	var err error
 
 	log.Info("starting elasticsearch ...")
 
-	tmpDir, err := ioutil.TempDir("/tmp", fmt.Sprintf("%s-elastic-test", name))
-	if err != nil {
-		return "", "", fmt.Errorf("failed to create temp dir, err: %v", err)
+	if utils.IsEmpty(dir) {
+		dir, err = ioutil.TempDir("/tmp", fmt.Sprintf("%s-elastic-test", name))
+		if err != nil {
+			return "", "", fmt.Errorf("failed to create temp dir, err: %v", err)
+		}
+		os.Chmod(dir, 0777) // override default permissions to allow cleanup
 	}
-	os.Chmod(tmpDir, 0777) // override default permissions to allow cleanup
 
-	logDir, err := ioutil.TempDir(tmpDir, "log")
-	if err != nil {
-		os.RemoveAll(tmpDir)
+	elasticDir := dir
+	logDir := path.Join(dir, "log")
+	if err := os.MkdirAll(logDir, 0777); err != nil {
 		return "", "", fmt.Errorf("failed to create log dir, err: %v", err)
 	}
 
@@ -65,15 +73,15 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 	if signer != nil {
 		log.Infof("setting up TLS")
 		var err error
-		authDir, err = ioutil.TempDir(tmpDir, "auth")
+		authDir, err = ioutil.TempDir(elasticDir, "auth")
 		if err != nil {
-			os.RemoveAll(tmpDir)
+			os.RemoveAll(elasticDir)
 			return "", "", fmt.Errorf("failed to create auth dir, err: %v", err)
 		}
 		os.Chmod(authDir, 0777)
 
 		if err := credentials.GenElasticHTTPSAuth("localhost", authDir, signer, trustRoots); err != nil {
-			os.RemoveAll(tmpDir)
+			os.RemoveAll(elasticDir)
 			return "", "", fmt.Errorf("error creating credentials in dir %s: err: %v", authDir, err)
 		}
 	}
@@ -94,6 +102,7 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 				"-e", fmt.Sprintf("http.publish_host=%s", elasticHost),
 				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/config/auth-node:ro", authDir),
 				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/config/auth-https:ro", authDir),
+				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/data", elasticDir),
 				"-v", fmt.Sprintf("%s:/var/log/pensando/elastic", logDir),
 				elasticClusterImage}
 		} else {
@@ -111,6 +120,7 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 				"-e", fmt.Sprintf("http.port=%d", port),
 				"-e", fmt.Sprintf("http.publish_host=%s", elasticHost),
 				"-v", fmt.Sprintf("%s:/var/log/pensando/elastic", logDir),
+				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/data", elasticDir),
 				elasticImage}
 		}
 
@@ -131,17 +141,17 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 		}
 
 		if err != nil {
-			os.RemoveAll(tmpDir)
+			os.RemoveAll(elasticDir)
 			return "", "", fmt.Errorf("%s, err: %v", out, err)
 		}
 
 		elasticAddr := fmt.Sprintf("%s:%d", elasticHost, port)
 		log.Infof("started elasticsearch: %s", elasticAddr)
 
-		return elasticAddr, tmpDir, nil
+		return elasticAddr, elasticDir, nil
 	}
 
-	os.RemoveAll(tmpDir)
+	os.RemoveAll(elasticDir)
 	return "", "", fmt.Errorf("exhausted all the ports from 6000-6999, failed to start elasticsearch")
 }
 
@@ -268,21 +278,23 @@ func setMaxMapCount() {
 	// $ screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty
 	// $ sysctl -w vm.max_map_count=262144
 	//
-	if runtime.GOOS == "darwin" {
-		fmt.Println("++++++ run this one time setup commands from your mac if you haven't done yet +++++++\n" +
-			"screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty\n" +
-			"on the blank screen, press return and run: sysctl -w vm.max_map_count=262144")
-		fmt.Println()
-		return
-	}
+	helpMsgOnce.Do(func() {
+		if runtime.GOOS == "darwin" {
+			fmt.Println("++++++ run this one time setup commands from your mac if you haven't done yet +++++++\n" +
+				"screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty\n" +
+				"on the blank screen, press return and run: sysctl -w vm.max_map_count=262144")
+			fmt.Println()
+			return
+		}
 
-	fmt.Println("++++++ setting vm.max_map_count=262144 +++++++")
-	out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput()
-	outStr := strings.TrimSpace(string(out))
-	if err != nil || outStr != "vm.max_map_count = 262144" {
-		fmt.Println(fmt.Sprintf("failed to set max_map_count: %s, err: %v\n", outStr, err) +
-			"run the below command manually on your machine if you haven't done yet\n" +
-			"sysctl -w vm.max_map_count=262144")
-		fmt.Println()
-	}
+		fmt.Println("++++++ setting vm.max_map_count=262144 +++++++")
+		out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput()
+		outStr := strings.TrimSpace(string(out))
+		if err != nil || outStr != "vm.max_map_count = 262144" {
+			fmt.Println(fmt.Sprintf("failed to set max_map_count: %s, err: %v\n", outStr, err) +
+				"run the below command manually on your machine if you haven't done yet\n" +
+				"sysctl -w vm.max_map_count=262144")
+			fmt.Println()
+		}
+	})
 }

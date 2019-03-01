@@ -136,7 +136,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 
 	// start elasticsearch
 	tInfo.elasticServerName = uuid.NewV4().String()
-	tInfo.elasticURL, tInfo.elasticDir, err = testutils.StartElasticsearch(tInfo.elasticServerName, tInfo.signer, tInfo.trustRoots)
+	tInfo.elasticURL, tInfo.elasticDir, err = testutils.StartElasticsearch(tInfo.elasticServerName, tInfo.elasticDir, tInfo.signer, tInfo.trustRoots)
 	if err != nil {
 		return fmt.Errorf("failed to start elasticsearch, err: %v", err)
 	}

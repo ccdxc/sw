@@ -27,7 +27,7 @@ func (e *elasticsearchTestSuite) TestElasticsearchRestart(c *C) {
 	elasticsearchName := c.TestName()
 	signer, _, trustRoots, err := testutils.GetCAKit()
 	Assert(c, err == nil, "Error getting CA artifacts")
-	elasticAddr, dir, err := testutils.StartElasticsearch(elasticsearchName, signer, trustRoots)
+	elasticAddr, dir, err := testutils.StartElasticsearch(elasticsearchName, "", signer, trustRoots)
 	Assert(c, err == nil, fmt.Sprintf("failed to start elasticsearch container, err: %v", err))
 	defer testutils.StopElasticsearch(elasticsearchName, dir)
 
@@ -105,7 +105,7 @@ func (e *elasticsearchTestSuite) TestElasticsearchRestart(c *C) {
 
 			time.Sleep(100 * time.Millisecond)
 
-			elasticAddr, dir, err = testutils.StartElasticsearch(elasticsearchName, signer, trustRoots)
+			elasticAddr, dir, err = testutils.StartElasticsearch(elasticsearchName, dir, signer, trustRoots)
 			if err != nil {
 				errs <- fmt.Errorf("failed to start elasticsearch, err:%v", err)
 				return
