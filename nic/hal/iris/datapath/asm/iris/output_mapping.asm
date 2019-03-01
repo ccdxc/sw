@@ -10,25 +10,21 @@ struct phv_             p;
 %%
 
 output_mapping_drop:
-  K_DBG_WR(0x100)
-  DBG_WR(0x108, k.control_metadata_dst_lport)
-  phvwr.e       p.capri_intrinsic_drop, TRUE
-  phvwr         p.control_metadata_egress_drop_reason[EGRESS_DROP_OUTPUT_MAPPING], 1
+  phvwr       p.capri_intrinsic_lif, 0
+  phvwr.e     p.capri_intrinsic_drop, TRUE
+  phvwr       p.control_metadata_egress_drop_reason[EGRESS_DROP_OUTPUT_MAPPING], 1
 
 .align
 set_tm_oport_enforce_src_lport:
   sne         c1, d.u.set_tm_oport_enforce_src_lport_d.mnic_enforce_src_lport, r0
   sne.c1      c1, d.u.set_tm_oport_enforce_src_lport_d.mnic_enforce_src_lport, k.control_metadata_src_lport
   b.!c1       set_tm_oport
-  b.c1        output_mapping_drop
-  nop
-  
-
+  phvwr.c1    p.capri_intrinsic_lif, d.u.set_tm_oport_enforce_src_lport_d.dst_lif
+  phvwr.e     p.capri_intrinsic_drop, TRUE
+  phvwr       p.control_metadata_egress_drop_reason[EGRESS_DROP_OUTPUT_MAPPING], 1
 
 .align
 set_tm_oport:
-  K_DBG_WR(0x100)
-  DBG_WR(0x10a, 0x10a)
   add         r7, r0, r0
   seq         c1, d.u.set_tm_oport_d.nports, 0
   mod.!c1     r7, k.rewrite_metadata_entropy_hash, d.u.set_tm_oport_d.nports

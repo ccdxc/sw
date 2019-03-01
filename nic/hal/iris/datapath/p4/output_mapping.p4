@@ -50,6 +50,7 @@ action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
                     egress_port5, egress_port6, egress_port7, egress_port8,
                     mnic_enforce_src_lport) {
 
+    modify_field(capri_intrinsic.lif, dst_lif);
     if ((mnic_enforce_src_lport != 0) and
         (control_metadata.src_lport != mnic_enforce_src_lport)) {
         drop_packet ();
@@ -126,6 +127,7 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
 }
 
 action output_mapping_drop () {
+    modify_field(capri_intrinsic.lif, 0);
     modify_field(control_metadata.egress_drop_reason,
                  EGRESS_DROP_OUTPUT_MAPPING);
     drop_packet();
