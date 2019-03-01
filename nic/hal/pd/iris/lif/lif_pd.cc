@@ -934,7 +934,7 @@ lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif
     hal_ret_t                    ret = HAL_RET_OK;
     lif_pd_rx_policer_stats_t    stats_0 = {0};
     lif_pd_rx_policer_stats_t    stats_1 = {0};
-    hbm_addr_t                   stats_addr = 0;
+    mem_addr_t                   stats_addr = 0;
     sdk_ret_t                    sdk_ret;
     lif_t                        *pi_lif = (lif_t *)pd_lif->pi_lif;
     directmap                    *rx_policer_action_tbl= NULL;

@@ -14,7 +14,6 @@
 namespace sdk {
 namespace types {
 
-typedef uint64_t    hbm_addr_t;
 typedef uint64_t    mem_addr_t;
 
 enum class port_link_sm_t {
@@ -209,7 +208,6 @@ using sdk::types::port_pause_type_t;
 using sdk::types::port_event_t;
 using sdk::types::port_breakout_mode_t;
 using sdk::types::mem_addr_t;
-using sdk::types::hbm_addr_t;
 using sdk::types::q_notify_mode_t;
 using sdk::types::cable_type_t;
 using sdk::types::xcvr_event_info_t;

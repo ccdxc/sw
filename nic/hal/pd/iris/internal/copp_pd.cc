@@ -428,7 +428,7 @@ copp_pd_populate_policer_stats (qos::PolicerStats *stats_rsp, pd_copp_t *pd_copp
     hal_ret_t               ret = HAL_RET_OK;
     copp_pd_policer_stats_t stats_0 = {0};
     copp_pd_policer_stats_t stats_1 = {0};
-    hbm_addr_t              stats_addr = 0;
+    mem_addr_t              stats_addr = 0;
     sdk_ret_t               sdk_ret;
     copp_t                  *pi_copp = pd_copp->pi_copp;
     directmap               *copp_action_tbl = NULL;

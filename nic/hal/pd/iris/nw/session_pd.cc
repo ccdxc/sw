@@ -38,7 +38,7 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
     sdk_ret_t sdk_ret;
     directmap *stats_table;
     flow_stats_actiondata_t d = { 0 };
-    hbm_addr_t              stats_mem_addr = 0;
+    mem_addr_t              stats_mem_addr = 0;
     uint64_t                zero_val = 0;
 
     SDK_ASSERT(assoc_hw_idx != NULL);
@@ -1223,7 +1223,7 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     pd_conv_hw_clock_to_sw_clock_args_t clock_args = {0};
     pd_flow_get_args_t *args = pd_func_args->pd_flow_get;
     sdk_ret_t sdk_ret;
-    hbm_addr_t              stats_addr = 0;
+    mem_addr_t              stats_addr = 0;
     flow_atomic_stats_t stats_0 = {0};
     flow_atomic_stats_t stats_1 = {0};
     flow_stats_actiondata_t d = {0};

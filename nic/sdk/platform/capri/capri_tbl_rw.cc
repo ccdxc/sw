@@ -211,7 +211,7 @@ void
 capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
                                    int stage, int pipe)
 {
-    hbm_addr_t start_offset;
+    mem_addr_t start_offset;
 
     if (strcmp(tablename, MEM_REGION_RSS_INDIR_TABLE_NAME) == 0) {
         // TODO: Work with Neel to clean capri_toeplitz_init

@@ -317,11 +317,11 @@ pd_egress_drop_stats_clear (pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
-inline hbm_addr_t
+inline mem_addr_t
 hbm_get_addr_for_stat_index (p4pd_table_id table_id,
                              uint8_t idx)
 {
-    hbm_addr_t  stats_base_addr;
+    mem_addr_t  stats_base_addr;
     p4pd_table_properties_t  tbl_ctx;
 
     stats_base_addr =  get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);

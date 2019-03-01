@@ -76,10 +76,10 @@ asicpd_p4plus_table_init (hal::hal_cfg_t *hal_cfg)
 hal_ret_t
 asicpd_stats_addr_get (int tblid, uint32_t index,
                        asicpd_stats_region_info_t *region_arr, int arrlen,
-                       hbm_addr_t *stats_addr_p)
+                       mem_addr_t *stats_addr_p)
 {
     p4pd_table_properties_t       tbl_ctx;
-    hbm_addr_t                    stats_base_addr;
+    mem_addr_t                    stats_base_addr;
 
     stats_base_addr = get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
     SDK_ASSERT(stats_base_addr != INVALID_MEM_ADDRESS);
@@ -104,7 +104,7 @@ hal_ret_t
 asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
 {
     p4pd_table_properties_t       tbl_ctx;
-    hbm_addr_t                    stats_base_addr;
+    mem_addr_t                    stats_base_addr;
     uint64_t                      stats_region_start;
     uint64_t                      stats_region_size;
     uint64_t                      bit31_base = 0;

@@ -126,7 +126,7 @@ qstate_mgr::destroy(qstate_mgr *qsm)
     }
 }
 
-hbm_addr_t
+mem_addr_t
 qstate_mgr::get_lifid_qstate_address(uint64_t lifid, uint8_t qtype,
                                      uint32_t qid) const
 {
@@ -140,7 +140,7 @@ qstate_mgr::get_lifid_qstate_address(uint64_t lifid, uint8_t qtype,
     return (it->second.qaddr[qtype] + (qid * it->second.qsize[qtype]));
 }
 
-hbm_addr_t
+mem_addr_t
 qstate_mgr::get_hwlifid_qstate_address(uint64_t hwlifid, uint8_t qtype,
                                        uint32_t qid) const
 {

@@ -20,12 +20,12 @@ namespace platform {
 namespace utils {
 
 typedef struct prog_info_s {
-    hbm_addr_t    base_addr;
-    hbm_addr_t    end_addr;
+    mem_addr_t    base_addr;
+    mem_addr_t    end_addr;
 } __PACK__ prog_info_t;
 
 typedef struct symbol_info_s {
-    hbm_addr_t    addr;
+    mem_addr_t    addr;
 } __PACK__ symbol_info_t;
 
 class program_info {
@@ -34,9 +34,9 @@ public:
     // file containing loader generated information
     static program_info *factory(const char *program_info_file, shmmgr *mmgr = NULL);
     static void destroy(program_info *program_info);
-    hbm_addr_t program_base_address(const char *program) const;
-    hbm_addr_t program_end_address(const char *program) const;
-    hbm_addr_t symbol_address(const char *program, char *symbol) const;
+    mem_addr_t program_base_address(const char *program) const;
+    mem_addr_t program_end_address(const char *program) const;
+    mem_addr_t symbol_address(const char *program, char *symbol) const;
 
 private:
     shmmgr                                  *mmgr_;

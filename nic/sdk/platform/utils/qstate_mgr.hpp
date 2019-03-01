@@ -23,7 +23,7 @@ namespace utils {
 
     typedef struct qstate_info_s {
         uint32_t qsize[NUM_QUEUE_TYPES];
-        hbm_addr_t qaddr[NUM_QUEUE_TYPES];
+        mem_addr_t qaddr[NUM_QUEUE_TYPES];
     } __PACK__ qstate_info_t;
 
     class qstate_mgr {
@@ -35,10 +35,10 @@ namespace utils {
 
         static void destroy(qstate_mgr *qsm);
 
-        hbm_addr_t get_lifid_qstate_address(uint64_t lifid, uint8_t qtype,
+        mem_addr_t get_lifid_qstate_address(uint64_t lifid, uint8_t qtype,
                                             uint32_t qid = 0) const;
 
-        hbm_addr_t get_hwlifid_qstate_address(uint64_t hwlifid, uint8_t qtype,
+        mem_addr_t get_hwlifid_qstate_address(uint64_t hwlifid, uint8_t qtype,
                                               uint32_t qid = 0) const;
 
     private:

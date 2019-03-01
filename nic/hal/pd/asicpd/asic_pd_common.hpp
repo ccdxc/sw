@@ -37,7 +37,7 @@ hal_ret_t asicpd_toeplitz_init(void);
 hal_ret_t asicpd_p4plus_table_init(hal::hal_cfg_t *hal_cfg);
 hal_ret_t asicpd_stats_addr_get(int tblid, uint32_t index,
                                 asicpd_stats_region_info_t *region_arr,
-                                int arrlen, hbm_addr_t *stats_addr_p);
+                                int arrlen, mem_addr_t *stats_addr_p);
 hal_ret_t asicpd_stats_region_init(asicpd_stats_region_info_t *region_arr,
                                    int arrlen);
 hal_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num,
