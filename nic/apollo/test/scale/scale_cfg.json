@@ -5,7 +5,9 @@
             "kind" : "device",
             "ip-addr" : "1.0.0.1",
             "mac-addr" : "0x000201000001",
-            "gw-ip-addr": "1.0.0.2"
+            "gw-ip-addr": "1.0.0.2",
+            "_comment_" : "encap is either vxlan or mplsoudp",
+            "encap": "vxlan"
         },
         {
             "kind" : "tep",

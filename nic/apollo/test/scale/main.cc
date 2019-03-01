@@ -33,6 +33,9 @@
 using std::string;
 namespace pt = boost::property_tree;
 
+#define VNID_BASE                      1000
+
+pds_tep_encap_type_t g_tep_encap = PDS_TEP_ENCAP_TYPE_NONE;
 char *g_input_cfg_file = NULL;
 char *g_cfg_file = NULL;
 bool g_daemon_mode = false;
@@ -208,8 +211,14 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                         (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
                     pds_mapping.subnet.id = (i - 1) * num_subnets + j;
-                    pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-                    pds_mapping.fabric_encap.val.value = vnic_key;
+                    if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                        pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                        //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
+                        pds_mapping.fabric_encap.val.vnid = vnic_key;
+                    } else {
+                        pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                        pds_mapping.fabric_encap.val.mpls_tag = vnic_key;
+                    }
                     pds_mapping.tep.ip_addr = g_device.switch_ip_addr;
                     MAC_UINT64_TO_ADDR(pds_mapping.overlay_mac,
                                        (((((uint64_t)i & 0x7FF) << 22) |
@@ -247,8 +256,14 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
                 pds_mapping.subnet.id = (i - 1) * num_subnets + j;
-                pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-                pds_mapping.fabric_encap.val.value = remote_slot++;
+                if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                    pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                    //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
+                    pds_mapping.fabric_encap.val.vnid = remote_slot++;
+                } else {
+                    pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                    pds_mapping.fabric_encap.val.mpls_tag = remote_slot++;
+                }
                 pds_mapping.tep.ip_addr =
                     teppfx->addr.addr.v4_addr + tep_offset++;
                 tep_offset %= num_teps;
@@ -294,8 +309,14 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
                 pds_vnic.subnet.id = (i - 1) * num_subnets + j;
                 pds_vnic.key.id = vnic_key;
                 pds_vnic.wire_vlan = vlan_start + vnic_key - 1;
-                pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-                pds_vnic.fabric_encap.val.mpls_tag = vnic_key;
+                if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                    pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                    //pds_vnic.fabric_encap.val.vnid = VNID_BASE + pds_vnic.subnet.id;
+                    pds_vnic.fabric_encap.val.vnid = vnic_key;
+                } else {
+                    pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                    pds_vnic.fabric_encap.val.mpls_tag = vnic_key;
+                }
                 MAC_UINT64_TO_ADDR(pds_vnic.mac_addr,
                                    (((((uint64_t)i & 0x7FF) << 22) |
                                      ((j & 0x7FF) << 11) | (k & 0x7FF))));
@@ -387,7 +408,11 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         // 1st IP in the TEP prefix is local TEP, 2nd is gateway IP,
         // so skip them
         pds_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
-        pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
+        if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+            pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VXLAN;
+        } else {
+            pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
+        }
         rv = pds_tep_create(&pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;
@@ -518,6 +543,11 @@ create_objects (void)
                           &ipaddr);
                 inet_aton(obj.second.get<std::string>("gw-ip-addr").c_str(),
                           &gwip);
+                if (!obj.second.get<std::string>("encap").compare("vxlan")) {
+                    g_tep_encap = PDS_TEP_ENCAP_TYPE_VXLAN;
+                } else {
+                    g_tep_encap = PDS_TEP_ENCAP_TYPE_VNIC;
+                }
                 ret = create_device_cfg(ntohl(ipaddr.s_addr), macaddr,
                                             ntohl(gwip.s_addr));
             } else if (kind == "tep") {

@@ -393,7 +393,7 @@ vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of LOCAL_VNIC_BY_SLOT_RX table failed, "
                       "api op %u, epoch %u, vnic %s , err %u", api_op, epoch,
-                          api_obj->key2str().c_str(), ret);
+                       api_obj->key2str().c_str(), ret);
         }
     return ret;
 }
