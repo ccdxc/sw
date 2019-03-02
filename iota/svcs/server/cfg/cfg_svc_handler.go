@@ -214,7 +214,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		Spec: auth.UserSpec{
 			Fullname: "Admin",
 			Email:    "dev@pensando.io",
-			Password: "password",
+			Password: common.UserPassword,
 			Type:     "Local",
 		},
 	}
@@ -253,7 +253,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 
 	login := auth.PasswordCredential{
 		Username: "admin",
-		Password: "password",
+		Password: common.UserPassword,
 		Tenant:   "default",
 	}
 

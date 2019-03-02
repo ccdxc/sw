@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"net"
 	"reflect"
-	"sort"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"github.com/pensando/sw/api/interfaces"
 
@@ -39,7 +40,7 @@ import (
 
 const (
 	testUser     = "test"
-	testPassword = "pensandoo0"
+	testPassword = "Pensandoo0%"
 )
 
 func TestHashPassword(t *testing.T) {
@@ -175,6 +176,26 @@ func TestHashPassword(t *testing.T) {
 			existing: nil,
 			result:   true,
 			err:      nil,
+		},
+		{
+			name: "non compliant password",
+			oper: apiintf.CreateOper,
+			in: auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:   testUser,
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "Aabcdefg12",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			existing: nil,
+			result:   false,
+			err:      k8serrors.NewAggregate([]error{password.ErrInsufficientSymbols}),
 		},
 	}
 
@@ -374,8 +395,8 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 	r.logger = log.GetNewLogger(logConfig)
 	for _, test := range tests {
 		errs := r.validateAuthenticatorConfig(test.in, "", false)
-		sortErrors(errs)
-		sortErrors(test.errs)
+		SortErrors(errs)
+		SortErrors(test.errs)
 		Assert(t, len(errs) == len(test.errs), fmt.Sprintf("[%s] test failed, expected errors [%#v], got [%#v]", test.name, test.errs, errs))
 		for i, err := range errs {
 			Assert(t, err.Error() == test.errs[i].Error(), fmt.Sprintf("[%s] test failed, expected errors [%#v], got [%#v]", test.name, test.errs[i], errs[i]))
@@ -642,7 +663,7 @@ func TestChangePassword(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to hash old password: %v", err)
 	}
-	const newPasswd = "pensando"
+	const newPasswd = "NewPensando0$"
 	tests := []struct {
 		name     string
 		in       interface{}
@@ -789,6 +810,7 @@ func TestChangePassword(t *testing.T) {
 				t.Fatalf("[%s] test failed, unable to populate kvstore with user, Err: %v", test.name, err)
 			}
 		}
+		currtime := time.Now()
 		_, ok, err := authHooks.changePassword(ctx, kvs, txn, userKey, "PasswordChange", false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
@@ -802,6 +824,10 @@ func TestChangePassword(t *testing.T) {
 			ok, err := hasher.CompareHashAndPassword(user.Spec.Password, req.NewPassword)
 			AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
 			Assert(t, ok, fmt.Sprintf("[%v] test failed", test.name))
+			chngpasswdtime, err := user.Status.LastPasswordChange.Time()
+			AssertOk(t, err, "error getting password change time")
+			Assert(t, chngpasswdtime.After(currtime), fmt.Sprintf("password change time [%v] not after current time [%v]", chngpasswdtime.Local(), currtime.Local()))
+			Assert(t, chngpasswdtime.Sub(currtime) < 30*time.Second, fmt.Sprintf("password change time [%v] not within 30 seconds of current time [%v]", chngpasswdtime, currtime))
 		}
 		kvs.Delete(ctx, userKey, nil)
 	}
@@ -899,13 +925,20 @@ func TestResetPassword(t *testing.T) {
 				t.Fatalf("[%s] test failed, unable to populate kvstore with user, Err: %v", test.name, err)
 			}
 		}
-		out, ok, err := authHooks.resetPassword(ctx, kvs, txn, userKey, "PasswordReset", false, test.in)
+		currtime := time.Now()
+		_, ok, err := authHooks.resetPassword(ctx, kvs, txn, userKey, "PasswordReset", false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
 		if err == nil {
-			user, _ := out.(auth.User)
+			user := &auth.User{}
+			err = kvs.Get(ctx, userKey, user)
+			AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
 			Assert(t, user.Spec.Password != test.existing.Spec.Password,
 				fmt.Sprintf("[%v] test failed, reset password [%s] is not different than old password [%s]", test.name, user.Spec.Password, test.existing.Spec.Password))
+			chngpasswdtime, err := user.Status.LastPasswordChange.Time()
+			AssertOk(t, err, "error getting password change time")
+			Assert(t, chngpasswdtime.After(currtime), fmt.Sprintf("password change time [%v] not after current time [%v]", chngpasswdtime.Local(), currtime.Local()))
+			Assert(t, chngpasswdtime.Sub(currtime) < 30*time.Second, fmt.Sprintf("password change time [%v] not within 30 seconds of current time [%v]", chngpasswdtime, currtime))
 		}
 		kvs.Delete(ctx, userKey, nil)
 	}
@@ -1179,8 +1212,47 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 	}
 }
 
-func sortErrors(errs []error) {
-	sort.Slice(errs, func(i, j int) bool {
-		return errs[i].Error() < errs[j].Error()
-	})
+func TestValidatePassword(t *testing.T) {
+	tests := []struct {
+		name   string
+		in     interface{}
+		errors []error
+	}{
+		{
+			"user create",
+			auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:   testUser,
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: testPassword,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			nil,
+		},
+		{
+			"change password",
+			auth.PasswordChangeRequest{OldPassword: "asdfa34345@", NewPassword: testPassword},
+			nil,
+		},
+		{
+			"incorrect object type",
+			struct{ name string }{"testing"},
+			[]error{errInvalidInputType},
+		},
+	}
+	r := authHooks{}
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	r.logger = log.GetNewLogger(logConfig)
+	for _, test := range tests {
+		errs := r.validatePassword(test.in, "", false)
+		SortErrors(errs)
+		SortErrors(test.errors)
+		Assert(t, reflect.DeepEqual(errs, test.errors), fmt.Sprintf("%s test failed, expected errors [%v], got [%v]", test.name, test.errors, errs))
+	}
 }

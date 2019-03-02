@@ -12,16 +12,18 @@ import { AuthUserStatus_authenticators,  AuthUserStatus_authenticators_uihint  }
 export interface IAuthUserStatus {
     'roles'?: Array<string>;
     'user-groups'?: Array<string>;
-    'last-successful-login'?: Date;
+    'last-login'?: Date;
     'authenticators': Array<AuthUserStatus_authenticators>;
+    'last-password-change'?: Date;
 }
 
 
 export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     'roles': Array<string> = null;
     'user-groups': Array<string> = null;
-    'last-successful-login': Date = null;
+    'last-login': Date = null;
     'authenticators': Array<AuthUserStatus_authenticators> = null;
+    'last-password-change': Date = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'roles': {
             required: false,
@@ -31,7 +33,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             required: false,
             type: 'Array<string>'
         },
-        'last-successful-login': {
+        'last-login': {
             required: false,
             type: 'Date'
         },
@@ -40,6 +42,10 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             default: 'LOCAL',
             required: true,
             type: 'Array<string>'
+        },
+        'last-password-change': {
+            required: false,
+            type: 'Date'
         },
     }
 
@@ -90,12 +96,12 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         } else {
             this['user-groups'] = [];
         }
-        if (values && values['last-successful-login'] != null) {
-            this['last-successful-login'] = values['last-successful-login'];
-        } else if (fillDefaults && AuthUserStatus.hasDefaultValue('last-successful-login')) {
-            this['last-successful-login'] = AuthUserStatus.propInfo['last-successful-login'].default;
+        if (values && values['last-login'] != null) {
+            this['last-login'] = values['last-login'];
+        } else if (fillDefaults && AuthUserStatus.hasDefaultValue('last-login')) {
+            this['last-login'] = AuthUserStatus.propInfo['last-login'].default;
         } else {
-            this['last-successful-login'] = null
+            this['last-login'] = null
         }
         if (values && values['authenticators'] != null) {
             this['authenticators'] = values['authenticators'];
@@ -103,6 +109,13 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             this['authenticators'] = [ AuthUserStatus.propInfo['authenticators'].default];
         } else {
             this['authenticators'] = [];
+        }
+        if (values && values['last-password-change'] != null) {
+            this['last-password-change'] = values['last-password-change'];
+        } else if (fillDefaults && AuthUserStatus.hasDefaultValue('last-password-change')) {
+            this['last-password-change'] = AuthUserStatus.propInfo['last-password-change'].default;
+        } else {
+            this['last-password-change'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -113,8 +126,9 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             this._formGroup = new FormGroup({
                 'roles': CustomFormControl(new FormControl(this['roles']), AuthUserStatus.propInfo['roles']),
                 'user-groups': CustomFormControl(new FormControl(this['user-groups']), AuthUserStatus.propInfo['user-groups']),
-                'last-successful-login': CustomFormControl(new FormControl(this['last-successful-login']), AuthUserStatus.propInfo['last-successful-login']),
+                'last-login': CustomFormControl(new FormControl(this['last-login']), AuthUserStatus.propInfo['last-login']),
                 'authenticators': CustomFormControl(new FormControl(this['authenticators']), AuthUserStatus.propInfo['authenticators']),
+                'last-password-change': CustomFormControl(new FormControl(this['last-password-change']), AuthUserStatus.propInfo['last-password-change']),
             });
         }
         return this._formGroup;
@@ -128,8 +142,9 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         if (this._formGroup) {
             this._formGroup.controls['roles'].setValue(this['roles']);
             this._formGroup.controls['user-groups'].setValue(this['user-groups']);
-            this._formGroup.controls['last-successful-login'].setValue(this['last-successful-login']);
+            this._formGroup.controls['last-login'].setValue(this['last-login']);
             this._formGroup.controls['authenticators'].setValue(this['authenticators']);
+            this._formGroup.controls['last-password-change'].setValue(this['last-password-change']);
         }
     }
 }

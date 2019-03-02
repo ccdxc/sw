@@ -243,7 +243,7 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 	if err != nil {
 		return nil, err
 	}
-	user.Status.LastSuccessfulLogin = &api.Timestamp{
+	user.Status.LastLogin = &api.Timestamp{
 		Timestamp: *m,
 	}
 	b := balancer.New(s.rslvr)

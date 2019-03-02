@@ -26,7 +26,7 @@ import (
 const (
 	apisrvURL    = "localhost:0"
 	testUser     = "test"
-	testPassword = "pensandoo0"
+	testPassword = "Pensandoo0$"
 	tenant       = "default"
 )
 

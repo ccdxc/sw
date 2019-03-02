@@ -26,11 +26,13 @@ import (
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 	"github.com/pensando/sw/venice/utils/trace"
+
+	. "github.com/pensando/sw/test/utils"
 )
 
 const (
 	testUser     = "test"
-	testPassword = "pensandoo0"
+	testPassword = TestLocalPassword
 	testTenant   = "testtenant"
 )
 

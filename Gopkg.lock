@@ -1846,6 +1846,14 @@
   revision = "f0d19b6901ade831d5a3204edc0d6a7d6457fbb2"
 
 [[projects]]
+  digest = "1:1af58d182e3b1008d25d7ba65ff7c2631a246023d3b814f9ba8c7919aded59f3"
+  name = "github.com/sethvargo/go-password"
+  packages = ["password"]
+  pruneopts = "NUT"
+  revision = "bc15c697eeda69a082991d2f1ed37660658fea32"
+  version = "v0.1.2"
+
+[[projects]]
   digest = "1:850e4270ee9e797d1d10547d4fa6c39bfc00c56c40358aac92ed1dd4391846b1"
   name = "github.com/shirou/gopsutil"
   packages = [
@@ -2702,6 +2710,7 @@
     "github.com/pkg/sftp",
     "github.com/russross/blackfriday",
     "github.com/satori/go.uuid",
+    "github.com/sethvargo/go-password/password",
     "github.com/shirou/gopsutil/cpu",
     "github.com/shirou/gopsutil/disk",
     "github.com/shirou/gopsutil/mem",

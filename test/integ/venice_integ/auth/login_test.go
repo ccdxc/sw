@@ -62,7 +62,7 @@ func TestLogin(t *testing.T) {
 	Assert(t, user.Name == userCred.Username && user.Tenant == userCred.Tenant, fmt.Sprintf("incorrect user [%s] and tenant [%s] returned", user.Name, user.Tenant))
 	Assert(t, user.Spec.Password == "", "password should be empty")
 	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
-	logintime, err := user.Status.LastSuccessfulLogin.Time()
+	logintime, err := user.Status.LastLogin.Time()
 	AssertOk(t, err, "error getting successful login time")
 	Assert(t, time.Now().Sub(logintime) < time.Second, fmt.Sprintf("unexpected successful login time [%v]", logintime.Local()))
 	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_LOCAL.String(),
@@ -351,7 +351,7 @@ func TestUserStatus(t *testing.T) {
 		return err == nil, nil
 	}, "unable to fetch user")
 	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
-	logintime, err := user.Status.LastSuccessfulLogin.Time()
+	logintime, err := user.Status.LastLogin.Time()
 	AssertOk(t, err, "error getting successful login time")
 	Assert(t, logintime.After(currtime), fmt.Sprintf("login time [%v] not after current time [%v]", logintime.Local(), currtime.Local()))
 	Assert(t, logintime.Sub(currtime) < 30*time.Second, fmt.Sprintf("login time [%v] not within 30 seconds of current time [%v]", logintime, currtime))
@@ -389,7 +389,7 @@ func TestUserStatus(t *testing.T) {
 		return err == nil, nil
 	}, "unable to fetch user")
 	Assert(t, len(user.Status.Roles) == 2, "user should have two roles")
-	newlogintime, err := user.Status.LastSuccessfulLogin.Time()
+	newlogintime, err := user.Status.LastLogin.Time()
 	AssertOk(t, err, "error getting successful login time")
 	Assert(t, newlogintime.After(logintime), fmt.Sprintf("new login time [%v] not after old login time [%v]", newlogintime.Local(), logintime.Local()))
 }
@@ -462,7 +462,7 @@ func TestLdapLogin(t *testing.T) {
 	defer MustDeleteUser(tinfo.apicl, config.LdapUser, testTenant)
 	Assert(t, user.Spec.Type == auth.UserSpec_External.String(), "unexpected user type: %s", user.Spec.Type)
 	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
-	logintime, err := user.Status.LastSuccessfulLogin.Time()
+	logintime, err := user.Status.LastLogin.Time()
 	AssertOk(t, err, "error getting successful login time")
 	Assert(t, logintime.After(currtime), fmt.Sprintf("login time [%v] not after current time [%v]", logintime.Local(), currtime.Local()))
 	Assert(t, logintime.Sub(currtime) < 30*time.Second, fmt.Sprintf("login time [%v] not within 30 seconds of current time [%v]", logintime, currtime))
@@ -689,7 +689,7 @@ func TestRadiusLogin(t *testing.T) {
 	defer MustDeleteUser(tinfo.apicl, config.User, config.Tenant)
 	Assert(t, user.Spec.Type == auth.UserSpec_External.String(), "unexpected user type: %s", user.Spec.Type)
 	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
-	logintime, err := user.Status.LastSuccessfulLogin.Time()
+	logintime, err := user.Status.LastLogin.Time()
 	AssertOk(t, err, "error getting successful login time")
 	Assert(t, logintime.After(currtime), fmt.Sprintf("login time [%v] not after current time [%v]", logintime.Local(), currtime.Local()))
 	Assert(t, logintime.Sub(currtime) < 30*time.Second, fmt.Sprintf("login time [%v] not within 30 seconds of current time [%v]", logintime, currtime))
@@ -711,7 +711,9 @@ func TestPasswordChange(t *testing.T) {
 	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context")
 	// test change password
+	currtime := time.Now()
 	var user *auth.User
+	const newPassword = "Newpassword1#"
 	AssertEventually(t, func() (bool, interface{}) {
 		user, err = tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
 			TypeMeta: api.TypeMeta{
@@ -722,12 +724,16 @@ func TestPasswordChange(t *testing.T) {
 				Tenant: testTenant,
 			},
 			OldPassword: testPassword,
-			NewPassword: "newpassword",
+			NewPassword: newPassword,
 		})
 		return err == nil, nil
 	}, "unable to change password")
 	Assert(t, user.Spec.Password == "", "password should be emptied out for password change request, got password [%s]", user.Spec.Password)
-	userCred.Password = "newpassword"
+	chngpasswdtime, err := user.Status.LastPasswordChange.Time()
+	AssertOk(t, err, "error getting password change time")
+	Assert(t, chngpasswdtime.After(currtime), fmt.Sprintf("password change time [%v] not after current time [%v]", chngpasswdtime.Local(), currtime.Local()))
+	Assert(t, chngpasswdtime.Sub(currtime) < 30*time.Second, fmt.Sprintf("password change time [%v] not within 30 seconds of current time [%v]", chngpasswdtime, currtime))
+	userCred.Password = newPassword
 	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context with new password")
 	// test with incorrect old password
@@ -740,7 +746,7 @@ func TestPasswordChange(t *testing.T) {
 			Tenant: testTenant,
 		},
 		OldPassword: testPassword,
-		NewPassword: "newpassword",
+		NewPassword: newPassword,
 	})
 	Assert(t, err != nil, "should not be able to change password with incorrect old password")
 	// test with non existent user
@@ -752,7 +758,7 @@ func TestPasswordChange(t *testing.T) {
 			Name:   "nonexistent",
 			Tenant: testTenant,
 		},
-		OldPassword: "newpassword",
+		OldPassword: newPassword,
 		NewPassword: testPassword,
 	})
 	Assert(t, err != nil, "should not be able to change password for non existent user")
@@ -765,7 +771,7 @@ func TestPasswordChange(t *testing.T) {
 			Name:   testUser,
 			Tenant: testTenant,
 		},
-		OldPassword: "newpassword",
+		OldPassword: newPassword,
 		NewPassword: "",
 	})
 	Assert(t, err != nil, "should not be able to change password with empty new password")
@@ -779,7 +785,7 @@ func TestPasswordChange(t *testing.T) {
 			Tenant: testTenant,
 		},
 		OldPassword: "",
-		NewPassword: "newpassword",
+		NewPassword: newPassword,
 	})
 	Assert(t, err != nil, "should not be able to change password with empty old password")
 	// test with empty password change request
@@ -787,6 +793,19 @@ func TestPasswordChange(t *testing.T) {
 	Assert(t, err != nil, "should not be able to change password with empty password change request")
 	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context with new password")
+	// test with non compliant password
+	user, err = tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: string(auth.KindUser),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   testUser,
+			Tenant: testTenant,
+		},
+		OldPassword: newPassword,
+		NewPassword: "abc",
+	})
+	Assert(t, err != nil, "should not be able to change password with non compliant password")
 }
 
 func TestPasswordReset(t *testing.T) {
@@ -803,6 +822,7 @@ func TestPasswordReset(t *testing.T) {
 	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context")
 	// test reset password
+	currtime := time.Now()
 	var user *auth.User
 	AssertEventually(t, func() (bool, interface{}) {
 		user, err = tinfo.restcl.AuthV1().User().PasswordReset(ctx, &auth.PasswordResetRequest{
@@ -816,6 +836,10 @@ func TestPasswordReset(t *testing.T) {
 		})
 		return err == nil, nil
 	}, "unable to reset password")
+	chngpasswdtime, err := user.Status.LastPasswordChange.Time()
+	AssertOk(t, err, "error getting password change time")
+	Assert(t, chngpasswdtime.After(currtime), fmt.Sprintf("password reset time [%v] not after current time [%v]", chngpasswdtime.Local(), currtime.Local()))
+	Assert(t, chngpasswdtime.Sub(currtime) < 30*time.Second, fmt.Sprintf("password reset time [%v] not within 30 seconds of current time [%v]", chngpasswdtime, currtime))
 	userCred.Password = user.Spec.Password
 	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context with new reset password")
@@ -867,4 +891,34 @@ func TestAuthOrder(t *testing.T) {
 	Assert(t, err != nil && strings.Contains(err.Error(), "401"), "expected radius login to fail")
 	_, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, localUserCred)
 	AssertOk(t, err, "expected local user login to succeed")
+
+}
+
+func TestPasswordValidation(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context")
+	_, err = tinfo.restcl.AuthV1().User().Create(ctx, &auth.User{
+		TypeMeta: api.TypeMeta{Kind: "User"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: testTenant,
+			Name:   "testUser2",
+		},
+		Spec: auth.UserSpec{
+			Fullname: "Test User2",
+			Email:    "testuser2@pensandio.io",
+			Type:     auth.UserSpec_Local.String(),
+			Password: "abc",
+		},
+	})
+	Assert(t, err != nil, "user created with non-compliant password")
 }

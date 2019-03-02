@@ -5,18 +5,20 @@ package veniceinteg
 import (
 	"strings"
 
-	"github.com/pensando/sw/api/generated/telemetry_query"
-	"github.com/pensando/sw/venice/utils/telemetryclient"
-
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/telemetry_query"
+	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+const password = testutils.TestLocalPassword
 
 var actionEnumMapping = map[string]string{
 	"ALLOW":  "SECURITY_RULE_ACTION_ALLOW",
@@ -41,11 +43,11 @@ func (it *veniceIntegSuite) TestFwlogsQueryAuth(c *C) {
 	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
 	AssertOk(c, err, "Failed to create telemetry client")
 
-	user, err := it.createUser(globals.DefaultTenant, username, "pass")
+	user, err := it.createUser(globals.DefaultTenant, username, password)
 	AssertOk(c, err, "Failed to create user")
 	defer it.restClient.AuthV1().User().Delete(adminCtx, &user.ObjectMeta)
 
-	newUserCtx, err := it.loggedInCtxWithCred(globals.DefaultTenant, username, "pass")
+	newUserCtx, err := it.loggedInCtxWithCred(globals.DefaultTenant, username, password)
 	AssertOk(c, err, "Failed to get logged in context")
 
 	query := &telemetry_query.FwlogsQueryList{
@@ -97,7 +99,7 @@ func (it *veniceIntegSuite) TestFwlogsQueryAuth(c *C) {
 	defer it.restClient.AuthV1().RoleBinding().Delete(adminCtx, &roleBinding.ObjectMeta)
 
 	// Should succeed
-	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, "pass")
+	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, password)
 	AssertOk(c, err, "Failed to get logged in context")
 
 	_, err = tc.Fwlogs(newUserCtx, query)
@@ -122,11 +124,11 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
 	AssertOk(c, err, "Failed to create telemetry client")
 
-	user, err := it.createUser(globals.DefaultTenant, username, "pass")
+	user, err := it.createUser(globals.DefaultTenant, username, password)
 	AssertOk(c, err, "Failed to get create user")
 	defer it.restClient.AuthV1().User().Delete(adminCtx, &user.ObjectMeta)
 
-	newUserCtx, err := it.loggedInCtxWithCred(globals.DefaultTenant, username, "pass")
+	newUserCtx, err := it.loggedInCtxWithCred(globals.DefaultTenant, username, password)
 	AssertOk(c, err, "Failed to get logged in context")
 
 	query := &telemetry_query.MetricsQueryList{
@@ -182,7 +184,7 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 	defer it.restClient.AuthV1().RoleBinding().Delete(adminCtx, &roleBinding.ObjectMeta)
 
 	// Query should fail since the user needs permissions for the Node kind
-	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, "pass")
+	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, password)
 	AssertOk(c, err, "Failed to get logged in context")
 
 	_, err = tc.Metrics(newUserCtx, query)
@@ -201,7 +203,7 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 	AssertOk(c, err, "Failed to update role")
 
 	// Query should succeed
-	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, "pass")
+	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, password)
 	AssertOk(c, err, "Failed to get logged in context")
 
 	_, err = tc.Metrics(newUserCtx, query)
@@ -222,7 +224,7 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 	AssertOk(c, err, "Failed to update role")
 
 	// Query should fail since it doesn't have metrics permission
-	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, "pass")
+	newUserCtx, err = it.loggedInCtxWithCred(globals.DefaultTenant, username, password)
 	AssertOk(c, err, "Failed to get logged in context")
 
 	_, err = tc.Metrics(newUserCtx, query)

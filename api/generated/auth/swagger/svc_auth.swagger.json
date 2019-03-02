@@ -2912,6 +2912,7 @@
           },
           {
             "name": "spec.password",
+            "description": "Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from \"~!@#$%^\u0026*()_+`-={}|[]\\\\:\\\"\u003c\u003e?,./\".",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2943,8 +2944,8 @@
             }
           },
           {
-            "name": "status.last-successful-login",
-            "description": "Last successful login time.",
+            "name": "status.last-login",
+            "description": "Last login time.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2959,6 +2960,14 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "status.last-password-change",
+            "description": "Last password change time for local user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
           }
         ],
         "tags": [
@@ -3621,6 +3630,7 @@
           },
           {
             "name": "spec.password",
+            "description": "Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from \"~!@#$%^\u0026*()_+`-={}|[]\\\\:\\\"\u003c\u003e?,./\".",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3652,8 +3662,8 @@
             }
           },
           {
-            "name": "status.last-successful-login",
-            "description": "Last successful login time.",
+            "name": "status.last-login",
+            "description": "Last login time.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3668,6 +3678,14 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "status.last-password-change",
+            "description": "Last password change time for local user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
           }
         ],
         "tags": [
@@ -6082,7 +6100,8 @@
           "type": "string"
         },
         "password": {
-          "type": "string"
+          "type": "string",
+          "title": "Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from \"~!@#$%^\u0026*()_+`-={}|[]\\\\:\\\"\u003c\u003e?,./\""
         },
         "type": {
           "type": "string",
@@ -6119,10 +6138,10 @@
           },
           "title": "Groups that external user belongs to"
         },
-        "last-successful-login": {
+        "last-login": {
           "type": "string",
           "format": "date-time",
-          "title": "Last successful login time"
+          "title": "Last login time"
         },
         "authenticators": {
           "type": "array",
@@ -6139,6 +6158,11 @@
             "LOCAL": "Local"
           },
           "title": "Authenticators used for last successful login"
+        },
+        "last-password-change": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Last password change time for local user"
         }
       },
       "title": "status part of user object"

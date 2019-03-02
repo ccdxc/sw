@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/iota/svcs/common"
 )
 
 // VeniceLoggedInCtx returns loggedin context for venice
@@ -31,14 +32,14 @@ func (tb *TestBed) VeniceLoggedInCtx() (context.Context, error) {
 	// local user credentials
 	userCred := auth.PasswordCredential{
 		Username: "admin",
-		Password: "password",
+		Password: common.UserPassword,
 		Tenant:   "default",
 	}
 
 	// overwrite user-id/password in mock mode to match venice integ user cred
 	if tb.mockMode {
 		userCred.Username = "test"
-		userCred.Password = "pensando"
+		userCred.Password = common.UserPassword
 	}
 
 	// try to login
@@ -119,7 +120,7 @@ func (tb *TestBed) InitVeniceConfig() error {
 
 	log.Infof("Setting up Auth on Venice cluster...")
 
-	err = tb.SetupAuth("admin", "password")
+	err = tb.SetupAuth("admin", common.UserPassword)
 	if err != nil {
 		log.Errorf("Setting up Auth failed. Err: %v", err)
 		return err

@@ -24,6 +24,7 @@ message UserSpec {
 
     string Fullname = 1 [(gogoproto.jsontag) = "fullname,omitempty"];
     string Email    = 2 [(gogoproto.jsontag) = "email,omitempty"];
+    // Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from "~!@#$%^&*()_+`-={}|[]\\:\"<>?,./"
     string Password = 3 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "password,omitempty"];
     string Type     = 4 [(venice.check) = "StrEnum(UserSpec.UserType)", (gogoproto.jsontag) = "type,omitempty"];
 }
@@ -31,13 +32,15 @@ message UserSpec {
 // status part of user object
 message UserStatus {
     // Roles assigned to user
-    repeated string Roles             = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "roles,omitempty"];
+    repeated string Roles            = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "roles,omitempty"];
     // Groups that external user belongs to
-    repeated string UserGroups        = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-groups,omitempty"];
-    // Last successful login time
-    api.Timestamp LastSuccessfulLogin = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-successful-login,omitempty"];
+    repeated string UserGroups       = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-groups,omitempty"];
+    // Last login time
+    api.Timestamp LastLogin          = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-login,omitempty"];
     // Authenticators used for last successful login
-    repeated string Authenticators    = 4 [(venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticators,omitempty"];
+    repeated string Authenticators   = 4 [(venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticators,omitempty"];
+    // Last password change time for local user
+    api.Timestamp LastPasswordChange = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-password-change,omitempty"];
 }
 
 // User could be local or external

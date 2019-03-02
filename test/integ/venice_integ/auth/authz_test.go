@@ -348,6 +348,7 @@ func TestUserSelfOperations(t *testing.T) {
 	}, "unable to update user")
 	Assert(t, user.Spec.Fullname == "Test User2", fmt.Sprintf("user update failed: %#v", *user))
 	// test change password
+	const newPassword = "Newpassword1#"
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
 			TypeMeta: api.TypeMeta{
@@ -358,11 +359,11 @@ func TestUserSelfOperations(t *testing.T) {
 				Tenant: testTenant,
 			},
 			OldPassword: testPassword,
-			NewPassword: "newpassword",
+			NewPassword: newPassword,
 		})
 		return err == nil, err
 	}, "unable to change password")
-	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: "testUser2", Password: "newpassword", Tenant: testTenant})
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: "testUser2", Password: newPassword, Tenant: testTenant})
 	AssertOk(t, err, "unable to get logged in context with new password")
 	// test reset password
 	AssertEventually(t, func() (bool, interface{}) {

@@ -66,7 +66,7 @@ var defaultTestBedConfig = TestBedConfig{
 	FirstVeniceIP:  "192.168.30.11",
 	SSHPrivKeyFile: "/root/.ssh/id_rsa",
 	User:           "test",
-	Password:       "pensando",
+	Password:       "Pensando0$",
 	AuthMethod:     auth.Authenticators_LOCAL.String(),
 	Radius: testutils.RadiusConfig{
 		URL:        "10.11.100.101:1812",

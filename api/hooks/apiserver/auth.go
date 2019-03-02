@@ -2,14 +2,15 @@ package impl
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
@@ -74,6 +75,12 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 		// password is a required field when local user is created
 		if r.Spec.GetPassword() == "" {
 			return r, false, errEmptyPassword
+		}
+		// validate password
+		pc := password.NewPolicyChecker()
+		if err := k8serrors.NewAggregate(pc.Validate(r.Spec.GetPassword())); err != nil {
+			s.logger.ErrorLog("method", "hashPassword", "msg", "password validation failed", "error", err)
+			return r, false, err
 		}
 		// get password hasher
 		hasher := password.GetPasswordHasher()
@@ -152,6 +159,14 @@ func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, tx
 			s.logger.Errorf("error encrypting password field: %v", err)
 			return userObj, err
 		}
+		// update last password change time
+		m, err := types.TimestampProto(time.Now())
+		if err != nil {
+			return userObj, err
+		}
+		userObj.Status.LastPasswordChange = &api.Timestamp{
+			Timestamp: *m,
+		}
 		genID, err := strconv.ParseInt(userObj.GenerationID, 10, 64)
 		if err != nil {
 			s.logger.Errorf("error parsing generation ID: %v", err)
@@ -178,12 +193,11 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 	if !ok {
 		return nil, false, errInvalidInputType
 	}
-	b, err := authn.CreateSecret(12)
+	genPasswd, err := password.CreatePassword()
 	if err != nil {
-		s.logger.Errorf("Error generating password for user key [%s]: %v", err)
+		s.logger.ErrorLog("method", "resetPassword", "msg", "error generating password", "user", key, "error", err)
 		return nil, false, err
 	}
-	genPasswd := base64.RawStdEncoding.EncodeToString(b)
 	cur := &auth.User{}
 	if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
 		userObj, ok := oldObj.(*auth.User)
@@ -206,6 +220,14 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 		if err := userObj.ApplyStorageTransformer(ctx, true); err != nil {
 			s.logger.Errorf("error encrypting password field: %v", err)
 			return userObj, err
+		}
+		// update last password change time
+		m, err := types.TimestampProto(time.Now())
+		if err != nil {
+			return userObj, err
+		}
+		userObj.Status.LastPasswordChange = &api.Timestamp{
+			Timestamp: *m,
 		}
 		genID, err := strconv.ParseInt(userObj.GenerationID, 10, 64)
 		if err != nil {
@@ -369,6 +391,23 @@ func (s *authHooks) returnUser(ctx context.Context, kvs kvstore.Interface, prefi
 	return cur, err
 }
 
+// validatePassword is a hook to check user password against password policy
+func (s *authHooks) validatePassword(i interface{}, ver string, ignStatus bool) []error {
+	s.logger.DebugLog("msg", "AuthHook called to validate password")
+	pc := password.NewPolicyChecker()
+	switch obj := i.(type) {
+	case auth.User:
+		if obj.Spec.Type == auth.UserSpec_Local.String() {
+			return pc.Validate(obj.Spec.Password)
+		}
+	case auth.PasswordChangeRequest:
+		return pc.Validate(obj.NewPassword)
+	default:
+		return []error{errInvalidInputType}
+	}
+	return nil
+}
+
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	r := authHooks{}
 	r.logger = logger.WithContext("Service", "AuthHooks")
@@ -382,7 +421,7 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("RoleBinding", apiintf.CreateOper).WithPreCommitHook(r.privilegeEscalationCheck)
 	svc.GetCrudService("RoleBinding", apiintf.UpdateOper).WithPreCommitHook(r.privilegeEscalationCheck)
 	// hook to change password
-	svc.GetMethod("PasswordChange").WithPreCommitHook(r.changePassword)
+	svc.GetMethod("PasswordChange").WithPreCommitHook(r.changePassword).GetRequestType().WithValidate(r.validatePassword)
 	svc.GetMethod("PasswordChange").WithResponseWriter(r.returnUser)
 	// hook to reset password
 	svc.GetMethod("PasswordReset").WithPreCommitHook(r.resetPassword)

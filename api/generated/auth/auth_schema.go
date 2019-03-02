@@ -518,9 +518,11 @@ var typesMapAuth = map[string]*api.Struct{
 
 			"UserGroups": api.Field{Name: "UserGroups", CLITag: api.CLIInfo{ID: "user-groups", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user-groups", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"LastSuccessfulLogin": api.Field{Name: "LastSuccessfulLogin", CLITag: api.CLIInfo{ID: "last-successful-login", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-successful-login", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+			"LastLogin": api.Field{Name: "LastLogin", CLITag: api.CLIInfo{ID: "last-login", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-login", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"Authenticators": api.Field{Name: "Authenticators", CLITag: api.CLIInfo{ID: "authenticators", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "authenticators", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"LastPasswordChange": api.Field{Name: "LastPasswordChange", CLITag: api.CLIInfo{ID: "last-password-change", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-password-change", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 }

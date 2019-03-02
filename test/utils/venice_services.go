@@ -40,11 +40,11 @@ import (
 	_ "github.com/pensando/sw/venice/utils/bootstrapper/auth"
 )
 
-var (
+const (
 	// TestLocalUser test username
 	TestLocalUser = "test"
 	// TestLocalPassword test password
-	TestLocalPassword = "pensando"
+	TestLocalPassword = "Pensando0$"
 	// TestTenant test tenant
 	TestTenant = globals.DefaultTenant
 )

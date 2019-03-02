@@ -54,7 +54,7 @@ const (
 	rootsPath = "../../venice/utils/certmgr/testdata/roots.pem"
 	// test user
 	testUser     = "test"
-	testPassword = "pensando"
+	testPassword = "Pensando0$"
 )
 
 var (

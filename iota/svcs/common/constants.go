@@ -102,6 +102,9 @@ const (
 	EsxIotaNaplesMgmtSwitch      = "iota-naples-mgmt-switch"
 	EsxDefaultNetworkVlan        = 4093
 	EsxVMNetworkVlan             = 4092
+
+	// UserPassword is test user password
+	UserPassword = "Pensando0$"
 )
 
 // incrementing constants. List all constants whose value you don't care here

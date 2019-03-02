@@ -1,6 +1,9 @@
 package testutils
 
-import "math/rand"
+import (
+	"math/rand"
+	"sort"
+)
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -11,4 +14,11 @@ func CreateAlphabetString(n int) string {
 		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
 	}
 	return string(b)
+}
+
+// SortErrors sort errors by the error text
+func SortErrors(errs []error) {
+	sort.Slice(errs, func(i, j int) bool {
+		return errs[i].Error() < errs[j].Error()
+	})
 }
