@@ -187,6 +187,12 @@ func TestClientBasic(t *testing.T) {
 	GetMessageFrom(c2, 1)
 	MessageFromList(c2)
 	MessageToList(c2)
+	dObj := &MessageFrom{
+		Key:   1,
+		Value: "FromObject 1",
+	}
+	c1.DeleteObject(dObj)
+	// End
 
 	c1.Close()
 	c2.Close()

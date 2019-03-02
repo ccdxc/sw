@@ -37,13 +37,17 @@ type client struct {
 	globalLock     *sync.Mutex
 	stopChan       chan bool
 	isConnected    bool
+	isMountAllowed bool
 	revIndex       map[string]string
 }
 
 // Mount a kind to get notifications and/or make changes to the objects. Must
 // be called before the calling `Dial`
 func (c *client) MountKind(kind string, mode delphi.MountMode) error {
-	log.Infof("DELPHI DEBUG: MOUNT KIND(): Kind: %v", kind)
+	log.Infof("Delphi: MountKind(): Kind: %v", kind)
+	if !c.isMountAllowed {
+		log.Fatalf("Delphi: Mount called after connection")
+	}
 	// FIXME: error out if already connected
 	c.mounts = append(c.mounts, &delphi_messenger.MountData{
 		Kind: kind,
@@ -56,7 +60,10 @@ func (c *client) MountKind(kind string, mode delphi.MountMode) error {
 // Mount a kind to get notifications and/or make changes to the objects. Must
 // be called before the calling `Dial`
 func (c *client) MountKindKey(kind string, key string, mode delphi.MountMode) error {
-	log.Infof("DELPHI DEBUG: MOUNTKINDKEY() Kind: %v", kind)
+	log.Infof("Delphi: MountKindKey() Kind: %v", kind)
+	if !c.isMountAllowed {
+		log.Fatalf("Delphi: Mount called after connection")
+	}
 	// FIXME: error out if already connected
 	c.mounts = append(c.mounts, &delphi_messenger.MountData{
 		Kind: kind,
@@ -69,6 +76,7 @@ func (c *client) MountKindKey(kind string, key string, mode delphi.MountMode) er
 
 // Run runs the main event loop in the background
 func (c *client) Run() {
+	c.isMountAllowed = false
 	err := c.connect()
 	if err != nil {
 		log.Fatalf("Error connecting to hub. Err: %v", err)
@@ -112,7 +120,7 @@ func (c *client) IsConnected() bool {
 // call this explicitly. It is getting called automatically when there is a
 // change in any object.
 func (c *client) SetObject(obj clientApi.BaseObject) error {
-	log.Infof("DelphiGo: Client set object: %v", obj)
+	log.Infof("Delphi: Client set object: %v", obj)
 	meta := obj.GetDelphiMeta()
 	if meta == nil {
 		obj.SetDelphiMeta(&delphi.ObjectMeta{
@@ -164,7 +172,7 @@ func (c *client) DeleteObject(obj clientApi.BaseObject) error {
 }
 
 func (c *client) queueChange(change *change) {
-	log.Infof("DelphiGo: Change queued: %v %v", change.op, change.obj)
+	log.Infof("Delphi: Change queued: %v %v", change.op, change.obj)
 	c.changeQueue <- change
 	// update subtree now so a back to back Set/Get will work
 	c.updateSubtree(change.op, change.obj.GetDelphiMeta().Kind,
@@ -409,6 +417,8 @@ func NewClient(service clientApi.Service) (clientApi.Client, error) {
 		globalLock:     &sync.Mutex{},
 		stopChan:       make(chan bool),
 		revIndex:       make(map[string]string),
+		isMountAllowed: true,
+		isConnected:    false,
 	}
 
 	mc, err := messenger.NewClient(client)

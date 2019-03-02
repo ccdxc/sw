@@ -51,12 +51,13 @@ func (ds *delphidpTestSuite) SetUpSuite(c *C) {
 	if err != nil {
 		log.Fatalf("Error creating delphi client. Err: %v", err)
 	}
-	go cl.Run()
 
 	// create delphi datapath
 	dp, err := NewDelphiDatapath(cl)
 	AssertOk(c, err, "Error creating delphi datapath")
 	ds.datapath = dp
+
+	go cl.Run()
 }
 
 func (ds *delphidpTestSuite) TearDownSuite(c *C) {
