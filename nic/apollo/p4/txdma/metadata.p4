@@ -8,6 +8,8 @@ header_type txdma_control_metadata_t {
         payload_addr        : 40;
         cindex              : 16;
         lpm_s2_offset       : 16;
+        pad1                :  6;
+        lpm_addr            : 34;
         rxdma_cindex_addr   : 34;
     }
 }
@@ -16,6 +18,7 @@ header_type scratch_metadata_t {
     fields {
         v4_addr         : 32;
         v6_addr         : 128;
+        field64         : 64;
         nh_index        : 16;
         data512         : 512;
         payload_addr    : 40;

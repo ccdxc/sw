@@ -91,7 +91,7 @@ dump_pkt(rpkt)
 # golden/main.cc
 ###############################################################################
 
-exit(0)
+#exit(0)
 
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
 spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
@@ -128,15 +128,15 @@ dump_pkt(rpkt)
 
 spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
         Dot1Q(vlan=1) / \
-        IP( src='2.0.0.1', dst='2.0.0.33') / \
+        IP( src='2.0.0.1', dst='2.0.32.1') / \
         UDP(sport=1000, dport=10000, chksum=0) / payload
 
 rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
         IP(src='1.0.0.1', dst='1.0.0.3', id=0, ttl=64, chksum=0) / \
-        UDP(sport=0x1FEF, dport=0x19EB, chksum=0) / \
+        UDP(sport=0xE04E, dport=0x19EB, chksum=0) / \
         MPLS(label=1, s=0) / \
         MPLS(label=1025, s=1) / \
-        IP( src='2.0.0.1', dst='2.0.0.33') / \
+        IP( src='2.0.0.1', dst='2.0.32.1') / \
         UDP(sport=1000, dport=10000, chksum=0) / payload
 
 dump_pkt(spkt)

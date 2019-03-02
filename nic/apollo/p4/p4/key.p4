@@ -23,6 +23,7 @@ action native_ipv6_packet() {
     }
     modify_field(key_metadata.proto, ipv6_1.nextHdr);
     modify_field(control_metadata.mapping_lkp_addr, ipv6_1.srcAddr);
+    modify_field(predicate_header.is_ipv6, 1);
 }
 
 action native_nonip_packet() {
@@ -49,6 +50,7 @@ action tunneled_ipv6_packet() {
     modify_field(key_metadata.dst, ipv6_2.dstAddr);
     modify_field(key_metadata.proto, ipv6_2.nextHdr);
     modify_field(control_metadata.mapping_lkp_addr, ipv6_2.dstAddr);
+    modify_field(predicate_header.is_ipv6, 1);
 }
 
 action tunneled_nonip_packet() {

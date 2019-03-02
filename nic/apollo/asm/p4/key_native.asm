@@ -33,6 +33,7 @@ native_ipv6_packet:
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_1_dstPort
+    phvwr           p.predicate_header_is_ipv6, 1
     phvwr.e         p.key_metadata_proto, k.ipv6_1_nextHdr
     phvwr           p.control_metadata_mapping_lkp_addr, \
                         k.{ipv6_1_srcAddr_sbit0_ebit31...ipv6_1_srcAddr_sbit64_ebit127}

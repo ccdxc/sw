@@ -148,7 +148,8 @@ header_type egress_service_header_t {
 header_type predicate_header_t {
     fields {
         txdma_drop_event      : 1;
-        pad0                  : 5;
+        pad0                  : 4;
+        is_ipv6               : 1;
         lpm_bypass            : 1;
         direction             : 1;
     }

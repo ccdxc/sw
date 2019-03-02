@@ -27,6 +27,7 @@ tunneled_ipv6_packet:
     phvwr           p.key_metadata_dst, k.{ipv6_2_dstAddr_sbit0_ebit31, \
                                            ipv6_2_dstAddr_sbit32_ebit63, \
                                            ipv6_2_dstAddr_sbit64_ebit127}
+    phvwr           p.predicate_header_is_ipv6, 1
     phvwr.e         p.key_metadata_proto, k.ipv6_2_nextHdr
     phvwr           p.control_metadata_mapping_lkp_addr, \
                         k.{ipv6_2_dstAddr_sbit0_ebit31, \

@@ -8,6 +8,7 @@
 
 #include "qstate.p4"
 #include "route.p4"
+#include "route_ipv6.p4"
 #include "dma.p4"
 #include "metadata.p4"
 
@@ -1059,7 +1060,11 @@ control ingress {
     if (app_header.table3_valid == 1) {
         read_qstate();
         if (app_header.table0_valid == 1) {
-            route_lookup();
+            if (app_header.table1_valid == 1) {
+                route_ipv6_lookup();
+            } else {
+                route_lookup();
+            }
         }
         dma();
     } else {
