@@ -97,6 +97,63 @@ func TestAppCreateDNS(t *testing.T) {
 	Assert(t, p.Name == "dns", "App names did not match", dnsApp)
 }
 
+func TestAppCreateICMP(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	icmpApp := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "ping",
+		},
+		Spec: netproto.AppSpec{
+			ALG: &netproto.ALG{
+				ICMP: &netproto.ICMP{},
+			},
+		},
+	}
+
+	// create app
+	err := ag.CreateApp(&icmpApp)
+	AssertOk(t, err, "Error creating icmp app")
+	p, err := ag.FindApp(icmpApp.ObjectMeta)
+	AssertOk(t, err, "ICMP was not found in DB")
+	Assert(t, p.Name == "ping", "App names did not match", icmpApp)
+}
+
+func TestAppCreateICMPWithProtocolSpecified(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	icmpApp := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "ping",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"icmp"},
+			ALG: &netproto.ALG{
+				ICMP: &netproto.ICMP{},
+			},
+		},
+	}
+
+	// create app
+	err := ag.CreateApp(&icmpApp)
+	AssertOk(t, err, "Error creating icmp app")
+	p, err := ag.FindApp(icmpApp.ObjectMeta)
+	AssertOk(t, err, "ICMP was not found in DB")
+	Assert(t, p.Name == "ping", "App names did not match", icmpApp)
+}
+
 func TestAppUpdate(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
@@ -565,4 +622,56 @@ func TestAppBadSIPT4Timeout(t *testing.T) {
 	// create app
 	err := ag.CreateApp(&app)
 	Assert(t, err != nil, "app with bad sip t4 timeout must fail")
+}
+
+func TestInvalidAppCreateICMPWithPortSpecified(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	icmpApp := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "ping",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"icmp/80"},
+			ALG: &netproto.ALG{
+				ICMP: &netproto.ICMP{},
+			},
+		},
+	}
+
+	// create app
+	err := ag.CreateApp(&icmpApp)
+	Assert(t, err != nil, "ICMP App with port must fail")
+}
+
+func TestInvalidAppCreateICMPWithPortocolSpecified(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	icmpApp := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "ping",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"tcp"},
+			ALG: &netproto.ALG{
+				ICMP: &netproto.ICMP{},
+			},
+		},
+	}
+
+	// create app
+	err := ag.CreateApp(&icmpApp)
+	Assert(t, err != nil, "ICMP App with non icmp proto port must fail")
 }

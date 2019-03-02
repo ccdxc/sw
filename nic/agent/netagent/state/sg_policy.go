@@ -79,6 +79,12 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 				return fmt.Errorf("could not find the corresponding app. %v", r.AppName)
 			}
 
+			if app != nil && (len(r.Dst.AppConfigs) != 0 || len(r.Src.AppConfigs) != 0) {
+				log.Errorf("cannot specify app-configs and an app name in the same rule. AppName: %v. SrcAppConfigs: %v. DstAppConfigs: %v", r.AppName, r.Src.AppConfigs, r.Dst.AppConfigs)
+				return fmt.Errorf("cannot specify app-configs and an app name in the same rule. AppName: %v. SrcAppConfigs: %v. DstAppConfigs: %v", r.AppName, r.Src.AppConfigs, r.Dst.AppConfigs)
+
+			}
+
 			na.RuleIDAppLUT.Store(ruleHash, app)
 		}
 	}

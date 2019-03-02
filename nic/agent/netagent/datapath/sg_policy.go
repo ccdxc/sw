@@ -49,6 +49,7 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 		}
 
 	}
+
 	sgPolicyReqMsg := &halproto.SecurityPolicyRequestMsg{
 		Request: []*halproto.SecurityPolicySpec{
 			{

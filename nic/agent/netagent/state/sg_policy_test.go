@@ -186,7 +186,7 @@ func TestSGPolicyUpdate(t *testing.T) {
 
 }
 
-func TestSGPolicyALGMatch(t *testing.T) {
+func TestSGPolicyALGMatchMSRPC(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -244,6 +244,65 @@ func TestSGPolicyALGMatch(t *testing.T) {
 						Addresses: []string{"any"},
 					},
 					AppName: "sunrpc_tcp",
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err = ag.CreateSGPolicy(&sgPolicy)
+	AssertOk(t, err, "Error creating sg policy")
+	sgp, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "SG Policy was not found in DB")
+	Assert(t, sgp.Name == "testSGPolicy", "SGPolicy names did not match", sgp)
+
+}
+
+func TestSGPolicyALGMatchICMP(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	alg := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "icmp-echo-req",
+			Tenant:    "default",
+			Namespace: "default",
+		},
+		Spec: netproto.AppSpec{
+			ALGType: "ICMP",
+			ALG: &netproto.ALG{
+				ICMP: &netproto.ICMP{
+					Type: 8,
+				},
+			},
+		},
+	}
+
+	err := ag.CreateApp(&alg)
+	AssertOk(t, err, "App creates must succeed")
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"any"}},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+					},
+					AppName: "icmp-echo-req",
 				},
 			},
 		},
@@ -371,7 +430,92 @@ func TestSGPolicyMatchAll(t *testing.T) {
 	AssertOk(t, err, "sg policy matching on all failed")
 }
 
+func TestSGPolicyICMPProtoMatch(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Protocol: "icmp",
+							},
+						},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	AssertOk(t, err, "Error creating sg policy")
+	sgp, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "SG Policy was not found in DB")
+	Assert(t, sgp.Name == "testSGPolicy", "SGPolicy names did not match", sgp)
+
+}
+
 //--------------------- Corner Case Tests ---------------------//
+
+func TestInvalidSGPolicyICMPPortMatch(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "42",
+								Protocol: "icmp",
+							},
+						},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	Assert(t, err != nil, "SGPolicy with ICMP protocol with a port must fail")
+}
 
 func TestSGPolicyOnMatchAllSrc(t *testing.T) {
 	// create netagent
@@ -720,4 +864,64 @@ func TestSGPolicyOutsidePortRange(t *testing.T) {
 	// create sg policy
 	err := ag.CreateSGPolicy(&sgPolicy)
 	Assert(t, err != nil, "Policies with ports > 64K should fail")
+}
+
+func TestInvalidSGPolicyWithAppAndProtoPort(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	alg := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "icmp-echo-req",
+			Tenant:    "default",
+			Namespace: "default",
+		},
+		Spec: netproto.AppSpec{
+			ALGType: "ICMP",
+			ALG: &netproto.ALG{
+				ICMP: &netproto.ICMP{
+					Type: 8,
+				},
+			},
+		},
+	}
+
+	err := ag.CreateApp(&alg)
+	AssertOk(t, err, "App creates must succeed")
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Protocol: "icmp",
+							},
+						}},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+					},
+					AppName: "icmp-echo-req",
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err = ag.CreateSGPolicy(&sgPolicy)
+	Assert(t, err != nil, "SGPolicy referring to both ALG and match criteria in the same rule must fail")
 }

@@ -5,6 +5,7 @@ package state
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -56,6 +57,13 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 		}
 		if alg.ICMP != nil {
 			// TODO Validate ICMP Code and Type Ranges here
+			for _, protoPort := range app.Spec.ProtoPorts {
+				if components := strings.Split(strings.TrimSpace(protoPort), "/"); len(components) != 1 || components[0] != "icmp" {
+					log.Errorf("icmp app must specify only the protocol and it must be icmp. Found: %v", app.Spec.ProtoPorts)
+					return fmt.Errorf("icmp app must specify only the protocol and it must be icmp. Found: %v", app.Spec.ProtoPorts)
+				}
+			}
+
 			algMapper = setBit(algMapper, 1)
 		}
 		if alg.FTP != nil {

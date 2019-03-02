@@ -121,11 +121,6 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 			Tenant:    "default",
 		},
 		Spec: security.AppSpec{
-			ProtoPorts: []security.ProtoPort{
-				{
-					Protocol: "icmp",
-				},
-			},
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "ICMP",
@@ -382,7 +377,7 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
-	// ICMP app
+	// FTP app
 	app := security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -451,7 +446,7 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
-	// ICMP app
+	// SunRPC app
 	pgmID := "8000"
 	sunapp := security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
