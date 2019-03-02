@@ -1153,16 +1153,6 @@ parser parse_tcp_option_four_sack {
     }
 }
 
-parser parse_tcp_option_sack {
-    return select(current(8,8)) {
-        0xa : parse_tcp_option_one_sack;
-        0x12 : parse_tcp_option_two_sack;
-        0x1a : parse_tcp_option_three_sack;
-        0x22 : parse_tcp_option_four_sack;
-        default : parse_tcp_unknown_option;
-    }
-}
-
 parser parse_tcp_option_EOL {
     extract(tcp_option_eol);
     set_metadata(parser_metadata.parse_tcp_counter,
@@ -1245,20 +1235,41 @@ parser parse_tcp_option_error {
     return ingress;
 }
 
+@pragma dont_capture_payload_offset
+parser parse_tcp_option_error2 {
+    set_metadata(control_metadata.parse_tcp_option_error, 1);
+    return ingress;
+}
+
 @pragma header_ordering tcp_option_mss tcp_option_ws tcp_option_sack_perm tcp_option_one_sack tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack tcp_option_timestamp tcp_option_unknown tcp_option_nop tcp_option_nop_1 tcp_option_eol
 parser parse_tcp_options {
     return select(parser_metadata.parse_tcp_counter, current(0, 8)) {
         0x0000 mask 0xff00 : ingress;
         0x8000 mask 0x8000 : parse_tcp_option_error;
-        0x0000 mask 0x00ff: parse_tcp_option_EOL;
-        0x0001 mask 0x00ff: parse_tcp_option_NOP;
-        0x0002 mask 0x00ff: parse_tcp_option_mss;
-        0x0003 mask 0x00ff: parse_tcp_option_ws;
-        0x0004 mask 0x00ff: parse_tcp_option_sack_perm;
-        0x0005 mask 0x00ff: parse_tcp_option_sack;
-        0x0008 mask 0x00ff: parse_tcp_timestamp;
+        0x0000 mask 0x00ff : parse_tcp_option_EOL;
+        0x0001 mask 0x00ff : parse_tcp_option_NOP;
+        default : parse_tcp_multibyte_options;
+        0x0001 mask 0x0000 : parse_tcp_deparse_options;
+    }
+}
+
+parser parse_tcp_multibyte_options {
+    return select(current(0, 16)) {
+        0x0204 mask 0xffff : parse_tcp_option_mss;
+        0x0200 mask 0xff00 : parse_tcp_option_error2;
+        0x0303 mask 0xffff : parse_tcp_option_ws;
+        0x0300 mask 0xff00 : parse_tcp_option_error2;
+        0x0402 mask 0xffff : parse_tcp_option_sack_perm;
+        0x0400 mask 0xff00 : parse_tcp_option_error2;
+        0x050a mask 0xffff : parse_tcp_option_one_sack;
+        0x0512 mask 0xffff : parse_tcp_option_two_sack;
+        0x051a mask 0xffff : parse_tcp_option_three_sack;
+        0x0522 mask 0xffff : parse_tcp_option_four_sack;
+        0x0500 mask 0xff00 : parse_tcp_option_error2;
+        0x080a mask 0xffff : parse_tcp_timestamp;
+        0x0800 mask 0xff00 : parse_tcp_option_error2;
+        0x0000 mask 0x00ff : parse_tcp_option_error2;
         default: parse_tcp_unknown_option;
-        0x0001 mask 0x0000: parse_tcp_deparse_options;
     }
 }
 
