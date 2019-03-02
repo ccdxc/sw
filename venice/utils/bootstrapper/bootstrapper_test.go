@@ -53,14 +53,29 @@ func TestFeatureRegistration(t *testing.T) {
 
 func TestBootstrapper(t *testing.T) {
 	bs := GetBootstrapper()
+	// test un-initialized bootstrapper
+	ok, err := bs.IsFlagSet(globals.DefaultTenant, Mock)
+	Assert(t, !ok, "IsFlagSet: expected false, got true")
+	Assert(t, reflect.DeepEqual(err, ErrNotInitialized), fmt.Sprintf("IsFlagSet: unexpected error: %v", err))
+	ok, err = bs.IsBootstrapped(globals.DefaultTenant, Mock)
+	Assert(t, !ok, "IsBootstrapped: expected false, got true")
+	Assert(t, reflect.DeepEqual(err, ErrNotInitialized), fmt.Sprintf("IsBootstrapped: unexpected error: %v", err))
+
+	countRegisterFeatureCb := 0
 	bs.RegisterFeatureCb(Mock, func(name, apiServer string, rslvr resolver.Interface, l log.Logger) (Feature, error) {
+		countRegisterFeatureCb++
 		return NewMockFeature(), nil
 	})
 	logConfig := log.GetDefaultConfig("TestBootstrapper")
 	logger := log.GetNewLogger(logConfig)
-	err := bs.CompleteRegistration("", "", nil, logger)
+	err = bs.CompleteRegistration("", "", nil, logger)
 	AssertOk(t, err, "error completing bootstrapper registration")
-	ok, err := bs.IsBootstrapped(globals.DefaultTenant, Mock)
+	Assert(t, countRegisterFeatureCb == 1, fmt.Sprintf("registration callback for mock feature called unexpected number of times: %d", countRegisterFeatureCb))
+	err = bs.CompleteRegistration("", "", nil, logger)
+	AssertOk(t, err, "error completing bootstrapper registration")
+	// it shouldn't call registration callback twice
+	Assert(t, countRegisterFeatureCb == 1, fmt.Sprintf("registration callback for mock feature called unexpected number of times: %d", countRegisterFeatureCb))
+	ok, err = bs.IsBootstrapped(globals.DefaultTenant, Mock)
 	AssertOk(t, err, "IsBootstrapped: unexpected error")
 	Assert(t, ok, "IsBootstrapped: expected true, got false")
 	ok, err = bs.IsBootstrapped("testTenant", Mock)
@@ -77,4 +92,9 @@ func TestBootstrapper(t *testing.T) {
 	Assert(t, !ok, "IsFlagSet: expected false, got true")
 	ok, err = bs.IsFlagSet(globals.DefaultTenant, FeatureID(3))
 	Assert(t, reflect.DeepEqual(err, ErrFeatureNotFound), fmt.Sprintf("IsFlagSet: unexpected error: %v", err))
+	bs.Stop()
+	impl := bs.(*bootstrapper)
+	Assert(t, !impl.ready, "Stop: expected ready flag to be false")
+	bs.CompleteRegistration("", "", nil, logger)
+	Assert(t, countRegisterFeatureCb == 2, fmt.Sprintf("registration callback for mock feature called unexpected number of times: %d", countRegisterFeatureCb))
 }

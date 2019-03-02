@@ -33,6 +33,8 @@ type Bootstrapper interface {
 	RegisterFeatureCb(id FeatureID, cb FeatureCb)
 	// CompleteRegistration calls registered feature callback to complete the initialization of feature and bootstrapper
 	CompleteRegistration(name, apiServer string, rslvr resolver.Interface, l log.Logger) error
+	// Stop un-initializes bootstrapper
+	Stop()
 }
 
 // FeatureCb is a feature registration callback registered to and called by Bootstrapper

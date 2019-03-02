@@ -16,10 +16,12 @@ import (
 	"github.com/pensando/sw/venice/utils/authn/password"
 	"github.com/pensando/sw/venice/utils/authn/radius"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/watcher"
 )
 
 const (
@@ -36,11 +38,12 @@ var gAuthGetter *defaultAuthGetter
 var once sync.Once
 
 type defaultAuthGetter struct {
+	sync.RWMutex
 	name      string // module name using the watcher
 	apiServer string // api server address
 	resolver  resolver.Interface
 	cache     *memdb.Memdb
-	watcher   *watcher
+	watcher   *watcher.Watcher
 	logger    log.Logger
 	stopped   bool
 }
@@ -161,13 +164,26 @@ func (ug *defaultAuthGetter) IsAuthBootstrapped() (bool, error) {
 }
 
 func (ug *defaultAuthGetter) Stop() {
-	ug.watcher.stop()
+	defer ug.Unlock()
+	ug.Lock()
+	ug.watcher.Stop()
 	ug.stopped = true
 }
 
+func (ug *defaultAuthGetter) start(name, apiServer string, rslver resolver.Interface) {
+	defer ug.Unlock()
+	ug.Lock()
+	if ug.stopped {
+		ug.name = name
+		ug.apiServer = apiServer
+		ug.resolver = rslver
+		ug.watcher.Start(ug.name, ug.apiServer, ug.resolver)
+		ug.stopped = false
+	}
+}
+
 func (ug *defaultAuthGetter) Start() {
-	ug.stopped = false
-	ug.watcher.start()
+	ug.start(ug.name, ug.apiServer, ug.resolver)
 }
 
 func (ug *defaultAuthGetter) addObj(kind auth.ObjKind, objMeta *api.ObjectMeta) (memdb.Object, error) {
@@ -205,33 +221,98 @@ func (ug *defaultAuthGetter) addObj(kind auth.ObjKind, objMeta *api.ObjectMeta) 
 	return val, err
 }
 
+func (ug *defaultAuthGetter) processUserEvent(evt *kvstore.WatchEvent, user *auth.User) {
+	// update cache
+	switch evt.Type {
+	case kvstore.Created, kvstore.Updated:
+		ug.cache.AddObject(user)
+		ug.logger.Infof("Updated User [%#v] in AuthGetter cache", user.ObjectMeta)
+	case kvstore.Deleted:
+		ug.cache.DeleteObject(user)
+		ug.logger.Infof("Deleted User [%#v] in AuthGetter cache", user.ObjectMeta)
+	}
+}
+
+func (ug *defaultAuthGetter) processPolicyEvent(evt *kvstore.WatchEvent, policy *auth.AuthenticationPolicy) {
+	// update cache
+	policy.Name = "AuthenticationPolicy" // it is a singleton
+	switch evt.Type {
+	case kvstore.Created, kvstore.Updated:
+		ug.cache.AddObject(policy)
+		ug.logger.Infof("Updated AuthenticationPolicy [%#v] in AuthGetter cache", policy.ObjectMeta)
+	case kvstore.Deleted:
+		ug.cache.DeleteObject(policy)
+		ug.logger.Infof("Deleted AuthenticationPolicy [%#v] in AuthGetter cache", policy.ObjectMeta)
+	}
+}
+
+func (ug *defaultAuthGetter) processClusterEvent(evt *kvstore.WatchEvent, clusterObj *cluster.Cluster) {
+	clusterObj.Name = "Cluster" // it is a singleton
+	switch evt.Type {
+	case kvstore.Created, kvstore.Updated:
+		ug.cache.AddObject(clusterObj)
+		ug.logger.Infof("Updated Cluster [%#v] in AuthGetter cache", clusterObj.ObjectMeta)
+	case kvstore.Deleted:
+		ug.cache.DeleteObject(clusterObj)
+		ug.logger.Infof("Deleted Cluster [%#v] in AuthGetter cache", clusterObj.ObjectMeta)
+	}
+}
+
+func (ug *defaultAuthGetter) processEventCb(evt *kvstore.WatchEvent) {
+	switch tp := evt.Object.(type) {
+	case *auth.User:
+		ug.processUserEvent(evt, tp)
+	case *auth.AuthenticationPolicy:
+		ug.processPolicyEvent(evt, tp)
+	case *cluster.Cluster:
+		ug.processClusterEvent(evt, tp)
+	default:
+		ug.logger.Errorf("watcher found object of invalid type: %+v", tp)
+		return
+	}
+}
+
+func (ug *defaultAuthGetter) resetCacheCb() {
+	users := ug.cache.ListObjects("User")
+	for _, user := range users {
+		ug.cache.DeleteObject(user)
+	}
+}
+
 // GetAuthGetter returns a singleton implementation of AuthGetter
 func GetAuthGetter(name, apiServer string, rslver resolver.Interface) AuthGetter {
-	if gAuthGetter != nil && gAuthGetter.stopped {
-		gAuthGetter.resolver = rslver
-		gAuthGetter.watcher.resolver = rslver
-		gAuthGetter.watcher.apiServer = apiServer
-		gAuthGetter.apiServer = apiServer
-		gAuthGetter.Start()
+	module := name + authn.ModuleSuffix
+	if gAuthGetter != nil {
+		gAuthGetter.start(module, apiServer, rslver)
 	}
 	once.Do(func() {
-		module := name + authn.ModuleSuffix
 		// create logger
 		config := log.GetDefaultConfig(module)
 		l := log.GetNewLogger(config)
 
 		cache := memdb.NewMemdb()
-		// start the watcher on api server
-		watcher := newWatcher(cache, module, apiServer, rslver)
 		gAuthGetter = &defaultAuthGetter{
 			name:      module,
 			apiServer: apiServer,
 			resolver:  rslver,
 			cache:     cache,
-			watcher:   watcher,
 			logger:    l,
 			stopped:   false,
 		}
+		// start watcher
+		gAuthGetter.watcher = watcher.NewWatcher(module, apiServer, rslver, l, gAuthGetter.resetCacheCb, gAuthGetter.processEventCb,
+			&watcher.KindOptions{
+				Kind:    string(auth.KindUser),
+				Options: &api.ListWatchOptions{},
+			},
+			&watcher.KindOptions{
+				Kind:    string(auth.KindAuthenticationPolicy),
+				Options: &api.ListWatchOptions{},
+			},
+			&watcher.KindOptions{
+				Kind:    string(cluster.KindCluster),
+				Options: &api.ListWatchOptions{},
+			})
 	})
 
 	return gAuthGetter

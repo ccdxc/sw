@@ -128,19 +128,14 @@ func NewLoggedInContextWithTimeout(ctx context.Context, apiGW string, in *auth.P
 // CreateTestUser creates a test user
 func CreateTestUser(apicl apiclient.Services, username, password, tenant string) (*auth.User, error) {
 	// user object
-	user := &auth.User{
-		TypeMeta: api.TypeMeta{Kind: "User"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant: tenant,
-			Name:   username,
-		},
-		Spec: auth.UserSpec{
-			Fullname: "Test User",
-			Password: password,
-			Email:    "testuser@pensandio.io",
-			Type:     auth.UserSpec_Local.String(),
-		},
-	}
+	user := &auth.User{}
+	user.Defaults("all")
+	user.Name = username
+	user.Tenant = tenant
+	user.Spec.Password = password
+	user.Spec.Fullname = "Test User"
+	user.Spec.Email = "testuser@pensandio.io"
+	user.Spec.Type = auth.UserSpec_Local.String()
 
 	// create the user object in api server
 	var err error

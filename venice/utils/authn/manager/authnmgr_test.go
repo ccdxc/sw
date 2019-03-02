@@ -98,8 +98,8 @@ func setup() {
 func shutdown() {
 	// stop api server
 	apiSrv.Stop()
-	// un-initialize authentication manager
-	authnmgr.Uninitialize()
+	// stop AuthGetter
+	authnmgr.GetAuthGetter().Stop()
 }
 
 // authenticationPoliciesData returns policies configured with Local and LDAP authenticators in different order
@@ -255,7 +255,7 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 		AssertConsistently(t, func() (bool, interface{}) {
 			autheduser, ok, err = authnmgr.Authenticate(&auth.PasswordCredential{Username: testUser, Password: "wrongpassword"})
 			return !ok, nil
-		}, fmt.Sprintf("[%v] Successful local user authentication", testtype))
+		}, fmt.Sprintf("[%v] Successful local user authentication", testtype), "100ms", "1s")
 
 		Assert(t, autheduser == nil, fmt.Sprintf("[%v] User returned while authenticating with wrong password", testtype))
 		Assert(t, err != nil, fmt.Sprintf("[%v] No error returned while authenticating with wrong password", testtype))

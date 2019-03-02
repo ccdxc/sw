@@ -46,6 +46,7 @@ import (
 	authnmgr "github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz"
 	authzmgr "github.com/pensando/sw/venice/utils/authz/manager"
+	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -72,6 +73,8 @@ type apiGw struct {
 	devmode         bool
 	skipAuth        bool
 	skipAuthz       bool
+	authGetter      authnmgr.AuthGetter
+	permGetter      rbac.PermissionGetter
 	authnMgr        *authnmgr.AuthenticationManager
 	authzMgr        authz.Authorizer
 	bootstrapper    bootstrapper.Bootstrapper
@@ -416,19 +419,6 @@ Loop:
 	}
 	a.logger.Infof("cleaned up DoneCh")
 
-	wg.Add(1)
-	go func(c context.Context) {
-		wg.Done()
-		srv := &http.Server{Handler: a.extractHdrInfo(a.checkCORS(a.tracerMiddleware(m)))}
-		go func() {
-			select {
-			case <-c.Done():
-				srv.Close()
-			}
-		}()
-		srv.Serve(ln)
-	}(ctx)
-
 	for name, svc := range a.svcmap {
 		config.Logger.Log("Svc", name, "msg", "RegisterComplete")
 		if isSkipped(config, name) {
@@ -457,10 +447,11 @@ Loop:
 			a.logger.Fatalf("hooks cb returned error (%s)", err)
 		}
 	}
-	wg.Wait()
 
+	a.authGetter = authnmgr.GetAuthGetter(globals.APIGw, grpcaddr, a.rslver)
+	a.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, a.rslver)
 	// create authentication manager
-	a.authnMgr, err = authnmgr.NewAuthenticationManager(globals.APIGw, grpcaddr, a.rslver)
+	a.authnMgr, err = authnmgr.WithAuthGetter(a.authGetter)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create authentication manager (%v)", err))
 	}
@@ -479,6 +470,20 @@ Loop:
 		}
 	}
 
+	wg.Add(1)
+	go func(c context.Context) {
+		wg.Done()
+		srv := &http.Server{Handler: a.extractHdrInfo(a.checkCORS(a.tracerMiddleware(m)))}
+		go func() {
+			select {
+			case <-c.Done():
+				srv.Close()
+			}
+		}()
+		srv.Serve(ln)
+	}(ctx)
+	wg.Wait()
+
 	// We are ready to set runstate we have started listening on HTTP port and
 	//  all backends are connected
 	a.runstate.cond.L.Lock()
@@ -495,7 +500,9 @@ func (a *apiGw) Stop() {
 	a.runstate.cond.L.Lock()
 	a.runstate.running = false
 	a.runstate.cond.L.Unlock()
-	a.authnMgr.Uninitialize()
+	a.bootstrapper.Stop()
+	a.authGetter.Stop()
+	a.permGetter.Stop()
 	a.authzMgr.Stop()
 	a.auditor.Shutdown()
 	a.keypair.Stop()

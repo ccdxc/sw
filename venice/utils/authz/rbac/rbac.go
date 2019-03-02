@@ -52,9 +52,7 @@ func (pc *defaultPermissionChecker) checkPermissions(user *auth.User, operations
 	return true, nil
 }
 
-func (pc *defaultPermissionChecker) stop() {
-	pc.permissionGetter.Stop()
-}
+func (pc *defaultPermissionChecker) stop() {}
 
 func newDefaultPermissionChecker(name, apiServer string, rslver resolver.Interface) permissionChecker {
 	return &defaultPermissionChecker{

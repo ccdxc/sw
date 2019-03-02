@@ -7,8 +7,10 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -74,6 +76,14 @@ func TestWatcher(t *testing.T) {
 		&KindOptions{
 			Kind:    string(cluster.KindCluster),
 			Options: &api.ListWatchOptions{},
+		},
+		&KindOptions{
+			Kind:    string(auth.KindAuthenticationPolicy),
+			Options: &api.ListWatchOptions{},
+		},
+		&KindOptions{
+			Kind:    string(auth.KindUser),
+			Options: &api.ListWatchOptions{},
 		})
 	defer watcher.Stop()
 
@@ -84,12 +94,25 @@ func TestWatcher(t *testing.T) {
 	}, "initiateWatchCb should be called at least once")
 	// create cluster
 	testutils.MustCreateCluster(apicl)
-
-	// verify the tenant cache got created
+	defer testutils.DeleteCluster(apicl)
 	AssertEventually(t, func() (bool, interface{}) {
 		return cbs.processEvent == 1, nil
 	}, "did not receive watch event for create cluster")
-
+	// create default tenant
+	testutils.MustCreateTenant(apicl, globals.DefaultTenant)
+	defer testutils.DeleteTenant(apicl, globals.DefaultTenant)
+	// create auth policy
+	testutils.MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false})
+	defer testutils.DeleteAuthenticationPolicy(apicl)
+	AssertEventually(t, func() (bool, interface{}) {
+		return cbs.processEvent == 2, nil
+	}, "did not receive watch event for create auth policy")
+	// create user
+	testutils.MustCreateTestUser(apicl, "test", "Pensando0$", globals.DefaultTenant)
+	defer testutils.DeleteUser(apicl, "test", globals.DefaultTenant)
+	AssertEventually(t, func() (bool, interface{}) {
+		return cbs.processEvent == 3, nil
+	}, "did not receive watch event for create user")
 }
 
 func TestStopStart(t *testing.T) {

@@ -22,6 +22,13 @@ type AuthenticationManager struct {
 	AuthGetter AuthGetter
 }
 
+// WithAuthGetter returns an instance of authentication manager
+func WithAuthGetter(authGetter AuthGetter) (*AuthenticationManager, error) {
+	return &AuthenticationManager{
+		AuthGetter: authGetter,
+	}, nil
+}
+
 // NewAuthenticationManager returns an instance of AuthenticationManager
 func NewAuthenticationManager(name, apiServer string, rslver resolver.Interface) (*AuthenticationManager, error) {
 
@@ -94,7 +101,7 @@ func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, 
 	return user, ok, csrfToken, nil
 }
 
-// Uninitialize stops watchers, un-initializes authentication manager. It should be called only when server is shutting down.
-func (authnmgr *AuthenticationManager) Uninitialize() {
-	authnmgr.AuthGetter.Stop()
+// GetAuthGetter returns AuthGetter
+func (authnmgr *AuthenticationManager) GetAuthGetter() AuthGetter {
+	return authnmgr.AuthGetter
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -194,6 +195,18 @@ func (w *Watcher) watch(ctx context.Context, apicl apiclient.Services, kind *Kin
 		}
 		// cluster watcher
 		watcher, err = apicl.ClusterV1().Cluster().Watch(ctx, kind.Options)
+	case string(auth.KindUser):
+		if kind.Options == nil {
+			kind.Options = &api.ListWatchOptions{}
+		}
+		// cluster watcher
+		watcher, err = apicl.AuthV1().User().Watch(ctx, kind.Options)
+	case string(auth.KindAuthenticationPolicy):
+		if kind.Options == nil {
+			kind.Options = &api.ListWatchOptions{}
+		}
+		// cluster watcher
+		watcher, err = apicl.AuthV1().AuthenticationPolicy().Watch(ctx, kind.Options)
 	default:
 		return nil, fmt.Errorf("unsupported kind: %s", kind)
 	}

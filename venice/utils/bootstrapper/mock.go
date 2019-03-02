@@ -62,6 +62,8 @@ func (b *mockBootstrapper) CompleteRegistration(name, apiServer string, rslvr re
 	return nil
 }
 
+func (b *mockBootstrapper) Stop() {}
+
 // NewMockBootstrapper return a mock Bootstrapper for testing
 func NewMockBootstrapper(simulateError bool) Bootstrapper {
 	return &mockBootstrapper{simulateError: simulateError}
