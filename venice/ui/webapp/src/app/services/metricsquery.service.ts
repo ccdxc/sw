@@ -70,7 +70,7 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
     const queries: Telemetry_queryMetricsQuerySpec[] = [];
     const pollingOptions: MetricsPollingOptions[] = [];
     body.queries.forEach((query) => {
-      queries.push(new Telemetry_queryMetricsQuerySpec(query.query));
+      queries.push(Utility.TrimDefaultsAndEmptyFields(new Telemetry_queryMetricsQuerySpec(query.query)));
       const pollOptions = query.pollingOptions || {};
       pollingOptions.push(pollOptions);
     });

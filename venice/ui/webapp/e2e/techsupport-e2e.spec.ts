@@ -3,7 +3,7 @@ import { LoginPage } from './page-objects/login.po';
 import { TechSupport } from './page-objects/techsupport.po';
 import { AppPage } from './page-objects/app.po';
 
-fdescribe('venice-ui techsupport', () => {
+describe('venice-ui techsupport', () => {
   let techsupportPage: TechSupport;
   let appPage: AppPage;
   let loginPage: LoginPage;
@@ -44,7 +44,7 @@ fdescribe('venice-ui techsupport', () => {
           }
         });
       } else {
-        console.log ('There is no record found.');
+        console.log('There is no record found.');
         expect(rowLen).toBe(0);
       }
     });

@@ -17,6 +17,7 @@ import { FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring'
 import { RepeaterComponent } from 'web-app-framework';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
 import { SearchExpression } from '@app/components/search/index.ts';
+import { Telemetry_queryFwlogsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 
 
 
@@ -117,7 +118,7 @@ export class Utility {
   }
 
   static getMacAddress(): string {
-    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function () {
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function() {
       return '0123456789ABCDEF'.charAt(Math.floor(Math.random() * 16));
     });
   }
@@ -239,7 +240,7 @@ export class Utility {
 
   // encode(decode) html text into html entity
   static decodeHtmlEntity(str: string) {
-    return str.replace(/&#(\d+);/g, function (match, dec) {
+    return str.replace(/&#(\d+);/g, function(match, dec) {
       return String.fromCharCode(dec);
     });
   }
@@ -253,7 +254,7 @@ export class Utility {
   }
 
   static escape(s): any {
-    return s.replace(/[&"<>]/g, function (c) {
+    return s.replace(/[&"<>]/g, function(c) {
       return {
         '&': '&amp;',
         '"': '&quot;',
@@ -602,14 +603,14 @@ export class Utility {
   public static stringInject(str, data): string {
     if (typeof str === 'string' && (data instanceof Array)) {
 
-      return str.replace(/({\d})/g, function (i) {
+      return str.replace(/({\d})/g, function(i) {
         return data[i.replace(/{/, '').replace(/}/, '')];
       });
     } else if (typeof str === 'string' && (data instanceof Object)) {
 
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
-          return str.replace(/({([^}]+)})/g, function (i) {
+          return str.replace(/({([^}]+)})/g, function(i) {
             i.replace(/{/, '').replace(/}/, '');
             if (!data[key]) {
               return i;
@@ -1186,6 +1187,34 @@ export class Utility {
     }
   }
 
+  // Walks the object and if a nested object has only null or defaults, it is
+  // removed fromt he request
+  // Request should be an object from Venice_sdk
+  // This is useful for removing nested objects that have validation that
+  // only apply if an object is given (Ex. pagination spec for telemetry queries)
+  // TODO: Create a BaseType for this function to take in
+  public static TrimDefaultsAndEmptyFields(request: any) {
+    request = _.cloneDeep(request)
+    const helperFunc = (obj): boolean => {
+      let retValue = true;
+      for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          if (Utility.isPlainObject(obj[key])) {
+            if (helperFunc(obj[key])) {
+              delete obj[key]
+            } else {
+              retValue = false
+            }
+          } else if (obj[key] != null && obj[key] != obj.getPropInfo(key).default) {
+            retValue = false
+          }
+        }
+      }
+      return retValue
+    }
+    helperFunc(request)
+    return request;
+  }
 
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()

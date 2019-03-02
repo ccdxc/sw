@@ -18,6 +18,7 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
   @ViewChild('fwlogsTable') fwlogTable: Table;
   loading = false;
   fwlogs = [];
+  subscriptions = [];
   query: Telemetry_queryFwlogsQuerySpec = new Telemetry_queryFwlogsQuerySpec(null, false);
   actionOptions = Utility.convertEnumToSelectItem(Telemetry_queryFwlogsQuerySpec.propInfo.actions.enum, ['ALL']);
 
@@ -70,7 +71,7 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
           cssClass: 'global-button-primary fwlogs-button',
           text: 'FIREWALL LOG POLICIES',
           callback: () => { this.controllerService.navigate(['/monitoring', 'fwlogs', 'fwlogpolicies']); }
-        }, ],
+        },],
       breadcrumb: [{ label: 'Firewall Logs', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs' }]
     });
     this.getFwlogs();
@@ -101,12 +102,7 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
       return;
     }
     this.loading = true;
-    const queryList: ITelemetry_queryFwlogsQueryList = {
-      tenant: Utility.getInstance().getTenant(),
-      queries: [
-        new Telemetry_queryFwlogsQuerySpec()
-      ],
-    };
+    let query = new Telemetry_queryFwlogsQuerySpec()
     const queryVal: any = this.query.getFormGroupValues();
     const fields = [
       'source-ips',
@@ -116,7 +112,7 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
     fields.forEach(
       (field) => {
         if (typeof queryVal[field] === 'string') {
-          queryList.queries[0][field] = queryVal[field].split(',').map((e: string) => {
+          query[field] = queryVal[field].split(',').map((e: string) => {
             return e.trim();
           }).filter((e: string) => {
             if (e.length === 0) {
@@ -131,19 +127,25 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
       'source-ports',
       'dest-ports'
     ];
-    queryList.queries[0].actions = queryVal.actions;
+    query.actions = queryVal.actions;
 
     fieldsInt.forEach(
       (field) => {
         if (typeof queryVal[field] === 'string') {
-          queryList.queries[0][field] = queryVal[field].split(',').map((e: string) => {
+          query[field] = queryVal[field].split(',').map((e: string) => {
             return parseInt(e, 10);
           });
         }
       }
     );
 
-    // get
+    const queryList: ITelemetry_queryFwlogsQueryList = {
+      tenant: Utility.getInstance().getTenant(),
+      queries: [
+        Utility.TrimDefaultsAndEmptyFields(query)
+      ],
+    };
+    // Get request
     const subscription = this.telemetryService.PostFwlogs(queryList).subscribe(
       (resp) => {
         const body = resp.body as ITelemetry_queryFwlogsQueryResponse;
@@ -163,7 +165,13 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
         this.controllerService.invokeRESTErrorToaster('Fwlog search failed', error);
       }
     );
+    this.subscriptions.push(subscription)
+  }
 
+  ngOnDestroy() {
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
+    })
   }
 
 }
