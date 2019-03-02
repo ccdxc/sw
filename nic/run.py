@@ -206,6 +206,8 @@ def run_model(args):
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/hello/gen/p4gen//hello/dbg_out/model_debug.json")
         elif args.l2switch_gtest:
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/l2switch/gen/p4gen//l2switch/dbg_out/model_debug.json")
+        elif args.elektra_gtest:
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/elektra/gen/p4gen//elektra/dbg_out/model_debug.json")
         else:
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:
@@ -221,6 +223,8 @@ def run_model(args):
         bin_dir = nic_dir + '/build/x86_64/apollo/bin/'
     elif args.l2switch_gtest:
         bin_dir = nic_dir + '/build/x86_64/l2switch/bin/'
+    elif args.elektra_gtest:
+        bin_dir = nic_dir + '/build/x86_64/elektra/bin/'
     elif args.hello_gtest:
         bin_dir = nic_dir + '/build/x86_64/hello/bin/'
 
@@ -527,6 +531,13 @@ def run_l2switch_test(args):
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
+# Run Elektra tests
+def run_elektra_test(args):
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
+    os.chdir(nic_dir)
+    cmd = ['build/x86_64/elektra/bin/elektra_test']
+    p = Popen(cmd)
+    return check_for_completion(p, None, model_process, hal_process, args)
 
 # Run Hello tests
 def run_hello_test(args):
@@ -1054,6 +1065,8 @@ def main():
                         default=False, help="Run Apollo2 gtests")
     parser.add_argument("--l2switch_gtest", dest='l2switch_gtest', action="store_true",
                         default=False, help="Run L2Switch gtests")
+    parser.add_argument("--elektra_gtest", dest='elektra_gtest', action="store_true",
+                        default=False, help="Run Elektra gtests")
     parser.add_argument("--hello_gtest", dest='hello_gtest', action="store_true",
                         default=False, help="Run Apollo2 gtests")
     parser.add_argument('--shuffle', dest='shuffle', action="store_true",
@@ -1164,7 +1177,7 @@ def main():
             else:
                 run_model(args)
             if args.gft_gtest is False and args.apollo_gtest is False \
-                    and args.l2switch_gtest is False and args.hello_gtest is False:
+                    and args.l2switch_gtest is False and args.elektra_gtest is False and args.hello_gtest is False:
                 run_hal(args)
 
     if args.storage and args.feature not in [None, 'storage'] and args.combined is False:
@@ -1200,6 +1213,10 @@ def main():
         status = run_l2switch_test(args)
         if status != 0:
             print "- L2Switch test failed, status=", status
+    elif args.elektra_gtest:
+        status = run_elektra_test(args)
+        if status != 0:
+            print "- Elektra test failed, status=", status
     elif args.hello_gtest:
         status = run_hello_test(args)
         if status != 0:
