@@ -295,6 +295,35 @@ str2ipv4pfx (char *str, ip_prefix_t *ip_pfx)
     return 0;
 }
 
+static inline int
+str2ipv6pfx (char *str, ip_prefix_t *ip_pfx)
+{
+    char              *slash;
+    char               buf[48];
+    struct in6_addr    addr;
+
+    // look for slash
+    slash = strchr(str, '/');
+    if (slash == NULL) {
+        if (inet_pton(AF_INET6, (const char *)str, &addr) != 1) {
+            return -1;
+        }
+        memcpy(ip_pfx->addr.addr.v6_addr.addr8, addr.s6_addr, IP6_ADDR8_LEN);
+        ip_pfx->addr.af = IP_AF_IPV6;
+        ip_pfx->len = 128;
+    } else {
+        strncpy(buf, str, slash - str);
+        buf[slash - str] = '\0';
+        if (inet_pton(AF_INET6, buf, &addr) != -1) {
+            return -1;
+        }
+        memcpy(ip_pfx->addr.addr.v6_addr.addr8, addr.s6_addr, IP6_ADDR8_LEN);
+        ip_pfx->addr.af = IP_AF_IPV6;
+        ip_pfx->len = (uint8_t) atoi(++slash);
+    }
+    return 0;
+}
+
 // spdlog formatter for ip_addr_t
 static inline std::ostream& operator<<(std::ostream& os, const ip_addr_t& ip) {
     return os << ipaddr2str(&ip);
