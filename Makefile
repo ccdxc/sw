@@ -197,6 +197,7 @@ clean:
 
 
 helper-containers:
+	@cd tools/docker-files/vinstall; docker build -t ${REGISTRY_URL}/pens-vinstall:v0.1 .
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.4 .
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.3 .
 	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.2 .
@@ -435,6 +436,14 @@ venice-release: venice-image
 	cp test/topos/gs/venice-conf.json nic/sim/naples/venice-conf.json
 	cd tools/docker-files/venice/ && docker build -t pensando/venice:${VENICE_RELEASE_TAG} .
 	cd test/topos/gs && tar -cvf venice_sim_addons.tar naples_admit.py start.sh stop.sh testbed.json venice-conf.json authbootstrap_postman_collection.json login_postman_collection.json postman_collection.json customroles_postman_collection.json
+
+# this creates the OS image - like buildroot for venice
+venice-base-iso:
+	$(MAKE) -C tools/docker-files/vinstall
+
+# this adds the bin/venice.tgz to the iso file (typically downloaded from asset-pull) but created as above
+venice-iso:
+	$(MAKE) -C tools/docker-files/vinstall venice-iso
 
 # After testing venice-release upload the script assets with a command like below
 # cd test/topos/gs && asset-upload venice_sim_addons.tar v0.2 ./venice_sim_addons.tar

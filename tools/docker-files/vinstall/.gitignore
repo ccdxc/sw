@@ -1,0 +1,12 @@
+# Ignore everything in this directory. They are installed by build scripts
+*
+# Except this file
+!.gitignore
+!Dockerfile
+!Makefile
+!create-iso.sh
+!isolinux.cfg
+!venice-cleaninstall.sh
+!venice-os.cfg
+!grub-efi.cfg
+!add-venice-iso.sh
