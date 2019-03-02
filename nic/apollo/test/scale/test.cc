@@ -1,0 +1,510 @@
+#include "nic/apollo/test/scale/test.hpp"
+#include "nic/apollo/test/flow_test/flow_test.hpp"
+#include "nic/apollo/include/api/pds_tep.hpp"
+#include "nic/apollo/include/api/pds_vcn.hpp"
+#include "nic/apollo/include/api/pds_subnet.hpp"
+#include "nic/apollo/include/api/pds_vnic.hpp"
+#include "nic/apollo/include/api/pds_mapping.hpp"
+#include "nic/apollo/include/api/pds_policy.hpp"
+#include "nic/apollo/include/api/pds_device.hpp"
+#include "boost/foreach.hpp"
+#include "boost/optional.hpp"
+#include "boost/property_tree/ptree.hpp"
+#include "boost/property_tree/json_parser.hpp"
+
+#define VNID_BASE                      1000
+
+using std::string;
+namespace pt = boost::property_tree;
+
+pds_tep_encap_type_t g_tep_encap = PDS_TEP_ENCAP_TYPE_NONE;
+extern char *g_input_cfg_file;
+extern char *g_cfg_file;
+extern bool g_daemon_mode;
+extern ip_prefix_t g_vcn_ippfx;
+extern pds_device_spec_t g_device;
+flow_test *g_flow_test_obj;
+
+//----------------------------------------------------------------------------
+// create route tables
+//------------------------------------------------------------------------------
+sdk_ret_t
+create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+                     uint32_t num_routes, ip_prefix_t *tep_pfx,
+                     ip_prefix_t *route_pfx)
+{
+    uint32_t ntables = num_vcns * num_subnets;
+    uint32_t tep_offset = 3;
+    static uint32_t rtnum = 0;
+    pds_route_table_spec_t route_table;
+    sdk_ret_t rv = SDK_RET_OK;
+
+    route_table.af = IP_AF_IPV4;
+    route_table.routes =
+        (pds_route_t *)malloc((num_routes * sizeof(pds_route_t)));
+    route_table.num_routes = num_routes;
+    for (uint32_t i = 1; i <= ntables; i++) {
+        route_table.key.id = i;
+        for (uint32_t j = 0; j < num_routes; j++) {
+            route_table.routes[j].prefix.len = 24;
+            route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
+            route_table.routes[j].prefix.addr.addr.v4_addr =
+                ((0xC << 28) | (rtnum++ << 8));
+            route_table.routes[j].nh_ip.af = IP_AF_IPV4;
+            route_table.routes[j].nh_ip.addr.v4_addr =
+                tep_pfx->addr.addr.v4_addr + tep_offset++;
+
+            tep_offset %= (num_teps + 3);
+            if (tep_offset == 0) {
+                // skip MyTEP and gateway IPs
+                tep_offset += 3;
+            }
+            route_table.routes[j].nh_type = PDS_NH_TYPE_REMOTE_TEP;
+            route_table.routes[j].vcn_id = PDS_VCN_ID_INVALID;
+        }
+        rv = pds_route_table_create(&route_table);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+    }
+    return rv;
+}
+
+//----------------------------------------------------------------------------
+// 1. create 1 primary + 32 secondary IP for each of 1K local vnics
+// 2. create 1023 remote mappings per VCN
+//------------------------------------------------------------------------------
+sdk_ret_t
+create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+                 uint32_t num_vnics, uint32_t num_ip_per_vnic,
+                 ip_prefix_t *teppfx, ip_prefix_t *natpfx,
+                 uint32_t num_remote_mappings)
+{
+    sdk_ret_t rv;
+    pds_mapping_spec_t pds_mapping;
+    uint16_t vnic_key = 1, ip_base, mac_offset = 1025;
+    uint32_t ip_offset = 0, remote_slot = 1025, tep_offset;
+
+    // ensure a max. of 32 IPs per VNIC
+    SDK_ASSERT(num_vcns * num_subnets * num_vnics * num_ip_per_vnic <=
+               (32 * 1024));
+    // create local vnic IP mappings first
+    for (uint32_t i = 1; i <= num_vcns; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            for (uint32_t k = 1; k <= num_vnics; k++) {
+                for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
+                    memset(&pds_mapping, 0, sizeof(pds_mapping));
+                    pds_mapping.key.vcn.id = i;
+                    pds_mapping.key.ip_addr.af = IP_AF_IPV4;
+                    pds_mapping.key.ip_addr.addr.v4_addr =
+                        (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                        (((k - 1) * num_ip_per_vnic) + l);
+                    pds_mapping.subnet.id = (i - 1) * num_subnets + j;
+                    if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                        pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                        //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
+                        pds_mapping.fabric_encap.val.vnid = vnic_key;
+                    } else {
+                        pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                        pds_mapping.fabric_encap.val.mpls_tag = vnic_key;
+                    }
+                    pds_mapping.tep.ip_addr = g_device.switch_ip_addr;
+                    MAC_UINT64_TO_ADDR(pds_mapping.overlay_mac,
+                                       (((((uint64_t)i & 0x7FF) << 22) |
+                                         ((j & 0x7FF) << 11) | (k & 0x7FF))));
+                    pds_mapping.vnic.id = vnic_key;
+                    if (natpfx) {
+                        pds_mapping.public_ip_valid = true;
+                        pds_mapping.public_ip.addr.v4_addr =
+                            natpfx->addr.addr.v4_addr + ip_offset++;
+                    }
+                    rv = pds_mapping_create(&pds_mapping);
+                    if (rv != SDK_RET_OK) {
+                        return rv;
+                    }
+#if 0
+                    g_flow_test_obj->add_local_ep(pds_mapping.key.vcn.id,
+                                         pds_mapping.key.ip_addr.addr.v4_addr);
+#endif
+                }
+                vnic_key++;
+            }
+        }
+    }
+
+    // create remote mappings
+    SDK_ASSERT(num_vcns * num_remote_mappings <= (1 << 20));
+    for (uint32_t i = 1; i <= num_vcns; i++) {
+        tep_offset = 3;
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            ip_base = num_vnics * num_ip_per_vnic + 1;
+            for (uint32_t k = 1; k <= num_remote_mappings; k++) {
+                memset(&pds_mapping, 0, sizeof(pds_mapping));
+                pds_mapping.key.vcn.id = i;
+                pds_mapping.key.ip_addr.af = IP_AF_IPV4;
+                pds_mapping.key.ip_addr.addr.v4_addr =
+                    (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                    ip_base++;
+                pds_mapping.subnet.id = (i - 1) * num_subnets + j;
+                if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                    pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                    //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
+                    pds_mapping.fabric_encap.val.vnid = remote_slot++;
+                } else {
+                    pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                    pds_mapping.fabric_encap.val.mpls_tag = remote_slot++;
+                }
+                pds_mapping.tep.ip_addr =
+                    teppfx->addr.addr.v4_addr + tep_offset++;
+                tep_offset %= num_teps + 3;
+                if (tep_offset == 0) {
+                    // skip MyTEP and gateway IPs
+                    tep_offset += 3;
+                }
+                MAC_UINT64_TO_ADDR(
+                    pds_mapping.overlay_mac,
+                    (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
+                      ((num_vnics + k) & 0x7FF))));
+                rv = pds_mapping_create(&pds_mapping);
+                if (rv != SDK_RET_OK) {
+                    return rv;
+                }
+
+                g_flow_test_obj->add_remote_ep(pds_mapping.key.vcn.id,
+                                     pds_mapping.key.ip_addr.addr.v4_addr);
+            }
+        }
+    }
+    return SDK_RET_OK;
+}
+
+// MAC address is encoded like below:
+// bits 0-10 have vnic number in the subnet
+// bits 11-21 have subnet number in the vcn
+// bits 22-32 have vcn number
+sdk_ret_t
+create_vnics (uint32_t num_vcns, uint32_t num_subnets,
+              uint32_t num_vnics, uint16_t vlan_start)
+{
+    sdk_ret_t rv = SDK_RET_OK;
+    pds_vnic_spec_t pds_vnic;
+    uint16_t vnic_key = 1;
+
+    SDK_ASSERT(num_vcns * num_subnets * num_vnics <= 1024);
+    for (uint32_t i = 1; i <= (uint64_t)num_vcns; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            for (uint32_t k = 1; k <= num_vnics; k++) {
+                memset(&pds_vnic, 0, sizeof(pds_vnic));
+                pds_vnic.vcn.id = i;
+                pds_vnic.subnet.id = (i - 1) * num_subnets + j;
+                pds_vnic.key.id = vnic_key;
+                pds_vnic.wire_vlan = vlan_start + vnic_key - 1;
+                if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                    pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                    //pds_vnic.fabric_encap.val.vnid = VNID_BASE + pds_vnic.subnet.id;
+                    pds_vnic.fabric_encap.val.vnid = vnic_key;
+                } else {
+                    pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                    pds_vnic.fabric_encap.val.mpls_tag = vnic_key;
+                }
+                MAC_UINT64_TO_ADDR(pds_vnic.mac_addr,
+                                   (((((uint64_t)i & 0x7FF) << 22) |
+                                     ((j & 0x7FF) << 11) | (k & 0x7FF))));
+                pds_vnic.rsc_pool_id = 1;
+                pds_vnic.src_dst_check = false; //(k & 0x1);
+                rv = pds_vnic_create(&pds_vnic);
+                if (rv != SDK_RET_OK) {
+                    return rv;
+                }
+                vnic_key++;
+            }
+        }
+    }
+
+    return rv;
+}
+
+// VCN prefix is /8, subnet id is encoded in next 10 bits (making it /18 prefix)
+// leaving LSB 14 bits for VNIC IPs
+sdk_ret_t
+create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
+{
+    sdk_ret_t rv;
+    pds_subnet_spec_t pds_subnet;
+    static uint32_t route_table_id = 1;
+    static uint32_t        id = 1;
+
+    for (uint32_t i = 1; i <= num_subnets; i++) {
+        memset(&pds_subnet, 0, sizeof(pds_subnet));
+        pds_subnet.key.id = (vcn_id - 1) * num_subnets + i;
+        pds_subnet.vcn.id = vcn_id;
+        pds_subnet.pfx = *vcn_pfx;
+        pds_subnet.pfx.addr.addr.v4_addr =
+            (pds_subnet.pfx.addr.addr.v4_addr) | ((i - 1) << 14);
+        pds_subnet.pfx.len = 18;
+        pds_subnet.vr_ip.af = IP_AF_IPV4;
+        // pds_subnet.vr_ip.addr.v4_addr = pds_subnet.pfx.addr.addr.v4_addr |
+        // 0x1;
+        pds_subnet.vr_ip.addr.v4_addr = pds_subnet.pfx.addr.addr.v4_addr;
+        MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
+                           (uint64_t)pds_subnet.vr_ip.addr.v4_addr);
+        pds_subnet.v4_route_table.id = route_table_id++;
+        pds_subnet.egr_v4_policy.id = id++;
+        rv = pds_subnet_create(&pds_subnet);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
+{
+    sdk_ret_t rv;
+    pds_vcn_spec_t pds_vcn;
+
+    SDK_ASSERT(num_vcns <= 1024);
+    for (uint32_t i = 1; i <= num_vcns; i++) {
+        memset(&pds_vcn, 0, sizeof(pds_vcn));
+        pds_vcn.type = PDS_VCN_TYPE_TENANT;
+        pds_vcn.key.id = i;
+        pds_vcn.pfx = *ip_pfx;
+        pds_vcn.pfx.len = 8; // fix this to /8
+        pds_vcn.pfx.addr.addr.v4_addr &= 0xFF000000;
+        rv = pds_vcn_create(&pds_vcn);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            rv = create_subnets(i, j, &pds_vcn.pfx);
+            if (rv != SDK_RET_OK) {
+                return rv;
+            }
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
+{
+    sdk_ret_t      rv;
+    pds_tep_spec_t pds_tep;
+
+    // leave the 1st IP in this prefix for MyTEP
+    for (uint32_t i = 1; i <= num_teps; i++) {
+        memset(&pds_tep, 0, sizeof(pds_tep));
+        // 1st IP in the TEP prefix is local TEP, 2nd is gateway IP,
+        // so skip them
+        pds_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
+        if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+            pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VXLAN;
+        } else {
+            pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
+        }
+        rv = pds_tep_create(&pds_tep);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_device_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
+{
+    sdk_ret_t rv;
+
+    memset(&g_device, 0, sizeof(g_device));
+    g_device.switch_ip_addr = ipaddr;
+    MAC_UINT64_TO_ADDR(g_device.switch_mac_addr, macaddr);
+    g_device.gateway_ip_addr = gwip;
+    return pds_device_create(&g_device);
+}
+
+sdk_ret_t
+create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
+                        uint32_t num_rules, uint32_t ip_af, bool ingress)
+{
+    sdk_ret_t            rv;
+    pds_policy_spec_t    policy;
+    uint32_t             policy_id = 1;
+    rule_t               *rule;
+
+    if (num_rules == 0) {
+        return SDK_RET_OK;
+    }
+
+    policy.policy_type = POLICY_TYPE_FIREWALL;
+    policy.af = ip_af;
+    policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;
+    policy.num_rules = num_rules;
+    policy.rules = (rule_t *)malloc(num_rules * sizeof(rule_t));
+    for (uint32_t i = 1; i <= num_vcns; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            memset(policy.rules, 0, num_rules * sizeof(rule_t));
+            policy.key.id = policy_id++;
+            for (uint32_t k = 0; k < num_rules; k++) {
+                rule = &policy.rules[k];
+                rule->stateful = false;
+                rule->match.l3_match.ip_proto = 17;    // UDP
+                rule->match.l3_match.ip_pfx = g_vcn_ippfx;
+                rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
+                    rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
+                    ((j - 1) << 14) | (k << 4);
+                rule->match.l3_match.ip_pfx.len = 28;
+                rule->match.l4_match.sport_range.port_lo = 0;
+                rule->match.l4_match.sport_range.port_hi = 65535;
+                rule->match.l4_match.dport_range.port_lo = 10000;
+                rule->match.l4_match.dport_range.port_hi = 20000;
+                rule->action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
+            }
+            rv = pds_policy_create(&policy);
+            if (rv != SDK_RET_OK) {
+                printf("Failed to create security policy, vcn %u, subnet %u, "
+                       "err %u\n", i, j, rv);
+                return rv;
+            }
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp,
+              uint16_t sport_base, uint16_t dport_base)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+
+    if (num_tcp) {
+        ret = g_flow_test_obj->create_flows(num_tcp, 6, sport_base, dport_base);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    if (num_udp) {
+        ret = g_flow_test_obj->create_flows(num_udp, 17, sport_base, dport_base);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    if (num_icmp) {
+        ret = g_flow_test_obj->create_flows(num_icmp, 1, 0, 0);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_objects (void)
+{
+    uint32_t num_vcns = 0, num_subnets = 0, num_vnics = 0, num_teps = 0;
+    uint32_t num_rules = 0;
+    uint32_t num_remote_mappings = 0, num_routes = 0, num_ip_per_vnic = 1;
+    uint16_t vlan_start = 1;
+    pt::ptree json_pt;
+    ip_prefix_t teppfx, natpfx, routepfx;
+    string pfxstr;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t num_tcp, num_udp, num_icmp;
+    uint16_t sport_base, dport_base;
+    
+    g_flow_test_obj = new flow_test();
+
+    // parse the config and create objects
+    std::ifstream json_cfg(g_input_cfg_file);
+    read_json(json_cfg, json_pt);
+    try {
+        BOOST_FOREACH (pt::ptree::value_type &obj,
+                       json_pt.get_child("objects")) {
+            std::string kind = obj.second.get<std::string>("kind");
+            if (kind == "device") {
+                struct in_addr ipaddr, gwip;
+                uint64_t macaddr;
+
+                macaddr =
+                    std::stoull(obj.second.get<std::string>("mac-addr"), 0, 0);
+                inet_aton(obj.second.get<std::string>("ip-addr").c_str(),
+                          &ipaddr);
+                inet_aton(obj.second.get<std::string>("gw-ip-addr").c_str(),
+                          &gwip);
+                if (!obj.second.get<std::string>("encap").compare("vxlan")) {
+                    g_tep_encap = PDS_TEP_ENCAP_TYPE_VXLAN;
+                } else {
+                    g_tep_encap = PDS_TEP_ENCAP_TYPE_VNIC;
+                }
+                ret = create_device_cfg(ntohl(ipaddr.s_addr), macaddr,
+                                            ntohl(gwip.s_addr));
+            } else if (kind == "tep") {
+                num_teps = std::stol(obj.second.get<std::string>("count"));
+                if (num_teps <= 2) {
+                    printf("No. of TEPs must be greater than 2\n");
+                    exit(1);
+                }
+                // reduce num_teps by 2, (MyTEP and GW-TEP)
+                num_teps -= 2;
+                pfxstr = obj.second.get<std::string>("prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &teppfx) == 0);
+                ret = create_teps(num_teps, &teppfx);
+            } else if (kind == "route-table") {
+                num_routes = std::stol(obj.second.get<std::string>("count"));
+                num_vcns = std::stol(obj.second.get<std::string>("num_vcns", "1024"));
+                pfxstr = obj.second.get<std::string>("prefix-start");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &routepfx) == 0);
+                ret = create_route_tables(num_teps, num_vcns, 1, num_routes, &teppfx,
+                                          &routepfx);
+            } else if (kind == "security-policy") {
+                num_rules = std::stol(obj.second.get<std::string>("count"));
+                pfxstr = obj.second.get<std::string>("vcn-prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_vcn_ippfx) == 0);
+                ret = create_security_policy(num_vcns, num_subnets, num_rules,
+                                             IP_AF_IPV4, false);
+                //ret = create_security_policy(num_vcns, num_subnets, num_rules,
+                                             //IP_AF_IPV6, true);
+            } else if (kind == "vcn") {
+                num_vcns = std::stol(obj.second.get<std::string>("count"));
+                pfxstr = obj.second.get<std::string>("prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_vcn_ippfx) == 0);
+                num_subnets = std::stol(obj.second.get<std::string>("subnets"));
+                ret = create_vcns(num_vcns, &g_vcn_ippfx, num_subnets);
+            } else if (kind == "vnic") {
+                num_vnics = std::stol(obj.second.get<std::string>("count"));
+                vlan_start =
+                    std::stol(obj.second.get<std::string>("vlan-start"));
+                ret = create_vnics(num_vcns, num_subnets, num_vnics, vlan_start);
+            } else if (kind == "mappings") {
+                pfxstr = obj.second.get<std::string>("nat-prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &natpfx) == 0);
+                num_remote_mappings =
+                    std::stol(obj.second.get<std::string>("remotes"));
+                num_ip_per_vnic =
+                    std::stol(obj.second.get<std::string>("locals"));
+                ret = create_mappings(num_teps, num_vcns, num_subnets, num_vnics,
+                                      num_ip_per_vnic, &teppfx, &natpfx,
+                                      num_remote_mappings);
+            } else if (kind == "flows") {
+                num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
+                num_udp = std::stol(obj.second.get<std::string>("num_udp"));
+                num_icmp = std::stol(obj.second.get<std::string>("num_icmp"));
+                sport_base = std::stol(obj.second.get<std::string>("sport_base"));
+                dport_base = std::stol(obj.second.get<std::string>("dport_base"));
+                ret = create_flows(num_tcp, num_udp, num_icmp, sport_base, dport_base);
+            }
+
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
+        }
+    } catch (std::exception const &e) {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
+
+    return ret;
+}
+
