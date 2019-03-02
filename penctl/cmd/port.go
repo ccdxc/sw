@@ -60,6 +60,7 @@ func init() {
 	portCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - up, down")
 	portCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
+	portCmd.MarkFlagRequired("port")
 
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatusShowCmd)
