@@ -11,14 +11,16 @@ endif
 # Lists excluded patterns to "go list"
 EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|gometrics|vchub|buildroot"
 
+# Lists targets to be prebuilt before generation
+TO_PREGEN := venice/utils/apigen/annotations
+
 # Lists venice venice protos and all things auto generated.
 TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \
 venice/ctrler/ckm/rpcserver/ckmproto nic/agent/netagent/protos/netproto \
 venice/ctrler/tpm/rpcserver/protos  \
 venice/ctrler/tsm/rpcserver/tsproto \
 venice/citadel/collector/rpcserver/metric venice/utils/runtime/test \
-venice/utils/apigen/annotations venice/orch \
-venice/cmd/grpc/server/certificates/certapi \
+venice/orch venice/cmd/grpc/server/certificates/certapi \
 venice/ctrler/evtsmgr/rpcserver/protos \
 venice/evtsproxy/rpcserver/evtsproxyproto \
 nic/agent/nmd/protos nic/agent/netagent/protos \
@@ -27,13 +29,15 @@ venice/ctrler/rollout/rpcserver/protos \
 venice/utils/objstore/client/mock \
 venice/citadel/broker/mock
 
+# Vendored packages to be installed before generation
+TO_PREGEN_INSTALL := ./vendor/github.com/gogo/protobuf/protoc-gen-gofast \
+						./vendor/github.com/gogo/protobuf/protoc-gen-gogofast \
+						./vendor/github.com/golang/protobuf/protoc-gen-go \
+						./vendor/golang.org/x/tools/cmd/goimports
+
 # Lists all the vendored packages that need to be installed prior to the build.
 TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway \
-							./vendor/github.com/gogo/protobuf/protoc-gen-gofast \
-							./vendor/github.com/gogo/protobuf/protoc-gen-gogofast \
-							./vendor/github.com/golang/protobuf/protoc-gen-go \
 							./venice/utils/apigen/protoc-gen-pensando \
-							./vendor/golang.org/x/tools/cmd/goimports \
 							./vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger \
 							./vendor/github.com/GeertJohan/go.rice/rice \
 							./vendor/github.com/golang/mock/gomock \
@@ -66,6 +70,7 @@ BUILD_DATE ?= $(shell date   +%Y-%m-%dT%H:%M:%S%z)
 export GIT_COMMIT GIT_VERSION BUILD_DATE
 
 default:
+	$(MAKE) pregen-clean
 	$(MAKE) ws-tools
 	$(MAKE) pull-assets
 	$(MAKE) gen-clean
@@ -74,8 +79,12 @@ default:
 	$(MAKE) build
 	$(MAKE) unit-test-cover
 
+pregen:
+	@CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ${TO_PREGEN_INSTALL}
+	@for c in ${TO_PREGEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} || exit 1; done
+
 # ws-tools installs all the binaries needed to generate, lint and build go sources
-ws-tools:
+ws-tools: pregen
 	$(info +++ building WS tools)
 	@CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ${TO_INSTALL}
 
@@ -175,6 +184,9 @@ install:
 
 gen-clean:
 	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Cleaning $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} gen-clean || exit 1; done
+
+pregen-clean:
+	@for c in ${TO_PREGEN}; do printf "\n+++++++++++++++++ Cleaning $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} gen-clean || exit 1; done
 
 clean:
 	@$(MAKE) c-stop >/dev/null 2>&1

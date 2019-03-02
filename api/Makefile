@@ -4,9 +4,9 @@ DEL_BAK = rm *.bak_
 SCHEMA_PROTOS = meta.proto common.proto export.proto
 
 TO_GEN = labels fields
-all: generated/manifest
+all: generated/swagger/rice-box.go
 
-generated/manifest: meta.proto common.proto $(shell ls protos/*.proto)
+generated/swagger/rice-box.go: meta.proto common.proto $(shell ls protos/*.proto)
 	$(MAKE) bld_proto
 	$(MAKE) fix
 	$(MAKE) genschema
