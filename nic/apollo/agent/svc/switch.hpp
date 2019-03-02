@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
-#ifndef __SVC_SWITCH_HPP__
-#define __SVC_SWITCH_HPP__
+#ifndef __AGENT_SVC_SWITCH_HPP__
+#define __AGENT_SVC_SWITCH_HPP__
 
 #include "grpc++/grpc++.h"
 #include "gen/proto/types/types.pb.h"
@@ -17,9 +17,8 @@ using tpc::SwitchStatus;
 
 class SwitchSvcImpl final : public SwitchSvc::Service {
 public:
-    Status SwitchCreate(ServerContext *context,
-                        const tpc::SwitchSpec *spec,
+    Status SwitchCreate(ServerContext *context, const tpc::SwitchSpec *spec,
                         tpc::SwitchStatus *status) override;
 };
 
-#endif    // __SVC_SWITCH_HPP__
+#endif    // __AGENT_SVC_SWITCH_HPP__

@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/include/api/pds_tep.hpp"
-#include "tunnel.hpp"
+#include "nic/apollo/agent/svc/tunnel.hpp"
 
 // Build TEP API spec from protobuf spec
 static inline void
@@ -36,8 +36,7 @@ pds_agent_tep_api_spec_fill (const tpc::TunnelSpec *proto_spec,
 Status
 TunnelSvcImpl::TunnelCreate(ServerContext *context,
                             const tpc::TunnelSpec *proto_spec,
-                            tpc::TunnelStatus *proto_status)
-{
+                            tpc::TunnelStatus *proto_status) {
     pds_tep_spec_t api_spec;
 
     pds_agent_tep_api_spec_fill(proto_spec, &api_spec);

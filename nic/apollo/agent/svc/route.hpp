@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
-#ifndef __SVC_ROUTE_HPP__
-#define __SVC_ROUTE_HPP__
+#ifndef __AGENT_SVC_ROUTE_HPP__
+#define __AGENT_SVC_ROUTE_HPP__
 
 #include "grpc++/grpc++.h"
 #include "gen/proto/types/types.pb.h"
@@ -22,4 +22,4 @@ public:
                             tpc::RouteTableStatus *status) override;
 };
 
-#endif    // __SVC_ROUTE_HPP__
+#endif    // __AGENT_SVC_ROUTE_HPP__

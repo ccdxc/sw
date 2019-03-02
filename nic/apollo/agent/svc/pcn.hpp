@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
-#ifndef __SVC_PCN_HPP__
-#define __SVC_PCN_HPP__
+#ifndef __AGENT_SVC_PCN_HPP__
+#define __AGENT_SVC_PCN_HPP__
 
 #include "grpc++/grpc++.h"
 #include "gen/proto/types/types.pb.h"
@@ -17,9 +17,8 @@ using tpc::PCNStatus;
 
 class PCNSvcImpl final : public PCNSvc::Service {
 public:
-    Status PCNCreate(ServerContext *context,
-                     const tpc::PCNSpec *spec,
+    Status PCNCreate(ServerContext *context, const tpc::PCNSpec *spec,
                      tpc::PCNStatus *status) override;
 };
 
-#endif    // __SVC_PCN_HPP__
+#endif    // __AGENT_SVC_PCN_HPP__

@@ -2,12 +2,36 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
-#include "pcn.hpp"
+#include "nic/apollo/include/api/pds_vcn.hpp"
+#include "nic/apollo/agent/svc/util.hpp"
+#include "nic/apollo/agent/svc/pcn.hpp"
+
+// Build PCN API spec from protobuf spec
+static inline void
+pds_agent_pcn_api_spec_fill (const tpc::PCNSpec *proto_spec,
+                             pds_vcn_spec_t *api_spec)
+{
+    tpc::PCNType type;
+
+    api_spec->key.id = proto_spec->id();
+    type = proto_spec->type();
+    if (type == tpc::PCN_TYPE_TENANT) {
+        api_spec->type = PDS_VCN_TYPE_TENANT;
+    } else if (type == tpc::PCN_TYPE_SUBSTRATE) {
+        api_spec->type = PDS_VCN_TYPE_SUBSTRATE;
+    }
+    pds_agent_util_ip_pfx_fill(proto_spec->prefix(), &api_spec->pfx);
+}
 
 Status
-PCNSvcImpl::PCNCreate(ServerContext *context,
-                      const tpc::PCNSpec *spec,
-                      tpc::PCNStatus *status)
-{
-    return Status::OK;
+PCNSvcImpl::PCNCreate(ServerContext *context, const tpc::PCNSpec *proto_spec,
+                      tpc::PCNStatus *proto_proto_status) {
+    pds_vcn_spec_t api_spec = {0};
+
+    if (proto_spec) {
+        pds_agent_pcn_api_spec_fill(proto_spec, &api_spec);
+        if (pds_vcn_create(&api_spec) == sdk::SDK_RET_OK)
+            return Status::OK;
+    }
+    return Status::CANCELLED;
 }

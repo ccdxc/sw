@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
-#ifndef __SVC_TUNNEL_HPP__
-#define __SVC_TUNNEL_HPP__
+#ifndef __AGENT_SVC_TUNNEL_HPP__
+#define __AGENT_SVC_TUNNEL_HPP__
 
 #include "grpc++/grpc++.h"
 #include "gen/proto/types/types.pb.h"
@@ -17,9 +17,8 @@ using tpc::TunnelStatus;
 
 class TunnelSvcImpl final : public TunnelSvc::Service {
 public:
-    Status TunnelCreate(ServerContext *context,
-                       const tpc::TunnelSpec *spec,
-                       tpc::TunnelStatus *status) override;
+    Status TunnelCreate(ServerContext *context, const tpc::TunnelSpec *spec,
+                        tpc::TunnelStatus *status) override;
 };
 
-#endif    // __SVC_TUNNEL_HPP__
+#endif    // __AGENT_SVC_TUNNEL_HPP__

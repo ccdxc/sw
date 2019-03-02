@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
-#ifndef __SVC_MAPPING_HPP__
-#define __SVC_MAPPING_HPP__
+#ifndef __AGENT_SVC_MAPPING_HPP__
+#define __AGENT_SVC_MAPPING_HPP__
 
 #include "grpc++/grpc++.h"
 #include "gen/proto/types/types.pb.h"
@@ -17,9 +17,8 @@ using tpc::MappingStatus;
 
 class MappingSvcImpl final : public MappingSvc::Service {
 public:
-    Status MappingCreate(ServerContext *context,
-                         const tpc::MappingSpec *spec,
+    Status MappingCreate(ServerContext *context, const tpc::MappingSpec *spec,
                          tpc::MappingStatus *status) override;
 };
 
-#endif    // __SVC_MAPPING_HPP__
+#endif    // __AGENT_SVC_MAPPING_HPP__
