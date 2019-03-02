@@ -3,16 +3,16 @@
 penctl show running-firmware
 ----------------------------
 
-Show running firmware from Naples
+Show running firmware from Naples (To be deprecated. Please use: penctl show firmware-version)
 
 Synopsis
 ~~~~~~~~
 
 
 
------------------------------------
- Show Running Firmware from Naples 
------------------------------------
+-----------------------------------------------------------------------------------------------
+ Show Running Firmware from Naples. (To be deprecated. Please use: penctl show firmware-version) 
+-----------------------------------------------------------------------------------------------
 
 
 ::

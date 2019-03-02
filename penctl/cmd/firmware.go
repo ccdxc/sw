@@ -26,8 +26,8 @@ var showFirmwareCmd = &cobra.Command{
 
 var showRunningFirmwareCmd = &cobra.Command{
 	Use:   "running-firmware",
-	Short: "Show running firmware from Naples",
-	Long:  "\n-----------------------------------\n Show Running Firmware from Naples \n-----------------------------------\n",
+	Short: "Show running firmware from Naples (To be deprecated. Please use: penctl show firmware-version)",
+	Long:  "\n-----------------------------------------------------------------------------------------------\n Show Running Firmware from Naples. (To be deprecated. Please use: penctl show firmware-version) \n-----------------------------------------------------------------------------------------------\n",
 	RunE:  showRunningFirmwareCmdHandler,
 }
 
@@ -100,6 +100,24 @@ func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
 	if verbose {
 		fmt.Println(string(resp))
 	}
+
+	v = &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-r"}, ""),
+	}
+
+	resp, err = restGetWithBody(v, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println("Running-Firmware: " + s)
+	}
+	if verbose {
+		fmt.Println(string(resp))
+	}
 	return nil
 }
 
@@ -117,6 +135,7 @@ func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(resp) > 3 {
 		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
 		fmt.Println(s)
+		fmt.Println("(To be deprecated. Please use: penctl show firmware-version)")
 	}
 	if verbose {
 		fmt.Println(string(resp))
