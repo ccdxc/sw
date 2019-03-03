@@ -167,6 +167,12 @@ public:
     }
 
     /**
+     * @brief return address family of this routing table
+     * @return IP_AF_IPV4, if routing table is IPv4 or else IP_AF_IPV6
+     */
+    uint8_t af(void) const { return af_; }
+
+    /**
      * @brief     return impl instance of this route table object
      * @return    impl instance of the rout table object
      */
@@ -181,6 +187,7 @@ private:
 
 private:
     pds_route_table_key_t    key_;        /**< route table key */
+    uint8_t                  af_;         /**< IP_AF_IPV4 or IP_AF_IPV6 */
     ht_ctxt_t                ht_ctxt_;    /**< hash table context */
     impl_base                *impl_;      /**< impl object instance */
 } __PACK__;

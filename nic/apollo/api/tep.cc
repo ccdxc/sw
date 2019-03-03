@@ -97,7 +97,7 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return impl_->reserve_resources(this);
+    return impl_->reserve_resources(this, obj_ctxt);
 }
 
 /**

@@ -54,20 +54,34 @@ route_table_impl::destroy(route_table_impl *impl) {
 
 /**
  * @brief    allocate/reserve h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-route_table_impl::reserve_resources(api_base *api_obj) {
-    uint32_t    lpm_block_id;
+route_table_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    uint32_t                  lpm_block_id;
+    pds_route_table_spec_t    *spec;
 
+    spec = &obj_ctxt->api_params->route_table_spec;
     /**< allocate free lpm slab for this route table */
-    if (route_table_impl_db()->route_table_idxr()->alloc(&lpm_block_id) !=
-            sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
+    if (spec->af == IP_AF_IPV4) {
+        if (route_table_impl_db()->v4_idxr()->alloc(&lpm_block_id) !=
+                sdk::lib::indexer::SUCCESS) {
+            return sdk::SDK_RET_NO_RESOURCE;
+        }
+        lpm_root_addr_ =
+            route_table_impl_db()->v4_region_addr() +
+                (route_table_impl_db()->v4_table_size() * lpm_block_id);
+    } else {
+        if (route_table_impl_db()->v6_idxr()->alloc(&lpm_block_id) !=
+                sdk::lib::indexer::SUCCESS) {
+            return sdk::SDK_RET_NO_RESOURCE;
+        }
+        lpm_root_addr_ =
+            route_table_impl_db()->v6_region_addr() +
+                (route_table_impl_db()->v6_table_size() * lpm_block_id);
     }
-    lpm_root_addr_ =
-        route_table_impl_db()->lpm_region_addr() +
-            (route_table_impl_db()->lpm_table_size() * lpm_block_id);
     return SDK_RET_OK;
 }
 
@@ -77,12 +91,19 @@ route_table_impl::reserve_resources(api_base *api_obj) {
  */
 sdk_ret_t
 route_table_impl::release_resources(api_base *api_obj) {
-    uint32_t    lpm_block_id;
+    uint32_t       lpm_block_id;
+    route_table    *rtable = (route_table *)api_obj;
 
     if (lpm_root_addr_ != 0xFFFFFFFFFFFFFFFFUL) {
-        lpm_block_id =
-            (lpm_root_addr_ - route_table_impl_db()->lpm_region_addr())/route_table_impl_db()->lpm_table_size();
-        route_table_impl_db()->route_table_idxr()->free(lpm_block_id);
+        if (rtable->af() == IP_AF_IPV4) {
+            lpm_block_id =
+                (lpm_root_addr_ - route_table_impl_db()->v4_region_addr())/route_table_impl_db()->v4_table_size();
+            route_table_impl_db()->v4_idxr()->free(lpm_block_id);
+        } else {
+            lpm_block_id =
+                (lpm_root_addr_ - route_table_impl_db()->v6_region_addr())/route_table_impl_db()->v6_table_size();
+            route_table_impl_db()->v6_idxr()->free(lpm_block_id);
+        }
     }
     return SDK_RET_OK;
 }
@@ -133,7 +154,9 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                         ipv4addr2str(tep->ip()));
     }
     ret = lpm_tree_create(rtable, lpm_root_addr_,
-                          route_table_impl_db()->lpm_table_size());
+                          (spec->af == IP_AF_IPV4) ?
+                          route_table_impl_db()->v4_table_size() :
+                          route_table_impl_db()->v6_table_size());
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build LPM route table, err : %u", ret);
     }

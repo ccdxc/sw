@@ -68,10 +68,12 @@ mapping_impl::destroy(mapping_impl *impl) {
 
 /**
  * @brief    allocate/reserve h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-mapping_impl::reserve_resources(api_base *api_obj) {
+mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 #if 0
     pds_mapping_spec_t    *spec;
 

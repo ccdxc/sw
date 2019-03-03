@@ -53,10 +53,12 @@ tep_impl::destroy(tep_impl *impl) {
 
 /**
  * @brief    allocate/reserve h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-tep_impl::reserve_resources(api_base *api_obj) {
+tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // TODO: if directmap provides a way to reserve() we dont need this indexer
     //       at all !!
     if (tep_impl_db()->tep_idxr()->alloc((uint32_t *)&hw_id_) !=

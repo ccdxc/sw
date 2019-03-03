@@ -84,6 +84,7 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
     
     spec = &api_ctxt->api_params->route_table_spec;
     memcpy(&this->key_, &spec->key, sizeof(pds_route_table_key_t));
+    this->af_ = spec->af;
     return SDK_RET_OK;
 }
 
@@ -95,7 +96,7 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 route_table::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return impl_->reserve_resources(this);
+    return impl_->reserve_resources(this, obj_ctxt);
 }
 
 /**

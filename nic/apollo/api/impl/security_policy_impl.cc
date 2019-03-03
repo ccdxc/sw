@@ -53,10 +53,13 @@ security_policy_impl::destroy(security_policy_impl *impl) {
 
 /**
  * @brief    allocate/reserve h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy_impl::reserve_resources(api_base *api_obj) {
+security_policy_impl::reserve_resources(api_base *orig_obj,
+                                        obj_ctxt_t *obj_ctxt) {
     uint32_t    policy_block_id;
 
     /**< allocate available block for this security policy */
@@ -142,7 +145,7 @@ security_policy_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                            obj_ctxt_t *obj_ctxt) {
+                                obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

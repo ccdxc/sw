@@ -36,21 +36,31 @@ public:
     /**< @brief    destructor */
     ~route_table_impl_state();
 
-    /**< @brief    return LPM region's base/start address in memory */
-    mem_addr_t lpm_region_addr(void) const { return lpm_region_addr_; }
+    /**< @brief    return v4 lpm region's base/start address in memory */
+    mem_addr_t v4_region_addr(void) const { return v4_region_addr_; }
 
-    /**< @brief    return per LPM table's size */
-    mem_addr_t lpm_table_size(void) const { return lpm_table_size_; }
+    /**< @brief    return per v4 lpm table's size */
+    mem_addr_t v4_table_size(void) const { return v4_table_size_; }
+
+    /**< @brief    return v6 lpm region's base/start address in memory */
+    mem_addr_t v6_region_addr(void) const { return v6_region_addr_; }
+
+    /**< @brief    return per v6 lpm table's size */
+    mem_addr_t v6_table_size(void) const { return v6_table_size_; }
 
 private:
-    indexer *route_table_idxr(void) { return route_table_idxr_; }
+    indexer *v4_idxr(void) { return v4_idxr_; }
+    indexer *v6_idxr(void) { return v6_idxr_; }
     friend class route_table_impl;
 
 private:
     /**< datapath tables for route table */
-    indexer       *route_table_idxr_;    /**< indexer to allocate lpm mem block */
-    mem_addr_t    lpm_region_addr_;      /**< base address for the LPM region */
-    uint32_t      lpm_table_size_;       /**< size of each LPM table */
+    indexer       *v4_idxr_;          /**< indexer to allocate v4 lpm mem block */
+    indexer       *v6_idxr_;          /**< indexer to allocate v6 lpm mem block */
+    mem_addr_t    v4_region_addr_;    /**< base address for the v4 lpm region */
+    mem_addr_t    v6_region_addr_;    /**< base address for the v6 lpm region */
+    uint32_t      v4_table_size_;     /**< size of each v4 lpm table */
+    uint32_t      v6_table_size_;     /**< size of each v6 lpm table */
 };
 
 /** * @} */    // end of PDS_ROUTE_TABLE_IMPL_STATE
