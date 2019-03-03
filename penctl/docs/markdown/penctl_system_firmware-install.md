@@ -19,6 +19,7 @@ penctl system firmware-install [flags]
 
 ```
   -f, --file string   Firmware file location/name
+  -g, --golden        Update golden image
   -h, --help          help for firmware-install
 ```
 

@@ -25,6 +25,7 @@ Options
 ::
 
   -f, --file string   Firmware file location/name
+  -g, --golden        Update golden image
   -h, --help          help for firmware-install
 
 Options inherited from parent commands

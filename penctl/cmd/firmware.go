@@ -66,6 +66,7 @@ var setFirmwareCmd = &cobra.Command{
 }
 
 var uploadFile string
+var goldfw bool
 
 func init() {
 	showCmd.AddCommand(showFirmwareCmd)
@@ -78,6 +79,7 @@ func init() {
 	sysCmd.AddCommand(setFirmwareCmd)
 
 	setFirmwareCmd.Flags().StringVarP(&uploadFile, "file", "f", "", "Firmware file location/name")
+	setFirmwareCmd.Flags().BoolVarP(&goldfw, "golden", "g", false, "Update golden image")
 	setFirmwareCmd.MarkFlagRequired("file")
 }
 
@@ -240,9 +242,14 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	fmt.Println(string(resp))
 
 	firmware := filepath.Base(uploadFile)
+
+	fw := "all"
+	if cmd.Flags().Changed("golden") {
+		fw = "goldfw"
+	}
 	v := &nmd.NaplesCmdExecute{
 		Executable: "/nic/tools/fwupdate",
-		Opts:       strings.Join([]string{"-p ", "/update/" + firmware, " -i all"}, ""),
+		Opts:       strings.Join([]string{"-p ", "/update/" + firmware, " -i " + fw}, ""),
 	}
 
 	resp, err = restGetWithBody(v, "cmd/v1/naples/")
@@ -294,24 +301,27 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println(string(resp))
 	}
 
-	v = &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
-		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
-	}
+	if goldfw == false {
+		v = &nmd.NaplesCmdExecute{
+			Executable: "/nic/tools/fwupdate",
+			Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
+		}
 
-	resp, err = restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
-		return err
+		resp, err = restGetWithBody(v, "cmd/v1/naples/")
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		if len(resp) > 3 {
+			s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+			fmt.Println(s)
+		}
+		if verbose {
+			fmt.Println(string(resp))
+		}
+		fmt.Printf("Package %s installed\n", uploadFile)
+	} else {
+		fmt.Printf("Golden package %s installed\n", uploadFile)
 	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-
-	fmt.Printf("Package %s installed\n", uploadFile)
 	return nil
 }
