@@ -375,33 +375,33 @@ hal_cfg_db_close (void)
 // API Callback api from SDK library
 //------------------------------------------------------------------------------
 void
-asiccfg_init_completion_event(sdk_status_t status)
+asiccfg_init_completion_event (sdk_status_t status)
 {
     hal_status_t hal_status;
     switch (status) {
-        case sdk_status_t::SDK_STATUS_NONE:
-            hal_status = hal::HAL_STATUS_NONE;
-            break;
-        case sdk_status_t::SDK_STATUS_ASIC_INIT_DONE:
-            hal_status = hal::HAL_STATUS_ASIC_INIT_DONE;
-            break;
-        case sdk_status_t::SDK_STATUS_MEM_INIT_DONE:
-            hal_status = hal::HAL_STATUS_MEM_INIT_DONE;
-            break;
-        case sdk_status_t::SDK_STATUS_PACKET_BUFFER_INIT_DONE:
-            hal_status = hal::HAL_STATUS_PACKET_BUFFER_INIT_DONE;
-            break;
-        case sdk_status_t::SDK_STATUS_DATA_PLANE_INIT_DONE:
-            hal_status = hal::HAL_STATUS_DATA_PLANE_INIT_DONE;
-            break;
-        case sdk_status_t::SDK_STATUS_SCHEDULER_INIT_DONE:
-            hal_status = hal::HAL_STATUS_SCHEDULER_INIT_DONE;
-            break;
-        case sdk_status_t::SDK_STATUS_UP:
-            hal_status = hal::HAL_STATUS_UP;
-            break;
-        default:
-            SDK_ASSERT(0);
+    case sdk_status_t::SDK_STATUS_NONE:
+        hal_status = hal::HAL_STATUS_NONE;
+        break;
+    case sdk_status_t::SDK_STATUS_ASIC_INIT_DONE:
+        hal_status = hal::HAL_STATUS_ASIC_INIT_DONE;
+        break;
+    case sdk_status_t::SDK_STATUS_MEM_INIT_DONE:
+        hal_status = hal::HAL_STATUS_MEM_INIT_DONE;
+        break;
+    case sdk_status_t::SDK_STATUS_PACKET_BUFFER_INIT_DONE:
+        hal_status = hal::HAL_STATUS_PACKET_BUFFER_INIT_DONE;
+        break;
+    case sdk_status_t::SDK_STATUS_DATA_PLANE_INIT_DONE:
+        hal_status = hal::HAL_STATUS_DATA_PLANE_INIT_DONE;
+        break;
+    case sdk_status_t::SDK_STATUS_SCHEDULER_INIT_DONE:
+        hal_status = hal::HAL_STATUS_SCHEDULER_INIT_DONE;
+        break;
+    case sdk_status_t::SDK_STATUS_UP:
+        hal_status = hal::HAL_STATUS_UP;
+        break;
+    default:
+        SDK_ASSERT(0);
     }
     hal::svc::set_hal_status(hal_status);
 }

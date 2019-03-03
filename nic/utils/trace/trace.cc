@@ -1,7 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include <chrono>
-#include "nic/include/hal_mem.hpp"
 #include "nic/utils/trace/trace.hpp"
 
 namespace utils {

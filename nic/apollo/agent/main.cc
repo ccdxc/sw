@@ -6,14 +6,16 @@
 #include <getopt.h>
 #include <limits.h>
 #include <string>
-#include "svc/batch.hpp"
-#include "svc/switch.hpp"
-#include "svc/pcn.hpp"
-#include "svc/subnet.hpp"
-#include "svc/tunnel.hpp"
-#include "svc/route.hpp"
-#include "svc/vnic.hpp"
-#include "svc/mapping.hpp"
+#include "nic/apollo/agent/svc/batch.hpp"
+#include "nic/apollo/agent/svc/switch.hpp"
+#include "nic/apollo/agent/svc/pcn.hpp"
+#include "nic/apollo/agent/svc/subnet.hpp"
+#include "nic/apollo/agent/svc/tunnel.hpp"
+#include "nic/apollo/agent/svc/route.hpp"
+#include "nic/apollo/agent/svc/vnic.hpp"
+#include "nic/apollo/agent/svc/mapping.hpp"
+#include "nic/apollo/agent/init.hpp"
+#include "nic/apollo/agent/trace.hpp"
 
 using std::string;
 using grpc::Server;
@@ -40,7 +42,8 @@ svc_reg (void)
 
     // do gRPC initialization
     grpc_init();
-    g_grpc_server_addr = std::string("0.0.0.0:") + std::to_string(GRPC_API_PORT);
+    g_grpc_server_addr =
+        std::string("0.0.0.0:") + std::to_string(GRPC_API_PORT);
     server_builder = new ServerBuilder();
     server_builder->SetMaxReceiveMessageSize(INT_MAX);
     server_builder->SetMaxSendMessageSize(INT_MAX);
@@ -57,6 +60,9 @@ svc_reg (void)
     server_builder->RegisterService(&vnic_svc);
     server_builder->RegisterService(&mapping_svc);
 
+    PDS_TRACE_INFO("gRPC server listening on ... {}",
+                   g_grpc_server_addr.c_str());
+    core::trace_logger()->flush();
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
     server->Wait();
 }
@@ -64,16 +70,15 @@ svc_reg (void)
 static void inline
 print_usage (char **argv)
 {
-    fprintf(stdout, "Usage : %s -c|--config <cfg.json> [-p|--platform <catalog.json>] \n", argv[0]);
+    fprintf(stdout, "Usage : %s -c|--config <cfg.json>\n", argv[0]);
 }
 
 int
 main (int argc, char **argv)
 {
-    int       oc;
-    char      *cfg_file = NULL, *catalog_file = NULL;
-    char      *cfg_path;
-    string    cfg_path_str, catalog_file_str;
+    int          oc;
+    string       cfg_path, cfg_file, file;
+    sdk_ret_t    ret;
 
     struct option longopts[] = {
        { "config",    required_argument, NULL, 'c' },
@@ -83,22 +88,13 @@ main (int argc, char **argv)
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:p:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
-            cfg_file = optarg;
-            if (!cfg_file) {
-                fprintf(stderr, "config file is not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
-        case 'p':
             if (optarg) {
-                catalog_file = optarg;
+                cfg_file = std::string(optarg);
             } else {
-                fprintf(stderr, "platform catalog file is not specified\n");
+                fprintf(stderr, "config file is not specified\n");
                 print_usage(argv);
                 exit(1);
             }
@@ -126,23 +122,25 @@ main (int argc, char **argv)
         }
     }
 
-    // set the full path of the catalog file
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        cfg_path_str = std::string(cfg_path) + "/";
+    // form the full path to the config directory
+    cfg_path = std::string(std::getenv("CONFIG_PATH"));
+    if (cfg_path.empty()) {
+        cfg_path = std::string("./");
     } else {
-        cfg_path_str = "./";
+        cfg_path += "/";
     }
-    if (catalog_file) {
-       catalog_file_str = cfg_path_str + "/" + std::string(catalog_file);
-    } else {
-        catalog_file_str = cfg_path_str + "/catalog.json";
-    }
-    // make sure catalog file exists
-    if (access(catalog_file_str.c_str(), R_OK) < 0) {
-        fprintf(stderr, "Catalog file %s has no read permissions\n",
-                catalog_file_str.c_str());
+
+    // make sure the cfg file exists
+    file = cfg_path + "apollo/" + std::string(cfg_file);
+    if (access(file.c_str(), R_OK) < 0) {
+        fprintf(stderr, "Config file %s doesn't exist or not accessible\n",
+                file.c_str());
         exit(1);
+    }
+
+    // initialize the agent
+    if ((ret = core::agent_init(cfg_file)) != SDK_RET_OK) {
+        fprintf(stderr, "Agent initialization failed, err %u", ret);
     }
 
     // register for all gRPC services
