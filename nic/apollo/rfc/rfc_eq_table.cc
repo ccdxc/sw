@@ -1223,7 +1223,7 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
             entry_num = next_entry_num;
         }
 
-        for (uint32_t j = 0; i < rfc_table2->num_classes; j++) {
+        for (uint32_t j = 0; j < rfc_table2->num_classes; j++) {
             rte_bitmap_and(rfc_table1->cbm_table[i], rfc_table2->cbm_table[j],
                            rfc_ctxt->cbm);
             entry_val = compute_entry_val_cb(rfc_ctxt, result_table,

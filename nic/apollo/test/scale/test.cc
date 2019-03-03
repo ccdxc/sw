@@ -17,13 +17,61 @@
 using std::string;
 namespace pt = boost::property_tree;
 
-pds_tep_encap_type_t g_tep_encap = PDS_TEP_ENCAP_TYPE_NONE;
 extern char *g_input_cfg_file;
 extern char *g_cfg_file;
 extern bool g_daemon_mode;
-extern ip_prefix_t g_vcn_ippfx;
 extern pds_device_spec_t g_device;
 flow_test *g_flow_test_obj;
+
+typedef struct test_params_s {
+    // device config
+    struct {
+        uint32_t device_ip;
+        uint64_t device_mac;
+        uint32_t device_gw_ip;
+        pds_tep_encap_type_t tep_encap;
+    };
+    // TEP config
+    struct {
+        uint32_t num_teps;
+        ip_prefix_t tep_pfx;
+    };
+    // route config
+    struct {
+        uint32_t num_routes;
+        ip_prefix_t route_pfx;
+    };
+    // policy config
+    struct {
+        uint32_t num_rules;
+    };
+    // vcn config
+    struct {
+        uint32_t num_vcns;
+        ip_prefix_t vcn_pfx;
+        uint32_t num_subnets;
+    };
+    // vnic config
+    struct {
+        uint32_t num_vnics;
+        uint32_t vlan_start;
+    };
+    // mapping config
+    struct {
+        ip_prefix_t nat_pfx;
+        uint32_t num_ip_per_vnic;
+        uint32_t num_remote_mappings;
+    };
+    // flow config
+    struct {
+        uint32_t num_tcp;
+        uint32_t num_udp;
+        uint32_t num_icmp;
+        uint16_t sport_base;
+        uint16_t dport_base;
+    };
+} test_params_t;
+test_params_t g_test_params = { 0 };
 
 //----------------------------------------------------------------------------
 // create route tables
@@ -97,10 +145,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     pds_mapping.key.vcn.id = i;
                     pds_mapping.key.ip_addr.af = IP_AF_IPV4;
                     pds_mapping.key.ip_addr.addr.v4_addr =
-                        (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                        (g_test_params.vcn_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
                     pds_mapping.subnet.id = (i - 1) * num_subnets + j;
-                    if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                    if (g_test_params.tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
                         pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                         //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
                         pds_mapping.fabric_encap.val.vnid = vnic_key;
@@ -143,10 +191,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                 pds_mapping.key.vcn.id = i;
                 pds_mapping.key.ip_addr.af = IP_AF_IPV4;
                 pds_mapping.key.ip_addr.addr.v4_addr =
-                    (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                    (g_test_params.vcn_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
                 pds_mapping.subnet.id = (i - 1) * num_subnets + j;
-                if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                if (g_test_params.tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
                     pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
                     pds_mapping.fabric_encap.val.vnid = remote_slot++;
@@ -199,7 +247,7 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
                 pds_vnic.subnet.id = (i - 1) * num_subnets + j;
                 pds_vnic.key.id = vnic_key;
                 pds_vnic.wire_vlan = vlan_start + vnic_key - 1;
-                if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                if (g_test_params.tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
                     pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     //pds_vnic.fabric_encap.val.vnid = VNID_BASE + pds_vnic.subnet.id;
                     pds_vnic.fabric_encap.val.vnid = vnic_key;
@@ -298,7 +346,7 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         // 1st IP in the TEP prefix is local TEP, 2nd is gateway IP,
         // so skip them
         pds_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
-        if (g_tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+        if (g_test_params.tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
             pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VXLAN;
         } else {
             pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
@@ -349,7 +397,7 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
                 rule = &policy.rules[k];
                 rule->stateful = false;
                 rule->match.l3_match.ip_proto = 17;    // UDP
-                rule->match.l3_match.ip_pfx = g_vcn_ippfx;
+                rule->match.l3_match.ip_pfx = g_test_params.vcn_pfx;
                 rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
                     rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
                     ((j - 1) << 14) | (k << 4);
@@ -403,16 +451,10 @@ create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp,
 sdk_ret_t
 create_objects (void)
 {
-    uint32_t num_vcns = 0, num_subnets = 0, num_vnics = 0, num_teps = 0;
-    uint32_t num_rules = 0;
-    uint32_t num_remote_mappings = 0, num_routes = 0, num_ip_per_vnic = 1;
-    uint16_t vlan_start = 1;
     pt::ptree json_pt;
     ip_prefix_t teppfx, natpfx, routepfx;
     string pfxstr;
-    sdk_ret_t ret = SDK_RET_OK;
-    uint32_t num_tcp, num_udp, num_icmp;
-    uint16_t sport_base, dport_base;
+    sdk_ret_t ret;
     
     g_flow_test_obj = new flow_test();
 
@@ -427,82 +469,134 @@ create_objects (void)
                 struct in_addr ipaddr, gwip;
                 uint64_t macaddr;
 
-                macaddr =
+                g_test_params.device_mac =
                     std::stoull(obj.second.get<std::string>("mac-addr"), 0, 0);
+
                 inet_aton(obj.second.get<std::string>("ip-addr").c_str(),
                           &ipaddr);
+                g_test_params.device_ip = ntohl(ipaddr.s_addr);
+
                 inet_aton(obj.second.get<std::string>("gw-ip-addr").c_str(),
                           &gwip);
+                g_test_params.device_gw_ip = ntohl(gwip.s_addr);
+
                 if (!obj.second.get<std::string>("encap").compare("vxlan")) {
-                    g_tep_encap = PDS_TEP_ENCAP_TYPE_VXLAN;
+                    g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VXLAN;
                 } else {
-                    g_tep_encap = PDS_TEP_ENCAP_TYPE_VNIC;
+                    g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VNIC;
                 }
-                ret = create_device_cfg(ntohl(ipaddr.s_addr), macaddr,
-                                            ntohl(gwip.s_addr));
             } else if (kind == "tep") {
-                num_teps = std::stol(obj.second.get<std::string>("count"));
-                if (num_teps <= 2) {
+                g_test_params.num_teps = std::stol(obj.second.get<std::string>("count"));
+                if (g_test_params.num_teps <= 2) {
                     printf("No. of TEPs must be greater than 2\n");
                     exit(1);
                 }
                 // reduce num_teps by 2, (MyTEP and GW-TEP)
-                num_teps -= 2;
+                g_test_params.num_teps -= 2;
                 pfxstr = obj.second.get<std::string>("prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &teppfx) == 0);
-                ret = create_teps(num_teps, &teppfx);
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.tep_pfx) == 0);
             } else if (kind == "route-table") {
-                num_routes = std::stol(obj.second.get<std::string>("count"));
-                num_vcns = std::stol(obj.second.get<std::string>("num_vcns", "1024"));
+                g_test_params.num_routes = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix-start");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &routepfx) == 0);
-                ret = create_route_tables(num_teps, num_vcns, 1, num_routes, &teppfx,
-                                          &routepfx);
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.route_pfx) == 0);
             } else if (kind == "security-policy") {
-                num_rules = std::stol(obj.second.get<std::string>("count"));
-                pfxstr = obj.second.get<std::string>("vcn-prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_vcn_ippfx) == 0);
-                ret = create_security_policy(num_vcns, num_subnets, num_rules,
-                                             IP_AF_IPV4, false);
-                //ret = create_security_policy(num_vcns, num_subnets, num_rules,
-                                             //IP_AF_IPV6, true);
+                g_test_params.num_rules = std::stol(obj.second.get<std::string>("count"));
             } else if (kind == "vcn") {
-                num_vcns = std::stol(obj.second.get<std::string>("count"));
+                g_test_params.num_vcns = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_vcn_ippfx) == 0);
-                num_subnets = std::stol(obj.second.get<std::string>("subnets"));
-                ret = create_vcns(num_vcns, &g_vcn_ippfx, num_subnets);
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.vcn_pfx) == 0);
+                g_test_params.num_subnets = std::stol(obj.second.get<std::string>("subnets"));
             } else if (kind == "vnic") {
-                num_vnics = std::stol(obj.second.get<std::string>("count"));
-                vlan_start =
+                g_test_params.num_vnics = std::stol(obj.second.get<std::string>("count"));
+                g_test_params.vlan_start =
                     std::stol(obj.second.get<std::string>("vlan-start"));
-                ret = create_vnics(num_vcns, num_subnets, num_vnics, vlan_start);
             } else if (kind == "mappings") {
                 pfxstr = obj.second.get<std::string>("nat-prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &natpfx) == 0);
-                num_remote_mappings =
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.nat_pfx) == 0);
+                g_test_params.num_remote_mappings =
                     std::stol(obj.second.get<std::string>("remotes"));
-                num_ip_per_vnic =
+                g_test_params.num_ip_per_vnic =
                     std::stol(obj.second.get<std::string>("locals"));
-                ret = create_mappings(num_teps, num_vcns, num_subnets, num_vnics,
-                                      num_ip_per_vnic, &teppfx, &natpfx,
-                                      num_remote_mappings);
             } else if (kind == "flows") {
-                num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
-                num_udp = std::stol(obj.second.get<std::string>("num_udp"));
-                num_icmp = std::stol(obj.second.get<std::string>("num_icmp"));
-                sport_base = std::stol(obj.second.get<std::string>("sport_base"));
-                dport_base = std::stol(obj.second.get<std::string>("dport_base"));
-                ret = create_flows(num_tcp, num_udp, num_icmp, sport_base, dport_base);
-            }
-
-            if (ret != SDK_RET_OK) {
-                return ret;
+                g_test_params.num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
+                g_test_params.num_udp = std::stol(obj.second.get<std::string>("num_udp"));
+                g_test_params.num_icmp = std::stol(obj.second.get<std::string>("num_icmp"));
+                g_test_params.sport_base = std::stol(obj.second.get<std::string>("sport_base"));
+                g_test_params.dport_base = std::stol(obj.second.get<std::string>("dport_base"));
             }
         }
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         exit(1);
+    }
+
+    // create device config
+    ret = create_device_cfg(g_test_params.device_ip, g_test_params.device_mac,
+                            g_test_params.device_gw_ip);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // create TEPs
+    ret = create_teps(g_test_params.num_teps, &g_test_params.tep_pfx);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // create route tables
+    ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vcns,
+                              g_test_params.num_subnets, g_test_params.num_routes,
+                              &g_test_params.tep_pfx, &g_test_params.route_pfx);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // create security policies
+    ret = create_security_policy(g_test_params.num_vcns, g_test_params.num_subnets,
+                                 g_test_params.num_rules, IP_AF_IPV4, false);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+#if 0
+    ret = create_security_policy(g_test_params.num_vcns, g_test_params.num_subnets,
+                                 g_test_params.num_rules, IP_AF_IPV4, true);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    ret = create_security_policy(g_test_params.num_vcns, g_test_params.num_subnets,
+                                 g_test_params.num_rules, IP_AF_IPV6, false);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    ret = create_security_policy(g_test_params.num_vcns, g_test_params.num_subnets,
+                                 g_test_params.num_rules, IP_AF_IPV6, true);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+#endif
+    // create vcns and subnets
+    ret = create_vcns(g_test_params.num_vcns, &g_test_params.vcn_pfx,
+                      g_test_params.num_subnets);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // create vnics
+    ret = create_vnics(g_test_params.num_vcns, g_test_params.num_subnets,
+                       g_test_params.num_vnics, g_test_params.vlan_start);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // create mappings
+    ret = create_mappings(g_test_params.num_teps, g_test_params.num_vcns,
+                          g_test_params.num_subnets, g_test_params.num_vnics,
+                          g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
+                          &g_test_params.nat_pfx, g_test_params.num_remote_mappings);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // create flows
+    ret = create_flows(g_test_params.num_tcp, g_test_params.num_udp,
+                       g_test_params.num_icmp, g_test_params.sport_base,
+                       g_test_params.dport_base);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
 
     return ret;
