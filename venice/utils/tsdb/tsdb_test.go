@@ -897,6 +897,11 @@ func TestOptionObjPrecision(t *testing.T) {
 
 func TestVeniceObjPerf(t *testing.T) {
 	ts.metricServer.ClearMetrics()
+	tmpMaxPoints := maxPoints
+	maxPoints = 50000
+	defer func() {
+		maxPoints = tmpMaxPoints
+	}()
 
 	time.Sleep(3 * testSendInterval)
 	rand.Seed(102)

@@ -20,7 +20,10 @@ const (
 	defaultRanges                  = 10
 	defaultSendInterval            = 10 * time.Second
 	defaultConnectionRetryInterval = 100 * time.Millisecond
-	maxPoints                      = 50000
+)
+
+var (
+	maxPoints = 500
 )
 
 // global information is maintained per client during Init time

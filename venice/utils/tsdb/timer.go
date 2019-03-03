@@ -253,6 +253,15 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 		return
 	}
 
+	// limit number of points stored in TSDB client
+	obj.Lock()
+	if len(obj.metricPoints) > maxPoints {
+		obj.Unlock()
+		atomic.AddUint64(&global.failedPoints, 1)
+		return
+	}
+	obj.Unlock()
+
 	mfs := make(map[string]*metric.Field)
 	for key, field := range fields {
 		switch k := field.(type) {
