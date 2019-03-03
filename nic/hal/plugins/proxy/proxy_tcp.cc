@@ -403,6 +403,10 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
         init_cwnd = std::min(init_cwnd_segments * smss,
                             std::max(2 * smss, init_cwnd_segments * 1460));
         spec->set_snd_cwnd(init_cwnd);
+
+        // Use large initial window for now to do perf testing
+        init_cwnd = 10000000;
+
         spec->set_initial_window(init_cwnd);
         HAL_TRACE_DEBUG("lkl snd_cwnd={} snd_ssthresh={}",
                         init_cwnd,

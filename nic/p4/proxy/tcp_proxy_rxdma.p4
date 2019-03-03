@@ -335,13 +335,19 @@ header_type read_ooo_base_addr_t {
 // d for stage 5 table 0
 header_type tcp_fc_d_t {
     fields {
-        page                    : 32;
-        descr                   : 32;
         rcv_wup                 : 32;
-        page_cnt                : 16;
+        consumer_ring_slots_mask: 16;
+        consumer_ring_slots     : 16;
+        high_thresh1            : 8;
+        high_thresh2            : 8;
+        high_thresh3            : 8;
+        high_thresh4            : 8;
         rcv_wnd                 : 32;
         rcv_scale               : 8;
         cpu_id                  : 8;
+        cum_pkt_size            : 32;
+        avg_pkt_size_shift      : 8;
+        num_pkts                : 8;
     }
 }
 
@@ -1057,7 +1063,11 @@ action ooo_qbase_alloc(qbase)
 /*
  * Stage 5 table 0 action1
  */
-action tcp_fc(page, descr, page_cnt, rcv_wnd, rcv_wup, rcv_scale, cpu_id) {
+action tcp_fc(
+        consumer_ring_slots_mask, consumer_ring_slots,
+        high_thresh1, high_thresh2, high_thresh3, high_thresh4,
+        rcv_wnd, rcv_wup, rcv_scale, cpu_id,
+        cum_pkt_size, avg_pkt_size_shift, num_pkts) {
     // k + i for stage 5
 
     // from to_stage 5
@@ -1071,13 +1081,19 @@ action tcp_fc(page, descr, page_cnt, rcv_wnd, rcv_wup, rcv_scale, cpu_id) {
     // from stage to stage
 
     // d for stage 5 table 0
-    modify_field(tcp_fc_d.page, page);
-    modify_field(tcp_fc_d.descr, descr);
-    modify_field(tcp_fc_d.page_cnt, page_cnt);
+    modify_field(tcp_fc_d.consumer_ring_slots_mask, consumer_ring_slots_mask);
+    modify_field(tcp_fc_d.consumer_ring_slots, consumer_ring_slots);
+    modify_field(tcp_fc_d.high_thresh1, high_thresh1);
+    modify_field(tcp_fc_d.high_thresh2, high_thresh2);
+    modify_field(tcp_fc_d.high_thresh3, high_thresh3);
+    modify_field(tcp_fc_d.high_thresh4, high_thresh4);
     modify_field(tcp_fc_d.rcv_wnd, rcv_wnd);
     modify_field(tcp_fc_d.rcv_wup, rcv_wup);
     modify_field(tcp_fc_d.rcv_scale, rcv_scale);
     modify_field(tcp_fc_d.cpu_id, cpu_id);
+    modify_field(tcp_fc_d.cum_pkt_size, cum_pkt_size);
+    modify_field(tcp_fc_d.avg_pkt_size_shift, avg_pkt_size_shift);
+    modify_field(tcp_fc_d.num_pkts, num_pkts);
 }
 
 /*

@@ -265,20 +265,32 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     s5_t0_tcp_rx_d      data = {0};
     hal_ret_t           ret = HAL_RET_OK;
+    int                 num_slots;
 
     // hardware index for this entry
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_FC);
 
     if(!del) {
-        data.u.tcp_fc_d.page_cnt = 0x1000;
         data.u.tcp_fc_d.rcv_wnd = htonl(tcpcb_pd->tcpcb->rcv_wnd);
         data.u.tcp_fc_d.rcv_scale = tcpcb_pd->tcpcb->rcv_wscale;
         data.u.tcp_fc_d.cpu_id = tcpcb_pd->tcpcb->cpu_id;
         data.u.tcp_fc_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_wup);
+        if (tcpcb_pd->tcpcb->bypass_tls) {
+            num_slots = CAPRI_SESQ_RING_SLOTS_MASK;
+        } else {
+            num_slots = CAPRI_SERQ_RING_SLOTS_MASK;
+        }
+        data.u.tcp_fc_d.consumer_ring_slots = htons(num_slots);
+        data.u.tcp_fc_d.consumer_ring_slots_mask = htons(num_slots - 1);
+        data.u.tcp_fc_d.high_thresh1 = (uint8_t)num_slots * .75;
+        data.u.tcp_fc_d.high_thresh2 = (uint8_t)num_slots * .50;
+        data.u.tcp_fc_d.high_thresh3 = (uint8_t)num_slots * .25;
+        data.u.tcp_fc_d.high_thresh4 = (uint8_t)num_slots * .125;
+        data.u.tcp_fc_d.avg_pkt_size_shift = 7;
     }
 
-    HAL_TRACE_DEBUG("Received rcv_wnd: {}", data.u.tcp_fc_d.rcv_wnd);
+    HAL_TRACE_DEBUG("Received rcv_wnd: {}", htonl(data.u.tcp_fc_d.rcv_wnd));
     HAL_TRACE_DEBUG("Received rcv_scale {}", data.u.tcp_fc_d.rcv_scale);
     HAL_TRACE_DEBUG("Received rcv_wup {:#x}", data.u.tcp_fc_d.rcv_wup);
 

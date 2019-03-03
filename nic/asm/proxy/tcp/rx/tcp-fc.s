@@ -20,12 +20,11 @@ struct s5_t0_tcp_rx_tcp_fc_d d;
     .param          tcp_rx_dma_rx2tx_stage_start
     .param          tcp_rx_write_arq_stage_start
     .align
+
 tcp_rx_fc_stage_start:
     seq         c1, k.common_phv_write_arq, 1
     bcf         [c1], tcp_cpu_rx
     nop
-
-    // TODO : FC stage has to be implemented
 
     // launch table 1 next stage
     CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_EN,
@@ -37,20 +36,60 @@ flow_fc_process:
     bcf         [!c2], flow_fc_process_done
     nop
 
+    // Calculate average every 16 packets
+    tblmincri   d.num_pkts, 4, 1
+    tbladd      d.cum_pkt_size, k.s1_s2s_payload_len
+    seq         c1, d.num_pkts, 0
+    b.!c1       start_window_calc
+
+    srl         r7, d.cum_pkt_size, 4
+    tblwr       d.cum_pkt_size, 0
+
+    sle         c1, r7, 128
+    tblwr.c1    d.avg_pkt_size_shift, 4
+    b.c1        start_window_calc
+    sle         c1, r7, 256
+    tblwr.c1    d.avg_pkt_size_shift, 5
+    b.c1        start_window_calc
+    sle         c1, r7, 512
+    tblwr.c1    d.avg_pkt_size_shift, 6
+    b.c1        start_window_calc
+    sle         c1, r7, 768
+    tblwr.c1    d.avg_pkt_size_shift, 7
+    b.c1        start_window_calc
+    sle         c1, r7, 1024
+    tblwr.c1    d.avg_pkt_size_shift, 8
+    b.c1        start_window_calc
+
+    tblwr.!c1   d.avg_pkt_size_shift, 10
+
+start_window_calc:
     /* Figure out how many entries are free in serq */
-    add         r2, k.to_s5_serq_cidx, CAPRI_SERQ_RING_SLOTS
+    add         r2, k.to_s5_serq_cidx, d.consumer_ring_slots;
     sub         r2, r2, k.to_s5_serq_pidx
-    and         r2, r2, CAPRI_SERQ_RING_SLOTS - 1
+    and         r2, r2, d.consumer_ring_slots_mask;
 
-    /* r2 free entries in serq. Reserve 32 and use the remaining in
-    * the window calculation below.
-    */ 
-    sub         r2, r2, 31
-    sle.s       c3, r2, 0
-    add.c3      r2, r0, r0
+    slt         c1, d.high_thresh1, r2
+    sll.c1      r4, r2, d.avg_pkt_size_shift
+    b.c1        window_calc_done
+    slt         c1, d.high_thresh2, r2
+    sub         r7, d.avg_pkt_size_shift, 1
+    sll.c1      r4, r2, r7
+    b.c1        window_calc_done
+    slt         c1, d.high_thresh3, r2
+    sub         r7, d.avg_pkt_size_shift, 2
+    sll.c1      r4, r2, r7
+    b.c1        window_calc_done
+    slt         c1, d.high_thresh4, r2
+    sub         r7, d.avg_pkt_size_shift, 3
+    sll.c1      r4, r2, r7
+    b.c1        window_calc_done
+    nop
 
-    /* Assume each entry can hold 128 bytes */
-    sll         r4, r2, 7
+    // When less than thresh4 slots are free, assume 0 window
+    add         r4, r0, 0
+
+window_calc_done:
 
     /* If the window calculated is smaller than the window
     * advertised previously reset to previous window to avoid
@@ -85,7 +124,8 @@ flow_fc_process:
 
     sle         c3, r4, r3
     add.c3      r4, r0, r3
-    tblwr.!c3   d.rcv_wnd, r4
+
+    tblwr       d.rcv_wnd, r4
 
 flow_fc_process_done:
     /* Apply the scale factor SEG.WND = RCV.WND >> Rcv.Wind.Scale */
