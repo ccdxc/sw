@@ -315,6 +315,34 @@ TEST_F(DelphiIntegTest, HubDisconnectTest) {
     }
 }
 
+TEST_F(DelphiIntegTest, MultipleWatcherTest) {
+    shared_ptr<testReactor>   watcher = make_shared<testReactor>();
+    delphi::objects::ExampleSpec::Watch(sdks[0], watcher);
+    delphi::objects::ExampleStatus::Watch(sdks[0], watcher);
+
+    usleep(1000);
+    // verify all the clients are inited
+    for (int i = 0; i < NUM_CLIENTS; i++) {
+        ASSERT_EQ_EVENTUALLY(services[i]->inited, true) << "client was not inited";
+    }
+
+    // send one object from each client
+    for (int i = 0; i < NUM_CLIENTS; i++) {
+        auto err = services[i]->QueueObject(i+1, 0);
+        ASSERT_TRUE(err.IsOK()) << "Error queuing object";
+    }
+
+    // verify second watcher got the callback
+        ASSERT_EQ_EVENTUALLY(watcher->numCreateCallbacks, NUM_CLIENTS) << "second watcher did not receive create callbacks";
+
+    // verify all service reactors got the callback too..
+    for (int i = 0; i < NUM_CLIENTS; i++) {
+        LogInfo("Client {} has {} objects", i, sdks[i]->ListKind("ExampleSpec").size());
+        ASSERT_EQ_EVENTUALLY(sdks[i]->ListKind("ExampleSpec").size(), NUM_CLIENTS) << "client did not have all the objects";
+        ASSERT_EQ_EVENTUALLY(services[i]->objMgr->numCreateCallbacks, NUM_CLIENTS) << "reactor did not receive create callbacks";
+    }
+}
+
 class DelphiPersistenceTest : public testing::Test {
 };
 

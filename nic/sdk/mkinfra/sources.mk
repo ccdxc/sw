@@ -78,7 +78,6 @@ $${${1}_BLD_OUT_DIR}/${2}/%.proto_delphiobj: ${2}/%.proto $${${1}_DEPS}
 	${AT}mkdir -p ${BLD_PROTOGEN_DIR}
 	${NAT}${AT}echo ${NAME_PROT2DELPHI} $$(call CANPATH,$$<)
 	${AT}$(strip ${CMD_PROTOC} --delphi_out=$${${1}_GEN_DIR} ${${1}_INCS} ${${1}_DEFS} $$<)
-	@${BLDTOP}/delphi/compiler/delphi_hdr_gen.sh ${BLD_PROTOGEN_DIR}
 	${AT}touch $$@
 endef
 

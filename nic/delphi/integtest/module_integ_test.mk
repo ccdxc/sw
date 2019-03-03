@@ -9,4 +9,5 @@ MODULE_SOLIBS   = delphisdk halproto upgradeproto nicmgrproto commonproto ftesta
 MODULE_ARLIBS   = delphiexampleproto delphimessenger delphishm 
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev dl lmdb
 MODULE_SRCS     = ${MODULE_SRC_DIR}/delphi_integ_test.cc ${MODULE_SRC_DIR}/../hub/delphi_server.cc
+MODULE_PREREQS = hub_objects.submake
 include ${MKDEFS}/post.mk
