@@ -1,42 +1,100 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
-#include "delphic.h"
-#include <memory>
-#include <pthread.h>
-#include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "gen/proto/sysmgr.delphi.hpp"
-#include "nic/sysmgr/lib/sysmgr_client.hpp"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <unistd.h>
+#include <inttypes.h>
 
-using namespace std;
-using namespace upgrade;
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#include "nic/sdk/platform/pcieport/include/pcieport.h"
+#include "delphic.h"
 
 static shared_ptr<PciemgrService> delphic;
 
-
 int delphi_client_start (void)
 {
-  printf("Starting delphi thread..\n");
+    printf("Starting delphi thread..\n");
+    delphic = make_shared<PciemgrService>();
+    delphic->RegisterService();
+    return 0;
+}
 
-  delphic = make_shared<PciemgrService>();
-  delphic->RegisterService();
+void delphi_update_pcie_port_status(
+    const int port,
+    const enum pciemgr::PciePortOperStatus status,
+    const int gen,
+    const int width,
+    const char *faultstr)
+{
+    if (delphic) {
+        delphic->UpdatePciePortStatus(port, status, gen, width, faultstr);
+    }
+}
 
-  return 0;
+static void delphi_update_pciemgr_metrics(const int port)
+{
+    static delphi::objects::pciemgrmetrics_t m;
+    pciemgr_stats_t *s = pciehw_stats_get(port);
+
+    if (delphic == NULL) return;
+    if (s == NULL) return;
+
+#define PCIEMGR_STATS_DEF(S) \
+    m.S = s->S;
+#include "nic/sdk/platform/pciemgr/include/pciemgr_stats_defs.h"
+
+    delphi::objects::PcieMgrMetrics::Publish(port, &m);
+}
+
+static void delphi_update_pcie_port_metrics(const int port)
+{
+    static delphi::objects::pcieportmetrics_t m;
+    pcieport_stats_t *s = pcieport_stats_get(port);
+
+    if (delphic == NULL) return;
+    if (s == NULL) return;
+
+#define PCIEPORT_STATS_DEF(S) \
+    m.S = s->S;
+#include "nic/sdk/platform/pcieport/include/pcieport_stats_defs.h"
+
+    delphi::objects::PciePortMetrics::Publish(port, &m);
+}
+
+void delphi_update_pcie_metrics(const int port)
+{
+    static int created[PCIEPORT_NPORTS];
+
+    if (delphic == NULL) return;
+    if (!created[port]) {
+        delphi::objects::PcieMgrMetrics::CreateTable();
+        delphi::objects::PciePortMetrics::CreateTable();
+        created[port] = 1;
+    }
+    delphi_update_pciemgr_metrics(port);
+    delphi_update_pcie_port_metrics(port);
 }
 
 PciemgrService::PciemgrService()
 {
-  this->delphi = make_shared<delphi::Sdk>();
-  this->name = SERVICE_NAME;
-  this->sysmgr = sysmgr::CreateClient(this->delphi, SERVICE_NAME);
-  this->upgsdk = make_shared<UpgSdk>(this->delphi, make_shared<PciemgrSvcHandler>(), this->name, NON_AGENT, nullptr);
+    this->delphi = make_shared<delphi::Sdk>();
+    this->name = SERVICE_NAME;
+    this->sysmgr = sysmgr::CreateClient(this->delphi, SERVICE_NAME);
+    this->upgsdk = make_shared<UpgSdk>(this->delphi,
+                                       make_shared<PciemgrSvcHandler>(),
+                                       this->name, NON_AGENT, nullptr);
+
+    PciePortStatus::Mount(this->delphi, delphi::ReadWriteMode);
 }
 
 void PciemgrService::RegisterService()
 {
-  this->delphi->RegisterService(shared_from_this());
-  this->delphi->Connect();
+    this->delphi->RegisterService(shared_from_this());
+    this->delphi->Connect();
 }
 
 void PciemgrService::OnMountComplete()
@@ -48,4 +106,20 @@ void PciemgrService::OnMountComplete()
     this->sysmgr->init_done();
 }
 
+void PciemgrService::UpdatePciePortStatus(
+    const int port,
+    const enum pciemgr::PciePortOperStatus status,
+    const int gen,
+    const int width,
+    const string faultstr)
+{
+    PciePortStatusPtr s = make_shared<PciePortStatus>();
 
+    s->set_key(port);
+    s->set_status(status);
+    s->set_gen(gen);
+    s->set_width(width);
+    s->set_fault_reason(faultstr);
+
+    this->delphi->QueueUpdate(s);
+}

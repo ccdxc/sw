@@ -20,6 +20,7 @@ extern "C" {
 
 #include "pmt.h"
 #include "prt.h"
+#include "pciemgr_stats.h"
 
 struct pciehdev_s;
 typedef struct pciehdev_s pciehdev_t;
@@ -86,26 +87,7 @@ typedef struct pciehwdev_s {
 
 typedef struct pciehw_port_s {
     u_int8_t secbus;                    /* bridge secondary bus */
-    u_int64_t indirect_cnt;             /* total count of indirect events */
-    u_int64_t notify_intr;              /* notify interrupts */
-    u_int64_t notify_cnt;               /* total count of notify events */
-    u_int32_t notify_max;               /* largest pending notify events */
-    u_int64_t notspurious;
-    u_int64_t notcfgrd;
-    u_int64_t notcfgwr;
-    u_int64_t notmemrd;
-    u_int64_t notmemwr;
-    u_int64_t notiord;
-    u_int64_t notiowr;
-    u_int64_t notunknown;
-    u_int64_t indspurious;
-    u_int64_t indcfgrd;
-    u_int64_t indcfgwr;
-    u_int64_t indmemrd;
-    u_int64_t indmemwr;
-    u_int64_t indiord;
-    u_int64_t indiowr;
-    u_int64_t indunknown;
+    pciemgr_stats_t stats;
 } pciehw_port_t;
 
 typedef struct pciehw_sprt_s {
@@ -114,6 +96,8 @@ typedef struct pciehw_sprt_s {
 
 typedef struct pciehw_spmt_s {
     u_int64_t baroff;                   /* bar addr offset */
+    u_int64_t swrd;                     /* reads  handled by sw (not/ind) */
+    u_int64_t swwr;                     /* writes handled by sw (not/ind) */
     pciehwdevh_t owner;                 /* current owner of this entry */
     u_int8_t loaded:1;                  /* is loaded into hw */
     u_int8_t cfgidx;                    /* cfgidx for bar we belong to */
@@ -156,6 +140,13 @@ void pciehw_finalize_topology(pciehdev_t *proot);
 void pciehw_dev_show(int argc, char *argv[]);
 void pciehw_pmt_show(int argc, char *argv[]);
 void pciehw_bar_show(void);
+
+/* flags for stats_show() */
+#define PMGRSF_NONE     0x0
+#define PMGRSF_ALL      0x1
+void pciehw_stats_show(const int port, const unsigned int flags);
+void pciehw_stats_clear(const int port, const unsigned int flags);
+pciemgr_stats_t *pciehw_stats_get(const int port);
 
 void pciehw_event_hostup(const int port, const int gen, const int width);
 void pciehw_event_hostdn(const int port);

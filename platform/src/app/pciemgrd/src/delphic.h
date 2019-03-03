@@ -1,33 +1,42 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
-#ifndef __DELPHI_H__
-#define __DELPHI_H__
+#ifndef __DELPHIC_H__
+#define __DELPHIC_H__
 
 #include <memory>
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/sysmgr/lib/sysmgr_client.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
+#include "gen/proto/sysmgr.delphi.hpp"
+#include "gen/proto/pciemgr/pciemgr.delphi.hpp"
 
 using namespace std;
 using namespace upgrade;
+using delphi::objects::PciePortStatus;
+using delphi::objects::PciePortStatusPtr;
 
 // delphi service for pciemgr
 class PciemgrService: public delphi::Service,
                       public enable_shared_from_this<PciemgrService>
 {
- private:
-  delphi::SdkPtr      delphi;
-  sysmgr::ClientPtr   sysmgr;
-  string              name;
-  UpgSdkPtr           upgsdk;
+private:
+    delphi::SdkPtr      delphi;
+    sysmgr::ClientPtr   sysmgr;
+    string              name;
+    UpgSdkPtr           upgsdk;
 
- public:
-  PciemgrService();
-  void RegisterService();
-  virtual void OnMountComplete();
+public:
+    PciemgrService();
+    void RegisterService();
+    virtual void OnMountComplete();
+    void UpdatePciePortStatus(const int port,
+                              const enum pciemgr::PciePortOperStatus status,
+                              const int gen = 0,
+                              const int width = 0,
+                              const string faultstr = "");
 };
 
 class PciemgrSvcHandler : public UpgHandler {
@@ -39,5 +48,12 @@ public:
 #define SERVICE_NAME "pciemgrd"
 
 int delphi_client_start();
+void
+delphi_update_pcie_port_status(const int port,
+                               const enum pciemgr::PciePortOperStatus status,
+                               const int gen = 0,
+                               const int width = 0,
+                               const char *faultstr = "");
+void delphi_update_pcie_metrics(const int port);
 
-#endif
+#endif /* __DELPHIC_H__ */

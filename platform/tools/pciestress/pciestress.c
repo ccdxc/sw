@@ -47,11 +47,13 @@ static void
 usage(void)
 {
     fprintf(stderr,
-"Usage: pciestress [-d <ven:dev>][-s <slot>][-vI] [test [args...]]\n"
+"Usage: pciestress [options] -- [test [args...]]\n"
+"    -D             show dots for progress\n"
+"    -I             simulate I/O,cfg space access\n"
+"    -n <niters>    run test for <niters> iterations\n"
+"    -v             verbose output\n"
 "    -d <ven:dev>   select target dev like lspci -d <ven:dev>\n"
 "    -s <slot>      select target dev like lspci -s <slot>\n"
-"    -S             simulate I/O,cfg space access\n"
-"    -v             verbose output\n"
             );
 }
 

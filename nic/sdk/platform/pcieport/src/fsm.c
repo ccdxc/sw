@@ -107,6 +107,54 @@ pcieport_drain(pcieport_t *p)
 }
 
 static void
+pcieport_clear_early_sat_ind_reason(pcieport_t *p)
+{
+    union {
+        struct {
+            u_int32_t pmr_force:8;
+            u_int32_t prt_force:8;
+            u_int32_t msg:8;
+            u_int32_t atomic:8;
+            u_int32_t poisoned:8;
+            u_int32_t unsupp:8;
+            u_int32_t pmv:8;
+            u_int32_t db_pmv:8;
+            u_int32_t pmt_miss:8;
+            u_int32_t rc_vfid_miss:8;
+            u_int32_t pmr_prt_miss:8;
+            u_int32_t prt_oor:8;
+            u_int32_t bdf_wcard_oor:8;
+            u_int32_t vfid_oor:8;
+        } __attribute__((packed));
+        u_int32_t w[4];
+    } v;
+    const u_int64_t sat_tgt_ind_reason =
+        (CAP_ADDR_BASE_PXB_PXB_OFFSET +
+         CAP_PXB_CSR_SAT_TGT_IND_REASON_BYTE_ADDRESS);
+
+    pal_reg_rd32w(sat_tgt_ind_reason, v.w, 4);
+    /*
+     * We get many pmt_miss events during BIOS bus scan
+     * as the BIOS probes for devices that don't exist.
+     * This counter ends up saturated at startup always.
+     * We'll clear the counter here so it can count
+     * the pmt_miss events we get *after* the BIOS scan.
+     *
+     * (We could add a catchall entry in the PMT to catch
+     * these and return UR?)
+     */
+    v.pmt_miss = 0;
+    pal_reg_wr32w(sat_tgt_ind_reason, v.w, 4);
+}
+
+static void
+pcieport_clear_early_link_counts(pcieport_t *p)
+{
+    pcieport_set_ltssm_st_cnt(p, 0);
+    pcieport_clear_early_sat_ind_reason(p);
+}
+
+static void
 pcieport_update_linkinfo(pcieport_t *p)
 {
     portcfg_read_genwidth(p->port, &p->cur_gen, &p->cur_width);
@@ -121,6 +169,7 @@ pcieport_buschg(pcieport_t *p)
 {
     const u_int8_t secbus_prev = p->secbus;
 
+    pcieport_clear_early_link_counts(p);
     pcieport_update_linkinfo(p);
     /*
      * Ignore changes to secbus=0 which happens at startup

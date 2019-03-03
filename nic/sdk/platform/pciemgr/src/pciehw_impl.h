@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #ifndef __PCIEHW_IMPL_H__
@@ -24,11 +24,11 @@ typedef struct pciehw_s pciehw_t;
 typedef struct pciehw_mem_s {
     u_int8_t notify_area[PCIEHW_NPORTS][PCIEHW_NOTIFYSZ]
                                      __attribute__((aligned(PCIEHW_NOTIFYSZ)));
+    /* page of zeros to back cfgspace */
+    u_int8_t zeros[0x1000] __attribute__((aligned(4096)));
     u_int8_t cfgcur[PCIEHW_NDEVS][PCIEHW_CFGSZ] __attribute__((aligned(4096)));
     u_int32_t notify_intr_dest[PCIEHW_NPORTS];   /* notify   intr dest */
     u_int32_t indirect_intr_dest[PCIEHW_NPORTS]; /* indirect intr dest */
-                                     /* page of zeros to back cfgspace */
-    u_int8_t zeros[0x1000] __attribute__((aligned(4096)));
     u_int32_t magic;                    /* PCIEHW_MAGIC when initialized */
     u_int32_t version;                  /* PCIEHW_VERSION when initialized */
 } pciehw_mem_t;

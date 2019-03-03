@@ -206,61 +206,6 @@ pmt_reset()
     pmt_pmr_init();
 }
 
-#if 0
-static void
-pmt_load_cfg_rcdev(pciehwdev_t *phwdev)
-{
-    const pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
-    const u_int64_t cfgpa = 0x800000000ULL; /* rc address */
-    const u_int16_t addr = 0;
-    const u_int16_t addrm = 0; /* don't care - match any cfg addr */
-    const u_int8_t romsksel = 0; /* all writable */
-    const u_int8_t notify = 0; /* no notify */
-    const u_int8_t indirect = 0; /* no indirect */
-    int pmti;
-    pmt_t pmt;
-
-    pmti = pmt_alloc(hwdevh);
-    assert(pmti >= 0);
-
-    pmt_make_cfg(&pmt, phwdev, cfgpa, addr, addrm, romsksel, notify, indirect);
-    pmt.pmre.cfg.vfbase = 200;
-    pmt_set(pmti, &pmt);
-}
-
-static void
-pmt_load_bar_rcdev(pciehwbar_t *phwbar)
-{
-    pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    const u_int32_t pmti = phwbar->pmti;
-    pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
-    pciehw_sprt_t *sprt = &pshmem->sprt[spmt->pmt.pmre.bar.prtb];
-    const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
-    pmt_t pmt;
-
-    /*
-     * Set res addr to baraddr so full address gets forwarded to RC.
-     */
-    sprt->resaddr = spmt->baraddr;
-
-    /*
-     * Load PRT first, then load PMT so PMT tcam search hit
-     * will find valid PRT entries.
-     */
-    pciehw_prt_load(spmt->pmt.pmre.bar.prtb, spmt->pmt.pmre.bar.prtc);
-
-    //pmt_load_bar(phwbar);
-    pmt_make_bar(&pmt, phwdev->port, phwdev->bdf, spmt);
-    pmt.pmre.bar.vfbase = 201;
-    pmt.pmre.bar.vflimit = 0x7ff; /* make 201 within range */
-    pmt_set(pmti, &pmt);
-
-    if (!spmt->loaded) {
-        spmt->loaded = 1;
-    }
-}
-#endif
-
 /******************************************************************
  * apis
  */
@@ -282,13 +227,6 @@ pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
     const u_int64_t cfgpa = pal_mem_vtop(&phwmem->cfgcur[hwdevh]);
     const u_int64_t zerospa = pal_mem_vtop(phwmem->zeros);
     int pmti, i;
-
-#if 0
-    if (strncmp(pciehwdev_get_name(phwdev), "rcdev", 5) == 0) {
-        pmt_load_cfg_rcdev(phwdev);
-        return 0;
-    }
-#endif
 
     for (i = 0; i < PCIEHW_ROMSKSZ; i++) {
         const int romsk = phwdev->romsksel[i];
@@ -346,20 +284,12 @@ pciehw_pmt_load_bar(pciehwbar_t *phwbar)
     const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
     const u_int16_t bdf = pciehwdev_get_bdf(phwdev);
 
-#if 0
-    if (strncmp(pciehwdev_get_name(phwdev), "rcdev", 5) == 0) {
-        pmt_load_bar_rcdev(phwbar);
-        return;
-    }
-#endif
-
-    assert(phwbar->valid);
-
 #ifdef __aarch64__
     pciesys_loginfo("%s: bar %d pmt %d loaded\n",
                     pciehwdev_get_name(phwdev), spmt->cfgidx, pmti);
 #endif
 
+    assert(phwbar->valid);
     for ( ; spmt < spmte; spmt++, pmti++) {
         /*
          * Load PRT first, then load PMT so PMT tcam search hit
@@ -391,6 +321,7 @@ pciehw_pmt_unload_bar(pciehwbar_t *phwbar)
                     pciehwdev_get_name(phwdev), spmt->cfgidx, pmti);
 #endif
 
+    assert(phwbar->valid);
     for ( ; spmt < spmte; spmt++, pmti++) {
         /*
          * Unload PMT first THEN PRT, so PMT tcam search will not hit
@@ -408,16 +339,11 @@ pciehw_pmt_unload_bar(pciehwbar_t *phwbar)
 void
 pciehw_pmt_enable_bar(pciehwbar_t *phwbar, const int on)
 {
-    pciemgr_params_t *params = pciehw_get_params();
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     const u_int32_t pmti = phwbar->pmtb;
     pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
 
-    if (params->force_bars_load) {
-        if (!spmt->loaded) {
-            pciehw_pmt_load_bar(phwbar);
-        }
-    } else if (on && !spmt->loaded) {
+    if (on && !spmt->loaded) {
         pciehw_pmt_load_bar(phwbar);
     } else if (!on && spmt->loaded) {
         pciehw_pmt_unload_bar(phwbar);
@@ -496,8 +422,8 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
                     "%4d %d:%-7s %4d %5d 0x%09" PRIx64 " %c%c%c%c%c\n",
                     pmti, d->tblid,
                     d->type == r->type ? pmt_type_str(d->type) : "BAD",
-                    pmt_allows_rd(pmt) ? 'r' : ' ',
-                    pmt_allows_wr(pmt) ? 'w' : ' ',
+                    pmt_allows_rd(pmt) ? 'r' : '-',
+                    pmt_allows_wr(pmt) ? 'w' : '-',
                     d->port, bdf_to_str(d->bdf), d->addrdw << 2,
                     r->vfbase,
                     r->plimit,
@@ -538,10 +464,10 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
 static void
 pmt_show_bar_entry_hdr(void)
 {
-    pciesys_loginfo("%-4s %-2s %-4s %-2s %-9s %-10s %-4s "
+    pciesys_loginfo("%-4s %-2s %-3s %-2s %-9s %-10s %-4s "
                     "%-5s %-5s %-5s %-5s %-5s "
                     "%-4s\n",
-                    "idx", "id", "type", "rw", "p:bb:dd.f", "baraddr",
+                    "idx", "id", "typ", "rw", "p:bb:dd.f", "baraddr",
                     "size", " vf  ", " lif ", " prt ", " pid ", "qtype",
                     "prts");
 }
@@ -631,7 +557,7 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     if (x##c) snprintf(x##s, sizeof(x##s), "%2d:%-2d", x##b + x##c - 1, x##b);
     S(qty); S(res); S(pid); S(lif); S(vf);
 
-    pciesys_loginfo("%-4d %2d %-4s %c%c %1d:%-7s 0x%08" PRIx64 " %-4s "
+    pciesys_loginfo("%-4d %2d %-3s %c%c %1d:%-7s 0x%08" PRIx64 " %-4s "
                     "%5s %5s %5s %5s %5s "
                     "%-4s\n",
                     pmti, d->tblid,

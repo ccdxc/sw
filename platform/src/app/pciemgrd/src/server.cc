@@ -291,6 +291,20 @@ dev_evhandler(const pciehdev_eventdata_t *evd)
     pciemgrs_msgfree(m);
 }
 
+#ifdef __aarch64__
+static void
+update_stats(void *arg)
+{
+    pciemgrenv_t *pme = pciemgrenv_get();
+
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            delphi_update_pcie_metrics(port);
+        }
+    }
+}
+#endif
+
 int
 server_loop(void)
 {
@@ -299,6 +313,11 @@ server_loop(void)
 
     logger_init();
     pciesys_loginfo("pciemgrd started\n");
+
+#ifdef __aarch64__
+    // connect to delphi
+    delphi_client_start();
+#endif
 
     pciemgrd_params(pme);
     if ((r = open_hostports()) < 0) {
@@ -315,8 +334,9 @@ server_loop(void)
     intr_init();
 
 #ifdef __aarch64__
-    // connect to delphi
-    delphi_client_start();
+    // initialize stats timer to update stats to delphi
+    static evutil_timer stats_timer;
+    evutil_timer_start(&stats_timer, update_stats, NULL, 10.0, 10.0);
 #endif
 
     pciemgrs_open(NULL, pciemgr_msg_cb);

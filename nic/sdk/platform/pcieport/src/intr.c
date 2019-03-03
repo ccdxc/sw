@@ -45,31 +45,55 @@ pcieport_intr(pcieport_t *p)
 #endif
     if (int_mac == 0) return -1;
 
+    p->stats.intr_total++;
+
     /*
      * Snapshot current status here *before* ack'ing int_mac intrs.
      */
     sta_rst = pcieport_get_sta_rst(p);
 #ifdef __aarch64__
     pal_reg_wr32(PXC_(INT_C_MAC_INTREG, pn), int_mac);
-    pciesys_loginfo("pcieport_intr: int_mac 0x%x sta_rst 0x%x\n",
-                    int_mac, sta_rst);
+
+    /*
+     * Don't log LTSSM_ST_CHANGED, we sometimes see a burst of
+     * these as the link settles dependening on how long the BIOS
+     * takes to bring up the link after reset.
+     * We'll count LTSSM_ST_CHANGED below for stats.
+     */
+    if (int_mac & ~MAC_INTREGF_(LTSSM_ST_CHANGED)) {
+        pciesys_loginfo("pcieport_intr: int_mac 0x%x sta_rst 0x%x\n",
+                        int_mac, sta_rst);
+    }
 #endif
 
+    if (int_mac & MAC_INTREGF_(LTSSM_ST_CHANGED)) {
+        /* count these, might indicate link quality issues */
+        if (p->state < PCIEPORTST_LINKUP) {
+            p->stats.intr_ltssmst_early++;
+        } else {
+            p->stats.intr_ltssmst++;
+        }
+    }
     if (int_mac & MAC_INTREGF_(LINK_UP2DN)) {
+        p->stats.intr_linkup2dn++;
         pcieport_fsm(p, PCIEPORTEV_LINKDN);
     }
     if (int_mac & MAC_INTREGF_(RST_DN2UP)) {
+        p->stats.intr_rstdn2up++;
         pcieport_fsm(p, PCIEPORTEV_MACDN);
     }
 
     if (sta_rst & STA_RSTF_(PERSTN)) {
         if (int_mac & MAC_INTREGF_(RST_UP2DN)) {
+            p->stats.intr_rstup2dn++;
             pcieport_fsm(p, PCIEPORTEV_MACUP);
         }
         if (int_mac & MAC_INTREGF_(LINK_DN2UP)) {
+            p->stats.intr_linkdn2up++;
             pcieport_fsm(p, PCIEPORTEV_LINKUP);
         }
         if (int_mac & MAC_INTREGF_(SEC_BUSNUM_CHANGED)) {
+            p->stats.intr_secbus++;
             pcieport_fsm(p, PCIEPORTEV_BUSCHG);
         }
     }
@@ -89,6 +113,7 @@ pcieport_intr_init(pcieport_t *p)
     pal_reg_wr32(PXC_(INT_C_MAC_INTREG, p->port), int_mac);
 #endif
 
+    /* XXX don't hard-code 0x10 - might be 0x11 (recovery)? */
     ltssm_st = sta_rst & 0x1f;
     if (ltssm_st == 0x10) {
         portcfg_read_bus(p->port, NULL, &secbus, NULL);
@@ -119,7 +144,6 @@ pcieport_poweron(pcieport_t *p)
 #ifdef __aarch64__
     pciesys_loginfo("port%d: poweron\n", p->port);
 #endif
-    pcieport_set_ltssm_st_cnt(p, 0);
     r = pcieport_config(p);
     if (r) pciesys_logwarn("%d: poweron config failed: %d\n", p->port, r);
 }

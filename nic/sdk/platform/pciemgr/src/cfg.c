@@ -283,11 +283,9 @@ pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 static void
 pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
-    pciemgr_params_t *params = pciehw_get_params();
     pciehwbar_t *phwbar;
     cfgspace_t cs;
     int i, cfgoff;
-    u_int16_t cmd;
 
     pciehwdev_get_cfgspace(phwdev, &cs);
 
@@ -306,17 +304,6 @@ pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
             }
             cfgoff += barlen;
         }
-    }
-
-    /*
-     * XXX We don't really need to enable bars when the bar addresses
-     * are written, because the enable/disable state is in the CMD register.
-     * But we put this here to give us a chance to load the bars early
-     * when the address arrives if force_bars_load is specified.
-     */
-    if (params->force_bars_load) {
-        cmd = cfgspace_readw(&cs, PCI_COMMAND);
-        pciehw_cfg_bars_enable(phwdev, cmd);
     }
 }
 

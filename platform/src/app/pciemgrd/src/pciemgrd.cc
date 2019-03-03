@@ -23,6 +23,10 @@
 
 #include "pciemgrd_impl.hpp"
 
+#ifndef PCIEMGRD_GOLD
+#include "delphic.h"
+#endif
+
 static pciemgrenv_t pciemgrenv;
 
 static void
@@ -87,9 +91,13 @@ port_evhandler(pcieport_event_t *ev, void *arg)
 
     switch (ev->type) {
     case PCIEPORT_EVENT_HOSTUP: {
-        pciesys_loginfo("port%d hostup gen%dx%d\n",
+        pciesys_loginfo("port%d: hostup gen%dx%d\n",
                         ev->port, ev->hostup.gen, ev->hostup.width);
         pciehw_event_hostup(ev->port, ev->hostup.gen, ev->hostup.width);
+#ifndef PCIEMGRD_GOLD
+        delphi_update_pcie_port_status(ev->port, pciemgr::Up,
+                                       ev->hostup.gen, ev->hostup.width);
+#endif
         break;
     }
     case PCIEPORT_EVENT_HOSTDN: {
@@ -98,6 +106,9 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         }
         pciesys_loginfo("port%d: hostdn\n", ev->port);
         pciehw_event_hostdn(ev->port);
+#ifndef PCIEMGRD_GOLD
+        delphi_update_pcie_port_status(ev->port, pciemgr::Down);
+#endif
         break;
     }
     case PCIEPORT_EVENT_BUSCHG: {
@@ -108,6 +119,10 @@ port_evhandler(pcieport_event_t *ev, void *arg)
     }
     case PCIEPORT_EVENT_FAULT: {
         pciesys_logerror("port%d: fault %s\n", ev->port, ev->fault.reason);
+#ifndef PCIEMGRD_GOLD
+        delphi_update_pcie_port_status(ev->port,
+                                       pciemgr::Fault, 0, 0, ev->fault.reason);
+#endif
         break;
     }
     default:
@@ -138,8 +153,13 @@ open_hostports(void)
                 pciesys_logerror("pcieport_hostconfig %d failed\n", port);
                 goto close_error_out;
             }
+#ifndef PCIEMGRD_GOLD
+            /* initialize delphi port status object */
+            delphi_update_pcie_port_status(port, pciemgr::Down);
+#endif
         }
     }
+
     if ((r = pcieport_register_event_handler(port_evhandler, NULL)) < 0) {
         goto close_error_out;
     }

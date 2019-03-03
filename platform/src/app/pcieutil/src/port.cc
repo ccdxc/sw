@@ -16,14 +16,6 @@
 
 #include "cmd.h"
 
-/*
-# display all ports summary
-
-# display port stats (default 0)
-# pcieport_stats(const int port, const int flags)
-portstats [-a][-p <n>]
-*/
-
 static void
 port(int argc, char *argv[])
 {
@@ -69,16 +61,20 @@ CMDFUNC(ports, "ports");
 static void
 portstats(int argc, char *argv[])
 {
-    int opt, port;
+    int opt, port, do_clear;
     unsigned int flags;
 
     flags = PSF_NONE;
     port = 0;
+    do_clear = 0;
     optind = 0;
-    while ((opt = getopt(argc, argv, "ap:")) != -1) {
+    while ((opt = getopt(argc, argv, "acp:")) != -1) {
         switch (opt) {
         case 'a':
             flags |= PSF_ALL;
+            break;
+        case 'c':
+            do_clear = 1;
             break;
         case 'p':
             port = strtoul(optarg, NULL, 0);
@@ -97,8 +93,9 @@ portstats(int argc, char *argv[])
         return;
     }
 
-    pcieport_showportstats(port, flags);
+    if (do_clear) pcieport_clearportstats(port, flags);
+    else          pcieport_showportstats(port, flags);
 
     pcieport_close(port);
 }
-CMDFUNC(portstats, "portstats [-a][-p<port>]");
+CMDFUNC(portstats, "portstats [-ac][-p<port>]");

@@ -315,8 +315,8 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
         prt_res_t *r = &prt->res;
 
         if (prt->res.vfstride >= 2) {
-        pciesys_loginfo("    %-4d %-5s %c%c%c%c  %-5s 0x%013"PRIx64" "
-                        "0x%09"PRIx64"   %-8d\n",
+        pciesys_loginfo("    %-4d %-5s %c%c%c%c  %-5s 0x%013" PRIx64 " "
+                        "0x%09" PRIx64 "             %-8d\n",
                         prti,
                         prt_type_str(r->type),
                         r->indirect ? 'i' : '-',
@@ -328,8 +328,8 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
                         (u_int64_t)r->addrdw << 2,
                         1 << prt->res.vfstride);
         } else {
-        pciesys_loginfo("    %-4d %-5s %c%c%c%c  %-5s 0x%013"PRIx64" "
-                        "0x%09"PRIx64"\n",
+        pciesys_loginfo("    %-4d %-5s %c%c%c%c  %-5s 0x%013" PRIx64 " "
+                        "0x%09" PRIx64 "\n",
                         prti,
                         prt_type_str(r->type),
                         r->indirect ? 'i' : '-',
@@ -346,8 +346,8 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
         prt_db_t *db = &prt->db;
 
         if (prt->res.vfstride >= 2) {
-        pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013"PRIx64" "
-                        "LIF=%-7d   %-8d\n",
+        pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013" PRIx64 " "
+                        "LIF=%-7d             %-8d\n",
                         prti,
                         prt_type_str(db->type),
                         db->indirect ? 'i' : '-',
@@ -357,7 +357,7 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
                         db->lif,
                         1 << db->vfstride);
         } else {
-        pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013"PRIx64" "
+        pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013" PRIx64 " "
                         "LIF=%d\n",
                         prti,
                         prt_type_str(db->type),
@@ -391,7 +391,7 @@ bar_show_prts(const int pmti, const pmt_t *pmt, const prt_t *prt)
     if (prt->res.vfstride >= 2) {
     pciesys_loginfo("    %-4s %-5s %-5s "
                     "%-5s %-15s %-11s "
-                    "  %-8s\n",
+                    "            %-8s\n",
                     "PRT", "TYPE", "FLAGS",
                     "SIZE", "BAR ADDR", "CAPRI ADDR",
                     "VFSTRIDE");
@@ -609,6 +609,7 @@ bar_show_pmt(const char *label, const pciehwbar_t *phwbar, const int pmti)
     prt_t lprt, *prt = &lprt;
     pmt_datamask_t dm;
     pmr_bar_entry_t *pmr;
+    char vfstr[16];
 
     bar_pmt_get(pmti, pmt, prt);
     pmr = &pmt->pmre.bar;
@@ -628,14 +629,15 @@ bar_show_pmt(const char *label, const pciehwbar_t *phwbar, const int pmti)
     if (prt->res.vfstride >= 2) {
     pciesys_loginfo("%-3s %-4s %-5s %-5s "
                     "%-5s %-15s %-9s %-3s "
-                    "%-8s\n",
+                    "%-4s %-4s %-6s\n",
                     "BAR", "PMT", "TYPE", "FLAGS",
                     "SIZE", "BAR ADDR", "P:BB:DD.F", "TID",
-                    "VF");
+                    "SWRD", "SWWR", "VF");
 
+    snprintf(vfstr, sizeof(vfstr), "%d-%d", pmr->vfbase, pmr->vflimit);
     pciesys_loginfo("%-3s %-4d %-5s %c%c%c   "
-                    "%-5s 0x%013"PRIx64" %1d:%s %-3d "
-                    "%d-%d\n",
+                    "%-5s 0x%013" PRIx64 " %1d:%s %-3d "
+                    "%-4" PRIu64 " %-4" PRIu64 " %-6s\n",
                     label,
                     pmti,
                     bar_type_str(dm.data.bar.type),
@@ -647,16 +649,20 @@ bar_show_pmt(const char *label, const pciehwbar_t *phwbar, const int pmti)
                     dm.data.bar.port,
                     bdf_to_str(pmr->bdf),
                     dm.data.bar.tblid,
-                    pmr->vfbase,
-                    pmr->vflimit);
+                    spmt->swrd,
+                    spmt->swwr,
+                    vfstr);
     } else {
     pciesys_loginfo("%-3s %-4s %-5s %-5s "
-                    "%-5s %-15s %-9s %-3s\n",
+                    "%-5s %-15s %-9s %-3s "
+                    "%-4s %-4s\n",
                     "BAR", "PMT", "TYPE", "FLAGS",
-                    "SIZE", "BAR ADDR", "P:BB:DD.F", "TID");
+                    "SIZE", "BAR ADDR", "P:BB:DD.F", "TID",
+                    "SWRD", "SWWR");
 
     pciesys_loginfo("%-3s %-4d %-5s %c%c%c   "
-                    "%-5s 0x%013"PRIx64" %1d:%s %-3d\n",
+                    "%-5s 0x%013" PRIx64 " %1d:%s %-3d "
+                    "%-4" PRIu64 " %-4" PRIu64 "\n",
                     label,
                     pmti,
                     bar_type_str(dm.data.bar.type),
@@ -667,7 +673,9 @@ bar_show_pmt(const char *label, const pciehwbar_t *phwbar, const int pmti)
                     pmt_bar_getaddr(pmt),
                     dm.data.bar.port,
                     bdf_to_str(pmr->bdf),
-                    dm.data.bar.tblid);
+                    dm.data.bar.tblid,
+                    spmt->swrd,
+                    spmt->swwr);
     }
 
     bar_show_prts(pmti, pmt, prt);

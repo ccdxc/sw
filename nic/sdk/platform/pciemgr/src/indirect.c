@@ -249,6 +249,8 @@ static void
 handle_indirect(indirect_entry_t *ientry)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    const u_int32_t pmti = ientry->info.pmti;
+    pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
     pciehw_port_t *p = &pshmem->port[ientry->port];
     pcie_stlp_t stlpbuf, *stlp = &stlpbuf;
 
@@ -258,35 +260,41 @@ handle_indirect(indirect_entry_t *ientry)
     case PCIE_STLP_CFGRD:
     case PCIE_STLP_CFGRD1:
         pciehw_cfgrd_indirect(ientry, stlp);
-        p->indcfgrd++;
+        spmt->swrd++;
+        p->stats.ind_cfgrd++;
         break;
     case PCIE_STLP_CFGWR:
     case PCIE_STLP_CFGWR1:
         pciehw_cfgwr_indirect(ientry, stlp);
-        p->indcfgwr++;
+        spmt->swwr++;
+        p->stats.ind_cfgwr++;
         break;
     case PCIE_STLP_MEMRD:
     case PCIE_STLP_MEMRD64:
         pciehw_barrd_indirect(ientry, stlp);
-        p->indmemrd++;
+        spmt->swrd++;
+        p->stats.ind_memrd++;
         break;
     case PCIE_STLP_MEMWR:
     case PCIE_STLP_MEMWR64:
         pciehw_barwr_indirect(ientry, stlp);
-        p->indmemwr++;
+        spmt->swwr++;
+        p->stats.ind_memwr++;
         break;
     case PCIE_STLP_IORD:
         pciehw_barrd_indirect(ientry, stlp);
-        p->indiord++;
+        spmt->swrd++;
+        p->stats.ind_iord++;
         break;
     case PCIE_STLP_IOWR:
         pciehw_barwr_indirect(ientry, stlp);
-        p->indiowr++;
+        spmt->swwr++;
+        p->stats.ind_iowr++;
         break;
     default:
         ientry->cpl = PCIECPL_UR;
         pciehw_indirect_complete(ientry);
-        p->indunknown++;
+        p->stats.ind_unknown++;
         break;
     }
 }
@@ -305,12 +313,11 @@ pciehw_indirect_intr(const int port)
     indirect_entry_t *ientry = &indirect_entry[port];
     const int pending = read_pending_indirect_entry(port, ientry);
 
+    p->stats.ind_intr++;
     if (!pending) {
-        p->indspurious++;
+        p->stats.ind_spurious++;
         return -1;
     }
-
-    p->indirect_cnt++;
 
     ientry->cpl = PCIECPL_SC; /* assume success */
     handle_indirect(ientry);
@@ -392,7 +399,7 @@ indirect_show(void)
         pciesys_loginfo("%-4d %9d %4"PRId64" %08x %08x %08x %08x\n",
                         i,
                         phwmem->indirect_intr_dest[i],
-                        p->indirect_cnt,
+                        p->stats.ind_intr,
                         ientry->data[0], ientry->data[1],
                         ientry->data[2], ientry->data[3]);
     }
@@ -509,11 +516,15 @@ cmd_stats(int argc, char *argv[])
     pciehw_port_t *p;
     int port = 0;
     const int w = 20;
+    unsigned int flags = 0;
     int opt;
 
     optind = 0;
-    while ((opt = getopt(argc, argv, "p:")) != -1) {
+    while ((opt = getopt(argc, argv, "ap:")) != -1) {
         switch (opt) {
+        case 'a':
+            flags |= PMGRSF_ALL;
+            break;
         case 'p':
             port = strtoul(optarg, NULL, 0);
             break;
@@ -522,29 +533,20 @@ cmd_stats(int argc, char *argv[])
             return;
         }
     }
+    if (port < 0 || port >= PCIEHW_NPORTS) {
+        pciesys_logerror("port %d out of range\n", port);
+        return;
+    }
 
     p = &pshmem->port[port];
     pciesys_loginfo("port %d:\n", port);
-    pciesys_loginfo("%-*s : 0x%02x\n", w, "secbus", p->secbus);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indirect_cnt", p->indirect_cnt);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indspurious", p->indspurious);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indcfgrd", p->indcfgrd);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indcfgwr", p->indcfgwr);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indmemrd", p->indmemrd);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indmemwr", p->indmemwr);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indiord", p->indiord);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indiowr", p->indiowr);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indunknown", p->indunknown);
+    pciesys_loginfo("%-*s 0x%02x\n", w, "secbus", p->secbus);
 
-    /* XXX need notify stats */
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notspurious", p->notspurious);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notcfgrd", p->notcfgrd);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notcfgwr", p->notcfgwr);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notmemrd", p->notmemrd);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notmemwr", p->notmemwr);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notiord", p->notiord);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notiowr", p->notiowr);
-    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notunknown", p->notunknown);
+#define PCIEMGR_STATS_DEF(S) \
+    if (flags & PMGRSF_ALL || p->stats.S) \
+        pciesys_loginfo("%-*s %" PRIi64 "\n", w, #S, p->stats.S);
+
+#include "../include/pciemgr_stats_defs.h"
 }
 
 typedef struct cmd_s {

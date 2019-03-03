@@ -6,9 +6,10 @@ MODULE_PIPELINE := iris
 MODULE_SOLIBS   := pciemgr_if pciemgr pciemgrutils pciehdevices pcieport \
 		   pcietlp intrutils cfgspace pal misc evutils \
 		   delphisdk utils upgrade_app upgradeproto \
-		   sdkpal logger sysmgr upgradeutils
+		   sdkpal logger sysmgr upgradeutils pciemgrproto
 MODULE_ARLIBS    = delphishm
-MODULE_INCS     := ${MODULE_SRC_DIR}/../include
+MODULE_INCS     := ${MODULE_SRC_DIR}/../include \
+		   ${BLD_PROTOGEN_DIR}
 MODULE_LDLIBS   := rt dl pthread ev m edit ncurses \
 		   ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
 MODULE_SRCS     := ${MODULE_SRC_DIR}/pciemgrd.cc \

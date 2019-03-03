@@ -147,6 +147,17 @@ pcieport_close(const int port)
     if (0) pcieport_info_unmap();
 }
 
+pcieport_stats_t *
+pcieport_stats_get(const int port)
+{
+    pcieport_t *p = pcieport_get(port);
+
+    if (p && p->open) {
+        return &p->stats;
+    }
+    return NULL;
+}
+
 static int
 pcieport_validate_hostconfig(pcieport_t *p)
 {
@@ -438,7 +449,21 @@ pcieport_showportstats(const int port, const unsigned int flags)
 #define PCIEPORT_STATS_DEF(S) \
     if (flags & PSF_ALL || p->stats.S) \
         pciesys_loginfo("%-*s %" PRIi64 "\n", w, #S, p->stats.S);
+#include "pcieport_stats_defs.h"
+}
 
+void
+pcieport_clearportstats(const int port, const unsigned int flags)
+{
+    pcieport_t *p = pcieport_get(port);
+
+    if (p == NULL) {
+        pciesys_logerror("port %d out of range\n", port);
+        return;
+    }
+
+#define PCIEPORT_STATS_DEF(S) \
+    if (p->stats.S) p->stats.S = 0;
 #include "pcieport_stats_defs.h"
 }
 

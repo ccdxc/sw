@@ -6,6 +6,15 @@
 #define PCIEPORT_STATS_DEF(st)
 #endif
 
+PCIEPORT_STATS_DEF(intr_total)
+PCIEPORT_STATS_DEF(intr_ltssmst_early)
+PCIEPORT_STATS_DEF(intr_ltssmst)
+PCIEPORT_STATS_DEF(intr_linkup2dn)
+PCIEPORT_STATS_DEF(intr_linkdn2up)
+PCIEPORT_STATS_DEF(intr_rstup2dn)
+PCIEPORT_STATS_DEF(intr_rstdn2up)
+PCIEPORT_STATS_DEF(intr_secbus)
+
 PCIEPORT_STATS_DEF(linkup)
 PCIEPORT_STATS_DEF(hostup)
 PCIEPORT_STATS_DEF(phypolllast)

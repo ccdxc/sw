@@ -107,6 +107,8 @@ void pcieport_showports(void);
 #define PSF_NONE 0x0
 #define PSF_ALL  0x1
 void pcieport_showportstats(const int port, const unsigned int flags);
+void pcieport_clearportstats(const int port, const unsigned int flags);
+pcieport_stats_t *pcieport_stats_get(const int port);
 
 const char *pcieport_stname(const pcieportst_t st);
 const char *pcieport_evname(const pcieportev_t ev);

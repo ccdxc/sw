@@ -202,10 +202,21 @@ pciehw_foreach(int port, pciehw_cb_t cb, void *cbarg)
     }
 }
 
+struct hostup_args {
+    int gen;
+    int width;
+};
+
 static void
 pciehw_hostup(pciehwdev_t *phwdev, void *arg)
 {
+    struct hostup_args *a = arg;
+    cfgspace_t cs;
+
     pciehw_hdrt_load(phwdev->lifb, phwdev->lifc, phwdev->bdf);
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    cfgspace_update(&cs, a->gen, a->width);
 }
 
 static void
@@ -219,7 +230,9 @@ pciehw_hostdn(pciehwdev_t *phwdev, void *arg)
 void
 pciehw_event_hostup(const int port, const int gen, const int width)
 {
-    pciehw_foreach(port, pciehw_hostup, NULL);
+    struct hostup_args a = { .gen = gen, .width = width };
+
+    pciehw_foreach(port, pciehw_hostup, &a);
 }
 
 void
@@ -472,31 +485,6 @@ pciehw_set_initmode(void)
     }
 }
 
-static u_int64_t
-getenv_override_ull(const char *label, const char *name, const u_int64_t def)
-{
-    const char *env = getenv(name);
-    if (env) {
-        u_int64_t val = strtoull(env, NULL, 0);
-        pciesys_loginfo("%s: $%s override %" PRIu64 " (0x%" PRIx64 ")\n",
-                        label, name, val, val);
-        return val;
-    }
-    return def;
-}
-
-static u_int64_t
-pciehw_param_ull(const char *name, const u_int64_t def)
-{
-    return getenv_override_ull("pciehw", name, def);
-}
-
-static void
-pciehw_init_params(pciemgr_params_t *p)
-{
-    p->force_bars_load = pciehw_param_ull("PCIE_FORCE_BARS_LOAD", 0);
-}
-
 int
 pciehw_open(pciemgr_params_t *params)
 {
@@ -512,8 +500,6 @@ pciehw_open(pciemgr_params_t *params)
     if (params) {
         phw->params = *params;
     }
-
-    pciehw_init_params(&phw->params);
 
     pciehw_set_initmode();
 
@@ -891,6 +877,76 @@ cmd_indirect(int argc, char *argv[])
     pciehw_indirect_dbg(argc, argv);
 }
 
+pciemgr_stats_t *
+pciehw_stats_get(const int port)
+{
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    pciehw_port_t *p;
+
+    if (port < 0 || port >= PCIEHW_NPORTS) {
+        return NULL;
+    }
+    p = &pshmem->port[port];
+    return &p->stats;
+}
+
+void
+pciehw_stats_show(const int port, const unsigned int flags)
+{
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    pciehw_port_t *p;
+    const int w = 20;
+
+    if (port < 0 || port >= PCIEHW_NPORTS) {
+        pciesys_logerror("port %d out of range\n", port);
+        return;
+    }
+    p = &pshmem->port[port];
+
+#define PCIEMGR_STATS_DEF(S) \
+    if (flags & PMGRSF_ALL || p->stats.S) \
+        pciesys_loginfo("%-*s %" PRIi64 "\n", w, #S, p->stats.S);
+
+#include "../include/pciemgr_stats_defs.h"
+}
+
+void
+pciehw_stats_clear(const int port, const unsigned int flags)
+{
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    pciehw_port_t *p;
+
+    if (port < 0 || port >= PCIEHW_NPORTS) {
+        pciesys_logerror("port %d out of range\n", port);
+        return;
+    }
+    p = &pshmem->port[port];
+
+#define PCIEMGR_STATS_DEF(S) \
+    if (p->stats.S) p->stats.S = 0;
+
+#include "../include/pciemgr_stats_defs.h"
+}
+
+static void
+cmd_stats(int argc, char *argv[])
+{
+    int opt, port;
+    unsigned int flags;
+
+    port = 0;
+    flags = PMGRSF_NONE;
+    optind = 0;
+    while ((opt = getopt(argc, argv, "ap:")) != -1) {
+        switch (opt) {
+        case 'a': flags |= PMGRSF_ALL; break;
+        case 'p': port = strtoul(optarg, NULL, 0); break;
+        case '?': return;
+        }
+    }
+    pciehw_stats_show(port, flags);
+}
+
 static void
 cmd_meminfo(int argc, char *argv[])
 {
@@ -933,6 +989,7 @@ static cmd_t cmdtab[] = {
     CMDENT(meminfo, "meminfo", ""),
     CMDENT(notify, "notify", ""),
     CMDENT(indirect, "indirect", ""),
+    CMDENT(stats, "stats", ""),
     { NULL, NULL }
 };
 

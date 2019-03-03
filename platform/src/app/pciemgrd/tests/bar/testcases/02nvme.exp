@@ -6,8 +6,8 @@ bridgedn0:
 |............0000000000000000000000000000000000..................|
 +----------------------------------------------------------------+
 vfe(V4) 17 vfs(V3) 18 prt_size(V2) 18 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
-0   0    mem   rw-   256K  0x0000000000000 0:01:00.0 0  
+BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
+0   0    mem   rw-   256K  0x0000000000000 0:01:00.0 0   0    0   
     PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     0    res   --p-  256K  0x0000000000000 0x0c7fc0000
 
@@ -18,12 +18,12 @@ nvme0:
 |............01110110011001010101010001000011001110..............|
 +----------------------------------------------------------------+
 vfe(V4) 13 vfs(V3) 14 prt_size(V2) 14 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
-0   33   mem   rwl   16K   0x3665544338000 0:02:00.0 0  
+BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
+0   33   mem   rwl   16K   0x3665544338000 0:02:00.0 0   0    0   
     PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     1    res   ----  0     0x3665544338000 0x000000000
 
-idx  id type rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
-33    0 mem  rw 0:02:00.0 0x7665544338000 16K                                1   
+idx  id typ rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
+33    0 mem rw 0:02:00.0 0x7665544338000 16K                                1   
 idx  x                y                pmr
 33   0766554433800009 0899aabbcc4001f0 20020003 00e39c00 00004000 00000000

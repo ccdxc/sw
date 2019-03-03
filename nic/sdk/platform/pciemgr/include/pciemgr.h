@@ -26,7 +26,6 @@ typedef struct pciemgr_params_s {
     u_int32_t sris:1;           /* enable spread spectrum clk */
     u_int32_t compliance:1;     /* compliance test mode */
     u_int32_t strict_crs:1;     /* enable crs=1 at open */
-    u_int32_t force_bars_load:1;/* force bars to load early */
     u_int32_t restart:1;        /* restarting */
 } pciemgr_params_t;
 

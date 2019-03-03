@@ -1,0 +1,103 @@
+// Copyright (c) 2019, Pensando Systems Inc.
+
+syntax = "proto3";
+package pciemgr;
+
+import "delphi.proto";
+
+// PciePortOperStatus reflects the current status of the port
+enum PciePortOperStatus {
+    None    = 0;
+    Up      = 1;		// link is up
+    Down    = 2;		// link is down
+    Fault   = 3;		// link is down
+}
+
+message PciePortStatus {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta Meta = 1;
+    uint32 Key = 2;		// key is port number 0-7
+    PciePortOperStatus status = 3; // link status
+    uint32 gen = 4;		// gen 0-4
+    uint32 width = 5;		// width 0-16
+    bool lanes_reversed = 6;	// pcie lanes autoneg to "reversed"
+    string fault_reason = 7;	// if Fault, this is the fault reason
+}
+
+message PciePortMetrics {
+    uint32 Key = 1;				// key is port number 0-7
+
+    delphi.Counter intr_total = 2;		// total port intrs
+    delphi.Counter intr_ltssmst_early = 3;	// link train before linkup
+    delphi.Counter intr_ltssmst = 4;		// link train after  linkup
+    delphi.Counter intr_linkup2dn = 5;		// link down
+    delphi.Counter intr_linkdn2up = 6;		// link up
+    delphi.Counter intr_rstup2dn = 7;		// mac up
+    delphi.Counter intr_rstdn2up = 8;		// mac down
+    delphi.Counter intr_secbus = 9;		// secondary bus set
+    //
+    // skip some spares to next group
+    //
+    delphi.Counter linkup = 14;			// link is up
+    delphi.Counter hostup = 15;			// host is up (secbus)
+    delphi.Counter phypolllast = 16;		// phy poll count (last)
+    delphi.Counter phypollmax = 17;		// phy poll count (max)
+    delphi.Counter phypollperstn = 18;		// phy poll lost perstn
+    delphi.Counter phypollfail = 19;		// phy poll failed
+    delphi.Counter gatepolllast = 20;		// gate poll count (last)
+    delphi.Counter gatepollmax = 21;		// gate poll count (max)
+    delphi.Counter markerpolllast = 22;		// marker poll count (last)
+    delphi.Counter markerpollmax = 23;		// marker poll count (max)
+    delphi.Counter axipendpolllast = 24;	// axipend poll count (last)
+    delphi.Counter axipendpollmax = 25;		// axipend poll count (max)
+    delphi.Counter faults = 26;			// link faults
+}
+
+message PcieMgrMetrics {
+    uint32 Key = 1;				// key is port number 0-7
+
+    delphi.Counter not_intr = 2;		// notify total intrs
+    delphi.Counter not_spurious = 3;		// notify spurious intrs
+    delphi.Counter not_cnt = 4;			// notify total txns
+    delphi.Counter not_max = 5;			// notify max txns per intr
+    delphi.Counter not_cfgrd = 6;		// notify config reads
+    delphi.Counter not_cfgwr = 7;		// notify config writes
+    delphi.Counter not_memrd = 8;		// notify memory reads
+    delphi.Counter not_memwr = 9;		// notify memory writes
+    delphi.Counter not_iord = 10;		// notify io reads
+    delphi.Counter not_iowr = 11;		// notify io writes
+    delphi.Counter not_unknown = 13;		// notify unknown type
+    //
+    // skip some spares to next group
+    //
+    delphi.Counter not_rsrv0 = 17;		// notify rsrv0
+    delphi.Counter not_rsrv1 = 18;		// notify rsrv1
+    delphi.Counter not_msg = 19;		// notify pcie message
+    delphi.Counter not_unsupported = 20;	// notify unsupported
+    delphi.Counter not_pmv = 21;		// notify pgm model violation
+    delphi.Counter not_dbpmv = 22;		// notify doorbell pmv
+    delphi.Counter not_atomic = 23;		// notify atomic trans
+    delphi.Counter not_pmtmiss = 24;		// notify PMT miss
+    delphi.Counter not_pmrmiss = 25;		// notify PMR miss
+    delphi.Counter not_prtmiss = 26;		// notify PRT miss
+    delphi.Counter not_bdf2vfidmiss = 27;	// notify bdf2vfid table miss
+    delphi.Counter not_prtoor = 28;		// notify PRT out-of-range
+    delphi.Counter not_vfidoor = 29;		// notify vfid out-of-range
+    delphi.Counter not_bdfoor = 30;		// notify bdf out-of-range
+    delphi.Counter not_pmrind = 31;		// notify PMR force indirect
+    delphi.Counter not_prtind = 32;		// notify PRT force indirect
+    delphi.Counter not_pmrecc = 33;		// notify PMR ECC error
+    delphi.Counter not_prtecc = 34;		// notify PRT ECC error
+    //
+    // skip some spares to next group
+    //
+    delphi.Counter ind_intr = 37;		// indirect total intrs
+    delphi.Counter ind_spurious = 38;		// indirect spurious intrs
+    delphi.Counter ind_cfgrd = 39;		// indirect config reads
+    delphi.Counter ind_cfgwr = 40;		// indirect config writes
+    delphi.Counter ind_memrd = 41;		// indirect memory reads
+    delphi.Counter ind_memwr = 42;		// indirect memory writes
+    delphi.Counter ind_iord = 43;		// indirect io reads
+    delphi.Counter ind_iowr = 44;		// indirect io writes
+    delphi.Counter ind_unknown = 45;		// indirect unknown type
+}

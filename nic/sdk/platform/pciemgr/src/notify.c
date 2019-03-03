@@ -134,13 +134,17 @@ notify_reset_pici(const int port)
 }
 
 static u_int32_t
-notify_pici_delta(const int pi, const int ci)
+notify_pici_delta(const int pi, const int ci, const u_int32_t ring_mask)
 {
-    return abs(pi - ci);
+    if (pi > ci) {
+        return pi - ci;
+    } else {
+        return pi + ring_mask + 1 - ci;
+    }
 }
 
 static void
-notify_enable(const u_int32_t mask)
+notify_enable(void)
 {
     union {
         struct {
@@ -160,9 +164,10 @@ notify_enable(const u_int32_t mask)
             u_int32_t prt_ecc_err:1;
         } __attribute__((packed));
         u_int32_t w;
-    } en = { 0 };
+    } en;
 
-    en.w = mask;
+    en.w = pal_reg_rd32(NOTIFY_EN);
+    en.w = 0x3fff; /* enable all sources */
     pal_reg_wr32(NOTIFY_EN, en.w);
 }
 
@@ -212,72 +217,83 @@ notify_ring_inc(const int idx, const int inc, const u_int32_t ring_mask)
 }
 
 static void
-pciehw_notify(pciehw_port_t *p, notify_entry_t *nentry)
+handle_notify(pciehw_port_t *p, notify_entry_t *nentry)
 {
-    pciehw_shmem_t *pshmem = pciehw_get_shmem();
     const tlpauxinfo_t *info = &nentry->info;
-    const u_int32_t pmti = info->pmti;
-    const pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
-    const pciehwdevh_t hwdevh = spmt->owner;
-    pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
-    pcie_stlp_t stlpbuf, *stlp = &stlpbuf;
-
-    pcietlp_decode(stlp, nentry->rtlp, sizeof(nentry->rtlp));
-
-    if (pshmem->notify_verbose) {
-        pciesys_loginfo("%s\n", pcietlp_str(stlp));
-        pciesys_loginfo("  %s: pmti %d %c%c%c%c%c%c addr 0x%08"PRIx64"\n",
-                        pciehwdev_get_name(phwdev),
-                        pmti,
-                        nentry->info.is_notify   ? 'n' : '-',
-                        nentry->info.pmt_hit     ? 'p' : '-',
-                        nentry->info.is_direct   ? 'd' : '-',
-                        nentry->info.is_indirect ? 'i' : '-',
-                        nentry->info.is_ur       ? 'u' : '-',
-                        nentry->info.is_ca       ? 'a' : '-',
-                        (u_int64_t)nentry->info.direct_addr);
-    }
 
     /*
-     * If info->pmt_hit means we hit an entry we installed
-     * in the PMT for a reason.  Go process the transaction.
+     * If info->indirect_reason == 0 means we hit an entry we installed
+     * in the PMT for indirect handling.  Go process the transaction.
      *
-     * If !info->pmt then perhaps this is an exception or error.
+     * If info->indirect_reason != 0 then perhaps
+     * this is an exception or error.  Track reason code stats.
      */
-    if (info->pmt_hit) {
+    if (info->indirect_reason == 0) {
+        pciehw_shmem_t *pshmem = pciehw_get_shmem();
+        const u_int32_t pmti = info->pmti;
+        pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
+        const pciehwdevh_t hwdevh = spmt->owner;
+        pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
+        pcie_stlp_t stlpbuf, *stlp = &stlpbuf;
+
+        pcietlp_decode(stlp, nentry->rtlp, sizeof(nentry->rtlp));
+
+        if (pshmem->notify_verbose) {
+            pciesys_loginfo("%s\n", pcietlp_str(stlp));
+            pciesys_loginfo("  %s: pmti %d %c%c%c%c%c%c addr 0x%08"PRIx64"\n",
+                            pciehwdev_get_name(phwdev),
+                            pmti,
+                            nentry->info.is_notify   ? 'n' : '-',
+                            nentry->info.pmt_hit     ? 'p' : '-',
+                            nentry->info.is_direct   ? 'd' : '-',
+                            nentry->info.is_indirect ? 'i' : '-',
+                            nentry->info.is_ur       ? 'u' : '-',
+                            nentry->info.is_ca       ? 'a' : '-',
+                            (u_int64_t)nentry->info.direct_addr);
+        }
+
         switch (stlp->type) {
         case PCIE_STLP_CFGRD:
         case PCIE_STLP_CFGRD1:
             pciehw_cfgrd_notify(phwdev, stlp, info, spmt);
-            p->notcfgrd++;
+            spmt->swrd++;
+            p->stats.not_cfgrd++;
             break;
         case PCIE_STLP_CFGWR:
         case PCIE_STLP_CFGWR1:
             pciehw_cfgwr_notify(phwdev, stlp, info, spmt);
-            p->notcfgwr++;
+            spmt->swwr++;
+            p->stats.not_cfgwr++;
             break;
         case PCIE_STLP_MEMRD:
         case PCIE_STLP_MEMRD64:
             pciehw_barrd_notify(phwdev, stlp, info, spmt);
-            p->notmemrd++;
+            spmt->swrd++;
+            p->stats.not_memrd++;
             break;
         case PCIE_STLP_MEMWR:
         case PCIE_STLP_MEMWR64:
             pciehw_barwr_notify(phwdev, stlp, info, spmt);
-            p->notmemwr++;
+            spmt->swwr++;
+            p->stats.not_memwr++;
             break;
         case PCIE_STLP_IORD:
             pciehw_barrd_notify(phwdev, stlp, info, spmt);
-            p->notiord++;
+            spmt->swrd++;
+            p->stats.not_iord++;
             break;
         case PCIE_STLP_IOWR:
             pciehw_barwr_notify(phwdev, stlp, info, spmt);
-            p->notiowr++;
+            spmt->swwr++;
+            p->stats.not_iowr++;
             break;
         default:
-            p->notunknown++;
+            p->stats.not_unknown++;
             break;
         }
+    } else {
+        uint64_t *notify_reasons = &p->stats.notify_reason_stats;
+        notify_reasons[info->indirect_reason]++;
     }
 }
 
@@ -316,19 +332,19 @@ pciehw_notify_intr(const int port)
     int pi, ci, i, endidx;
     u_int32_t pici_delta;
 
-    p->notify_intr++;
+    p->stats.not_intr++;
     notify_get_masked_pici(port, &pi, &ci, ring_mask);
 
     if (ci == pi) {
-        p->notspurious++;
+        p->stats.not_spurious++;
         return -1;
     }
 
-    pici_delta = notify_pici_delta(pi, ci);
+    pici_delta = notify_pici_delta(pi, ci, ring_mask);
 
-    p->notify_cnt += pici_delta;
-    if (pici_delta > p->notify_max) {
-        p->notify_max = pici_delta;
+    p->stats.not_cnt += pici_delta;
+    if (pici_delta > p->stats.not_max) {
+        p->stats.not_max = pici_delta;
     }
 
     endidx = notify_ring_inc(pi, 1, ring_mask);
@@ -341,9 +357,9 @@ pciehw_notify_intr(const int port)
 
         /* XXX avoid an alignment crash on "io mem" */
         pciehw_memcpy(&nentry, &notify_ring[i], sizeof(nentry));
-        pciehw_notify(p, &nentry);
+        handle_notify(p, &nentry);
 #else
-        pciehw_notify(p, &notify_ring[i]);
+        handle_notify(p, &notify_ring[i]);
 #endif
         /* return some slots occasionally while processing */
         if ((i & 0xff) == 0) {
@@ -362,6 +378,7 @@ pciehw_notify_intr(const int port)
 int
 pciehw_notify_intr_init(const int port, u_int64_t msgaddr, u_int32_t msgdata)
 {
+    notify_enable();
     return req_int_init(notify_int_addr(), "notify_intr", port,
                         msgaddr, msgdata | 0x80000000);
 }
@@ -394,6 +411,7 @@ pciehw_notify_poll_init(void)
     const u_int64_t msgaddr = pal_mem_vtop(&phwmem->notify_intr_dest[0]);
     const u_int32_t msgdata = 1;
 
+    notify_enable();
     return req_int_init(notify_int_addr(), "notify_intr", port,
                         msgaddr, msgdata);
 }
@@ -436,16 +454,15 @@ notify_show(void)
         notify_get_ring_base(i, &ring_base);
         notify_get_pici(i, &pi, &ci);
 
-        pciesys_loginfo("%-4d 0x%09"PRIx64" %9d %5d %5d %4d %4"PRId64"\n",
-                        i, ring_base,
-                        phwmem->notify_intr_dest[i],
-                        pi, ci, p->notify_max, p->notify_cnt);
+        pciesys_loginfo("%-4d 0x%09" PRIx64 " "
+                        "%9d %5d %5d %4" PRId64 " %4" PRId64 "\n",
+                        i, ring_base, phwmem->notify_intr_dest[i],
+                        pi, ci, p->stats.not_max, p->stats.not_cnt);
     }
 }
 
 //
 // notify
-// notify <mask>
 //
 void
 pciehw_notify_dbg(int argc, char *argv[])
@@ -477,12 +494,6 @@ pciehw_notify_dbg(int argc, char *argv[])
         default:
             return;
         }
-    }
-
-    if (optind < argc) {
-        const u_int32_t enable_mask = strtoull(argv[optind], NULL, 0);
-        notify_enable(enable_mask);
-        return;
     }
 
     notify_show();
