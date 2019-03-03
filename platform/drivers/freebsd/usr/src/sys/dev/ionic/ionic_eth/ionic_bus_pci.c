@@ -214,16 +214,10 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	pci_set_drvdata(pdev, ionic);
 
 	/* Validate some parameters. */
-	if (ionic_rx_sg_size > MJUM9BYTES) {
-		ionic_rx_sg_size = MJUM16BYTES;
-		printf("Adjusting hw.ionic.rx_sg_size to %d\n", ionic_rx_sg_size);
-	} else if (ionic_rx_sg_size > MJUMPAGESIZE) {
-		ionic_rx_sg_size = MJUM9BYTES;
-		printf("Adjusting hw.ionic.rx_sg_size to %d\n", ionic_rx_sg_size);
-	} else if (ionic_rx_sg_size > MCLBYTES) {
+	if (ionic_rx_sg_size > MCLBYTES) {
 		ionic_rx_sg_size = MJUMPAGESIZE;
 		printf("Adjusting hw.ionic.rx_sg_size to %d\n", ionic_rx_sg_size);
-	} else {
+	} else if (ionic_rx_sg_size) {
 		ionic_rx_sg_size = MCLBYTES;
 		printf("Adjusting hw.ionic.rx_sg_size to %d\n", ionic_rx_sg_size);
 	}

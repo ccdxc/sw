@@ -153,14 +153,14 @@ struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
 {
 	unsigned int key = *(const u32 *)addr & RX_FILTER_HLISTS_MASK;
 	struct hlist_head *head = &lif->rx_filters.by_hash[key];
-	struct rx_filter *f = NULL;
+	struct rx_filter *f;
 
 	hlist_for_each_entry(f, head, by_hash) {
 		if (f->cmd.match != RX_FILTER_MATCH_MAC)
 			continue;
 		if (memcmp(addr, f->cmd.mac.addr, ETH_ALEN) == 0)
-			break;
+			return f;
 	}
 
-	return f;
+	return NULL;
 }

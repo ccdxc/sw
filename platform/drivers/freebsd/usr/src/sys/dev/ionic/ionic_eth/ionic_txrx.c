@@ -99,12 +99,12 @@ TUNABLE_INT("hw.ionic.notifyq_descs", &ionic_notifyq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, notifyq_descs, CTLFLAG_RDTUN,
     &ionic_notifyq_descs, 0, "Number of notifyq descriptors");
 
-int ntxq_descs = 16384;
+int ntxq_descs = 2048;
 TUNABLE_INT("hw.ionic.tx_descs", &ntxq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, tx_descs, CTLFLAG_RDTUN,
     &ntxq_descs, 0, "Number of Tx descriptors");
 
-int nrxq_descs = 16384;
+int nrxq_descs = 2048;
 TUNABLE_INT("hw.ionic.rx_descs", &nrxq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_descs, CTLFLAG_RDTUN,
     &nrxq_descs, 0, "Number of Rx descriptors");
@@ -285,6 +285,7 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 #ifdef HAPS
 	if (comp->len > ETHER_MAX_FRAME(rxq->lif->netdev, ETHERTYPE_VLAN, 1)) {
 		IONIC_QUE_INFO(rxq, "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
+		stats->comp_err++;
 		m_freem(m);
 		rxbuf->m = NULL;
 		return;
@@ -441,9 +442,6 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 		return (error);
 	}
 
-	if (ionic_rx_sg_size && num != nsegs)
-		panic("Number of mbufs(%d) != number of segments(%d)", num, nsegs);
-
 	bus_dmamap_sync(rxq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_PREREAD);
 	rxq->stats.mbuf_alloc++;
 	rxbuf->m = m;
@@ -464,11 +462,7 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 
 	if (ionic_rx_sg_size && size < len)
 		panic("Rx SG size is not sufficient(%d) != %d", size, len);
-#if 0	
-	IONIC_QUE_DEBUG(rxq, "Desc 0x%lx %hu\n", desc->addr, desc->len);
-	for (i = 0; i< nsegs - 1; i++)
-		IONIC_QUE_DEBUG(rxq, "SG[%d] 0x%lx %hu\n", i, sg->elems[i].addr, sg->elems[i].len);
-#endif
+
 	return (0);
 }
 
@@ -526,6 +520,8 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 	tx_work = ionic_tx_clean(txq, ionic_tx_clean_threshold);
 	IONIC_TX_TRACE(txq, "processed: %d packets\n", tx_work);
 	IONIC_TX_UNLOCK(txq);
+
+	ionic_intr_return_credits(&rxq->intr, work_done + tx_work, false, false);
 
 	taskqueue_enqueue(rxq->taskq, &rxq->task);
 
@@ -1403,6 +1399,80 @@ ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 }
 
 static int
+ionic_filter_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif* lif;
+	struct sbuf *sb;
+	struct ionic_mc_addr *mc;
+	struct rx_filter *f;
+	int i, err;
+
+	lif = oidp->oid_arg1;
+        err = sysctl_wire_old_buffer(req, 0);
+        if (err)
+                return (err);
+
+	sb = sbuf_new_for_sysctl(NULL, NULL, 4096, req);
+        if (sb == NULL)
+                return (ENOMEM);
+
+	for (i = 0; i < lif->num_mc_addrs; i++) {
+		mc = &lif->mc_addrs[i];
+		f = ionic_rx_filter_by_addr(lif, mc->addr);
+		sbuf_printf(sb, "\nMAC[%d](%d) 0x%02x:%02x:%02x:%02x:%02x:%02x", i, f ? f->filter_id : -1,
+			mc->addr[5], mc->addr[4], mc->addr[3],
+			mc->addr[2], mc->addr[1], mc->addr[0]);
+	}
+
+        err = sbuf_finish(sb);
+        sbuf_delete(sb);
+
+        return (err);
+}
+
+static int
+ionic_intr_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif* lif;
+	struct rxque *rxq;
+	struct adminq *adminq;
+	struct notifyq* notifyq;
+	struct sbuf *sb;
+	int i, err;
+
+	lif = oidp->oid_arg1;
+	adminq = lif->adminq;
+	notifyq = lif->notifyq;
+
+        err = sysctl_wire_old_buffer(req, 0);
+        if (err)
+                return (err);
+
+	sb = sbuf_new_for_sysctl(NULL, NULL, 4096, req);
+        if (sb == NULL)
+                return (ENOMEM);
+
+	sbuf_printf(sb, "\n%s intr: %s credits: %d\n",
+		adminq->name, adminq->intr.ctrl->mask ? "masked" : "unmasked",
+		adminq->intr.ctrl->int_credits);
+	sbuf_printf(sb, "%s intr: %s credits: %d\n",
+		notifyq->name, notifyq->intr.ctrl->mask ? "masked" : "unmasked",
+		notifyq->intr.ctrl->int_credits);
+
+	for (i = 0; i < lif->ntxqs ; i++) {
+		rxq = lif->rxqs[i];
+		sbuf_printf(sb, "%s intr: %s credits: %d\n",
+			rxq->name, rxq->intr.ctrl->mask ? "masked" : "unmasked",
+			rxq->intr.ctrl->int_credits);
+	}
+
+        err = sbuf_finish(sb);
+        sbuf_delete(sb);
+
+        return (err);
+}
+
+static int
 ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct lif* lif;
@@ -1410,6 +1480,8 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 	struct xcvr_status *xcvr;
 	struct qsfp_sprom_data *qsfp;
 	struct sfp_sprom_data *sfp;
+	struct sbuf *sb;
+	int err;
 
 	lif = oidp->oid_arg1;
 	nb = lif->notifyblock;
@@ -1417,13 +1489,20 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 	if (nb == NULL)
 		return (EIO);
 
-	if_printf(lif->netdev, "notifyblock eid=0x%lx link_status=0x%x error_bits=0x%x"
+        err = sysctl_wire_old_buffer(req, 0);
+        if (err)
+                return (err);
+
+	sb = sbuf_new_for_sysctl(NULL, NULL, 4096, req);
+        if (sb == NULL)
+                return (ENOMEM);
+	sbuf_printf(sb, "notifyblock eid=0x%lx link_status=0x%x error_bits=0x%x"
 		" link_speed=%d phy_type=0x%x autoneg=0x%x flap=0x%x\n",
 			nb->eid, nb->link_status, nb->link_error_bits, nb->link_speed, nb->phy_type,
 			nb->autoneg_status, nb->link_flap_count);
-	if_printf(lif->netdev, "  port_status id=0x%x status=0x%x speed=0x%x\n",
+	sbuf_printf(sb, "  port_status id=0x%x status=0x%x speed=0x%x\n",
 			nb->port_status.id, nb->port_status.status, nb->port_status.speed);
-	if_printf(lif->netdev, "  port_config state=0x%x speed=%d mtu=%d an_enable=0x%x"
+	sbuf_printf(sb, "  port_config state=0x%x speed=%d mtu=%d an_enable=0x%x"
 		" fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
 			nb->port_config.state,
 			nb->port_config.speed,
@@ -1434,8 +1513,9 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 			nb->port_config.loopback_mode);
 
 	xcvr = &nb->port_status.xcvr;
-	if_printf(lif->netdev, "    xcvr status state=0x%x phy=0x%x pid=0x%x\n",
+	sbuf_printf(sb, "    xcvr status state=0x%x phy=0x%x pid=0x%x\n",
 			xcvr->state, xcvr->phy, xcvr->pid);
+
 	switch (xcvr->pid) {
 		case XCVR_PID_QSFP_100G_CR4:
 		case XCVR_PID_QSFP_40GBASE_CR4:
@@ -1450,7 +1530,7 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 		case XCVR_PID_QSFP_40GBASE_AOC:
 			qsfp = (struct qsfp_sprom_data *)xcvr->sprom;
 
-			if_printf(lif->netdev, "    QSFP vendor OUI: %s P/N: %s S/N: %s\n",
+			sbuf_printf(sb, "    QSFP vendor OUI: %s P/N: %s S/N: %s\n",
 				qsfp->vendor_oui, qsfp->vendor_pn, qsfp->vendor_sn);
 			break;
 
@@ -1468,16 +1548,19 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 		case XCVR_PID_SFP_10GBASE_AOC:
 		case XCVR_PID_SFP_10GBASE_CU:
 			sfp = (struct sfp_sprom_data *)xcvr->sprom;
-			if_printf(lif->netdev, "    SFP vendor OUI: %s P/N: %s S/N: %s\n",
+			sbuf_printf(sb, "    SFP vendor OUI: %s P/N: %s S/N: %s\n",
 				sfp->vendor_oui, sfp->vendor_pn, sfp->vendor_sn);
 			break;
 
 		default:
-			if_printf(lif->netdev, "    unknown media\n");
+			sbuf_printf(sb, "    unknown media\n");
 			break;
 	}
 
-	return (0);
+        err = sbuf_finish(sb);
+        sbuf_delete(sb);
+
+        return (err);
 }
 
 static void
@@ -1517,7 +1600,6 @@ ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
 					 &rxstat->csum_l4_ok, "L4 checksum OK");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "csum_l4_bad", CTLFLAG_RD,
 					 &rxstat->csum_l4_bad, "L4 checksum bad");
-
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "isr_count", CTLFLAG_RD,
 					 &rxstat->isr_count, "ISR count");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "clean_count", CTLFLAG_RD,
@@ -1551,7 +1633,7 @@ ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
 					 &rxstat->rss_udp_ip6, "RSS UDP/IPv6 packets");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_unknown", CTLFLAG_RD,
-					 &rxstat->rss_unknown, "RSS for unknown packets"); // XXX???
+					 &rxstat->rss_unknown, "RSS for unknown packets");
 }
 
 static void
@@ -1796,8 +1878,15 @@ ionic_setup_device_stats(struct lif *lif)
 			&lif->num_mc_addrs, 0, "Number of MAC filters");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "coal_usecs", CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
 			ionic_intr_coal_handler, "IU", "Interrupt coalescing timeout in usecs");
-	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "media_status", CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
-			ionic_media_sysctl, "IU", "Miscellenious media details");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "filters",
+			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
+			ionic_filter_sysctl, "A", "Miscellenious media details");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "media_status",
+			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
+			ionic_media_sysctl, "A", "Miscellenious media details");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "intr_status",
+			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
+			ionic_intr_sysctl, "A", "Interrupt details");
 
 	ionic_setup_hw_stats(lif, ctx, child);
 	ionic_adminq_sysctl(lif, ctx, child);

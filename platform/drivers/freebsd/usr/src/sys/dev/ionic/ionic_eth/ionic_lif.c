@@ -355,7 +355,7 @@ static int _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 	if (err)
 		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "failed to add, err: %d", err);
 	else		
-		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "added (filter id %d)",
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "added (filter id %d)",
 					ctx.comp.rx_filter_add.filter_id);
 
 	err = ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
@@ -385,7 +385,12 @@ static int _ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 		return ENOENT;
 	}
 
-	KASSERT(f->filter_id, ("addr del, filter id(%d) == 0", f->filter_id));
+	if (f->filter_id == 0) {
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "invalid filter id");
+		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+		return EINVAL;
+	}
+
 	ctx.cmd.rx_filter_del.filter_id = f->filter_id;
 	ionic_rx_filter_free(lif, f);
 	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
@@ -394,7 +399,7 @@ static int _ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 	if (err)
 		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "failed to delete), err: %d", err);
 	else
-		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "deleted (filter id: %d)",
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "deleted (filter id: %d)",
 					ctx.cmd.rx_filter_del.filter_id);
 
 	return err;
