@@ -44,6 +44,8 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
     nop
 
 esp_ipv4_tunnel_n2h_txdma1_bad_barco_in_desc:
+    add r6, k.txdma1_global_ipsec_cb_addr, 63
+    memwr.b r6, 0xFF 
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_BAD_BARCO_IN_DESC, 1)
     phvwri p.p4_intr_global_drop, 1
@@ -51,8 +53,10 @@ esp_ipv4_tunnel_n2h_txdma1_bad_barco_in_desc:
     nop
 
 esp_ipv4_tunnel_n2h_txdma1_bad_barco_out_desc:
+    add r6, k.txdma1_global_ipsec_cb_addr, 63
+    memwr.b r6, 0xFF 
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_BAD_BARCO_IN_DESC, 1)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_BAD_BARCO_OUT_DESC, 1)
     phvwri p.p4_intr_global_drop, 1
     phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop

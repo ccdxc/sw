@@ -36,11 +36,15 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_bad_barco_in_desc:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_BAD_BARCO_IN_DESC, 1)
+    add r6, k.txdma1_global_ipsec_cb_addr, 63
+    memwr.b r6, 0xFF 
     phvwri p.p4_intr_global_drop, 1
     phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_bad_barco_out_desc:
+    add r6, k.txdma1_global_ipsec_cb_addr, 63
+    memwr.b r6, 0xFF 
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_BAD_BARCO_OUT_DESC, 1)
     phvwri p.p4_intr_global_drop, 1

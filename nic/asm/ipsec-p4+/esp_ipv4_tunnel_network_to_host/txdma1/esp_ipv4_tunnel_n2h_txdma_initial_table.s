@@ -12,6 +12,10 @@ struct phv_ p;
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 esp_ipv4_tunnel_n2h_txdma_initial_table:
+    seq c6, d.is_v6, 0xFF
+    bcf [c6], txdma1_freeze2
+    nop
+
     add r1, d.{barco_ring_pindex}.hx, 1
     and r1, r1, IPSEC_BARCO_RING_INDEX_MASK
     seq c5, d.{barco_ring_cindex}.hx, r1
@@ -54,6 +58,13 @@ esp_ipv4_tunnel_n2h_txdma_initial_table_drop_pkt:
     phvwri p.p4_intr_global_drop, 1
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_ENTER_DROP_OFFSET, 1)
+    nop.e
+    nop
+
+txdma1_freeze2:
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_FREEZE_OFFSET, 1)
+    phvwri p.p4_intr_global_drop, 1
     nop.e
     nop
     

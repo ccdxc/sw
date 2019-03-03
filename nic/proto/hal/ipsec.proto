@@ -190,26 +190,30 @@ message IPSecGlobalStatisticsGetSpec {
     uint64         encrypt_rxdma_enter_counters      = 22;
     uint64         encrypt_barco_bad_indesc_errors   = 23;
     uint64         encrypt_barco_bad_outdesc_errors  = 24;
+    uint64         encrypt_bad_indesc_free_errors    = 25;
+    uint64         encrypt_bad_outdesc_free_errors   = 26;
 
-    uint64         decrypt_input_desc_errors         = 25;
-    uint64         decrypt_output_desc_errors        = 26;
-    uint64         decrypt_cb_ring_base_errors       = 27;
-    uint64         decrypt_input_page_errors         = 28;
-    uint64         decrypt_barco_req_addr_errors     = 29;
-    uint64         decrypt_barco_cb_addr_errors      = 30;
-    uint64         decrypt_stage4_inpage_errors      = 31;
-    uint64         decrypt_output_page_errors        = 32;
-    uint64         decrypt_txdma1_enter_counters     = 33;
-    uint64         decrypt_txdma2_enter_counters     = 34;
-    uint64         decrypt_txdma1_drop_counters      = 35;
-    uint64         decrypt_desc_exhaust_errors       = 36;
-    uint64         decrypt_load_ipsec_int_errors     = 37;
-    uint64         decrypt_txdma1_dummy_errors       = 38;
-    uint64         decrypt_txdma2_dummy_free         = 39;
-    uint64         decrypt_rxdma_dummy_desc_errors   = 40;
-    uint64         decrypt_rxdma_enter_counters      = 41;
-    uint64         decrypt_barco_bad_indesc_errors   = 42;
-    uint64         decrypt_barco_bad_outdesc_errors  = 43;
+    uint64         decrypt_input_desc_errors         = 27;
+    uint64         decrypt_output_desc_errors        = 28;
+    uint64         decrypt_cb_ring_base_errors       = 29;
+    uint64         decrypt_input_page_errors         = 30;
+    uint64         decrypt_barco_req_addr_errors     = 31;
+    uint64         decrypt_barco_cb_addr_errors      = 32;
+    uint64         decrypt_stage4_inpage_errors      = 33;
+    uint64         decrypt_output_page_errors        = 34;
+    uint64         decrypt_txdma1_enter_counters     = 35;
+    uint64         decrypt_txdma2_enter_counters     = 36;
+    uint64         decrypt_txdma1_drop_counters      = 37;
+    uint64         decrypt_desc_exhaust_errors       = 38;
+    uint64         decrypt_load_ipsec_int_errors     = 39;
+    uint64         decrypt_txdma1_dummy_errors       = 40;
+    uint64         decrypt_txdma2_dummy_free         = 41;
+    uint64         decrypt_rxdma_dummy_desc_errors   = 42;
+    uint64         decrypt_rxdma_enter_counters      = 43;
+    uint64         decrypt_barco_bad_indesc_errors   = 44;
+    uint64         decrypt_barco_bad_outdesc_errors  = 45;
+    uint64         decrypt_bad_indesc_free_errors    = 46;
+    uint64         decrypt_bad_outdesc_free_errors   = 47;
 }
 
   

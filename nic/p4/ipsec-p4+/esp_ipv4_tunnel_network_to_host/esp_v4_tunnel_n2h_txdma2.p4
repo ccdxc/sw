@@ -104,6 +104,13 @@ header_type ipsec_to_stage4_t {
     }
 }
 
+header_type ipsec_to_stage5_t {
+    fields {
+        in_desc_addr   : ADDRESS_WIDTH;
+        out_desc_addr : ADDRESS_WIDTH;
+    }
+}
+
 
 @pragma pa_header_union ingress app_header
 metadata p4plus_to_p4_header_t p4plus2p4_hdr;
@@ -123,6 +130,9 @@ metadata ipsec_to_stage3_t ipsec_to_stage3;
 
 @pragma pa_header_union ingress to_stage_4
 metadata ipsec_to_stage4_t ipsec_to_stage4;
+
+@pragma pa_header_union ingress to_stage_5
+metadata ipsec_to_stage5_t ipsec_to_stage5;
 
 @pragma pa_header_union ingress common_t0_s2s
 metadata ipsec_table0_s2s t0_s2s;
@@ -169,6 +179,9 @@ metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_to_stage4_t ipsec_to_stage4_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_to_stage5_t ipsec_to_stage5_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_table0_s2s t0_s2s_scratch;
@@ -220,6 +233,8 @@ action ipsec_release_resources(sem_cindex)
 {
     IPSEC_DECRYPT_GLOBAL_SCRATCH
     modify_field(ipsec_to_stage3_scratch.sem_cindex, sem_cindex);
+    modify_field(ipsec_to_stage5_scratch.in_desc_addr, ipsec_to_stage5.in_desc_addr);
+    modify_field(ipsec_to_stage5_scratch.out_desc_addr, ipsec_to_stage5.out_desc_addr);
 }
 
 //stage 4 - table1
