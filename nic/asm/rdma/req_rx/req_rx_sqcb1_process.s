@@ -402,13 +402,13 @@ recirc_pkt:
     bcf             [!c6], skip_recirc_cnt_max_check
 
     // check if phv's recirc iter count has hit the limit
-    add             r6, 1, CAPRI_APP_DATA_RECIRC_ITER_COUNT //BD Slot
+    add             r7, 1, CAPRI_APP_DATA_RECIRC_ITER_COUNT //BD Slot
 
     // did we reach recirc_iter_count to 15 ? 
-    seq             c6, r6, RDMA_RECIRC_ITER_COUNT_MAX
+    seq             c6, r7, RDMA_RECIRC_ITER_COUNT_MAX
     bcf             [c6], max_recirc_cnt_err
     phvwr.!c6       p.common.p4_intr_recirc_count, 1  //BD Slot
-    phvwr           p.common.rdma_recirc_recirc_iter_count, r6
+    phvwr           p.common.rdma_recirc_recirc_iter_count, r7
 
 
 skip_recirc_cnt_max_check:

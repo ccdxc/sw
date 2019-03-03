@@ -23,6 +23,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
     # Program work_not_done_recirc_cnt to 1 to induce work_not_done recircs
     rs.lqp.sq.qstate.data.work_not_done_recirc_cnt = 1
+    rs.lqp.sq.qstate.data.nxt_to_go_token_id = (rs.lqp.sq.qstate.data.nxt_to_go_token_id - 1) & 0xFF;
     rs.lqp.sq.qstate.Write()
 
     # Read CQ pre state
@@ -46,7 +47,6 @@ def TestCaseStepVerify(tc, step):
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
     ring4_mask = (rs.lqp.num_rrq_wqes - 1)
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
-    rs.lqp.sq.qstate.data.nxt_to_go_token_id = (rs.lqp.sq.qstate.data.nxt_to_go_token_id - 1) & 0xFF;        
 
     if step.step_id == 0:
         # verify that tx_psn is incremented by 2
