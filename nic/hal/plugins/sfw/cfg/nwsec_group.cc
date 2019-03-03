@@ -1728,6 +1728,11 @@ security_policy_spec_build (nwsec_policy_t               *policy,
         hal_ret_t                     ret;
         rule_cfg_t                   *rcfg;
     } fn_ctx = { spec, stats, HAL_RET_OK, rcfg };
+    if (rcfg == NULL) {
+        HAL_TRACE_ERR("Couldnt find rule config for: {}", ctx_name);
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_GET_FAIL);
+        return HAL_RET_ERR;
+    }
 
     policy->rules_ht[policy->version]->walk_safe([](void *data, void *ctxt) -> bool {
         dllist_ctxt_t            *curr, *next;
@@ -1764,7 +1769,6 @@ security_policy_spec_build (nwsec_policy_t               *policy,
             }
         }
         return false; }, &fn_ctx);
-
 
     if (fn_ctx.ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_GET_SUCCESS);

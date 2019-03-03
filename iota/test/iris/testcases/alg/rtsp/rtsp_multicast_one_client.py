@@ -51,7 +51,7 @@ def Trigger(tc):
     tc.cmd_cookies.append("ip route client")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "openRTSP rtsp://%s/vobStream" % (server.ip_address))
+                           "openRTSP rtsp://%s/vobStream" % (server.ip_address), background=True)
     tc.cmd_cookies.append("Run RTSP client")
 
     ## Add Naples command validation
@@ -61,6 +61,10 @@ def Trigger(tc):
     api.Trigger_AddNaplesCommand(req, naples.node_name,
                             "/nic/bin/halctl show nwsec flow-gate")
     tc.cmd_cookies.append("show flow-gate") 
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg rtsp")
+    tc.cmd_cookies.append("show session")
+
     api.Trigger_AddNaplesCommand(req, naples.node_name,
                                 "/nic/bin/halctl clear session --alg rtsp")
     tc.cmd_cookies.append("clear session")

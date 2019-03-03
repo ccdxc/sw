@@ -46,7 +46,7 @@ def Trigger(tc):
     tc.cmd_cookies.append("Run RTSP server")
     
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "openRTSP rtsp://%s/small.vob" % server.ip_address)
+                           "openRTSP -t rtsp://%s/small.vob" % server.ip_address)
     tc.cmd_cookies.append("Run RTSP client")
 
     ## Add Naples command validation

@@ -21,6 +21,12 @@ static void incr_parse_error(ftp_info_t *info) {
     SDK_ATOMIC_INC_UINT32(&info->parse_errors, 1);
 }
 
+static inline bool session_state_is_reset(session_t *session) {
+    return(session &&
+           ((session->iflow->state == session::FLOW_TCP_STATE_RESET) ||
+            (session->rflow && session->rflow->state == session::FLOW_TCP_STATE_RESET)));
+}
+
 /*
  * FTP Info cleanup handler
  */
@@ -91,13 +97,15 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
 
     app_sess = l4_sess->app_session;
     if (l4_sess->isCtrl == true) {
-        if (ctx.force_delete() == true|| (dllist_empty(&app_sess->exp_flow_lhead) &&
+        if (ctx.force_delete() == true || session_state_is_reset(ctx.session()) ||
+            (dllist_empty(&app_sess->exp_flow_lhead) &&
              dllist_count(&app_sess->l4_sess_lhead) == 1 &&
             ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
                                  l4_alg_status_t, l4_sess_lentry)) == l4_sess)) {
             /*
              * Clean up app session if (a) its a force delete or
-             * (b) if there are no expected flows or L4 data sessions
+             * (b) if we receive a RESET as a result of connection termination or
+             * (c) if there are no expected flows or L4 data sessions
              * hanging off of this ctrl session.
              */
             g_ftp_state->cleanup_app_session(l4_sess->app_session);
@@ -107,11 +115,11 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
                     (ctx.session()->rflow->state >= session::FLOW_TCP_STATE_FIN_RCVD))) {
             l4_alg_status_t   *ctrl_l4_sess = g_ftp_state->get_ctrl_l4sess(app_sess);
             /*
-             * We received FIN/RST on the control session
+             * We received FIN on the control session
              * and we have data sessions hanging. We cannot
              * honor this
              */
-            HAL_TRACE_DEBUG("Received FIN/RST when data session is active - bailing");
+            HAL_TRACE_DEBUG("Received FIN when data session is active - bailing");
             ctx.set_feature_status(HAL_RET_INVALID_CTRL_SESSION_OP);
             // Mark this entry for deletion so we cleanup
             // when we clean up the data sessions

@@ -18,8 +18,14 @@ namespace sfw = hal::plugins::sfw;
 namespace alg_utils = hal::plugins::alg_utils;
 namespace lib = sdk::lib;
 
-static void incr_parse_error(rtsp_session_t *info) {
+static inline void incr_parse_error(rtsp_session_t *info) {
     SDK_ATOMIC_INC_UINT32(&info->parse_errors, 1);
+}
+
+static inline bool session_state_is_reset(session_t *session) {
+    return(session &&
+           ((session->iflow->state == session::FLOW_TCP_STATE_RESET) ||
+            (session->rflow && session->rflow->state == session::FLOW_TCP_STATE_RESET)));
 }
 
 /*
@@ -79,7 +85,8 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
 
     app_sess = l4_sess->app_session;
     if (l4_sess->isCtrl == true) {
-        if (ctx.force_delete() || lib::dllist_empty(&app_sess->app_sess_lentry)) {
+        if (ctx.force_delete() || session_state_is_reset(ctx.session()) ||
+            lib::dllist_empty(&app_sess->app_sess_lentry)) {
             /*
              * Clean up app session if (a) its a force delete or
              * (b) if there are no rtsp session hanging off this app session
@@ -92,9 +99,9 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
             alg_utils::l4_alg_status_t   *ctrl_l4_sess = g_rtsp_state->get_ctrl_l4sess(app_sess);
 
             /*
-             * We have received FIN/RST on control session and RTSP sessions are active
+             * We have received FIN on control session and RTSP sessions are active
              */
-            HAL_TRACE_DEBUG("Received FIN/RST while RTSP sessions are active");
+            HAL_TRACE_DEBUG("Received FIN while RTSP sessions are active");
             ctx.set_feature_status(HAL_RET_INVALID_CTRL_SESSION_OP);
             // Mark this entry for deletion so we cleanup
             // when we clean up the data sessions
@@ -163,6 +170,8 @@ void rtsp_app_sess_cleanup_hdlr(alg_utils::app_session_t *app_sess) {
                             alg_utils::app_session_t, app_sess_lentry);
             g_rtsp_state->cleanup_app_session(rtsp_sess);
         }
+    } else {
+        dllist_del(&app_sess->app_sess_lentry);
     }
 
     if (app_sess->oper != NULL) {
@@ -225,12 +234,12 @@ add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
     key.dvrf_id = rtsp_sess->sess_key.vrf_id;
     key.flow_type = spec->client_ip.af == IP_AF_IPV6 ?
         hal::FLOW_TYPE_V6 : hal::FLOW_TYPE_V4;
-    key.sip = spec->server_ip.addr;
-    key.dip = spec->client_ip.addr;
+    key.dip = spec->server_ip.addr;
+    key.sip = spec->client_ip.addr;
     key.proto = (types::IPProtocol)spec->ip_proto;
 
-    for (key.dport = spec->client_port_start, key.sport = spec->server_port_start;
-         key.dport <= spec->client_port_end && key.sport <= spec->server_port_end;
+    for (key.sport = spec->client_port_start, key.dport = spec->server_port_start;
+         key.sport <= spec->client_port_end && key.dport <= spec->server_port_end;
          key.dport++, key.sport++) {
         INFO("adding rtsp expected flow {}", key);
         ret = g_rtsp_state->alloc_and_insert_exp_flow(app_sess, key, &exp_flow);
@@ -346,15 +355,17 @@ process_resp_message(fte::ctx_t& ctx, alg_utils::app_session_t *app_sess,
         if (spec->interleaved == true)
             continue;
 
+        HAL_TRACE_DEBUG("Key: {} Rkey: {}", ctx.key(), ctx.get_key(FLOW_ROLE_RESPONDER));
         // Set IPs to flow IPs if not specified in the spec
-        if (ip_addr_is_zero(&spec->client_ip)) {
+        if (ip_addr_is_zero(&spec->client_ip) ||
+            ip_addr_is_multicast(&spec->client_ip)) {
             spec->client_ip.af = af;
-            spec->client_ip.addr = ctx.key().dip;
+            spec->client_ip.addr = ctx.key().sip;
         }
 
         if (ip_addr_is_zero(&spec->server_ip)) {
             spec->server_ip.af = af;
-            spec->server_ip.addr = ctx.key().sip;
+            spec->server_ip.addr = ctx.key().dip;
         }
 
         ret = add_expected_flows(ctx, app_sess, l4_sess, spec);

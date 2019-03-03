@@ -326,6 +326,8 @@ rtsp_parse_addr_list(const char *buf, uint32_t len, uint32_t *poff,
 //     Transport: RTP/AVP;multicast;ttl=127;mode="PLAY",
 //                RTP/AVP;unicast;client_port=3456-3457;mode="PLAY"
 //
+//   For Multicast, "port=" signifies both source & destination
+//
 //------------------------------------------------------------------------
 inline bool
 rtsp_parse_transport_spec(const char *buf, uint32_t len, rtsp_transport_t* spec)
@@ -348,6 +350,8 @@ rtsp_parse_transport_spec(const char *buf, uint32_t len, rtsp_transport_t* spec)
             alg_utils::alg_mime_strtoip(buf, paramlen, &paramoff, &spec->client_ip);
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "port", '=')) {
             rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->client_port_start, &spec->client_port_end);
+            spec->server_port_start = spec->client_port_start;
+            spec->server_port_end = spec->client_port_end;
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "client_port", '=')) {
             rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->client_port_start, &spec->client_port_end);
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "server_port", '=')) {

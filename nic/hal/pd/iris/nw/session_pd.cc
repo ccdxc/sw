@@ -1289,7 +1289,7 @@ pd_flow_get (pd_func_args_t *pd_func_args)
         return ret;
     }
 
-#ifdef STATS_DEBUG
+#if STATS_DEBUG
     HAL_TRACE_DEBUG("Flow stats for session {} stats_addr: {:#x} stats_0: permit_packets {},"
                     "permit_bytes: {}, drop_packets: {}, drop_bytes: {} "
                     "stats_1: permit_packets {}, permit_bytes: {}, drop_packets: {},"

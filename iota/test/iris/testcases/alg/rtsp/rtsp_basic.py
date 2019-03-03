@@ -47,7 +47,7 @@ def Trigger(tc):
 
     ## Add Naples command validation
     api.Trigger_AddNaplesCommand(req, naples.node_name,
-                                "/nic/bin/halctl show session --alg rtsp")
+                                "/nic/bin/halctl show session --alg rtsp --yaml")
     tc.cmd_cookies.append("show session RTSP established")
 
     api.Trigger_AddNaplesCommand(req, naples.node_name,
@@ -79,9 +79,21 @@ def Verify(tc):
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
-        if tc.cmd_cookies[cookie_idx].find("show session FTP") != -1 and \
+        if tc.cmd_cookies[cookie_idx].find("show session") != -1 and \
            cmd.stdout == '':
            result = api.types.status.FAILURE
+        if tc.cmd_cookies[cookie_idx].find("show session") != -1 and \
+           cmd.stdout != '':
+           alginfo = get_alginfo(cmd, APP_SVC_RTSP)
+           control_seen = 0 
+           data_seen = 0
+           for info in alginfo:
+               if info['rtspinfo']['iscontrol'] == True:
+                  control_seen = 1
+               if info['rtspinfo']['iscontrol'] == False:
+                  data_seen = 1
+           if control_seen == 0 or data_seen == 0:
+               result = api.types.status.FAILURE
         cookie_idx += 1       
     return result
 

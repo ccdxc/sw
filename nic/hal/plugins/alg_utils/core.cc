@@ -603,9 +603,6 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     if (app_sess_cleanup_hdlr_)
         app_sess_cleanup_hdlr_(app_sess);
 
-    if (!dllist_empty(&app_sess->app_sess_lentry))
-        dllist_del(&app_sess->app_sess_lentry);
-
     SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
     SDK_SPINLOCK_DESTROY(&app_sess->slock);

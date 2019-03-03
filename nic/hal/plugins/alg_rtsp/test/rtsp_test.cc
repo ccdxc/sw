@@ -148,11 +148,10 @@ TEST_F(rtsp_test, rtsp_session)
     EXPECT_FALSE(ctx_.drop());
 
     // Check expected flows
-    CHECK_ALLOW_UDP(client_eph, server_eph, 4588, 6256, "c:4588 <- s:6256");
-    CHECK_ALLOW_UDP(client_eph, server_eph, 4589, 6257, "c:4589 <- s:6257");
-
     CHECK_ALLOW_UDP(server_eph, client_eph, 6256, 4588, "c:4588 -> s:6256");
     CHECK_ALLOW_UDP(server_eph, client_eph, 6257, 4589, "c:4589 -> s:6257");
+    CHECK_ALLOW_UDP(client_eph, server_eph, 4588, 6256, "c:4588 <- s:6256");
+    CHECK_ALLOW_UDP(client_eph, server_eph, 4589, 6257, "c:4589 <- s:6257");
 
     CHECK_DENY_UDP(client_eph, server_eph, 4589, 6256, "c:4589 <- s:6256");
     CHECK_DENY_UDP(client_eph, server_eph, 4588, 6257, "c:4588 <- s:6257");
@@ -575,21 +574,21 @@ TEST_F(rtsp_test, rtsp_session_id_error)
     EXPECT_FALSE(ctx_.drop());
 
     // Check expected flows
-    CHECK_ALLOW_UDP(server_eph, client_eph, 57692, 6970, "c:57692 <- s:6970");
-    CHECK_ALLOW_UDP(server_eph, client_eph, 57693, 6971, "c:57693 <- s:6971");
-    CHECK_ALLOW_UDP(client_eph, server_eph, 6970, 57692, "c:6970 -> s:57692");
-    CHECK_ALLOW_UDP(client_eph, server_eph, 6971, 57693, "c:6971 -> s:57693");
+    CHECK_ALLOW_UDP(server_eph, client_eph, 6970, 57692, "c:57692 -> s:6970");
+    CHECK_ALLOW_UDP(server_eph, client_eph, 6971, 57693, "c:57693 -> s:6971");
+    CHECK_ALLOW_UDP(client_eph, server_eph, 57692, 6970, "c:57592 <- s:6970");
+    CHECK_ALLOW_UDP(client_eph, server_eph, 57693, 6971, "c:57693 <- s:6971");
 
     CHECK_DENY_UDP(client_eph, server_eph, 57693, 6970, "c:57693 <- s:6970");
     CHECK_DENY_UDP(client_eph, server_eph, 57692, 6971, "c:57692 <- s:6971");
     CHECK_DENY_UDP(server_eph, client_eph, 6970, 57693, "c:6970 -> s:57693");
     CHECK_DENY_UDP(server_eph, client_eph, 6971, 57692, "c:6971 -> s:57692");
 
-    CHECK_DENY_UDP(client_eph, server_eph, 57692, 6970, "s:57692 -> c:6970");
-    CHECK_DENY_UDP(client_eph, server_eph, 57693, 6971, "s:57693 -> c:6971");
-    CHECK_DENY_UDP(server_eph, client_eph, 6970, 57692, "s:6970 <- c:57692");
-    CHECK_DENY_UDP(server_eph, client_eph, 6971, 57693, "s:6971 <- c:57693");
-
+    CHECK_DENY_UDP(client_eph, server_eph, 6970, 57692, "s:57692 <- c:6970");
+    CHECK_DENY_UDP(client_eph, server_eph, 6971, 57693, "s:57693 <- c:6971");
+    CHECK_DENY_UDP(server_eph, client_eph, 57692, 6970, "c:6970 -> s:57692");
+    CHECK_DENY_UDP(server_eph, client_eph, 57692, 6971, "c:6971 -> s:57693");
+ 
     ret = hal::session_get_all(&resp);
     EXPECT_EQ(ret, HAL_RET_OK);
     for (int idx=0; idx<resp.response_size(); idx++) {
