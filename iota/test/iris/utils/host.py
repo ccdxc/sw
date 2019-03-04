@@ -135,6 +135,46 @@ def getInterfaceMTU(node, interface):
         mtu = "0"
     return int(mtu)
 
+def AddIPRoute(node, interface, ip_addr):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip route add " + ip_addr + " dev " + interface
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "route add " + ip_addr + " -interface " + interface
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return resp.commands[0]
+
+def DelIPRoute(node, interface, ip_addr):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip route del " + ip_addr + " dev " + interface
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "route del " + ip_addr + " -interface " + interface
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return resp.commands[0]
+
+def AddMcastMAC(node, interface, mcast_mac):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip maddr add " + mcast_mac + " dev " + interface
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "echo 'a " + interface + " " + mcast_mac + " ; q ;' | mtest"
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return resp.commands[0]
+
+def DeleteMcastMAC(node, interface, mcast_mac):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip maddr del " + mcast_mac + " dev " + interface
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "echo 'd " + interface + " " + mcast_mac + " ; q ;' | mtest"
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return resp.commands[0]
+
 def EnablePromiscuous(node, interface):
     result = api.types.status.SUCCESS
     if api.GetNodeOs(node) == "linux":
