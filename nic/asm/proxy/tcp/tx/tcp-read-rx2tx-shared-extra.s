@@ -25,7 +25,6 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     add             r4, r0, r0
     add             r6, r0, r0
 #endif
-    CAPRI_OPERAND_DEBUG(d.rcv_mss)
     CAPRI_OPERAND_DEBUG(k.common_phv_pending_rx2tx)
     phvwr           p.common_phv_snd_una, d.snd_una
     or              r1, d.t_flags, TCPHDR_ACK
@@ -42,8 +41,7 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     phvwrpair       p.to_s4_snd_cwnd, d.snd_cwnd, \
                         p.to_s4_rto, 1
 #endif
-    phvwrpair       p.to_s5_rcv_mss, d.rcv_mss, \
-                        p.to_s5_rcv_wnd, d.rcv_wnd
+    phvwr           p.to_s5_rcv_wnd, d.rcv_wnd
     phvwrpair       p.t0_s2s_limited_transmit, d.limited_transmit[1:0], \
                         p.t0_s2s_rcv_nxt, d.rcv_nxt
 

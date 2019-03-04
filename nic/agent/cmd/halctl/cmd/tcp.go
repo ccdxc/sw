@@ -314,14 +314,16 @@ func showTCPCb(resp *halproto.TcpCbGetResponse) {
 
 	spec := resp.GetSpec()
 
+	fmt.Printf("%-30s : %-6X\n", "tcb_base_addr", spec.CbBase)
+	fmt.Printf("%-30s : %-6X\n", "sesq_base", spec.SesqBase)
+	fmt.Printf("%-30s : %-6X\n", "serq_base", spec.SerqBase)
 	fmt.Printf("%-30s : %-6d\n", "rcv_nxt", spec.RcvNxt)
 	fmt.Printf("%-30s : %-6d\n", "snd_nxt", spec.SndNxt)
 	fmt.Printf("%-30s : %-6d\n", "snd_una", spec.SndUna)
+	fmt.Printf("%-30s : %-6d\n", "retx_snd_una", spec.RetxSndUna)
 	fmt.Printf("%-30s : %-6d\n", "rcv_tsval", spec.RcvTsval)
 	fmt.Printf("%-30s : %-6d\n", "ts_recent", spec.TsRecent)
-	fmt.Printf("%-30s : %-6X\n", "serq_base", spec.SerqBase)
 	fmt.Printf("%-30s : %-6X\n", "debug_dol", spec.DebugDol)
-	fmt.Printf("%-30s : %-6X\n", "sesq_base", spec.SesqBase)
 	fmt.Printf("%-30s : %-6X\n", "ooo_rx2tx_qbase", spec.OooRx2TxQbase)
 	fmt.Printf("%-30s : %-6d\n", "rcv_wnd", spec.RcvWnd)
 	fmt.Printf("%-30s : %-6d\n", "snd_wnd", spec.SndWnd<<spec.SndWscale)
@@ -339,7 +341,6 @@ func showTCPCb(resp *halproto.TcpCbGetResponse) {
 	fmt.Printf("%-30s : %-6X\n", "debug_dol_tx", spec.DebugDolTx)
 	fmt.Printf("%-30s : %-6d\n", "header_len", spec.HeaderLen)
 	fmt.Printf("%-30s : %-6t\n", "pending_ack_send", spec.PendingAckSend)
-	fmt.Printf("%-30s : %-6d\n", "retx_snd_una", spec.RetxSndUna)
 	fmt.Printf("%-30s : %-6d\n", "other_qid", spec.OtherQid)
 	fmt.Printf("%-30s : %-6d\n", "rto_backoff", spec.RtoBackoff)
 }

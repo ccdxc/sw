@@ -24,7 +24,7 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
 
 
 // mask ring clean_retx and pending_tx when barrier is set
-#define CLEAN_RETX_PENDING_MASK         0x7f
+#define CLEAN_RETX_PENDING_MASK         0x5f
 
 tcp_tx_read_rx2tx_shared_process:
     CAPRI_OPERAND_DEBUG(r7)
@@ -327,6 +327,9 @@ pending_rx2tx_clean_sesq:
     sub             r2, CAPRI_SESQ_RING_SLOTS, d.sesq_retx_ci
     slt             c1, r2, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
     add.c1          r1, r0, r2
+    // free 8 at the most
+    slt             c1, 8, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
+    add.c1          r1, r0, 8
     phvwr           p.t0_s2s_clean_retx_num_retx_pkts, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
 
     /*

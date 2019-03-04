@@ -24,8 +24,7 @@ struct s5_t0_tcp_tx_tso_d d    ;
 tcp_tso_process_start:
     /* check SESQ for pending data to be transmitted */
     sne             c6, k.common_phv_debug_dol_dont_tx, r0
-    bcf             [c6], flow_tso_process_done
-    phvwri.c6       p.p4_intr_global_drop, 1
+    bcf             [c6], flow_tso_process_drop
     or              r1, k.to_s5_pending_tso_data, k.to_s5_pending_tso_retx
     or              r1, r1, k.common_phv_pending_ack_send
     sne             c1, r1, r0
@@ -123,9 +122,10 @@ dma_cmd_data:
     seq             c1, k.t0_s2s_len, 0
     b.c1            pkts_sent_stats_update_start
     phvwri.c1       p.tcp_header_dma_dma_pkt_eop, 1
-    slt             c1, k.to_s5_rcv_mss, k.t0_s2s_len
-    add.c1          r6, k.to_s5_rcv_mss, r0
-    add.!c1         r6, k.t0_s2s_len, r0
+
+    slt             c1, d.smss, k.t0_s2s_len
+    b.c1            flow_tso_process_drop
+    add             r6, k.t0_s2s_len, r0
 
     phvwrpair       p.data_dma_dma_cmd_size, r6, \
                         p.data_dma_dma_cmd_addr[33:0], k.t0_s2s_addr
@@ -151,6 +151,13 @@ tcp_retx:
 tcp_retx_done:
 
 flow_tso_process_done:
+    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_stage5_start)
+    nop.e
+    nop
+
+flow_tso_process_drop:
+    // TODO: Stats
+    phvwri          p.p4_intr_global_drop, 1
     CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_stage5_start)
     nop.e
     nop

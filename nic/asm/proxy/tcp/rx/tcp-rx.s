@@ -156,7 +156,6 @@ slow_path:
 flow_rx_process_done:
 table_read_setup_next:
     phvwr           p.rx2tx_extra_snd_wnd, d.u.tcp_rx_d.snd_wnd
-    phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
     phvwr           p.rx2tx_extra_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.rx2tx_extra_state, d.u.tcp_rx_d.state
     phvwr           p.to_s2_flag, d.u.tcp_rx_d.flag
@@ -232,6 +231,7 @@ tcp_rx_slow_path:
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
     phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
+    phvwr.c1        p.to_s5_serq_pidx, d.u.tcp_rx_d.serq_pidx
     sne             c2, k.s1_s2s_payload_len, 0
     setcf           c3, [c1 & c2]
     phvwr.c3        p.common_phv_skip_pkt_dma, 1

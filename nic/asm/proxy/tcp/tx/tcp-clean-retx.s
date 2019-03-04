@@ -307,8 +307,8 @@ tcp_retx_remove_barrier_and_end_program:
                         TCP_SCHED_RING_CLEAN_RETX, k.to_s3_clean_retx_pi)
     memwr.dx        r4, r3
 
-    // get barrier offset in TCP CB (retx_ci + 4)
-    add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_RETX_CI_OFFSET + 4
+    // get barrier offset in TCP CB
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_RETX_PENDING_OFFSET
     // remove barrier
     memwr.b.e       r1, 0
     nop

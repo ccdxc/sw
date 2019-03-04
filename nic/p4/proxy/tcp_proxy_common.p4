@@ -51,14 +51,13 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         rto                             : 16                    ;\
         snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_tsval                       : TS_WIDTH              ;\
-        rcv_mss                         : 16                    ;\
         cc_flags                        : 16                    ;\
         t_flags                         : 8                     ;\
         limited_transmit                : 8                     ;\
         state                           : 8                     ;\
         pending_dup_ack_send            : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
-        rx2tx_end_marker                : 6                     ;\
+        rx2tx_end_marker                : 22                    ;\
         pad_rx2tx_extra                 : 272                   ;\
 
 #define TCB_RETX_SHARED_STATE \
@@ -98,6 +97,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         dest_port                       : 16                    ;\
         header_len                      : 16                    ;\
         bytes_sent                      : 16                    ;\
+        smss                            : 16                    ;\
         pkts_sent                       : 8                     ;\
         quick_acks_decr                 : 4                     ;\
 
@@ -120,7 +120,7 @@ smss, is_cwnd_limited, limited_transmit, rto_backoff, no_window
 
 #define TSO_PARAMS                                                        \
 ip_id, source_lif, source_port, dest_port, header_len,\
-bytes_sent, pkts_sent
+bytes_sent, smss, pkts_sent
 
 
 #define GENERATE_RETX_SHARED_D \
@@ -160,6 +160,7 @@ bytes_sent, pkts_sent
     modify_field(tso_d.dest_port, dest_port); \
     modify_field(tso_d.header_len, header_len); \
     modify_field(tso_d.bytes_sent, bytes_sent);\
+    modify_field(tso_d.smss, smss);\
     modify_field(tso_d.pkts_sent, pkts_sent);\
 
 header_type rx2tx_extra_t {

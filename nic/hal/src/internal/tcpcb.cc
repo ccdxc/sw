@@ -490,6 +490,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_ato(rtcpcb.ato);
     rsp->mutable_spec()->set_abc_l_var(rtcpcb.abc_l_var);
     rsp->mutable_spec()->set_ooo_queue(rtcpcb.ooo_queue);
+    rsp->mutable_spec()->set_cb_base(rtcpcb.cb_base);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);

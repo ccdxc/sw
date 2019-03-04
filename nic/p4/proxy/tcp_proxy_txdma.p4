@@ -306,7 +306,6 @@ header_type to_stage_4_phv_t {
 
 header_type to_stage_5_phv_t {
     fields {
-        rcv_mss                 : 16;
         rcv_wnd                 : 16;
 
         pending_challenge_ack_send : 1;
@@ -616,7 +615,7 @@ action read_rx2tx(RX2TX_PARAMS) {
  */
 action read_rx2tx_extra(
        snd_cwnd, rcv_nxt, snd_wnd, rcv_wnd, rto, snd_una, rcv_tsval,
-       rcv_mss, cc_flags, t_flags, limited_transmit, state,
+       cc_flags, t_flags, limited_transmit, state,
        pending_dup_ack_send, pending_challenge_ack_send) {
 
     // from ki global
@@ -639,7 +638,6 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.cc_flags, cc_flags);
     modify_field(rx2tx_extra_d.t_flags, t_flags);
     modify_field(rx2tx_extra_d.limited_transmit, limited_transmit);
-    modify_field(rx2tx_extra_d.rcv_mss, rcv_mss);
     modify_field(rx2tx_extra_d.state, state);
     modify_field(rx2tx_extra_d.pending_dup_ack_send, pending_dup_ack_send);
     modify_field(rx2tx_extra_d.pending_challenge_ack_send, pending_challenge_ack_send);
@@ -834,7 +832,6 @@ action tso(TSO_PARAMS) {
     GENERATE_GLOBAL_K
 
     // from to_stage 5
-    modify_field(to_s5_scratch.rcv_mss, to_s5.rcv_mss);
     modify_field(to_s5_scratch.rcv_wnd, to_s5.rcv_wnd);
     modify_field(to_s5_scratch.pending_challenge_ack_send, to_s5.pending_challenge_ack_send);
     modify_field(to_s5_scratch.pending_sync_mss, to_s5.pending_sync_mss);

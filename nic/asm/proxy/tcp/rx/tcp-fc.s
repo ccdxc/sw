@@ -32,8 +32,13 @@ tcp_rx_fc_stage_start:
                 TCP_TCB_RX_DMA_OFFSET, TABLE_SIZE_512_BITS)
 
 flow_fc_process:
-    seq         c2, k.common_phv_write_serq, 1
-    bcf         [!c2], flow_fc_process_done
+    and         r1, k.common_phv_pending_txdma, \
+                    TCP_PENDING_TXDMA_ACK_SEND | TCP_PENDING_TXDMA_DEL_ACK
+    seq         c2, r1, 0
+    bcf         [c2], flow_fc_process_done
+    nop
+
+    bbeq        k.common_phv_write_serq, 0, start_window_calc
     nop
 
     // Calculate average every 16 packets
@@ -118,9 +123,9 @@ window_calc_done:
     * current window to avoid shrinking the window when we
     * apply scale
     */
-    sll         r2, 1, d.rcv_scale
-    sub         r2, r2, 1
-    add         r3, r3, r2
+    sll.!c3     r2, 1, d.rcv_scale
+    sub.!c3     r2, r2, 1
+    add.!c3     r3, r3, r2
 
     sle         c3, r4, r3
     add.c3      r4, r0, r3
@@ -136,6 +141,8 @@ flow_fc_process_done:
     */
     slt         c3, 0xffff, r4
     add.c3      r4, r0, 0xffff
+    sll.c3      r3, 0xffff, d.rcv_scale
+    tblwr.c3    d.rcv_wnd, r3
 
     /* We have a valid window after applying the scale factor. */
     phvwr       p.rx2tx_extra_rcv_wnd, r4

@@ -46,6 +46,7 @@ typedef struct tcpcb_ooo_queue_entry_s {
 typedef struct tcpcb_s {
     sdk_spinlock_t        slock;                   // lock to protect this structure
     tcpcb_id_t            cb_id;                   // TCP CB id
+    uint64_t              cb_base;
     uint32_t              rcv_nxt;
     uint32_t              rcv_wup;
     uint32_t              snd_nxt;

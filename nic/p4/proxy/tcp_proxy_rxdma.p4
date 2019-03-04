@@ -178,7 +178,6 @@ header_type tcp_rx_d_t {
         bytes_rcvd              : 16;
         snd_wnd                 : 16;   // tcp_ack stage
         serq_pidx               : 16;
-        rcv_mss                 : 16;
         num_dup_acks            : 16;   // tcp_ack_stage
         cc_flags                : 8;    // tcp_ack stage
         quick                   : 8;
@@ -348,6 +347,7 @@ header_type tcp_fc_d_t {
         cum_pkt_size            : 32;
         avg_pkt_size_shift      : 8;
         num_pkts                : 8;
+        rcv_mss                 : 16;
     }
 }
 
@@ -820,7 +820,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         ato, del_ack_pi, cfg_flags, \
         rcv_nxt, rx_drop_cnt, ts_recent, lrcv_time, \
         snd_una, snd_wl1, pred_flags, snd_recover, bytes_rcvd, \
-        snd_wnd, serq_pidx, rcv_mss, num_dup_acks, cc_flags, quick, \
+        snd_wnd, serq_pidx, num_dup_acks, cc_flags, quick, \
         flag, rto, state, parsed_state, rcv_wscale, limited_transmit, pending, \
         write_serq, alloc_descr
 
@@ -845,7 +845,6 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_rx_d.bytes_rcvd, bytes_rcvd); \
     modify_field(tcp_rx_d.snd_wnd, snd_wnd); \
     modify_field(tcp_rx_d.serq_pidx, serq_pidx); \
-    modify_field(tcp_rx_d.rcv_mss, rcv_mss); \
     modify_field(tcp_rx_d.num_dup_acks, num_dup_acks); \
     modify_field(tcp_rx_d.cc_flags, cc_flags); \
     modify_field(tcp_rx_d.quick, quick); \
@@ -1067,7 +1066,7 @@ action tcp_fc(
         consumer_ring_slots_mask, consumer_ring_slots,
         high_thresh1, high_thresh2, high_thresh3, high_thresh4,
         rcv_wnd, rcv_wup, rcv_scale, cpu_id,
-        cum_pkt_size, avg_pkt_size_shift, num_pkts) {
+        cum_pkt_size, avg_pkt_size_shift, num_pkts, rcv_mss) {
     // k + i for stage 5
 
     // from to_stage 5
@@ -1094,6 +1093,7 @@ action tcp_fc(
     modify_field(tcp_fc_d.cum_pkt_size, cum_pkt_size);
     modify_field(tcp_fc_d.avg_pkt_size_shift, avg_pkt_size_shift);
     modify_field(tcp_fc_d.num_pkts, num_pkts);
+    modify_field(tcp_fc_d.rcv_mss, rcv_mss);
 }
 
 /*
