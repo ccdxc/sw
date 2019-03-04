@@ -187,10 +187,10 @@ testcases:
         args    :
             type: local_only
 
-    -   name    : MSRPC_TEST_CONTROL_CLOSE
-        testcase: testcases.alg.msrpc.msrpc_test_control_session_close
-        args    :
-            type: local_only
+    #-   name    : MSRPC_TEST_CONTROL_CLOSE
+    #    testcase: testcases.alg.msrpc.msrpc_test_control_session_close
+    #    args    :
+    #        type: local_only
 
     -   name    : DNS_QUERY
         testcase: testcases.alg.dns.dns_basic

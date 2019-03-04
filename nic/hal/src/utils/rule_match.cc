@@ -636,7 +636,9 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
         } else if (proto == types::IPPROTO_ICMP ||
                    proto == types::IPPROTO_ICMPV6) {
             rule->field[ICMP_TYPE].value.u32 = icmp_type;
+            rule->field[ICMP_TYPE].mask_range.u32 = 0xFFFFFFFF;
             rule->field[ICMP_CODE].value.u32 = icmp_code;
+            rule->field[ICMP_CODE].mask_range.u32 = 0xFFFFFFFF;
         } else if (proto == types::IPPROTO_ESP) {
             rule->field[PORT_SRC].value.u32 = (spi >> 16) & 0xFFFF;
             rule->field[PORT_SRC].mask_range.u32 = (spi >> 16) & 0xFFFF;
