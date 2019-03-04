@@ -11,6 +11,9 @@ export COVFILE=$NIC_DIR/conf/hw_bullseye_hal.cov
 
 ulimit -c unlimited
 
+# Reserving port for HAL GRPC server
+sysctl -w net.ipv4.ip_local_reserved_ports=50054
+
 # Set core file pattern
 CORE_MIN_DISK=512
 [[ "$IMAGE_TYPE" = "diag" ]] && CORE_MIN_DISK=1
