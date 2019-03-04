@@ -283,6 +283,8 @@ func (c *IPClient) updateDelphiNaplesObject() error {
 		Controllers:     c.nmdState.config.Status.Controllers,
 		NaplesMode:      naplesMode,
 		TransitionPhase: transitionPhase,
+		MgmtIP:          c.nmdState.config.Status.IPConfig.IPAddress,
+		Hostname:        c.nmdState.config.Spec.Hostname,
 	}
 
 	// Update corresponding delphi object and write to delphi db

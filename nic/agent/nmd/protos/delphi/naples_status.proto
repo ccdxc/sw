@@ -5,6 +5,18 @@ syntax = "proto3";
 package nmd;
 
 import "delphi.proto";
+// Has all the information read from FRU.json
+message NaplesFru {
+    string ManufacturingDate = 1;
+    string Manufacturer      = 2;
+    string ProductName       = 3;
+    string SerialNum         = 4;
+    string PartNum           = 5;
+    string BoardId           = 6;
+    string EngChangeLevel    = 7;
+    string NumMacAddr        = 8;
+    string MacStr            = 9;
+}
 
 // NaplesStatus contains current status of a Naples I/O subsystem
 message NaplesStatus {
@@ -46,5 +58,15 @@ message NaplesStatus {
     Mode NaplesMode                         = 4;
 
     Transition TransitionPhase              = 5;
+
+    // Hostname is used as a user friendly identifier in logs/events
+    string                      Hostname    = 6;
+
+    // IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
+    string                      MgmtIP       = 7;
+
+    string SmartNicName                      = 8;
+
+    NaplesFru                   Fru          = 9;
 }
 
