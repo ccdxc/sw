@@ -358,7 +358,7 @@ TEST_F(DelphiMetricTest, BasicMetricsTest) {
 TEST_F(DelphiMetricTest, TestDpMetric) {
     // create a new datapath metric
     int32_t key = 100;
-    TestMetricPtr tmptr = TestMetric::NewDpTestMetric(key, (uint64_t)0x1001);
+    TestMetricPtr tmptr = TestMetric::NewDpTestMetric(key, (uint64_t)0x1000);
     ASSERT_TRUE((tmptr != NULL)) << "Failed to create the dp metric";
     delphi::shm::TableMgrUptr tbl = srv_shm_->Kvstore()->Table("TestMetric");
 

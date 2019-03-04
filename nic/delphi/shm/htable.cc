@@ -111,6 +111,7 @@ void * TableMgr::Create(const char *key, int16_t keylen, int16_t val_len) {
     error err = this->insertHashEntry(key, keylen, entry);
     assert(err.IsOK());
 
+    assert(((int64_t)VAL_PTR_FROM_HASH_ENTRY(entry) & 0x07) == 0);
     return (void *)VAL_PTR_FROM_HASH_ENTRY(entry);
 }
 
@@ -149,6 +150,8 @@ error TableMgr::CreateDpstats(const char *key, int16_t keylen, uint64_t pal_addr
     assert(err.IsOK());
 
     // copy the pal address into value part
+    assert(((int64_t)VAL_PTR_FROM_HASH_ENTRY(entry) & 0x07) == 0);
+    assert((pal_addr & 0x07) == 0);
     uint64_t *val_ptr = (uint64_t *)VAL_PTR_FROM_HASH_ENTRY(entry);
     *val_ptr = pal_addr;
 
@@ -181,6 +184,7 @@ error TableMgr::Publish(const char *key, int16_t keylen, const char *val, int16_
         return error::New("Error allocating memory");
     }
 
+    assert(((int64_t)VAL_PTR_FROM_HASH_ENTRY(entry) & 0x07) == 0);
     // copy value
     memcpy(VAL_PTR_FROM_HASH_ENTRY(entry), val, val_len);
 
@@ -218,6 +222,7 @@ ht_entry_t *TableMgr::createHashEntry(const char *key, int16_t keylen, int16_t v
     ht_entry_trailer_t *trailer = TRAILER_FROM_HASH_ENTRY(entry);
     trailer->refcnt = 1;
     trailer->ht_entry = OFFSET_FROM_PTR(shm_ptr_->GetBase(), entry);
+    assert(((int64_t)VAL_PTR_FROM_HASH_ENTRY(entry) & 0x07) == 0);
     memset(VAL_PTR_FROM_HASH_ENTRY(entry), 0, val_len);
     return entry;
 }
@@ -233,6 +238,7 @@ void * TableMgr::Find(const char *key, int16_t keylen) {
     // find the entry
     ht_entry_t *entry = this->findEntry(key, keylen);
     if (entry != NULL) {
+        assert(((int64_t)VAL_PTR_FROM_HASH_ENTRY(entry) & 0x07) == 0);
         return (void *)VAL_PTR_FROM_HASH_ENTRY(entry);
     }
 
@@ -251,7 +257,9 @@ uint64_t TableMgr::FindDpstats(const char *key, int16_t keylen) {
     // find the entry
     ht_entry_t *entry = this->findEntry(key, keylen);
     if ((entry != NULL) && (entry->flags & HT_ENTRY_FLAG_DPSTATS)) {
+        assert(((int64_t)VAL_PTR_FROM_HASH_ENTRY(entry) & 0x07) == 0);
         uint64_t *vptr = (uint64_t *)VAL_PTR_FROM_HASH_ENTRY(entry);
+        assert((*vptr & 0x07) == 0);
         return *vptr;
     }
 
@@ -323,6 +331,7 @@ ht_entry_t * TableMgr::findMatchingEntry(int32_t offset, const char *key, int16_
 
 // Release releases a hash entry, memory is freed when all users release a hash entry
 error TableMgr::Release(void *val_ptr) {
+    assert(((int64_t)val_ptr & 0x07) == 0);
     ht_entry_trailer_t *trailer = TRAILER_FROM_VAL_PTR(val_ptr);
     atomic_decrement(&trailer->refcnt);
     if (trailer->refcnt <= 0) {
@@ -337,6 +346,7 @@ error TableMgr::Release(void *val_ptr) {
 // RefCount returns the refcount of a hash entry
 // Note: to be used for testing pueposes only
 int32_t TableMgr::RefCount(void *val_ptr) {
+    assert(((int64_t)val_ptr & 0x07) == 0);
     ht_entry_trailer_t *trailer = TRAILER_FROM_VAL_PTR(val_ptr);
     return trailer->refcnt;
 }

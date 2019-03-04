@@ -143,6 +143,7 @@ DelphiMetrics_cgo MetricsCreateEntry(const char *kind, char *key, int keylen, in
     // create an entry
     char *valptr = (char *)tbl->Create(key, keylen, vallen);
     assert(valptr != NULL);
+    assert(((int64_t)valptr & 0x07) == 0);
 
     return (void *)valptr;
 }
@@ -155,6 +156,7 @@ int GetCounter(DelphiMetrics_cgo mtr, int offset) {
 #ifdef __x86_64__
 #elif __aarch64__
         uint64_t pal_addr = *(uint64_t *)mtr + offset;
+        assert((pal_addr & 0x07) == 0);
         auto rc = sdk::lib::pal_reg_read(pal_addr, (uint32_t *)&data, 2);
         if (rc != sdk::lib::PAL_RET_OK) {
             LogError("Error reading from PAL. Err: %d\n", rc);
@@ -167,6 +169,7 @@ int GetCounter(DelphiMetrics_cgo mtr, int offset) {
 
     // return from shared memory
     void *ptr = (void *)((intptr_t)mtr + offset);
+    assert(((int64_t)ptr & 0x07) == 0);
     return *(int *)ptr;
 }
 
@@ -183,6 +186,7 @@ double GetGauge(DelphiMetrics_cgo mtr, int offset) {
 #ifdef __x86_64__
 #elif __aarch64__
         uint64_t pal_addr = *(uint64_t *)mtr + offset;
+        assert((pal_addr & 0x07) == 0);
         auto rc = sdk::lib::pal_reg_read(pal_addr, (uint32_t *)&data, 2);
         if (rc != sdk::lib::PAL_RET_OK) {
             LogError("Error reading from PAL. Err: %d\n", rc);
@@ -195,6 +199,7 @@ double GetGauge(DelphiMetrics_cgo mtr, int offset) {
 
     // return value from shared memory
     void *ptr = (void *)((intptr_t)mtr + offset);
+    assert(((int64_t)ptr & 0x07) == 0);
     return *(double *)ptr;
 }
 
