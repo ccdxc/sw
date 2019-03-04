@@ -70,6 +70,8 @@ penctl show metrics [flags]
 * [penctl show metrics pbpbcintpbusviolation](penctl_show_metrics_pbpbcintpbusviolation.md)	 - Show PbpbcintpbusviolationMetrics from Naples
 * [penctl show metrics pbpbcintrpl](penctl_show_metrics_pbpbcintrpl.md)	 - Show PbpbcintrplMetrics from Naples
 * [penctl show metrics pbpbcintwrite](penctl_show_metrics_pbpbcintwrite.md)	 - Show PbpbcintwriteMetrics from Naples
+* [penctl show metrics pciemgr](penctl_show_metrics_pciemgr.md)	 - Show PcieMgrMetrics from Naples
+* [penctl show metrics pcieport](penctl_show_metrics_pcieport.md)	 - Show PciePortMetrics from Naples
 * [penctl show metrics sessionsummary](penctl_show_metrics_sessionsummary.md)	 - Show SessionSummaryMetrics from Naples
 * [penctl show metrics sgempuinterr](penctl_show_metrics_sgempuinterr.md)	 - Show SgempuinterrMetrics from Naples
 * [penctl show metrics sgempuintinfo](penctl_show_metrics_sgempuintinfo.md)	 - Show SgempuintinfoMetrics from Naples

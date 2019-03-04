@@ -5,7 +5,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -29,13 +28,5 @@ func eventsShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	fmt.Println(string(resp))
-	if jsonFormat {
-		fmt.Println("JSON not supported for this command")
-		return errors.New("JSON not supported for this command")
-	}
-	if yamlFormat {
-		fmt.Println("YAML not supported for this command")
-		return errors.New("YAML not supported for this command")
-	}
 	return nil
 }
