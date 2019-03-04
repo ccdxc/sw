@@ -937,18 +937,20 @@ func qosClassPrintOne(resp *halproto.QosClassSpec) {
 	} else {
 		scheduleStr = fmt.Sprintf("%d%%", resp.GetSched().GetDwrr().GetBwPercentage())
 	}
-	dscpStr := "-"
+	dscpStr := "any"
 	if len(resp.GetClassMap().GetIpDscp()) > 0 {
 		dscpStr = fmt.Sprintf("%v", resp.GetClassMap().GetIpDscp())
 		dscpStr = strings.Replace(dscpStr, "[", "", -1)
 		dscpStr = strings.Replace(dscpStr, "]", "", -1)
 		dscpStr = strings.Replace(dscpStr, " ", ",", -1)
 	}
-
-	fmt.Printf("%-30s%-6d%-14s%-8d%-18s%-10d%-10s\n",
+	dot1qPcpStr := "any"
+	if resp.GetClassMap().GetDot1QPcp() > 0 {
+		dot1qPcpStr = fmt.Sprintf("%d", resp.GetClassMap().GetDot1QPcp())
+	}
+	fmt.Printf("%-30s%-6d%-14s%-8d%-18s%-10s%-10s\n",
 		qosGroup, resp.GetMtu(), pfcStr, resp.GetPfc().GetPfcCos(),
-		scheduleStr, resp.GetClassMap().GetDot1QPcp(),
-		dscpStr)
+		scheduleStr, dot1qPcpStr, dscpStr)
 }
 
 func isQosGroupValid(qosGroup string) bool {
