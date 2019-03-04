@@ -14,6 +14,88 @@
 extern "C" {
 #endif
 
+/* Non-atomic versions */
+#if 0
+#define PNSO_DECLARE_STAT(s) int64_t s;
+#define PNSO_STAT_INC(pcr, s) pcr->api_stats.s++
+#define PNSO_STAT_ADD(pcr, s, count) pcr->api_stats.s += count
+#define PNSO_STAT_READ(stats, s) (stats)->s
+#define PNSO_STAT_READ_BY_ID(stats, id) ((int64_t*)(stats))[id]
+#else
+/* Atomic versions */
+#define PNSO_DECLARE_STAT(s) atomic64_t s;
+#define PNSO_STAT_INC(pcr, s) \
+	atomic64_inc_return(&pcr->api_stats.s)
+#define PNSO_STAT_ADD(pcr, s, count) \
+	atomic64_add(count, &pcr->api_stats.s)
+#define PNSO_STAT_READ(stats, s) atomic64_read(&(stats)->s)
+#define PNSO_STAT_READ_BY_ID(stats, id) \
+	atomic64_read(&((atomic64_t*)(stats))[id])
+#endif
+
+#define PNSO_ENUM_STAT(s) pas_ ## s,
+#define PNSO_STAT_ID(s) pas_ ## s
+
+#define PNSO_LIST_STATS \
+	PNSO_LIST_STAT(num_requests) \
+	PNSO_LIST_STAT(num_services) \
+	PNSO_LIST_STAT(num_chains) \
+	PNSO_LIST_STAT(num_batches) \
+\
+	PNSO_LIST_STAT(num_request_failures) \
+	PNSO_LIST_STAT(num_service_failures) \
+	PNSO_LIST_STAT(num_chain_failures) \
+	PNSO_LIST_STAT(num_batch_failures) \
+\
+	PNSO_LIST_STAT(num_enc_requests) \
+	PNSO_LIST_STAT(num_dec_requests) \
+	PNSO_LIST_STAT(num_cp_requests) \
+	PNSO_LIST_STAT(num_dc_requests) \
+	PNSO_LIST_STAT(num_hash_requests) \
+	PNSO_LIST_STAT(num_chksum_requests) \
+\
+	PNSO_LIST_STAT(num_enc_request_failures) \
+	PNSO_LIST_STAT(num_dec_request_failures) \
+	PNSO_LIST_STAT(num_cp_request_failures) \
+	PNSO_LIST_STAT(num_dc_request_failures) \
+	PNSO_LIST_STAT(num_hash_request_failures) \
+	PNSO_LIST_STAT(num_chksum_request_failures) \
+\
+	PNSO_LIST_STAT(num_enc_bytes) \
+	PNSO_LIST_STAT(num_dec_bytes) \
+\
+	PNSO_LIST_STAT(num_cp_bytes_in) \
+	PNSO_LIST_STAT(num_cp_bytes_out) \
+\
+	PNSO_LIST_STAT(num_dc_bytes_in) \
+	PNSO_LIST_STAT(num_dc_bytes_out) \
+\
+	PNSO_LIST_STAT(num_hash_bytes_in) \
+	PNSO_LIST_STAT(num_hashes) \
+\
+	PNSO_LIST_STAT(num_chksum_bytes_in) \
+	PNSO_LIST_STAT(num_chksums) \
+\
+	PNSO_LIST_STAT(num_out_of_rmem_bufs) \
+	PNSO_LIST_STAT(num_out_of_rmem_status) \
+	PNSO_LIST_STAT(num_pdma_exceed_constraints) \
+\
+	PNSO_LIST_STAT(total_latency) \
+	PNSO_LIST_STAT(total_hw_latency)
+
+
+#undef PNSO_LIST_STAT
+#define PNSO_LIST_STAT PNSO_ENUM_STAT
+#define PNSO_ENUM_STATS PNSO_LIST_STATS
+enum {
+	PNSO_ENUM_STATS
+	pas_max
+};
+
+#undef PNSO_LIST_STAT
+#define PNSO_LIST_STAT PNSO_DECLARE_STAT
+#define PNSO_DECLARE_STATS PNSO_LIST_STATS
+
 /*
  * TODO-stats:
  *	- replace ktime with osal equivalent
@@ -23,142 +105,102 @@ extern "C" {
  *
  */
 struct pnso_api_stats {
-	atomic64_t pas_num_requests;
-	atomic64_t pas_num_services;
-	atomic64_t pas_num_chains;
-	atomic64_t pas_num_batches;
-
-	atomic64_t pas_num_request_failures;
-	atomic64_t pas_num_service_failures;
-	atomic64_t pas_num_chain_failures;
-	atomic64_t pas_num_batch_failures;
-
-	atomic64_t pas_num_enc_requests;
-	atomic64_t pas_num_dec_requests;
-	atomic64_t pas_num_cp_requests;
-	atomic64_t pas_num_dc_requests;
-	atomic64_t pas_num_hash_requests;
-	atomic64_t pas_num_chksum_requests;
-
-	atomic64_t pas_num_enc_request_failures;
-	atomic64_t pas_num_dec_request_failures;
-	atomic64_t pas_num_cp_request_failures;
-	atomic64_t pas_num_dc_request_failures;
-	atomic64_t pas_num_hash_request_failures;
-	atomic64_t pas_num_chksum_request_failures;
-
-	atomic64_t pas_num_enc_bytes;
-	atomic64_t pas_num_dec_bytes;
-
-	atomic64_t pas_num_cp_bytes_in;
-	atomic64_t pas_num_cp_bytes_out;
-
-	atomic64_t pas_num_dc_bytes_in;
-	atomic64_t pas_num_dc_bytes_out;
-
-	atomic64_t pas_num_hash_bytes_in;
-	atomic64_t pas_num_hashes;
-
-	atomic64_t pas_num_chksum_bytes_in;
-	atomic64_t pas_num_chksums;
-
-	atomic64_t pas_num_out_of_rmem_bufs;
-	atomic64_t pas_num_out_of_rmem_status;
-	atomic64_t pas_num_pdma_exceed_constraints;
-
-	atomic64_t pas_total_latency;
-	atomic64_t pas_total_hw_latency;
+	PNSO_DECLARE_STATS
 };
 
+#ifdef PNSO_INIT_STAT
+#undef PNSO_LIST_STAT
+#define PNSO_LIST_STAT PNSO_INIT_STAT
+#define PNSO_INIT_STATS PNSO_LIST_STATS
+#endif
+
 #define PAS_INC_NUM_REQUESTS(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_requests)
+	PNSO_STAT_INC(pcr, num_requests)
 #define PAS_INC_NUM_SERVICES(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_services)
+	PNSO_STAT_INC(pcr, num_services)
 #define PAS_INC_NUM_CHAINS(pcr)						\
-	atomic64_inc_return(&pcr->api_stats.pas_num_chains)
+	PNSO_STAT_INC(pcr, num_chains)
 #define PAS_INC_NUM_BATCHES(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_batches)
+	PNSO_STAT_INC(pcr, num_batches)
 
 #define PAS_INC_NUM_REQUEST_FAILURES(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_request_failures)
+	PNSO_STAT_INC(pcr, num_request_failures)
 #define PAS_INC_NUM_SERVICE_FAILURES(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_service_failures)
+	PNSO_STAT_INC(pcr, num_service_failures)
 #define PAS_INC_NUM_CHAIN_FAILURES(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_chain_failures)
+	PNSO_STAT_INC(pcr, num_chain_failures)
 #define PAS_INC_NUM_BATCH_FAILURES(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_batch_failures)
+	PNSO_STAT_INC(pcr, num_batch_failures)
 
 #define PAS_INC_NUM_ENC_REQUESTS(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_enc_requests)
+	PNSO_STAT_INC(pcr, num_enc_requests)
 #define PAS_INC_NUM_DEC_REQUESTS(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_dec_requests)
+	PNSO_STAT_INC(pcr, num_dec_requests)
 #define PAS_INC_NUM_CP_REQUESTS(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_cp_requests)
+	PNSO_STAT_INC(pcr, num_cp_requests)
 #define PAS_INC_NUM_DC_REQUESTS(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_dc_requests)
+	PNSO_STAT_INC(pcr, num_dc_requests)
 #define PAS_INC_NUM_HASH_REQUESTS(pcr)					\
-	atomic64_inc_return(&pcr->api_stats.pas_num_hash_requests)
+	PNSO_STAT_INC(pcr, num_hash_requests)
 #define PAS_INC_NUM_CHKSUM_REQUESTS(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_chksum_requests)
+	PNSO_STAT_INC(pcr, num_chksum_requests)
 
 #define PAS_INC_NUM_ENC_REQUEST_FAILURES(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_enc_request_failures)
+	PNSO_STAT_INC(pcr, num_enc_request_failures)
 #define PAS_INC_NUM_DEC_REQUEST_FAILURES(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_dec_request_failures)
+	PNSO_STAT_INC(pcr, num_dec_request_failures)
 #define PAS_INC_NUM_CP_REQUEST_FAILURES(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_cp_request_failures)
+	PNSO_STAT_INC(pcr, num_cp_request_failures)
 #define PAS_INC_NUM_DC_REQUEST_FAILURES(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_dc_request_failures)
+	PNSO_STAT_INC(pcr, num_dc_request_failures)
 #define PAS_INC_NUM_HASH_REQUEST_FAILURES(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_hash_request_failures)
+	PNSO_STAT_INC(pcr, num_hash_request_failures)
 #define PAS_INC_NUM_CHKSUM_REQUEST_FAILURES(pcr)			\
-	atomic64_inc_return(&pcr->api_stats.pas_num_chksum_request_failures)
+	PNSO_STAT_INC(pcr, num_chksum_request_failures)
 #define PAS_INC_NUM_OUT_OF_RMEM_BUFS(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_out_of_rmem_bufs)
+	PNSO_STAT_INC(pcr, num_out_of_rmem_bufs)
 #define PAS_INC_NUM_OUT_OF_RMEM_STATUS(pcr)				\
-	atomic64_inc_return(&pcr->api_stats.pas_num_out_of_rmem_status)
+	PNSO_STAT_INC(pcr, num_out_of_rmem_status)
 #define PAS_INC_NUM_PDMA_EXCEED_CONSTRAINTS(pcr)			\
-	atomic64_inc_return(&pcr->api_stats.pas_num_pdma_exceed_constraints)
+	PNSO_STAT_INC(pcr, num_pdma_exceed_constraints)
 
 #define PAS_INC_NUM_ENC_BYTES(pcr, bytes)				\
-	atomic64_add(bytes, &pcr->api_stats.pas_num_enc_bytes)
+	PNSO_STAT_ADD(pcr, num_enc_bytes, bytes)
 #define PAS_INC_NUM_DEC_BYTES(pcr, bytes)				\
-	atomic64_add(bytes, &pcr->api_stats.pas_num_dec_bytes)
+	PNSO_STAT_ADD(pcr, num_dec_bytes, bytes)
 
 #define PAS_INC_NUM_CP_BYTES_IN(pcr, bytes)				\
-	atomic64_add(bytes, &pcr->api_stats.pas_num_cp_bytes_in)
+	PNSO_STAT_ADD(pcr, num_cp_bytes_in, bytes)
 #define PAS_INC_NUM_CP_BYTES_OUT(pcr, bytes)				\
-	atomic64_add(bytes, &pcr->api_stats.pas_num_cp_bytes_out)
+	PNSO_STAT_ADD(pcr, num_cp_bytes_out, bytes)
 
 #define PAS_INC_NUM_DC_BYTES_IN(pcr, bytes)				\
-	atomic64_add(bytes, &pcr->api_stats.pas_num_dc_bytes_in)
+	PNSO_STAT_ADD(pcr, num_dc_bytes_in, bytes)
 #define PAS_INC_NUM_DC_BYTES_OUT(pcr, bytes)				\
-	atomic64_add(bytes, &pcr->api_stats.pas_num_dc_bytes_out)
+	PNSO_STAT_ADD(pcr, num_dc_bytes_out, bytes)
 
 /* TODO-stats: Separate count for different algo?? */
 #define PAS_INC_NUM_HASH_BYTES_IN(pcr, bytes)				\
-	atomic64_add(bytes, &pcr->api_stats.pas_num_hash_bytes_in)
+	PNSO_STAT_ADD(pcr, num_hash_bytes_in, bytes)
 #define PAS_INC_NUM_HASHES(pcr, count)					\
-	atomic64_add(count, &pcr->api_stats.pas_num_hashes)
+	PNSO_STAT_ADD(pcr, num_hashes, count)
 
 #define PAS_INC_NUM_CHKSUM_BYTES_IN(pcr, bytes)				\
-	atomic64_add(bytes, &pcr->api_stats.pas_num_chksum_bytes_in)
+	PNSO_STAT_ADD(pcr, num_chksum_bytes_in, bytes)
 #define PAS_INC_NUM_CHKSUMS(pcr, count)					\
-	atomic64_add(count, &pcr->api_stats.pas_num_chksums)
+	PNSO_STAT_ADD(pcr, num_chksums, count)
 
 /* for measuring the time spent in both software and hardware */
 #define PAS_DECL_PERF()		ktime_t s
 #define PAS_START_PERF()	s = ktime_get()
 #define PAS_END_PERF(pcr)						\
-	atomic64_add(ktime_us_delta(ktime_get(), s),\
-			&pcr->api_stats.pas_total_latency)
+	PNSO_STAT_ADD(pcr, total_latency, ktime_us_delta(ktime_get(), s))
 
 /* for measuring the time spent just in hardware */
 #define PAS_DECL_HW_PERF()	ktime_t h
 #define PAS_START_HW_PERF()	h = ktime_get()
 #define PAS_END_HW_PERF(pcr)						\
-	atomic64_add(ktime_us_delta(ktime_get(), h),			\
-			&pcr->api_stats.pas_total_hw_latency)
+	PNSO_STAT_ADD(pcr, total_hw_latency, ktime_us_delta(ktime_get(), h))
 
 #define PAS_SHOW_STATS(pcr)	pas_show_stats(&pcr->api_stats);
 

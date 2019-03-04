@@ -10,6 +10,14 @@
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
 
+#ifdef __FreeBSD__
+#include <sys/sysctl.h>
+#define PNSO_INIT_STAT(s) SYSCTL_ADD_PROC(ctx, child, OID_AUTO, #s, \
+		CTLTYPE_S64 | CTLFLAG_RD, lif, PNSO_STAT_ID(s), \
+		sonic_sysctl_stat_handler, "Q", NULL);
+#endif
+#include "pnso_stats.h"
+
 #include "sonic.h"
 #include "sonic_bus.h"
 #include "sonic_dev.h"
@@ -709,6 +717,50 @@ static void sonic_per_core_resources_free(struct lif *lif)
 	}
 }
 
+#ifdef __FreeBSD__
+
+static int
+sonic_sysctl_stat_handler(SYSCTL_HANDLER_ARGS)
+{
+	struct lif* lif = oidp->oid_arg1;
+	uint32_t stat_id = oidp->oid_arg2;
+	int64_t stat_val = 0;
+	uint32_t i;
+	struct per_core_resource *res;
+
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		stat_val += PNSO_STAT_READ_BY_ID(&res->api_stats, stat_id);
+	}
+
+	return sysctl_handle_64(oidp, &stat_val, 0, req);
+}
+
+static void sonic_sysctl_deinit(struct lif *lif)
+{
+	/* Nothing to do, for now */
+}
+
+static int sonic_sysctl_init(struct lif *lif)
+{
+	struct device *dev = lif->sonic->dev;
+	struct sysctl_ctx_list *ctx;
+	struct sysctl_oid *tree;
+	struct sysctl_oid_list *child;
+
+	ctx = device_get_sysctl_ctx(dev->bsddev);
+	tree = device_get_sysctl_tree(dev->bsddev);
+	if (!ctx || !tree) {
+		dev_err(dev, "Cannot find sonic systcl root device node\n");
+		return EPERM;
+	}
+	child = SYSCTL_CHILDREN(tree);
+
+	PNSO_INIT_STATS;
+
+	return 0;
+}
+#endif
+
 void sonic_lifs_free(struct sonic *sonic)
 {
 	struct list_head *cur, *tmp;
@@ -787,6 +839,9 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 static void sonic_lif_deinit(struct lif *lif)
 {
 	sonic_lif_qcq_deinit(lif, lif->adminqcq);
+#ifdef __FreeBSD__
+	sonic_sysctl_deinit(lif);
+#endif
 	sonic_lif_per_core_resources_deinit(lif);
 	sonic_seq_q_batch_ht_for_all_safe(lif, sonic_seq_q_batch_free, lif);
 }
@@ -1316,6 +1371,12 @@ static int sonic_lif_init(struct lif *lif)
 	err = sonic_lif_per_core_resources_init(lif);
 	if (err)
 		goto err_out_per_core_res_deinit;
+
+#ifdef __FreeBSD__
+	err = sonic_sysctl_init(lif);
+	if (err)
+		goto err_out_per_core_res_deinit;
+#endif
 
 	err = sonic_lif_per_core_resources_post_init(lif);
 	if (err == SONIC_DEVCMD_UNKNOWN)
