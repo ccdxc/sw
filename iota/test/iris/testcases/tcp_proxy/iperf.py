@@ -2,7 +2,6 @@
 import time
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as netagent_cfg_api
-import iota.test.iris.testcases.aging.aging_utils as aging_utils
 
 def Setup(tc):
     api.Logger.info("tcp_proxy iperf SETUP")
@@ -25,18 +24,6 @@ def Trigger(tc):
     if len(get_config_objects) == 0:
         api.Logger.error("Unable to fetch newly pushed objects")
         return api.types.status.FAILURE
-
-    # Disable connection tracking so we don't age tcp flows or trap
-    # FIN etc.
-    aging_utils.update_field("enable-connection-tracking", False)
-
-    # disabling connection tracking doesn't have agent support yet.
-    # Workaround is to increase tcp timeouts for now
-    aging_utils.update_timeout("tcp-timeout", "10000s")
-    aging_utils.update_timeout("tcp-half-close", "10000s")
-    aging_utils.update_timeout("tcp-close", "10000s")
-    aging_utils.update_timeout("tcp-connection-setup", "10000s")
-    aging_utils.update_timeout("tcp-drop", "10000s")
 
     pairs = api.GetRemoteWorkloadPairs()
     w1 = pairs[0][0]
