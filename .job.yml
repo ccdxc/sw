@@ -12,6 +12,7 @@ image:
 rebase: true
 references:
   - nic
+  - penctl
   - nic/apollo
   - nic/sdk
   - dol
