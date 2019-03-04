@@ -539,6 +539,7 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 		err = -ENOMEM;
 		goto err_free_cq_info;
 	}
+	memset (new->base, 0, total_size);
 
 	new->total_size = total_size;
 	new->base_pa = virt_to_phys(new->base);
@@ -662,6 +663,8 @@ int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	if (!lif->notifyblock) {
 		goto err_freelif;
 	}
+	memset (lif->notifyblock, 0, lif->notifyblock_sz);
+
 	lif->notifyblock_pa = virt_to_phys(lif->notifyblock);
 	// allocate the qcqs
 	err = ionic_qcqs_alloc(lif);

@@ -28,7 +28,7 @@ $(BLD_BIN_DIR)/ionic.efirom: $(IPXEMOD)/src/bin-x86_64-efi/ionic.efirom
 	cp $(IPXEMOD)/src/bin-x86_64-efi/ionic.efirom $@
 
 $(IPXEMOD)/src/bin-x86_64-efi/ionic.efi: .ipxefiles
-	make PLATFORM=efi ARCH=x86_64 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efi EMBED=../../ipxe.ipxe
+	make PLATFORM=efi ARCH=x86_64 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efi
 
 $(IPXEMOD)/src/bin-x86_64-efi/ionic.efirom: .ipxefiles
 	make PLATFORM=efi ARCH=x86_64 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efirom
