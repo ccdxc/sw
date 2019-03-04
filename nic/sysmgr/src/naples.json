@@ -7,17 +7,17 @@
     "name": "pciemgrd",
     "command": "/platform/bin/pciemgrd -d",
     "dependencies": ["delphi"],
-    "flags": ["no_watchdog"]
+    "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "nicmgrd",
     "command": "/bin/sh /platform/tools/start-nicmgr-haps.sh",
     "dependencies": ["delphi", "pciemgrd"],
-    "flags": ["no_watchdog"]
+    "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "hal",
     "command": "/bin/sh /nic/tools/start-hal-haps.sh",
     "dependencies": ["delphi", "nicmgrd"],
-    "flags": ["no_watchdog"]
+    "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "netagent",
     "command": "/nic/bin/netagent -datapath hal",
