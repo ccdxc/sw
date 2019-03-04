@@ -19,8 +19,6 @@ struct aq_tx_s5_t2_k k;
 #define K_ERR_RETRY_COUNT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count_valid)
 #define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout)
 #define K_LOCAL_ACK_TIMEOUT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout_valid)
-#define K_RNR_RETRY_TIMER_VALID CAPRI_KEY_FIELD(IN_P, rnr_timer_valid) 
-#define K_RNR_RETRY_TIMER  CAPRI_KEY_FIELD(IN_P, rnr_min_timer) 
 #define K_RNR_RETRY_COUNT CAPRI_KEY_RANGE(IN_P, rnr_retry_count_sbit0_ebit1, rnr_retry_count_sbit2_ebit2) 
 #define K_RNR_RETRY_VALID CAPRI_KEY_FIELD(IN_P, rnr_retry_valid) 
     

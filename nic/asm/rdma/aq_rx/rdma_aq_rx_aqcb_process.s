@@ -20,7 +20,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 
 //create_qp params    
 #define K_CQP_PD k.{rdma_aq_feedback_cqp_pd_sbit0_ebit7...rdma_aq_feedback_cqp_pd_sbit16_ebit31}
-#define K_CQP_RQ_MAP_COUNT k.{rdma_aq_feedback_cqp_rq_map_count_sbit0_ebit7...rdma_aq_feedback_cqp_rq_map_count_sbit16_ebit31}
+#define K_CQP_RQ_MAP_COUNT k.{rdma_aq_feedback_cqp_rq_map_count_sbit0_ebit7...rdma_aq_feedback_cqp_rq_map_count_sbit24_ebit31}
 #define K_CQP_RQ_DMA_ADDR k.{rdma_aq_feedback_cqp_rq_dma_addr_sbit0_ebit15...rdma_aq_feedback_cqp_rq_dma_addr_sbit56_ebit63}
 #define K_CQP_RQ_CMB k.{rdma_aq_feedback_cqp_rq_cmb}
 #define K_CQP_RQ_CQ_ID k.{rdma_aq_feedback_cqp_rq_cq_id_sbit0_ebit7...rdma_aq_feedback_cqp_rq_cq_id_sbit16_ebit23}
@@ -51,11 +51,14 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_MQP_PMTU_LOG2 k.{rdma_aq_feedback_mqp_pmtu_log2_sbit0_ebit1...rdma_aq_feedback_mqp_pmtu_log2_sbit2_ebit4}    
 #define K_MQP_PMTU_VALID k.{rdma_aq_feedback_mqp_pmtu_valid}
 #define K_MQP_RQ_ID k.{rdma_aq_feedback_mqp_rq_id_sbit0_ebit6...rdma_aq_feedback_mqp_rq_id_sbit23_ebit23}
-    
+#define K_QQP_DMA_ADDR k.{rdma_aq_feedback_qqp_dma_addr_sbit0_ebit7...rdma_aq_feedback_qqp_dma_addr_sbit56_ebit63}
+#define K_QQP_RQ_ID k.{rdma_aq_feedback_qqp_rq_id_sbit0_ebit7...rdma_aq_feedback_qqp_rq_id_sbit16_ebit23}
+
 %%
 
     .param      rdma_aq_rx_cqcb_mpu_only_process
     .param      rdma_aq_rx_sqcb1_process
+    .param      rdma_aq_rx_query_sqcb1_process
     .param      rdma_aq_rx_wqe_process
     .param      rdma_resp_rx_stage0
     .param      rx_dummy
@@ -81,6 +84,10 @@ process_feedback:
 
     seq         c1, K_OP, AQ_OP_TYPE_MODIFY_QP
     bcf         [c1], modify_qp
+    nop
+
+    seq         c1, K_OP, AQ_OP_TYPE_QUERY_QP
+    bcf         [c1], query_qp
     nop
     
 aq_feedback:
@@ -186,4 +193,14 @@ modify_qp:
     b           aq_feedback
     nop
 
-    
+query_qp:
+
+	CAPRI_RESET_TABLE_2_ARG()
+	phvwr		CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, rq_id), K_QQP_RQ_ID
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_query_sqcb1_process, r0)
+
+	DMA_CMD_STATIC_BASE_GET(r1, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_QUERY_QP_RQ)
+	DMA_PHV2MEM_SETUP2(r1, c0, query_rq, query_rq, K_QQP_DMA_ADDR)
+
+	b			aq_feedback
+	nop

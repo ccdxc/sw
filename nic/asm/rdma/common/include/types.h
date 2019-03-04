@@ -1398,6 +1398,12 @@ struct rdma_aq_feedback_t {
             rsq_valid                :  1;
             rsvd                     : 16;
         } modify_qp;
+        struct {
+            rq_id                    : 24;
+            pad                      : 16;
+            dma_addr                 : 64;
+            rsvd                     : 72;
+        } query_qp;
         pad: 176;
     };
 };
@@ -1511,7 +1517,7 @@ struct resp_rx_send_fml_t {
 #define AQ_QPF_PRIVILEGED       0x00008000
 
 struct aqwqe_t {
-	op: 8;
+    op: 8;
     type_state: 8;
     union {
         dbid_flags: 16;
@@ -1521,39 +1527,39 @@ struct aqwqe_t {
         };
     };
     id_ver: 32;
-	union {
-		struct {
-			dma_addr: 64;
-			length: 32;
-			rsvd: 352;
-		} stats;
-		struct {
-			va: 64;
-			length: 64;
-			pd_id: 32;
+    union {
+        struct {
+            dma_addr: 64;
+            length: 32;
+            rsvd: 352;
+        } stats;
+        struct {
+            va: 64;
+            length: 64;
+            pd_id: 32;
             rsvd_flags: 16;            
-			rsvd: 128;
-			dir_size_log2: 8;
-			page_size_log2: 8;
-			tbl_index: 32;
-			map_count: 32;
-			dma_addr: 64;
-		} mr;
-		struct {
-			eq_id: 32;
-			depth_log2: 8;
-			stride_log2: 8;
-			dir_size_log2_rsvd: 8;
-			page_size_log2: 8;
-			rsvd: 256;
-			tbl_index: 32;
-			map_count: 32;
-			dma_addr: 64;
-		} cq;
-		struct {
-			pd_id: 32;
+            rsvd: 128;
+            dir_size_log2: 8;
+            page_size_log2: 8;
+            tbl_index: 32;
+            map_count: 32;
+            dma_addr: 64;
+        } mr;
+        struct {
+            eq_id: 32;
+            depth_log2: 8;
+            stride_log2: 8;
+            dir_size_log2_rsvd: 8;
+            page_size_log2: 8;
+            rsvd: 256;
+            tbl_index: 32;
+            map_count: 32;
+            dma_addr: 64;
+        } cq;
+        struct {
+            pd_id: 32;
             union {
-			    priv_flags: 32;
+                priv_flags: 32;
                 struct {
                     pad1: 16;
                     privileged:1;
@@ -1568,24 +1574,24 @@ struct aqwqe_t {
                     access_local_write:1;
                 };
             };
-			sq_cq_id: 32;
-			sq_depth_log2: 8;
-			sq_stride_log2: 8;
-			sq_dir_size_log2_rsvd: 8;
-			sq_page_size_log2: 8;
-			sq_tbl_index_xrcd_id: 32;
-			sq_map_count: 32;
-			sq_dma_addr:64 ;
-			rq_cq_id: 32;
-			rq_depth_log2: 8;
-			rq_stride_log2: 8;
-			rq_dir_size_log2_rsvd: 8;
-			rq_page_size_log2: 8;
-			rq_tbl_index_srq_id: 32;
-			rq_map_count: 32;
-			rq_dma_addr: 64;
-		} qp;
-		struct {
+            sq_cq_id: 32;
+            sq_depth_log2: 8;
+            sq_stride_log2: 8;
+            sq_dir_size_log2_rsvd: 8;
+            sq_page_size_log2: 8;
+            sq_tbl_index_xrcd_id: 32;
+            sq_map_count: 32;
+            sq_dma_addr:64 ;
+            rq_cq_id: 32;
+            rq_depth_log2: 8;
+            rq_stride_log2: 8;
+            rq_dir_size_log2_rsvd: 8;
+            rq_page_size_log2: 8;
+            rq_tbl_index_srq_id: 32;
+            rq_map_count: 32;
+            rq_dma_addr: 64;
+        } qp;
+        struct {
             attr_mask:32;
             access_flags:32;
             rq_psn:32;
@@ -1604,14 +1610,46 @@ struct aqwqe_t {
             rrq_index:32;
             rsq_index:32;
             dma_addr:64;
-		} mod_qp;
-		struct {
+        } mod_qp;
+        struct {
             dma_addr:64;
             length:32;
             pd_id:32;
-			rsvd:320;
-		} ah;
-	};
+            rsvd:320;
+        } ah;
+        struct {
+            rsvd: 320;
+            sq_dma_addr: 64;
+            rq_dma_addr: 64;
+        } query;
+    };
+};
+
+struct aq_query_qp_sq_buf {
+    rsvd:3;
+    rnr_timer:5;
+    retry_timeout:8;
+    access_perms_flags:16;
+    access_perms_rsvd:16;
+    pkey_id:16;
+    qkey_dest_qpn:32;
+    rate_limit_kbps:32;
+    rq_psn:32;
+};
+
+struct aq_query_qp_rq_buf {
+    pad1:1;
+    state:3;
+    pmtu:4;
+    pad2:1;
+    retry_cnt:3;
+    pad3:1;
+    rnr_retry:3;
+    rrq_depth:8;
+    rsq_depth:8;
+    pad4:8;
+    sq_psn:24;
+    ah_id_len:32;
 };
 
 #define AQ_WQE_T_LOG_SIZE_BYTES 6

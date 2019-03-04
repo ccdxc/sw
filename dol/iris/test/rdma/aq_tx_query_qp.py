@@ -14,9 +14,28 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
-    tc.pvtdata.lif = tc.config.root
+    rs = tc.config.rdmasession
+    rs.lqp.sq.qstate.Read()
+    rs.lqp.rq.qstate.Read()
+    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
+    tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
+
+    tc.pvtdata.test_qp = rs.lqp
+
+    # Assuming SQ, RQ share CQ
+    rs.lqp.sq_cq.qstate.Read()
+    tc.pvtdata.qp_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
+
+    tc.pvtdata.lif = rs.lqp.pd.ep.intf.lif
     tc.pvtdata.aq = tc.pvtdata.lif.aq
     PopulateAdminPreQStates(tc)
+
+    syndrome = tc.pvtdata.rq_pre_qstate.syndrome
+    tc.pvtdata.rq_psn = tc.pvtdata.rq_pre_qstate.ack_nak_psn
+    # syndrome != ACK_SYNDROME
+    if syndrome != 0:
+        tc.pvtdata.rq_psn = (tc.pvtdata.rq_psn - 1) & 0xFFFFFFFF
+
     return
 
 def TestCaseTrigger(tc):

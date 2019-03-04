@@ -12,7 +12,6 @@ struct aq_tx_s1_t0_k k;
 #define IN_TO_S_P to_s1_info
 #define IN_S2S_P  t0_s2s_aqcb_to_wqe_info
 #define TO_S_FB_INFO_P to_s7_fb_stats_info
-    
 #define PHV_GLOBAL_COMMON_P phv_global_common
     
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
@@ -38,6 +37,7 @@ struct aq_tx_s1_t0_k k;
     .param      rdma_req_tx_stage0    
     .param      rdma_aq_tx_feedback_process
     .param      rdma_aq_tx_modify_qp_2_process
+    .param      rdma_aq_tx_query_sqcb2_process
 
 .align
 rdma_aq_tx_wqe_process:
@@ -79,7 +79,7 @@ rdma_aq_tx_wqe_process:
         b           modify_qp
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, modify_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_QUERY_QP
-        b           report_bad_cmd
+        b           query_qp
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, query_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DESTROY_QP
         b           destroy_qp
@@ -352,8 +352,6 @@ create_qp:
     // c3: RC QP?
     seq         c3, d.type_state, RDMA_SERV_TYPE_RC
 
-    // TODO: For now setting it to RTS, but later change it to INIT
-    // state. modify_qp is supposed to set it to RTR and RTS.
     phvwr       p.sqcb0.state, QP_STATE_RESET
     phvwr       p.sqcb0.color, 1
 
@@ -673,7 +671,30 @@ eq_dump:
     
     b           prepare_feedback
     nop
-    
+
+query_qp:
+    add         r3, r0, d.{id_ver}.wx
+    SQCB_ADDR_GET(r1, r3[23:0], K_SQCB_BASE_ADDR_HI)
+    RQCB_ADDR_GET(r2, r3[23:0], K_RQCB_BASE_ADDR_HI)
+
+    phvwr       p.rdma_feedback.aq_completion.op, AQ_OP_TYPE_QUERY_QP
+    add         r4, r0, d.{query.rq_dma_addr}.dx
+    phvwrpair   p.rdma_feedback.query_qp.rq_id, r3, p.rdma_feedback.query_qp.dma_addr, r4
+
+    // sqcb2 address
+    add         r1, r1, (CB_UNIT_SIZE_BYTES * 2)
+    CAPRI_RESET_TABLE_2_ARG()
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_tx_query_sqcb2_process, r1)
+
+    DMA_CMD_STATIC_BASE_GET(r1, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_QUERY_QP_SQ)
+    DMA_PHV2MEM_SETUP2(r1, c0, query_sq, query_sq, d.{query.sq_dma_addr}.dx)
+
+    // rqcb2 address
+    add         r2, r2, (CB_UNIT_SIZE_BYTES * 2)
+
+    b prepare_feedback
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_INFO_P, cb_addr), r2       // BD Slot
+
 modify_qp:
 
     add         r3, r0, d.{id_ver}.wx  //TODO: Need to optimize 

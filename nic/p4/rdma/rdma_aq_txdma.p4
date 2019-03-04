@@ -371,6 +371,7 @@ action aq_tx_sqcb2_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s5_info_scr.cb_addr, to_s5_info.cb_addr);
     modify_field(to_s5_info_scr.rqcb_base_addr_hi, to_s5_info.rqcb_base_addr_hi);
     modify_field(to_s5_info_scr.tx_psn, to_s5_info.tx_psn);
     modify_field(to_s5_info_scr.tx_psn_valid, to_s5_info.tx_psn_valid);

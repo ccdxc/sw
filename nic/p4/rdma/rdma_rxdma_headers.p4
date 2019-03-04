@@ -387,3 +387,14 @@ header_type rdma_aq_completion_feedback_header_modify_qp_t {
     }
 }
 
+//248
+header_type rdma_aq_completion_feedback_header_query_qp_t {
+    fields {
+        common_roce_bits      :  48;
+        rsvd                  :  112;
+        aq_comp_common_bits   :  56;
+        rq_id                 :  24;
+        dma_addr              :  64;
+        rsvd2                 :  88;
+    }
+}

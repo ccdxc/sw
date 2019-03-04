@@ -15,21 +15,27 @@
 
 #define AQ_RX_DMA_CMD_PYLD_BASE             2
 #define AQ_RX_DMA_CMD_START                 0
+
 #define AQ_RX_DMA_CMD_CQ                    (AQ_RX_MAX_DMA_CMDS - 4)
 #define AQ_RX_DMA_CMD_AQ_ERR_DIS            (AQ_RX_MAX_DMA_CMDS - 4)
+
+/* DMA Cmds for EQ, Async EQ, Wakeup Dpath (Mutually Exclusive) */
 #define AQ_RX_DMA_CMD_EQ                    (AQ_RX_MAX_DMA_CMDS - 3)
 #define AQ_RX_DMA_CMD_ASYNC_EQ              AQ_RX_DMA_CMD_EQ
-//wakeup dpath and EQ are mutually exclusive
 #define AQ_RX_DMA_CMD_WAKEUP_DPATH          AQ_RX_DMA_CMD_EQ
 #define AQ_RX_DMA_CMD_EQ_INT                (AQ_RX_MAX_DMA_CMDS - 1)
 #define AQ_RX_DMA_CMD_ASYNC_EQ_INT          AQ_RX_DMA_CMD_EQ_INT
 
+/* DMA Cmds for Create QP */
 #define AQ_RX_DMA_CMD_CREATE_QP_CB          (AQ_RX_MAX_DMA_CMDS - 5)
 #define AQ_RX_DMA_CMD_CREATE_QP_RQPT_DST    (AQ_RX_MAX_DMA_CMDS - 6)
 #define AQ_RX_DMA_CMD_CREATE_QP_RQPT_SRC    (AQ_RX_MAX_DMA_CMDS - 7)
 
+/* DMA Cmds for Query QP */
+#define AQ_RX_DMA_CMD_QUERY_QP_RQ           (AQ_RX_MAX_DMA_CMDS - 5)
+
 //following cmds are for modify qp
-#define AQ_RX_DMA_CMD_CLEAR_STATS_CB          (AQ_RX_MAX_DMA_CMDS - 5)
+#define AQ_RX_DMA_CMD_CLEAR_STATS_CB        (AQ_RX_MAX_DMA_CMDS - 5)
 
 #define AQ_RX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
@@ -58,6 +64,7 @@ struct aq_rx_phv_t {
     union {
         struct aq_rx_dma_cmds_flit_t flit_9;
         struct rqcb2_t rqcb2;
+        struct aq_query_qp_rq_buf query_rq;
     };
      
     /* flit 8 */

@@ -682,8 +682,9 @@ struct ionic_v1_admin_wqe {
 			__le64		dma_addr;
 		} mod_qp;
 		struct {
-			__u8		rsvd[48];
-			__le64		dma_addr;
+			__u8		rsvd[40];
+			__le64		sq_dma_addr;
+			__le64		rq_dma_addr;
 		} query;
 	};
 };
@@ -707,21 +708,24 @@ struct ionic_v1_admin_resize_qp {
 };
 
 /* side data for query qp */
-struct ionic_v1_admin_query_qp {
-	__u8				state_pmtu;
-	__u8				retry_rnrtry;
+struct ionic_v1_admin_query_qp_sq {
 	__u8				rnr_timer;
 	__u8				retry_timeout;
-	__le16				access_perms_flags;
-	__le16				access_perms_rsvd;
-	__le32				rq_psn;
-	__le32				sq_psn;
-	__le32				qkey_dest_qpn;
-	__le32				rate_limit_kbps;
-	__u8				rsq_depth;
+	__be16				access_perms_flags;
+	__be16				access_perms_rsvd;
+	__be16				pkey_id;
+	__be32				qkey_dest_qpn;
+	__be32				rate_limit_kbps;
+	__be32				rq_psn;
+};
+
+struct ionic_v1_admin_query_qp_rq {
+	__u8				state_pmtu;
+	__u8				retry_rnrtry;
 	__u8				rrq_depth;
-	__le16				pkey_id;
-	__le32				ah_id_len;
+	__u8				rsq_depth;
+	__be32				sq_psn;
+	__be32				ah_id_len;
 };
 
 /* admin queue v1 opcodes */
@@ -736,7 +740,7 @@ enum ionic_v1_admin_op {
 	IONIC_v1_ADMIN_RSVD_7,
 	IONIC_v1_ADMIN_RSVD_8,
 	IONIC_V1_ADMIN_MODIFY_QP,
-	IONIC_v1_ADMIN_RSVD_10,
+	IONIC_V1_ADMIN_QUERY_QP,
 	IONIC_V1_ADMIN_DESTROY_QP,
 	IONIC_V1_ADMIN_DEBUG,
 	IONIC_V1_ADMIN_CREATE_AH,
@@ -747,7 +751,6 @@ enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_STATS_VALS,
 	IONIC_V1_ADMIN_DESTROY_CQ,
 	IONIC_V1_ADMIN_DESTROY_AH,
-	IONIC_V1_ADMIN_QUERY_QP,
 
 	/* TODO: move ops up as they are assigned and implemented */
 	IONIC_V1_ADMIN_NOT_IMPLEMENTED = 100,

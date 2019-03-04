@@ -27,6 +27,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_AQ_TX_QUERY_QP1
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_query_qp
+        spec    : aq_tx_query_qp.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY
         enable  : True
         package : test.rdma
@@ -655,6 +663,14 @@ modules:
         package : test.rdma
         module  : req_tx_ud_sq_drain
         spec    : req_tx_ud_sq_drain.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_AQ_TX_QUERY_QP2
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_query_qp
+        spec    : aq_tx_query_qp.testspec
         ignore  : False
 
     - module:

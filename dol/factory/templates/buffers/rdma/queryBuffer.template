@@ -1,0 +1,20 @@
+# Rdma Buffer Template
+meta:
+    id      : RDMA_QUERY_BUFFER
+    package : factory.objects.rdma
+    module  : buffer
+    objname : RdmaBufferObject
+
+buffer_type : None
+size  : None
+data  : None
+rnr_timer : None
+retry_timeout : None
+qkey_dest_qpn : None
+rq_psn  : None
+state_pmtu  : None
+retry_rnrtry: None
+rrq_depth : None
+rsq_depth : None
+sq_psn    : None
+ah_id_len : None

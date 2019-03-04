@@ -9,6 +9,7 @@
 #define common_p4plus_stage0_app_header_table_action_dummy2 rdma_stage0_dummy_action
 #define common_p4plus_stage0_app_header_table_action_dummy3 rdma_stage0_aq_feedback_action2
 #define common_p4plus_stage0_app_header_table_action_dummy4 rdma_stage0_aq_feedback_action3
+#define common_p4plus_stage0_app_header_table_action_dummy5 rdma_stage0_aq_feedback_action4
 
 /**** table declarations ****/
 
@@ -67,6 +68,7 @@
 
 #define rx_table_s4_t0_action rdma_aq_rx_cqcb_process_dummy
 #define rx_table_s4_t2_action rdma_aq_rx_sqcb1_process
+#define rx_table_s4_t2_action1 rdma_aq_rx_query_sqcb1_process
 
 #define rx_table_s5_t0_action rdma_aq_rx_cqcb_process_dummy
 #define rx_table_s5_t2_action rdma_aq_rx_rqcb1_process
@@ -124,8 +126,8 @@ header_type aq_rx_aqcb_to_wqe_info_t {
     fields {
         rq_id                            :  24;
         rq_tbl_index                     :  32;
-		rq_map_count                     :  32;
-		rq_dma_addr                      :  64;
+        rq_map_count                     :  32;
+        rq_dma_addr                      :  64;
         rq_cmb                           :   1;
         pad                              :   7;
     }
@@ -189,7 +191,7 @@ header_type aq_rx_to_stage_cqcb_t {
     }
 }
 
-@pragma pa_header_union ingress app_header rdma_aq_feedback rdma_bth rdma_aq_feedback_cqp rdma_aq_feedback_mqp
+@pragma pa_header_union ingress app_header rdma_aq_feedback rdma_bth rdma_aq_feedback_cqp rdma_aq_feedback_mqp rdma_aq_feedback_qqp
 
 metadata p4_to_p4plus_roce_bth_header_t rdma_bth;
 @pragma scratch_metadata
@@ -206,6 +208,10 @@ metadata rdma_aq_completion_feedback_header_create_qp_t rdma_aq_feedback_cqp_scr
 metadata rdma_aq_completion_feedback_header_modify_qp_t rdma_aq_feedback_mqp;
 @pragma scratch_metadata
 metadata rdma_aq_completion_feedback_header_modify_qp_t rdma_aq_feedback_mqp_scr;
+
+metadata rdma_aq_completion_feedback_header_query_qp_t rdma_aq_feedback_qqp;
+@pragma scratch_metadata
+metadata rdma_aq_completion_feedback_header_query_qp_t rdma_aq_feedback_qqp_scr;
 
 /**** header unions and scratch ****/
 
@@ -429,6 +435,45 @@ action rdma_stage0_aq_feedback_action3 () {
     modify_field(rdma_aq_feedback_mqp_scr.pmtu_valid, rdma_aq_feedback_mqp.pmtu_valid);
 }
 
+action rdma_stage0_aq_feedback_action4 () {
+    // k + i for stage 0
+
+    // from intrinsic
+    modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
+    modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
+    modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
+    modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
+    modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
+
+    // We only need raw-flags in this piece. Can be pruned further
+    // from p4-to-p4plus-rdma-hdr
+    modify_field(rdma_bth_scr.p4plus_app_id, rdma_bth.p4plus_app_id);
+    modify_field(rdma_bth_scr.table0_valid, rdma_bth.table0_valid);
+    modify_field(rdma_bth_scr.table1_valid, rdma_bth.table1_valid);
+    modify_field(rdma_bth_scr.table2_valid, rdma_bth.table2_valid);
+    modify_field(rdma_bth_scr.table3_valid, rdma_bth.table3_valid);
+    modify_field(rdma_bth_scr.roce_opt_ts_valid, rdma_bth.roce_opt_ts_valid);
+    modify_field(rdma_bth_scr.roce_opt_mss_valid, rdma_bth.roce_opt_mss_valid);
+    modify_field(rdma_bth_scr.rdma_hdr_len, rdma_bth.rdma_hdr_len);
+    modify_field(rdma_bth_scr.raw_flags, rdma_bth.raw_flags);
+    modify_field(rdma_bth_scr.ecn, rdma_bth.ecn);
+    modify_field(rdma_bth_scr.payload_len, rdma_bth.payload_len);
+    modify_field(rdma_bth_scr.roce_opt_ts_value, rdma_bth.roce_opt_ts_value);
+    modify_field(rdma_bth_scr.roce_opt_ts_echo, rdma_bth.roce_opt_ts_echo);
+    modify_field(rdma_bth_scr.roce_opt_mss, rdma_bth.roce_opt_mss);
+    modify_field(rdma_bth_scr.roce_int_recirc_hdr, rdma_bth.roce_int_recirc_hdr);
+
+
+    // from app header
+    modify_field(rdma_aq_feedback_qqp_scr.common_roce_bits, rdma_aq_feedback_qqp.common_roce_bits);
+
+    // aq_feedback_header bits
+    modify_field(rdma_aq_feedback_qqp_scr.aq_comp_common_bits, rdma_aq_feedback_qqp.aq_comp_common_bits);
+
+    modify_field(rdma_aq_feedback_qqp_scr.rq_id, rdma_aq_feedback_qqp.rq_id);
+    modify_field(rdma_aq_feedback_qqp_scr.dma_addr, rdma_aq_feedback_qqp.dma_addr);
+}
+
 /*
  * Stage 0 table 0 dummy action
  */
@@ -495,6 +540,18 @@ action rdma_aq_rx_aqwqe_process () {
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_cmb, t3_s2s_aqcb_to_wqe_info.rq_cmb);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.pad, t3_s2s_aqcb_to_wqe_info.pad);
 
+}
+
+action rdma_aq_rx_query_sqcb1_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s4_info_scr.rqcb_base_addr_hi, to_s4_info.rqcb_base_addr_hi);
+    modify_field(to_s4_info_scr.sqcb_base_addr_hi, to_s4_info.sqcb_base_addr_hi);
+
+    //stage to stage
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.rq_id, t2_s2s_aqcb_to_sqcb1_info.rq_id);
 }
 
 action rdma_aq_rx_sqcb1_process () {

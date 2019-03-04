@@ -316,6 +316,13 @@ class RdmaAqDescriptorModQP(Packet):
         LELongField("dma_addr", 0),
     ]
 
+class RdmaAqDescriptorQueryQP(Packet):
+  fields_desc = [
+    BitField("rsvd", 0, 320),
+    LELongField("sq_dma_addr", 0),
+    LELongField("rq_dma_addr", 0),
+  ]
+
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
@@ -841,10 +848,20 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
     def __set_desc(self, desc):
         self.desc = desc
 
-    def Write(self, debug = False):
+    def Write(self, debug = True):
+        if self.spec != None and hasattr(self.spec.fields, 'query_qp'):
+           logger.info("Reading Admin Query QP")
+           sq_dma_addr = self.spec.fields.query_qp.sq_dma_addr if hasattr(self.spec.fields.query_qp, 'sq_dma_addr') else 0
+           rq_dma_addr = self.spec.fields.query_qp.rq_dma_addr if hasattr(self.spec.fields.query_qp, 'rq_dma_addr') else 0
+           queryQp = RdmaAqDescriptorQueryQP(rsvd=0, sq_dma_addr=sq_dma_addr, rq_dma_addr=rq_dma_addr)
+           desc = self.desc/queryQp
+           self.__set_desc(desc)
+           logger.ShowScapyObject(queryQp)
+
         if debug is True:
-            logger.info("Writing AQ Desciptor @0x%x = op: %d type_state: %d dbid_flags: 0x%x id_ver: %d" %
-                       (self.address, self.op, self.type_state, self.dbid_flags, self.id_ver))
+            logger.info("Writing AQ Desciptor @0x%x = op: %d type_state: %d dbid_flags: 0x%x id_ver: %d len: %d" %
+                       (self.address, self.op, self.type_state, self.dbid_flags, self.id_ver, len(bytearray(bytes(self.desc)))))
+        logger.ShowScapyObject(self.desc)
         # AQ is not NIC resident
         assert(self.mem_handle)
         resmgr.HostMemoryAllocator.write(self.mem_handle,
@@ -860,6 +877,13 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             logger.info("Reading AQ Desciptor @ 0x%x phy_address: 0x%x" % (self.address, self.phy_address))
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaAqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaAqDescriptorBase()))))
+
+        if self.desc.op == 10: # AQ_OP_TYPE_QUERY_QP
+            mem_handle.va += len(RdmaAqDescriptorBase())
+            self.queryQP = RdmaAqDescriptorQueryQP(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaAqDescriptorQueryQP())))
+            self.sq_dma_addr = self.queryQP.sq_dma_addr
+            self.rq_dma_addr = self.queryQP.rq_dma_addr
+            logger.ShowScapyObject(self.queryQP)
 
     def Show(self):
         logger.ShowScapyObject(self.desc)
@@ -900,9 +924,39 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
 
     def GetBuffer(self):
         logger.info("GetBuffer() operator invoked on AQ descriptor")
-        # AQ is not associated with any buffer and hence simply create
-        # default RDMABuffer object so that ebuf == abuf check passes
-        return rdmabuffer.RdmaBufferObject()
+
+        if not hasattr(self, 'address'):
+            logger.info("Reading from buff")
+            return self.spec.fields.buff
+
+        if self.desc.op == 10: # AQ_OP_TYPE_QUERY_QP
+            rdmabuff = rdmabuffer.RdmaBufferObject()
+            total_data = bytearray()
+            total_size = 0
+            sq_data_len = len(rdmabuffer.RdmaQuerySqBuffer())
+            rq_data_len = len(rdmabuffer.RdmaQueryRqBuffer())
+            logger.info("Reading query_qp content. len: %d sq_dma_addr: 0x%x rq_dma_addr: 0x%x" %(len(self.queryQP), self.sq_dma_addr, self.rq_dma_addr))
+
+            mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.sq_dma_addr), self.sq_dma_addr)
+            sq_data = resmgr.HostMemoryAllocator.read(mem_handle, sq_data_len)
+            total_data.extend(sq_data)
+            total_size += sq_data_len
+            
+            mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.rq_dma_addr), self.rq_dma_addr)
+            rq_data = resmgr.HostMemoryAllocator.read(mem_handle, rq_data_len)
+            total_data.extend(rq_data)
+            total_size += rq_data_len
+            
+            rdmabuff.data = bytes(total_data)
+            rdmabuff.size = total_size
+            logger.info("Total data: %s" % bytes(total_data))
+
+            return rdmabuff
+
+        else:
+            # AQ is not associated with any buffer and hence simply create
+            # default RDMABuffer object so that ebuf == abuf check passes
+            return rdmabuffer.RdmaBufferObject()
 
 class RdmaCqDescriptorRecvObject(base.FactoryObjectBase):
     def __init__(self):

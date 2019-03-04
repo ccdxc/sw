@@ -15,6 +15,9 @@ def Teardown(infra, module):
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
 
+    tc.pvtdata.lif = tc.config.root
+    tc.pvtdata.aq = tc.pvtdata.lif.aq
+
     PopulateAdminPreQStates(tc)
 
     tc.pvtdata.save_aq_state = copy.deepcopy(tc.pvtdata.aq_pre_qstate)

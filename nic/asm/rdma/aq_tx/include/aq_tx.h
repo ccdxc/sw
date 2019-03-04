@@ -33,6 +33,9 @@
 #define AQ_TX_DMA_CMD_CREATE_QP_SQPT_DST  (AQ_TX_MAX_DMA_CMDS -4)
 #define AQ_TX_DMA_CMD_CREATE_QP_SQPT_SRC  (AQ_TX_MAX_DMA_CMDS -5)
 
+/* DMA Cmds for Query QP */
+#define AQ_TX_DMA_CMD_QUERY_QP_SQ       (AQ_TX_MAX_DMA_CMDS - 3)
+
 /* DMA Cmds for Modify QP */
 // Modify QP to ERR
 #define AQ_TX_DMA_CMD_REQ_ERR_FEEDBACK  (AQ_TX_MAX_DMA_CMDS - 3)
@@ -148,6 +151,7 @@ struct aq_tx_phv_t {
         struct aq_tx_dma_cmds_flit_t flit_8;
         struct sqcb2_t sqcb2;
         struct err_feedback_t req_feedback;
+        struct aq_query_qp_sq_buf query_sq;
     };
      
         /* flit 7 */

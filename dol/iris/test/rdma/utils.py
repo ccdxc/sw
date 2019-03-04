@@ -512,41 +512,38 @@ def ValidateAsyncEQChecks(tc, num_wqes=1):
     return True
 
 def PopulateAdminPreQStates(tc):
-    lif = tc.config.root
-    tc.pvtdata.aq = lif.aq
+    #lif = tc.config.root
+    #tc.pvtdata.aq = lif.aq
 
     #aq
-    lif.aq.aq.qstate.Read()
-    tc.pvtdata.aq_pre_qstate = copy.deepcopy(lif.aq.aq.qstate.data)
+    tc.pvtdata.lif.aq.aq.qstate.Read()
+    tc.pvtdata.aq_pre_qstate = copy.deepcopy(tc.pvtdata.lif.aq.aq.qstate.data)
 
     #aq_cq
-    lif.aq.cq.qstate.Read()
-    tc.pvtdata.aq_cq_pre_qstate = copy.deepcopy(lif.aq.cq.qstate.data)
+    tc.pvtdata.lif.aq.cq.qstate.Read()
+    tc.pvtdata.aq_cq_pre_qstate = copy.deepcopy(tc.pvtdata.lif.aq.cq.qstate.data)
 
     #aq_eq
-    lif.aq.eq.qstate.Read()
-    tc.pvtdata.eq_pre_qstate = copy.deepcopy(lif.aq.eq.qstate.data)
+    tc.pvtdata.lif.aq.eq.qstate.Read()
+    tc.pvtdata.eq_pre_qstate = copy.deepcopy(tc.pvtdata.lif.aq.eq.qstate.data)
 
     #async_eq
-    lif.async_eq.qstate.Read()
-    tc.pvtdata.async_eq_pre_qstate = lif.async_eq.qstate.data
+    tc.pvtdata.lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_pre_qstate = tc.pvtdata.lif.async_eq.qstate.data
     return
 
 def PopulateAdminPostQStates(tc):
-    lif = tc.config.root
-    tc.pvtdata.aq = lif.aq
-
     #aq
-    lif.aq.aq.qstate.Read()
-    tc.pvtdata.aq_post_qstate = copy.deepcopy(lif.aq.aq.qstate.data)
+    tc.pvtdata.lif.aq.aq.qstate.Read()
+    tc.pvtdata.aq_post_qstate = copy.deepcopy(tc.pvtdata.lif.aq.aq.qstate.data)
 
     #aq_cq
-    lif.aq.cq.qstate.Read()
-    tc.pvtdata.aq_cq_post_qstate = copy.deepcopy(lif.aq.cq.qstate.data)
+    tc.pvtdata.lif.aq.cq.qstate.Read()
+    tc.pvtdata.aq_cq_post_qstate = copy.deepcopy(tc.pvtdata.lif.aq.cq.qstate.data)
 
     #async_eq
-    lif.async_eq.qstate.Read()
-    tc.pvtdata.async_eq_post_qstate = lif.async_eq.qstate.data
+    tc.pvtdata.lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_post_qstate = tc.pvtdata.lif.async_eq.qstate.data
     return
 
 def ValidateAdminAsyncEQChecks(tc, num_wqes=1):

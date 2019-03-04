@@ -4316,8 +4316,10 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 			.id_ver = cpu_to_le32(qp->qpid),
 		}
 	};
-	struct ionic_v1_admin_query_qp *query_buf;
-	dma_addr_t query_dma;
+	struct ionic_v1_admin_query_qp_sq *query_sqbuf;
+	struct ionic_v1_admin_query_qp_rq *query_rqbuf;
+	dma_addr_t query_sqdma;
+	dma_addr_t query_rqdma;
 	int flags, rc;
 
 	attr->cap.max_send_sge =
@@ -4327,19 +4329,31 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 	attr->cap.max_inline_data =
 		ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
 
-	query_buf = kmalloc(sizeof(*query_buf), GFP_KERNEL);
-	if (!query_buf) {
+	query_sqbuf = kmalloc(sizeof(*query_sqbuf), GFP_KERNEL);
+	if (!query_sqbuf) {
 		rc = -ENOMEM;
-		goto err_buf;
+		goto err_sqbuf;
+	}
+	query_rqbuf = kmalloc(sizeof(*query_rqbuf), GFP_KERNEL);
+	if (!query_rqbuf) {
+		rc = -ENOMEM;
+		goto err_rqbuf;
 	}
 
-	query_dma = dma_map_single(dev->hwdev, query_buf, sizeof(*query_buf),
-				   DMA_FROM_DEVICE);
-	rc = dma_mapping_error(dev->hwdev, query_dma);
+	query_sqdma = dma_map_single(dev->hwdev, query_sqbuf, sizeof(*query_sqbuf),
+				     DMA_FROM_DEVICE);
+	rc = dma_mapping_error(dev->hwdev, query_sqdma);
 	if (rc)
-		goto err_dma;
+		goto err_sqdma;
 
-	wr.wqe.query.dma_addr = cpu_to_le64(query_dma);
+	query_rqdma = dma_map_single(dev->hwdev, query_rqbuf, sizeof(*query_rqbuf),
+				     DMA_FROM_DEVICE);
+	rc = dma_mapping_error(dev->hwdev, query_rqdma);
+	if (rc)
+		goto err_rqdma;
+
+	wr.wqe.query.sq_dma_addr = cpu_to_le64(query_sqdma);
+	wr.wqe.query.rq_dma_addr = cpu_to_le64(query_rqdma);
 
 	ionic_admin_post(dev, &wr);
 	ionic_admin_wait(dev, &wr);
@@ -4355,43 +4369,50 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 		rc = 0;
 	}
 
-	dma_unmap_single(dev->hwdev, query_dma, sizeof(*query_buf),
+	dma_unmap_single(dev->hwdev, query_sqdma, sizeof(*query_sqbuf),
+			 DMA_FROM_DEVICE);
+	dma_unmap_single(dev->hwdev, query_rqdma, sizeof(*query_rqbuf),
 			 DMA_FROM_DEVICE);
 
 	if (rc)
-		goto err_dma;
+		goto err_sqdma;
 
-	flags = le32_to_cpu(query_buf->access_perms_flags);
+	flags = le32_to_cpu(query_sqbuf->access_perms_flags);
 
-	attr->qp_state = from_ionic_qp_state(query_buf->state_pmtu & 0xf);
+	attr->qp_state = from_ionic_qp_state(query_rqbuf->state_pmtu & 0xf);
 	attr->cur_qp_state = attr->qp_state;
-	attr->path_mtu = query_buf->state_pmtu >> 4;
+	attr->path_mtu = (query_rqbuf->state_pmtu >> 4) - 7;
 	attr->path_mig_state = IB_MIG_MIGRATED;
-	attr->qkey = le32_to_cpu(query_buf->qkey_dest_qpn);
-	attr->rq_psn = le32_to_cpu(query_buf->rq_psn);
-	attr->sq_psn = le32_to_cpu(query_buf->sq_psn);
+	attr->qkey = le32_to_cpu(query_sqbuf->qkey_dest_qpn);
+	attr->rq_psn = le32_to_cpu(query_sqbuf->rq_psn);
+	attr->sq_psn = le32_to_cpu(query_rqbuf->sq_psn);
 	attr->dest_qp_num = attr->qkey;
 	attr->qp_access_flags = from_ionic_qp_flags(flags);
 	attr->pkey_index = 0;
 	attr->alt_pkey_index = 0;
 	attr->en_sqd_async_notify = !!(flags & IONIC_QPF_SQD_NOTIFY);
 	attr->sq_draining = !!(flags & IONIC_QPF_SQ_DRAINING);
-	attr->max_rd_atomic = BIT(query_buf->rrq_depth) - 1;
-	attr->max_dest_rd_atomic = BIT(query_buf->rsq_depth) - 1;
-	attr->min_rnr_timer = query_buf->rnr_timer;
+	attr->max_rd_atomic = BIT(query_rqbuf->rrq_depth) - 1;
+	attr->max_dest_rd_atomic = BIT(query_rqbuf->rsq_depth) - 1;
+	attr->min_rnr_timer = query_sqbuf->rnr_timer;
 	attr->port_num = 0;
-	attr->timeout = query_buf->retry_timeout;
-	attr->retry_cnt = query_buf->retry_rnrtry & 0xf;
-	attr->rnr_retry = query_buf->retry_rnrtry >> 4;
+	attr->timeout = query_sqbuf->retry_timeout;
+	attr->retry_cnt = query_rqbuf->retry_rnrtry & 0xf;
+	attr->rnr_retry = query_rqbuf->retry_rnrtry >> 4;
 	attr->alt_port_num = 0;
 	attr->alt_timeout = 0;
 #ifdef HAVE_QP_RATE_LIMIT
-	attr->rate_limit = le32_to_cpu(query_buf->rate_limit_kbps);
+	attr->rate_limit = le32_to_cpu(query_sqbuf->rate_limit_kbps);
 #endif
 
-err_dma:
-	kfree(query_buf);
-err_buf:
+err_rqdma:
+	dma_unmap_single(dev->hwdev, query_sqdma, sizeof(*query_sqbuf),
+			 DMA_FROM_DEVICE);
+err_sqdma:
+	kfree(query_rqbuf);
+err_rqbuf:
+	kfree(query_sqbuf);
+err_sqbuf:
 	return rc;
 }
 
