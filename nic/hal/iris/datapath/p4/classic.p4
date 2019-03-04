@@ -3,6 +3,7 @@
 /*****************************************************************************/
 action registered_macs(dst_lport, multicast_en) {
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
+    modify_field(qos_metadata.qos_class_id, capri_intrinsic.tm_oq);
 
     // hit action
     if (multicast_en == TRUE) {

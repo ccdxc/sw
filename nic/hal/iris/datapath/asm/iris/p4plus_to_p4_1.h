@@ -29,6 +29,8 @@ p4plus_to_p4_1_upd_tcp_seq:
   // update from CPU flag
   seq         c2, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
   phvwr.c2    p.control_metadata_from_cpu, TRUE
+  seq         c2, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_IPSEC
+  phvwr.c2    p.control_metadata_i2e_flags[P4_I2E_FLAGS_FROM_IPSEC_APP], TRUE
 
   // Update the flow_index given by ARM CPU
   // In this case we will skip the flow_hash lookup

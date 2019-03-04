@@ -10,11 +10,7 @@ struct phv_              p;
 %%
 
 registered_macs:
-  K_DBG_WR(0x140)
-  DBG_WR(0x148, d.registered_macs_d.multicast_en)
-  DBG_WR(0x149, d.registered_macs_d.dst_lport)
-  DBG_WR(0x14a, k.flow_lkp_metadata_pkt_type)
-  DBG_WR(0x14b, k.control_metadata_flow_miss_idx)
+  phvwr       p.qos_metadata_qos_class_id, k.capri_intrinsic_tm_oq
   bcf         [c1], registered_macs_hit
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   seq         c2, k.flow_lkp_metadata_lkp_vrf, r0
