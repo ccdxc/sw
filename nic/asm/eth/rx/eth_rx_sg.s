@@ -157,7 +157,7 @@ eth_rx_sg_error:
   phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
 
   // Reset the DMA command stack to discard existing DMA commands.
-  phvwr           p.eth_rx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
+  addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)
