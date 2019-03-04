@@ -40,11 +40,11 @@ test_qsfp (int port)
     memset(qsfp_buffer, 0, QSFP_READ_SIZE);
     
     printf("Enter a offset to read:");
-    scanf("%" SCNx8, &readoffset);
+    scanf("%" SCNx32, &readoffset);
     printf("offset to read: 0x%x\n", readoffset);
 
     printf("Enter a page to read:");
-    scanf("%" SCNx32, &lowpage);
+    scanf("%" SCNx32, (uint32_t*)&lowpage);
     printf("page to read: %d\n", lowpage);
 
     ASSERT_EQ(sdk::lib::pal_qsfp_read(
@@ -69,11 +69,11 @@ test_qsfp_write (int port)
     memset(qsfp_buffer, 0, QSFP_READ_SIZE);
 
     printf("Enter a offset to write:");
-    scanf("%" SCNx8, &writeoffset);
+    scanf("%" SCNx32, &writeoffset);
     printf("offset to write: 0x%x\n", writeoffset);
 
     printf("Enter a page to read:");
-    scanf("%" SCNx32, &lowpage);
+    scanf("%" SCNx32, (uint32_t*)&lowpage);
     printf("page to read: %d\n", lowpage);
 
     ASSERT_EQ(sdk::lib::pal_qsfp_read(
