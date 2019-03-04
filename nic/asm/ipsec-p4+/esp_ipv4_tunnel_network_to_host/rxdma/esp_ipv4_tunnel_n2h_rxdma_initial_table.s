@@ -11,9 +11,9 @@ struct phv_ p;
     .param esp_ipv4_tunnel_n2h_rxmda_ring_full_error
     .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
-    seq c6, d.is_v6, 0xFF
-    bcf [c6], rxdma_freeze2
-    nop
+    //seq c6, d.is_v6, 0xFF
+    //bcf [c6], rxdma_freeze2
+    //nop
 
     add r1, d.cb_pindex, 1
     andi r1, r1, IPSEC_CB_RING_INDEX_MASK

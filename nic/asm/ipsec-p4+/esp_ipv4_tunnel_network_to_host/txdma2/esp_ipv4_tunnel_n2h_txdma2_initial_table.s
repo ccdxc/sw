@@ -13,9 +13,9 @@ struct phv_ p;
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 esp_ipv4_tunnel_n2h_txdma2_initial_table:
-    seq c6, d.is_v6, 0xFF
-    bcf [c6], txdma2_freeze2
-    nop
+    //seq c6, d.is_v6, 0xFF
+    //bcf [c6], txdma2_freeze2
+    //nop
 
     seq c2, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx
     b.c2 esp_ipv4_tunnel_n2h_txdma2_initial_table_do_nothing

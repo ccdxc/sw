@@ -115,7 +115,6 @@
 #define H2N_TXDMA1_FREEZE_OFFSET     216
 #define H2N_TXDMA2_FREEZE_OFFSET     224
 
-
 #define DOT1Q_ETYPE  0x8100
 #define IPV4_ETYPE   0x0800
 #define IPV6_ETYPE   0x86dd

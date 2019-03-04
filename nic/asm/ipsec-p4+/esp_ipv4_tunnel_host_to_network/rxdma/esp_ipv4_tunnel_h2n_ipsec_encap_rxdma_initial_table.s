@@ -13,9 +13,9 @@ struct phv_ p;
         .param          IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
         .align 
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
-    seq c6, d.flags, 0xFF
-    bcf [c6], rxdma_freeze
-    nop
+    //seq c6, d.flags, 0xFF
+    //bcf [c6], rxdma_freeze
+    //nop
     add r1, d.cb_pindex, 1
     and r1, r1, IPSEC_CB_RING_INDEX_MASK 
     seq c5, d.cb_cindex, r1
