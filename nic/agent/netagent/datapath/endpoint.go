@@ -397,6 +397,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	hd.Lock()
 	defer hd.Unlock()
 	var halIPAddresses []*halproto.IPAddress
+	var ifKey *halproto.InterfaceKeyHandle
 
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
@@ -436,14 +437,16 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		},
 	}
 
-	ifKey := halproto.InterfaceKeyHandle{
-		KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-			InterfaceId: uplinkID,
-		},
+	if uplinkID != 0 {
+		ifKey = &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uplinkID,
+			},
+		}
 	}
 
 	epAttrs := halproto.EndpointAttributes{
-		InterfaceKeyHandle: &ifKey,
+		InterfaceKeyHandle: ifKey,
 		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          halIPAddresses,
 		SgKeyHandle:        sgHandles,
