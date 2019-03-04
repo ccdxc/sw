@@ -36,9 +36,16 @@ var getSystemCmd = &cobra.Command{
 
 var getSystemStatusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Show current system status",
-	Long:  "\n------------------------------------\n Show current system status \n------------------------------------\n",
+	Short: "show current system status",
+	Long:  "\n------------------------------------\n show current system status \n------------------------------------\n",
 	RunE:  getSystemStatusCmdCmdHandler,
+}
+
+var getSystemQueueStatsCmd = &cobra.Command{
+	Use:   "queue-statistics",
+	Short: "show system queue-statistics",
+	Long:  "\n------------------------------------\n show system queue-statistics \n------------------------------------\n",
+	Run:   getSystemQueueStatsCmdHandler,
 }
 
 func init() {
@@ -46,6 +53,7 @@ func init() {
 	showCmd.AddCommand(getProcMemInfoCmd)
 	showCmd.AddCommand(getSystemCmd)
 	getSystemCmd.AddCommand(getSystemStatusCmd)
+	getSystemCmd.AddCommand(getSystemQueueStatsCmd)
 
 }
 
@@ -123,4 +131,27 @@ func getSystemStatusCmdCmdHandler(cmd *cobra.Command, args []string) error {
 		int64(pcietime/time.Second),
 		int64(pcietime/time.Millisecond))
 	return nil
+}
+
+func getSystemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
+	halctlStr := "/nic/bin/halctl show system queue-statistics "
+
+	execCmd := strings.Fields(halctlStr)
+	v := &nmd.NaplesCmdExecute{
+		Executable: execCmd[0],
+		Opts:       strings.Join(execCmd[1:], " "),
+	}
+
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Println(s)
+	}
+
+	return
 }

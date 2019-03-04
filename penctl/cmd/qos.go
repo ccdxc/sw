@@ -155,12 +155,6 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 		return
 	}
 
-	if cmd.Flags().Changed("dscp") == false &&
-		cmd.Flags().Changed("dot1q-pcp") == false {
-		fmt.Printf("At least one of dscp or dot1q-pcp needs to be specified\n")
-		return
-	}
-
 	halctlStr := "/nic/bin/halctl debug "
 
 	if update == true {
