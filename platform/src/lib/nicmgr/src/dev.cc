@@ -182,6 +182,7 @@ DeviceManager::LoadConfig(string path)
     uint32_t num_macs = 24;
     string mac_str;
     string num_macs_str;
+    uplink_t *up = NULL;
 #ifdef __aarch64__
     if (readKey(MACADDRESS_KEY, mac_str) == 0) {
         mac_from_str(&fru_mac, mac_str.c_str());
@@ -235,9 +236,16 @@ DeviceManager::LoadConfig(string path)
                 NIC_LOG_DEBUG("Creating uplink: {}, oob: {}",
                              val.get<uint64_t>("id"),
                              val.get<bool>("oob", false));
+#if 0
                 Uplink::Factory(val.get<uint64_t>("id"),
                                 val.get<uint64_t>("port"),
                                 val.get<bool>("oob", false));
+#endif
+                up = new uplink_t();
+                up->id = val.get<uint64_t>("id");
+                up->port = val.get<uint64_t>("port");
+                up->is_oob = val.get<bool>("oob", false);
+                uplinks[up->id] = up;
             }
         }
     }
@@ -402,7 +410,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 
     switch (type) {
     case MNIC:
-        eth_dev = new Eth(hal, hal_common_client, dev_spec, pd);
+        eth_dev = new Eth(hal, dev_api, dev_spec, pd);
         eth_dev->SetType(MNIC);
         devices[eth_dev->GetName()] = eth_dev;
         return (Device *)eth_dev;
@@ -410,12 +418,12 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         NIC_LOG_ERR("Unsupported Device Type DEBUG");
         return NULL;
     case ETH:
-        eth_dev = new Eth(hal, hal_common_client, dev_spec, pd);
+        eth_dev = new Eth(hal, dev_api, dev_spec, pd);
         eth_dev->SetType(type);
         devices[eth_dev->GetName()] = eth_dev;
         return (Device *)eth_dev;
     case ACCEL:
-        accel_dev = new Accel_PF(hal, hal_common_client, dev_spec, pd);
+        accel_dev = new Accel_PF(hal, dev_api, dev_spec, pd);
         accel_dev->SetType(type);
         devices[accel_dev->GetName()] = accel_dev;
         return (Device *)accel_dev;
@@ -439,17 +447,18 @@ DeviceManager::GetDevice(std::string name)
 }
 
 void
-DeviceManager::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client)
+DeviceManager::SetHalClient(HalClient *hal_client, devapi *dev_api)
 {
+    hal_client->set_devapi(dev_api);
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH || dev->GetType() == MNIC) {
             Eth *eth_dev = (Eth *)dev;
-            eth_dev->SetHalClient(hal_client, hal_cmn_client);
+            eth_dev->SetHalClient(hal_client, dev_api);
         }
         if (dev->GetType() == ACCEL) {
             Accel_PF *accel_dev = (Accel_PF *)dev;
-            accel_dev->SetHalClient(hal_client, hal_cmn_client);
+            accel_dev->SetHalClient(hal_client, dev_api);
         }
     }
 }
@@ -464,16 +473,26 @@ DeviceManager::HalEventHandler(bool status)
         NIC_LOG_DEBUG("Hal UP: Initializing hal client and creating VRFs.");
         // Instantiate HAL client
         hal = new HalClient(fwd_mode);
+        dev_api = devapi_iris::factory();
+        dev_api->set_fwd_mode((fwd_mode_t)fwd_mode);
+#if 0
         hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
         // Setting up HAL container for all objects
         HalObject::PopulateHalCommonClient();
+#endif
         pd->update();
 
+        // Create uplinks
+        for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+            uplink_t *up = it->second;
+            dev_api->uplink_create(up->id, up->port, up->is_oob);
+        }
+
         // Create VRFs for uplinks
-        Uplink::CreateVrfs();
+        // Uplink::CreateVrfs();
 
         // Setting hal clients in all devices
-        SetHalClient(hal, hal_common_client);
+        SetHalClient(hal, dev_api);
 
         init_done = true;
     }

@@ -16,7 +16,7 @@
 #include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 
-#include "platform/src/lib/hal_api/include/hal_types.hpp"
+// #include "platform/src/lib/hal_api/include/hal_types.hpp"
 #include "platform/src/lib/mnet/include/mnet.h"
 
 #include "dev.hpp"
@@ -38,7 +38,8 @@ namespace pt = boost::property_tree;
 class Eth : public Device {
 public:
     Eth(HalClient *hal_client,
-        HalCommonClient *hal_common_client,
+        devapi *dev_api,
+        // HalCommonClient *hal_common_client,
         void *dev_spec,
         PdClient *pd_client);
 
@@ -51,7 +52,8 @@ public:
     void LinkEventHandler(hal_port_status_t *evd);
     void HalEventHandler(bool status);
 
-    void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    // void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    void SetHalClient(HalClient *hal_client, devapi *dapi);
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
 
@@ -62,7 +64,8 @@ private:
     PdClient *pd;
     // HAL Info
     HalClient *hal;
-    HalCommonClient *hal_common_client;
+    devapi *dev_api;
+    // HalCommonClient *hal_common_client;
     bool hal_status;
     // Resources
     std::map<uint64_t, EthLif *> lif_map;

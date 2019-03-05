@@ -6,6 +6,7 @@
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
+#include "platform/src/lib/nicmgr/include/logger.hpp"
 #include <grpc++/grpc++.h>
 #include "gen/proto/interface.grpc.pb.h"
 #include <boost/multiprecision/cpp_int.hpp>
@@ -102,7 +103,7 @@ nicmgr_init()
 {
     // initialize capri_state_pd
     sdk::platform::capri::capri_state_pd_init(NULL);
-    
+
     // DeviceManager *devmgr;
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
         devmgr =

@@ -64,30 +64,28 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
 }
 
 uint64_t
-HalClient::LifCreate(hal_lif_info_t *hal_lif_info)
+HalClient::LifCreate(lif_info_t *hal_lif_info)
 {
     NIC_LOG_DEBUG("Creating with Lif: type: {}, uplink_port: {}, hw_lif_id: {}, rdma_en: {}",
                  hal_lif_info->type,
                  hal_lif_info->pinned_uplink_port_num,
-                 hal_lif_info->hw_lif_id,
+                 hal_lif_info->lif_id,
                  hal_lif_info->enable_rdma);
 
     // Nicmgr should always allocate hw_lif_id and pass to HAL
-    NIC_ASSERT(hal_lif_info->hw_lif_id != 0);
+    NIC_ASSERT(hal_lif_info->lif_id != 0);
 
-    Lif *eth_lif = Lif::Factory(hal_lif_info);
+    dev_api->lif_create(hal_lif_info);
+
+    // Lif *eth_lif = Lif::Factory(hal_lif_info);
     hal_lif_info->pushed_to_hal = true;
 
-    eth_lif_map[hal_lif_info->hw_lif_id] = eth_lif;
-
-    NIC_LOG_DEBUG("hw_lif_id {} eth_lif->id {} ",
-                 hal_lif_info->hw_lif_id,
-                 eth_lif->GetHwLifId());
+    // eth_lif_map[hal_lif_info->hw_lif_id] = eth_lif;
 
     // Passed hw_lif_id should be same as HAL returned
-    NIC_ASSERT(hal_lif_info->hw_lif_id == eth_lif->GetHwLifId());
+    // NIC_ASSERT(hal_lif_info->hw_lif_id == eth_lif->GetHwLifId());
 
-    NIC_LOG_DEBUG("lif-{} Created", hal_lif_info->hw_lif_id);
+    NIC_LOG_DEBUG("lif-{} Created", hal_lif_info->lif_id);
 
     return 0;
 }
@@ -626,7 +624,7 @@ HalClient::PortStatusGet(uint8_t portnum, hal_port_status_t &st)
     st.xcvr.pid = port.status().xcvr_status().pid();
     memcpy(st.xcvr.sprom,
         port.status().xcvr_status().xcvr_sprom().c_str(),
-        MIN(port.status().xcvr_status().xcvr_sprom().size(), 
+        MIN(port.status().xcvr_status().xcvr_sprom().size(),
         sizeof (st.xcvr.sprom)));
 
     NIC_FUNC_DEBUG("{}: id {} status {} speed {} "

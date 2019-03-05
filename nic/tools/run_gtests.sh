@@ -83,6 +83,8 @@ LD_PRELOAD=${L2SEG_PRELOAD} ${CMD_OPTS} l2seg_test --gtest_output="xml:${GEN_TES
 # Nicmgr hal_api test
 HAL_API_PRELOAD=${BUILD_DIR}/lib/hal_api_mock.so
 LD_PRELOAD=${HAL_API_PRELOAD} hal_api_filter_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/hal_api_filter_test.xml"
+DEVAPI_PRELOAD=${BUILD_DIR}/lib/devapi_iris_mock.so
+LD_PRELOAD=${DEVAPI_PRELOAD} devapi_iris_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/devapi_iris_test.xml"
 
 bitmap_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/bitmap_test.xml"
 host_mem_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/host_mem_test.xml"

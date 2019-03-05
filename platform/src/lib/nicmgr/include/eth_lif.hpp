@@ -7,6 +7,7 @@
 
 #include "hal_client.hpp"
 #include "eth_if.h"
+#include "nic/sdk/platform/devapi/devapi.hpp"
 
 
 namespace pt = boost::property_tree;
@@ -84,7 +85,8 @@ enum lif_state {
 class EthLif {
 public:
     EthLif(HalClient *hal_client,
-           HalCommonClient *hal_common_client,
+           devapi *dev_api,
+           // HalCommonClient *hal_common_client,
            void *dev_spec,
            PdClient *pd_client,
            eth_lif_res_t *res);
@@ -99,7 +101,8 @@ public:
     void LinkEventHandler(hal_port_status_t *evd);
     void HalEventHandler(bool status);
 
-    void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    // void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    void SetHalClient(HalClient *hal_client, devapi *dev_api);
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
 
@@ -112,11 +115,12 @@ private:
     PdClient *pd;
     // HAL Info
     HalClient *hal;
-    HalCommonClient *hal_common_client;
-    hal_lif_info_t hal_lif_info_;
+    devapi *dev_api;
+    // HalCommonClient *hal_common_client;
+    lif_info_t hal_lif_info_;
     bool hal_status;
     // LIF Info
-    Lif *lif;
+    // Lif *lif;
     eth_lif_res_t *res;
     uint8_t cosA, cosB, ctl_cosA, ctl_cosB;
     // Spec

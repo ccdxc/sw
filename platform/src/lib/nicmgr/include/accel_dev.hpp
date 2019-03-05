@@ -10,7 +10,7 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/linkmgr/linkmgr_types.hpp"
 
-#include "platform/src/lib/hal_api/include/hal_types.hpp"
+// #include "platform/src/lib/hal_api/include/hal_types.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 
 #include "dev.hpp"
@@ -276,7 +276,8 @@ enum DevcmdStatus
 class Accel_PF : public Device {
 public:
     Accel_PF(HalClient *hal_client,
-             HalCommonClient *hal_cmn_client,
+             // HalCommonClient *hal_cmn_client,
+             devapi *dev_api,
              void *dev_spec,
              PdClient *pd_client);
 
@@ -287,7 +288,8 @@ public:
                                  void *resp, void *resp_data);
     void HalEventHandler(bool status);
 
-    void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    // void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    void SetHalClient(HalClient *hal_client, devapi *dapi);
     uint64_t devcmd_page_get(void) { return devcmd_mem_addr; }
     uint64_t devcmddb_page_get(void) { return devcmddb_mem_addr; }
 
@@ -297,7 +299,7 @@ public:
 
     friend void *seq_queue_info_publish_thread(void *ctx);
 
-    hal_lif_info_t              hal_lif_info_;
+    lif_info_t              hal_lif_info_;
 
 private:
     // Device Spec
@@ -312,7 +314,8 @@ private:
     PdClient *pd;
     // HAL Info
     HalClient                   *hal;
-    HalCommonClient             *hal_common_client;
+    // HalCommonClient             *hal_common_client;
+    devapi                      *dev_api;
     uint8_t cosA, cosB, ctl_cosA, ctl_cosB;
     // PCIe info
     pciehdev_t                  *pdev;

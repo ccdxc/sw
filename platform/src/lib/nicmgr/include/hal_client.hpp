@@ -19,9 +19,10 @@
 #include "gen/proto/internal.grpc.pb.h"
 #include "gen/proto/internal.pb.h"
 #include "gen/proto/port.grpc.pb.h"
+#include "nic/sdk/platform/devapi/devapi.hpp"
 
-#include "platform/src/lib/hal_api/include/lif.hpp"
-#include "platform/src/lib/hal_api/include/qos.hpp"
+// #include "platform/src/lib/hal_api/include/lif.hpp"
+// #include "platform/src/lib/hal_api/include/qos.hpp"
 
 using namespace kh;
 using namespace types;
@@ -40,6 +41,39 @@ using namespace std;
 
 #define NUM_QUEUE_TYPES 8
 #define MAX_HOST_LIFS 1000
+
+/**
+ * Transceiver Status information
+ */
+typedef struct __attribute__((packed)) {
+    uint8_t     state;
+    uint8_t     phy;
+    uint16_t    pid;
+    uint8_t     sprom[256];
+} hal_xcvr_status_t;
+
+/**
+ * Port Config information
+ */
+typedef struct __attribute__((packed)) {
+    uint32_t    speed;
+    uint32_t    mtu;
+    uint8_t     state;
+    uint8_t     an_enable;
+    uint8_t     fec_type;
+    uint8_t     pause_type;
+    uint8_t     loopback_mode;
+} hal_port_config_t;
+
+/**
+ * Port Status information
+ */
+typedef struct __attribute__((packed)) {
+    uint32_t           speed;
+    uint8_t            id;
+    uint8_t            status;
+    hal_xcvr_status_t  xcvr;
+} hal_port_status_t;
 
 /**
  * Forwarding Modes
@@ -145,8 +179,9 @@ public:
   HalClient(enum ForwardingMode fwd_mode);
 
   ForwardingMode get_fwd_mode() { return this->fwd_mode; }
+  void set_devapi(devapi *dapi) { dev_api = dapi; }
 
-  uint64_t LifCreate(hal_lif_info_t *hal_lif_info);
+  uint64_t LifCreate(lif_info_t *hal_lif_info);
 
   int PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr);
 
@@ -190,13 +225,15 @@ public:
   /* Port APIs */
   int PortStatusGet(uint8_t portnum, hal_port_status_t &st);
   int PortConfigGet(uint8_t portnum, hal_port_config_t &cfg);
-  int PortConfigSet(uint8_t portnum, hal_port_config_t &cfg);  
+  int PortConfigSet(uint8_t portnum, hal_port_config_t &cfg);
 
   static port::PortSpeed PortSpeedEnum(uint32_t speed);
   static uint32_t PortSpeedInMbps(port::PortSpeed speed_enum);
 
   /* State */
-  map<uint64_t, Lif*> eth_lif_map;
+  // map<uint64_t, Lif*> eth_lif_map;
+
+  devapi *dev_api;
 
   enum ForwardingMode fwd_mode;
 

@@ -14,9 +14,10 @@ MODULE_SOLIBS   := nicmgr hal_api mnet \
                    sdkasicpd pdcapri pdcommon hal_mock sdkasicrw \
                    sdkp4 sdkp4utils p4pd_common_p4plus_rxdma sdkxcvrdriver \
                    p4pd_common_p4plus_txdma p4pd_${PIPELINE} \
-                   asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} lif_mgr
+                   asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} lif_mgr devapi_iris
 MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \
                    ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                    ${NIC_CAPSIM_LDLIBS}
-MODULE_INCS     := ${BLD_PROTOGEN_DIR}/
+MODULE_INCS     := ${BLD_PROTOGEN_DIR}/ \
+	               ${TOPDIR}/nic/sdk/platform/devapi
 include ${MKDEFS}/post.mk

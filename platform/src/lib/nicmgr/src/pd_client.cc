@@ -656,21 +656,21 @@ PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
 }
 
 int PdClient::program_qstate(struct queue_info* queue_info,
-                             hal_lif_info_t *lif_info,
+                             lif_info_t *lif_info,
                              uint8_t coses)
 {
     int ret;
 
-    NIC_LOG_DEBUG("lif-{}: Programming qstate", lif_info->hw_lif_id);
+    NIC_LOG_DEBUG("lif-{}: Programming qstate", lif_info->lif_id);
 
     // init queue state map
-    ret = lif_qstate_map_init(lif_info->hw_lif_id, queue_info, coses);
+    ret = lif_qstate_map_init(lif_info->lif_id, queue_info, coses);
     if (ret != 0) {
         return -1;
     }
 
     // init queues
-    ret = lif_qstate_init(lif_info->hw_lif_id, queue_info);
+    ret = lif_qstate_init(lif_info->lif_id, queue_info);
     if (ret != 0) {
         NIC_LOG_ERR("Failed to do lif qstate: ret: {}", ret);
         return -1;
@@ -680,10 +680,10 @@ int PdClient::program_qstate(struct queue_info* queue_info,
         auto &qinfo = queue_info[type];
         if (qinfo.size < 1) continue;
 
-        // lif_info->qstate_addr[type] = lm_->GetLIFQStateAddr(lif_info->hw_lif_id, type, 0);
-        lif_info->qstate_addr[type] = lm_->get_lif_qstate_addr(lif_info->hw_lif_id, type, 0);
+        // lif_info->qstate_addr[type] = lm_->GetLIFQStateAddr(lif_info->lif_id, type, 0);
+        lif_info->qstate_addr[type] = lm_->get_lif_qstate_addr(lif_info->lif_id, type, 0);
         NIC_LOG_DEBUG("lif-{}: qtype: {}, qstate_base: {:#x}",
-                     lif_info->hw_lif_id,
+                     lif_info->lif_id,
                      type, lif_info->qstate_addr[type]);
     }
 

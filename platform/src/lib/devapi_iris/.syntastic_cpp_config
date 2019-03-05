@@ -1,0 +1,6 @@
+-I ../../../..
+-I ../../../../nic/hal/third-party/spdlog/include
+-I ../../../../nic/sdk
+-I ../../../../nic/sdk/platform/devapi
+-I ../../../../nic/build/aarch64/iris
+-std=c++11

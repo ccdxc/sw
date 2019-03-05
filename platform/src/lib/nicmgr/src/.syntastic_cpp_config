@@ -35,6 +35,7 @@
 -I ../../../../../nic/asic/capri/design/common
 -I ../../../../../nic/sdk/third-party/asic/capri/model/cap_top/csr_defines
 -I ../../../../../nic/sdk/third-party/asic/capri/model/cap_top
+-I ../../../../../nic/sdk/platform/devapi
 -I ../../../../../nic/build/aarch64/iris/gen/p4gen/common_rxdma_actions/include
 -I ../../../../../nic/build/aarch64/iris/gen/p4gen/common_txdma_actions/include
 -std=c++11

@@ -124,7 +124,6 @@ HalGRPCClient::HalGRPCClient(enum HalForwardingMode mode) : HalCommonClient(mode
 Status
 HalGRPCClient::vrf_create (VrfRequestMsg& req_msg, VrfResponseMsg& rsp_msg)
 {
-    // NIC_LOG_DEBUG("Hal Moc: Vrf Create");
     printf("Hal Mock: Vrf Create\n");
     auto response = rsp_msg.add_response();
     response->set_api_status(types::API_STATUS_OK);

@@ -15,6 +15,7 @@
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "platform/src/lib/nicmgr/include/logger.hpp"
 
 #include "delphic.hpp"
 

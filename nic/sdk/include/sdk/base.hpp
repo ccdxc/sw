@@ -175,7 +175,8 @@ do {                                                       \
     ENTRY(SDK_RET_TXN_NOT_FOUND,              16,   "transaction not found")                \
     ENTRY(SDK_RET_TXN_EXISTS,                 17,   "transaction exists")                   \
     ENTRY(SDK_RET_TXN_INCOMPLETE,             18,   "transaction incomplete")               \
-    ENTRY(SDK_RET_MAX,                        19,   "max return value")                     \
+    ENTRY(SDK_RET_COMM_FAIL,                  19,   "communication failure")                \
+    ENTRY(SDK_RET_MAX,                        20,   "max return value")                     \
     ENTRY(SDK_RET_ERR,                        255,  "catch all generic error")
 
 SDK_DEFINE_ENUM(sdk_ret_t, SDK_RET_ENTRIES)
@@ -200,6 +201,7 @@ using sdk::SDK_RET_OK;
 using sdk::SDK_RET_ERR;
 using sdk::SDK_RET_INVALID_ARG;
 using sdk::SDK_RET_INVALID_OP;
+using sdk::SDK_RET_COMM_FAIL;
 using sdk::sdk_status_t;
 
 #endif    // __SDK_BASE_HPP__

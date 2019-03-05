@@ -15,10 +15,12 @@ MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/platform/src/lib/pciemgrutils/include \
                   ${TOPDIR}/platform/src/lib/pciehdevices/include \
                   ${TOPDIR}/platform/src/lib/pcieport/include \
+                  ${TOPDIR}/platform/src/lib/devapi_iris \
                   ${BLD_GEN_DIR}/proto \
                   ${BLD_P4GEN_DIR}/common_rxdma_actions/include/ \
                   ${BLD_P4GEN_DIR}/common_txdma_actions/include/ \
                   ${TOPDIR}/nic/sdk/include \
                   ${TOPDIR}/nic/sdk/platform/utils \
-                  ${TOPDIR}/nic/include
+                  ${TOPDIR}/nic/include \
+				  ${TOPDIR}/nic/sdk/platform/devapi
 include ${MKDEFS}/post.mk

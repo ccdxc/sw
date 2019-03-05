@@ -10,6 +10,7 @@
 
 #include "delphic.hpp"
 #include "nicmgrd.hpp"
+#include "platform/src/lib/nicmgr/include/logger.hpp"
 
 using namespace std;
 using namespace upgrade;

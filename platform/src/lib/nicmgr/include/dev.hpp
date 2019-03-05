@@ -13,8 +13,11 @@
 
 #include "nic/include/globals.hpp"
 
+#if 0
 #include "platform/src/lib/hal_api/include/hal_common_client.hpp"
 #include "platform/src/lib/hal_api/include/hal_grpc_client.hpp"
+#endif
+#include "platform/src/lib/devapi_iris/devapi_iris.hpp"
 
 #include "platform/capri/capri_tbl_rw.hpp"
 
@@ -27,6 +30,7 @@
 #endif
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+#include "nic/sdk/platform/devapi/devapi.hpp"
 
 
 #define VERSION_FILE        "/nic/etc/VERSION.json"
@@ -81,6 +85,12 @@ typedef enum EthDevType_s {
     ETH_MNIC_INTERNAL_MGMT,
     ETH_MNIC_INBAND_MGMT,
 } EthDevType;
+
+typedef struct uplink_s {
+    uint32_t id;
+    uint32_t port;
+    bool is_oob;
+} uplink_t;
 
 const char *eth_dev_type_to_str(EthDevType type);
 
@@ -145,7 +155,7 @@ private:
 class DeviceManager {
 public:
     DeviceManager(std::string config_file, enum ForwardingMode fwd_mode,
-        platform_t platform);
+                  platform_t platform);
 
     int LoadConfig(std::string path);
     static DeviceManager *GetInstance() { return instance; }
@@ -156,7 +166,8 @@ public:
     void LinkEventHandler(hal_port_status_t *evd);
 
     void CreateUplinkVRFs();
-    void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    // void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    void SetHalClient(HalClient *hal_client, devapi *dev_api);
 
     void ThreadsWaitJoin(void);
 
@@ -172,8 +183,10 @@ private:
 
     // HAL Info
     HalClient *hal;
-    HalCommonClient *hal_common_client;
+    // HalCommonClient *hal_common_client;
+    devapi *dev_api;
     PdClient *pd;
+    std::map<uint32_t, uplink_t*> uplinks;
 
     bool init_done;
     std::string config_file;

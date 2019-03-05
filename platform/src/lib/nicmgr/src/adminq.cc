@@ -3,6 +3,7 @@
 */
 
 #include "adminq.hpp"
+#include "logger.hpp"
 
 
 AdminQ::AdminQ(

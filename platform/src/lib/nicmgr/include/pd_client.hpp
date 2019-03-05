@@ -63,7 +63,7 @@ public:
     int lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info);
 
     int program_qstate(struct queue_info* queue_info,
-                       hal_lif_info_t *lif_info,
+                       lif_info_t *lif_info,
                        uint8_t coses);
     void set_program_info();
     int32_t get_pc_offset(const char *prog_name, const char *label,
