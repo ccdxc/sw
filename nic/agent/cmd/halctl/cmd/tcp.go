@@ -152,6 +152,8 @@ func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
 	fmt.Printf("%-30s : %-6d\n", "GcFull", respMsg.GlobalStats.GcFull)
 	fmt.Printf("%-30s : %-6d\n", "TlsGcFull", respMsg.GlobalStats.TlsGcFull)
 	fmt.Printf("%-30s : %-6d\n", "InvalidNmdrDescr", respMsg.GlobalStats.InvalidNmdrDescr)
+	fmt.Printf("%-30s : %-6d\n", "RcvdCePkts", respMsg.GlobalStats.RcvdCePkts)
+	fmt.Printf("%-30s : %-6d\n", "RetxPkts", respMsg.GlobalStats.RetxPkts)
 }
 
 func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {

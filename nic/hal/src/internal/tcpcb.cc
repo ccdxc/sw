@@ -630,6 +630,10 @@ tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
                   pd_tcp_global_stats_get_args.tls_gc_full);
     rsp->mutable_global_stats()->set_invalid_nmdr_descr(
                   pd_tcp_global_stats_get_args.invalid_nmdr_descr);
+    rsp->mutable_global_stats()->set_rcvd_ce_pkts(
+                  pd_tcp_global_stats_get_args.rcvd_ce_pkts);
+    rsp->mutable_global_stats()->set_retx_pkts(
+                  pd_tcp_global_stats_get_args.retx_pkts);
     rsp->set_api_status(types::API_STATUS_OK);
 
     return HAL_RET_OK;

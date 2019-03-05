@@ -134,5 +134,7 @@
 #define TCP_PROXY_STATS_TLS_GC_FULL             (6 << 3)
 #define TCP_PROXY_STATS_OOQ_FULL                (7 << 3)
 #define TCP_PROXY_STATS_INVALID_NMDR_DESCR      (8 << 3)
+#define TCP_PROXY_STATS_RCVD_CE_PKTS            (9 << 3)
+#define TCP_PROXY_STATS_RETX_PKTS               (10 << 3)
 
 #endif /* #ifndef __TCP_COMMON_H__ */

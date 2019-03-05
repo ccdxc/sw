@@ -366,6 +366,8 @@ message TcpProxyGlobalStats {
   uint64 gc_full = 6;
   uint64 tls_gc_full = 7;
   uint64 invalid_nmdr_descr = 8;
+  uint64 rcvd_ce_pkts = 9;
+  uint64 retx_pkts = 10;
 }
 
 // TcpProxyGlobalCfg captures global TCP configuration

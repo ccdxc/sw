@@ -18,6 +18,7 @@ struct s4_t0_tcp_rx_tcp_cc_d d;
 %%
     .param          tcp_rx_fc_stage_start
     .param          tcp_cc_new_reno
+    .param          TCP_PROXY_STATS
     .align
 tcp_rx_cc_stage_start:
     bbeq            k.common_phv_ooq_tx2rx_pkt, 1, tcp_rx_cc_stage_end
@@ -51,10 +52,18 @@ tcp_rx_cc_stage_end:
  * Functions
  *****************************************************************************/
  tcp_rx_cc_handle_ip_tos:
-    smeqb           c1, k.common_phv_flags, TCPHDR_CWR, TCPHDR_CWR
-    tblwr.c1        d.ip_tos_ecn_received, 0
+    smeqb           c2, k.common_phv_flags, TCPHDR_CWR, TCPHDR_CWR
     seq             c1, k.common_phv_ip_tos_ecn, 3
-    tblwr.c1        d.ip_tos_ecn_received, 1
+    balcf           r6, [c1], tcp_rx_cc_handle_ecn_rcvd
+    // Next instr gets executed before the branch in the branch delay slot
+    tblwr.c2        d.ip_tos_ecn_received, 0
     seq             c1, d.ip_tos_ecn_received, 1
     jr              r7
     tblor.c1.l      d.t_flags, TCPHDR_ECE
+
+tcp_rx_cc_handle_ecn_rcvd:
+    addui           r2, r0, hiword(TCP_PROXY_STATS)
+    addi            r2, r2, loword(TCP_PROXY_STATS)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RCVD_CE_PKTS, 1)
+    jr              r6
+    tblwr           d.ip_tos_ecn_received, 1

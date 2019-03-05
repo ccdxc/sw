@@ -19,6 +19,7 @@ struct s4_t0_tcp_tx_xmit_d d;
 %%
     .align
     .param          tcp_tso_process_start
+    .param          TCP_PROXY_STATS
 
     /*
      * r4 = current timestamp. Do not use this register
@@ -213,7 +214,12 @@ tcp_tx_retransmit:
 
     // indicate to rx pipeline that timeout occured
     phvwr           p.tx2rx_rto_event, 1
-
+    
+    // Incr retx pkt stat
+    addui           r2, r0, hiword(TCP_PROXY_STATS)
+    addi            r2, r2, loword(TCP_PROXY_STATS)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RETX_PKTS, 1)
+ 
     b               rearm_rto
     tbladd          d.rto_backoff, 1
 
