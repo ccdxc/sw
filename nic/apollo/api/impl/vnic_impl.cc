@@ -432,7 +432,7 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     }
     route_table_key = subnet->v4_route_table();
     v4_route_table = route_table_db()->route_table_find(&route_table_key);
-    route_table_key = subnet->v4_route_table();
+    route_table_key = subnet->v6_route_table();
     if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
         v6_route_table =
             route_table_db()->route_table_find(&route_table_key);
