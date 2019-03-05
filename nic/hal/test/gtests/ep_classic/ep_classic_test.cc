@@ -262,7 +262,7 @@ TEST_F(endpoint_test, test1)
     ret = create_ep(vrf_id, l2seg_id, enicif_id, mac);
     HAL_TRACE_DEBUG("Return value: {}", ret);
     printf("ret: %d\n", ret);
-    ASSERT_TRUE(ret == HAL_RET_HW_PROG_ERR);
+    ASSERT_TRUE(ret == HAL_RET_NO_RESOURCE || ret == HAL_RET_HW_PROG_ERR);
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);

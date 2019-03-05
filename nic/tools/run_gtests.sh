@@ -45,9 +45,8 @@ ${CMD_OPTS} tlscb_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/tlscb_test.xm
 #${CMD_OPTS} uplinkif_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/uplinkif_test.xml"
 ${CMD_OPTS} uplinkpc_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/uplinkpc_test.xml"
 ${CMD_OPTS} internal_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/internal_test.xml"
-# Disabling endpoint_test an endpoint_classic_test temporarily
-#${CMD_OPTS} endpoint_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/endpoint_test.xml"
-#${CMD_OPTS} endpoint_classic_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/endpoint_classic_test.xml"
+${CMD_OPTS} endpoint_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/endpoint_test.xml"
+${CMD_OPTS} endpoint_classic_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/endpoint_classic_test.xml"
 ${CMD_OPTS} network_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/network_test.xml"
 ${CMD_OPTS} vrf_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/vrf_test.xml"
 ${CMD_OPTS} l2seg_classic_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/l2seg_classic_test.xml"

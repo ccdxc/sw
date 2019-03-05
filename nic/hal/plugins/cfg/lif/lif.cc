@@ -294,7 +294,7 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
 
         // Set both cosA,cosB to admin_cos(cosA) value for admin-qtype.
         if (ent.purpose() != intf::LIF_QUEUE_PURPOSE_ADMIN ||
-                (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END)) {
+                (hw_lif_id >= HAL_LIF_ID_SVC_LIF_MIN && hw_lif_id <= HAL_LIF_ID_SVC_LIF_MAX)) {
             qstate.type[ent.type_num()].qtype_info.cosA = (lif->qos_info.coses & 0x0f);
             qstate.type[ent.type_num()].qtype_info.cosB = (lif->qos_info.coses & 0xf0) >> 4;
         } else {
@@ -342,80 +342,6 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
 
     return HAL_RET_OK;
 }
-
-#if 0
-//------------------------------------------------------------------------------
-// init lif specific queue state, if any
-//------------------------------------------------------------------------------
-hal_ret_t
-lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_zero_qstate_mem)
-{
-    LIFQStateParams qs_params = { 0 };
-    int32_t         ec        = 0;
-    uint8_t         hint_cos = 0;
-    uint32_t        qcount = 0;
-
-    for (int i = 0; i < spec.lif_qstate_map_size(); i++) {
-        const auto &ent = spec.lif_qstate_map(i);
-        if (ent.type_num() >= kNumQTypes) {
-            HAL_TRACE_ERR("Invalid type num in LifSpec : {}", ent.type_num());
-            return HAL_RET_INVALID_ARG;
-        }
-        if (ent.size() > 7 || ent.entries() > 24) {
-            HAL_TRACE_ERR("Invalid entry in LifSpec : size={} entries={}",
-                          ent.size(), ent.entries());
-            return HAL_RET_INVALID_ARG;
-        }
-
-        if (ent.purpose() > intf::LifQPurpose_MAX) {
-            HAL_TRACE_ERR("Invalid entry in LifSpec : purpose={}", ent.purpose());
-            return HAL_RET_INVALID_ARG;
-        }
-
-        qs_params.type[ent.type_num()].size    = ent.size();
-        qs_params.type[ent.type_num()].entries = ent.entries();
-
-        // Set both cosA,cosB to admin_cos(cosA) value for admin-qtype.
-        if (ent.purpose() != intf::LIF_QUEUE_PURPOSE_ADMIN ||
-                (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END)) {
-            qs_params.type[ent.type_num()].cosA    = (lif->qos_info.coses & 0x0f);
-            qs_params.type[ent.type_num()].cosB    = (lif->qos_info.coses & 0xf0) >> 4;
-        } else {
-            qs_params.type[ent.type_num()].cosA = qs_params.type[ent.type_num()].cosB = (lif->qos_info.coses & 0x0f);
-        }
-
-        lif->qinfo[ent.purpose()].type = ent.type_num();
-        lif->qinfo[ent.purpose()].size = (uint16_t)pow(2, ent.size());
-        lif->qinfo[ent.purpose()].num_queues = pow(2, ent.entries());
-        qcount += lif->qinfo[ent.purpose()].num_queues;
-
-        HAL_TRACE_DEBUG("type: {}, entries: {}, size: {}, log entries: {}, size: {}",
-                        ent.type_num(),
-                        ent.entries(), ent.size(), lif->qinfo[ent.purpose()].num_queues,
-                        lif->qinfo[ent.purpose()].size);
-    }
-
-    HAL_TRACE_DEBUG("Lif lif_id: {}, Qcount: {}",
-                    lif->lif_id, qcount);
-    lif->qcount = qcount;
-
-
-    qs_params.dont_zero_memory = dont_zero_qstate_mem;
-    // cosB (default cos) will be the hint_cos for the lif.
-    hint_cos = (lif->qos_info.coses & 0xf0) >> 4;
-    // Program lif
-    if (lif->qstate_pgm_in_hal) {
-        if ((ec = lif_manager()->InitLIFQState(hw_lif_id, &qs_params, hint_cos)) < 0) {
-            HAL_TRACE_ERR("Failed to initialize LIFQState: err_code : {}", ec);
-            return HAL_RET_INVALID_ARG;
-        }
-    } else {
-        HAL_TRACE_DEBUG("Skipped initing lifqstate");
-    }
-
-    return HAL_RET_OK;
-}
-#endif
 
 //------------------------------------------------------------------------------
 // init lif specific queue state, if any
@@ -601,27 +527,18 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
      *    NIC Mgr allocates hw_lif_id and does qstate programming.
      *    Only for those lifs, qstate_pgm_in_hal:false.
      * 3. HAL
-     *    Service LIFs are created inside HAL, so qsate programmins
+     *    Service LIFs & CPU LIF are created inside HAL, so qsate programmins
      *    is also done in HAL. qstate_pgm_in_hal:true
+     *    Service LIFs are reserved during init
      */
     // allocate a hw lif id
     if (lif_hal_info && lif_hal_info->with_hw_lif_id) {
         hw_lif_id = lif_hal_info->hw_lif_id;
         // Check that only service lifs are already allocated
-        if (hw_lif_id >= HAL_LIF_CPU && hw_lif_id < SERVICE_LIF_END) {
+        if (hw_lif_id >= HAL_LIF_CPU && hw_lif_id <= HAL_LIF_ID_SVC_LIF_MAX) {
             lif->qstate_pgm_in_hal = true;
-#if 0
-            // make sure hw_lif_id is already allocated.
-            // LIFQState *qstate = lif_manager()->GetLIFQState(hw_lif_id);
-            lif_qstate_t *qstate = lif_manager()->get_lif_qstate(hw_lif_id);
-            if (qstate == nullptr) {
-                HAL_TRACE_ERR("Failed to get LifQState for service Lif");
-                ret = HAL_RET_INVALID_ARG;
-                goto end;
-            }
-#endif
         } else {
-            // hw_lif_id = lif_manager()->LIFRangeMarkAlloced(hw_lif_id, 1);
+            // Nicmgr LIFs
             sret = lif_manager()->reserve_id(hw_lif_id, 1);
             if (sret != SDK_RET_OK) {
                 HAL_TRACE_ERR("Failed to mark lif allocated, info hw_lif_id : {} "
@@ -629,32 +546,17 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                 ret = HAL_RET_ERR;
                 goto end;
             }
-#if 0
-            if ((((int32_t)hw_lif_id) < 0) || (hw_lif_id != lif_hal_info->hw_lif_id)) {
-                HAL_TRACE_ERR("Failed to mark lif allocated, info hw_lif_id : {} "
-                              "hw_lif_id: {}", lif_hal_info->hw_lif_id, hw_lif_id);
-                ret = HAL_RET_ERR;
-                goto end;
-            }
-#endif
         }
         memcpy(&lif_info, lif_hal_info, sizeof(lif_info));
         dont_zero_qstate_mem = lif_hal_info->dont_zero_qstate_mem;
     } else {
-        // hw_lif_id = lif_manager()->LIFRangeAlloc(-1, 1);
+        // DOL
         sret = lif_manager()->alloc_id(&hw_lif_id, 1);
         if (sret != SDK_RET_OK) {
             HAL_TRACE_ERR("Failed to allocate lif, hw_lif_id : {}", hw_lif_id);
             ret = HAL_RET_NO_RESOURCE;
             goto end;
         }
-#if 0
-        if (((int32_t)hw_lif_id) < 0) {
-            HAL_TRACE_ERR("Failed to allocate lif, hw_lif_id : {}", hw_lif_id);
-            ret = HAL_RET_NO_RESOURCE;
-            goto end;
-        }
-#endif
         lif->qstate_pgm_in_hal = true;
         lif_info.with_hw_lif_id = 1;
         lif_info.hw_lif_id = hw_lif_id;
@@ -1685,12 +1587,14 @@ end:
 hal_ret_t
 lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t               ret          = HAL_RET_OK;
-    dllist_ctxt_t           *lnode       = NULL;
-    dhl_entry_t             *dhl_entry   = NULL;
-    lif_t                   *lif         = NULL;
-    pd::pd_lif_delete_args_t pd_lif_args = { 0 };
-    pd::pd_func_args_t          pd_func_args = {0};
+    hal_ret_t               ret           = HAL_RET_OK;
+    sdk_ret_t               sret          = SDK_RET_OK;
+    dllist_ctxt_t           *lnode        = NULL;
+    dhl_entry_t             *dhl_entry    = NULL;
+    lif_t                   *lif          = NULL;
+    pd::pd_lif_delete_args_t pd_lif_args  = { 0 };
+    pd::pd_func_args_t       pd_func_args = {0};
+    uint64_t                 hw_lif_id    = 0;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
@@ -1710,6 +1614,8 @@ lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("{}:delete del cb {}",
                     __FUNCTION__, lif->lif_id);
 
+    hw_lif_id = lif_hw_lif_id_get(lif);
+
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_lif_delete_args_init(&pd_lif_args);
     pd_lif_args.lif = lif;
@@ -1718,6 +1624,16 @@ lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to delete lif pd, err : {}",
                       __FUNCTION__, ret);
+    }
+
+    // Free up lif id for Nicmgr and DOL LIFs
+    if (hw_lif_id < HAL_LIF_CPU || hw_lif_id > HAL_LIF_ID_SVC_LIF_MAX) {
+        sret = lif_manager()->free_id(hw_lif_id, 1);
+        if (sret != SDK_RET_OK) {
+            HAL_TRACE_ERR("Failed to free hw_lif_id: {}", hw_lif_id);
+            ret = HAL_RET_ERR;
+            goto end;
+        }
     }
 
     // P4+ delete code for the lif

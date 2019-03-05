@@ -173,6 +173,7 @@ TEST_F(lif_test, test4)
     spec.set_vlan_strip_en(1);
     //spec.set_allmulti(1);
     spec.mutable_key_or_handle()->set_lif_id(400);
+    spec.set_hw_lif_id(HAL_LIF_ID_SVC_LIF_MAX + 1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(spec, &rsp, NULL);
     hal::hal_cfg_db_close();
@@ -189,6 +190,17 @@ TEST_F(lif_test, test4)
 
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
+
+    // Create lif
+    spec.Clear();
+    spec.set_vlan_strip_en(1);
+    spec.set_hw_lif_id(HAL_LIF_ID_SVC_LIF_MAX + 1);
+    //spec.set_allmulti(1);
+    spec.mutable_key_or_handle()->set_lif_id(400);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(spec, &rsp, NULL);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 // ----------------------------------------------------------------------------
