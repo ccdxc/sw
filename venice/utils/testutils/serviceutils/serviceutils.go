@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pensando/sw/api/cache"
@@ -79,6 +80,8 @@ func StartTCPServer(addr string, chanLen int, sleepBetweenReads time.Duration) (
 		return nil, nil, err
 	}
 
+	var wg sync.WaitGroup
+
 	closeReceiver := make(chan struct{})
 	// if there are multiple clients, all the received messages will be send to the same channel.
 	go func() {
@@ -88,6 +91,7 @@ func StartTCPServer(addr string, chanLen int, sleepBetweenReads time.Duration) (
 			if err != nil {
 				log.Errorf("connection failed, err: %v", err)
 				close(closeReceiver)
+				wg.Wait()
 				return
 			}
 
@@ -95,7 +99,9 @@ func StartTCPServer(addr string, chanLen int, sleepBetweenReads time.Duration) (
 				continue
 			}
 
+			wg.Add(1)
 			go func(conn net.Conn) {
+				defer wg.Done()
 				defer conn.Close()
 				reader := bufio.NewReader(conn)
 				for {

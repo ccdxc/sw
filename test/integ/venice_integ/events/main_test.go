@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -66,10 +67,16 @@ type tInfo struct {
 	signer            certs.CSRSigner              // function to sign CSRs for TLS
 	trustRoots        []*x509.Certificate          // trust roots to verify TLS certs
 	apicl             apiclient.Services
+	recorders         *recorders
+}
+
+// list of recorders belonging to the test
+type recorders struct {
+	sync.Mutex
+	list []events.Recorder
 }
 
 // setup helper function create evtsmgr, evtsproxy, etc. services
-
 func (t *tInfo) setup(tst *testing.T) error {
 	var err error
 	logConfig := log.GetDefaultConfig("events_test")
@@ -103,6 +110,8 @@ func (t *tInfo) setup(tst *testing.T) error {
 	if t.storeConfig == nil {
 		t.storeConfig = &events.StoreConfig{}
 	}
+
+	t.recorders = &recorders{}
 
 	// start elasticsearch
 	if err = t.startElasticsearch(); err != nil {
@@ -155,6 +164,8 @@ func (t *tInfo) setup(tst *testing.T) error {
 
 // teardown stops all the services that were started during setup
 func (t *tInfo) teardown() {
+	t.recorders.close()
+
 	if t.esClient != nil {
 		t.esClient.Close()
 	}
@@ -282,4 +293,14 @@ func (t *tInfo) assertElasticUniqueEvents(te *testing.T, query es.Query, exact b
 
 			return true, nil
 		}, "couldn't get the expected number of unique events", "60ms", timeout)
+}
+
+// close all the recorders
+func (r *recorders) close() {
+	r.Lock()
+	defer r.Unlock()
+
+	for _, re := range r.list {
+		re.Close()
+	}
 }

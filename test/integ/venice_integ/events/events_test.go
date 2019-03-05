@@ -157,9 +157,6 @@ func TestEventsProxyRestart(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
-	var recorders []events.Recorder
-	defer closeRecorders(recorders)
-
 	numRecorders := 3
 
 	stopEventRecorders := make(chan struct{})
@@ -187,7 +184,9 @@ func TestEventsProxyRestart(t *testing.T) {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
 			}
-			recorders = append(recorders, evtsRecorder)
+			ti.recorders.Lock()
+			ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+			ti.recorders.Unlock()
 
 			ticker := time.NewTicker(10 * time.Millisecond)
 			for {
@@ -268,9 +267,6 @@ func TestEventsMgrRestart(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
-	var recorders []events.Recorder
-	defer closeRecorders(recorders)
-
 	numRecorders := 3
 
 	stopEventRecorders := make(chan struct{})
@@ -298,7 +294,9 @@ func TestEventsMgrRestart(t *testing.T) {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
 			}
-			recorders = append(recorders, evtsRecorder)
+			ti.recorders.Lock()
+			ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+			ti.recorders.Unlock()
 
 			ticker := time.NewTicker(10 * time.Millisecond)
 			for {
@@ -373,9 +371,6 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	ti := tInfo{}
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
-
-	var recorders []events.Recorder
-	defer closeRecorders(recorders)
 
 	// start spyglass (backend service for events)
 	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, nil, ti.logger, ti.esClient)
@@ -461,7 +456,9 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			log.Errorf("failed to create recorder")
 			return
 		}
-		recorders = append(recorders, evtsRecorder)
+		ti.recorders.Lock()
+		ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+		ti.recorders.Unlock()
 
 		// record events
 		for _, evt := range recordEvents {
@@ -961,9 +958,6 @@ func TestEventsAlertEngine(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
-	var recorders []events.Recorder
-	defer closeRecorders(recorders)
-
 	// create API server client
 	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
 	AssertOk(t, err, "failed to create API server client, err: %v", err)
@@ -1075,7 +1069,9 @@ func TestEventsAlertEngine(t *testing.T) {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
 		}
-		recorders = append(recorders, evtsRecorder)
+		ti.recorders.Lock()
+		ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+		ti.recorders.Unlock()
 
 		// record events
 		for i := range recordEvents {
@@ -1613,8 +1609,6 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 	Substrs   []string
 	MsgFormat monitoring.MonitoringExportFormat
 }) {
-	var recorders []events.Recorder
-	defer closeRecorders(recorders)
 
 	var m sync.Mutex
 	wg := new(sync.WaitGroup)
@@ -1667,7 +1661,9 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
 		}
-		recorders = append(recorders, evtsRecorder)
+		ti.recorders.Lock()
+		ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+		ti.recorders.Unlock()
 
 		// record events
 		for i := range recordEvents {
@@ -2159,9 +2155,6 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
-	var recorders []events.Recorder
-	defer closeRecorders(recorders)
-
 	var wg sync.WaitGroup
 	stopGoRoutines := make(chan struct{})
 
@@ -2222,7 +2215,9 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 			ti.logger.Errorf("failed to create recorder, err: %v", err)
 			return
 		}
-		recorders = append(recorders, evtsRecorder)
+		ti.recorders.Lock()
+		ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+		ti.recorders.Unlock()
 
 		for {
 			count++
@@ -2275,9 +2270,6 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 	ti := tInfo{storeConfig: &events.StoreConfig{MaxFileSize: 50 * 1000, MaxNumFiles: 50}}
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
-
-	var recorders []events.Recorder
-	defer closeRecorders(recorders)
 
 	var wg sync.WaitGroup
 	stopSyslogMessagesReceiver := make(chan struct{})
@@ -2333,7 +2325,9 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 			ti.logger.Errorf("failed to create recorder, err: %v", err)
 			return
 		}
-		recorders = append(recorders, evtsRecorder)
+		ti.recorders.Lock()
+		ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+		ti.recorders.Unlock()
 
 		for {
 			count++
@@ -2410,12 +2404,9 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 // TestEventsMgrWithElasticRestart test evtsmgr behavior with elastic restarts. evtsmgr should be intact
 // and ES client connection should be reset automatically.
 func TestEventsMgrWithElasticRestart(t *testing.T) {
-	ti := tInfo{}
+	ti := tInfo{dedupInterval: 300 * time.Second, batchInterval: 100 * time.Millisecond}
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
-
-	var recorders []events.Recorder
-	defer closeRecorders(recorders)
 
 	numRecorders := 3
 
@@ -2443,7 +2434,9 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
 			}
-			recorders = append(recorders, evtsRecorder)
+			ti.recorders.Lock()
+			ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+			ti.recorders.Unlock()
 
 			ticker := time.NewTicker(10 * time.Millisecond)
 			for {
@@ -2482,7 +2475,7 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 						return false, fmt.Sprintf("invalid elastic addr: %v", ti.elasticsearchAddr)
 					}
 
-					port, err := strconv.Atoi(temp[1])
+					port, err := strconv.Atoi(strings.TrimRight(temp[1], "/"))
 					if err != nil {
 						return false, fmt.Sprintf("invalid elastic port: %v", temp[1])
 
@@ -2493,7 +2486,6 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 
 					return false, fmt.Sprintf("elastic port not yet available")
 				}, "port not available to start elasticsearch", "50ms", "5s")
-
 			ti.elasticsearchAddr, ti.elasticsearchDir, err = testutils.StartElasticsearch(ti.elasticsearchName, ti.elasticsearchDir, ti.signer, ti.trustRoots)
 			AssertOk(t, err, "failed to start elasticsearch, err: %v", err)
 			ti.updateResolver(globals.ElasticSearch, ti.elasticsearchAddr)
@@ -2515,15 +2507,8 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 	// query all the events received from this source.component
 	query := es.NewRegexpQuery("source.component.keyword", fmt.Sprintf("%v-.*", componentID))
 	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "120s")
-	ti.assertElasticTotalEvents(t, query, true, totalEventsSent, "120s")
+	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "120s")
 	Assert(t, ti.esClient.GetResetCount() > 0, "client should have restarted")
-}
-
-// closes all the given recorders
-func closeRecorders(recorders []events.Recorder) {
-	for _, r := range recorders {
-		r.Close()
-	}
 }
 
 // getAvailablePort returns the port available between [from, to]
