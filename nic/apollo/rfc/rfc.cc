@@ -21,6 +21,8 @@ using std::string;
 
 namespace rfc {
 
+typedef bool (rfc_p0_tree_inode_eq_cb_t)(inode_t *inode1, inode_t *inode2);
+
 /**
  * @brief    dump a given policy rule
  * @param[in]    policy    policy table
@@ -119,138 +121,108 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     return SDK_RET_OK;
 }
 
+static inline bool
+rfc_p0_pfx_tree_inode_eq_cb (inode_t *inode1, inode_t *inode2) {
+    if (IPADDR_EQ(&inode1->ipaddr, &inode2->ipaddr)) {
+        return true;
+    }
+    return false;
+}
+
+static inline bool
+rfc_p0_port_tree_inode_eq_cb (inode_t *inode1, inode_t *inode2) {
+    if (inode1->port == inode2->port) {
+        return true;
+    }
+    return false;
+}
+
+static inline bool
+rfc_p0_proto_port_tree_inode_eq_cb (inode_t *inode1, inode_t *inode2) {
+    if (inode1->key32 == inode2->key32) {
+        return true;
+    }
+    return false;
+}
+
+static inline sdk_ret_t
+rfc_compute_p0_itree_classes (rfc_ctxt_t *rfc_ctxt, rfc_tree_t *rfc_tree,
+                              rfc_p0_tree_inode_eq_cb_t inode_eq_cb,
+                              uint32_t max_tree_nodes)
+{
+    uint32_t       num_intervals = 0;
+    itable_t       *itable = &rfc_tree->itable;
+    rfc_table_t    *rfc_table = &rfc_tree->rfc_table;
+    inode_t        *inode;
+
+    /**
+     * walk over the interval table, compute class id and class bitmap for each
+     * unique interval
+     */
+    rte_bitmap_reset(rfc_ctxt->cbm);
+    for (uint32_t i = 0; i < itable->num_nodes; i++) {
+        inode = &itable->nodes[i];
+        if (inode->rfc.start) {
+            rte_bitmap_set(rfc_ctxt->cbm, inode->rfc.rule_no);
+        } else {
+            rte_bitmap_clear(rfc_ctxt->cbm, inode->rfc.rule_no);
+        }
+
+        /**< skip next interval if key is same, note that we updated the bmap */
+        if (((i + 1) < itable->num_nodes) &&
+            inode_eq_cb(inode, &itable->nodes[i+1])) {
+            continue;
+        }
+        inode->rfc.class_id =
+            rfc_compute_class_id(rfc_ctxt, rfc_table,
+                                 rfc_ctxt->cbm, rfc_ctxt->cbm_size);
+        itable->nodes[num_intervals++] = *inode;
+    }
+    rfc_tree->num_intervals = num_intervals;
+
+    PDS_TRACE_DEBUG("No. of interval nodes in itree %u", num_intervals);
+    PDS_TRACE_DEBUG("No. of equivalence classes in tree %u",
+                    rfc_table->num_classes);
+    if (num_intervals > max_tree_nodes) {
+        PDS_TRACE_ERR("No. of interval nodes in itree %u exceeded "
+                      "max supported nodes %u", num_intervals,
+                      max_tree_nodes);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    if (rfc_table->num_classes > rfc_table->max_classes) {
+        PDS_TRACE_ERR("No. of equivalence classes in tree %u exceeded "
+                      "max supported classes %u",
+                      rfc_table->num_classes, rfc_table->max_classes);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    return SDK_RET_OK;
+}
+
 static inline sdk_ret_t
 rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
 {
-    uint32_t    num_intervals;
-    itable_t    *addr_itable = &rfc_ctxt->pfx_tree.itable;
-    itable_t    *port_itable = &rfc_ctxt->port_tree.itable;
-    itable_t    *proto_port_itable = &rfc_ctxt->proto_port_tree.itable;
-    inode_t     *inode;
+    sdk_ret_t   ret;
 
-    /**
-     * walk over the address interval table, compute class id and class bitmap
-     * for each unique interval
-     */
-    num_intervals = 0;
-    rte_bitmap_reset(rfc_ctxt->cbm);
-    for (uint32_t i = 0; i < addr_itable->num_nodes; i++) {
-        inode = &addr_itable->nodes[i];
-        if (inode->rfc.start) {
-            rte_bitmap_set(rfc_ctxt->cbm, inode->rfc.rule_no);
-        } else {
-            rte_bitmap_clear(rfc_ctxt->cbm, inode->rfc.rule_no);
-        }
-
-        /**< skip next interval if key is same, note that we updated the bmap */
-        if (((i + 1) < addr_itable->num_nodes) &&
-            IPADDR_EQ(&inode->ipaddr,
-                      &addr_itable->nodes[i+1].ipaddr)) {
-            continue;
-        }
-        inode->rfc.class_id =
-            rfc_compute_class_id(rfc_ctxt, &rfc_ctxt->pfx_tree.rfc_table,
-                                 rfc_ctxt->cbm, rfc_ctxt->cbm_size);
-        addr_itable->nodes[num_intervals++] = *inode;
-    }
-    rfc_ctxt->pfx_tree.num_intervals = num_intervals;
-    PDS_TRACE_DEBUG("No. of interval nodes in prefix itree %u", num_intervals);
-    PDS_TRACE_DEBUG("No. of equivalence classes in prefix tree %u",
-                    rfc_ctxt->pfx_tree.rfc_table.num_classes);
-    if (num_intervals > SACL_IPV4_TREE_MAX_NODES) {
-        PDS_TRACE_ERR("No. of interval nodes in prefix itree %u exceeded "
-                      "max supported nodes %u", num_intervals,
-                      SACL_IPV4_TREE_MAX_NODES);
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-    if (rfc_ctxt->pfx_tree.rfc_table.num_classes >
-            rfc_ctxt->pfx_tree.rfc_table.max_classes) {
-        PDS_TRACE_ERR("No. of equivalence classes in prefix tree %u exceeded "
-                      "max supported classes %u",
-                      rfc_ctxt->pfx_tree.rfc_table.num_classes,
-                      rfc_ctxt->pfx_tree.rfc_table.max_classes);
-        return sdk::SDK_RET_NO_RESOURCE;
+    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->pfx_tree,
+                                       rfc_p0_pfx_tree_inode_eq_cb,
+                                       SACL_IPV4_TREE_MAX_NODES);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
 
-    num_intervals = 0;
-    rte_bitmap_reset(rfc_ctxt->cbm);
-    for (uint32_t i = 0; i < port_itable->num_nodes; i++) {
-        inode = &port_itable->nodes[i];
-        if (inode->rfc.start) {
-            rte_bitmap_set(rfc_ctxt->cbm, inode->rfc.rule_no);
-        } else {
-            rte_bitmap_clear(rfc_ctxt->cbm, inode->rfc.rule_no);
-        }
-
-        /**< skip next interval if key is same, note that we updated the bmap */
-        if (((i + 1) < port_itable->num_nodes) &&
-            (inode->port == port_itable->nodes[i+1].port)) {
-            continue;
-        }
-        inode->rfc.class_id =
-            rfc_compute_class_id(rfc_ctxt, &rfc_ctxt->port_tree.rfc_table,
-                                 rfc_ctxt->cbm, rfc_ctxt->cbm_size);
-        port_itable->nodes[num_intervals++] = *inode;
-    }
-    rfc_ctxt->port_tree.num_intervals = num_intervals;
-    PDS_TRACE_DEBUG("No. of interval nodes in port itree %u", num_intervals);
-    PDS_TRACE_DEBUG("No. of equivalence classes in port tree %u",
-                    rfc_ctxt->port_tree.rfc_table.num_classes);
-    if (num_intervals > SACL_SPORT_TREE_MAX_NODES) {
-        PDS_TRACE_ERR("No. of interval nodes in port itree %u exceeded "
-                      "max supported nodes %u", num_intervals,
-                      SACL_SPORT_TREE_MAX_NODES);
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-    if (rfc_ctxt->port_tree.rfc_table.num_classes >
-            rfc_ctxt->port_tree.rfc_table.max_classes) {
-        PDS_TRACE_ERR("No. of equivalence classes in port tree %u exceeded "
-                      "max supported classes %u",
-                      rfc_ctxt->port_tree.rfc_table.num_classes,
-                      rfc_ctxt->port_tree.rfc_table.max_classes);
-        return sdk::SDK_RET_NO_RESOURCE;
+    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->port_tree,
+                                       rfc_p0_port_tree_inode_eq_cb,
+                                       SACL_SPORT_TREE_MAX_NODES);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
 
-    num_intervals = 0;
-    rte_bitmap_reset(rfc_ctxt->cbm);
-    for (uint32_t i = 0; i < proto_port_itable->num_nodes; i++) {
-        inode = &proto_port_itable->nodes[i];
-        if (inode->rfc.start) {
-            rte_bitmap_set(rfc_ctxt->cbm, inode->rfc.rule_no);
-        } else {
-            rte_bitmap_clear(rfc_ctxt->cbm, inode->rfc.rule_no);
-        }
-
-        /**< skip next interval if key is same, note that we updated the bmap */
-        if (((i + 1) < proto_port_itable->num_nodes) &&
-            (inode->key32 == proto_port_itable->nodes[i+1].key32)) {
-            continue;
-        }
-        inode->rfc.class_id =
-            rfc_compute_class_id(rfc_ctxt, &rfc_ctxt->proto_port_tree.rfc_table,
-                                 rfc_ctxt->cbm, rfc_ctxt->cbm_size);
-        proto_port_itable->nodes[num_intervals++] = *inode;
+    ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->proto_port_tree,
+                                       rfc_p0_proto_port_tree_inode_eq_cb,
+                                       SACL_PROTO_DPORT_TREE_MAX_NODES);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
-    rfc_ctxt->proto_port_tree.num_intervals = num_intervals;
-    PDS_TRACE_DEBUG("No. of interval nodes in (proto, port) itree %u",
-                    num_intervals);
-    PDS_TRACE_DEBUG("No. of equivalence classes in (proto, port) tree %u",
-                    rfc_ctxt->proto_port_tree.rfc_table.num_classes);
-    if (num_intervals > SACL_PROTO_DPORT_TREE_MAX_NODES) {
-        PDS_TRACE_ERR("No. of interval nodes in (proto, port) itree %u "
-                      "exceeded max supported nodes %u", num_intervals,
-                      SACL_PROTO_DPORT_TREE_MAX_NODES);
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-    if (rfc_ctxt->proto_port_tree.rfc_table.num_classes >
-            rfc_ctxt->proto_port_tree.rfc_table.max_classes) {
-        PDS_TRACE_ERR("No. of equivalence classes in (proto, port) tree %u "
-                      "exceeded max supported classes %u",
-                      rfc_ctxt->proto_port_tree.rfc_table.num_classes,
-                      rfc_ctxt->proto_port_tree.rfc_table.max_classes);
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-
 
     return SDK_RET_OK;
 }
