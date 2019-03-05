@@ -22,6 +22,10 @@ rte_bitmap_and (struct rte_bitmap *ibmp1, struct rte_bitmap *ibmp2,
 
     for (index = 0; index < ibmp1->array2_size; index++) {
         obmp->array2[index] = ibmp1->array2[index] & ibmp2->array2[index];
+        if (obmp->array2[index]) {
+            obmp->array1[index >> RTE_BITMAP_SLAB_BIT_SIZE_LOG2] |=
+                1 << (index % RTE_BITMAP_SLAB_BIT_SIZE_LOG2);
+        }
     }
 }
 
@@ -33,6 +37,10 @@ rte_bitmap_or (struct rte_bitmap *ibmp1, struct rte_bitmap *ibmp2,
 
     for (index = 0; index < ibmp1->array2_size; index++) {
         obmp->array2[index] = ibmp1->array2[index] | ibmp2->array2[index];
+        if (obmp->array2[index]) {
+            obmp->array1[index >> RTE_BITMAP_SLAB_BIT_SIZE_LOG2] |=
+                1 << (index % RTE_BITMAP_SLAB_BIT_SIZE_LOG2);
+        }
     }
 }
 
@@ -66,11 +74,16 @@ rte_bitmap_eq (struct rte_bitmap *ibmp1, struct rte_bitmap *ibmp2)
 }
 
 static inline void
-rte_bitmap2str (rte_bitmap *bmap, std::stringstream& buffer)
+rte_bitmap2str (rte_bitmap *bmap, std::stringstream& a1ss,
+                std::stringstream& a2ss)
 {
+    for (uint32_t index = 0; index < bmap->array1_size; index++) {
+        a1ss << std::setfill('0') << std::setw(8) << std::hex
+             << bmap->array1[index] << " ";
+    }
     for (uint32_t index = 0; index < bmap->array2_size; index++) {
-        buffer << std::setfill('0') << std::setw(8) << std::hex
-               << bmap->array2[index] << " ";
+        a2ss << std::setfill('0') << std::setw(8) << std::hex
+             << bmap->array2[index] << " ";
     }
 }
 

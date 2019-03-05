@@ -35,7 +35,8 @@ typedef void (*rfc_compute_cl_addr_entry_cb_t)(mem_addr_t base_address,
                                                uint16_t *next_entry_num);
 typedef sdk_ret_t (*rfc_action_data_flush_cb_t)(mem_addr_t addr,
                                                 void *action_data);
-typedef sdk_ret_t (*rfc_table_entry_pack_cb_t)(void *action_data,
+typedef sdk_ret_t (*rfc_table_entry_pack_cb_t)(uint32_t running_id,
+                                               void *action_data,
                                                uint32_t entry_num,
                                                uint16_t entry_val);
 typedef uint16_t rfc_compute_entry_val_cb_t(rfc_ctxt_t *rfc_ctxt,
@@ -44,6 +45,7 @@ typedef uint16_t rfc_compute_entry_val_cb_t(rfc_ctxt_t *rfc_ctxt,
 /**
  * @brief    given a classid & entry id, fill the corresponding portion of the
  *           RFC phase 1 table entry action data
+ * @param[in] running_id    running index of the entry (for debugging)
  * @param[in] actiondata    pointer to the action data
  * @param[in] entry_num     entry idx (0 to 50, inclusive), we can fit 51
  *                          entries, each 10 bits wide
@@ -51,10 +53,12 @@ typedef uint16_t rfc_compute_entry_val_cb_t(rfc_ctxt_t *rfc_ctxt,
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_p1_table_entry_pack (void *actiondata, uint32_t entry_num, uint16_t cid)
+rfc_p1_table_entry_pack (uint32_t running_id, void *actiondata,
+                         uint32_t entry_num, uint16_t cid)
 {
     sacl_ip_sport_p1_actiondata_t    *action_data;
 
+    PDS_TRACE_DEBUG("running id %u, class id %u", running_id, cid);
     action_data = (sacl_ip_sport_p1_actiondata_t *)actiondata;
     switch (entry_num) {
     case 0:
@@ -284,6 +288,7 @@ rfc_compute_p1_next_cl_addr_entry_num (mem_addr_t base_address,
  * @brief    given two bits of data (stateful rule hit, stateless rule hit) and
  *           the entry id, fill corresponding portion of the RFC phase 2 table
  *           entry action data
+ * @param[in] running_id     running index of the entry (for debugging)
  * @param[in] action_data    pointer to the action data
  * @param[in] entry_num      entry idx (0 to 50, inclusive), we can fit 51
  *                           entries, each 10 bits wide
@@ -291,12 +296,14 @@ rfc_compute_p1_next_cl_addr_entry_num (mem_addr_t base_address,
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_p2_table_entry_pack (void *actiondata, uint32_t entry_num, uint16_t data)
+rfc_p2_table_entry_pack (uint32_t running_id, void *actiondata,
+                         uint32_t entry_num, uint16_t data)
 {
     sacl_p2_actiondata_t    *action_data;
 
     action_data = (sacl_p2_actiondata_t *)actiondata;
     data &= 0x3;    // only last 2 bits of the result are relevant
+    PDS_TRACE_DEBUG("running id %u, result 0x%x", running_id, data);
     switch (entry_num) {
     case 0:
         action_data->action_u.sacl_p2_sacl_p2.id000 = data;
@@ -1136,25 +1143,34 @@ rfc_compute_p2_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
 {
     int         rv;
     uint16_t    result;
-    uint32_t    posn = 0;
+    uint32_t    posn = 0, new_posn = 0;
     uint64_t    slab = 0;
 
-    rv = rte_bitmap_scan(cbm, &posn, &slab);
+    // TODO: remove
+    std::stringstream    a1ss, a2ss;
+    rte_bitmap2str(cbm, a1ss, a2ss);
+    PDS_TRACE_DEBUG("a1ss %s\nbitmap %s",
+                    a1ss.str().c_str(), a2ss.str().c_str());
+
+    rv = rte_bitmap_scan(cbm, &new_posn, &slab);
     if (rv == 0) {
         // no bit is set in the bitmap
         result = 0;
     } else {
         do {
+            PDS_TRACE_DEBUG("posn %u", new_posn);
+            posn = new_posn;
             // TODO: which bit is SL bit, which bit is SF bit ?
             if (rfc_ctxt->policy->rules[posn].stateful) {
                 RFC_RESULT_SET_STATEFUL_BIT(result);
             } else {
-                RFC_RESULT_SET_STATEFUL_BIT(result);
+                RFC_RESULT_SET_STATELESS_BIT(result);
             }
             if (RFC_RESULT_BOTH_BITS_SET(result)) {
                 break;
             }
-        } while (rte_bitmap_scan(cbm, &posn, &slab));
+            rte_bitmap_scan(cbm, &new_posn, &slab);
+        } while (new_posn != posn);
     }
     return result;
 }
@@ -1196,6 +1212,7 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
                              rfc_action_data_flush_cb_t action_data_flush_cb)
 {
     uint16_t      entry_val, entry_num = 0, next_entry_num;
+    uint32_t      running_id = 0;
     mem_addr_t    cl_addr, next_cl_addr;
 
     // do cross product of bitmaps, compute the entries (e.g., class ids or
@@ -1224,15 +1241,17 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
         }
 
         for (uint32_t j = 0; j < rfc_table2->num_classes; j++) {
+            rte_bitmap_reset(rfc_ctxt->cbm);
             rte_bitmap_and(rfc_table1->cbm_table[i], rfc_table2->cbm_table[j],
                            rfc_ctxt->cbm);
             entry_val = compute_entry_val_cb(rfc_ctxt, result_table,
                                              rfc_ctxt->cbm, rfc_ctxt->cbm_size);
-            entry_pack_cb(action_data, entry_num, entry_val);
+            entry_pack_cb(running_id, action_data, entry_num, entry_val);
+            running_id++;
             entry_num++;
             if (entry_num == entries_per_cl) {
                 // write this full entry to the table
-                action_data_flush_cb(cl_addr, &action_data);
+                action_data_flush_cb(cl_addr, action_data);
                 entry_num = 0;
                 cl_addr += CACHE_LINE_SIZE;
             }
@@ -1240,7 +1259,7 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
     }
     if (entry_num) {
         // flush the partially filled last cache line as well
-        action_data_flush_cb(cl_addr, &action_data);
+        action_data_flush_cb(cl_addr, action_data);
     }
     return SDK_RET_OK;
 }

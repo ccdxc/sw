@@ -263,14 +263,17 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
 void
 rfc_eq_class_table_dump (rfc_table_t *rfc_table)
 {
-    std::stringstream    cbm_ss;
+    std::stringstream    a1ss, a2ss;
 
     PDS_TRACE_DEBUG("Number of equivalence classes %u", rfc_table->num_classes);
     for (uint32_t i = 0; i < rfc_table->num_classes; i++) {
-        rte_bitmap2str(rfc_table->cbm_table[i], cbm_ss);
-        PDS_TRACE_DEBUG("class id %u, cbm %s", i, cbm_ss.str().c_str());
-        cbm_ss.clear();
-        cbm_ss.str("");
+        rte_bitmap2str(rfc_table->cbm_table[i], a1ss, a2ss);
+        PDS_TRACE_DEBUG("class id %u, a1ss %s\na2ss %s", i,
+                        a1ss.str().c_str(), a2ss.str().c_str());
+        a1ss.clear();
+        a1ss.str("");
+        a2ss.clear();
+        a2ss.str("");
     }
 }
 

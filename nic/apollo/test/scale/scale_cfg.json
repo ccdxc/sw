@@ -25,7 +25,7 @@
         {
             "_comment_" : "security policy parameters here are per subnet per direction",
             "kind" : "security-policy",
-            "count" : "0"
+            "count" : "4"
         },
         {
             "_comment_" : "All VCNs have same prefix",
