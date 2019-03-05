@@ -402,6 +402,7 @@ chksum_write_result(struct service_info *svc_info)
 	}
 	svc_status->u.chksum.num_tags = num_tags;
 	PAS_INC_NUM_CHKSUMS(svc_info->si_pcr, num_tags);
+	PAS_INC_NUM_CHKSUM_BYTES_IN(svc_info->si_pcr, svc_info->si_num_bytes);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");

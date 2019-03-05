@@ -364,6 +364,7 @@ hash_write_result(struct service_info *svc_info)
 	}
 	svc_status->u.hash.num_tags = num_tags;
 	PAS_INC_NUM_HASHES(svc_info->si_pcr, svc_info->si_num_tags);
+	PAS_INC_NUM_HASH_BYTES_IN(svc_info->si_pcr, svc_info->si_num_bytes);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");

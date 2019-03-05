@@ -650,6 +650,7 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 					svc_info->si_type, err);
 			goto out;
 		}
+		svc_info->si_num_bytes += svc_info->si_src_blist.len;
 
 		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
 			bof_desc =
@@ -706,6 +707,7 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 					svc_info->si_bof_sgl.sgl, bof_desc, 0);
 		}
 
+		svc_info->si_num_bytes += svc_info->si_src_blist.len;
 		num_tags = 1;
 	}
 	svc_info->si_num_tags = num_tags;
@@ -1154,6 +1156,8 @@ cpdc_update_tags(struct service_info *svc_info)
 		(svc_info->si_type == PNSO_SVC_TYPE_CHKSUM &&
 		 svc_info->si_desc_flags & PNSO_CHKSUM_DFLAG_PER_BLOCK)) {
 		svc_info->si_num_tags = chn_service_deps_num_blks_get(svc_info);
+		svc_info->si_num_bytes =
+			chn_service_deps_data_len_get(svc_info);
 
 		OSAL_ASSERT(svc_info->si_num_tags >= 1);
 	} else

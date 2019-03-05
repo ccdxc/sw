@@ -179,7 +179,6 @@ struct pnso_api_stats {
 #define PAS_INC_NUM_DC_BYTES_OUT(pcr, bytes)				\
 	PNSO_STAT_ADD(pcr, num_dc_bytes_out, bytes)
 
-/* TODO-stats: Separate count for different algo?? */
 #define PAS_INC_NUM_HASH_BYTES_IN(pcr, bytes)				\
 	PNSO_STAT_ADD(pcr, num_hash_bytes_in, bytes)
 #define PAS_INC_NUM_HASHES(pcr, count)					\

@@ -239,8 +239,10 @@ struct service_info {
 	uint16_t si_block_size;
 	uint16_t si_desc_flags;		/* caller supplied desc flags */
 	uint16_t hdr_fmt_idx;
+
 	bool tags_updated;
 	uint32_t si_num_tags;		/* for tracking # of hash or checksum */
+	uint32_t si_num_bytes;
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
 	struct service_status_desc si_status_desc;	/* status desc of cp/dc/encrypt/etc. */
