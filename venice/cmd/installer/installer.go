@@ -10,6 +10,7 @@ import (
 	"os/exec"
 
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/imagestore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/systemd"
 )
@@ -76,13 +77,18 @@ func RunVersion(version string) error {
 
 // DownloadImage downloads an image from minio and returns the local filename
 func DownloadImage(version string) (string, error) {
+
+	if err := imagestore.DownloadVeniceImage(version); err != nil {
+		return "", fmt.Errorf("Error %s during image download of version %s", err, version)
+	}
+
 	if err := os.RemoveAll(installerTmpDir); err != nil {
 		return "", fmt.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
 	}
 	if err := os.MkdirAll(installerTmpDir, 0700); err != nil {
 		return "", fmt.Errorf("Error %s during mkdirAll of %s", err, installerTmpDir)
 	}
-	if err := copyFileContents("/var/log/pensando"+"/"+tmpImageFileName, installerTmpDir+"/"+tmpImageFileName); err != nil {
+	if err := copyFileContents(tmpImageFileName, installerTmpDir+"/"+tmpImageFileName); err != nil {
 		return "", fmt.Errorf("Error %s during DownloadImage.copyFileContents", err)
 	}
 	return installerTmpDir + "/" + tmpImageFileName, nil

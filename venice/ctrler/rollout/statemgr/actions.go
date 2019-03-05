@@ -97,7 +97,8 @@ func (ros *RolloutState) getVenicePendingPreCheckIssue() []string {
 		}
 	}
 	for _, n := range nodeStates {
-		if !issuedVenices[n.ObjectMeta.Name] {
+		log.Infof("Status of node %s is %+v", n.Name, n.Status.Phase)
+		if !issuedVenices[n.ObjectMeta.Name] && n.Status.Phase == "JOINED" {
 			pendingVenice = append(pendingVenice, n.ObjectMeta.Name)
 		}
 	}

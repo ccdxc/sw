@@ -294,6 +294,9 @@ func createNodeHelper(stateMgr *Statemgr, name string) {
 			Name:   name,
 			Tenant: "default",
 		},
+		Status: cluster.NodeStatus{
+			Phase: "JOINED",
+		},
 	}
 	stateMgr.handleNodeEvent(kvstore.Created, &node)
 }

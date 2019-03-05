@@ -5,6 +5,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/pensando/sw/api/generated/rollout"
+
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -28,6 +30,7 @@ const (
 	fsmstRolloutSuccess
 	fsmstRolloutPausing
 	fsmstRolloutFail
+	fsmstRolloutSuspend
 )
 
 func (x rofsmState) String() string {
@@ -54,6 +57,8 @@ func (x rofsmState) String() string {
 		return "fsmstRolloutPausing"
 	case fsmstRolloutFail:
 		return "fsmstRolloutFail"
+	case fsmstRolloutSuspend:
+		return "fsmstRolloutSuspend"
 	}
 	return "unknownState " + strconv.Itoa(int(x))
 }
@@ -78,6 +83,7 @@ const (
 	fsmEvOneSmartNICUpgSuccess
 	fsmEvOneSmartNICUpgFail
 	fsmEvFailThresholdReached
+	fsmEvSuspend
 	fsmEvFail
 	fsmEvSuccess
 )
@@ -122,6 +128,8 @@ func (x rofsmEvent) String() string {
 		return "fsmEvOneSmartNICUpgFail"
 	case fsmEvFailThresholdReached:
 		return "fsmEvFailThresholdReached"
+	case fsmEvSuspend:
+		return "fsmEvSuspend"
 	case fsmEvFail:
 		return "fsmEvFail"
 	case fsmEvSuccess:
@@ -139,6 +147,7 @@ type fsmNode struct {
 var roFSM = [][]fsmNode{
 	fsmstStart: {
 		fsmEvROCreated: {nextSt: fsmstPreCheckingVenice, actFn: fsmAcCreated},
+		fsmEvSuspend:   {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 
 	fsmstPreCheckingVenice: {
@@ -160,6 +169,7 @@ var roFSM = [][]fsmNode{
 		fsmEvOneVeniceUpgSuccess: {nextSt: fsmstRollingOutVenice, actFn: fsmAcIssueNextVeniceRollout},
 		fsmEvAllVeniceUpgOK:      {nextSt: fsmstRollingOutService, actFn: fsmAcIssueServiceRollout},
 		fsmEvVeniceBypass:        {nextSt: fsmstRollingoutOutSmartNIC, actFn: fsmAcRolloutSmartNICs},
+		fsmEvSuspend:             {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 	fsmstRollingOutService: {
 		fsmEvServiceUpgOK: {nextSt: fsmstRollingoutOutSmartNIC, actFn: fsmAcRolloutSmartNICs},
@@ -169,6 +179,7 @@ var roFSM = [][]fsmNode{
 		fsmEvOneSmartNICUpgFail:    {nextSt: fsmstRollingoutOutSmartNIC}, // TODO
 		fsmEvOneSmartNICUpgSuccess: {nextSt: fsmstRollingoutOutSmartNIC}, // TODO
 		fsmEvFail:                  {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
+		fsmEvSuspend:               {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 }
 
@@ -191,7 +202,20 @@ func (ros *RolloutState) runFSM() {
 }
 
 func fsmAcCreated(ros *RolloutState) {
+	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_PROGRESSING)]
+	//TODO Set the rollout Object Previous version to that of bundle version
 	ros.setPreviousVersion("TODO_PREV_VERSION")
+	if ros.Spec.GetSuspend() {
+		log.Infof("Rollout object created with state SUSPENDED.")
+		ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
+		ros.eventChan <- fsmEvSuspend
+		return
+	}
+
+	if ros.Spec.ScheduledStartTime == nil {
+		ros.setStartTime()
+	}
+
 	if ros.Spec.SmartNICsOnly {
 		ros.eventChan <- fsmEvVeniceBypass
 	} else {
@@ -214,6 +238,7 @@ func fsmAcOneVenicePreupgSuccess(ros *RolloutState) {
 }
 
 func fsmAcPreUpgSmartNIC(ros *RolloutState) {
+
 	ros.writer.WriteRollout(ros.Rollout)
 	ros.Add(1)
 
@@ -247,6 +272,16 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 }
 
 func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
+
+	if ros.Spec.GetSuspend() {
+		log.Infof("Rollout is SUSPENDED. Returning without further controller node Rollout.")
+		ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
+		ros.eventChan <- fsmEvSuspend
+		return
+	}
+	if ros.Status.StartTime == nil {
+		ros.setStartTime()
+	}
 	if ros.Spec.SmartNICsOnly {
 		ros.eventChan <- fsmEvVeniceBypass
 		return
@@ -256,7 +291,7 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 		log.Errorf("Error %s issuing rollout to next venice", err)
 		return
 	}
-	ros.setStartTime()
+
 	if numPendingRollout == 0 {
 		if !ros.allVeniceRolloutSuccess() { // some venice rollout failed
 			ros.eventChan <- fsmEvFail
@@ -266,16 +301,27 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 	}
 }
 func fsmAcIssueServiceRollout(ros *RolloutState) {
+	log.Infof("fsmAcIssueServiceRollout..")
 	serviceRolloutPending, err := ros.issueServiceRollout()
 	if err != nil {
 		log.Errorf("Error %s issuing service rollout", err)
 		return
 	}
+
+	log.Infof("fsmAcIssueServiceRollout.. checking pending service Rollout")
 	if !serviceRolloutPending {
+		log.Infof("issue fsmEvServiceUpgOK")
 		ros.eventChan <- fsmEvServiceUpgOK
 	}
+	log.Infof("fsmAcIssueServiceRollout.. returning from fsmAcIssueServiceRollout")
 }
 func fsmAcRolloutSmartNICs(ros *RolloutState) {
+	if ros.Spec.GetSuspend() {
+		log.Infof("Rollout is SUSPENDED. Returning without smartNIC Rollout.")
+		ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
+		ros.eventChan <- fsmEvSuspend
+		return
+	}
 	ros.writer.WriteRollout(ros.Rollout)
 	ros.Add(1)
 	go func() {
@@ -295,6 +341,10 @@ func fsmAcRolloutSuccess(ros *RolloutState) {
 	ros.saveStatus()
 }
 func fsmAcRolloutFail(ros *RolloutState) {
+	ros.setEndTime()
+	ros.saveStatus()
+}
+func fsmAcRolloutSuspend(ros *RolloutState) {
 	ros.setEndTime()
 	ros.saveStatus()
 }
