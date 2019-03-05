@@ -380,7 +380,7 @@ create_qp:
 
     //infinite  retries                 
     phvwr.c3    p.sqcb1.credits, 0x1F
-    phvwr.c3    p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x7<<3|0x7)
+    phvwr.c3    p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x7<<3|0x7) //default timeout
     phvwr       p.sqcb1.sqcb1_priv_oper_enable, d.qp.privileged
 
     phvwr       p.sqcb1.log_sqwqe_size, d.qp.sq_stride_log2[4:0]

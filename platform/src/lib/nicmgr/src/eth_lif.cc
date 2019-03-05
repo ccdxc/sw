@@ -2087,7 +2087,9 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
     memset(&aqcb, 0, sizeof(aqcb_t));
     aqcb.aqcb0.ring_header.total_rings = MAX_AQ_RINGS;
     aqcb.aqcb0.ring_header.host_rings = MAX_AQ_HOST_RINGS;
-
+    aqcb.aqcb0.ring_header.cosA = 1;
+    aqcb.aqcb0.ring_header.cosB = 1;
+    
     aqcb.aqcb0.log_wqe_size = cmd->stride_log2;
     aqcb.aqcb0.log_num_wqes = cmd->depth_log2;
     aqcb.aqcb0.aq_id = cmd->qid_ver;
