@@ -35,6 +35,11 @@ using internal::TcpCbOoqStatus;
 #define NUM_TCP_OOO_QUEUES_PER_FLOW     4
 
 namespace hal {
+typedef struct tcpcb_global_cfg_ {
+    uint32_t mss;
+    uint32_t cwnd_initial;
+    uint32_t cwnd_idle;
+} tcpcb_global_cfg_t;
 
 typedef struct tcpcb_ooo_queue_entry_s {
     uint64_t                queue_addr;

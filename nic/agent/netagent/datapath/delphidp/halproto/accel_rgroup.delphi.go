@@ -1226,6 +1226,9 @@ It has these top-level messages:
 	TcpProxyGlobalStatsGetRequestMsg
 	TcpProxyGlobalStatsGetResponseMsg
 	TcpProxyGlobalStats
+	TcpProxyGlobalCfg
+	TcpProxyGlobalCfgRequestMsg
+	TcpProxyGlobalCfgResponseMsg
 	CollectorSpec
 	CollectorStatus
 	CollectorResponse

@@ -34,6 +34,9 @@ var (
 	regInstance         uint32
 	platPbPause         string
 	xcvrValid           string
+	tcpProxyMss         uint32
+	tcpProxyCwndInitial uint32
+	tcpProxyCwndIdle    uint32
 )
 
 var debugCmd = &cobra.Command{
@@ -108,6 +111,13 @@ var secProfDebugCmd = &cobra.Command{
 	Run:   fwSecProfDebugCmdHandler,
 }
 
+var tcpProxyDebugCmd = &cobra.Command{
+	Use:   "tcp-proxy",
+	Short: "set tcp-proxy options",
+	Long:  "set tcp-proxy options",
+	Run:   tcpProxyDebugCmdHandler,
+}
+
 var testDebugCmd = &cobra.Command{
 	Use:    "test",
 	Short:  "test options",
@@ -161,6 +171,7 @@ func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
 	debugCmd.AddCommand(fwDebugCmd)
+	debugCmd.AddCommand(tcpProxyDebugCmd)
 	debugCmd.AddCommand(platDebugCmd)
 	debugCmd.AddCommand(regDebugCmd)
 	debugCmd.AddCommand(debugCreateCmd)
@@ -194,6 +205,10 @@ func init() {
 	secProfDebugCmd.Flags().StringVar(&ipNormalization, "ip-normalization", "off", "Turn IP Normalization on/off")
 	secProfDebugCmd.Flags().StringVar(&tcpNormalization, "tcp-normalization", "off", "Turn TCP Normalization on/off")
 	secProfDebugCmd.MarkFlagRequired("id")
+
+	tcpProxyDebugCmd.Flags().Uint32Var(&tcpProxyMss, "mss", 9216, "TCP Maximum Segment Size in range 68-10000")
+	tcpProxyDebugCmd.Flags().Uint32Var(&tcpProxyCwndInitial, "cwnd-initial", 10, "TCP initial window size in range 1-14")
+	tcpProxyDebugCmd.Flags().Uint32Var(&tcpProxyCwndIdle, "cwnd-idle", 10, "TCP window size after idle timer is hit in range 1-14")
 
 	regDebugCmd.Flags().Uint32Var(&regID, "reg-id", 0, "Specify register ID")
 	regDebugCmd.Flags().Uint64Var(&regAddr, "reg-addr", 0, "Specify register address")
@@ -850,6 +865,46 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 	if err != nil {
 		fmt.Printf("Set conn tracking failed. %v\n", err)
 		return
+	}
+}
+
+func tcpProxyDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewTcpProxyClient(c)
+
+	defer c.Close()
+
+	tcpGlobalCfg := &halproto.TcpProxyGlobalCfg{}
+
+	if cmd.Flags().Changed("mss") {
+		tcpGlobalCfg.Mss = tcpProxyMss
+	}
+	if cmd.Flags().Changed("cwnd-initial") {
+		tcpGlobalCfg.CwndInitial = tcpProxyCwndInitial
+	}
+	if cmd.Flags().Changed("cwnd-idle") {
+		tcpGlobalCfg.CwndIdle = tcpProxyCwndIdle
+	}
+
+	globalCfgReqMsg := &halproto.TcpProxyGlobalCfgRequestMsg{
+		Request: []*halproto.TcpProxyGlobalCfg{tcpGlobalCfg},
+	}
+
+	// HAL call
+	respMsg, err := client.TcpProxyGlobalCfgCreate(context.Background(), globalCfgReqMsg)
+	if err != nil {
+		fmt.Printf("Set conn tracking failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("HAL Returned error status. %v\n", respMsg.ApiStatus)
+		os.Exit(1)
 	}
 }
 

@@ -389,6 +389,24 @@ func (mr *MockTcpProxyClientMockRecorder) TcpProxyGlobalStatsGet(ctx, in interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpProxyGlobalStatsGet", reflect.TypeOf((*MockTcpProxyClient)(nil).TcpProxyGlobalStatsGet), varargs...)
 }
 
+// TcpProxyGlobalCfgCreate mocks base method
+func (m *MockTcpProxyClient) TcpProxyGlobalCfgCreate(ctx context.Context, in *TcpProxyGlobalCfgRequestMsg, opts ...grpc.CallOption) (*TcpProxyGlobalCfgResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TcpProxyGlobalCfgCreate", varargs...)
+	ret0, _ := ret[0].(*TcpProxyGlobalCfgResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpProxyGlobalCfgCreate indicates an expected call of TcpProxyGlobalCfgCreate
+func (mr *MockTcpProxyClientMockRecorder) TcpProxyGlobalCfgCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpProxyGlobalCfgCreate", reflect.TypeOf((*MockTcpProxyClient)(nil).TcpProxyGlobalCfgCreate), varargs...)
+}
+
 // MockTcpProxyServer is a mock of TcpProxyServer interface
 type MockTcpProxyServer struct {
 	ctrl     *gomock.Controller
@@ -540,4 +558,17 @@ func (m *MockTcpProxyServer) TcpProxyGlobalStatsGet(arg0 context.Context, arg1 *
 // TcpProxyGlobalStatsGet indicates an expected call of TcpProxyGlobalStatsGet
 func (mr *MockTcpProxyServerMockRecorder) TcpProxyGlobalStatsGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpProxyGlobalStatsGet", reflect.TypeOf((*MockTcpProxyServer)(nil).TcpProxyGlobalStatsGet), arg0, arg1)
+}
+
+// TcpProxyGlobalCfgCreate mocks base method
+func (m *MockTcpProxyServer) TcpProxyGlobalCfgCreate(arg0 context.Context, arg1 *TcpProxyGlobalCfgRequestMsg) (*TcpProxyGlobalCfgResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TcpProxyGlobalCfgCreate", arg0, arg1)
+	ret0, _ := ret[0].(*TcpProxyGlobalCfgResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpProxyGlobalCfgCreate indicates an expected call of TcpProxyGlobalCfgCreate
+func (mr *MockTcpProxyServerMockRecorder) TcpProxyGlobalCfgCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpProxyGlobalCfgCreate", reflect.TypeOf((*MockTcpProxyServer)(nil).TcpProxyGlobalCfgCreate), arg0, arg1)
 }

@@ -16,6 +16,8 @@ namespace hal {
 
 using hal::tls::proxy_tls_bypass_mode;
 
+tcpcb_global_cfg_t tcpcb_global_cfg = {0};
+
 void *
 tcpcb_get_key_func (void *entry)
 {
@@ -143,6 +145,11 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->snd_ssthresh = spec.snd_ssthresh();
     tcpcb->snd_cwnd_cnt = spec.snd_cwnd_cnt();
     tcpcb->rcv_mss = spec.rcv_mss();
+#if 0
+    if (tcpcb_global_cfg.mss) {
+        tcpcb->rcv_mss = tcpcb_global_cfg.mss;
+    }
+#endif
     tcpcb->smss = spec.smss();
     tcpcb->source_port = spec.source_port();
     tcpcb->dest_port = spec.dest_port();
@@ -183,7 +190,8 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     ret = add_tcpcb_to_db(tcpcb);
     SDK_ASSERT(ret == HAL_RET_OK);
 
-    HAL_TRACE_DEBUG("Added TCPCB to DB  with id: {}", tcpcb->cb_id);
+    HAL_TRACE_DEBUG("Added TCPCB to DB  with id: {} with mss: {}", tcpcb->cb_id,
+                    tcpcb->rcv_mss);
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->mutable_tcpcb_status()->set_tcpcb_handle(tcpcb->hal_handle);
@@ -240,6 +248,11 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->snd_ssthresh = spec.snd_ssthresh();
     tcpcb->snd_cwnd_cnt = spec.snd_cwnd_cnt();
     tcpcb->rcv_mss = spec.rcv_mss();
+#if 0
+    if (tcpcb_global_cfg.mss) {
+        tcpcb->rcv_mss = tcpcb_global_cfg.mss;
+    }
+#endif
     tcpcb->smss = spec.smss();
     tcpcb->source_port = spec.source_port();
     tcpcb->dest_port = spec.dest_port();
@@ -620,6 +633,28 @@ tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
     rsp->set_api_status(types::API_STATUS_OK);
 
     return HAL_RET_OK;
+}
+
+hal_ret_t
+tcp_proxy_global_cfg_create(tcp_proxy::TcpProxyGlobalCfg& req,
+                            tcp_proxy::TcpProxyGlobalCfgResponseMsg* rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("mss: {} cwnd_initial: {} cwnd_idle: {}", req.mss(), req.cwnd_initial(), req.cwnd_idle());
+
+    if (req.mss()) {
+        tcpcb_global_cfg.mss = req.mss();
+    }
+    if (req.cwnd_initial()) {
+        tcpcb_global_cfg.cwnd_initial = req.cwnd_initial();
+    }
+    if (req.cwnd_idle()) {
+        tcpcb_global_cfg.cwnd_idle = req.cwnd_idle();
+    }
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return ret;
 }
 
 }    // namespace hal

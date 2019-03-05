@@ -926,6 +926,9 @@ hal_ret_t tcp_proxy_session_get(tcp_proxy::TcpProxySessionGetRequest& req,
 hal_ret_t tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
                     tcp_proxy::TcpProxyGlobalStatsGetResponseMsg *rsp);
 
+hal_ret_t tcp_proxy_global_cfg_create(tcp_proxy::TcpProxyGlobalCfg& req,
+                                      tcp_proxy::TcpProxyGlobalCfgResponseMsg *rsp);
+
 }    // namespace hal
 
 #endif    // __TCP_PROXY_HPP__

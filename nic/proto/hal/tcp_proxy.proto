@@ -25,6 +25,8 @@ service TcpProxy {
   rpc TcpProxyCbGet (TcpProxyCbGetRequestMsg) returns (TcpProxyCbGetResponseMsg) {}
   rpc TcpProxySessionGet (TcpProxySessionGetRequestMsg) returns (TcpProxySessionGetResponseMsg) {}
   rpc TcpProxyGlobalStatsGet(TcpProxyGlobalStatsGetRequestMsg) returns (TcpProxyGlobalStatsGetResponseMsg) {}
+
+  rpc TcpProxyGlobalCfgCreate (TcpProxyGlobalCfgRequestMsg) returns (TcpProxyGlobalCfgResponseMsg) {}
 }
 
 message TcpProxySessionFilter {
@@ -364,4 +366,21 @@ message TcpProxyGlobalStats {
   uint64 gc_full = 6;
   uint64 tls_gc_full = 7;
   uint64 invalid_nmdr_descr = 8;
+}
+
+// TcpProxyGlobalCfg captures global TCP configuration
+message TcpProxyGlobalCfg {
+  uint32 mss = 1;
+  uint32 cwnd_initial = 2;
+  uint32 cwnd_idle = 3;
+}
+
+// TcpProxyGlobalCfgRequestMsg is batched GET requests for tcp global cfg
+message TcpProxyGlobalCfgRequestMsg {
+  repeated TcpProxyGlobalCfg request = 1;
+}
+
+// Only if api_status indicates success, other fields are valid
+message TcpProxyGlobalCfgResponseMsg {
+  types.ApiStatus api_status = 1; // API status code
 }

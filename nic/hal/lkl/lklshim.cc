@@ -94,6 +94,7 @@ static bool lklshim_setsockopt_and_bind(int fd,
     struct sockaddr_in       local;
     int optval = 1;
     int proto=0x0800;
+
     if (lkl_sys_setsockopt(fd, LKL_SOL_SOCKET, LKL_SO_REUSEADDR,
               (char*)&optval, sizeof(optval)) < 0) {
         perror("setsockopt()");
@@ -151,6 +152,18 @@ static bool lklshim_setsockopt_and_bind(int fd,
             return false;
         }
     }
+
+#if 0
+    if (mss) {
+        HAL_TRACE_DEBUG("lklshim: setsockopt tcp mss {}", mss);
+        if (lkl_sys_setsockopt(fd, IPPROTO_TCP, TCP_MAXSEG,
+                               &mss, sizeof(mss)) < 0)  {
+            perror("TCP_MAXSEG");
+            lkl_sys_close(fd);
+            return false;
+        }
+    }
+#endif
 
     memset(&local, 0, sizeof(local));
     local.sin_family = AF_INET;
