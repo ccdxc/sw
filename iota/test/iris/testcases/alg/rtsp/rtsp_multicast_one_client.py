@@ -89,7 +89,8 @@ def Verify(tc):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             if tc.cmd_cookies[cookie_idx].find("Run RTSP client") != -1 or \
-               tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1:
+               tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1 or \
+               tc.cmd_cookies[cookie_idx].find("Before") != -1:
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE

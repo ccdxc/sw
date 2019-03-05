@@ -22,7 +22,6 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include <string.h>
-#define  STATS_DEBUG 0
 
 namespace hal {
 namespace pd {
