@@ -59,9 +59,9 @@ class TestMgmtNode:
         if self.nettype == 'bridge':
             ports_exposed = """ -p {}:9000 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
         if self.dev_mode:
-            runCommand("""docker run -td {} -l pens --network pen-dind-net --ip {}  -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.4 /bin/sh """.format(ports_exposed, self.ipaddress, src_dir, self.name, self.name))
+            runCommand("""docker run --dns-search my.dummy -td {} -l pens --network pen-dind-net --ip {}  -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.4 /bin/sh """.format(ports_exposed, self.ipaddress, src_dir, self.name, self.name))
         else:
-            runCommand("""docker run -td {} -l pens --network pen-dind-net --ip {} -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.4 /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name))
+            runCommand("""docker run --dns-search my.dummy -td {} -l pens --network pen-dind-net --ip {} -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.4 /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name))
         self.runCmd("""sh -c 'if ! test -f /root/.ssh/id_rsa ; then ssh-keygen -f /root/.ssh/id_rsa -t rsa -N "";fi ' """)
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys""")
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys2""")
@@ -103,11 +103,11 @@ class Node:
         if self.custom_config_file is not None :
             extra_config = extra_config + """ -v {}:/etc/pensando/configs/shared/common/venice-conf.json """.format(self.custom_config_file)
         if self.dev_mode:
-            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, src_dir, self.name, self.name))
+            runCommand("""docker run --dns-search my.dummy -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, src_dir, self.name, self.name))
         elif self.venice_image_dir != '':
-            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image_dir, self.name, self.name))
+            runCommand("""docker run --dns-search my.dummy -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image_dir, self.name, self.name))
         else:
-            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice.tgz:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image, self.name, self.name))
+            runCommand("""docker run --dns-search my.dummy -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice.tgz:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image, self.name, self.name))
         # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
         while self.runCmd("""docker ps >/dev/null 2>&1""", ignore_error=True) != 0 and not debug:
             time.sleep(2)
@@ -161,7 +161,7 @@ class NaplesNode(Node):
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/nmd" """.format(self.name))
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/tmagent" """.format(self.name))
         else:
-            runCommand("""docker run -td {} -P -l pens -l pens-naples --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name, self.name))
+            runCommand("""docker run --dns-search my.dummy -td {} -P -l pens -l pens-naples --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name, self.name))
         runCommand("""docker exec {}  mkdir -p /var/log/pensando """.format(self.name))
         runCommand("""docker exec {}  mkdir -p /var/log/pensando/elastic """.format(self.name))
         runCommand("""docker exec {}  mkdir -p /var/lib/pensando """.format(self.name))
@@ -169,7 +169,7 @@ class NaplesNode(Node):
         runCommand("""docker network connect pen-dind-nnet {}""".format(self.name))
         runCommand("""docker exec {}  bash -c "echo {} pen-master | tee -a /etc/hosts " """.format(self.name, self.clustervip))
     def setupCommon(self):
-            runCommand("""docker run -td -P -l pens --network pen-dind-net  --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --ip {} -v {}:/sw -v {}/bazel-cache:/root/.cache -w /sw/nic --rm --name {} -h {} {}/pensando/nic:1.18 /bin/sh """.format(self.ipaddress, src_dir, src_dir, self.name, self.name, registry))
+            runCommand("""docker run --dns-search my.dummy -td -P -l pens --network pen-dind-net  --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --ip {} -v {}:/sw -v {}/bazel-cache:/root/.cache -w /sw/nic --rm --name {} -h {} {}/pensando/nic:1.18 /bin/sh """.format(self.ipaddress, src_dir, src_dir, self.name, self.name, registry))
             runCommand("""docker exec {}  bash -c "mkdir -p /go/src/github.com/pensando/sw" """.format(self.name))
             runCommand("""docker exec {}  bash -c "mount -o bind /sw /go/src/github.com/pensando/sw" """.format(self.name))
 
