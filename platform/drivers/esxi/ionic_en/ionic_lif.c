@@ -1776,10 +1776,7 @@ ionic_rss_hash_key_set(struct lif *lif, const u8 *key)
                                | RSS_TYPE_IPV4_UDP
                                | RSS_TYPE_IPV6
                                | RSS_TYPE_IPV6_TCP
-                               | RSS_TYPE_IPV6_UDP
-                               | RSS_TYPE_IPV6_EX
-                               | RSS_TYPE_IPV6_TCP_EX
-                               | RSS_TYPE_IPV6_UDP_EX,
+                               | RSS_TYPE_IPV6_UDP,
                 },  
         };  
 

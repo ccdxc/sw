@@ -111,17 +111,11 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 case RXQ_COMP_RSS_TYPE_IPV6:
                         hash_type = VMK_PKT_RSS_TYPE_IPV6;
                         break;
-                case RXQ_COMP_RSS_TYPE_IPV6_EX:
-                        hash_type = VMK_PKT_RSS_TYPE_IPV6_EX;
-                        break;
                 case RXQ_COMP_RSS_TYPE_IPV4_TCP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV4_TCP;
                         break;
                 case RXQ_COMP_RSS_TYPE_IPV6_TCP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV6_TCP;
-                        break;
-                case RXQ_COMP_RSS_TYPE_IPV6_TCP_EX:
-                        hash_type = VMK_PKT_RSS_TYPE_IPV6_TCP_EX;
                         break;
                 case RXQ_COMP_RSS_TYPE_IPV4_UDP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV4_UDP;
@@ -129,8 +123,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 case RXQ_COMP_RSS_TYPE_IPV6_UDP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV6_UDP;
                         break;
-                case RXQ_COMP_RSS_TYPE_IPV6_UDP_EX:
-                        hash_type = VMK_PKT_RSS_TYPE_IPV6_UDP_EX;
+                default:
                         break;
                 }
 
