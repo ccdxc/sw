@@ -90,6 +90,7 @@ update_submodule() {
     return 0
 }
 
+
 start_shell() {
     cd $TOPDIR/nic
     make docker/background-shell | tail -n 1
@@ -129,6 +130,9 @@ docker_exec "cd /sw/nic/buildroot && make capri_defconfig"
 
 echo 'Building buildroot'
 docker_exec "cd /sw/nic/buildroot && make -j 24"
+
+echo 'Preparing kernel headers for building external modules'
+docker_exec "sh /sw/nic/tools/prepare_kernel_headers.sh"
 
 echo 'Modifying VERSIONS'
 sed -i "s/buildroot.*/buildroot ${BUILDROOT_HASH}/" $TOPDIR/minio/VERSIONS

@@ -103,7 +103,7 @@ static void ionic_get_drvinfo(struct net_device *netdev,
 
 static bool ionic_is_mnic(struct ionic *ionic)
 {
-	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
+	return ionic->pfdev || ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
 }
 
 #if 0  /* save these for later */

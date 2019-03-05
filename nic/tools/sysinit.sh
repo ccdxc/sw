@@ -57,6 +57,23 @@ if [[ ! -f $PLATFORM_DIR/bin/nicmgrd ]]; then
     exit 1
 fi
 
+if [[ ! -f $PLATFORM_DIR/drivers/ionic_mnic.ko ]]; then
+    echo "mnic driver not found"
+    exit 1
+fi
+
+if [[ ! -f $PLATFORM_DIR/drivers/mnet.ko ]]; then
+    echo "mnet driver not found"
+    exit 1
+fi
+
+#remove the old drivers if they exist
+#TODO: Need to remove this rmmod once we remove mnic from plkatform-linux tree
+rmmod mnet ionic_mnic
+
+insmod $PLATFORM_DIR/drivers/ionic_mnic.ko
+insmod $PLATFORM_DIR/drivers/mnet.ko
+
 # start sysmgr
 rm -f *.log
 rm -f agent.log* /tmp/*.db

@@ -710,7 +710,7 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 static int ionic_set_mac_address(struct net_device *netdev, void *sa)
 {
 	struct sockaddr *addr = sa;
-	u8 *mac = (u8*)addr->sa_data;
+	u8 *mac = (u8 *)addr->sa_data;
 
 	if (ether_addr_equal(netdev->dev_addr, mac))
 		return 0;
@@ -1040,13 +1040,13 @@ static const struct net_device_ops ionic_netdev_ops = {
 	.ndo_set_mac_address	= ionic_set_mac_address,
 	.ndo_validate_addr	= eth_validate_addr,
 #ifdef HAVE_RHEL7_EXTENDED_MIN_MAX_MTU
-        .extended.ndo_change_mtu = ionic_change_mtu,
+	.extended.ndo_change_mtu = ionic_change_mtu,
 #else
-        .ndo_change_mtu         = ionic_change_mtu,
+	.ndo_change_mtu         = ionic_change_mtu,
 #endif
-        .ndo_tx_timeout         = ionic_tx_timeout,
-        .ndo_vlan_rx_add_vid    = ionic_vlan_rx_add_vid,
-        .ndo_vlan_rx_kill_vid   = ionic_vlan_rx_kill_vid,
+	.ndo_tx_timeout         = ionic_tx_timeout,
+	.ndo_vlan_rx_add_vid    = ionic_vlan_rx_add_vid,
+	.ndo_vlan_rx_kill_vid   = ionic_vlan_rx_kill_vid,
 
 #ifdef HAVE_RHEL7_NET_DEVICE_OPS_EXT
 	.extended.ndo_dfwd_add_station = ionic_dfwd_add_station,
@@ -1463,9 +1463,10 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		 * for lif0.
 		 */
 		nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
-		dev_info(ionic->dev, "nxqs=%d nslaves=%d nqueues=%d\n",
-			 ionic->ntxqs_per_lif, ionic->nslaves, nqueues);
-		netdev = alloc_etherdev_mqs(sizeof(*lif), nqueues, nqueues);
+		dev_info(ionic->dev, "nxqs=%d nslaves=%d nqueues=%d nintrs=%d\n",
+			ionic->ntxqs_per_lif, ionic->nslaves, nqueues, ionic->nintrs);
+
+		netdev = ionic_alloc_netdev(ionic);
 		if (!netdev) {
 			dev_err(dev, "Cannot allocate netdev, aborting\n");
 			return ERR_PTR(-ENOMEM);
@@ -1504,7 +1505,6 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 			return ERR_PTR(-ENOMEM);
 		}
 		lif->netdev = ionic->master_lif->netdev;
-
 		lif->neqs = 0;
 		lif->nxqs = 1;
 	}

@@ -3,6 +3,7 @@
 
 #include <linux/module.h>
 #include <linux/netdevice.h>
+#include <linux/etherdevice.h>
 #include <linux/pci.h>
 
 #include "ionic.h"
@@ -69,6 +70,13 @@ void ionic_bus_free_irq_vectors(struct ionic *ionic)
 	devm_kfree(ionic->dev, ionic->msix);
 	ionic->msix = NULL;
 #endif
+}
+
+struct net_device *ionic_alloc_netdev(struct ionic *ionic)
+{
+	struct lif *lif;
+	int nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
+	return alloc_etherdev_mqs(sizeof(*lif), nqueues, nqueues);
 }
 
 static int ionic_map_bars(struct ionic *ionic)
@@ -293,7 +301,7 @@ static void ionic_remove(struct pci_dev *pdev)
 		ionic_debugfs_del_dev(ionic);
 
 		mutex_destroy(&ionic->dev_cmd_lock);
-		
+
 		dev_info(ionic->dev, "removed\n");
 	}
 }

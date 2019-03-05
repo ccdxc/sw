@@ -175,6 +175,12 @@ struct intr_status {
 	u32 status[2];
 };
 
+typedef struct intr_msixcfg_s {
+	u_int64_t msgaddr;
+	u_int32_t msgdata;
+	u_int32_t vector_ctrl;
+} __attribute__((packed)) intr_msixcfg_t;
+
 #pragma pack(pop)
 
 static inline void ionic_struct_size_checks(void)
@@ -257,6 +263,7 @@ struct ionic_dev {
 	dma_addr_t phy_db_pages;
 	struct intr_ctrl __iomem *intr_ctrl;
 	struct intr_status __iomem *intr_status;
+	uint8_t* msix_cfg_base;
 	struct mutex cmb_inuse_lock; /* for cmb_inuse */
 	unsigned long *cmb_inuse;
 	dma_addr_t phy_cmb_pages;

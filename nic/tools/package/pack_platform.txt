@@ -60,7 +60,12 @@ nic/sdk/third-party/ncurses/aarch64/*.so                                       /
 platform/tools/start-nicmgr-haps.sh                                             /platform/tools/
 platform/src/app/nicmgrd/etc/*.json                                             /platform/etc/nicmgrd/
 nic/build/aarch64/iris/out/capviewdb_submake/capviewdb.bin                      /platform/etc/
-platform/drivers/linux/eth/ionic/ionic_mnic.ko                                  /platform/
 
 # Oprom
 nic/build/aarch64/iris/bin/ionic.efirom                                         /platform/oprom/
+
+# Drivers
+platform/drivers/linux/eth/ionic/ionic_mnic.ko                                  /platform/drivers/
+platform/drivers/linux/mnet/mnet.ko                                             /platform/drivers/
+
+

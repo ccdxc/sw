@@ -13,55 +13,26 @@
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
 
+#define DEVCMD_BAR      0
+#define DEVCMD_DB_BAR   1
+#define INTR_CTRL_BAR   2
+#define MSIX_CFG_BAR    3
+#define DOORBELL_BAR    4
+#define NUM_OF_BAR      5
+
 #define INTR_MSIXCFG_STRIDE     0x10
-#define INTR_FWCFG_STRIDE       0x8
 
-typedef union intr_fwcfg_u {
-	struct {
-		u_int32_t function_mask:1;
-		u_int32_t rsrv:31;
-		u_int32_t lif:11;
-		u_int32_t port_id:3;
-		u_int32_t local_int:1;
-		u_int32_t legacy:1;
-		u_int32_t int_pin:2;
-		u_int32_t rsrv2:14;
-	} __attribute__((packed));
-	u_int32_t w[2];
-} intr_fwcfg_t;
-
-
-typedef struct intr_msixcfg_s {
-	u_int64_t msgaddr;
-	u_int32_t msgdata;
-	u_int32_t vector_ctrl;
-} __attribute__((packed)) intr_msixcfg_t;
-
-uint8_t *msix_cfg_base_addr;
-uint8_t *fwcfg_base_addr;
-
-void *intr_msixcfg_addr(const int intr)
+void *intr_msixcfg_addr(struct device *mnic_dev, const int intr)
 {
-	return (msix_cfg_base_addr + (intr * INTR_MSIXCFG_STRIDE));
+	struct ionic_dev *idev = (struct ionic_dev *) mnic_dev->platform_data;
+	dev_info(mnic_dev, "msix_cfg_base: %p\n", idev->msix_cfg_base);
+	return (idev->msix_cfg_base + (intr * INTR_MSIXCFG_STRIDE));
 }
 
-void *intr_fwcfg_addr(const int intr)
-{
-	return (fwcfg_base_addr + (intr * INTR_FWCFG_STRIDE));
-}
-
-void intr_fwcfg(const int intr, uint32_t lif)
-{
-	volatile void *pa = intr_fwcfg_addr(intr);
-	u64 data = (u64)((u64)1 << 46)/*local_int=1*/ | ((u64)lif << 32);
-
-	writeq(data, pa);
-}
-
-void intr_msixcfg(const int intr, const u_int64_t msgaddr,
+void intr_msixcfg(struct device *mnic_dev, const int intr, const u_int64_t msgaddr,
 		  const u_int32_t msgdata, const int vctrl)
 {
-	volatile void *pa = intr_msixcfg_addr(intr);
+	volatile void *pa = intr_msixcfg_addr(mnic_dev, intr);
 
 	writeq(msgaddr, (pa + offsetof(intr_msixcfg_t, msgaddr)));
 	writel(msgdata, (pa + offsetof(intr_msixcfg_t, msgdata)));
@@ -94,26 +65,12 @@ const char *ionic_bus_info(struct ionic *ionic)
 
 static void mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
 {
-	uint32_t lif;
-	int ret;
-	struct device_node *mnic_node = NULL;
-
-	pr_info("[%d] %x:%x %x\n", desc->platform.msi_index,
+	dev_dbg(desc->dev, "msi_index: [%d] (msi_addr hi_lo): %x_%x msi_data: %x\n", desc->platform.msi_index,
 		msg->address_hi, msg->address_lo, msg->data);
 
-	intr_msixcfg(desc->platform.msi_index,
+	intr_msixcfg(desc->dev, desc->platform.msi_index,
 		     (((uint64_t)msg->address_hi << 32) | msg->address_lo),
 		     msg->data, 0/*vctrl*/);
-
-	mnic_node = of_find_node_by_name(NULL, "mnic");
-	if (!mnic_node)
-		pr_err("Can't find device node \"mnic\" in device tree! Can not configure interrupts\n");
-
-	ret = of_property_read_u32_index(mnic_node, "lif", 0, &lif);
-	if (ret)
-		pr_err("Failed to get lif property for \"mnic\"! Can not configure interrupts\n");
-
-	intr_fwcfg(desc->platform.msi_index, lif);
 }
 
 int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
@@ -134,31 +91,56 @@ void ionic_bus_free_irq_vectors(struct ionic *ionic)
 	platform_msi_domain_free_irqs(ionic->dev);
 }
 
+struct net_device *ionic_alloc_netdev(struct ionic *ionic)
+{
+	struct net_device *netdev = NULL;
+	struct lif *lif;
+	int nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
+
+	netdev = alloc_netdev_mqs(sizeof(struct lif), ionic->pfdev->name,
+			NET_NAME_USER, ether_setup,
+			nqueues, nqueues);
+
+	if (!netdev)
+		return netdev;
+
+	lif = netdev_priv(netdev);
+
+	/* lif name is used for naming the interrupt handler so better
+	 * to name them differently for mnic
+	 * */
+	snprintf(lif->name, sizeof(lif->name), "%s-", ionic->pfdev->name);
+
+	return netdev;
+}
+
 int ionic_mnic_dev_setup(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	unsigned int num_bars = ionic->num_bars;
 	u32 sig;
 
-	if (num_bars < 5)
+	if (num_bars < NUM_OF_BAR)
 		return -EFAULT;
 
-	idev->dev_cmd = ionic->bars[0].vaddr;
-	idev->dev_cmd_db = ionic->bars[1].vaddr;
-	fwcfg_base_addr = ionic->bars[2].vaddr;
-	idev->intr_ctrl = ionic->bars[3].vaddr;
-	msix_cfg_base_addr = ionic->bars[4].vaddr;
+	idev->dev_cmd = ionic->bars[DEVCMD_BAR].vaddr;
+	idev->dev_cmd_db = ionic->bars[DEVCMD_DB_BAR].vaddr;
+	idev->intr_ctrl = ionic->bars[INTR_CTRL_BAR].vaddr;
+	idev->msix_cfg_base = ionic->bars[MSIX_CFG_BAR].vaddr;
+
+	/* save the idev into dev->platform_data so we can use it later */
+	ionic->dev->platform_data = idev;
 
 #ifdef HAPS
-	idev->ident = ionic->bars[0].vaddr + 0x800;
+	idev->ident = ionic->bars[DEVCMD_BAR].vaddr + 0x800;
 #endif
 
 	sig = ioread32(&idev->dev_cmd->signature);
 	if (sig != DEV_CMD_SIGNATURE)
 		return -EFAULT;
 
-	idev->db_pages = ionic->bars[5].vaddr;
-	idev->phy_db_pages = ionic->bars[5].bus_addr;
+	idev->db_pages = ionic->bars[DOORBELL_BAR].vaddr;
+	idev->phy_db_pages = ionic->bars[DOORBELL_BAR].bus_addr;
 
 	return ionic_debugfs_add_dev_cmd(ionic);
 }
@@ -205,7 +187,7 @@ static void ionic_unmap_bars(struct ionic *ionic)
 
 void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
 {
-	return ionic->bars[1].vaddr + (page_num << PAGE_SHIFT);
+	return ionic->bars[DOORBELL_BAR].vaddr;
 }
 
 void ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
@@ -217,7 +199,7 @@ phys_addr_t ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
 	return 0;
 }
 
-static int ionic_probe(struct platform_device *pfdev)
+int ionic_probe(struct platform_device *pfdev)
 {
 	struct device *dev = &pfdev->dev;
 	struct ionic *ionic;
@@ -325,7 +307,9 @@ err_out_unmap_bars:
 	return err;
 }
 
-static int ionic_remove(struct platform_device *pfdev)
+EXPORT_SYMBOL_GPL(ionic_probe);
+
+int ionic_remove(struct platform_device *pfdev)
 {
 	struct ionic *ionic = platform_get_drvdata(pfdev);
 
@@ -341,6 +325,8 @@ static int ionic_remove(struct platform_device *pfdev)
 
 	return 0;
 }
+
+EXPORT_SYMBOL_GPL(ionic_remove);
 
 static const struct of_device_id mnic_of_match[] = {
 		{.compatible = "pensando,ionic-mnic"},
