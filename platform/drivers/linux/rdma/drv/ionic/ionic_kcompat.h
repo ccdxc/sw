@@ -37,33 +37,36 @@
 #include <linux/netdevice.h>
 #include <rdma/ib_verbs.h>
 
-#ifdef RHEL_RELEASE_VERSION
-#define IONIC_KCOMPAT_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN) \
+#if defined(OFA_KERNEL)
+#define IONIC_KCOMPAT_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN, OFA) \
+	(OFA)
+#elif defined(RHEL_RELEASE_VERSION)
+#define IONIC_KCOMPAT_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN, OFA) \
 	(RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(RH_MAJ, RH_MIN))
 #else
-#define IONIC_KCOMPAT_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN) \
+#define IONIC_KCOMPAT_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN, OFA) \
 	(LINUX_VERSION_CODE < KERNEL_VERSION(LX_MAJ, LX_MIN, 0))
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 3,11, /* RHEL */ 99,99)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 3,11, /* RHEL */ 99,99, /* OFA */ 0)
 #define netdev_notifier_info_to_dev(ptr) (ptr)
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,8, /* RHEL */ 7,6)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,8, /* RHEL */ 7,6, /* OFA */ 0)
 #else /* 4.9.0 and later */
 #define HAVE_QP_RWQ_IND_TBL
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,9, /* RHEL */ 7,4)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,9, /* RHEL */ 7,4, /* OFA */ 0)
 #define IB_DEVICE_NODE_DESC_MAX sizeof(((struct ib_device *)0)->node_desc)
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,9, /* RHEL */ 7,5)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,9, /* RHEL */ 7,5, /* OFA */ 0)
 #else /* 4.9.0 and later */
 #define HAVE_IB_PD_UNSAFE_DMA_RKEY
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 7,4)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 7,4, /* OFA */ 0)
 
 static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 {
@@ -86,16 +89,16 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 #define HAVE_QP_RATE_LIMIT
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 99,99)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 99,99, /* OFA */ 1)
 #else /* 4.10.0 and later */
 #define HAVE_NETDEV_MAX_MTU
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,11, /* RHEL */ 7,5)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,11, /* RHEL */ 7,5, /* OFA */ 0)
 #define HAVE_REQUIRED_DMA_DEVICE
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,12, /* RHEL */ 7,5)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,12, /* RHEL */ 7,5, /* OFA */ 0)
 
 #define rdma_ah_attr ib_ah_attr
 #define rdma_ah_read_grh(attr) (&(attr)->grh)
@@ -105,19 +108,20 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 #define HAVE_UMEM_PAGE_SHIFT
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,5)
-
-static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
-{
-	return srq_type == IB_SRQT_XRC;
-}
-
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,5, /* OFA */ 1)
 static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 				   u8 *speed, u8 *width)
 {
 	*width = IB_WIDTH_4X;
 	*speed = IB_SPEED_EDR;
 	return 0;
+}
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,5, /* OFA */ 0)
+static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
+{
+	return srq_type == IB_SRQT_XRC;
 }
 
 #define HAVE_GET_DEV_FW_STR_LEN
@@ -126,17 +130,17 @@ static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 #define HAVE_SRQ_EXT_CQ
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 99,99)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 99,99, /* OFA */ 1)
 #else /* 4.14.0 and later */
 #define HAVE_GET_VECTOR_AFFINITY
 #define HAVE_QP_INIT_SRC_QPN
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,17, /* RHEL */ 99,99)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,17, /* RHEL */ 99,99, /* OFA */ 1)
 #define HAVE_IB_GID_DEV_PORT_INDEX
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,19, /* RHEL */ 99,99)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,19, /* RHEL */ 99,99, /* OFA */ 1)
 #define HAVE_REQUIRED_IB_GID
 #define HAVE_IBDEV_PORT_CAP_FLAGS
 #define ud_wr(wr) ud_wr((struct ib_send_wr *)(wr))
@@ -150,7 +154,7 @@ static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 #define HAVE_IBDEV_MAX_SEND_RECV_SGE
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,20, /* RHEL */ 99,99)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,20, /* RHEL */ 99,99, /* OFA */ 1)
 #define ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask) \
 	ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask, \
 			   IB_LINK_LAYER_ETHERNET)
@@ -158,7 +162,7 @@ static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 #define HAVE_IB_REGISTER_DEVICE_NAME
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99, /* OFA */ 1)
 #undef dma_alloc_coherent
 #define dma_alloc_coherent dma_zalloc_coherent
 #define RDMA_CREATE_AH_SLEEPABLE 0
@@ -172,5 +176,10 @@ static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 /* change ib_gid_to_network_type to accept const ib_gid */
 #define ib_gid_to_network_type(gid_type, gid) \
 	ib_gid_to_network_type(gid_type, (union ib_gid *)(gid))
+
+/* other compat for ofed-only */
+#ifdef OFA_KERNEL
+#define ib_umem_get(c,s,l,a,f) ib_umem_get(c,s,l,a,f,0)
+#endif
 
 #endif
