@@ -35,7 +35,6 @@ type CmdClient struct {
 	sync.WaitGroup // wait group to wait on all go routines to exit
 
 	cmdRegistrationURL     string             // CMD endpoint for the NIC registration API
-	cmdUpdatesURL          string             // CMD endpoint for NIC watches and updates
 	resolverClient         resolver.Interface // resolver Interface
 	registrationRPCClient  *rpckit.RPCClient  // RPC client for NIC registration API
 	updatesRPCClient       *rpckit.RPCClient  // RPC client for NIC watches and updates
@@ -53,12 +52,11 @@ func objectKey(meta api.ObjectMeta) string {
 }
 
 // NewCmdClient creates an CMD client object
-func NewCmdClient(nmd nmdapi.NmdAPI, cmdRegistrationURL, cmdUpdatesURL string, resolverClient resolver.Interface) (*CmdClient, error) {
+func NewCmdClient(nmd nmdapi.NmdAPI, cmdRegistrationURL string, resolverClient resolver.Interface) (*CmdClient, error) {
 
 	// create CmdClient object
 	client := CmdClient{
 		cmdRegistrationURL: cmdRegistrationURL,
-		cmdUpdatesURL:      cmdUpdatesURL,
 		resolverClient:     resolverClient,
 		nmd:                nmd,
 		startTime:          time.Now(),
@@ -99,10 +97,10 @@ func (client *CmdClient) initUpdatesRPC() error {
 	// initialize rpcClient
 	var err error
 	log.Infof("Initializing NIC updates RPC client ")
-	client.updatesRPCClient, err = rpckit.NewRPCClient("nmd-nic-upd", client.cmdUpdatesURL,
+	client.updatesRPCClient, err = rpckit.NewRPCClient("nmd-nic-upd", globals.CmdNICUpdatesSvc,
 		rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Cmd))
 	if err != nil {
-		log.Errorf("Error connecting to grpc server for NIC updates, URL: %v Err: %v", client.cmdUpdatesURL, err)
+		log.Errorf("Error connecting to grpc serice for NIC updates: %v", err)
 	}
 	return err
 }

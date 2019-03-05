@@ -33,9 +33,6 @@ func RunAuthServer(url string, stopChannel chan bool) {
 		types.RegisterServiceAPIServer(env.AuthRPCServer.GrpcServer, service.NewRPCHandler(env.ResolverService))
 	}
 
-	// Create and register the RPC handler for SmartNIC service
-	grpc.RegisterSmartNICUpdatesServer(env.AuthRPCServer.GrpcServer, env.NICService.(*smartnic.RPCServer))
-
 	// The Certificates API runs both on the authenticated and unauthenticated port.
 	//
 	// The endpoint on the unauthenticated port is for local processes that can be attested
@@ -53,6 +50,35 @@ func RunAuthServer(url string, stopChannel chan bool) {
 
 	rpcServer.Start()
 
+	log.Infof("Started CMD authenticated service at %v", url)
+
 	// wait forever
 	<-stopChannel
+}
+
+// RunLeaderInstanceServer creates a gRPC server for authenticated services offered by leader CMD.
+func RunLeaderInstanceServer(url string, stopChannel chan bool) {
+	// Leader sevice require TLS so it depends on certificate services being available
+	rpcServer, err := rpckit.NewRPCServer(globals.Cmd, url)
+	if err != nil {
+		log.Fatalf("Error creating grpc server at %v: %v", url, err)
+	}
+	env.LeaderRPCServer = rpcServer
+
+	// Create and register the RPC handler for SmartNIC service
+	grpc.RegisterSmartNICUpdatesServer(env.LeaderRPCServer.GrpcServer, env.NICService.(*smartnic.RPCServer))
+
+	rpcServer.Start()
+
+	log.Infof("Started CMD leader instance service at %v", url)
+
+	// wait until stop signal
+	<-stopChannel
+
+	if env.LeaderRPCServer != nil {
+		env.LeaderRPCServer.Stop()
+		env.LeaderRPCServer = nil
+	}
+
+	log.Infof("Stopped CMD leader instance service at %v", url)
 }

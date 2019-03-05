@@ -6,6 +6,8 @@ import (
 	"time"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/cmd/env"
+	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
@@ -14,6 +16,7 @@ import (
 )
 
 func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock.CfgWatcherService, types.MasterService) {
+	env.Options = &options.ServerRunOptions{} // use empty options so that we don't bind to fixed ports
 	l := mock.NewLeaderService(t.Name())
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := mock.CfgWatcherService{}

@@ -5,6 +5,7 @@ const (
 	APIGw                 = "pen-apigw"
 	APIServer             = "pen-apiserver"
 	Cmd                   = "pen-cmd"
+	CmdNICUpdatesSvc      = "pen-cmd-nic-updates" // This a separate service running exclusively on leader CMD
 	Ckm                   = "pen-ckm"
 	Etcd                  = "pen-etcd"
 	Filebeat              = "pen-filebeat"

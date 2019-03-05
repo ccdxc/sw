@@ -87,8 +87,9 @@ const (
 	integTestCitadelURL = "localhost:9094"
 	integTestRolloutURL = "localhost:9095"
 
-	smartNICServerURL = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
-	cmdAuthServer     = "localhost:" + globals.CMDGRPCAuthPort
+	smartNICServerURL       = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
+	cmdAuthServer           = "localhost:" + globals.CMDGRPCAuthPort
+	cmdLeaderInstanceServer = "localhost:" + globals.CMDGRPCLeaderInstancePort
 
 	// TS Controller
 	integTestTsmURL     = "localhost:9500"
@@ -242,6 +243,7 @@ func (it *veniceIntegSuite) launchCMDServer() {
 
 	// start CMD auth server
 	go cmdauth.RunAuthServer(cmdAuthServer, nil)
+	go cmdauth.RunLeaderInstanceServer(cmdLeaderInstanceServer, nil)
 }
 
 func (it *veniceIntegSuite) startNmd(c *check.C) {
@@ -282,10 +284,12 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 			log.Fatalf("Error creating Upgrade client . Err: %v", err)
 		}
 
-		// create the new NMD
-		nmd, err := nmd.NewAgent(pa, uc, dbPath, hostID, hostID, smartNICServerURL,
-			cmdAuthServer, restURL, "", "", "network", globals.NicRegIntvl*time.Second,
-			globals.NicUpdIntvl*time.Second, it.resolverClient)
+		// Agent assumes it has exclusive ownership of the passed-in resolver and closes it
+		// when it receives updated Venice coordinates, so we need to create a dedicated one.
+		ar := resolver.New(&resolver.Config{Name: "venice_integ_agent_rslvr", Servers: []string{"localhost:" + globals.CMDResolverPort}})
+		// Create the new NMD
+		nmd, err := nmd.NewAgent(pa, uc, dbPath, hostID, hostID, smartNICServerURL, restURL, "", "", "network",
+			globals.NicRegIntvl*time.Second, globals.NicUpdIntvl*time.Second, ar)
 		if err != nil {
 			log.Fatalf("Error creating NMD. Err: %v", err)
 		}
@@ -432,6 +436,19 @@ func (it *veniceIntegSuite) createResolver() {
 		URL:     integTestRolloutURL,
 	}
 	m.AddServiceInstance(&rolloutSi)
+
+	nicUpdatesSi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.CmdNICUpdatesSvc,
+		},
+		Service: globals.CmdNICUpdatesSvc,
+		Node:    "localhost",
+		URL:     cmdLeaderInstanceServer,
+	}
+	m.AddServiceInstance(&nicUpdatesSi)
 }
 
 func (it *veniceIntegSuite) updateResolver(serviceName, url string) {

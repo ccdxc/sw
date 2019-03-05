@@ -59,7 +59,6 @@ func main() {
 		primaryMAC         = flag.String("primary-mac", "", "Primary MAC address")
 		nmdDbPath          = flag.String("nmddb", globals.NmdDBPath, "NMD Database file")
 		cmdRegistrationURL = flag.String("cmdregistration", ":"+globals.CMDSmartNICRegistrationAPIPort, "NIC Registration API server URL(s)")
-		cmdUpdatesURL      = flag.String("cmdupdates", ":"+globals.CMDSmartNICUpdatesPort, "NIC Updates server URL(s)")
 		cmdCertsURL        = flag.String("cmdcerts", ":"+globals.CMDAuthCertAPIPort, "CMD Certificates API URL(s)")
 		regInterval        = flag.Int64("reginterval", globals.NicRegIntvl, "NIC registration interval in seconds")
 		updInterval        = flag.Int64("updinterval", globals.NicUpdIntvl, "NIC update interval in seconds")
@@ -186,7 +185,6 @@ func main() {
 		host,
 		macAddr.String(),
 		*cmdRegistrationURL,
-		*cmdUpdatesURL,
 		":"+globals.NmdRESTPort,
 		":"+globals.CMDCertAPIPort,
 		*cmdCertsURL,

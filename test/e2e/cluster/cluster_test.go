@@ -28,6 +28,7 @@ var _ = Describe("cluster tests", func() {
 			obj                  api.ObjectMeta
 			cl                   *cmd.Cluster
 			clusterIf            cmd.ClusterV1ClusterInterface
+			smartNICIf           cmd.ClusterV1SmartNICInterface
 			err                  error
 			oldLeader, newLeader string
 			oldLeaderIP          string
@@ -43,10 +44,13 @@ var _ = Describe("cluster tests", func() {
 			apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)
 			Expect(err).ShouldNot(HaveOccurred())
 			clusterIf = apiClient.ClusterV1().Cluster()
+			smartNICIf = apiClient.ClusterV1().SmartNIC()
+			ctx := ts.tu.NewLoggedInContext(context.Background())
 			obj = api.ObjectMeta{Name: "testCluster"}
-			cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
+			cl, err = clusterIf.Get(ctx, &obj)
 			Expect(err).ShouldNot(HaveOccurred())
 
+			validateNICHealth(ctx, smartNICIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
 		})
 
 		It("Pause the master", func() {
@@ -92,6 +96,15 @@ var _ = Describe("cluster tests", func() {
 						}
 					}
 				}
+				if svc.Name == globals.CmdNICUpdatesSvc {
+					for j, inst := range svc.Instances {
+						if inst.Node == oldLeader {
+							serviceListBefore.Items[i].Instances[j].Node = newLeader
+							serviceListBefore.Items[i].Instances[j].URL = fmt.Sprintf("%s:%s", newLeader, globals.CMDSmartNICUpdatesPort)
+							By(fmt.Sprintf("Replaced %v to %v in serviceListBefore", oldLeader, newLeader))
+						}
+					}
+				}
 			}
 
 			xformList := func(inp []*cmdprotos.Service) []*cmdprotos.Service {
@@ -110,7 +123,7 @@ var _ = Describe("cluster tests", func() {
 				By(fmt.Sprintf("after: %v", serviceListAfter.String()))
 				serviceListAfter.Items = xformList(serviceListAfter.Items)
 				return reflect.DeepEqual(serviceListAfter, serviceListBefore)
-			}, 20, 2).Should(BeTrue(), "Services except filebeat,pen-kubeapiserver should be same after leader change")
+			}, 20, 2).Should(BeTrue(), "Services except filebeat,pen-kubeapiserver and CMD NIC updates should be same after leader change")
 
 			validateCluster()
 
@@ -120,6 +133,13 @@ var _ = Describe("cluster tests", func() {
 			ts.restSvc, err = apiclient.NewRestAPIClient(apiGwAddr)
 			Expect(err).ShouldNot(HaveOccurred())
 
+			// Old leader CMD instance should have shut down leader-only services and
+			// NAPLES should send health updates to the the new leader CMD instance.
+			// Wait 1.5 * dead interval (15 s) to make sure NIC is marked ad unhealthy
+			// if no fresh updates are received.
+			time.Sleep(15 * time.Second)
+			ctx := ts.tu.NewLoggedInContext(context.Background())
+			validateNICHealth(ctx, smartNICIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
 		})
 	})
 })

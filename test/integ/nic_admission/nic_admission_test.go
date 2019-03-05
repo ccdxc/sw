@@ -244,7 +244,6 @@ func createNMD(t *testing.T, dbPath, priMac, restURL, mgmtMode string) (*nmdInfo
 		priMac,
 		priMac,
 		*cmdRegURL,
-		*cmdUpdURL,
 		restURL,
 		"", // no local certs endpoint
 		"", // no remote certs endpoint

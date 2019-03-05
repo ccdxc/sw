@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/pensando/sw/venice/globals"
@@ -85,7 +86,20 @@ func (m *ServiceTracker) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 			Service: globals.KubeAPIServer,
 			Node:    m.leaderAddr,
 		})
+
+		m.resolver.DeleteServiceInstance(&protos.ServiceInstance{
+			TypeMeta: api.TypeMeta{
+				Kind: "ServiceInstance",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: globals.CmdNICUpdatesSvc,
+			},
+			Service: globals.CmdNICUpdatesSvc,
+			Node:    m.leaderAddr,
+			URL:     fmt.Sprintf("%s:%s", m.leaderAddr, globals.CMDSmartNICUpdatesPort),
+		})
 	}
+
 	m.leaderAddr = e.Leader
 	m.resolver.AddServiceInstance(&protos.ServiceInstance{
 		TypeMeta: api.TypeMeta{
@@ -97,6 +111,20 @@ func (m *ServiceTracker) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 		Service: globals.KubeAPIServer,
 		Node:    m.leaderAddr,
 	})
+
+	if m.leaderAddr != "" {
+		m.resolver.AddServiceInstance(&protos.ServiceInstance{
+			TypeMeta: api.TypeMeta{
+				Kind: "ServiceInstance",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: globals.CmdNICUpdatesSvc,
+			},
+			Service: globals.CmdNICUpdatesSvc,
+			Node:    m.leaderAddr,
+			URL:     fmt.Sprintf("%s:%s", m.leaderAddr, globals.CMDSmartNICUpdatesPort),
+		})
+	}
 	return nil
 }
 

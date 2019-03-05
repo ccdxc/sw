@@ -314,7 +314,6 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 		"", // no local certs endpoint
 		"", // no remote certs endpoint
 		"", // no cmd registration endpoint
-		"", // no cmd updates endpoint
 		mode,
 		nicRegInterval,
 		nicUpdInterval,

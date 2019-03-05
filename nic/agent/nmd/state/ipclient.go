@@ -345,7 +345,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
 
 			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
-			c.nmdState.cmdUpdURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 			c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 
 			err := c.nmdState.StopManagedMode()
@@ -420,7 +419,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 
 			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
-			c.nmdState.cmdUpdURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 			c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 			if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
 				log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)

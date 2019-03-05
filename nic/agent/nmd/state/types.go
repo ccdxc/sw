@@ -44,7 +44,6 @@ type NMD struct {
 	nodeUUID       string                // Node's UUID
 	macAddr        string                // Primary MAC addr
 	cmdRegURL      string                // The URL for the CMD registration API
-	cmdUpdURL      string                // The URL for the CMD NIC update API
 	cmd            nmdapi.CmdAPI         // CMD API object
 	platform       nmdapi.PlatformAPI    // Platform Agent object
 	rollout        nmdapi.RolloutCtrlAPI // Rollout API Object

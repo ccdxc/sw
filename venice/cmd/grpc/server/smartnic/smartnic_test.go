@@ -203,7 +203,6 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 		hostID,
 		hostID,
 		smartNICServerURL,
-		smartNICServerURL,
 		restURL,
 		"", // no local certs endpoint
 		"", // no remote certs endpoint

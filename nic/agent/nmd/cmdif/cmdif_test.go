@@ -21,6 +21,8 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	cmdprotos "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver/mock"
@@ -259,6 +261,22 @@ func (srv *mockRPCServer) Stop() {
 	srv.grpcServer.Stop()
 }
 
+func getCmdClientResolver() *mock.ResolverClient {
+	cmdResolver := mock.New()
+	cmdResolver.AddServiceInstance(
+		&cmdprotos.ServiceInstance{
+			TypeMeta: api.TypeMeta{
+				Kind: "ServiceInstance",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: globals.CmdNICUpdatesSvc,
+			},
+			Service: globals.CmdNICUpdatesSvc,
+			URL:     testSrvURL,
+		})
+	return cmdResolver
+}
+
 func TestCmdClient(t *testing.T) {
 	// Init tsdb
 	ctx, cancel := context.WithCancel(context.Background())
@@ -283,7 +301,7 @@ func TestCmdClient(t *testing.T) {
 	ag := createMockAgent(t.Name())
 
 	// create cmd client
-	cl, err := NewCmdClient(ag, testSrvURL, testSrvURL, nil)
+	cl, err := NewCmdClient(ag, testSrvURL, getCmdClientResolver())
 	AssertOk(t, err, "Error creating cmd client")
 	log.Infof("Cmd client name: %s", cl.getAgentName())
 	defer cl.Stop()
@@ -331,7 +349,7 @@ func TestCmdClientWatch(t *testing.T) {
 	ag := createMockAgent(t.Name())
 
 	// create CMD client
-	cl, err := NewCmdClient(ag, testSrvURL, testSrvURL, nil)
+	cl, err := NewCmdClient(ag, testSrvURL, getCmdClientResolver())
 	AssertOk(t, err, "Error creating CMD client")
 	Assert(t, (cl != nil), "Error creating CMD client")
 	defer cl.Stop()
@@ -386,7 +404,7 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	ag := createMockAgent(t.Name())
 
 	// create cmd client
-	cl, err := NewCmdClient(ag, testSrvURL, testSrvURL, nil)
+	cl, err := NewCmdClient(ag, testSrvURL, getCmdClientResolver())
 	AssertOk(t, err, "Error creating cmd client")
 	log.Infof("Cmd client name: %s", cl.getAgentName())
 	defer cl.Stop()

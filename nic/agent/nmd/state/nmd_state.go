@@ -58,7 +58,7 @@ func WithRolloutAPI(ro nmdapi.RolloutCtrlAPI) NewNMDOption {
 
 // NewNMD returns a new NMD instance
 func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient resolver.Interface,
-	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, cmdRegURL, cmdUpdURL, mode string,
+	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, cmdRegURL, mode string,
 	regInterval, updInterval time.Duration, opts ...NewNMDOption) (*NMD, error) {
 	var emdb emstore.Emstore
 	var err error
@@ -157,7 +157,6 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		certsListenURL:     certsListenURL,
 		remoteCertsURL:     remoteCertsURL,
 		cmdRegURL:          cmdRegURL,
-		cmdUpdURL:          cmdUpdURL,
 		stopNICReg:         make(chan bool, 1),
 		stopNICUpd:         make(chan bool, 1),
 		config:             config,
@@ -256,16 +255,19 @@ func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
 		cmdResolverURL = append(cmdResolverURL, fmt.Sprintf("%s:%s", res, globals.CMDGRPCAuthPort))
 	}
 
+	// stop resolver client if active
+	if n.resolverClient != nil {
+		n.resolverClient.Stop()
+		n.resolverClient = nil
+	}
+
 	n.resolverClient = resolver.New(&resolver.Config{Name: "NMD", Servers: cmdResolverURL})
 	tsdb.Start(n.resolverClient)
 
-	// TODO Move this to resolver client at least for cmdUpdatesURL
-	// Use the first resolverURL as registration and updatesURL
-
+	// Use the first resolverURL as registration URL
 	cmdRegistrationURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCUnauthPort)
-	cmdUpdatesURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCAuthPort)
 
-	newCMDClient, err := cmdif.NewCmdClient(n, cmdRegistrationURL, cmdUpdatesURL, n.resolverClient)
+	newCMDClient, err := cmdif.NewCmdClient(n, cmdRegistrationURL, n.resolverClient)
 	if err != nil {
 		log.Errorf("Failed to update CMD Client. Err: %v", err)
 		return err

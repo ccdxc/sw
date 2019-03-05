@@ -97,7 +97,7 @@ func (n *NMD) StartManagedMode() error {
 
 	if n.cmd == nil {
 		// create the CMD client
-		cmdClient, err := cmdif.NewCmdClient(n, n.cmdRegURL, n.cmdUpdURL, n.resolverClient)
+		cmdClient, err := cmdif.NewCmdClient(n, n.cmdRegURL, n.resolverClient)
 		if err != nil {
 			log.Errorf("Error creating CMD client. Err: %v", err)
 			return err

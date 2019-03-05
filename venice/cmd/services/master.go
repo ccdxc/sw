@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/ops"
 
 	"github.com/pensando/sw/venice/cmd/credentials"
+	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/cmd/types"
 	k8stypes "github.com/pensando/sw/venice/cmd/types/protos"
@@ -76,6 +77,8 @@ type masterService struct {
 	updateCh chan bool
 
 	closeCh chan bool
+
+	leaderInstanceRPCStopChannel chan bool // Stop channel for Leader RPC server
 }
 
 // MasterOption fills the optional params
@@ -273,6 +276,9 @@ func (m *masterService) startLeaderServices() error {
 		env.ServiceRolloutClient.Start()
 	}
 
+	m.leaderInstanceRPCStopChannel = make(chan bool)
+	go auth.RunLeaderInstanceServer(":"+env.Options.GRPCLeaderInstancePort, m.leaderInstanceRPCStopChannel)
+
 	// Start elastic curator service
 	if m.esCuratorSvc != nil {
 		m.esCuratorSvc.Start()
@@ -319,8 +325,12 @@ func (m *masterService) Stop() {
 
 // caller holds the lock
 func (m *masterService) stopLeaderServices() {
-
 	go performQuorumDefrag(false)
+
+	if m.leaderInstanceRPCStopChannel != nil {
+		close(m.leaderInstanceRPCStopChannel)
+		m.leaderInstanceRPCStopChannel = nil
+	}
 
 	if env.ServiceRolloutClient != nil {
 		env.ServiceRolloutClient.Stop()

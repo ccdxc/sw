@@ -107,8 +107,9 @@ const (
 	CMDSmartNICRegistrationAPIPort = CMDGRPCUnauthPort
 	CMDGRPCAuthPort                = "9009"
 	CMDResolverPort                = CMDGRPCAuthPort
-	CMDSmartNICUpdatesPort         = CMDGRPCAuthPort
 	CMDAuthCertAPIPort             = CMDGRPCAuthPort
+	CMDGRPCLeaderInstancePort      = "9014"
+	CMDSmartNICUpdatesPort         = CMDGRPCLeaderInstancePort
 
 	// API Server
 	APIServerPort     = "9003"

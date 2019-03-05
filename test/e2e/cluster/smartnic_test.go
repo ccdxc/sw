@@ -58,64 +58,27 @@ var _ = Describe("SmartNIC tests", func() {
 
 	Context("SmartNIC health status and periodic updates test", func() {
 		var (
-			snics  []*cmd.SmartNIC
-			health map[string]*cmd.SmartNICCondition
-			err    error
-			snIf   cmd.ClusterV1SmartNICInterface
+			err  error
+			snIf cmd.ClusterV1SmartNICInterface
 		)
 		BeforeEach(func() {
 			snIf = ts.tu.APIClient.ClusterV1().SmartNIC()
-			health = make(map[string](*cmd.SmartNICCondition))
 		})
 
 		It("CMD should receive SmartNIC health updates and flag unresponsive NICs", func() {
 			Expect(err).ShouldNot(HaveOccurred())
+			ctx := context.Background()
 			// Validate nic is healthy
-			Eventually(func() bool {
-				snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
-				numHealthySmartNICs := 0
-				for _, snic := range snics {
-					for _, cond := range snic.Status.Conditions {
-						if cond.Type == cmd.SmartNICCondition_HEALTHY.String() &&
-							cond.Status == cmd.ConditionStatus_TRUE.String() {
-							numHealthySmartNICs++
-							health[snic.Name] = &cond
-							By(fmt.Sprintf("SmartNIC [%s] is healthy", snic.Name))
-						}
-					}
-				}
-				if numHealthySmartNICs != ts.tu.NumNaplesHosts {
-					return false
-				}
-				By(fmt.Sprintf("ts:%s SmartNIC health status check validated for [%d] nics", time.Now().String(), numHealthySmartNICs))
-				return true
-			}, 90, 1).Should(BeTrue(), "SmartNIC health status check failed")
+			validateNICHealth(ctx, snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
 
 			// Pause the NIC containers, verify that CMD marks health as "unknown"
 			for _, nicContainer := range ts.tu.NaplesNodes {
 				By(fmt.Sprintf("Pausing NIC container %s", nicContainer))
 				ts.tu.LocalCommandOutput(fmt.Sprintf("docker pause %s", nicContainer))
 			}
+
 			// Validate nic health gets updated
-			Eventually(func() bool {
-				snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
-				numUnresponsiveSmartNICs := 0
-				for _, snic := range snics {
-					for _, cond := range snic.Status.Conditions {
-						if cond.Type == cmd.SmartNICCondition_HEALTHY.String() &&
-							cond.Status == cmd.ConditionStatus_UNKNOWN.String() {
-							numUnresponsiveSmartNICs++
-							health[snic.Name] = &cond
-							By(fmt.Sprintf("SmartNIC [%s] health is unknown", snic.Name))
-						}
-					}
-				}
-				if numUnresponsiveSmartNICs != ts.tu.NumNaplesHosts {
-					return false
-				}
-				By(fmt.Sprintf("ts:%s SmartNIC health status update validated for [%d] nics", time.Now().String(), numUnresponsiveSmartNICs))
-				return true
-			}, 90, 1).Should(BeTrue(), "SmartNIC health status update failed")
+			validateNICHealth(ctx, snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_UNKNOWN)
 
 			// CMD should update health of NIC after it comes back
 			wakeTime := time.Now()
@@ -129,33 +92,56 @@ var _ = Describe("SmartNIC tests", func() {
 				By(fmt.Sprintf("Unpausing NIC container %s", nicContainer))
 				ts.tu.LocalCommandOutput(fmt.Sprintf("docker unpause %s", nicContainer))
 			}
+			validateNICHealth(ctx, snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
+
+			// Check that LastTransitionTime has been updated
 			Eventually(func() bool {
-				snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
-				numHealthySmartNICs := 0
+				snics, err := snIf.List(context.Background(), &api.ListWatchOptions{})
+				if err != nil {
+					By(fmt.Sprintf("Error getting list of NICs: %v", err))
+					return false
+				}
 				for _, snic := range snics {
-					for _, cond := range snic.Status.Conditions {
-						if cond.Type == cmd.SmartNICCondition_HEALTHY.String() &&
-							cond.Status == cmd.ConditionStatus_TRUE.String() {
-							curr, err := time.Parse(time.RFC3339, cond.LastTransitionTime)
-							if err != nil {
-								By(fmt.Sprintf("ts:%s SmartNIC [%s] invalid LastTransitionTime %v", time.Now().String(), snic.Name, cond.LastTransitionTime))
-								return false
-							}
-							if curr.Sub(wakeTime) <= 0 {
-								By(fmt.Sprintf("ts:%s SmartNIC [%s] invalid LastTransitionTime %v, ref: %v", time.Now().String(), snic.Name, curr, wakeTime))
-								return false
-							}
-							numHealthySmartNICs++
-							By(fmt.Sprintf("ts:%s SmartNIC [%s] reported new health update", time.Now().String(), snic.Name))
+					for _, condition := range snic.Status.Conditions {
+						curr, err := time.Parse(time.RFC3339, condition.LastTransitionTime)
+						if err != nil {
+							By(fmt.Sprintf("ts:%s SmartNIC [%s] invalid LastTransitionTime %v", time.Now().String(), snic.Name, condition.LastTransitionTime))
+							return false
+						}
+						if curr.Sub(wakeTime) <= 0 {
+							By(fmt.Sprintf("ts:%s SmartNIC [%s] invalid LastTransitionTime %v, ref: %v", time.Now().String(), snic.Name, curr, wakeTime))
+							return false
 						}
 					}
 				}
-				if numHealthySmartNICs != ts.tu.NumNaplesHosts {
-					return false
-				}
-				By(fmt.Sprintf("ts: %s SmartNIC periodic health update validated for [%d] nics", time.Now().String(), numHealthySmartNICs))
 				return true
-			}, 90, 1).Should(BeTrue(), "SmartNIC periodic health update check failed")
+			}, 15, 1).Should(BeTrue(), "SmartNIC condition condition.LastTransitionTime check failed")
 		})
 	})
 })
+
+func validateNICHealth(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface, expectedNumNICS int, status cmd.ConditionStatus) {
+	Eventually(func() bool {
+		snics, err := snIf.List(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			By(fmt.Sprintf("Error getting list of NICs: %v", err))
+			return false
+		}
+		numMatchingNICs := 0
+		for _, snic := range snics {
+			for _, cond := range snic.Status.Conditions {
+				if cond.Type == cmd.SmartNICCondition_HEALTHY.String() &&
+					cond.Status == status.String() {
+					numMatchingNICs++
+					By(fmt.Sprintf("SmartNIC [%s] is %s", snic.Name, status.String()))
+				}
+			}
+		}
+		if numMatchingNICs != expectedNumNICS {
+			By(fmt.Sprintf("Found %d NICS with expected health status %s, want: %d", numMatchingNICs, status.String(), expectedNumNICS))
+			return false
+		}
+		By(fmt.Sprintf("ts:%s SmartNIC health status check validated for [%d] nics", time.Now().String(), numMatchingNICs))
+		return true
+	}, 90, 1).Should(BeTrue(), "SmartNIC health status check failed")
+}

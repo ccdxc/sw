@@ -40,6 +40,10 @@ type ServerRunOptions struct {
 	// Requires TLS and valid client certificate. Used by resolver.
 	GRPCAuthPort string
 
+	// GRPCLeaderInstancePort is the port for the authenticated gRPC server
+	// where the CMD leader instance provides services such as NIC updates
+	GRPCLeaderInstancePort string
+
 	// ConfigDir is where cmd can persist its configuration.
 	ConfigDir string
 
@@ -70,15 +74,16 @@ func NewServerRunOptions() *ServerRunOptions {
 	}
 
 	return &ServerRunOptions{
-		KVStore:             kvStoreOptions,
-		RESTPort:            globals.CMDRESTPort,
-		GRPCAuthPort:        globals.CMDGRPCAuthPort,
-		GRPCUnauthPort:      globals.CMDGRPCUnauthPort,
-		ConfigDir:           globals.CmdConfigDir,
-		CommonConfigDir:     globals.CommonConfigDir,
-		ClusterConfigFile:   "cluster.conf",
-		ContainerConfigFile: "venice.json",
-		CustomConfigFile:    "venice-conf.json",
-		PKIDir:              globals.CmdPKIDir,
+		KVStore:                kvStoreOptions,
+		RESTPort:               globals.CMDRESTPort,
+		GRPCAuthPort:           globals.CMDGRPCAuthPort,
+		GRPCLeaderInstancePort: globals.CMDGRPCLeaderInstancePort,
+		GRPCUnauthPort:         globals.CMDGRPCUnauthPort,
+		ConfigDir:              globals.CmdConfigDir,
+		CommonConfigDir:        globals.CommonConfigDir,
+		ClusterConfigFile:      "cluster.conf",
+		ContainerConfigFile:    "venice.json",
+		CustomConfigFile:       "venice-conf.json",
+		PKIDir:                 globals.CmdPKIDir,
 	}
 }
