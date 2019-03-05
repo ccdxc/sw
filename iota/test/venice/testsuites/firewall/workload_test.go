@@ -14,6 +14,9 @@ var _ = Describe("workload tests", func() {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
 	})
+	AfterEach(func() {
+		ts.tb.AfterTestCommon()
+	})
 
 	Context("Basic workload tests", func() {
 		It("Should be able to bringup new workloads and connect between them", func() {

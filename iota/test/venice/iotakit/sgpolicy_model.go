@@ -155,7 +155,6 @@ func (spc *SGPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollect
 	}
 
 	// walk each workload pair
-	var pairNames []string
 	for _, wpair := range wpc.pairs {
 		fromIP := strings.Split(wpair.second.iotaWorkload.IpPrefix, "/")[0]
 		toIP := strings.Split(wpair.first.iotaWorkload.IpPrefix, "/")[0]
@@ -163,10 +162,115 @@ func (spc *SGPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollect
 		if nspc.err != nil {
 			return nspc
 		}
-		pairNames = append(pairNames, fmt.Sprintf("%s %s %s -> %s", action, port, fromIP, toIP))
 	}
 
-	log.Infof("Adding rules for pairs: %v", pairNames)
+	return spc
+}
+
+// AddAlgRulesForWorkloadPairs adds ALG rule for each workload pair
+func (spc *SGPolicyCollection) AddAlgRulesForWorkloadPairs(wpc *WorkloadPairCollection, alg, action string) *SGPolicyCollection {
+	if spc.err != nil {
+		return spc
+	}
+	if wpc.err != nil {
+		return &SGPolicyCollection{err: wpc.err}
+	}
+
+	// walk each workload pair
+	for _, wpair := range wpc.pairs {
+		fromIP := strings.Split(wpair.second.iotaWorkload.IpPrefix, "/")[0]
+		toIP := strings.Split(wpair.first.iotaWorkload.IpPrefix, "/")[0]
+		// build the rule
+		rule := security.SGRule{
+			Action:          action,
+			FromIPAddresses: []string{fromIP},
+			ToIPAddresses:   []string{toIP},
+			Apps:            []string{alg},
+		}
+
+		for _, pol := range spc.policies {
+			pol.venicePolicy.Spec.Rules = append(pol.venicePolicy.Spec.Rules, rule)
+		}
+	}
+
+	return spc
+}
+
+// AddRuleForWorkloadCombo adds rule combinations
+func (spc *SGPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollection, fromIP, toIP, proto, port, action string) *SGPolicyCollection {
+	for _, wpair := range wpc.pairs {
+		firstIP := strings.Split(wpair.first.iotaWorkload.IpPrefix, "/")[0]
+		secondIP := strings.Split(wpair.second.iotaWorkload.IpPrefix, "/")[0]
+		firstSubnet := wpair.first.subnet.ipPrefix
+		secondSubnet := wpair.second.subnet.ipPrefix
+		// build the rule
+		rule := security.SGRule{
+			Action: action,
+		}
+
+		// determine from ip
+		switch fromIP {
+		case "workload-ip":
+			rule.FromIPAddresses = []string{secondIP}
+		case "workload-subnet":
+			rule.FromIPAddresses = []string{secondSubnet}
+		case "any":
+			rule.FromIPAddresses = []string{"any"}
+		default:
+			log.Fatalf("Invalid fromIP: %s", fromIP)
+		}
+
+		// determine to ip
+		switch toIP {
+		case "workload-ip":
+			rule.ToIPAddresses = []string{firstIP}
+		case "workload-subnet":
+			rule.ToIPAddresses = []string{firstSubnet}
+		case "any":
+			rule.ToIPAddresses = []string{"any"}
+		default:
+			log.Fatalf("Invalid fromIP: %s", fromIP)
+		}
+
+		// determine protocol
+		switch proto {
+		case "any":
+		case "icmp":
+			rule.ProtoPorts = append(rule.ProtoPorts, security.ProtoPort{Protocol: proto})
+		default:
+
+			// determine ports
+			if port != "any" {
+				pp := security.ProtoPort{
+					Protocol: proto,
+					Ports:    port,
+				}
+				rule.ProtoPorts = append(rule.ProtoPorts, pp)
+			} else {
+				rule.ProtoPorts = append(rule.ProtoPorts, security.ProtoPort{Protocol: proto})
+			}
+
+		}
+
+		log.Infof("Adding rule: %#v", rule)
+
+		for _, pol := range spc.policies {
+			pol.venicePolicy.Spec.Rules = append(pol.venicePolicy.Spec.Rules, rule)
+		}
+	}
+
+	return spc
+}
+
+// DeleteAllRules deletes all rules in the policy
+func (spc *SGPolicyCollection) DeleteAllRules() *SGPolicyCollection {
+	if spc.err != nil {
+		return spc
+	}
+
+	for _, pol := range spc.policies {
+		pol.venicePolicy.Spec.Rules = []security.SGRule{}
+	}
 
 	return spc
 }
@@ -187,7 +291,7 @@ func (spc *SGPolicyCollection) Commit() error {
 			}
 		}
 
-		log.Debugf("Created policy: %+v", pol.venicePolicy)
+		log.Debugf("Created policy: %#v", pol.venicePolicy)
 
 		pol.sm.sgpolicies[pol.venicePolicy.Name] = pol
 	}

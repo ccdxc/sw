@@ -26,7 +26,7 @@ type SysModel struct {
 	hosts       map[string]*Host       // hosts
 	naples      map[string]*Naples     // Naples instances
 	workloads   map[string]*Workload   // workloads
-	subnets     map[string]*Network    // subnets
+	subnets     []*Network             // subnets
 	sgpolicies  map[string]*SGPolicy   // security policies
 	veniceNodes map[string]*VeniceNode // Venice nodes
 
@@ -43,7 +43,6 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 		naples:       make(map[string]*Naples),
 		veniceNodes:  make(map[string]*VeniceNode),
 		workloads:    make(map[string]*Workload),
-		subnets:      make(map[string]*Network),
 		sgpolicies:   make(map[string]*SGPolicy),
 		allocatedMac: make(map[string]bool),
 	}
@@ -275,11 +274,11 @@ func (sm *SysModel) createDefaultAlgs() error {
 		return fmt.Errorf("Error creating FTP app. Err: %v", err)
 	}
 
-	// ICMP App
+	// ICMP echo req
 	icmpApp := security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      "icmp-app",
+			Name:      "icmp-echo-req",
 			Namespace: "default",
 			Tenant:    "default",
 		},
@@ -293,8 +292,7 @@ func (sm *SysModel) createDefaultAlgs() error {
 			ALG: &security.ALG{
 				Type: "ICMP",
 				Icmp: &security.Icmp{
-					Type: "1",
-					Code: "2",
+					Type: "8",
 				},
 			},
 		},
@@ -302,7 +300,35 @@ func (sm *SysModel) createDefaultAlgs() error {
 	// create ICMP app
 	err = sm.tb.CreateApp(&icmpApp)
 	if err != nil {
-		return fmt.Errorf("Error creating FICMPTP app. Err: %v", err)
+		return fmt.Errorf("Error creating ICMP req app. Err: %v", err)
+	}
+	// ICMP echo resp
+	icmpApp = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "icmp-echo-resp",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			Timeout: "5m",
+			ALG: &security.ALG{
+				Type: "ICMP",
+				Icmp: &security.Icmp{
+					Type: "0",
+				},
+			},
+		},
+	}
+	// create ICMP app
+	err = sm.tb.CreateApp(&icmpApp)
+	if err != nil {
+		return fmt.Errorf("Error creating ICMP resp app. Err: %v", err)
 	}
 
 	// DNS app

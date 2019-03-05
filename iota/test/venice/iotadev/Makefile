@@ -3,4 +3,3 @@ default:
 	cd ../../../../ && make e2e-naples && make venice-image
 	cd ../../../ && make
 	../start_iota.sh
-	sleep 10000000

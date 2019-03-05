@@ -50,7 +50,7 @@ func (sm *SysModel) createNetwork(vlanID uint32, ipPrefix string) error {
 		bitmask:    bs,
 		sm:         sm,
 	}
-	sm.subnets[snet.Name] = &snet
+	sm.subnets = append(sm.subnets, &snet)
 
 	return nil
 }

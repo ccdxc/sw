@@ -21,6 +21,8 @@ var _ = Describe("firewall whitelist tests", func() {
 		Expect(ts.model.SGPolicy("default-policy").Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
+		ts.tb.AfterTestCommon()
+
 		// delete test policy if its left over. we can ignore the error here
 		ts.model.SGPolicy("test-policy").Delete()
 		ts.model.SGPolicy("default-policy").Delete()
@@ -28,7 +30,6 @@ var _ = Describe("firewall whitelist tests", func() {
 		// recreate default allow policy
 		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()).ShouldNot(HaveOccurred())
 	})
-
 	Context("basic whitelist tests", func() {
 		It("Should not ping between any workload without permit rules", func() {
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
@@ -39,7 +40,7 @@ var _ = Describe("firewall whitelist tests", func() {
 
 		It("Should allow TCP connections with specific permit rules", func() {
 			// add permit rules for workload pairs
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/8000", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
@@ -62,9 +63,6 @@ var _ = Describe("firewall whitelist tests", func() {
 			Eventually(func() error {
 				return ts.model.Action().TCPSessionFails(workloadPairs.ReversePairs(), 8000)
 			}).Should(Succeed())
-
-			// finally, delete the policy
-			Expect(ts.model.SGPolicy("test-policy").Delete()).ShouldNot(HaveOccurred())
 		})
 
 		It("Should allow UDP connections with specific permit rules", func() {
@@ -95,16 +93,13 @@ var _ = Describe("firewall whitelist tests", func() {
 			Eventually(func() error {
 				return ts.model.Action().UDPSessionFails(workloadPairs.ReversePairs(), 8000)
 			}).Should(Succeed())
-
-			// finally, delete the policy
-			Expect(ts.model.SGPolicy("test-policy").Delete()).ShouldNot(HaveOccurred())
 		})
 
 		It("Ping should work with specific permit rules", func() {
 			Skip("Disabling ICMP test till we figure out ICMP proto/port issue in netagent")
 
 			// add permit rules for workload pairs
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "icmp", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
@@ -122,9 +117,6 @@ var _ = Describe("firewall whitelist tests", func() {
 			Eventually(func() error {
 				return ts.model.Action().TCPSessionFails(workloadPairs, 8000)
 			}).Should(Succeed())
-
-			// finally, delete the policy
-			Expect(ts.model.SGPolicy("test-policy").Delete()).ShouldNot(HaveOccurred())
 		})
 		It("Should be able to update policy and verify it takes effect", func() {
 			const maxRules = 5000
@@ -133,7 +125,7 @@ var _ = Describe("firewall whitelist tests", func() {
 			boundaryPort := (startPort - 1) + maxRules
 
 			// pick a workload pair
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 
 			// run multiple iterations, each time updating the policy with different number of rules
 			for iter := 0; iter < numIter; iter++ {
@@ -161,8 +153,6 @@ var _ = Describe("firewall whitelist tests", func() {
 				// change the boundary port
 				boundaryPort = rand.Intn(maxRules) + startPort
 			}
-			// finally, delete the policy
-			Expect(ts.model.SGPolicy("test-policy").Delete()).ShouldNot(HaveOccurred())
 		})
 	})
 })

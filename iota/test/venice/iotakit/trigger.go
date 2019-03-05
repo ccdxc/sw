@@ -51,11 +51,32 @@ func (tr *Trigger) AddBackgroundCommand(command, entity, node string) error {
 	return nil
 }
 
-// Run runs trigger commands in parallel
+// Run runs trigger commands serially within a node but, parallely across nodes
 func (tr *Trigger) Run() ([]*iota.Command, error) {
 	trigMsg := &iota.TriggerMsg{
 		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
 		TriggerMode: iota.TriggerMode_TRIGGER_PARALLEL,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Commands:    tr.cmds,
+	}
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(tr.iotaClient.Client)
+	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return nil, fmt.Errorf("Trigger failed. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
+	}
+
+	log.Debugf("Got Trigger resp: %+v", triggerResp)
+
+	return triggerResp.Commands, nil
+}
+
+// RunParallel runs all commands parallely
+func (tr *Trigger) RunParallel() ([]*iota.Command, error) {
+	trigMsg := &iota.TriggerMsg{
+		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
+		TriggerMode: iota.TriggerMode_TRIGGER_NODE_PARALLEL,
 		ApiResponse: &iota.IotaAPIResponse{},
 		Commands:    tr.cmds,
 	}

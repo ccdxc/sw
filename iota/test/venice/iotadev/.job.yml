@@ -8,7 +8,7 @@ rebase: true
 
 warmd:
   target:
-    commands: ["make", "default"]
+    commands: ["sleep", "10000000"]
     owners: ["email:shaleman@pensando.io"]
   create:
     image: build-112

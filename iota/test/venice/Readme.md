@@ -97,6 +97,15 @@ USER="" rund-run --logdir ~/ --load-factor=4 iota/test/venice warmd
 
 This will create a rund container on your dev machine, Build Venice and Naples images, create a 6-VM testbed(3 Venice nodes and 3 Naples sim nodes), run the tests on this testbed. Once the tests are done, it tears down the testbed and deletes the rund container.
 
+** Run tests on Naples HW setup**
+
+```
+USER="" rund-run --logdir ~/ --load-factor=4 iota/test/venice/hwtest e2e-venice-2naples
+```
+
+This will reserve a testbed with two Naples HW and run the tests on it
+
+
 ### Keeping an IOTA testbed up and running for development and debugging
 
 Instead of step 2 above, you can run this command to have a warmd testbed up and running during development.
@@ -110,7 +119,7 @@ This command brings up a rund container, builds Venice and Naples images, brings
 you can login to the rund container using:
 
 ```
-docker exec -it <pensando-user-id_rund> bash
+docker exec -it <pensando-user-id>_rund bash
 ```
 
 once you are in the rund container, you can rebuild venice or naples images and run the IOTA venice tests in `iota/test/venice/testsuites/` directory using standard `go test` command. 
@@ -118,6 +127,10 @@ once you are in the rund container, you can rebuild venice or naples images and 
 If you want to login to the testbed, rund container contains the test topology file called `/warmd.json`. you can do `
 `cat /warmd.json | python -mjson.tool` to look at the contents of it. The "NodeMgmtIP" field in each node contains the ip address of the VM. 
 
+**Some Useful env variables**
+
+1. `SKIP_INSTALL=1` : this option will skip installing naples images. This is useful for re-running tests on a setup that already has correct images
+2. `SKIP_SETUP=1` : this option is useful for rerunning tests on an already working setup. This will not cleanup configuration from previous run and just rerun the tests.
 
 ## Mocking test environment during development
 

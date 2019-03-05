@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"strconv"
+	"strings"
 
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
@@ -44,7 +45,8 @@ func convertRules(veniceRules []security.SGRule) (agentRules []netproto.PolicyRu
 				Addresses:      v.ToIPAddresses,
 				AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
 			},
-			ID: generateRuleHash(v),
+			AppName: strings.Join(v.Apps, ", "),
+			ID:      generateRuleHash(v),
 		}
 		agentRules = append(agentRules, a)
 	}
@@ -54,11 +56,14 @@ func convertRules(veniceRules []security.SGRule) (agentRules []netproto.PolicyRu
 // convertAppConfig converts venice app information to port protocol for agent
 func convertAppConfig(apps []string, protoPorts []security.ProtoPort) (agentAppConfigs []*netproto.AppConfig) {
 	for _, pp := range protoPorts {
-		c := netproto.AppConfig{
-			Protocol: pp.Protocol,
-			Port:     pp.Ports,
+		portRanges := strings.Split(pp.Ports, ",")
+		for _, prange := range portRanges {
+			c := netproto.AppConfig{
+				Protocol: pp.Protocol,
+				Port:     prange,
+			}
+			agentAppConfigs = append(agentAppConfigs, &c)
 		}
-		agentAppConfigs = append(agentAppConfigs, &c)
 	}
 	return
 }

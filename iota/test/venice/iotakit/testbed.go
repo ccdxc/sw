@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	"github.com/pensando/sw/api/generated/apiclient"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -216,6 +217,11 @@ func (tb *TestBed) HasNaplesSim() bool {
 // HasNaplesHW returns true if testbed has Naples HW
 func (tb *TestBed) HasNaplesHW() bool {
 	return tb.hasNaplesHW
+}
+
+// IsMockMode returns true if test is running in mock mode
+func (tb *TestBed) IsMockMode() bool {
+	return tb.mockMode
 }
 
 // getAvailableInstance returns next instance of a given type
@@ -839,6 +845,17 @@ func (tb *TestBed) SetupConfig() error {
 	if err != nil {
 		log.Errorf("Error setting up venice nodes. Err: %v", err)
 		return err
+	}
+
+	return nil
+}
+
+// AfterTestCommon common handling after each test
+func (tb *TestBed) AfterTestCommon() error {
+	testInfo := ginkgo.CurrentGinkgoTestDescription()
+	if testInfo.Failed && os.Getenv("STOP_ON_ERROR") != "" {
+		fmt.Printf("\n------------------ Test Failed exiting--------------------\n")
+		os.Exit(1)
 	}
 
 	return nil

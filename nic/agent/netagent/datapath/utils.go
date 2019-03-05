@@ -482,6 +482,12 @@ func (hd *Datapath) convertIPs(addresses []string) ([]*halproto.IPAddressObj, er
 }
 
 func (hd *Datapath) convertPort(port string) (*halproto.L4PortRange, error) {
+	// handle empty port case
+	if port == "" {
+		return &halproto.L4PortRange{}, nil
+	}
+
+	// parse port range
 	portSlice := strings.Split(port, "-")
 	switch len(portSlice) {
 	// single port

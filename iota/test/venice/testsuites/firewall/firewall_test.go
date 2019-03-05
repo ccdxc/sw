@@ -16,6 +16,8 @@ var _ = Describe("firewall tests", func() {
 	})
 
 	AfterEach(func() {
+		ts.tb.AfterTestCommon()
+
 		// delete test policy if its left over. we can ignore the error here
 		ts.model.SGPolicy("test-policy").Delete()
 		ts.model.SGPolicy("default-policy").Delete()
@@ -28,7 +30,7 @@ var _ = Describe("firewall tests", func() {
 		It("Should establish TCP session between all workload with default policy", func() {
 
 			// ping all workload pairs in same subnet
-			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			Eventually(func() error {
 				return ts.model.Action().TCPSession(workloadPairs, 8000)
 			}).Should(Succeed())
@@ -45,7 +47,7 @@ var _ = Describe("firewall tests", func() {
 			}).Should(Succeed())
 
 			// randomly pick one workload and verify ping fails between them
-			workloadPair := ts.model.WorkloadPairs().WithinNetwork().Any(4)
+			workloadPair := ts.model.WorkloadPairs().WithinNetwork()
 			Eventually(func() error {
 				return ts.model.Action().TCPSessionFails(workloadPair, 8000)
 			}).Should(Succeed())

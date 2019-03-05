@@ -73,6 +73,7 @@ func convertApp(aps *AppState) *netproto.App {
 	switch aps.App.Spec.ALG.Type {
 	case "ICMP":
 		if aps.App.Spec.ALG.Icmp != nil {
+			app.Spec.ProtoPorts = []string{"icmp"}
 			ictype, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Type)
 			icode, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Code)
 

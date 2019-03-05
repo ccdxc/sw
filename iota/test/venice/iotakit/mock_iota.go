@@ -24,7 +24,7 @@ type mockIotaServer struct {
 
 // newMockIotaServer creates a mock iota server
 func newMockIotaServer(listenURL string, tb *TestBed) (*mockIotaServer, error) {
-	serverSvc, err := common.CreateNewGRPCServer("Mock IOTA Server", listenURL)
+	serverSvc, err := common.CreateNewGRPCServer("Mock IOTA Server", listenURL, common.GrpcMaxMsgSize)
 	if err != nil {
 		log.Errorf("Could not start IOTA GRPC server. Err: %v", err)
 		return nil, err

@@ -15,11 +15,12 @@ import (
 
 // Workload represents a VM/container/Baremetal workload (endpoints are associated with the workload)
 type Workload struct {
-	iotaWorkload   *iota.Workload
-	veniceWorkload *workload.Workload
-	sm             *SysModel // pointer back to the model
-	host           *Host
-	subnet         *Network
+	iotaWorkload       *iota.Workload
+	veniceWorkload     *workload.Workload
+	sm                 *SysModel // pointer back to the model
+	host               *Host
+	subnet             *Network
+	isFTPServerRunning bool // is FTP server running already on this workload
 }
 
 // WorkloadCollection is the collection of workloads
