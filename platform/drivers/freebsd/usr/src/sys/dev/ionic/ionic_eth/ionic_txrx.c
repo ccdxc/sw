@@ -290,6 +290,13 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 		rxbuf->m = NULL;
 		return;
 	}
+	if (comp->len < ETHER_HDR_LEN + ETHER_CRC_LEN) {
+		IONIC_QUE_INFO(rxq, "Malformed ethernet packet!  comp->len %d\n", comp->len);
+		stats->comp_err++;
+		m_freem(m);
+		rxbuf->m = NULL;
+		return;
+	}
 #endif
 
 	stats->pkts++;
@@ -407,6 +414,7 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 	sg = &rxq->sg_ring[index];
 	
 	bzero(desc, sizeof(*desc));
+	bzero(sg, sizeof(*sg));
 	KASSERT(rxbuf->m == NULL, ("rxuf %d is not empty", index));
 
 	size = ionic_rx_sg_size ? ionic_rx_sg_size : len;
