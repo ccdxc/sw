@@ -117,6 +117,7 @@ $(PENCAKE)-y += third-party/libyaml/src/scanner.o
 $(PENCAKE)-y += third-party/libyaml/src/writer.o
 
 KERN_DIR ?= /lib/modules/$(shell uname -r)/build
+KERN_SRC ?= /lib/modules/$(shell uname -r)/source
 
 sonic-sim-var: $(eval obj-m += $(SONICSIM).o)
 sonic-sim-var: $(eval ccflags-y += $(SONICSIM_INCDIRS:%=-I$(PWD)/%))
@@ -138,6 +139,7 @@ sonic: sonic-var modules-compile
 pencake-var: $(eval obj-m += $(PENCAKE).o)
 pencake-var: $(eval ccflags-y += $(PENCAKE_INCDIRS:%=-I$(PWD)/%))
 pencake-var: $(eval ccflags-y += -I$(KERN_DIR)/include/linux)
+pencake-var: $(eval ccflags-y += -I$(KERN_SRC)/include/linux)
 pencake-var: $(eval ccflags-y += -DHAVE_CONFIG_H=0)
 pencake: pencake-var modules-compile
 
