@@ -5,49 +5,33 @@
 #include "sysmond.h"
 #include "nic/sdk/platform/sensor/sensor.hpp"
 
-#define PIN_INPUT_FILE "/sys/class/hwmon/hwmon1/power1_input"
-#define POUT1_INPUT_FILE "/sys/class/hwmon/hwmon1/power2_input"
-#define POUT2_INPUT_FILE "/sys/class/hwmon/hwmon1/power3_input"
-
 static delphi::objects::asicpowermetrics_t    asicpower;
 using namespace sdk::platform::sensor;
 
 static void
 checkpower(void)
 {
-    uint8_t counter = 0;
     uint8_t key = 0;
     uint32_t ret;
+    sdk::platform::sensor::system_power_t power;
 
-    ret = read_pin(&asicpower.pin);
+    ret = sdk::platform::sensor::read_powers(&power);
     if (!ret) {
-        asicpower.pin = asicpower.pin / 1000000;
+        asicpower.pin = power.pin / 1000000;
         TRACE_INFO(GetLogger(), "Power of {:s} is : {:d}W",
                    "pin", asicpower.pin);
-    } else if (ret != ENOENT){
-        TRACE_ERR(GetLogger(), "Reading PIN failed");
-    }
-
-    ret = read_pout1(&asicpower.pout1);
-    if (!ret) {
-        asicpower.pout1 = asicpower.pout1 / 1000000;
+        asicpower.pout1 = power.pout1 / 1000000;
         TRACE_INFO(GetLogger(), "Power of {:s} is : {:d}W",
                    "pout1", asicpower.pout1);
-    } else if (ret != ENOENT){
-        TRACE_ERR(GetLogger(), "Reading POUT1 failed");
-    }
-
-    ret = read_pout2(&asicpower.pout2);
-    if (!ret) {
         asicpower.pout2 = asicpower.pout2 / 1000000;
         TRACE_INFO(GetLogger(), "Power of {:s} is : {:d}W",
                    "pout2", asicpower.pout2);
-    } else if (ret != ENOENT){
-        TRACE_ERR(GetLogger(), "Reading POUT2 failed");
+
+        //Publish Delphi object
+        delphi::objects::AsicPowerMetrics::Publish(key, &asicpower);
+    } else {
+        TRACE_ERR(GetLogger(), "Reading power failed");
     }
-
-    delphi::objects::AsicPowerMetrics::Publish(key, &asicpower);
-
     return;
 }
 

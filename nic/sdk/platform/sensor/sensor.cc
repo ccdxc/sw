@@ -8,7 +8,7 @@ namespace platform {
 namespace sensor {
 
 static int
-read_file(const char *filename, uint64_t *variable)
+read_file(const char *filename, int *variable)
 {
     char buf[32] = {0, };
     int fd;
@@ -17,12 +17,12 @@ read_file(const char *filename, uint64_t *variable)
 
     fd = open(filename, O_RDONLY);
     if (fd < 1) {
-        return ENOENT;
+        return -ENOENT;
     }
     len = read(fd, buf, sizeof(buf) - 1);
     if (len < 0) {
         close(fd);
-        return EIO;
+        return -EIO;
     }
     buf[len] = 0;
     sscanf(buf, "%d", &var);
@@ -32,44 +32,73 @@ read_file(const char *filename, uint64_t *variable)
     return 0;
 }
 
-int read_die_temperature(uint64_t *dietemp)
-{
-    if (dietemp == NULL) {
-        return EINVAL;
-    }
-    return read_file(DIE_TEMP_FILE, dietemp);
-}
-
-int read_local_temperature(uint64_t *localtemp)
+int read_local_temperature(int *localtemp)
 {
     if (localtemp == NULL) {
-        return EINVAL;
+        return -EINVAL;
     }
     return read_file(LOCAL_TEMP_FILE, localtemp);
 }
 
-int read_pin(uint64_t *pin)
+static int read_pin(int *pin)
 {
     if (pin == NULL) {
-        return EINVAL;
+        return -EINVAL;
     }
     return read_file(PIN_INPUT_FILE, pin);
 }
 
-int read_pout1(uint64_t *pout1)
+static int read_pout1(int *pout1)
 {
     if (pout1 == NULL) {
-        return EINVAL;
+        return -EINVAL;
     }
     return read_file(POUT1_INPUT_FILE, pout1);
 }
 
-int read_pout2(uint64_t *pout2)
+static int read_pout2(int *pout2)
 {
     if (pout2 == NULL) {
-        return EINVAL;
+        return -EINVAL;
     }
     return read_file(POUT2_INPUT_FILE, pout2);
+}
+
+/**
+    Read temperature function provides an API to read
+    all the temperatures and fills in the structure.
+    Requires sdkcapri_csrint to be linked
+*/
+int read_temperatures(system_temperature_t *temperature)
+{
+    if (temperature == NULL) {
+        return -EINVAL;
+    }
+    if (read_local_temperature(&temperature->localtemp) == 0)
+    {
+        temperature->dietemp = cap_get_temp();
+        temperature->hbmtemp = cap_nwl_sbus_get_1500_temperature();
+        return 0;
+    }
+    return -EINVAL;
+}
+
+/**
+    Read power function provides an API to read
+    all the power and fills in the structure.
+*/
+int read_powers(system_power_t *power)
+{
+    if (power == NULL) {
+        return -EINVAL;
+    }
+    if (read_pin(&power->pin) == 0 &&
+        read_pout1(&power->pout1) == 0 &&
+        read_pout2(&power->pout2) == 0)
+    {
+        return 0;
+    }
+    return -EINVAL;
 }
 
 } // namespace sensor

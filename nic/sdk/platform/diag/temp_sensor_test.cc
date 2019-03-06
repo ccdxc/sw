@@ -95,7 +95,7 @@ void temp_sensor_test_usage(test_mode_e mode)
 
 int local_temp_sensor_test()
 {
-    uint64_t local_temperature = 0;
+    int local_temperature = 0;
     int retval = 0;
 
     retval = sdk::platform::sensor::read_local_temperature(&local_temperature);

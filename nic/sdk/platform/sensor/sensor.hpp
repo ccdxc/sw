@@ -11,6 +11,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "include/sdk/base.hpp"
+#include "third-party/asic/capri/verif/apis/cap_nwl_sbus_api.h"
+#include "third-party/asic/capri/verif/apis/cap_sbus_api.h"
 
 namespace sdk {
 namespace platform {
@@ -20,16 +22,26 @@ namespace sensor {
 #define POUT1_INPUT_FILE "/sys/class/hwmon/hwmon1/power2_input"
 #define POUT2_INPUT_FILE "/sys/class/hwmon/hwmon1/power3_input"
 #define LOCAL_TEMP_FILE "/sys/class/hwmon/hwmon0/temp1_input"
-#define DIE_TEMP_FILE "/sys/class/hwmon/hwmon0/temp2_input"
+
+typedef struct system_temperature {
+    int dietemp;
+    int localtemp;
+    int hbmtemp;
+} system_temperature_t;
+
+typedef struct system_power {
+    int pin;
+    int pout1;
+    int pout2;
+} system_power_t;
 
 //Read temperature functions will fill the value in millidegrees
-int read_die_temperature(uint64_t *dietemp);
-int read_local_temperature(uint64_t *localtemp);
+int read_local_temperature(int *localtemp);
+int read_temperatures(system_temperature_t *temperature);
 
 //Read power functions will fill the value in microwatts
-int read_pin(uint64_t *pin);
-int read_pout1(uint64_t *pout1);
-int read_pout2(uint64_t *pout2);
+int read_powers(system_power_t *power);
+
 
 } // namespace sensor
 } // namespace platform

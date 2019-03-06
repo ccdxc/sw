@@ -35,7 +35,7 @@ static int pal_i2c_read(const uint8_t *buffer, uint32_t size,
     }
 
     for (i = 0; i < nretry; i++) {
-        if (ioctl(fd, I2C_SLAVE, slaveaddr) < 0) {
+        if (ioctl(fd, I2C_SLAVE_FORCE, slaveaddr) < 0) {
             printf("Failed to acquire bus access and/or talk to slave.\n");
             continue;
         }
@@ -85,7 +85,7 @@ static int pal_i2c_write(const uint8_t *buffer, uint32_t size,
     }
 
     for (i = 0; i < nretry; i++) {
-        if (ioctl(fd, I2C_SLAVE, slaveaddr) < 0) {
+        if (ioctl(fd, I2C_SLAVE_FORCE, slaveaddr) < 0) {
             printf("Failed to acquire bus access and/or talk to slave.\n");
             continue;
         }
@@ -141,4 +141,20 @@ int pal_qsfp_write(const uint8_t *buffer, uint32_t size,
         return pal_i2c_write(buffer, size, addr, nretry,
                              QSFP_2_I2C_BUS, QSFP_2_SLAVE_ADDRESS);
     return -1;
+}
+
+int smbus_write(const uint8_t *buffer, uint32_t size,
+                uint32_t offset, uint32_t nretry,
+                uint32_t bus, uint32_t slaveaddr)
+{
+    return pal_i2c_write(buffer, size, offset,
+                         nretry, bus, slaveaddr);
+}
+
+int smbus_read(const uint8_t *buffer, uint32_t size,
+                uint32_t offset, uint32_t nretry,
+                uint32_t bus, uint32_t slaveaddr)
+{
+    return pal_i2c_read(buffer, size, offset,
+                         nretry, bus, slaveaddr);
 }
