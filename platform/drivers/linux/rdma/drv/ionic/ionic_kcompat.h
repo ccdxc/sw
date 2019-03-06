@@ -163,11 +163,240 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99, /* OFA */ 1)
+
+struct ib_device_ops {
+#ifdef HAVE_CONST_IB_WR
+	int (*post_send)(struct ib_qp *qp, const struct ib_send_wr *send_wr,
+			 const struct ib_send_wr **bad_send_wr);
+	int (*post_recv)(struct ib_qp *qp, const struct ib_recv_wr *recv_wr,
+			 const struct ib_recv_wr **bad_recv_wr);
+#else
+	int (*post_send)(struct ib_qp *qp, struct ib_send_wr *send_wr,
+			 struct ib_send_wr **bad_send_wr);
+	int (*post_recv)(struct ib_qp *qp, struct ib_recv_wr *recv_wr,
+			 struct ib_recv_wr **bad_recv_wr);
+#endif
+	void (*drain_rq)(struct ib_qp *qp);
+	void (*drain_sq)(struct ib_qp *qp);
+	int (*poll_cq)(struct ib_cq *cq, int num_entries, struct ib_wc *wc);
+	int (*peek_cq)(struct ib_cq *cq, int wc_cnt);
+	int (*req_notify_cq)(struct ib_cq *cq, enum ib_cq_notify_flags flags);
+	int (*req_ncomp_notif)(struct ib_cq *cq, int wc_cnt);
+#ifdef HAVE_CONST_IB_WR
+	int (*post_srq_recv)(struct ib_srq *srq,
+			     const struct ib_recv_wr *recv_wr,
+			     const struct ib_recv_wr **bad_recv_wr);
+#else
+	int (*post_srq_recv)(struct ib_srq *srq,
+			     struct ib_recv_wr *recv_wr,
+			     struct ib_recv_wr **bad_recv_wr);
+#endif
+	int (*query_device)(struct ib_device *device,
+			    struct ib_device_attr *device_attr,
+			    struct ib_udata *udata);
+	int (*modify_device)(struct ib_device *device, int device_modify_mask,
+			     struct ib_device_modify *device_modify);
+#ifdef HAVE_GET_DEV_FW_STR_LEN
+	void (*get_dev_fw_str)(struct ib_device *device, char *str,
+			       size_t str_len);
+#else
+	void (*get_dev_fw_str)(struct ib_device *device, char *str);
+#endif
+#ifdef HAVE_GET_VECTOR_AFFINITY
+	const struct cpumask *(*get_vector_affinity)(struct ib_device *ibdev,
+						     int comp_vector);
+#endif
+	int (*query_port)(struct ib_device *device, u8 port_num,
+			  struct ib_port_attr *port_attr);
+	int (*modify_port)(struct ib_device *device, u8 port_num,
+			   int port_modify_mask,
+			   struct ib_port_modify *port_modify);
+	int (*get_port_immutable)(struct ib_device *device, u8 port_num,
+				  struct ib_port_immutable *immutable);
+	enum rdma_link_layer (*get_link_layer)(struct ib_device *device,
+					       u8 port_num);
+	struct net_device *(*get_netdev)(struct ib_device *device, u8 port_num);
+#ifdef HAVE_REQUIRED_IB_GID
+	int (*query_gid)(struct ib_device *device, u8 port_num, int index,
+			 union ib_gid *gid);
+#ifdef HAVE_IB_GID_DEV_PORT_INDEX
+	int (*add_gid)(struct ib_device *device, u8 port, unsigned int index,
+		       const union ib_gid *gid, const struct ib_gid_attr *attr,
+		       void **context);
+	int (*del_gid)(struct ib_device *device, u8 port, unsigned int index,
+		       void **context);
+#else
+	int (*add_gid)(const union ib_gid *gid, const struct ib_gid_attr *attr,
+		       void **context);
+	int (*del_gid)(const struct ib_gid_attr *attr, void **context);
+#endif
+#endif
+	int (*query_pkey)(struct ib_device *device, u8 port_num, u16 index,
+			  u16 *pkey);
+	struct ib_ucontext *(*alloc_ucontext)(struct ib_device *device,
+					      struct ib_udata *udata);
+	int (*dealloc_ucontext)(struct ib_ucontext *context);
+	int (*mmap)(struct ib_ucontext *context, struct vm_area_struct *vma);
+	void (*disassociate_ucontext)(struct ib_ucontext *ibcontext);
+	struct ib_pd *(*alloc_pd)(struct ib_device *device,
+				  struct ib_ucontext *context,
+				  struct ib_udata *udata);
+	int (*dealloc_pd)(struct ib_pd *pd);
+#ifdef HAVE_CREATE_AH_UDATA
+#ifdef HAVE_CREATE_AH_FLAGS
+	struct ib_ah *(*create_ah)(struct ib_pd *pd,
+				   struct rdma_ah_attr *ah_attr, u32 flags,
+				   struct ib_udata *udata);
+#else
+	struct ib_ah *(*create_ah)(struct ib_pd *pd,
+				   struct rdma_ah_attr *ah_attr,
+				   struct ib_udata *udata);
+#endif
+#else
+	struct ib_ah *(*create_ah)(struct ib_pd *pd,
+				   struct rdma_ah_attr *ah_attr);
+#endif
+	int (*modify_ah)(struct ib_ah *ah, struct rdma_ah_attr *ah_attr);
+	int (*query_ah)(struct ib_ah *ah, struct rdma_ah_attr *ah_attr);
+#ifdef HAVE_CREATE_AH_FLAGS
+	int (*destroy_ah)(struct ib_ah *ah, u32 flags);
+#else
+	int (*destroy_ah)(struct ib_ah *ah);
+#endif
+	struct ib_srq *(*create_srq)(struct ib_pd *pd,
+				     struct ib_srq_init_attr *srq_init_attr,
+				     struct ib_udata *udata);
+	int (*modify_srq)(struct ib_srq *srq, struct ib_srq_attr *srq_attr,
+			  enum ib_srq_attr_mask srq_attr_mask,
+			  struct ib_udata *udata);
+	int (*query_srq)(struct ib_srq *srq, struct ib_srq_attr *srq_attr);
+	int (*destroy_srq)(struct ib_srq *srq);
+	struct ib_qp *(*create_qp)(struct ib_pd *pd,
+				   struct ib_qp_init_attr *qp_init_attr,
+				   struct ib_udata *udata);
+	int (*modify_qp)(struct ib_qp *qp, struct ib_qp_attr *qp_attr,
+			 int qp_attr_mask, struct ib_udata *udata);
+	int (*query_qp)(struct ib_qp *qp, struct ib_qp_attr *qp_attr,
+			int qp_attr_mask, struct ib_qp_init_attr *qp_init_attr);
+	int (*destroy_qp)(struct ib_qp *qp);
+	struct ib_cq *(*create_cq)(struct ib_device *device,
+				   const struct ib_cq_init_attr *attr,
+				   struct ib_ucontext *context,
+				   struct ib_udata *udata);
+	int (*modify_cq)(struct ib_cq *cq, u16 cq_count, u16 cq_period);
+	int (*destroy_cq)(struct ib_cq *cq);
+	int (*resize_cq)(struct ib_cq *cq, int cqe, struct ib_udata *udata);
+	struct ib_mr *(*get_dma_mr)(struct ib_pd *pd, int mr_access_flags);
+	struct ib_mr *(*reg_user_mr)(struct ib_pd *pd, u64 start, u64 length,
+				     u64 virt_addr, int mr_access_flags,
+				     struct ib_udata *udata);
+	int (*rereg_user_mr)(struct ib_mr *mr, int flags, u64 start, u64 length,
+			     u64 virt_addr, int mr_access_flags,
+			     struct ib_pd *pd, struct ib_udata *udata);
+	int (*dereg_mr)(struct ib_mr *mr);
+	struct ib_mr *(*alloc_mr)(struct ib_pd *pd, enum ib_mr_type mr_type,
+				  u32 max_num_sg);
+	int (*map_mr_sg)(struct ib_mr *mr, struct scatterlist *sg, int sg_nents,
+			 unsigned int *sg_offset);
+	int (*check_mr_status)(struct ib_mr *mr, u32 check_mask,
+			       struct ib_mr_status *mr_status);
+	struct ib_mw *(*alloc_mw)(struct ib_pd *pd, enum ib_mw_type type,
+				  struct ib_udata *udata);
+	int (*dealloc_mw)(struct ib_mw *mw);
+	int (*attach_mcast)(struct ib_qp *qp, union ib_gid *gid, u16 lid);
+	int (*detach_mcast)(struct ib_qp *qp, union ib_gid *gid, u16 lid);
+	struct ib_xrcd *(*alloc_xrcd)(struct ib_device *device,
+				      struct ib_ucontext *ucontext,
+				      struct ib_udata *udata);
+	int (*dealloc_xrcd)(struct ib_xrcd *xrcd);
+	struct rdma_hw_stats *(*alloc_hw_stats)(struct ib_device *device,
+						u8 port_num);
+	int (*get_hw_stats)(struct ib_device *device,
+			    struct rdma_hw_stats *stats, u8 port, int index);
+};
+
+static inline void ib_set_device_ops(struct ib_device *dev,
+				     const struct ib_device_ops *ops)
+{
+#define SET_DEVICE_OP(name) \
+	(dev->name = dev->name ?: ops->name)
+
+#ifdef HAVE_REQUIRED_IB_GID
+	SET_DEVICE_OP(add_gid);
+#endif
+	SET_DEVICE_OP(alloc_hw_stats);
+	SET_DEVICE_OP(alloc_mr);
+	SET_DEVICE_OP(alloc_mw);
+	SET_DEVICE_OP(alloc_pd);
+	SET_DEVICE_OP(alloc_ucontext);
+	SET_DEVICE_OP(alloc_xrcd);
+	SET_DEVICE_OP(attach_mcast);
+	SET_DEVICE_OP(check_mr_status);
+	SET_DEVICE_OP(create_ah);
+	SET_DEVICE_OP(create_cq);
+	SET_DEVICE_OP(create_qp);
+	SET_DEVICE_OP(create_srq);
+	SET_DEVICE_OP(dealloc_mw);
+	SET_DEVICE_OP(dealloc_pd);
+	SET_DEVICE_OP(dealloc_ucontext);
+	SET_DEVICE_OP(dealloc_xrcd);
+#ifdef HAVE_REQUIRED_IB_GID
+	SET_DEVICE_OP(del_gid);
+#endif
+	SET_DEVICE_OP(dereg_mr);
+	SET_DEVICE_OP(destroy_ah);
+	SET_DEVICE_OP(destroy_cq);
+	SET_DEVICE_OP(destroy_qp);
+	SET_DEVICE_OP(destroy_srq);
+	SET_DEVICE_OP(detach_mcast);
+	SET_DEVICE_OP(disassociate_ucontext);
+	SET_DEVICE_OP(drain_rq);
+	SET_DEVICE_OP(drain_sq);
+#ifdef HAVE_GET_DEV_FW_STR
+	SET_DEVICE_OP(get_dev_fw_str);
+#endif
+	SET_DEVICE_OP(get_dma_mr);
+	SET_DEVICE_OP(get_hw_stats);
+	SET_DEVICE_OP(get_link_layer);
+	SET_DEVICE_OP(get_netdev);
+	SET_DEVICE_OP(get_port_immutable);
+#ifdef HAVE_GET_VECTOR_AFFINITY
+	SET_DEVICE_OP(get_vector_affinity);
+#endif
+	SET_DEVICE_OP(map_mr_sg);
+	SET_DEVICE_OP(mmap);
+	SET_DEVICE_OP(modify_ah);
+	SET_DEVICE_OP(modify_cq);
+	SET_DEVICE_OP(modify_device);
+	SET_DEVICE_OP(modify_port);
+	SET_DEVICE_OP(modify_qp);
+	SET_DEVICE_OP(modify_srq);
+	SET_DEVICE_OP(peek_cq);
+	SET_DEVICE_OP(poll_cq);
+	SET_DEVICE_OP(post_recv);
+	SET_DEVICE_OP(post_send);
+	SET_DEVICE_OP(post_srq_recv);
+	SET_DEVICE_OP(query_ah);
+	SET_DEVICE_OP(query_device);
+#ifdef HAVE_REQUIRED_IB_GID
+	SET_DEVICE_OP(query_gid);
+#endif
+	SET_DEVICE_OP(query_pkey);
+	SET_DEVICE_OP(query_port);
+	SET_DEVICE_OP(query_qp);
+	SET_DEVICE_OP(query_srq);
+	SET_DEVICE_OP(reg_user_mr);
+	SET_DEVICE_OP(req_ncomp_notif);
+	SET_DEVICE_OP(req_notify_cq);
+	SET_DEVICE_OP(rereg_user_mr);
+	SET_DEVICE_OP(resize_cq);
+#undef SET_DEVICE_OP
+}
+
 #undef dma_alloc_coherent
 #define dma_alloc_coherent dma_zalloc_coherent
 #define RDMA_CREATE_AH_SLEEPABLE 0
 #else
-#define HAVE_IB_DEVICE_OPS
 #define HAVE_CREATE_AH_FLAGS
 #endif
 

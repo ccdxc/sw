@@ -5466,7 +5466,6 @@ static int ionic_get_port_immutable(struct ib_device *ibdev, u8 port,
 	return 0;
 }
 
-#ifdef HAVE_GET_DEV_FW_STR
 #ifdef HAVE_GET_DEV_FW_STR_LEN
 static void ionic_get_dev_fw_str(struct ib_device *ibdev, char *str,
 				 size_t str_len)
@@ -5476,7 +5475,6 @@ static void ionic_get_dev_fw_str(struct ib_device *ibdev, char *str)
 {
 	str[0] = 0;
 }
-#endif
 
 #ifdef HAVE_GET_VECTOR_AFFINITY
 static const struct cpumask *ionic_get_vector_affinity(struct ib_device *ibdev,
@@ -6211,7 +6209,6 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	dev_put(ndev);
 }
 
-#ifdef HAVE_IB_DEVICE_OPS
 static const struct ib_device_ops ionic_dev_ops = {
 	.alloc_hw_stats		= ionic_alloc_hw_stats,
 	.get_hw_stats		= ionic_get_hw_stats,
@@ -6269,14 +6266,11 @@ static const struct ib_device_ops ionic_dev_ops = {
 	.post_srq_recv		= ionic_post_srq_recv,
 
 	.get_port_immutable	= ionic_get_port_immutable,
-#ifdef HAVE_GET_DEV_FW_STR
 	.get_dev_fw_str		= ionic_get_dev_fw_str,
-#endif
 #ifdef HAVE_GET_VECTOR_AFFINITY
 	.get_vector_affinity	= ionic_get_vector_affinity,
 #endif
 };
-#endif
 
 static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 					      struct net_device *ndev)
@@ -6595,72 +6589,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 #endif
 		0;
 
-#ifdef HAVE_IB_DEVICE_OPS
 	ib_set_device_ops(&dev->ibdev, &ionic_dev_ops);
-#else
-	dev->ibdev.alloc_hw_stats	= ionic_alloc_hw_stats;
-	dev->ibdev.get_hw_stats		= ionic_get_hw_stats;
-
-	dev->ibdev.query_device		= ionic_query_device;
-	dev->ibdev.query_port		= ionic_query_port;
-	dev->ibdev.get_link_layer	= ionic_get_link_layer;
-	dev->ibdev.get_netdev		= ionic_get_netdev;
-#ifdef HAVE_REQUIRED_IB_GID
-	dev->ibdev.query_gid		= ionic_query_gid;
-	dev->ibdev.add_gid		= ionic_add_gid;
-	dev->ibdev.del_gid		= ionic_del_gid;
-#endif
-	dev->ibdev.query_pkey		= ionic_query_pkey;
-	dev->ibdev.modify_device	= ionic_modify_device;
-	dev->ibdev.modify_port		= ionic_modify_port;
-
-	dev->ibdev.alloc_ucontext	= ionic_alloc_ucontext;
-	dev->ibdev.dealloc_ucontext	= ionic_dealloc_ucontext;
-	dev->ibdev.mmap			= ionic_mmap;
-
-	dev->ibdev.alloc_pd		= ionic_alloc_pd;
-	dev->ibdev.dealloc_pd		= ionic_dealloc_pd;
-
-	dev->ibdev.create_ah		= ionic_create_ah;
-	dev->ibdev.destroy_ah		= ionic_destroy_ah;
-
-	dev->ibdev.get_dma_mr		= ionic_get_dma_mr;
-	dev->ibdev.reg_user_mr		= ionic_reg_user_mr;
-	dev->ibdev.rereg_user_mr	= ionic_rereg_user_mr;
-	dev->ibdev.dereg_mr		= ionic_dereg_mr;
-	dev->ibdev.alloc_mr		= ionic_alloc_mr;
-	dev->ibdev.map_mr_sg		= ionic_map_mr_sg;
-
-	dev->ibdev.alloc_mw		= ionic_alloc_mw;
-	dev->ibdev.dealloc_mw		= ionic_dealloc_mw;
-
-	dev->ibdev.create_cq		= ionic_create_cq;
-	dev->ibdev.destroy_cq		= ionic_destroy_cq;
-	dev->ibdev.resize_cq		= ionic_resize_cq;
-	dev->ibdev.poll_cq		= ionic_poll_cq;
-	dev->ibdev.req_notify_cq	= ionic_req_notify_cq;
-
-	dev->ibdev.create_qp		= ionic_create_qp;
-	dev->ibdev.modify_qp		= ionic_modify_qp;
-	dev->ibdev.query_qp		= ionic_query_qp;
-	dev->ibdev.destroy_qp		= ionic_destroy_qp;
-	dev->ibdev.post_send		= ionic_post_send;
-	dev->ibdev.post_recv		= ionic_post_recv;
-
-	dev->ibdev.create_srq		= ionic_create_srq;
-	dev->ibdev.modify_srq		= ionic_modify_srq;
-	dev->ibdev.query_srq		= ionic_query_srq;
-	dev->ibdev.destroy_srq		= ionic_destroy_srq;
-	dev->ibdev.post_srq_recv	= ionic_post_srq_recv;
-
-	dev->ibdev.get_port_immutable	= ionic_get_port_immutable;
-#ifdef HAVE_GET_DEV_FW_STR
-	dev->ibdev.get_dev_fw_str	= ionic_get_dev_fw_str;
-#endif
-#ifdef HAVE_GET_VECTOR_AFFINITY
-	dev->ibdev.get_vector_affinity	= ionic_get_vector_affinity;
-#endif
-#endif
 
 	if (ionic_xxx_noop) {
 		rc = ionic_noop_cmd(dev);
