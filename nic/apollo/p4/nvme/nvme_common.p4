@@ -1,3 +1,5 @@
+#include "../../../p4/common-p4+/capri_dma_cmd.p4"
+#include "../../../p4/common-p4+/capri_doorbell.p4"
 
 // NVME command definition
 header_type nvme_sqe_t {
@@ -171,21 +173,22 @@ header_type nscb_t {
         // Stats/Accounting
         num_outstanding_req             : 11; //1-based
 
-        //41 Bytes
-        pad                             : 128;
+        sess_prodcb_table_addr          : 34;
+
+        pad                             : 94;
     }
 }
 
 #define NSCB_PARAMS                                                      \
-ns_size, ns_valid, ns_active, rsvd0, log_lba_size, backend_ns_id,                 \
-rsvd1, num_sessions, rr_session_id_served, valid_session_bitmap,                \
-num_outstanding_req, pad
+ns_size, ns_valid, ns_active, rsvd0, log_lba_size, backend_ns_id,        \
+rsvd1, num_sessions, rr_session_id_served, valid_session_bitmap,         \
+num_outstanding_req, sess_prodcb_table_addr, pad
 
 #define GENERATE_NSCB_D                                                  \
     modify_field(nscb_d.valid_session_bitmap, valid_session_bitmap);     \
-    modify_field(nscb_d.ns_size, ns_size);                                     \
-    modify_field(nscb_d.ns_valid, ns_valid);                                   \
-    modify_field(nscb_d.ns_active, ns_active);                                 \
+    modify_field(nscb_d.ns_size, ns_size);                               \
+    modify_field(nscb_d.ns_valid, ns_valid);                             \
+    modify_field(nscb_d.ns_active, ns_active);                           \
     modify_field(nscb_d.rsvd0, rsvd0);                                   \
     modify_field(nscb_d.log_lba_size, log_lba_size);                     \
     modify_field(nscb_d.backend_ns_id, backend_ns_id);                   \
@@ -193,24 +196,25 @@ num_outstanding_req, pad
     modify_field(nscb_d.num_sessions, num_sessions);                     \
     modify_field(nscb_d.rr_session_id_served, rr_session_id_served);     \
     modify_field(nscb_d.num_outstanding_req, num_outstanding_req);       \
+    modify_field(nscb_d.sess_prodcb_table_addr, sess_prodcb_table_addr); \
     modify_field(nscb_d.pad, pad);                                       \
 
 // session producer cb
 header_type sessprodcb_t {
     fields {
-        sess_q_base_addr0               : 34;
-        log_num_q_entries0              : 5;
+        xts_q_base_addr                 : 34;
+        log_num_xts_q_entries           : 5;
         rsvd0                           : 25;
 
-        sess_q_base_addr1               : 34;
-        log_num_q_entries1              : 5;
+        dgst_q_base_addr                : 34;
+        log_num_dgst_q_entries          : 5;
         rsvd1                           : 25;
 
-        proxy_pi_0                      : 16;
-        ci_0                            : 16;
+        xts_q_pi                        : 16;
+        xts_q_ci                        : 16;
 
-        proxy_pi_1                      : 16;
-        ci_1                            : 16;
+        dgst_q_pi                       : 16;
+        dgst_q_ci                       : 16;
 
         //40 Bytes
         pad                             : 320;
@@ -218,25 +222,62 @@ header_type sessprodcb_t {
 }
 
 #define SESSPRODCB_PARAMS                                                      \
-sess_q_base_addr0, log_num_q_entries0, rsvd0,                                  \
-sess_q_base_addr1, log_num_q_entries1, rsvd1,                                  \
-proxy_pi_0, ci_0,                                                              \
-proxy_pi_1, ci_1,                                                              \
+xts_q_base_addr, log_num_xts_q_entries, rsvd0,                                 \
+dgst_q_base_addr, log_num_dgst_q_entries, rsvd1,                               \
+xts_q_pi, xts_q_ci,                                                            \
+dgst_q_pi, dgst_q_ci,                                                          \
 pad
 
 
 #define GENERATE_SESSPRODCB_D                                                  \
-    modify_field(sessprodcb_d.sess_q_base_addr0, sess_q_base_addr0);           \
-    modify_field(sessprodcb_d.log_num_q_entries0, log_num_q_entries0);         \
+    modify_field(sessprodcb_d.xts_q_base_addr, xts_q_base_addr);               \
+    modify_field(sessprodcb_d.log_num_xts_q_entries, log_num_xts_q_entries);   \
     modify_field(sessprodcb_d.rsvd0, rsvd0);                                   \
-    modify_field(sessprodcb_d.sess_q_base_addr1, sess_q_base_addr1);           \
-    modify_field(sessprodcb_d.log_num_q_entries1, log_num_q_entries1);         \
+    modify_field(sessprodcb_d.dgst_q_base_addr, dgst_q_base_addr);             \
+    modify_field(sessprodcb_d.log_num_dgst_q_entries, log_num_dgst_q_entries); \
     modify_field(sessprodcb_d.rsvd1, rsvd1);                                   \
-    modify_field(sessprodcb_d.proxy_pi_0, proxy_pi_0);                         \
-    modify_field(sessprodcb_d.ci_0, ci_0);                                     \
-    modify_field(sessprodcb_d.proxy_pi_1, proxy_pi_1);                         \
-    modify_field(sessprodcb_d.ci_1, ci_1);                                     \
+    modify_field(sessprodcb_d.xts_q_pi, xts_q_pi);                             \
+    modify_field(sessprodcb_d.xts_q_ci, xts_q_ci);                             \
+    modify_field(sessprodcb_d.dgst_q_pi, dgst_q_pi);                           \
+    modify_field(sessprodcb_d.dgst_q_ci, dgst_q_ci);                           \
     modify_field(sessprodcb_d.pad, pad);                                       \
+
+// session producer cb
+header_type resourcecb_t {
+    fields {
+        page_ring_pi                    : 16;
+        page_ring_ci                    : 16;
+
+        cmdid_ring_pi                   : 16;
+        cmdid_ring_ci                   : 16;
+
+        log_page_ring_sz                : 5;
+        rsvd0                           : 3;
+
+        log_cmdid_ring_sz               : 5;
+        rsvd1                           : 3;
+
+        //54 Bytes
+        pad                             : 432;
+    }
+}
+
+#define RESOURCECB_PARAMS                                                      \
+page_ring_pi, page_ring_ci, cmdid_ring_pi, cmdid_ring_ci,                      \
+log_page_ring_sz, rsvd0, log_cmdid_ring_sz, rsvd1,                             \
+pad
+
+
+#define GENERATE_RESOURCECB_D                                                  \
+    modify_field(resourcecb_d.page_ring_pi, page_ring_pi);                     \
+    modify_field(resourcecb_d.page_ring_ci, page_ring_ci);                     \
+    modify_field(resourcecb_d.cmdid_ring_pi, cmdid_ring_pi);                   \
+    modify_field(resourcecb_d.cmdid_ring_ci, cmdid_ring_ci);                   \
+    modify_field(resourcecb_d.log_page_ring_sz, log_page_ring_sz);             \
+    modify_field(resourcecb_d.rsvd0, rsvd0);                                   \
+    modify_field(resourcecb_d.log_cmdid_ring_sz, log_cmdid_ring_sz);           \
+    modify_field(resourcecb_d.rsvd1, rsvd1);                                   \
+    modify_field(resourcecb_d.pad, pad);                                       \
 
 
 // SQ stats cb

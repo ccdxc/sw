@@ -6,12 +6,7 @@
 #include "../include/table_sizes.h"
 #include "../include/headers.p4"
 
-#include "qstate.p4"
-#include "route.p4"
-#include "route_ipv6.p4"
-#include "dma.p4"
-#include "metadata.p4"
-
+#include "./common_metadata.p4"
 
 @pragma scratch_metadata
 metadata common_scratch_metadata_t common_scratch_metadata0;
@@ -93,6 +88,9 @@ action tx_table_dummy_action(data0, data1, data2, data3, data4, data5,
                              data6, data7)
 {
     SCRATCH_METADATA_INIT_7(common_scratch_metadata1)
+}
+
+control tx_dummy_control {
 }
 
 //stage 7 action functions
