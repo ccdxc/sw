@@ -22,6 +22,11 @@ def Setup(tc):
         tc.skip = True
         return api.types.status.IGNORED
 
+    if tc.args.mode != "promiscuous" and tc.args.mode != "non-promiscuous":
+        api.Logger.error("Unknown mode '%s'. Skipping testcase" %(tc.args.mode))
+        tc.skip = True
+        return api.types.status.IGNORED
+
     tc.expect_pkt = {}
     tc.on_host = {}
 
@@ -57,7 +62,13 @@ def Setup(tc):
         tc.on_host[intf] = False
 
     tc.all_intfs = tc.host_intfs + tc.host_int_intfs + tc.inband_intfs + tc.naples_int_mgmt_intfs + tc.naples_oob_mgmt_intfs
-    api.Logger.debug("Promiscuous test interfaces: ", tc.all_intfs)
+
+    # In non-promiscuous mode, unknown unicast traffic shouldn't reach any interface
+    if tc.args.mode == "non-promiscuous":
+        for intf in tc.all_intfs:
+            tc.expect_pkt[intf] = False
+
+    api.Logger.debug("Test interfaces: ", tc.all_intfs)
 
     workloads = api.GetWorkloads()
     tc.peer_workloads = []
@@ -98,9 +109,15 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    # Run tcpdump on all interfaces in promiscuous mode
+    if tc.args.mode == "non-promiscuous":
+        # Run tcdpump in non-promiscuous mode
+        tcpdump_flags_extra = " -p "
+    else:
+        tcpdump_flags_extra = ""
+
+    # Run tcpdump on all interfaces
     for intf in tc.all_intfs:
-        cmd = "tcpdump -l -i " + intf + " -tne ether host " + tc.random_mac
+        cmd = "tcpdump -l -i " + intf + tcpdump_flags_extra + " -tne ether host " + tc.random_mac
         __PR_AddCommand(intf, tc, req, cmd, True)
 
     cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
@@ -120,19 +137,24 @@ def Trigger(tc):
         if lif_obj == None:
             break
 
-        promisc_lif = False
+        # See if the lif belongs to any of the interface in tc.all_intfs (inteface lif)
+        intf_lif = False
         for intf in tc.all_intfs:
             if lif_obj['spec']['name'].startswith(intf):
-                promisc_lif = True
+                intf_lif = True
                 break
 
-        if promisc_lif and lif_obj['spec']['packetfilter']['receivepromiscuous'] != True:
-            api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(intf))
-            result = api.types.status.FAILURE
-        # A LIF which is not in tc.all_intfs
-        elif not promisc_lif and lif_obj['spec']['packetfilter']['receivepromiscuous'] == True:
-            api.Logger.error("halctl PR flag set for non-promiscuous mode LIF [%s]" %(lif_obj['spec']['name']))
-            result = api.types.status.FAILURE
+        lif_pr_flag = lif_obj['spec']['packetfilter']['receivepromiscuous']
+
+        # A lif must have its PR flag when it is an interface lif and tc.args.mode is 'promiscuous'
+        if tc.args.mode == "promiscuous":
+            if intf_lif and lif_pr_flag != True:
+                api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
+                result = api.types.status.FAILURE
+        else:
+            if lif_pr_flag == True:
+                api.Logger.error("halctl PR flag set for non-promiscuous mode LIF [%s]" %(lif_obj['spec']['name']))
+                result = api.types.status.FAILURE
 
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
@@ -144,10 +166,10 @@ def Trigger(tc):
     for intf, cmd in zip(tc.all_intfs, cmds):
         found = cmd.stdout.find(pattern)
         if found > 0 and not tc.expect_pkt[intf]:
-            api.Logger.error("Interface [%s] received packet in promiscuous mode while not expecting" %(intf))
+            api.Logger.error("Interface [%s] received Unknown unicast packet while not expecting" %(intf))
             result = api.types.status.FAILURE
         elif found == -1 and tc.expect_pkt[intf]:
-            api.Logger.error("Interface [%s] did not receive Unknown Unicast packet in promiscuous mode" %(intf))
+            api.Logger.error("Interface [%s] did not receive expected Unknown unicast packet" %(intf))
             result = api.types.status.FAILURE
 
     # Incase of testcase failure, dump the entire command output for further debug
