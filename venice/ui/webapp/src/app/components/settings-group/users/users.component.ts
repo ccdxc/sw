@@ -124,7 +124,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this._controllerService.setToolbarData({
       buttons: [
         {
-          cssClass: 'global-button-primary users-toolbar-button',
+          cssClass: 'global-button-primary users-toolbar-button users-toolbar-button-refresh',
           text: 'Refresh',
           callback: () => { this.getData(); },
         }
@@ -325,8 +325,17 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param deletedUser
    */
   onDeleteUser_with_staging($event, deletedUser: AuthUser) {
-    const r = confirm('Please confirm to delete user:' + deletedUser.spec.fullname);
-    if (r === true) {
+    this._controllerService.invokeConfirm({
+      header: Utility.generateDeleteConfirmMsg('User', deletedUser.meta.name),
+      message: 'This action cannot be reversed',
+      acceptLabel: 'Delete',
+      accept: () => {
+        this.deleteUser_with_staging(deletedUser);
+      }
+    });
+  }
+
+  deleteUser_with_staging( deletedUser: AuthUser) {
       this.createStagingBuffer().subscribe(
         responseBuffer => {
           const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
@@ -363,16 +372,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           this.invokeRESTErrorToaster('Create Buffer Failed When Deleting User ' + deletedUser.meta.name, error);
         }
       );
-    } else {
-      return;
-    }
   }
-
-
-
-
-
-
 
   deleteStagingBuffer(buffername: string, reason: string) {
     this.stagingService.DeleteBuffer(buffername).subscribe(
@@ -399,12 +399,14 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param role
    */
   onDeleteRole($event, role: AuthRole) {
-    const r = confirm('Please confirm to delete role:' + role.meta.name);
-    if (r === true) {
-      this.deleteRole_with_staging(role);
-    } else {
-      return;
-    }
+    this._controllerService.invokeConfirm({
+      header: Utility.generateDeleteConfirmMsg('Role', role.meta.name),
+      message: 'This action cannot be reversed',
+      acceptLabel: 'Delete',
+      accept: () => {
+        this.deleteRole_with_staging(role);
+      }
+    });
   }
 
 
@@ -463,8 +465,17 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param rolebinding
    */
   onDeleteRoleBinding($event, rolebinding: AuthRoleBinding) {
-    const r = confirm('Please confirm to delete rolebinding:' + rolebinding.meta.name);
-    if (r === true) {
+    this._controllerService.invokeConfirm({
+      header: Utility.generateDeleteConfirmMsg('Rolebinding', rolebinding.meta.name),
+      message: 'This action cannot be reversed',
+      acceptLabel: 'Delete',
+      accept: () => {
+        this.deleteRoleBinding(rolebinding);
+      }
+    });
+  }
+
+  deleteRoleBinding( rolebinding: AuthRoleBinding) {
       this._authService.DeleteRoleBinding(rolebinding.meta.name).subscribe(
         (data) => {
           // refresh roles list
@@ -473,9 +484,6 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         },
         this.restErrorHandler('Delete Role-binding Failed')
       );
-    } else {
-      return;
-    }
   }
 
   /**

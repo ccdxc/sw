@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ViewChild, OnDestroy } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
@@ -14,7 +14,7 @@ import { IPUtility } from '@app/common/IPUtility';
   styleUrls: ['./fwlogs.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class FwlogsComponent extends BaseComponent implements OnInit {
+export class FwlogsComponent extends BaseComponent implements OnInit , OnDestroy {
   @ViewChild('fwlogsTable') fwlogTable: Table;
   loading = false;
   fwlogs = [];
@@ -71,7 +71,7 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
           cssClass: 'global-button-primary fwlogs-button',
           text: 'FIREWALL LOG POLICIES',
           callback: () => { this.controllerService.navigate(['/monitoring', 'fwlogs', 'fwlogpolicies']); }
-        },],
+        }],
       breadcrumb: [{ label: 'Firewall Logs', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs' }]
     });
     this.getFwlogs();
@@ -94,6 +94,7 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
 
   clearSearch() {
     this.query = new Telemetry_queryFwlogsQuerySpec(null, false);
+    this.getFwlogs();  // after clear search criteria, we want to restore table records.
   }
 
   getFwlogs() {
@@ -102,7 +103,7 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
       return;
     }
     this.loading = true;
-    let query = new Telemetry_queryFwlogsQuerySpec()
+    const query = new Telemetry_queryFwlogsQuerySpec();
     const queryVal: any = this.query.getFormGroupValues();
     const fields = [
       'source-ips',
@@ -132,8 +133,18 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
     fieldsInt.forEach(
       (field) => {
         if (typeof queryVal[field] === 'string') {
-          query[field] = queryVal[field].split(',').map((e: string) => {
+          query[field] = queryVal[field].split(',')
+          .filter((e: string) => {
+            if (e.length === 0) {
+              return false;
+            }
+            return true;
+          })
+          .map((e: string) => {
             return parseInt(e, 10);
+          })
+          .filter( (e) => {
+            return !isNaN(e);
           });
         }
       }
@@ -165,13 +176,13 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
         this.controllerService.invokeRESTErrorToaster('Fwlog search failed', error);
       }
     );
-    this.subscriptions.push(subscription)
+    this.subscriptions.push(subscription);
   }
 
   ngOnDestroy() {
     this.subscriptions.forEach(subscription => {
       subscription.unsubscribe();
-    })
+    });
   }
 
 }

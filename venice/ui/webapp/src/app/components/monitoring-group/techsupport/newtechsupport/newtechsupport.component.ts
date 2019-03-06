@@ -68,13 +68,13 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
     this.oldButtons = currToolbar.buttons;
     currToolbar.buttons = [
       {
-        cssClass: 'global-button-primary techsupportrequests-toolbar-button',
+        cssClass: 'global-button-primary techsupportrequests-toolbar-button techsupportrequests-toolbar-SAVE',
         text: 'CREATE TECH SUPPORT REQUEST',
         callback: () => { this.onSaveTechsupportRequest(); },
         computeClass: () => this.computeButtonClass()
       },
       {
-        cssClass: 'global-button-neutral techsupportrequests-toolbar-button',
+        cssClass: 'global-button-neutral techsupportrequests-toolbar-button techsupportrequests-toolbar-CANCEL',
         text: 'CANCEL',
         callback: () => { this.onCancelTechsupportRequest(); }
       },

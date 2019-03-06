@@ -24,14 +24,14 @@
             </div>
   
           <ng-container *ngTemplateOutlet="divider"></ng-container>
-          <div fxFlex="noshrink" fxLayout="row" class="newtechsupport-row">
+          <div fxFlex="noshrink" fxLayout="row" class="newtechsupport-row newtechsupport-row-nodeselector">
             <div fxFlex="nogrow" class="newtechsupport-text">Node Selector:</div>
             <app-repeater #nmlabelRepeater [data]="cslabelData" [formArray]="nmlabelFormArray" ></app-repeater>
           </div>
 
           <ng-container *ngTemplateOutlet="divider"></ng-container>
 
-          <div fxFlex="noshrink" fxLayout="row" class="newtechsupport-row">
+          <div fxFlex="noshrink" fxLayout="row" class="newtechsupport-row  newtechsupport-row-collectionselector">
             <div fxFlex="nogrow" class="newtechsupport-text">Collection Selector:</div>
             <app-repeater #cslabelRepeater [data]="cslabelData" [formArray]="cslabelFormArray" ></app-repeater>
           </div>

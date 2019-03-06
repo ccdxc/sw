@@ -1194,27 +1194,32 @@ export class Utility {
   // only apply if an object is given (Ex. pagination spec for telemetry queries)
   // TODO: Create a BaseType for this function to take in
   public static TrimDefaultsAndEmptyFields(request: any) {
-    request = _.cloneDeep(request)
+    request = _.cloneDeep(request);
     const helperFunc = (obj): boolean => {
       let retValue = true;
-      for (var key in obj) {
+      for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
-          if (Utility.isPlainObject(obj[key])) {
+          if (_.isObjectLike(obj[key])) {
             if (helperFunc(obj[key])) {
-              delete obj[key]
+              delete obj[key];
             } else {
-              retValue = false
+              retValue = false;
             }
-          } else if (obj[key] != null && obj[key] != obj.getPropInfo(key).default) {
-            retValue = false
+          } else if (obj[key] != null && (obj.getPropInfo == null || obj[key] !== obj.getPropInfo(key).default)) {
+            retValue = false;
           }
         }
       }
-      return retValue
-    }
-    helperFunc(request)
+      return retValue;
+    };
+    helperFunc(request);
     return request;
   }
+  
+  public static generateDeleteConfirmMsg(objectType: string,  name: string ): string {
+    return 'Are you sure you want to delete ' +  objectType + ':  name';
+  }
+
 
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()
@@ -1259,8 +1264,16 @@ export class Utility {
     return token ? token : '';
   }
 
-  getLoginName(): string | null {
+  getLoginUser(): any | null {
     const body = JSON.parse(sessionStorage.getItem(AUTH_BODY));
+    if (body != null && body.meta != null) {
+      return body;
+    }
+    return null;
+  }
+
+  getLoginName(): string | null {
+    const body = this.getLoginUser();
     if (body != null && body.meta != null) {
       return body.meta.name;
     }

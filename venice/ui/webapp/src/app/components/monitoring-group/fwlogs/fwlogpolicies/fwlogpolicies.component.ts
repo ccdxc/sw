@@ -78,7 +78,7 @@ export class FwlogpoliciesComponent implements OnInit, OnDestroy, DoCheck {
   setDefaultToolbar() {
     this._controllerService.setToolbarData({
       buttons: [{
-        cssClass: 'global-button-primary fwlogpolicies-button',
+        cssClass: 'global-button-primary fwlogpolicies-button fwlogpolicies-button-ADD',
         text: 'ADD FIREWALL LOG POLICY',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewPolicy(); }

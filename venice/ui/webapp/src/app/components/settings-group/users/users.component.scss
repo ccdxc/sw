@@ -48,12 +48,12 @@
     display: flex;
 }
 
- .users-adduser-button {
+ .users-add-button {
     float: right;
     margin: 8px 16px 8px 8px;
 }
 
-.users-adduser-button:disabled {
+.users-add-button:disabled {
     cursor: not-allowed ;
     box-shadow: none ;
     opacity: .25;

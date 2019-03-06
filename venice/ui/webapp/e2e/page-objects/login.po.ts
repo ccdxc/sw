@@ -4,7 +4,7 @@ export class LoginPage {
   username: string;
   password: string;
 
-  constructor(username: string = 'test', password: string = 'pensando') {
+  constructor(username: string = 'test', password: string = 'Pensando0$') {
     this.username = username;
     this.password = password;
   }

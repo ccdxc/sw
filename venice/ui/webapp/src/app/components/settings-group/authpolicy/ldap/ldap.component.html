@@ -12,7 +12,7 @@
   <div fxFlex fxLayout="column" fxLayoutAlign="center stretch">
     <div fxFlex="nogrow" fxLayout="row">
       <mat-slide-toggle fxFlex='nogrow' class="ldap-toggle"></mat-slide-toggle>
-      <div class="ldap-title">
+      <div class="ldap-title authpolicy-config-title">
         LDAP
       </div>
       <div fxFlex></div>
@@ -36,7 +36,7 @@
   <div fxFlex fxLayout="column">
     <div fxFlex="nogrow" fxLayout="row" [formGroup]="LDAPObject.$formGroup">
       <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="ldap-toggle" ></mat-slide-toggle>
-      <div class="ldap-title">
+      <div class="ldap-title authpolicy-config-title">
         LDAP
       </div>
     </div>
@@ -56,7 +56,7 @@
   <div *ngIf="!LDAPEditMode" fxFlex="nogrow" fxLayout="column">
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" fxLayoutGap="10px" class="authpolicy-arrow-up">
       <!-- NOT EDIT MODE, SHOW EDIT BUTTON AND ARROW -->
-      <mat-icon *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="toggleEdit()">
+      <mat-icon class="ldap-edit-icon" *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="toggleEdit()">
         edit
       </mat-icon>
       <mat-icon *ngIf="!LDAPEditMode && canRaiseAuthRank()" (click)="raiseAuthRank()">
@@ -75,7 +75,7 @@
   <!-- EDIT MODE, SHOW SAVE/CANCEL BUTTON -->
   <div *ngIf="LDAPEditMode" fxFlex="nogrow" fxLayout="row">    
     <div  fxFlex="nogrow">
-      <button (click)="saveLDAP()" class="global-button-primary authpolicy-save" 
+      <button (click)="saveLDAP()" class="global-button-primary authpolicy-save authpolicy-save-ldap" 
        [disabled]="!enableSaveButton()" >SAVE</button>
     </div>
     <div fxFlex="nogrow">
@@ -110,7 +110,7 @@
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
               <input fxFlex="nogrow" formControlName="bind-dn"  app-errorTooltip  class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
               <div fxFlex="nogrow" class="global-button-primary ldap-bind-connection-button" (click)="onCheckLDAPBindConnect($event)">Test Bind</div>
-              <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"  title="{{getBindConfigErrorTooltip()}}" class="ldap-test-error-icon">
+              <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"  title="{{getBindConfigErrorTooltip()}}" class="ldap-test-error-icon ldap-test-error-icon-bind">
                   error
               </mat-icon>
             </div>
@@ -354,7 +354,7 @@
     <div fxFlex="10px"></div>
   </div>
   <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
-      <mat-icon *ngIf="hasConnConfigError()" (click)="onConnErrorMessageClick($event)"  title="{{getConnConfigErrorTooltip()}}" class="ldap-test-error-icon">
+      <mat-icon *ngIf="hasConnConfigError()" (click)="onConnErrorMessageClick($event)"  title="{{getConnConfigErrorTooltip()}}" class="ldap-test-error-icon ldap-test-error-icon-connection">
           error
       </mat-icon>
     <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button"  (click)="onCheckLdapConnection($event)">Test Connections</div>

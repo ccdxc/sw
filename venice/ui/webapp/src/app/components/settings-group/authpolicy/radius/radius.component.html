@@ -9,7 +9,7 @@
     <div fxFlex fxLayout="column" fxLayoutAlign="center stretch">
       <div fxFlex="nogrow" fxLayout="row">
         <mat-slide-toggle fxFlex='nogrow' class="radius-toggle"></mat-slide-toggle>
-        <div class="radius-title">
+        <div class="radius-title  authpolicy-config-title">
           Radius
         </div>
         <div fxFlex></div>
@@ -32,7 +32,7 @@
   <div fxFlex fxLayout="column">
     <div fxFlex="nogrow" fxLayout="row" [formGroup]="radiusObject.$formGroup">
       <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="radius-toggle"  ></mat-slide-toggle>
-      <div class="radius-title">
+      <div class="radius-title  authpolicy-config-title">
         Radius
       </div>
   
@@ -53,7 +53,7 @@
   <div *ngIf="!radiusEditMode" fxFlex="nogrow" fxLayout="column">
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" fxLayoutGap="10px" class="authpolicy-arrow-up">
       <!-- NOT EDIT MODE, SHOW EDIT BUTTON AND ARROW -->
-      <mat-icon *ngIf="isHover && !radiusEditMode" fxFlex="nogrow" (click)="toggleEdit()">
+      <mat-icon  class="radius-edit-icon" *ngIf="isHover && !radiusEditMode" fxFlex="nogrow" (click)="toggleEdit()">
         edit
       </mat-icon>
       <mat-icon *ngIf="!radiusEditMode && canRaiseAuthRank()" (click)="raiseAuthRank()">
@@ -72,7 +72,7 @@
   <!-- EDIT MODE, SHOW SAVE/CANCEL BUTTON -->
   <div *ngIf="radiusEditMode" fxFlex="nogrow" fxLayout="row">
     <div *ngIf="radiusEditMode" fxFlex="nogrow">
-      <button (click)="saveRadius()" class="global-button-primary authpolicy-save" [disabled]="!enableSaveButton()">SAVE</button>
+      <button (click)="saveRadius()" class="global-button-primary authpolicy-save authpolicy-save-radius" [disabled]="!enableSaveButton()">SAVE</button>
     </div>
     <div *ngIf="radiusEditMode" fxFlex="nogrow">
       <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>

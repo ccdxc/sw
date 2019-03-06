@@ -38,9 +38,9 @@
             </ng-container>
           </td>
           <td class="global-column-action">
-            <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-              <mat-icon matTooltip="Edit policy" class="global-table-action-icon" (click)="onUpdateRecord($event, rowData)">edit</mat-icon>
-              <mat-icon matTooltip="Delete policy" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+            <div class="global-column-action-icon-container global-column-action-icon-container-fwlogpolicies_{{rowData.meta.name}}" fxLayout="row" fxLayoutGap="5px">
+              <mat-icon matTooltip="Edit policy" class="global-table-action-icon fwlogpolicies-table-action-icon-edit" (click)="onUpdateRecord($event, rowData)">edit</mat-icon>
+              <mat-icon matTooltip="Delete policy" class="global-table-action-icon fwlogpolicies-table-action-icon-delete" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
             </div>
           </td>
          </tr>

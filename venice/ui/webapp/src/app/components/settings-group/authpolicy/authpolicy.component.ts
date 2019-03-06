@@ -64,7 +64,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   private setupToolbarItems(rankChanged: boolean = false) {
     const buttons = [
       {
-        cssClass: 'global-button-primary authpolicy-toolbar-button',
+        cssClass: 'global-button-primary authpolicy-toolbar-button authpolicy-toolbar-button-refresh',
         text: 'Refresh',
         callback: () => {
           this.getAuthenticationPolicy();
@@ -73,7 +73,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     ];
     if (rankChanged === true) {
       const saveRankChange = {
-        cssClass: 'global-button-primary authpolicy-toolbar-button',
+        cssClass: 'global-button-primary authpolicy-toolbar-button authpolicy-toolbar-button-save',
         text: 'Save',
         callback: () => {
           this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());

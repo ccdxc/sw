@@ -31,7 +31,7 @@ import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging'
  *  To prevent excessive computing kind options,  we introduce role.spec.permission[i][NewroleComponent.KINDOPTIONS]
  *  see this.onGroupChange($event, permission, index) and htmm template =>
  *  <p-dropdown class="newrole-severity" fxFlex="170px" formControlName="resource-kind" styleClass="newrole-font"
- *   [options]="permission.kindOptions" placeholder="kind..."  (onChange)="onKindChange($event,permission)" ></p-dropdown>
+ *   [options]="permission.kindOptions" placeholder="kind..."  ></p-dropdown>
  *
  */
 @Component({
@@ -322,16 +322,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     permission[NewroleComponent.KINDOPTIONS].length = 0;
     permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
   }
-  /**
-   * This API serves html template
-   * @param $event
-   * @param permission
-   * @param permissionIndex
-   */
-  onKindChange($event, permission) {
-    const value = $event.value; // per p-dropdown API doc
-    // console.log(this.getClassName() + 'onKindChange()', value, permission);
-  }
+
   /**
    * This API serves html template
    * Given a permission control, we compute the available options for resource-kind field

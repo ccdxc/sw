@@ -61,13 +61,13 @@ export class NewfwlogpolicyComponent extends BaseComponent implements OnInit, Af
       this.oldButtons = currToolbar.buttons;
       currToolbar.buttons = [
         {
-          cssClass: 'global-button-primary fwlogpolicies-button',
+          cssClass: 'global-button-primary fwlogpolicies-button fwlogpolicies-button-SAVE',
           text: 'CREATE FIREWALL LOG POLICY',
           callback: () => { this.savePolicy(); },
           computeClass: () => this.computeButtonClass()
         },
         {
-          cssClass: 'global-button-neutral fwlogpolicies-button',
+          cssClass: 'global-button-neutral fwlogpolicies-button fwlogpolicies-button-CANCEL',
           text: 'CANCEL',
           callback: () => { this.cancelPolicy(); }
         },

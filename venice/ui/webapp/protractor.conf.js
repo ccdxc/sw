@@ -19,11 +19,12 @@ exports.config = {
   },
   capabilities: {
     browserName: 'chrome',
+    unexpectedAlertBehaviour: 'accept',
     //binary: process.env.CHROME_BIN,
     chromeOptions: {
-        args: ["--headless",  "--no-sandbox", "--disable-gpu", "--window-size=1200,900"]  
+      args: ["--headless",  "--no-sandbox", "--disable-gpu", "--window-size=1200,900"]  
       // The following allowes watching the e2e test run and is helpful for debugging
-       // args: ["--window-size=1200,900"]
+      //  args: ["--window-size=1400,1000"]
     },
     //  loggingPrefs: {driver: 'ALL', server: 'ALL', browser: 'ALL'}
   },

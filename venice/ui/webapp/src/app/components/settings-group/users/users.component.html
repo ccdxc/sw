@@ -1,12 +1,12 @@
 <app-pagebody [icon]="usericon" header="Manage {{whichPanel}}" class="users" *ngIf="authusers && authusers.length>0">
     <div pagebody-options>
-        <button class="global-button-primary users-toolbar-button users-adduser-button" [disabled]="isToShowAddUserPanel"
+        <button class="global-button-primary users-toolbar-button users-add-button users-adduser-button" [disabled]="isToShowAddUserPanel"
             (click)="onAddUser($event)" *ngIf="whichPanel=='user'" title="Add User">Add User
         </button>
-        <button class="global-button-primary users-toolbar-button users-adduser-button" [disabled]="isToShowAddRolePanel"
+        <button class="global-button-primary users-toolbar-button users-add-button users-addrole-button" [disabled]="isToShowAddRolePanel"
             (click)="onAddRole($event)" *ngIf="whichPanel=='role'" title="Add Role">Add Role
         </button>
-        <button class="global-button-primary users-toolbar-button users-adduser-button" [disabled]="isToShowAddRolebindingPanel"
+        <button class="global-button-primary users-toolbar-button users-add-button users-addrolebinding-button" [disabled]="isToShowAddRolebindingPanel"
             (click)="onAddRoleBinding($event)" *ngIf="whichPanel=='rolebinding'" title="Add Role-binding">Add
             Rolebinding
         </button>
@@ -38,7 +38,7 @@
     <div class="users-adduser-div" *ngIf="isToShowAddRolePanel" [@slideInOut]>
         <app-newrole (formClose)="creationRoleFormClose($event)" [veniceRoles]="authRoles" [selectedAuthRole]="selectedAuthRole"></app-newrole>
     </div>
-    <div class="users-panel-content" fxLayout="row wrap" *ngIf="authRoles && !isToShowAddRolePanel">
+    <div class="users-panel-content users-panel-content-roles" fxLayout="row wrap" *ngIf="authRoles && !isToShowAddRolePanel">
         <div *ngFor="let role of authRoles" class="user-panel-div">
             <ng-container *ngTemplateOutlet="roletemplate; context:{item:role}"></ng-container>
         </div>
@@ -51,7 +51,7 @@
         <app-newrolebinding [veniceUsers]="authusers" [veniceRoles]="authRoles" [veniceRolebindings]="authRoleBindings" (formClose)="creationRoleBindingFormClose($event)"
             [selectedAuthRolebinding]="selectedAuthRolebinding"></app-newrolebinding>
     </div>
-    <div class="users-panel-content" fxLayout="row wrap" *ngIf="authRoleBindings && !isToShowAddRolebindingPanel">
+    <div class="users-panel-content users-panel-content-rolebindings" fxLayout="row wrap" *ngIf="authRoleBindings && !isToShowAddRolebindingPanel">
         <div *ngFor="let rolebinding of authRoleBindings" class="user-panel-div" fxFlex="30%">
             <ng-container *ngTemplateOutlet="rolebindingtemplate; context:{item:rolebinding}"></ng-container>
         </div>
@@ -64,7 +64,7 @@
         <app-newuser [authRoleBindings]="authRoleBindings" [authUsers]="authusers" [rolebindingOptions]="rolebindingOptions"
             (formClose)="creationUserFormClose($event)"></app-newuser>
     </div>
-    <div class="users-panel-content" *ngIf="authusers">
+    <div class="users-panel-content  users-panel-content-users" *ngIf="authusers">
         <div *ngFor="let role of getRoles()" class="user-panel-rolegroup">
             <div class="user-panel-rolegroup-header">
                 <div fxLayout="row wrap" fxLayoutAlign="start" class="user-panel-rolegroup-header-info-row">
@@ -83,7 +83,7 @@
 </ng-template>
 
 <ng-template #roletemplate let-role="item">
-    <div class="usertemplate-div">
+    <div class="usertemplate-div usertemplate-div_role_{{role?.meta.name}}">
         <div class="usertemplate-div-card" fxLayout="row">
             <div class="usertemplate-div-card-account-circle" fxFlex="none" fxLayout="column">
                 <button mat-icon-button class="usertemplate-div-card-icon">
@@ -133,7 +133,7 @@
 </ng-template>
 
 <ng-template #usertemplate let-user="item">
-    <div class="usertemplate-div">
+    <div class="usertemplate-div usertemplate-div_user_{{user?.meta.name}}">
         <div class="usertemplate-div-card" fxLayout="row">
             <div class="usertemplate-div-card-account-circle" fxFlex="none" fxLayout="column">
                 <button mat-icon-button class="usertemplate-div-card-icon">
@@ -157,7 +157,7 @@
                         </button>
                     </div>
                     <div class="usertemplate-div-card-icon-div-edit" *ngIf="showEditButton(user)">
-                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button"
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-changepassword-button"
                             title="change password">
                             <mat-icon class="usertemplate-div-card-icon-button" (click)="onChangePassword($event, user)">lock</mat-icon>
                         </button>
@@ -241,7 +241,7 @@
 </ng-template>
 
 <ng-template #rolebindingtemplate let-rolebinding="item">
-    <div class="usertemplate-div">
+    <div class="usertemplate-div  usertemplate-div_rolebinding_{{rolebinding?.meta.name}}">
         <div class="usertemplate-div-card" fxLayout="row">
             <div class="usertemplate-div-card-account-circle" fxFlex="none" fxLayout="column">
                 <button mat-icon-button class="usertemplate-div-card-icon">
