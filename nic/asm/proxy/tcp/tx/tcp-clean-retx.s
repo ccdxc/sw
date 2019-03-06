@@ -47,6 +47,9 @@ tcp_retx_snd_una_update:
     slt             c1, r1[31:0], k.t0_s2s_clean_retx_len1
     b.c1            tcp_retx_partial_pkt_ack
 
+    seq             c1, k.t0_s2s_clean_retx_num_retx_pkts, 0
+    b.c1            tcp_retx_cleaningup_more_error
+
 tcp_retx_calc_num_pkts_freed_start:
     // r1 = snd_una - retx_snd_una
     // r4 = total bytes freed (minimum = len1)

@@ -2,11 +2,25 @@ meta:
     name    : tcp_proxy 
     os      : [ linux, esx ]
     nics    : [ pensando, mellanox, intel, broadcom ]
-    targetcount : 35
+    #targetcount : 35
 
 testcases:
-    -   name    : iperf_thru_tcp_proxy
-        testcase: testcases.tcp_proxy.iperf
+    -   name    : nc_client_thru_tcp_proxy
+        testcase: testcases.tcp_proxy.nc_client
         iterators:
             type  : simple 
-            port  : [ 69, 70, 71 ]
+            port  : [ 69 ]
+
+    -   name    : iperf_server_thru_tcp_proxy
+        testcase: testcases.tcp_proxy.iperf_server
+        iterators:
+            type  : simple 
+            port  : [ 70, 71, 72 ]
+            pktsize : [ 128, 512, 1024 ]
+
+    -   name    : iperf_client_thru_tcp_proxy
+        testcase: testcases.tcp_proxy.iperf_client
+        iterators:
+            type  : simple 
+            port  : [ 73, 74, 75 ]
+            pktsize : [ 256, 768, 1400 ]

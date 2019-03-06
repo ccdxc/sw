@@ -523,6 +523,21 @@ tcp_tx_retx_timer_expired:
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+
+    seq             c1, d.asesq_retx_ci, d.{ci_4}.hx
+    b.c1            tcp_tx_retx_timer_expired_launch_sesq
+tcp_tx_retx_timer_expired_launch_asesq:
+    /*
+     * Launch asesq entry ready with RETX CI as index
+     */
+    // asesq_base = sesq_base - number of sesq slots
+    sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
+    add             r3, r3, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
+                     r3, TABLE_SIZE_64_BITS)
+    b               tcp_tx_retx_timer_expired_done
+    phvwri          p.common_phv_pending_asesq, 1
+tcp_tx_retx_timer_expired_launch_sesq:
     /*
      * Launch sesq entry ready with RETX CI as index
      */
@@ -530,6 +545,7 @@ tcp_tx_retx_timer_expired:
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
 
+tcp_tx_retx_timer_expired_done:
 #ifndef HW
     // DEBUG code
     // If we are testing timer full case, don't start the timer again to
@@ -549,6 +565,7 @@ tcp_tx_del_ack:
     // start perpetual timer if necessary for the flow
     seq             c1, d.perpetual_timer_started, 0
     bal.c1          r7, tcp_tx_start_perpetual_timer
+    nop
     tblwr.f         d.{ci_3}.hx, d.{pi_3}.hx
 del_ack_doorbell:
 

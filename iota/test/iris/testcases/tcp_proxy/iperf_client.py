@@ -41,24 +41,19 @@ def Trigger(tc):
         api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show tcp-proxy session")
         tc.cmd_cookies.append(cmd_cookie)
 
-    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s) on tcp proxy port %s" %\
-                   (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address, tc.iterators.port)
+    tc.cmd_descr = "Client: %s(%s) <--> Server: %s(%s) on tcp proxy port %s pktsize %s" %\
+                   (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address, tc.iterators.port, tc.iterators.pktsize)
    
     api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
-
-    cmd_cookie = "Set rcv socket buffer size on %s" %(w1.workload_name)
-    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                           "sysctl -w net.ipv4.tcp_rmem='4096 2147483647 2147483647'")
-    tc.cmd_cookies.append(cmd_cookie)
-
-    cmd_cookie = "Running iperf server on %s" % (w1.workload_name)
-    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
+    
+    cmd_cookie = "Running iperf server on %s" % (w2.workload_name)
+    api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            "iperf3 -s -p %s" % (tc.iterators.port), background = True)
     tc.cmd_cookies.append(cmd_cookie)
-    
-    cmd_cookie = "Running iperf client on %s" % (w2.workload_name)
-    api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
-                           "iperf3 -c %s -p %s -M 1024 -b 100M" % (w1.ip_address, tc.iterators.port))
+
+    cmd_cookie = "Running iperf client on %s" % (w1.workload_name)
+    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
+                           "iperf3 -c %s -p %s -M %s" % (w2.ip_address, tc.iterators.port, tc.iterators.pktsize))
     tc.cmd_cookies.append(cmd_cookie)
     
     if w1.IsNaples():

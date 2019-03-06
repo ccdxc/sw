@@ -149,7 +149,7 @@ flow_fc_process_done:
     tblwr       d.rcv_wup, k.to_s5_rcv_nxt
 
     bbeq        k.common_phv_ooo_rcv, 1, flow_fc_ooq
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_dma_serq_stage_start, k.common_phv_qstate_addr,
                 TCP_TCB_RX_DMA_OFFSET, TABLE_SIZE_512_BITS)
 
