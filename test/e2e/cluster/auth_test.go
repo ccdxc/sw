@@ -208,4 +208,43 @@ var _ = Describe("auth tests", func() {
 			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
 		})
 	})
+	Context("jwt", func() {
+		BeforeEach(func() {
+			var authPolicy *auth.AuthenticationPolicy
+			var err error
+			Eventually(func() error {
+				authPolicy, err = ts.restSvc.AuthV1().AuthenticationPolicy().Get(ts.loggedInCtx, &api.ObjectMeta{})
+				return err
+			}, 10, 1).Should(BeNil())
+			authPolicy.Spec.TokenExpiry = "2m"
+			Eventually(func() error {
+				authPolicy, err = ts.restSvc.AuthV1().AuthenticationPolicy().Update(ts.loggedInCtx, authPolicy)
+				return err
+			}, 10, 1).Should(BeNil())
+			Expect(authPolicy.Spec.TokenExpiry).Should(Equal("2m"))
+			time.Sleep(1 * time.Second)
+			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+		})
+		It("check expiry", func() {
+			var err error
+			time.Sleep(180 * time.Second)
+			_, err = ts.restSvc.AuthV1().User().Get(ts.loggedInCtx, &api.ObjectMeta{Name: ts.tu.User, Tenant: globals.DefaultTenant})
+			Expect(err).Should(HaveOccurred())
+		})
+		AfterEach(func() {
+			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+			var authPolicy *auth.AuthenticationPolicy
+			var err error
+			Eventually(func() error {
+				authPolicy, err = ts.restSvc.AuthV1().AuthenticationPolicy().Get(ts.loggedInCtx, &api.ObjectMeta{})
+				return err
+			}, 10, 1).Should(BeNil())
+			authPolicy.Spec.TokenExpiry = "144h"
+			Eventually(func() error {
+				_, err = ts.restSvc.AuthV1().AuthenticationPolicy().Update(ts.loggedInCtx, authPolicy)
+				return err
+			}, 10, 1).Should(BeNil())
+			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+		})
+	})
 })

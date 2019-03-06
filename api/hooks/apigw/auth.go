@@ -379,7 +379,7 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	grpcaddr := globals.APIServer
 	grpcaddr = gw.GetAPIServerAddr(grpcaddr)
 	r := authHooks{
-		authGetter:       manager.GetAuthGetter(globals.APIGw, grpcaddr, gw.GetResolver()),
+		authGetter:       manager.GetAuthGetter(globals.APIGw, grpcaddr, gw.GetResolver(), l),
 		permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver()),
 		bootstrapper:     bootstrapper.GetBootstrapper(),
 		ldapChecker:      ldap.NewConnectionChecker(),

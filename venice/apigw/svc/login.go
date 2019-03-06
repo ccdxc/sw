@@ -111,7 +111,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr = apiGateway.GetAPIServerAddr(grpcaddr)
 	s.apiserver = grpcaddr
 	// create AuthenticationManager
-	authnMgr, err := manager.NewAuthenticationManager(globals.APIGw, grpcaddr, s.rslvr)
+	authnMgr, err := manager.NewAuthenticationManager(globals.APIGw, grpcaddr, s.rslvr, logger)
 	if err != nil {
 		s.logger.Errorf("failed to create authentication manager: %v", err)
 		return ErrInternal

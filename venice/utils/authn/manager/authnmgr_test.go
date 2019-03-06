@@ -89,7 +89,7 @@ func setup() {
 	testHS512JWTToken = createHeadlessToken(signatureAlgorithm, secret, expiration, issuerClaimValue)
 
 	// create authentication manager
-	authnmgr, err = NewAuthenticationManager("authnmgr_test", apiSrvAddr, nil)
+	authnmgr, err = NewAuthenticationManager("authnmgr_test", apiSrvAddr, nil, logger)
 	if err != nil {
 		panic("Error creating authentication manager")
 	}
@@ -183,7 +183,7 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 }
 
 func createAuthenticationPolicy(t *testing.T, policy *auth.AuthenticationPolicy) *auth.AuthenticationPolicy {
-	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil)
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, logger)
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := authGetter.GetAuthenticationPolicy()
 		return err != nil, nil
@@ -207,7 +207,7 @@ func createAuthenticationPolicy(t *testing.T, policy *auth.AuthenticationPolicy)
 }
 
 func deleteAuthenticationPolicy(t *testing.T) {
-	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil)
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, logger)
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := authGetter.GetAuthenticationPolicy()
 		return err == nil, nil

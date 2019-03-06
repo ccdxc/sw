@@ -280,27 +280,26 @@ func (ug *defaultAuthGetter) resetCacheCb() {
 }
 
 // GetAuthGetter returns a singleton implementation of AuthGetter
-func GetAuthGetter(name, apiServer string, rslver resolver.Interface) AuthGetter {
+func GetAuthGetter(name, apiServer string, rslver resolver.Interface, logger log.Logger) AuthGetter {
 	module := name + authn.ModuleSuffix
 	if gAuthGetter != nil {
 		gAuthGetter.start(module, apiServer, rslver)
 	}
 	once.Do(func() {
-		// create logger
-		config := log.GetDefaultConfig(module)
-		l := log.GetNewLogger(config)
-
+		if logger == nil {
+			logger = log.GetNewLogger(log.GetDefaultConfig(module))
+		}
 		cache := memdb.NewMemdb()
 		gAuthGetter = &defaultAuthGetter{
 			name:      module,
 			apiServer: apiServer,
 			resolver:  rslver,
 			cache:     cache,
-			logger:    l,
+			logger:    logger,
 			stopped:   false,
 		}
 		// start watcher
-		gAuthGetter.watcher = watcher.NewWatcher(module, apiServer, rslver, l, gAuthGetter.resetCacheCb, gAuthGetter.processEventCb,
+		gAuthGetter.watcher = watcher.NewWatcher(module, apiServer, rslver, logger, gAuthGetter.resetCacheCb, gAuthGetter.processEventCb,
 			&watcher.KindOptions{
 				Kind:    string(auth.KindUser),
 				Options: &api.ListWatchOptions{},

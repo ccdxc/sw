@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authn"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (
@@ -119,6 +120,7 @@ func NewMockAuthenticationManager() *AuthenticationManager {
 				Secret: nil,
 			},
 		}, false),
+		logger: log.WithContext("Pkg", "authnmgr_mock"),
 	}
 	return mockAuthnmgr
 }

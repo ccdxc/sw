@@ -59,7 +59,7 @@ func registerAuthFeature(name, apiServer string, rslvr resolver.Interface, l log
 		apiServer:  apiServer,
 		rslvr:      rslvr,
 		id:         bootstrapper.Auth,
-		authGetter: manager.GetAuthGetter(name, apiServer, rslvr),
+		authGetter: manager.GetAuthGetter(name, apiServer, rslvr, l),
 		permGetter: rbac.GetPermissionGetter(name, apiServer, rslvr),
 	}
 	return f, nil

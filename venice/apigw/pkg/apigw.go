@@ -448,7 +448,7 @@ Loop:
 		}
 	}
 
-	a.authGetter = authnmgr.GetAuthGetter(globals.APIGw, grpcaddr, a.rslver)
+	a.authGetter = authnmgr.GetAuthGetter(globals.APIGw, grpcaddr, a.rslver, a.logger)
 	a.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, a.rslver)
 	// create authentication manager
 	a.authnMgr, err = authnmgr.WithAuthGetter(a.authGetter)

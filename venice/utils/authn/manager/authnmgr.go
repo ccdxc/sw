@@ -20,6 +20,7 @@ var (
 // AuthenticationManager authenticates and returns user information
 type AuthenticationManager struct {
 	AuthGetter AuthGetter
+	logger     log.Logger
 }
 
 // WithAuthGetter returns an instance of authentication manager
@@ -30,10 +31,13 @@ func WithAuthGetter(authGetter AuthGetter) (*AuthenticationManager, error) {
 }
 
 // NewAuthenticationManager returns an instance of AuthenticationManager
-func NewAuthenticationManager(name, apiServer string, rslver resolver.Interface) (*AuthenticationManager, error) {
-
+func NewAuthenticationManager(name, apiServer string, rslver resolver.Interface, logger log.Logger) (*AuthenticationManager, error) {
+	if logger == nil {
+		logger = log.GetNewLogger(log.GetDefaultConfig(name))
+	}
 	return &AuthenticationManager{
-		AuthGetter: GetAuthGetter(name, apiServer, rslver), // get singleton user cache
+		AuthGetter: GetAuthGetter(name, apiServer, rslver, logger), // get singleton user cache
+		logger:     logger,
 	}, nil
 }
 
@@ -84,7 +88,7 @@ func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, 
 	// get username
 	username, ok := tokenInfo[SubClaim].(string)
 	if !ok {
-		log.Errorf("username is not of type string: {%+v}", username)
+		authnmgr.logger.Errorf("username is not of type string: {%+v}", username)
 		return nil, ok, "", ErrUserNotFound
 	}
 	// get tenant if present
@@ -93,7 +97,7 @@ func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, 
 	// get user from cache
 	user, ok := authnmgr.AuthGetter.GetUser(username, tenant)
 	if !ok {
-		log.Errorf("User [%s] in tenant [%s] not found in cache", username, tenant)
+		authnmgr.logger.Errorf("User [%s] in tenant [%s] not found in cache", username, tenant)
 		return nil, ok, "", ErrUserNotFound
 	}
 	// get csrf token if present
