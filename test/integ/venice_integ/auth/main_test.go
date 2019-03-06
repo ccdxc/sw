@@ -8,16 +8,15 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
-	"github.com/pensando/sw/venice/utils"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
@@ -36,12 +35,8 @@ const (
 var (
 	logger = log.WithContext("module", "auth_integ_test")
 
-	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "auth_integ_test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
-		BackupDir:     "/tmp",
-		SkipEvtsProxy: true}, logger)
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("auth_integ_test", logger))
 )
 
 type tInfo struct {

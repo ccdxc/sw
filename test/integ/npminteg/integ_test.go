@@ -27,9 +27,9 @@ import (
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	rmock "github.com/pensando/sw/venice/utils/resolver/mock"
@@ -71,12 +71,9 @@ var datapathKind = flag.String("datapath", agentDatapathKind, "Specify the datap
 var (
 	logger  = log.GetNewLogger(log.GetDefaultConfig("npm-integ-test"))
 	evtType = append(evtsapi.GetEventTypes(), cluster.GetEventTypes()...)
-	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "npm_integ_test"},
-		EvtTypes:      evtType,
-		BackupDir:     "/tmp",
-		SkipEvtsProxy: true}, logger)
+
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("npm_integ_test", logger))
 )
 
 // Hook up gocheck into the "go test" runner.

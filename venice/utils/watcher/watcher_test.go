@@ -9,11 +9,10 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -30,12 +29,8 @@ const (
 var (
 	logger = log.WithContext("Pkg", "watcher_test")
 
-	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "watcher_test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
-		BackupDir:     "/tmp",
-		SkipEvtsProxy: true}, logger)
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("watcher_test", logger))
 )
 
 func createAPIClient(apiSrvAddr string) apiclient.Services {

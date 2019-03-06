@@ -273,12 +273,12 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 	Assert(t, atomic.LoadUint64(&totalEventsSent) > 0, "recorder did not record any event")
-	totalEventsSentBeforeStop := totalEventsSent
+	totalEventsSentBeforeStop := atomic.LoadUint64(&totalEventsSent)
 	proxyRPCServer.Stop()
 
 	// proxy won't be able to accept any events for 2s but the events will be stored in a backup file
 	time.Sleep(2 * time.Second)
-	totalEventsSentAfterStop := totalEventsSent
+	totalEventsSentAfterStop := atomic.LoadUint64(&totalEventsSent)
 
 	// this indicates that the recorder was running fine when the proxy is unavailable
 	Assert(t, totalEventsSentAfterStop > totalEventsSentBeforeStop, "recorder wasn't running when proxy went disconnected")

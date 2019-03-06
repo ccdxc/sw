@@ -8,7 +8,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
@@ -16,12 +15,12 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	pcache "github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
-	"github.com/pensando/sw/venice/utils"
 	elasticauditor "github.com/pensando/sw/venice/utils/audit/elastic"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
@@ -37,12 +36,9 @@ const (
 )
 
 var (
-	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "auth_integ_test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
-		BackupDir:     "/tmp",
-		SkipEvtsProxy: true}, log.GetNewLogger(log.GetDefaultConfig("audit_integ_test")))
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("auth_integ_test",
+		log.GetNewLogger(log.GetDefaultConfig("audit_integ_test"))))
 )
 
 // tInfo represents test info.

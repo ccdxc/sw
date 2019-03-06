@@ -8,34 +8,29 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	goruntime "runtime"
+	"runtime/pprof"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	goruntime "runtime"
-	"runtime/pprof"
-
 	hdr "github.com/codahale/hdrhistogram"
 	gogotypes "github.com/gogo/protobuf/types"
+	rl "github.com/juju/ratelimit"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
-
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
-	"github.com/pensando/sw/venice/utils/events/recorder"
-
-	rl "github.com/juju/ratelimit"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	rec "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -276,11 +271,8 @@ func startWorkers() {
 }
 
 func setupAPIServer(kvtype string, cluster []string, pool int) {
-	if _, err := recorder.NewRecorder(&recorder.Config{
-		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIServer},
-		EvtTypes: evtsapi.GetEventTypes(), SkipEvtsProxy: true}, tinfo.l); err != nil {
-		tinfo.l.Fatalf("failed to create events recorder, err: %v", err)
-	}
+	recorder.Override(mockevtsrecorder.NewRecorder("perf_becnhmark", tinfo.l)) // mock events recorder
+
 	apiserverAddress := ":0"
 	srvconfig := apiserver.Config{
 		GrpcServerPort: apiserverAddress,

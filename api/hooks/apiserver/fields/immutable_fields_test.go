@@ -11,10 +11,10 @@ import (
 	"github.com/pensando/sw/api/client"
 	bs "github.com/pensando/sw/api/generated/bookstore"
 	_ "github.com/pensando/sw/api/generated/bookstore/grpc/server"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	. "github.com/pensando/sw/api/hooks/apiserver/fields"
-	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -211,11 +211,7 @@ func TestCheckImmutableFieldChanges(t *testing.T) {
 func TestRegisterImmutableFieldsServiceHooks(t *testing.T) {
 	// ApiServer dependencies
 	logger := log.GetNewLogger(log.GetDefaultConfig("immutable_fields_test.go"))
-	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: "localhost", Component: "apiserver_test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
-		BackupDir:     "/tmp",
-		SkipEvtsProxy: true}, logger)
+	recorder.Override(mock.NewRecorder("apiserver_test", logger))
 
 	// Start ApiServer to trigger invocation of RegisterImmutableFieldsServiceHooks
 	srv, addr, err := serviceutils.StartAPIServer("localhost:0", "immutable_fields_test", logger)

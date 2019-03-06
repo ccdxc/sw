@@ -16,14 +16,14 @@ import (
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/apiserver"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	mockes "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -40,15 +40,11 @@ var (
 	sortByField = ""
 	sortAsc     = true
 
-	vLogger = log.GetNewLogger(log.GetDefaultConfig("venice-exporter-test"))
+	vLogger = log.GetNewLogger(log.GetDefaultConfig("venice_exporter_test"))
 	mr      = mockresolver.New() // create mock resolver
 
-	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice-exporter-test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
-		BackupDir:     "/tmp",
-		SkipEvtsProxy: true}, vLogger)
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("venice_exporter_test", vLogger))
 )
 
 // This file tests venice exporter using events manager -> mock elasticsearch

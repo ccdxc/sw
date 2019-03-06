@@ -1,21 +1,18 @@
 package services
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
 
-	"github.com/pensando/sw/venice/utils/log"
-
-	"fmt"
-
-	cmd "github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -33,14 +30,7 @@ func setupTestCluster(t *testing.T, tmpDir string) (*integration.ClusterV3, kvst
 		t.Fatalf("Failed to create store, error: %v", err)
 	}
 
-	_, err = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: "test", Component: "cmd"},
-		EvtTypes:      cmd.GetEventTypes(),
-		BackupDir:     tmpDir,
-		SkipEvtsProxy: true}, log.GetNewLogger(log.GetDefaultConfig(t.Name())))
-	if err != nil {
-		t.Fatalf("Failed to create recorder, error: %v", err)
-	}
+	recorder.Override(mockevtsrecorder.NewRecorder("leader_test", log.GetNewLogger(log.GetDefaultConfig(t.Name()))))
 	return cluster, store
 }
 

@@ -31,11 +31,29 @@ import (
 // is called for the very first time. Any further calls to `NewRecorder(...)` will not change
 // singleton recorder.
 
-var singletonRecorder *recorderImpl
+var singletonRecorder events.Recorder
+var m sync.RWMutex
 var once sync.Once
+
+// Override overrides the singleton recorder with the given recorder.
+// NOTE: this should be used only from the tests.
+func Override(recorder events.Recorder) error {
+	m.Lock()
+	defer m.Unlock()
+
+	if singletonRecorder != nil {
+		singletonRecorder.Close()
+	}
+
+	singletonRecorder = recorder
+	return nil
+}
 
 // Event records the given event
 func Event(eventType string, severity evtsapi.SeverityLevel, message string, objRef interface{}) {
+	m.RLock()
+	defer m.RUnlock()
+
 	if singletonRecorder == nil {
 		log.Fatal("initialize events recorder")
 	}
@@ -140,7 +158,9 @@ func NewRecorder(config *Config, logger log.Logger) (events.Recorder, error) {
 	}
 
 	once.Do(func() {
+		m.Lock()
 		singletonRecorder = recorder
+		m.Unlock()
 	})
 
 	return recorder, nil

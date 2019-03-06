@@ -124,6 +124,8 @@ func StartElasticsearch(name, dir string, signer certs.CSRSigner, trustRoots []*
 				elasticImage}
 		}
 
+		fmt.Println("running command:", cmd)
+
 		// run the command
 		out, err := exec.Command("docker", cmd...).CombinedOutput()
 

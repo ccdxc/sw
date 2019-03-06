@@ -14,24 +14,23 @@ import (
 	"testing"
 	"time"
 
-	trace "golang.org/x/net/trace"
+	"golang.org/x/net/trace"
 	rpc "google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 	api_cache "github.com/pensando/sw/api/cache"
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	pencluster "github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	nmd "github.com/pensando/sw/nic/agent/nmd"
+	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	proto "github.com/pensando/sw/nic/agent/nmd/protos"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
 	testutils "github.com/pensando/sw/test/utils"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	cmdapi "github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/cache"
@@ -43,12 +42,12 @@ import (
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
-	store "github.com/pensando/sw/venice/utils/kvstore/store"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -79,12 +78,8 @@ var (
 
 	logger = log.GetNewLogger(log.GetDefaultConfig("nic_admission_test"))
 
-	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nic_admission_test"},
-		EvtTypes:      append(pencluster.GetEventTypes(), evtsapi.GetEventTypes()...),
-		BackupDir:     "/tmp",
-		SkipEvtsProxy: true}, logger)
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("nic_admission_test", logger))
 )
 
 type testInfo struct {

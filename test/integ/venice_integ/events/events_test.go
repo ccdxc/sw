@@ -2475,7 +2475,7 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 						return false, fmt.Sprintf("invalid elastic addr: %v", ti.elasticsearchAddr)
 					}
 
-					port, err := strconv.Atoi(strings.TrimRight(temp[1], "/"))
+					port, err := strconv.Atoi(temp[1])
 					if err != nil {
 						return false, fmt.Sprintf("invalid elastic port: %v", temp[1])
 
