@@ -4,6 +4,7 @@ package iotakit
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"strings"
 	"time"
@@ -13,14 +14,17 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
+	loginctx "github.com/pensando/sw/api/login/context"
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	"github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/iota/svcs/common"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // VeniceLoggedInCtx returns loggedin context for venice
@@ -51,6 +55,22 @@ func (tb *TestBed) VeniceLoggedInCtx() (context.Context, error) {
 	tb.veniceLoggedinCtx = ctx
 
 	return ctx, nil
+}
+
+// GetAuthorizationHeader gets and returns the authorization header from login context
+func (tb *TestBed) GetAuthorizationHeader() (string, error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return "", err
+	}
+
+	// get authz header
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if !ok {
+		return "", fmt.Errorf("failed to get authorization header from context")
+	}
+
+	return authzHeader, nil
 }
 
 // VeniceRestClient returns the REST client for venice
@@ -533,4 +553,20 @@ func (tb *TestBed) CreateApp(app *security.App) error {
 	}
 
 	return err
+}
+
+// ListEvents makes a http request to the APIGw with the given list watch options and returns the response
+func (tb *TestBed) ListEvents(listWatchOptions *api.ListWatchOptions) (evtsapi.EventList, error) {
+	resp := evtsapi.EventList{}
+	authzHdr, err := tb.GetAuthorizationHeader()
+	if err != nil {
+		return resp, err
+	}
+	httpClient := netutils.NewHTTPClient()
+	httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	httpClient.SetHeader("Authorization", authzHdr)
+
+	URL := fmt.Sprintf("https://%s/events/v1/events", tb.GetVeniceURL()[0])
+	_, err = httpClient.Req("GET", URL, *listWatchOptions, &resp)
+	return resp, err
 }

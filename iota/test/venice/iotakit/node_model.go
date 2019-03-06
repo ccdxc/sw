@@ -4,6 +4,7 @@ package iotakit
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -199,6 +200,39 @@ func (sm *SysModel) ForEachNaples(fn naplesIteratorFn) error {
 	}
 
 	return nil
+}
+
+// Naples returns all naples in the model
+func (sm *SysModel) Naples() *NaplesCollection {
+	var naples []*Naples
+	for _, np := range sm.naples {
+		naples = append(naples, np)
+	}
+	return &NaplesCollection{nodes: naples}
+}
+
+// Any returns the requested number of naples from collection in random
+func (npc *NaplesCollection) Any(num int) *NaplesCollection {
+	if npc.err != nil || len(npc.nodes) <= num {
+		return npc
+	}
+
+	newNpc := &NaplesCollection{nodes: []*Naples{}}
+	tmpArry := make([]*Naples, len(npc.nodes))
+	copy(tmpArry, npc.nodes)
+	for i := 0; i < num; i++ {
+		idx := rand.Intn(len(tmpArry))
+		sn := tmpArry[idx]
+		tmpArry = append(tmpArry[:idx], tmpArry[idx+1:]...)
+		newNpc.nodes = append(newNpc.nodes, sn)
+	}
+
+	return newNpc
+}
+
+// Error returns the error in collection
+func (npc *NaplesCollection) Error() error {
+	return npc.err
 }
 
 func (sm *SysModel) createVeniceNode(iotaNode *iota.Node) error {

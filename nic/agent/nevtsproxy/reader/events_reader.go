@@ -149,7 +149,7 @@ func (r *EvtReader) handler(nEvt *halproto.Event) error {
 // helper function to convert halproto.Event to venice event
 func convertToVeniceEvent(nEvt *halproto.Event) *evtsapi.Event {
 	uuid := uuid.NewV4().String()
-	t := time.Unix(int64(nEvt.GetTime()), 0).UTC()
+	t := time.Unix(0, int64(nEvt.GetTime())).UTC() // get time from nsecs
 	ts, _ := types.TimestampProto(t)
 
 	vEvt := &evtsapi.Event{ // create event object

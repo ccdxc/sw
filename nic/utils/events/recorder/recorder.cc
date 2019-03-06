@@ -3,6 +3,7 @@
 #include "nic/utils/events/queue/queue.hpp"
 #include "gen/proto/events.pb.h"
 #include "lib/logger/logger.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
 #include <google/protobuf/any.h>
 #include <google/protobuf/generated_enum_reflection.h>
 #include <stdio.h>
@@ -76,11 +77,16 @@ int events_recorder::event(events::Severity severity, const int type, const char
     events::Event evt;
     va_list args;
     char buffer[256];                           // message buffer
+    timespec_t   time_ts;                       // time
+    uint64_t     time_ns;                       // time in ns
+
+    clock_gettime(CLOCK_REALTIME, &time_ts);
+    sdk::timestamp_to_nsecs(&time_ts, &time_ns);
 
     evt.set_severity(severity);                 // severity
     evt.set_type(event_type_str.c_str());       // type
     evt.set_component(this->component_);        // component
-    evt.set_time(std::time(0));                 // time
+    evt.set_time(time_ns);                      // time
     evt.set_object_kind(kind);                  // object_kind
     evt.set_allocated_object_key(toAny(key));   // object_key
 
