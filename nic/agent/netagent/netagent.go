@@ -202,9 +202,16 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDGRPCAuthPort))
 		}
 
-		log.Infof("Populating Venice Co-ordinates with %v", controllers)
+		isNewResolver := false
+		if ag.ResolverClient == nil {
+			ag.ResolverClient = resolver.New(&resolver.Config{Name: globals.Netagent, Servers: controllers})
+			isNewResolver = true
+			log.Infof("Populating Venice Co-ordinates with %v", controllers)
+		} else {
+			ag.ResolverClient.UpdateServers(controllers)
+			log.Infof("Updating Venice Co-ordinates with %v", controllers)
+		}
 
-		ag.ResolverClient = resolver.New(&resolver.Config{Name: globals.Netagent, Servers: controllers})
 		// initialize netagent's tsdb client
 		opts := &tsdb.Opts{
 			ClientName:              globals.Netagent + ag.NetworkAgent.NodeUUID,
@@ -215,31 +222,32 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			ConnectionRetryInterval: 100 * time.Millisecond,
 		}
 		tsdb.Init(context.Background(), opts)
+		if isNewResolver {
+			// Lock netagent state
+			ag.NetworkAgent.Lock()
 
-		// Lock netagent state
-		ag.NetworkAgent.Lock()
+			// Stop the existing npm client
+			if ag.NpmClient != nil {
+				ag.NpmClient.Stop()
+			}
 
-		// Stop the existing npm client
-		if ag.NpmClient != nil {
-			ag.NpmClient.Stop()
+			ag.NetworkAgent.ControllerIPs = controllers
+			ag.NetworkAgent.Mode = obj.NaplesMode.String()
+
+			// Clear previously registered controller interface.
+			ag.NetworkAgent.Ctrlerif = nil
+
+			// create the NPM client
+			npmClient, err := ctrlerif.NewNpmClient(ag.NetworkAgent, globals.Npm, ag.ResolverClient)
+			if err != nil {
+				log.Errorf("Error creating NPM client. Err: %v", err)
+			}
+			// Unlock netagent state
+			ag.NetworkAgent.Unlock()
+
+			log.Infof("NPM client {%+v} is running", npmClient)
+			ag.NpmClient = npmClient
 		}
-
-		ag.NetworkAgent.ControllerIPs = controllers
-		ag.NetworkAgent.Mode = obj.NaplesMode.String()
-
-		// Clear previously registered controller interface.
-		ag.NetworkAgent.Ctrlerif = nil
-
-		// create the NPM client
-		npmClient, err := ctrlerif.NewNpmClient(ag.NetworkAgent, globals.Npm, ag.ResolverClient)
-		if err != nil {
-			log.Errorf("Error creating NPM client. Err: %v", err)
-		}
-		// Unlock netagent state
-		ag.NetworkAgent.Unlock()
-
-		log.Infof("NPM client {%+v} is running", npmClient)
-		ag.NpmClient = npmClient
 	}
 }
 

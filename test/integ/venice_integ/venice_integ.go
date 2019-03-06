@@ -290,12 +290,9 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 			log.Fatalf("Error creating Upgrade client . Err: %v", err)
 		}
 
-		// Agent assumes it has exclusive ownership of the passed-in resolver and closes it
-		// when it receives updated Venice coordinates, so we need to create a dedicated one.
-		ar := resolver.New(&resolver.Config{Name: "venice_integ_agent_rslvr", Servers: []string{"localhost:" + globals.CMDResolverPort}})
 		// Create the new NMD
 		nmd, err := nmd.NewAgent(pa, uc, dbPath, hostID, hostID, smartNICServerURL, restURL, "", "", "network",
-			globals.NicRegIntvl*time.Second, globals.NicUpdIntvl*time.Second, ar)
+			globals.NicRegIntvl*time.Second, globals.NicUpdIntvl*time.Second, it.resolverClient)
 		if err != nil {
 			log.Fatalf("Error creating NMD. Err: %v", err)
 		}

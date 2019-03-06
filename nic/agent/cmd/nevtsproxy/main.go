@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
-	"reflect"
 	"sync"
 	"time"
 
@@ -49,19 +48,19 @@ type config struct {
 // represents the list of event services (includes both network and host modes)
 type evtServices struct {
 	sync.Mutex
-	config        *config
-	resolverURLs  []string
-	eps           *evtsproxy.EventsProxy // events proxy server
-	policyWatcher *policy.Watcher        // policy watcher responsible for watching event policies from evtsmgr; will be nil in host mode
-	policyMgr     *policy.Manager        // responsible for creating/deleting syslog exporters for the incoming event policies
-	shmReader     *reader.Reader         // shared memory reader
-	restServer    *restapi.RestServer    // REST server serving event policy APIs in host mode
-	agentStore    emstore.Emstore        // agent store
-	running       bool                   // indicates whether the services are running or not
-	wg            sync.WaitGroup         // for the shm reader
-	ctx           context.Context        // ctx for each start/stop
-	cancelCtx     context.CancelFunc     // to stop shm reader routine
-	logger        log.Logger             // logger
+	config         *config
+	resolverClient resolver.Interface
+	eps            *evtsproxy.EventsProxy // events proxy server
+	policyWatcher  *policy.Watcher        // policy watcher responsible for watching event policies from evtsmgr; will be nil in host mode
+	policyMgr      *policy.Manager        // responsible for creating/deleting syslog exporters for the incoming event policies
+	shmReader      *reader.Reader         // shared memory reader
+	restServer     *restapi.RestServer    // REST server serving event policy APIs in host mode
+	agentStore     emstore.Emstore        // agent store
+	running        bool                   // indicates whether the services are running or not
+	wg             sync.WaitGroup         // for the shm reader
+	ctx            context.Context        // ctx for each start/stop
+	cancelCtx      context.CancelFunc     // to stop shm reader routine
+	logger         log.Logger             // logger
 }
 
 // NAPLES Clients for all the south bound connections
@@ -128,18 +127,15 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		}
 
 		if n.evtServices.running {
-			if reflect.DeepEqual(n.evtServices.resolverURLs, controllers) {
-				n.logger.Debugf("nothing to be done for the NAPLES status change")
-				return // nothing to be done; as the URLs did not change
-			}
-			n.evtServices.stop() // stop the old services; start them with new resolver client
+			n.evtServices.resolverClient.UpdateServers(controllers)
+			return
 		}
 
 		resolverClient = resolver.New(&resolver.Config{
 			Name:    globals.EvtsProxy,
 			Servers: controllers,
 		})
-		n.evtServices.resolverURLs = controllers
+		n.evtServices.resolverClient = resolverClient
 		n.evtServices.start(networkMode, resolverClient)
 	} else {
 		if n.evtServices.running {

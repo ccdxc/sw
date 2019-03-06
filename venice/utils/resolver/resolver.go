@@ -38,6 +38,9 @@ type Interface interface {
 
 	// Deregister an observer.
 	Deregister(Observer)
+
+	// Update list of servers providing the resolver service
+	UpdateServers(servers []string)
 }
 
 // Config contains configuration to create a resolver client.
@@ -57,7 +60,7 @@ type Config struct {
 // resolverClient implements the resolver client functionality.
 type resolverClient struct {
 	sync.Mutex
-	config    *Config
+	config    Config
 	ctx       context.Context
 	cancel    context.CancelFunc
 	svcsMap   map[string]map[string]*types.ServiceInstance // service name to instance mappings.
@@ -66,7 +69,7 @@ type resolverClient struct {
 
 // New creates a new resolver client.
 func New(c *Config) Interface {
-	if len(c.Servers) == 0 || c.Name == "" {
+	if c.Name == "" {
 		return nil
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -75,7 +78,7 @@ func New(c *Config) Interface {
 	ctx = metadata.NewOutgoingContext(ctx, md)
 
 	r := &resolverClient{
-		config:    c,
+		config:    *c,
 		ctx:       ctx,
 		cancel:    cancel,
 		svcsMap:   make(map[string]map[string]*types.ServiceInstance),
@@ -104,6 +107,11 @@ func (r *resolverClient) runUntilCancel() {
 			return
 		}
 		r.Unlock()
+
+		if len(r.config.Servers) == 0 {
+			time.Sleep(2 * time.Second)
+			continue
+		}
 
 		// Pick one of the servers at random.
 		i := rand.New(s).Intn(len(r.config.Servers))
@@ -275,4 +283,11 @@ func (r *resolverClient) notify(e types.ServiceInstanceEvent) error {
 		}
 	}
 	return err
+}
+
+func (r *resolverClient) UpdateServers(servers []string) {
+	s := []string{}
+	r.Lock()
+	r.config.Servers = append(s, servers...)
+	r.Unlock()
 }

@@ -244,21 +244,15 @@ func (n *NMD) UnRegisterCMD() error {
 
 // UpdateCMDClient updates the cmd client with the resolver information obtained by DHCP
 func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
-	if n.cmd != nil {
-		n.cmd.Stop()
-		n.UnRegisterCMD()
-	}
-
 	var cmdResolverURL []string
-	// Ensure ResolverURLs are updated
 	for _, res := range resolverURLs {
 		cmdResolverURL = append(cmdResolverURL, fmt.Sprintf("%s:%s", res, globals.CMDGRPCAuthPort))
 	}
-
 	// stop resolver client if active
 	if n.resolverClient != nil {
-		n.resolverClient.Stop()
-		n.resolverClient = nil
+		n.resolverClient.UpdateServers(cmdResolverURL)
+		log.Infof("Updated cmd client with newer cmd resolver URLs: %v", resolverURLs)
+		return nil
 	}
 
 	n.resolverClient = resolver.New(&resolver.Config{Name: "NMD", Servers: cmdResolverURL})
@@ -274,7 +268,6 @@ func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
 	}
 	n.cmd = newCMDClient
 	log.Infof("Updated cmd client with newer cmd resolver URLs: %v", resolverURLs)
-
 	return nil
 }
 

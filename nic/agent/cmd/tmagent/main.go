@@ -35,7 +35,7 @@ type TelemetryAgent struct {
 	tpState        *state.PolicyState
 	tpClient       *ctrlerif.TpClient
 	nodeUUID       string
-	resolverConfig *resolver.Config
+	resolverClient resolver.Interface
 	mode           string
 	restServer     *restapi.RestServer
 }
@@ -87,32 +87,25 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		var err error
 
 		for _, ip := range obj.Controllers {
-			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDGRPCAuthPort))
+			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDResolverPort))
 		}
 
-		if s.tmagent.tpClient != nil {
-			log.Infof("Tpclient already started. ignoring...")
+		if s.tmagent.resolverClient != nil {
+			log.Infof("Tpclient updating Venice Co-ordinates with %v", controllers)
+			s.tmagent.resolverClient.UpdateServers(controllers)
 			return
 		}
 
 		log.Infof("Populating Venice Co-ordinates with %v", controllers)
 
-		cfg := &resolver.Config{
-			Name:    globals.Tmagent,
-			Servers: controllers,
-		}
-
-		s.tmagent.resolverConfig = cfg
-
-		// start tsdb export
-		rc := resolver.New(cfg)
+		s.tmagent.resolverClient = resolver.New(&resolver.Config{Name: globals.Tmagent, Servers: controllers})
 
 		// Init the TSDB
-		if err := s.tmagent.tpState.TsdbInit(rc); err != nil {
+		if err := s.tmagent.tpState.TsdbInit(s.tmagent.resolverClient); err != nil {
 			log.Fatalf("failed to init tsdb, err: %v", err)
 		}
 
-		s.tmagent.tpClient, err = ctrlerif.NewTpClient(s.tmagent.nodeUUID, s.tmagent.tpState, globals.Tpm, rc)
+		s.tmagent.tpClient, err = ctrlerif.NewTpClient(s.tmagent.nodeUUID, s.tmagent.tpState, globals.Tpm, s.tmagent.resolverClient)
 		if err != nil {
 			log.Fatalf("failed to init tmagent controller client, err: %v", err)
 		}
@@ -122,7 +115,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		}
 
 		// start reporting metrics
-		if err := s.tmagent.reportMetrics(rc); err != nil {
+		if err := s.tmagent.reportMetrics(s.tmagent.resolverClient); err != nil {
 			log.Fatal(err)
 		}
 	}

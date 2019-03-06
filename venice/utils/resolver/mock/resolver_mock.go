@@ -134,3 +134,7 @@ func (r *ResolverClient) DeleteServiceInstance(si *protos.ServiceInstance) error
 	})
 	return nil
 }
+
+// UpdateServers is unimplemented
+func (r *ResolverClient) UpdateServers(s []string) {
+}

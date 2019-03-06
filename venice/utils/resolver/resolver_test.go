@@ -135,5 +135,7 @@ func TestResolverClient(t *testing.T) {
 		return false, nil
 	}, "Failed to find added and deleted instances")
 
+	client.UpdateServers([]string{server.GetListenURL()})
+	client.Deregister(mo)
 	client.Stop()
 }
