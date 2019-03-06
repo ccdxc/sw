@@ -1,9 +1,9 @@
 /*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2019 Pensando Systems. All rights reserved.
  *
- * This program is free software; you may redistribute it and/or modify
- * i under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
+ * This software is provided to you under the terms of the GNU
+ * General Public License (GPL) Version 2.0, available from the file
+ * [ionic_pci.c] in the main directory of this source tree.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
