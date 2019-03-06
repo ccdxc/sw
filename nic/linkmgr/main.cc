@@ -151,7 +151,6 @@ static void
 linkmgr_cfg_init(void)
 {
     linkmgr_cfg.cfg_file     = "linkmgr.json";
-    linkmgr_cfg.catalog_file = "catalog.json";
 }
 
 } // namespace linkmgr

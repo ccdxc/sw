@@ -30,7 +30,7 @@ hal_initialize (const char c_file[], bool disable_fte=true)
     printf("Parsed cfg json file \n");
 
     // set the full path of the catalog file
-    hal::g_hal_cfg.catalog_file = hal::g_hal_cfg.cfg_path + "/catalog.json";
+    hal::g_hal_cfg.catalog_file = "/catalog.json";
 
     // make sure catalog file exists
     if (access(hal::g_hal_cfg.catalog_file.c_str(), R_OK) < 0) {

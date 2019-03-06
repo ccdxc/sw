@@ -309,7 +309,7 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
 
     linkmgr_parse_cfg(cfg_file.c_str(), linkmgr_cfg);
 
-    catalog = sdk::lib::catalog::factory(catalog_file);
+    catalog = sdk::lib::catalog::factory(cfg_path, catalog_file);
 
     SDK_ASSERT_RETURN((catalog != NULL), HAL_RET_ERR);
 

@@ -37,7 +37,7 @@ if [[ "$PLATFORM" != "hw" ]]; then
     exec $NIC_DIR/bin/hal -c hal_haps.json
 else
     export LD_LIBRARY_PATH=$HAL_LIBRARY_PATH
-    exec $NIC_DIR/bin/hal -c hal_hw.json -p catalog_hw.json
+    exec $NIC_DIR/bin/hal -c hal_hw.json
 fi
 [[ $? -ne 0 ]] && echo "Failed to start HAL!" && exit 1
 

@@ -119,8 +119,7 @@ pds_init (pds_init_params_t *params)
     api::g_pds_state.set_mpartition(
         sdk::platform::utils::mpartition::factory(mpart_json.c_str()));
     api::g_pds_state.set_catalog(catalog::factory(
-        api::g_pds_state.cfg_path() +
-        catalog::catalog_file(api::g_pds_state.platform_type())));
+        api::g_pds_state.cfg_path(), "", api::g_pds_state.platform_type()));
     ret = core::parse_pipeline_config(params->pipeline, &api::g_pds_state);
     SDK_ASSERT(ret == SDK_RET_OK);
 

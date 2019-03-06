@@ -217,15 +217,13 @@ main (int argc, char **argv)
     if (catalog_file) {
         hal::g_hal_cfg.catalog_file =
             hal::g_hal_cfg.cfg_path + "/" + std::string(catalog_file);
-    } else {
-        hal::g_hal_cfg.catalog_file = hal::g_hal_cfg.cfg_path + "/catalog.json";
-    }
 
-    // make sure catalog file exists
-    if (access(hal::g_hal_cfg.catalog_file.c_str(), R_OK) < 0) {
-        fprintf(stderr, "Catalog file %s has no read permissions\n",
-                hal::g_hal_cfg.catalog_file.c_str());
-        exit(1);
+        // make sure catalog file exists
+        if (access(hal::g_hal_cfg.catalog_file.c_str(), R_OK) < 0) {
+            fprintf(stderr, "Catalog file %s has no read permissions\n",
+                    hal::g_hal_cfg.catalog_file.c_str());
+            exit(1);
+        }
     }
 
     // TODO: HAL_PBC_INIT_CONFIG will have to go away

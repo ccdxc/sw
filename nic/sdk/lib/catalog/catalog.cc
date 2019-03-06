@@ -3,6 +3,7 @@
 #include <sys/sysinfo.h>
 #include <libgen.h>
 #include "lib/catalog/catalog.hpp"
+#include "platform/fru/fru.hpp"
 #include "include/sdk/mem.hpp"
 #include "lib/utils/utils.hpp"
 
@@ -365,6 +366,7 @@ catalog::parse_serdes(ptree &prop_tree)
         uint32_t serdes_lane = 0;
         uint8_t  cable_type  = 0;
         uint32_t port_speed  = 0;
+        std::string tx_pol, rx_pol;
 
         std::string slip = "";
 
@@ -396,8 +398,11 @@ catalog::parse_serdes(ptree &prop_tree)
         serdes_info->width = serdes.second.get<uint32_t>("width", 0);
 
         // Tx/Rx polatiry
-        serdes_info->tx_pol = serdes.second.get<uint8_t>("tx_pol", 0);
-        serdes_info->rx_pol = serdes.second.get<uint8_t>("rx_pol", 0);
+        tx_pol = serdes.second.get<std::string>("tx_pol", "");
+        rx_pol = serdes.second.get<std::string>("rx_pol", "");
+
+        serdes_info->tx_pol = strtoul(tx_pol.c_str(), NULL, 16);
+        serdes_info->rx_pol = strtoul(rx_pol.c_str(), NULL, 16);
 
         // Rx termination
         serdes_info->rx_term = serdes.second.get<uint8_t>("rx_termination", 0);
@@ -498,6 +503,11 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
         return SDK_RET_ERR;
     }
 
+    catalog_db_.form_factor = prop_tree.get<std::string>("form_factor", "");
+    catalog_db_.num_pcie_lanes = prop_tree.get<uint32_t>("num_pcie_lanes", 0);
+    catalog_db_.emmc_size = prop_tree.get<uint32_t>("emmc_size", 0);
+    catalog_db_.memory_size = prop_tree.get<uint32_t>("memory_size", 0);
+
     catalog_db_.num_asics = prop_tree.get<uint32_t>("num_asics", 0);
     catalog_db_.num_uplink_ports =
                             prop_tree.get<uint32_t>("num_uplink_ports", 0);
@@ -541,6 +551,7 @@ catalog::init(std::string &catalog_file)
     sdk_ret_t ret;
     ptree prop_tree;
 
+    catalog_db_.catalog_file = catalog_file;
     ret = get_ptree_(catalog_file, prop_tree);
     if (ret != SDK_RET_OK) {
         return ret;
@@ -553,10 +564,41 @@ catalog::init(std::string &catalog_file)
 // factory method for this class
 //------------------------------------------------------------------------------
 catalog *
-catalog::factory(std::string catalog_file) {
+catalog::factory(std::string catalog_file_path, std::string catalog_file_name, platform_type_t platform) {
     sdk_ret_t  ret;
     void       *mem;
     catalog    *new_catalog = NULL;
+
+    if (catalog_file_name.empty())
+    {
+        if (platform == platform_type_t::PLATFORM_TYPE_HW) {
+            std::string part_num(32, '\0');
+            std::string part_id;
+
+            readKey(PARTNUM_KEY, part_num);
+
+            //first 7 characters are the part identifiers
+            part_id = part_num.substr(0, 7);
+
+            if(!part_id.compare("68-0005")) {
+                catalog_file_name = "/catalog_hw_68-0005.json";
+            }
+            else if(!part_id.compare("68-0003")) {
+                catalog_file_name = "/catalog_hw_68-0003.json";
+            }
+            else {
+                SDK_TRACE_ERR("part-id %s is not supported",
+                        part_id.c_str());
+                return NULL;
+            }
+        }
+        else if (platform == platform_type_t::PLATFORM_TYPE_SIM) {
+            catalog_file_name = "/catalog.json";
+        }
+    }
+
+    std::string catalog_file = catalog_file_path + catalog_file_name;
+    SDK_TRACE_DEBUG("catalog file for platform: %d: %s", platform, catalog_file.c_str());
 
     // make sure file exists
     if (access(catalog_file.c_str(), R_OK) < 0) {
@@ -584,14 +626,14 @@ catalog::factory(std::string catalog_file) {
 }
 
 sdk_ret_t
-catalog::get_child_str (std::string catalog_file, std::string path, std::string& child_str) 
+catalog::get_child_str (std::string path, std::string& child_str)
 {
     sdk_ret_t ret;
     ptree prop_tree;
 
     child_str = "";
 
-    ret = get_ptree_(catalog_file, prop_tree);
+    ret = get_ptree_(catalog_db_.catalog_file, prop_tree);
     if (ret != SDK_RET_OK) {
         return ret;
     }

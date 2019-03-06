@@ -1423,7 +1423,7 @@ TEST_F(gft_test, test1) {
     const char *hal_conf_file = "conf/gft/hal.json";
     std::string mpart_json = cfg.cfg_path + "/gft/hbm_mem.json";
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
-    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
+    catalog = sdk::lib::catalog::factory(cfg.cfg_path, "/catalog.json");
 
     if (getenv("HAL_PLATFORM_RTL")) {
         hal_conf_file = "conf/gft/hal_rtl.json";
@@ -1431,7 +1431,7 @@ TEST_F(gft_test, test1) {
     } else if (getenv("HAL_PLATFORM_HW")) {
         hal_conf_file = "conf/gft/hal_hw.json";
         platform= platform_type_t::PLATFORM_TYPE_HW;
-        catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog_hw.json");
+        catalog = sdk::lib::catalog::factory(cfg.cfg_path, "");
     }
     ASSERT_TRUE(catalog != NULL);
     cfg.catalog = catalog;

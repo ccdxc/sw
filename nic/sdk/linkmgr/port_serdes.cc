@@ -1131,12 +1131,16 @@ cleanup:
 int
 serdes_basic_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
-    int ret = 0;
-    uint32_t divider = serdes_info->sbus_divider;
-    uint32_t width   = serdes_info->width;
+    int      ret       = 0;
+    uint32_t divider   = serdes_info->sbus_divider;
+    uint32_t width     = serdes_info->width;
+    uint8_t  tx_invert = serdes_info->tx_pol;
+    uint8_t  rx_invert = serdes_info->rx_pol;
 
-    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u",
-                            sbus_addr, divider, width);
+    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u, "
+                            "tx_invert: %u, rx_invert:%u",
+                            sbus_addr, divider, width,
+                            tx_invert, rx_invert);
 
     Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
     if (NULL == cfg) {
@@ -1176,6 +1180,9 @@ serdes_basic_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     }
 
     avago_serdes_init_config_destruct(aapl, cfg);
+
+    avago_serdes_set_tx_invert(aapl, sbus_addr, tx_invert);
+    avago_serdes_set_rx_invert(aapl, sbus_addr, rx_invert);
 
     return ret;
 }

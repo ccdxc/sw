@@ -183,7 +183,7 @@ TEST_F(l2switch_test, test1) {
     std::string mpart_json = cfg.cfg_path + "/l2switch/hbm_mem.json";
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
     printf("Parsing sim catalog ...\n");
-    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "catalog.json");
+    catalog = sdk::lib::catalog::factory(cfg.cfg_path, "catalog.json");
     ASSERT_TRUE(catalog != NULL);
     cfg.catalog = catalog;
     printf("\nMPART_JSON %s\n", mpart_json.c_str());

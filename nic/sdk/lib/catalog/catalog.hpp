@@ -99,10 +99,15 @@ typedef struct aacs_info_s {
 } aacs_info_t;
 
 typedef struct catalog_s {
+    std::string              catalog_file;                      // catalog file name with absolute path
     uint32_t                 card_index;                        // card index for the board
     uint32_t                 max_mpu_per_stage;                 // max MPU per pipeline stage
     uint32_t                 mpu_trace_size;                    // MPU trace size
     uint64_t                 cores_mask;                        // mask of all control/data cores
+    std::string              form_factor;                       // Form factor of the card
+    uint32_t                 num_pcie_lanes;                    // Number of PCIe lanes on card
+    uint32_t                 emmc_size;                         // eMMC size on card
+    uint32_t                 memory_size;                       // Total Memory on card
     uint32_t                 num_asics;                         // number of asics on the board
     uint32_t                 num_uplink_ports;                  // number of uplinks in the board
     uint32_t                 num_fp_ports;                      // number of front panel ports in the board
@@ -129,7 +134,7 @@ typedef struct catalog_s {
 
 class catalog {
 public:
-    static catalog *factory(std::string catalog_file);
+    static catalog *factory(std::string catalog_file_path, std::string catalog_file, platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM);
     static void destroy(catalog *clog);
     static port_speed_t catalog_speed_to_port_speed(std::string speed);
     static port_type_t catalog_type_to_port_type(std::string type);
@@ -137,20 +142,9 @@ public:
     static platform_type_t catalog_platform_type_to_platform_type(
                                             std::string platform_type);
 
-    static sdk_ret_t get_child_str(std::string catalog_file,
-                                   std::string path,
+    sdk_ret_t get_child_str(std::string path,
                                    std::string& child_str);
     static int port_num_to_qsfp_port(uint32_t port_num);
-    static std::string catalog_file(platform_type_t platform_type) {
-        if ((platform_type == platform_type_t::PLATFORM_TYPE_HW) ||
-            (platform_type == platform_type_t::PLATFORM_TYPE_HAPS) ||
-            (platform_type == platform_type_t::PLATFORM_TYPE_MOCK)) {
-            return "catalog_hw.json";
-        } else if (platform_type == platform_type_t::PLATFORM_TYPE_RTL) {
-            return "catalog_rtl.json";
-        }
-        return "catalog.json";
-    }
 
     catalog_t *catalog_db(void) { return &catalog_db_; }
     uint32_t num_uplink_ports(void) const { return catalog_db_.num_uplink_ports; }

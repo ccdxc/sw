@@ -520,7 +520,7 @@ TEST_F(apollo_test, test1) {
     ret = hal::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_NE(ret, -1);
 
-    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
+    catalog = sdk::lib::catalog::factory(cfg.cfg_path, "/catalog.json");
     ASSERT_TRUE(catalog != NULL);
 
     if (!catalog->qos_sw_init_enabled()) {

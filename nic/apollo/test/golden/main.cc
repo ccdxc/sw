@@ -936,7 +936,7 @@ TEST_F(apollo_test, test1)
 
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
     printf("Parsing sim catalog ...\n");
-    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "catalog.json");
+    catalog = sdk::lib::catalog::factory(cfg.cfg_path, "catalog.json");
 
     if (getenv("HAL_PLATFORM_RTL")) {
         hal_conf_file = "apollo/hal_rtl.json";
@@ -945,7 +945,7 @@ TEST_F(apollo_test, test1)
         hal_conf_file = "apollo/hal_hw.json";
         platform = platform_type_t::PLATFORM_TYPE_HW;
         printf("Parsing hw catalog ...\n");
-        catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog_hw.json");
+        catalog = sdk::lib::catalog::factory(cfg.cfg_path, "");
     }
     ASSERT_TRUE(catalog != NULL);
     cfg.catalog = catalog;

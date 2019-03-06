@@ -65,7 +65,7 @@ linkmgr_initialize (const char c_file[])
     linkmgr::linkmgr_parse_cfg(cfg_file.c_str(), &linkmgr_cfg);
 
     catalog =
-        sdk::lib::catalog::factory(std::string(cfg_path) + "/catalog.json");
+        sdk::lib::catalog::factory(std::string(cfg_path), "/catalog.json");
 
     if (sdk::lib::pal_init(linkmgr_cfg.platform_type) != sdk::lib::PAL_RET_OK) {
         HAL_TRACE_ERR("pal init failed");

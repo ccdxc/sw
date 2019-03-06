@@ -67,8 +67,7 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
     // Qos class
     std::string copp_configs;
 
-    sdk_ret = sdk::lib::catalog::get_child_str(hal_cfg->catalog_file,
-                                               "qos.configs.copp",
+    sdk_ret = g_hal_state->catalog()->get_child_str("qos.configs.copp",
                                                copp_configs);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
