@@ -1593,17 +1593,16 @@ void ionic_lifs_free(struct ionic *ionic)
 */
 }
 
-#if 0
 static VMK_ReturnStatus
-ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
+ionic_lif_stats_start(struct lif *lif, unsigned int ver)
 {
         VMK_ReturnStatus status = VMK_OK;
         struct ionic_en_priv_data *priv_data;
 
 	struct ionic_admin_ctx ctx = {
 //		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
-		.cmd.stats_dump = {
-			.opcode = CMD_OPCODE_STATS_DUMP_START,
+		.cmd.lif_stats = {
+			.opcode = CMD_OPCODE_LIF_STATS_START,
 			.ver = ver,
 		},
 	};
@@ -1628,25 +1627,22 @@ ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 //	lif->stats_dump = dma_alloc_coherent(dev, sizeof(*lif->stats_dump),
 //					     &lif->stats_dump_pa, GFP_KERNEL);
 
-        lif->stats_dump = ionic_dma_zalloc_align(ionic_driver.heap_id,
-                                                 priv_data->dma_engine_coherent,
-                                                 sizeof(*lif->stats_dump),
-                                                 0,
-                                                 &lif->stats_dump_pa);;
-	if (!lif->stats_dump) {
+        lif->lif_stats = ionic_dma_zalloc_align(ionic_driver.heap_id,
+                                                priv_data->dma_engine_coherent,
+                                                sizeof(*lif->lif_stats),
+                                                0,
+                                                &lif->lif_stats_pa);
+	if (!lif->lif_stats) {
 	        ionic_err("ionic_dma_zalloc_align() failed, "
                           "status: VMK_NO_MEMORY");
                 ionic_completion_destroy(&ctx.work);
                 return  VMK_NO_MEMORY;
 	}
 
-	ctx.cmd.stats_dump.addr = lif->stats_dump_pa;
+	ctx.cmd.lif_stats.addr = lif->lif_stats_pa;
 
-	ionic_info("stats_dump START ver %d addr 0x%lx\n", ver,
-		   lif->stats_dump_pa);
-
-        // TODO: need to complete
-	return VMK_OK;
+	ionic_info("lif_stats START ver %d addr 0x%lx\n", ver,
+		   lif->lif_stats_pa);
 
 	status = ionic_adminq_post_wait(lif, &ctx);
         ionic_completion_destroy(&ctx.work);
@@ -1661,14 +1657,18 @@ ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 adminq_post_err:
         ionic_dma_free(ionic_driver.heap_id,
                        priv_data->dma_engine_coherent,
-                       sizeof(*lif->stats_dump),
-                       lif->stats_dump,
-                       lif->stats_dump_pa);
+                       sizeof(*lif->lif_stats),
+                       lif->lif_stats,
+                       lif->lif_stats_pa);
+
+        lif->lif_stats = NULL;
+        lif->lif_stats_pa = 0;
 
         return status;
 }
 
-static void ionic_lif_stats_dump_stop(struct lif *lif)
+static void
+ionic_lif_stats_stop(struct lif *lif)
 {
         VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data;
@@ -1676,12 +1676,14 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 	struct ionic_admin_ctx ctx = {
 //		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.stats_dump = {
-			.opcode = CMD_OPCODE_STATS_DUMP_STOP,
+			.opcode = CMD_OPCODE_LIF_STATS_STOP,
 		},
 	};
 
+        VMK_ASSERT(lif->lif_stats_pa);
+
 	ionic_info("stats_dump STOP\n");
-     	
+
         status = ionic_completion_create(ionic_driver.module_id,
 					 ionic_driver.heap_id,
 					 ionic_driver.lock_domain,
@@ -1708,11 +1710,13 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 
         ionic_dma_free(ionic_driver.heap_id,
                        priv_data->dma_engine_coherent,
-                       sizeof(*lif->stats_dump),
-                       lif->stats_dump,
-                       lif->stats_dump_pa);
+                       sizeof(*lif->lif_stats),
+                       lif->lif_stats,
+                       lif->lif_stats_pa);
+
+        lif->lif_stats = NULL;
+        lif->lif_stats_pa = 0;
 }
-#endif
 
 VMK_ReturnStatus
 ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
@@ -1946,7 +1950,7 @@ static void ionic_lif_deinit(struct lif *lif)
                 return;
         }
 
-//	ionic_lif_stats_dump_stop(lif);
+	ionic_lif_stats_stop(lif);
 	if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH &&
             (!lif->uplink_handle->is_mgmt_nic)) {
                 ionic_lif_rss_teardown(lif);
@@ -2574,14 +2578,13 @@ ionic_lif_init(struct lif *lif)
                 }
 	}
 
-/*
-	status = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
+	status = ionic_lif_stats_start(lif, STATS_DUMP_VERSION_1);
 	if (status != VMK_OK) {
-                ionic_err("ionic_lif_stats_dump_start() failed, status: %s",
+                ionic_err("ionic_lif_stats_start() failed, status: %s",
                           vmk_StatusToString(status));
-		goto stats_dump_start_err;
+		goto stats_start_err;
         }
-*/
+
         init_state = VMK_UPLINK_STATE_ENABLED |
                      VMK_UPLINK_STATE_BROADCAST_OK |
                      VMK_UPLINK_STATE_MULTICAST_OK |
@@ -2609,12 +2612,10 @@ err_out_rxqs_deinit:
 //rxqs_init_err:
 //        ionic_lif_txqs_deinit(lif);
 
-#if 0
-stats_dump_start_err:
+stats_start_err:
         if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH) {
                 ionic_lif_rss_teardown(lif);
         }
-#endif
 
 rss_setup_err:
         ionic_lif_addr(lif,

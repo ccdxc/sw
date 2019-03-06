@@ -898,21 +898,45 @@ static void
 ionic_en_uplink_lif_stats_get(struct lif *lif,                  // IN
                               vmk_UplinkStats *uplink_stats)    // IN/OUT
 {
-        vmk_uint32 i;
-        struct rx_stats *rx_stats;
-        struct tx_stats *tx_stats;
+        struct ionic_lif_stats *ls = lif->lif_stats;
 
-        for (i = 0; i < lif->nrxqcqs; i++) {
-                rx_stats = &lif->rxqcqs[i]->stats.rx;
-                uplink_stats->rxPkts += rx_stats->pkts;
-                uplink_stats->rxBytes += rx_stats->bytes;
-        }
+        uplink_stats->rxPkts = ls->rx_ucast_packets +
+                               ls->rx_mcast_packets +
+                               ls->rx_bcast_packets;
+        uplink_stats->rxBytes = ls->rx_ucast_bytes +
+                                ls->rx_mcast_bytes +
+                                ls->rx_bcast_bytes;
 
-        for (i = 0; i < lif->ntxqcqs; i++) {
-                tx_stats = &lif->txqcqs[i]->stats.tx;
-                uplink_stats->txPkts += tx_stats->pkts;
-                uplink_stats->txBytes += tx_stats->bytes;
-        }
+        uplink_stats->rxDrops = ls->rx_ucast_drop_packets +
+                                ls->rx_mcast_drop_packets +
+                                ls->rx_bcast_drop_packets;
+        uplink_stats->rxMulticastPkts = ls->rx_mcast_packets;
+        uplink_stats->rxBroadcastPkts = ls->rx_bcast_packets;
+        uplink_stats->rxOverflowErrors = ls->rx_queue_empty;
+        uplink_stats->rxMissErrors = ls->rx_dma_error +
+                                     ls->rx_queue_disabled +
+                                     ls->rx_desc_fetch_error +
+                                     ls->rx_desc_data_error;
+        uplink_stats->rxErrors = uplink_stats->rxOverflowErrors +
+                                 uplink_stats->rxMissErrors;
+
+        uplink_stats->txPkts = ls->tx_ucast_packets +
+                               ls->tx_mcast_packets +
+                               ls->tx_bcast_packets;
+        uplink_stats->txBytes = ls->tx_ucast_bytes +
+                                ls->tx_mcast_bytes +
+                                ls->tx_bcast_bytes;
+
+        uplink_stats->txDrops = ls->tx_ucast_drop_packets +
+                                ls->tx_mcast_drop_packets +
+                                ls->tx_bcast_drop_packets;
+        uplink_stats->txMulticastPkts = ls->tx_mcast_packets;
+        uplink_stats->txBroadcastPkts = ls->tx_bcast_packets;
+        uplink_stats->txAbortedErrors = ls->tx_dma_error +
+                                        ls->tx_queue_disabled +
+                                        ls->tx_desc_fetch_error +
+                                        ls->tx_desc_data_error;
+        uplink_stats->txErrors = uplink_stats->txAbortedErrors;
 }
 
 
