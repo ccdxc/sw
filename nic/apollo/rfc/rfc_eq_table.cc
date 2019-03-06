@@ -17,8 +17,8 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 
-#define RFC_RESULT_STATEFUL_BIT_MASK            0x1
-#define RFC_RESULT_STATELESS_BIT_MASK           0x2
+#define RFC_RESULT_STATELESS_BIT_MASK           0x1
+#define RFC_RESULT_STATEFUL_BIT_MASK            0x2
 #define RFC_RESULT_BITS_MASK                    0x3
 #define RFC_RESULT_SET_STATEFUL_BIT(val)        ((val) |= RFC_RESULT_STATEFUL_BIT_MASK)
 #define RFC_RESULT_SET_STATELESS_BIT(val)       ((val) |= RFC_RESULT_STATELESS_BIT_MASK)

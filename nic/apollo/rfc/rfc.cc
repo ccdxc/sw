@@ -180,9 +180,6 @@ rfc_compute_p0_itree_classes (rfc_ctxt_t *rfc_ctxt, rfc_tree_t *rfc_tree,
     }
     rfc_tree->num_intervals = num_intervals;
 
-    PDS_TRACE_DEBUG("No. of interval nodes in itree %u", num_intervals);
-    PDS_TRACE_DEBUG("No. of equivalence classes in tree %u",
-                    rfc_table->num_classes);
     if (num_intervals > max_tree_nodes) {
         PDS_TRACE_ERR("No. of interval nodes in itree %u exceeded "
                       "max supported nodes %u", num_intervals,
@@ -196,6 +193,38 @@ rfc_compute_p0_itree_classes (rfc_ctxt_t *rfc_ctxt, rfc_tree_t *rfc_tree,
         return sdk::SDK_RET_NO_RESOURCE;
     }
     return SDK_RET_OK;
+}
+
+static inline void
+rfc_itree_dump (rfc_tree_t *rfc_tree, itree_type_t tree_type)
+{
+    itable_t    *itable = &rfc_tree->itable;
+    inode_t     *inode;
+
+    PDS_TRACE_DEBUG("No. of interval nodes in itree %u",
+                    rfc_tree->num_intervals);
+    for (uint32_t i = 0; i < rfc_tree->num_intervals; i++) {
+        inode = &itable->nodes[i];
+        if ((tree_type == ITREE_TYPE_IPV4_ACL) ||
+            (tree_type == ITREE_TYPE_IPV6_ACL)) {
+            PDS_TRACE_DEBUG("inode %u, IP %s, classid %u, rule# %u, start %s",
+                            i, ipaddr2str(&inode->ipaddr), inode->rfc.class_id,
+                            inode->rfc.rule_no,
+                            inode->rfc.start ? "true" : "false");
+        } else if (tree_type == ITREE_TYPE_PORT) {
+            PDS_TRACE_DEBUG("inode %u, port %u, classid %u, rule# %u, start %s",
+                            i, inode->port, inode->rfc.class_id,
+                            inode->rfc.rule_no,
+                            inode->rfc.start ? "true" : "false");
+        } else if (tree_type == ITREE_TYPE_PROTO_PORT) {
+            PDS_TRACE_DEBUG("inode %u, proto %u, port %u, classid %u, "
+                            "rule# %u, start %s", i,
+                            (inode->key32 >> 16) & 0xFF,
+                            inode->key32 & 0xFFFF, inode->rfc.class_id,
+                            inode->rfc.rule_no,
+                            inode->rfc.start ? "true" : "false");
+        }
+    }
 }
 
 static inline sdk_ret_t
@@ -252,10 +281,20 @@ rfc_eq_class_table_dump (rfc_table_t *rfc_table)
 static inline void
 rfc_p0_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 {
+    PDS_TRACE_DEBUG("RFC P0 prefix interval tree dump :");
+    rfc_itree_dump(&rfc_ctxt->pfx_tree,
+                   (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_ACL:
+                                                          ITREE_TYPE_IPV6_ACL);
     PDS_TRACE_DEBUG("RFC P0 prefix tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->pfx_tree.rfc_table);
+
+    PDS_TRACE_DEBUG("RFC P0 port interval tree dump :");
+    rfc_itree_dump(&rfc_ctxt->port_tree, ITREE_TYPE_PORT);
     PDS_TRACE_DEBUG("RFC P0 port tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->port_tree.rfc_table);
+
+    PDS_TRACE_DEBUG("RFC P0 (proto, port) interval tree dump :");
+    rfc_itree_dump(&rfc_ctxt->proto_port_tree, ITREE_TYPE_PROTO_PORT);
     PDS_TRACE_DEBUG("RFC P0 (proto, port) tree equivalence class table dump :");
     rfc_eq_class_table_dump(&rfc_ctxt->proto_port_tree.rfc_table);
 }
