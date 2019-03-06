@@ -514,11 +514,11 @@ void sonic_pprint_ev_list(struct sonic_event_list *evl)
 {
 	if (!evl)
 		return;
-	OSAL_LOG_WARN("EVL %s: irq %d, enabled %u, armed %u\n",
+	OSAL_LOG_NOTICE("EVL %s: irq %d, enabled %u, armed %u",
 		      evl->name, evl->irq, evl->enable, evl->armed);
-	OSAL_LOG_WARN("  idle_count %d, next_evid %d, next_used_evid %d\n",
+	OSAL_LOG_NOTICE("  idle_count %d, next_evid %d, next_used_evid %d",
 		      evl->idle_count, evl->next_evid, evl->next_used_evid);
-	OSAL_LOG_WARN("  size_bmp %d, bmp = %llx %llx %llx %llx %llx %llx %llx %llx\n",
+	OSAL_LOG_NOTICE("  size_bmp %d, bmp = %llx %llx %llx %llx %llx %llx %llx %llx",
 		      evl->size_ev_bmp,
 		      (unsigned long long) evl->inuse_evid_bmp[0],
 		      (unsigned long long) evl->inuse_evid_bmp[1],
@@ -528,14 +528,20 @@ void sonic_pprint_ev_list(struct sonic_event_list *evl)
 		      (unsigned long long) evl->inuse_evid_bmp[5],
 		      (unsigned long long) evl->inuse_evid_bmp[6],
 		      (unsigned long long) evl->inuse_evid_bmp[7]);
-	OSAL_LOG_WARN("  db_total_size %u, db_base 0x%llx, db_base_pa 0x%llx\n",
+	OSAL_LOG_NOTICE("  db_total_size %u, db_base 0x%llx, db_base_pa 0x%llx",
 		      evl->db_total_size,
 		      (unsigned long long) evl->db_base,
 		      (unsigned long long) evl->db_base_pa);
-	OSAL_LOG_WARN("  idle work: pending %u\n",
+	OSAL_LOG_NOTICE("  idle work: pending %u",
 		      delayed_work_pending(&evl->idle_work));
-	OSAL_LOG_WARN("  work: pending %u, found %u, ev_count %u, timestamp %llu\n",
+	OSAL_LOG_NOTICE("  work: pending %u, found %u, ev_count %u, timestamp %llu",
 		      work_pending(&evl->work_data.work),
 		      evl->work_data.found_work, evl->work_data.ev_count,
 		      (unsigned long long) evl->work_data.timestamp);
+}
+
+void sonic_pprint_pcr_ev_list(struct per_core_resource *pcr)
+{
+	if (pcr)
+		sonic_pprint_ev_list(pcr->evl);
 }

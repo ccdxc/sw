@@ -41,8 +41,7 @@ unsigned int core_count = SONIC_DEFAULT_CORES;
 module_param(core_count, uint, 0444);
 MODULE_PARM_DESC(core_count, "max number of cores to use for sonic driver (default=1)");
 
-static unsigned int log_level = OSAL_LOG_LEVEL_WARNING;
-module_param(log_level, uint, 0444);
+module_param_named(log_level, g_osal_log_level, uint, 0644);
 MODULE_PARM_DESC(log_level, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN(default),5=NOTICE,6=INFO,7=DBG");
 
 bool rate_limit_src_en = true;
@@ -470,7 +469,7 @@ static int __init sonic_init_module(void)
 {
 	int err;
 
-	osal_log_init(log_level, "sonic");
+	osal_log_init(g_osal_log_level, "sonic");
 	if (core_count <= 0)
 		core_count = 1;
 	else if (core_count > SONIC_MAX_CORES)

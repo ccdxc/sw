@@ -56,8 +56,7 @@ static char mode[MAX_PARAM_STRING_LEN] = "";
 module_param_string(mode, mode, sizeof(mode), 0444);
 MODULE_PARM_DESC(mode, "mode is sync, async, or poll");
 
-static unsigned int log_level = OSAL_LOG_LEVEL_NOTICE;
-module_param(log_level, uint, 0444);
+module_param_named(log_level, g_osal_log_level, uint, 0644);
 MODULE_PARM_DESC(log_level, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN,5=NOTICE,6=INFO,7=DBG");
 
 static unsigned int success_cnt = 0;
@@ -67,6 +66,10 @@ MODULE_PARM_DESC(success_cnt, "Success Count: Number of passed tests");
 static unsigned int fail_cnt = 0;
 module_param(fail_cnt, uint, 0444);
 MODULE_PARM_DESC(fail_cnt, "Failure Count: Number of failed tests");
+
+static unsigned int state = PENCAKE_STATE_INIT;
+module_param(state, uint, 0444);
+MODULE_PARM_DESC(state, "state: 0=INIT,1=CFG,2=RUNNING,3=IDLE,4=SHUTDOWN");
 
 static osal_thread_t g_main_thread;
 
@@ -79,7 +82,7 @@ pnso_test_mod_init(void)
 {
 	int rv;
 
-	rv = osal_log_init(log_level, "pencake");
+	rv = osal_log_init(g_osal_log_level, "pencake");
 	if (rv)
 		goto done;
 #ifndef __FreeBSD__ 
@@ -97,6 +100,7 @@ static int
 pnso_test_mod_fini(void)
 {
 	pnso_test_shutdown();
+	state = PENCAKE_STATE_SHUTDOWN;
 
 	osal_thread_stop(&g_main_thread);
 
@@ -438,6 +442,7 @@ body(void *not_used)
 	pnso_test_init_fns(pnso_submit_request, status_output_func,
 			   osal_alloc, osal_free, osal_realloc);
 
+	state = PENCAKE_STATE_CFG;
 	cfg = pnso_test_desc_alloc();
 	if (!cfg) {
 		PNSO_LOG_ERROR("Cannot allocate test descriptor\n");
@@ -575,8 +580,9 @@ body(void *not_used)
 		}
 	}
 
-	if (log_level >= OSAL_LOG_LEVEL_DEBUG)
+	if (g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG)
 		test_dump_desc(cfg);
+	state = PENCAKE_STATE_RUNNING;
 	pnso_run_unit_tests(cfg);
 
 	/* run default testcases */
@@ -599,6 +605,7 @@ body(void *not_used)
 		case CTL_STATE_START:
 		case CTL_STATE_REPEAT:
 			/* setup configuration */
+			state = PENCAKE_STATE_CFG;
 			pnso_test_desc_free(cfg);
 			cfg = pnso_test_desc_alloc();
 			if (cfg) {
@@ -631,12 +638,15 @@ body(void *not_used)
 		}
 
 		if (cfg && (ctl_repeat || ctl_state == CTL_STATE_START)) {
+			state = PENCAKE_STATE_RUNNING;
 			err = pnso_test_run_all(cfg, ctl_core_id);
 		}
+		state = PENCAKE_STATE_IDLE;
 		msleep(10);
 	}
 
 done:
+	state = PENCAKE_STATE_SHUTDOWN;
 	pnso_test_desc_free(cfg);
 
 	pnso_test_set_shutdown_complete();

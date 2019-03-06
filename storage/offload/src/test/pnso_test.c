@@ -1611,8 +1611,8 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 
 	cmp = (int) batch_ctx->req_rc - (int) validation->req_retcode;
 	if (cmp != 0 || batch_ctx->req_rc != PNSO_OK) {
-		if (validation->req_retcode)
-			PNSO_LOG_DEBUG("Testcase %u expected req_retcode %u, got %u\n",
+		if (cmp && validation->cmp_type == COMPARE_TYPE_EQ)
+			PNSO_LOG_INFO("Testcase %u expected req_retcode %u, got %u\n",
 				testcase->node.idx, validation->req_retcode,
 				batch_ctx->req_rc);
 		goto done;
@@ -1620,15 +1620,15 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 
 	cmp = (int) req_ctx->svc_res.err - (int) validation->retcode;
 	if (cmp != 0) {
-		if (validation->retcode)
-			PNSO_LOG_DEBUG("Testcase %u expected retcode %u, got %u\n",
+		if (validation->cmp_type == COMPARE_TYPE_EQ)
+			PNSO_LOG_INFO("Testcase %u expected retcode %u, got %u\n",
 				testcase->node.idx, validation->retcode,
 				req_ctx->svc_res.err);
 		goto done;
 	}
 
 	if (req_ctx->svc_res.num_services < validation->svc_count) {
-		PNSO_LOG_DEBUG("Testcase %u expected num_services %u, got %u\n",
+		PNSO_LOG_WARN("Testcase %u expected num_services %u, got %u\n",
 			testcase->node.idx, validation->svc_count,
 			req_ctx->svc_res.num_services);
 		err = EINVAL;
@@ -1639,8 +1639,8 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 		cmp = (int) req_ctx->svc_res.svc[i].err -
 			(int) validation->svc_retcodes[i];
 		if (cmp != 0) {
-			if (validation->svc_retcodes[i])
-				PNSO_LOG_DEBUG("Testcase %u expected svc_retcode[%u] %u, got %u\n",
+			if (validation->cmp_type == COMPARE_TYPE_EQ)
+				PNSO_LOG_INFO("Testcase %u expected svc_retcode[%u] %u, got %u\n",
 					       testcase->node.idx, i,
 					       validation->svc_retcodes[i],
 					       req_ctx->svc_res.svc[i].err);
@@ -1658,9 +1658,9 @@ static pnso_error_t run_data_len_validation(struct request_context *req_ctx,
 					    struct test_validation *validation)
 {
 	pnso_error_t err = PNSO_OK;
-	size_t i;
+	uint32_t i;
 	int cmp = 0;
-	int total_len = 0;
+	uint32_t len;
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
 
@@ -1671,24 +1671,36 @@ static pnso_error_t run_data_len_validation(struct request_context *req_ctx,
 
 	if (validation->len) {
 		/* get total len */
+		len = 0;
 		for (i = 0; i < req_ctx->svc_res.num_services; i++)
-			total_len += get_svc_status_data_len(&req_ctx->svc_res.svc[i]);
+			len += get_svc_status_data_len(&req_ctx->svc_res.svc[i]);
 
-		cmp = (int) total_len - (int) validation->len;
+		cmp = (int) len - (int) validation->len;
 		if (cmp != 0) {
+			if (validation->cmp_type == COMPARE_TYPE_EQ)
+				PNSO_LOG_INFO("Testcase %u expected total data_len %u, got %u\n",
+					       testcase->node.idx,
+					       validation->len, len);
 			goto done;
 		}
 	}
 
 	if (req_ctx->svc_res.num_services < validation->svc_count) {
+		PNSO_LOG_WARN("Testcase %u expected num_services %u, got %u\n",
+			testcase->node.idx, validation->svc_count,
+			req_ctx->svc_res.num_services);
 		err = EINVAL;
 		goto done;
 	}
 
 	for (i = 0; i < validation->svc_count; i++) {
-		cmp = (int) get_svc_status_data_len(&req_ctx->svc_res.svc[i]) -
-			(int) validation->svc_retcodes[i];
+		len = get_svc_status_data_len(&req_ctx->svc_res.svc[i]);
+		cmp = (int) len - (int) validation->svc_retcodes[i];
 		if (cmp != 0) {
+			if (validation->cmp_type == COMPARE_TYPE_EQ)
+				PNSO_LOG_INFO("Testcase %u expected svc[%u] data_len %d, got %u\n",
+					      testcase->node.idx, i,
+					      validation->svc_retcodes[i], len);
 			break;
 		}
 	}

@@ -21,6 +21,16 @@ extern "C"
 
 #define TEST_MAX_RANDOM_LEN 4096
 
+enum {
+	PENCAKE_STATE_INIT,
+	PENCAKE_STATE_CFG,
+	PENCAKE_STATE_RUNNING,
+	PENCAKE_STATE_IDLE,
+	PENCAKE_STATE_SHUTDOWN,
+
+	PENCAKE_STATE_MAX
+};
+
 /* Full definition in pnso_test_parse.h */
 struct test_desc;
 

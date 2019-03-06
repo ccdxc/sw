@@ -118,6 +118,7 @@ void *sonic_phy_to_virt(uint64_t phy);
 
 bool sonic_is_accel_dev_ready(void);
 void sonic_pprint_seq_bmps(struct per_core_resource *pcr);
+void sonic_pprint_pcr_ev_list(struct per_core_resource *pcr);
 void sonic_pprint_ev_lists(void);
 
 #endif /* SONIC_API_INT_H */
