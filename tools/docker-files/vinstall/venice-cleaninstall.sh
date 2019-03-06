@@ -6,7 +6,7 @@ set -o pipefail
 # after installation DVD is booted up, this script is run to format
 #   the harddisk and copy the OS and Venice contents to hardisk
 
-device=/dev/sda
+device=
 mkfs=/sbin/mkfs.ext4
 label1=PENGRUB
 label2=PENBOOT
@@ -20,6 +20,30 @@ then
     echo Not running from install media
     exit 1
 fi
+
+# if pen.live.device=sde is seen in command-line we will install to /dev/sde instead of /dev/sda
+for o in `cat /proc/cmdline` ; do
+    case $o in
+    pen.live.device=*)
+        device="${o#pen.live.device=}"
+        ;;
+    esac
+done
+
+if [ -z "$device" ]
+then
+    # first disk device in the system
+    device=$(lsblk -Sdno NAME,TYPE | grep disk | head -n1 | awk '{print $1}')
+fi
+
+if [ -z "$device" ]
+then
+    echo No Installable device found
+    exit 2
+fi
+
+device=/dev/${device}
+echo Installing to ${device}
 
 # version of the pensando-base image
 VERSION=$(grep version: /run/initramfs/live/LiveOS/PEN-VERSION  | awk '{print $2}')
