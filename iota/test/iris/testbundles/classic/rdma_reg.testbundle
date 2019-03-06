@@ -117,6 +117,77 @@ testcases:
             transport: ['UD']
             command  : ['ib_send_bw']
 
+    #=======================================
+    # Multi SGE test: Send
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_Send
+        testcase: testcases.rdma.packet_sweep
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1, 8, 100]
+            threads  : [1]
+            rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
+            mtu      : [4096, 2048, 1024]
+            size     : [65536, 32768, 16384]
+            numsges  : [2, 4, 8, 16]
+            transport: ['RC']
+            command  : ['ib_send_bw']
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Multi SGE test: Read
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_Read
+        testcase: testcases.rdma.packet_sweep
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1, 100]
+            threads  : [1]
+            rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
+            mtu      : [4096, 2048, 1024]
+            size     : [65536, 32768, 16384]
+            numsges  : [2, 4, 8, 16]
+            transport: ['RC']
+            command  : ['ib_read_bw']
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Multi SGE test: Write
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_Write
+        testcase: testcases.rdma.packet_sweep
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1, 8]
+            threads  : [1]
+            rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
+            mtu      : [4096, 2048, 1024]
+            size     : [65536, 32768, 16384]
+            numsges  : [2, 4, 8, 16]
+            transport: ['RC']
+            command  : ['ib_write_bw']
+        args    :
+            type: remote_only
+
+    #=======================================
+    # RPing
+    #=======================================
+    -   name    : Rping
+        testcase: testcases.rdma.rping
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            pktsize : [23, 32, 64, 65, 128, 256, 512, 1024, 1025, 2048, 4096, 8191, 8192, 9131, 16384, 65535]
+            server  : [ 'yes', 'no']
 
     #=======================================
     # KRping Sweep

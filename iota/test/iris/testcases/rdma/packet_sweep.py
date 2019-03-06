@@ -57,6 +57,15 @@ def Trigger(tc):
     else:
         size_opt  =  " -a "
 
+    # When numsges configured, use the -W option, but that only works on Naples
+    # First create numsges_opt here, but only use it on Naples when forming the
+    # command below
+    # Ensure that essage size is correct multiple of numsges otherwise this wont work
+    if hasattr(tc.iterators, 'numsges'):
+        numsges_opt  =  " -W {numsges} ".format(numsges = tc.iterators.numsges)
+    else:
+        numsges_opt  =  " "
+
     if tc.iterators.server == 'yes':
         i = 0
         k = 1
@@ -83,8 +92,13 @@ def Trigger(tc):
 
         # cmd for server
         for p in range(s_port, e_port):
+            # Keep numsges (-W) option only for Naples
+            if (w1.IsNaples):
+                W_opt = numsges_opt
+            else:
+                W_opt = " "
 
-            cmd = tc.iterators.command + " -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + size_opt + " -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + " -p {0}".format(p)
+            cmd = tc.iterators.command + " -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + size_opt + W_opt + " -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + " -p {0}".format(p)
             api.Trigger_AddCommand(req, 
                                    w1.node_name, 
                                    w1.workload_name,
@@ -101,7 +115,13 @@ def Trigger(tc):
 
         # cmd for client
         for p in range(s_port, e_port):
-            cmd = tc.iterators.command + " -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + size_opt + " -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + w1.ip_address + " -p {0}".format(p)
+            # Keep numsges (-W) option only for Naples
+            if (w2.IsNaples):
+                W_opt = numsges_opt
+            else:
+                W_opt = " "
+
+            cmd = tc.iterators.command + " -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + W_opt + size_opt + " -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + w1.ip_address + " -p {0}".format(p)
             api.Trigger_AddCommand(req, 
                                    w2.node_name, 
                                    w2.workload_name,

@@ -81,14 +81,6 @@ testcases:
         args    :
             type: remote_only
 
-    -   name    : Rc_SendBw_Fml_16Sge
-        testcase: testcases.rdma.rc_send_bw_fml_16sge
-        iterators :
-            type    : simple
-            num_qp: [1, 2]
-        args    :
-            type: remote_only
-
     -   name    : Rc_SendBw_Only_Inline_TcpCm
         testcase: testcases.rdma.rc_send_bw_inline
         iterators :
@@ -299,6 +291,86 @@ testcases:
     #        type: remote_only
 
     #=======================================
+    # Multi SGE test: Send
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_Send
+        testcase: testcases.rdma.packet_sweep
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1]
+            threads  : [1]
+            rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
+            mtu      : [4096]
+            size     : [65536, 32768, 16384]
+            numsges  : [4, 8, 16]
+            transport: ['RC']
+            command  : ['ib_send_bw']
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Multi SGE test: Read
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_Read
+        testcase: testcases.rdma.packet_sweep
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1]
+            threads  : [1]
+            rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
+            mtu      : [4096]
+            size     : [65536, 32768]
+            numsges  : [8, 16]
+            transport: ['RC']
+            command  : ['ib_read_bw']
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Multi SGE test: Write
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_Write
+        testcase: testcases.rdma.packet_sweep
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1]
+            threads  : [1]
+            rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
+            mtu      : [4096]
+            size     : [65536, 16384]
+            numsges  : [4, 16]
+            transport: ['RC']
+            command  : ['ib_write_bw']
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Multi SGE test, Multiple QPs, All Msgs
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_MultiQPs
+        testcase: testcases.rdma.packet_sweep
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            threads  : [1]
+            rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
+            mtu      : [4096]
+            size     : [65536, 16384]
+            numsges  : [16]
+            transport: ['RC']
+            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+        args    :
+            type: remote_only
+
+    #=======================================
     # RPing
     #=======================================
     -   name    : Rping
@@ -307,7 +379,7 @@ testcases:
             type: remote_only
         iterators :
             type    : nested
-            pktsize : [23, 32, 64, 65, 128, 256, 512, 1024, 1025, 2048, 4096, 8191, 8192, 9131, 16384, 65535]
+            pktsize : [23, 32, 65, 1025, 2048, 4096, 16384, 65535]
             server  : [ 'yes', 'no']
 
     #=======================================
