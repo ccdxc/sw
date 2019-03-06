@@ -28,7 +28,6 @@ import (
 
 // reportInterval is how often(in seconds) tmagent sends metrics to TSDB
 const reportInterval = 30
-const fwlogIpcShm = "/fwlog_ipc_shm"
 
 // TelemetryAgent keeps the telementry agent state
 type TelemetryAgent struct {
@@ -118,7 +117,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			log.Fatalf("failed to init tmagent controller client, err: %v", err)
 		}
 
-		if err := s.tmagent.tpState.FwlogInit(fwlogIpcShm); err != nil {
+		if err := s.tmagent.tpState.FwlogInit(state.FwlogIpcShm); err != nil {
 			log.Fatal(err)
 		}
 
@@ -218,7 +217,7 @@ func main() {
 
 	tmAgent.tpState = tpState
 
-	tmAgent.restServer, err = restapi.NewRestServer(ctx, *restURL)
+	tmAgent.restServer, err = restapi.NewRestServer(ctx, *restURL, tpState)
 	if err != nil {
 		log.Fatalf("failed to create tmagent rest API server, Err: %v", err)
 	}

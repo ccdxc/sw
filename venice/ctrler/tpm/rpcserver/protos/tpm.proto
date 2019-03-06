@@ -48,7 +48,7 @@ service StatsPolicyApi {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "StatsPolicy",
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
     rpc WatchStatsPolicy (api.ObjectMeta) returns (stream statsPolicyEvent) {};
@@ -75,7 +75,8 @@ service FwlogPolicyApi {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "FwlogPolicy",
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+        Method: ["get", "list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
     rpc WatchFwlogPolicy (api.ObjectMeta) returns (stream FwlogPolicyEvent) {};

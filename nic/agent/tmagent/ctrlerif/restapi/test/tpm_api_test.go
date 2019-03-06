@@ -4,7 +4,7 @@
 Package tpmprotos is a auto generated package.
 Input file: tpm.proto
 */
-package restapi
+package resttest
 
 import (
 	"testing"

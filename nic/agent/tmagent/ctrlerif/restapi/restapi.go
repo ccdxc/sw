@@ -12,17 +12,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/httputils"
-
-	"github.com/pensando/sw/venice/utils/ntranslate"
-
-	"github.com/pensando/sw/api"
-
-	"github.com/pensando/sw/venice/utils/tsdb"
-
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/httputils"
+	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ntranslate"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // this package contains the REST API provided by the agent
@@ -32,6 +29,7 @@ type RestServer struct {
 	ctx               context.Context
 	cancel            context.CancelFunc
 	waitGrp           sync.WaitGroup
+	TpAgent           types.CtrlerIntf         // telemetry policy agent
 	listenURL         string                   // URL where http server is listening
 	listener          net.Listener             // socket listener
 	httpServer        *http.Server             // HTTP server
@@ -47,19 +45,33 @@ type Response struct {
 	References []string `json:"references,omitempty"`
 }
 
+// MakeErrorResponse generates error response for MakeHTTPHandler() API
+func MakeErrorResponse(code int, err error) (*Response, error) {
+	res := &Response{
+		StatusCode: code,
+	}
+
+	if err != nil {
+		res.Error = err.Error()
+	}
+
+	return res, err
+}
+
 type routeAddFunc func(*mux.Router, *RestServer)
 type getPointsFunc func() ([]*tsdb.Point, error)
 
 // NewRestServer creates a new HTTP server servicg REST api
-func NewRestServer(ctx context.Context, listenURL string) (*RestServer, error) {
+func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerIntf) (*RestServer, error) {
 
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(pctx)
 
 	// create server instance
 	srv := RestServer{
 		listenURL: listenURL,
 		ctx:       ctx,
 		cancel:    cancel,
+		TpAgent:   tpAgent,
 	}
 
 	// if no URL was specified, just return (used during unit/integ tests)
@@ -85,6 +97,17 @@ func NewRestServer(ctx context.Context, listenURL string) (*RestServer, error) {
 		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
 		subRouter(sub, &srv)
 	}
+
+	prefixRoutes := map[string]routeAddFunc{
+		"/api/telemetry/flowexports/": addFlowExportPolicyAPIRoutes,
+		"/api/telemetry/fwlog/":       addFwlogPolicyAPIRoutes,
+	}
+
+	for prefix, subRouter := range prefixRoutes {
+		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
+		subRouter(sub, &srv)
+	}
+
 	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/", pprof.Index)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -100,8 +123,6 @@ func NewRestServer(ctx context.Context, listenURL string) (*RestServer, error) {
 
 	router.Methods("GET").Subrouter().HandleFunc("/debug/tsdb", httputils.MakeHTTPHandler(tsdb.Debug))
 
-	log.Infof("Starting server at %s", listenURL)
-
 	// listener
 	listener, err := net.Listen("tcp", listenURL)
 	if err != nil {
@@ -109,6 +130,8 @@ func NewRestServer(ctx context.Context, listenURL string) (*RestServer, error) {
 		return nil, err
 	}
 	srv.listener = listener
+
+	log.Infof("Starting tm-agent server at %s", listener.Addr().String())
 
 	// create a http server
 	srv.httpServer = &http.Server{Addr: listenURL, Handler: router}

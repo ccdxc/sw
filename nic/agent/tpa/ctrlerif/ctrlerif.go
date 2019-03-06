@@ -187,11 +187,11 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 			log.Infof("received policy(%s) %+v", event.EventType, event.Policy)
 			switch event.EventType {
 			case api.EventType_CreateEvent:
-				client.state.CreateFwLogPolicy(ctx, event.Policy)
+				client.state.CreateFwlogPolicy(ctx, event.Policy)
 			case api.EventType_UpdateEvent:
-				client.state.UpdateFwLogPolicy(ctx, event.Policy)
+				client.state.UpdateFwlogPolicy(ctx, event.Policy)
 			case api.EventType_DeleteEvent:
-				client.state.DeleteFwLogPolicy(ctx, event.Policy)
+				client.state.DeleteFwlogPolicy(ctx, event.Policy)
 			}
 
 		case event, ok := <-wc.flowExpChan:

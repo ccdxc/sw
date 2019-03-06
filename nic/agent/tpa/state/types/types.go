@@ -22,11 +22,11 @@ type CtrlerIntf interface {
 	UpdateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error
 	DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error
 
-	CreateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
-	GetFwLogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error)
-	ListFwLogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error)
-	UpdateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
-	DeleteFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
+	CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
+	GetFwlogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error)
+	ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error)
+	UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
+	DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
 	Debug(w http.ResponseWriter, r *http.Request)
 }
 

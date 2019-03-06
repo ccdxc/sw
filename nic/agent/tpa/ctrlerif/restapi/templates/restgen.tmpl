@@ -22,11 +22,11 @@ import (
             {{$methods := .Methods}}
             {{range $methods}}
                 {{if strEq . "list"}}
-                    r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.FlowExportPolicy{{title .}}Handler))
+                    r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.{{$crudObject}}{{title .}}Handler))
                 {{else if strEq . "post"}}
-                    r.Methods("{{upper .}}").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.FlowExportPolicy{{title .}}Handler))
+			r.Methods("{{upper .}}").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.{{$crudObject}}{{title .}}Handler))
                 {{else}}
-                    r.Methods("{{upper .}}").Subrouter().HandleFunc("{{$pattern}}", httputils.MakeHTTPHandler(srv.FlowExportPolicy{{title .}}Handler))
+			r.Methods("{{upper .}}").Subrouter().HandleFunc("{{$pattern}}", httputils.MakeHTTPHandler(srv.{{$crudObject}}{{title .}}Handler))
                 {{end}}
             {{end}}
             }
@@ -37,35 +37,35 @@ import (
            {{$methods := .Methods}}
            {{range $methods}}
                 {{if strEq . "list"}}
-                    func (s *RestServer) FlowExportPolicy{{title .}}Handler(r *http.Request) (interface{}, error){
-                        res, err :=  s.TpAgent.ListFlowExportPolicy(r.Context())
+                    func (s *RestServer) {{$crudObject}}{{title .}}Handler(r *http.Request) (interface{}, error){
+                        res, err :=  s.TpAgent.List{{$crudObject}}(r.Context())
                         if err != nil {
                            return MakeErrorResponse(http.StatusInternalServerError, err)
                         }
                         return res, err
                     }
                 {{else}}
-                    func (s *RestServer) FlowExportPolicy{{title .}}Handler(r *http.Request) (interface{}, error){
+                    func (s *RestServer) {{$crudObject}}{{title .}}Handler(r *http.Request) (interface{}, error){
                         var o tpmprotos.{{title $crudObject}}
 
                         {{if strEq . "get"}}
-                             o.TypeMeta.Kind = "FlowExportPolicy"
+                             o.TypeMeta.Kind = "{{$crudObject}}"
                              o.ObjectMeta.Tenant = mux.Vars(r)["ObjectMeta.Tenant"]
                              o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
                              o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
-                             res, err := s.TpAgent.GetFlowExportPolicy(r.Context(),&o)
+                             res, err := s.TpAgent.Get{{$crudObject}}(r.Context(),&o)
                              if err != nil {
                                 return MakeErrorResponse(http.StatusInternalServerError, err)
                              }
                              return res, err
 
                         {{else if strEq . "delete"}}
-                             o.TypeMeta.Kind = "FlowExportPolicy"
+                             o.TypeMeta.Kind = "{{$crudObject}}"
                              o.ObjectMeta.Tenant = mux.Vars(r)["ObjectMeta.Tenant"]
                              o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
                              o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
 
-                             err := s.TpAgent.DeleteFlowExportPolicy(r.Context(), &o)
+                             err := s.TpAgent.Delete{{$crudObject}}(r.Context(), &o)
                              if err != nil {
                                 return MakeErrorResponse(http.StatusInternalServerError, err)
                              }
@@ -84,7 +84,7 @@ import (
                              o.ModTime = api.Timestamp{
                                 Timestamp: *c,
                              }
-                             err = s.TpAgent.CreateFlowExportPolicy(r.Context(), &o)
+                             err = s.TpAgent.Create{{$crudObject}}(r.Context(), &o)
                              if err != nil {
                                  return MakeErrorResponse(http.StatusInternalServerError, err)
                              }
@@ -103,7 +103,7 @@ import (
                              o.ModTime = api.Timestamp{
                                 Timestamp: *m,
                              }
-                             err = s.TpAgent.UpdateFlowExportPolicy(r.Context(), &o)
+                             err = s.TpAgent.Update{{$crudObject}}(r.Context(), &o)
                              if err != nil {
                                  return MakeErrorResponse(http.StatusInternalServerError, err)
                              }

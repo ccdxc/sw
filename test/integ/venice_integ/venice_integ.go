@@ -19,19 +19,25 @@ import (
 	pencluster "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	state "github.com/pensando/sw/nic/agent/netagent/protos"
+	tmstate "github.com/pensando/sw/nic/agent/tmagent/state"
+
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	nmdproto "github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
 	tmrestapi "github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
+
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	"github.com/pensando/sw/nic/delphi/gosdk"
+
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
+	tpactrlerif "github.com/pensando/sw/nic/agent/tpa/ctrlerif"
+
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
@@ -684,7 +690,26 @@ func (it *veniceIntegSuite) startAgent() {
 				log.Fatalf("Error creating NodeWatcher. Err: %v", err)
 			}
 
-			res, err := tmrestapi.NewRestServer(it.ctx, fmt.Sprintf("localhost:%d", it.config.TmAgentRestPort+i))
+			tpState, err := tmstate.NewTpAgent(it.ctx, fmt.Sprintf("dummy-uuid-%d", i), globals.AgentRESTPort)
+			if err != nil {
+				log.Fatalf("failed to init tmagent state, err: %v", err)
+			}
+
+			// Init the TSDB
+			if err := tpState.TsdbInit(rc); err != nil {
+				log.Fatalf("failed to init tsdb, err: %v", err)
+			}
+
+			_, err = tpactrlerif.NewTpClient(fmt.Sprintf("dummy-uuid-%d", i), tpState, globals.Tpm, rc)
+			if err != nil {
+				log.Fatalf("failed to init tmagent controller client, err: %v", err)
+			}
+
+			if err := tpState.FwlogInit(tmstate.FwlogIpcShm); err != nil {
+				log.Fatal(err)
+			}
+
+			res, err := tmrestapi.NewRestServer(it.ctx, fmt.Sprintf("localhost:%d", it.config.TmAgentRestPort+i), tpState)
 			if err != nil {
 				log.Fatalf("Error creating tmagent rest server. Err: %v", err)
 			}

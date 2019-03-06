@@ -142,16 +142,24 @@ func (s *PolicyState) getCollectorKey(vrf uint64, policy *tpmprotos.FwlogPolicy,
 
 // get vrf from netagent
 func (s *PolicyState) getvrf(tenant, namespace string) (uint64, error) {
+	var err error
+	reqURL := fmt.Sprintf("%s/api/namespaces/", s.netAgentURL)
+
 	// find vrf  from netagent
-	var ns netproto.Namespace
+	nslist := []netproto.Namespace{}
 	for i := 0; i < maxRetry; i++ {
-		err := netutils.HTTPGet(fmt.Sprintf("%s/api/namespace/%s/%s", s.netAgentURL, tenant, namespace), &ns)
+		err = netutils.HTTPGet(reqURL, &nslist)
 		if err == nil {
-			return ns.Status.NamespaceID, nil
+			for _, ns := range nslist {
+				if ns.Name == namespace && ns.Tenant == tenant {
+					return ns.Status.NamespaceID, nil
+				}
+			}
 		}
 		time.Sleep(time.Millisecond * 100)
 	}
-	return 0, fmt.Errorf("failed to get vrf id")
+
+	return 0, fmt.Errorf("GET [%s], %s", reqURL, err)
 }
 
 // connect to syslog server
@@ -328,8 +336,8 @@ func (s *PolicyState) deleteCollectors(vrf uint64) error {
 	return nil
 }
 
-// CreateFwLogPolicy is the POST() entry point
-func (s *PolicyState) CreateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) (err error) {
+// CreateFwlogPolicy is the POST() entry point
+func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) (err error) {
 	if err = s.validateFwLogPolicy(p); err != nil {
 		return err
 	}
@@ -341,7 +349,7 @@ func (s *PolicyState) CreateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 	vrf, err := s.getvrf(p.Tenant, p.Namespace)
 	if err != nil {
-		return fmt.Errorf("failed to get tenant for %s/%s", p.Tenant, p.Namespace)
+		return fmt.Errorf("failed to get vrf for %s/%s, %s", p.Tenant, p.Namespace, err)
 	}
 
 	filter := s.getFilter(p.Spec.Filter)
@@ -363,15 +371,15 @@ func (s *PolicyState) CreateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	}
 
 	if err := s.emstore.Write(p); err != nil {
-		s.DeleteFwLogPolicy(ctx, p)
+		s.DeleteFwlogPolicy(ctx, p)
 		return fmt.Errorf("failed to save policy, %s", err)
 	}
 
 	return nil
 }
 
-// UpdateFwLogPolicy is the PUT entry point
-func (s *PolicyState) UpdateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+// UpdateFwlogPolicy is the PUT entry point
+func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
 	if err := s.validateFwLogPolicy(p); err != nil {
 		return err
 	}
@@ -431,15 +439,15 @@ func (s *PolicyState) UpdateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	}
 
 	if err := s.emstore.Write(p); err != nil {
-		s.DeleteFwLogPolicy(ctx, p)
+		s.DeleteFwlogPolicy(ctx, p)
 		return fmt.Errorf("failed to save policy, %s", err)
 	}
 
 	return nil
 }
 
-// DeleteFwLogPolicy is the DELETE entry point
-func (s *PolicyState) DeleteFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+// DeleteFwlogPolicy is the DELETE entry point
+func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
 	// set default
 	if p.Tenant == "" {
 		p.Tenant = globals.DefaultTenant
@@ -486,8 +494,8 @@ func (s *PolicyState) DeleteFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	return nil
 }
 
-// GetFwLogPolicy is the GET entry point
-func (s *PolicyState) GetFwLogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error) {
+// GetFwlogPolicy is the GET entry point
+func (s *PolicyState) GetFwlogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error) {
 
 	obj, err := s.emstore.Read(p)
 	if err != nil {
@@ -499,8 +507,8 @@ func (s *PolicyState) GetFwLogPolicy(tx context.Context, p *tpmprotos.FwlogPolic
 	return nil, fmt.Errorf("failed to find policy")
 }
 
-// ListFwLogPolicy is the LIST all entry point
-func (s *PolicyState) ListFwLogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error) {
+// ListFwlogPolicy is the LIST all entry point
+func (s *PolicyState) ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error) {
 	fwlogPol := []*tpmprotos.FwlogPolicy{}
 
 	objList, err := s.emstore.List(&tpmprotos.FwlogPolicy{
@@ -510,13 +518,14 @@ func (s *PolicyState) ListFwLogPolicy(tx context.Context) ([]*tpmprotos.FwlogPol
 	})
 
 	if err != nil {
-		return fwlogPol, err
+		return fwlogPol, nil
 	}
 
 	for _, obj := range objList {
 		pol, ok := obj.(*tpmprotos.FwlogPolicy)
 		if !ok {
-			return []*tpmprotos.FwlogPolicy{}, fmt.Errorf("invalid fwlog policy")
+			log.Errorf("invalid fwlog policy type %+v", obj)
+			return fwlogPol, nil
 		}
 		fwlogPol = append(fwlogPol, pol)
 	}

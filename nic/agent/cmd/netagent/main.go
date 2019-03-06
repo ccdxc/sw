@@ -188,14 +188,15 @@ func main() {
 		"/update/":       "http://127.0.0.1:" + globals.NmdRESTPort,
 
 		// TM-AGENT
-		"/telemetry/":     "http://127.0.0.1:" + globals.TmAGENTRestPort,
-		"/api/telemetry/": "http://127.0.0.1:" + globals.TmAGENTRestPort,
+		"/telemetry/":           "http://127.0.0.1:" + globals.TmAGENTRestPort,
+		"/api/telemetry/fwlog/": "http://127.0.0.1:" + globals.TmAGENTRestPort,
 
 		// EVENTS
 		"/api/eventpolicies/": "http://127.0.0.1:" + globals.EvtsProxyRESTPort,
 
 		// NET-AGENT
-		"/api ": "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/telemetry/flowexports/": "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api ":                       "http://127.0.0.1:" + globals.AgentRESTPort,
 	}
 
 	proxyRouter, err := revproxy.NewRevProxyRouter(*revProxyURL, proxyConfig)

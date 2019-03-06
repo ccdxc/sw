@@ -75,14 +75,14 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	handler := mocks.NewMockCtrlerIntf(mockCtrl)
 
 	mockresolver := mock.New()
-	handler.EXPECT().CreateFwLogPolicy(gomock.Any(), gomock.Any()).Times(2).Return(nil)
+	handler.EXPECT().CreateFwlogPolicy(gomock.Any(), gomock.Any()).Times(2).Return(nil)
 	client, err := NewTpClient("agent-007", handler, f.GetListenURL(), mockresolver)
 	AssertOk(t, err, "failed to create telemetry client")
 	Assert(t, client != nil, "invalid telemetry client ")
 	defer client.Stop()
 
 	// add new object
-	handler.EXPECT().CreateFwLogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
+	handler.EXPECT().CreateFwlogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
 	appObj := *fp["fwlog-2"]
 	appObj.Name = "new-obj"
 	err = policyDb.AddObject(&appObj)
@@ -93,7 +93,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	}, "fwlog update failed")
 
 	//update
-	handler.EXPECT().UpdateFwLogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
+	handler.EXPECT().UpdateFwlogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
 	err = policyDb.UpdateObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to update fwlog object %+v", appObj))
 	AssertEventually(t, func() (bool, interface{}) {
@@ -102,7 +102,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	}, "fwlog update failed")
 
 	// delete
-	handler.EXPECT().DeleteFwLogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
+	handler.EXPECT().DeleteFwlogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
 	err = policyDb.DeleteObject(&appObj)
 	AssertOk(t, err, fmt.Sprintf("failed to delete fwlog object %+v", appObj))
 	AssertEventually(t, func() (bool, interface{}) {

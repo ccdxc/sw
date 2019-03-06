@@ -99,66 +99,66 @@ func (mr *MockCtrlerIntfMockRecorder) DeleteFlowExportPolicy(ctx, p interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFlowExportPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).DeleteFlowExportPolicy), ctx, p)
 }
 
-// CreateFwLogPolicy mocks base method
-func (m *MockCtrlerIntf) CreateFwLogPolicy(ctx context.Context, p *protos.FwlogPolicy) error {
-	ret := m.ctrl.Call(m, "CreateFwLogPolicy", ctx, p)
+// CreateFwlogPolicy mocks base method
+func (m *MockCtrlerIntf) CreateFwlogPolicy(ctx context.Context, p *protos.FwlogPolicy) error {
+	ret := m.ctrl.Call(m, "CreateFwlogPolicy", ctx, p)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateFwLogPolicy indicates an expected call of CreateFwLogPolicy
-func (mr *MockCtrlerIntfMockRecorder) CreateFwLogPolicy(ctx, p interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFwLogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).CreateFwLogPolicy), ctx, p)
+// CreateFwlogPolicy indicates an expected call of CreateFwlogPolicy
+func (mr *MockCtrlerIntfMockRecorder) CreateFwlogPolicy(ctx, p interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFwlogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).CreateFwlogPolicy), ctx, p)
 }
 
-// GetFwLogPolicy mocks base method
-func (m *MockCtrlerIntf) GetFwLogPolicy(tx context.Context, p *protos.FwlogPolicy) (*protos.FwlogPolicy, error) {
-	ret := m.ctrl.Call(m, "GetFwLogPolicy", tx, p)
+// GetFwlogPolicy mocks base method
+func (m *MockCtrlerIntf) GetFwlogPolicy(tx context.Context, p *protos.FwlogPolicy) (*protos.FwlogPolicy, error) {
+	ret := m.ctrl.Call(m, "GetFwlogPolicy", tx, p)
 	ret0, _ := ret[0].(*protos.FwlogPolicy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetFwLogPolicy indicates an expected call of GetFwLogPolicy
-func (mr *MockCtrlerIntfMockRecorder) GetFwLogPolicy(tx, p interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFwLogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).GetFwLogPolicy), tx, p)
+// GetFwlogPolicy indicates an expected call of GetFwlogPolicy
+func (mr *MockCtrlerIntfMockRecorder) GetFwlogPolicy(tx, p interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFwlogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).GetFwlogPolicy), tx, p)
 }
 
-// ListFwLogPolicy mocks base method
-func (m *MockCtrlerIntf) ListFwLogPolicy(tx context.Context) ([]*protos.FwlogPolicy, error) {
-	ret := m.ctrl.Call(m, "ListFwLogPolicy", tx)
+// ListFwlogPolicy mocks base method
+func (m *MockCtrlerIntf) ListFwlogPolicy(tx context.Context) ([]*protos.FwlogPolicy, error) {
+	ret := m.ctrl.Call(m, "ListFwlogPolicy", tx)
 	ret0, _ := ret[0].([]*protos.FwlogPolicy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListFwLogPolicy indicates an expected call of ListFwLogPolicy
-func (mr *MockCtrlerIntfMockRecorder) ListFwLogPolicy(tx interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFwLogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).ListFwLogPolicy), tx)
+// ListFwlogPolicy indicates an expected call of ListFwlogPolicy
+func (mr *MockCtrlerIntfMockRecorder) ListFwlogPolicy(tx interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFwlogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).ListFwlogPolicy), tx)
 }
 
-// UpdateFwLogPolicy mocks base method
-func (m *MockCtrlerIntf) UpdateFwLogPolicy(ctx context.Context, p *protos.FwlogPolicy) error {
-	ret := m.ctrl.Call(m, "UpdateFwLogPolicy", ctx, p)
+// UpdateFwlogPolicy mocks base method
+func (m *MockCtrlerIntf) UpdateFwlogPolicy(ctx context.Context, p *protos.FwlogPolicy) error {
+	ret := m.ctrl.Call(m, "UpdateFwlogPolicy", ctx, p)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateFwLogPolicy indicates an expected call of UpdateFwLogPolicy
-func (mr *MockCtrlerIntfMockRecorder) UpdateFwLogPolicy(ctx, p interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFwLogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).UpdateFwLogPolicy), ctx, p)
+// UpdateFwlogPolicy indicates an expected call of UpdateFwlogPolicy
+func (mr *MockCtrlerIntfMockRecorder) UpdateFwlogPolicy(ctx, p interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFwlogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).UpdateFwlogPolicy), ctx, p)
 }
 
-// DeleteFwLogPolicy mocks base method
-func (m *MockCtrlerIntf) DeleteFwLogPolicy(ctx context.Context, p *protos.FwlogPolicy) error {
-	ret := m.ctrl.Call(m, "DeleteFwLogPolicy", ctx, p)
+// DeleteFwlogPolicy mocks base method
+func (m *MockCtrlerIntf) DeleteFwlogPolicy(ctx context.Context, p *protos.FwlogPolicy) error {
+	ret := m.ctrl.Call(m, "DeleteFwlogPolicy", ctx, p)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteFwLogPolicy indicates an expected call of DeleteFwLogPolicy
-func (mr *MockCtrlerIntfMockRecorder) DeleteFwLogPolicy(ctx, p interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFwLogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).DeleteFwLogPolicy), ctx, p)
+// DeleteFwlogPolicy indicates an expected call of DeleteFwlogPolicy
+func (mr *MockCtrlerIntfMockRecorder) DeleteFwlogPolicy(ctx, p interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFwlogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).DeleteFwlogPolicy), ctx, p)
 }
 
 // Debug mocks base method

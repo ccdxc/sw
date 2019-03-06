@@ -1184,27 +1184,27 @@ func getObjMetaKey(m *api.ObjectMeta) string {
 
 // dummy functions, these polcies are handled in tmagent
 
-// CreateFwLogPolicy is the POST entry point
-func (s *PolicyState) CreateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+// CreateFwlogPolicy is the POST entry point
+func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
 	return nil
 }
 
-// GetFwLogPolicy is the GET entry point
-func (s *PolicyState) GetFwLogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error) {
+// GetFwlogPolicy is the GET entry point
+func (s *PolicyState) GetFwlogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error) {
 	return &tpmprotos.FwlogPolicy{}, nil
 }
 
-// ListFwLogPolicy is the LIST entry point
-func (s *PolicyState) ListFwLogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error) {
+// ListFwlogPolicy is the LIST entry point
+func (s *PolicyState) ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error) {
 	return []*tpmprotos.FwlogPolicy{}, nil
 }
 
-// UpdateFwLogPolicy is the PUT entry point
-func (s *PolicyState) UpdateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+// UpdateFwlogPolicy is the PUT entry point
+func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
 	return nil
 }
 
-// DeleteFwLogPolicy is the DEL entry points
-func (s *PolicyState) DeleteFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+// DeleteFwlogPolicy is the DEL entry points
+func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
 	return nil
 }

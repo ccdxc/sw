@@ -15,6 +15,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// FwlogIpcShm is the path to fw logs in shared memory
+const FwlogIpcShm = "/fwlog_ipc_shm"
+
 // TsdbInit initilaizes tsdb and fwlog object
 func (s *PolicyState) TsdbInit(rc resolver.Interface) error {
 	opts := &tsdb.Opts{
