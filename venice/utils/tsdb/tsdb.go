@@ -28,20 +28,20 @@ var (
 
 // global information is maintained per client during Init time
 type globalInfo struct {
-	opts         Opts                   // user options
-	sync.Mutex                          // global lock
-	wg           sync.WaitGroup         // waitgroup for threads
-	rpcClient    *rpckit.RPCClient      // rpc connection to collector
-	mc           metric.MetricApiClient // metric client object (to write points)
-	context      context.Context        // global context (used for cancellation)
-	objs         map[string]*iObj       // cache for various objs
-	deletedObjs  []*iObj                // deleted list of objs
-	httpServer   *http.Server           // local http server
-	listener     net.Listener           // listener used by http server
-	cancelFunc   context.CancelFunc     // cancel function to initiate internal cleanup
-	sendErrors   int                    // send error stats
-	numPoints    int                    // number of points reported
-	failedPoints uint64                 // number of points failed to add in TSDB
+	opts          Opts                   // user options
+	sync.Mutex                           // global lock
+	wg            sync.WaitGroup         // waitgroup for threads
+	rpcClient     *rpckit.RPCClient      // rpc connection to collector
+	mc            metric.MetricApiClient // metric client object (to write points)
+	context       context.Context        // global context (used for cancellation)
+	objs          map[string]*iObj       // cache for various objs
+	deletedObjs   []*iObj                // deleted list of objs
+	httpServer    *http.Server           // local http server
+	listener      net.Listener           // listener used by http server
+	cancelFunc    context.CancelFunc     // cancel function to initiate internal cleanup
+	sendErrors    uint64                 // send error stats
+	numPoints     uint64                 // number of points sent to TSDB
+	ignoredPoints uint64                 // number of points failed to add in TSDB
 }
 
 var global *globalInfo

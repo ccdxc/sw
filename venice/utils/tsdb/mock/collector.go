@@ -72,7 +72,7 @@ func (f *Collector) ClearMetrics() {
 // Validate ensures that fake collector has received the specified tags/fields over measurement time
 func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[string]string, fieldsRanges []map[string]interface{}) bool {
 	if f.mb == nil {
-		log.Errorf("nil metric bundle ")
+		log.Errorf("nil metric bundle in %v", measurementName)
 		return false
 	}
 

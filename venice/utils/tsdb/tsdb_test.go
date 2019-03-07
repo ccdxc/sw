@@ -380,6 +380,34 @@ func TestMetricsWithPoints(t *testing.T) {
 	}
 }
 
+func TestMaxPoints(t *testing.T) {
+	ts.metricServer.ClearMetrics()
+	tName := t.Name()
+
+	keyTags := map[string]string{objID: tName}
+	obj, err := NewObj(tName, keyTags, nil, nil)
+	AssertOk(t, err, "unable to create obj")
+	defer obj.Delete()
+
+	for i := 0; i < maxPoints+5; i++ {
+		err := obj.Points([]*Point{
+			{
+				Tags:   map[string]string{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
+				Fields: map[string]interface{}{"action": "rejected"},
+			},
+		}, time.Now())
+		AssertOk(t, err, "unable to create obj")
+		Assert(t, len(obj.(*iObj).metricPoints) <= maxPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
+	}
+
+	obj.PrecisionGauge("pgauge").Set(1.0, time.Now())
+	Assert(t, len(obj.(*iObj).metricPoints) <= maxPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
+	obj.Bool("pstatus").Set(true, time.Now())
+	Assert(t, len(obj.(*iObj).metricPoints) <= maxPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
+	obj.String("Name").Set(t.Name(), time.Now())
+	Assert(t, len(obj.(*iObj).metricPoints) <= maxPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
+}
+
 func TestAttributeChangeWithAggregation(t *testing.T) {
 	tid := 0
 	for ; tid < maxTestCount; tid++ {

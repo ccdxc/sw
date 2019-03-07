@@ -136,7 +136,7 @@ func sendAllObjs(ctx context.Context) error {
 			global.sendErrors++
 			return err
 		}
-		global.numPoints += len(mb.Metrics)
+		atomic.AddUint64(&global.numPoints, uint64(len(mb.Metrics)))
 	}
 	return nil
 }
@@ -179,8 +179,8 @@ func createNewMetricPoint(obj *iObj, ts time.Time) {
 	}
 
 	// limit number of points stored in TSDB client
-	if len(obj.metricPoints) > maxPoints {
-		atomic.AddUint64(&global.failedPoints, 1)
+	if len(obj.metricPoints) >= maxPoints {
+		atomic.AddUint64(&global.ignoredPoints, 1)
 		return
 	}
 
@@ -255,9 +255,9 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 
 	// limit number of points stored in TSDB client
 	obj.Lock()
-	if len(obj.metricPoints) > maxPoints {
+	if len(obj.metricPoints) >= maxPoints {
 		obj.Unlock()
-		atomic.AddUint64(&global.failedPoints, 1)
+		atomic.AddUint64(&global.ignoredPoints, 1)
 		return
 	}
 	obj.Unlock()
@@ -311,11 +311,11 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 // Debug returns tsdb client info
 func Debug(r *http.Request) (interface{}, error) {
 	if global == nil {
-		return map[string]int{}, nil
+		return map[string]uint64{}, nil
 	}
 
-	return map[string]int{
-		"numPoints":    global.numPoints,
-		"sendErrors":   global.sendErrors,
-		"failedPoints": int(atomic.LoadUint64(&global.failedPoints))}, nil
+	return map[string]uint64{
+		"numPointsReported": atomic.LoadUint64(&global.numPoints),
+		"numSendErrors":     atomic.LoadUint64(&global.sendErrors),
+		"numIgnoredPoints":  atomic.LoadUint64(&global.ignoredPoints)}, nil
 }
