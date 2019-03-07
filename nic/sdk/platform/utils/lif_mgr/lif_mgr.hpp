@@ -70,7 +70,7 @@ public:
 
 
 // Start Traces
-#define LIF_MGR_API_START_TRACE_LOCK()                                 \
+#define LIF_MGR_API_START_LOCK()                                        \
     SDK_SPINLOCK_LOCK(&slock_);
 
 #define LIF_MGR_API_START_LIF_ID_TRACE_LOCK()                           \
@@ -92,6 +92,9 @@ public:
 
 #define LIF_MGR_API_END_LIF_ID_TRACE()                                  \
     SDK_TRACE_DEBUG("lif_mgr id: %u status: %u", lif_id, ret);
+
+#define LIF_MGR_API_END_UNLOCK()                                        \
+    SDK_SPINLOCK_UNLOCK(&slock_);
 
 
 

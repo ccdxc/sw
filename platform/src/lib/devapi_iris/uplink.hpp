@@ -32,31 +32,29 @@ public:
                                   bool is_oob = false);
     static void destroy(devapi_uplink *up);
 
-    static sdk_ret_t create_vrfs();
+    static sdk_ret_t create_vrfs(void);
     static devapi_uplink *get_uplink(uint32_t port_num);
 
     sdk_ret_t update_hal_native_l2seg(uint32_t native_l2seg_id);
-    sdk_ret_t create_vrf();
-    sdk_ret_t delete_vrf();
+    sdk_ret_t create_vrf(void);
+    sdk_ret_t delete_vrf(void);
 
-    // Get APIs
-    uint32_t get_id();
-    uint32_t get_port_num();
-    uint32_t get_num_lifs();
-    devapi_vrf *get_vrf();
-    devapi_l2seg *get_native_l2seg();
+    uint32_t get_id(void);
+    uint32_t get_port_num(void);
+    uint32_t get_num_lifs(void);
+    devapi_vrf *get_vrf(void);
+    devapi_l2seg *get_native_l2seg(void);
 
-    // Set APIs
     void set_port_num(uint32_t port_num);
     void set_native_l2seg(devapi_l2seg *l2seg);
 
-    void inc_num_lifs();
-    void dec_num_lifs();
+    void inc_num_lifs(void);
+    void dec_num_lifs(void);
 
-    bool is_oob();
+    bool is_oob(void);
 };
 
-} // namespace iris
+}    // namespace iris
 
 using iris::devapi_uplink;
 

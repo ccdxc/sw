@@ -54,19 +54,16 @@ extern class pciemgr *pciemgr;
 
 Eth::Eth(HalClient *hal_client,
          devapi *dev_api,
-         // HalCommonClient *hal_common_client,
          void *dev_spec,
          PdClient *pd_client)
 {
     sdk_ret_t ret = SDK_RET_OK;
     Eth::hal = hal_client;
     Eth::dev_api = dev_api;
-    // Eth::hal_common_client = hal_common_client;
     Eth::spec = (struct eth_devspec *)dev_spec;
     Eth::pd = pd_client;
 
     // Allocate lifs
-    // lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
     ret = pd->lm_->alloc_id(&lif_base, spec->lif_count);
     if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
@@ -145,7 +142,6 @@ Eth::Eth(HalClient *hal_client,
         lif_res->cmb_mem_addr = cmb_mem_addr;
         lif_res->cmb_mem_size = cmb_mem_size;
 
-        // EthLif *eth_lif = new EthLif(hal_client, hal_common_client,
         EthLif *eth_lif = new EthLif(hal_client, dev_api,
             dev_spec, pd_client, lif_res);
         lif_map[lif_id] = eth_lif;
@@ -745,16 +741,25 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 enum status_code
 Eth::_CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data)
 {
+    sdk_ret_t ret = SDK_RET_OK;
     struct port_config_cmd *cmd = (struct port_config_cmd *)req;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_PORT_CONFIG_SET", spec->name);
 
+    ret = dev_api->port_set_config(spec->uplink_port_num,
+                                   (port_config_t *)&cmd->config);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: failed to set port config", spec->name);
+        return (IONIC_RC_ERROR);
+    }
+#if 0
     int ret = hal->PortConfigSet(spec->uplink_port_num,
                 (hal_port_config_t &)cmd->config);
     if (ret < 0) {
         NIC_LOG_ERR("{}: failed to set port config", spec->name);
         return (IONIC_RC_ERROR);
     }
+#endif
 
     return (IONIC_RC_SUCCESS);
 }
@@ -825,15 +830,12 @@ Eth::GenerateQstateInfoJson(pt::ptree &lifs)
 
 void
 Eth::SetHalClient(HalClient *hal_client, devapi *dapi)
-// Eth::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client)
 {
     hal = hal_client;
     dev_api = dapi;
-    // hal_common_client = hal_cmn_client;
 
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
-        // eth_lif->SetHalClient(hal_client, hal_cmn_client);
         eth_lif->SetHalClient(hal_client, dapi);
     }
 }

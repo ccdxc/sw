@@ -16,7 +16,7 @@ namespace iris {
 hal_grpc *hal_grpc::hal_ = NULL;
 
 hal_grpc *
-hal_grpc::factory()
+hal_grpc::factory(void)
 {
     sdk_ret_t ret = SDK_RET_OK;
     void *mem     = NULL;
@@ -37,7 +37,7 @@ hal_grpc::factory()
 }
 
 sdk_ret_t
-hal_grpc::init_()
+hal_grpc::init_(void)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -55,7 +55,7 @@ end:
 }
 
 sdk_ret_t
-hal_grpc::connect_hal()
+hal_grpc::connect_hal(void)
 {
     std::string svc_url;
 
@@ -86,6 +86,7 @@ hal_grpc::connect_hal()
     multicast_stub_ = multicast::Multicast::NewStub(channel);
     rdma_stub_ = rdma::Rdma::NewStub(channel);
     qos_stub_ = qos::QOS::NewStub(channel);
+    port_stub_ = port::Port::NewStub(channel);
 
     return SDK_RET_OK;
 }
@@ -98,7 +99,7 @@ hal_grpc::destroy(hal_grpc *hal)
 }
 
 hal_grpc *
-hal_grpc::get_hal_grpc()
+hal_grpc::get_hal_grpc(void)
 {
     return hal_;
 }
@@ -176,7 +177,7 @@ hal_grpc::vrf_create (VrfRequestMsg& req_msg, VrfResponseMsg& rsp_msg)
 //-----------------------------------------------------------------------------
 Status
 hal_grpc::vrf_delete (VrfDeleteRequestMsg& req_msg,
-                           VrfDeleteResponseMsg& rsp_msg)
+                      VrfDeleteResponseMsg& rsp_msg)
 {
     grpc::ClientContext         context;
     grpc::Status                status;
@@ -207,7 +208,7 @@ hal_grpc::vrf_update (VrfRequestMsg& req_msg, VrfResponseMsg& rsp_msg)
 //-----------------------------------------------------------------------------
 Status
 hal_grpc::vrf_get (VrfGetRequestMsg& req_msg,
-                        VrfGetResponseMsg& rsp_msg)
+                   VrfGetResponseMsg& rsp_msg)
 {
     grpc::ClientContext         context;
     grpc::Status                status;
@@ -236,7 +237,7 @@ HAL_GET_API(endpoint, Endpoint, endpoint);
 //-----------------------------------------------------------------------------
 Status
 hal_grpc::endpoint_update (EndpointUpdateRequestMsg& req_msg,
-                                EndpointUpdateResponseMsg& rsp_msg)
+                           EndpointUpdateResponseMsg& rsp_msg)
 {
     grpc::ClientContext         context;
     grpc::Status                status;
@@ -273,4 +274,8 @@ HAL_GET_API(filter, Filter, endpoint);
 // Qos Calls
 HAL_GET_API(qos_class, QosClass, qos);
 
-} // namespace iris
+// Port Calls
+HAL_UPDATE_API(port, Port, port);
+HAL_GET_API(port, Port, port);
+
+}    // namespace iris

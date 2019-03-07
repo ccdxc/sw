@@ -99,7 +99,7 @@ devapi_ep::lookup(devapi_l2seg *l2seg, mac_t mac)
 }
 
 sdk_ret_t
-devapi_ep::ep_halcreate()
+devapi_ep::ep_halcreate(void)
 {
     sdk_ret_t             ret = SDK_RET_OK;
     grpc::ClientContext   context;
@@ -142,7 +142,7 @@ end:
 }
 
 sdk_ret_t
-devapi_ep::ep_haldelete()
+devapi_ep::ep_haldelete(void)
 {
     sdk_ret_t                   ret = SDK_RET_OK;
     grpc::ClientContext         context;
@@ -187,14 +187,14 @@ end:
 }
 
 devapi_l2seg *
-devapi_ep::get_l2seg()
+devapi_ep::get_l2seg(void)
 {
     return l2seg_;
 }
 mac_t
-devapi_ep::get_mac()
+devapi_ep::get_mac(void)
 {
     return mac_;
 }
 
-} // namespace iris
+}    // namespace iris

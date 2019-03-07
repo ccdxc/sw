@@ -3,6 +3,7 @@
 //-----------------------------------------------------------------------------
 #ifndef __DEVAPI_HPP__
 #define __DEVAPI_HPP__
+
 #include "include/sdk/base.hpp"
 #include "devapi_types.hpp"
 
@@ -13,7 +14,7 @@ class devapi {
 private:
 
 public:
-    static devapi *factory();
+    static devapi *factory(void);
     static void destroy(devapi *dapi);
 
     devapi() {}
@@ -34,16 +35,26 @@ public:
     virtual sdk_ret_t lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
                                       bool all_multicast, bool promiscuous) = 0;
     virtual sdk_ret_t lif_upd_name(uint32_t lif_id, std::string name) = 0 ;
+    // Qos APIs
     virtual sdk_ret_t qos_get_txtc_cos(const std::string &group, uint32_t uplink_port,
                                        uint8_t *cos) = 0;
-    virtual sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode) = 0;
+    // Uplink APIs
     virtual sdk_ret_t uplink_create(uint32_t id, uint32_t port, bool is_oob) = 0;
     virtual sdk_ret_t uplink_destroy(uint32_t port) = 0;
+    // Port APIs
+    virtual sdk_ret_t port_get_status(uint32_t port_num,
+                                      port_status_t *status /* o/p */) = 0;
+    virtual sdk_ret_t port_get_config(uint32_t port_num,
+                                      port_config_t *config /* o/p */) = 0;
+    virtual sdk_ret_t port_set_config(uint32_t port_num,
+                                      port_config_t *config) = 0;
+    // Generic APIs
+    virtual sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode) = 0;
 };
 
-} // namespace platform
-} // namespace sdk
+}    // namespace platform
+}    // namespace sdk
 
 using sdk::platform::devapi;
 
-#endif  // __DEVAPI_HPP__
+#endif    // __DEVAPI_HPP__

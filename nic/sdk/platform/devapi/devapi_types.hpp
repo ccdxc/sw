@@ -4,6 +4,8 @@
 #ifndef __DEVAPI_TYPES_HPP__
 #define __DEVAPI_TYPES_HPP__
 
+#include "include/sdk/base.hpp"
+
 namespace sdk {
 namespace platform {
 
@@ -12,7 +14,7 @@ namespace platform {
 typedef uint64_t mac_t;
 typedef uint32_t vlan_t;
 
-typedef enum lif_qpurpose_ {
+typedef enum lif_qpurpose_e {
     LIF_QUEUE_PURPOSE_NONE,
     LIF_QUEUE_PURPOSE_ADMIN,
     LIF_QUEUE_PURPOSE_TX,
@@ -28,7 +30,7 @@ typedef enum lif_qpurpose_ {
     LIF_QUEUE_PURPOSE_SVC
 } lif_qpurpose_t;
 
-typedef enum lif_type_ {
+typedef enum lif_type_e {
     LIF_TYPE_NONE,
     LIF_TYPE_HOST,
     LIF_TYPE_HOST_MANAGEMENT,
@@ -38,14 +40,14 @@ typedef enum lif_type_ {
 } lif_type_t;
 
 typedef struct lif_queue_info_s {
-  uint32_t type_num;           /* HW Queue Type */
-  uint32_t size;               /* Qstate Size: 2^size */
-  uint32_t entries;            /* Number of Queues: 2^entries */
-  lif_qpurpose_t purpose;      /* Queue Purpose */
-  const char* prog;            /* Program File Name */
-  const char* label;           /* Program Entry Label */
-  const char* qstate;          /* Qstate structure */
-} lif_queue_info_t;
+    uint32_t type_num;           /* HW Queue Type */
+    uint32_t size;               /* Qstate Size: 2^size */
+    uint32_t entries;            /* Number of Queues: 2^entries */
+    lif_qpurpose_t purpose;      /* Queue Purpose */
+    const char* prog;            /* Program File Name */
+    const char* label;           /* Program Entry Label */
+    const char* qstate;          /* Qstate structure */
+} __PACK__ lif_queue_info_t;
 
 typedef struct lif_info_s {
     uint64_t lif_id;
@@ -69,20 +71,47 @@ typedef struct lif_info_s {
     bool pushed_to_hal;  // TODO: Remove from here
     lif_queue_info_t queue_info[NUM_QUEUE_TYPES];
     uint64_t qstate_addr[NUM_QUEUE_TYPES];
-} lif_info_t;
+} __PACK__ lif_info_t;
 
-typedef enum fwd_mode_ {
+typedef enum fwd_mode_e {
     FWD_MODE_CLASSIC,
     FWD_MODE_SMART,
 } fwd_mode_t;
 
-} // namespace platform
-} // namespace sdk
+typedef struct port_config_s {
+    uint32_t    speed;
+    uint32_t    mtu;
+    uint8_t     state;
+    uint8_t     an_enable;
+    uint8_t     fec_type;
+    uint8_t     pause_type;
+    uint8_t     loopback_mode;
+} __PACK__ port_config_t;
+
+typedef struct xcvr_status_s {
+    uint8_t     state;
+    uint8_t     phy;
+    uint16_t    pid;
+    uint8_t     sprom[256];
+} __PACK__ xcvr_status_t;
+
+typedef struct port_status_s {
+    uint32_t       speed;
+    uint8_t        id;
+    uint8_t        status;
+    xcvr_status_t  xcvr;
+} __PACK__ port_status_t;
+
+}    // namespace platform
+}    // namespace sdk
 
 using sdk::platform::mac_t;
 using sdk::platform::vlan_t;
 using sdk::platform::lif_queue_info_t;
 using sdk::platform::lif_info_t;
 using sdk::platform::fwd_mode_t;
+using sdk::platform::port_config_t;
+using sdk::platform::port_status_t;
+using sdk::platform::xcvr_status_t;
 
-#endif  // __DEVAPI_TYPES_HPP__
+#endif    // __DEVAPI_TYPES_HPP__

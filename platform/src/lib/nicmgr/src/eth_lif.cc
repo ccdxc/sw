@@ -447,7 +447,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
     // Initialize the EDMA queue
     uint8_t off;
-    if (pd->get_pc_offset("txdma_stage0.bin", "edma_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "edma_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: edma_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -703,7 +703,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     uint8_t off;
-    if (pd->get_pc_offset("txdma_stage0.bin", "adminq_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "adminq_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -995,7 +995,7 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     uint8_t off;
-    if (pd->get_pc_offset("txdma_stage0.bin", "eth_tx_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "eth_tx_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: eth_tx_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -1097,7 +1097,7 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     uint8_t off;
-    if (pd->get_pc_offset("rxdma_stage0.bin", "eth_rx_stage0", &off) < 0) {
+    if (pd->get_pc_offset("rxdma_stage0.bin", "eth_rx_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: rxdma_stage0.bin label: eth_rx_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -1195,7 +1195,7 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     notify_ring_head = 0;
 
     uint8_t off;
-    if (pd->get_pc_offset("txdma_stage0.bin", "notify_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "notify_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to resolve program: txdma_stage0.bin label: notify_stage0");
         return (IONIC_RC_ERROR);
     }
@@ -1234,10 +1234,16 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     // Init the notify block
     notify_block->eid = 1;
     if (spec->uplink_port_num) {
+#if 0
         hal_port_config_t port_config = {0};
         hal_port_status_t port_status = {0};
         hal->PortConfigGet(spec->uplink_port_num, port_config);
         hal->PortStatusGet(spec->uplink_port_num, port_status);
+#endif
+        port_config_t port_config = {0};
+        port_status_t port_status = {0};
+        dev_api->port_get_config(spec->uplink_port_num, &port_config);
+        dev_api->port_get_status(spec->uplink_port_num, &port_status);
         notify_block->link_status = port_status.status;
         notify_block->link_speed =  port_status.speed ? port_status.speed : port_config.speed;
         memcpy(&notify_block->port_status, &port_status, sizeof (port_status));
@@ -2033,7 +2039,7 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     /* store  pt_pa & pt_next_pa in little endian. So need an extra memrev */
     memrev((uint8_t*)&cqcb.pt_pa, sizeof(uint64_t));
 
-    ret = pd->get_pc_offset("rxdma_stage0.bin", "rdma_cq_rx_stage0", &offset);
+    ret = pd->get_pc_offset("rxdma_stage0.bin", "rdma_cq_rx_stage0", &offset, NULL);
     if (ret < 0) {
         NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, "rxdma_stage0.bin", "rdma_cq_rx_stage0");
         return (IONIC_RC_ERROR);
@@ -2089,7 +2095,7 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
     aqcb.aqcb0.ring_header.host_rings = MAX_AQ_HOST_RINGS;
     aqcb.aqcb0.ring_header.cosA = 1;
     aqcb.aqcb0.ring_header.cosB = 1;
-    
+
     aqcb.aqcb0.log_wqe_size = cmd->stride_log2;
     aqcb.aqcb0.log_num_wqes = cmd->depth_log2;
     aqcb.aqcb0.aq_id = cmd->qid_ver;
@@ -2105,7 +2111,7 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
 
     aqcb.aqcb0.first_pass = 1;
 
-    ret = pd->get_pc_offset("txdma_stage0.bin", "rdma_aq_tx_stage0", &offset);
+    ret = pd->get_pc_offset("txdma_stage0.bin", "rdma_aq_tx_stage0", &offset, NULL);
     if (ret < 0) {
         NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, "txdma_stage0.bin", "rdma_aq_tx_stage0");
         return IONIC_RC_ERROR;
@@ -2167,10 +2173,16 @@ EthLif::LinkEventHandler(hal_port_status_t *evd)
     }
 
     // Update the local notify block
+#if 0
     hal_port_config_t port_config = {0};
     hal_port_status_t port_status = {0};
     hal->PortConfigGet(spec->uplink_port_num, port_config);
     hal->PortStatusGet(spec->uplink_port_num, port_status);
+#endif
+    port_config_t port_config = {0};
+    port_status_t port_status = {0};
+    dev_api->port_get_config(spec->uplink_port_num, &port_config);
+    dev_api->port_get_status(spec->uplink_port_num, &port_status);
     notify_block->link_status = port_status.status;
     notify_block->link_speed =  port_status.speed ? port_status.speed : port_config.speed;
     memcpy(&notify_block->port_status, &port_status, sizeof (port_status));

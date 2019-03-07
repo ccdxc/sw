@@ -21,9 +21,6 @@
 #include "gen/proto/port.grpc.pb.h"
 #include "nic/sdk/platform/devapi/devapi.hpp"
 
-// #include "platform/src/lib/hal_api/include/lif.hpp"
-// #include "platform/src/lib/hal_api/include/qos.hpp"
-
 using namespace kh;
 using namespace types;
 using namespace vrf;
@@ -183,8 +180,6 @@ public:
 
   uint64_t LifCreate(lif_info_t *hal_lif_info);
 
-  int PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr);
-
   /* Accel APIs */
   int AccelRGroupAdd(const std::string& rgroup_name);
   int AccelRGroupDel(const std::string& rgroup_name);
@@ -222,33 +217,27 @@ public:
                             void *key,
                             uint32_t key_size);
 
+#if 0
   /* Port APIs */
   int PortStatusGet(uint8_t portnum, hal_port_status_t &st);
   int PortConfigGet(uint8_t portnum, hal_port_config_t &cfg);
   int PortConfigSet(uint8_t portnum, hal_port_config_t &cfg);
 
   static port::PortSpeed PortSpeedEnum(uint32_t speed);
+#endif
   static uint32_t PortSpeedInMbps(port::PortSpeed speed_enum);
 
   /* State */
   // map<uint64_t, Lif*> eth_lif_map;
 
   devapi *dev_api;
-
   enum ForwardingMode fwd_mode;
 
 private:
   shared_ptr<Channel> channel;
-  std::unique_ptr<Vrf::Stub> vrf_stub_;
-  std::unique_ptr<Interface::Stub> intf_stub_;
-  std::unique_ptr<Internal::Stub> internal_stub_;
-  std::unique_ptr<Endpoint::Stub> ep_stub_;
-  std::unique_ptr<L2Segment::Stub> l2seg_stub_;
-  std::unique_ptr<Multicast::Stub> multicast_stub_;
-  std::unique_ptr<Rdma::Stub> rdma_stub_;
   std::unique_ptr<AccelRGroup::Stub> accel_rgroup_stub_;
   std::unique_ptr<Internal::Stub> crypto_stub_;
-  std::unique_ptr<Port::Stub> port_stub_;
+  // std::unique_ptr<Port::Stub> port_stub_;
 };
 
 #define   IB_QP_STATE        (1 << 0)

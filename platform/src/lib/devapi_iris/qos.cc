@@ -5,6 +5,8 @@
 #include "qos.hpp"
 #include "hal_grpc.hpp"
 
+namespace iris {
+
 int32_t
 devapi_qos::get_txtc_cos(const std::string &group, uint32_t uplink_port)
 {
@@ -38,3 +40,5 @@ devapi_qos::get_txtc_cos(const std::string &group, uint32_t uplink_port)
     }
     return get_rsp.status().epd_status().tx_traffic_class_coses(uplink_port%num_coses);
 }
+
+}    // namespace iris

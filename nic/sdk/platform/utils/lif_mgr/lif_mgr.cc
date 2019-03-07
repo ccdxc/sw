@@ -167,17 +167,13 @@ end:
 lif_qstate_t *
 lif_mgr::get_lif_qstate(uint32_t lif_id)
 {
-    sdk_ret_t ret = SDK_RET_OK;
     lif_qstate_t *qstate = NULL;
 
-    LIF_MGR_API_START_LIF_ID_TRACE_LOCK();
+    LIF_MGR_API_START_LOCK();
 
     qstate = get_lif_qstate_(lif_id);
-    if (!qstate) {
-        ret = SDK_RET_ENTRY_NOT_FOUND;
-    }
 
-    LIF_MGR_API_END_LIF_ID_TRACE_UNLOCK();
+    LIF_MGR_API_END_UNLOCK();
     return qstate;
 }
 
@@ -187,14 +183,13 @@ lif_mgr::get_lif_qstate(uint32_t lif_id)
 int64_t
 lif_mgr::get_lif_qstate_addr(uint32_t lif_id, uint32_t type, uint32_t qid)
 {
-    sdk_ret_t ret = SDK_RET_OK;
     lif_qstate_t *qstate = NULL;
     int64_t qstate_addr = -1;
 
     if ((lif_id >= num_lifs_) || (type >= kNumQTypes)) {
         return -1;
     }
-    LIF_MGR_API_START_LIF_ID_TRACE_LOCK();
+    LIF_MGR_API_START_LOCK();
 
     qstate = get_lif_qstate_(lif_id);
     if (!qstate) {
@@ -209,7 +204,7 @@ lif_mgr::get_lif_qstate_addr(uint32_t lif_id, uint32_t type, uint32_t qid)
                             (qid * qstate->type[type].qsize));
 
 end:
-    LIF_MGR_API_END_LIF_ID_TRACE_UNLOCK();
+    LIF_MGR_API_END_UNLOCK();
     return qstate_addr;
 }
 
@@ -219,7 +214,6 @@ end:
 int64_t
 lif_mgr::get_lif_qstate_base_addr(uint32_t lif_id, uint32_t type)
 {
-    sdk_ret_t ret = SDK_RET_OK;
     lif_qstate_t *qstate = NULL;
     int64_t qstate_addr = -1;
 
@@ -227,7 +221,7 @@ lif_mgr::get_lif_qstate_base_addr(uint32_t lif_id, uint32_t type)
         return -1;
     }
 
-    LIF_MGR_API_START_LIF_ID_TRACE_LOCK();
+    LIF_MGR_API_START_LOCK();
 
     qstate = get_lif_qstate_(lif_id);
     if (!qstate) {
@@ -237,7 +231,7 @@ lif_mgr::get_lif_qstate_base_addr(uint32_t lif_id, uint32_t type)
     qstate_addr = (int64_t)(qstate->hbm_address + qstate->type[type].hbm_offset);
 
 end:
-    LIF_MGR_API_END_LIF_ID_TRACE_UNLOCK();
+    LIF_MGR_API_END_UNLOCK();
     return qstate_addr;
 }
 
@@ -265,7 +259,7 @@ lif_mgr::init(lif_qstate_t *qstate)
     lif_qstate_t *state = (lif_qstate_t *)SDK_CALLOC(SDK_MEM_ALLOC_LIF_QSTATE,
                                                      sizeof(lif_qstate_t));
 
-    LIF_MGR_API_START_LIF_ID_TRACE_LOCK();
+    LIF_MGR_API_START_LOCK();
 
     memcpy(state, qstate, sizeof(lif_qstate_t));
 
@@ -329,7 +323,7 @@ lif_mgr::init(lif_qstate_t *qstate)
     state->hbm_address = hbm_base_ + alloc_offset;
 
 end:
-    LIF_MGR_API_END_LIF_ID_TRACE_UNLOCK();
+    LIF_MGR_API_END_UNLOCK();
     return ret;
 }
 
@@ -351,7 +345,7 @@ lif_mgr::write_qstate(uint32_t lif_id, uint32_t type, uint32_t qid,
         return SDK_RET_INVALID_ARG;
     }
 
-    LIF_MGR_API_START_LIF_ID_TRACE_LOCK();
+    LIF_MGR_API_START_LOCK();
 
     auto it = lifs_.find(lif_id);
     if (it == lifs_.end()) {
@@ -384,7 +378,7 @@ lif_mgr::write_qstate(uint32_t lif_id, uint32_t type, uint32_t qid,
     ret = sdk::asic::pd::asic_pd_p4plus_invalidate_cache(reg, q_addr, bufsize);
 
 end:
-    LIF_MGR_API_END_LIF_ID_TRACE_UNLOCK();
+    LIF_MGR_API_END_UNLOCK();
     return ret;
 }
 
@@ -404,7 +398,7 @@ lif_mgr::read_qstate(uint32_t lif_id, uint32_t type, uint32_t qid,
         return SDK_RET_INVALID_ARG;
     }
 
-    LIF_MGR_API_START_LIF_ID_TRACE_LOCK();
+    LIF_MGR_API_START_LOCK();
 
     auto it = lifs_.find(lif_id);
     if (it == lifs_.end()) {
@@ -425,7 +419,7 @@ lif_mgr::read_qstate(uint32_t lif_id, uint32_t type, uint32_t qid,
     ret = sdk::asic::pd::asic_pd_qstate_read(q_addr, buf, bufsize);
 
 end:
-    LIF_MGR_API_END_LIF_ID_TRACE_UNLOCK();
+    LIF_MGR_API_END_UNLOCK();
     return ret;
 }
 
@@ -438,7 +432,7 @@ lif_mgr::clear_qstate(uint32_t lif_id)
     sdk_ret_t ret = SDK_RET_OK;
     lif_qstate_t *qstate = NULL;
 
-    LIF_MGR_API_START_LIF_ID_TRACE_LOCK();
+    LIF_MGR_API_START_LOCK();
 
     qstate = get_lif_qstate_(lif_id);
     if (!qstate) {
@@ -448,7 +442,7 @@ lif_mgr::clear_qstate(uint32_t lif_id)
     ret = sdk::asic::pd::asic_pd_qstate_clear(qstate);
 
 end:
-    LIF_MGR_API_END_LIF_ID_TRACE_UNLOCK();
+    LIF_MGR_API_END_UNLOCK();
     return ret;
 }
 
@@ -462,7 +456,7 @@ lif_mgr::enable(uint32_t lif_id)
     sdk_ret_t ret = SDK_RET_OK;
     lif_qstate_t *qstate = NULL;
 
-    LIF_MGR_API_START_LIF_ID_TRACE_LOCK();
+    LIF_MGR_API_START_LOCK();
 
     qstate = get_lif_qstate_(lif_id);
     if (!qstate) {
@@ -471,7 +465,7 @@ lif_mgr::enable(uint32_t lif_id)
     }
     ret = sdk::asic::pd::asic_pd_qstate_map_write(qstate, true);
 end:
-    LIF_MGR_API_END_LIF_ID_TRACE_UNLOCK();
+    LIF_MGR_API_END_UNLOCK();
     return ret;
 }
 
@@ -500,7 +494,7 @@ lif_mgr::remove(uint32_t lif_id)
     uint32_t alloc_units = 0;
     lif_qstate_t *qstate = NULL;
 
-    LIF_MGR_API_START_LIF_ID_TRACE_LOCK();
+    LIF_MGR_API_START_LOCK();
 
     qstate = get_lif_qstate_(lif_id);
     if (!qstate) {
@@ -535,7 +529,7 @@ lif_mgr::remove(uint32_t lif_id)
     ret = free_id(lif_id, 1);
 
 end:
-    LIF_MGR_API_END_LIF_ID_TRACE_UNLOCK();
+    LIF_MGR_API_END_UNLOCK();
     return ret;
 }
 

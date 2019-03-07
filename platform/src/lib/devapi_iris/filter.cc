@@ -31,7 +31,7 @@ devapi_filter::factory(devapi_lif *lif, mac_t mac, vlan_t vlan,
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = filter->filter_create();
+        ret = filter->filter_halcreate();
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -64,13 +64,13 @@ devapi_filter::init_(devapi_lif *lif,
 void
 devapi_filter::destroy(devapi_filter *filter)
 {
-    filter->filter_delete();
+    filter->filter_haldelete();
     filter->~devapi_filter();
     DEVAPI_FREE(DEVAPI_MEM_ALLOC_FILTER, filter);
 }
 
 sdk_ret_t
-devapi_filter::filter_create()
+devapi_filter::filter_halcreate()
 {
     sdk_ret_t         ret = SDK_RET_OK;
     grpc::Status      status;
@@ -160,7 +160,7 @@ end:
 }
 
 sdk_ret_t
-devapi_filter::filter_delete()
+devapi_filter::filter_haldelete()
 {
     sdk_ret_t                 ret = SDK_RET_OK;
     grpc::ClientContext       context;
@@ -227,4 +227,4 @@ end:
     return ret;
 }
 
-} // namespace iris
+}    // namespace iris

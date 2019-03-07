@@ -6,10 +6,14 @@
 
 #include "devapi_object.hpp"
 
+namespace iris {
+
 class devapi_qos : public devapi_object {
 public:
     static int32_t get_txtc_cos(const std::string &group,
                                 uint32_t uplink_port);
 };
+
+}    // namespace iris
 
 #endif

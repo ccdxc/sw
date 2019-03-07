@@ -20,7 +20,7 @@ typedef kh::FilterType filter_type_t;
 typedef std::tuple<mac_t, vlan_t> mac_vlan_t;
 typedef std::tuple<filter_type_t, mac_t, vlan_t> mac_vlan_filter_t;
 
-} // namespace iris
+}     // namespace iris
 
 
 #endif  // __DEVAPI_IRIS_TYPES_HPP__

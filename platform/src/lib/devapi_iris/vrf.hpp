@@ -26,17 +26,17 @@ public:
     static devapi_vrf *factory(types::VrfType type, devapi_uplink *up);
     static void destroy(devapi_vrf *vrf);
 
-    sdk_ret_t vrf_create();
-    sdk_ret_t vrf_delete();
+    sdk_ret_t vrf_halcreate(void);
+    sdk_ret_t vrf_haldelete(void);
 
-    void deallocate_id();
-    uint64_t get_id();
+    void deallocate_id(void);
+    uint64_t get_id(void);
 
-    static void probe();
-    devapi_uplink *get_uplink() { return uplink_; }
+    static void probe(void);
+    devapi_uplink *get_uplink(void) { return uplink_; }
 };
 
-} // namespace iris
+}    // namespace iris
 
 using iris::devapi_vrf;
 

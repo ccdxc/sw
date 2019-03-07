@@ -12,18 +12,13 @@ class devapi_object
 {
 public:
     devapi_object() {}
-    static void populate_hal_grpc();
+    static void populate_hal_grpc(void);
 
 protected:
     static hal_grpc *hal;
-#if 0
-    // Hal objects are non-copyable
-    HalObject(HalObject const &) = delete;
-    void operator=(HalObject const &x) = delete;
-#endif
 };
 
-} // namespace iris
+}    // namespace iris
 
 using iris::devapi_object;
 

@@ -78,7 +78,7 @@ devapi_enic::destroy(devapi_enic *enic)
 }
 
 void
-devapi_enic::deallocate_id()
+devapi_enic::deallocate_id(void)
 {
     if (id_ != indexer::INVALID_INDEXER) {
         allocator_->free(id_);
@@ -86,7 +86,7 @@ devapi_enic::deallocate_id()
 }
 
 sdk_ret_t
-devapi_enic::enic_halcreate()
+devapi_enic::enic_halcreate(void)
 {
     sdk_ret_t             ret = SDK_RET_OK;
     grpc::ClientContext   context;
@@ -132,7 +132,7 @@ end:
 }
 
 sdk_ret_t
-devapi_enic::enic_haldelete()
+devapi_enic::enic_haldelete(void)
 {
     sdk_ret_t                       ret = SDK_RET_OK;
     grpc::ClientContext             context;
@@ -168,7 +168,7 @@ end:
 }
 
 sdk_ret_t
-devapi_enic::trigger_halupdate()
+devapi_enic::trigger_halupdate(void)
 {
     sdk_ret_t                 ret = SDK_RET_OK;
     grpc::ClientContext       context;
@@ -311,7 +311,7 @@ devapi_enic::del_vlan(vlan_t vlan, bool skip_hal)
 
 
 uint64_t
-devapi_enic::get_id()
+devapi_enic::get_id(void)
 {
     return id_;
 }
@@ -332,4 +332,4 @@ devapi_enic::get_l2seg(vlan_t vlan)
     return NULL;
 }
 
-} // namespace iris
+}     // namespace iris

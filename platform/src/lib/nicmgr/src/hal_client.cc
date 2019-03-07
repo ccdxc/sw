@@ -26,7 +26,6 @@ using namespace endpoint;
 using namespace l2segment;
 using namespace multicast;
 using namespace accelRGroup;
-//using namespace internal;
 
 using namespace grpc;
 using namespace std;
@@ -49,16 +48,9 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
         state = channel->GetState(true);
     }
 
-    vrf_stub_ = Vrf::NewStub(channel);
-    intf_stub_ = Interface::NewStub(channel);
-    internal_stub_ = Internal::NewStub(channel);
-    ep_stub_ = Endpoint::NewStub(channel);
-    l2seg_stub_ = L2Segment::NewStub(channel);
-    multicast_stub_ = Multicast::NewStub(channel);
-    rdma_stub_ = Rdma::NewStub(channel);
     accel_rgroup_stub_ = AccelRGroup::NewStub(channel);
     crypto_stub_ = Internal::NewStub(channel);
-    port_stub_ = Port::NewStub(channel);
+    // port_stub_ = Port::NewStub(channel);
 
     this->fwd_mode = fwd_mode;
 }
@@ -87,27 +79,6 @@ HalClient::LifCreate(lif_info_t *hal_lif_info)
 
     NIC_LOG_DEBUG("lif-{} Created", hal_lif_info->lif_id);
 
-    return 0;
-}
-
-int HalClient::PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr)
-{
-    ClientContext               context;
-    GetProgramAddressRequestMsg req_msg;
-    ProgramAddressResponseMsg   resp_msg;
-
-    auto req = req_msg.add_request();
-    req->set_handle("p4plus");
-    req->set_prog_name(prog_name);
-    req->set_resolve_label(false);
-
-    auto status = internal_stub_->GetProgramAddress(&context, req_msg, &resp_msg);
-    if (!status.ok()) {
-        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
-        return -1;
-    }
-
-    *base_addr = resp_msg.response(0).addr();
     return 0;
 }
 
@@ -556,6 +527,7 @@ HalClient::PortSpeedInMbps(port::PortSpeed speed_enum)
     return speed;
 }
 
+#if 0
 port::PortSpeed
 HalClient::PortSpeedEnum(uint32_t speed)
 {
@@ -733,3 +705,4 @@ HalClient::PortConfigSet(uint8_t portnum, hal_port_config_t &cfg)
 
     return (0);
 }
+#endif

@@ -96,7 +96,7 @@ AdminQ::AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     NIC_LOG_DEBUG("{}: initializing request qstate {:#x}", name, req_qstate_addr);
 
     uint8_t off;
-    if (pd->get_pc_offset("txdma_stage0.bin", "nicmgr_req_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "nicmgr_req_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_req_stage0");
         return false;
     }
@@ -148,7 +148,7 @@ AdminQ::AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     NIC_LOG_DEBUG("{}: initializing response qstate {:#x}", name, resp_qstate_addr);
 
     uint8_t off;
-    if (pd->get_pc_offset("txdma_stage0.bin", "nicmgr_resp_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "nicmgr_resp_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_resp_stage0");
         return false;
     }

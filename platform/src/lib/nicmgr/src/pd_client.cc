@@ -1255,23 +1255,35 @@ PdClient::set_program_info()
 }
 
 // TODO: Eventually may have to be moved to SDK
+// label NULL => return base address
 int32_t
 PdClient::get_pc_offset(const char *prog_name, const char *label,
-                        uint8_t *offset)
+                        uint8_t *offset, uint64_t *base)
 {
      mem_addr_t off;
 
-     off = pinfo_->symbol_address((char *)prog_name, (char *)label);
-     if (off == SDK_INVALID_HBM_ADDRESS)
-         return -ENOENT;
-     // 64 byte alignment check
-     if ((off & 0x3F) != 0) {
-         return -EIO;
+     if (label == NULL) {
+         off = pinfo_->program_base_address((char *)prog_name);
+         if (off == SDK_INVALID_HBM_ADDRESS)
+             return -ENOENT;
+         // 64 byte alignment check
+         if ((off & 0x3F) != 0) {
+             return -EIO;
+         }
+         *base = off;
+     } else {
+         off = pinfo_->symbol_address((char *)prog_name, (char *)label);
+         if (off == SDK_INVALID_HBM_ADDRESS)
+             return -ENOENT;
+         // 64 byte alignment check
+         if ((off & 0x3F) != 0) {
+             return -EIO;
+         }
+         // offset can be max 14 bits
+         if (off > 0x3FC0) {
+             return -EIO;
+         }
+         *offset = (uint8_t) (off >> 6);
      }
-     // offset can be max 14 bits
-     if (off > 0x3FC0) {
-         return -EIO;
-     }
-     *offset = (uint8_t) (off >> 6);
      return 0;
 }

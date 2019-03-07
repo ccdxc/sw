@@ -85,7 +85,7 @@ devapi_mcast::destroy(devapi_mcast *mcast)
 }
 
 sdk_ret_t
-devapi_mcast::mcast_halcreate()
+devapi_mcast::mcast_halcreate(void)
 {
     sdk_ret_t ret = SDK_RET_OK;
     grpc::ClientContext context;
@@ -126,11 +126,11 @@ end:
 }
 
 sdk_ret_t
-devapi_mcast::mcast_haldelete()
+devapi_mcast::mcast_haldelete(void)
 {
-    sdk_ret_t     ret = SDK_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
     grpc::ClientContext context;
-    grpc::Status        status;
+    grpc::Status status;
     MulticastEntryDeleteRequest *req;
     MulticastEntryDeleteResponse rsp;
     MulticastEntryDeleteRequestMsg req_msg;
@@ -185,7 +185,7 @@ devapi_mcast::find_or_create(devapi_l2seg *l2seg, mac_t mac, bool create)
 }
 
 sdk_ret_t
-devapi_mcast::trigger_hal()
+devapi_mcast::trigger_hal(void)
 {
     sdk_ret_t ret = SDK_RET_OK;
     grpc::ClientContext context;
@@ -240,18 +240,18 @@ devapi_mcast::del_enic(devapi_enic *enic)
 }
 
 devapi_l2seg *
-devapi_mcast::get_l2seg()
+devapi_mcast::get_l2seg(void)
 {
     return l2seg_;
 }
 mac_t
-devapi_mcast::get_mac()
+devapi_mcast::get_mac(void)
 {
     return mac_;
 }
 
 uint32_t
-devapi_mcast::get_numenics()
+devapi_mcast::get_numenics(void)
 {
     return enic_refs_.size();
 }

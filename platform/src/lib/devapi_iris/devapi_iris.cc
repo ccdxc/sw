@@ -7,6 +7,7 @@
 #include "lif.hpp"
 #include "uplink.hpp"
 #include "qos.hpp"
+#include "port.hpp"
 
 namespace iris {
 
@@ -14,7 +15,7 @@ namespace iris {
 // Factory method to instantiate the class
 //-----------------------------------------------------------------------------
 devapi_iris *
-devapi_iris::factory()
+devapi_iris::factory(void)
 {
     sdk_ret_t ret      = SDK_RET_OK;
     void *mem          = NULL;
@@ -38,7 +39,7 @@ devapi_iris::factory()
 // Initializing fields in the class
 //-----------------------------------------------------------------------------
 sdk_ret_t
-devapi_iris::init_()
+devapi_iris::init_(void)
 {
     // Initialize grpc
     hal_grpc::factory();
@@ -334,4 +335,64 @@ end:
     return ret;
 }
 
-} // namespace devapi_iris
+sdk_ret_t
+devapi_iris::port_get_status(uint32_t port_num,
+                             port_status_t *status)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_port *port = NULL;
+
+    port = devapi_port::find_or_create(port_num);
+    if (!port) {
+        NIC_LOG_ERR("Failed to find/create port: {}", port_num);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = port->port_hal_get_status(status);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::port_get_config(uint32_t port_num,
+                             port_config_t *config)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_port *port = NULL;
+
+    port = devapi_port::find_or_create(port_num);
+    if (!port) {
+        NIC_LOG_ERR("Failed to find/create port: {}", port_num);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = port->port_hal_get_config(config);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::port_set_config(uint32_t port_num,
+                             port_config_t *config)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_port *port = NULL;
+
+    port = devapi_port::find_or_create(port_num);
+    if (!port) {
+        NIC_LOG_ERR("Failed to find/create port: {}", port_num);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = port->port_hal_update_config(config);
+
+end:
+    return ret;
+}
+
+
+
+
+}    // namespace iris

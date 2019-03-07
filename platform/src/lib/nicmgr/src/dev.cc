@@ -475,11 +475,6 @@ DeviceManager::HalEventHandler(bool status)
         hal = new HalClient(fwd_mode);
         dev_api = devapi_iris::factory();
         dev_api->set_fwd_mode((fwd_mode_t)fwd_mode);
-#if 0
-        hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
-        // Setting up HAL container for all objects
-        HalObject::PopulateHalCommonClient();
-#endif
         pd->update();
 
         // Create uplinks
@@ -487,9 +482,6 @@ DeviceManager::HalEventHandler(bool status)
             uplink_t *up = it->second;
             dev_api->uplink_create(up->id, up->port, up->is_oob);
         }
-
-        // Create VRFs for uplinks
-        // Uplink::CreateVrfs();
 
         // Setting hal clients in all devices
         SetHalClient(hal, dev_api);

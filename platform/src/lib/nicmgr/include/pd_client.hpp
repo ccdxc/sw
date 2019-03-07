@@ -7,7 +7,7 @@
 
 #include "hal_client.hpp"
 
-#include "platform/capri/capri_lif_manager.hpp"
+#include "platform/utils/program.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/utils/lif_mgr/lif_mgr.hpp"
 #include "lib/table/directmap/directmap.hpp"
@@ -67,7 +67,7 @@ public:
                        uint8_t coses);
     void set_program_info();
     int32_t get_pc_offset(const char *prog_name, const char *label,
-                          uint8_t *offset);
+                          uint8_t *offset, uint64_t *base);
     int create_dirs();
     int p4plus_rxdma_init_tables();
     int p4plus_txdma_init_tables();

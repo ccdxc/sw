@@ -849,7 +849,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     }
 
     uint8_t off;
-    if (pd->get_pc_offset("txdma_stage0.bin", "adminq_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "adminq_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
         return (DEVCMD_ERROR);
     }
@@ -939,12 +939,12 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
         return (DEVCMD_ERROR);
     }
 
-    if (desc0_pgm_name && hal->PgmBaseAddrGet(desc0_pgm_name, &desc0_pgm_pc)) {
+    if (desc0_pgm_name && pd->get_pc_offset(desc0_pgm_name, NULL, NULL, &desc0_pgm_pc)) {
         NIC_LOG_ERR("Failed to get base for program {}", desc0_pgm_name);
         return (DEVCMD_ERROR);
     }
 
-    if (desc1_pgm_name && hal->PgmBaseAddrGet(desc1_pgm_name, &desc1_pgm_pc)) {
+    if (desc1_pgm_name && pd->get_pc_offset(desc1_pgm_name, NULL, NULL, &desc1_pgm_pc)) {
         NIC_LOG_ERR("Failed to get base for program {}", desc1_pgm_name);
         return (DEVCMD_ERROR);
     }
@@ -958,7 +958,7 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     seq_qid_init_high = std::max(seq_qid_init_high, qid);
 
     uint8_t off;
-    if (pd->get_pc_offset("txdma_stage0.bin", "storage_seq_stage0", &off) < 0) {
+    if (pd->get_pc_offset("txdma_stage0.bin", "storage_seq_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: storage_seq_stage0");
         return (DEVCMD_ERROR);
     }

@@ -31,24 +31,24 @@ private:
   sdk_ret_t init_(devapi_lif *lif);
   devapi_enic() {}
   ~devapi_enic() {}
-  sdk_ret_t trigger_halupdate();
-  void deallocate_id();
+  sdk_ret_t trigger_halupdate(void);
+  void deallocate_id(void);
 public:
     static devapi_enic *factory(devapi_lif *lif);
     static void destroy(devapi_enic *enic);
 
-    sdk_ret_t enic_halcreate();
-    sdk_ret_t enic_haldelete();
+    sdk_ret_t enic_halcreate(void);
+    sdk_ret_t enic_haldelete(void);
 
     // Classic enic APIs only
     sdk_ret_t add_vlan(vlan_t vlan);
     void del_vlan(vlan_t vlan, bool skip_vlan = false);
 
-    uint64_t get_id();
+    uint64_t get_id(void);
     devapi_l2seg *get_l2seg(vlan_t vlan);
 };
 
-} // namespace iris
+}     // namespace iris
 
 using iris::devapi_enic;
 

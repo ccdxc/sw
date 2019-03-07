@@ -42,9 +42,9 @@ private:
     sdk_ret_t init_(lif_info_t *info);
     devapi_lif() {}
     ~devapi_lif();
-    sdk_ret_t lif_halcreate();
-    sdk_ret_t lif_haldelete();
-    sdk_ret_t lif_halupdate();
+    sdk_ret_t lif_halcreate(void);
+    sdk_ret_t lif_haldelete(void);
+    sdk_ret_t lif_halupdate(void);
     void populate_req(intf::LifRequestMsg &req_msg,
                       intf::LifSpec **req_ptr);
     sdk_ret_t create_macvlan_filter(mac_t mac, vlan_t vlan);
@@ -79,23 +79,23 @@ public:
                          bool promiscuous);
 
     sdk_ret_t upd_name(std::string name);
-    sdk_ret_t reset();
+    sdk_ret_t reset(void);
 
-    void remove_macfilters();
+    void remove_macfilters(void);
     void remove_vlanfilters(bool skip_native_vlan = false);
-    void remove_macvlanfilters();
+    void remove_macvlanfilters(void);
 
     // Get APIs
-    devapi_lif *get_lif();
-    devapi_uplink *get_uplink();
-    devapi_enic *get_enic();
-    devapi_vrf *get_vrf();
-    devapi_l2seg *get_nativel2seg();
-    uint32_t get_id();
-    bool get_isprom();
-    lif_info_t *get_lifinfo();
+    devapi_lif *get_lif(void);
+    devapi_uplink *get_uplink(void);
+    devapi_enic *get_enic(void);
+    devapi_vrf *get_vrf(void);
+    devapi_l2seg *get_nativel2seg(void);
+    uint32_t get_id(void);
+    bool get_isprom(void);
+    lif_info_t *get_lifinfo(void);
     static devapi_lif *lookup(uint32_t lif_id);
-    static devapi_lif *get_intmgmt_lif() { return devapi_lif::internal_mgmt_ethlif; }
+    static devapi_lif *get_intmgmt_lif(void) { return devapi_lif::internal_mgmt_ethlif; }
 
     // Set APIs
     void set_enic(devapi_enic *enic);
@@ -103,20 +103,20 @@ public:
     void set_nativel2seg(devapi_l2seg *l2seg) { native_l2seg_ = l2seg; }
     static void set_intmgmt_lif(devapi_lif *lif) { devapi_lif::internal_mgmt_ethlif = lif; }
 
-    bool is_mnic();
-    bool is_oobmnic();
-    bool is_intmgmtmnic();
-    bool is_inbmgmtmnic();
-    bool is_hostmgmt();
-    bool is_intmgmt();
-    bool is_classicfwd();
-    bool is_recallmc();
-    void program_mcfilters();
-    void deprogram_mcfilters();
+    bool is_mnic(void);
+    bool is_oobmnic(void);
+    bool is_intmgmtmnic(void);
+    bool is_inbmgmtmnic(void);
+    bool is_hostmgmt(void);
+    bool is_intmgmt(void);
+    bool is_classicfwd(void);
+    bool is_recallmc(void);
+    void program_mcfilters(void);
+    void deprogram_mcfilters(void);
 
 };
 
-} // namespace iris
+}    // namespace iris
 
 using iris::devapi_lif;
 

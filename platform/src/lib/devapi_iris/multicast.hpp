@@ -29,19 +29,19 @@ public:
     static devapi_mcast *factory(devapi_l2seg *l2seg, mac_t mac);
     static void destroy(devapi_mcast *mcast);
 
-    sdk_ret_t mcast_halcreate();
-    sdk_ret_t mcast_haldelete();
+    sdk_ret_t mcast_halcreate(void);
+    sdk_ret_t mcast_haldelete(void);
     static devapi_mcast *find_or_create(devapi_l2seg *l2seg, mac_t mac,
                                         bool create);
 
     sdk_ret_t add_enic(devapi_enic *enic);
     sdk_ret_t del_enic(devapi_enic *enic);
-    sdk_ret_t trigger_hal();
-    devapi_l2seg *get_l2seg();
-    mac_t get_mac();
-    uint32_t get_numenics();
+    sdk_ret_t trigger_hal(void);
+    devapi_l2seg *get_l2seg(void);
+    mac_t get_mac(void);
+    uint32_t get_numenics(void);
 };
-} // namespace iris
+}    // namespace iris
 
 using iris::devapi_mcast;
 #endif  /* __MULTICAST_HPP__ */

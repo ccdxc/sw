@@ -13,6 +13,7 @@
 #include "gen/proto/multicast.grpc.pb.h"
 #include "gen/proto/rdma.grpc.pb.h"
 #include "gen/proto/qos.grpc.pb.h"
+#include "gen/proto/port.grpc.pb.h"
 #include "hal_grpc.hpp"
 #include "include/sdk/base.hpp"
 #include "devapi_iris_types.hpp"
@@ -76,6 +77,13 @@ using intf::LifResponse;
 using intf::LifDeleteRequest;
 using intf::LifDeleteResponse;
 using intf::QStateSetReq;
+using port::PortGetRequestMsg;
+using port::PortGetResponseMsg;
+using port::PortGetResponse;
+using port::PortRequestMsg;
+using port::PortResponseMsg;
+using port::PortSpec;
+using port::PortResponse;
 using multicast::MulticastEntryRequestMsg;
 using multicast::MulticastEntryResponseMsg;
 using multicast::MulticastEntryDeleteRequestMsg;
@@ -121,19 +129,20 @@ private:
     std::unique_ptr<multicast::Multicast::Stub> multicast_stub_;
     std::unique_ptr<rdma::Rdma::Stub> rdma_stub_;
     std::unique_ptr<qos::QOS::Stub> qos_stub_;
+    std::unique_ptr<port::Port::Stub> port_stub_;
     std::shared_ptr<grpc::Channel> channel;
 private:
-    sdk_ret_t init_();
+    sdk_ret_t init_(void);
     hal_grpc() {}
     ~hal_grpc() {}
 
 public:
-    static hal_grpc *factory();
+    static hal_grpc *factory(void);
     static void destroy(hal_grpc *hal);
-    static hal_grpc *get_hal_grpc();
+    static hal_grpc *get_hal_grpc(void);
 
     // Make GRPC connection to HAL
-    sdk_ret_t connect_hal();
+    sdk_ret_t connect_hal(void);
 
     // Vrf APIs
     Status vrf_create(VrfRequestMsg& req_msg,
@@ -181,9 +190,13 @@ public:
     GET_API(filter, Filter);
 
     GET_API(qos_class, QosClass);
+
+    // Port APIs
+    UPDATE_API(port, Port);
+    GET_API(port, Port);
 };
 
-} // namespace iris
+}    // namespace iris
 
 using iris::hal_grpc;
 #endif /* __HAL_GRPC_HPP__ */

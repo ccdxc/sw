@@ -29,13 +29,13 @@ public:
   static void  destroy(devapi_ep *ep);
 
   static devapi_ep *lookup(devapi_l2seg *l2seg, mac_t mac);
-  sdk_ret_t ep_halcreate();
-  sdk_ret_t ep_haldelete();
-  devapi_l2seg *get_l2seg();
-  mac_t get_mac();
+  sdk_ret_t ep_halcreate(void);
+  sdk_ret_t ep_haldelete(void);
+  devapi_l2seg *get_l2seg(void);
+  mac_t get_mac(void);
 };
 
-} // namespace iris
+}     // namespace iris
 
 using iris::devapi_ep;
 

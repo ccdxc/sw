@@ -33,7 +33,7 @@ private:
 
 private:
     sdk_ret_t init_(devapi_vrf *vrf, vlan_t vlan);
-    sdk_ret_t trigger_halupdate();
+    sdk_ret_t trigger_halupdate(void);
     devapi_l2seg() {}
     ~devapi_l2seg() {}
 
@@ -41,9 +41,9 @@ public:
     static devapi_l2seg *factory(devapi_vrf *vrf, vlan_t vlan);
     static void destroy(devapi_l2seg *l2seg);
 
-    sdk_ret_t l2seg_create();
-    sdk_ret_t l2seg_delete();
-    void deallocate_id();
+    sdk_ret_t l2seg_halcreate(void);
+    sdk_ret_t l2seg_haldelete(void);
+    void deallocate_id(void);
 
     static devapi_l2seg *lookup(devapi_vrf *vrf, vlan_t vlan);
 
@@ -56,7 +56,7 @@ public:
 
     static void probe();
 };
-} // namespace iris
+}    // namespace iris
 
 using iris::devapi_l2seg;
 

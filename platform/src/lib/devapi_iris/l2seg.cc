@@ -44,7 +44,7 @@ devapi_l2seg::factory(devapi_vrf *vrf, vlan_t vlan)
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = l2seg->l2seg_create();
+        ret = l2seg->l2seg_halcreate();
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -70,7 +70,7 @@ devapi_l2seg::destroy(devapi_l2seg *l2seg)
     api_trace("l2seg delete");
 
     // remove from hal
-    l2seg->l2seg_delete();
+    l2seg->l2seg_haldelete();
     // remove from db
     l2seg_db_.erase(key);
     // free up id
@@ -101,7 +101,7 @@ devapi_l2seg::init_(devapi_vrf *vrf, vlan_t vlan)
 }
 
 sdk_ret_t
-devapi_l2seg::l2seg_create()
+devapi_l2seg::l2seg_halcreate(void)
 {
     sdk_ret_t                     ret = SDK_RET_OK;
     grpc::ClientContext                 context;
@@ -165,7 +165,7 @@ devapi_l2seg::lookup(devapi_vrf *vrf, vlan_t vlan)
 }
 
 sdk_ret_t
-devapi_l2seg::l2seg_delete()
+devapi_l2seg::l2seg_haldelete(void)
 {
     sdk_ret_t                               ret = SDK_RET_OK;
     grpc::ClientContext                     context;
@@ -208,7 +208,7 @@ end:
 }
 
 void
-devapi_l2seg::deallocate_id()
+devapi_l2seg::deallocate_id(void)
 {
     if (id_ != indexer::INVALID_INDEXER) {
         allocator_->free(id_);
@@ -309,4 +309,4 @@ devapi_l2seg::del_uplink(devapi_uplink *uplink)
     // Sends update to Hal
     return trigger_halupdate();
 }
-} // namespace iris
+}    // namespace iris

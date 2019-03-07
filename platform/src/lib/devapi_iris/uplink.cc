@@ -94,7 +94,7 @@ devapi_uplink::get_uplink(uint32_t port_num)
 }
 
 sdk_ret_t
-devapi_uplink::create_vrf()
+devapi_uplink::create_vrf(void)
 {
     // In both Classic and hostpin modes, every uplink will get a VRF.
     vrf_ = devapi_vrf::factory(is_oob() ?
@@ -108,7 +108,7 @@ devapi_uplink::create_vrf()
 }
 
 sdk_ret_t
-devapi_uplink::delete_vrf()
+devapi_uplink::delete_vrf(void)
 {
     if (vrf_) {
         // Delete Vrf
@@ -119,7 +119,7 @@ devapi_uplink::delete_vrf()
 }
 
 sdk_ret_t
-devapi_uplink::create_vrfs()
+devapi_uplink::create_vrfs(void)
 {
     sdk_ret_t ret = SDK_RET_OK;
     devapi_uplink *uplink = NULL;
@@ -199,49 +199,49 @@ end:
 }
 
 uint32_t
-devapi_uplink::get_id()
+devapi_uplink::get_id(void)
 {
     return id_;
 }
 
 uint32_t
-devapi_uplink::get_port_num()
+devapi_uplink::get_port_num(void)
 {
     return port_num_;
 }
 
 uint32_t
-devapi_uplink::get_num_lifs()
+devapi_uplink::get_num_lifs(void)
 {
     return num_lifs_;
 }
 
 void
-devapi_uplink::inc_num_lifs()
+devapi_uplink::inc_num_lifs(void)
 {
     num_lifs_++;
 }
 
 void
-devapi_uplink::dec_num_lifs()
+devapi_uplink::dec_num_lifs(void)
 {
     num_lifs_--;
 }
 
 devapi_vrf *
-devapi_uplink::get_vrf()
+devapi_uplink::get_vrf(void)
 {
     return vrf_;
 }
 
 devapi_l2seg *
-devapi_uplink::get_native_l2seg()
+devapi_uplink::get_native_l2seg(void)
 {
     return native_l2seg_;
 }
 
 bool
-devapi_uplink::is_oob()
+devapi_uplink::is_oob(void)
 {
     return is_oob_;
 }
@@ -257,4 +257,5 @@ devapi_uplink::set_port_num(uint32_t port_num)
 {
     port_num_ = port_num;
 }
-} // iris
+
+}    // namespace iris

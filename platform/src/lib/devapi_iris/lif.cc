@@ -1,8 +1,6 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
-
-// #include "nic/sdk/storage/storage_seq_common.h"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 #include "lif.hpp"
 #include "print.hpp"
@@ -15,7 +13,6 @@
 #include "devapi_iris_types.hpp"
 #include "devapi_mem.hpp"
 #include "hal_grpc.hpp"
-// #include "platform/src/lib/nicmgr/include/nicmgr_utils.hpp"
 
 namespace iris {
 
@@ -185,7 +182,7 @@ devapi_lif::lookup(uint32_t lif_id)
 }
 
 sdk_ret_t
-devapi_lif::reset()
+devapi_lif::reset(void)
 {
     NIC_LOG_DEBUG("Resetting lif: {}", get_id());
 
@@ -226,9 +223,6 @@ devapi_lif::destroy(devapi_lif *lif)
     }
 
     if (lif->is_classicfwd()) {
-        // Delete Vlan filter
-        lif->del_vlan(NATIVE_VLAN_ID);
-
         // Delete enic
         devapi_enic::destroy(lif->get_enic());
 
@@ -892,7 +886,7 @@ devapi_lif::delete_vlan_filter(vlan_t vlan)
 }
 
 void
-devapi_lif::program_mcfilters()
+devapi_lif::program_mcfilters(void)
 {
     mac_t mac;
     for (auto it = mac_table_.begin(); it != mac_table_.end();it++) {
@@ -905,7 +899,7 @@ devapi_lif::program_mcfilters()
 }
 
 void
-devapi_lif::deprogram_mcfilters()
+devapi_lif::deprogram_mcfilters(void)
 {
     mac_t mac;
 
@@ -919,7 +913,7 @@ devapi_lif::deprogram_mcfilters()
 }
 
 void
-devapi_lif::remove_macfilters()
+devapi_lif::remove_macfilters(void)
 {
     mac_t mac;
 
@@ -952,7 +946,7 @@ devapi_lif::remove_vlanfilters(bool skip_native_vlan)
 }
 
 void
-devapi_lif::remove_macvlanfilters()
+devapi_lif::remove_macvlanfilters(void)
 {
     mac_t mac;
     vlan_t vlan;
@@ -968,7 +962,7 @@ devapi_lif::remove_macvlanfilters()
 }
 
 sdk_ret_t
-devapi_lif::lif_halcreate()
+devapi_lif::lif_halcreate(void)
 {
     sdk_ret_t            ret = SDK_RET_OK;
     grpc::ClientContext        context;
@@ -1043,7 +1037,7 @@ end:
 }
 
 sdk_ret_t
-devapi_lif::lif_halupdate()
+devapi_lif::lif_halupdate(void)
 {
     sdk_ret_t            ret = SDK_RET_OK;
     grpc::ClientContext  context;
@@ -1078,7 +1072,7 @@ end:
 }
 
 sdk_ret_t
-devapi_lif::lif_haldelete()
+devapi_lif::lif_haldelete(void)
 {
     sdk_ret_t               ret = SDK_RET_OK;
     grpc::ClientContext     context;
@@ -1147,14 +1141,14 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
 }
 
 devapi_uplink *
-devapi_lif::get_uplink()
+devapi_lif::get_uplink(void)
 {
     // return info_.pinned_uplink;
     return devapi_uplink::get_uplink(info_.pinned_uplink_port_num);
 }
 
 devapi_enic *
-devapi_lif::get_enic()
+devapi_lif::get_enic(void)
 {
     return enic_;
 }
@@ -1166,25 +1160,25 @@ devapi_lif::set_enic(devapi_enic *enic)
 }
 
 uint32_t
-devapi_lif::get_id()
+devapi_lif::get_id(void)
 {
     return info_.lif_id;
 }
 
 bool
-devapi_lif::get_isprom()
+devapi_lif::get_isprom(void)
 {
     return info_.receive_promiscuous;
 }
 
 lif_info_t *
-devapi_lif::get_lifinfo()
+devapi_lif::get_lifinfo(void)
 {
     return &info_;
 }
 
 devapi_vrf *
-devapi_lif::get_vrf()
+devapi_lif::get_vrf(void)
 {
     if (is_intmgmtmnic()) {
         return vrf_;
@@ -1196,7 +1190,7 @@ devapi_lif::get_vrf()
 }
 
 devapi_l2seg *
-devapi_lif::get_nativel2seg()
+devapi_lif::get_nativel2seg(void)
 {
     if (is_intmgmtmnic()) {
         return native_l2seg_;
@@ -1208,28 +1202,28 @@ devapi_lif::get_nativel2seg()
 }
 
 bool
-devapi_lif::is_oobmnic()
+devapi_lif::is_oobmnic(void)
 {
     return (info_.type ==
             sdk::platform::LIF_TYPE_MNIC_OOB_MANAGEMENT);
 }
 
 bool
-devapi_lif::is_intmgmtmnic()
+devapi_lif::is_intmgmtmnic(void)
 {
     return (info_.type ==
             sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT);
 }
 
 bool
-devapi_lif::is_inbmgmtmnic()
+devapi_lif::is_inbmgmtmnic(void)
 {
     return (info_.type ==
             sdk::platform::LIF_TYPE_MNIC_INBAND_MANAGEMENT);
 }
 
 bool
-devapi_lif::is_mnic()
+devapi_lif::is_mnic(void)
 {
     return (is_oobmnic() ||
             is_intmgmtmnic() ||
@@ -1237,26 +1231,26 @@ devapi_lif::is_mnic()
 }
 
 bool
-devapi_lif::is_hostmgmt()
+devapi_lif::is_hostmgmt(void)
 {
     return (info_.type == sdk::platform::LIF_TYPE_HOST_MANAGEMENT);
 }
 
 bool
-devapi_lif::is_intmgmt()
+devapi_lif::is_intmgmt(void)
 {
     return (is_intmgmtmnic() ||
             is_hostmgmt());
 }
 
 bool
-devapi_lif::is_recallmc()
+devapi_lif::is_recallmc(void)
 {
     return info_.receive_all_multicast;
 }
 
 bool
-devapi_lif::is_classicfwd()
+devapi_lif::is_classicfwd(void)
 {
     // Classic:
     // - All LIFs
@@ -1276,4 +1270,4 @@ devapi_lif::is_classicfwd()
 #endif
 }
 
-} // namespce iris
+}    // namespce iris

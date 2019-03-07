@@ -11,6 +11,6 @@ namespace iris {
 char *macaddr2str (mac_t mac_addr);
 void api_trace (const char *trace);
 
-} // namespace iris
+}     // namespace iris
 
 #endif

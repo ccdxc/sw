@@ -35,11 +35,11 @@ public:
                                 mac_t mac, vlan_t vlan,
                                 filter_type_t type = kh::FILTER_LIF_MAC_VLAN);
   static void destroy(devapi_filter *filter);
-  sdk_ret_t filter_create();
-  sdk_ret_t filter_delete();
+  sdk_ret_t filter_halcreate(void);
+  sdk_ret_t filter_haldelete(void);
 };
 
-} // namespace iris
+}    // namespace iris
 
 using iris::devapi_filter;
 

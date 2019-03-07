@@ -34,7 +34,7 @@ devapi_vrf::factory (types::VrfType type, devapi_uplink *up)
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = v->vrf_create();
+        ret = v->vrf_halcreate();
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -70,14 +70,14 @@ devapi_vrf::destroy(devapi_vrf *v)
 {
     api_trace("vrf delete");
 
-    v->vrf_delete();
+    v->vrf_haldelete();
     v->deallocate_id();
     v->~devapi_vrf();
     DEVAPI_FREE(DEVAPI_MEM_ALLOC_VRF, v);
 }
 
 void
-devapi_vrf::deallocate_id()
+devapi_vrf::deallocate_id(void)
 {
     if (id_ != indexer::INVALID_INDEXER) {
         allocator_->free(id_);
@@ -85,7 +85,7 @@ devapi_vrf::deallocate_id()
 }
 
 sdk_ret_t
-devapi_vrf::vrf_create()
+devapi_vrf::vrf_halcreate(void)
 {
     sdk_ret_t             ret = SDK_RET_OK;
     grpc::ClientContext   context;
@@ -128,7 +128,7 @@ end:
 }
 
 sdk_ret_t
-devapi_vrf::vrf_delete()
+devapi_vrf::vrf_haldelete(void)
 {
     sdk_ret_t                 ret = SDK_RET_OK;
     grpc::ClientContext       context;
@@ -168,9 +168,9 @@ end:
 }
 
 uint64_t
-devapi_vrf::get_id()
+devapi_vrf::get_id(void)
 {
     return id_;
 }
 
-} // iris
+}    // namespace iris

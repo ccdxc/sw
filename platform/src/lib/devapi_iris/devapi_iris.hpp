@@ -17,10 +17,10 @@ private:
     sdk_spinlock_t slock_;
 
 private:
-    sdk_ret_t init_();
+    sdk_ret_t init_(void);
 
 public:
-    static devapi_iris *factory();
+    static devapi_iris *factory(void);
     static void destroy(devapi *dapi);
     static void destroy(devapi_iris *dapi);
 
@@ -50,6 +50,13 @@ public:
     sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode);
     sdk_ret_t uplink_create(uint32_t id, uint32_t port, bool is_oob);
     sdk_ret_t uplink_destroy(uint32_t port);
+    // Port APIs
+    sdk_ret_t port_get_status(uint32_t port_num,
+                              port_status_t *status);
+    sdk_ret_t port_get_config(uint32_t port_num,
+                              port_config_t *config);
+    sdk_ret_t port_set_config(uint32_t port_num,
+                              port_config_t *config);
 };
 
 } // namespace iris
