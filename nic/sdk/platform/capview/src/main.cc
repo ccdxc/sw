@@ -63,7 +63,8 @@ dbpath(void)
         "/pensando/etc/capviewdb.bin",
         "/platform/etc/capviewdb.bin",
         "/mnt/etc/capviewdb.bin",
-        "capviewdb.bin"
+        "capviewdb.bin",
+        "/nic/etc/capviewdb.bin",
     };
     if (opts.dbpath != NULL) {
         return opts.dbpath;
