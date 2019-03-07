@@ -8,7 +8,7 @@ def __init_config():
     req = cfg_svc_pb2.InitConfigMsg()
     req.entry_point_type = cfg_svc_pb2.VENICE_REST
     for venice_ip in api.GetVeniceMgmtIpAddresses():
-        req.endpoints.append("%s:9000" % venice_ip)
+        req.endpoints.append("%s:443" % venice_ip)
 
     # Temp change: Send only 10 vlans
     for v in range(10):

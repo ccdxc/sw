@@ -14,7 +14,7 @@ import exceptions
 import traceback
 
 # Port numbers - keep in sync with venice/globals/constants.go
-APIGwRESTPort = "9000"
+APIGwRESTPort = "443"
 CMDClusterMgmtPort = "9002"
 CMDResolverPort = "9009"
 CMDAuthCertAPIPort = "9009"

@@ -53,11 +53,11 @@ class TestMgmtNode:
     def runCmd(self, command, ignore_error=False):
         return runCommand("""docker exec {} """.format(self.name) + command, ignore_error)
     def startNode(self):
-        # expose ApiGw(9000) instances on 10001, 10002, 10003 ...
+        # expose ApiGw(443) instances on 10001, 10002, 10003 ...
         # expose Elasticsearch(9200) instances on 10201, 10202, 10203 ...
         ports_exposed = ""
         if self.nettype == 'bridge':
-            ports_exposed = """ -p {}:9000 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
+            ports_exposed = """ -p {}:443 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
         if self.dev_mode:
             runCommand("""docker run --dns-search my.dummy -td {} -l pens --network pen-dind-net --ip {}  -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.4 /bin/sh """.format(ports_exposed, self.ipaddress, src_dir, self.name, self.name))
         else:
@@ -74,7 +74,7 @@ class TestMgmtNode:
         if self.dev_mode:
             self.runCmd("""go install ./venice/exe/venice""")
             self.runCmd("""/usr/local/go/bin/venice auto-completion""")
-            self.runCmd("""sh -c 'echo export PENSERVER=http://{}:9000 >> ~/.bashrc' """.format(self.clustervip))
+            self.runCmd("""sh -c 'echo export PENSERVER=http://{}:443 >> ~/.bashrc' """.format(self.clustervip))
             self.runCmd("""sh -c 'echo source /etc/bash_completion.d/venice >> ~/.bashrc' """)
 class Node:
     def __init__(self, name, ipaddress, containerIndex, nettype=None, venice_image=None, venice_image_dir=None, dev_mode=None, custom_config_file=None, disableTmpfs=False):
@@ -93,11 +93,11 @@ class Node:
     def startNode(self):
         while runCommand("""docker inspect {} >/dev/null 2>&1""".format(self.name), ignore_error=True) == 0 and not debug:
             time.sleep(2)
-        # expose ApiGw(9000) instances on 10001, 10002, 10003 ...
+        # expose ApiGw(443) instances on 10001, 10002, 10003 ...
         # expose Elasticsearch(9200) instances on 10201, 10202, 10203 ...
         extra_config = ""
         if self.nettype == 'bridge': # all original ports are exposed for macvlan in its own ip. for bridge, we need to expose explicitly
-            extra_config = """ -p {}:9000 -p {}:9200 -p {}:8080 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex, 8080 + self.containerIndex - 1)
+            extra_config = """ -p {}:443 -p {}:9200 -p {}:8080 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex, 8080 + self.containerIndex - 1)
 	if self.disableTmpfs is False:
             extra_config = extra_config + "--tmpfs /var/lib/pensando "
         if self.custom_config_file is not None :

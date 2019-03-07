@@ -15,7 +15,7 @@ import (
 )
 
 // mockVeniceURL is the venice URL when we are in mock mode
-const mockVeniceURL = "localhost:9000"
+const mockVeniceURL = "localhost:443"
 
 type mockIotaServer struct {
 	listenURL string
@@ -60,7 +60,7 @@ func (ms *mockIotaServer) startPalazzo() {
 				time.Sleep(time.Second * 5)
 
 				// run new palazzo instance
-				cmd := exec.Command("bash", "-c", gopath+"/bin/palazzo -apiport 9000 > /tmp/palazzo.log")
+				cmd := exec.Command("bash", "-c", gopath+"/bin/palazzo -apiport 443 > /tmp/palazzo.log")
 				out, err := cmd.CombinedOutput()
 				if err != nil {
 					fmt.Printf("palazzo out:\n%s\n", string(out))

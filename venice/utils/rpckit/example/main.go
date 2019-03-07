@@ -18,8 +18,8 @@ import (
 
 // Usage:
 // 0. Compile the example: go install
-// 1. Run server in a window: $GOPATH/bin/example -server -url :9000
-// 2. Run client in another window: $GOPATH/bin/example -client -url localhost:9000
+// 1. Run server in a window: $GOPATH/bin/example -server -url :443
+// 2. Run client in another window: $GOPATH/bin/example -client -url localhost:443
 
 // ExampleRPCHandler is the grpc handler
 type ExampleRPCHandler struct {

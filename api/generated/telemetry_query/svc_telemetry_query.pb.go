@@ -61,9 +61,9 @@ const _ = grpc.SupportPackageIsVersion4
 
 type TelemetryV1Client interface {
 	AutoWatchSvcTelemetryV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (TelemetryV1_AutoWatchSvcTelemetryV1Client, error)
-	//  Fwlogs is the telemetry fwlog query RPC, http://localhost:9000/telemetry/v1/fwlogs
+	//  Fwlogs is the telemetry fwlog query RPC, http://localhost:443/telemetry/v1/fwlogs
 	Fwlogs(ctx context.Context, in *FwlogsQueryList, opts ...grpc.CallOption) (*FwlogsQueryResponse, error)
-	//  Metrics is the telemetry metrics query RPC, http://localhost:9000/telemetry/v1/metrics
+	//  Metrics is the telemetry metrics query RPC, http://localhost:443/telemetry/v1/metrics
 	Metrics(ctx context.Context, in *MetricsQueryList, opts ...grpc.CallOption) (*MetricsQueryResponse, error)
 }
 
@@ -129,9 +129,9 @@ func (c *telemetryV1Client) Metrics(ctx context.Context, in *MetricsQueryList, o
 
 type TelemetryV1Server interface {
 	AutoWatchSvcTelemetryV1(*api.ListWatchOptions, TelemetryV1_AutoWatchSvcTelemetryV1Server) error
-	//  Fwlogs is the telemetry fwlog query RPC, http://localhost:9000/telemetry/v1/fwlogs
+	//  Fwlogs is the telemetry fwlog query RPC, http://localhost:443/telemetry/v1/fwlogs
 	Fwlogs(context.Context, *FwlogsQueryList) (*FwlogsQueryResponse, error)
-	//  Metrics is the telemetry metrics query RPC, http://localhost:9000/telemetry/v1/metrics
+	//  Metrics is the telemetry metrics query RPC, http://localhost:443/telemetry/v1/metrics
 	Metrics(context.Context, *MetricsQueryList) (*MetricsQueryResponse, error)
 }
 

@@ -97,7 +97,7 @@ const (
 	RevProxyPort = "8888"
 
 	// API gw Port
-	APIGwRESTPort = "9000"
+	APIGwRESTPort = "443"
 
 	// CMD
 	CMDRESTPort                    = "9001"

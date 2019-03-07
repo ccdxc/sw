@@ -67,8 +67,8 @@ characters appropriately. For Example a password `$ecRe7&P@ssword!` need to be s
 ```
 [vagrant@venice ~]$ docker ps
 CONTAINER ID        IMAGE                                           COMMAND             CREATED             STATUS              PORTS                                                                      NAMES
-5aa5eb166be0        registry.test.pensando.io:5000/pens-e2e:v0.3    "/bin/sh"           45 minutes ago      Up 45 minutes       0.0.0.0:10000->9000/tcp, 0.0.0.0:10200->9200/tcp                           node0
-4d6e529b37c5        registry.test.pensando.io:5000/pens-dind:v0.3   "/usr/sbin/init"    About an hour ago   Up About an hour    0.0.0.0:8080->8080/tcp, 0.0.0.0:10001->9000/tcp, 0.0.0.0:10201->9200/tcp   node1
+5aa5eb166be0        registry.test.pensando.io:5000/pens-e2e:v0.3    "/bin/sh"           45 minutes ago      Up 45 minutes       0.0.0.0:10000->443/tcp, 0.0.0.0:10200->9200/tcp                           node0
+4d6e529b37c5        registry.test.pensando.io:5000/pens-dind:v0.3   "/usr/sbin/init"    About an hour ago   Up About an hour    0.0.0.0:8080->8080/tcp, 0.0.0.0:10001->443/tcp, 0.0.0.0:10201->9200/tcp   node1
 ebb059e60608        pen-netagent                                    "/bin/sh"           About an hour ago   Up About an hour                                                                               naples1
 ```
 - Examining Services from simulator VM

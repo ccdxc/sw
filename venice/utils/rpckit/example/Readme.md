@@ -21,13 +21,13 @@ go install
 3. Run server in a window:
 
 ```
-$GOPATH/bin/example -server -url :9000
+$GOPATH/bin/example -server -url :443
 ```
 
 4. Run client in another window:
 
 ```
-$GOPATH/bin/example -client -url localhost:9000
+$GOPATH/bin/example -client -url localhost:443
 ```
 
 ### Mock testing

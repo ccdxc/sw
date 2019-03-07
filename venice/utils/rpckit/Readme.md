@@ -68,7 +68,7 @@ func (es *ExampleRpcHandler) ExampleRPC(ctx context.Context, req *ExampleReq) (*
 
 ```
     // create an RPC server
-    rpcServer := rpckit.NewRpcServer("exampleServer", ":9000")
+    rpcServer := rpckit.NewRpcServer("exampleServer", ":443")
 ```
 
 ### Step 4: Register the backend object with RPC server
@@ -88,7 +88,7 @@ func (es *ExampleRpcHandler) ExampleRPC(ctx context.Context, req *ExampleReq) (*
 
 ```
     // create an RPC client
-    rpcClient, err := rpckit.NewRpcClient("exampleClient", "localhost:9000")
+    rpcClient, err := rpckit.NewRpcClient("exampleClient", "localhost:443")
     if err != nil {
         log.Errorf("Error connecting to server. Err: %v", err)
         return

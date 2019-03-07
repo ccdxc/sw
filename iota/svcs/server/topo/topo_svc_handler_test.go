@@ -11,6 +11,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/workload"
 
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/api"
@@ -286,8 +287,8 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	b, _ := json.Marshal(clusterObj)
 
 	clusterMsg := &iota.MakeClusterMsg{
-		Endpoint:       "10.8.103.40:9001/api/v1/cluster",
-		HealthEndpoint: "10.8.103.40:9000/configs/cluster/v1/tenants",
+		Endpoint:       "10.8.103.40:" + globals.CMDRESTPort + "/api/v1/cluster",
+		HealthEndpoint: "10.8.103.40:" + globals.APIGwRESTPort + "/configs/cluster/v1/tenants",
 		Config:         string(b),
 		ApiResponse:    &iota.IotaAPIResponse{},
 	}
@@ -300,7 +301,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 
 	var initCfgMsg iota.InitConfigMsg
 	initCfgMsg.EntryPointType = iota.EntrypointType_VENICE_REST
-	initCfgMsg.Endpoints = []string{"10.8.103.40:9000"}
+	initCfgMsg.Endpoints = []string{"10.8.103.40:443"}
 	initCfgMsg.Vlans = vlans
 	initCfgMsg.ApiResponse = &iota.IotaAPIResponse{}
 

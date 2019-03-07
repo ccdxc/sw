@@ -70,7 +70,7 @@ type cliContext struct {
 }
 
 const (
-	defaultVeniceURL = "http://localhost:9000"
+	defaultVeniceURL = "https://localhost:443"
 	helpTmpl         = `NAME:
 {{.Name}} - {{.Usage}}
 USAGE:

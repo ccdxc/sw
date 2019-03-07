@@ -48,8 +48,8 @@ This will compile the code, package it as containers and run an end-to-end clust
 ```
 [vagrant@node1 sw]$ docker ps
 CONTAINER ID        IMAGE                                           COMMAND             CREATED             STATUS              PORTS                                                                      NAMES
-5f9ed1c57954        registry.test.pensando.io:5000/pens-e2e:v0.4    "/bin/sh"           2 minutes ago       Up 2 minutes        0.0.0.0:10000->9000/tcp, 0.0.0.0:10200->9200/tcp                           node0
-f045420c41d4        registry.test.pensando.io:5000/pens-dind:v0.3   "/usr/sbin/init"    4 minutes ago       Up 4 minutes        0.0.0.0:8080->8080/tcp, 0.0.0.0:10001->9000/tcp, 0.0.0.0:10201->9200/tcp   node1
+5f9ed1c57954        registry.test.pensando.io:5000/pens-e2e:v0.4    "/bin/sh"           2 minutes ago       Up 2 minutes        0.0.0.0:10000->443/tcp, 0.0.0.0:10200->9200/tcp                           node0
+f045420c41d4        registry.test.pensando.io:5000/pens-dind:v0.3   "/usr/sbin/init"    4 minutes ago       Up 4 minutes        0.0.0.0:8080->8080/tcp, 0.0.0.0:10001->443/tcp, 0.0.0.0:10201->9200/tcp   node1
 32f236b3c8b6        pen-netagent                                    "/bin/sh"           5 minutes ago       Up 5 minutes        0.0.0.0:15002->9008/tcp                                                    naples1
 ```
 

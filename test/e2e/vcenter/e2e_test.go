@@ -25,7 +25,7 @@ const (
 	defSoapURL         = "http://user:pass@pen-master:8989/sdk"
 	hostSimURL         = "http://192.168.30.121:5050"
 	hostMac            = "02:02:02:02:02:01"
-	apigwURL           = "pen-master:9000"
+	apigwURL           = "pen-master:443"
 	user               = "test"
 	password           = "pensando"
 )

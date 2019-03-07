@@ -217,6 +217,13 @@ func StartQuorumServices(c utils.Cluster) {
 
 	env.SystemdService.Start() // must be called before dependent services
 	env.VipService.AddVirtualIPs(c.VirtualIP)
+
+	env.RolloutMgr = services.NewRolloutMgr()
+	env.RolloutMgr.Start()
+	env.VeniceRolloutClient = rolloutclient.NewVeniceRolloutClient(globals.Rollout, c.NodeID, env.ResolverClient, env.RolloutMgr)
+	env.VeniceRolloutClient.Start()
+	env.ServiceRolloutClient = rolloutclient.NewServiceRolloutClient(globals.Rollout, c.NodeID, env.ResolverClient, env.RolloutMgr)
+
 	env.MasterService.Start()
 	env.LeaderService.Start()
 	env.CfgWatcherService.Start()
@@ -227,12 +234,6 @@ func StartQuorumServices(c utils.Cluster) {
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
-
-	env.RolloutMgr = services.NewRolloutMgr()
-	env.RolloutMgr.Start()
-	env.VeniceRolloutClient = rolloutclient.NewVeniceRolloutClient(globals.Rollout, c.NodeID, env.ResolverClient, env.RolloutMgr)
-	env.VeniceRolloutClient.Start()
-	env.ServiceRolloutClient = rolloutclient.NewServiceRolloutClient(globals.Rollout, c.NodeID, env.ResolverClient, env.RolloutMgr)
 
 	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
 

@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
@@ -26,7 +27,7 @@ func (tb *TestBed) GetVeniceURL() []string {
 	// walk all venice nodes
 	for _, node := range tb.Nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-			veniceURL = append(veniceURL, fmt.Sprintf("%s:9000", node.NodeMgmtIP))
+			veniceURL = append(veniceURL, fmt.Sprintf("%s:%s", node.NodeMgmtIP, globals.APIGwRESTPort))
 		}
 	}
 

@@ -201,7 +201,7 @@ func testStagingFn(instance string) {
 }
 func main() {
 	var (
-		instance    = flag.String("gwaddr", "localhost:9000", "API gateway to connect to")
+		instance    = flag.String("gwaddr", "localhost:443", "API gateway to connect to")
 		testStaging = flag.Bool("staging", false, "Use Api server staging")
 		testScaleSg = flag.Bool("scaleSg", false, "test scaled SG policy post")
 		testWebSock = flag.Bool("ws", false, "test websocket watch")
