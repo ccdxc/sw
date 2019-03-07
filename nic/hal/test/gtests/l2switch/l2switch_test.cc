@@ -260,10 +260,10 @@ TEST_F(l2switch_test, test1) {
        key_mask.vlan_tag_vid_mask = 0xFFFF;
        key_mask.control_metadata_uplink_mask = 0xFF;
 
-      data.action_id = DERIVE_LIF_DERIVE_LIF_ACTION_0_ID;
-      data.action_u.derive_lif_derive_lif_action_0.dir = 0;
-      data.action_u.derive_lif_derive_lif_action_0.src_lif_check_en = 0;
-      data.action_u.derive_lif_derive_lif_action_0.src_lif = 1;
+      data.action_id = DERIVE_LIF_DERIVE_LIF_ACTION_ID;
+      data.action_u.derive_lif_derive_lif_action.dir = 0;
+      data.action_u.derive_lif_derive_lif_action.src_lif_check_en = 0;
+      data.action_u.derive_lif_derive_lif_action.src_lif = 1;
 
       entry_write(P4TBL_ID_DERIVE_LIF, 0, &key, &key_mask, &data, false, 0);
 
@@ -280,8 +280,8 @@ TEST_F(l2switch_test, test1) {
        memcpy(key.ethernet_dstAddr, dst_addr, 6);
        key.vlan_tag_vid = 002;
 
-       data.action_id = L2SWITCH_TABLE_L2SWITCH_0_ID;
-       data.action_u.l2switch_table_l2switch_0.dst_lport = 1;
+       data.action_id = L2SWITCH_TABLE_L2SWITCH_ID;
+       data.action_u.l2switch_table_l2switch.dst_lport = 1;
 
        entry_write(P4TBL_ID_L2SWITCH_TABLE, 0, &key, NULL, &data, true, L2SWITCH_TABLE_SIZE);
 
@@ -296,8 +296,8 @@ TEST_F(l2switch_test, test1) {
 
        key.control_metadata_src_lif = 1;
      
-       data.action_id = XLATE_VLAN_HOST_TO_NW_XLATE_VLAN_0_ID;
-       data.action_u.xlate_vlan_host_to_nw_xlate_vlan_0.vid = 0x101;
+       data.action_id = XLATE_VLAN_HOST_TO_NW_XLATE_VLAN_ID;
+       data.action_u.xlate_vlan_host_to_nw_xlate_vlan.vid = 0x101;
 
        entry_write(P4TBL_ID_XLATE_VLAN_HOST_TO_NW, 1, NULL, NULL, &data, true, XLATE_VLAN_HOST_TO_NW_TABLE_SIZE);
     }
@@ -312,8 +312,8 @@ TEST_F(l2switch_test, test1) {
 
        key.control_metadata_src_lif = 1;
      
-       data.action_id = XLATE_VLAN_NW_TO_HOST_XLATE_VLAN_2_ID;
-       data.action_u.xlate_vlan_nw_to_host_xlate_vlan_2.vid = 0x2;
+       data.action_id = XLATE_VLAN_NW_TO_HOST_XLATE_VLAN_ID;
+       data.action_u.xlate_vlan_nw_to_host_xlate_vlan.vid = 0x2;
 
        entry_write(P4TBL_ID_XLATE_VLAN_NW_TO_HOST, 1, NULL, NULL, &data, true, XLATE_VLAN_NW_TO_HOST_TABLE_SIZE);
     }
