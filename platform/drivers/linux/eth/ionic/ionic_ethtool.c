@@ -106,15 +106,15 @@ static bool ionic_is_mnic(struct ionic *ionic)
 	return ionic->pfdev || ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
 }
 
+static bool ionic_is_pf(struct ionic *ionic)
+{
+	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF;
+}
+
 #if 0  /* save these for later */
 static bool ionic_is_vf(struct ionic *ionic)
 {
 	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF;
-}
-
-static bool ionic_is_pf(struct ionic *ionic)
-{
-	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF;
 }
 
 static bool ionic_is_25g(struct ionic *ionic)
@@ -146,6 +146,13 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 	} else {
 		ethtool_link_ksettings_add_link_mode(ks, supported, FIBRE);
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FIBRE);
+
+		if (ionic_is_pf(lif->ionic)) {
+			ethtool_link_ksettings_add_link_mode(ks, supported,
+							     Autoneg);
+			ethtool_link_ksettings_add_link_mode(ks, advertising,
+							     Autoneg);
+		}
 	}
 
 	switch (lif->notifyblock->port_status.xcvr.pid) {
@@ -309,12 +316,8 @@ fake_port_type++;
 
 	ks->base.speed = lif->notifyblock->link_speed;
 
-	if (lif->notifyblock->port_config.an_enable) {
+	if (lif->notifyblock->port_config.an_enable)
 		ks->base.autoneg = AUTONEG_ENABLE;
-		ethtool_link_ksettings_add_link_mode(ks, advertising, Autoneg);
-	} else {
-		ks->base.autoneg = AUTONEG_DISABLE;
-	}
 
 	if (lif->notifyblock->link_status)
 		ks->base.duplex = DUPLEX_FULL;
