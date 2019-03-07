@@ -498,18 +498,12 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 {
 	struct rxque* rxq = data;
 	struct txque* txq = rxq->lif->txqs[rxq->index];
-	struct ifnet *ifp = rxq->lif->netdev;
 	struct rx_stats* rxstats = &rxq->stats;
 	int work_done, tx_work;
 
 	KASSERT(rxq, ("rxq is NULL"));
-	KASSERT(ifp, ("%s ifp == NULL", rxq->name));
 	KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
-			("%s has no interrupt resource", rxq->name));
-
-	/* Protect against spurious interrupts */
-	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
-		return (IRQ_NONE);
+		("%s has no interrupt resource", rxq->name));
 
 	IONIC_RX_LOCK(rxq);
 
@@ -1538,8 +1532,8 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 		case XCVR_PID_QSFP_40GBASE_AOC:
 			qsfp = (struct qsfp_sprom_data *)xcvr->sprom;
 
-			sbuf_printf(sb, "    QSFP vendor OUI: %s P/N: %s S/N: %s\n",
-				qsfp->vendor_oui, qsfp->vendor_pn, qsfp->vendor_sn);
+			sbuf_printf(sb, "    QSFP vendor: %s P/N: %s S/N: %s\n",
+				qsfp->vendor_name, qsfp->vendor_pn, qsfp->vendor_sn);
 			break;
 
 		case XCVR_PID_SFP_25GBASE_CR_S:
@@ -1556,8 +1550,8 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 		case XCVR_PID_SFP_10GBASE_AOC:
 		case XCVR_PID_SFP_10GBASE_CU:
 			sfp = (struct sfp_sprom_data *)xcvr->sprom;
-			sbuf_printf(sb, "    SFP vendor OUI: %s P/N: %s S/N: %s\n",
-				sfp->vendor_oui, sfp->vendor_pn, sfp->vendor_sn);
+			sbuf_printf(sb, "    SFP vendor: %s P/N: %s S/N: %s\n",
+				sfp->vendor_name, sfp->vendor_pn, sfp->vendor_sn);
 			break;
 
 		default:
