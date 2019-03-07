@@ -191,15 +191,15 @@ struct pnso_api_stats {
 
 /* for measuring the time spent in both software and hardware */
 #define PAS_DECL_PERF()		ktime_t s
-#define PAS_START_PERF()	s = ktime_get()
+#define PAS_START_PERF()	s = ktime_get_raw_ns()
 #define PAS_END_PERF(pcr)						\
-	PNSO_STAT_ADD(pcr, total_latency, ktime_us_delta(ktime_get(), s))
+	PNSO_STAT_ADD(pcr, total_latency, (ktime_get_raw_ns() - s))
 
 /* for measuring the time spent just in hardware */
 #define PAS_DECL_HW_PERF()	ktime_t h
-#define PAS_START_HW_PERF()	h = ktime_get()
+#define PAS_START_HW_PERF()	h = ktime_get_raw_ns()
 #define PAS_END_HW_PERF(pcr)						\
-	PNSO_STAT_ADD(pcr, total_hw_latency, ktime_us_delta(ktime_get(), h))
+	PNSO_STAT_ADD(pcr, total_hw_latency, (ktime_get_raw_ns() - h))
 
 #define PAS_SHOW_STATS(pcr)	pas_show_stats(&pcr->api_stats);
 

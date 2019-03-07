@@ -98,9 +98,9 @@ pprint_pnso_stats(struct pnso_api_stats *stats)
 
 	OSAL_LOG_NOTICE("%30s:", "===");
 	OSAL_LOG_NOTICE("%30s: %ld (%s)", "pas_total_latency",
-			PNSO_STAT_READ(stats, total_latency), "us");
+			PNSO_STAT_READ(stats, total_latency), "ns");
 	OSAL_LOG_NOTICE("%30s: %ld (%s)", "pas_total_hw_latency",
-			PNSO_STAT_READ(stats, total_hw_latency), "us");
+			PNSO_STAT_READ(stats, total_hw_latency), "ns");
 }
 
 void
