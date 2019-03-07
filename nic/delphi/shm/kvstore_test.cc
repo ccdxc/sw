@@ -10,9 +10,6 @@ using namespace std;
 using namespace delphi;
 using namespace delphi::shm;
 
-const int32_t kshmTestMemSize = (1024 * 1024);
-const string kshmName = "kvtest_shm";
-
 class KvstoreTest : public testing::Test {
 protected:
     DelphiShmPtr srv_shm_;
@@ -22,12 +19,12 @@ public:
         usleep(1000);
         // create the server
         srv_shm_ = make_shared<DelphiShm>();
-        error err = srv_shm_->MemMap(kshmName, kshmTestMemSize, true);
+        error err = srv_shm_->MemMap(DELPHI_SHM_NAME, DELPHI_SHM_SIZE, true);
         assert(err.IsOK());
 
         // create the client
         client_shm_ = make_shared<DelphiShm>();
-        err = client_shm_->MemMap(kshmName, kshmTestMemSize, false);
+        err = client_shm_->MemMap(DELPHI_SHM_NAME, DELPHI_SHM_SIZE, false);
         assert(err.IsOK());
     }
     virtual void TearDown() {
@@ -429,6 +426,101 @@ TEST_F(KvstoreTest, ParallelCreateDeleteTest) {
         ASSERT_EQ(test_ctx[i].find_count, NUM_CREATE_DELETE) << "some finds failed";
         ASSERT_EQ(test_ctx[i].release_count, NUM_CREATE_DELETE) << "some releases failed";
 
+    }
+}
+
+#define NUM_OBJS_TO_PUBLISH 100
+#define NUM_PUBLISH_ITERATIONS 1000
+#define NUM_WALK_ITERATIONS 1000
+#define PUBLISH_VAL_LEN 18
+#define NUM_PUBLISH_THREADS 5
+#define NUM_ITERATOR_THREADS 20
+
+void * runPublishThread(void* targ) {
+    concurrent_test_ctx_t *ctx = (concurrent_test_ctx_t *)targ;
+    char val[] = "01234567890123456789" ;
+
+    // repeatedly publish
+    for (int iter = 0; iter < NUM_PUBLISH_ITERATIONS; iter++) {
+        for (int i = 0; i < NUM_OBJS_TO_PUBLISH; i++) {
+            int32_t key = (i + 1) * NUM_THREADS + ctx->my_id;
+            auto err = ctx->tbl->Publish((char *)&key, sizeof(key), val, PUBLISH_VAL_LEN);
+            if (err.IsOK()) ctx->create_count++;
+        }
+        int sleep_time = (rand() % 5000) + 5000;
+        usleep(sleep_time);
+    }
+
+    LogInfo("Published {} entries, {} iterations", ctx->create_count, NUM_PUBLISH_ITERATIONS);
+
+    pthread_exit(NULL);
+    return NULL;
+}
+
+void * runIteratorThread(void* targ) {
+    concurrent_test_ctx_t *ctx = (concurrent_test_ctx_t *)targ;
+
+    // repeatedly iterate over the table
+    for (int iter = 0; iter < NUM_WALK_ITERATIONS; iter++) {            
+        for (TableIterator it = ctx->tbl->Iterator(); it.IsNotNil(); it.Next()) {
+            if ((it.Keylen() == sizeof(int32_t)) && (it.ValLen() == PUBLISH_VAL_LEN)) {
+                ctx->find_count++;
+            } else {
+                LogError("Invalid keylen {} or vallen {}", it.Keylen(), it.ValLen());
+            }
+        }
+        int sleep_time = (rand() % 5000) + 5000;
+        usleep(sleep_time);
+    }
+
+    LogInfo("Iterated {} entries, {} iterations", ctx->find_count, NUM_WALK_ITERATIONS);
+
+    pthread_exit(NULL);
+    return NULL;
+}
+
+TEST_F(KvstoreTest, ParallelPublishIterateTest) {
+    pthread_t    pub_threads[NUM_PUBLISH_THREADS];
+    pthread_t    iter_threads[NUM_ITERATOR_THREADS];
+    concurrent_test_ctx_t pub_ctx[NUM_PUBLISH_THREADS];
+    concurrent_test_ctx_t iter_ctx[NUM_ITERATOR_THREADS];
+    usleep(1000);
+
+    // create a table
+    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("ptest", 2000);
+    ASSERT_TRUE(tbl != NULL) << "Failed to create table";
+
+    // setup thread context
+    for (int i = 0; i < NUM_PUBLISH_THREADS; i++) {
+        pub_ctx[i].tbl = client_shm_->Kvstore()->Table("ptest");
+        pub_ctx[i].create_count = 0;
+        pub_ctx[i].find_count = 0;
+        pub_ctx[i].my_id = i + 1;
+    }
+    for (int i = 0; i < NUM_ITERATOR_THREADS; i++) {
+        iter_ctx[i].tbl = client_shm_->Kvstore()->Table("ptest");
+        iter_ctx[i].create_count = 0;
+        iter_ctx[i].find_count = 0;
+        iter_ctx[i].my_id = i + 1 + NUM_PUBLISH_THREADS;
+    }
+
+    // start the threads in parallel
+    pthread_attr_t tattr;
+    pthread_attr_init (&tattr);
+    pthread_attr_setscope(&tattr, PTHREAD_SCOPE_SYSTEM);
+    for (int i = 0; i < NUM_PUBLISH_THREADS; i++) {
+        pthread_create(&pub_threads[i], &tattr, &runPublishThread, (void*)&pub_ctx[i]);
+    }
+    for (int i = 0; i < NUM_ITERATOR_THREADS; i++) {
+        pthread_create(&iter_threads[i], &tattr, &runIteratorThread, (void*)&iter_ctx[i]);
+    }
+
+    // wait for the tests to complete
+    for (int i = 0; i < NUM_PUBLISH_THREADS; i++) {
+        pthread_join(pub_threads[i], NULL);
+    }
+    for (int i = 0; i < NUM_ITERATOR_THREADS; i++) {
+        pthread_join(iter_threads[i], NULL);
     }
 }
 

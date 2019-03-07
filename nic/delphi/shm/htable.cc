@@ -419,7 +419,7 @@ error TableMgr::deleteMatchingEntry(int32_t *offset, const char *key, int16_t ke
         if ((entry->key_len == keylen) && (!memcmp(hkey, key, keylen))) {
             // remove from the linked list
             *offset = entry->next_entry;
-
+            entry->next_entry = 0;
             ht_->num_entries--;
 
             // decrement ref count
@@ -447,6 +447,9 @@ ht_entry_t * TableMgr::getNextEntry(int idx) {
             spin_lock(&bkt->rw_lock);
             if (bkt->ht_entry != 0) {
                 ht_entry_t *entry = (ht_entry_t *)PTR_FROM_OFFSET(shm_ptr_->GetBase(), bkt->ht_entry);
+                // increment ref count
+                ht_entry_trailer_t *trailer = TRAILER_FROM_HASH_ENTRY(entry);
+                atomic_increment(&trailer->refcnt);
                 spin_unlock(&bkt->rw_lock);
                 return entry;
             }
@@ -467,6 +470,9 @@ ht_entry_t * TableMgr::getNextEntry(int idx) {
             spin_lock(&bkt->rw_lock);
             if (bkt->ht_entry != 0) {
                 ht_entry_t *entry = (ht_entry_t *)PTR_FROM_OFFSET(shm_ptr_->GetBase(), bkt->ht_entry);
+                // increment ref count
+                ht_entry_trailer_t *trailer = TRAILER_FROM_HASH_ENTRY(entry);
+                atomic_increment(&trailer->refcnt);
                 spin_unlock(&bkt->rw_lock);
                 return entry;
             }
@@ -488,15 +494,32 @@ ht_entry_t * TableMgr::GetNext(ht_entry_t *entry) {
         return getNextEntry(0);
     }
 
-    // if the hash entry has a next element, return it
-    if (entry->next_entry != 0) {
-        return (ht_entry_t *)PTR_FROM_OFFSET(shm_ptr_->GetBase(), entry->next_entry);
-    }
-
     // compute hash on the key
     uint32_t hash = fnv_hash(KEY_PTR_FROM_HASH_ENTRY(entry), entry->key_len);
     // calculate the hash bucket index
     int32_t idx = (int32_t)(hash % ht_->num_buckets);
+
+    ht_bucket_t *bkt = &ht_->buckets[idx];
+    spin_lock(&bkt->rw_lock);
+
+    // if the hash entry has a next element, return it
+    if (entry->next_entry != 0) {
+        auto next_entry = (ht_entry_t *)PTR_FROM_OFFSET(shm_ptr_->GetBase(), entry->next_entry);
+
+        // increment ref count for next entry
+        ht_entry_trailer_t *trailer = TRAILER_FROM_HASH_ENTRY(next_entry);
+        atomic_increment(&trailer->refcnt);
+
+        // decrement ref count for old entry
+        Release(VAL_PTR_FROM_HASH_ENTRY(entry));
+        spin_unlock(&bkt->rw_lock);
+
+        return next_entry;
+    }
+
+    // decrement ref count
+    Release(VAL_PTR_FROM_HASH_ENTRY(entry));
+    spin_unlock(&bkt->rw_lock);
 
     // find the next entry in hash table
     return getNextEntry(++idx);
