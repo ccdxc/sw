@@ -194,7 +194,7 @@ func main() {
 
 	tmAgent := &TelemetryAgent{
 		ctx:      ctx,
-		nodeUUID: macAddr.String(),
+		nodeUUID: globals.Tmagent + macAddr.String(),
 	}
 
 	var delphiService = &service{
