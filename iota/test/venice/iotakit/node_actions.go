@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -235,4 +236,30 @@ func (act *ActionCtx) runCommandOnGivenNaples(np *Naples, cmd string) (string, e
 		return "", fmt.Errorf("command failed: %+v", cmdResp)
 	}
 	return cmdResp.Stdout, nil
+}
+
+// VeniceNodeLoggedInCtx creates logged in context by connecting to a specified venice node
+func (act *ActionCtx) VeniceNodeLoggedInCtx(vnc *VeniceNodeCollection) error {
+	nodeURL := fmt.Sprintf("%s:%s", vnc.nodes[0].iotaNode.IpAddress, globals.APIGwRESTPort)
+	_, err := act.model.tb.VeniceNodeLoggedInCtx(nodeURL)
+	if err != nil {
+		log.Errorf("error logging in to venice node (%s): %v", nodeURL, err)
+		return fmt.Errorf("error logging in to venice node (%s): %v", nodeURL, err)
+	}
+	return nil
+}
+
+// VeniceNodeGetCluster gets cluster obj by connecting to a specified venice node
+func (act *ActionCtx) VeniceNodeGetCluster(vnc *VeniceNodeCollection) error {
+	nodeURL := fmt.Sprintf("%s:%s", vnc.nodes[0].iotaNode.IpAddress, globals.APIGwRESTPort)
+	restcl, err := act.model.tb.VeniceNodeRestClient(nodeURL)
+	if err != nil {
+		return err
+	}
+	_, err = act.model.tb.GetClusterWithRestClient(restcl)
+	if err != nil {
+		log.Errorf("error getting cluster obj from node (%s): %v", nodeURL, err)
+		return fmt.Errorf("error getting cluster obj from node (%s): %v", nodeURL, err)
+	}
+	return nil
 }

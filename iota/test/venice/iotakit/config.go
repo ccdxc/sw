@@ -32,7 +32,11 @@ func (tb *TestBed) VeniceLoggedInCtx() (context.Context, error) {
 	if tb.veniceLoggedinCtx != nil {
 		return tb.veniceLoggedinCtx, nil
 	}
+	return tb.VeniceNodeLoggedInCtx(tb.GetVeniceURL()[0])
+}
 
+// VeniceNodeLoggedInCtx logs in to a specified node and returns loggedin context
+func (tb *TestBed) VeniceNodeLoggedInCtx(nodeURL string) (context.Context, error) {
 	// local user credentials
 	userCred := auth.PasswordCredential{
 		Username: "admin",
@@ -47,9 +51,9 @@ func (tb *TestBed) VeniceLoggedInCtx() (context.Context, error) {
 	}
 
 	// try to login
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), tb.GetVeniceURL()[0], &userCred)
+	ctx, err := authntestutils.NewLoggedInContext(context.Background(), nodeURL, &userCred)
 	if err != nil {
-		log.Errorf("Error logging into Venice URL %v. Err: %v", tb.GetVeniceURL()[0], err)
+		log.Errorf("Error logging into Venice URL %v. Err: %v", nodeURL, err)
 		return nil, err
 	}
 	tb.veniceLoggedinCtx = ctx
@@ -93,6 +97,17 @@ func (tb *TestBed) VeniceRestClient() ([]apiclient.Services, error) {
 	}
 
 	return restcls, nil
+}
+
+// VeniceNodeRestClient returns the REST client for venice node
+func (tb *TestBed) VeniceNodeRestClient(nodeURL string) (apiclient.Services, error) {
+	// connect to Venice
+	restcl, err := apiclient.NewRestAPIClient(nodeURL)
+	if err != nil {
+		log.Errorf("Error connecting to Venice %v. Err: %v", nodeURL, err)
+		return nil, err
+	}
+	return restcl, nil
 }
 
 // WaitForVeniceClusterUp wait for venice cluster to come up
@@ -406,6 +421,15 @@ func (tb *TestBed) GetCluster() (cl *cluster.Cluster, err error) {
 	}
 
 	return cl, err
+}
+
+// GetClusterWithRestClient gets the venice cluster object
+func (tb *TestBed) GetClusterWithRestClient(restcl apiclient.Services) (cl *cluster.Cluster, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	return restcl.ClusterV1().Cluster().Get(ctx, &api.ObjectMeta{Name: "iota-cluster"})
 }
 
 // GetVeniceNode gets venice node state from venice cluster
