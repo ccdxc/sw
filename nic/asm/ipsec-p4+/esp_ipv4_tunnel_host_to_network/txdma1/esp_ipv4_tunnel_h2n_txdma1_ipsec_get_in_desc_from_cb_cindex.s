@@ -30,7 +30,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex:
 
 esp_v4_tunnel_h2n_get_in_desc_from_cb_cindex_abort_txdma1:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_ABORT_TXDMA1_DUMMY_OFFSET, 1)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_TXDMA1_BAD_INDESC_FROM_CB, 1)
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     phvwri.e p.p4_intr_global_drop, 1
     nop

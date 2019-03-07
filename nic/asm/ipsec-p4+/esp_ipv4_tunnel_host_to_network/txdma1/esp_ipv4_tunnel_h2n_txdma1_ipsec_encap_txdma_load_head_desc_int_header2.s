@@ -28,15 +28,15 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header2:
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header2_illegal_dma_in_desc:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_IN_DESC_OFFSET, 1)
-    phvwri p.p4_intr_global_drop, 1
-    phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_TXDMA1_BAD_INDESC_FREE, 1)
+    phvwri p.txdma1_global_flags, 1
+    nop.e
     nop
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header2_illegal_dma_out_desc:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_OUT_DESC_OFFSET, 1)
-    phvwri p.p4_intr_global_drop, 1
-    phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
+    phvwri p.txdma1_global_flags, 1
+    nop.e
     nop
 

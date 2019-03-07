@@ -13,6 +13,8 @@
 
 #define tx_table_s4_t0_action ipsec_write_barco_req
 
+#define tx_table_s5_t0_action ipsec_release_resources
+
 #include "../../common-p4+/common_txdma.p4"
 #include "esp_ipv4_tunnel_h2n_headers.p4"
 #include "../ipsec_defines.h"
@@ -20,8 +22,10 @@
 
 header_type ipsec_txdma1_global_t {
     fields {
-        ipsec_cb_addr  : ADDRESS_WIDTH;
         in_desc_addr   : ADDRESS_WIDTH;
+        ipsec_cb_addr  : 40;
+        flags          : 8;
+        pad            : 16;
     }
 }
 
@@ -83,7 +87,14 @@ header_type ipsec_to_stage4_t {
     fields {
         barco_req_addr   : ADDRESS_WIDTH;
         barco_pindex : 16;
-        stage4_pad1     :  48;
+        sem_cindex   : 32;
+        stage4_pad1     :  16;
+    }
+}
+header_type ipsec_to_stage5_t {
+    fields {
+        in_desc_addr : ADDRESS_WIDTH;
+        out_desc_addr : ADDRESS_WIDTH;
     }
 }
 
@@ -118,6 +129,9 @@ metadata ipsec_to_stage3_t ipsec_to_stage3;
 
 @pragma pa_header_union ingress to_stage_4
 metadata ipsec_to_stage4_t ipsec_to_stage4;
+
+@pragma pa_header_union ingress to_stage_5
+metadata ipsec_to_stage5_t ipsec_to_stage5;
 
 @pragma pa_header_union ingress common_t0_s2s
 metadata ipsec_table0_s2s t0_s2s;
@@ -158,9 +172,22 @@ metadata dma_cmd_phv2mem_t dma_cmd_post_barco_ring;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
 
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t rnmdr;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t tnmdr;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t sem_cindex;
+
 
 @pragma scratch_metadata
 metadata ipsec_txdma1_global_t txdma1_global_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_to_stage4_t ipsec_to_stage4_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_to_stage5_t ipsec_to_stage5_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_to_stage1_t scratch_to_s1;
@@ -196,6 +223,8 @@ metadata h2n_stats_header_t ipsec_stats_scratch;
 #define IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT \
     modify_field(txdma1_global_scratch.ipsec_cb_addr, txdma1_global.ipsec_cb_addr); \
     modify_field(txdma1_global_scratch.in_desc_addr, txdma1_global.in_desc_addr); \
+    modify_field(txdma1_global_scratch.flags, txdma1_global.flags); \
+    modify_field(txdma1_global_scratch.pad, txdma1_global.pad); \
 
 #define IPSEC_TXDMA1_S2S0_SCRATCH_INIT \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
@@ -234,7 +263,16 @@ metadata h2n_stats_header_t ipsec_stats_scratch;
     modify_field(scratch_to_s4.barco_pindex, ipsec_to_stage4.barco_pindex); \
     modify_field(scratch_to_s4.stage4_pad1, ipsec_to_stage4.stage4_pad1);
 
-//stage 3 table 0
+//stage 5
+action ipsec_release_resources(sem_cindex)
+{
+    IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
+     modify_field(ipsec_to_stage5_scratch.in_desc_addr, ipsec_to_stage5.in_desc_addr);
+     modify_field(ipsec_to_stage5_scratch.out_desc_addr, ipsec_to_stage5.out_desc_addr);
+     modify_field(ipsec_to_stage4_scratch.sem_cindex, sem_cindex);
+}
+
+//stage 4 table 0
 action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
                              eval_last, host, total, pid,
                              rxdma_ring_pindex, rxdma_ring_cindex,
@@ -247,6 +285,7 @@ action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
                              barco_ring_base_addr_hi, barco_ring_base_addr, 
                              iv_salt, flags)
 {
+    IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
     IPSEC_CB_SCRATCH_WITH_PC
     // memwr to increment hw-cindex (cb_base + offset)
     IPSEC_TXDMA1_S2S0_SCRATCH_INIT
@@ -336,6 +375,7 @@ action ipsec_get_in_desc_from_cb_cindex(in_desc_addr)
 //stage 1
 action ipsec_stage1_dummy()
 {
+    IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
     IPSEC_TXDMA1_S2S0_SCRATCH_INIT
     IPSEC_TXDMA1_TO_STAGE1_INIT
 }

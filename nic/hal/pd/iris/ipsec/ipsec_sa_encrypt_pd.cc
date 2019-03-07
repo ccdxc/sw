@@ -4,6 +4,8 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/sdk/platform/capri/capri_common.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
@@ -635,6 +637,7 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     hal_ret_t                  ret;
     pd_ipsec_global_stats_get_args_t *args = pd_func_args->pd_ipsec_global_stats_get;
     ipsec_global_stats_cb_t stats;
+    uint32_t counter;
     uint64_t hwid =  get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
 
     if (args == NULL) {
@@ -645,8 +648,42 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
+    
+    hwid = CAPRI_SEM_IPSEC_RNMDR_ALLOC_CI_RAW_ADDR - 4;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    HAL_TRACE_DEBUG("RNMDPR PI {}", counter); 
+    stats.rnmdpr_pi_counters = counter;
+
+    hwid = CAPRI_SEM_IPSEC_RNMDR_ALLOC_CI_RAW_ADDR;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    HAL_TRACE_DEBUG("RNMDPR CI {}", counter);
+    stats.rnmdpr_ci_counters = counter;
+
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM0_PI_HBM_TABLE_OFFSET + 4;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    HAL_TRACE_DEBUG("Barco Encrypt Full Errors {}", ntohl(counter));
+    stats.gcm0_full_counters = ntohl(counter);
+
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM1_PI_HBM_TABLE_OFFSET + 4;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    HAL_TRACE_DEBUG("Barco Decrypt Full Errors {}", htonl(counter));
+    stats.gcm1_full_counters = ntohl(counter);
+     
     memcpy(args->stats_cb, &stats, sizeof(ipsec_global_stats_cb_t));
-    HAL_TRACE_DEBUG("txdma1 {} txdma2 {}", stats.decrypt_txdma1_enter_counters, stats.decrypt_txdma2_enter_counters);
+     
+    
     ret = HAL_RET_OK;
     return ret;
 }

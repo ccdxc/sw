@@ -34,7 +34,7 @@ esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore:
 
 esp_ipv4_tunnel_h2n_desc_ring_full:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_DESC_RING_OFFSET, 1)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_DESC_EXHAUST_OFFSET, 1)
     phvwri.e p.ipsec_to_stage4_flags, IPSEC_N2H_GLOBAL_FLAGS
     nop
 

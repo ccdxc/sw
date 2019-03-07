@@ -91,11 +91,11 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     i++;
 
     symbols[i].name = IPSEC_PAGE_ADDR_RX;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_PAGE_BIG_RX) + (4096 * 9216);
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_PAGE_BIG_RX) + (4096 * 9600);
     i++;
 
     symbols[i].name = IPSEC_PAGE_ADDR_TX;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_PAGE_BIG_TX)+ (4096 * 9216);
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_PAGE_BIG_TX)+ (4096 * 9600);
     i++;
 
     symbols[i].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;

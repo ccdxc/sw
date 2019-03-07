@@ -27,6 +27,8 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     add r1, d.pad_size, d.tailroom_offset
     addi r1, r1, ESP_FIXED_HDR_SIZE+2
     add r1, r1, d.out_page
+    phvwr p.ipsec_to_stage5_in_desc_addr, d.in_desc
+    phvwr p.ipsec_to_stage5_out_desc_addr, d.out_desc
     phvwr p.barco_req_auth_tag_addr, r1.dx
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req[33:6] 
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14
@@ -36,15 +38,15 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_bad_barco_in_desc:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_BAD_BARCO_IN_DESC, 1)
-    add r6, k.txdma1_global_ipsec_cb_addr, 63
-    memwr.b r6, 0xFF 
+    //add r6, k.txdma1_global_ipsec_cb_addr, 63
+    //memwr.b r6, 0xFF 
     phvwri p.p4_intr_global_drop, 1
     phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_bad_barco_out_desc:
-    add r6, k.txdma1_global_ipsec_cb_addr, 63
-    memwr.b r6, 0xFF 
+    //add r6, k.txdma1_global_ipsec_cb_addr, 63
+    //memwr.b r6, 0xFF 
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_BAD_BARCO_OUT_DESC, 1)
     phvwri p.p4_intr_global_drop, 1

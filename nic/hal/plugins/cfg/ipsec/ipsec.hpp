@@ -243,9 +243,14 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         encrypt_rxdma_enter_counters;
     uint64_t         encrypt_barco_bad_indesc_errors;
     uint64_t         encrypt_barco_bad_outdesc_errors;
-    uint64_t         encrypt_bad_indesc_free_errors;
-    uint64_t         encrypt_bad_outdesc_free_errors;
-    uint64_t         encrypt_pad[38];
+    uint64_t         encrypt_txdma2_bad_indesc_free_errors;
+    uint64_t         encrypt_txdma2_bad_outdesc_free_errors;
+    uint64_t         encrypt_txdma1_bad_indesc_free_errors;
+    uint64_t         encrypt_txdma1_bad_outdesc_free_errors;
+    uint64_t         encrypt_txdma1_sem_free_errors;
+    uint64_t         encrypt_txdma2_sem_free_errors;
+    uint64_t         encrypt_txdma1_barco_ring_full_errors;
+    uint64_t         encrypt_pad[34];
 
     uint64_t         decrypt_input_desc_errors;
     uint64_t         decrypt_output_desc_errors;
@@ -270,6 +275,10 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         decrypt_bad_outdesc_free_errors;
     uint64_t         decrypt_pad[43];
 
+    uint32_t         rnmdpr_pi_counters;
+    uint32_t         rnmdpr_ci_counters;
+    uint32_t         gcm0_full_counters;
+    uint32_t         gcm1_full_counters;
 } __PACK__ ipsec_global_stats_cb_t;
 
 // max. number of CBs supported  (TODO: we can take this from cfg file)

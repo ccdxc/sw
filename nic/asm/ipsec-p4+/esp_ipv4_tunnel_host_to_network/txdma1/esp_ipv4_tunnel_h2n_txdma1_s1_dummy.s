@@ -12,12 +12,17 @@ struct phv_ p;
        .param      esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2
        .align
 esp_ipv4_tunnel_h2n_txdma1_s1_dummy:
-    phvwri p.{app_header_table0_valid...app_header_table1_valid}, 3
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 5
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex[33:6]
-    phvwr  p.common_te0_phv_table_addr, k.ipsec_to_stage1_cb_ring_slot_addr
+    add r4, r0, k.ipsec_to_stage1_cb_ring_slot_addr
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex, r4, TABLE_SIZE_256_BITS) 
+    seq c1, k.txdma1_global_flags, 1
+    bcf [c1], esp_ipv4_tunnel_h2n_txdma1_do_not_launch_barco
+    nop
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
     addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2, r5, TABLE_SIZE_512_BITS) 
+    nop.e
+    nop
+
+esp_ipv4_tunnel_h2n_txdma1_do_not_launch_barco:
     nop.e
     nop
