@@ -272,12 +272,12 @@ var _ = Describe("auth tests", func() {
 				return err
 			}, 10, 1).Should(BeNil())
 			Expect(authPolicy.Spec.TokenExpiry).Should(Equal("2m"))
-			time.Sleep(1 * time.Second)
+			time.Sleep(6 * time.Second)
 			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
 		})
 		It("check expiry", func() {
 			var err error
-			time.Sleep(180 * time.Second)
+			time.Sleep(201 * time.Second)
 			_, err = ts.restSvc.AuthV1().User().Get(ts.loggedInCtx, &api.ObjectMeta{Name: ts.tu.User, Tenant: globals.DefaultTenant})
 			Expect(err).Should(HaveOccurred())
 		})
