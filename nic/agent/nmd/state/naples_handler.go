@@ -3,6 +3,7 @@
 package state
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -83,6 +84,14 @@ func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
 // UpdateNaplesConfig updates a local Naples Config object
 func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 	log.Infof("NAPLES Update: Old: %v  | New: %v ", n.config, cfg)
+
+	// Remove this once we have a way to pick up the real mac address as hostname when
+	// hostname is not passed as a parameter for mode update.
+	if cfg.Spec.Mode == cmd.SmartNICSpec_NETWORK.String() && len(cfg.Spec.Hostname) == 0 {
+		log.Errorf("Hostname cannot be empty. Cannot update NaplesConfig.")
+		return errors.New("hostname cannot be empty")
+	}
+
 	n.SetNaplesConfig(cfg.Spec)
 	if err := n.store.Write(&n.config); err != nil {
 		log.Errorf("Failed to persist naples config to bolt db. Err:  %v", err)

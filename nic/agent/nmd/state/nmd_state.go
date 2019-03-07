@@ -20,6 +20,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/httputils"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
@@ -116,6 +117,11 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 			PrimaryMAC:    macAddr,
 			Hostname:      nodeUUID,
 			NaplesProfile: "default",
+			IPConfig: &cluster.IPConfig{
+				IPAddress:  "",
+				DefaultGW:  "",
+				DNSServers: nil,
+			},
 		},
 	}
 	// List available NaplesProfiles

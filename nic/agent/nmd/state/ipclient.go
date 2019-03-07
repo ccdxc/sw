@@ -132,7 +132,7 @@ func clearDhcpLeaseFile(leaseFile string) error {
 }
 
 func killDhclient() error {
-	killDhclientCmdStr := "cat " + dhclientPidFile + " | xargs kill -9"
+	killDhclientCmdStr := "kill -9 $(pidof dhclient)"
 	return runCmd(killDhclientCmdStr)
 }
 
@@ -320,12 +320,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 	}
 
 	c.nmdState.config.Status.IPConfig.IPAddress = ipaddress
-
-	// For Static configuration case, we assume that the user knows what they are doing.
-	if c.isDynamic && !c.isAfterReboot() && !c.hasControllerChanged(controllers) {
-		log.Errorf("Cannot trigger update as controllers break security gurantees. Bailing from Naples Status Update.")
-		return nil
-	}
 
 	// TODO : Reenable these lines
 	// Disable any updates to Naples Admission once Naples has been admitted into a Venice Cluster.
@@ -634,8 +628,6 @@ func (c *IPClient) doOOB() error {
 	// Ensure the interface is up. Ignore errors here. It will fail downstream anyway.
 	intfcUp(c.iface)
 
-	c.nmdState.config.Status.NetworkMode = nmd.NetworkMode_OOB.String()
-
 	if c.nmdState.config.Spec.IPConfig.IPAddress != "" {
 		err := c.doStaticIPConfig()
 		if err != nil {
@@ -669,7 +661,6 @@ func (c *IPClient) doInband() error {
 
 		c.iface = "bond0." + fmt.Sprint(c.nmdState.config.Spec.MgmtVlan)
 	}
-	c.nmdState.config.Status.NetworkMode = nmd.NetworkMode_INBAND.String()
 
 	if c.nmdState.config.Spec.IPConfig.IPAddress != "" {
 		err := c.doStaticIPConfig()
@@ -751,8 +742,11 @@ func (c *IPClient) Stop() {
 	// Add a de-admission cycle here?
 	c.nmdState.config.Status.AdmissionPhase = ""
 	c.nmdState.config.Status.Controllers = []string{}
-	c.nmdState.config.Status.NetworkMode = ""
-	c.nmdState.config.Status.IPConfig = nil
+	c.nmdState.config.Status.IPConfig = &cluster.IPConfig{
+		IPAddress:  "",
+		DefaultGW:  "",
+		DNSServers: make([]string, 0),
+	}
 	// Bring the currently active management interface down.
 	intfcDown(c.iface)
 

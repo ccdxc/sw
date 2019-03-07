@@ -100,6 +100,11 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 
 	} else {
 		managementMode = nmd.MgmtMode_NETWORK
+		// TODO : Remove this check once we have means to automatically generated a
+		// hostname on Naples, if hostname is not explicitly passed for network managed mode.
+		if hostname == "" {
+			return errors.New("hostname parameter cannot be empty")
+		}
 	}
 
 	if managementNetwork == "inband" {

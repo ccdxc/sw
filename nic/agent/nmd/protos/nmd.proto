@@ -94,7 +94,7 @@ message NaplesStatus {
     string    AdmissionPhase                = 1 [(gogoproto.jsontag) = "phase,omitempty",
                                                  (venice.check) = "StrEnum(cluster.SmartNICStatus.Phase)"];
 
-    cluster.IPConfig IPConfig       	    = 2 [(gogoproto.jsontag) = "ip-config"];
+    cluster.IPConfig IPConfig       	    = 2 [(gogoproto.jsontag) = "ip-config,omitempty"];
 
     // Resolved Controllers/Venice IPs
     repeated string Controllers             = 3 [(gogoproto.jsontag) = "controllers,omitempty"];
@@ -104,11 +104,6 @@ message NaplesStatus {
     // Operational mode of the NIC
     string Mode                   	        = 5 [(gogoproto.jsontag) = "mode",
                                                  (venice.check) = "StrEnum(Naples.MgmtMode)"];
-
-    // Operational mode of the NIC
-    string NetworkMode                      = 6 [(gogoproto.jsontag) = "network-mode",
-                                                 (venice.check) = "StrEnum(Naples.NetworkMode)"];
-
 }
 
 // NaplesCmdExecute contains information on what command to execute
