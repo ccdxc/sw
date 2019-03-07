@@ -1,24 +1,26 @@
-package vos
+package vospkg
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	minioclient "github.com/minio/minio-go"
 	minio "github.com/minio/minio/cmd"
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/venice/utils/rpckit"
-
 	"github.com/pensando/sw/api/generated/objstore"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/watchstream"
+	"github.com/pensando/sw/venice/vos"
+	"github.com/pensando/sw/venice/vos/plugins"
 )
 
 const (
@@ -34,33 +36,101 @@ const (
 	metaContentType  = "content-type"
 )
 
-// backendClient is an interface representing the backend minio service.
-type backendClient interface {
-	BucketExists(bucketName string) (bool, error)
-	MakeBucket(bucketName string, location string) error
-	RemoveBucket(bucketName string) error
-
-	PutObject(bucketName, objectName string, reader io.Reader, objectSize int64, opts minioclient.PutObjectOptions) (n int64, err error)
-	RemoveObject(bucketName, objectName string) error
-	ListObjectsV2(bucketName, objectPrefix string, recursive bool, doneCh <-chan struct{}) <-chan minioclient.ObjectInfo
-	StatObject(bucketName, objectName string, opts minioclient.StatObjectOptions) (minioclient.ObjectInfo, error)
+type instance struct {
+	sync.RWMutex
+	ctx        context.Context
+	cancel     context.CancelFunc
+	wg         sync.WaitGroup
+	pluginsMap map[string]*pluginSet
+	watcherMap map[string]*storeWatcher
+	store      apiintf.Store
+	pfxWatcher watchstream.WatchedPrefixes
+	client     vos.BackendClient
 }
 
-func createBuckets(client backendClient) error {
+func (i *instance) Init(client vos.BackendClient) {
+	defer i.Unlock()
+	i.Lock()
+	i.client = client
+	i.pluginsMap = make(map[string]*pluginSet)
+	l := log.WithContext("sub-module", "watcher")
+	i.store = &storeImpl{client}
+	i.pfxWatcher = watchstream.NewWatchedPrefixes(l, i.store, watchstream.WatchEventQConfig{})
+	i.store = &storeImpl{client}
+	i.watcherMap = make(map[string]*storeWatcher)
+	i.ctx, i.cancel = context.WithCancel(context.Background())
+}
+
+func (i *instance) RegisterCb(bucket string, stage vos.OperStage, oper vos.ObjectOper, cb vos.CallBackFunc) {
+	v, ok := i.pluginsMap[bucket]
+	if !ok {
+		v = newPluginSet(bucket)
+		i.pluginsMap[bucket] = v
+	}
+	v.registerPlugin(stage, oper, cb)
+}
+
+func (i *instance) RunPlugins(ctx context.Context, bucket string, stage vos.OperStage, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) []error {
+	defer i.RUnlock()
+	i.RLock()
+	v, ok := i.pluginsMap[bucket]
+	if ok {
+		errs := v.RunPlugins(ctx, stage, oper, in, client)
+		return errs
+	}
+	return nil
+}
+
+func (i *instance) Close() {
+	i.cancel()
+	i.wg.Wait()
+}
+
+func (i *instance) createDefaultBuckets(client vos.BackendClient) error {
 	log.Infof("creating default buckets in minio")
+	defer i.Unlock()
+	i.Lock()
 	for _, n := range objstore.Buckets_name {
 		name := "default." + strings.ToLower(n)
-		ok, err := client.BucketExists(strings.ToLower(name))
-		if err != nil {
-			return errors.Wrap(err, "client error")
-		}
-		if !ok {
-			err = client.MakeBucket(strings.ToLower(name), defaultLocation)
-			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("MakeBucket operation[%s]", name))
-			}
+		if err := i.createBucket(name); err != nil {
+			return err
 		}
 	}
+	return nil
+}
+
+func (i *instance) createBucket(bucket string) error {
+	ok, err := i.client.BucketExists(strings.ToLower(bucket))
+	if err != nil {
+		return errors.Wrap(err, "client error")
+	}
+	if !ok {
+		err = i.client.MakeBucket(strings.ToLower(bucket), defaultLocation)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("MakeBucket operation[%s]", bucket))
+		}
+		if _, ok := i.watcherMap[bucket]; !ok {
+			watcher := &storeWatcher{bucket: bucket, client: i.client, watchPrefixes: i.pfxWatcher}
+			i.watcherMap[bucket] = watcher
+			i.wg.Add(1)
+			go watcher.Watch(i.ctx, func() {
+				i.Lock()
+				bucket := bucket
+				delete(i.watcherMap, bucket)
+				i.Unlock()
+				i.wg.Done()
+			})
+		}
+	}
+	return nil
+}
+
+func (i *instance) Watch(ctx context.Context, path, peer string, handleFn apiintf.EventHandlerFn) error {
+	wq := i.pfxWatcher.Add(path, peer)
+	cleanupFn := func() {
+		i.pfxWatcher.Del(path, peer)
+	}
+	wq.Dequeue(ctx, 0, handleFn, cleanupFn)
 	return nil
 }
 
@@ -76,10 +146,12 @@ func New(ctx context.Context, args []string) error {
 	go minio.Main(args)
 
 	time.Sleep(2 * time.Second)
+	inst := &instance{}
+
 	url := "localhost:" + globals.VosMinioPort
 	log.Infof("connecting to minio at [%v]", url)
 
-	client, err := minioclient.New(url, minioKey, minioSecret, true)
+	mclient, err := minioclient.New(url, minioKey, minioSecret, true)
 	if err != nil {
 		log.Errorf("Failed to create client (%s)", err)
 		return errors.Wrap(err, "Failed to create Client")
@@ -89,6 +161,16 @@ func New(ctx context.Context, args []string) error {
 		log.Errorf("failed to get tls provider (%s)", err)
 		return errors.Wrap(err, "failed GetDefaultTLSProvider()")
 	}
+	defTr := http.DefaultTransport.(*http.Transport)
+	tlsClientConfig, err := tlsp.GetClientTLSConfig(globals.Vos)
+	if err != nil {
+		log.Errorf("failed to get client tls config (%s)", err)
+		return errors.Wrap(err, "client tls config")
+	}
+	defTr.TLSClientConfig = tlsClientConfig
+	mclient.SetCustomTransport(defTr)
+	client := &storeImpl{BaseBackendClient: mclient}
+
 	tlsc, err := tlsp.GetServerTLSConfig(globals.Vos)
 	if err != nil {
 		log.Errorf("failed to get tls config (%s)", err)
@@ -96,24 +178,24 @@ func New(ctx context.Context, args []string) error {
 	}
 	tlsc.ServerName = globals.Vos
 
-	defTr := http.DefaultTransport.(*http.Transport)
-	defTr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	client.SetCustomTransport(defTr)
+	inst.Init(client)
 
-	grpcBackend, err := newGrpcServer(client)
+	grpcBackend, err := newGrpcServer(inst, client)
 	if err != nil {
 		return errors.Wrap(err, "failed to start grpc listener")
 	}
 
-	httpBackend, err := newHTTPHandler(client)
+	httpBackend, err := newHTTPHandler(inst, client)
 	if err != nil {
 		return errors.Wrap(err, "failed to start http listener")
 	}
 
-	err = createBuckets(client)
+	err = inst.createDefaultBuckets(client)
 	if err != nil {
 		return errors.Wrap(err, "create buckets")
 	}
+	// Register all plugins
+	plugins.RegisterPlugins(inst)
 	grpcBackend.start(ctx)
 	httpBackend.start(ctx, globals.VosHTTPPort, tlsc)
 	log.Infof("Initialization complete")

@@ -1645,7 +1645,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c9bcb58858f4ab897f314d41c0360710886d50101e095f3e1354879710e1349e"
+  digest = "1:0cace5723d345bb46fb3bfe2790626e58a57e62ad919a86d491558b6963da9c5"
   name = "github.com/pensando/grpc-gateway"
   packages = [
     "protoc-gen-grpc-gateway",
@@ -1662,7 +1662,7 @@
     "utilities",
   ]
   pruneopts = "T"
-  revision = "f5e8ff0c2120a05a6139af73c6672d966c7c36f7"
+  revision = "bd216cc70751025af3f7d22c9151eb8079b1859a"
 
 [[projects]]
   digest = "1:0332ddbee3ad55b3abb8e2d45bd17b89416675b63f566cc4743681b651b7420c"

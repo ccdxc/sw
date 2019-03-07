@@ -147,6 +147,12 @@ var typesMapObjstore = map[string]*api.Struct{
 			"Digest": api.Field{Name: "Digest", CLITag: api.CLIInfo{ID: "digest", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "digest", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
+	"objstore.StreamChunk": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(StreamChunk{}) },
+		Fields: map[string]api.Field{
+			"Content": api.Field{Name: "Content", CLITag: api.CLIInfo{ID: "Content", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+		},
+	},
 }
 
 var keyMapObjstore = map[string][]api.PathsMap{}

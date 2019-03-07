@@ -1,4 +1,4 @@
-package cache
+package watchstream
 
 import (
 	"container/list"
@@ -14,17 +14,18 @@ import (
 
 	"github.com/tchap/go-patricia/patricia"
 
-	"github.com/pensando/sw/api/utils"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/ctxutils"
-	hdr "github.com/pensando/sw/venice/utils/histogram"
+	"github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/safelist"
 )
 
+// Default timers
 var (
 	defSweepInterval     = (3 * time.Second)
 	defRetentionDuration = (30 * time.Second)
@@ -32,8 +33,6 @@ var (
 	defEvictInterval     = (30 * time.Second)
 	defPurgeInterval     = (10 * time.Second)
 )
-
-type eventHandlerFn func(evType kvstore.WatchEventType, item, prev runtime.Object)
 
 // WatchEventQConfig specifies the behavior of the event queue
 type WatchEventQConfig struct {
@@ -57,7 +56,7 @@ type WatchEventQConfig struct {
 // WatchEventQ is a interface for a Watch Q which is used to mux events to watchers.
 type WatchEventQ interface {
 	Enqueue(evType kvstore.WatchEventType, obj, prev runtime.Object) error
-	Dequeue(ctx context.Context, fromver uint64, cb eventHandlerFn, cleanupfn func())
+	Dequeue(ctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupfn func())
 	// Stop signals a watcher exiting. Returns true when the last
 	//  watcher has returned
 	Stop() bool
@@ -120,7 +119,7 @@ type watchEventQStats struct {
 
 // watchEventQ is an implementation of the WatchEventQ interface
 type watchEventQ struct {
-	//TBD Pending Heap
+	// TBD Pending Heap
 
 	// Mutex protects all mutable unsafe members that dont have a more granular lock.
 	//  currently only refCount
@@ -128,7 +127,7 @@ type watchEventQ struct {
 	// path is the KV path pertaining to the eventQueue
 	path string
 	// Store for the cache
-	store Store
+	store apiintf.Store
 	// eventList is the queue of events
 	eventList *safelist.SafeList
 	// watcherList is the list of watchers currently active
@@ -161,7 +160,7 @@ type watchedPrefixes struct {
 	sync.RWMutex
 	trie        *patricia.Trie // Entries of type watchEventQ
 	log         log.Logger
-	store       Store
+	store       apiintf.Store
 	watchConfig WatchEventQConfig
 }
 
@@ -170,12 +169,29 @@ func (w *watchedPrefixes) init() {
 }
 
 // NewWatchedPrefixes returns an implementation of WatchedPrefixes
-func NewWatchedPrefixes(logger log.Logger, store Store, config WatchEventQConfig) WatchedPrefixes {
+func NewWatchedPrefixes(logger log.Logger, store apiintf.Store, config WatchEventQConfig) WatchedPrefixes {
+	wconfig := config
+	if wconfig.EvictInterval == 0 {
+		wconfig.EvictInterval = defEvictInterval
+	}
+	if wconfig.PurgeInterval == 0 {
+		wconfig.PurgeInterval = defPurgeInterval
+	}
+	if wconfig.RetentionDepthMax == 0 {
+		wconfig.RetentionDepthMax = defRetentionDepthMax
+	}
+	if wconfig.RetentionDuration == 0 {
+		wconfig.RetentionDuration = defRetentionDuration
+	}
+	if wconfig.SweepInterval == 0 {
+		wconfig.SweepInterval = defSweepInterval
+	}
 	ret := &watchedPrefixes{
 		log:         logger,
 		store:       store,
-		watchConfig: config,
+		watchConfig: wconfig,
 	}
+
 	ret.init()
 	return ret
 }
@@ -284,14 +300,14 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 	w.eventList.Insert(i)
 	w.notify()
 	w.stats.enqueues.Add(1)
-	hdr.Record("watch.Enqueue", time.Since(start))
+	histogram.Record("watch.Enqueue", time.Since(start))
 	return nil
 }
 
 // Dequeue dequeues elements from the event queue and calls the callback fn
 // for each element. Dequeue() runs as a go routine and does callbacks in a tight loop
 // till the end of the list is encountered.
-func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandlerFn, cleanupFn func()) {
+func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupFn func()) {
 	tracker := watcher{}
 	tracker.ctx, tracker.cancel = context.WithCancel(ctx)
 	w.wg.Add(1)
@@ -315,7 +331,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 			return
 		}
 
-		hdr.Record("watch.DequeueLatency", time.Since(obj.enqts))
+		histogram.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
 			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "peer", peer)
 			cb(obj.evType, obj.item, obj.prev)

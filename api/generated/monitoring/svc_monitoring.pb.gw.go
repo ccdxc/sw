@@ -8050,6 +8050,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8072,7 +8073,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchAlert_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchAlert_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8095,6 +8105,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8117,7 +8128,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchAlert_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchAlert_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8140,6 +8160,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8162,7 +8183,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchAlertDestination_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchAlertDestination_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8185,6 +8215,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8207,7 +8238,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchAlertDestination_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchAlertDestination_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8230,6 +8270,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8252,7 +8293,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchAlertPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchAlertPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8275,6 +8325,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8297,7 +8348,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchAlertPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchAlertPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8320,6 +8380,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8342,7 +8403,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchEventPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchEventPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8365,6 +8435,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8387,7 +8458,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchEventPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchEventPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8410,6 +8490,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8432,7 +8513,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchFlowExportPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchFlowExportPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8455,6 +8545,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8477,7 +8568,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchFlowExportPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchFlowExportPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8500,6 +8600,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8522,7 +8623,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchFwlogPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchFwlogPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8545,6 +8655,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8567,7 +8678,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchFwlogPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchFwlogPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8590,6 +8710,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8612,7 +8733,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchMirrorSession_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchMirrorSession_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8635,6 +8765,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8657,7 +8788,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchMirrorSession_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchMirrorSession_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8680,6 +8820,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8702,7 +8843,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchStatsPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchStatsPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8725,6 +8875,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8747,7 +8898,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchStatsPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchStatsPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -8770,6 +8930,7 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -8792,7 +8953,16 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_MonitoringV1_AutoWatchTechSupportRequest_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_MonitoringV1_AutoWatchTechSupportRequest_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})

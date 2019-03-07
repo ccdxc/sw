@@ -174,6 +174,27 @@ func (m *ObjectStatus) Defaults(ver string) bool {
 	return false
 }
 
+// Clone clones the object into into or creates one of into is nil
+func (m *StreamChunk) Clone(into interface{}) (interface{}, error) {
+	var out *StreamChunk
+	var ok bool
+	if into == nil {
+		out = &StreamChunk{}
+	} else {
+		out, ok = into.(*StreamChunk)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *StreamChunk) Defaults(ver string) bool {
+	return false
+}
+
 // Validators and Requirements
 
 func (m *Bucket) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -266,6 +287,15 @@ func (m *ObjectStatus) References(tenant string, path string, resp map[string]ap
 }
 
 func (m *ObjectStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *StreamChunk) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *StreamChunk) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }

@@ -49,6 +49,10 @@ message ObjectSpec {
     string ContentType = 1 [(gogoproto.jsontag) = "content-type,omitempty"];
 }
 
+message StreamChunk {
+    bytes Content = 1;
+}
+
 // Object is placed in a bucket determined by the Tenant and the Namespace in the ObjectMeta.
 message Object {
     api.TypeMeta T      = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];

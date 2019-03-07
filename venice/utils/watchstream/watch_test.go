@@ -1,15 +1,16 @@
-package cache
+package watchstream
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	cachemocks "github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/api/api_test"
+	"github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
-	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils"
 )
 
 func TestWatchedPrefixes(t *testing.T) {
@@ -98,7 +99,7 @@ func TestWatchEventQ(t *testing.T) {
 	}
 	wp := watchedPrefixes{
 		log:         log.GetNewLogger(log.GetDefaultConfig("cacheWatchTest")),
-		store:       &cachemocks.FakeStore{},
+		store:       &mocks.FakeStore{},
 		watchConfig: wconfig,
 	}
 	wp.init()
@@ -128,15 +129,15 @@ func TestWatchEventQ(t *testing.T) {
 		t.Errorf("expecting number of active watchers to be 0 found %d", q.watcherList.Len())
 	}
 	t.Logf(" --> Enqueue without any active Watchers")
-	b1 := testObj{}
+	b1 := apitest.TestObj{}
 	b1.ResourceVersion = "111"
-	b2 := testObj{}
+	b2 := apitest.TestObj{}
 	b2.ResourceVersion = "112"
-	b3 := testObj{}
+	b3 := apitest.TestObj{}
 	b3.ResourceVersion = "113"
-	b4 := testObj{}
+	b4 := apitest.TestObj{}
 	b4.ResourceVersion = "114"
-	b5 := testObj{}
+	b5 := apitest.TestObj{}
 	b5.ResourceVersion = "115"
 	q.Enqueue(kvstore.Created, &b1, nil)
 	if q.eventList.Len() != 1 || q.watcherList.Len() != 0 {
@@ -148,12 +149,12 @@ func TestWatchEventQ(t *testing.T) {
 	go q.Dequeue(nctx, 0, cbfunc("q2-0"), nil)
 	time.Sleep(100 * time.Millisecond)
 	q.Enqueue(kvstore.Created, &b2, nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return rcvdEvents == 1, nil
 	}, "expecting 1 events", "10ms", "10000ms")
 
 	cancel()
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == 0, nil
 	}, "expecting watcher to exit", "10ms", "100ms")
 
@@ -166,10 +167,10 @@ func TestWatchEventQ(t *testing.T) {
 	rcvdEvents = 0
 	watchersCount := q.watcherList.Len()
 	go q.Dequeue(nctx, 109, cbfunc("q3-109"), nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount, nil
 	}, "expecting new watcher", "10ms", "100ms")
-	AssertConsistently(t, func() (bool, interface{}) {
+	testutils.AssertConsistently(t, func() (bool, interface{}) {
 		t.Logf("erorrs is %d", rcvdErrors)
 		return rcvdErrors == 1, nil
 	}, "expecting 1 error", "10ms", "100ms")
@@ -177,10 +178,10 @@ func TestWatchEventQ(t *testing.T) {
 	rcvdEvents = 0
 	watchersCount = q.watcherList.Len()
 	go q.Dequeue(nctx, 0, cbfunc("q4-0"), nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("events is %d", rcvdEvents)
 		return rcvdEvents == 0, nil
 	}, "expecting 0 event", "10ms", "100ms")
@@ -188,10 +189,10 @@ func TestWatchEventQ(t *testing.T) {
 	rcvdEvents = 0
 	watchersCount = q.watcherList.Len()
 	go q.Dequeue(nctx, 112, cbfunc("q5-112"), nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("events is %d", rcvdEvents)
 		return rcvdEvents == 2, nil
 	}, "expecting 1 events", "10ms", "100ms")
@@ -199,10 +200,10 @@ func TestWatchEventQ(t *testing.T) {
 	rcvdEvents = 0
 	watchersCount = q.watcherList.Len()
 	go q.Dequeue(nctx, 113, cbfunc("q6-113"), nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
-	AssertConsistently(t, func() (bool, interface{}) {
+	testutils.AssertConsistently(t, func() (bool, interface{}) {
 		t.Logf("events is%d", rcvdEvents)
 		return rcvdEvents == 1, nil
 	}, "expecting 1 events", "10ms", "100ms")
@@ -214,7 +215,7 @@ func TestWatchEventQ(t *testing.T) {
 	rcvdEvents = 0
 	q.Enqueue(kvstore.Created, &b4, nil)
 	q.Enqueue(kvstore.Created, &b5, nil)
-	AssertConsistently(t, func() (bool, interface{}) {
+	testutils.AssertConsistently(t, func() (bool, interface{}) {
 		t.Logf("events is %d", rcvdEvents)
 		return rcvdEvents == 6, nil
 	}, "expecting 6 events", "10ms", "100ms")
@@ -248,7 +249,7 @@ func TestWatchEventQ(t *testing.T) {
 	rcvdEvents = 0
 	watchersCount = q.watcherList.Len()
 	go q.Dequeue(nctx, 116, slowcb("q1"), nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return q.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
 	b1.ResourceVersion = "116"
@@ -263,7 +264,7 @@ func TestWatchEventQ(t *testing.T) {
 	if q.watcherList.Len() != 4 {
 		t.Errorf("incorrect number of watchers")
 	}
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("events is %d slowRcvd is %d", rcvdEvents, slowrcvd)
 		return rcvdEvents == 12 && slowrcvd == 3, nil
 	}, "expecting 12 and slowrcvd 3 events", "10ms", "100ms")
@@ -278,7 +279,7 @@ func TestWatchEventQ(t *testing.T) {
 	t.Logf("Stop the Queue")
 	q.Stop()
 	cancel()
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("Lengths are  %d/%d", q.watcherList.Len(), q.eventList.Len())
 		return q.watcherList.Len() == 0 && q.eventList.Len() == 0, nil
 	}, "expecting 1 events", "10ms", "10s")
@@ -292,13 +293,13 @@ func TestWatchEventQ(t *testing.T) {
 	slowBlockCount = 2
 	watchersCount = q3.watcherList.Len()
 	go q3.Dequeue(nctx, 0, slowcb("q3-0"), nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return q3.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
 	b5.ResourceVersion = "120"
 	q3.Enqueue(kvstore.Created, &b4, nil)
 	q3.Enqueue(kvstore.Created, &b5, nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("slow rcvd are  %d", slowrcvd)
 		return slowrcvd == 2, nil
 	}, "expecting to hit 2 slowrcvd", "10ms", "1000ms")
@@ -306,7 +307,7 @@ func TestWatchEventQ(t *testing.T) {
 	if q3.stats.clientEvictions.Value() != int64(1) {
 		t.Errorf("expecting 1 eviction")
 	}
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return q3.watcherList.Len() == 0, nil
 	}, "expecting watcher to exit", "10ms", "1000ms")
 	q3.Stop()
@@ -330,7 +331,7 @@ func TestWatchEventQ(t *testing.T) {
 		cleanupCalled++
 	}
 	go q4.Dequeue(nctx, 0, cbfunc("slow-q4-0"), cleanfunc)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		return q4.watcherList.Len() == 1, nil
 	}, "expecting to hit 1 watcher", "10ms", "1000ms")
 	b3.ResourceVersion = "121"
@@ -339,7 +340,7 @@ func TestWatchEventQ(t *testing.T) {
 	q4.Enqueue(kvstore.Created, &b3, nil)
 	q4.Enqueue(kvstore.Created, &b4, nil)
 	q4.Enqueue(kvstore.Created, &b5, nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("dequeues are %d/%d", dequeues, q4.stats.dequeues.Value())
 		return (q4.stats.dequeues.Value() - dequeues) == 3, nil
 	}, "expecting to hit 3 dequeuesd", "10ms", "1000ms")
@@ -363,7 +364,7 @@ func TestWatchEventQ(t *testing.T) {
 	q4.Enqueue(kvstore.Created, &b3, nil)
 	q4.Enqueue(kvstore.Created, &b4, nil)
 	q4.Enqueue(kvstore.Created, &b5, nil)
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("dequeues are %d/%d", dequeues, q4.stats.dequeues.Value())
 		return (q4.stats.dequeues.Value() - dequeues) == 3, nil
 	}, "expecting to hit 3 dequeuesd", "10ms", "1000ms")
@@ -375,7 +376,7 @@ func TestWatchEventQ(t *testing.T) {
 		t.Errorf("expecting 2 depthouts got %d", q4.stats.depthEvictions.Value())
 	}
 	cancel()
-	AssertEventually(t, func() (bool, interface{}) {
+	testutils.AssertEventually(t, func() (bool, interface{}) {
 
 		return cleanupCalled == 1, nil
 	}, "expecting to hit 3 dequeuesd", "10ms", "1000ms")

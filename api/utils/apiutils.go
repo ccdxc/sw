@@ -22,6 +22,7 @@ const (
 	CtxKeyAPIGwHTTPWriter     = "ApiGwHttpWriter"
 	CtxKeyAPIGwWebSocketWatch = "ApiGwWebSocketWatch"
 	CtxKeyAPIGwWebSocketConn  = "ApiGwWebSocketConn"
+	CtxKeyAPIGwBinStreamReq   = "CtxKeyAPIGwBinStreamReq"
 	CtxKeyAPISrvInitRestore   = "InitRestorePath"
 )
 

@@ -32,6 +32,8 @@ type ServiceObjstoreV1Client interface {
 
 	AutoWatchBucket(ctx context.Context, in *api.ListWatchOptions) (ObjstoreV1_AutoWatchBucketClient, error)
 	AutoWatchObject(ctx context.Context, in *api.ListWatchOptions) (ObjstoreV1_AutoWatchObjectClient, error)
+
+	DownloadFile(ctx context.Context, in *Object) (ObjstoreV1_DownloadFileClient, error)
 }
 
 // ServiceObjstoreV1Server is the server interface for the service.
@@ -51,4 +53,6 @@ type ServiceObjstoreV1Server interface {
 
 	AutoWatchBucket(in *api.ListWatchOptions, stream ObjstoreV1_AutoWatchBucketServer) error
 	AutoWatchObject(in *api.ListWatchOptions, stream ObjstoreV1_AutoWatchObjectServer) error
+
+	DownloadFile(*Object, ObjstoreV1_DownloadFileServer) error
 }

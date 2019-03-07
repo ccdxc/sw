@@ -3382,6 +3382,7 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -3404,7 +3405,16 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_AuthV1_AutoWatchAuthenticationPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_AuthV1_AutoWatchAuthenticationPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -3427,6 +3437,7 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -3449,7 +3460,16 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_AuthV1_AutoWatchRole_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_AuthV1_AutoWatchRole_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -3472,6 +3492,7 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -3494,7 +3515,16 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_AuthV1_AutoWatchRole_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_AuthV1_AutoWatchRole_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -3517,6 +3547,7 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -3539,7 +3570,16 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_AuthV1_AutoWatchRoleBinding_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_AuthV1_AutoWatchRoleBinding_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -3562,6 +3602,7 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -3584,7 +3625,16 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_AuthV1_AutoWatchRoleBinding_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_AuthV1_AutoWatchRoleBinding_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -3607,6 +3657,7 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -3629,7 +3680,16 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_AuthV1_AutoWatchUser_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_AuthV1_AutoWatchUser_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -3652,6 +3712,7 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -3674,7 +3735,16 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_AuthV1_AutoWatchUser_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_AuthV1_AutoWatchUser_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})

@@ -601,6 +601,7 @@ func (s *sobjstoreObjstoreBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 		"objstore.ObjectSpec":   apisrvpkg.NewMessage("objstore.ObjectSpec"),
 		"objstore.ObjectStatus": apisrvpkg.NewMessage("objstore.ObjectStatus"),
+		"objstore.StreamChunk":  apisrvpkg.NewMessage("objstore.StreamChunk"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

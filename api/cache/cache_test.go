@@ -13,11 +13,13 @@ import (
 	cachemocks "github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
-	memkv "github.com/pensando/sw/venice/utils/kvstore/memkv"
+	"github.com/pensando/sw/venice/utils/kvstore/memkv"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/watchstream"
+	"github.com/pensando/sw/venice/utils/watchstream/mocks"
 )
 
 type testObj struct {
@@ -81,83 +83,6 @@ func (t *testObjList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
-type fakeWatchPrefixes struct {
-	sync.Mutex
-	qmap                     map[string]*fakeWatchEventQ
-	adds, dels, Gets, getexs uint64
-	addfn                    func(path string) WatchEventQ
-	delfn                    func(path string) WatchEventQ
-	Getfn                    func(path string) []WatchEventQ
-	getexfn                  func(path string) WatchEventQ
-}
-
-func (f *fakeWatchPrefixes) Add(path, peer string) WatchEventQ {
-	defer f.Unlock()
-	f.Lock()
-	f.adds++
-	if f.addfn != nil {
-		return f.addfn(path)
-	}
-	return nil
-}
-
-func (f *fakeWatchPrefixes) Del(path, peer string) WatchEventQ {
-	defer f.Unlock()
-	f.Lock()
-	f.dels++
-	if f.delfn != nil {
-		return f.delfn(path)
-	}
-	return nil
-}
-
-func (f *fakeWatchPrefixes) Get(path string) []WatchEventQ {
-	defer f.Unlock()
-	f.Lock()
-	f.Gets++
-	if f.Getfn != nil {
-		return f.Getfn(path)
-	}
-	return nil
-}
-
-func (f *fakeWatchPrefixes) GetExact(path string) WatchEventQ {
-	defer f.Unlock()
-	f.Lock()
-	f.getexs++
-	if f.getexfn != nil {
-		return f.getexfn(path)
-	}
-	return nil
-}
-
-type fakeWatchEventQ struct {
-	sync.Mutex
-	enqueues, dequeues, stops uint64
-	dqCh                      chan error
-}
-
-func (f *fakeWatchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.Object) error {
-	defer f.Unlock()
-	f.Lock()
-	f.enqueues++
-	return nil
-}
-
-func (f *fakeWatchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandlerFn, cleanupfn func()) {
-	defer f.Unlock()
-	f.Lock()
-	close(f.dqCh)
-	f.dequeues++
-}
-
-func (f *fakeWatchEventQ) Stop() bool {
-	defer f.Unlock()
-	f.Lock()
-	f.stops++
-	return false
-}
-
 func TestCreateCache(t *testing.T) {
 	cluster := []string{
 		"abc",
@@ -203,7 +128,7 @@ func TestCacheOper(t *testing.T) {
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
-		queues: &fakeWatchPrefixes{},
+		queues: &mocks.FakeWatchPrefixes{},
 		logger: log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
 		active: true,
 	}
@@ -339,7 +264,7 @@ func TestCacheGet(t *testing.T) {
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
-		queues: &fakeWatchPrefixes{},
+		queues: &mocks.FakeWatchPrefixes{},
 		logger: log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
 		active: true,
 	}
@@ -385,7 +310,7 @@ func TestCacheList(t *testing.T) {
 	c := cache{
 		store:     str,
 		pool:      &connPool{},
-		queues:    &fakeWatchPrefixes{},
+		queues:    &mocks.FakeWatchPrefixes{},
 		logger:    log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
 		active:    true,
 		versioner: runtime.NewObjectVersioner(),
@@ -614,7 +539,7 @@ func TestCacheWatch(t *testing.T) {
 		t.Fatalf("unable to create memkv")
 	}
 	str := &cachemocks.FakeStore{}
-	fakeqs := &fakeWatchPrefixes{}
+	fakeqs := &mocks.FakeWatchPrefixes{}
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
@@ -626,19 +551,19 @@ func TestCacheWatch(t *testing.T) {
 	key := "/testkey"
 	ctx := context.TODO()
 
-	fakeq := fakeWatchEventQ{
-		dqCh: make(chan error),
+	fakeq := mocks.FakeWatchEventQ{
+		DqCh: make(chan error),
 	}
-	addfn := func(path string) WatchEventQ {
+	addfn := func(path string) watchstream.WatchEventQ {
 		return &fakeq
 	}
-	fakeqs.addfn = addfn
+	fakeqs.Addfn = addfn
 
 	c.Watch(ctx, key, "0")
-	<-fakeq.dqCh
+	<-fakeq.DqCh
 	fakeqs.Lock()
-	if fakeqs.adds != 1 || fakeq.dequeues != 1 {
-		t.Errorf("wrong counts %d/%d", fakeqs.adds, fakeq.dequeues)
+	if fakeqs.Adds != 1 || fakeq.Dequeues != 1 {
+		t.Errorf("wrong counts %d/%d", fakeqs.Adds, fakeq.Dequeues)
 	}
 	fakeqs.Unlock()
 	c.Close()
@@ -647,7 +572,7 @@ func TestCacheWatch(t *testing.T) {
 func TestPrefixWatcher(t *testing.T) {
 	kstr := &cachemocks.FakeKvStore{}
 	str := &cachemocks.FakeStore{}
-	fakeqs := &fakeWatchPrefixes{}
+	fakeqs := &mocks.FakeWatchPrefixes{}
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
@@ -727,7 +652,7 @@ func TestPrefixWatcher(t *testing.T) {
 func TestCacheDelayedDelete(t *testing.T) {
 	kstr := &cachemocks.FakeKvStore{}
 	str := NewStore()
-	fakeqs := &fakeWatchPrefixes{}
+	fakeqs := &mocks.FakeWatchPrefixes{}
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
@@ -741,16 +666,16 @@ func TestCacheDelayedDelete(t *testing.T) {
 	b1.ResourceVersion = "10"
 	b1.Name = "book1"
 	key := "/test/book1"
-	fakeq := fakeWatchEventQ{
-		dqCh: make(chan error),
+	fakeq := mocks.FakeWatchEventQ{
+		DqCh: make(chan error),
 	}
-	addfn := func(path string) WatchEventQ {
+	addfn := func(path string) watchstream.WatchEventQ {
 		return &fakeq
 	}
-	fakeqs.addfn = addfn
+	fakeqs.Addfn = addfn
 
-	getfn := func(path string) []WatchEventQ {
-		return []WatchEventQ{&fakeq}
+	getfn := func(path string) []watchstream.WatchEventQ {
+		return []watchstream.WatchEventQ{&fakeq}
 	}
 	fakeqs.Getfn = getfn
 	_, err := c.Watch(ctx, "/test/", "0")
@@ -763,7 +688,7 @@ func TestCacheDelayedDelete(t *testing.T) {
 		t.Errorf("expecting to succeed")
 	}
 	AssertEventually(t, func() (bool, interface{}) {
-		return fakeq.enqueues == 1, nil
+		return fakeq.Enqueues == 1, nil
 	}, "did not receive create watch event")
 
 	err = c.Delete(ctx, key, nil)
@@ -771,13 +696,13 @@ func TestCacheDelayedDelete(t *testing.T) {
 		t.Errorf("expecting to succeed")
 	}
 	AssertEventually(t, func() (bool, interface{}) {
-		return fakeq.enqueues == 2, nil
+		return fakeq.Enqueues == 2, nil
 	}, "did not receive delete watch event")
 
 	// purge delete Q and ensure there is no new events raised.
 	str.PurgeDeleted(0)
 	AssertConsistently(t, func() (bool, interface{}) {
-		return fakeq.enqueues == 2, nil
+		return fakeq.Enqueues == 2, nil
 	}, "received new watch event", "10ms", "200ms")
 	cancel()
 }
@@ -791,7 +716,7 @@ func TestBackendWatcher(t *testing.T) {
 		t.Fatalf("unable to create memkv")
 	}
 	str := &cachemocks.FakeStore{}
-	fakeqs := &fakeWatchPrefixes{}
+	fakeqs := &mocks.FakeWatchPrefixes{}
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
@@ -849,7 +774,7 @@ func TestTxnCommit(t *testing.T) {
 	}
 	kstr.(*memkv.MemKv).SetRevMode(memkv.ClusterRevision)
 	str := &cachemocks.FakeStore{}
-	fakeqs := &fakeWatchPrefixes{}
+	fakeqs := &mocks.FakeWatchPrefixes{}
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
@@ -859,10 +784,10 @@ func TestTxnCommit(t *testing.T) {
 	}
 	c.pool.AddToPool(kstr)
 	ctx, cancel := context.WithCancel(context.TODO())
-	fakeq1 := fakeWatchEventQ{}
-	fakeq2 := fakeWatchEventQ{}
-	wqs := []WatchEventQ{&fakeq1, &fakeq2}
-	getfn := func(path string) []WatchEventQ {
+	fakeq1 := mocks.FakeWatchEventQ{}
+	fakeq2 := mocks.FakeWatchEventQ{}
+	wqs := []watchstream.WatchEventQ{&fakeq1, &fakeq2}
+	getfn := func(path string) []watchstream.WatchEventQ {
 		t.Logf("get called")
 		return wqs
 	}
@@ -913,8 +838,8 @@ func TestTxnCommit(t *testing.T) {
 	f.Commitfn = commitfn
 
 	tx.Commit(ctx)
-	if fakeq1.enqueues != 3 || fakeq2.enqueues != 3 {
-		t.Errorf("expecting 3 enqueues in 2 queueus got %d/%d", fakeq1.enqueues, fakeq2.enqueues)
+	if fakeq1.Enqueues != 3 || fakeq2.Enqueues != 3 {
+		t.Errorf("expecting 3 enqueues in 2 queueus got %d/%d", fakeq1.Enqueues, fakeq2.Enqueues)
 	}
 	cancel()
 }

@@ -28,3 +28,4 @@ export * from './objstore-object.model';
 export * from './objstore-object-list.model';
 export * from './objstore-object-spec.model';
 export * from './objstore-object-status.model';
+export * from './objstore-stream-chunk.model';

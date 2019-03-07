@@ -2640,6 +2640,14 @@ func joinFields(dlmtr string, in ...string) string {
 	return ret
 }
 
+func isSrvBinStream(m *descriptor.Method) (bool, error) {
+	bin, err := reg.GetExtension("venice.methodSrvBinaryStream", m)
+	if err != nil {
+		return false, nil
+	}
+	return bin.(bool), nil
+}
+
 func init() {
 	cliTagRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
 
@@ -2731,6 +2739,7 @@ func init() {
 	reg.RegisterFunc("getPathsMap", getPathsMap)
 	reg.RegisterFunc("getJSONTagByName", getJSONTagByName)
 	reg.RegisterFunc("getMsgName", getMsgName)
+	reg.RegisterFunc("isSrvBinStream", isSrvBinStream)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

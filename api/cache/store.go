@@ -29,19 +29,6 @@ type StoreStats struct {
 
 var storeID uint32
 
-// Store is the interface for the Local Object Store
-type Store interface {
-	Set(key string, rev uint64, obj runtime.Object, cb apiintf.SuccessCbFunc) error
-	Get(key string) (runtime.Object, error)
-	Delete(key string, rev uint64, cb apiintf.SuccessCbFunc) (runtime.Object, error)
-	List(key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error)
-	Mark(key string)
-	Sweep(key string, cb apiintf.SuccessCbFunc)
-	PurgeDeleted(past time.Duration)
-	Stat(key []string) []apiintf.ObjectStat
-	Clear()
-}
-
 // cacheObj is a wrapper around each object stored in the cache.
 type cacheObj struct {
 	revision uint64
@@ -68,7 +55,7 @@ type store struct {
 }
 
 // NewStore creates a new Local Object Store.
-func NewStore() Store {
+func NewStore() apiintf.Store {
 
 	ret := &store{
 		objs:       patricia.NewTrie(),

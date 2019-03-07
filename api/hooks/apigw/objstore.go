@@ -25,11 +25,30 @@ func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 		return err
 	}
 	prof.AddPreAuthNHook(r.skipAuthN)
+	prof, err = svc.GetServiceProfile("DownloadFile")
+	if err != nil {
+		return err
+	}
+	prof.AddPreAuthNHook(r.skipAuthN)
 	prof, err = svc.GetCrudServiceProfile("Object", apiintf.ListOper)
+	if err != nil {
+		return err
+	}
 	prof.AddPreAuthNHook(r.skipAuthN)
 	prof, err = svc.GetCrudServiceProfile("Object", apiintf.DeleteOper)
+	if err != nil {
+		return err
+	}
 	prof.AddPreAuthNHook(r.skipAuthN)
 	prof, err = svc.GetCrudServiceProfile("Object", apiintf.GetOper)
+	if err != nil {
+		return err
+	}
+	prof.AddPreAuthNHook(r.skipAuthN)
+	prof, err = svc.GetCrudServiceProfile("Object", apiintf.WatchOper)
+	if err != nil {
+		return err
+	}
 	prof.AddPreAuthNHook(r.skipAuthN)
 	return nil
 }

@@ -148,3 +148,19 @@ type ConstUpdateItem struct {
 	Func kvstore.UpdateFunc
 	Into runtime.Object
 }
+
+// Store is the interface for the Local Object Store
+type Store interface {
+	Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error
+	Get(key string) (runtime.Object, error)
+	Delete(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error)
+	List(key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error)
+	Mark(key string)
+	Sweep(key string, cb SuccessCbFunc)
+	PurgeDeleted(past time.Duration)
+	Stat(key []string) []ObjectStat
+	Clear()
+}
+
+// EventHandlerFn is for handling watch events
+type EventHandlerFn func(evType kvstore.WatchEventType, item, prev runtime.Object)

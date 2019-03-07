@@ -56,7 +56,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// init obj store
-	err := vos.New(ctx, args)
+	err := vospkg.New(ctx, args)
 	if err != nil {
 		// let the scheduler restart obj store
 		log.Fatalf("failed to init object store, %s", err)

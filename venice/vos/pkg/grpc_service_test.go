@@ -1,4 +1,4 @@
-package vos
+package vospkg
 
 import (
 	"context"
@@ -10,77 +10,22 @@ import (
 
 	minioclient "github.com/minio/minio-go"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/objstore"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/vos"
 )
-
-type mockBackend struct {
-	bucketExists, makeBucket, removeBucket, putBucket int
-	putObject, removeObject, listObject, statObject   int
-
-	retErr       error
-	bExists      bool
-	putSize      int64
-	putErr       error
-	objInfo      minioclient.ObjectInfo
-	listObjFn    func() <-chan minioclient.ObjectInfo
-	makeBucketFn func(bucketName string, location string) error
-	delBucketFn  func(bucketname string) error
-	delObjFn     func(b, n string) error
-	statFunc     func(bucketName, objectName string, opts minioclient.StatObjectOptions) (minioclient.ObjectInfo, error)
-	bExistsFunc  func(in string) (bool, error)
-}
-
-func (f *mockBackend) BucketExists(bucketName string) (bool, error) {
-	f.bucketExists++
-	if f.bExistsFunc != nil {
-		return f.bExistsFunc(bucketName)
-	}
-	return f.bExists, f.retErr
-}
-func (f *mockBackend) MakeBucket(bucketName string, location string) (err error) {
-	f.makeBucket++
-	if f.makeBucketFn != nil {
-		return f.makeBucketFn(bucketName, location)
-	}
-	return f.retErr
-}
-func (f *mockBackend) RemoveBucket(bucketName string) error {
-	f.removeBucket++
-	if f.delBucketFn != nil {
-		return f.delBucketFn(bucketName)
-	}
-	return f.retErr
-}
-
-func (f *mockBackend) PutObject(bucketName, objectName string, reader io.Reader, objectSize int64, opts minioclient.PutObjectOptions) (n int64, err error) {
-	f.putObject++
-	return f.putSize, f.putErr
-}
-func (f *mockBackend) RemoveObject(bucketName, objectName string) error {
-	f.removeObject++
-	return f.retErr
-}
-func (f *mockBackend) ListObjectsV2(bucketName, objectPrefix string, recursive bool, doneCh <-chan struct{}) <-chan minioclient.ObjectInfo {
-	f.listObject++
-	return f.listObjFn()
-}
-func (f *mockBackend) StatObject(bucketName, objectName string, opts minioclient.StatObjectOptions) (minioclient.ObjectInfo, error) {
-	f.statObject++
-	if f.statFunc != nil {
-		return f.statFunc(bucketName, objectName, opts)
-	}
-	return f.objInfo, f.retErr
-}
 
 func TestValidateNamespace(t *testing.T) {
 	good := []string{"images", "techsupport"}
 	bad := []string{"invalid", " images", "tech-support"}
 	obj := &objstore.Object{}
 	mbackend := &mockBackend{}
-	srv, err := newGrpcServer(mbackend)
+	inst := &instance{}
+	inst.Init(mbackend)
+	srv, err := newGrpcServer(inst, mbackend)
 	AssertOk(t, err, "could not create client")
 	for _, v := range good {
 		obj.Namespace = v
@@ -100,7 +45,9 @@ func TestValidateNamespace(t *testing.T) {
 
 func TestBucketOps(t *testing.T) {
 	fb := &mockBackend{}
-	srv := grpcBackend{client: fb}
+	inst := &instance{}
+	inst.Init(fb)
+	srv := grpcBackend{client: fb, instance: inst}
 	ctx := context.Background()
 	bucket := objstore.Bucket{
 		ObjectMeta: api.ObjectMeta{
@@ -186,7 +133,9 @@ func TestBucketOps(t *testing.T) {
 
 func TestObjectOps(t *testing.T) {
 	fb := &mockBackend{}
-	srv := grpcBackend{client: fb}
+	inst := &instance{}
+	inst.Init(fb)
+	srv := grpcBackend{client: fb, instance: inst}
 	ctx := context.Background()
 	obj := &objstore.Object{
 		ObjectMeta: api.ObjectMeta{
@@ -194,6 +143,31 @@ func TestObjectOps(t *testing.T) {
 			Namespace: "images",
 		},
 	}
+
+	// Add plugin funcs
+	callMap1 := make(map[vos.ObjectOper]int)
+	callMap2 := make(map[vos.ObjectOper]int)
+	cbFunc1 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		callMap1[oper] = callMap1[oper] + 1
+		return nil
+	}
+	cbFunc2 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		callMap2[oper] = callMap2[oper] + 1
+		return nil
+	}
+	inst.RegisterCb("images", vos.PreOp, vos.Upload, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Upload, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Download, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Download, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Get, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Get, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Delete, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Delete, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Update, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Update, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Watch, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Watch, cbFunc2)
+
 	_, err := srv.AutoAddObject(ctx, obj)
 	Assert(t, err != nil, "not implemented")
 
@@ -325,9 +299,238 @@ func TestObjectOps(t *testing.T) {
 	_, err = srv.AutoListBucket(ctx, &api.ListWatchOptions{})
 	Assert(t, err != nil, "not implemented")
 
-	err = srv.AutoWatchObject(&api.ListWatchOptions{}, nil)
-	Assert(t, err != nil, "not implemented")
+	cctx, cancel := context.WithCancel(ctx)
+	fw := &fakeWatchServer{ctx: cctx}
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		cancel()
+	}()
+	err = srv.AutoWatchObject(&api.ListWatchOptions{}, fw)
 
 	err = srv.AutoWatchSvcObjstoreV1(nil, nil)
 	Assert(t, err != nil, "not implemented")
+}
+
+func TestObjectOpsWError(t *testing.T) {
+	fb := &mockBackend{}
+	inst := &instance{}
+	inst.Init(fb)
+	srv := grpcBackend{client: fb, instance: inst}
+	ctx := context.Background()
+	obj := &objstore.Object{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testobj",
+			Namespace: "images",
+		},
+	}
+	var cbErr1, cbErr2 error
+	// Add plugin funcs
+	cbErr1 = errors.New("some error")
+	cbFunc1 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		return cbErr1
+	}
+	cbFunc2 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		return cbErr2
+	}
+	inst.RegisterCb("images", vos.PreOp, vos.Upload, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Upload, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Download, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Download, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Get, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Get, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.List, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.List, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Delete, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Delete, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Update, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Update, cbFunc2)
+	inst.RegisterCb("images", vos.PreOp, vos.Watch, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Watch, cbFunc2)
+
+	fb.delObjFn = func(b, n string) error {
+		if b != obj.Namespace || n != obj.Name {
+			return fmt.Errorf("wrong bucket/name [%v/%v]", b, n)
+		}
+		return nil
+	}
+	tm := time.Now()
+	crKey := metaPrefix + metaCreationTime
+	metadata := make(map[string]string)
+	httphdr := http.Header{}
+	metadata["test1"] = "One"
+	httphdr.Set("X-Amz-Meta-test1", "One")
+	metadata["test2"] = "two"
+	httphdr.Set("X-Amz-Meta-test2", "two")
+	httphdr.Set(crKey, tm.Format(time.RFC3339Nano))
+	objInfo := minioclient.ObjectInfo{
+		ETag:     "abcdef",
+		Key:      "file",
+		Metadata: httphdr,
+	}
+	fb.objInfo = objInfo
+	srv.client = fb
+	fb.retErr = nil
+	obj.Namespace = "images"
+	_, err := srv.AutoDeleteObject(ctx, obj)
+	Assert(t, err != nil, "Delete should have failed")
+
+	_, err = srv.AutoGetObject(ctx, obj)
+	Assert(t, err != nil, "Get Object should have failed")
+
+	objCh := make(chan minioclient.ObjectInfo)
+	fb.listObjFn = func() <-chan minioclient.ObjectInfo {
+		return objCh
+	}
+	objs := []minioclient.ObjectInfo{
+		{
+			ETag:     "abcdef",
+			Key:      "file1",
+			Metadata: httphdr,
+		},
+		{
+			ETag:     "abcdef",
+			Key:      "file2",
+			Metadata: httphdr,
+		},
+		{
+			ETag:     "abcdef",
+			Key:      "file3",
+			Metadata: httphdr,
+		},
+	}
+	go func() {
+		for _, v := range objs {
+			objCh <- v
+		}
+		close(objCh)
+	}()
+
+	_, err = srv.AutoListObject(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Namespace: "images", Tenant: "default"}})
+	Assert(t, err != nil, "list objects should have failed")
+
+	cctx, cancel := context.WithCancel(ctx)
+	fw := &fakeWatchServer{ctx: cctx}
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		cancel()
+	}()
+	err = srv.AutoWatchObject(&api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Namespace: "images"}}, fw)
+	Assert(t, err != nil, "watch objects should have failed")
+
+	err = srv.AutoWatchSvcObjstoreV1(nil, nil)
+	Assert(t, err != nil, "not implemented")
+
+	cbErr2 = cbErr1
+	cbErr1 = nil
+	_, err = srv.AutoDeleteObject(ctx, obj)
+	Assert(t, err != nil, "Delete should have failed")
+
+	_, err = srv.AutoGetObject(ctx, obj)
+	Assert(t, err != nil, "Get Object should have failed")
+
+	_, err = srv.AutoListObject(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Namespace: "images", Tenant: "default"}})
+	Assert(t, err != nil, "list objects should have failed")
+
+	inst.Close()
+}
+
+type fakeDownloadFileServer struct {
+	ctx     context.Context
+	sendCnt int
+}
+
+// SetHeader implements a mock interface
+func (f *fakeDownloadFileServer) Send(chunk *objstore.StreamChunk) error {
+	f.sendCnt++
+	return nil
+}
+
+// SetHeader implements a mock interface
+func (f *fakeDownloadFileServer) SetHeader(metadata.MD) error { return nil }
+
+// SendHeader implements a mock interface
+func (f *fakeDownloadFileServer) SendHeader(metadata.MD) error { return nil }
+
+// SetTrailer implements a mock interface
+func (f *fakeDownloadFileServer) SetTrailer(metadata.MD) {}
+
+// Context implements a mock interface
+func (f *fakeDownloadFileServer) Context() context.Context {
+	return f.ctx
+}
+
+// SendMsg implements a mock interface
+func (f *fakeDownloadFileServer) SendMsg(m interface{}) error { return nil }
+
+// RecvMsg implements a mock interface
+func (f *fakeDownloadFileServer) RecvMsg(m interface{}) error { return nil }
+
+func TestDownloadFile(t *testing.T) {
+	fb := &mockBackend{}
+	inst := &instance{}
+	inst.Init(fb)
+
+	ctx := context.Background()
+	obj := &objstore.Object{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testobj",
+			Namespace: "images",
+		},
+	}
+	ffs := &fakeDownloadFileServer{ctx: ctx}
+	var cbErr1, cbErr2 error
+	var cbcalled1, cbcalled2 int
+	// Add plugin funcs
+	cbFunc1 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		cbcalled1++
+		return cbErr1
+	}
+	cbFunc2 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		cbcalled2++
+		return cbErr2
+	}
+	inst.RegisterCb("images", vos.PreOp, vos.Download, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Download, cbFunc2)
+	srv := grpcBackend{client: fb, instance: inst}
+	fso := &fakeStoreObj{}
+	fb.fObj = fso
+	fb.retErr = errors.New("some error")
+	err := srv.DownloadFile(obj, ffs)
+	Assert(t, err != nil, "expecting download to error out")
+	fb.retErr = nil
+	cnt := 0
+	testStr := []byte("aabababababababaabababababaababababababaabababababa")
+	readErr := io.EOF
+	fso.readFn = func(in []byte) (int, error) {
+		in = testStr
+		var err error
+		if cnt == 3 {
+			err = readErr
+		}
+
+		if cnt > 3 {
+			return 0, io.EOF
+		}
+		cnt++
+		return len(testStr), err
+	}
+	err = srv.DownloadFile(obj, ffs)
+	AssertOk(t, err, "DownloadFile failed")
+	Assert(t, cbcalled1 == 1, "exepecting 1 call for preop got [%d]", cbcalled1)
+	Assert(t, cbcalled2 == 1, "exepecting 1 call for postop got [%d]", cbcalled2)
+	Assert(t, ffs.sendCnt == 4, "should have seen 3 sends got [%d]", ffs.sendCnt)
+	cnt = 0
+	readErr = errors.New("some error")
+	err = srv.DownloadFile(obj, ffs)
+	Assert(t, err != nil, "DownloadFile should have failed")
+	cnt = 0
+	cbErr1 = readErr
+	readErr = nil
+	err = srv.DownloadFile(obj, ffs)
+	Assert(t, err != nil, "DownloadFile should have failed")
+	cnt = 0
+	cbErr2 = cbErr1
+	cbErr1 = nil
+	err = srv.DownloadFile(obj, ffs)
+	Assert(t, err != nil, "DownloadFile should have failed")
 }

@@ -220,3 +220,37 @@ func EncodeGrpcRespObjectStatus(ctx context.Context, response interface{}) (inte
 func DecodeGrpcRespObjectStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPStreamChunk(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPStreamChunk(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StreamChunk
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqStreamChunk encodes GRPC request
+func EncodeGrpcReqStreamChunk(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StreamChunk)
+	return req, nil
+}
+
+// DecodeGrpcReqStreamChunk decodes GRPC request
+func DecodeGrpcReqStreamChunk(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StreamChunk)
+	return req, nil
+}
+
+// EncodeGrpcRespStreamChunk encodes GRC response
+func EncodeGrpcRespStreamChunk(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespStreamChunk decodes GRPC response
+func DecodeGrpcRespStreamChunk(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

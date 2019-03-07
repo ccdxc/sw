@@ -1,16 +1,19 @@
-package vos
+package vospkg
 
 import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/go-martini/martini"
 	"github.com/minio/minio-go"
+
+	"github.com/pensando/sw/venice/vos"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/objstore"
@@ -20,25 +23,29 @@ import (
 )
 
 const (
-	apiPrefix  = "/apis/v1"
-	uploadPath = "/uploads/images/"
+	apiPrefix    = "/apis/v1"
+	uploadPath   = "/uploads/images/"
+	downloadPath = "/downloads/images/**"
 )
 
 type httpHandler struct {
-	client  backendClient
-	handler *martini.ClassicMartini
-	server  http.Server
+	client   vos.BackendClient
+	handler  *martini.ClassicMartini
+	server   http.Server
+	instance *instance
 }
 
-func newHTTPHandler(client backendClient) (*httpHandler, error) {
+func newHTTPHandler(instance *instance, client vos.BackendClient) (*httpHandler, error) {
 	log.InfoLog("msgs", "creating new HTTP backend", "port", globals.VosGRPcPort)
 	mux := martini.Classic()
-	return &httpHandler{client: client, handler: mux}, nil
+	return &httpHandler{client: client, handler: mux, instance: instance}, nil
 }
 
 func (h *httpHandler) start(ctx context.Context, port string, config *tls.Config) {
 	log.InfoLog("msg", "starting HTTP listener")
 	h.handler.Post(apiPrefix+uploadPath, h.uploadHandler)
+	h.handler.Get(apiPrefix+downloadPath, h.downloadHandler)
+
 	log.InfoLog("msg", "adding path", "path", apiPrefix+uploadPath)
 	done := make(chan error)
 	var ln net.Listener
@@ -78,8 +85,7 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 		file, header, err := req.FormFile("file")
 		if err != nil {
 			log.Errorf("could not get the file from form")
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("could not get the file from form"))
+			h.writeError(w, http.StatusBadRequest, "could not get the file from form")
 			return
 		}
 		contentType := req.FormValue("content-type")
@@ -107,19 +113,26 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 		} else {
 			meta[metaCreationTime] = stat.Metadata.Get(metaPrefix + metaCreationTime)
 		}
-
+		errs := h.instance.RunPlugins(context.TODO(), "images", vos.PreOp, vos.Upload, nil, h.client)
+		if errs != nil {
+			h.writeError(w, http.StatusPreconditionFailed, errs)
+			return
+		}
 		sz, err := h.client.PutObject("default.images", header.Filename, file, -1, minio.PutObjectOptions{UserMetadata: meta, ContentType: contentType})
 		if err != nil {
 			log.Errorf("failed to write object (%s)", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("error writing object (%s)", err)))
+			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error writing object (%s)", err))
+			return
+		}
+		errs = h.instance.RunPlugins(context.TODO(), "images", vos.PostOp, vos.Upload, nil, h.client)
+		if errs != nil {
+			h.writeError(w, http.StatusInternalServerError, errs)
 			return
 		}
 		log.Infof("Wrote object [%v] of size [%v]", header.Filename, sz)
 		stat, err = h.client.StatObject("default.images", header.Filename, minio.StatObjectOptions{})
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("error verifying image write (%s)", err)))
+			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error verifying image write (%s)", err))
 			return
 		}
 		ret := objstore.Object{
@@ -132,21 +145,69 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 			},
 		}
 		if stat.Size != sz {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("error in object size after write written[%d] readback[%d]", sz, stat.Size)))
+			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error in object size after write written[%d] readback[%d]", sz, stat.Size))
 			return
 		}
 		updateObjectMeta(&stat, &ret.ObjectMeta)
 		b, err := json.Marshal(&ret)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("error marshalling return value (%s)", err)))
+			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error marshalling return value (%s)", err))
 			return
 		}
 		w.WriteHeader(http.StatusOK)
 		w.Write(b)
 	} else {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(fmt.Sprintf("upsupported method [%v]", req.Method)))
+		h.writeError(w, http.StatusMethodNotAllowed, fmt.Sprintf("upsupported method [%v]", req.Method))
 	}
+}
+
+func (h *httpHandler) downloadHandler(params martini.Params, w http.ResponseWriter, req *http.Request) {
+	log.Infof("got Upload call")
+	path := params["_1"]
+	if path == "" {
+		h.writeError(w, http.StatusBadRequest, "empty path")
+		return
+	}
+	// Only supports default.images for now.
+	bucket := "default.images"
+	buf := make([]byte, 1024*1024)
+	ctx := context.Background()
+	fr, err := h.client.GetStoreObject(ctx, bucket, path, minio.GetObjectOptions{})
+	if err != nil {
+		log.Errorf("failed to get object [%v]", path)
+		h.writeError(w, http.StatusNotFound, "unknown object")
+		return
+	}
+	errs := h.instance.RunPlugins(ctx, "images", vos.PreOp, vos.Download, nil, h.client)
+	if errs != nil {
+		h.writeError(w, http.StatusPreconditionFailed, errs)
+		return
+	}
+	w.Header().Set("Content-Disposition", "attachment")
+	w.Header().Set("Content-Type", "application/octet-stream; charset=utf-8")
+	totsize := 0
+	for {
+		n, err := fr.Read(buf)
+		if err != nil && err != io.EOF {
+			log.Errorf("error while reading object (%s)", err)
+			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error reading object: (%s)", err))
+			return
+		}
+		if n == 0 {
+			break
+		}
+		totsize += n
+		w.Write(buf[:n])
+	}
+	errs = h.instance.RunPlugins(ctx, "images", vos.PostOp, vos.Download, nil, h.client)
+	if errs != nil {
+		h.writeError(w, http.StatusInternalServerError, errs)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *httpHandler) writeError(w http.ResponseWriter, code int, msg interface{}) {
+	w.WriteHeader(code)
+	w.Write([]byte(fmt.Sprintf("%v", msg)))
 }

@@ -2017,6 +2017,7 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -2039,7 +2040,16 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_ClusterV1_AutoWatchCluster_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_ClusterV1_AutoWatchCluster_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -2062,6 +2072,7 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -2084,7 +2095,16 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_ClusterV1_AutoWatchHost_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_ClusterV1_AutoWatchHost_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -2107,6 +2127,7 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -2129,7 +2150,16 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_ClusterV1_AutoWatchNode_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_ClusterV1_AutoWatchNode_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -2152,6 +2182,7 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -2174,7 +2205,16 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_ClusterV1_AutoWatchSmartNIC_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_ClusterV1_AutoWatchSmartNIC_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})
@@ -2197,6 +2237,7 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
 		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
 		if websocket.IsWebSocketUpgrade(req) {
 			ws = true
 			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
@@ -2219,7 +2260,16 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			conn := ic.(*websocket.Conn)
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
-			forward_ClusterV1_AutoWatchTenant_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_ClusterV1_AutoWatchTenant_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
 		}
 
 	})

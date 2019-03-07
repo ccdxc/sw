@@ -107,6 +107,8 @@ extend google.protobuf.MethodOptions {
   bool methodTenantDefault = 51272;
   // methodActionObject notes the Object against which the action is defined (for actions only)
   string methodActionObject = 51273;
+  // methodSrvBinaryStream marks this method to be handled as a binary stream from the server
+  bool methodSrvBinaryStream = 51274;
 };
 
 // Venice Option extensions applicable to messages

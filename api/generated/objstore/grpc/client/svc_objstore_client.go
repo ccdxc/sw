@@ -540,7 +540,7 @@ func (a *restObjObjstoreV1Object) Allowed(oper apiintf.APIOperType) bool {
 	case apiintf.ListOper:
 		return true
 	case apiintf.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}

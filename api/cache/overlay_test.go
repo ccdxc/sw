@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	mocks2 "github.com/pensando/sw/venice/utils/watchstream/mocks"
 )
 
 func TestOverlayCRD(t *testing.T) {
@@ -961,7 +962,7 @@ func TestCommit(t *testing.T) {
 	fkv := &cachemocks.FakeKvStore{}
 	str := &cachemocks.FakeStore{}
 	// c := &cachemocks.FakeCache{fakeKvStore: fakeKvStore{}, kvconn: fkv}
-	fakeqs := &fakeWatchPrefixes{}
+	fakeqs := &mocks2.FakeWatchPrefixes{}
 	c := &cache{
 		store:  str,
 		pool:   &connPool{},

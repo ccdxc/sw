@@ -208,11 +208,28 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
 func (a adapter{{$svcname}}) {{.Name}}(oldctx oldcontext.Context, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_{{.Name}}Client, error) {
 	ctx := context.Context(oldctx)
 	return a.service.{{.Name}}(ctx)
-} {{else}}
+} {{else}}{{if isSrvBinStream .}}
+func (a adapter{{$svcname}}) {{.Name}}(oldctx oldcontext.Context, in *{{getInputType $pkgname . true}}, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_{{.Name}}Client, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("{{.Name}}")
+	if err != nil {
+	return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*{{getInputType $pkgname . true}})
+		return a.service.{{.Name}}(ctx, in)
+	}
+	apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwBinStreamReq, true)
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.({{$pkgname}}.{{$svcname}}_{{.Name}}Client), err
+}{{else}}
 func (a adapter{{$svcname}}) {{.Name}}(oldctx oldcontext.Context, in *{{getInputType $pkgname . true}}, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_{{.Name}}Client, error) {
 	ctx := context.Context(oldctx)
 	return a.service.{{.Name}}(ctx, in)
-}{{end}}{{end}}{{end}}{{end}}
+}{{end}}{{end}}{{end}}{{end}}{{end}}
 
 func (e *s{{.Name}}GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "{{$svcparams.Prefix}}", apiintf.UnknownOper)

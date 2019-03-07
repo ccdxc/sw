@@ -75,6 +75,7 @@ type EndpointsObjstoreV1RestClient struct {
 	AutoWatchBucketEndpoint        endpoint.Endpoint
 	AutoWatchObjectEndpoint        endpoint.Endpoint
 	AutoWatchSvcObjstoreV1Endpoint endpoint.Endpoint
+	DownloadFileEndpoint           endpoint.Endpoint
 }
 
 // MiddlewareObjstoreV1Server adds middle ware to the server
@@ -251,6 +252,10 @@ func (e EndpointsObjstoreV1Client) AutoWatchBucket(ctx context.Context, in *api.
 // AutoWatchObject performs Watch for Object
 func (e EndpointsObjstoreV1Client) AutoWatchObject(ctx context.Context, in *api.ListWatchOptions) (ObjstoreV1_AutoWatchObjectClient, error) {
 	return e.Client.AutoWatchObject(ctx, in)
+}
+
+func (e EndpointsObjstoreV1Client) DownloadFile(ctx context.Context, in *Object) (ObjstoreV1_DownloadFileClient, error) {
+	return e.Client.DownloadFile(ctx, in)
 }
 
 // AutoAddBucket implementation on server Endpoint
@@ -511,6 +516,10 @@ func MakeAutoWatchObjectEndpoint(s ServiceObjstoreV1Server, logger log.Logger) f
 	}
 }
 
+func (e EndpointsObjstoreV1Server) DownloadFile(in *Object, stream ObjstoreV1_DownloadFileServer) error {
+	return errors.New("not implemented")
+}
+
 // MakeObjstoreV1ServerEndpoints creates server endpoints
 func MakeObjstoreV1ServerEndpoints(s ServiceObjstoreV1Server, logger log.Logger) EndpointsObjstoreV1Server {
 	return EndpointsObjstoreV1Server{
@@ -734,6 +743,20 @@ func (m loggingObjstoreV1MiddlewareClient) AutoWatchObject(ctx context.Context, 
 	return
 }
 
+func (m loggingObjstoreV1MiddlewareClient) DownloadFile(ctx context.Context, in *Object) (resp ObjstoreV1_DownloadFileClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ObjstoreV1", "method", "DownloadFile", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.DownloadFile(ctx, in)
+	return
+}
+
 func (m loggingObjstoreV1MiddlewareServer) AutoAddBucket(ctx context.Context, in Bucket) (resp Bucket, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -906,6 +929,10 @@ func (m loggingObjstoreV1MiddlewareServer) AutoWatchObject(in *api.ListWatchOpti
 	return
 }
 
+func (m loggingObjstoreV1MiddlewareServer) DownloadFile(in *Object, stream ObjstoreV1_DownloadFileServer) error {
+	return errors.New("not implemented")
+}
+
 func (r *EndpointsObjstoreV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if ok {
@@ -994,8 +1021,7 @@ func makeURIObjstoreV1AutoWatchBucketWatchOper(in *api.ListWatchOptions) string 
 
 //
 func makeURIObjstoreV1AutoWatchObjectWatchOper(in *api.ListWatchOptions) string {
-	return ""
-
+	return fmt.Sprint("/objstore/v1", "/watch/tenant/", in.Tenant, "/", in.Namespace, "/objects")
 }
 
 //
@@ -1199,6 +1225,10 @@ func (r *EndpointsObjstoreV1RestClient) AutoWatchObject(ctx context.Context, opt
 		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 	}()
 	return lw, nil
+}
+
+func (r *EndpointsObjstoreV1RestClient) ObjstoreV1DownloadFileEndpoint(ctx context.Context, in *Object) (*StreamChunk, error) {
+	return nil, errors.New("not allowed")
 }
 
 // MakeObjstoreV1RestClientEndpoints make REST client endpoints

@@ -1,23 +1,28 @@
-package vos
+package vospkg
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/go-martini/martini"
 	minioclient "github.com/minio/minio-go"
 	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/api/generated/objstore"
+	"github.com/pensando/sw/venice/vos"
 
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func TestNewHandler(t *testing.T) {
-	h, err := newHTTPHandler(nil)
+	h, err := newHTTPHandler(nil, nil)
 	AssertOk(t, err, "newHTTPHandler returned error")
 	Assert(t, h != nil, "handler is nil")
 	ctx, cancel := context.WithCancel(context.Background())
@@ -58,7 +63,9 @@ func TestUploadHandler(t *testing.T) {
 	AssertOk(t, err, "failted to create request (%s)", err)
 	wr := httptest.NewRecorder()
 	fb := &mockBackend{}
-	srv := httpHandler{client: fb}
+	inst := &instance{}
+	inst.Init(fb)
+	srv := httpHandler{client: fb, instance: inst}
 	srv.uploadHandler(wr, req)
 	Assert(t, wr.Code == http.StatusBadRequest, "invalid response for bad request [%v]", wr.Code)
 	wr = httptest.NewRecorder()
@@ -141,4 +148,81 @@ func TestUploadHandler(t *testing.T) {
 	AssertOk(t, err, "failed to create request (%s)", err)
 	srv.uploadHandler(wr, req)
 	Assert(t, wr.Code == http.StatusInternalServerError, "invalid response for good request [%v][%v]", wr.Code, wr.Body.String())
+}
+
+func TestDownloadHandler(t *testing.T) {
+	wr := httptest.NewRecorder()
+	fb := &mockBackend{}
+	inst := &instance{}
+	inst.Init(fb)
+	srv := httpHandler{client: fb, instance: inst}
+	var cbErr1, cbErr2 error
+	var cbcalled1, cbcalled2 int
+	// Add plugin funcs
+	cbFunc1 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		cbcalled1++
+		return cbErr1
+	}
+	cbFunc2 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		cbcalled2++
+		return cbErr2
+	}
+	inst.RegisterCb("images", vos.PreOp, vos.Download, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Download, cbFunc2)
+
+	req, err := http.NewRequest("GET", "/download/image", nil)
+	AssertOk(t, err, "failed to create request")
+
+	wr = httptest.NewRecorder()
+	params := martini.Params(map[string]string{"_1": ""})
+	srv.downloadHandler(params, wr, req)
+	Assert(t, wr.Code == http.StatusBadRequest, "expecting failure due to no path")
+
+	wr = httptest.NewRecorder()
+	fso := &fakeStoreObj{}
+	fb.fObj = fso
+	fb.retErr = errors.New("some error")
+	req, err = http.NewRequest("GET", "/download/image/some/path", nil)
+	AssertOk(t, err, "failed to create request")
+	params["_1"] = "/some/path"
+	srv.downloadHandler(params, wr, req)
+	Assert(t, wr.Code == http.StatusNotFound, "expecting failure due to not found got [%v]", wr.Code)
+
+	wr = httptest.NewRecorder()
+
+	cbErr1 = fb.retErr
+	fb.retErr = nil
+	wr = httptest.NewRecorder()
+	srv.downloadHandler(params, wr, req)
+	Assert(t, wr.Code == http.StatusPreconditionFailed, "expecting failure due to not found got [%v]", wr.Code)
+
+	cnt := 0
+	testStr := []byte("aabababababababaabababababaababababababaabababababa")
+	readErr := io.EOF
+	fso.readFn = func(in []byte) (int, error) {
+		in = testStr
+		var err error
+		if cnt == 3 {
+			err = readErr
+		}
+
+		if cnt > 3 {
+			return 0, io.EOF
+		}
+		cnt++
+		return len(testStr), err
+	}
+	wr = httptest.NewRecorder()
+	cbcalled1, cbcalled2, cnt = 0, 0, 0
+	cbErr1 = nil
+	srv.downloadHandler(params, wr, req)
+	AssertOk(t, err, "DownloadFile failed")
+	Assert(t, cbcalled1 == 1, "exepecting 1 call for preop got [%d]", cbcalled1)
+	Assert(t, cbcalled2 == 1, "exepecting 1 call for postop got [%d]", cbcalled2)
+	Assert(t, wr.Code == http.StatusOK, "expecting downlod to succeed got  [%v]", wr.Code)
+
+	cbErr2 = errors.New("some error")
+	wr = httptest.NewRecorder()
+	cbcalled1, cbcalled2, cnt = 0, 0, 0
+	srv.downloadHandler(params, wr, req)
 }

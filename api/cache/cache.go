@@ -26,6 +26,7 @@ import (
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/watchstream"
 )
 
 var (
@@ -52,6 +53,14 @@ const (
 	operDelete apiOper = "delete"
 )
 
+var (
+	defSweepInterval     = (3 * time.Second)
+	defRetentionDuration = (30 * time.Second)
+	defRetentionDepthMax = 1024 * 1024
+	defEvictInterval     = (30 * time.Second)
+	defPurgeInterval     = (10 * time.Second)
+)
+
 // Config is the configuration passed in when initializing the cache.
 type Config struct {
 	// Config is the configuration for the KVStore backend for the cache.
@@ -72,9 +81,9 @@ type filterFn func(obj, prev runtime.Object) bool
 type cache struct {
 	sync.RWMutex
 	active    bool
-	store     Store
+	store     apiintf.Store
 	pool      *connPool
-	queues    WatchedPrefixes
+	queues    watchstream.WatchedPrefixes
 	argus     *backendWatcher
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -455,14 +464,14 @@ func CreateNewCache(config Config) (apiintf.CacheInterface, error) {
 		apiserver: config.APIServer,
 		versioner: runtime.NewObjectVersioner(),
 	}
-	wconfig := WatchEventQConfig{
+	wconfig := watchstream.WatchEventQConfig{
 		SweepInterval:     defSweepInterval,
 		RetentionDuration: defRetentionDuration,
 		RetentionDepthMax: defRetentionDepthMax,
 		EvictInterval:     defEvictInterval,
 		PurgeInterval:     defPurgeInterval,
 	}
-	ret.queues = NewWatchedPrefixes(config.Logger, ret.store, wconfig)
+	ret.queues = watchstream.NewWatchedPrefixes(config.Logger, ret.store, wconfig)
 	argus := &backendWatcher{
 		prefixes: make(map[string]*prefixWatcher),
 		parent:   &ret,

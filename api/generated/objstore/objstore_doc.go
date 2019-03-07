@@ -13,6 +13,7 @@ The following Messages are defined.
   Object
   ObjectSpec
   ObjectStatus
+  StreamChunk
 
 The following Services and Methods are defined.
 

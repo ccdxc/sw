@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/textproto"
+	"reflect"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -15,6 +16,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
+// FowardResponseStreamToWebSocket forwards stream response to a websocket
 func FowardResponseStreamToWebSocket(ctx context.Context, marshaler Marshaler, w http.ResponseWriter, req *http.Request, conn *websocket.Conn, recv func() (proto.Message, error), opts ...func(context.Context, http.ResponseWriter, proto.Message) error) {
 	// The HTTP 1.1 response has already been sent by the time we get here. Handle the data stream here.
 	for {
@@ -39,6 +41,50 @@ func FowardResponseStreamToWebSocket(ctx context.Context, marshaler Marshaler, w
 			return
 		}
 	}
+}
+
+// ForwardBinaryResponseStream forwards the response as a binary stream
+func ForwardBinaryResponseStream(ctx context.Context, marshaler Marshaler, w http.ResponseWriter, req *http.Request, recv func() (proto.Message, error), opts ...func(context.Context, http.ResponseWriter, proto.Message) error) {
+	md, ok := ServerMetadataFromContext(ctx)
+	if !ok {
+		grpclog.Printf("Failed to extract ServerMetadata from context")
+		http.Error(w, "unexpected error", http.StatusInternalServerError)
+		return
+	}
+	handleForwardResponseServerMetadata(w, md)
+
+	w.Header().Set("Content-Disposition", "attachment")
+	w.Header().Set("Content-Type", "application/octet-stream; charset=utf-8")
+	if err := handleForwardResponseOptions(ctx, w, nil, opts); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+
+	for {
+		resp, err := recv()
+		if err == io.EOF {
+			return
+		}
+		if err != nil {
+			handleForwardResponseStreamError(marshaler, w, err)
+			return
+		}
+		if err := handleForwardResponseOptions(ctx, w, resp, opts); err != nil {
+			handleForwardResponseStreamError(marshaler, w, err)
+			return
+		}
+		v := reflect.ValueOf(resp)
+		if v.Kind() == reflect.Ptr {
+			v = reflect.Indirect(v)
+		}
+		fv := v.FieldByName("Content").Interface()
+		if _, err = w.Write(fv.([]byte)); err != nil {
+			grpclog.Printf("Failed to send response: %v", err)
+			return
+		}
+	}
+
 }
 
 // ForwardResponseStream forwards the stream from gRPC server to REST client.
