@@ -51,7 +51,7 @@ crypto_read_queues(int verbose)
         CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" XTS ENC has %d ring entries\n", cnt);
+        printf(" XTS ENC has %u ring entries\n", cnt);
 
     //. XTS
     cnt = read_num_entries(
@@ -60,7 +60,7 @@ crypto_read_queues(int verbose)
         CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" XTS has %d ring entries\n", cnt);
+        printf(" XTS has %u ring entries\n", cnt);
 
     // GCM0
     cnt = read_num_entries(
@@ -69,7 +69,7 @@ crypto_read_queues(int verbose)
         CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM0_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM0_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" GCM0 has %d ring entries\n", cnt);
+        printf(" GCM0 has %u ring entries\n", cnt);
 
     // GCM1
     cnt = read_num_entries(
@@ -78,7 +78,7 @@ crypto_read_queues(int verbose)
         CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM1_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM1_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" GCM1 has %d ring entries\n", cnt);
+        printf(" GCM1 has %u ring entries\n", cnt);
 
     // CP hotq
     uint32_t pi, ci, cp_cfg;
@@ -101,7 +101,7 @@ crypto_read_queues(int verbose)
     else
         cnt = (hotq_size - ci) + pi;
     if (cnt != 0)
-        printf(" CP HOTQ has %d ring entries\n", cnt);
+        printf(" CP HOTQ has %u ring entries\n", cnt);
 
     // CP
     pal_reg_rd32w(CAP_ADDR_BASE_MD_HENS_OFFSET +
@@ -115,7 +115,7 @@ crypto_read_queues(int verbose)
     else
         cnt = (descq_size - ci) + pi;
     if (cnt != 0)
-        printf(" CP has %d ring entries\n", cnt);
+        printf(" CP has %u ring entries\n", cnt);
 
     // DC hotq
     pal_reg_rd32w(
@@ -136,7 +136,7 @@ crypto_read_queues(int verbose)
     else
         cnt = (hotq_size - ci) + pi;
     if (cnt != 0)
-        printf(" DC HOTQ has %d ring entries\n", cnt);
+        printf(" DC HOTQ has %u ring entries\n", cnt);
 
     // DC
     pal_reg_rd32w(CAP_ADDR_BASE_MD_HENS_OFFSET +
@@ -150,7 +150,7 @@ crypto_read_queues(int verbose)
     else
         cnt = (descq_size - ci) + pi;
     if (cnt != 0)
-        printf(" DC has %d ring entries\n", cnt);
+        printf(" DC has %u ring entries\n", cnt);
 
     // MPP0
     cnt = read_num_entries(
@@ -159,7 +159,7 @@ crypto_read_queues(int verbose)
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP0_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP0_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" MPP0 has %d ring entries\n", cnt);
+        printf(" MPP0 has %u ring entries\n", cnt);
 
     // MPP1
     cnt = read_num_entries(
@@ -168,7 +168,7 @@ crypto_read_queues(int verbose)
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP1_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP1_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" MPP1 has %d ring entries\n", cnt);
+        printf(" MPP1 has %u ring entries\n", cnt);
 
     // MPP2
     cnt = read_num_entries(
@@ -177,7 +177,7 @@ crypto_read_queues(int verbose)
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP2_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP2_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" MPP2 has %d ring entries\n", cnt);
+        printf(" MPP2 has %u ring entries\n", cnt);
 
     // MPP3
     cnt = read_num_entries(
@@ -186,7 +186,7 @@ crypto_read_queues(int verbose)
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP3_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP3_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" MPP3 has %d ring entries\n", cnt);
+        printf(" MPP3 has %u ring entries\n", cnt);
 
     // MPP4
     cnt = read_num_entries(
@@ -195,7 +195,7 @@ crypto_read_queues(int verbose)
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP4_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP4_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" MPP4 has %d ring entries\n", cnt);
+        printf(" MPP4 has %u ring entries\n", cnt);
 
     // MPP5
     cnt = read_num_entries(
@@ -204,7 +204,7 @@ crypto_read_queues(int verbose)
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP5_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP5_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf("MPP5 has %d ring entries\n", cnt);
+        printf("MPP5 has %u ring entries\n", cnt);
 
     // MPP6
     cnt = read_num_entries(
@@ -213,7 +213,7 @@ crypto_read_queues(int verbose)
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP6_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP6_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" MPP6 has %d ring entries\n", cnt);
+        printf(" MPP6 has %u ring entries\n", cnt);
 
     // MPP7
     cnt = read_num_entries(
@@ -222,7 +222,7 @@ crypto_read_queues(int verbose)
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP7_CONSUMER_IDX_BYTE_ADDRESS,
         CAP_MPNS_CSR_DHS_CRYPTO_CTL_MPP7_RING_SIZE_BYTE_ADDRESS);
     if (cnt != 0)
-        printf(" MPP7 has %d ring entries\n", cnt);
+        printf(" MPP7 has %u ring entries\n", cnt);
 
     if (verbose) {
         uint32_t stride = (CAP_HENS_CSR_CNT_AXI_AW_GCM1_BYTE_ADDRESS -
@@ -256,8 +256,8 @@ crypto_read_queues(int verbose)
                               CAP_HENS_CSR_CNT_AXI_RRSP_ERR_GCM0_BYTE_ADDRESS +
                               (i * stride),
                           (uint32_t *)&rrsp_err, 1);
-            printf(" offload=%s AW=%ld DW=%ld WRSP=%ld AR=%ld DR=%ld "
-                   "WR_ERR=%ld RR_ERR=%ld\n",
+            printf(" offload=%s AW=%lu DW=%lu WRSP=%lu AR=%lu DR=%lu "
+                   "WR_ERR=%lu RR_ERR=%lu\n",
                    offloadname[i], aw, dw, wrsp, ar, dr, wrsp_err, rrsp_err);
         }
     }

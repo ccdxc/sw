@@ -155,7 +155,7 @@ capmon_mpu_display_fn(void *ptr)
     if (verbose) {
         int cycles = mpu->cycles;
 
-        CAPMON_REPORT(" mpu %d cycles=%u", mpu->index, cycles);
+        CAPMON_REPORT(" mpu %u cycles=%u", mpu->index, cycles);
         CAPMON_REPORT(" inst=%u", mpu->inst_executed);
         CAPMON_REPORT(" miss=%u", mpu->icache_miss);
         CAPMON_REPORT(" istl=%u", mpu->icache_fill_stall);
@@ -295,14 +295,14 @@ static inline void
 capmon_dma_pipeline_data_display2(pipeline_t *pipeline)
 {
     if (pipeline->type == TXDMA) {
-        CAPMON_REPORT(" NPV: phv=%lu pb_pbus=%ld pr_pbus=%ld sw=%ld "
-                      "phv_drop=%ld recirc=%ld\n",
+        CAPMON_REPORT(" NPV: phv=%lu pb_pbus=%lu pr_pbus=%lu sw=%lu "
+                      "phv_drop=%lu recirc=%lu\n",
                       pipeline->phv, pipeline->pb_pbus_cnt,
                       pipeline->pr_pbus_cnt, pipeline->sw_cnt,
                       pipeline->phv_drop_cnt, pipeline->recirc_cnt);
     } else if (pipeline->type == RXDMA) {
-        CAPMON_REPORT(" PSP: phv=%lu pb_pbus=%ld pr_pbus=%ld sw=%ld "
-                      "phv_drop=%ld recirc=%ld\n",
+        CAPMON_REPORT(" PSP: phv=%lu pb_pbus=%lu pr_pbus=%lu sw=%lu "
+                      "phv_drop=%lu recirc=%lu\n",
                       pipeline->phv, pipeline->pb_pbus_cnt,
                       pipeline->pr_pbus_cnt, pipeline->sw_cnt,
                       pipeline->phv_drop_cnt, pipeline->recirc_cnt);
@@ -342,7 +342,7 @@ capmon_p4_pipeline_display_fn(pipeline_t *pipeline)
         default:
             break;
     }
-    CAPMON_REPORT(" Parser: pkt_from_pb=%ld phv_to_s0=%ld pkt_to_dp=%ld\n",
+    CAPMON_REPORT(" Parser: pkt_from_pb=%lu phv_to_s0=%lu pkt_to_dp=%lu\n",
                   pipeline->pkt_from_pb, pipeline->phv_to_s0,
                   pipeline->pkt_to_dp);
 }
@@ -355,17 +355,17 @@ capmon_dma_post_stage_display(pipeline_t *pipeline)
     } else if (pipeline->type == RXDMA) {
         CAPMON_REPORT(" RxDMA:");
     }
-    CAPMON_REPORT(" phv=%ld pkt=%ld drop=%ld(%ld%%) err=%ld recirc=%ld "
-                  "resub=%ld in_flight=%ld\n",
+    CAPMON_REPORT(" phv=%lu pkt=%lu drop=%lu(%lu%%) err=%lu recirc=%lu "
+                  "resub=%lu in_flight=%lu\n",
                   pipeline->phv, pipeline->pb_cnt, pipeline->phv_drop,
                   (pipeline->phv_drop * 100) / pipeline->phv, pipeline->phv_err,
                   pipeline->phv_recirc, pipeline->resub_cnt,
                   pipeline->in_flight);
 
-    CAPMON_REPORT("       AXI reads=%ld writes=%ld\n", pipeline->axi_reads,
+    CAPMON_REPORT("       AXI reads=%lu writes=%lu\n", pipeline->axi_reads,
                   pipeline->axi_writes);
 
-    CAPMON_REPORT("       FIFO (empty%%/full%%) rd=%d/%d wr=%d/%d pkt=%d/%d",
+    CAPMON_REPORT("       FIFO (empty%%/full%%) rd=%u/%u wr=%u/%u pkt=%u/%u",
                   pipeline->rd_empty_fifos, pipeline->rd_full_fifos,
                   pipeline->wr_empty_fifos, pipeline->wr_full_fifos,
                   pipeline->pkt_empty_fifos, pipeline->pkt_full_fifos);
@@ -379,8 +379,8 @@ capmon_dma_post_stage_display(pipeline_t *pipeline)
 static inline void
 capmon_rxdma_post_stage_display1(pipeline_t *pipeline)
 {
-    CAPMON_REPORT("       XOFF hostq=%ld pkt=%ld phv=%ld phv_xoff=%d%% "
-                  "pb_xoff=%d%% host_xoff=%d%%\n",
+    CAPMON_REPORT("       XOFF hostq=%lu pkt=%lu phv=%lu phv_xoff=%u%% "
+                  "pb_xoff=%u%% host_xoff=%u%%\n",
                   pipeline->hostq_xoff_cnt, pipeline->pkt_xoff_cnt,
                   pipeline->phv_xoff_cnt, pipeline->host_xoff,
                   pipeline->phv_xoff, pipeline->pb_xoff);
@@ -436,7 +436,7 @@ capmon_pipeline_display_fn(void *ptr)
             capmon_p4_pipeline_display_fn(pipeline);
             break;
         default:
-            CAPMON_REPORT("Error: Unknown pipeline type:%d", pipeline->type);
+            CAPMON_REPORT("Error: Unknown pipeline type:%u", pipeline->type);
     }
 
     capmon_stages_display((pipeline_t *)pipeline);
@@ -458,7 +458,7 @@ capmon_pipelines_display()
 static inline void
 capmon_asic_display_target_status()
 {
-    CAPMON_REPORT("  pending [0]=%d\n", asic->target_pending);
+    CAPMON_REPORT("  pending [0]=%u\n", asic->target_pending);
 }
 
 static inline void
@@ -475,8 +475,8 @@ capmon_asic_display_target_counters()
 static inline void
 capmon_asic_display_target_err_counters()
 {
-    CAPMON_REPORT("  ur_cpl=%ld tlp_drop=%ld rresp_err=%d bresp_err=%d "
-                  "ind_cnxt_mismatch=%d\n", asic->ur_cpl,
+    CAPMON_REPORT("  ur_cpl=%lu tlp_drop=%lu rresp_err=%u bresp_err=%u "
+                  "ind_cnxt_mismatch=%u\n", asic->ur_cpl,
                   asic->tlp_drop, asic->rresp_err, asic->bresp_err,
                   asic->ind_cnxt_mismatch);
 }
@@ -489,7 +489,7 @@ capmon_asic_display_initiator_status()
     auto rd_total =
         asic->rd_lat0 + asic->rd_lat1 + asic->rd_lat2 + asic->rd_lat3;
     CAPMON_REPORT(
-        "  read latency (clks) >%d=%.2f%% >%d=%.2f%% >%d=%.2f%% >%d=%.2f%%\n",
+        "  read latency (clks) >%u=%.2f%% >%u=%.2f%% >%u=%.2f%% >%u=%.2f%%\n",
         asic->cfg_rdlat[3], (asic->rd_lat0 * 100.0) / rd_total,
         asic->cfg_rdlat[2], (asic->rd_lat1 * 100.0) / rd_total,
         asic->cfg_rdlat[1], (asic->rd_lat2 * 100.0) / rd_total,
@@ -503,7 +503,7 @@ capmon_asic_display_initiator_counters()
                   asic->axi_wr64, asic->axi_wr256, asic->axi_wr_bytes);
     CAPMON_REPORT("  rd=%lu rd_64=%lu wr_256=%lu bytes=%lu\n", asic->axi_rd,
                   asic->axi_rd64, asic->axi_rd256, asic->axi_rd_bytes);
-    CAPMON_REPORT("  atomic=%ld\n", asic->atomic_req);
+    CAPMON_REPORT("  atomic=%lu\n", asic->atomic_req);
 }
 
 static inline void
@@ -517,7 +517,7 @@ static inline void
 capmon_asic_display_pport_counters()
 {
     CAPMON_REPORT(
-        "  rx_req_tlp=%ld rx_cpl_tlp=%ld tx_req_tlp=%ld tx_cpl_tlp=%ld\n",
+        "  rx_req_tlp=%lu rx_cpl_tlp=%lu tx_req_tlp=%lu tx_cpl_tlp=%lu\n",
         asic->rx_req_tlp, asic->rx_cpl_tlp, asic->tx_req_tlp, asic->tx_cpl_tlp);
 }
 
@@ -525,16 +525,16 @@ static inline void
 capmon_asic_display_pport_err_counters()
 {
     CAPMON_REPORT(
-        "  rx_bad_tlp=%ld rx_bad_dllp=%ld rx_nak_rcvd=%ld\n"
-        "  rx_nullified=%ld rxbfr_overflow=%ld\n"
-        "  tx_nak_sent=%ld txbuf_ecc_err=%ld\n"
-        "  fcpe=%ld fc_timeout=%ld replay_num_err=%ld replay_timer_err=%ld\n"
-        "  core_initiated_recovery=%d ltssm_state_changed=%d\n"
-        "  skp_os_err=%ld deskew_err=%ld phystatus_err=%ld\n"
-        "  rx_malform_tlp=%ld rx_framing_err=%ld rx_ecrc_err=%ld\n"
-        "  rx_nullify=%ld rx_watchdog_nullify=%ld rx_unsupp=%ld "
-        "rxbuf_ecc_err=%ld\n"
-        "  tx_drop=%ld txbfr_overflow=%ld\n",
+        "  rx_bad_tlp=%lu rx_bad_dllp=%lu rx_nak_rcvd=%lu\n"
+        "  rx_nullified=%lu rxbfr_overflow=%lu\n"
+        "  tx_nak_sent=%lu txbuf_ecc_err=%lu\n"
+        "  fcpe=%lu fc_timeout=%lu replay_num_err=%lu replay_timer_err=%lu\n"
+        "  core_initiated_recovery=%u ltssm_state_changed=%u\n"
+        "  skp_os_err=%lu deskew_err=%lu phystatus_err=%lu\n"
+        "  rx_malform_tlp=%lu rx_framing_err=%lu rx_ecrc_err=%lu\n"
+        "  rx_nullify=%lu rx_watchdog_nullify=%lu rx_unsupp=%lu "
+        "rxbuf_ecc_err=%lu\n"
+        "  tx_drop=%lu txbfr_overflow=%lu\n",
         asic->rx_bad_tlp, asic->rx_bad_dllp, asic->rx_nak_received,
         asic->rx_nullified, asic->rxbfr_overflow, asic->tx_nak_sent,
         asic->txbuf_ecc_err, asic->fcpe, asic->fc_timeout, asic->replay_num_err,
@@ -550,7 +550,7 @@ static inline void
 capmon_asic_display_doorbells()
 {
     CAPMON_REPORT("== Doorbell ==\n");
-    CAPMON_REPORT(" Host=%ld Local=%ld Sched=%ld\n", asic->host_dbs,
+    CAPMON_REPORT(" Host=%lu Local=%lu Sched=%lu\n", asic->host_dbs,
                   asic->local_dbs, asic->db_to_sched_reqs);
 }
 
@@ -634,7 +634,7 @@ capmon_asic_crypto_display()
 {
     CAPMON_REPORT("==Crypto==\n");
     CAPMON_REPORT("  Doorbells:\n");
-    CAPMON_REPORT("    XTS %ld XTS ENC %ld GCM0 %ld GCM1 %ld PK %ld\n",
+    CAPMON_REPORT("    XTS %lu XTS ENC %lu GCM0 %lu GCM1 %lu PK %lu\n",
                   asic->xts_cnt, asic->xtsenc_cnt, asic->gcm0_cnt,
                   asic->gcm1_cnt, asic->pk_cnt);
 }
