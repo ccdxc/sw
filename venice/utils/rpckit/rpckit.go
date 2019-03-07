@@ -297,11 +297,7 @@ func (srv *RPCServer) Stop() error {
 		srv.GrpcServer = nil
 	}
 
-	// release resources held by TLS provider, if any
-	if srv.tlsProvider != nil {
-		srv.tlsProvider.Close()
-		srv.tlsProvider = nil
-	}
+	// do not invoke Close() on the TLS provider because it might be shared
 
 	// close the socket listener
 	return srv.listener.Close()

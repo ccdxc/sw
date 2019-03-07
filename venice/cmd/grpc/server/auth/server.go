@@ -59,7 +59,7 @@ func RunAuthServer(url string, stopChannel chan bool) {
 // RunLeaderInstanceServer creates a gRPC server for authenticated services offered by leader CMD.
 func RunLeaderInstanceServer(url string, stopChannel chan bool) {
 	// Leader sevice require TLS so it depends on certificate services being available
-	rpcServer, err := rpckit.NewRPCServer(globals.Cmd, url)
+	rpcServer, err := rpckit.NewRPCServer(globals.CmdNICUpdatesSvc, url)
 	if err != nil {
 		log.Fatalf("Error creating grpc server at %v: %v", url, err)
 	}
