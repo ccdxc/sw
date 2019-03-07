@@ -9,6 +9,7 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	"github.com/pensando/sw/api/generated/auth"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/hooks/apigw"
@@ -102,7 +103,7 @@ func main() {
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIGw},
-		EvtTypes: evtsapi.GetEventTypes(), SkipEvtsProxy: *disableEvents}, pl)
+		EvtTypes: append(evtsapi.GetEventTypes(), auth.GetEventTypes()...), SkipEvtsProxy: *disableEvents}, pl)
 	if err != nil {
 		pl.Fatalf("failed to create events recorder, err: %v", err)
 	}

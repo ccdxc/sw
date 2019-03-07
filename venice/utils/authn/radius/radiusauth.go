@@ -78,12 +78,11 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		}
 		username = credential.Username
 	}
-	//TODO: Check if it is a multi tenant deployment. If it is then error out if tenant is empty otherwise put "default"
 	tenant := penattrs.PensandoTenant_GetString(response)
 	log.Debugf("tenant retrieved from RADIUS attribute: %s", tenant)
 
 	groups, err := penattrs.PensandoUserGroup_GetStrings(response)
-	if err != nil || len(groups) == 0 {
+	if err != nil {
 		log.Errorf("Error getting user group from RADIUS attributes: Err: %v", err)
 		return nil, false, err
 	}

@@ -26,6 +26,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
@@ -38,6 +39,7 @@ import (
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/balancer"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -141,6 +143,15 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 
 		// authenticate user
 		user, err := s.login(ctx, cred)
+		defer func() {
+			if err != nil {
+				objRef := &auth.User{}
+				objRef.Defaults("all")
+				objRef.Tenant = cred.Tenant
+				objRef.Name = cred.Username
+				recorder.Event(auth.LoginFailed, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("Unsuccessful login attempt by user [%s|%s] connecting from client IPs [%v]", cred.Tenant, cred.Username, getClientIPs(req)), objRef)
+			}
+		}()
 		switch err {
 		case ErrInternal:
 			w.WriteHeader(http.StatusInternalServerError)
@@ -206,7 +217,7 @@ func (s *loginV1GwService) login(ctx context.Context, in *auth.PasswordCredentia
 	}
 	if !ok {
 		s.logger.Infof("failed to authenticate user: [%s|%s]", in.Tenant, in.Username)
-		return nil, err
+		return nil, errors.New("authentication failed")
 	}
 	return user, nil
 }

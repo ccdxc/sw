@@ -346,7 +346,7 @@ dind-cluster-restart:
 # Target to run venice e2e on mac using a dind environment. Uses Agent with its datapath mocked
 e2e:
 	$(MAKE) dind-cluster
-	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v'
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 15m'
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
 

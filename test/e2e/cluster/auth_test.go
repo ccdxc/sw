@@ -15,9 +15,10 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/login"
+	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/authn/testutils"
+	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 )
 
 var _ = Describe("auth tests", func() {
@@ -162,11 +163,60 @@ var _ = Describe("auth tests", func() {
 				return err
 			}, 30, 1).Should(BeNil())
 		})
+		It("check login failure event", func() {
+			_, err := login.NewLoggedInContext(context.TODO(), ts.tu.APIGwAddr, &auth.PasswordCredential{Username: ts.tu.User, Password: "incorrect", Tenant: globals.DefaultTenant})
+			Expect(err).Should(HaveOccurred())
+			query := &search.SearchRequest{
+				Query: &search.SearchQuery{
+					Categories: []string{search.Category_Monitoring.String()},
+					Kinds:      []string{auth.Permission_Event.String()},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "type",
+								Operator: "equals",
+								Values:   []string{auth.LoginFailed},
+							},
+							{
+								Key:      "meta.creation-time",
+								Operator: "gte",
+								Values:   []string{time.Now().Add(-3 * time.Second).Format(time.RFC3339Nano)},
+							},
+							{
+								Key:      "meta.creation-time",
+								Operator: "lte",
+								Values:   []string{time.Now().Format(time.RFC3339Nano)},
+							},
+						},
+					},
+				},
+				From:       0,
+				MaxResults: 50,
+			}
+			Eventually(func() error {
+				resp := testutils.EventSearchResponse{}
+				err := ts.tu.Search(ts.loggedInCtx, query, &resp)
+				if err != nil {
+					return err
+				}
+				if resp.ActualHits == 0 {
+					return fmt.Errorf("no events found for failed login attempt")
+				}
+				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_Event.String()].Entries
+
+				for _, evt := range events {
+					if strings.Contains(evt.Object.Message, fmt.Sprintf("%s|%s", globals.DefaultTenant, ts.tu.User)) {
+						return nil
+					}
+				}
+				return fmt.Errorf("no events found for failed login attempt in default tenant")
+			}, 30, 1).Should(BeNil())
+		})
 		It("successful radius auth", func() {
 			// TODO: Enable this test once we can get ACS to accept connection from IP subnet of API Gw in CI. Currently ACS accepts 192.168.0.0/16, 10.3.0.0/16 but it doesn't seem to work for connections
 			// coming from API Gw in CI. This test works on laptop.
 			Skip("Skipping radius e2e")
-			radiusCtx, err := testutils.NewLoggedInContext(context.TODO(), ts.tu.APIGwAddr, &auth.PasswordCredential{Username: ts.tu.Radius.User, Password: ts.tu.Radius.Password})
+			radiusCtx, err := authntestutils.NewLoggedInContext(context.TODO(), ts.tu.APIGwAddr, &auth.PasswordCredential{Username: ts.tu.Radius.User, Password: ts.tu.Radius.Password})
 			Expect(err).ShouldNot(HaveOccurred())
 			var user *auth.User
 			Eventually(func() error {

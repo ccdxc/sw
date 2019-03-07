@@ -114,7 +114,7 @@ const (
 var (
 	logger = log.GetNewLogger(log.GetDefaultConfig("venice_integ_test"))
 
-	evtType = append(evtsapi.GetEventTypes(), pencluster.GetEventTypes()...)
+	evtType = append(evtsapi.GetEventTypes(), append(pencluster.GetEventTypes(), auth.GetEventTypes()...)...)
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_integ_test"},

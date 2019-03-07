@@ -526,7 +526,7 @@ func (tu *TestUtils) NewLoggedInContext(ctx context.Context) context.Context {
 }
 
 // Search sends a search query to API Gateway
-func (tu *TestUtils) Search(ctx context.Context, query *search.SearchRequest, resp *search.SearchResponse) error {
+func (tu *TestUtils) Search(ctx context.Context, query *search.SearchRequest, resp interface{}) error {
 	return Search(ctx, tu.APIGwAddr, query, resp)
 }
 

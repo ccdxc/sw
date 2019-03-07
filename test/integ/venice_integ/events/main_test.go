@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -44,7 +45,7 @@ var (
 	// create mock events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "events_integ_test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
+		EvtTypes:      append(evtsapi.GetEventTypes(), auth.GetEventTypes()...),
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true}, log.GetNewLogger(log.GetDefaultConfig("events_integ_test")))
 )

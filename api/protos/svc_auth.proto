@@ -12,6 +12,11 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/protos/tenant.proto";
 import "auth.proto";
 
+// list of V1 event types supported by the auth service
+enum EventTypesV1 {
+    LoginFailed = 0; // User login failed
+}
+
 // Auth REST API
 service AuthV1 {
     // Prefix for all resources served by this service.
@@ -69,4 +74,8 @@ service AuthV1 {
         Object: "RoleBinding"
         Method: [ "get", "put", "delete", "post", "list", "watch" ]
     };
+
+    // name of enums containing event types.
+    // e.g: V2 can include "EventTypesV1" and "EventTypesV2" in this list.
+    option(venice.eventTypes) = "EventTypesV1";
 }
