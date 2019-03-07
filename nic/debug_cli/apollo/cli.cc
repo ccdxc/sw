@@ -16,8 +16,10 @@ static bool pd_inited = 0;
 int
 cli_init (char *ptr)
 {
-    pal_ret_t       pal_ret;
-    p4pd_error_t    p4pd_ret;
+    pal_ret_t    pal_ret;
+    p4pd_error_t p4pd_ret;
+    capri_cfg_t  capri_cfg;
+
     p4pd_cfg_t p4pd_cfg = {
         .table_map_cfg_file  = "apollo/capri_p4_table_map.json",
         .p4pd_pgm_name       = "apollo_p4",
@@ -44,9 +46,15 @@ cli_init (char *ptr)
     pal_ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
 
+    memset(&capri_cfg, 0, sizeof(capri_cfg_t));
+    capri_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    std::string mpart_json = capri_cfg.cfg_path + "/apollo/hbm_mem.json";
+    capri_cfg.mempartition =
+        sdk::platform::utils::mpartition::factory(mpart_json.c_str());
+
     // do capri_state_pd_init needed by sdk capri
     // csr init is done inside capri_state_pd_init
-    sdk::platform::capri::capri_state_pd_init(NULL);
+    sdk::platform::capri::capri_state_pd_init(&capri_cfg);
 
     // do apollo specific initialization
     p4pd_ret = p4pd_init(&p4pd_cfg);

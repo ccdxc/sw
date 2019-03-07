@@ -184,6 +184,26 @@ apollo_impl::key_native_init_(void) {
 
     ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask,
                                                      &data, (uint32_t *)&idx);
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ipv4_1_valid = 0;
+    key.ipv6_1_valid = 1;
+    key.ethernet_2_valid = 0;
+    key.ipv4_2_valid = 0;
+    key.ipv6_2_valid = 0;
+    data.action_id = KEY_NATIVE_NATIVE_IPV6_PACKET_ID;
+    mask.ipv4_1_valid_mask = 0xFF;
+    mask.ipv6_1_valid_mask = 0xFF;
+    mask.ethernet_2_valid_mask = 0xFF;
+    mask.ipv4_2_valid_mask = 0xFF;
+    mask.ipv6_2_valid_mask = 0xFF;
+
+    ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask,
+                                                     &data, (uint32_t *)&idx);
+
     return ret;
 }
 

@@ -173,7 +173,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
     api_params.appdata = &local_ip_mapping_data;
     api_params.action_id = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;
     ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(&api_params);
-    if ((ret != SDK_RET_OK) && (ret != sdk::SDK_RET_COLLISION)) {
+    if (ret != SDK_RET_OK) {
         goto error;
     }
 
@@ -237,6 +237,11 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
     api_params.action_id =
         REMOTE_VNIC_MAPPING_RX_REMOTE_VNIC_MAPPING_RX_INFO_ID;
     ret = mapping_impl_db()->remote_vnic_mapping_rx_tbl()->insert(&api_params);
+    // TODO: Remote mapping key is SIPo, we need to handle the refcounts, if
+    // there are multiple inserts with same key (e.g. dual-stack)
+    if (ret == sdk::SDK_RET_ENTRY_EXISTS || ret == SDK_RET_OK) {
+        return SDK_RET_OK;
+    }
     return ret;
 }
 
@@ -258,9 +263,16 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
     tep_impl_obj =
         (tep_impl *)tep_db()->tep_find(&spec->tep)->impl();
     remote_vnic_mapping_tx_key.txdma_to_p4e_header_vcn_id = vcn->hw_id();
+
     // TODO: ipv4 or ipv6 is not part of the key ? p4 needs to change
-    memcpy(remote_vnic_mapping_tx_key.p4e_apollo_i2e_dst,
-           spec->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+    if (spec->key.ip_addr.af == IP_AF_IPV6) {
+        sdk::lib::memrev(remote_vnic_mapping_tx_key.p4e_apollo_i2e_dst, 
+                         spec->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+    } else {
+        memcpy(remote_vnic_mapping_tx_key.p4e_apollo_i2e_dst,
+               spec->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+    }
+
     remote_vnic_mapping_tx_data.nexthop_index = tep_impl_obj->nh_id();
     remote_vnic_mapping_tx_data.dst_slot_id_valid = 1;
     if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {

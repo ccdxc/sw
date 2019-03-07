@@ -8,33 +8,76 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "gen/proto/types/types.pb.h"
 
+//----------------------------------------------------------------------------
+// convert IP address spec in proto to ip_addr
+//----------------------------------------------------------------------------
 static inline void
-pds_agent_util_ipaddr_fill (types::IPAddress proto_addr, ip_addr_t *addr)
+pds_agent_util_ipaddr_fill (const types::IPAddress &in_ipaddr, ip_addr_t *out_ipaddr)
 {
-    if (proto_addr.af() == types::IP_AF_INET) {
-        addr->af = IP_AF_IPV4;
-        addr->addr.v4_addr = proto_addr.v4addr();
-    } else if (proto_addr.af() == types::IP_AF_INET6) {
-        addr->af = IP_AF_IPV6;
-        // proto_addr.v6aaddr()
-        // TODO
+    memset(out_ipaddr, 0, sizeof(ip_addr_t));
+    if (in_ipaddr.af() == types::IP_AF_INET) {
+        out_ipaddr->af = IP_AF_IPV4;
+        out_ipaddr->addr.v4_addr = in_ipaddr.v4addr();
+    } else if (in_ipaddr.af() == types::IP_AF_INET6) {
+        out_ipaddr->af = IP_AF_IPV6;
+        memcpy(out_ipaddr->addr.v6_addr.addr8,
+               in_ipaddr.v6addr().c_str(),
+               IP6_ADDR8_LEN);
+    } else {
+        return;
     }
+
+    return;
 }
 
-static inline void
-pds_agent_util_ip_pfx_fill (types::IPPrefix proto_pfx, ip_prefix_t *pfx)
+static inline sdk_ret_t
+pds_agent_util_ip_pfx_fill (const types::IPPrefix& in_ippfx, ip_prefix_t *ip_pfx)
 {
-    types::IPAddress addr;
-
-    addr = proto_pfx.addr();
-    pfx->len = proto_pfx.len();
-    pfx->addr.af = addr.af();
-    if (addr.af() == IP_AF_IPV4) {
-        pds_agent_util_ipaddr_fill(addr, &pfx->addr);
+    ip_pfx->len = in_ippfx.len();
+    if (((in_ippfx.addr().af() == types::IP_AF_INET) &&
+             (ip_pfx->len > 32)) ||
+        ((in_ippfx.addr().af() == types::IP_AF_INET6) &&
+             (ip_pfx->len > 128))) {
+        return SDK_RET_INVALID_ARG;
     } else {
-        // TODO
-        // std::string v6addr = addr.v6aadr();
+        pds_agent_util_ipaddr_fill(in_ippfx.addr(), &ip_pfx->addr);
     }
+    return SDK_RET_OK;
+}
+
+static inline pds_encap_t
+proto_encap_to_pds_encap (types::Encap encap)
+{
+    pds_encap_t    pds_encap;
+
+    memset(&pds_encap, 0, sizeof(pds_encap));
+    switch (encap.type()) {
+    case types::ENCAP_TYPE_NONE:
+        pds_encap.type = PDS_ENCAP_TYPE_NONE;
+        break;
+
+    case types::ENCAP_TYPE_DOT1Q:
+        pds_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+        pds_encap.val.vlan_tag = encap.value().vlanid();
+        break;
+
+    case types::ENCAP_TYPE_QINQ:
+        pds_encap.type = PDS_ENCAP_TYPE_QINQ;
+        break;
+
+    case types::ENCAP_TYPE_MPLSoUDP:
+        pds_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+        pds_encap.val.mpls_tag = encap.value().mplstag();
+        break;
+
+    case types::ENCAP_TYPE_VXLAN:
+        pds_encap.type = PDS_ENCAP_TYPE_VXLAN;
+        pds_encap.val.vnid = encap.value().vnid();
+        break;
+    default:
+        break;
+    }
+    return pds_encap;
 }
 
 #endif    // __AGENT_SVC_UTIL_HPP__

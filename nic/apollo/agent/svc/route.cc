@@ -10,20 +10,30 @@ static inline void
 pds_agent_route_table_api_spec_fill (const tpc::RouteTableSpec *proto_spec,
                                      pds_route_table_spec_t *api_spec)
 {
-    pds_route_t route = {0};
-
     api_spec->key.id = proto_spec->id();
-    api_spec->af = proto_spec->af();
+    switch (proto_spec->af()) {
+    case types::IP_AF_INET:
+        api_spec->af = IP_AF_IPV4;
+        break;
+
+    case types::IP_AF_INET6:
+        api_spec->af = IP_AF_IPV6;
+        break;
+
+    default:
+        break;
+    }
     api_spec->num_routes = proto_spec->routes_size();
     api_spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ROUTE_TABLE,
                                                  sizeof(pds_route_t) *
-                                                     proto_spec->routes_size());
+                                                 api_spec->num_routes);
     for (int i = 0; i < proto_spec->routes_size(); i++) {
         const tpc::Route &proto_route = proto_spec->routes(i);
-        pds_agent_util_ip_pfx_fill(proto_route.prefix(), &route.prefix);
-        pds_agent_util_ipaddr_fill(proto_route.nexthop(), &route.nh_ip);
-        route.vcn_id = proto_route.pcnid();
-        api_spec->routes[i] = route;
+        pds_agent_util_ip_pfx_fill(proto_route.prefix(), &api_spec->routes[i].prefix);
+        pds_agent_util_ipaddr_fill(proto_route.nexthop(), &api_spec->routes[i].nh_ip);
+        api_spec->routes[i].vcn_id = proto_route.pcnid();
+        // TODO: hardcoded for now
+        api_spec->routes[i].nh_type = PDS_NH_TYPE_REMOTE_TEP;
     }
 }
 

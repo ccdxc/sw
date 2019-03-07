@@ -35,7 +35,7 @@ message VnicSpec {
   // or while receiving traffic from this vnic
   bool                SourceGuardEnable = 7;
   // fabric encap information to be used for traffic originated from this vnic
-  types.FabricEncapId EncapId           = 8 [(gogoproto.nullable) = false];
+  types.Encap Encap                     = 8 [(gogoproto.nullable) = false];
 }
 
 // Operational status of Vnic, if any

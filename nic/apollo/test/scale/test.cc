@@ -1,5 +1,9 @@
+//------------------------------------------------------------------------------
+// Copyright (c) 2019 Pensando Systems, Inc.
+//------------------------------------------------------------------------------
+
+#include <iostream>
 #include "nic/apollo/test/scale/test.hpp"
-#include "nic/apollo/test/flow_test/flow_test.hpp"
 #include "nic/apollo/include/api/pds_tep.hpp"
 #include "nic/apollo/include/api/pds_vcn.hpp"
 #include "nic/apollo/include/api/pds_subnet.hpp"
@@ -11,6 +15,10 @@
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
+#include "nic/apollo/agent/testapp/test_app.hpp"
+#ifndef TEST_GRPC_APP
+#include "nic/apollo/test/flow_test/flow_test.hpp"
+#endif
 
 #define VNID_BASE                      1000
 
@@ -18,10 +26,10 @@ using std::string;
 namespace pt = boost::property_tree;
 
 extern char *g_input_cfg_file;
-extern char *g_cfg_file;
-extern bool g_daemon_mode;
-extern pds_device_spec_t g_device;
+pds_device_spec_t g_device = {0};
+#ifndef TEST_GRPC_APP
 flow_test *g_flow_test_obj;
+#endif
 
 typedef struct test_params_s {
     // device config
@@ -40,6 +48,7 @@ typedef struct test_params_s {
     struct {
         uint32_t num_routes;
         ip_prefix_t route_pfx;
+        ip_prefix_t v6_route_pfx;
     };
     // policy config
     struct {
@@ -49,6 +58,7 @@ typedef struct test_params_s {
     struct {
         uint32_t num_vcns;
         ip_prefix_t vcn_pfx;
+        ip_prefix_t v6_vcn_pfx;
         uint32_t num_subnets;
     };
     // vnic config
@@ -59,6 +69,7 @@ typedef struct test_params_s {
     // mapping config
     struct {
         ip_prefix_t nat_pfx;
+        ip_prefix_t v6_nat_pfx;
         uint32_t num_ip_per_vnic;
         uint32_t num_remote_mappings;
     };
@@ -73,13 +84,20 @@ typedef struct test_params_s {
 } test_params_t;
 test_params_t g_test_params = { 0 };
 
+#define CONVERT_TO_V4_MAPPED_V6_ADDRESS(_v6pfx, _v4addr) {\
+    _v6pfx.addr8[12] = (_v4addr >> 24) & 0xFF;\
+    _v6pfx.addr8[13] = (_v4addr >> 16) & 0xFF;\
+    _v6pfx.addr8[14] = (_v4addr >> 8) & 0xFF;\
+    _v6pfx.addr8[15] = (_v4addr) & 0xFF;\
+}
+
 //----------------------------------------------------------------------------
 // create route tables
 //------------------------------------------------------------------------------
 sdk_ret_t
 create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                      uint32_t num_routes, ip_prefix_t *tep_pfx,
-                     ip_prefix_t *route_pfx)
+                     ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx)
 {
     uint32_t ntables = num_vcns * num_subnets;
     uint32_t tep_offset = 3;
@@ -110,10 +128,17 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
             route_table.routes[j].nh_type = PDS_NH_TYPE_REMOTE_TEP;
             route_table.routes[j].vcn_id = PDS_VCN_ID_INVALID;
         }
+#ifdef TEST_GRPC_APP
+        rv = create_route_table_grpc(&route_table);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#else
         rv = pds_route_table_create(&route_table);
         if (rv != SDK_RET_OK) {
             return rv;
         }
+#endif
     }
     return rv;
 }
@@ -125,13 +150,15 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
 sdk_ret_t
 create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                  uint32_t num_vnics, uint32_t num_ip_per_vnic,
-                 ip_prefix_t *teppfx, ip_prefix_t *natpfx,
+                 ip_prefix_t *teppfx, ip_prefix_t *natpfx, ip_prefix_t *v6_natpfx,
                  uint32_t num_remote_mappings)
 {
     sdk_ret_t rv;
     pds_mapping_spec_t pds_mapping;
-    uint16_t vnic_key = 1, ip_base, mac_offset = 1025;
-    uint32_t ip_offset = 0, remote_slot = 1025, tep_offset;
+    pds_mapping_spec_t pds_v6_mapping;
+    uint16_t vnic_key = 1, ip_base;
+    uint32_t ip_offset = 0, remote_slot = 1025;
+    uint32_t tep_offset = 0, v6_tep_offset = 0;
 
     // ensure a max. of 32 IPs per VNIC
     SDK_ASSERT(num_vcns * num_subnets * num_vnics * num_ip_per_vnic <=
@@ -166,13 +193,48 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                         pds_mapping.public_ip.addr.v4_addr =
                             natpfx->addr.addr.v4_addr + ip_offset++;
                     }
-                    rv = pds_mapping_create(&pds_mapping);
+
+#ifdef TEST_GRPC_APP
+                    rv = create_mapping_grpc(&pds_mapping);
                     if (rv != SDK_RET_OK) {
+                        SDK_ASSERT(0);
                         return rv;
                     }
-#if 0
+#else
+                    rv = pds_mapping_create(&pds_mapping);
+                    if (rv != SDK_RET_OK) {
+                        SDK_ASSERT(0);
+                        return rv;
+                    }
                     g_flow_test_obj->add_local_ep(pds_mapping.key.vcn.id,
-                                         pds_mapping.key.ip_addr.addr.v4_addr);
+                                                  pds_mapping.key.ip_addr);
+#endif
+                    // V6 mapping
+                    pds_v6_mapping = pds_mapping;
+                    pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
+                    pds_v6_mapping.key.ip_addr.addr.v6_addr = 
+                           g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
+                    CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
+                                                    pds_mapping.key.ip_addr.addr.v4_addr);
+                    if (natpfx) {
+                        pds_v6_mapping.public_ip.addr.v6_addr = v6_natpfx->addr.addr.v6_addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.public_ip.addr.v6_addr,
+                                                        pds_mapping.public_ip.addr.v4_addr);
+                    }
+#ifdef TEST_GRPC_APP
+                    rv = create_mapping_grpc(&pds_v6_mapping);
+                    if (rv != SDK_RET_OK) {
+                        SDK_ASSERT(0);
+                        return rv;
+                    }
+#else
+                    rv = pds_mapping_create(&pds_v6_mapping);
+                    if (rv != SDK_RET_OK) {
+                        SDK_ASSERT(0);
+                        return rv;
+                    }
+                    g_flow_test_obj->add_local_ep(pds_mapping.key.vcn.id,
+                                                  pds_v6_mapping.key.ip_addr);
 #endif
                 }
                 vnic_key++;
@@ -184,6 +246,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     SDK_ASSERT(num_vcns * num_remote_mappings <= (1 << 20));
     for (uint32_t i = 1; i <= num_vcns; i++) {
         tep_offset = 3;
+        v6_tep_offset = tep_offset + num_teps / 2;
         for (uint32_t j = 1; j <= num_subnets; j++) {
             ip_base = num_vnics * num_ip_per_vnic + 1;
             for (uint32_t k = 1; k <= num_remote_mappings; k++) {
@@ -203,23 +266,53 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     pds_mapping.fabric_encap.val.mpls_tag = remote_slot++;
                 }
                 pds_mapping.tep.ip_addr =
-                    teppfx->addr.addr.v4_addr + tep_offset++;
-                tep_offset %= num_teps + 3;
-                if (tep_offset == 0) {
-                    // skip MyTEP and gateway IPs
-                    tep_offset += 3;
-                }
+                    teppfx->addr.addr.v4_addr + tep_offset;
                 MAC_UINT64_TO_ADDR(
                     pds_mapping.overlay_mac,
                     (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
                       ((num_vnics + k) & 0x7FF))));
+
+#ifdef TEST_GRPC_APP
+                rv = create_mapping_grpc(&pds_mapping);
+                if (rv != SDK_RET_OK) {
+                    return rv;
+                }
+#else
                 rv = pds_mapping_create(&pds_mapping);
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
-
                 g_flow_test_obj->add_remote_ep(pds_mapping.key.vcn.id,
-                                     pds_mapping.key.ip_addr.addr.v4_addr);
+                                               pds_mapping.key.ip_addr);
+#endif
+                // V6 mapping
+                pds_v6_mapping = pds_mapping;
+                pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
+                pds_v6_mapping.key.ip_addr.addr.v6_addr =
+                      g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
+                CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
+                                                pds_mapping.key.ip_addr.addr.v4_addr);
+                pds_v6_mapping.tep.ip_addr = teppfx->addr.addr.v4_addr + v6_tep_offset;
+#ifdef TEST_GRPC_APP
+                rv = create_mapping_grpc(&pds_v6_mapping);
+                if (rv != SDK_RET_OK) {
+                    return rv;
+                }
+#else
+                rv = pds_mapping_create(&pds_v6_mapping);
+                if (rv != SDK_RET_OK) {
+                    return rv;
+                }
+                g_flow_test_obj->add_remote_ep(pds_mapping.key.vcn.id,
+                                               pds_v6_mapping.key.ip_addr);
+#endif
+                tep_offset++;
+                tep_offset %= num_teps;
+                tep_offset = tep_offset ? tep_offset : 3;
+
+                v6_tep_offset++;
+                v6_tep_offset %= num_teps;
+                v6_tep_offset = v6_tep_offset ? v6_tep_offset : 3;
             }
         }
     }
@@ -260,10 +353,17 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
                                      ((j & 0x7FF) << 11) | (k & 0x7FF))));
                 pds_vnic.rsc_pool_id = 1;
                 pds_vnic.src_dst_check = false; //(k & 0x1);
+#ifdef TEST_GRPC_APP
+                rv = create_vnic_grpc(&pds_vnic);
+                if (rv != SDK_RET_OK) {
+                    return rv;
+                }
+#else
                 rv = pds_vnic_create(&pds_vnic);
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
+#endif
                 vnic_key++;
             }
         }
@@ -298,10 +398,17 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
                            (uint64_t)pds_subnet.vr_ip.addr.v4_addr);
         pds_subnet.v4_route_table.id = route_table_id++;
         pds_subnet.egr_v4_policy.id = id++;
+#ifdef TEST_GRPC_APP
+        rv = create_subnet_grpc(&pds_subnet);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#else
         rv = pds_subnet_create(&pds_subnet);
         if (rv != SDK_RET_OK) {
             return rv;
         }
+#endif
     }
     return SDK_RET_OK;
 }
@@ -320,10 +427,17 @@ create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
         pds_vcn.pfx = *ip_pfx;
         pds_vcn.pfx.len = 8; // fix this to /8
         pds_vcn.pfx.addr.addr.v4_addr &= 0xFF000000;
+#ifdef TEST_GRPC_APP
+        rv = create_vcn_grpc(&pds_vcn);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#else
         rv = pds_vcn_create(&pds_vcn);
         if (rv != SDK_RET_OK) {
             return rv;
         }
+#endif
         for (uint32_t j = 1; j <= num_subnets; j++) {
             rv = create_subnets(i, j, &pds_vcn.pfx);
             if (rv != SDK_RET_OK) {
@@ -351,10 +465,17 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         } else {
             pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
         }
+#ifdef TEST_GRPC_APP
+        rv = create_tunnel_grpc(&pds_tep);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#else
         rv = pds_tep_create(&pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;
         }
+#endif
     }
     return SDK_RET_OK;
 }
@@ -362,19 +483,26 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 sdk_ret_t
 create_device_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
 {
-    sdk_ret_t rv;
-
+    sdk_ret_t            rv;
     memset(&g_device, 0, sizeof(g_device));
     g_device.switch_ip_addr = ipaddr;
     MAC_UINT64_TO_ADDR(g_device.switch_mac_addr, macaddr);
     g_device.gateway_ip_addr = gwip;
-    return pds_device_create(&g_device);
+
+#ifdef TEST_GRPC_APP
+    rv = create_switch_grpc(&g_device);
+#else
+    rv = pds_device_create(&g_device);
+#endif
+
+    return rv;
 }
 
 sdk_ret_t
 create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
                         uint32_t num_rules, uint32_t ip_af, bool ingress)
 {
+#ifndef TEST_GRPC_APP
     sdk_ret_t            rv;
     pds_policy_spec_t    policy;
     uint32_t             policy_id = 1;
@@ -416,35 +544,40 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
             }
         }
     }
+#endif
     return SDK_RET_OK;
 }
 
-sdk_ret_t
+static sdk_ret_t
 create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp,
-              uint16_t sport_base, uint16_t dport_base)
+              uint16_t sport_base, uint16_t dport_base, bool ipv6)
 {
+#ifndef TEST_GRPC_APP
     sdk_ret_t ret = SDK_RET_OK;
 
     if (num_tcp) {
-        ret = g_flow_test_obj->create_flows(num_tcp, 6, sport_base, dport_base);
+        ret = g_flow_test_obj->create_flows(num_tcp, 6, sport_base,
+                                            dport_base, ipv6);
         if (ret != SDK_RET_OK) {
             return ret;
         }
     }
 
     if (num_udp) {
-        ret = g_flow_test_obj->create_flows(num_udp, 17, sport_base, dport_base);
+        ret = g_flow_test_obj->create_flows(num_udp, 17, sport_base,
+                                            dport_base, ipv6);
         if (ret != SDK_RET_OK) {
             return ret;
         }
     }
 
     if (num_icmp) {
-        ret = g_flow_test_obj->create_flows(num_icmp, 1, 0, 0);
+        ret = g_flow_test_obj->create_flows(num_icmp, 1, 0, 0, ipv6);
         if (ret != SDK_RET_OK) {
             return ret;
         }
     }
+#endif
     return SDK_RET_OK;
 }
 
@@ -452,11 +585,12 @@ sdk_ret_t
 create_objects (void)
 {
     pt::ptree json_pt;
-    ip_prefix_t teppfx, natpfx, routepfx;
     string pfxstr;
     sdk_ret_t ret;
     
+#ifndef TEST_GRPC_APP
     g_flow_test_obj = new flow_test();
+#endif
 
     // parse the config and create objects
     std::ifstream json_cfg(g_input_cfg_file);
@@ -467,7 +601,6 @@ create_objects (void)
             std::string kind = obj.second.get<std::string>("kind");
             if (kind == "device") {
                 struct in_addr ipaddr, gwip;
-                uint64_t macaddr;
 
                 g_test_params.device_mac =
                     std::stoull(obj.second.get<std::string>("mac-addr"), 0, 0);
@@ -499,12 +632,16 @@ create_objects (void)
                 g_test_params.num_routes = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix-start");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.route_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("v6-prefix-start");
+                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_route_pfx) == 0);
             } else if (kind == "security-policy") {
                 g_test_params.num_rules = std::stol(obj.second.get<std::string>("count"));
             } else if (kind == "vcn") {
                 g_test_params.num_vcns = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.vcn_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("v6-prefix");
+                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_vcn_pfx) == 0);
                 g_test_params.num_subnets = std::stol(obj.second.get<std::string>("subnets"));
             } else if (kind == "vnic") {
                 g_test_params.num_vnics = std::stol(obj.second.get<std::string>("count"));
@@ -513,6 +650,8 @@ create_objects (void)
             } else if (kind == "mappings") {
                 pfxstr = obj.second.get<std::string>("nat-prefix");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.nat_pfx) == 0);
+                pfxstr = obj.second.get<std::string>("v6-nat-prefix");
+                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_nat_pfx) == 0);
                 g_test_params.num_remote_mappings =
                     std::stol(obj.second.get<std::string>("remotes"));
                 g_test_params.num_ip_per_vnic =
@@ -544,7 +683,8 @@ create_objects (void)
     // create route tables
     ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vcns,
                               g_test_params.num_subnets, g_test_params.num_routes,
-                              &g_test_params.tep_pfx, &g_test_params.route_pfx);
+                              &g_test_params.tep_pfx, &g_test_params.route_pfx,
+                              &g_test_params.v6_route_pfx);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -587,18 +727,28 @@ create_objects (void)
     ret = create_mappings(g_test_params.num_teps, g_test_params.num_vcns,
                           g_test_params.num_subnets, g_test_params.num_vnics,
                           g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
-                          &g_test_params.nat_pfx, g_test_params.num_remote_mappings);
+                          &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
+                          g_test_params.num_remote_mappings);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    // create flows
+    // create V6 flows
     ret = create_flows(g_test_params.num_tcp, g_test_params.num_udp,
                        g_test_params.num_icmp, g_test_params.sport_base,
-                       g_test_params.dport_base);
+                       g_test_params.dport_base, true);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // create V4 flows
+    ret = create_flows(g_test_params.num_tcp, g_test_params.num_udp,
+                       g_test_params.num_icmp, g_test_params.sport_base,
+                       g_test_params.dport_base, false);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
     return ret;
 }
+
+
 

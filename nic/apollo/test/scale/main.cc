@@ -19,8 +19,6 @@
 char *g_input_cfg_file = NULL;
 char *g_cfg_file = NULL;
 bool g_daemon_mode = false;
-ip_prefix_t g_vcn_ippfx = {0};
-pds_device_spec_t g_device = {0};
 
 uint8_t g_snd_pkt1[] = {
     0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0, 0x00, 0x00,

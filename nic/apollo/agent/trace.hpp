@@ -38,27 +38,37 @@ trace_level (void)
 // trace macros
 // NOTE: we can't use printf() here if g_trace_logger is NULL, because printf()
 // won't understand spdlog friendly formatters
+// TODO: Remove call to trace_logger flush from all the macros below
 //------------------------------------------------------------------------------
+#define PDS_TRACE_FLUSH()                                                      \
+    if (likely(trace_logger())) {                                              \
+        core::trace_logger()->flush();                                         \
+    }
+
 #define PDS_TRACE_ERR(fmt, ...)                                                \
     if (likely(trace_logger()) && (trace_level() >= utils::trace_err)) {       \
         trace_logger()->error("[{}:{}] " fmt, __func__, __LINE__,              \
                               ##__VA_ARGS__);                                  \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_TRACE_ERR_NO_META(fmt...)                                          \
     if (likely(trace_logger()) && (trace_level() >= utils::trace_err)) {       \
         trace_logger()->error(fmt);                                            \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_TRACE_WARN(fmt, ...)                                               \
     if (likely(trace_logger()) && (trace_level() >= utils::trace_warn)) {      \
         trace_logger()->warn("[{}:{}] " fmt, __func__, __LINE__,               \
                              ##__VA_ARGS__);                                   \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_TRACE_WARN_NO_META(fmt, ...)                                       \
     if (likely(trace_logger()) && (trace_level() >= utils::trace_warn)) {      \
         trace_logger()->warn(fmt);                                             \
+        trace_logger()->flush();                                               \
     }
 
 #define PDS_TRACE_INFO(fmt, ...)                                               \
@@ -66,33 +76,39 @@ trace_level (void)
         (core::trace_level() >= utils::trace_info)) {                          \
         core::trace_logger()->info("[{}:{}] " fmt, __func__, __LINE__,         \
                              ##__VA_ARGS__);                                   \
+        core::trace_logger()->flush();                                         \
     }                                                                          \
 
 #define PDS_TRACE_INFO_NO_META(fmt, ...)                                       \
     if (likely(trace_logger()) && (trace_level() >= utils::trace_info)) {      \
         trace_logger()->info(fmt);                                             \
+        trace_logger()->flush();                                               \
     }
 
 #define PDS_TRACE_DEBUG(fmt, ...)                                              \
     if (likely(trace_logger()) && (trace_level() >= utils::trace_debug)) {     \
         trace_logger()->debug("[{}:{}] " fmt, __func__, __LINE__,              \
                               ##__VA_ARGS__);                                  \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_TRACE_DEBUG_NO_META(fmt...)                                        \
     if (likely(trace_logger()) && (trace_level() >= utils::trace_debug)) {     \
         trace_logger()->debug(fmt);                                            \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_TRACE_VERBOSE(fmt, ...)                                            \
     if (likely(trace_logger())) {                                              \
         trace_logger()->trace("[{}:{}] " fmt, __func__, __LINE__,              \
                               ##__VA_ARGS__);                                  \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_TRACE_VERBOSE_NO_META(fmt...)                                      \
     if (likely(trace_logger())) {                                              \
         trace_logger()->trace(fmt);                                            \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_ERR_IF(cond, fmt, ...)                                             \
@@ -100,6 +116,7 @@ trace_level (void)
                (trace_level() >= utils::trace_err) && (cond))) {               \
         trace_logger()->error("[{}:{}] "  fmt,  __func__, __LINE__,            \
                               ##__VA_ARGS__);                                  \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_WARN_IF(cond, fmt, ...)                                            \
@@ -107,6 +124,7 @@ trace_level (void)
                (trace_level() >= utils::trace_warn) && (cond))) {              \
         trace_logger()->warn("[{}:{}] "  fmt, __func__, __LINE__,              \
                              ##__VA_ARGS__);                                   \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_INFO_IF(cond, fmt, ...)                                            \
@@ -114,6 +132,7 @@ trace_level (void)
                (trace_level() >= utils::trace_info) && (cond))) {              \
         trace_logger()->info("[{}:{}] "  fmt, __func__, __LINE__,              \
                              ##__VA_ARGS__);                                   \
+        trace_logger()->flush();                                               \
     }                                                                          \
 
 #define PDS_DEBUG_IF(cond, fmt, ...)                                           \
@@ -121,11 +140,7 @@ trace_level (void)
                (trace_level() >= utils::trace_debug) && (cond))) {             \
         trace_logger()->debug("[{}:{}] "  fmt, __func__, __LINE__,             \
                                         ##__VA_ARGS__);                        \
-    }                                                                          \
-
-#define PDS_TRACE_FLUSH()                                                      \
-    if (likely(trace_logger())) {                                              \
         trace_logger()->flush();                                               \
-    }
+    }                                                                          \
 
 #endif    // __PDS_AGENT_TRACE_HPP__

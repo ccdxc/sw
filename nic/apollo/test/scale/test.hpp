@@ -9,12 +9,12 @@
 sdk_ret_t
 create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                      uint32_t num_routes, ip_prefix_t *tep_pfx,
-                     ip_prefix_t *route_pfx);
+                     ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx);
 
 sdk_ret_t
 create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                  uint32_t num_vnics, uint32_t num_ip_per_vnic,
-                 ip_prefix_t *teppfx, ip_prefix_t *natpfx,
+                 ip_prefix_t *teppfx, ip_prefix_t *natpfx, ip_prefix_t *v6_natpfx,
                  uint32_t num_remote_mappings);
 
 sdk_ret_t

@@ -16,13 +16,14 @@
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
+#include "nic/apollo/test/flow_test/flow_test.hpp"
 
 using std::string;
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
-
+flow_test *g_flow_test_obj;
 std::string g_grpc_server_addr;
 #define GRPC_API_PORT    50054
 
@@ -143,6 +144,8 @@ main (int argc, char **argv)
         fprintf(stderr, "Agent initialization failed, err %u", ret);
     }
 
+    g_flow_test_obj = new flow_test();
+    
     // register for all gRPC services
     svc_reg();
 

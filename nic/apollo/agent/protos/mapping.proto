@@ -35,7 +35,7 @@ message MappingSpec {
   // overlay MAC address of this mapping
   uint64          MACAddr     = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // fabric encap information specific to this mapping, if any
-  types.FabricEncapId EncapId = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  types.Encap     Encap       = 5 [(gogoproto.moretags) = "meta:mandatory"];
   // if IP is that of local vnic, corresponding vnic id
   uint32          VnicId      = 6;
   // public IP, if overlay IP has corresponding public IP

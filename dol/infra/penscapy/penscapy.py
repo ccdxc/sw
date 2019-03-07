@@ -3,6 +3,7 @@ import pdb
 
 from third_party.scapy import *
 from third_party.scapy.all import *
+from third_party.scapy.contrib.mpls import *
 
 class PAYLOAD(Packet):
     name = "PAYLOAD"
@@ -906,15 +907,3 @@ class RawPacketParser:
         self.__process_vxlan(pkt) 
         return pkt
 
-class MPLS(Packet):
-    name = "MPLS"
-    fields_desc = [
-        BitField("label",  0,      20),
-        BitField("exp",    0,      3),
-        BitField("bos",    1,      1),
-        BitField("ttl",    64,     8),
-    ]
-
-bind_layers(UDP, MPLS, dport=6635)
-bind_layers(MPLS, MPLS, bos=0)
-bind_layers(MPLS, IP, bos=1)

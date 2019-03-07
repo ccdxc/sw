@@ -314,7 +314,7 @@ str2ipv6pfx (char *str, ip_prefix_t *ip_pfx)
     } else {
         strncpy(buf, str, slash - str);
         buf[slash - str] = '\0';
-        if (inet_pton(AF_INET6, buf, &addr) != -1) {
+        if (inet_pton(AF_INET6, buf, &addr) != 1) {
             return -1;
         }
         memcpy(ip_pfx->addr.addr.v6_addr.addr8, addr.s6_addr, IP6_ADDR8_LEN);

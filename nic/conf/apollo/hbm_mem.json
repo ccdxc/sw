@@ -82,7 +82,7 @@
         },
         {
             "name": "local_ip_mapping",
-            "size": "8192K",
+            "size": "16384K",
             "cache": "p4ig",
             "reset": true
         },
@@ -100,7 +100,7 @@
         },
         {
             "name": "local_ip_mapping_ohash",
-            "size": "1024K",
+            "size": "2048K",
             "cache": "p4ig",
             "reset": true
         },

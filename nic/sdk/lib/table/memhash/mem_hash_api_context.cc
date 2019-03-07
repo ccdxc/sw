@@ -202,7 +202,7 @@ mem_hash_api_context::print_input() {
         if (key2str) {
             MEMHASH_TRACE_DEBUG("- Key:[%s] Hash:[%#x]", key2str(in_key), in_hash_32b);
         } else {
-            MEMHASH_TRACE_DEBUG("- RawKey:[%s]",
+            MEMHASH_TRACE_DEBUG("- RawSwKey:[%s]",
                                 mem_hash_utils_rawstr(in_key, sw_key_len));
         }
     }
@@ -211,7 +211,7 @@ mem_hash_api_context::print_input() {
         if (appdata2str) {
             MEMHASH_TRACE_DEBUG("- AppData:[%s]", appdata2str(in_appdata));
         } else {
-            MEMHASH_TRACE_DEBUG("- RawData:[%s]",
+            MEMHASH_TRACE_DEBUG("- RawSwData:[%s]",
                                 mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
         }
     }
