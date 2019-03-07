@@ -159,7 +159,7 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
     itable.num_intervals = rfc_ctxt->proto_port_tree.num_intervals;
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);
-    ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->port_tree,
+    ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->proto_port_tree,
                              tree_base_addr, tree_size,
                              SACL_PROTO_DPORT_TREE_MAX_NODES >> 1);
     if (ret != SDK_RET_OK) {

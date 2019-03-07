@@ -1276,7 +1276,8 @@ rfc_compute_p1_eq_class_tables (rfc_ctxt_t *rfc_ctxt)
 {
     sacl_ip_sport_p1_actiondata_t action_data = { 0 };
 
-    rfc_compute_eq_class_tables(rfc_ctxt, &rfc_ctxt->port_tree.rfc_table,
+    rfc_compute_eq_class_tables(rfc_ctxt,
+                                &rfc_ctxt->port_tree.rfc_table,
                                 &rfc_ctxt->pfx_tree.rfc_table,
                                 &rfc_ctxt->p1_table,
                                 rfc_ctxt->base_addr + SACL_P1_TABLE_OFFSET,
