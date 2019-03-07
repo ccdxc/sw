@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -51,6 +52,27 @@ func TestAuthorization(t *testing.T) {
 		return err == nil, nil
 	}, fmt.Sprintf("error while retrieving role: Err: %v", err))
 	Assert(t, role.Name == globals.AdminRole && role.Tenant == testTenant, fmt.Sprintf("incorrect role retrieved [%#v]", role))
+	const testTenant2 = "testtenant2"
+
+	// create testtenant2 and admin user
+	MustCreateTenant(tinfo.apicl, testTenant2)
+	defer MustDeleteTenant(tinfo.apicl, testTenant2)
+	MustCreateTestUser(tinfo.apicl, testUser, testPassword, testTenant2)
+	defer MustDeleteUser(tinfo.apicl, testUser, testTenant2)
+	MustCreateRoleBinding(tinfo.apicl, "AdminRoleBinding", testTenant2, globals.AdminRole, []string{testUser}, nil)
+	defer MustDeleteRoleBinding(tinfo.apicl, "AdminRoleBinding", testTenant2)
+
+	ctx, err = NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: testUser, Password: testPassword, Tenant: testTenant2})
+	AssertOk(t, err, "error creating logged in context for testtenant2 admin user")
+	// tenant boundaries should be respected; retrieving testtenant AdminRole should fail
+	AssertConsistently(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().Role().Get(ctx, &api.ObjectMeta{Name: globals.AdminRole, Tenant: testTenant})
+		return err != nil, nil
+	}, "authorization error expected while retrieve other tenant's AdminRole", "100ms", "1s")
+	AssertConsistently(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: testTenant})
+		return err != nil, nil
+	}, "authorization error expected while retrieve other tenant's admin user", "100ms", "1s")
 }
 
 func TestAdminRole(t *testing.T) {
@@ -95,11 +117,17 @@ func TestAdminRole(t *testing.T) {
 		tinfo.l.Infof("admin role update error: %v", err)
 		return err != nil, err
 	}, "admin role shouldn't be updated", "100ms", "1s")
+	currTime := time.Now()
 	MustCreateTenant(tinfo.apicl, testTenant)
+	var adminRole *auth.Role
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := tinfo.restcl.AuthV1().Role().Get(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRole, Tenant: testTenant})
+		adminRole, err = tinfo.restcl.AuthV1().Role().Get(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRole, Tenant: testTenant})
 		return err == nil, err
 	}, "admin role should be created when a tenant is created")
+	creationTime, err := adminRole.CreationTime.Time()
+	AssertOk(t, err, "error getting role creation time")
+	Assert(t, creationTime.After(currTime), "admin role creation time is not set")
+	Assert(t, adminRole.UUID != "", "admin role UUID is not set")
 	MustDeleteTenant(tinfo.apicl, testTenant)
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := tinfo.restcl.AuthV1().Role().Get(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRole, Tenant: testTenant})

@@ -300,6 +300,13 @@ func TestAddRolesHookRegistration(t *testing.T) {
 }
 
 func TestAdminRoleCheck(t *testing.T) {
+	testSuperAdminRole := login.NewClusterRole(globals.AdminRole, login.NewPermission(
+		authz.ResourceTenantAll,
+		authz.ResourceGroupAll,
+		authz.ResourceKindAll,
+		authz.ResourceNamespaceAll,
+		"",
+		auth.Permission_AllActions.String()))
 	tests := []struct {
 		name     string
 		in       interface{}
@@ -308,21 +315,9 @@ func TestAdminRoleCheck(t *testing.T) {
 		err      error
 	}{
 		{
-			name: "super admin role",
-			in: login.NewClusterRole(globals.AdminRole, login.NewPermission(
-				authz.ResourceTenantAll,
-				authz.ResourceGroupAll,
-				authz.ResourceKindAll,
-				authz.ResourceNamespaceAll,
-				"",
-				auth.Permission_AllActions.String())),
-			out: login.NewClusterRole(globals.AdminRole, login.NewPermission(
-				authz.ResourceTenantAll,
-				authz.ResourceGroupAll,
-				authz.ResourceKindAll,
-				authz.ResourceNamespaceAll,
-				"",
-				auth.Permission_AllActions.String())),
+			name:     "super admin role",
+			in:       testSuperAdminRole,
+			out:      testSuperAdminRole,
 			skipCall: true,
 			err:      errors.New("admin role create, update or delete is not allowed"),
 		},

@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/gogo/protobuf/types"
+	"github.com/satori/go.uuid"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"github.com/pensando/sw/api"
@@ -124,16 +127,17 @@ func NewPermission(tenant, resourceGroup, resourceKind, resourceNamespace, resou
 
 // NewRole is a helper to create new role
 func NewRole(name, tenant string, permissions ...auth.Permission) *auth.Role {
-	return &auth.Role{
-		TypeMeta: api.TypeMeta{Kind: string(auth.KindRole)},
-		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: tenant,
-		},
-		Spec: auth.RoleSpec{
-			Permissions: permissions,
-		},
+	role := &auth.Role{}
+	role.Defaults("all")
+	if tenant != "" {
+		role.Tenant = tenant
 	}
+	role.Name = name
+	role.Spec.Permissions = permissions
+	role.UUID = uuid.NewV4().String()
+	ts, _ := types.TimestampProto(time.Now())
+	role.CreationTime.Timestamp = *ts
+	return role
 }
 
 // NewRoleBinding is a helper to create new role binding
@@ -154,16 +158,7 @@ func NewRoleBinding(name, tenant, roleName, users, groups string) *auth.RoleBind
 
 // NewClusterRole is a helper to create a role in default tenant
 func NewClusterRole(name string, permissions ...auth.Permission) *auth.Role {
-	return &auth.Role{
-		TypeMeta: api.TypeMeta{Kind: string(auth.KindRole)},
-		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: globals.DefaultTenant,
-		},
-		Spec: auth.RoleSpec{
-			Permissions: permissions,
-		},
-	}
+	return NewRole(name, globals.DefaultTenant, permissions...)
 }
 
 // NewClusterRoleBinding is a helper to create a role binding in default tenant
