@@ -19,10 +19,8 @@ import "export.proto";
 
 // Source of an alert; for alerts generated from events, it maps to event.Source
 message AlertSource {
-  string Component    = 1 [(gogoproto.nullable) = true,
-                           (gogoproto.jsontag) = "component, omitempty"];
-  string NodeName     = 2 [(gogoproto.nullable) = true,
-                           (gogoproto.jsontag) = "node-name, omitempty"];
+  string Component    = 1 [(gogoproto.jsontag) = "component, omitempty"];
+  string NodeName     = 2 [(gogoproto.jsontag) = "node-name, omitempty"];
 }
 
 // One of the requirement from the expression that was met
@@ -34,8 +32,7 @@ message MatchedRequirement {
   // The value at which the requirement was met.
   // same as Requirement.value for operator `Equals` but could vary for other operators
   // e.g. requirement - CPU;Gt;90 could have a matching value 96
-  string ObservedValue            = 2 [(gogoproto.nullable) = true,
-                                       (gogoproto.jsontag) = "observed-value, omitempty"];
+  string ObservedValue            = 2 [(gogoproto.jsontag) = "observed-value, omitempty"];
 }
 
 // AlertReason captures all the requirements with matched value from the alert policy rule
@@ -47,8 +44,8 @@ message AlertReason {
                                                        (gogoproto.jsontag) = "matched-requirements, omitempty"];
 
   // Alert Policy ID that matched
-  string PolicyID                                 = 2 [(gogoproto.nullable) = true,
-                                                       (gogoproto.jsontag) = "alert-policy-id, omitempty"];
+  string PolicyID                                 = 2 [(gogoproto.jsontag) = "alert-policy-id, omitempty",
+                                                       (venice.objRelation) = {Type: "NamedRef", To: "monitoring/AlertPolicy"}];
 }
 
 
@@ -56,8 +53,7 @@ message AlertReason {
 // action was performed.
 message AuditInfo {
   // Name of the user performed some action.
-  string User               = 1 [(gogoproto.nullable) = true,
-                                 (gogoproto.jsontag) = "user, omitempty"];
+  string User               = 1 [(gogoproto.jsontag) = "user, omitempty"];
 
   // Time at which the action was performed.
   api.Timestamp Time        = 2 [(gogoproto.nullable) = true,
@@ -76,15 +72,13 @@ message AlertSpec {
     ACKNOWLEDGED = 2;
   }
 
-  string State        = 1 [(gogoproto.nullable) = true,
-                           (venice.check) = "StrEnum(AlertSpec.AlertState)",
+  string State        = 1 [(venice.check) = "StrEnum(AlertSpec.AlertState)",
                            (gogoproto.jsontag) = "state, omitempty"];
 }
 // Status part of the alert object
 message AlertStatus {
   // Severity of an alert
-  string Severity                 = 1 [(gogoproto.nullable) = true,
-                                       (venice.check) = "StrEnum(.events.SeverityLevel)",
+  string Severity                 = 1 [(venice.check) = "StrEnum(.events.SeverityLevel)",
                                        (gogoproto.jsontag) = "severity, omitempty"];
 
   // Alert source or origin
@@ -92,16 +86,14 @@ message AlertStatus {
                                        (gogoproto.jsontag) = "source, omitempty"];
 
   // Event that triggered the alert
-  string EventURI                 = 3 [(gogoproto.nullable) = true,
-                                       (gogoproto.jsontag) = "event-uri, omitempty"];
+  string EventURI                 = 3 [(gogoproto.jsontag) = "event-uri, omitempty"];
 
   // Affected object
   api.ObjectRef ObjectRef         = 4 [(gogoproto.nullable) = true,
                                        (gogoproto.jsontag) = "object-ref, omitempty"];
 
   // Message from the alert rule that triggered the alert
-  string Message                  = 5 [(gogoproto.nullable) = true,
-                                       (gogoproto.jsontag) = "message, omitempty"];
+  string Message                  = 5 [(gogoproto.jsontag) = "message, omitempty"];
 
   // Captures all the requirements from the alert policy rule with matched value.
   // All these requirements must be cleared to auto-resolve an alert.
@@ -207,14 +199,12 @@ message AlertPolicySpec {
   string Resource                           = 1 [(gogoproto.jsontag) = "resource, omitempty"];
 
   // Severity to be set for an alert that gets triggered from this rule
-  string Severity                           = 2 [(gogoproto.nullable) = true,
-                                                 (venice.check) = "StrEnum(.events.SeverityLevel)",
+  string Severity                           = 2 [(venice.check) = "StrEnum(.events.SeverityLevel)",
                                                  (gogoproto.jsontag) = "severity, omitempty"];
 
   // Message to be used while generating the alert
   // XXX: Event based alerts should not carry a message. It will be derived from the event.
-  string Message                            = 3 [(gogoproto.nullable) = true,
-                                                 (gogoproto.jsontag) = "message, omitempty"];
+  string Message                            = 3 [(gogoproto.jsontag) = "message, omitempty"];
 
   // List of requirements that needs to be met to trigger an alert
   repeated fields.Requirement Requirements  = 4 [(gogoproto.jsontag) = "requirements, omitempty"];
@@ -237,21 +227,19 @@ message AlertPolicySpec {
 
   // name of the alert destinations to be used to send out notification when an alert
   // gets generated.
-  repeated string Destinations              = 9 [(gogoproto.jsontag) = "destinations, omitempty"];
+  repeated string Destinations              = 9 [(gogoproto.jsontag) = "destinations, omitempty",
+                                                 (venice.objRelation) = {Type: "NamedRef", To: "monitoring/AlertDestination"}];
 }
 
 message AlertPolicyStatus {
   // Total hits on this policy
-  int32 TotalHits            = 1 [(gogoproto.nullable) = true,
-                                  (gogoproto.jsontag) = "total-hits, omitempty"];
+  int32 TotalHits            = 1 [(gogoproto.jsontag) = "total-hits, omitempty"];
 
   // Open alerts based on this policy
-  int32 OpenAlerts           = 2 [(gogoproto.nullable) = true,
-                                  (gogoproto.jsontag) = "open-alerts, omitempty"];
+  int32 OpenAlerts           = 2 [(gogoproto.jsontag) = "open-alerts, omitempty"];
 
   // Acknowledged alerts based on this policy
-  int32 AcknowledgedAlerts   = 3 [(gogoproto.nullable) = true,
-                                  (gogoproto.jsontag) = "acknowledged-alerts, omitempty"];
+  int32 AcknowledgedAlerts   = 3 [(gogoproto.jsontag) = "acknowledged-alerts, omitempty"];
 
 }
 

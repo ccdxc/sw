@@ -211,9 +211,9 @@ var typesMapAlerts = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Resource": api.Field{Name: "Resource", CLITag: api.CLIInfo{ID: "resource", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Severity": api.Field{Name: "Severity", CLITag: api.CLIInfo{ID: "severity", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Severity": api.Field{Name: "Severity", CLITag: api.CLIInfo{ID: "severity", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Requirements": api.Field{Name: "Requirements", CLITag: api.CLIInfo{ID: "requirements", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "requirements", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "fields.Requirement"},
 
@@ -231,11 +231,11 @@ var typesMapAlerts = map[string]*api.Struct{
 	"monitoring.AlertPolicyStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicyStatus{}) },
 		Fields: map[string]api.Field{
-			"TotalHits": api.Field{Name: "TotalHits", CLITag: api.CLIInfo{ID: "total-hits", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-hits", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+			"TotalHits": api.Field{Name: "TotalHits", CLITag: api.CLIInfo{ID: "total-hits", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-hits", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 
-			"OpenAlerts": api.Field{Name: "OpenAlerts", CLITag: api.CLIInfo{ID: "open-alerts", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "open-alerts", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+			"OpenAlerts": api.Field{Name: "OpenAlerts", CLITag: api.CLIInfo{ID: "open-alerts", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "open-alerts", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 
-			"AcknowledgedAlerts": api.Field{Name: "AcknowledgedAlerts", CLITag: api.CLIInfo{ID: "acknowledged-alerts", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "acknowledged-alerts", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+			"AcknowledgedAlerts": api.Field{Name: "AcknowledgedAlerts", CLITag: api.CLIInfo{ID: "acknowledged-alerts", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "acknowledged-alerts", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
 	"monitoring.AlertReason": &api.Struct{
@@ -243,35 +243,35 @@ var typesMapAlerts = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"MatchedRequirements": api.Field{Name: "MatchedRequirements", CLITag: api.CLIInfo{ID: "matched-requirements", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "matched-requirements", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MatchedRequirement"},
 
-			"PolicyID": api.Field{Name: "PolicyID", CLITag: api.CLIInfo{ID: "alert-policy-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alert-policy-id", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"PolicyID": api.Field{Name: "PolicyID", CLITag: api.CLIInfo{ID: "alert-policy-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alert-policy-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.AlertSource": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertSource{}) },
 		Fields: map[string]api.Field{
-			"Component": api.Field{Name: "Component", CLITag: api.CLIInfo{ID: "component", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "component", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Component": api.Field{Name: "Component", CLITag: api.CLIInfo{ID: "component", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "component", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"NodeName": api.Field{Name: "NodeName", CLITag: api.CLIInfo{ID: "node-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "node-name", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"NodeName": api.Field{Name: "NodeName", CLITag: api.CLIInfo{ID: "node-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "node-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.AlertSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertSpec{}) },
 		Fields: map[string]api.Field{
-			"State": api.Field{Name: "State", CLITag: api.CLIInfo{ID: "state", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "state", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"State": api.Field{Name: "State", CLITag: api.CLIInfo{ID: "state", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "state", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.AlertStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertStatus{}) },
 		Fields: map[string]api.Field{
-			"Severity": api.Field{Name: "Severity", CLITag: api.CLIInfo{ID: "severity", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Severity": api.Field{Name: "Severity", CLITag: api.CLIInfo{ID: "severity", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Source": api.Field{Name: "Source", CLITag: api.CLIInfo{ID: "source", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AlertSource"},
 
-			"EventURI": api.Field{Name: "EventURI", CLITag: api.CLIInfo{ID: "event-uri", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "event-uri", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"EventURI": api.Field{Name: "EventURI", CLITag: api.CLIInfo{ID: "event-uri", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "event-uri", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ObjectRef": api.Field{Name: "ObjectRef", CLITag: api.CLIInfo{ID: "object-ref", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object-ref", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectRef"},
 
-			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{ID: "reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AlertReason"},
 
@@ -283,7 +283,7 @@ var typesMapAlerts = map[string]*api.Struct{
 	"monitoring.AuditInfo": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuditInfo{}) },
 		Fields: map[string]api.Field{
-			"User": api.Field{Name: "User", CLITag: api.CLIInfo{ID: "user", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"User": api.Field{Name: "User", CLITag: api.CLIInfo{ID: "user", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Time": api.Field{Name: "Time", CLITag: api.CLIInfo{ID: "time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
@@ -299,7 +299,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Requirement": api.Field{Name: "Requirement", CLITag: api.CLIInfo{ID: "Requirement", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "fields.Requirement"},
 
-			"ObservedValue": api.Field{Name: "ObservedValue", CLITag: api.CLIInfo{ID: "observed-value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "observed-value", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"ObservedValue": api.Field{Name: "ObservedValue", CLITag: api.CLIInfo{ID: "observed-value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "observed-value", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Key": api.Field{Name: "Key", CLITag: api.CLIInfo{ID: "key", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 

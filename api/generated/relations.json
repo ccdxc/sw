@@ -19,5 +19,19 @@
       "To": "bookstore/Book",
       "Field": "Book"
     }
+  ],
+  "monitoring.AlertPolicySpec": [
+    {
+      "Type": "NamedRef",
+      "To": "monitoring/AlertDestination",
+      "Field": "Destinations"
+    }
+  ],
+  "monitoring.AlertReason": [
+    {
+      "Type": "NamedRef",
+      "To": "monitoring/AlertPolicy",
+      "Field": "PolicyID"
+    }
   ]
 }

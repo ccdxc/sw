@@ -1285,13 +1285,22 @@ func TestEventsAlertEngine(t *testing.T) {
 			"expected #acknowledged alerts: <%d, got: %d", ap.Status.OpenAlerts, updatedAp.Status.OpenAlerts)
 	}
 
-	apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
-	apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy2.GetObjectMeta())
-	apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy3.GetObjectMeta())
-	time.Sleep(1 * time.Second) // wait for the policies to propagate to evtsmgr so that it can stop producing alerts
+	// delete all alerts
 	alerts, err = apiClient.MonitoringV1().Alert().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
 	for _, a := range alerts {
 		apiClient.MonitoringV1().Alert().Delete(context.Background(), &a.ObjectMeta)
+	}
+
+	// delete all alert destinations
+	alertDestinations, err := apiClient.MonitoringV1().AlertDestination().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+	for _, ad := range alertDestinations {
+		apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), &ad.ObjectMeta)
+	}
+
+	// delete all alert policies
+	alertPolicies, err := apiClient.MonitoringV1().AlertPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+	for _, ap := range alertPolicies {
+		apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), &ap.ObjectMeta)
 	}
 }
 

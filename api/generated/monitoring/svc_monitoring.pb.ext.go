@@ -836,6 +836,19 @@ func (m *AlertDestinationList) Validate(ver, path string, ignoreStatus bool) []e
 
 func (m *AlertList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AlertList) Validate(ver, path string, ignoreStatus bool) []error {
@@ -855,6 +868,19 @@ func (m *AlertList) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *AlertPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AlertPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
@@ -912,6 +938,19 @@ func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) Validate(ver, path strin
 
 func (m *AutoMsgAlertPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgAlertPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -931,6 +970,18 @@ func (m *AutoMsgAlertPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 
 func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
@@ -950,6 +1001,19 @@ func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) Validate(ver, path string, ig
 
 func (m *AutoMsgAlertWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgAlertWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -969,6 +1033,18 @@ func (m *AutoMsgAlertWatchHelper) Validate(ver, path string, ignoreStatus bool) 
 
 func (m *AutoMsgAlertWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgAlertWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {

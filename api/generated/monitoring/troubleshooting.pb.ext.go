@@ -559,6 +559,19 @@ func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *TsReport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "alerts"
+
+		for _, v := range m.Alerts {
+
+			v.References(tenant, tag, resp)
+
+		}
+	}
 }
 
 func (m *TsReport) Validate(ver, path string, ignoreStatus bool) []error {
