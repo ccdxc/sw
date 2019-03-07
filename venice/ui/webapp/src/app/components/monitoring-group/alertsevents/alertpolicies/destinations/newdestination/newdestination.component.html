@@ -15,7 +15,8 @@
         <div fxFlex="25px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
 
         <div fxFlex="noshrink" fxLayout="row" class="newdestination-row">
-          <div fxFlex="nogrow" class="newdestination-text">EXPORT ALERT IF:</div>
+          <!-- Commenting out as it is not currently supported -->
+          <!-- <div fxFlex="nogrow" class="newdestination-text">EXPORT ALERT IF:</div>
           <app-fieldselector fxFlex="nogrow" #fieldSelector 
                     kind="Alert"
                     [formArray]="newDestination.$formGroup.get(['spec', 'selector', 'requirements'])"
@@ -23,7 +24,7 @@
                     operatorFormName="operator" 
                     valueFormName="values"
                   >
-          </app-fieldselector>
+          </app-fieldselector> -->
         </div>
 
         <div fxFlex="20px" fxLayout="row">

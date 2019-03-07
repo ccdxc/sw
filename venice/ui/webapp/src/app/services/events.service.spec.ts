@@ -33,7 +33,7 @@ describe('EventsService', () => {
     postSpy = spyOn(service, 'PostGetEvents').and.returnValue(
       new BehaviorSubject({
         body: {
-          items: [{ meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]
+          items: [{ meta: { uuid: 'event1', 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]
         }
       })
     );
@@ -84,7 +84,7 @@ describe('EventsService', () => {
     expect(serviceAny.pollingFetchData).toHaveBeenCalledTimes(1);
     expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'max-results': 100, 'field-selector': 'meta.mod-time>2018-08-20T19:09:04.777255798Z', 'sort-order': ApiListWatchOptions_sort_order.None }, true);
     // Shouldn't have appended onto results from the first call
-    expect(handler1.next).toHaveBeenCalledWith([{ meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
+    expect(handler1.next).toHaveBeenCalledWith([{ meta: { uuid: 'event1', 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
     subscription1.unsubscribe();
     tick(10000);
     expect(serviceAny.pollingUtility.terminatePolling).toHaveBeenCalledTimes(2);
@@ -105,13 +105,20 @@ describe('EventsService', () => {
     expect(handler1.next).toHaveBeenCalledTimes(1);
     handlerSpy.calls.reset();
     pollingSpy.calls.reset();
+    postSpy.and.returnValue(
+      new BehaviorSubject({
+        body: {
+          items: [{ meta: { uuid: 'event2', 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]
+        }
+      })
+    );
     tick(10000);
     // Check next poll adds mod time
     expect(serviceAny.pollingFetchData).toHaveBeenCalledTimes(1);
     expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'field-selector': 'meta.mod-time>2018-08-20T19:09:04.777255798Z', 'sort-order': ApiListWatchOptions_sort_order.None }, true);
     expect(handler1.next).toHaveBeenCalledTimes(1);
     // When not blank, should pass in updated array.
-    expect(handler1.next).toHaveBeenCalledWith([{ meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }, { meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
+    expect(handler1.next).toHaveBeenCalledWith([{ meta: { uuid: 'event2', 'mod-time': '2018-08-20T19:09:04.777255798Z' } }, { meta: { uuid: 'event1', 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
     postSpy.and.returnValue(new BehaviorSubject(
       {
         body: {
@@ -128,7 +135,7 @@ describe('EventsService', () => {
     postSpy.and.returnValue(new BehaviorSubject(
       {
         body: {
-          items: [{ meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]
+          items: [{ meta: { uuid: 'event3', 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]
         }
       }
     ));
@@ -146,8 +153,8 @@ describe('EventsService', () => {
     expect(serviceAny.pollingFetchData).toHaveBeenCalledTimes(1);
     expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'field-selector': 'random>10,meta.mod-time>2018-08-20T19:09:04.777255798Z,random2>30', 'sort-order': ApiListWatchOptions_sort_order.None }, true);
     expect(handler1.next).toHaveBeenCalledTimes(2);
-    // When not blank, should pass in updated array.
-    expect(handler1.next).toHaveBeenCalledWith([{ meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }, { meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
+    // When not blank, should pass in updated array, events deduped
+    expect(handler1.next).toHaveBeenCalledWith([{ meta: { uuid: 'event3', 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
     postSpy.and.returnValue(new BehaviorSubject(
       {
         body: {

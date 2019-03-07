@@ -66,6 +66,8 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
   // Whether we show a missing overlay
   showMissingScreen: boolean;
 
+  lastUpdateTime: string = '';
+
   cpuChartData: HeroCardOptions = MetricsUtility.detailLevelCPUHeroCard(this.cardColor, this.cardIcon);
 
   memChartData: HeroCardOptions = MetricsUtility.detailLevelMemHeroCard(this.cardColor, this.cardIcon);
@@ -215,6 +217,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
           this.avgData = data.results[1];
           this.avgDayData = data.results[2];
           this.clusterAvgData = data.results[3];
+          this.lastUpdateTime = new Date().toISOString();
           this.tryGenCharts();
         }
       },

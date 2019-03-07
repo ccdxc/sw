@@ -86,7 +86,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: true },
     { field: 'severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false },
     { field: 'type', header: 'Type', class: 'alertsevents-column-event', sortable: true },
-    { field: 'message', header: 'Message', class: 'alertsevents-column-message', sortable: false },
+    { field: 'message', header: 'Message', class: 'alertsevents-column-message-event', sortable: false },
+    { field: 'object-ref.name', header: 'Object Ref', class: 'alertsevents-column-obj-ref', sortable: false },
     { field: 'count', header: 'Count', class: 'alertsevents-column-count', sortable: false },
     { field: 'source', header: 'Source Node & Component', class: 'alertsevents-column-source', sortable: false },
   ];

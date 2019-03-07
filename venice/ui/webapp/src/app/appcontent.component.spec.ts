@@ -51,6 +51,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ToasterComponent, ToasterItemComponent } from '@app/widgets/toaster/toaster.component';
 import { MessageService, ConfirmationService } from 'primeng/primeng';
+import { ClusterService } from './services/generated/cluster.service';
 
 
 describe('AppcontentComponent', () => {
@@ -93,7 +94,8 @@ describe('AppcontentComponent', () => {
         SearchService,
         OverlayContainer,
         UIConfigsService,
-        MessageService
+        MessageService,
+        ClusterService
       ],
     });
 

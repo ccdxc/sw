@@ -225,6 +225,12 @@ $sidenavWidth: 200px;
     margin-right: 4px;
 }
 
+.app-shell-build-info {
+  @include primary-font(14px);
+  margin-bottom: 15px;
+  margin-left: 10px;
+}
+
 /*======= Seach =========*/
 
 .app-shell-header-search-div {

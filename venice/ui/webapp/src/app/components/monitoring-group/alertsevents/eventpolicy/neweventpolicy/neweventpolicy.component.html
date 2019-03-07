@@ -9,7 +9,8 @@
         </div>
         <div fxFlex="25px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
         <div fxFlex="noshrink" fxLayout="row" class="neweventpolicy-row"></div>
-          <div fxFlex="nogrow" class="neweventpolicy-text">EXPORT EVENT IF:</div>
+          <!-- Commenting out as it is not currently supported -->
+          <!-- <div fxFlex="nogrow" class="neweventpolicy-text">EXPORT EVENT IF:</div>
           <app-fieldselector fxFlex="nogrow" #fieldSelector 
                     kind="Event"
                     [formArray]="newPolicy.$formGroup.get(['spec', 'selector', 'requirements'])"
@@ -17,7 +18,7 @@
                     operatorFormName="operator" 
                     valueFormName="values"
                   >
-          </app-fieldselector>
+          </app-fieldselector> -->
         </div>
 
         <div fxFlex="20px" fxLayout="row">

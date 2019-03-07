@@ -41,8 +41,9 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'eventpolicy-column-name', sortable: true, width: 35 },
-    { field: 'spec.selector', header: 'Filters', class: 'eventpolicy-column-name', sortable: false, width: 30 },
-    { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets', sortable: false, width: 35 },
+    // Commenting out as it is not currently supported by backend
+    // { field: 'spec.selector', header: 'Filters', class: 'eventpolicy-column-name', sortable: false, width: 30 },
+    { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets', sortable: false, width: 65 },
   ];
 
   isTabComponent = false;

@@ -20,6 +20,8 @@ import { ControllerService } from './services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MonitoringAlert, MonitoringAuditInfo, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
+import { ClusterCluster } from '@sdk/v1/models/generated/cluster';
+import { ClusterService } from './services/generated/cluster.service';
 
 
 /**
@@ -75,6 +77,11 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   userName: string = '';
 
+  clusterArray: ReadonlyArray<ClusterCluster> = [];
+  cluster: ClusterCluster = new ClusterCluster();
+  // Used for processing the stream events
+  clusterEventUtility: HttpEventUtility<ClusterCluster>;
+
   @HostBinding('class') componentCssClass;
   private unsubscribeStore$: Subject<void> = new Subject<void>();
   @ViewChild('sidenav') _sidenav: MatSidenav;
@@ -94,6 +101,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     public dialog: MatDialog,
     protected uiconfigsService: UIConfigsService,
     protected monitoringService: MonitoringService,
+    protected clusterService: ClusterService,
   ) {
     super();
   }
@@ -109,6 +117,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.browsertype = browserObj['browserName'];
     this.browserversion = browserObj['browserName'] + browserObj['majorVersion'];
     this._initAppData();
+    this.getCluster();
 
     this._subscribeToEvents();
     this._bindtoStore();
@@ -137,6 +146,21 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
    */
   getClassName(): string {
     return this.constructor.name;
+  }
+
+  getCluster() {
+    this.clusterEventUtility = new HttpEventUtility<ClusterCluster>(ClusterCluster, true);
+    this.clusterArray = this.clusterEventUtility.array as ReadonlyArray<ClusterCluster>;
+    const subscription = this.clusterService.WatchCluster().subscribe(
+      response => {
+        this.clusterEventUtility.processEvents(response);
+        if (this.clusterArray.length > 0) {
+          this.cluster = this.clusterArray[0];
+        }
+      },
+      this._controllerService.restErrorHandler('Failed to get Cluster info')
+    );
+    this.subscriptions.push(subscription);
   }
 
   private _bindtoStore() {

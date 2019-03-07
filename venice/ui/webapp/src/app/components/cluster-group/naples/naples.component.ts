@@ -56,6 +56,8 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     svgIcon: 'naples'
   };
 
+  lastUpdateTime: string = '';
+
   cpuChartData: HeroCardOptions = MetricsUtility.clusterLevelCPUHeroCard(this.cardColor, this.cardIcon);
 
   memChartData: HeroCardOptions = MetricsUtility.clusterLevelMemHeroCard(this.cardColor, this.cardIcon);
@@ -153,6 +155,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
           this.avgData = data.results[1];
           this.avgDayData = data.results[2];
           this.maxObjData = data.results[3];
+          this.lastUpdateTime = new Date().toISOString();
           this.tryGenCharts();
         }
       },

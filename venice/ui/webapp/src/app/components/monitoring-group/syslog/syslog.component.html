@@ -10,7 +10,8 @@
       <div fxFlex="nogrow" fxLayout="column" [@slideInOut] *ngFor="let target of targets; let index = index; let first = first" [formGroupName]="index">
       <div fxFlex="nogrow" fxLayout="row wrap" fxLayoutGap="10px">
         <ng-container *ngTemplateOutlet="syslogTargets; context:{index:index}"></ng-container>
-        <ng-container *ngTemplateOutlet="syslogCredentials; context:{index:index}"></ng-container>
+        <!-- Commenting out as it is not currently implemented in the backend -->
+        <!-- <ng-container *ngTemplateOutlet="syslogCredentials; context:{index:index}"></ng-container> -->
           <div fxFlex="nogrow" fxLayout="row">
           <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
             <div fxFlex="55px" fxLayout="column" fxLayoutAlign="start end" class="syslog-fieldtitle syslog-and">

@@ -53,6 +53,9 @@ function genEvent(modTime, creationTime, severity, type, message, source, count)
     'severity': severity,
     'type': type,
     'message': message,
+    'object-ref': {
+      name: 'objRef'
+    },
     'source': source,
     'count': count
   });

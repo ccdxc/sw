@@ -120,7 +120,8 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
     let handler: Observable<{ body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number }>;
     const destination: IMonitoringAlertDestination = this.newDestination.getFormGroupValues();
     destination.spec['syslog-export'] = this.syslogServers.getValues();
-    destination.spec.selector.requirements = this.fieldSelector.getValues();
+    // Commenting out since backend doesn't support it currently
+    // destination.spec.selector.requirements = this.fieldSelector.getValues();
     if (this.isInline) {
       handler = this._monitoringService.UpdateAlertDestination(this.newDestination.meta.name, destination);
     } else {

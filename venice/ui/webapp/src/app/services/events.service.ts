@@ -4,6 +4,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { HttpClient } from '@angular/common/http';
 import { IEventsEvent, IEventsEventList, ApiListWatchOptions, IApiListWatchOptions, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { PollUtility, PollingInstance } from '@app/services/PollUtility';
+import { Utility } from '@app/common/Utility';
 
 /**
  * Events polling
@@ -72,7 +73,10 @@ export class EventsService extends EventGenService {
           // We assume that the incoming poll is only for new data
           if (items.length > 0) {
             const currArray = poll.handler.value;
-            const res = items.concat(currArray);
+            let res = items.concat(currArray);
+            res = Utility.getLodash().uniqBy(res, (e: IEventsEvent) => {
+              return e.meta.uuid;
+            });
             poll.handler.next(res);
             // Modify time selector to only get new data
             this.addModTimeSelector(items[0].meta['mod-time'], poll.body);

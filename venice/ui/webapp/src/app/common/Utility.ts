@@ -1215,9 +1215,9 @@ export class Utility {
     helperFunc(request);
     return request;
   }
-  
-  public static generateDeleteConfirmMsg(objectType: string,  name: string ): string {
-    return 'Are you sure you want to delete ' +  objectType + ':  name';
+
+  public static generateDeleteConfirmMsg(objectType: string, name: string): string {
+    return 'Are you sure you want to delete ' + objectType + ':  name';
   }
 
 

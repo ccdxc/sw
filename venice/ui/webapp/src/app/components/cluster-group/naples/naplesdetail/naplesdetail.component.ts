@@ -56,6 +56,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   // Whether we show a missing overlay
   showMissingScreen: boolean;
 
+  lastUpdateTime: string = '';
+
   cpuChartData: HeroCardOptions = MetricsUtility.detailLevelCPUHeroCard(this.cardColor, this.cardIcon);
 
   memChartData: HeroCardOptions = MetricsUtility.detailLevelMemHeroCard(this.cardColor, this.cardIcon);
@@ -204,6 +206,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           this.avgData = data.results[1];
           this.avgDayData = data.results[2];
           this.clusterAvgData = data.results[3];
+          this.lastUpdateTime = new Date().toISOString();
           this.tryGenCharts();
         }
       },
@@ -215,8 +218,12 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
+    let name = this.selectedId;
+    if (this.selectedObj != null) {
+      name = this.selectedObj.status['primary-mac'];
+    }
     const query: Telemetry_queryMetricsQuerySpec =
-      MetricsUtility.timeSeriesQuery(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
+      MetricsUtility.timeSeriesQuery(this.telemetryKind, MetricsUtility.createNameSelector(name));
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.timeSeriesQueryMerge

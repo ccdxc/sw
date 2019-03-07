@@ -25,11 +25,19 @@
 }
 
 .alertsevents-column-source {
-  width: 7%;
+  width: 11%;
 }
 
 .alertsevents-column-count {
   width: 5%;
+}
+
+.alertsevents-column-obj-ref {
+  width: 10%
+}
+
+.alertsevents-column-message-event {
+  width: 30%;
 }
 
 .alertsevents-icon {
@@ -64,16 +72,16 @@ app-shared-alertsevents {
 }
 
 .alerts-column-source {
-  width: 10%
+  width: 14%
 }
 
 // Plus 100px for the action column that it will also contain
 th.alerts-column-source {
-  width: 15%
+  width: 19%
 }
 
 .alertsevents-column-date {
-  width: 15%; // two cols use this
+  width: 13%; // two cols use this
 }
 
 .alertsevents-column-name {

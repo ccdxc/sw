@@ -60,9 +60,9 @@
                     <div *ngSwitchCase="'notifications'">
                         <ng-container *ngTemplateOutlet="sideNavNotification; "></ng-container>
                     </div>
-                    <div *ngSwitchCase="'settings'">
+                    <ng-container *ngSwitchCase="'settings'">
                         <ng-container *ngTemplateOutlet="sideNavSettings; "></ng-container>
-                    </div>
+                    </ng-container>
                 </mat-sidenav>
                 <mat-sidenav #sidenav class="app-shell-left-sidenav" mode="side" opened="true" id="app-sidebar">
                     <!-- Side Nav Items -->
@@ -235,22 +235,37 @@
 </ng-template>
 
 <ng-template #sideNavSettings let-item="item">
-    <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
-        <!-- comment out for GS0.3 -->
-        <!--  
-        <button mat-icon-button routerLink="settings" class="hidden-sm-down">
-            <mat-icon>settings</mat-icon>
-            Themes and endpoints
-        </button>
-        -->
-        <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
-        <button mat-icon-button (click)="settingsNavigate(['/settings', 'authpolicy'])" class="hidden-sm-down">
-            <mat-icon>settings</mat-icon>
-            Authentication Policy
-        </button>       
-           <button mat-icon-button (click)="settingsNavigate(['/settings', 'users'])" class="hidden-sm-down">
+    <div fxFlex fxLayout="column">
+        <div fxFlex="auto" class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
+            <!-- comment out for GS0.3 -->
+            <!--  
+            <button mat-icon-button routerLink="settings" class="hidden-sm-down">
+                <mat-icon>settings</mat-icon>
+                Themes and endpoints
+            </button>
+            -->
+            <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
+            <button mat-icon-button (click)="settingsNavigate(['/settings', 'authpolicy'])" class="hidden-sm-down">
+                <mat-icon>settings</mat-icon>
+                Authentication Policy
+            </button>       
+            <button mat-icon-button (click)="settingsNavigate(['/settings', 'users'])" class="hidden-sm-down">
             <mat-icon>person</mat-icon>
                 User Management
-        </button>
+            </button>
+        </div>
+
+        <div fxFlex></div>
+        <div fxFlex="nogrow" class="app-shell-build-info">
+            <div>
+                Build Version: {{cluster?.status["build-version"]}}
+            </div>
+            <div>
+                VCS Commit ID: {{ cluster?.status["vcs-commit"] }}
+            </div>
+            <div>
+                Build Date: {{ cluster?.status["build-date"] }}
+            </div>
+        </div>
     </div>
 </ng-template>

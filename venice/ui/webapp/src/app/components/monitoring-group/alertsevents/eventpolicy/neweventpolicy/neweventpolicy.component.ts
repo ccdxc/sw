@@ -98,7 +98,8 @@ export class NeweventpolicyComponent extends BaseComponent implements OnInit, Af
     const policy: IMonitoringEventPolicy = this.newPolicy.getFormGroupValues();
     let handler: Observable<{ body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number }>;
 
-    policy.spec.selector.requirements = this.fieldSelector.getValues();
+    // Commenting out since backend doesn't support it currently
+    // policy.spec.selector.requirements = this.fieldSelector.getValues();
 
     const syslogValues = this.syslogComponent.getValues();
     Object.keys(syslogValues).forEach((key) => {
