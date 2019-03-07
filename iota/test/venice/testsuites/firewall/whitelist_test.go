@@ -39,6 +39,10 @@ var _ = Describe("firewall whitelist tests", func() {
 		})
 
 		It("Should allow TCP connections with specific permit rules", func() {
+			if ts.tb.HasNaplesSim() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+
 			// add permit rules for workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/8000", "PERMIT")

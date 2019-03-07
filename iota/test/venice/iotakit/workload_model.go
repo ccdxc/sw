@@ -212,6 +212,16 @@ func (wc *WorkloadCollection) Bringup() error {
 	var workloads []*iota.Workload
 	var sm *SysModel
 
+	// check for errors
+	if wc.HasError() {
+		return wc.Error()
+	}
+
+	// if there are no workloads, nothing to do
+	if len(wc.workloads) == 0 {
+		return nil
+	}
+
 	// build workload list
 	for _, wrk := range wc.workloads {
 		workloads = append(workloads, wrk.iotaWorkload)
