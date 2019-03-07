@@ -25,7 +25,7 @@
 action sacl_proto_dport_lpm_s2_ext() {
     modify_field(sacl_metadata.p2_table_addr,
                  p4_to_rxdma_header.sacl_base_addr + SACL_P2_TABLE_OFFSET +
-                 (sacl_metadata.p1_class_id << 8));
+                 (sacl_metadata.p1_class_id << 6));
 }
 
 #include "../include/lpm.h"

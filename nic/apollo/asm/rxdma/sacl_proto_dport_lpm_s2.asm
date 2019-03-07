@@ -23,7 +23,7 @@ struct sacl_proto_dport_lpm_s2_d    d;
 sacl_proto_dport_lpm_s2_ext:
     add             r1, r0, k.p4_to_rxdma_header_sacl_base_addr
     add             r1, r1, SACL_P2_TABLE_OFFSET
-    add             r1, r1, k.sacl_metadata_p1_class_id, 8
+    add             r1, r1, k.sacl_metadata_p1_class_id, 6
     phvwr.e         p.sacl_metadata_p2_table_addr, r1
     phvwr           p.sacl_metadata_proto_dport_class_id, r7
 
