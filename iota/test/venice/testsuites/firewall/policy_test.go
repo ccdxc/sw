@@ -111,13 +111,15 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 					if aerr != nil {
 						return aerr
 					}
-					aerr = ts.model.Action().UDPSessionFails(workloadPairs, portMin-1)
-					if aerr != nil {
-						return aerr
-					}
-					aerr = ts.model.Action().UDPSessionFails(workloadPairs, portMax+1)
-					if aerr != nil {
-						return aerr
+					if port != "any" {
+						aerr = ts.model.Action().UDPSessionFails(workloadPairs, portMin-1)
+						if aerr != nil {
+							return aerr
+						}
+						aerr = ts.model.Action().UDPSessionFails(workloadPairs, portMax+1)
+						if aerr != nil {
+							return aerr
+						}
 					}
 				} else {
 					aerr := ts.model.Action().TCPSession(workloadPairs, portMin)
@@ -128,13 +130,15 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 					if aerr != nil {
 						return aerr
 					}
-					aerr = ts.model.Action().TCPSessionFails(workloadPairs, portMin-1)
-					if aerr != nil {
-						return aerr
-					}
-					aerr = ts.model.Action().TCPSessionFails(workloadPairs, portMax+1)
-					if aerr != nil {
-						return aerr
+					if port != "any" {
+						aerr = ts.model.Action().TCPSessionFails(workloadPairs, portMin-1)
+						if aerr != nil {
+							return aerr
+						}
+						aerr = ts.model.Action().TCPSessionFails(workloadPairs, portMax+1)
+						if aerr != nil {
+							return aerr
+						}
 					}
 				}
 			}
@@ -202,13 +206,15 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 					if aerr != nil {
 						return aerr
 					}
-					aerr = ts.model.Action().UDPSession(workloadPairs, portMin-1)
-					if aerr != nil {
-						return aerr
-					}
-					aerr = ts.model.Action().UDPSession(workloadPairs, portMax+1)
-					if aerr != nil {
-						return aerr
+					if port != "any" {
+						aerr = ts.model.Action().UDPSession(workloadPairs, portMin-1)
+						if aerr != nil {
+							return aerr
+						}
+						aerr = ts.model.Action().UDPSession(workloadPairs, portMax+1)
+						if aerr != nil {
+							return aerr
+						}
 					}
 				} else {
 					aerr := ts.model.Action().TCPSessionFails(workloadPairs, portMin)
@@ -219,13 +225,15 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 					if aerr != nil {
 						return aerr
 					}
-					aerr = ts.model.Action().TCPSession(workloadPairs, portMin-1)
-					if aerr != nil {
-						return aerr
-					}
-					aerr = ts.model.Action().TCPSession(workloadPairs, portMax+1)
-					if aerr != nil {
-						return aerr
+					if port != "any" {
+						aerr = ts.model.Action().TCPSession(workloadPairs, portMin-1)
+						if aerr != nil {
+							return aerr
+						}
+						aerr = ts.model.Action().TCPSession(workloadPairs, portMax+1)
+						if aerr != nil {
+							return aerr
+						}
 					}
 				}
 			}
@@ -277,6 +285,7 @@ var _ = Describe("firewall policy model tests", func() {
 								if err != nil {
 									log.Errorf("Error during whitelist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port), err)
 									if os.Getenv("STOP_ON_ERROR") != "" {
+										log.Errorf("Whitelist Test failed for: %s\t%s\t%s\t%s. Err: %v", fromIP, toIP, proto, port, err)
 										os.Exit(1)
 									}
 								}
@@ -287,6 +296,7 @@ var _ = Describe("firewall policy model tests", func() {
 							if err != nil {
 								log.Errorf("Error during whitelist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 								if os.Getenv("STOP_ON_ERROR") != "" {
+										log.Errorf("Whitelist Test failed for: %s\t%s\t%s. Err: %v", fromIP, toIP, proto, err)
 									os.Exit(1)
 								}
 							}
@@ -309,6 +319,7 @@ var _ = Describe("firewall policy model tests", func() {
 									log.Errorf("Error during blacklist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port), err)
 
 									if os.Getenv("STOP_ON_ERROR") != "" {
+										log.Errorf("Blacklist Test failed for: %s\t%s\t%s\t%s. Err: %v", fromIP, toIP, proto, port, err)
 										os.Exit(1)
 									}
 								}
@@ -320,6 +331,7 @@ var _ = Describe("firewall policy model tests", func() {
 								log.Errorf("Error during blacklist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 
 								if os.Getenv("STOP_ON_ERROR") != "" {
+										log.Errorf("Blacklist Test failed for: %s\t%s\t%s. Err: %v", fromIP, toIP, proto, err)
 									os.Exit(1)
 								}
 							}

@@ -242,6 +242,10 @@ func (act *ActionCtx) UDPSession(wpc *WorkloadPairCollection, port int) error {
 		return wpc.err
 	}
 
+	if act.model.tb.mockMode {
+		return nil
+	}
+
 	return act.netcatTrigger(wpc, "-u --sh-exec 'echo test'", "-u", port, false, 0, "test")
 }
 

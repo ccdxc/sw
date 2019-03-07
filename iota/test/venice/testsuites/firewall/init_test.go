@@ -57,6 +57,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(model).ShouldNot(BeNil())
 
+	model.NewSGPolicy("test-policy").Delete()
+
 	err = model.SetupDefaultConfig()
 	Expect(err).ShouldNot(HaveOccurred())
 

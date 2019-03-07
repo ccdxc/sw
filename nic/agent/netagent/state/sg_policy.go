@@ -30,8 +30,8 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	if err == nil {
 		// check if the contents are same
 		if !proto.Equal(oldSgp, sgp) {
-			log.Errorf("SGPolicy %+v already exists", oldSgp)
-			return errors.New("security group policy already exists")
+			log.Infof("SGPolicy %+v already exists", oldSgp)
+			return na.UpdateSGPolicy(sgp)
 		}
 
 		log.Infof("Received duplicate security group policy create {%+v}", sgp)

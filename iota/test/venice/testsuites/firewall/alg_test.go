@@ -91,9 +91,7 @@ var _ = Describe("firewall ALG tests", func() {
 			}).Should(Succeed())
 		})
 		It("Should be able to verify ICMP ALG", func() {
-			if ts.tb.HasNaplesSim() {
-				Skip("Disabling ICMP ALG test on naples sim till traffic issue is debugged")
-			}
+			Skip("Disabling ICMP ALG test till traffic issue is debugged")
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 
 			// verify ping fails

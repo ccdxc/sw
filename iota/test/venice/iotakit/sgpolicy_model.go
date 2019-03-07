@@ -212,6 +212,9 @@ func (spc *SGPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollecti
 		switch fromIP {
 		case "workload-ip":
 			rule.FromIPAddresses = []string{secondIP}
+			if proto == "icmp" || proto == "any" {
+				rule.FromIPAddresses = []string{firstIP, secondIP}
+			}
 		case "workload-subnet":
 			rule.FromIPAddresses = []string{secondSubnet}
 		case "any":
@@ -224,6 +227,9 @@ func (spc *SGPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollecti
 		switch toIP {
 		case "workload-ip":
 			rule.ToIPAddresses = []string{firstIP}
+			if proto == "icmp" || proto == "any" {
+				rule.ToIPAddresses = []string{firstIP, secondIP}
+			}
 		case "workload-subnet":
 			rule.ToIPAddresses = []string{firstSubnet}
 		case "any":

@@ -548,7 +548,7 @@ func (tb *TestBed) setupTestBed() error {
 		testBedMsg.Nodes = append(testBedMsg.Nodes, &tbn)
 
 		// set testbed id if available
-		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES && node.instParams.ID != 0 {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES && node.instParams.ID != 0 && testBedMsg.TestbedId == 0 {
 			testBedMsg.TestbedId = uint32(node.instParams.ID)
 		}
 
