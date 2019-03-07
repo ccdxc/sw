@@ -120,28 +120,26 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 
 	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
 		var controllers []string
-		var resolverClient resolver.Interface
 
 		for _, ip := range obj.Controllers {
 			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDGRPCAuthPort))
 		}
+		n.evtServices.resolverClient.UpdateServers(controllers)
 
 		if n.evtServices.running {
-			n.evtServices.resolverClient.UpdateServers(controllers)
+			n.logger.Infof("changing mode to {%s}", networkMode)
+			n.evtServices.startNetworkModeServices()
 			return
 		}
-
-		resolverClient = resolver.New(&resolver.Config{
-			Name:    globals.EvtsProxy,
-			Servers: controllers,
-		})
-		n.evtServices.resolverClient = resolverClient
-		n.evtServices.start(networkMode, resolverClient)
+		n.evtServices.start(networkMode)
 	} else {
 		if n.evtServices.running {
-			n.evtServices.stop()
+			n.logger.Infof("changing mode to {%s}", hostMode)
+			n.evtServices.stopNetworkModeServices()
+			n.evtServices.resolverClient.UpdateServers([]string{})
+			return
 		}
-		n.evtServices.start(hostMode, nil)
+		n.evtServices.start(hostMode)
 	}
 }
 
@@ -189,6 +187,9 @@ func main() {
 			dedupInterval: *dedupInterval,
 			batchInterval: *batchInterval,
 		},
+		resolverClient: resolver.New(&resolver.Config{
+			Name: globals.EvtsProxy,
+		}),
 		logger: logger,
 	}
 	defer es.stop()
@@ -220,8 +221,43 @@ func main() {
 	select {}
 }
 
+// startNetworkModeServices helper function to start network mode services
+func (e *evtServices) startNetworkModeServices() {
+	e.logger.Infof("starting network mode services")
+	var err error
+
+	if e.policyWatcher == nil {
+		// start events policy watcher to watch events from events manager
+		if e.policyWatcher, err = policy.NewWatcher(e.policyMgr, e.logger,
+			policy.WithResolverClient(e.resolverClient)); err != nil {
+			e.logger.Fatalf("failed to create events policy watcher, err: %v", err)
+		}
+		e.logger.Infof("running policy watcher")
+	}
+
+	// register venice exporter (exports events to evtsmgr -> elastic)
+	// it will fail if it is already registered
+	if _, err := e.eps.RegisterEventsExporter(exporters.Venice, nil); err != nil {
+		e.logger.Fatalf("failed to register venice events exporter with events proxy, err: %v", err)
+	}
+	e.logger.Infof("registered venice exporter")
+}
+
+// stopNetworkModeServices helper function to stop network mode services
+func (e *evtServices) stopNetworkModeServices() {
+	e.logger.Infof("stopping network mode services")
+
+	if e.policyWatcher != nil {
+		e.policyWatcher.Stop()
+		e.policyWatcher = nil
+	}
+
+	// unregister venice exporter (exports events to evtsmgr -> elastic)
+	e.eps.UnregisterEventsExporter(exporters.Venice.String())
+}
+
 // helper function to start services based on the given mode
-func (e *evtServices) start(mode string, resolverClient resolver.Interface) {
+func (e *evtServices) start(mode string) {
 	e.logger.Infof("initializing {%s} mode", mode)
 
 	var err error
@@ -238,7 +274,7 @@ func (e *evtServices) start(mode string, resolverClient resolver.Interface) {
 	}
 
 	// create events proxy
-	if e.eps, err = evtsproxy.NewEventsProxy(globals.EvtsProxy, e.config.grpcListenURL, resolverClient,
+	if e.eps, err = evtsproxy.NewEventsProxy(globals.EvtsProxy, e.config.grpcListenURL, e.resolverClient,
 		e.config.dedupInterval, e.config.batchInterval, &events.StoreConfig{Dir: e.config.evtsStoreDir}, e.logger); err != nil {
 		e.logger.Fatalf("error creating events proxy instance: %v", err)
 	}
@@ -255,18 +291,7 @@ func (e *evtServices) start(mode string, resolverClient resolver.Interface) {
 
 	switch mode {
 	case networkMode: // start venice events policy watcher and register events exporter to elastic
-		// start events policy watcher to watch events from events manager
-		if e.policyWatcher, err = policy.NewWatcher(e.policyMgr, e.logger,
-			policy.WithResolverClient(resolverClient)); err != nil {
-			e.logger.Fatalf("failed to create events policy watcher, err: %v", err)
-		}
-		e.logger.Infof("running policy watcher")
-
-		// register venice exporter (exports events to evtsmgr -> elastic)
-		if _, err := e.eps.RegisterEventsExporter(exporters.Venice, nil); err != nil {
-			e.logger.Fatalf("failed to register venice events exporter with events proxy, err: %v", err)
-		}
-		e.logger.Infof("registered venice exporter")
+		e.startNetworkModeServices()
 	}
 
 	// start dispatching events to its registered exporters
