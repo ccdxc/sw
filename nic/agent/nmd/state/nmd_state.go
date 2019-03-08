@@ -709,6 +709,10 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 		return "", nil
 	}
 	cmd := exec.Command(req.Executable, parts...)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, req.Env)
+
+	log.Infof("Naples Cmd Execute Request: %+v env: [%s]", req, os.Environ())
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(fmt.Sprintf(err.Error()) + ":" + string(stdoutStderr)), err
@@ -781,8 +785,6 @@ func NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, resp)
 		return
 	}
-
-	log.Infof("Naples Cmd Execute Request: %+v env: [%s]", req, os.Environ())
 
 	stdErrOut, _ := naplesExecCmd(&req)
 	fmt.Fprintln(w, stdErrOut)

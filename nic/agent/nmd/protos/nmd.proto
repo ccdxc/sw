@@ -115,4 +115,8 @@ message NaplesCmdExecute {
     // Flags for the executable to run on naples side
     string Opts                     = 2 [(gogoproto.nullable) = true,
                                         (gogoproto.jsontag) = "opts,omitempty"];
+
+    // Environment variables to set on naples side to execute the command
+    string Env                      = 3 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "env,omitempty"];
 }
