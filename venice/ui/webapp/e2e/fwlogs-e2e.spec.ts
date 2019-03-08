@@ -60,6 +60,8 @@ describe('venice-ui fwlogs', () => {
         });
       } else {
         expect(rowLen).toBe(0);
+        sourcePorts = '';
+        destPorts = '';
       }
     });
     await browser.sleep(5000);

@@ -56,15 +56,11 @@ export class FlowExport {
         await E2EuiTools.clickElement('.toolbar-button.global-button-primary.flowexportpolicy-button');
     }
 
-    private getFlowExportTableRowActionBlockCSS( flowExportValueMetaName: string) {
-        return '.global-column-action-icon-container.global-column-action-icon-container-flowexportpolicy_' + flowExportValueMetaName;
-    }
 
     async deletelowExportPolicy(monitoringFlowExportPolicy: IMonitoringFlowExportPolicy) {
-        const tsTableRowActionBlockCSS = this.getFlowExportTableRowActionBlockCSS(monitoringFlowExportPolicy.meta.name);
-        await E2EuiTools.clickElement(tsTableRowActionBlockCSS);
-        const tsTableRowActionBlockDeleteIconCSS = tsTableRowActionBlockCSS + ' .flowexportpolicy-table-action-icon-delete';
-        await E2EuiTools.clickElement(tsTableRowActionBlockDeleteIconCSS);
+        const tsTableRowActionDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowDeleteBtnCSS(monitoringFlowExportPolicy.meta.name);
+        await E2EuiTools.clickElement(tsTableRowActionDeleteButtonCSS);
+
         await browser.sleep(5000); // wait for alert pop-up
         await E2EuiTools.clickConfirmAlertFirstButton();
     }

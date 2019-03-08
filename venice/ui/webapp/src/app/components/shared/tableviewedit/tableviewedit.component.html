@@ -37,7 +37,10 @@
           [style.width]="last && actionTemplate != null ? col.width - actionWidth + '%' : col.width + '%'">
             <ng-container *ngTemplateOutlet="bodyTemplate; context: {col: col, $implicit: rowData}"></ng-container>
           </td>
-          <td *ngIf="actionTemplate != null" [style.width]="actionWidth + '%'" class="tableviewedit-actiontd">
+          <!--
+            To assist E2E-UI test, we use rawData to make up td class. 
+          -->
+          <td *ngIf="actionTemplate != null" [style.width]="actionWidth + '%'" class="tableviewedit-actiontd tableviewedit-action-icon-{{rowData?.meta?.name}}">
             <ng-container *ngTemplateOutlet="actionTemplate; context: {$implicit: rowData}"></ng-container>
           </td>
         </tr>

@@ -2,6 +2,16 @@ import { browser, by, element, protractor, WebElement, ElementFinder } from 'pro
 import { throws } from 'assert';
 
 export class E2EuiTools {
+    public static TABLEEDITVIEW_ACTION_TD_CELL_CSS = '.tableviewedit-actiontd';
+    public static TABLEEDITVIEW_ACTION_TD_ITEM_CSS = '.tableviewedit-action-icon-';
+    public static TABLEEDITVIEW_ACTION_TD_CSS = E2EuiTools.TABLEEDITVIEW_ACTION_TD_CELL_CSS + E2EuiTools.TABLEEDITVIEW_ACTION_TD_ITEM_CSS;
+
+
+    public static  getTableEditViewTableRowDeleteBtnCSS( recordMetaName: string) {
+        // CSS should look like '.tableviewedit-actiontd.tableviewedit-action-icon-techsupport-aa95 .global-table-action-icon'
+        return E2EuiTools.TABLEEDITVIEW_ACTION_TD_CSS + recordMetaName;
+    }
+
     public static s4() {
         return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
     }

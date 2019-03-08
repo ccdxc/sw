@@ -38,7 +38,9 @@
 </ng-template>
 
 <ng-template #actionTemplate let-rowData>
-  <div class="global-column-action-icon-container global-column-action-icon-container-flowexportpolicy_{{rowData.meta.name}}" fxLayout="row" fxLayoutGap="5px">
+
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+
     <mat-icon matTooltip="Edit policy" class="global-table-action-icon flowexportpolicy-table-action-icon-edit" (click)="onUpdateRecord($event, rowData)">edit</mat-icon>
     <mat-icon matTooltip="Delete policy" class="global-table-action-icon flowexportpolicy-table-action-icon-delete" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>

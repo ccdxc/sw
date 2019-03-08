@@ -58,13 +58,11 @@ export class TechSupport {
         await this.pressSaveTechSupportButton();
     }
 
-    private getTechsupportTableRowActionBlockCSS( techsupportRequestValueMetaName: string) {
-        return '.global-column-action-icon-container.global-column-action-icon-container-techsupport_' + techsupportRequestValueMetaName;
-    }
+
 
     async deleteTechsupport(techsupportRequestValue: TechsupportRequestValue) {
-        const tsTableRowActionBlockCSS = this.getTechsupportTableRowActionBlockCSS(techsupportRequestValue.name);
-        await E2EuiTools.clickElement(tsTableRowActionBlockCSS);
+        const tsTableRowActionBlockDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowDeleteBtnCSS(techsupportRequestValue.name);
+        await E2EuiTools.clickElement(tsTableRowActionBlockDeleteButtonCSS);
         await browser.sleep(2000); // wait for alert pop-up
         await E2EuiTools.clickConfirmAlertFirstButton();
     }

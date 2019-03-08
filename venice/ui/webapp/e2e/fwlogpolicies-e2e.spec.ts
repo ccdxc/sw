@@ -103,6 +103,8 @@ describe('venice-ui fwlogs-policies', () => {
         expect(recordCreated).toBeTruthy();
       }
     );
+
+    await browser.sleep(5000);
   });
 
   it('should delete firewall-log-policy record', async () => {

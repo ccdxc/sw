@@ -85,6 +85,7 @@ describe('venice-ui techsupport', () => {
         expect(recordCreated).toBeTruthy(techsupportRequestValue.name + ' created');
       }
     );
+    await browser.sleep(5000);
   });
 
   it('should delete tech-support-request record', async () => {
