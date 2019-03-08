@@ -8,19 +8,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdint.h>
-#include "nic/sdk/platform/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 
 #define MAX_RETRY 5
 
 #ifdef NOTYET
-void
-pal_smbus_write_byte(unsigned int dev_num, unsigned char addr,
-                 unsigned char value)
-{
-    printf("Not implemented yet\n");
-    return;
-}
-
 int
 pal_smbus_read_block_data(unsigned int dev_num, unsigned char addr,
                       unsigned char command, unsigned char *values) {
@@ -36,16 +28,24 @@ smbus_read_byte(int dev_num, unsigned char addr) {
 #endif //NOTYET
 
 void
+pal_smbus_write_byte(unsigned int dev_num, unsigned char addr,
+                 unsigned char value)
+{
+    printf("Not implemented yet;;NOP\n");
+    return;
+}
+
+void
 pal_smbus_write_byte_data(unsigned int dev_num, unsigned char addr,
                       unsigned char cmd, unsigned char value)
 {
     int retval;
     retval = smbus_write(&value, 1, cmd, MAX_RETRY, dev_num, addr);
-
     if(retval)
     {
         printf("Error occured while writing\n");
     }
+
     return;
 }
 
@@ -55,11 +55,11 @@ pal_smbus_write_word(unsigned int dev_num, unsigned char addr,
 
     int retval;
     retval = smbus_write((uint8_t*)&value, 2, cmd, MAX_RETRY, dev_num, addr);
-
     if(retval)
     {
         printf("Error occured while writing\n");
     }
+
     return;
 }
 
@@ -70,7 +70,6 @@ pal_smbus_read_word(unsigned int dev_num, unsigned char addr,
     int retval;
     uint8_t value[2];
     retval = smbus_read(value, 2, cmd, MAX_RETRY, dev_num, addr);
-
     if(retval)
     {
         printf("Error occured while reading\n");
@@ -86,7 +85,6 @@ pal_smbus_read_byte_data(unsigned int dev_num, unsigned char addr,
     int retval;
     uint8_t value = 0;
     retval = smbus_read(&value, 1, cmd, MAX_RETRY, dev_num, addr);
-
     if(retval)
     {
         printf("Error occured while reading\n");

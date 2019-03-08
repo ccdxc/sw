@@ -5,6 +5,7 @@
 #include "sysmond_delphi.hpp"
 
 ::utils::log *g_trace_logger;
+extern int changestartingfrequencyfromfile();
 
 extern monfunc_t __start_monfunclist[];
 extern monfunc_t __stop_monfunclist[];
@@ -48,6 +49,11 @@ main(int argc, char *argv[])
     delphi::objects::AsicTemperatureMetrics::CreateTable();
     delphi::objects::AsicPowerMetrics::CreateTable();
 
+    if (changestartingfrequencyfromfile() == 0) {
+        TRACE_INFO(GetLogger(), "Frequency set from file");
+    } else {
+        TRACE_INFO(GetLogger(), "Failed to set frequency from file");
+    }
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
     shared_ptr<SysmondService> svc = make_shared<SysmondService>(sdk, "Sysmond");
     svc->init();

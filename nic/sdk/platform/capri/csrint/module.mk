@@ -3,7 +3,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libsdkcapri_csrint.so
 MODULE_DEFS     = ${NIC_CSR_DEFINES}
 MODULE_FLAGS    = -DCAPRI_SW ${NIC_CSR_FLAGS}
-MODULE_SOLIBS   := sdkcapri_asicrw_if
+MODULE_SOLIBS   := sdkcapri_asicrw_if pal
 MODULE_EXCLUDE_FLAGS = -O2
 MODULE_INCS     = ${NIC_CSR_INCS} ${MODULE_DIR}
 MODULE_SRCS     = ${SDKDIR}/third-party/asic/capri/model/cap_top/cap_top_csr.cc \
@@ -91,6 +91,8 @@ MODULE_SRCS     = ${SDKDIR}/third-party/asic/capri/model/cap_top/cap_top_csr.cc 
                   ${SDKDIR}/third-party/asic/ip/verif/pcpp/pknobs_reader.cc \
                   ${SDKDIR}/third-party/asic/capri/verif/apis/cap_nwl_sbus_api.cc \
                   ${SDKDIR}/third-party/asic/capri/verif/apis/cap_sbus_api.cc \
+                  ${SDKDIR}/third-party/asic/capri/verif/apis/cap_platform_api.cc \
+                  ${SDKDIR}/third-party/asic/capri/verif/apis/cap_freq_api.cc \
                   ${SDKDIR}/platform/capri/csrint/csr_init.cc \
                   $(wildcard ${SDKDIR}/third-party/asic/capri/model/cap_dpa/*csr.cc) \
                   $(wildcard ${SDKDIR}/third-party/asic/capri/model/cap_pb/*port*csr.cc)

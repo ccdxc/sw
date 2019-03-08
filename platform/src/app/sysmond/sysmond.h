@@ -14,6 +14,9 @@
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "gen/proto/sysmond.delphi.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include "third-party/asic/capri/verif/apis/cap_freq_api.h"
 
 typedef struct monfunc_s {
     void (*func)(void);
