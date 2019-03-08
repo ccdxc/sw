@@ -20,6 +20,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     and r1, r1, IPSEC_CB_RING_INDEX_MASK 
     seq c5, d.cb_cindex, r1
     bcf [c5], esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full
+    nop
     phvwr p.ipsec_global_ipsec_cb_pindex, d.cb_pindex 
     tbladd d.esn_lo, 1
     tbladd d.iv, 1

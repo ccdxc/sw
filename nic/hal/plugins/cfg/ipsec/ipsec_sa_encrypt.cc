@@ -492,10 +492,14 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     rsp->mutable_spec()->set_decrypt_load_ipsec_int_errors(stats_cb.decrypt_load_ipsec_int_errors);
     rsp->mutable_spec()->set_decrypt_txdma2_dummy_free(stats_cb.decrypt_txdma2_dummy_free);
     rsp->mutable_spec()->set_decrypt_rxdma_enter_counters(stats_cb.decrypt_rxdma_enter_counters);
-    rsp->mutable_spec()->set_decrypt_barco_bad_indesc_errors(stats_cb.decrypt_barco_bad_indesc_errors);
-    rsp->mutable_spec()->set_decrypt_barco_bad_outdesc_errors(stats_cb.decrypt_barco_bad_outdesc_errors);
-    rsp->mutable_spec()->set_decrypt_bad_indesc_free_errors(stats_cb.decrypt_bad_indesc_free_errors);
-    rsp->mutable_spec()->set_decrypt_bad_outdesc_free_errors(stats_cb.decrypt_bad_outdesc_free_errors);
+    rsp->mutable_spec()->set_decrypt_txdma2_barco_bad_indesc_errors(stats_cb.decrypt_txdma2_barco_bad_indesc_errors);
+    rsp->mutable_spec()->set_decrypt_txdma2_barco_bad_outdesc_errors(stats_cb.decrypt_txdma2_barco_bad_outdesc_errors);
+    rsp->mutable_spec()->set_decrypt_txdma2_bad_indesc_free_errors(stats_cb.decrypt_txdma2_bad_indesc_free_errors);
+    rsp->mutable_spec()->set_decrypt_txdma2_bad_outdesc_free_errors(stats_cb.decrypt_txdma2_bad_outdesc_free_errors);
+    rsp->mutable_spec()->set_decrypt_txdma1_bad_indesc_free_errors(stats_cb.decrypt_txdma1_bad_indesc_free_errors);
+    rsp->mutable_spec()->set_decrypt_txdma1_bad_outdesc_free_errors(stats_cb.decrypt_txdma1_bad_outdesc_free_errors);
+    rsp->mutable_spec()->set_decrypt_txdma1_sem_free_errors(stats_cb.decrypt_txdma1_sem_free_errors);
+    rsp->mutable_spec()->set_decrypt_txdma2_sem_free_errors(stats_cb.decrypt_txdma2_sem_free_errors);
 
 
     rsp->mutable_spec()->set_rnmdpr_sem_pindex(stats_cb.rnmdpr_pi_counters);

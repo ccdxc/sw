@@ -20,6 +20,7 @@ esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2:
     addui r2, r2, hiword(BRQ_BASE)
     addi r2, r2, loword(BRQ_BASE)
     blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2_illegal 
+    nop
     phvwr p.ipsec_to_stage4_barco_req_addr, r2
     phvwr p.barco_dbell_pi, r4.wx
     tblwr.f d.pi, r4

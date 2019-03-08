@@ -250,7 +250,7 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         encrypt_txdma1_sem_free_errors;
     uint64_t         encrypt_txdma2_sem_free_errors;
     uint64_t         encrypt_txdma1_barco_ring_full_errors;
-    uint64_t         encrypt_pad[34];
+    uint64_t         encrypt_pad[33];
 
     uint64_t         decrypt_input_desc_errors;
     uint64_t         decrypt_output_desc_errors;
@@ -269,11 +269,15 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         decrypt_txdma2_dummy_free;
     uint64_t         decrypt_rxdma_dummy_desc_errors;
     uint64_t         decrypt_rxdma_enter_counters;
-    uint64_t         decrypt_barco_bad_indesc_errors;
-    uint64_t         decrypt_barco_bad_outdesc_errors;
-    uint64_t         decrypt_bad_indesc_free_errors;
-    uint64_t         decrypt_bad_outdesc_free_errors;
-    uint64_t         decrypt_pad[43];
+    uint64_t         decrypt_txdma2_barco_bad_indesc_errors;
+    uint64_t         decrypt_txdma2_barco_bad_outdesc_errors;
+    uint64_t         decrypt_txdma2_bad_indesc_free_errors;
+    uint64_t         decrypt_txdma2_bad_outdesc_free_errors;
+    uint64_t         decrypt_txdma1_sem_free_errors;
+    uint64_t         decrypt_txdma2_sem_free_errors;
+    uint64_t         decrypt_txdma1_bad_indesc_free_errors;
+    uint64_t         decrypt_txdma1_bad_outdesc_free_errors;
+    uint64_t         decrypt_pad[39];
 
     uint32_t         rnmdpr_pi_counters;
     uint32_t         rnmdpr_ci_counters;

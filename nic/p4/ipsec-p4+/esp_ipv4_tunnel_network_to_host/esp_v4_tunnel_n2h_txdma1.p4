@@ -12,13 +12,17 @@
 
 #define tx_table_s4_t0_action esp_v4_tunnel_n2h_txdma1_update_cb
 
+#define tx_table_s5_t0_action ipsec_release_resources
+
 #include "../../common-p4+/common_txdma.p4"
 #include "../ipsec_defines.h"
 #include "esp_v4_tunnel_n2h_headers.p4"
 
 header_type ipsec_txdma1_global_t {
     fields {
-        ipsec_cb_addr  : ADDRESS_WIDTH;
+        ipsec_cb_addr  : 40;
+        flags          : 8;
+        pad            : 16;
         in_desc_addr   : ADDRESS_WIDTH;
     }
 }
@@ -76,9 +80,18 @@ header_type ipsec_to_stage3_t {
     fields {
         barco_req_addr   : ADDRESS_WIDTH;
         new_key          : 1;
-        stage3_pad1      : 63;
+        stage3_pad1      : 31;
+        sem_cindex       : 32;
     }
 }
+
+header_type ipsec_to_stage5_t {
+    fields {
+        in_desc_addr : ADDRESS_WIDTH;
+        out_desc_addr : ADDRESS_WIDTH;
+    }
+}
+
 
 header_type doorbell_data_pad_t {
     fields {
@@ -114,6 +127,9 @@ metadata ipsec_to_stage2_t ipsec_to_stage2;
 @pragma pa_header_union ingress to_stage_3
 metadata ipsec_to_stage3_t ipsec_to_stage3;
 
+@pragma pa_header_union ingress to_stage_5
+metadata ipsec_to_stage5_t ipsec_to_stage5;
+
 @pragma pa_header_union ingress common_t0_s2s
 metadata ipsec_table0_s2s t0_s2s;
 @pragma pa_header_union ingress common_t1_s2s
@@ -143,15 +159,19 @@ metadata doorbell_data_pad_t db_data_pad;
 metadata dma_cmd_phv2mem_t brq_in_desc_zero;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t brq_out_desc_zero;
-
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t brq_req_write;
-
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_post_barco_ring;
-
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex; 
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t rnmdr;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t tnmdr;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t sem_cindex;
+
 
 @pragma scratch_metadata
 metadata ipsec_txdma1_global_t txdma1_global_scratch;
@@ -162,6 +182,8 @@ metadata ipsec_to_stage1_t scratch_to_s1;
 metadata ipsec_to_stage2_t scratch_to_s2;
 @pragma scratch_metadata
 metadata ipsec_to_stage3_t scratch_to_s3;
+@pragma scratch_metadata
+metadata ipsec_to_stage5_t scratch_to_s5;
 
 @pragma scratch_metadata
 metadata ipsec_table0_s2s scratch_t0_s2s;
@@ -174,18 +196,20 @@ metadata ipsec_table3_s2s scratch_t3_s2s;
 
 @pragma scratch_metadata
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
-
 @pragma scratch_metadata
 metadata ipsec_int_header_t ipsec_int_hdr_scratch;
-
 @pragma scratch_metadata
 metadata ipsec_decrypt_part2_t ipsec_decrypt_part2_scratch;
-
 @pragma scratch_metadata
 metadata barco_pi barco_pi_scratch;
-
 @pragma scratch_metadata
 metadata barco_shadow_params_d_t barco_shadow_params_d;
+
+#define IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT \
+    modify_field(txdma1_global_scratch.flags, txdma1_global.flags); \
+    modify_field(txdma1_global_scratch.ipsec_cb_addr, txdma1_global.ipsec_cb_addr); \
+    modify_field(txdma1_global_scratch.pad, txdma1_global.pad); \
+    modify_field(txdma1_global_scratch.in_desc_addr, txdma1_global.in_desc_addr);
 
 #define IPSEC_TXDMA1_S2S0_SCRATCH_INIT \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
@@ -221,8 +245,18 @@ metadata barco_shadow_params_d_t barco_shadow_params_d;
 #define IPSEC_TXDMA1_TO_STAGE3_INIT \
     modify_field(scratch_to_s3.barco_req_addr, ipsec_to_stage2.barco_req_addr); \
     modify_field(scratch_to_s3.new_key, ipsec_to_stage3.new_key); \
+    modify_field(scratch_to_s3.sem_cindex, ipsec_to_stage3.sem_cindex); \
     modify_field(scratch_to_s3.stage3_pad1, ipsec_to_stage2.stage3_pad1);
 
+
+//stage 5
+action ipsec_release_resources(sem_cindex)
+{
+     IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
+     modify_field(scratch_to_s5.in_desc_addr, ipsec_to_stage5.in_desc_addr);
+     modify_field(scratch_to_s5.out_desc_addr, ipsec_to_stage5.out_desc_addr);
+     modify_field(scratch_to_s3.sem_cindex, sem_cindex);
+}
 
 //stage 4 table 0
 action esp_v4_tunnel_n2h_txdma1_update_cb(pc, rsvd, cosA, cosB,
@@ -238,6 +272,7 @@ action esp_v4_tunnel_n2h_txdma1_update_cb(pc, rsvd, cosA, cosB,
                                        cb_ring_base_addr, barco_ring_base_addr, 
                                        iv_salt, vrf_vlan, is_v6)
 {
+    IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
     modify_field(p4plus2p4_hdr.table0_valid, 0);
     IPSEC_CB_SCRATCH_WITH_PC
 }

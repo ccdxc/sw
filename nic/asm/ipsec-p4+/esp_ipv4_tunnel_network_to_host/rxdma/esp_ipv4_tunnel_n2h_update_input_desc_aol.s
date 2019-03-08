@@ -30,12 +30,13 @@ esp_ipv4_tunnel_n2h_update_input_desc_aol:
 dma_cmd_to_move_input_pkt_to_mem:
     add r2, r0, r6 
     blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma_in_page
-
+    nop
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r6 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_iv_salt_off
  
     sub r3, r3, k.ipsec_to_stage3_iv_size 
     blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma_in_page
+    nop
     phvwr p.dma_cmd_pkt2mem2_dma_cmd_addr, r3 
     add r5, k.ipsec_to_stage3_payload_size, k.ipsec_to_stage3_iv_size
     add r5, r5, IPSEC_DEFAULT_ICV_SIZE 

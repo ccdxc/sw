@@ -27,10 +27,10 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
     phvwri p.{dma_cmd_in_desc_aol_dma_cmd_phv_end_addr...dma_cmd_in_desc_aol_dma_cmd_type}, ((IPSEC_IN_DESC_AOL_END << 18) | (IPSEC_IN_DESC_AOL_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE| CAPRI_DMA_COMMAND_PHV_TO_MEM)
 
 
-dma_cmd_write_iv_to_in_desc:
     add r3, r7, IPSEC_SALT_HEADROOM
     //add r3, r3, ESP_FIXED_HDR_SIZE_LI
     blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_update_input_desc_aol_illegal_dma_in_page
+    nop
     phvwr p.dma_cmd_iv_dma_cmd_addr, r3
     seq c1, k.ipsec_to_stage3_iv_size, 16
     phvwri.!c1 p.{dma_cmd_iv_dma_cmd_phv_end_addr...dma_cmd_iv_dma_cmd_type}, ((IPSEC_IN_DESC_IV_END << 18) | (IPSEC_IN_DESC_IV_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM) 

@@ -30,9 +30,9 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     phvwr p.ipsec_to_stage5_in_desc_addr, d.in_desc
     phvwr p.ipsec_to_stage5_out_desc_addr, d.out_desc
     phvwr p.barco_req_auth_tag_addr, r1.dx
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req[33:6] 
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14
-    phvwr.e  p.common_te0_phv_table_addr, k.txdma1_global_ipsec_cb_addr
+    add r5, r0, k.txdma1_global_ipsec_cb_addr
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req, r5, TABLE_SIZE_512_BITS)
+    nop.e
     nop 
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_bad_barco_in_desc:

@@ -16,15 +16,10 @@ esp_ipv4_tunnel_h2n_update_output_desc_aol:
     add r6, k.t1_s2s_payload_size, k.ipsec_to_stage3_pad_size
     addi r6, r6, ESP_FIXED_HDR_SIZE+2
     phvwr p.barco_desc_out_L0, r6.wx 
-    phvwri p.{app_header_table0_valid...app_header_table2_valid}, 7
     add r4, k.t1_s2s_ipsec_cb_addr, IPSEC_H2N_STATS_CB_OFFSET
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc[33:6]
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size},  6
-    phvwr p.common_te0_phv_table_addr, k.t1_s2s_ipsec_cb_addr 
-    phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2[33:6]
-    phvwr p.common_te2_phv_table_addr, k.t1_s2s_ipsec_cb_addr 
-    phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 6 
-    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats[33:6]
-    phvwr p.common_te1_phv_table_addr, r4 
-    phvwri.e p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, ((1 << 3) | 6 ) 
+    add r1, r0, k.t1_s2s_ipsec_cb_addr 
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc, r1, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats, r4, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2, r1, TABLE_SIZE_512_BITS)
+    nop.e
     nop

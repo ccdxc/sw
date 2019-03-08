@@ -14,26 +14,26 @@ struct phv_ p;
 
 esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2:
 
-esp_ipv4_tunnel_h2n_dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:
     add r2, r0, k.ipsec_global_in_desc_addr
     blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2_illegal_dma_in_desc
+    nop
     phvwr p.dma_cmd_phv2mem_ipsec_int_dma_cmd_addr, k.ipsec_global_in_desc_addr
 
-esp_ipv4_tunnel_h2n_dma_cmd_fill_esp_hdr:
     add r6, k.ipsec_global_in_desc_addr, IPSEC_PAGE_OFFSET
     add r1, r6, IPSEC_SALT_HEADROOM
     add r1, r1, d.iv_size
     blti  r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2_illegal_dma_in_page
+    nop
     phvwr p.dma_cmd_fill_esp_hdr_dma_cmd_addr, r1
   
-esp_ipv4_tunnel_h2n_dma_cmd_to_write_input_desc_aol:
     add r1, k.ipsec_global_in_desc_addr, 64
     blti  r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2_illegal_dma_in_desc
+    nop
     phvwr p.dma_cmd_in_desc_aol_dma_cmd_addr, r1
     
-esp_ipv4_tunnel_h2n_dma_cmd_to_write_output_desc_aol:
     add r1, k.ipsec_to_stage4_out_desc_addr, 64
     blti  r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2_illegal_dma_out_desc
+    nop
     phvwr.e p.dma_cmd_out_desc_aol_dma_cmd_addr, r1 
     nop
 

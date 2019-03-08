@@ -19,32 +19,34 @@ dma_cmd_to_move_input_pkt_to_mem:
     add r6, k.ipsec_global_in_desc_addr, IPSEC_PAGE_OFFSET
     add r1, r1, r6 
     blti  r1, CAPRI_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_in_page 
+    nop
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r1 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_packet_len[13:0]
 
-dma_cmd_to_write_pad_bytes:
     seq c3, k.ipsec_to_stage3_pad_size, 0
     add r2, r1, k.ipsec_to_stage3_packet_len
     //source - from fixed hbm pad table data structure.
     phvwri.!c3 p.{dma_cmd_pad_byte_src_dma_cmd_mem2mem_type...dma_cmd_pad_byte_src_dma_cmd_type}, ((DMA_CMD_TYPE_MEM2MEM_TYPE_SRC << 4) | CAPRI_DMA_COMMAND_MEM_TO_MEM)
     add r1, r0, k.ipsec_to_stage3_pad_addr[51:0]
     blti  r1, CAPRI_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_pad_bytes
+    nop
  
     phvwr  p.dma_cmd_pad_byte_src_dma_cmd_addr, k.ipsec_to_stage3_pad_addr[51:0] 
     phvwr p.dma_cmd_pad_byte_src_dma_cmd_size, k.ipsec_to_stage3_pad_size
     //destination - to the end of the page where pkt is DMA'ed.
     phvwri.!c3 p.{dma_cmd_pad_byte_dst_dma_cmd_mem2mem_type...dma_cmd_pad_byte_dst_dma_cmd_type}, ((DMA_CMD_TYPE_MEM2MEM_TYPE_DST << 4) | CAPRI_DMA_COMMAND_MEM_TO_MEM)
     blti  r2, CAPRI_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_pad_bytes
+    nop
     phvwr p.dma_cmd_pad_byte_dst_dma_cmd_addr, r2
     phvwr p.dma_cmd_pad_byte_dst_dma_cmd_size, k.ipsec_to_stage3_pad_size
 
-dma_cmd_to_write_pad_size_l4_proto:
     add r2, r2, k.ipsec_to_stage3_pad_size
     blti  r2, CAPRI_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_tail_bytes
+    nop
     phvwr p.tail_2_bytes_dma_cmd_addr, r2
 
-dma_cmd_write_salt_to_in_desc:
     blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_in_page
+    nop
     phvwr.e p.dma_cmd_iv_salt_dma_cmd_addr, r6 
     nop
 

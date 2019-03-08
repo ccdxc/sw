@@ -11,12 +11,10 @@ struct phv_ p;
         .align
 
 esp_ipv4_tunnel_h2n_allocate_output_desc_index:
-    phvwri p.app_header_table1_valid, 1
-    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_update_output_desc_aol[33:6] 
-    phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 4 
-    phvwr p.common_te1_phv_table_addr, d.out_desc_index 
     phvwr p.ipsec_int_header_out_desc, d.out_desc_index 
     phvwr p.t1_s2s_out_desc_addr, d.out_desc_index
+    add r5, r0, d.out_desc_index
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_update_output_desc_aol, r5, TABLE_SIZE_128_BITS)
     add r6, d.out_desc_index, IPSEC_PAGE_OFFSET 
     phvwr p.ipsec_int_header_out_page, r6 
     phvwr p.barco_desc_out_A0_addr, r6.dx

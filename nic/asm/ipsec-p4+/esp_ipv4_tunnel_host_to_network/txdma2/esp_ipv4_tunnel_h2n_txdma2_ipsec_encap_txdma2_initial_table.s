@@ -36,10 +36,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwr.c4 p.ipsec_to_stage4_is_vlan_encap, 1
     smeqb c3, d.flags, IPSEC_FLAGS_NATT_MASK, IPSEC_FLAGS_NATT_MASK 
     phvwr.c3 p.ipsec_to_stage4_is_nat_t, 1
-    phvwri p.app_header_table0_valid, 1
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 10 
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy[33:6] 
-    phvwri.f p.common_te0_phv_table_addr, TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE 
+    addi r5, r0, TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy, r5, TABLE_SIZE_32_BITS)
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_TXDMA2_ENTER_OFFSET, 1)
     seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 

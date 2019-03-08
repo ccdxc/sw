@@ -10,11 +10,8 @@ struct phv_ p;
         .param  esp_ipv4_tunnel_h2n_txdma2_ipsec_update_tx_stats
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int:
-    phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 14
-    phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_update_tx_stats[33:6]
     add r4, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_H2N_STATS_CB_OFFSET
-    phvwr  p.common_te2_phv_table_addr, r4 
-
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma2_ipsec_update_tx_stats, r4, TABLE_SIZE_512_BITS)
     phvwr p.t0_s2s_out_page_addr, d.out_page 
     phvwr p.t1_s2s_out_desc_addr, d.out_desc
     phvwr p.ipsec_to_stage5_out_desc_addr, d.out_desc
