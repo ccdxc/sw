@@ -271,6 +271,7 @@ struct lif {
 	unsigned int nrxqs;
 
 	unsigned int rx_mode;
+	uint16_t rss_hash_cfg;
 
 	int rx_mbuf_size;		/* Rx mbuf size pool. */
 	uint16_t max_frame_size;	/* MTU size. */

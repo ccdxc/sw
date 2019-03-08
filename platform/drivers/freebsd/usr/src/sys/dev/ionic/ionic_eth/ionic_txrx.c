@@ -151,6 +151,31 @@ TUNABLE_INT("hw.ionic.rx_sg_size", &ionic_rx_sg_size);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_sg_size, CTLFLAG_RDTUN,
     &ionic_rx_sg_size, 0, "Rx scatter-gather buffer size, disabled by default.");
 
+static inline bool
+ionic_is_rx_tcp(uint8_t pkt_type)
+{
+
+	return ((pkt_type == PKT_TYPE_IPV4_TCP) ||
+		(pkt_type == PKT_TYPE_IPV6_TCP));
+}
+
+static inline bool
+ionic_is_rx_udp(uint8_t pkt_type)
+{
+
+	return ((pkt_type == PKT_TYPE_IPV4_UDP) ||
+		(pkt_type == PKT_TYPE_IPV6_UDP));
+}
+
+static inline bool
+ionic_is_rx_ipv4(uint8_t pkt_type)
+{
+
+	return ((pkt_type == PKT_TYPE_IPV4) ||
+		(pkt_type == PKT_TYPE_IPV4_TCP) ||
+		(pkt_type == PKT_TYPE_IPV4_UDP));
+}
+
 static void ionic_dump_mbuf(struct mbuf* m)
 {
 	IONIC_INFO("len %u\n", m->m_len);
@@ -173,13 +198,28 @@ static void ionic_dump_mbuf(struct mbuf* m)
 static void ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
 	struct rxq_comp *comp, struct rx_stats *stats)
 {
+	bool ipv4;
+
+	ipv4 = ionic_is_rx_ipv4(comp->pkt_type);
 	m->m_pkthdr.csum_flags = 0;
+
+	/* XXX: for debug only. */
+	if ((comp->csum_ip_ok || comp->csum_ip_bad) && !ipv4)
+		IONIC_NETDEV_ERROR(ifp, "csum ip is set(%d:%d) for non-IP packet\n",
+			comp->csum_ip_ok, comp->csum_ip_bad);
+	if ((comp->csum_tcp_ok || comp->csum_tcp_bad) && !ionic_is_rx_tcp(comp->pkt_type))
+		IONIC_NETDEV_ERROR(ifp, "csum TCP is set(%d:%d) for non-TCP packet\n",
+			comp->csum_tcp_ok, comp->csum_tcp_bad);
+	if ((comp->csum_udp_ok || comp->csum_udp_bad) && !ionic_is_rx_tcp(comp->pkt_type))
+		IONIC_NETDEV_ERROR(ifp, "csum UDP is set(%d:%d) for non-TCP packet\n",
+			comp->csum_udp_ok, comp->csum_udp_bad);
 
 	if (comp->csum_ip_ok) {
 		if ((if_getcapenable(ifp) & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6))) {
 			m->m_pkthdr.csum_flags = CSUM_IP_CHECKED | CSUM_IP_VALID;
 			m->m_pkthdr.csum_data = htons(0xffff);
-			stats->csum_ip_ok++;
+			if (ipv4)
+				stats->csum_ip_ok++;
 			if (comp->csum_tcp_ok || comp->csum_udp_ok) {
 				m->m_pkthdr.csum_flags |= CSUM_DATA_VALID | CSUM_PSEUDO_HDR;
 				stats->csum_l4_ok++;
@@ -188,7 +228,8 @@ static void ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
 	}
 
 	if (comp->csum_ip_bad) {
-		stats->csum_ip_bad++;
+		if (ipv4)
+			stats->csum_ip_bad++;
 		if (comp->csum_tcp_ok || comp->csum_udp_ok)
 			stats->csum_l4_ok++;
 	}
@@ -199,59 +240,93 @@ static void ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
 
 /*
  * Set RSS packet type.
- * NOTE: Use h/w logic to determine if packet is TCP type to enable
- * LRO etc.
  */
-static bool ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum, 
-	struct rx_stats *stats)
+static void
+ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
+	struct rx_stats *stats, uint16_t rss_hash)
 {
-	bool tcp = false;
 
-	if (comp->rss_type != 0) {
-		m->m_pkthdr.flowid = comp->rss_hash;
-#ifdef RSS
-		switch (comp->rss_type) {
-		case RXQ_COMP_RSS_TYPE_IPV4:
-			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV4);
-			stats->rss_ip4++;
-			break;
-		case RXQ_COMP_RSS_TYPE_IPV4_TCP:
-			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_TCP_IPV4);
-			stats->rss_tcp_ip4++;
-			tcp = true;
-			break;
-		case RXQ_COMP_RSS_TYPE_IPV4_UDP:
-			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_UDP_IPV4);
-			stats->rss_udp_ip4++;
-			break;
-		case RXQ_COMP_RSS_TYPE_IPV6:
-			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV6);
-			stats->rss_ip6++;
-			break;
-		case RXQ_COMP_RSS_TYPE_IPV6_TCP:
-			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_TCP_IPV6);
-			stats->rss_tcp_ip6++;
-			tcp = true;
-			break;
-		case RXQ_COMP_RSS_TYPE_IPV6_UDP:
-			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_UDP_IPV6);
-			stats->rss_udp_ip6++;
-			break;
-		default:
-			M_HASHTYPE_SET(m, M_HASHTYPE_OPAQUE_HASH);
-			stats->rss_unknown++;
-			break;
-		}
-#else
-		M_HASHTYPE_SET(m, M_HASHTYPE_OPAQUE_HASH);
-#endif
-
-	} else {
+	if (comp->pkt_type == 0) {
 		m->m_pkthdr.flowid = qnum;
 		M_HASHTYPE_SET(m, M_HASHTYPE_OPAQUE_HASH);
+		stats->rss_unknown++;
+		return;
 	}
 
-	return(tcp);
+	m->m_pkthdr.flowid = comp->rss_hash;
+#ifdef RSS
+	/*
+	 * Set the correct RSS type based on RSS hash config. If RSS is not enabled
+	 * for that particular type, e.g. TCP/IPv4 but enabled for IPv4, set RSS
+	 * type to IPv4.
+	 */
+	switch (comp->pkt_type) {
+	case PKT_TYPE_IPV4:
+		if (rss_hash & IONIC_RSS_TYPE_IPV4) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV4);
+			stats->rss_ip4++;
+		}
+		break;
+	case PKT_TYPE_IPV4_TCP:
+		if (rss_hash & IONIC_RSS_TYPE_IPV4_TCP) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_TCP_IPV4);
+			stats->rss_tcp_ip4++;
+		} else if (rss_hash & IONIC_RSS_TYPE_IPV4) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV4);
+			stats->rss_ip4++;
+		}
+		break;
+	case PKT_TYPE_IPV4_UDP:
+		if (rss_hash & IONIC_RSS_TYPE_IPV4_UDP) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_UDP_IPV4);
+			stats->rss_udp_ip4++;
+		} else if (rss_hash & IONIC_RSS_TYPE_IPV4) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV4);
+			stats->rss_ip4++;
+		}
+		break;
+	case PKT_TYPE_IPV6:
+		if (rss_hash & IONIC_RSS_TYPE_IPV6) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV6);
+			stats->rss_ip6++;
+		}
+		break;
+	case PKT_TYPE_IPV6_TCP:
+		if (rss_hash & IONIC_RSS_TYPE_IPV6_TCP) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_TCP_IPV6);
+			stats->rss_tcp_ip6++;
+		} else if (rss_hash & IONIC_RSS_TYPE_IPV6) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV6);
+			stats->rss_ip6++;
+		}
+		break;
+	case PKT_TYPE_IPV6_UDP:
+		if (rss_hash & IONIC_RSS_TYPE_IPV6_UDP) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_UDP_IPV6);
+			stats->rss_udp_ip6++;
+		} else if (rss_hash & IONIC_RSS_TYPE_IPV6) {
+			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV6);
+			stats->rss_ip6++;
+		}
+		break;
+	default:
+		M_HASHTYPE_SET(m, M_HASHTYPE_OPAQUE_HASH);
+		stats->rss_unknown++;
+		break;
+	}
+
+	/*
+	 * RSS hash type was not configured for these packet type,
+	 * use OPAQUE_HASH.
+	 */
+	if (M_HASHTYPE_SET(m, M_HASHTYPE_NONE)) {
+		M_HASHTYPE_SET(m, M_HASHTYPE_OPAQUE_HASH);
+		stats->rss_unknown++;
+	}
+#else
+	M_HASHTYPE_SET(m, M_HASHTYPE_OPAQUE_HASH);
+	stats->rss_unknown++;
+#endif
 }
 
 void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
@@ -261,12 +336,12 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	struct rx_stats *stats = &rxq->stats;
 	struct ifnet *ifp = rxq->lif->netdev;
 	int left, error;
-	bool i, is_tcp;
+	bool i;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 
 	/*
-	 * No-op case.
+	 * No-op case.k
 	 */
 	if (m == NULL) {
 		stats->mem_err++;
@@ -325,31 +400,23 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 			mb->m_len = 0;
 	}
 
-	// rx checksum offload
 	ionic_rx_checksum(ifp, m, comp, stats);
 
 	/* Populate mbuf with h/w RSS hash, type etc. */
-	is_tcp = ionic_rx_rss(m, comp, rxq->index, stats);
+	ionic_rx_rss(m, comp, rxq->index, stats, rxq->lif->rss_hash_cfg);
 
-	// rx vlan strip offload
 	if ((if_getcapenable(ifp) & IFCAP_VLAN_HWTAGGING) && comp->V) {
 		m->m_pkthdr.ether_vtag = le16toh(comp->vlan_tci);
 		m->m_flags |= M_VLANTAG;
 	}
 
-	/*
-	 * Use h/w RSS engine of L4 checksum to determine if its TCP packet.
-	 * XXX: add more cases of LRO.
-	 * XXX: LRO with VLAN??
-	 */
-	if ((if_getcapenable(ifp) & IFCAP_LRO) && (is_tcp || comp->csum_tcp_ok)) {
+	if ((if_getcapenable(ifp) & IFCAP_LRO) && ionic_is_rx_tcp(comp->pkt_type)) {
 		if (rxq->lro.lro_cnt != 0) {
-			if ((error = tcp_lro_rx(&rxq->lro, m, 0)) == 0) {/* third arg -Checksum?? */
+			if ((error = tcp_lro_rx(&rxq->lro, m, 0)) == 0) {
 				rxbuf->m = NULL;
 				return;
-			} else {
+			} else 
 				IONIC_RX_TRACE(rxq, "lro failed, error: %d\n", error);
-			}
 		}
 	}
 
@@ -967,7 +1034,6 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n",
 		txq->head_index, txq->tail_index);
 
-	/* XXX: once we have packet type, we don't need s/w parsing. */
 	if ((error = ionic_get_header_size(txq, *m_headp, &eth_type, &proto, &hdr_len))) {
 		IONIC_QUE_ERROR(txq, "mbuf packet discarded, type: %x proto: %x"
 			" hdr_len :%u\n", eth_type, proto, hdr_len);
@@ -2195,8 +2261,6 @@ ionic_set_rss_type(void)
 {
 #ifdef RSS
 	uint32_t rss_hash_config = rss_gethashconfig();
-	uint16_t rss_types = 0;
-
 	if (rss_hash_config & RSS_HASHTYPE_RSS_IPV4)
 		rss_types |= IONIC_RSS_TYPE_IPV4;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_TCP_IPV4)
@@ -2264,7 +2328,8 @@ ionic_lif_rss_setup(struct lif *lif)
 	if (err)
 		goto err_out_free;
 
-	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key, ionic_set_rss_type());
+	lif->rss_hash_cfg =  ionic_set_rss_type();
+	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key, lif->rss_hash_cfg);
 	if (err)
 		goto err_out_free;
 

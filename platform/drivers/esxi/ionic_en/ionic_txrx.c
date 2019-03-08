@@ -103,23 +103,23 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 //        skb_record_rx_queue(skb, q->index);
 
         if (priv_data->uplink_handle.hw_features & ETH_HW_RX_HASH) {
-                switch (comp->rss_type) {
-                case RXQ_COMP_RSS_TYPE_IPV4:
+                switch (comp->pkt_type) {
+                case PKT_TYPE_IPV4:
                         hash_type = VMK_PKT_RSS_TYPE_IPV4;
                         break;
-                case RXQ_COMP_RSS_TYPE_IPV6:
+                case PKT_TYPE_IPV6:
                         hash_type = VMK_PKT_RSS_TYPE_IPV6;
                         break;
-                case RXQ_COMP_RSS_TYPE_IPV4_TCP:
+                case PKT_TYPE_IPV4_TCP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV4_TCP;
                         break;
-                case RXQ_COMP_RSS_TYPE_IPV6_TCP:
+                case PKT_TYPE_IPV6_TCP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV6_TCP;
                         break;
-                case RXQ_COMP_RSS_TYPE_IPV4_UDP:
+                case PKT_TYPE_IPV4_UDP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV4_UDP;
                         break;
-                case RXQ_COMP_RSS_TYPE_IPV6_UDP:
+                case PKT_TYPE_IPV6_UDP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV6_UDP;
                         break;
                 default:

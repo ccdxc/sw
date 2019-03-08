@@ -19,13 +19,10 @@ header_type eth_rx_cq_desc_p {
         csum : 16;
         vlan_tci : 16;
         len_lo : 8;
-        rsvd2 : 2;
-        len_hi : 6;
-
-        rsvd3 : 3;
+        rsvd2 : 1;
         csum_calc : 1;
-        rss_type : 4;
-
+        len_hi : 6;
+        pkt_type : 8;
         color : 1;
         vlan_strip : 1;
         csum_ip_bad : 1;

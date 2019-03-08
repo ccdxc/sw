@@ -756,45 +756,22 @@ struct rxq_sg_desc {
 	} elems[IONIC_RX_MAX_SG_ELEMS];
 };
 
-enum rxq_comp_rss_type {
-	RXQ_COMP_RSS_TYPE_NONE = 0,
-	RXQ_COMP_RSS_TYPE_IPV4,
-	RXQ_COMP_RSS_TYPE_IPV4_TCP,
-	RXQ_COMP_RSS_TYPE_IPV4_UDP,
-	RXQ_COMP_RSS_TYPE_IPV6,
-	RXQ_COMP_RSS_TYPE_IPV6_TCP,
-	RXQ_COMP_RSS_TYPE_IPV6_UDP,
-	RXQ_COMP_RSS_TYPE_IPV6_EX,
-	RXQ_COMP_RSS_TYPE_IPV6_TCP_EX,
-	RXQ_COMP_RSS_TYPE_IPV6_UDP_EX,
-};
-
 /** struct rxq_comp - Ethernet receive queue completion descriptor
  * @status:       The status of the command.  Values for status are:
  *                   0 = Successful completion
  * @num_sg_elems: Number of SG elements used by this descriptor
  * @comp_index:   The index in the descriptor ring for which this
  *                is the completion.
- * @rss_hash:     32-bit RSS hash for the @rss_type indicated
- * @csum:         16-bit sum of the packet’s L2 payload.
- *                If the packet’s L2 payload is odd length, an extra
+ * @rss_hash:     32-bit RSS hash
+ * @csum:         16-bit sum of the packet's L2 payload.
+ *                If the packet's L2 payload is odd length, an extra
  *                zero-value byte is included in the @csum calculation but
  *                not included in @len.
  * @vlan_tci:     VLAN tag stripped from the packet.  Valid if @V is
  *                set.  Includes .1p and .1q tags.
  * @len:          Received packet length, in bytes.  Excludes FCS.
  * @csum_calc     L2 payload checksum is computed or not
- * @rss_type:     RSS type for @rss_hash:
- *                   0 = RSS hash not calcuated
- *                   1 = L3 IPv4
- *                   2 = L4 IPv4/TCP
- *                   3 = L4 IPv4/UDP
- *                   4 = L3 IPv6
- *                   5 = L4 IPv6/TCP
- *                   6 = L4 IPv6/UDP
- *                   7 = L3 IPv6 w/ extensions
- *                   8 = L4 IPv6/TCP w/ extensions
- *                   9 = L4 IPv6/UDP w/ extensions
+ * @pkt_type:     Packet type
  * @csum_tcp_ok:  The TCP checksum calculated by the device
  *                matched the checksum in the receive packet's
  *                TCP header
@@ -831,10 +808,9 @@ struct rxq_comp {
 	u16 csum;
 	u16 vlan_tci;
 	u32 len:14;
-	u32 rsvd2:2;
-	u32 rss_type:4;
 	u32 csum_calc:1;
-	u32 rsvd3:3;
+	u32 rsvd2:1;
+	u32 pkt_type:8;
 	u32 csum_tcp_ok:1;
 	u32 csum_tcp_bad:1;
 	u32 csum_udp_ok:1;
@@ -843,6 +819,16 @@ struct rxq_comp {
 	u32 csum_ip_bad:1;
 	u32 V:1;
 	u32 color:1;
+};
+
+enum pkt_type {
+	PKT_TYPE_NON_IP     = 0x000,
+	PKT_TYPE_IPV4       = 0x001,
+	PKT_TYPE_IPV4_TCP   = 0x003,
+	PKT_TYPE_IPV4_UDP   = 0x005,
+	PKT_TYPE_IPV6       = 0x008,
+	PKT_TYPE_IPV6_TCP   = 0x018,
+	PKT_TYPE_IPV6_UDP   = 0x028,
 };
 
 enum feature_set {

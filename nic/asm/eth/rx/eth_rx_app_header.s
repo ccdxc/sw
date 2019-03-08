@@ -30,6 +30,9 @@ eth_rx_app_header:
 
   // Build completion entry in the PHV
 
+  // Packet type information
+  phvwr           p.eth_rx_cq_desc_pkt_type, k.p4_to_p4plus_pkt_type
+
   // L2/Complete checksum offload
   sne             c1, k.p4_to_p4plus_pkt_type, PKT_TYPE_NON_IP
   SET_STAT(_r_stats, c1, oper_csum_complete)

@@ -26,6 +26,26 @@ RssType2Enum = {
     LifRssType.Value("RSS_TYPE_IPV6") + LifRssType.Value("RSS_TYPE_IPV6_UDP"): RSS.IPV6_UDP,
 }
 
+def GetRxPktType(tc, obj, args=None):
+    pkt = tc.packets.db['PKT2'].spktobj.spkt
+    lif = tc.config.dst.endpoint.intf.lif
+    flags = []
+    if pkt.haslayer(IP):
+        if pkt.haslayer(TCP):
+            return LifRssType.Value("RSS_TYPE_IPV4") + LifRssType.Value("RSS_TYPE_IPV4_TCP")
+        elif pkt.haslayer(UDP):
+            return LifRssType.Value("RSS_TYPE_IPV4") + LifRssType.Value("RSS_TYPE_IPV4_UDP")
+        else:
+            return LifRssType.Value("RSS_TYPE_IPV4")
+    elif pkt.haslayer(IPv6):
+        if pkt.haslayer(TCP):
+            return LifRssType.Value("RSS_TYPE_IPV6") + LifRssType.Value("RSS_TYPE_IPV6_TCP")
+        elif pkt.haslayer(UDP):
+            return LifRssType.Value("RSS_TYPE_IPV6") + LifRssType.Value("RSS_TYPE_IPV6_UDP")
+        else:
+            return LifRssType.Value("RSS_TYPE_IPV6")
+    return LifRssType.Value("RSS_TYPE_NONE")
+
 
 def GetRxRssTypeNum(tc, obj, args=None):
     pkt = tc.packets.db['PKT2'].spktobj.spkt

@@ -32,7 +32,7 @@ eth_rx_rss_params:
 
 .brbegin
   br                  r7[2:0]
-  phvwr               p.eth_rx_cq_desc_rss_type, r7[2:0]
+  nop
 
   .brcase 0
     b                   eth_rx_rss_none
@@ -64,7 +64,6 @@ eth_rx_rss_params:
     phvwri              p.{app_header_table0_valid...app_header_table3_valid}, 0
 
   .brcase 7
-    phvwr               p.eth_rx_cq_desc_rss_type, 0
     b                   eth_rx_rss_none
     phvwri              p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
 

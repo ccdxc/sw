@@ -115,7 +115,7 @@ descriptors:
         fields:
             _buf          : ref://testcase/buffers/id=BUF2
             len           : ref://testcase/buffers/id=BUF2/size
-            rss_type      : callback://eth/callbacks/GetRxRssType
+            pkt_type      : callback://eth/callbacks/GetRxPktType
             rss_hash      : callback://eth/callbacks/GetRxRssHash
 
 trigger:

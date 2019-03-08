@@ -123,18 +123,15 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 				 false);
 
 	if (netdev->features & NETIF_F_RXHASH) {
-		switch (comp->rss_type) {
-		case RXQ_COMP_RSS_TYPE_IPV4:
-		case RXQ_COMP_RSS_TYPE_IPV6:
-		case RXQ_COMP_RSS_TYPE_IPV6_EX:
+		switch (comp->pkt_type) {
+		case PKT_TYPE_IPV4:
+		case PKT_TYPE_IPV6:
 			skb_set_hash(skb, comp->rss_hash, PKT_HASH_TYPE_L3);
 			break;
-		case RXQ_COMP_RSS_TYPE_IPV4_TCP:
-		case RXQ_COMP_RSS_TYPE_IPV6_TCP:
-		case RXQ_COMP_RSS_TYPE_IPV6_TCP_EX:
-		case RXQ_COMP_RSS_TYPE_IPV4_UDP:
-		case RXQ_COMP_RSS_TYPE_IPV6_UDP:
-		case RXQ_COMP_RSS_TYPE_IPV6_UDP_EX:
+		case PKT_TYPE_IPV4_TCP:
+		case PKT_TYPE_IPV6_TCP:
+		case PKT_TYPE_IPV4_UDP:
+		case PKT_TYPE_IPV6_UDP:
 			skb_set_hash(skb, comp->rss_hash, PKT_HASH_TYPE_L4);
 			break;
 		}
