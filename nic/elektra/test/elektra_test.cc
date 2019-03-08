@@ -18,15 +18,23 @@
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
+#include "nic/hal/iris/datapath/p4/include/table_sizes.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "gen/p4gen/elektra/include/p4pd.h"
 
 using boost::property_tree::ptree;
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
 
+uint64_t g_dmac1 = 0x000102030405ULL;
+uint16_t g_vlan_id1 = 0x64;
+uint16_t g_vrf_id1 = 0x35;
+uint16_t g_dst_lport1 = 0x53;
+uint16_t g_out_vlan_id1 = 0x65;
+
 uint8_t g_snd_pkt1[] = {
-    0x00, 0xEE, 0xFF, 0x00, 0x00, 0x03, 0x00, 0xCC,
-    0x00, 0x00, 0x00, 0x02, 0x81, 0x00, 0x00, 0x02,
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,
+    0xC2, 0xC3, 0xC4, 0xC5, 0x81, 0x00, 0x00, 0x64,
     0x08, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
     0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0B, 0x0B,
     0x01, 0x01, 0x0A, 0x0A, 0x01, 0x01, 0x12, 0x34,
@@ -42,22 +50,23 @@ uint8_t g_snd_pkt1[] = {
 };
 
 uint8_t g_rcv_pkt1[] = {
-    0x00, 0xEE, 0xFF, 0x00, 0x00, 0x03, 0x00, 0xCC,
-    0x00, 0x00, 0x00, 0x02, 0x81, 0x00, 0x01, 0x01,
-    0x08, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
-    0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0B, 0x0B,
-    0x01, 0x01, 0x0A, 0x0A, 0x01, 0x01, 0x12, 0x34,
-    0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2, 0xB4,
-    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
-    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
-    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
-    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
-    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
-    0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
-    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,
+    0xC2, 0xC3, 0xC4, 0xC5, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x5C, 0x00, 0x01, 0x00, 0x00, 0x40, 0x06,
+    0x63, 0x85, 0x0B, 0x0B, 0x01, 0x01, 0x0A, 0x0A,
+    0x01, 0x01, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x02,
+    0x20, 0x00, 0xF2, 0xB4, 0x00, 0x00, 0x61, 0x62,
+    0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A,
+    0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72,
+    0x73, 0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70,
+    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A,
+    0x78, 0x79,
 };
 
+#if 0
 static uint8_t *
 memrev(uint8_t *block, size_t elnum) {
     uint8_t *s, *t, tmp;
@@ -69,10 +78,10 @@ memrev(uint8_t *block, size_t elnum) {
     }
     return block;
 }
+#endif
 
 static int
-sdk_trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
-{
+sdk_trace_cb(sdk_trace_level_e trace_level, const char *format, ...) {
     char       logbuf[1024];
     va_list    args;
 
@@ -149,6 +158,117 @@ entry_write(uint32_t tbl_id, uint32_t index, void *key, void *mask,
     } else {
         p4pd_entry_write(tbl_id, index, NULL, NULL, data);
     }
+}
+
+static void
+key_native_init() {
+    input_mapping_native_swkey_t key;
+    input_mapping_native_swkey_mask_t mask;
+    input_mapping_native_actiondata_t data;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0xFF, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ip_u_ipv4_valid = 1;
+    mask.ip_u_ipv4_dstAddr_mask = 0;
+    data.action_id = INPUT_MAPPING_NATIVE_NATIVE_IPV4_PACKET_ID;
+
+    entry_write(P4TBL_ID_INPUT_MAPPING_NATIVE, 0, &key,
+                &mask, &data, false, INPUT_MAPPING_TABLE_SIZE);
+}
+
+static void
+key_tunneled_init() {
+    input_mapping_tunneled_swkey_t key;
+    input_mapping_tunneled_swkey_mask_t mask;
+    input_mapping_tunneled_actiondata_t data;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0xFF, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ip_u_ipv4_valid = 1;
+    mask.ip_u_ipv4_dstAddr_mask = 0;
+    data.action_id = INPUT_MAPPING_TUNNELED_NOP_ID;
+
+    entry_write(P4TBL_ID_INPUT_MAPPING_TUNNELED, 0, &key,
+                &mask, &data, false, INPUT_MAPPING_TABLE_SIZE);
+}
+
+static void
+key_init() {
+    key_native_init();
+    key_tunneled_init();
+}
+
+static void
+input_properties_init() {
+    input_properties_swkey_t key;
+    input_properties_actiondata_t data;
+    input_properties_set_input_properties_t *dptr =
+        &(data.action_u.input_properties_set_input_properties);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    key.intr_global_lif = 0;
+    key.p4plus_to_p4_insert_vlan_tag = 0;
+    key.vlan_u_vlan_valid = 1;
+    key.vlan_u_vlan_vid = g_vlan_id1;
+    key.metadata_tunnel_type = 0;
+    key.metadata_tunnel_vni = 0;
+    key.metadata_entry_inactive_input_properties = 0;
+
+    data.action_id = INPUT_PROPERTIES_SET_INPUT_PROPERTIES_ID;
+    dptr->nic_mode = NIC_MODE_CLASSIC;
+    dptr->vrf_4_0  = 0x0;
+    dptr->vrf_15_5 = g_vrf_id1;
+
+    entry_write(P4TBL_ID_INPUT_PROPERTIES, 0, &key,
+                NULL, &data, true, INPUT_PROPERTIES_TABLE_SIZE);
+}
+
+static void
+registered_macs_init() {
+    registered_macs_swkey_t key;
+    registered_macs_actiondata_t data;
+    registered_macs_registered_mac_t *dptr =
+        &(data.action_u.registered_macs_registered_mac);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    key.metadata_flow_lkp_vrf = g_vrf_id1;
+    memcpy(key.metadata_flow_lkp_dstMacAddr, &g_dmac1, 6);
+    key.metadata_entry_inactive_registered_macs = 0;
+
+    data.action_id = REGISTERED_MACS_REGISTERED_MAC_ID;
+    dptr->dst_lport = g_dst_lport1;
+    dptr->multicast_en = 0;
+
+    entry_write(P4TBL_ID_REGISTERED_MACS, 0, &key,
+                NULL, &data, true, REGISTERED_MACS_TABLE_SIZE);
+}
+
+static void
+output_mappings_init() {
+    output_mapping_swkey_t key;
+    output_mapping_actiondata_t data;
+    output_mapping_set_tm_oport_t *dptr =
+        &(data.action_u.output_mapping_set_tm_oport);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    key.i2e_dst_lport = g_dst_lport1;
+
+    data.action_id = OUTPUT_MAPPING_SET_TM_OPORT_ID;
+    dptr->nports = 1;
+    dptr->egress_port1 = TM_PORT_UPLINK_1;
+
+    entry_write(P4TBL_ID_OUTPUT_MAPPING, g_dst_lport1, &key,
+                NULL, &data, true, OUTPUT_MAPPING_TABLE_SIZE);
 }
 
 class elektra_test : public ::testing::Test {
@@ -236,72 +356,48 @@ TEST_F(elektra_test, test1) {
 
     config_done();
 
-    {
-       // Do the Table Programming here
+    key_init();
+    input_properties_init();
+    registered_macs_init();
+    output_mappings_init();
+
+    uint32_t port = 0;
+    uint32_t cos = 0;
+    std::vector<uint8_t> ipkt;
+    std::vector<uint8_t> opkt;
+    std::vector<uint8_t> epkt;
+    uint32_t i = 0;
+    uint32_t tcscale = 1;
+    int tcid = 0;
+    int tcid_filter = 0;
+
+    if (getenv("TCSCALE")) {
+        tcscale = atoi(getenv("TCSCALE"));
     }
 
-    {
-        uint32_t port = 0;
-        uint32_t cos = 0;
-        std::vector<uint8_t> ipkt;
-        std::vector<uint8_t> opkt;
-        std::vector<uint8_t> epkt;
-        uint32_t i = 0;
-        uint32_t tcscale = 1;
-        int tcid = 0;
-        int tcid_filter = 0;
+    if (getenv("TCID")) {
+        tcid_filter = atoi(getenv("TCID"));
+    }
 
-        if (getenv("TCSCALE")) {
-            tcscale = atoi(getenv("TCSCALE"));
-        }
-
-        if (getenv("TCID")) {
-            tcid_filter = atoi(getenv("TCID"));
-        }
-
-        tcid++;
-        if (tcid_filter == 0 || tcid == tcid_filter) {
-            ipkt.resize(sizeof(g_snd_pkt1));
-            memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
-            epkt.resize(sizeof(g_rcv_pkt1));
-            memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
-            std::cout << "Testing Host to Switch" << std::endl;
-            for (i = 0; i < tcscale; i++) {
-                testcase_begin(tcid, i+1);
-                step_network_pkt(ipkt, 0);
-                if (!getenv("SKIP_VERIFY")) {
-                    get_next_pkt(opkt, port, cos);
-
-                    printf("\nIPKT PORT %d\n", 0);
-                    printf("===> IPKET START\n");
-
-                    for(int iter = 0; iter < ipkt.size(); iter++) {
-                        if(iter != 0 && iter % 8 == 0) {
-                           printf("\n");
-                        }
-                        printf(" %02x ", ipkt[iter]);
-                    }
-                    printf("\n");
-
-                    printf("\nOPKT PORT %d COS %d\n", port, cos);
-                    printf("===> OPKET START\n");
-
-                    for(int iter = 0; iter < opkt.size(); iter++) {
-                        if(iter != 0 && iter % 8 == 0) {
-                           printf("\n");
-                        }
-                        printf(" %02x ", opkt[iter]);
-                    }
-                    printf("\n");
-
-                    // Comment this out until we program the tabeles
-                    // EXPECT_TRUE(opkt == epkt);
-                    // EXPECT_TRUE(port == 1);
-                }
-                testcase_end(tcid, i+1);
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt1));
+        memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
+        epkt.resize(sizeof(g_rcv_pkt1));
+        memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
+        std::cout << "Testing Host to Switch" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i+1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
+            testcase_end(tcid, i+1);
         }
     }
+
     exit_simulation();
 }
 

@@ -1,13 +1,15 @@
 {
     "regions": [
         {
-            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
-            "name" : "unused cache coherent",
-            "size" : "65536K",
-            "cc"      : "true"
+            "_comment0": "keep this to make cache coherent region order of 2",
+            "_comment1": "currently 64MB from hbm base including this region",
+            "name": "unused cache coherent",
+            "size": "65536K",
+            "cc": "true"
         },
         {
-            "_comment" : "memtun address is hardcoded to HBM base + 64MB(above cc regions)",
+            "_comment0": "memtun address is hardcoded to HBM base + ",
+            "_comment1": "64MB (above cache coherent regions)",
              "name": "memtun",
              "size": "256K"
         },
@@ -31,6 +33,31 @@
             "cache": "p4plus-txdma"
         },
         {
+            "name": "flow_hash",
+            "size": "131072K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "flow_hash_overflow",
+            "size": "16384K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "flow",
+            "size": "65536K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "session_state",
+            "size": "65536K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "flow_stats",
+            "size": "65536K",
+            "cache": "p4ig"
+        },
+        {
             "name": "qos-hbm-fifo",
             "size": "262144K"
         },
@@ -39,7 +66,7 @@
             "size": "2048K"
         },
         {
-            "_comment": "hash depth = 1024",
+            "_comment0": "hash depth = 1024",
             "_comment1": "data space = 1024 * 16 * 64 = 1024K",
             "_comment1": "key space = 1024 * 64 = 64K",
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
