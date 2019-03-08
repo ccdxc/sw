@@ -3,269 +3,123 @@
 package indexer
 
 import (
+	"context"
+	"fmt"
+	"net/http"
 	"reflect"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/kvstore"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 const (
 	indexRetryIntvl = (100 * time.Millisecond)
 	indexMaxRetries = 5
+	// Time in minutes to tolerate continuous write failures
+	// before we restart indexer
+	failedWriteTimeout = 5 * time.Minute
 )
 
-// API server object-kinds of interest for search
-// TODO: Using a enumerated slice for now, until we have
-// support from infra to watch all or watch by apiGroup.
-var apiObjects = []string{
-
-	// app objects
-	"App",
-
-	// auth objects
-	"User",
-	"AuthenticationPolicy",
-
-	// cmd objects
-	"Cluster",
-	"Node",
-	"Host",
-	"SmartNIC",
-
-	// events objects
-	"EventPolicy",
-
-	// network objects
-	"Endpoint",
-	"LbPolicy",
-	"Network",
-	"SecurityGroup",
-	"Service",
-	"SGPolicy",
-	"Tenant",
-	"Workload",
-
-	// networkencryption objects
-	"TrafficEncryptionPolicy",
-
-	// telemetry objects
-	"StatsPolicy",
-	"FwlogPolicy",
-	"FlowExportPolicy",
-
-	// x509 objects
-	"Certificate",
+type service interface {
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }
 
 // Create watchers for API-server objects
-//
-// TODO:
-// 1. Need an elegant way/iterator to create watchers
-//    per Kind, instead of this manual enumeration
-// 2. Cache the resourceVersion per Object Kind and
-//    use it when creating watchers when handling
-//    failures or restarts.
 func (idr *Indexer) createWatchers() error {
-
 	idr.Lock()
 	defer idr.Unlock()
 
-	var err error
-	opts := api.ListWatchOptions{}
-
-	idr.watchers["App"], err = idr.apiClient.SecurityV1().App().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for app.App object, err: %v", err)
-		return err
+	idr.watchers = make(map[string]kvstore.Watcher)
+	idr.channels = make(map[string]<-chan *kvstore.WatchEvent)
+	if idr.writerMap == nil {
+		idr.writerMap = make(map[string]*writerMapEntry)
 	}
-	idr.channels["App"] = idr.watchers["App"].EventChan()
 
-	idr.watchers["User"], err = idr.apiClient.AuthV1().User().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for auth.User object, err: %v", err)
-		return err
+	groupMap := runtime.GetDefaultScheme().Kinds()
+	apiClientVal := reflect.ValueOf(idr.apiClient)
+
+	for group := range groupMap {
+		// TODO: Enable objstore when it's watch is ready
+		if group == "objstore" || group == "bookstore" {
+			continue
+		}
+		// TODO: Remove hardcoded version
+		version := "V1"
+		key := strings.Title(group) + version
+		groupFunc := apiClientVal.MethodByName(key)
+		if !groupFunc.IsValid() {
+			idr.logger.Infof("API Group %s does not have a watch method", key)
+			continue
+		}
+		opts := api.ListWatchOptions{}
+		if entry, ok := idr.writerMap[key]; ok && entry.resVersion != "" {
+			opts.ObjectMeta = api.ObjectMeta{
+				ResourceVersion: entry.resVersion,
+			}
+		}
+
+		serviceGroup := groupFunc.Call(nil)
+		watch, err := serviceGroup[0].Interface().(service).Watch(idr.ctx, &opts)
+		if err != nil {
+			apiErr := apierrors.FromError(err)
+			switch apiErr.GetCode() {
+			case http.StatusNotImplemented:
+				idr.logger.Errorf("Error starting watcher for API Group %s, err unimplemented: %v", key, err)
+				break
+			case http.StatusGone:
+				// API Server no longer has records for our resource version.
+				// Shutdown indexer and have spyglass recreate in case we missed delete events
+				idr.logger.Errorf("Error starting watcher for API Group %s, outdated res version: %v", key, err)
+				idr.doneCh <- err
+				return err
+			default:
+				idr.logger.Errorf("Error starting watcher for API Group %s, err: %v", key, err)
+				return err
+			}
+		} else {
+			idr.logger.Infof("Created watcher for API Group %s", key)
+			idr.watchers[key] = watch
+			idr.channels[key] = watch.EventChan()
+		}
 	}
-	idr.channels["User"] = idr.watchers["User"].EventChan()
-
-	idr.watchers["AuthenticationPolicy"], err = idr.apiClient.AuthV1().AuthenticationPolicy().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for auth.AuthenticationPolicy object, err: %v", err)
-		return err
-	}
-	idr.channels["AuthenticationPolicy"] = idr.watchers["AuthenticationPolicy"].EventChan()
-
-	idr.watchers["Role"], err = idr.apiClient.AuthV1().Role().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for auth.Role object, err: %v", err)
-		return err
-	}
-	idr.channels["Role"] = idr.watchers["Role"].EventChan()
-
-	idr.watchers["RoleBinding"], err = idr.apiClient.AuthV1().RoleBinding().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for auth.RoleBinding object, err: %v", err)
-		return err
-	}
-	idr.channels["RoleBinding"] = idr.watchers["RoleBinding"].EventChan()
-
-	idr.watchers["Cluster"], err = idr.apiClient.ClusterV1().Cluster().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for cmd.Cluster object, err: %v", err)
-		return err
-	}
-	idr.channels["Cluster"] = idr.watchers["Cluster"].EventChan()
-
-	idr.watchers["Node"], err = idr.apiClient.ClusterV1().Node().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for cmd.Node object, err: %v", err)
-		return err
-	}
-	idr.channels["Node"] = idr.watchers["Node"].EventChan()
-
-	idr.watchers["Host"], err = idr.apiClient.ClusterV1().Host().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for cmd.Host object, err: %v", err)
-		return err
-	}
-	idr.channels["Host"] = idr.watchers["Host"].EventChan()
-
-	idr.watchers["SmartNIC"], err = idr.apiClient.ClusterV1().SmartNIC().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for cmd.SmartNIC object, err: %v", err)
-		return err
-	}
-	idr.channels["SmartNIC"] = idr.watchers["SmartNIC"].EventChan()
-
-	idr.watchers["EventPolicy"], err = idr.apiClient.MonitoringV1().EventPolicy().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for events.EventPolicy object, err: %v", err)
-		return err
-	}
-	idr.channels["EventPolicy"] = idr.watchers["EventPolicy"].EventChan()
-
-	idr.watchers["Endpoint"], err = idr.apiClient.WorkloadV1().Endpoint().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for workload.Endpoint object, err: %v", err)
-		return err
-	}
-	idr.channels["Endpoint"] = idr.watchers["Endpoint"].EventChan()
-
-	idr.watchers["Workload"], err = idr.apiClient.WorkloadV1().Workload().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for workload.Workload object, err: %v", err)
-		return err
-	}
-	idr.channels["Workload"] = idr.watchers["Workload"].EventChan()
-
-	idr.watchers["LbPolicy"], err = idr.apiClient.NetworkV1().LbPolicy().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for network.LbPolicy object, err: %v", err)
-		return err
-	}
-	idr.channels["LbPolicy"] = idr.watchers["LbPolicy"].EventChan()
-
-	idr.watchers["Network"], err = idr.apiClient.NetworkV1().Network().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for network.Network object, err: %v", err)
-		return err
-	}
-	idr.channels["Network"] = idr.watchers["Network"].EventChan()
-
-	idr.watchers["SecurityGroup"], err = idr.apiClient.SecurityV1().SecurityGroup().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for network.SecurityGroup object, err: %v", err)
-		return err
-	}
-	idr.channels["SecurityGroup"] = idr.watchers["SecurityGroup"].EventChan()
-
-	idr.watchers["Service"], err = idr.apiClient.NetworkV1().Service().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for network.Service object, err: %v", err)
-		return err
-	}
-	idr.channels["Service"] = idr.watchers["Service"].EventChan()
-
-	idr.watchers["SGPolicy"], err = idr.apiClient.SecurityV1().SGPolicy().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for network.SGPolicy object, err: %v", err)
-		return err
-	}
-	idr.channels["SGPolicy"] = idr.watchers["SGPolicy"].EventChan()
-
-	idr.watchers["Tenant"], err = idr.apiClient.ClusterV1().Tenant().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for network.Tenant object, err: %v", err)
-		return err
-	}
-	idr.channels["Tenant"] = idr.watchers["Tenant"].EventChan()
-
-	idr.watchers["TrafficEncryptionPolicy"], err = idr.apiClient.SecurityV1().TrafficEncryptionPolicy().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for networkencryption.TrafficEncryptionPolicy object, err: %v", err)
-		return err
-	}
-	idr.channels["TrafficEncryptionPolicy"] = idr.watchers["TrafficEncryptionPolicy"].EventChan()
-
-	idr.watchers["StatsPolicy"], err = idr.apiClient.MonitoringV1().StatsPolicy().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for telemetry.StatsPolicy object, err: %v", err)
-		return err
-	}
-	idr.channels["StatsPolicy"] = idr.watchers["StatsPolicy"].EventChan()
-
-	idr.watchers["FwlogPolicy"], err = idr.apiClient.MonitoringV1().FwlogPolicy().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for telemetry.FwlogPolicy object, err: %v", err)
-		return err
-	}
-	idr.channels["FwlogPolicy"] = idr.watchers["FwlogPolicy"].EventChan()
-
-	idr.watchers["FlowExportPolicy"], err = idr.apiClient.MonitoringV1().FlowExportPolicy().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for telemetry.FlowExportPolicy object, err: %v", err)
-		return err
-	}
-	idr.channels["FlowExportPolicy"] = idr.watchers["FlowExportPolicy"].EventChan()
-
-	idr.watchers["Certificate"], err = idr.apiClient.SecurityV1().Certificate().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for x509.Certificate object, err: %v", err)
-		return err
-	}
-	idr.channels["Certificate"] = idr.watchers["Certificate"].EventChan()
-
 	return nil
 }
 
 // Start watch handlers for api-server objects
 func (idr *Indexer) startWatchers() {
-
+	idr.logger.Info("Starting watchers")
 	activateIndices := false
 	idr.Add(1)
 	go func() {
 
 		defer idr.Done()
 
-		// The following code snipped performs Select on a slice of channels
+		// The following code snippet performs Select on a slice of channels
 		// Initialize the SelectCase slice, with one channel per Kind and
 		// and two additional channel to handle context cancellation and Done
 		cases := make([]reflect.SelectCase, len(idr.channels)+2)
+		apiGroupMappings := make([]string, len(idr.channels)+2)
 
-		// Add the Done and Ctx.Done() channels to initial offset of the slice
-		cases[0] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(idr.done)}
+		// Add the watcherDone and Ctx.Done() channels to initial offset of the slice
+		cases[0] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(idr.watcherDone)}
 		cases[1] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(idr.ctx.Done())}
 
 		// Add the object watcher channels
 		i := 2
-		for _, ch := range idr.channels {
+		for key, ch := range idr.channels {
 			cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
+			apiGroupMappings[i] = key
+			idr.writerMap[key] = &writerMapEntry{
+				writerID: (i - 2) % maxWriters,
+			}
 			i++
 		}
 
@@ -275,12 +129,12 @@ func (idr *Indexer) startWatchers() {
 		for {
 			chosen, value, ok := reflect.Select(cases)
 
-			// First handle special channels related to Done and Ctx
+			// First handle special channels related to watcherDone and Ctx
 			if chosen == 0 {
-				log.Debugf("Exiting watcher, Done ")
+				idr.logger.Info("Exiting watcher, watcherDone event")
 				return
 			} else if chosen == 1 {
-				log.Debugf("Exiting watcher, Ctx cancelled")
+				idr.logger.Info("Exiting watcher, Ctx cancelled")
 				idr.stopWatchers()
 				return
 			}
@@ -292,8 +146,8 @@ func (idr *Indexer) startWatchers() {
 				// needed. In all other cases, it is a watcher error that
 				// needs to be re-established.
 				if idr.GetRunningStatus() == true {
-					idr.stopWatchers()
-					go idr.Start()
+					idr.logger.Errorf("Channel read not ok")
+					idr.restartWatchers()
 					return
 				}
 
@@ -302,80 +156,113 @@ func (idr *Indexer) startWatchers() {
 				continue
 			}
 
-			log.Debugf(" Reading from channel %d and received event: {%+v} %s",
+			idr.logger.Debugf("Reading from channel %d and received event: {%+v} %s",
 				chosen, value, value.String())
+			apiGroup := apiGroupMappings[chosen]
 			event := value.Interface().(*kvstore.WatchEvent)
-			idr.handleWatcherEvent(event.Type, event.Object)
+			idr.handleWatcherEvent(apiGroup, event.Type, event.Object)
 
 			// Launch the index refresher function first time
 			// when there are objects ready to be indexed.
+			// refreshIndices checks if a refresher is already running before
+			// starting of a go routine,
+			// so the watcher group restarting won't cause a leak
 			if activateIndices == false {
-				idr.Add(1)
-				go func() {
-					defer idr.Done()
-					idr.logger.Infof("Launching index refresher")
-					idr.refreshIndices()
-				}()
+				idr.refreshIndices()
 				activateIndices = true
 			}
 		}
 	}()
 }
 
-// Update object count
-func (idr *Indexer) updateCount(increment uint64) {
+// Update write count
+func (idr *Indexer) updateWriteCount(increment uint64) {
 	atomic.AddUint64(&idr.count, increment)
 }
 
-// GetObjectCount returns count of total objects indexed
-func (idr *Indexer) GetObjectCount() uint64 {
+// GetWriteCount returns total count of writes/updates to elastic
+func (idr *Indexer) GetWriteCount() uint64 {
 	return atomic.LoadUint64(&idr.count)
 }
 
-// handleWatcherEvent enqueue the watcher-event into requestChannel
-func (idr *Indexer) handleWatcherEvent(et kvstore.WatchEventType, obj interface{}) {
-
+// handleWatcherEvent enqueue the watcher-event into the correct writers requestChannel
+// NOTE: All events for an api group must always go to the same writer
+func (idr *Indexer) handleWatcherEvent(apiGroup string, et kvstore.WatchEventType, obj interface{}) {
 	// create request object and enqueue it to the request channel
+	ometa, _ := runtime.GetObjectMeta(obj)
+	resVersion := ometa.GetResourceVersion()
+	kind := obj.(runtime.Object).GetObjectKind()
 	req := &indexRequest{
 		evType: et,
 		object: obj,
+		resVersionUpdate: func() {
+			// No need for lock since only one writer will be updating this
+			idr.writerMap[apiGroup].resVersion = resVersion
+			idr.logger.Debugf("Updated resource version to %s for api group %s", resVersion, apiGroup)
+		},
 	}
-	log.Debugf("handleWatcherEvent - writing req: %+v to reqChan", req)
+
+	idr.logger.Debugf("event req for %s-%s : %+v to reqChan", kind, ometa.GetName(), resVersion, req)
 
 	// TODO: if we see very prolonged or repeated blocking due to slow writers
 	// we should wrap this channel send inside a select loop along with timer
 	// and threshold counter to do recovery by doing either adaptive backoff or
 	// increasing the writer pool size (bounded by NUMPROCS). This is TBD.
-	idr.reqChan <- req
+	idr.reqChan[idr.writerMap[apiGroup].writerID] <- req
 }
 
 // Start the Bulk/Batch writer to Elasticseach
 func (idr *Indexer) startWriter(id int) {
-
 	// input validation
 	if id < 0 || id >= idr.maxWriters {
-		log.Debugf("argID: %d out of range [%d .. %d]",
+		idr.logger.Debugf("argID: %d out of range [%d .. %d]",
 			id, 0, idr.maxWriters)
 		return
 	}
 
 	idr.logger.Debugf("Starting Writer: %d to Elasticsearch", id)
-	//idr.reqCount[id] = 0
 	idr.requests[id] = make([]*elastic.BulkRequest, 0, idr.batchSize)
 
+	failedBulkCount := 0
+	bulkTimeout := int((1 / (indexRetryIntvl.Seconds() * indexMaxRetries)) * failedWriteTimeout.Seconds())
 	for {
+
+		// If we fail to write for 5 min, we restart indexer
+		if failedBulkCount == bulkTimeout {
+			idr.doneCh <- fmt.Errorf("Elastic write failed for %d minutes", bulkTimeout)
+			// We should be shutting down now
+			return
+		}
+
+		if len(idr.requests[id]) == idr.batchSize {
+			select {
+			case <-idr.ctx.Done():
+				idr.logger.Infof("Stopping Writer: %d, ctx cancelled", id)
+				return
+			default:
+				if idr.attemptSendBulkRequest(id) != nil {
+					failedBulkCount++
+				} else {
+					failedBulkCount = 0
+				}
+			}
+			continue
+		}
 
 		select {
 
+		// handle context cancellation
+		case <-idr.ctx.Done():
+			idr.logger.Infof("Stopping Writer: %d, ctx cancelled", id)
+			return
+
 		// read Index Request from Request Channel
-		case req, more := <-idr.reqChan:
+		case req, more := <-idr.reqChan[id]:
 
 			if more == false {
 				idr.logger.Debugf("Writer: %d Request channel is closed, Done", id)
 				return
 			}
-
-			idr.logger.Debugf("Writer: %d, got request from channel {%+v}", id, req)
 
 			// get the object meta
 			ometa, err := runtime.GetObjectMeta(req.object)
@@ -384,6 +271,7 @@ func (idr *Indexer) startWriter(id int) {
 					id, req.object, err)
 				continue
 			}
+			idr.logger.Debugf("Writer %d, processing object: <%s %s %v, %+v>", id, req.object.(runtime.Object).GetObjectKind(), ometa.GetName(), ometa.GetUUID(), req)
 
 			// determine the operation type based on event-type
 			var reqType string
@@ -395,10 +283,6 @@ func (idr *Indexer) startWriter(id int) {
 			case kvstore.Deleted:
 				reqType = elastic.Delete
 			}
-
-			idr.logger.Debugf("Writer: %d processing object: <%s %s> count: %d",
-				id, ometa.GetName(), req.evType,
-				len(idr.requests[id]))
 
 			// Update Policy cache for SGpolicy objects
 			kind := req.object.(runtime.Object).GetObjectKind()
@@ -442,6 +326,18 @@ func (idr *Indexer) startWriter(id int) {
 				Obj:         req.object,
 			}
 			idr.requests[id] = append(idr.requests[id], request)
+
+			if idr.resVersionUpdater[id] == nil {
+				idr.resVersionUpdater[id] = req.resVersionUpdate
+			} else {
+				currFunc := idr.resVersionUpdater[id]
+				idr.resVersionUpdater[id] = func() {
+					// Order is important. We must run previous updates before newer ones
+					currFunc()
+					req.resVersionUpdate()
+				}
+			}
+
 			idr.logger.Debugf("Writer: %d pending-requests len:%d data:%v",
 				id, len(idr.requests[id]), idr.requests[id])
 
@@ -450,23 +346,16 @@ func (idr *Indexer) startWriter(id int) {
 			if count >= idr.batchSize {
 
 				// Send a bulk request
-				log.Infof("Writer: %d Calling Bulk Api reached batchsize len: %d requests: %v",
+				idr.logger.Infof("Writer: %d Calling Bulk Api reached batchsize len: %d requests: %v",
 					id,
 					len(idr.requests[id]),
 					idr.requests[id])
 
-				// Perform Bulk index with inline retries
-				result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-					return idr.elasticClient.Bulk(idr.ctx, idr.requests[id])
-				}, indexRetryIntvl, indexMaxRetries)
-				if err != nil {
-					idr.logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
-						id, result, err)
-					// TODO: Need to add recovery for perisisting errors
-					//       - Reset connection and restart (tbd)
+				if idr.attemptSendBulkRequest(id) != nil {
+					failedBulkCount++
+				} else {
+					failedBulkCount = 0
 				}
-				idr.updateCount(uint64(count))
-				idr.requests[id] = nil
 				break
 			}
 
@@ -482,26 +371,46 @@ func (idr *Indexer) startWriter(id int) {
 					id,
 					len(idr.requests[id]),
 					idr.requests[id])
-				resp, err := idr.elasticClient.Bulk(idr.ctx, idr.requests[id])
-				if err != nil {
-					idr.logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
-						id, resp, err)
+				if idr.attemptSendBulkRequest(id) != nil {
+					failedBulkCount++
+				} else {
+					failedBulkCount = 0
 				}
-				idr.updateCount(uint64(count))
-				idr.requests[id] = nil
 				break
 			}
-
-		// handle context cancellation
-		case <-idr.ctx.Done():
-			idr.logger.Infof("Stopping Writer: %d, ctx cancelled", id)
-			return
 		}
 	}
 }
 
+// Attempts to send the buffered requests for the writer with the given id
+func (idr *Indexer) attemptSendBulkRequest(id int) error {
+	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+		return idr.elasticClient.Bulk(idr.ctx, idr.requests[id])
+	}, indexRetryIntvl, indexMaxRetries)
+	if err != nil {
+		idr.logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
+			id, result, err)
+		return err
+	}
+
+	idr.updateWriteCount(uint64(len(idr.requests[id])))
+
+	updateFunc := idr.resVersionUpdater[id]
+	updateFunc()
+
+	idr.resVersionUpdater[id] = nil
+	idr.requests[id] = nil
+	return nil
+}
+
 // Stop all the watchers
 func (idr *Indexer) stopWatchers() {
+	select {
+	case <-idr.watcherDone:
+		idr.logger.Errorf("Stop watchers called but watcher channel is already closed")
+		return
+	default:
+	}
 
 	idr.Lock()
 	defer idr.Unlock()
@@ -512,7 +421,9 @@ func (idr *Indexer) stopWatchers() {
 		}
 		idr.watchers[key] = nil
 	}
-	close(idr.done)
+	idr.watchers = nil
+	idr.channels = nil
+	close(idr.watcherDone)
 	idr.logger.Info("Stopped watchers")
 }
 

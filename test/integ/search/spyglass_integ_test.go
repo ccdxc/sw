@@ -73,7 +73,7 @@ const (
 )
 
 var (
-	logger = log.GetNewLogger(log.GetDefaultConfig("spyglass_integ_test"))
+	logger = log.SetConfig(log.GetDefaultConfig("spyglass_integ_test"))
 
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
@@ -179,7 +179,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	}
 
 	// start spygalss indexer
-	idr, _, err := testutils.StartSpyglass("indexer", tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l, tInfo.esClient)
+	idr, _, err := testutils.StartSpyglass("indexer", globals.APIServer, tInfo.mockResolver, tInfo.pcache, tInfo.l, tInfo.esClient)
 	if err != nil {
 		return err
 	}
@@ -253,6 +253,26 @@ func (tInfo *testInfo) teardown() {
 	os.RemoveAll(tInfo.evtsStoreConfig.Dir)
 }
 
+func (tInfo *testInfo) verifyElasticDocumentCount(t *testing.T, expectedIndexes uint64) {
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			stats, err := tInfo.esClient.GetIndicesStats(context.Background(), []string{})
+			if err != nil {
+				return false, fmt.Errorf("Failed to get index stats. err %v", err)
+			}
+			index, ok := stats.Indices[elastic.GetIndex(globals.Configs, globals.DefaultTenant)]
+			if !ok {
+				return false, fmt.Errorf("Elastic didn't have index for default tenant")
+			}
+			elasticCount := index.Primaries.Docs.Count
+			if uint64(elasticCount) != expectedIndexes {
+				return false, fmt.Errorf("Elastic index document mismatch - expected: %d actual: %d",
+					expectedIndexes, elasticCount)
+			}
+			return true, nil
+		}, "Failed to match index operations counter", "20ms", "2m")
+}
+
 // updateResolver helper function to update mock resolver with the given service and URL
 func (tInfo *testInfo) updateResolver(serviceName, url string) {
 	tInfo.mockResolver.AddServiceInstance(&types.ServiceInstance{
@@ -298,6 +318,123 @@ func getPolicySearchURL() string {
 	return fmt.Sprintf("https://%s/search/v1/policy-query", tInfo.apiGwAddr)
 }
 
+// Starts Spyglass
+// Checks objects are written to elastic
+// restarts Api Server and checks indexer watch is restablished
+// Deletes objects and checks elastic entries are deleted
+// Kills elastic and new objects are created
+// Startsup elastic again and checks new objects were indexed
+// Checks indexer's buffer overflows
+// Test for deleted objects while spyglass is down
+func TestSpyglassErrorHandeling(t *testing.T) {
+	var err error
+	log.Info("Starting Spyglass Error Handeling Test")
+
+	tInfo.mockResolver = mockresolver.New()
+	tInfo.l = logger
+
+	AssertOk(t, tInfo.setup(t), "failed to setup test")
+	defer tInfo.teardown()
+
+	log.Info("Setup complete")
+
+	ctx := context.Background()
+
+	// Generate objects in api-server to trigger indexer watch
+	go DefaultTenantPolicyGenerator(ctx, tInfo.apiClient, objectCount, 0)
+
+	// Objects that already exist: Auth policy, cluster, tenant, admin role, admin role binding, admin user
+	existingObjects := uint64(6)
+	expectedIndexes := uint64(objectCount) + existingObjects
+
+	// Should be the same as the number of entries in elastic
+	tInfo.verifyElasticDocumentCount(t, expectedIndexes)
+
+	// Even though we have the correct number of entries, update events could still be processing
+	// We wait to remove flakiness
+	time.Sleep(5 * time.Second)
+
+	currentWriteCount := tInfo.idr.GetWriteCount()
+
+	// Stop API server
+	t.Logf("Restarting API server...")
+	log.Info("Stopping API Server")
+	tInfo.apiServer.Stop()
+
+	time.Sleep(5 * time.Second)
+
+	// restart API server
+	log.Info("Restating API Server")
+	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", t.Name(), tInfo.l)
+	AssertOk(t, err, "Failed to start api server")
+	tInfo.updateResolver(globals.APIServer, tInfo.apiServerAddr)
+
+	// recreate apiclient
+	AssertEventually(t, func() (bool, interface{}) {
+		apiCl, err := apicache.NewGrpcUpstream("spyglass-integ-test", tInfo.apiServerAddr, tInfo.l)
+		if err != nil {
+			return false, err
+		}
+		tInfo.apiClient = apiCl
+		return true, nil
+	}, "failed to create gRPC client", "20ms", "2m")
+
+	// Give time for API Server to setup
+	// Needed due to issue with how APi server creates the watch event queue
+	// If the data is written before spyglass reconnects, the event will not be
+	// played.
+	// TODO: Remove once this issue is fixed with API Server
+	// time.Sleep(10 * time.Second)
+
+	DefaultTenantPolicyGenerator(ctx, tInfo.apiClient, objectCount, objectCount)
+	expectedIndexes += uint64(objectCount)
+
+	// Validate the object count matches after restart
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			// Should have only received updates for the new objects
+			// We may also have updates for existing objects, but we should receive
+			// less events than there are objects
+			if tInfo.idr.GetWriteCount()-currentWriteCount < expectedIndexes {
+				return false, fmt.Errorf("New indexed objects count mismatch expected: %d actual: %d",
+					expectedIndexes, tInfo.idr.GetWriteCount()-currentWriteCount)
+			}
+			return true, nil
+		}, "Failed to match count of indexed objects", "20ms", "2m")
+
+	tInfo.verifyElasticDocumentCount(t, expectedIndexes)
+
+	log.Info("Deleting objects")
+
+	// Verify deleting objects
+	DeleteDefaultTenantPolicyGenerator(ctx, tInfo.apiClient, objectCount, 0)
+	expectedIndexes -= uint64(objectCount)
+
+	tInfo.verifyElasticDocumentCount(t, expectedIndexes)
+
+	// Killing elastic and writing new objects to apiserver
+	// When elastic comes back up, indexer should write the new objects
+	log.Info("Stopping elastic ...")
+	err = testutils.StopElasticsearch(tInfo.elasticServerName, tInfo.elasticDir)
+	AssertOk(t, err, "Failed to stop elastic search")
+
+	// Not run as a go routine because we want it to finish creating before we bring up elastic
+	DefaultTenantPolicyGenerator(ctx, tInfo.apiClient, objectCount, 2*objectCount)
+
+	log.Info("Starting elastic")
+	tInfo.elasticURL, tInfo.elasticDir, err = testutils.StartElasticsearch(tInfo.elasticServerName, tInfo.elasticDir, tInfo.signer, tInfo.trustRoots)
+	tInfo.updateResolver(globals.ElasticSearch, tInfo.elasticURL) // add mock elastic service to mock resolver
+
+	// Should only write new objects into elastic
+	expectedIndexes = uint64(objectCount)
+
+	// Should be the same as the number of entries in elastic
+	tInfo.verifyElasticDocumentCount(t, expectedIndexes)
+
+	log.Info("Test Complete")
+	t.Logf("Done with Tests ....")
+}
+
 // TestSpyglass does e2e test for Spyglass search service
 // - brings up elasticsearch docker
 // - brings up finder gRPC server which is the search backend
@@ -309,6 +446,8 @@ func getPolicySearchURL() string {
 // - shuts down elasticsearch, spyglass, api-gw & api-server.
 func TestSpyglass(t *testing.T) {
 	var err error
+
+	log.Info("Starting Spyglass test")
 
 	tInfo.mockResolver = mockresolver.New()
 	tInfo.l = logger
@@ -329,9 +468,9 @@ func TestSpyglass(t *testing.T) {
 	expectedCount += 8 // for cluster, default tenant, auth policy, test user, tesla admin role, audi admin role, default admin role, default admin role binding
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			if tInfo.idr.GetObjectCount() < expectedCount {
+			if tInfo.idr.GetWriteCount() < expectedCount {
 				t.Logf("Retrying, index operations counter mismatch - expected: %d actual: %d",
-					expectedCount, tInfo.idr.GetObjectCount())
+					expectedCount, tInfo.idr.GetWriteCount())
 				return false, nil
 			}
 			return true, nil
@@ -341,6 +480,7 @@ func TestSpyglass(t *testing.T) {
 
 	// Validate the search REST endpoint
 	t.Logf("Validating Search REST endpoint ...")
+	log.Info("Validating Search endpoint")
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
@@ -366,6 +506,7 @@ func TestSpyglass(t *testing.T) {
 
 	// Stop Indexer
 	t.Logf("Stopping indexer ...")
+	log.Info("Stopping indexer")
 	tInfo.idr.Stop()
 
 	// create the indexer again
@@ -381,18 +522,28 @@ func TestSpyglass(t *testing.T) {
 		}, "Failed to create indexer", "20ms", "1m")
 
 	// start the indexer
-	err = tInfo.idr.Start()
-	if err != nil {
-		t.Fatal("failed to get start indexer")
+	log.Info("Starting indexer")
+	indexerCreate := make(chan error)
+	go func() {
+		tInfo.idr.Start() // start the indexer
+		if err != nil {
+			log.Errorf("Indexer exited err: %v", err)
+			indexerCreate <- err
+		}
+	}()
+	select {
+	case <-indexerCreate:
+		t.Fatal("failed to start indexer")
+	case <-time.After(time.Second * 5):
 	}
 
 	// Validate the object count matches after restart
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
-			if expectedCount != tInfo.idr.GetObjectCount() {
+			if expectedCount != tInfo.idr.GetWriteCount() {
 				t.Logf("Retrying, indexed objects count mismatch expected: %d actual: %d",
-					expectedCount, tInfo.idr.GetObjectCount())
+					expectedCount, tInfo.idr.GetWriteCount())
 				return false, nil
 			}
 			return true, nil
@@ -406,6 +557,7 @@ func TestSpyglass(t *testing.T) {
 	performPolicySearchTests(t, PostWithBody)
 	testAuthzInSearch(t, GetWithURI)
 	tInfo.idr.Stop()
+	log.Info("Test complete")
 	t.Logf("Done with Tests ....")
 }
 
@@ -3206,20 +3358,6 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 func TestMain(m *testing.M) {
 
 	rand.Seed(time.Now().UnixNano())
-
-	// Fill logger config params
-	logConfig := &log.Config{
-		Module:      "search-integ-test",
-		Format:      log.LogFmt,
-		Filter:      log.AllowInfoFilter,
-		Debug:       false,
-		CtxSelector: log.ContextAll,
-		LogToStdout: true,
-		LogToFile:   false,
-	}
-
-	// Initialize logger config
-	tInfo.l = log.SetConfig(logConfig)
 
 	// Run tests
 	rcode := m.Run()

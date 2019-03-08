@@ -24,6 +24,24 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
+/**
+ * Indexer has two components:
+ *   1. Watcher - responsible for maintaining a watch to API Server and giving events to writers
+ *   2. Writers - responsible for creating bulk elastic requests and writing them to elastic
+ *
+ * Watchers establish a watch on all API Groups. It maintiains in memeory a resource version count so that if the
+ * connection is broken, it can pick up the watch from where it left off. If API server no longer supports the
+ * resource version we have, it returns a 410 HTTP Gone. In this case, or if we get any other errors during watcher creation
+ * for a prolonged period of time, we shutdown indexer. Spyglass should restart indexer, and
+ * on indexer start we delete and recreate the elastic index.
+ *
+ * Since we need to maintain a resource version for each watch, an API Group's events should always
+ * be processed by the same writer.
+ *
+ * If a writer fails to write to elastic while it's buffer is full for a prolonged period of time,
+ * it will shutdown the indexer.
+ */
+
 const (
 	elasticWaitIntvl  = time.Second
 	maxElasticRetries = 200
@@ -36,7 +54,7 @@ const (
 	indexMaxBuffer    = (maxWriters * indexBatchSize)
 )
 
-// Option fills the optional params for Finder
+// Option fills the optional params for Indexer
 type Option func(*Indexer)
 
 // Indexer is an implementation of the indexer.Interface
@@ -54,22 +72,21 @@ type Indexer struct {
 	// ElasticDB client object
 	elasticClient elastic.ESClient
 
-	// Map of KV store watchers per Object Kind
+	// Map of KV store watchers per API Group
 	watchers map[string]kvstore.Watcher
+
+	// Map from API Group to the writer responsible for it
+	writerMap map[string]*writerMapEntry
 
 	// Map of KV store recv channel per Object kind
 	// to receive WatchEvent
-	// TODO: Move to single consolidated watcher once
-	//       apiserver supports it.
 	channels map[string]<-chan *kvstore.WatchEvent
 
-	// Fan-in channel of index request objects.
-	// The watcher events are fanned to a single
-	// requestChannel. A pool of Elastic Writers
-	// listen on this channel and divide the work
-	// of indexing among them using a Worker-Pool
-	// pattern
-	reqChan chan *indexRequest
+	// Fan-in channels of index request objects.
+	// The watcher events are fanned to an array of
+	// requestChannels with length maxWriters. A pool of Elastic Writers
+	// each listen to one channel.
+	reqChan []chan *indexRequest
 
 	// Max number of objects indexed using
 	// Bulk/Batch API
@@ -92,10 +109,20 @@ type Indexer struct {
 	// Slice of Pending objects per Elastic Writer
 	requests [][]*elastic.BulkRequest
 
-	// Channel to stop processing
-	done chan bool
+	// Slice of Pending functions to update resource version
+	// Each index belongs to a specific writer
+	resVersionUpdater []func()
 
-	// Total count of objects indexed
+	// Channel to stop watchers
+	watcherDone chan bool
+
+	// Channel to block indexer start on
+	doneCh chan error
+
+	// Running status of refreshIndices
+	refreshIndicesRunning bool
+
+	// Total count of writes made to elastic
 	count uint64
 
 	// Running status of the indexer
@@ -118,14 +145,20 @@ type WatchHandler func(et kvstore.WatchEventType, obj interface{})
 
 // indexRequest entry
 type indexRequest struct {
-	evType kvstore.WatchEventType
-	object interface{}
+	evType           kvstore.WatchEventType
+	object           interface{}
+	resVersionUpdate func()
+}
+
+type writerMapEntry struct {
+	writerID   int
+	resVersion string
 }
 
 // NewIndexer instantiates a new indexer
 func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interface, cache cache.Interface, logger log.Logger, opts ...Option) (Interface, error) {
 
-	log.Debugf("Creating Indexer, apiserver-addr: %s", apiServerAddr)
+	logger.Infof("Creating Indexer, apiserver-addr: %s", apiServerAddr)
 
 	newCtx, cancelFunc := context.WithCancel(ctx)
 	indexer := Indexer{
@@ -133,15 +166,11 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 		cancelFunc:        cancelFunc,
 		apiServerAddr:     apiServerAddr,
 		logger:            logger,
-		watchers:          make(map[string]kvstore.Watcher),
-		channels:          make(map[string]<-chan *kvstore.WatchEvent),
-		reqChan:           make(chan *indexRequest, indexMaxBuffer),
 		batchSize:         indexBatchSize,
 		indexIntvl:        indexBatchIntvl,
 		indexRefreshIntvl: indexRefreshIntvl,
 		maxWriters:        maxWriters,
-		requests:          make([][]*elastic.BulkRequest, maxWriters),
-		done:              make(chan bool),
+		doneCh:            make(chan error),
 		count:             0,
 		cache:             cache,
 	}
@@ -158,27 +187,27 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 			return elastic.NewAuthenticatedClient("", rsr, logger.WithContext("submodule", "elastic"))
 		}, elasticWaitIntvl, maxElasticRetries)
 		if err != nil {
-			log.Errorf("Failed to create elastic client, err: %v", err)
+			logger.Errorf("Failed to create elastic client, err: %v", err)
 			return nil, err
 		}
-		log.Debugf("Created elastic client")
+		logger.Debugf("Created elastic client")
 		indexer.elasticClient = result.(elastic.ESClient)
 	}
 
 	// Initialize api client
 	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-		return apiservice.NewGrpcAPIClient(globals.Spyglass, apiServerAddr, logger, rpckit.WithBalancer(balancer.New(rsr)))
+		return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.APIServer, logger, rpckit.WithBalancer(balancer.New(rsr)))
 	}, apiSrvWaitIntvl, maxAPISrvRetries)
 	if err != nil {
-		log.Errorf("Failed to create api client, addr: %s err: %v",
+		logger.Errorf("Failed to create api client, addr: %s err: %v",
 			apiServerAddr, err)
 		indexer.elasticClient.Close()
 		return nil, err
 	}
-	log.Debugf("Created API client")
+	logger.Debugf("Created API client")
 	indexer.apiClient = result.(apiservice.Services)
 
-	log.Infof("Created new indexer: {%+v}", &indexer)
+	logger.Infof("Created new indexer: {%+v}", &indexer)
 	return &indexer, nil
 }
 
@@ -194,23 +223,20 @@ func (idr *Indexer) Start() error {
 		return err
 	}
 
-	// initialize the watchers
-	// TODO: need to reinitialize done channel to take care of Stop/Start scenario
-	//       that can happen when watchers are reset and reestablished due to error.
-	err = idr.createWatchers()
+	idr.reqChan = make([]chan *indexRequest, idr.maxWriters)
+	for i := range idr.reqChan {
+		idr.reqChan[i] = make(chan *indexRequest, indexMaxBuffer)
+	}
+	idr.requests = make([][]*elastic.BulkRequest, idr.maxWriters)
+	idr.resVersionUpdater = make([]func(), idr.maxWriters)
+
+	err = idr.initializeAndStartWatchers()
 	if err != nil {
-		idr.logger.Errorf("Failed to create watchers, err: %v", err)
-		// stop and cleanup watchers
-		idr.stopWatchers()
-		idr.watchers = nil
 		return err
 	}
 
-	// start the watchers
-	idr.SetRunningStatus(true)
-	idr.startWatchers()
-
 	// start the Elastic Writer Pool
+	idr.logger.Infof("Starting %d writers", idr.maxWriters)
 	for i := 0; i < idr.maxWriters; i++ {
 		idr.Add(1)
 		go func(id int) {
@@ -219,19 +245,58 @@ func (idr *Indexer) Start() error {
 		}(i)
 	}
 
+	// Block on the done channel
+	err = <-idr.doneCh
+	idr.Stop()
+	return err
+}
+
+func (idr *Indexer) initializeAndStartWatchers() error {
+	idr.Lock()
+	idr.watcherDone = make(chan bool)
+	idr.Unlock()
+	_, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+		return func() (interface{}, error) {
+			return nil, idr.createWatchers()
+		}()
+	}, apiSrvWaitIntvl, maxAPISrvRetries)
+
+	if err != nil {
+		idr.logger.Errorf("Failed to create watchers, err: %v", err)
+		// stop and cleanup watchers
+		idr.stopWatchers()
+		return err
+	}
+	// start the watchers
+	idr.SetRunningStatus(true)
+	idr.startWatchers()
 	return nil
 }
 
-// Stop stops all the watchers for API-server objects
+func (idr *Indexer) restartWatchers() {
+	idr.logger.Info("Restarting watchers")
+	idr.stopWatchers()
+	err := idr.initializeAndStartWatchers()
+	if err != nil {
+		// Failed to connect to api server, shutting down
+		idr.doneCh <- err
+	}
+}
+
+// Stop stops all the watchers and writers for API-server objects
 func (idr *Indexer) Stop() {
+	idr.logger.Info("Stopping indexer...")
 	if idr.GetRunningStatus() == false {
 		return
 	}
 
 	idr.SetRunningStatus(false)
 	idr.cancelFunc()
-	idr.Wait()         // wait for all the watchers and writers to stop (<-ctx.Done())
-	close(idr.reqChan) // close the channel where the writers were receiving the request from
+	idr.Wait() // wait for all the watchers and writers to stop (<-ctx.Done())
+	// close the channel where the writers were receiving the request from
+	for i := range idr.reqChan {
+		close(idr.reqChan[i])
+	}
 	idr.elasticClient.Close()
 	idr.apiClient.Close()
 	idr.logger.Info("Stopped indexer")
@@ -353,18 +418,28 @@ func (idr *Indexer) GetRunningStatus() bool {
 // Initialize the searchDB with indices
 // required for Venice search
 func (idr *Indexer) initSearchDB() error {
+	index := elastic.GetIndex(globals.Configs, globals.DefaultTenant)
+
+	// Delete current index since we may have missed delete events while spyglass was down
+	idr.elasticClient.DeleteIndex(idr.ctx, index)
+	if err := idr.elasticClient.DeleteIndex(idr.ctx, index); err != nil && !elastic.IsIndexNotExists(err) {
+		elasticErr := err.(*es.Error)
+		idr.logger.Errorf("Failed to delete index: %s, err: %+v", index, elasticErr)
+		return err
+	}
+	idr.logger.Info("Deleted index")
 
 	// Create index and mapping for Policy objects
-	index := elastic.GetIndex(globals.Configs, globals.DefaultTenant)
 	mapping, err := idr.getIndexMapping(globals.Configs)
 	if err != nil {
 		idr.logger.Errorf("Failed to get index mapping, err: %v", err)
 		return err
 	}
-	if err := idr.elasticClient.CreateIndex(idr.ctx, index, mapping); err != nil && !elastic.IsIndexExists(err) {
-		idr.logger.Errorf("Failed to create index: %s, err: %v, %v", index, err, elastic.IsIndexExists(err))
+	if err := idr.elasticClient.CreateIndex(idr.ctx, index, mapping); err != nil {
+		idr.logger.Errorf("Failed to create index: %s, err: %v", index, err)
 		return err
 	}
+	idr.logger.Info("Created index")
 
 	return nil
 }
@@ -374,35 +449,48 @@ func (idr *Indexer) initSearchDB() error {
 // reduce the intital search latency by 2-5x order of
 // magnitude.
 func (idr *Indexer) refreshIndices() {
-
-	query := func() {
-		idr.logger.Debugf("Executing query to keep indices warm in cache")
-		idr.elasticClient.Search(idr.ctx,
-			fmt.Sprintf("%s.*", elastic.ExternalIndexPrefix),
-			"",
-			es.NewTermQuery("kind.keyword", "Node"),
-			nil,
-			0,
-			10,
-			"",
-			true)
+	idr.Lock()
+	defer idr.Unlock()
+	if idr.refreshIndicesRunning {
+		return
 	}
-
-	// Query once right away
-	query()
-
-	// Loop to query in background
-	for {
-		select {
-		// Periodic timer callback to keep the indices warm
-		// by periodically querying in the background
-		case <-time.After(idr.indexRefreshIntvl):
-			query()
-
-		// Handle indexer stop/done event
-		case <-idr.done:
-			idr.logger.Infof("Stopping refreshIndices(), indexer stopped")
-			return
+	idr.refreshIndicesRunning = true
+	idr.logger.Infof("Launching index refresher")
+	idr.Add(1)
+	go func() {
+		defer idr.Done()
+		query := func() {
+			idr.logger.Debugf("Executing query to keep indices warm in cache")
+			idr.elasticClient.Search(idr.ctx,
+				fmt.Sprintf("%s.*", elastic.ExternalIndexPrefix),
+				"",
+				es.NewTermQuery("kind.keyword", "Node"),
+				nil,
+				0,
+				10,
+				"",
+				true)
 		}
-	}
+
+		// Query once right away
+		query()
+
+		// Loop to query in background
+		for {
+			select {
+			// Periodic timer callback to keep the indices warm
+			// by periodically querying in the background
+			case <-time.After(idr.indexRefreshIntvl):
+				query()
+
+			// Handle indexer stop/done event
+			case <-idr.ctx.Done():
+				idr.logger.Infof("Stopping refreshIndices(), indexer stopped")
+				idr.Lock()
+				defer idr.Unlock()
+				idr.refreshIndicesRunning = false
+				return
+			}
+		}
+	}()
 }

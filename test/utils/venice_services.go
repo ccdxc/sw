@@ -227,12 +227,20 @@ func StartSpyglass(service, apiServerAddr string, mr resolver.Interface, cache s
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create indexer, err: %v", err)
 		}
-		err = idr.Start() // start the indexer
-		if err != nil {
+		indexerCreate := make(chan error)
+		go func() {
+			idr.Start() // start the indexer
+			if err != nil {
+				log.Errorf("Indexer exited err: %v", err)
+				indexerCreate <- err
+			}
+		}()
+		select {
+		case err := <-indexerCreate:
 			return nil, "", fmt.Errorf("failed to start indexer, err: %v", err)
+		case <-time.After(time.Second * 5):
+			return idr, "", nil
 		}
-
-		return idr, "", nil
 	}
 
 	return nil, "", nil

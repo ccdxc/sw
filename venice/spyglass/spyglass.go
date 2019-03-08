@@ -78,23 +78,26 @@ func main() {
 	}
 
 	// Create the indexer
-	idxer, err := indexer.NewIndexer(ctx,
-		*apiServerAddr,
-		rslr,
-		cache,
-		logger)
+	go func() {
+		for {
+			idxer, err := indexer.NewIndexer(ctx,
+				*apiServerAddr,
+				rslr,
+				cache,
+				logger)
 
-	if err != nil || idxer == nil {
-		log.Fatalf("Failed to create indexer, err: %v", err)
-	}
+			if err != nil || idxer == nil {
+				log.Fatalf("Failed to create indexer, err: %v", err)
+			}
+			err = idxer.Start()
+			if err != nil {
+				log.Errorf("Indexer failed with err, err: %v", err)
+			}
+		}
+	}()
 
-	// Start indexer service
-	err = idxer.Start()
-	if err != nil {
-		log.Fatalf("Failed to start indexer, err: %v", err)
-	}
+	log.Infof("%s is running", globals.Spyglass)
 
-	log.Infof("%s is running {%+v} {%v}", globals.Spyglass, fdr, idxer)
 	// wait forever
 	<-waitCh
 }

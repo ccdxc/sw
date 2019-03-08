@@ -9,8 +9,8 @@ type Interface interface {
 	// Stop service
 	Stop()
 
-	// GetObjectCount return count of total objects indexed
-	GetObjectCount() uint64
+	// GetWriteCount return count of total writes to elastic
+	GetWriteCount() uint64
 
 	// CreateIndex creates the given index with the given settings in SearchDB.
 	CreateIndex(index, settings string) error

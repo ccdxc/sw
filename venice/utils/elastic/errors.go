@@ -5,6 +5,8 @@ package elastic
 import (
 	"fmt"
 	"strings"
+
+	es "github.com/olivere/elastic"
 )
 
 // error codes
@@ -62,12 +64,11 @@ func IsIndexExists(err error) bool {
 	return false
 }
 
-// IsIndexNotExists returns true if the error code is ErrIndexExists.
+// IsIndexNotExists returns true if the error code is IsIndexNotExists.
 func IsIndexNotExists(err error) bool {
-	if cErr, ok := err.(*Error); ok {
-		return cErr.Code == ErrIndexNotExist
+	if cErr, ok := err.(*es.Error); ok {
+		return cErr.Status == 404
 	}
-
 	return false
 }
 
