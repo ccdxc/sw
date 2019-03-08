@@ -8,7 +8,7 @@
 
 static delphi::objects::asictemperaturemetrics_t    asictemp;
 static pen_adjust_perf_index perf_id = PEN_PERF_ID0;
-int frequencyfromfile = 0;
+int startingfrequency_1100 = 0;
 
 #define FREQUENCY_FILE "/sysconfig/config0/frequency.json"
 #define FREQUENCY_KEY "frequency"
@@ -52,7 +52,7 @@ checktemperature(void)
 
     ret = sdk::platform::sensor::read_temperatures(&temperature);
     if (!ret) {
-        asictemp.die_temperature = temperature.dietemp / 1000;
+        asictemp.die_temperature = temperature.dietemp;
         TRACE_INFO(GetLogger(), "{:s} is : {:d}C",
                    "Die temperature", asictemp.die_temperature);
         asictemp.local_temperature = temperature.localtemp / 1000;
@@ -61,7 +61,7 @@ checktemperature(void)
         asictemp.hbm_temperature = temperature.hbmtemp;
         TRACE_INFO(GetLogger(), "HBM temperature is : {:d}C", asictemp.hbm_temperature);
 
-        if (frequencyfromfile == 1) {
+        if (startingfrequency_1100 == 1) {
             changefrequency(asictemp.hbm_temperature);
         }
 
@@ -76,7 +76,7 @@ checktemperature(void)
 
 MONFUNC(checktemperature);
 
-int changestartingfrequencyfromfile() {
+int configurablefrequency() {
     boost::property_tree::ptree input;
     pen_adjust_perf_status status = PEN_PERF_FAILED;
     int chip_id = 0;
@@ -107,7 +107,7 @@ int changestartingfrequencyfromfile() {
         } else if (frequency.compare("1033") == 0) {
             perf_id = PEN_PERF_ID3;
         } else if (frequency.compare("1100") == 0) {
-            frequencyfromfile = 1;
+            startingfrequency_1100 = 1;
             perf_id = PEN_PERF_ID4;
         } else {
             return -1;
