@@ -20,7 +20,7 @@
 
 #define DRV_NAME		"sonic"
 #define DRV_DESCRIPTION		"Pensando Offload Driver"
-#define DRV_VERSION		"0.1"
+#define DRV_VERSION		"0.8.0"
 
 /*
  * Special error codes for certain well known sonic utility functions
