@@ -10,7 +10,6 @@
 
 #include "logger.hpp"
 #include "pd_client.hpp"
-#include "hal_client.hpp"
 #include "eth_dev.hpp"
 #include "rdma_dev.hpp"
 
@@ -534,7 +533,7 @@ PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
             return -1;
         }
 
-        if (qinfo.purpose > intf::LifQPurpose_MAX) {
+        if (qinfo.purpose > sdk::platform::LIF_QUEUE_PURPOSE_MAX) {
             NIC_LOG_ERR("Invalid entry in LifSpec : purpose={}", qinfo.purpose);
             return -1;
         }
@@ -543,7 +542,7 @@ PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
         qstate.type[qinfo.type_num].qtype_info.entries = qinfo.entries;
 
         // Set both cosA,cosB to admin_cos(cosA) value for admin-qtype.
-        if (qinfo.purpose != LIF_QUEUE_PURPOSE_ADMIN) {
+        if (qinfo.purpose != sdk::platform::LIF_QUEUE_PURPOSE_ADMIN) {
             qstate.type[qinfo.type_num].qtype_info.cosA = (coses & 0x0f);
             qstate.type[qinfo.type_num].qtype_info.cosB = (coses & 0xf0) >> 4;
         } else {

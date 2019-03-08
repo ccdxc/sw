@@ -28,15 +28,12 @@
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
-// #include "platform/src/lib/hal_api/include/print.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 
 #include "logger.hpp"
 #include "eth_dev.hpp"
 #include "rdma_dev.hpp"
 #include "pd_client.hpp"
-#include "hal_client.hpp"
-
 
 using namespace nicmgr;
 using namespace nicmgr_status_msgs;
@@ -52,13 +49,11 @@ using nicmgr_status_msgs::EthDeviceHostUpStatusMsg;
 
 extern class pciemgr *pciemgr;
 
-Eth::Eth(HalClient *hal_client,
-         devapi *dev_api,
+Eth::Eth(devapi *dev_api,
          void *dev_spec,
          PdClient *pd_client)
 {
     sdk_ret_t ret = SDK_RET_OK;
-    Eth::hal = hal_client;
     Eth::dev_api = dev_api;
     Eth::spec = (struct eth_devspec *)dev_spec;
     Eth::pd = pd_client;
@@ -142,7 +137,7 @@ Eth::Eth(HalClient *hal_client,
         lif_res->cmb_mem_addr = cmb_mem_addr;
         lif_res->cmb_mem_size = cmb_mem_size;
 
-        EthLif *eth_lif = new EthLif(hal_client, dev_api,
+        EthLif *eth_lif = new EthLif(dev_api,
             dev_spec, pd_client, lif_res);
         lif_map[lif_id] = eth_lif;
     }
@@ -809,7 +804,7 @@ Eth::HalEventHandler(bool status)
 }
 
 void
-Eth::LinkEventHandler(hal_port_status_t *evd)
+Eth::LinkEventHandler(port_status_t *evd)
 {
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
@@ -829,13 +824,12 @@ Eth::GenerateQstateInfoJson(pt::ptree &lifs)
 }
 
 void
-Eth::SetHalClient(HalClient *hal_client, devapi *dapi)
+Eth::SetHalClient(devapi *dapi)
 {
-    hal = hal_client;
     dev_api = dapi;
 
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
-        eth_lif->SetHalClient(hal_client, dapi);
+        eth_lif->SetHalClient(dapi);
     }
 }

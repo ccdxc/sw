@@ -33,13 +33,11 @@ nic/build/aarch64/iris/lib/libpciemgr_if.so                                     
 nic/build/aarch64/iris/lib/libpciehsvc.so                                       /platform/lib/
 nic/build/aarch64/iris/lib/libnicmgr_sysmgr.so                                  /platform/lib/
 nic/build/aarch64/iris/lib/libintrutils.so                                      /platform/lib/
-nic/build/aarch64/iris/lib/libhal_api.so                                        /platform/lib/
 nic/build/aarch64/iris/lib/libmnet.so                                           /platform/lib/
 nic/build/aarch64/iris/lib/libnicmgr_delphi_client.so                           /platform/lib/
 nic/build/aarch64/iris/lib/libgtest_without_main.so                             /platform/lib/
 nic/build/aarch64/iris/lib/libnicmgr_upgrade.so                                 /platform/lib/
 nic/build/aarch64/iris/lib/libpcieport.so                                       /platform/lib/
-nic/build/aarch64/iris/lib/libhal_api_trace.so                                  /platform/lib/
 nic/build/aarch64/iris/lib/libcfgspace.so                                       /platform/lib/
 nic/build/aarch64/iris/lib/libpciemgrutils.so                                   /platform/lib/
 nic/build/aarch64/iris/lib/libevutils.so                                        /platform/lib/

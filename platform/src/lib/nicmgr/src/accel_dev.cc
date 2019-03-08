@@ -34,7 +34,6 @@
 #include "logger.hpp"
 #include "accel_dev.hpp"
 #include "pd_client.hpp"
-#include "hal_client.hpp"
 #include "adminq.hpp"
 
 
@@ -106,8 +105,8 @@ static accel_crypto_key_map_t   accel_crypto_key_map;
 static crypto_key_accum_t *crypto_key_accum_find_add(uint32_t key_index);
 static void crypto_key_accum_del(uint32_t key_index);
 
-static const std::string accel_pf_rgroup_name("Accel_PF_RGroup");
-static const std::vector<std::pair<const std::string,uint32_t>> accel_pf_ring_vec = {
+static std::string accel_pf_rgroup_name("Accel_PF_RGroup");
+static std::vector<std::pair<const std::string,uint32_t>> accel_pf_ring_vec = {
     {"cp",      ACCEL_RING_CP},
     {"cp_hot",  ACCEL_RING_CP_HOT},
     {"dc",      ACCEL_RING_DC},
@@ -170,9 +169,7 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
     } while (false)
 
 
-Accel_PF::Accel_PF(HalClient *hal_client,
-                   devapi *dapi,
-                   // HalCommonClient *hal_cmn_client,
+Accel_PF::Accel_PF(devapi *dapi,
                    void *dev_spec,
                    PdClient *pd_client) :
     seq_qid_init_high(0)
@@ -180,9 +177,7 @@ Accel_PF::Accel_PF(HalClient *hal_client,
     sdk_ret_t ret = SDK_RET_OK;
     uint32_t    num_keys_max;
 
-    hal = hal_client;
     dev_api = dapi;
-    // hal_cmn_client = hal_cmn_client;
     spec = (accel_devspec_t *)dev_spec;
     pd = pd_client;
 
@@ -1189,10 +1184,11 @@ enum DevcmdStatus
 Accel_PF::_DevcmdCryptoKeyUpdate(void *req, void *req_data,
                                  void *resp, void *resp_data)
 {
+    sdk_ret_t                   ret = SDK_RET_OK;
     crypto_key_update_cmd_t     *cmd = (crypto_key_update_cmd_t *)req;
     crypto_key_accum_t          *key_accum;
     uint8_t                     *dst_key_data;
-    int                         ret_val;
+    int                         ret_val = 0;
 
     NIC_LOG_DEBUG(" lif-{}  key_index {} key_type {} key_size {} key_part {}",
                  hal_lif_info_.lif_id, cmd->key_index, cmd->key_type,
@@ -1237,10 +1233,13 @@ Accel_PF::_DevcmdCryptoKeyUpdate(void *req, void *req_data,
     key_accum->num_key_parts = std::min(key_accum->num_key_parts + 1,
                                         (uint32_t)CMD_CRYPTO_KEY_PART_MAX);
     if (cmd->trigger_update) {
-        ret_val = hal->CryptoKeyIndexUpdate(cmd->key_index,
-                              crypto_key_type_tbl[cmd->key_type],
-                              &key_accum->key_data[0][0],
-                              key_accum->num_key_parts * CMD_CRYPTO_KEY_PART_SIZE);
+        ret = dev_api->crypto_key_index_upd(cmd->key_index,
+                                            (crypto_key_type_t)crypto_key_type_tbl[cmd->key_type],
+                                            &key_accum->key_data[0][0],
+                                            key_accum->num_key_parts * CMD_CRYPTO_KEY_PART_SIZE);
+        if (ret != SDK_RET_OK) {
+            ret_val = -1;
+        }
         /*
          * Wipe and erase accumulator
          */
@@ -1263,7 +1262,7 @@ int
 Accel_PF::accel_ring_info_get_all(void)
 {
     accel_rgroup_iter_c     iter;
-    int                     ret_val;
+    int                     ret_val = 0;
 
     ret_val = accel_rgroup_add();
     if (ret_val == 0) {
@@ -1408,13 +1407,16 @@ Accel_PF::accel_ring_wait_quiesce_all(void)
 int
 Accel_PF::accel_rgroup_add(void)
 {
-    int     ret_val;
+    sdk_ret_t ret = SDK_RET_OK;
+    int     ret_val = 0;
 
-    ret_val = hal->AccelRGroupAdd(accel_pf_rgroup_name);
-    if (ret_val) {
+    ret = dev_api->accel_rgroup_add(accel_pf_rgroup_name);
+    if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("lif-{}:: failed to add ring group {}",
                     hal_lif_info_.lif_id, accel_pf_rgroup_name);
+        ret_val = -1;
     }
+
     return ret_val;
 }
 
@@ -1424,13 +1426,16 @@ Accel_PF::accel_rgroup_add(void)
 int
 Accel_PF::accel_rgroup_rings_add(void)
 {
-    int     ret_val;
+    sdk_ret_t ret = SDK_RET_OK;
+    int     ret_val = 0;
 
-    ret_val = hal->AccelRGroupRingAdd(accel_pf_rgroup_name,
-                                      accel_pf_ring_vec);
-    if (ret_val) {
+    ret = dev_api->accel_rgroup_ring_add(accel_pf_rgroup_name,
+                                         accel_pf_ring_vec);
+
+    if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("lif-{}: failed to add ring vector",
                     hal_lif_info_.lif_id, accel_pf_rgroup_name);
+        ret_val = -1;
     }
     return ret_val;
 }
@@ -1441,13 +1446,15 @@ Accel_PF::accel_rgroup_rings_add(void)
 int
 Accel_PF::accel_rgroup_reset_set(bool reset_sense)
 {
-    int     ret_val;
+    sdk_ret_t ret = SDK_RET_OK;
+    int     ret_val = 0;
 
-    ret_val = hal->AccelRGroupResetSet(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
-                                       reset_sense);
-    if (ret_val) {
+    ret = dev_api->accel_rgroup_reset_set(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
+                                          reset_sense);
+    if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("lif-{}:: failed to reset ring group {} sense {}",
                     hal_lif_info_.lif_id, accel_pf_rgroup_name, reset_sense);
+        ret_val = -1;
     }
     return ret_val;
 }
@@ -1458,13 +1465,15 @@ Accel_PF::accel_rgroup_reset_set(bool reset_sense)
 int
 Accel_PF::accel_rgroup_enable_set(bool enable_sense)
 {
-    int     ret_val;
+    sdk_ret_t ret = SDK_RET_OK;
+    int     ret_val = 0;
 
-    ret_val = hal->AccelRGroupEnableSet(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
-                                        enable_sense);
-    if (ret_val) {
+    ret = dev_api->accel_rgroup_enable_set(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
+                                           enable_sense);
+    if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("lif-{}:: failed to enable ring group {} sense {}",
                     hal_lif_info_.lif_id, accel_pf_rgroup_name, enable_sense);
+        ret_val = -1;
     }
     return ret_val;
 }
@@ -1476,13 +1485,15 @@ int
 Accel_PF::accel_rgroup_pndx_set(uint32_t val,
                                 bool conditional)
 {
-    int     ret_val;
+    sdk_ret_t ret = SDK_RET_OK;
+    int     ret_val = 0;
 
-    ret_val = hal->AccelRGroupPndxSet(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
-                                      val, conditional);
-    if (ret_val) {
+    ret = dev_api->accel_rgroup_pndx_set(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
+                                         val, conditional);
+    if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("lif-{}:: failed to set pndx for ring group {} val {}",
                     hal_lif_info_.lif_id, accel_pf_rgroup_name, val);
+        ret_val = -1;
     }
     return ret_val;
 }
@@ -1509,12 +1520,17 @@ accel_rgroup_rinfo_rsp_cb(void *user_ctx,
 int
 Accel_PF::accel_rgroup_rinfo_get(void)
 {
+    sdk_ret_t ret = SDK_RET_OK;
     uint32_t    num_rings;
-    int         ret_val;
+    int         ret_val = 0;
 
-    ret_val = hal->AccelRGroupInfoGet(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
-                                      accel_rgroup_rinfo_rsp_cb, this,
-                                      num_rings);
+    ret = dev_api->accel_rgroup_info_get(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
+                                         accel_rgroup_rinfo_rsp_cb, this,
+                                         &num_rings);
+    if (ret != SDK_RET_OK) {
+        ret_val = -1;
+    }
+
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "rinfo");
     return ret_val;
 }
@@ -1543,12 +1559,16 @@ accel_rgroup_rindices_rsp_cb(void *user_ctx,
 int
 Accel_PF::accel_rgroup_rindices_get(void)
 {
+    sdk_ret_t ret = SDK_RET_OK;
     uint32_t    num_rings;
-    int         ret_val;
+    int         ret_val = 0;
 
-    ret_val = hal->AccelRGroupIndicesGet(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
-                                         accel_rgroup_rindices_rsp_cb, this,
-                                         num_rings);
+    ret = dev_api->accel_rgroup_indices_get(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
+                                            accel_rgroup_rindices_rsp_cb, this,
+                                            &num_rings);
+    if (ret != SDK_RET_OK) {
+        ret_val = -1;
+    }
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "indices");
     return ret_val;
 }
@@ -1577,12 +1597,16 @@ accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
 int
 Accel_PF::accel_rgroup_rmetrics_get(void)
 {
+    sdk_ret_t ret = SDK_RET_OK;
     uint32_t    num_rings;
-    int         ret_val;
+    int         ret_val = 0;
 
-    ret_val = hal->AccelRGroupMetricsGet(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
-                                         accel_rgroup_rmetrics_rsp_cb, this,
-                                         num_rings);
+    ret = dev_api->accel_rgroup_metrics_get(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
+                                            accel_rgroup_rmetrics_rsp_cb, this,
+                                            &num_rings);
+    if (ret != SDK_RET_OK) {
+        ret_val = -1;
+    }
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "metrics");
     return ret_val;
 }
@@ -1816,6 +1840,8 @@ crypto_key_accum_del(uint32_t key_index)
 void
 Accel_PF::HalEventHandler(bool status)
 {
+    sdk_ret_t ret = SDK_RET_OK;
+
     if (!status) {
         return;
     }
@@ -1827,12 +1853,21 @@ Accel_PF::HalEventHandler(bool status)
     // Trigger Hal for Lif create if this is the first time
     if (!hal_lif_info_.pushed_to_hal) {
 
+#if 0
         uint64_t ret = hal->LifCreate(&hal_lif_info_);
         if (ret != 0) {
             NIC_LOG_ERR("{}: Failed to create LIF {}",
                 spec->name, hal_lif_info_.lif_id);
             return;
         }
+#endif
+        ret = dev_api->lif_create(&hal_lif_info_);
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: Failed to create lif. id: {}",
+                        spec->name, hal_lif_info_.lif_id);
+            return;
+        }
+        hal_lif_info_.pushed_to_hal = true;
 
         NIC_LOG_INFO("lif-{}: created", hal_lif_info_.lif_id);
 
@@ -1900,12 +1935,9 @@ Poller::operator()(std::function<int(void)> poll_func)
 }
 
 void
-// Accel_PF::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client)
-Accel_PF::SetHalClient(HalClient *hal_client, devapi *dapi)
+Accel_PF::SetHalClient(devapi *dapi)
 {
-    hal = hal_client;
     dev_api = dapi;
-    // hal_common_client = hal_cmn_client;
 }
 
 void

@@ -80,7 +80,7 @@ nicmgr_if_init(void)
      * Interface with the Accel_PF device directly
      */
     devmgr = new DeviceManager(FLAGS_nicmgr_config_file,
-                               FWD_MODE_CLASSIC_NIC, PLATFORM_SIM);
+                               sdk::platform::FWD_MODE_CLASSIC, PLATFORM_SIM);
     devmgr->LoadConfig(FLAGS_nicmgr_config_file);
     devmgr->HalEventHandler(true);
     accel_dev = (Accel_PF *)devmgr->GetDevice("accel");

@@ -5,8 +5,6 @@
 #ifndef __PD_CLIENT_HPP__
 #define __PD_CLIENT_HPP__
 
-#include "hal_client.hpp"
-
 #include "platform/utils/program.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/utils/lif_mgr/lif_mgr.hpp"
@@ -17,6 +15,7 @@
 #include "platform/capri/capri_common.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/platform/devapi/devapi_types.hpp"
 
 #include "common_rxdma_actions_p4pd.h"
 #include "common_rxdma_actions_p4pd_table.h"
@@ -38,6 +37,50 @@
 // Memory bar should be multiple of 8 MB
 #define MEM_BARMAP_SIZE_SHIFT               (23)
 
+typedef enum lif_rss_type_s {
+  LIF_RSS_TYPE_NONE = 0,
+  LIF_RSS_TYPE_IPV4 = 1,
+  LIF_RSS_TYPE_IPV4_TCP = 2,
+  LIF_RSS_TYPE_IPV4_UDP = 4,
+  LIF_RSS_TYPE_IPV6 = 8,
+  LIF_RSS_TYPE_IPV6_TCP = 16,
+  LIF_RSS_TYPE_IPV6_UDP = 32,
+  LIF_RSS_TYPE_IPV6_EX = 64,
+  LIF_RSS_TYPE_IPV6_TCP_EX = 128,
+  LIF_RSS_TYPE_IPV6_UDP_EX = 256,
+} lif_rss_type_t;
+
+/**
+ * Platform Modes
+ */
+typedef enum platform_s {
+    PLATFORM_NONE,
+    PLATFORM_SIM,
+    PLATFORM_HW,
+    PLATFORM_HAPS,
+    PLATFORM_RTL,
+    PLATFORM_MOCK,
+} platform_t;
+
+static inline bool
+platform_is_hw(platform_t platform)
+{
+    return (platform == PLATFORM_HW) || (platform == PLATFORM_HAPS);
+}
+
+/**
+ * Queue info structure for LifCreate
+ */
+struct queue_info {
+  uint32_t type_num;           /* HW Queue Type */
+  uint32_t size;               /* Qstate Size: 2^size */
+  uint32_t entries;            /* Number of Queues: 2^entries */
+  lif_qpurpose_t  purpose;     /* Queue Purpose */
+  const char* prog;            /* Program File Name */
+  const char* label;           /* Program Entry Label */
+  const char* qstate;          /* Qstate structure */
+};
+
 const uint32_t kNumMaxLIFs = 2048;
 
 class PdClient {
@@ -46,8 +89,8 @@ public:
     void update(void);
     void destroy(PdClient *pdc);
 
-    string hal_cfg_path_;
-    string gen_dir_path_;
+    std::string hal_cfg_path_;
+    std::string gen_dir_path_;
     platform_t platform_;
     sdk::platform::utils::program_info *pinfo_;
     sdk::platform::utils::mpartition *mp_;

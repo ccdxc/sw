@@ -18,22 +18,17 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/p4/common/defines.h"
 
-#include "gen/proto/nicmgr/nicmgr.pb.h"
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
-#include "gen/proto/common/nicmgr_status_msgs.pb.h"
-#include "gen/proto/common/nicmgr_status_msgs.delphi.hpp"
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
-// #include "platform/src/lib/hal_api/include/print.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 
 #include "logger.hpp"
 #include "eth_dev.hpp"
 #include "rdma_dev.hpp"
 #include "pd_client.hpp"
-#include "hal_client.hpp"
 #include "eth_lif.hpp"
 #include "adminq.hpp"
 
@@ -133,16 +128,12 @@ EthLif::ConvertDevTypeToLifType(EthDevType dev_type)
     }
 }
 
-EthLif::EthLif(HalClient *hal_client,
-               devapi *dev_api,
-                // HalCommonClient *hal_common_client,
+EthLif::EthLif(devapi *dev_api,
                 void *dev_spec,
                 PdClient *pd_client,
                 eth_lif_res_t *res)
 {
-    EthLif::hal = hal_client;
     EthLif::dev_api = dev_api;
-    // EthLif::hal_common_client = hal_common_client;
     EthLif::spec = (struct eth_devspec *)dev_spec;
     EthLif::res = res;
     EthLif::pd = pd_client;
@@ -337,14 +328,6 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         state = LIF_STATE_INITING;
 
-#if 0
-        // Create the LIF
-        lif = Lif::Factory(&hal_lif_info_);
-        if (lif == NULL) {
-            NIC_LOG_ERR("{}: Failed to create LIF", hal_lif_info_.name);
-            return (IONIC_RC_ERROR);
-        }
-#endif
         rs = dev_api->lif_create(&hal_lif_info_);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Failed to create LIF", hal_lif_info_.name);
@@ -382,7 +365,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     // Reset RSS configuration
-    rss_type = LifRssType::RSS_TYPE_NONE;
+    rss_type = LIF_RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
     memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
     ret = pd->eth_program_rss(hal_lif_info_.lif_id, rss_type, rss_key, rss_indir,
@@ -580,7 +563,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
 
 
     // Reset RSS configuration
-    rss_type = LifRssType::RSS_TYPE_NONE;
+    rss_type = LIF_RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
     memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
     ret = pd->eth_program_rss(hal_lif_info_.lif_id, rss_type, rss_key, rss_indir,
@@ -1295,7 +1278,18 @@ EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     comp->status = 0;
-    if (hal->fwd_mode == FWD_MODE_SMART_NIC) {
+    comp->supported = (
+                       ETH_HW_VLAN_RX_STRIP |
+                       ETH_HW_VLAN_TX_TAG |
+                       ETH_HW_VLAN_RX_FILTER |
+                       ETH_HW_RX_CSUM |
+                       ETH_HW_TX_CSUM |
+                       ETH_HW_RX_HASH |
+                       ETH_HW_TX_SG |
+                       ETH_HW_TSO |
+                       ETH_HW_TSO_IPV6);
+#if 0
+    if (hal->fwd_mode == FWD_MODE_SMART) {
         comp->supported = (
             ETH_HW_VLAN_RX_STRIP |
             ETH_HW_VLAN_TX_TAG |
@@ -1319,6 +1313,7 @@ EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
             ETH_HW_TSO_IPV6
         );
     }
+#endif
 
     bool vlan_strip = cmd->wanted & comp->supported & ETH_HW_VLAN_RX_STRIP;
     bool vlan_insert = cmd->wanted & comp->supported & ETH_HW_VLAN_TX_TAG;
@@ -2155,7 +2150,7 @@ EthLif::HalEventHandler(bool status)
 }
 
 void
-EthLif::LinkEventHandler(hal_port_status_t *evd)
+EthLif::LinkEventHandler(port_status_t *evd)
 {
     if (spec->uplink_port_num != evd->id) {
         return;
@@ -2239,12 +2234,9 @@ EthLif::LinkEventHandler(hal_port_status_t *evd)
 }
 
 void
-// EthLif::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client)
-EthLif::SetHalClient(HalClient *hal_client, devapi *dapi)
+EthLif::SetHalClient(devapi *dapi)
 {
-    hal = hal_client;
     dev_api = dapi;
-    // hal_common_client = hal_cmn_client;
 }
 
 /*

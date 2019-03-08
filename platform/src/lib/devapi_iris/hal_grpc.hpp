@@ -14,6 +14,8 @@
 #include "gen/proto/rdma.grpc.pb.h"
 #include "gen/proto/qos.grpc.pb.h"
 #include "gen/proto/port.grpc.pb.h"
+#include "gen/proto/internal.grpc.pb.h"
+#include "gen/proto/accel_rgroup.grpc.pb.h"
 #include "hal_grpc.hpp"
 #include "include/sdk/base.hpp"
 #include "devapi_iris_types.hpp"
@@ -96,6 +98,30 @@ using multicast::MulticastEntryDeleteRequest;
 using multicast::MulticastEntryDeleteResponse;
 using qos::QosClassGetRequestMsg;
 using qos::QosClassGetResponseMsg;
+using accelRGroup::AccelRGroupAddRequestMsg;
+using accelRGroup::AccelRGroupAddResponseMsg;
+using accelRGroup::AccelRGroupDelRequestMsg;
+using accelRGroup::AccelRGroupDelResponseMsg;
+using accelRGroup::AccelRGroupRingAddRequestMsg;
+using accelRGroup::AccelRGroupRingAddResponseMsg;
+using accelRGroup::AccelRGroupRingDelRequestMsg;
+using accelRGroup::AccelRGroupRingDelResponseMsg;
+using accelRGroup::AccelRGroupResetSetRequestMsg;
+using accelRGroup::AccelRGroupResetSetResponseMsg;
+using accelRGroup::AccelRGroupEnableSetRequestMsg;
+using accelRGroup::AccelRGroupEnableSetResponseMsg;
+using accelRGroup::AccelRGroupPndxSetRequestMsg;
+using accelRGroup::AccelRGroupPndxSetResponseMsg;
+using accelRGroup::AccelRGroupInfoGetRequestMsg;
+using accelRGroup::AccelRGroupInfoGetResponseMsg;
+using accelRGroup::AccelRGroupIndicesGetRequestMsg;
+using accelRGroup::AccelRGroupIndicesGetResponseMsg;
+using accelRGroup::AccelRGroupMetricsGetRequestMsg;
+using accelRGroup::AccelRGroupMetricsGetResponseMsg;
+using internal::CryptoKeyCreateWithIdRequestMsg;
+using internal::CryptoKeyCreateWithIdResponseMsg;
+using internal::CryptoKeyUpdateRequestMsg;
+using internal::CryptoKeyUpdateResponseMsg;
 using std::chrono::seconds;
 
 namespace iris {
@@ -131,6 +157,8 @@ private:
     std::unique_ptr<rdma::Rdma::Stub> rdma_stub_;
     std::unique_ptr<qos::QOS::Stub> qos_stub_;
     std::unique_ptr<port::Port::Stub> port_stub_;
+    std::unique_ptr<internal::Internal::Stub> crypto_stub_;
+    std::unique_ptr<accelRGroup::AccelRGroup::Stub> accel_rgroup_stub_;
     std::shared_ptr<grpc::Channel> channel;
 private:
     sdk_ret_t init_(void);
@@ -198,6 +226,33 @@ public:
     // Port APIs
     UPDATE_API(port, Port);
     GET_API(port, Port);
+
+    // Accel APIs
+    Status accel_rgroup_add(AccelRGroupAddRequestMsg& req_msg,
+                            AccelRGroupAddResponseMsg& rsp_msg);
+    Status accel_rgroup_del(AccelRGroupDelRequestMsg& req_msg,
+                            AccelRGroupDelResponseMsg& rsp_msg);
+    Status accel_rgroup_ring_add(AccelRGroupRingAddRequestMsg& req_msg,
+                                 AccelRGroupRingAddResponseMsg& rsp_msg);
+    Status accel_rgroup_ring_del(AccelRGroupRingDelRequestMsg& req_msg,
+                                 AccelRGroupRingDelResponseMsg& rsp_msg);
+    Status accel_rgroup_reset_set(AccelRGroupResetSetRequestMsg& req_msg,
+                                  AccelRGroupResetSetResponseMsg& rsp_msg);
+    Status accel_rgroup_enable_set(AccelRGroupEnableSetRequestMsg& req_msg,
+                                   AccelRGroupEnableSetResponseMsg& rsp_msg);
+    Status accel_rgroup_pndx_set(AccelRGroupPndxSetRequestMsg& req_msg,
+                                 AccelRGroupPndxSetResponseMsg& rsp_msg);
+    Status accel_rgroup_info_get(AccelRGroupInfoGetRequestMsg& req_msg,
+                                 AccelRGroupInfoGetResponseMsg& rsp_msg);
+    Status accel_rgroup_indices_get(AccelRGroupIndicesGetRequestMsg& req_msg,
+                                    AccelRGroupIndicesGetResponseMsg& rsp_msg);
+    Status accel_rgroup_metrics_get(AccelRGroupMetricsGetRequestMsg& req_msg,
+                                    AccelRGroupMetricsGetResponseMsg& rsp_msg);
+    Status crypto_create(CryptoKeyCreateWithIdRequestMsg& req_msg,
+                         CryptoKeyCreateWithIdResponseMsg& rsp_msg);
+    Status crypto_update(CryptoKeyUpdateRequestMsg& req_msg,
+                         CryptoKeyUpdateResponseMsg& rsp_msg);
+
 };
 
 }    // namespace iris

@@ -14,7 +14,7 @@
 #include "nic/sdk/platform/evutils/include/evutils.h"
 
 #include "dev.hpp"
-#include "hal_client.hpp"
+// #include "hal_client.hpp"
 
 #define ACCEL_DEV_CONTROL_CORES_MASK    (1 << CONTROL_CORE_ID)
 #define ACCEL_DEV_PAGE_SIZE             4096
@@ -275,9 +275,7 @@ enum DevcmdStatus
  */
 class Accel_PF : public Device {
 public:
-    Accel_PF(HalClient *hal_client,
-             // HalCommonClient *hal_cmn_client,
-             devapi *dev_api,
+    Accel_PF(devapi *dev_api,
              void *dev_spec,
              PdClient *pd_client);
 
@@ -289,7 +287,8 @@ public:
     void HalEventHandler(bool status);
 
     // void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
-    void SetHalClient(HalClient *hal_client, devapi *dapi);
+    // void SetHalClient(HalClient *hal_client, devapi *dapi);
+    void SetHalClient(devapi *dapi);
     uint64_t devcmd_page_get(void) { return devcmd_mem_addr; }
     uint64_t devcmddb_page_get(void) { return devcmddb_mem_addr; }
 
@@ -313,8 +312,6 @@ private:
     // PD Info
     PdClient *pd;
     // HAL Info
-    HalClient                   *hal;
-    // HalCommonClient             *hal_common_client;
     devapi                      *dev_api;
     uint8_t cosA, cosB, ctl_cosA, ctl_cosB;
     // PCIe info

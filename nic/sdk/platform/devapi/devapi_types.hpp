@@ -27,7 +27,8 @@ typedef enum lif_qpurpose_e {
     LIF_QUEUE_PURPOSE_STORAGE,
     LIF_QUEUE_PURPOSE_VIRTIO_TX,
     LIF_QUEUE_PURPOSE_VIRTIO_RX,
-    LIF_QUEUE_PURPOSE_SVC
+    LIF_QUEUE_PURPOSE_SVC,
+    LIF_QUEUE_PURPOSE_MAX
 } lif_qpurpose_t;
 
 typedef enum lif_type_e {
@@ -102,6 +103,55 @@ typedef struct port_status_s {
     xcvr_status_t  xcvr;
 } __PACK__ port_status_t;
 
+ typedef struct {
+     uint32_t    ring_handle;
+     uint32_t    sub_ring;
+     uint64_t    base_pa;
+     uint64_t    pndx_pa;
+     uint64_t    shadow_pndx_pa;
+     uint64_t    opaque_tag_pa;
+     uint32_t    opaque_tag_size;
+     uint32_t    ring_size;
+     uint32_t    desc_size;
+     uint32_t    pndx_size;
+     uint32_t    sw_reset_capable;
+     uint32_t    sw_enable_capable;
+ } accel_rgroup_rinfo_rsp_t;
+
+typedef void (*accel_rgroup_rinfo_rsp_cb_t)(void *user_ctx,
+                                            const accel_rgroup_rinfo_rsp_t& info);
+
+ typedef struct {
+     uint32_t    ring_handle;
+     uint32_t    sub_ring;
+     uint32_t    pndx;
+     uint32_t    cndx;
+ } accel_rgroup_rindices_rsp_t;
+
+typedef void (*accel_rgroup_rindices_rsp_cb_t)(void *user_ctx,
+                                               const accel_rgroup_rindices_rsp_t& indices);
+
+ typedef struct {
+     uint32_t    ring_handle;
+     uint32_t    sub_ring;
+     uint64_t    input_bytes;
+     uint64_t    output_bytes;
+     uint64_t    soft_resets;
+ } accel_rgroup_rmetrics_rsp_t;
+
+typedef void (*accel_rgroup_rmetrics_rsp_cb_t)(void *user_ctx,
+                                               const accel_rgroup_rmetrics_rsp_t& indices);
+
+typedef enum crypto_key_type_e {
+    CRYPTO_KEY_TYPE_AES128,
+    CRYPTO_KEY_TYPE_AES192,
+    CRYPTO_KEY_TYPE_AES256,
+    CRYPTO_KEY_TYPE_DES,
+    CRYPTO_KEY_TYPE_CHACHA20,
+    CRYPTO_KEY_TYPE_POLY1305,
+    CRYPTO_KEY_TYPE_HMAC,
+} crypto_key_type_t;
+
 }    // namespace platform
 }    // namespace sdk
 
@@ -113,5 +163,13 @@ using sdk::platform::fwd_mode_t;
 using sdk::platform::port_config_t;
 using sdk::platform::port_status_t;
 using sdk::platform::xcvr_status_t;
+using sdk::platform::accel_rgroup_rinfo_rsp_t;
+using sdk::platform::accel_rgroup_rindices_rsp_t;
+using sdk::platform::accel_rgroup_rmetrics_rsp_t;
+using sdk::platform::crypto_key_type_t;
+using sdk::platform::accel_rgroup_rinfo_rsp_cb_t;
+using sdk::platform::accel_rgroup_rindices_rsp_cb_t;
+using sdk::platform::accel_rgroup_rmetrics_rsp_cb_t;
+using sdk::platform::lif_qpurpose_t;
 
 #endif    // __DEVAPI_TYPES_HPP__

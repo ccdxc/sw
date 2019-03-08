@@ -14,7 +14,7 @@ MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
                   host_mem storage_qstate_if model_client \
                   p4pd_pack_storage_seq \
                   sdkplatformutils shmmgr logger \
-                  nicmgr hal_api mnet \
+                  nicmgr mnet \
                   pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
                   intrutils pal misc evutils \
                   ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \

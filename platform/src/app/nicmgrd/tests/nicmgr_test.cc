@@ -11,6 +11,7 @@
 #include "gen/proto/interface.grpc.pb.h"
 #include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>
+#include "devapi_types.hpp"
 // #include "logger.hpp"
 
 using grpc::Channel;
@@ -29,7 +30,7 @@ using namespace std;
 
 class pciemgr *pciemgr;
 
-enum ForwardingMode g_fwd_mode = FWD_MODE_SMART_NIC;
+fwd_mode_t g_fwd_mode = sdk::platform::FWD_MODE_SMART;
 
 namespace nicmgr {
 shared_ptr<nicmgr::NicMgrService> g_nicmgr_svc;
@@ -105,7 +106,7 @@ nicmgr_init()
     sdk::platform::capri::capri_state_pd_init(NULL);
 
     // DeviceManager *devmgr;
-    if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
+    if (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) {
         devmgr =
             new DeviceManager("../platform/src/app/nicmgrd/etc/eth.json",
                               g_fwd_mode, PLATFORM_HW);
@@ -117,7 +118,7 @@ nicmgr_init()
     EXPECT_TRUE(devmgr != NULL);
 
     // load config
-    if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
+    if (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) {
         devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth.json");
     } else {
         devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth-smart.json");
@@ -399,11 +400,11 @@ int main(int argc, char **argv) {
     // sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--classic") == 0) {
-            g_fwd_mode = FWD_MODE_CLASSIC_NIC;
+            g_fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
         }
     }
     printf("\n------------------ Execting tests in mode: %s ---------------------\n",
-           (g_fwd_mode == FWD_MODE_CLASSIC_NIC) ? "CLASSIC" : "SMART");
+           (g_fwd_mode == sdk::platform::FWD_MODE_CLASSIC) ? "CLASSIC" : "SMART");
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

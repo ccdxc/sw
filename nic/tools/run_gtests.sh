@@ -80,9 +80,6 @@ ${CMD_OPTS} upgrade_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/upgrade_tes
 # L2seg test for hostpin
 L2SEG_PRELOAD=${BUILD_DIR}/lib/libport_mock.so
 LD_PRELOAD=${L2SEG_PRELOAD} ${CMD_OPTS} l2seg_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/l2seg_test.xml"
-# Nicmgr hal_api test
-HAL_API_PRELOAD=${BUILD_DIR}/lib/hal_api_mock.so
-LD_PRELOAD=${HAL_API_PRELOAD} hal_api_filter_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/hal_api_filter_test.xml"
 DEVAPI_PRELOAD=${BUILD_DIR}/lib/devapi_iris_mock.so
 LD_PRELOAD=${DEVAPI_PRELOAD} devapi_iris_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/devapi_iris_test.xml"
 

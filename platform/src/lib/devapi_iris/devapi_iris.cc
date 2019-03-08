@@ -8,6 +8,7 @@
 #include "uplink.hpp"
 #include "qos.hpp"
 #include "port.hpp"
+#include "accel.hpp"
 
 namespace iris {
 
@@ -393,7 +394,219 @@ end:
     return ret;
 }
 
+sdk_ret_t
+devapi_iris::accel_rgroup_add(string name)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
 
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_add(name);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::accel_rgroup_del(string name)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_del(name);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::accel_rgroup_ring_add(string name,
+                                   std::vector<std::pair<const std::string,uint32_t>>& ring_vec)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_ring_add(name, ring_vec);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::accel_rgroup_ring_del(string name,
+                                   std::vector<std::pair<const std::string,uint32_t>>& ring_vec)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_ring_del(name, ring_vec);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::accel_rgroup_reset_set(string name, uint32_t sub_ring,
+                                    bool reset_sense)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_reset_set(name, sub_ring, reset_sense);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::accel_rgroup_enable_set(string name, uint32_t sub_ring,
+                                     bool enable_sense)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_enable_set(name, sub_ring, enable_sense);
+
+end:
+    return ret;
+}
+
+
+sdk_ret_t
+devapi_iris::accel_rgroup_pndx_set(string name, uint32_t sub_ring,
+                                   uint32_t val, bool conditional)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_pndx_set(name, sub_ring, val, conditional);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::accel_rgroup_info_get(string name, uint32_t sub_ring,
+                                   accel_rgroup_rinfo_rsp_cb_t rsp_cb_func,
+                                   void *user_ctx, uint32_t *ret_num_entries)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_info_get(name, sub_ring, rsp_cb_func,
+                                       user_ctx, ret_num_entries);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::accel_rgroup_indices_get(string name,uint32_t sub_ring,
+                                      accel_rgroup_rindices_rsp_cb_t rsp_cb_func,
+                                      void *user_ctx, uint32_t *ret_num_entries)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_indices_get(name, sub_ring, rsp_cb_func,
+                                          user_ctx, ret_num_entries);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::accel_rgroup_metrics_get(string name, uint32_t sub_ring,
+                                      accel_rgroup_rmetrics_rsp_cb_t rsp_cb_func,
+                                      void *user_ctx, uint32_t *ret_num_entries)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_metrics_get(name, sub_ring, rsp_cb_func,
+                                          user_ctx, ret_num_entries);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::crypto_key_index_upd(uint32_t key_index, crypto_key_type_t type,
+                                  void *key, uint32_t key_size)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->crypto_key_index_upd(key_index, type, key, key_size);
+
+end:
+    return ret;
+}
 
 
 }    // namespace iris

@@ -2,8 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #include <string>
-#include <memory>
-#include <iostream>
 #include <grpc++/grpc++.h>
 #include "devapi_iris_types.hpp"
 #include "hal_grpc.hpp"
@@ -87,6 +85,8 @@ hal_grpc::connect_hal(void)
     rdma_stub_ = rdma::Rdma::NewStub(channel);
     qos_stub_ = qos::QOS::NewStub(channel);
     port_stub_ = port::Port::NewStub(channel);
+    crypto_stub_ = internal::Internal::NewStub(channel);
+    accel_rgroup_stub_ = accelRGroup::AccelRGroup::NewStub(channel);
 
     return SDK_RET_OK;
 }
@@ -277,5 +277,177 @@ HAL_GET_API(qos_class, QosClass, qos);
 // Port Calls
 HAL_UPDATE_API(port, Port, port);
 HAL_GET_API(port, Port, port);
+
+// Accel Calls
+Status
+hal_grpc::accel_rgroup_add(AccelRGroupAddRequestMsg& req_msg,
+                           AccelRGroupAddResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupAdd(&context,
+                                                req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::accel_rgroup_del(AccelRGroupDelRequestMsg& req_msg,
+                           AccelRGroupDelResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupDel(&context,
+                                                 req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::accel_rgroup_ring_add(AccelRGroupRingAddRequestMsg& req_msg,
+                                AccelRGroupRingAddResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupRingAdd(&context,
+                                                    req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::accel_rgroup_ring_del(AccelRGroupRingDelRequestMsg& req_msg,
+                                AccelRGroupRingDelResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupRingDel(&context,
+                                                    req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::accel_rgroup_reset_set(AccelRGroupResetSetRequestMsg& req_msg,
+                                 AccelRGroupResetSetResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupResetSet(&context,
+                                                     req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::accel_rgroup_enable_set(AccelRGroupEnableSetRequestMsg& req_msg,
+                                  AccelRGroupEnableSetResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupEnableSet(&context,
+                                                      req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::accel_rgroup_pndx_set(AccelRGroupPndxSetRequestMsg& req_msg,
+                                AccelRGroupPndxSetResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupPndxSet(&context,
+                                                    req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::accel_rgroup_info_get(AccelRGroupInfoGetRequestMsg& req_msg,
+                                AccelRGroupInfoGetResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupInfoGet(&context,
+                                                    req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::accel_rgroup_indices_get(AccelRGroupIndicesGetRequestMsg& req_msg,
+                                   AccelRGroupIndicesGetResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupIndicesGet(&context,
+                                                       req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::accel_rgroup_metrics_get(AccelRGroupMetricsGetRequestMsg& req_msg,
+                                   AccelRGroupMetricsGetResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupMetricsGet(&context,
+                                                       req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::crypto_create(CryptoKeyCreateWithIdRequestMsg& req_msg,
+                        CryptoKeyCreateWithIdResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = crypto_stub_->CryptoKeyCreateWithId(&context,
+                                                 req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
+hal_grpc::crypto_update(CryptoKeyUpdateRequestMsg& req_msg,
+                        CryptoKeyUpdateResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = crypto_stub_->CryptoKeyUpdate(&context,
+                                           req_msg, &rsp_msg);
+
+    return status;
+}
+
+
+
 
 }    // namespace iris

@@ -26,6 +26,7 @@
 #include "eth_dev.hpp"
 #include "accel_dev.hpp"
 
+using namespace std;
 
 namespace pt = boost::property_tree;
 
@@ -96,7 +97,7 @@ oprom_type_to_str(OpromType type)
     }
 }
 
-DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mode,
+DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
                              platform_t platform)
 {
     NIC_HEADER_TRACE("Initializing DeviceManager");
@@ -410,7 +411,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 
     switch (type) {
     case MNIC:
-        eth_dev = new Eth(hal, dev_api, dev_spec, pd);
+        eth_dev = new Eth(dev_api, dev_spec, pd);
         eth_dev->SetType(MNIC);
         devices[eth_dev->GetName()] = eth_dev;
         return (Device *)eth_dev;
@@ -418,12 +419,12 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         NIC_LOG_ERR("Unsupported Device Type DEBUG");
         return NULL;
     case ETH:
-        eth_dev = new Eth(hal, dev_api, dev_spec, pd);
+        eth_dev = new Eth(dev_api, dev_spec, pd);
         eth_dev->SetType(type);
         devices[eth_dev->GetName()] = eth_dev;
         return (Device *)eth_dev;
     case ACCEL:
-        accel_dev = new Accel_PF(hal, dev_api, dev_spec, pd);
+        accel_dev = new Accel_PF(dev_api, dev_spec, pd);
         accel_dev->SetType(type);
         devices[accel_dev->GetName()] = accel_dev;
         return (Device *)accel_dev;
@@ -447,18 +448,17 @@ DeviceManager::GetDevice(std::string name)
 }
 
 void
-DeviceManager::SetHalClient(HalClient *hal_client, devapi *dev_api)
+DeviceManager::SetHalClient(devapi *dev_api)
 {
-    hal_client->set_devapi(dev_api);
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH || dev->GetType() == MNIC) {
             Eth *eth_dev = (Eth *)dev;
-            eth_dev->SetHalClient(hal_client, dev_api);
+            eth_dev->SetHalClient(dev_api);
         }
         if (dev->GetType() == ACCEL) {
             Accel_PF *accel_dev = (Accel_PF *)dev;
-            accel_dev->SetHalClient(hal_client, dev_api);
+            accel_dev->SetHalClient(dev_api);
         }
     }
 }
@@ -472,9 +472,8 @@ DeviceManager::HalEventHandler(bool status)
     if (status && !init_done) {
         NIC_LOG_DEBUG("Hal UP: Initializing hal client and creating VRFs.");
         // Instantiate HAL client
-        hal = new HalClient(fwd_mode);
         dev_api = devapi_iris::factory();
-        dev_api->set_fwd_mode((fwd_mode_t)fwd_mode);
+        dev_api->set_fwd_mode(fwd_mode);
         pd->update();
 
         // Create uplinks
@@ -484,7 +483,7 @@ DeviceManager::HalEventHandler(bool status)
         }
 
         // Setting hal clients in all devices
-        SetHalClient(hal, dev_api);
+        SetHalClient(dev_api);
 
         init_done = true;
     }
@@ -518,7 +517,7 @@ DeviceManager::HalEventHandler(bool status)
 }
 
 void
-DeviceManager::LinkEventHandler(hal_port_status_t *evd)
+DeviceManager::LinkEventHandler(port_status_t *evd)
 {
     NIC_HEADER_TRACE("Link Event");
 

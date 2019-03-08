@@ -17,6 +17,13 @@ bool is_multicast(uint64_t mac);
         goto end;                                   \
     }
 
+#define VERIFY_HAL_RETURN() \
+    if (!hal) {                                     \
+        ret = SDK_RET_COMM_FAIL;                    \
+        NIC_LOG_DEBUG("Hal down: ret: {}", ret);    \
+        return ret;                                 \
+    }
+
 } // namepsace iris
 
 #endif /* __UTILS_HPP__ */

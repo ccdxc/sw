@@ -21,7 +21,6 @@
 
 #include "platform/capri/capri_tbl_rw.hpp"
 
-#include "hal_client.hpp"
 #include "pal_compat.hpp"
 
 #include "nic/sdk/platform/evutils/include/evutils.h"
@@ -31,9 +30,13 @@
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/devapi/devapi.hpp"
+#include "devapi_types.hpp"
+#include "pd_client.hpp"
 
 
 #define VERSION_FILE        "/nic/etc/VERSION.json"
+
+using std::string;
 
 enum {
     NICMGR_THREAD_ID_MIN           = 0,
@@ -154,7 +157,7 @@ private:
  */
 class DeviceManager {
 public:
-    DeviceManager(std::string config_file, enum ForwardingMode fwd_mode,
+    DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
                   platform_t platform);
 
     int LoadConfig(std::string path);
@@ -163,11 +166,10 @@ public:
     Device *GetDevice(std::string name);
 
     void HalEventHandler(bool is_up);
-    void LinkEventHandler(hal_port_status_t *evd);
+    void LinkEventHandler(port_status_t *evd);
 
     void CreateUplinkVRFs();
-    // void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
-    void SetHalClient(HalClient *hal_client, devapi *dev_api);
+    void SetHalClient(devapi *dev_api);
 
     void ThreadsWaitJoin(void);
 
@@ -181,16 +183,13 @@ private:
     boost::property_tree::ptree spec;
     std::map<std::string, Device*> devices;
 
-    // HAL Info
-    HalClient *hal;
-    // HalCommonClient *hal_common_client;
     devapi *dev_api;
     PdClient *pd;
     std::map<uint32_t, uplink_t*> uplinks;
 
     bool init_done;
     std::string config_file;
-    ForwardingMode fwd_mode;
+    fwd_mode_t fwd_mode;
 
     Device *AddDevice(enum DeviceType type, void *dev_spec);
 };

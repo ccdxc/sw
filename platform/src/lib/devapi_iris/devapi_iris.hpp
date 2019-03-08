@@ -11,6 +11,8 @@
 
 namespace iris {
 
+using std::string;
+
 class devapi_iris : public devapi {
 private:
     fwd_mode_t fwd_mode_;
@@ -57,6 +59,34 @@ public:
                               port_config_t *config);
     sdk_ret_t port_set_config(uint32_t port_num,
                               port_config_t *config);
+    // Accel APIs
+    sdk_ret_t accel_rgroup_add(string name);
+    sdk_ret_t accel_rgroup_del(string name);
+    sdk_ret_t accel_rgroup_ring_add(string name,
+                                    std::vector<std::pair<const std::string,uint32_t>>& ring_vec);
+    sdk_ret_t accel_rgroup_ring_del(string name,
+                                    std::vector<std::pair<const std::string,uint32_t>>& ring_vec);
+    sdk_ret_t accel_rgroup_reset_set(string name, uint32_t sub_ring,
+                                     bool reset_sense);
+    sdk_ret_t accel_rgroup_enable_set(string name, uint32_t sub_ring,
+                                      bool enable_sense);
+    sdk_ret_t accel_rgroup_pndx_set(string name, uint32_t sub_ring,
+                                    uint32_t val, bool conditional);
+    sdk_ret_t accel_rgroup_info_get(string name, uint32_t sub_ring,
+                                    accel_rgroup_rinfo_rsp_cb_t rsp_cb_func,
+                                    void *user_ctx,
+                                    uint32_t *ret_num_entries);
+    sdk_ret_t accel_rgroup_indices_get(string name, uint32_t sub_ring,
+                                       accel_rgroup_rindices_rsp_cb_t rsp_cb_func,
+                                       void *user_ctx,
+                                       uint32_t *ret_num_entries);
+    sdk_ret_t accel_rgroup_metrics_get(string name, uint32_t sub_ring,
+                                       accel_rgroup_rmetrics_rsp_cb_t rsp_cb_func,
+                                       void *user_ctx,
+                                       uint32_t *ret_num_entries);
+    sdk_ret_t crypto_key_index_upd(uint32_t key_index,
+                                   crypto_key_type_t type,
+                                   void *key, uint32_t key_size);
 };
 
 } // namespace iris

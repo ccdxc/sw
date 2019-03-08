@@ -18,6 +18,7 @@
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 
 #include "delphic.hpp"
+#include "devapi_types.hpp"
 
 #define MAX_STRING_BUFF_SIZE   100
 
@@ -26,7 +27,7 @@ using namespace std;
 DeviceManager *devmgr;
 pciemgr *pciemgr;
 static string config_file;
-enum ForwardingMode fwd_mode = FWD_MODE_CLASSIC_NIC;
+fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
 platform_t platform = PLATFORM_NONE;
 bool g_hal_up = false;
 extern void nicmgr_do_client_registration(void);
@@ -111,7 +112,7 @@ int main(int argc, char *argv[])
             config_file = DeviceManager::ParseDeviceConf(string(optarg));
             break;
         case 's':
-            fwd_mode = FWD_MODE_SMART_NIC;
+            fwd_mode = sdk::platform::FWD_MODE_SMART;
             break;
         case 'p':
             if (string(optarg) == "sim") {

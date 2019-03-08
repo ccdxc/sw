@@ -37,9 +37,7 @@ namespace pt = boost::property_tree;
  */
 class Eth : public Device {
 public:
-    Eth(HalClient *hal_client,
-        devapi *dev_api,
-        // HalCommonClient *hal_common_client,
+    Eth(devapi *dev_api,
         void *dev_spec,
         PdClient *pd_client);
 
@@ -49,11 +47,10 @@ public:
     enum status_code CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
 
-    void LinkEventHandler(hal_port_status_t *evd);
+    void LinkEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
 
-    // void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
-    void SetHalClient(HalClient *hal_client, devapi *dapi);
+    void SetHalClient(devapi *dapi);
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
 
@@ -63,9 +60,7 @@ private:
     // PD Info
     PdClient *pd;
     // HAL Info
-    HalClient *hal;
     devapi *dev_api;
-    // HalCommonClient *hal_common_client;
     bool hal_status;
     // Resources
     std::map<uint64_t, EthLif *> lif_map;

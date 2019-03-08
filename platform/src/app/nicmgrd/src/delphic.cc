@@ -11,6 +11,7 @@
 #include "delphic.hpp"
 #include "nicmgrd.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
+#include "platform/src/lib/devapi_iris/port.hpp"
 
 using namespace std;
 using namespace upgrade;
@@ -100,12 +101,13 @@ error port_status_handler::update_port_status(PortStatusPtr port) {
         return error::OK();
     }
 
-    hal_port_status_t st = {0};
+    port_status_t st = {0};
 
     st.id = port->key_or_handle().port_id();
     st.status = port->oper_status();
     NIC_FUNC_DEBUG("{}: port_speed {}", port->key_or_handle().port_id(), port->port_speed());
-    st.speed = HalClient::PortSpeedInMbps(port->port_speed());
+    // st.speed = HalClient::PortSpeedInMbps(port->port_speed());
+    st.speed = devapi_port::port_speed_enum_to_mbps(port->port_speed());
     st.xcvr.state = port->xcvr_status().state();
     st.xcvr.pid = port->xcvr_status().pid();
     st.xcvr.phy = port->xcvr_status().cable_type();

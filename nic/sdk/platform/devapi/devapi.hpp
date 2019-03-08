@@ -4,11 +4,14 @@
 #ifndef __DEVAPI_HPP__
 #define __DEVAPI_HPP__
 
+#include <string>
 #include "include/sdk/base.hpp"
 #include "devapi_types.hpp"
 
 namespace sdk {
 namespace platform {
+
+using std::string;
 
 class devapi {
 private:
@@ -50,6 +53,34 @@ public:
                                       port_config_t *config) = 0;
     // Generic APIs
     virtual sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode) = 0;
+    // Accel APIs
+    virtual sdk_ret_t accel_rgroup_add(string name) = 0;
+    virtual sdk_ret_t accel_rgroup_del(string name) = 0;
+    virtual sdk_ret_t accel_rgroup_ring_add(string name,
+                                            std::vector<std::pair<const std::string,uint32_t>>& ring_vec) = 0;
+    virtual sdk_ret_t accel_rgroup_ring_del(string name,
+                                            std::vector<std::pair<const std::string,uint32_t>>& ring_vec) = 0;
+    virtual sdk_ret_t accel_rgroup_reset_set(string name, uint32_t sub_ring,
+                                             bool reset_sense) = 0;
+    virtual sdk_ret_t accel_rgroup_enable_set(string name, uint32_t sub_ring,
+                                              bool enable_sense) = 0;
+    virtual sdk_ret_t accel_rgroup_pndx_set(string name, uint32_t sub_ring,
+                                            uint32_t val, bool conditional) = 0;
+    virtual sdk_ret_t accel_rgroup_info_get(string name, uint32_t sub_ring,
+                                            accel_rgroup_rinfo_rsp_cb_t rsp_cb_func,
+                                            void *user_ctx,
+                                            uint32_t *ret_num_entries) = 0;
+    virtual sdk_ret_t accel_rgroup_indices_get(string name, uint32_t sub_ring,
+                                               accel_rgroup_rindices_rsp_cb_t rsp_cb_func,
+                                               void *user_ctx,
+                                               uint32_t *ret_num_entries) = 0;
+    virtual sdk_ret_t accel_rgroup_metrics_get(string name, uint32_t sub_ring,
+                                               accel_rgroup_rmetrics_rsp_cb_t rsp_cb_func,
+                                               void *user_ctx,
+                                               uint32_t *ret_num_entries) = 0;
+    virtual sdk_ret_t crypto_key_index_upd(uint32_t key_index,
+                                           crypto_key_type_t type,
+                                           void *key, uint32_t key_size) = 0;
 };
 
 }    // namespace platform
