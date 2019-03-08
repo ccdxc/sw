@@ -12,7 +12,6 @@
 #include "addr_list.hpp"
 #include "port_list.hpp"
 #include "sg_list.hpp"
-#include "icmp_list.hpp"
 
 using types::IPProtocol;
 using acl::acl_rule_data_t;
@@ -24,12 +23,17 @@ using acl::ref_t;
 using acl::acl_config_t;
 namespace hal {
 
+typedef struct rule_match_icmp_s {
+    uint32_t    icmp_type;
+    uint32_t    icmp_code;
+} __PACK__ rule_match_icmp_t;
+
 typedef struct rule_match_app_s {
-    dllist_ctxt_t    l4srcport_list; // list elems of type port_list_elem_t;
-    dllist_ctxt_t    l4dstport_list; // list elems of type port_list_elem_t;
-    dllist_ctxt_t    icmp_list;      // list elems of type icmp - TBD
-    dllist_ctxt_t    rpc_list;       // list elems of type rpc/msrpc - TBD
-    uint32_t         esp_spi;       // list elems of type Esp - TBD
+    dllist_ctxt_t      l4srcport_list; // list elems of type port_list_elem_t;
+    dllist_ctxt_t      l4dstport_list; // list elems of type port_list_elem_t;
+    dllist_ctxt_t      rpc_list;       // list elems of type rpc/msrpc - TBD
+    uint32_t           esp_spi;       // list elems of type Esp - TBD
+    rule_match_icmp_t  icmp;
 } __PACK__ rule_match_app_t;
 
 typedef struct rule_match_s {
@@ -133,9 +137,6 @@ typedef struct rule_ctr_s {
 
 #define RULE_MATCH_GET_ADDR(addr_entry)  \
     dllist_entry(addr_entry, addr_list_elem_t, list_ctxt)
-
-#define RULE_MATCH_GET_ICMP(icmp_entry)  \
-    dllist_entry(icmp_entry, icmp_list_elem_t, list_ctxt)
 
 #define RULE_MATCH_GET_PORT(port_entry)  \
     dllist_entry(port_entry, port_list_elem_t, list_ctxt)

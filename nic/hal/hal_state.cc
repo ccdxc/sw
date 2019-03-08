@@ -350,12 +350,6 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
-    slab = register_slab(HAL_SLAB_ICMP_LIST_ELEM,
-                         slab_args={.name="icmp_list_elem",
-                        .size=sizeof(hal::icmp_list_elem_t), .num_elements=64,
-                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    SDK_ASSERT_RETURN((slab != NULL), false);
-
     slab = register_slab(HAL_SLAB_MACADDR_LIST_ELEM,
                          slab_args={.name="macaddr_list_elem",
                         .size=sizeof(hal::mac_addr_list_elem_t), .num_elements=64,

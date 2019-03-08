@@ -41,9 +41,10 @@ rule_match_app_init (rule_match_app_t *app)
 {
     dllist_reset(&app->l4srcport_list);
     dllist_reset(&app->l4dstport_list);
-    dllist_reset(&app->icmp_list);
     dllist_reset(&app->rpc_list);
     app->esp_spi = 0;
+    app->icmp.icmp_type = 0;
+    app->icmp.icmp_code = 0;
 }
 
 void
@@ -65,7 +66,6 @@ rule_match_app_cleanup (rule_match_t *match)
 
    port_list_cleanup(&rule_match_app->l4srcport_list);
    port_list_cleanup(&rule_match_app->l4dstport_list);
-   icmp_list_cleanup(&rule_match_app->icmp_list);
    //TBD - cleanup icmp, rpc, esp
 }
 
@@ -163,15 +163,10 @@ static inline hal_ret_t
 rule_match_icmp_app_spec_extract (const types::RuleMatch_AppMatch spec,
                                   rule_match_app_t *app)
 {
-    hal_ret_t ret;
     const types::RuleMatch_ICMPAppInfo icmp_info = spec.icmp_info(); 
 
-    ret = icmp_list_elem_icmp_spec_handle(icmp_info.icmp_type(), 
-                                           icmp_info.icmp_code(),
-                                           &app->icmp_list);
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
+    app->icmp.icmp_type = icmp_info.icmp_type();
+    app->icmp.icmp_code = icmp_info.icmp_code();
     return HAL_RET_OK;
 }
 
@@ -635,10 +630,12 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
             }
         } else if (proto == types::IPPROTO_ICMP ||
                    proto == types::IPPROTO_ICMPV6) {
+            // ICMP Type and code mask doesnt come from Agent.
+            // If the type/code is 0 then its supposed to be any, hence we mark the mask as 0
             rule->field[ICMP_TYPE].value.u32 = icmp_type;
-            rule->field[ICMP_TYPE].mask_range.u32 = 0xFFFFFFFF;
+            rule->field[ICMP_TYPE].mask_range.u32 = (icmp_type)?0xFFFFFFFF:0x0;
             rule->field[ICMP_CODE].value.u32 = icmp_code;
-            rule->field[ICMP_CODE].mask_range.u32 = 0xFFFFFFFF;
+            rule->field[ICMP_CODE].mask_range.u32 = (icmp_code)?0xFFFFFFFF:0x0;
         } else if (proto == types::IPPROTO_ESP) {
             rule->field[PORT_SRC].value.u32 = (spi >> 16) & 0xFFFF;
             rule->field[PORT_SRC].mask_range.u32 = (spi >> 16) & 0xFFFF;
@@ -684,9 +681,9 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
     addr_list_elem_t     *src_addr = NULL, *dst_addr = NULL;
     port_list_elem_t     *dst_port = NULL, *src_port = NULL;
     sg_list_elem_t       *src_sg = NULL, *dst_sg = NULL;
-    dllist_ctxt_t        *sa_entry = NULL, *da_entry = NULL, *sp_entry = NULL, *dp_entry = NULL, *icmp_entry = NULL;
+    dllist_ctxt_t        *sa_entry = NULL, *da_entry = NULL, *sp_entry = NULL, *dp_entry = NULL;
     dllist_ctxt_t        *mac_sa_entry = NULL, *mac_da_entry = NULL, *dst_sg_entry = NULL, *src_sg_entry = NULL;
-    icmp_list_elem_t     *icmp = NULL;
+    rule_match_icmp_t     icmp;
 
     /* SRC-SG loop */
     dllist_for_each(src_sg_entry, &match->src_sg_list) {
@@ -747,41 +744,39 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                     } //  < push it to the vector of ipv4_rule_t >
                                 }
                             } else if ((match->proto == types::IPPROTO_ICMP) || (match->proto == types::IPPROTO_ICMPV6)) {
-                                /* ICMP loop */
-                                dllist_for_each(icmp_entry, &app_match->icmp_list) {
-                                    icmp = RULE_MATCH_GET_ICMP(icmp_entry);
-                                    rule = construct_rule_fields(src_addr, dst_addr,  mac_src_addr,
+                                /* ICMP */
+                                icmp = app_match->icmp;
+                                rule = construct_rule_fields(src_addr, dst_addr,  mac_src_addr,
                                                         mac_dst_addr, src_port,
                                                         dst_port, src_sg, dst_sg, match->proto,
-                                                        icmp->icmp_type, icmp->icmp_code, 0,
+                                                        icmp.icmp_type, icmp.icmp_code, 0,
                                                         match->ethertype);
-                                    if (!rule) {
-                                        HAL_TRACE_DEBUG("rule allocation failed");
-                                        continue;
-                                    } else {
-                                        PRINT_RULE_FIELDS(rule);
-                                    }
-                                    rule->data.priority = rule_prio;
-                                    rule->data.userdata = ref_count;
-                                    if (add) {
-                                        /* Rule add */
-                                        ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
-                                        if (ret != HAL_RET_OK) {
-                                            HAL_TRACE_ERR("Unable to create the acl rules");
-                                            return ret;
-                                        }
-                                        /* Incremented here, corresponding decrement in acl_rule_deref */
-                                        ref_inc((acl::ref_t *)ref_count);
-                                    } else {
-                                        /* Rule delete */
-                                        ret = acl_del_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
-                                        if (ret != HAL_RET_OK) {
-                                            HAL_TRACE_ERR("Unable to delete the acl rules");
-                                            return ret;
-                                        }
-                                        /* acl_rule_deref calls ref_dec of the userdata (refcount) */
-                                        acl_rule_deref((const acl_rule_t *)rule);
-                                    }
+                                if (!rule) {
+                                    HAL_TRACE_DEBUG("rule allocation failed");
+                                    continue;
+                                } else {
+                                    PRINT_RULE_FIELDS(rule);
+                                }
+                                rule->data.priority = rule_prio;
+                                rule->data.userdata = ref_count;
+                                if (add) {
+                                   /* Rule add */
+                                   ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
+                                   if (ret != HAL_RET_OK) {
+                                       HAL_TRACE_ERR("Unable to create the acl rules");
+                                       return ret;
+                                   }
+                                   /* Incremented here, corresponding decrement in acl_rule_deref */
+                                   ref_inc((acl::ref_t *)ref_count);
+                                } else {
+                                   /* Rule delete */
+                                   ret = acl_del_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
+                                   if (ret != HAL_RET_OK) {
+                                       HAL_TRACE_ERR("Unable to delete the acl rules");
+                                       return ret;
+                                   }
+                                   /* acl_rule_deref calls ref_dec of the userdata (refcount) */
+                                   acl_rule_deref((const acl_rule_t *)rule);
                                 }
                             } else if ((match->proto == types::IPPROTO_ESP) || (match->proto == types::IPPROTO_NONE)) {
                                 uint32_t spi  = app_match->esp_spi;

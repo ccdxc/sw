@@ -59,8 +59,8 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
         switch ( ctx.get_key().proto) {
         case types::IPPROTO_ICMP:
         case types::IPPROTO_ICMPV6:
-            acl_key.port_src =  ctx.get_key().icmp_id;
-            acl_key.port_dst = ((ctx.get_key().icmp_type << 8) |  ctx.get_key().icmp_code);
+            acl_key.icmp_type =  ctx.get_key().icmp_type;
+            acl_key.icmp_code =  ctx.get_key().icmp_code;
             break;
         case types::IPPROTO_ESP:
             acl_key.port_src = ctx.get_key().spi >> 16 & 0xFFFF;

@@ -110,8 +110,8 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
     switch ( ctx.key().proto) {
     case types::IPPROTO_ICMP:
     case types::IPPROTO_ICMPV6:
-        acl_key.port_src =  ctx.key().icmp_id;
-        acl_key.port_dst = ((ctx.key().icmp_type << 8) |  ctx.key().icmp_code);
+        acl_key.icmp_type =  ctx.key().icmp_type;
+        acl_key.icmp_code = ctx.key().icmp_code;
         break;
     case types::IPPROTO_ESP:
         acl_key.port_src = ctx.key().spi >> 16 & 0xFFFF;
