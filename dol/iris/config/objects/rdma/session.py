@@ -418,3 +418,5 @@ class RdmaSessionObjectHelper:
         return self.__get_matching_sessions(selectors)
 
 RdmaSessionHelper = RdmaSessionObjectHelper()
+def GetMatchingObjects(selectors):
+    return RdmaSessionHelper.GetMatchingConfigObjects(selectors)

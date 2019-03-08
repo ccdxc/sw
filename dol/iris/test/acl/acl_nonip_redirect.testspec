@@ -2,6 +2,7 @@
 # orig flow: uplink -- uplink
 # redirected flow: uplink -- uplink
 selectors:
+    root: ref://store/templates/id=SESSION
     src:
         tenant      : filter://type=TENANT
         segment     : filter://fabencap=VLAN,native=False

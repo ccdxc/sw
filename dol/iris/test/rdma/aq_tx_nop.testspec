@@ -1,5 +1,6 @@
 # Test Spec
 selectors:
+    root: ref://store/templates/id=RDMA_SESSION
     root            : ref://store/templates/id=LIF
     lif             : filter://enable_rdma=True
 

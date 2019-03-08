@@ -2,6 +2,7 @@
 # orig flow: tunnel -- tunnel
 # redirected flow: tunnel -- tunnel
 selectors:
+    root: ref://store/templates/id=SESSION
     src:
         tenant      : filter://type=TENANT
         segment     : filter://fabencap=VXLAN,native=False

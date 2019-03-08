@@ -7,8 +7,6 @@ import infra.common.timeprofiler    as timeprofiler
 timeprofiler.TotalTimeProfiler.Start()
 timeprofiler.InitTimeProfiler.Start()
 paths = [
-    '/nic/build/x86_64/iris/gen/proto/',
-    '/nic/build/x86_64/gft/gen/proto/',
     '/mbt/',
     '/nic',
     '/nic/sdk',
@@ -30,15 +28,13 @@ for path in paths:
 
 # This import will parse all the command line options.
 import infra.common.glopts as glopts
-import infra.common.loader as loader
-from infra.common.logging import logger
-
 glopts.ValidateGlopts()
 
-import infra.factory.factory    as factory
-import infra.e2e.main           as e2e
-
-from infra.asic.pktcollector    import PacketCollector
+import infra.common.loader as loader
+import infra.factory.factory as factory
+import infra.e2e.main as e2e
+from infra.common.logging import logger
+from infra.asic.pktcollector import PacketCollector
 
 def GetPipeline():
     pipeline = loader.ImportModule(glopts.GlobalOptions.pipeline,

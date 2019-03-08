@@ -18,8 +18,6 @@ import infra.factory.testcase   as testcase
 import infra.factory.factory    as factory
 
 from infra.factory.store                import FactoryStore as FactoryStore
-from iris.config.objects.session        import SessionHelper
-from iris.config.objects.rdma.session   import RdmaSessionHelper
 from infra.common.logging               import logger
 from infra.common.glopts                import GlobalOptions
 from infra.config.store                 import ConfigStore  as ConfigStore
@@ -348,17 +346,11 @@ class DolModuleRunner(ModuleRunner):
         if not self.module.testspec:
             return
 
-        if hasattr(self.module.testspec.selectors, "root"):
-            obj = self.module.testspec.selectors.root.Get(ConfigStore)
-            module_hdl = loader.ImportModule(obj.meta.package, obj.meta.module,
-                                             GlobalOptions.pipeline)
-            assert(module_hdl)
-            objs = module_hdl.GetMatchingObjects(self.module.testspec.selectors)
-        else:
-            if self.module.testspec.selectors.IsRdmaSessionBased():
-                objs = RdmaSessionHelper.GetMatchingConfigObjects(self.module.testspec.selectors)
-            else:
-                objs = SessionHelper.GetMatchingConfigObjects(self.module.testspec.selectors)
+        rootobj = self.module.testspec.selectors.root.Get(ConfigStore)
+        module_hdl = loader.ImportModule(rootobj.meta.package, rootobj.meta.module,
+                                         GlobalOptions.pipeline)
+        assert(module_hdl)
+        objs = module_hdl.GetMatchingObjects(self.module.testspec.selectors)
 
         self.module.testspec.selectors.roots = objs
         if len(objs) == 0:

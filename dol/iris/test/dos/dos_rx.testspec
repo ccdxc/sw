@@ -1,5 +1,6 @@
 # Test Spec
 selectors:
+    root: ref://store/templates/id=SESSION
     src:
         tenant      : filter://type=TENANT,label=DOS
         segment     : filter://any

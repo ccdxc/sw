@@ -1,5 +1,6 @@
 # Test Spec
 selectors:
+    root: ref://store/templates/id=SESSION
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://broadcast_policy=2,fabencap=VLAN,access=True

@@ -1,5 +1,6 @@
 # Ethernet RX Sample TestSpec file.
 selectors:
+    root: ref://store/templates/id=SESSION
     src:
         tenant  : filter://any
         segment : filter://any

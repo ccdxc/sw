@@ -1,5 +1,6 @@
 # Test Spec
 selectors:
+    root: ref://store/templates/id=RDMA_SESSION
 #    src:
 #        tenant      : filter://overlay=VLAN,type=TENANT
 #        segment     : filter://any

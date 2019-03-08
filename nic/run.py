@@ -628,7 +628,7 @@ def run_dol(args):
     os.chdir(dol_dir)
 
     #log = open(dol_log, "w")
-    cmd = ['./main.py', '--topo', args.topology ]
+    cmd = ['./main.py', '--topo', args.topology, '--pipeline', args.pipeline ]
     if args.modlist is not None:
         cmd.append('--modlist')
         cmd.append(args.modlist)
@@ -988,6 +988,8 @@ def main():
                         help="run with model logs enabled")
     parser.add_argument('--topo', dest='topology', default='base',
                         help='Run for a specific topology')
+    parser.add_argument('--pipeline', dest='pipeline', default='iris',
+                        help='Run for a specific pipeline')
     parser.add_argument('--modlist', dest='modlist',
                         default=None, help='Module List File')
     parser.add_argument('--feature', dest='feature',
@@ -1139,6 +1141,10 @@ def main():
     os.environ['MODEL_SHMKEY_PROJID'] = '1'
     if args.rtl:
         os.environ['HAL_PLATFORM_MODE_RTL'] = '1'
+
+    # Hack: Since GFT and IRIS are combined in DOLs
+    if args.pipeline == 'gft':
+        args.pipeline = 'iris'
 
     if args.cleanup:
         if os.path.isfile(lock_file):

@@ -1,6 +1,7 @@
 # Test Spec
 # Test Spec
 selectors:
+    root: ref://store/templates/id=SESSION
     src:
         tenant      : filter://overlay=VXLAN,type=TENANT
         segment     : filter://fabencap=VXLAN

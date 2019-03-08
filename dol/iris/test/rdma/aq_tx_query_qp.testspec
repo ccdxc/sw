@@ -1,5 +1,6 @@
 # Test Spec
 selectors:
+    root: ref://store/templates/id=RDMA_SESSION
     rdmasession     :
         lqp         : filter://svc=0
         rqp         : filter://svc=0

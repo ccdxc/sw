@@ -1,10 +1,11 @@
 # RDMA Session Object Template
 meta:
     id: RDMA_SESSION
+    package : config.objects.rdma
+    module  : session
     feature_set:
         - iris
         - gft
-
 
 lqp: None
 rqp: None

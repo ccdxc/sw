@@ -592,5 +592,4 @@ class SessionObjectHelper:
 SessionHelper = SessionObjectHelper()
 
 def GetMatchingObjects(selectors):
-    sessions =  Store.objects.GetAllByClass(SessionObject)
-    return [session for session in sessions if session.IsFilterMatch(selectors)]
+    return SessionHelper.GetMatchingConfigObjects(selectors)
