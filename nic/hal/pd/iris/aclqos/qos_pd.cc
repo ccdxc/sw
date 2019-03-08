@@ -324,7 +324,7 @@ program_oq (tm_port_t port, tm_q_t oq, qos_class_t *qos_class)
     }
 
     // Update the oq config
-    sdk_ret = capri_tm_scheduler_map_update(port, TM_QUEUE_NODE_TYPE_LEVEL_0,
+    sdk_ret = capri_tm_scheduler_map_update(port, TM_QUEUE_NODE_TYPE_LEVEL_1,
                                         oq, &q_node_params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -667,6 +667,102 @@ qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
 }
 #undef QOS_ACTION
 
+static hal_ret_t
+qos_class_pd_sched_pgm_oq (tm_port_t port,
+                           tm_q_t    oq,
+                           qos_class_t *qos_class)
+{
+    hal_ret_t ret     = HAL_RET_OK;
+    sdk_ret_t sdk_ret = SDK_RET_OK;
+    pb_sched_node_input_info_t input_info;
+
+    if (!capri_tm_q_valid(oq)) {
+        return HAL_RET_OK;
+    }
+
+    memset(&input_info, 0, sizeof(pb_sched_node_input_info_t));
+
+    switch(qos_class->sched.type) {
+    case QOS_SCHED_TYPE_DWRR:
+        input_info.weight = qos_class->sched.dwrr.bw;
+        break;
+
+    default:
+    case QOS_SCHED_TYPE_STRICT:
+        input_info.is_strict = true;
+        HAL_TRACE_DEBUG("sp_rate_mbps: {}", qos_class->sched.strict.bps);
+        input_info.sp_rate_mbps = qos_class->sched.strict.bps;
+        sdk_ret = cap_pb_sched_spq_pgm (0, 0, port, oq, &input_info);
+
+        // TODO MBT: revert after fixing delete of scheduler programming
+        sdk_ret = SDK_RET_OK;
+
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        break;
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+qos_class_pd_sched_pgm (pd_qos_class_t *pd_qos_class)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    tm_port_t            port;
+    qos_class_t          *qos_class = pd_qos_class->pi_qos_class;
+    tm_q_t               oq;
+
+    port = TM_PORT_INGRESS;
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
+        oq = pd_qos_class->p4_ig_q[i];
+        ret = qos_class_pd_sched_pgm_oq(port, oq, qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the oq params for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+    }
+
+    port = TM_PORT_EGRESS;
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(pd_qos_class->p4_eg_q); i++) {
+        oq = pd_qos_class->p4_eg_q[i];
+        ret = qos_class_pd_sched_pgm_oq(port, oq, qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the oq params for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+    }
+
+    // On the DMA port
+    for (port = TM_DMA_PORT_BEGIN; port <= TM_DMA_PORT_END; port++) {
+        ret = qos_class_pd_sched_pgm_oq(port, pd_qos_class->dest_oq, qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the oq params for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+    }
+
+    // On the uplink port
+    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        if (pd_qos_class->dest_oq_type == HAL_PD_QOS_OQ_COMMON) {
+            ret = qos_class_pd_sched_pgm_oq(port, pd_qos_class->dest_oq, qos_class);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error programming the oq params for "
+                              "Qos-class {} on port {} ret {}",
+                              qos_class->key, port, ret);
+                return ret;
+            }
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
 // ----------------------------------------------------------------------------
 // Program HW
 // ----------------------------------------------------------------------------
@@ -700,16 +796,14 @@ qos_class_pd_program_hw (pd_qos_class_t *pd_qos_class)
         return ret;
     }
 
-#if 0
-    ret = qos_class_pd_program_scheduler(pd_qos_class);
+    ret = qos_class_pd_sched_pgm(pd_qos_class);
     if (ret != HAL_RET_OK) {
         // TODO: What to do in case of hw programming error ?
-        HAL_TRACE_ERR("Error programming the p4 ports for "
+        HAL_TRACE_ERR("Error programming the scheduler for "
                       "Qos-class {} ret {}",
                       qos_class->key, ret);
         return ret;
     }
-#endif
 
     ret = qos_class_pd_program_qos_table(pd_qos_class);
     if (ret != HAL_RET_OK) {

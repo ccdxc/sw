@@ -34,7 +34,6 @@ namespace sdk {
 namespace platform {
 namespace capri {
 
-
 static cpp_int_helper cpp_helper;
 
 qos_profile_t qos_profile = {true, true, 9216, 8, 25, 27, 16, 2, {0, 24}};
@@ -1030,14 +1029,18 @@ capri_tm_scheduler_map_update (uint32_t port,
                       port);
         return sdk::SDK_RET_INVALID_ARG;
     }
-    switch(node_type) {
-        case TM_QUEUE_NODE_TYPE_LEVEL_0:
+
+    switch (node_type) {
+        case TM_QUEUE_NODE_TYPE_LEVEL_1:
             ret = capri_tm_scheduler_map_update_l0(port, node, node_params);
             break;
-        case TM_QUEUE_NODE_TYPE_LEVEL_1:
+
+        case TM_QUEUE_NODE_TYPE_LEVEL_2:
             ret = capri_tm_scheduler_map_update_l1(port, node, node_params);
             break;
-        case TM_QUEUE_NODE_TYPE_LEVEL_2:
+
+        default:
+        case TM_QUEUE_NODE_TYPE_LEVEL_3:
             ret = capri_tm_scheduler_map_update_l2(port, node, node_params);
             break;
     }
@@ -2165,7 +2168,729 @@ void cap_pb_cfg_sched_node(int chip_id, int inst_id, int level,
     pbc_csr.dhs_sched.entry[0].write();
 }
 
+pb_sched_port_cfg_t pb_sched_port_cfg[CAPRI_TM_MAX_PORTS];
+
+static bool
+cap_pb_sched_node_set (int port,
+                       int node_type,
+                       int node,
+                       int queue)
+{
+    bool set = pb_sched_port_cfg[port].node_cfg[node_type].input_cfg[node].
+                                    inputs_bitmap->is_index_allocated(queue);
+    if (set == true) {
+        SDK_TRACE_DEBUG("port: %d, node_type; %d, node: %d, q: %d",
+                        port, node_type, node, queue);
+    }
+
+    return set;
+}
+
+sdk_ret_t
+cap_pb_sched_node_alloc (int port,
+                         tm_queue_node_type_t node_type,
+                         uint32_t *index)
+{
+    indexer::status status = indexer::status::SUCCESS;
+    indexer *node_bitmap = pb_sched_port_cfg[port].
+                            node_cfg[node_type].node_bitmap;
+
+    if (NULL == node_bitmap) {
+        SDK_TRACE_ERR("node_bitmap indexer NULL. "
+                      "port: %u, node_type: %u, index: %u",
+                      port, node_type, *index);
+        return SDK_RET_ERR;
+    }
+
+    if (*index == 0xFFFFFFFF) {
+        status = node_bitmap->alloc(index, true, 1);
+    } else {
+        status = node_bitmap->alloc_withid(*index, 1);
+    }
+
+    if (status != indexer::status::SUCCESS) {
+        SDK_TRACE_ERR("Indexer allocation failed. "
+                      "port: %u, node_type: %u, index: %u",
+                      port, node_type, *index);
+        return SDK_RET_ERR;
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+cap_pb_sched_inputs_bitmap_free (int port,
+                                 tm_queue_node_type_t node_type,
+                                 int node_index,
+                                 int input_index)
+{
+    indexer::status status = indexer::status::SUCCESS;
+    indexer *inputs_bitmap = pb_sched_port_cfg[port].node_cfg[node_type].
+                                    input_cfg[node_index].inputs_bitmap;
+    if (NULL == inputs_bitmap) {
+        SDK_TRACE_ERR("inputs_bitmap indexer NULL. "
+                      "port: %u, node_type: %u, node_index: %u",
+                      "input_index: %u",
+                      port, node_type, node_index, input_index);
+        return SDK_RET_ERR;
+    }
+
+    status = inputs_bitmap->free(input_index);
+    if (status != indexer::status::SUCCESS) {
+        SDK_TRACE_ERR("Indexer free failed. "
+                      "port: %u, node_type: %u, node_index: %u",
+                      "input_index: %u",
+                      port, node_type, node_index, input_index);
+        return SDK_RET_ERR;
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+cap_pb_sched_inputs_bitmap_alloc (int port,
+                                  tm_queue_node_type_t node_type,
+                                  int node_index,
+                                  uint32_t *input_index,
+                                  pb_sched_node_input_info_t *input_info)
+{
+    indexer::status status = indexer::status::SUCCESS;
+    pb_sched_node_input_cfg_t *input_cfg = &pb_sched_port_cfg[port].
+                                node_cfg[node_type].input_cfg[node_index];
+
+    indexer *inputs_bitmap = input_cfg->inputs_bitmap;
+    if (NULL == inputs_bitmap) {
+        SDK_TRACE_ERR("inputs_bitmap indexer NULL. "
+                      "port: %u, node_type: %u, node_index: %u",
+                      "input_index: %u",
+                      port, node_type, node_index, *input_index);
+        return SDK_RET_ERR;
+    }
+
+    if (*input_index == 0xFFFFFFFF) {
+        status = inputs_bitmap->alloc(input_index, true, 1);
+    } else {
+        status = inputs_bitmap->alloc_withid(*input_index, 1);
+    }
+
+    if (status != indexer::status::SUCCESS) {
+        SDK_TRACE_ERR("Indexer alloc failed. "
+                      "port: %u, node_type: %u, node_index: %u",
+                      "input_index: %u",
+                      port, node_type, node_index, *input_index);
+        return SDK_RET_ERR;
+    }
+
+    input_cfg->num_inputs += 1;
+    input_cfg->total_weights += input_info->weight;
+
+    memcpy(&input_cfg->input_info[*input_index],
+           input_info,
+           sizeof(pb_sched_node_input_info_t));
+
+    return SDK_RET_OK;
+}
+
+bool
+cap_pb_sched_find_and_remove_index (int port,
+                                    tm_queue_node_type_t node_type,
+                                    int input_index,
+                                    uint32_t *node_index,
+                                    bool remove)
+{
+    pb_sched_node_cfg_t *node_cfg =
+                        &pb_sched_port_cfg[port].node_cfg[node_type];
+
+    for (uint32_t node = 0; node < CAPRI_TM_MAX_SCHED_NODES; ++node) {
+        pb_sched_node_input_cfg_t *input_cfg =
+                                    &node_cfg->input_cfg[node];
+        indexer *inputs_bitmap = input_cfg->inputs_bitmap;
+        if (inputs_bitmap->is_index_allocated(input_index) == true) {
+            input_cfg->num_inputs -= 1;
+            input_cfg->total_weights -=
+                            input_cfg->input_info[input_index].weight;
+
+            if (remove == true) {
+                inputs_bitmap->free(input_index);
+            }
+
+            *node_index = node;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+sdk_ret_t
+cap_pb_sched_node_pgm (int chip_id, int inst_id, int port,
+                       pb_sched_node_cfg_t *node_cfg,
+                       tm_queue_node_type_t node_type,
+                       uint32_t node)
+{
+    pb_sched_node_input_cfg_t *input_cfg = &node_cfg->input_cfg[node];
+
+    for (uint32_t input = 0; input < CAPRI_TM_MAX_SCHED_NODE_INPUTS;
+                                                    ++input) {
+        if (input_cfg->inputs_bitmap->is_index_allocated(input) == false) {
+            continue;
+        }
+
+        pb_sched_node_input_info_t *input_info =
+                                   &input_cfg->input_info[input];
+
+        input_info->dwrr_ratio = (input_info->weight * 100.0) /
+                                            input_cfg->total_weights;
+
+        if (input_info->is_strict == true) {
+            SDK_TRACE_DEBUG("bypass_timer: %u, input_info->sp_rate_mbps: %u",
+                            input_info->priority_bypass_timer,
+                            input_info->sp_rate_mbps);
+
+            if (input_info->priority_bypass_timer != 0) {
+                input_info->cfg_quota = 10 + (CAPRI_TM_SCHED_TIMER % 1000);
+            } else {
+                input_info->cfg_quota = ((input_info->sp_rate_mbps *
+                            (unsigned long long) 64 * CAPRI_TM_SCHED_TIMER)/
+                            (CAPRI_TM_CLK_PERIOD * CAPRI_TM_BUS_WIDTH));
+            }
+
+            SDK_TRACE_DEBUG("cfg_quota: %u", input_info->cfg_quota);
+        } else {
+            input_info->cfg_quota = input_info->dwrr_ratio * CAPRI_TM_DWRR_UNIT
+                                        * input_cfg->total_weights;
+        }
+
+        cap_pb_cfg_sched_node(chip_id, inst_id, (uint32_t)node_type + 1,
+                              port, input, input_info->cfg_quota);
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+cap_pb_sched_l1_update (tm_port_t port,
+                        uint32_t  node,
+                        uint32_t  input,
+                        bool      is_strict,
+                        bool      reset)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cpp_int node_val;
+    cpp_int strict_val;
+    uint32_t val = 1;
+
+    if (reset == true) {
+        val = 0;
+    }
+
+    switch (port) {
+//::
+//:: for p in range(TM_PORTS):
+//::
+    case ${p}:
+        if (is_strict == true) {
+            pbc_csr.port_${p}.cfg_oq_arb_l1_strict.read();
+
+            strict_val = pbc_csr.port_${p}.cfg_oq_arb_l1_strict.priority();
+            cpp_helper.set_slc(strict_val, val, input, input);
+
+            pbc_csr.port_${p}.cfg_oq_arb_l1_strict.priority(strict_val);
+            pbc_csr.port_${p}.cfg_oq_arb_l1_strict.write();
+        }
+        switch (node) {
+//::
+//::     for node in range(16):
+//::
+        case ${node}:
+            pbc_csr.port_${p}.cfg_oq_arb_l1_selection.read();
+            node_val = pbc_csr.port_${p}.cfg_oq_arb_l1_selection.node_${node}();
+
+            cpp_helper.set_slc(node_val, val, input, input);
+
+            pbc_csr.port_${p}.cfg_oq_arb_l1_selection.node_${node}(node_val);
+            pbc_csr.port_${p}.cfg_oq_arb_l1_selection.write();
+            break;
+//::
+//::     #endfor
+//::
+        }
+        break;
+
+//::
+//:: #endfor
+//::
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+cap_pb_sched_l2_update (tm_port_t port,
+                        uint32_t  node,
+                        uint32_t  input,
+                        bool      is_strict,
+                        bool      reset)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cpp_int node_val;
+    cpp_int strict_val;
+    uint32_t val = 1;
+
+    if (reset == true) {
+        val = 0;
+    }
+
+    switch (port) {
+//::
+//:: for p in range(TM_PORTS):
+//::
+    case ${p}:
+        if (is_strict == true) {
+            pbc_csr.port_${p}.cfg_oq_arb_l2_strict.read();
+
+            strict_val = pbc_csr.port_${p}.cfg_oq_arb_l2_strict.priority();
+            cpp_helper.set_slc(strict_val, val, input, input);
+
+            pbc_csr.port_${p}.cfg_oq_arb_l2_strict.priority(strict_val);
+            pbc_csr.port_${p}.cfg_oq_arb_l2_strict.write();
+        }
+
+        switch (node) {
+//::
+//::     for node in range(4):
+//::
+        case ${node}:
+            pbc_csr.port_${p}.cfg_oq_arb_l2_selection.read();
+            node_val = pbc_csr.port_${p}.cfg_oq_arb_l2_selection.node_${node}();
+
+            cpp_helper.set_slc(node_val, val, input, input);
+
+            pbc_csr.port_${p}.cfg_oq_arb_l2_selection.node_${node}(node_val);
+            pbc_csr.port_${p}.cfg_oq_arb_l2_selection.write();
+            break;
+
+//::
+//::     #endfor
+//::
+        }
+        break;
+
+//::
+//:: #endfor
+//::
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+cap_pb_sched_l3_update (tm_port_t port,
+                        uint32_t  l2_strict_node,
+                        bool      is_strict,
+                        uint64_t  priority_bypass_timer)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    switch (port) {
+    case 9:
+        pbc_csr.port_9.cfg_oq_arb_l3_strict.read();
+
+        if(is_strict == true) {
+              pbc_csr.port_9.cfg_oq_arb_l3_strict.priority(
+                          pbc_csr.port_9.cfg_oq_arb_l3_strict.priority().
+                                    convert_to<int>() | 1 << l2_strict_node);
+        }
+
+        pbc_csr.port_9.cfg_oq_arb_l3_strict.write();
+        break;
+
+    case 10:
+        pbc_csr.port_10.cfg_oq_arb_l3_strict.read();
+
+        if(is_strict == true) {
+            pbc_csr.port_10.cfg_oq_arb_l3_strict.priority(
+                        pbc_csr.port_10.cfg_oq_arb_l3_strict.priority().
+                                    convert_to<int>() | 1 << l2_strict_node);
+        }
+
+        if(priority_bypass_timer != 0) {
+            pbc_csr.port_10.cfg_oq_arb_l3_strict.priority_bypass_timer(
+                pbc_csr.port_10.cfg_oq_arb_l3_strict.priority_bypass_timer().
+                                    convert_to<int>() | 1 << l2_strict_node);
+        }
+
+        pbc_csr.port_10.cfg_oq_arb_l3_strict.write();
+        break;
+
+    case 11:
+        pbc_csr.port_11.cfg_oq_arb_l3_strict.read();
+
+        if(is_strict == true) {
+            pbc_csr.port_11.cfg_oq_arb_l3_strict.priority(
+                        pbc_csr.port_11.cfg_oq_arb_l3_strict.priority().
+                                    convert_to<int>() | 1 << l2_strict_node);
+        }
+
+        if(priority_bypass_timer != 0) {
+            pbc_csr.port_11.cfg_oq_arb_l3_strict.priority_bypass_timer(
+                pbc_csr.port_11.cfg_oq_arb_l3_strict.priority_bypass_timer().
+                                    convert_to<int>() | 1 << l2_strict_node);
+        }
+
+        pbc_csr.port_11.cfg_oq_arb_l3_strict.write();
+        break;
+
+    default:
+        break;
+    }
+
+    //read to flush writes
+    pbc_csr.cfg_island_control.read();
+
+    return SDK_RET_OK;
+}
+
+static uint32_t
+cap_pb_sched_get_num_inputs (tm_port_t port,
+                             tm_queue_node_type_t node_type,
+                             uint32_t node)
+{
+    return pb_sched_port_cfg[port].node_cfg[node_type].
+                                input_cfg[node].num_inputs;
+}
+
+sdk_ret_t
+cap_pb_sched_spq_pgm (uint32_t chip_id, uint32_t inst_id,
+                      tm_port_t port,
+                      tm_q_t oq,
+                      pb_sched_node_input_info_t *input_info)
+{
+    uint32_t l1_node = 0;
+    uint32_t l2_node = 0;
+    static uint32_t l2_strict_node = 0xFFFFFFFF;
+    bool remove = true;
+    bool is_strict = input_info->is_strict;
+    sdk_ret_t ret = SDK_RET_OK;
+
+    /**
+     * remove the inputs from LEVEL_1 and LEVEL_2 nodes
+     * and reprogram the nodes
+     */
+
+    // remove the oq from the LEVEL_1 node
+    cap_pb_sched_find_and_remove_index(port,
+                                       TM_QUEUE_NODE_TYPE_LEVEL_1,
+                                       oq,
+                                       &l1_node,
+                                       true);
+    // program LEVEL_1 node cfg
+    cap_pb_sched_node_pgm(
+                chip_id, inst_id, port,
+                &pb_sched_port_cfg[port].node_cfg[TM_QUEUE_NODE_TYPE_LEVEL_1],
+                TM_QUEUE_NODE_TYPE_LEVEL_1, l1_node);
+
+    cap_pb_sched_l1_update(port, l1_node, oq, false, true);
+
+    remove = cap_pb_sched_get_num_inputs(
+                    port, TM_QUEUE_NODE_TYPE_LEVEL_1, l1_node) == 0;
+
+    // remove the LEVEL_1 node from the LEVEL_2 node
+    cap_pb_sched_find_and_remove_index(port,
+                                       TM_QUEUE_NODE_TYPE_LEVEL_2,
+                                       l1_node,
+                                       &l2_node,
+                                       remove);
+    // program LEVEL_2 node cfg
+    cap_pb_sched_node_pgm(
+                chip_id, inst_id, port,
+                &pb_sched_port_cfg[port].node_cfg[TM_QUEUE_NODE_TYPE_LEVEL_2],
+                TM_QUEUE_NODE_TYPE_LEVEL_2, l2_node);
+
+    cap_pb_sched_l2_update(port, l2_node, l1_node, false, remove);
+
+    /**
+     * allocate inputs for LEVEL_1 and LEVEL_2 nodes
+     * and reprogram the nodes
+     */
+
+    // allocate LEVEL_1 node
+    l1_node = 0xFFFFFFFF;
+
+    ret = cap_pb_sched_node_alloc(port, TM_QUEUE_NODE_TYPE_LEVEL_1, &l1_node);
+    if (ret == SDK_RET_ERR) {
+        return ret;
+    }
+
+    // set the oq for LEVEL_1 node
+    cap_pb_sched_inputs_bitmap_alloc(port,
+                                     TM_QUEUE_NODE_TYPE_LEVEL_1,
+                                     l1_node,
+                                     (uint32_t*)&oq,
+                                     input_info);
+    // program LEVEL_1 node cfg
+    cap_pb_sched_node_pgm(
+            chip_id, inst_id, port,
+            &pb_sched_port_cfg[port].node_cfg[TM_QUEUE_NODE_TYPE_LEVEL_1],
+            TM_QUEUE_NODE_TYPE_LEVEL_1, l1_node);
+
+    cap_pb_sched_l1_update(port, l1_node, oq, is_strict, false);
+
+    // remove the newly allocated L1_NODE from the older L2_NODE
+    cap_pb_sched_l2_update(port, l2_node, l1_node, false, true);
+
+    // allocate LEVEL_2 node
+    if (l2_strict_node == 0xFFFFFFFF) {
+        ret = cap_pb_sched_node_alloc(port, TM_QUEUE_NODE_TYPE_LEVEL_2, 
+                                      &l2_strict_node);
+        if (ret == SDK_RET_ERR) {
+            return ret;
+        }
+    }
+
+    // set the input for LEVEL_2 node
+    cap_pb_sched_inputs_bitmap_alloc(port,
+                                     TM_QUEUE_NODE_TYPE_LEVEL_2,
+                                     l2_strict_node,
+                                     &l1_node,
+                                     input_info);
+    // program LEVEL_2 node cfg
+    cap_pb_sched_node_pgm(
+                chip_id, inst_id, port,
+                &pb_sched_port_cfg[port].node_cfg[TM_QUEUE_NODE_TYPE_LEVEL_2],
+                TM_QUEUE_NODE_TYPE_LEVEL_2, l2_strict_node);
+
+    cap_pb_sched_l2_update(port, l2_strict_node, l1_node, is_strict, false);
+
+    cap_pb_sched_l3_update(port, l2_strict_node, is_strict,
+                           input_info->priority_bypass_timer);
+    return SDK_RET_OK;
+}
+
 static sdk_ret_t
+cap_pb_sched_node_cfg_init (int chip_id, int inst_id, int port,
+                            pb_sched_node_cfg_t *node_cfg,
+                            tm_queue_node_type_t node_type,
+                            uint32_t num_nodes)
+{
+    uint32_t level = 0;
+    node_cfg->node_type = node_type;
+    node_cfg->num_nodes = num_nodes;
+    node_cfg->node_bitmap = sdk::lib::indexer::factory(
+                                        CAPRI_TM_MAX_SCHED_NODES);
+    if (NULL == node_cfg->node_bitmap) {
+        return SDK_RET_ERR;
+    }
+
+    for (uint32_t node = 0; node < num_nodes; ++node) {
+        pb_sched_node_input_cfg_t *input_cfg = &node_cfg->input_cfg[node];
+        input_cfg->inputs_bitmap = sdk::lib::indexer::factory(
+                                    CAPRI_TM_MAX_SCHED_NODE_INPUTS);
+        if (NULL == input_cfg->inputs_bitmap) {
+            return SDK_RET_ERR;
+        }
+
+        switch (node_type) {
+        case TM_QUEUE_NODE_TYPE_LEVEL_1:
+            if (node == 0) {
+                cap_pb_sched_node_alloc(port, node_type, &node);
+                input_cfg->num_inputs    = 32;
+                input_cfg->total_weights = 32;
+                level = 1;
+            }
+            break;
+
+        case TM_QUEUE_NODE_TYPE_LEVEL_2:
+            if (node == 0) {
+                cap_pb_sched_node_alloc(port, node_type, &node);
+                input_cfg->num_inputs    = 16;
+                input_cfg->total_weights = 16;
+                level = 2;
+            }
+            break;
+
+        case TM_QUEUE_NODE_TYPE_LEVEL_3:
+        default:
+            if (node == 0) {
+                cap_pb_sched_node_alloc(port, node_type, &node);
+                input_cfg->num_inputs    = 4;
+                input_cfg->total_weights = 4;
+                level = 3;
+            }
+            break;
+        }   // switch (node_type)
+
+        for (uint32_t input = 0; input < input_cfg->num_inputs;
+                                                ++input) {
+            input_cfg->inputs_bitmap->alloc_withid(input, 1);
+            pb_sched_node_input_info_t *input_info =
+                                       &input_cfg->input_info[input];
+            input_info->weight = 1;
+            input_info->dwrr_ratio = (input_info->weight * 100.0) /
+                                        input_cfg->total_weights;
+            input_info->cfg_quota = input_info->dwrr_ratio * CAPRI_TM_DWRR_UNIT
+                                    * input_cfg->total_weights;
+            cap_pb_cfg_sched_node(
+                chip_id, inst_id, level, port, input, input_info->cfg_quota);
+        }
+    } // for each node
+
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+cap_pb_sched_cfg_init (int chip_id, int inst_id)
+{
+    sdk_ret_t sdk_ret = SDK_RET_OK;
+    cap_pbc_csr_t & pbc_csr =
+                CAP_BLK_REG_MODEL_ACCESS(cap_pbc_csr_t, chip_id, inst_id);
+
+    for (int port = 0; port < CAPRI_TM_MAX_PORTS; ++port) {
+        for (int level = 0; level < TM_QUEUE_NODE_TYPE_LEVEL_MAX; ++level) {
+            pb_sched_node_cfg_t *node_cfg = &pb_sched_port_cfg[port].node_cfg[level];
+            switch (level) {
+            case 0:
+                sdk_ret = cap_pb_sched_node_cfg_init(chip_id, inst_id,
+                              port, node_cfg, TM_QUEUE_NODE_TYPE_LEVEL_1, 16);
+                if (sdk_ret != SDK_RET_OK) {
+                    return sdk_ret;
+                }
+                break;
+
+            case 1:
+                sdk_ret = cap_pb_sched_node_cfg_init(chip_id, inst_id,
+                              port, node_cfg, TM_QUEUE_NODE_TYPE_LEVEL_2, 4);
+                if (sdk_ret != SDK_RET_OK) {
+                    return sdk_ret;
+                }
+                break;
+
+            case 2:
+            default:
+                sdk_ret = cap_pb_sched_node_cfg_init(chip_id, inst_id,
+                              port, node_cfg, TM_QUEUE_NODE_TYPE_LEVEL_3, 1);
+                if (sdk_ret != SDK_RET_OK) {
+                    return sdk_ret;
+                }
+                break;
+            }
+        }
+    }
+
+//::
+//:: for p in range(TM_PORTS):
+//::
+    pbc_csr.port_${p}.cfg_oq_arb_l1_selection.all(0);
+    pbc_csr.port_${p}.cfg_oq_arb_l1_selection.write();
+
+    for (int q_idx = 0; q_idx < 32; ++q_idx) {
+//::
+//::     for node in range(16):
+//::
+        if (cap_pb_sched_node_set(${p}, 0, ${node}, q_idx)) {
+            pbc_csr.port_${p}.cfg_oq_arb_l1_selection.node_${node}(
+                pbc_csr.port_${p}.cfg_oq_arb_l1_selection.node_${node}().
+                                        convert_to<int>() | 1 << q_idx);
+        }
+//::
+//::     #endfor
+//::
+    }
+
+    pbc_csr.port_${p}.cfg_oq_arb_l1_strict.all(0);
+
+    if (0) {
+        pbc_csr.port_${p}.cfg_oq_arb_l1_strict.priority(0);
+    }
+
+    pbc_csr.port_${p}.cfg_oq_arb_l1_selection.write();
+    pbc_csr.port_${p}.cfg_oq_arb_l1_strict.write();
+
+//::
+//:: #endfor
+//:: for p in range(TM_PORTS):
+//::
+    pbc_csr.port_${p}.cfg_oq_arb_l2_selection.all(0);
+
+    for (int l1_node_idx = 0; l1_node_idx < 16; ++l1_node_idx) {
+//::
+//::     for node in range(4):
+//::
+        if (cap_pb_sched_node_set(${p}, 1, ${node}, l1_node_idx)) {
+            pbc_csr.port_${p}.cfg_oq_arb_l2_selection.node_${node}(
+                pbc_csr.port_${p}.cfg_oq_arb_l2_selection.node_${node}().
+                                        convert_to<int>() | 1 << l1_node_idx);
+        }
+
+//::
+//::     #endfor
+//::
+        pbc_csr.port_${p}.cfg_oq_arb_l2_strict.all(0);
+
+        if (0) {
+            pbc_csr.port_${p}.cfg_oq_arb_l2_strict.priority(
+                    pbc_csr.port_${p}.cfg_oq_arb_l2_strict.priority().
+                    convert_to<int>() | 1 << l1_node_idx);
+        }
+
+        pbc_csr.port_${p}.cfg_oq_arb_l2_selection.write();
+        pbc_csr.port_${p}.cfg_oq_arb_l2_strict.write();
+    }
+
+//::
+//:: #endfor
+//::
+    pbc_csr.port_9.cfg_oq_arb_l3_strict.all(0);
+
+    for(int l2_node_idx=0; l2_node_idx<4; l2_node_idx++) {
+        if (0) {
+        // if (cap_pb_sched_node_set(9, 2, 0, l2_node_idx)) {
+            pbc_csr.port_9.cfg_oq_arb_l3_strict.priority(pbc_csr.port_9.cfg_oq_arb_l3_strict.priority().convert_to<int>() | 1 << l2_node_idx);
+        }
+    }
+
+    pbc_csr.port_9.cfg_oq_arb_l3_strict.write();
+
+    pbc_csr.port_10.cfg_oq_arb_l3_strict.all(0);
+
+    for(int l2_node_idx=0; l2_node_idx<4; l2_node_idx++) {
+        if (0) {
+        // if (cap_pb_sched_node_set(10, 2, 0, l2_node_idx)) {
+            pbc_csr.port_10.cfg_oq_arb_l3_strict.priority(pbc_csr.port_10.cfg_oq_arb_l3_strict.priority().convert_to<int>() | 1 << l2_node_idx);
+        }
+        if (0) {
+        // if (cap_pb_sched_node_set(10, 2, 0, l2_node_idx)) {
+            pbc_csr.port_10.cfg_oq_arb_l3_strict.priority_bypass_timer(pbc_csr.port_10.cfg_oq_arb_l3_strict.priority_bypass_timer().convert_to<int>() | 1 << l2_node_idx);
+        }
+    }
+
+    pbc_csr.port_10.cfg_oq_arb_l3_strict.write();
+
+    pbc_csr.port_11.cfg_oq_arb_l3_strict.all(0);
+
+    for(int l2_node_idx=0; l2_node_idx<4; l2_node_idx++) {
+        if (0) {
+        // if (cap_pb_sched_node_set(11, 2, 0, l2_node_idx)) {
+            pbc_csr.port_11.cfg_oq_arb_l3_strict.priority(pbc_csr.port_11.cfg_oq_arb_l3_strict.priority().convert_to<int>() | 1 << l2_node_idx);
+        }
+        if (0) {
+        // if (cap_pb_sched_node_set(11, 2, 0, l2_node_idx)) {
+            pbc_csr.port_11.cfg_oq_arb_l3_strict.priority_bypass_timer(pbc_csr.port_11.cfg_oq_arb_l3_strict.priority_bypass_timer().convert_to<int>() | 1 << l2_node_idx);
+        }
+    }
+
+    pbc_csr.port_11.cfg_oq_arb_l3_strict.write();
+
+    // read to flush writes
+    pbc_csr.cfg_island_control.read();
+
+    return sdk_ret;
+}
+
+sdk_ret_t
 cap_pb_cfg_sched(int chip_id, int inst_id, int is_random)
 {
     cap_pbc_csr_t & pbc_csr =
@@ -2545,11 +3270,19 @@ capri_tm_init_pbc (capri_tm_buf_cfg_t *buf_cfg)
         return ret;
     }
 
+    ret = cap_pb_sched_cfg_init(0, 0);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error programming scheduler defaults %d", ret);
+        return ret;
+    }
+
+#if 0
     ret = cap_pb_cfg_sched(0, 0, 0);
     if (ret != sdk::SDK_RET_OK) {
         SDK_TRACE_ERR("Error programming scheduler defaults %d", ret);
         return ret;
     }
+#endif
 
     ret = capri_tm_program_buffers(buf_cfg);
     if (ret != sdk::SDK_RET_OK) {

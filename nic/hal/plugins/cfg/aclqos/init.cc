@@ -79,7 +79,12 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
 
         spec.mutable_key_or_handle()->set_qos_group(qos_group[i]);
         spec.set_mtu(9216);
-        spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(50);
+
+        if (qos_group[i] == kh::QosGroup::INTERNAL_CPU_COPY) {
+            spec.mutable_sched()->mutable_strict()->set_bps(10000);
+        } else {
+            spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(50);
+        }
 
         ret = qosclass_create(spec, &qos_class_rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {

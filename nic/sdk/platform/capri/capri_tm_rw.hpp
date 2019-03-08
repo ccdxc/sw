@@ -13,12 +13,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "include/sdk/base.hpp"
+#include "lib/indexer/indexer.hpp"
 #include "lib/catalog/catalog.hpp"
 #include "platform/capri/capri_p4.hpp"
 
 namespace sdk {
 namespace platform {
 namespace capri {
+
+using sdk::lib::indexer;
 
 // 320 bytes in one TM cell
 #define CAPRI_TM_CELL_SIZE            320
@@ -32,6 +35,13 @@ namespace capri {
 #define CAPRI_TM_COUNT_L2_NODES       4
 #define CAPRI_TM_MAX_DSCP_VALS        64
 #define CAPRI_TM_NUM_BUFFER_ISLANDS   2
+#define CAPRI_TM_MAX_SCHED_NODES      16
+#define CAPRI_TM_MAX_SCHED_NODE_INPUTS 32
+#define CAPRI_TM_MAX_PORTS             12
+#define CAPRI_TM_DWRR_UNIT             10000
+#define CAPRI_TM_SCHED_TIMER           5000
+#define CAPRI_TM_CLK_PERIOD            833
+#define CAPRI_TM_BUS_WIDTH             512
 
 #define CAPRI_TM_BUFFER_ISLAND_0_CELL_COUNT 8192
 #define CAPRI_TM_BUFFER_ISLAND_1_CELL_COUNT 5120 
@@ -168,11 +178,12 @@ typedef struct tm_queue_node_params_s {
     };
 } tm_queue_node_params_t;
 
-typedef enum {
-    TM_QUEUE_NODE_TYPE_LEVEL_0,
+typedef enum tm_queue_node_type_e {
     TM_QUEUE_NODE_TYPE_LEVEL_1,
     TM_QUEUE_NODE_TYPE_LEVEL_2,
-} tm_queue_node_type_e;
+    TM_QUEUE_NODE_TYPE_LEVEL_3,
+    TM_QUEUE_NODE_TYPE_LEVEL_MAX,
+} tm_queue_node_type_t;
 
 /** capri_tm_scheduler_map_update
  * API to update the output queue scheduler
@@ -336,11 +347,48 @@ typedef struct tm_pb_debug_stats_s {
     tm_pb_debug_oflow_fifo_stats_t  oflow_fifo_stats;
 } tm_pb_debug_stats_t;
 
+typedef struct pb_sched_node_input_info_s {
+    uint32_t weight;
+    uint64_t cfg_quota;
+    float    dwrr_ratio;
+
+    // strict priotiry Q params
+    bool     is_strict;
+    uint64_t priority_bypass_timer;
+    uint64_t sp_rate_mbps;
+} pb_sched_node_input_info_t;
+
+typedef struct pb_sched_node_input_cfg_s {
+    uint32_t  num_inputs;
+    uint64_t  total_weights;
+    indexer   *inputs_bitmap;
+    pb_sched_node_input_info_t input_info[
+                                CAPRI_TM_MAX_SCHED_NODE_INPUTS];
+} pb_sched_node_input_cfg_t;
+
+typedef struct pb_sched_node_cfg_s {
+    tm_queue_node_type_t      node_type;
+    uint32_t                  num_nodes;
+    indexer                   *node_bitmap;
+    pb_sched_node_input_cfg_t input_cfg[CAPRI_TM_MAX_SCHED_NODES];
+} pb_sched_node_cfg_t;
+
+typedef struct pb_sched_port_cfg_s {
+    pb_sched_node_cfg_t node_cfg[TM_QUEUE_NODE_TYPE_LEVEL_MAX];
+} pb_sched_port_cfg_t;
+
 sdk_ret_t capri_tm_get_pb_debug_stats(tm_port_t port,
                                       tm_pb_debug_stats_t *debug_stats,
                                       bool reset);
 uint32_t capri_tm_get_num_iqs_for_port(tm_port_t port);
 uint32_t capri_tm_get_num_oqs_for_port(tm_port_t port);
+
+sdk_ret_t
+cap_pb_sched_spq_pgm (uint32_t chip_id,
+                      uint32_t inst_id,
+                      tm_port_t port,
+                      tm_q_t oq,
+                      pb_sched_node_input_info_t *input_info);
 
 }    // namespace capri
 }    // namespace platform
