@@ -265,16 +265,14 @@ static struct verbs_device *ionic_alloc_device(const char *sysfs_path,
 	char value[8];
 	int i;
 
-	goto found; /* for some reason no "device" group */
-
 	if (ibv_read_sysfs_file(sysfs_path, "device/vendor",
-				value, sizeof(value) < 0))
+				value, sizeof(value)) < 0)
 		return NULL;
 	if (sscanf(value, "%i", &vendor) != 1)
 		return NULL;
 
 	if (ibv_read_sysfs_file(sysfs_path, "device/device",
-				value, sizeof(value) < 0))
+				value, sizeof(value)) < 0)
 		return NULL;
 	if (sscanf(value, "%i", &device) != 1)
 		return NULL;

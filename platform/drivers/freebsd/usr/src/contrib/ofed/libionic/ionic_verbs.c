@@ -1968,6 +1968,11 @@ out:
 	ionic_stat_incr_idx_fls(ctx->stats, post_recv_nwr, old_prod);
 	ionic_stat_add(ctx->stats, post_recv_wr, old_prod);
 
+	if (!cq) {
+		ionic_spin_unlock(ctx, &qp->rq_lock);
+		goto out_unlocked;
+	}
+
 	if (ionic_spin_trylock(ctx, &cq->lock)) {
 		ionic_spin_unlock(ctx, &qp->rq_lock);
 		ionic_spin_lock(ctx, &cq->lock);
@@ -2001,6 +2006,7 @@ out:
 	ionic_spin_unlock(ctx, &qp->rq_lock);
 	ionic_spin_unlock(ctx, &cq->lock);
 
+out_unlocked:
 	ionic_lat_trace(ctx->lats, post_recv);
 	ionic_stat_add(ctx->stats, post_recv_err, !!rc);
 
