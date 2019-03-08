@@ -200,14 +200,39 @@ hal_grpc::vrf_get (VrfGetRequestMsg& req_msg,
 }
 
 // HalL2Segment Calls
-HAL_CREATE_API(l2segment, L2Segment, l2segment);
+Status
+hal_grpc::l2segment_create (L2SegmentRequestMsg& req_msg, L2SegmentResponseMsg& rsp_msg)
+{
+    printf("Hal Mock: L2seg Create\n");
+    auto response = rsp_msg.add_response();
+    response->set_api_status(types::API_STATUS_OK);
+    return Status::OK;
+}
+// HAL_CREATE_API(l2segment, L2Segment, l2segment);
 HAL_UPDATE_API(l2segment, L2Segment, l2segment);
 HAL_DELETE_API(l2segment, L2Segment, l2segment);
 HAL_GET_API(l2segment, L2Segment, l2segment);
 
 // HalEndpoint Calls
-HAL_CREATE_API(endpoint, Endpoint, endpoint);
-HAL_DELETE_API(endpoint, Endpoint, endpoint);
+Status
+hal_grpc::endpoint_create (EndpointRequestMsg& req_msg, EndpointResponseMsg& rsp_msg)
+{
+    printf("Hal Mock: Endpoint Create\n");
+    auto response = rsp_msg.add_response();
+    response->set_api_status(types::API_STATUS_OK);
+    return Status::OK;
+}
+Status
+hal_grpc::endpoint_delete (EndpointDeleteRequestMsg& req_msg,
+                           EndpointDeleteResponseMsg& rsp_msg)
+{
+    printf("Hal Mock: Endpoint Delete\n");
+    auto response = rsp_msg.add_response();
+    response->set_api_status(types::API_STATUS_OK);
+    return Status::OK;
+}
+// HAL_CREATE_API(endpoint, Endpoint, endpoint);
+// HAL_DELETE_API(endpoint, Endpoint, endpoint);
 HAL_GET_API(endpoint, Endpoint, endpoint);
 
 // TODO: Cleanup once EP's Update request change
@@ -224,13 +249,29 @@ hal_grpc::endpoint_update (EndpointUpdateRequestMsg& req_msg,
 }
 
 // Interface Calls
-HAL_CREATE_API(interface, Interface, interface);
+Status
+hal_grpc::interface_create (InterfaceRequestMsg& req_msg, InterfaceResponseMsg& rsp_msg)
+{
+    printf("Hal Mock: Interface Create\n");
+    auto response = rsp_msg.add_response();
+    response->set_api_status(types::API_STATUS_OK);
+    return Status::OK;
+}
+// HAL_CREATE_API(interface, Interface, interface);
 HAL_UPDATE_API(interface, Interface, interface);
 HAL_DELETE_API(interface, Interface, interface);
 HAL_GET_API(interface, Interface, interface);
 
 // Lif Calls
-HAL_CREATE_API(lif, Lif, interface);
+// HAL_CREATE_API(lif, Lif, interface);
+Status
+hal_grpc::lif_create (LifRequestMsg& req_msg, LifResponseMsg& rsp_msg)
+{
+    printf("Hal Mock: Lif Create\n");
+    auto response = rsp_msg.add_response();
+    response->set_api_status(types::API_STATUS_OK);
+    return Status::OK;
+}
 HAL_UPDATE_API(lif, Lif, interface);
 HAL_DELETE_API(lif, Lif, interface);
 HAL_GET_API(lif, Lif, interface);

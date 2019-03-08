@@ -109,7 +109,7 @@ public:
     bool is_inbmgmtmnic(void);
     bool is_hostmgmt(void);
     bool is_intmgmt(void);
-    bool is_classicfwd(void);
+    bool is_classicfwd(vlan_t vlan);
     bool is_recallmc(void);
     void program_mcfilters(void);
     void deprogram_mcfilters(void);

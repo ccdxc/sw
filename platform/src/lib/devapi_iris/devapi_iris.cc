@@ -296,6 +296,7 @@ sdk_ret_t
 devapi_iris::set_fwd_mode(fwd_mode_t fwd_mode)
 {
     fwd_mode_ = fwd_mode;
+    hal_grpc::get_hal_grpc()->set_fwd_mode(fwd_mode);
     return SDK_RET_OK;
 }
 

@@ -32,6 +32,7 @@ devapi_lif::factory(lif_info_t *info)
     devapi_enic     *enic = NULL;
 
     api_trace("lif create");
+    NIC_LOG_DEBUG("lif_id: {}", info->lif_id);
 
     if (lif_db_.find(info->lif_id) != lif_db_.end()) {
         NIC_LOG_WARN("Dliflicate Create of lif with id: {}",
@@ -56,8 +57,10 @@ devapi_lif::factory(lif_info_t *info)
     }
     ret = lif->lif_halcreate();
     if (ret != SDK_RET_OK) {
+        NIC_LOG_DEBUG("Returning 1");
         goto end;
     }
+    NIC_LOG_DEBUG("After hal create ...");
 
     if (lif->is_intmgmtmnic()) {
         NIC_LOG_DEBUG("lif-{}:Setting Internal management lif",
@@ -80,6 +83,7 @@ devapi_lif::factory(lif_info_t *info)
         lif->get_uplink()->inc_num_lifs();
     }
 
+    NIC_LOG_DEBUG("Adding lif to db for id: {}", lif->get_id());
     // Store in DB for disruptive upgrade
     lif_db_[lif->get_id()] = lif;
 
@@ -145,12 +149,16 @@ devapi_lif::factory(lif_info_t *info)
     // Add Vlan filter on devapi_lif
     lif->add_vlan(NATIVE_VLAN_ID);
 
+    // No need as we are not supporting filters
+    // to hal in smart
+#if 0
     if (!lif->is_classicfwd()) {
         // If its promiscuos. send (devapi_lif, *, *) filter to HAL
         if (info->receive_promiscuous) {
             lif->create_macvlan_filter(0, 0);
         }
     }
+#endif
 
 end:
     if (ret != SDK_RET_OK) {
@@ -222,7 +230,8 @@ devapi_lif::destroy(devapi_lif *lif)
         lif->get_uplink()->dec_num_lifs();
     }
 
-    if (lif->is_classicfwd()) {
+    // if (lif->is_classicfwd())
+    if (true) {
         // Delete enic
         devapi_enic::destroy(lif->get_enic());
 
@@ -256,6 +265,7 @@ devapi_lif::destroy(devapi_lif *lif)
             }
         }
     } else {
+        // Never reach here
         if (lif->get_isprom()) {
             lif->delete_macvlan_filter(0, 0);
         }
@@ -310,8 +320,8 @@ devapi_lif::add_mac(mac_t mac, bool re_add)
          * Smart:
          *      - Create Mac filter
          */
-        if (is_classicfwd()) {
-
+        // if (is_classicfwd())
+        if (true) {
             if (is_multicast(mac) && is_recallmc()) {
                 skip_registration = true;
             }
@@ -336,7 +346,8 @@ devapi_lif::add_mac(mac_t mac, bool re_add)
                 }
             }
         } else {
-            create_mac_filter(mac);
+            // Smart mode: Not sending filters at all
+            // create_mac_filter(mac);
         }
 
         if (!re_add) {
@@ -363,8 +374,8 @@ devapi_lif::del_mac(mac_t mac, bool update_db, bool add_failure)
 
     mac_key = std::make_tuple(mac, 0);
     if (add_failure || mac_table_.find(mac) != mac_table_.end()) {
-        if (is_classicfwd()) {
-
+        // if (is_classicfwd())
+        if (true) {
             if (is_multicast(mac)) {
                 if (is_recallmc()) {
                     skipped_registration = true;
@@ -389,7 +400,8 @@ devapi_lif::del_mac(mac_t mac, bool update_db, bool add_failure)
                 }
             }
         } else {
-            delete_mac_filter(mac);
+            // Smart mode: Not sending filters at all
+            // delete_mac_filter(mac);
         }
 
         if (update_db) {
@@ -413,6 +425,12 @@ devapi_lif::add_vlan(vlan_t vlan)
     if (!vlan) {
         vlan = 8192;
     }
+    if (!is_classicfwd(vlan)) {
+        // Not classic: Dont even store the vlan filter.
+        NIC_LOG_DEBUG("Lif: {}, Vlan: {} is not classic. Skipping vlan add",
+                      get_id(), vlan);
+        return ret;
+    }
 
     if (vlan_table_.find(vlan) == vlan_table_.end()) {
         // Check if max limit reached
@@ -429,7 +447,7 @@ devapi_lif::add_vlan(vlan_t vlan)
          * Smart:
          *      - Create Vlan filter
          */
-        if (is_classicfwd()) {
+        if (is_classicfwd(vlan)) {
             // Register new mac across all existing vlans
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 if (is_multicast(*it) && is_recallmc()) {
@@ -452,7 +470,8 @@ devapi_lif::add_vlan(vlan_t vlan)
                 }
             }
         } else {
-            create_vlan_filter(vlan);
+            // Wont even reach here
+            // create_vlan_filter(vlan);
         }
 
         // Store vlan filter
@@ -476,8 +495,15 @@ devapi_lif::del_vlan(vlan_t vlan, bool update_db, bool add_failure)
         return SDK_RET_OK;
     }
 
+    if (!is_classicfwd(vlan)) {
+        // Not classic: Dont even store the vlan filter.
+        NIC_LOG_DEBUG("Lif: {}, Vlan: {} is not classic. Skipping vlan del",
+                      get_id(), vlan);
+        return SDK_RET_OK;
+    }
+
     if (add_failure || vlan_table_.find(vlan) != vlan_table_.end()) {
-        if (is_classicfwd()) {
+        if (is_classicfwd(vlan)) {
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 if (is_multicast(*it) && is_recallmc()) {
                     // skip Mcast macs if ALL_MC is set
@@ -497,7 +523,8 @@ devapi_lif::del_vlan(vlan_t vlan, bool update_db, bool add_failure)
                 }
             }
         } else {
-            delete_vlan_filter(vlan);
+            // Wont even reach here
+            // delete_vlan_filter(vlan);
         }
 
         if (update_db) {
@@ -519,6 +546,15 @@ devapi_lif::add_macvlan(mac_t mac, vlan_t vlan)
     api_trace("Adding (Mac,Vlan) Filter");
     NIC_LOG_DEBUG("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
+    if (!vlan) {
+        vlan = 8192;
+    }
+
+    if (!is_classicfwd(vlan)) {
+        // Not classic: Dont even store the vlan filter.
+        return ret;
+    }
+
     if (mac_vlan_table_.find(key) == mac_vlan_table_.end()) {
         // Check if max limit reached
         if (mac_vlan_table_.size() == info_.max_mac_vlan_filters) {
@@ -527,7 +563,7 @@ devapi_lif::add_macvlan(mac_t mac, vlan_t vlan)
                           get_id());
             return sdk::SDK_RET_NO_RESOURCE;
         }
-        if (is_classicfwd()) {
+        if (is_classicfwd(vlan)) {
             // Check if mac filter and vlan filter is present
             if (mac_table_.find(mac) == mac_table_.end() ||
                 vlan_table_.find(vlan) == vlan_table_.end()) {
@@ -543,7 +579,8 @@ devapi_lif::add_macvlan(mac_t mac, vlan_t vlan)
                                 "No-op for (Mac,Vlan) filter");
             }
         } else {
-            create_macvlan_filter(mac, vlan);
+            // Wont come here
+            // create_macvlan_filter(mac, vlan);
         }
 
         // Store mac-vlan filter
@@ -563,9 +600,18 @@ devapi_lif::del_macvlan(mac_t mac, vlan_t vlan, bool update_db, bool add_failure
     api_trace("Deleting (Mac,Vlan) Filter");
     NIC_LOG_DEBUG("Deleting (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
+    if (!vlan) {
+        vlan = 8192;
+    }
+
+    if (!is_classicfwd(vlan)) {
+        // Not classic: Dont even store the vlan filter.
+        return SDK_RET_OK;
+    }
+
     mac_vlan_key = std::make_tuple(mac, vlan);
     if (add_failure || mac_vlan_table_.find(mac_vlan_key) != mac_vlan_table_.end()) {
-        if (is_classicfwd()) {
+        if (is_classicfwd(vlan)) {
             if (mac_table_.find(mac) == mac_table_.end() ||
                  vlan_table_.find(vlan) == vlan_table_.end()) {
                 // One of Mac or Vlan is not present.
@@ -577,7 +623,8 @@ devapi_lif::del_macvlan(mac_t mac, vlan_t vlan, bool update_db, bool add_failure
                                 "No-op for (Mac,Vlan) filter");
             }
         } else {
-            delete_macvlan_filter(mac, vlan);
+            // Wont come here
+            // delete_macvlan_filter(mac, vlan);
         }
         if (update_db) {
             // Erase mac-vlan filter
@@ -638,6 +685,8 @@ devapi_lif::update_recprom(bool receive_promiscuous)
 
     info_.receive_promiscuous = receive_promiscuous;
 
+    // For smart, hal is not supporting filters
+#if 0
     if (is_classicfwd()) {
     } else {
         if (receive_promiscuous) {
@@ -646,6 +695,7 @@ devapi_lif::update_recprom(bool receive_promiscuous)
             delete_macvlan_filter(0, 0);
         }
     }
+#endif
 
     return SDK_RET_OK;
 }
@@ -988,13 +1038,15 @@ devapi_lif::lif_halcreate(void)
         lif_info->max_mac_vlan_filters = LIF_DEFAULT_MAX_MAC_VLAN_FILTERS;
     }
 
-    NIC_LOG_DEBUG("Creating devapi_lif: {}, prom: {}, oob: {}, int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}",
-                 lif_info->name,
-                 lif_info->receive_promiscuous,
-                 is_oobmnic(),
-                 is_intmgmtmnic(),
-                 is_hostmgmt(),
-                 lif_info->enable_rdma);
+    NIC_LOG_DEBUG("Creating devapi_lif: id: {}, name: {}, prom: {}, oob: {}, "
+                  "int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}",
+                  lif_info->lif_id,
+                  lif_info->name,
+                  lif_info->receive_promiscuous,
+                  is_oobmnic(),
+                  is_intmgmtmnic(),
+                  is_hostmgmt(),
+                  lif_info->enable_rdma);
 
     populate_req(req_msg, &req);
 
@@ -1250,7 +1302,7 @@ devapi_lif::is_recallmc(void)
 }
 
 bool
-devapi_lif::is_classicfwd(void)
+devapi_lif::is_classicfwd(vlan_t vlan)
 {
     // Classic:
     // - All LIFs
@@ -1261,13 +1313,12 @@ devapi_lif::is_classicfwd(void)
     //   - ARM Internal Mgmt - All traffic
     //   - ARM Internal Data - Untag traffic
     //   - ARM OOB - All traffic
-    return true;
-#if 0
-    return (hal->GetMode() == FWD_MODE_CLASSIC ||
-            is_oobmnic() ||
-            is_intmgmtmnic() ||
-            is_hostmgmt());
-#endif
+    if (hal->get_fwd_mode() == sdk::platform::FWD_MODE_CLASSIC ||
+        (is_hostmgmt() || is_intmgmtmnic() ||
+         is_oobmnic() || vlan == NATIVE_VLAN_ID)) {
+        return true;
+    }
+    return false;
 }
 
 }    // namespce iris

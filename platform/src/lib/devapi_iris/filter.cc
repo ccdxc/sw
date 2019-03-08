@@ -86,7 +86,9 @@ devapi_filter::filter_halcreate()
                     lif_->get_id(),
                     macaddr2str(mac_), vlan_);
 
-    if (lif_->is_classicfwd()) {
+    // For smart we should not even be coming here
+    // if (lif_->is_classicfwd())
+    if (true) {
         // Unicast:
         //  - Add vlan to devapi_enic. May have already been added.
         //  - Create EP
@@ -177,7 +179,9 @@ devapi_filter::filter_haldelete()
                     lif_->get_id(),
                     macaddr2str(mac_), vlan_);
 
-    if (lif_->is_classicfwd()) {
+    // For smart we should not even come here
+    // if (lif_->is_classicfwd()) {
+    if (true) {
         enic = lif_->get_enic();
         l2seg = enic->get_l2seg(vlan_);
         if (is_multicast(mac_)) {

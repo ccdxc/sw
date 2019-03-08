@@ -121,6 +121,7 @@ namespace iris {
 class hal_grpc {
 private:
     static hal_grpc *hal_;
+    fwd_mode_t fwd_mode_;
     // API stubs
     std::unique_ptr<vrf::Vrf::Stub> vrf_stub_;
     std::unique_ptr<intf::Interface::Stub> interface_stub_;
@@ -143,6 +144,9 @@ public:
 
     // Make GRPC connection to HAL
     sdk_ret_t connect_hal(void);
+
+    void set_fwd_mode(fwd_mode_t fwd_mode) { fwd_mode_ = fwd_mode; }
+    fwd_mode_t get_fwd_mode(void) { return fwd_mode_; }
 
     // Vrf APIs
     Status vrf_create(VrfRequestMsg& req_msg,
