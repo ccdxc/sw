@@ -27,7 +27,7 @@ struct rx_table_s4_t1_eth_rx_sg_d d;
 eth_rx_sg_start:
   // LOAD_STATS(_r_stats)
 
-  bcf             [c2 | c3 | c7], eth_rx_sg_desc_error
+  bcf             [c2 | c3 | c7], eth_rx_sg_addr_error
   nop
 
   // Load DMA command pointer
@@ -45,9 +45,9 @@ eth_rx_sg_start:
 eth_rx_sg_continue:
 
   // dma_len = min(rem_bytes, buf_len)
-  slt             c1, _r_rem_bytes, d.{len0}.hx
+  sle             c1, _r_rem_bytes, d.{len0}.hx
   cmov            _r_len, c1, _r_rem_bytes, d.{len0}.hx
-  beq             _r_len, r0, eth_rx_sg_error
+  beq             _r_len, r0, eth_rx_sg_data_error
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_FRAG(0, _r_addr, _r_len, _r_ptr)
@@ -59,9 +59,9 @@ eth_rx_sg_continue:
   bcf             [c1], eth_rx_sg_done
 
   // dma_len = min(rem_bytes, buf_len)
-  slt             c1, _r_rem_bytes, d.{len1}.hx
+  sle             c1, _r_rem_bytes, d.{len1}.hx
   cmov            _r_len, c1, _r_rem_bytes, d.{len1}.hx
-  beq             _r_len, r0, eth_rx_sg_error
+  beq             _r_len, r0, eth_rx_sg_data_error
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_FRAG(1, _r_addr, _r_len, _r_ptr)
@@ -73,9 +73,9 @@ eth_rx_sg_continue:
   bcf             [c1], eth_rx_sg_done
 
   // dma_len = min(rem_bytes, buf_len)
-  slt             c1, _r_rem_bytes, d.{len2}.hx
+  sle             c1, _r_rem_bytes, d.{len2}.hx
   cmov            _r_len, c1, _r_rem_bytes, d.{len2}.hx
-  beq             _r_len, r0, eth_rx_sg_error
+  beq             _r_len, r0, eth_rx_sg_data_error
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_FRAG(2, _r_addr, _r_len, _r_ptr)
@@ -87,9 +87,9 @@ eth_rx_sg_continue:
   bcf             [c1], eth_rx_sg_done
 
   // dma_len = min(rem_bytes, buf_len)
-  slt             c1, _r_rem_bytes, d.{len3}.hx
+  sle             c1, _r_rem_bytes, d.{len3}.hx
   cmov            _r_len, c1, _r_rem_bytes, d.{len3}.hx
-  beq             _r_len, r0, eth_rx_sg_error
+  beq             _r_len, r0, eth_rx_sg_data_error
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_FRAG(3, _r_addr, _r_len, _r_ptr)
@@ -107,7 +107,7 @@ eth_rx_sg_next:   // Continue SG in next stage
   seq             c1, _r_rem_sg, r0
   sne             c2, _r_rem_bytes, r0
   setcf           c3, [c1 & c2]
-  bcf             [c3], eth_rx_sg_error
+  bcf             [c3], eth_rx_sg_data_error
   nop
   //SET_STAT(_r_stats, c3, desc_data_error)
 
@@ -145,10 +145,10 @@ eth_rx_sg_done:   // We are done with SG
   phvwri.e        p.common_te0_phv_table_pc, eth_rx_completion[38:6]
   phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
-eth_rx_sg_desc_error:
+eth_rx_sg_addr_error:
   //SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
 
-eth_rx_sg_error:
+eth_rx_sg_data_error:
   //SAVE_STATS(_r_stats)
 
   // Don't drop the phv, because, we have claimed the completion entry.
@@ -160,18 +160,19 @@ eth_rx_sg_error:
   addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
+  DMA_CMD_RESET(_r_ptr, _C_TRUE)
   DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)
   DMA_CMD_NEXT(_r_index)
-
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
 
   // Save DMA command pointer
   phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
-  // Launch eth_rx_completion stage
-  phvwri          p.common_te0_phv_table_pc, eth_rx_completion[38:6]
-  phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | (1 << 2))
 
   // Launch eth_rx_stats action
-  phvwri.e        p.common_te1_phv_table_pc, eth_rx_stats[38:6]
-  phvwri.f        p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri          p.common_te1_phv_table_pc, eth_rx_stats[38:6]
+  phvwri          p.common_te1_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+
+  // Launch eth_completion action
+  phvwri.e        p.common_te0_phv_table_pc, eth_rx_completion[38:6]
+  phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

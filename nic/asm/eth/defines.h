@@ -141,6 +141,13 @@ struct skip {
     addi        _r_index, _r_index, -1
 
 /**
+ * ZERO
+ */
+
+#define DMA_CMD_RESET(_r, _c) \
+    phvwrp._c   _r, 0, 128, r0; \
+
+/**
  * SKIP
  */
 
