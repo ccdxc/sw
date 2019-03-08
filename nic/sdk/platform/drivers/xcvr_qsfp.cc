@@ -12,12 +12,15 @@ namespace platform {
 using sdk::lib::pal_ret_t;
 using sdk::lib::qsfp_page_t;
 
+#define MAX_XCVR_ACCESS_RETRIES 5
+
 sdk_ret_t
 qsfp_read_page (int port, qsfp_page_t pgno, int offset,
                 int num_bytes, uint8_t *data) {
     pal_ret_t ret = sdk::lib::pal_qsfp_read(data, num_bytes,
                                             offset, pgno,
-                                            1, port + 1);
+                                            MAX_XCVR_ACCESS_RETRIES,
+                                            port + 1);
     if (ret == sdk::lib::PAL_RET_OK) {
         return SDK_RET_OK;
     } else {
@@ -30,7 +33,8 @@ qsfp_write_page (int port, qsfp_page_t pgno, int offset,
                  int num_bytes, uint8_t *data) {
     pal_ret_t ret = sdk::lib::pal_qsfp_write(data, num_bytes,
                                              offset, pgno,
-                                             1, port + 1);
+                                             MAX_XCVR_ACCESS_RETRIES,
+                                             port + 1);
     if (ret == sdk::lib::PAL_RET_OK) {
         return SDK_RET_OK;
     } else {
