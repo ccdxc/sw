@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+
+	"github.com/pensando/sw/venice/cmd/env"
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/imagestore"
@@ -78,7 +81,7 @@ func RunVersion(version string) error {
 // DownloadImage downloads an image from minio and returns the local filename
 func DownloadImage(version string) (string, error) {
 
-	if err := imagestore.DownloadVeniceImage(version); err != nil {
+	if err := imagestore.DownloadVeniceImage(context.Background(), env.ResolverClient, version); err != nil {
 		return "", fmt.Errorf("Error %s during image download of version %s", err, version)
 	}
 

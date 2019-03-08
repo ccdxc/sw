@@ -155,15 +155,18 @@ var roFSM = [][]fsmNode{
 		fsmEvOneVenicePreUpgFail:    {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 		fsmEvAllVenicePreUpgOK:      {nextSt: fsmstPreCheckingSmartNIC, actFn: fsmAcPreUpgSmartNIC},
 		fsmEvVeniceBypass:           {nextSt: fsmstPreCheckingSmartNIC, actFn: fsmAcPreUpgSmartNIC},
+		fsmEvSuspend:                {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 	fsmstPreCheckingSmartNIC: {
 		fsmEvAllSmartNICPreUpgOK:      {nextSt: fsmstWaitForSchedule, actFn: fsmAcWaitForSchedule},
 		fsmEvSomeSmartNICPreUpgFail:   {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 		fsmEvOneSmartNICPreupgSuccess: {nextSt: fsmstPreCheckingSmartNIC}, // TODO
 		fsmEvOneSmartNICPreupgFail:    {nextSt: fsmstPreCheckingSmartNIC}, // TODO
+		fsmEvSuspend:                  {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 	fsmstWaitForSchedule: {
 		fsmEvScheduleNow: {nextSt: fsmstRollingOutVenice, actFn: fsmAcIssueNextVeniceRollout},
+		fsmEvSuspend:     {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 	fsmstRollingOutVenice: {
 		fsmEvOneVeniceUpgSuccess: {nextSt: fsmstRollingOutVenice, actFn: fsmAcIssueNextVeniceRollout},
@@ -173,6 +176,7 @@ var roFSM = [][]fsmNode{
 	},
 	fsmstRollingOutService: {
 		fsmEvServiceUpgOK: {nextSt: fsmstRollingoutOutSmartNIC, actFn: fsmAcRolloutSmartNICs},
+		fsmEvSuspend:      {nextSt: fsmstRolloutSuspend, actFn: fsmAcRolloutSuspend},
 	},
 	fsmstRollingoutOutSmartNIC: {
 		fsmEvSuccess:               {nextSt: fsmstRolloutSuccess, actFn: fsmAcRolloutSuccess},

@@ -4,9 +4,10 @@ import (
 	"context"
 	"strings"
 
+	"github.com/pensando/sw/venice/utils/imagestore"
+
 	"github.com/davecgh/go-spew/spew"
 
-	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -112,8 +113,7 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 	case protos.SmartNICOp_SmartNICImageDownload:
-		servers := n.GetControllerIps()
-		utils.DownloadNaplesImage(context.Background(), servers, n.inProgressOps.Version, n.resolverClient)
+		imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, n.inProgressOps.Version)
 	}
 }
 
