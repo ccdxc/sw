@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	targetStateChangeWaitTime = 10 * time.Second
+	targetStateChangeWaitTime = 20 * time.Second
 	restartServiceWaitTime    = 10 * time.Second
 	watcherPollInterval       = time.Second
 )
