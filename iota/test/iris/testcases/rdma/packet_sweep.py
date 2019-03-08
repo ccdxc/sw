@@ -93,7 +93,7 @@ def Trigger(tc):
         # cmd for server
         for p in range(s_port, e_port):
             # Keep numsges (-W) option only for Naples
-            if (w1.IsNaples):
+            if (w1.IsNaples()):
                 W_opt = numsges_opt
             else:
                 W_opt = " "
@@ -116,7 +116,7 @@ def Trigger(tc):
         # cmd for client
         for p in range(s_port, e_port):
             # Keep numsges (-W) option only for Naples
-            if (w2.IsNaples):
+            if (w2.IsNaples()):
                 W_opt = numsges_opt
             else:
                 W_opt = " "
