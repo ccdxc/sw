@@ -9,7 +9,7 @@ package tpc;
 
 import public "gogo.proto";
 import "meta/meta.proto";
-import "types.proto";
+import "types/types.proto";
 
 service PCNSvc {
   rpc PCNCreate (PCNSpec) returns (PCNStatus) {}
