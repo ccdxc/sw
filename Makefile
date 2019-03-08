@@ -168,6 +168,7 @@ c-stop:
 install:
 	@#copy the agent binaries to netagent
 	@cp -p ${PWD}/bin/cbin/fakedelphihub tools/docker-files/netagent/fakedelphihub
+	@cp -p ${PWD}/bin/cbin/ctctl tools/docker-files/citadel/ctctl
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
 	@cp -p ${PWD}/bin/cbin/nevtsproxy tools/docker-files/netagent/nevtsproxy
 	@cp -p ${PWD}/bin/cbin/tmagent tools/docker-files/netagent/tmagent
