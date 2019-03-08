@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 
     logger = spdlog::stdout_color_mt("fte_sim");
     logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
-    std::string server_addr("0.0.0.0:");
+    std::string server_addr("localhost:");
     if (argc > 1) {
         server_addr.append(argv[1]);
     } else {

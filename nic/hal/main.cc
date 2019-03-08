@@ -205,7 +205,7 @@ main (int argc, char **argv)
 
     // listen on the given address (no authentication)
     grpc_init();
-    g_grpc_server_addr = std::string("0.0.0.0:") + hal::g_hal_cfg.grpc_port;
+    g_grpc_server_addr = std::string("localhost:") + hal::g_hal_cfg.grpc_port;
     hal::g_hal_cfg.server_builder = server_builder = new ServerBuilder();
     server_builder->SetMaxReceiveMessageSize(INT_MAX);
     server_builder->SetMaxSendMessageSize(INT_MAX);

@@ -181,7 +181,7 @@ func main() {
 	es := &evtServices{
 		config: &config{
 			restURL:       fmt.Sprintf(":" + globals.EvtsProxyRESTPort),
-			grpcListenURL: fmt.Sprintf(":%s", globals.EvtsProxyRPCPort),
+			grpcListenURL: fmt.Sprintf("localhost:%s", globals.EvtsProxyRPCPort),
 			evtsStoreDir:  *evtsStoreDir,
 			agentDbPath:   *agentDbPath,
 			dedupInterval: *dedupInterval,

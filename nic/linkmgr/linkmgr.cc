@@ -320,7 +320,7 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
     }
 
     // listen on the given address (no authentication)
-    std::string server_addr = std::string("0.0.0.0:") + linkmgr_cfg->grpc_port;
+    std::string server_addr = std::string("localhost:") + linkmgr_cfg->grpc_port;
 
     server_builder.AddListeningPort(server_addr,
                                     grpc::InsecureServerCredentials());
