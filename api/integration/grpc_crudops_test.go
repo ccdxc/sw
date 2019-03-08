@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
 	"reflect"
 	"sort"
@@ -137,6 +138,31 @@ func TestCrudOps(t *testing.T) {
 			return addToWatchList(eventslist, obj, evtype)
 		}
 		return nil
+	}
+
+	// Start a dummy watcher with a resource version, which is expected to fail
+	{
+		opts := api.ListWatchOptions{}
+		wctx, cancel := context.WithCancel(ctx)
+		opts.ResourceVersion = "10"
+		watcher, err := apicl.BookstoreV1().Publisher().Watch(wctx, &opts)
+		if err != nil {
+			t.Fatalf("Failed to start watch (%s)\n", err)
+		}
+		for ev := range watcher.EventChan() {
+			if ev.Type != kvstore.WatcherError {
+				t.Fatalf("expecting Watcherror but got [%+v]", ev)
+			}
+			status, ok := ev.Object.(*api.Status)
+			if !ok {
+				t.Fatalf("not api.Status [%+v]", ev.Object)
+			}
+			if status.Code != http.StatusGone {
+				t.Fatalf("expecting http.StatusGone, got [%+v]", status)
+			}
+			break
+		}
+		cancel()
 	}
 
 	var wg sync.WaitGroup

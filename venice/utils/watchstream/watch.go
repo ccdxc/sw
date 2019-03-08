@@ -449,6 +449,18 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 				item = item.Next()
 			}
 		}
+	} else {
+		if fromver != 0 {
+			// fromVer specified but there is nothing in the queue.
+			errmsg := api.Status{
+				Result:  api.StatusResultExpired,
+				Message: []string{fmt.Sprintf("version not in cache history, retry without specifying version")},
+				Code:    http.StatusGone,
+			}
+			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer)
+			cb(kvstore.WatcherError, &errmsg, nil)
+			return
+		}
 	}
 
 	condCh := make(chan error, 1)

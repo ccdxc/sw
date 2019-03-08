@@ -989,9 +989,11 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	ret := newWatchServer(cancel)
 	peer := ctxutils.GetContextID(nctx)
 	watchHandler := func(evType kvstore.WatchEventType, item, prev runtime.Object) {
-		for _, fn := range filters {
-			if !fn(item, prev) {
-				return
+		if evType != kvstore.WatcherError {
+			for _, fn := range filters {
+				if !fn(item, prev) {
+					return
+				}
 			}
 		}
 		ret.ch <- &kvstore.WatchEvent{

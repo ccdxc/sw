@@ -128,6 +128,18 @@ func TestWatchEventQ(t *testing.T) {
 	if q.watcherList.Len() != 0 {
 		t.Errorf("expecting number of active watchers to be 0 found %d", q.watcherList.Len())
 	}
+
+	t.Logf(" --> Dequeue with fromVer on an empty EventQ")
+	d = time.Now().Add(50 * time.Millisecond)
+	nctx, cancel = context.WithDeadline(ctx, d)
+	q.Dequeue(nctx, 10, cbfunc("q1-0"), nil)
+	cancel()
+	if q.watcherList.Len() != 0 {
+		t.Errorf("expecting number of active watchers to be 0 found %d", q.watcherList.Len())
+	}
+	testutils.Assert(t, rcvdErrors == 1, "expecting a received error")
+	rcvdErrors = 0
+
 	t.Logf(" --> Enqueue without any active Watchers")
 	b1 := apitest.TestObj{}
 	b1.ResourceVersion = "111"
