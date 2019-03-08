@@ -42,7 +42,7 @@ packets:
     - packet:
         id          : PKT1     # Input packet 1
         clone       : ref://testcase/packets/id=BASE
-        encaps      : 
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
             - ref://factory/packets/id=ENCAP_VXLAN
         headers     :

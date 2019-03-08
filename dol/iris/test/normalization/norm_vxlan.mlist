@@ -226,3 +226,29 @@ modules:
             - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
               flow: filter://type=IPV4,proto=TCP
 
+    - module:
+        name    : IPV4_BAD_VERSION
+        spec    : norm_mf_vxlan.testspec
+        iterate :
+            - profile   : SEC_PROF_IP_OPTIONS_ACTION_ALLOW
+              flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
+
+    - module:
+        name    : OUTER_IPV4_BAD_VERSION
+        spec    : norm_mf_vxlan.testspec
+        iterate :
+            - profile   : SEC_PROF_IP_OPTIONS_ACTION_ALLOW
+              flow          : filter://type=IPV4
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]
+
+    - module:
+        name    : IPV6_BAD_VERSION
+        spec    : norm_mf_vxlan.testspec
+        iterate :
+            - profile   : SEC_PROF_IP_OPTIONS_ACTION_ALLOW
+              flow          : filter://type=IPV6
+              drop_stats    : True
+              drop_reasons  : [ drop_malformed_pkt ]

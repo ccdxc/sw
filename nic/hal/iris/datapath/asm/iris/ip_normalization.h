@@ -7,6 +7,7 @@ ip_normalization:
   // we can use bbeq here to branch if we spare a bit for V4 and V6. But
   // that might increase the lkp_type beyond 4 bits. So not chaning it for now.
   // Good Packet start
+  seq         c7, k.tunnel_metadata_tunnel_terminate, 1
   seq         c5, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   seq         c6, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
   b.c5        lb_ipv4_normalizaiton_optimal
@@ -18,8 +19,11 @@ ip_normalization:
 // c2 has vlan_tag_valid
 lb_ipv4_normalizaiton_optimal:
   seq         c3, k.flow_lkp_metadata_ip_ttl, r0
-  phvwr.c3.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
-  phvwr.c3    p.capri_intrinsic_drop, 1
+  cmov        r1, c7, k.inner_ipv4_version, k.ipv4_version
+  sne.!c3     c3, r1, 4
+  sne         c4, k.ipv4_version, 4
+  andcf       c4, [c7]
+  bcf         [c3|c4], lb_malformed_packet
   smneb       c1, k.flow_lkp_metadata_ipv4_flags, (IP_FLAGS_RSVD_MASK | IP_FLAGS_DF_MASK), 0
   slt.!c1     c1, 5, k.flow_lkp_metadata_ipv4_hlen
   add.c2      r1, k.ipv4_totalLen, 18 // c2 has vlan_tag_valid to TRUE
@@ -36,8 +40,11 @@ lb_ipv4_normalizaiton_optimal:
 // c2 has vlan_tag_valid
 lb_ipv6_normalization_optimal:
   seq         c3, k.flow_lkp_metadata_ip_ttl, r0
-  phvwr.c3.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
-  phvwr.c3    p.capri_intrinsic_drop, 1
+  cmov        r1, c7, k.inner_ipv6_version, k.ipv6_version
+  sne.!c3     c3, r1, 6
+  sne         c4, k.ipv4_version, 4
+  andcf       c4, [c7]
+  bcf         [c3|c4], lb_malformed_packet
   add.c2      r1, k.ipv6_payloadLen, 58 // c2 has vlan_tag_valid to TRUE
   add.!c2     r1, k.ipv6_payloadLen, 54
   slt.!c1     c1, r1, k.capri_p4_intrinsic_packet_len
@@ -53,7 +60,6 @@ lb_ipv6_normalization_optimal:
 lb_ipv4_normalizaiton:
   // Will fall through non-optimal logic for bad packet cases
   // c5 - v4 packet, c6 - v6 packet
-  seq         c7, k.tunnel_metadata_tunnel_terminate, 1
   seq         c4, k.l4_metadata_ip_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
   b.c4        lb_ipv4_norm_df_bit
   seq         c4, k.l4_metadata_ip_df_action, NORMALIZATION_ACTION_ALLOW
@@ -226,7 +232,6 @@ lb_ipv4_norm_ttl:
 
 
 lb_ipv6_normalization:
-  seq         c7, k.tunnel_metadata_tunnel_terminate, 1
   seq         c4, k.l4_metadata_ip_options_action, NORMALIZATION_ACTION_ALLOW
   b.c4        lb_ipv6_norm_invalid_length
   seq         c4, k.l4_metadata_ip_invalid_len_action, NORMALIZATION_ACTION_ALLOW
@@ -300,7 +305,6 @@ lb_ipv6_norm_invalid_length:
   b           lb_ipv6_norm_hop_limit
   phvwr       p.capri_intrinsic_payload, 0
 
-
 lb_ipv6_norm_hop_limit:
   jr.c4       r7
   seq         c1, k.control_metadata_uplink, FALSE
@@ -314,3 +318,7 @@ lb_ipv6_norm_hop_limit:
   phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
   jr          r7
   nop
+
+lb_malformed_packet:
+  phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
+  phvwr       p.capri_intrinsic_drop, 1

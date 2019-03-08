@@ -17,7 +17,7 @@ packets:
         id          : PKT1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        encaps      : 
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:

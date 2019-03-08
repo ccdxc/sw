@@ -823,11 +823,11 @@ parser parse_ipv4 {
     set_metadata(ohi.l3_len, current(16,16) + 0);
     set_metadata(ohi.l4_len, current(16,16) + 0);
     return select(current(48,16), current(0,8)) {
-        0x000045 mask 0x3fffff   : parse_base_ipv4;
-        0x000044 mask 0x3fffff   : ingress;
-        0x000040 mask 0x3fff4C   : ingress;
-        0x000040 mask 0x3fff40   : parse_ipv4_with_options;
-        0x000000 mask 0x3fff00   : ingress;
+        0x000045 mask 0x3fffff : parse_base_ipv4;
+        0x000044 mask 0x3fffff : ingress;
+        0x000040 mask 0x3ffffc : ingress;
+        0x000040 mask 0x3ffff0 : parse_ipv4_with_options;
+        0x000000 mask 0x3fff00 : parse_base_ipv4;
         default : parse_ipv4_frag;
     }
 }
@@ -1680,9 +1680,9 @@ parser parse_inner_ipv4 {
     return select(current(48,16), current(0,8)) {
         0x000045 mask 0x3fffff : parse_base_inner_ipv4;
         0x000044 mask 0x3fffff : ingress;
-        0x000040 mask 0x3fff4C : ingress;
-        0x000040 mask 0x3fff40 : parse_inner_ipv4_with_options;
-        0x000000 mask 0x3fff00 : ingress;
+        0x000040 mask 0x3ffffc : ingress;
+        0x000040 mask 0x3ffff0 : parse_inner_ipv4_with_options;
+        0x000000 mask 0x3fff00 : parse_base_inner_ipv4;
         default : parse_inner_ipv4_frag;
     }
 }

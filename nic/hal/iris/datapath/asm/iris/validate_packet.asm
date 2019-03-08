@@ -21,30 +21,9 @@ validate_native_packet:
   seq.!c1     c1, k.ethernet_srcAddr[40], 1
   sub         r1, r0, 1
   seq.!c1     c1, k.ethernet_srcAddr, r1[47:0]
-  b.c1        malformed_packet
-  seq         c1, k.ipv4_valid, TRUE
-  seq         c2, k.ipv6_valid, TRUE
-
-  .csbegin
-  cswitch [c2,c1]
-  nop
-  .cscase 0
+  phvwr.c1    p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   nop.e
-  nop
-  .cscase 1
-  sne         c1, k.ipv4_version, 4
-  nop.!c1.e
-  phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
-  phvwr       p.capri_intrinsic_drop, 1
-  .cscase 2
-  sne         c1, k.ipv6_version, 6
-  nop.!c1.e
-  phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
-  phvwr       p.capri_intrinsic_drop, 1
-  .cscase 3
-  nop.e
-  nop
-  .csend
+  phvwr.c1    p.capri_intrinsic_drop, 1
 
 validate_tunneled_packet:
   seq         c1, k.ethernet_srcAddr, r0
@@ -60,30 +39,9 @@ validate_tunneled_packet:
   seq.!c1     c1, k.inner_ethernet_srcAddr[40], 1
   seq.!c1     c1, k.inner_ethernet_srcAddr, r1[47:0]
 validate_tunneled_packet_ip:
-  b.c1        malformed_packet
-  seq         c1, k.inner_ipv4_valid, TRUE
-  seq         c2, k.inner_ipv6_valid, TRUE
-
-  .csbegin
-  cswitch [c2,c1]
-  nop
-  .cscase 0
+  phvwr.c1    p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   nop.e
-  nop
-  .cscase 1
-  sne         c1, k.inner_ipv4_version, 4
-  nop.!c1.e
-  phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
-  phvwr       p.capri_intrinsic_drop, 1
-  .cscase 2
-  sne        c1, k.inner_ipv6_version, 6
-  nop.!c1.e
-  phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
-  phvwr       p.capri_intrinsic_drop, 1
-  .cscase 3
-  nop.e
-  nop
-  .csend
+  phvwr.c1    p.capri_intrinsic_drop, 1
 
 f_check_parser_errors:
   // do not use c1 register in this function
@@ -103,10 +61,6 @@ check_parser_errors_uplink:
   phvwr.!c3   p.control_metadata_drop_reason[DROP_PARSER_ICRC_ERR], 1
   phvwr.e     p.capri_intrinsic_drop, 1
   nop
-
-malformed_packet:
-  phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
-  phvwr       p.capri_intrinsic_drop, 1
 
 /*****************************************************************************/
 /* error function                                                            */

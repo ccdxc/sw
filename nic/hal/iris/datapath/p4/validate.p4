@@ -98,18 +98,6 @@ action validate_native_packet() {
         (ethernet.srcAddr == 0xFFFFFFFFFFFF)) {
         malformed_packet();
     }
-
-    if ((ipv4.valid == TRUE) and
-        (ipv4.version != 4)) {
-        malformed_packet();
-    }
-
-    if ((ipv6.valid == TRUE) and
-        (ipv6.version != 6)) {
-        malformed_packet();
-    }
-
-    modify_field(scratch_metadata.size4, ipv4.ihl);
 }
 
 action validate_tunneled_packet() {
@@ -133,18 +121,6 @@ action validate_tunneled_packet() {
          (inner_ethernet.srcAddr == 0xFFFFFFFFFFFF))) {
         malformed_packet();
     }
-
-    if ((inner_ipv4.valid == TRUE) and
-        (inner_ipv4.version != 4)) {
-        malformed_packet();
-    }
-
-    if ((inner_ipv6.valid == TRUE) and
-        (inner_ipv6.version != 6)) {
-        malformed_packet();
-    }
-
-    modify_field(scratch_metadata.size4, inner_ipv4.ihl);
 }
 
 action check_parser_errors() {

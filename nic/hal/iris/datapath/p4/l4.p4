@@ -1161,173 +1161,195 @@ action ip_normalization_checks() {
         // Act on inner fields otherwise outer fields
     }
 
-    if (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4)
-    {
+    if (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4) {
 
-    // Reserved bit in ip header non-zero
-    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
-        (l4_metadata.ip_rsvd_flags_action == NORMALIZATION_ACTION_DROP)) {
-        modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
-    }
-
-    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
-        (tunnel_metadata.tunnel_terminate == FALSE) and
-        (l4_metadata.ip_rsvd_flags_action == NORMALIZATION_ACTION_EDIT)) {
-        bit_and(ipv4.flags, ipv4.flags, 6);
-    }
-
-    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
-        (tunnel_metadata.tunnel_terminate == TRUE) and
-        (l4_metadata.ip_rsvd_flags_action == NORMALIZATION_ACTION_EDIT)) {
-        bit_and(inner_ipv4.flags, inner_ipv4.flags, 6);
-    }
-
-    // DF bit in ip header non-zero
-    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_DF_MASK != 0) and
-        (l4_metadata.ip_df_action == NORMALIZATION_ACTION_DROP)) {
-        modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
-    }
-
-    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_DF_MASK != 0) and
-        (tunnel_metadata.tunnel_terminate == FALSE) and
-        (l4_metadata.ip_df_action == NORMALIZATION_ACTION_EDIT)) {
-        bit_or(ipv4.flags, ipv4.flags, 5);
-    }
-
-    if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_DF_MASK != 0) and
-        (tunnel_metadata.tunnel_terminate == TRUE) and
-        (l4_metadata.ip_df_action == NORMALIZATION_ACTION_EDIT)) {
-        bit_or(inner_ipv4.flags, inner_ipv4.flags, 5);
-    }
-
-    // IPV4 Options packets
-    if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_DROP) and
-        (flow_lkp_metadata.ipv4_hlen > 5)) {
-        modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
-    }
-    if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
-        (tunnel_metadata.tunnel_terminate == FALSE) and
-        (flow_lkp_metadata.ipv4_hlen > 5)) {
-        // mark the IP option header valid to zero
-        // remove_header(ipv4_options_blob);
-        modify_field(ipv4_options_blob.valid, 0);
-        // We also need to update
-        // 1. IPv4 hlen in packet
-        // 2. IPv4 Total Len in packet
-        // 3. IP header checksum update, meaning change the header valid bit
-        //    to the one which will trigger checksum update
-        // 4. capri_p4_intrinsic.packet_len needs to be reduced.
-        modify_field(ipv4.ihl, 5);
-        subtract_from_field(ipv4.totalLen, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
-        // IP header checksum update.
-        subtract_from_field(capri_p4_intrinsic.packet_len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
-    }
-    if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
-        (tunnel_metadata.tunnel_terminate == TRUE) and
-        (flow_lkp_metadata.ipv4_hlen > 5)) {
-        // mark the IP option header valid to zero
-        modify_field(inner_ipv4_options_blob.valid, 0);
-        modify_field(inner_ipv4.ihl, 5);
-        subtract(inner_ipv4.totalLen, inner_ipv4.totalLen, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
-        subtract(udp.len, udp.len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
-        subtract(ipv4.totalLen, ipv4.totalLen, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
-        subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
-    }
-
-
-    // Outer IP Header length to frame length validation
-    // !!! TODO !!!
-    // According to the SNORT IP4 specification:
-    // trim - truncate packets with excess payload to the datagram length specified in the IP
-    // header + the layer 2 header (e.g. ethernet), but don’t truncate below minimum frame length.
-    // Non-tunneled packet or tunnel is not terminated
-
-    modify_field(scratch_metadata.size8, control_metadata.parser_outer_eth_offset);
-    modify_field(scratch_metadata.size8, control_metadata.parser_inner_eth_offset);
-    modify_field(scratch_metadata.size16, control_metadata.parser_payload_offset);
-    if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
-        (tunnel_metadata.tunnel_terminate == FALSE) and
-        (((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18))) or
-         ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14))))) {
-        modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
-    }
-    // Vlan tagged packet
-    if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        (tunnel_metadata.tunnel_terminate == FALSE) and
-        ((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18)) and
-        (((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
-        if ((ipv4.totalLen + 18) > MIN_ETHER_FRAME_LEN) {
-            modify_field(capri_p4_intrinsic.packet_len, (ipv4.totalLen + 18));
+        if (((tunnel_metadata.tunnel_terminate == FALSE) and (ipv4.version != 4)) or
+            ((tunnel_metadata.tunnel_terminate == TRUE) and
+             ((ipv4.version != 4) or (inner_ipv4.version != 4)))) {
+            malformed_packet();
         }
-        if ((ipv4.totalLen + 18) < MIN_ETHER_FRAME_LEN) {
-            modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
+
+        // Reserved bit in ip header non-zero
+        if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
+            (l4_metadata.ip_rsvd_flags_action == NORMALIZATION_ACTION_DROP)) {
+            modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
         }
-    }
-    // Vlan untagged packet
-    if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        (tunnel_metadata.tunnel_terminate == FALSE) and
-        ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14)) and
-        (((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
-        if ((ipv4.totalLen + 14) > MIN_ETHER_FRAME_LEN) {
-            modify_field(capri_p4_intrinsic.packet_len, (ipv4.totalLen + 14));
+
+        if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
+            (tunnel_metadata.tunnel_terminate == FALSE) and
+            (l4_metadata.ip_rsvd_flags_action == NORMALIZATION_ACTION_EDIT)) {
+            bit_and(ipv4.flags, ipv4.flags, 6);
         }
-        if ((ipv4.totalLen + 14) < MIN_ETHER_FRAME_LEN) {
-            modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
+
+        if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_RSVD_MASK != 0) and
+            (tunnel_metadata.tunnel_terminate == TRUE) and
+            (l4_metadata.ip_rsvd_flags_action == NORMALIZATION_ACTION_EDIT)) {
+            bit_and(inner_ipv4.flags, inner_ipv4.flags, 6);
         }
-    }
+
+        // DF bit in ip header non-zero
+        if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_DF_MASK != 0) and
+            (l4_metadata.ip_df_action == NORMALIZATION_ACTION_DROP)) {
+            modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
+        }
+
+        if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_DF_MASK != 0) and
+            (tunnel_metadata.tunnel_terminate == FALSE) and
+            (l4_metadata.ip_df_action == NORMALIZATION_ACTION_EDIT)) {
+            bit_or(ipv4.flags, ipv4.flags, 5);
+        }
+
+        if ((flow_lkp_metadata.ipv4_flags & IP_FLAGS_DF_MASK != 0) and
+            (tunnel_metadata.tunnel_terminate == TRUE) and
+            (l4_metadata.ip_df_action == NORMALIZATION_ACTION_EDIT)) {
+            bit_or(inner_ipv4.flags, inner_ipv4.flags, 5);
+        }
+
+        // IPV4 Options packets
+        if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_DROP) and
+            (flow_lkp_metadata.ipv4_hlen > 5)) {
+            modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
+        }
+        if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
+            (tunnel_metadata.tunnel_terminate == FALSE) and
+            (flow_lkp_metadata.ipv4_hlen > 5)) {
+            // mark the IP option header valid to zero
+            // remove_header(ipv4_options_blob);
+            modify_field(ipv4_options_blob.valid, 0);
+            // We also need to update
+            // 1. IPv4 hlen in packet
+            // 2. IPv4 Total Len in packet
+            // 3. IP header checksum update, meaning change the header valid bit
+            //    to the one which will trigger checksum update
+            // 4. capri_p4_intrinsic.packet_len needs to be reduced.
+            modify_field(ipv4.ihl, 5);
+            subtract_from_field(ipv4.totalLen,
+                                ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+            // IP header checksum update.
+            subtract_from_field(capri_p4_intrinsic.packet_len,
+                                ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+        }
+        if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
+            (tunnel_metadata.tunnel_terminate == TRUE) and
+            (flow_lkp_metadata.ipv4_hlen > 5)) {
+            // mark the IP option header valid to zero
+            modify_field(inner_ipv4_options_blob.valid, 0);
+            modify_field(inner_ipv4.ihl, 5);
+            subtract(inner_ipv4.totalLen, inner_ipv4.totalLen,
+                     ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+            subtract(udp.len, udp.len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+            subtract(ipv4.totalLen, ipv4.totalLen,
+                     ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+            subtract(capri_p4_intrinsic.packet_len,
+                     capri_p4_intrinsic.packet_len,
+                     ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+        }
+
+
+        // Outer IP Header length to frame length validation
+        // !!! TODO !!!
+        // According to the SNORT IP4 specification:
+        // trim - truncate packets with excess payload to the datagram length
+        // specified in the IP header + the layer 2 header (e.g. ethernet),
+        // but don’t truncate below minimum frame length.
+        // Non-tunneled packet or tunnel is not terminated
+
+        modify_field(scratch_metadata.size8, control_metadata.parser_outer_eth_offset);
+        modify_field(scratch_metadata.size8, control_metadata.parser_inner_eth_offset);
+        modify_field(scratch_metadata.size16, control_metadata.parser_payload_offset);
+        if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
+            (tunnel_metadata.tunnel_terminate == FALSE) and
+            (((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18))) or
+             ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14))))) {
+            modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
+        }
+        // Vlan tagged packet
+        if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+            (tunnel_metadata.tunnel_terminate == FALSE) and
+            ((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18)) and
+             (((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN) or
+              (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
+            if ((ipv4.totalLen + 18) > MIN_ETHER_FRAME_LEN) {
+                modify_field(capri_p4_intrinsic.packet_len, (ipv4.totalLen + 18));
+            }
+            if ((ipv4.totalLen + 18) < MIN_ETHER_FRAME_LEN) {
+                modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
+            }
+        }
+        // Vlan untagged packet
+        if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+            (tunnel_metadata.tunnel_terminate == FALSE) and
+            ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14)) and
+             (((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN) or
+              (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
+            if ((ipv4.totalLen + 14) > MIN_ETHER_FRAME_LEN) {
+                modify_field(capri_p4_intrinsic.packet_len, (ipv4.totalLen + 14));
+            }
+            if ((ipv4.totalLen + 14) < MIN_ETHER_FRAME_LEN) {
+                modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
+            }
+        }
 
 #if 0
-    // tunneled packet and terminated
-    // 8 Bytes for UDP Header
-    // 8 bytes for vxlan Header
-    if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
-        (tunnel_metadata.tunnel_terminate == TRUE) and
-        (((vlan_tag.valid == TRUE) and
-          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
-         ((vlan_tag.valid == FALSE) and
-          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
-        modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
-    }
-    // Vlan tagged packet
-    // Ignoring the minimum size packet checks for Tunneled packets as the deparser
-    // may already take care of this.
-    // TBD - Check
-    if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        (tunnel_metadata.tunnel_terminate == TRUE) and
-        (((vlan_tag.valid == TRUE) and
-          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
-         ((vlan_tag.valid == FALSE) and
-          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
-        modify_field(capri_p4_intrinsic.packet_len, (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen));
-    }
-    // Vlan untagged packet
-    if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        (tunnel_metadata.tunnel_terminate == TRUE) and
-        (((vlan_tag.valid == TRUE) and
-          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
-         ((vlan_tag.valid == FALSE) and
-          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
-        modify_field(capri_p4_intrinsic.packet_len, (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen));
-    }
+        // tunneled packet and terminated
+        // 8 Bytes for UDP Header
+        // 8 bytes for vxlan Header
+        if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
+            (tunnel_metadata.tunnel_terminate == TRUE) and
+            (((vlan_tag.valid == TRUE) and
+              (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
+             ((vlan_tag.valid == FALSE) and
+              (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
+            modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
+        }
+        // Vlan tagged packet
+        // Ignoring the minimum size packet checks for Tunneled packets as the deparser
+        // may already take care of this.
+        // TBD - Check
+        if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+            (tunnel_metadata.tunnel_terminate == TRUE) and
+            (((vlan_tag.valid == TRUE) and
+              (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
+             ((vlan_tag.valid == FALSE) and
+              (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
+            modify_field(capri_p4_intrinsic.packet_len,
+                         (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen));
+        }
+        // Vlan untagged packet
+        if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+            (tunnel_metadata.tunnel_terminate == TRUE) and
+            (((vlan_tag.valid == TRUE) and
+              (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
+             ((vlan_tag.valid == FALSE) and
+              (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
+            modify_field(capri_p4_intrinsic.packet_len,
+                         (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen));
+        }
 #endif /* 0 */
-    // IP Normalize TTL: If the configured value is non-zero then every
-    // IPv4 packet hitting this L4 Profile will be updated with a ttl which is
-    // ip_normalize_ttl
-    //
-    if (control_metadata.uplink == FALSE and l4_metadata.ip_normalize_ttl != 0 and
-        flow_lkp_metadata.ip_ttl != l4_metadata.ip_normalize_ttl and
-        tunnel_metadata.tunnel_terminate == FALSE) {
-        modify_field(ipv4.ttl, l4_metadata.ip_normalize_ttl);
-    }
-    if (control_metadata.uplink == FALSE and l4_metadata.ip_normalize_ttl != 0 and
-        flow_lkp_metadata.ip_ttl != l4_metadata.ip_normalize_ttl and
-        tunnel_metadata.tunnel_terminate == TRUE) {
-        modify_field(inner_ipv4.ttl, l4_metadata.ip_normalize_ttl);
+        // IP Normalize TTL: If the configured value is non-zero then every
+        // IPv4 packet hitting this L4 Profile will be updated with a ttl which is
+        // ip_normalize_ttl
+        //
+        if (control_metadata.uplink == FALSE and l4_metadata.ip_normalize_ttl != 0 and
+            flow_lkp_metadata.ip_ttl != l4_metadata.ip_normalize_ttl and
+            tunnel_metadata.tunnel_terminate == FALSE) {
+            modify_field(ipv4.ttl, l4_metadata.ip_normalize_ttl);
+        }
+        if (control_metadata.uplink == FALSE and l4_metadata.ip_normalize_ttl != 0 and
+            flow_lkp_metadata.ip_ttl != l4_metadata.ip_normalize_ttl and
+            tunnel_metadata.tunnel_terminate == TRUE) {
+            modify_field(inner_ipv4.ttl, l4_metadata.ip_normalize_ttl);
+        }
     }
 
-    }
-    if (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6)
-    {
+    if (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6) {
+
+        if (((tunnel_metadata.tunnel_terminate == FALSE) and (ipv6.version != 6)) or
+            ((tunnel_metadata.tunnel_terminate == TRUE) and
+             ((ipv4.version != 4) or (inner_ipv6.version != 6)))) {
+            malformed_packet();
+        }
+
         // For V6 Packet we will do the following normalization checks
         // 1. Normalize Hop Limit
         // 2. IPv6 Extension header strip.
@@ -1347,7 +1369,7 @@ action ip_normalization_checks() {
 
         // If you use "subtract()" (takes 3 args - subtract(dest, src1, src2)), 
         // then you don't need the dummy modify fields. When "subtract_from is used,
-        // the dest is not considered as one of the fields that is read in the 
+        // the dest is not considered as one of the fields that is read in the
         // action - this has to be fixed in the HLIR.
         if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
             (l3_metadata.ip_option_seen == TRUE) and
@@ -1406,7 +1428,8 @@ action ip_normalization_checks() {
         // Vlan tagged packet
         if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
             ((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv6.payloadLen + 58)) and
-            (((ipv6.payloadLen + 58) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
+            (((ipv6.payloadLen + 58) >= MIN_ETHER_FRAME_LEN) or
+             (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
             if ((ipv6.payloadLen + 58) > MIN_ETHER_FRAME_LEN) {
                 modify_field(capri_p4_intrinsic.packet_len, (ipv6.payloadLen + 58));
             }
@@ -1417,7 +1440,8 @@ action ip_normalization_checks() {
         // Vlan untagged packet
         if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
             ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv6.payloadLen + 54)) and
-            (((ipv6.payloadLen + 54) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
+            (((ipv6.payloadLen + 54) >= MIN_ETHER_FRAME_LEN) or
+             (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
             if ((ipv6.payloadLen + 54) > MIN_ETHER_FRAME_LEN) {
                 modify_field(capri_p4_intrinsic.packet_len, (ipv6.payloadLen + 54));
             }
@@ -1426,7 +1450,6 @@ action ip_normalization_checks() {
             }
         }
     }
-
 }
 
 action icmp_normalization() {

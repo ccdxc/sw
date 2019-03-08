@@ -110,7 +110,7 @@ modules:
             - flow          : filter://type=IPV4
               drop_stats    : True
               drop_reasons  : [ drop_malformed_pkt ]
- 
+
     - module:
         name    : OUTER_SIP_LOOPBACK_V4
         ignore  : True
@@ -119,7 +119,7 @@ modules:
             - flow          : filter://type=IPV4
               drop_stats    : True
               drop_reasons  : [ drop_malformed_pkt ]
-   
+
     - module:
         name    : SIP_LOOPBACK_V6
         iterate :
@@ -172,27 +172,6 @@ modules:
               drop_reasons  : [ drop_malformed_pkt ]
 
     - module:
-        name    : IPV4_BAD_VERSION
-        iterate :
-            - flow          : filter://type=IPV4
-              drop_stats    : True
-              drop_reasons  : [ drop_malformed_pkt ]
-
-    - module:
-        name    : OUTER_IPV4_BAD_VERSION
-        ignore  : True
-        enable  : False
-        iterate :
-            - flow          : filter://type=IPV4
-              drop_stats    : True
-              drop_reasons  : [ drop_malformed_pkt ]
-   
-    - module:
-        name    : IPV6_BAD_VERSION
-        iterate :
-            - flow          : filter://type=IPV6
-    
-    - module:
         name    : SIP_EQ_DIP_V4
         ignore  : true
         iterate :
@@ -207,7 +186,7 @@ modules:
             - flow          : filter://type=IPV4
               drop_stats    : True
               drop_reasons  : [ drop_malformed_pkt ]
-   
+
     - module:
         name    : SIP_EQ_DIP_V6
         ignore  : true
