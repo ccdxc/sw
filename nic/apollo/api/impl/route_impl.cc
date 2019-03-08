@@ -66,6 +66,7 @@ route_table_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->route_table_spec;
     /**< allocate free lpm slab for this route table */
     if (spec->af == IP_AF_IPV4) {
+        PDS_TRACE_DEBUG("Allocation IPv4 index for route-table %u", spec->key.id);
         if (route_table_impl_db()->v4_idxr()->alloc(&lpm_block_id) !=
                 sdk::lib::indexer::SUCCESS) {
             return sdk::SDK_RET_NO_RESOURCE;
@@ -74,6 +75,7 @@ route_table_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
             route_table_impl_db()->v4_region_addr() +
                 (route_table_impl_db()->v4_table_size() * lpm_block_id);
     } else {
+        PDS_TRACE_DEBUG("Allocation IPv6 index for route-table %u", spec->key.id);
         if (route_table_impl_db()->v6_idxr()->alloc(&lpm_block_id) !=
                 sdk::lib::indexer::SUCCESS) {
             return sdk::SDK_RET_NO_RESOURCE;

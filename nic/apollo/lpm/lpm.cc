@@ -13,6 +13,7 @@
 #include "nic/apollo/lpm/lpm_sport.hpp"
 #include "nic/apollo/lpm/lpm_ipv4_acl.hpp"
 #include "nic/apollo/lpm/lpm_ipv4_route.hpp"
+#include "nic/apollo/lpm/lpm_ipv6_route.hpp"
 #include "nic/apollo/lpm/lpm_proto_dport.hpp"
 
 using std::stack;
@@ -46,7 +47,7 @@ lpm_entry_key_size (itree_type_t tree_type)
     } else if (tree_type == ITREE_TYPE_IPV4_ACL) {
         return lpm_ipv4_acl_key_size();
     } else if (tree_type == ITREE_TYPE_IPV6) {
-        return 8;
+        return lpm_ipv6_route_key_size();
     }
     return 0;
 }
@@ -69,7 +70,7 @@ lpm_keys_per_table (itree_type_t tree_type)
     } else if (tree_type == ITREE_TYPE_IPV4_ACL) {
         return ((LPM_TABLE_SIZE / lpm_ipv4_acl_key_size()) - 1);
     } else if (tree_type == ITREE_TYPE_IPV6) {
-        return 7;
+        return ((LPM_TABLE_SIZE / lpm_ipv6_route_key_size()) - 1);
     }
     return 0;
 }
@@ -121,8 +122,7 @@ lpm_stages (itree_type_t tree_type, uint32_t num_intrvls)
     } else if (tree_type == ITREE_TYPE_IPV4_ACL) {
         return lpm_ipv4_acl_stages(num_intrvls);
     } else if (tree_type == ITREE_TYPE_IPV6) {
-        // 1 * 4-way last stage, plus (n-1) * 8-way stages
-        return (1 + ((uint32_t)ceil(log2f((float)(num_intrvls/4.0))/3.0)));
+        return lpm_ipv6_route_stages(num_intrvls);
     }
 
     return 0;
@@ -326,6 +326,11 @@ lpm_add_key_to_stage (itree_type_t tree_type, lpm_stage_info_t *stage,
                                       stage->curr_index,
                                       lpm_inode);
         break;
+    case ITREE_TYPE_IPV6:
+        lpm_ipv6_route_add_key_to_stage(stage->curr_table,
+                                        stage->curr_index,
+                                        lpm_inode);
+        break;
     default:
         SDK_ASSERT(0);
         break;
@@ -354,6 +359,10 @@ lpm_write_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
     case ITREE_TYPE_IPV4_ACL:
         lpm_ipv4_acl_write_stage_table(stage->curr_table_addr,
                                        stage->curr_table);
+        break;
+    case ITREE_TYPE_IPV6:
+        lpm_ipv6_route_write_stage_table(stage->curr_table_addr,
+                                         stage->curr_table);
         break;
     default:
         SDK_ASSERT(0);
@@ -387,6 +396,11 @@ lpm_add_key_to_last_stage (itree_type_t tree_type, lpm_stage_info_t *stage,
         lpm_ipv4_acl_add_key_to_last_stage(stage->curr_table,
                                            stage->curr_index,
                                            lpm_inode);
+    case ITREE_TYPE_IPV6:
+        lpm_ipv6_route_add_key_to_last_stage(stage->curr_table,
+                                             stage->curr_index,
+                                             lpm_inode);
+        break;
     default:
         SDK_ASSERT(0);
         break;
@@ -412,6 +426,9 @@ lpm_set_default_data (itree_type_t tree_type, lpm_stage_info_t *stage,
         break;
     case ITREE_TYPE_IPV4_ACL:
         lpm_ipv4_acl_set_default_data(stage->curr_table, default_data);
+        break;
+    case ITREE_TYPE_IPV6:
+        lpm_ipv6_route_set_default_data(stage->curr_table, default_data);
         break;
     default:
         SDK_ASSERT(0);
@@ -440,6 +457,10 @@ lpm_write_last_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
     case ITREE_TYPE_IPV4_ACL:
         lpm_ipv4_acl_write_last_stage_table(stage->curr_table_addr,
                                             stage->curr_table);
+        break;
+    case ITREE_TYPE_IPV6:
+        lpm_ipv6_route_write_last_stage_table(stage->curr_table_addr,
+                                              stage->curr_table);
         break;
     default:
         SDK_ASSERT(0);

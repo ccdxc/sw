@@ -25,24 +25,28 @@ prog_name:
     bcf        [c1],       lessthan6                 //then goto lessthan6
 ge6:
     sub        r1,         curr_addr,      base_addr
-    add.e      r1,         LPM_B7_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add        r1,         LPM_B7_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add.e      r1,         r1,             base_addr
     phvwr      next_addr,  r1                        //next_addr = r1
-    // Total 9 instructions; 0 branch delay slot waste
+    // Total 10 instructions; 0 branch delay slot waste
 lessthan6:
-    add.e      r1,         LPM_B6_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add        r1,         LPM_B6_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add.e      r1,         r1,             base_addr
     phvwr      next_addr,  r1                        //next_addr = r1
-    // Total 9 instructions; 0 branch delay slot waste
+    // Total 10 instructions; 0 branch delay slot waste
 lessthan5:
     slt        c1,         key,            keys(4)   //if key < keys[4]
     bcf        [c1],       lessthan4                 //then goto lessthan4
     sub        r1,         curr_addr,      base_addr
-    add.e      r1,         LPM_B5_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add        r1,         LPM_B5_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add.e      r1,         r1,             base_addr
     phvwr      next_addr,  r1                        //next_addr = r1
-    // Total 10 instructions; 1 branch delay slot waste
+    // Total 11 instructions; 1 branch delay slot waste
 lessthan4:
-    add.e      r1,         LPM_B4_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add        r1,         LPM_B4_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add.e      r1,         r1,             base_addr
     phvwr      next_addr,  r1                        //next_addr = r1
-    // Total 10 instructions; 1 branch delay slot waste
+    // Total 11 instructions; 1 branch delay slot waste
 lessthan3:
     slt        c1,         key,            keys(1)   //if key < keys[1]
     bcf        [c1],       lessthan1                 //then goto lessthan1
@@ -50,24 +54,28 @@ lessthan3:
     bcf        [c1],       lessthan2                 //then goto lessthan2
 ge2:
     sub        r1,         curr_addr,      base_addr
-    add.e      r1,         LPM_B3_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add        r1,         LPM_B3_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add.e      r1,         r1,             base_addr
     phvwr      next_addr,  r1                        //next_addr = r1
-    // Total 10 instructions; 1 branch delay slot waste
+    // Total 11 instructions; 1 branch delay slot waste
 lessthan2:
-    add.e      r1,         LPM_B2_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add        r1,         LPM_B2_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add.e      r1,         r1,             base_addr
     phvwr      next_addr,  r1                        //next_addr = r1
-    // Total 10 instructions; 1 branch delay slot waste
+    // Total 11 instructions; 1 branch delay slot waste
 lessthan1:
     slt        c1,         key,            keys(0)   //if key < keys[0]
     bcf        [c1],       lessthan0                 //then goto lessthan0
     sub        r1,         curr_addr,      base_addr
-    add.e      r1,         LPM_B1_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add        r1,         LPM_B1_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add.e      r1,         r1,             base_addr
     phvwr      next_addr,  r1                        //next_addr = r1
-    // Total 11 instructions; 2 branch delay slot waste
+    // Total 12 instructions; 2 branch delay slot waste
 lessthan0:
-    add.e      r1,         LPM_B0_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add        r1,         LPM_B0_OFFSET,  r1,        LPM_LOG2_FANOUT
+    add.e      r1,         r1,             base_addr
     phvwr      next_addr,  r1                        //next_addr = r1
-    // Total 11 instructions; 2 branch delay slot waste
+    // Total 12 instructions; 2 branch delay slot waste
 
 /*****************************************************************************/
 /* error function                                                            */

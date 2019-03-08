@@ -20,7 +20,7 @@
 /// @{
 
 // TODO: should be same as PDS_MAX_SUBNET
-#define PDS_MAX_ROUTE_TABLE            (5 * PDS_MAX_VCN)
+#define PDS_MAX_ROUTE_TABLE            1024
 #define PDS_MAX_ROUTE_PER_TABLE        1023
 
 /// \brief Nexthop type

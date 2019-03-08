@@ -102,7 +102,9 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     uint32_t ntables = num_vcns * num_subnets;
     uint32_t tep_offset = 3;
     static uint32_t rtnum = 0;
+    static uint32_t v6rtnum = 0;
     pds_route_table_spec_t route_table;
+    pds_route_table_spec_t v6route_table;
     sdk_ret_t rv = SDK_RET_OK;
 
     route_table.af = IP_AF_IPV4;
@@ -140,6 +142,47 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
         }
 #endif
     }
+
+    tep_offset = 3;
+    v6route_table.af = IP_AF_IPV6;
+    v6route_table.routes =
+            (pds_route_t *)malloc((num_routes * sizeof(pds_route_t)));
+    v6route_table.num_routes = num_routes;
+    for (uint32_t i = 1; i <= ntables; i++) {
+        v6route_table.key.id = ntables + i;
+        for (uint32_t j = 0; j < num_routes; j++) {
+            v6route_table.routes[j].prefix = *v6_route_pfx;
+            v6route_table.routes[j].prefix.addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
+                    htonl((0xC << 28) | (v6rtnum++ << 8));
+            v6route_table.routes[j].prefix.len = 120;
+
+            v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
+            v6route_table.routes[j].nh_ip.addr.v4_addr =
+                    tep_pfx->addr.addr.v4_addr + tep_offset++;
+
+            tep_offset %= (num_teps + 3);
+            if (tep_offset == 0) {
+                // skip MyTEP and gateway IPs
+                tep_offset += 3;
+            }
+
+            v6route_table.routes[j].nh_type = PDS_NH_TYPE_REMOTE_TEP;
+            v6route_table.routes[j].vcn_id = PDS_VCN_ID_INVALID;
+        }
+
+#ifdef TEST_GRPC_APP
+        rv = create_route_table_grpc(&v6route_table);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#else
+        rv = pds_route_table_create(&v6route_table);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#endif
+    }
+
     return rv;
 }
 
@@ -375,7 +418,8 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
 // VCN prefix is /8, subnet id is encoded in next 10 bits (making it /18 prefix)
 // leaving LSB 14 bits for VNIC IPs
 sdk_ret_t
-create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
+create_subnets (uint32_t vcn_id, uint32_t num_vcns,
+                uint32_t num_subnets, ip_prefix_t *vcn_pfx)
 {
     sdk_ret_t rv;
     pds_subnet_spec_t pds_subnet;
@@ -396,6 +440,7 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
         pds_subnet.vr_ip.addr.v4_addr = pds_subnet.pfx.addr.addr.v4_addr;
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
                            (uint64_t)pds_subnet.vr_ip.addr.v4_addr);
+        pds_subnet.v6_route_table.id = route_table_id + (num_subnets * num_vcns);
         pds_subnet.v4_route_table.id = route_table_id++;
         pds_subnet.egr_v4_policy.id = id++;
 #ifdef TEST_GRPC_APP
@@ -439,7 +484,7 @@ create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
         }
 #endif
         for (uint32_t j = 1; j <= num_subnets; j++) {
-            rv = create_subnets(i, j, &pds_vcn.pfx);
+            rv = create_subnets(i, num_vcns, j, &pds_vcn.pfx);
             if (rv != SDK_RET_OK) {
                 return rv;
             }
@@ -630,6 +675,7 @@ create_objects (void)
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.tep_pfx) == 0);
             } else if (kind == "route-table") {
                 g_test_params.num_routes = std::stol(obj.second.get<std::string>("count"));
+                g_test_params.num_vcns = std::stol(obj.second.get<std::string>("num_vcns", "1"));
                 pfxstr = obj.second.get<std::string>("prefix-start");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.route_pfx) == 0);
                 pfxstr = obj.second.get<std::string>("v6-prefix-start");

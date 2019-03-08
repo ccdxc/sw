@@ -337,25 +337,9 @@ static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
 
 #define IPADDR_EQ(ipaddr1, ipaddr2) !memcmp(ipaddr1, ipaddr2, sizeof(ip_addr_t))
 
-#define IPADDR_LT(ipaddr1, ipaddr2)                                            \
-    ((ipaddr1)->af == IP_AF_IPV4) ?                                            \
-        (((ipaddr1)->addr.v4_addr < (ipaddr2)->addr.v4_addr) ? true : false) : \
-        ((((ipaddr1)->addr.v6_addr.addr64[1] <                                 \
-           (ipaddr2)->addr.v6_addr.addr64[1]) ||                               \
-          (((ipaddr1)->addr.v6_addr.addr64[1] ==                               \
-            (ipaddr1)->addr.v6_addr.addr64[1]) &&                              \
-           ((ipaddr1)->addr.v6_addr.addr64[0] <                                \
-            (ipaddr2)->addr.v6_addr.addr64[0]))) ? true : false)
+#define IPADDR_LT(ipaddr1, ipaddr2) ip_addr_is_lessthan(ipaddr1, ipaddr2)
 
-#define IPADDR_GT(ipaddr1, ipaddr2)                                            \
-    ((ipaddr1)->af == IP_AF_IPV4) ?                                            \
-        (((ipaddr1)->addr.v4_addr > (ipaddr2)->addr.v4_addr) ? true : false) : \
-        ((((ipaddr1)->addr.v6_addr.addr64[1] >                                 \
-           (ipaddr2)->addr.v6_addr.addr64[1]) ||                               \
-          (((ipaddr1)->addr.v6_addr.addr64[1] ==                               \
-            (ipaddr1)->addr.v6_addr.addr64[1]) &&                              \
-           ((ipaddr1)->addr.v6_addr.addr64[0] >                                \
-            (ipaddr2)->addr.v6_addr.addr64[0]))) ? true : false)
+#define IPADDR_GT(ipaddr1, ipaddr2) ip_addr_is_greaterthan(ipaddr1, ipaddr2)
 
 static inline bool
 ip_addr_is_zero (const ip_addr_t *addr)
@@ -525,6 +509,78 @@ ip_addr_is_multicast (ip_addr_t *ip_addr)
         return ipv4_addr_is_multicast(&(ip_addr->addr.v4_addr));
     } else {
         return ipv6_addr_is_multicast(&(ip_addr->addr.v6_addr));
+    }
+}
+
+static inline bool
+ip_addr_is_lessthan (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
+{
+    if (ip_addr1->af == IP_AF_IPV4) {
+        return ((ip_addr1)->addr.v4_addr < (ip_addr2)->addr.v4_addr);
+    } else {
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[0]) <
+            htonl((ip_addr2)->addr.v6_addr.addr32[0])) {
+            return true;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[0]) >
+            htonl((ip_addr2)->addr.v6_addr.addr32[0])) {
+            return false;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[1]) <
+            htonl((ip_addr2)->addr.v6_addr.addr32[1])) {
+            return true;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[1]) >
+            htonl((ip_addr2)->addr.v6_addr.addr32[1])) {
+            return false;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[2]) <
+            htonl((ip_addr2)->addr.v6_addr.addr32[2])) {
+            return true;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[2]) >
+            htonl((ip_addr2)->addr.v6_addr.addr32[2])) {
+            return false;
+        } else {
+            return (htonl((ip_addr1)->addr.v6_addr.addr32[3]) <
+                    htonl((ip_addr2)->addr.v6_addr.addr32[3]));
+        }
+    }
+}
+
+static inline bool
+ip_addr_is_greaterthan (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
+{
+    if (ip_addr1->af == IP_AF_IPV4) {
+        return ((ip_addr1)->addr.v4_addr > (ip_addr2)->addr.v4_addr);
+    } else {
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[0]) >
+            htonl((ip_addr2)->addr.v6_addr.addr32[0])) {
+            return true;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[0]) <
+            htonl((ip_addr2)->addr.v6_addr.addr32[0])) {
+            return false;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[1]) >
+            htonl((ip_addr2)->addr.v6_addr.addr32[1])) {
+            return true;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[1]) <
+            htonl((ip_addr2)->addr.v6_addr.addr32[1])) {
+            return false;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[2]) >
+            htonl((ip_addr2)->addr.v6_addr.addr32[2])) {
+            return true;
+        } else
+        if (htonl((ip_addr1)->addr.v6_addr.addr32[2]) <
+            htonl((ip_addr2)->addr.v6_addr.addr32[2])) {
+            return false;
+        } else {
+            return (htonl((ip_addr1)->addr.v6_addr.addr32[3]) >
+                    htonl((ip_addr2)->addr.v6_addr.addr32[3]));
+        }
     }
 }
 

@@ -12,6 +12,7 @@
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 
 sdk_ret_t
 lpm_ipv6_route_add_key_to_stage (uint8_t *bytes, uint32_t idx,
@@ -21,32 +22,39 @@ lpm_ipv6_route_add_key_to_stage (uint8_t *bytes, uint32_t idx,
 
     switch (idx) {
         case 0:
-            memcpy(table->action_u.route_ipv6_keys_search.key0,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key0,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             break;
         case 1:
-            memcpy(table->action_u.route_ipv6_keys_search.key1,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key1,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             break;
         case 2:
-            memcpy(table->action_u.route_ipv6_keys_search.key2,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key2,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             break;
         case 3:
-            memcpy(table->action_u.route_ipv6_keys_search.key3,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key3,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             break;
         case 4:
-            memcpy(table->action_u.route_ipv6_keys_search.key4,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key4,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             break;
         case 5:
-            memcpy(table->action_u.route_ipv6_keys_search.key5,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key5,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             break;
         case 6:
-            memcpy(table->action_u.route_ipv6_keys_search.key6,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key6,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             break;
         default:
             break;
@@ -63,20 +71,23 @@ lpm_ipv6_route_add_key_to_last_stage (uint8_t *bytes, uint32_t idx,
 
     switch (idx) {
         case 0:
-            memcpy(table->action_u.route_ipv6_data_search_retrieve.key0,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_data_search_retrieve.key0,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             table->action_u.route_ipv6_data_search_retrieve.data0 =
                     (uint16_t)lpm_inode->data;
             break;
         case 1:
-            memcpy(table->action_u.route_ipv6_data_search_retrieve.key1,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_data_search_retrieve.key1,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             table->action_u.route_ipv6_data_search_retrieve.data1 =
                     (uint16_t)lpm_inode->data;
             break;
         case 2:
-            memcpy(table->action_u.route_ipv6_data_search_retrieve.key2,
-                   &lpm_inode->ipaddr.addr.v6_addr.addr64[0], IP6_ADDR8_LEN/2);
+            sdk::lib::memrev(table->action_u.route_ipv6_data_search_retrieve.key2,
+                   &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
+                   IP6_ADDR8_LEN/2);
             table->action_u.route_ipv6_data_search_retrieve.data2 =
                     (uint16_t)lpm_inode->data;
             break;
