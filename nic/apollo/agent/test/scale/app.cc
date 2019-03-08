@@ -17,8 +17,8 @@
 #include <gtest/gtest.h>
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/agent/testapp/test_app_utils.hpp"
-#include "nic/apollo/agent/testapp/test_app.hpp"
+#include "nic/apollo/agent/test/scale/utils.hpp"
+#include "nic/apollo/agent/test/scale/app.hpp"
 #include "nic/apollo/test/scale/test.hpp"
 
 using std::string;
@@ -186,6 +186,22 @@ test_app_push_configs (void)
     printf("%s: Pushing objects...\n", __FUNCTION__);
     /* Create objects */
     create_objects();
+    
+#if 0
+    // TODO: Adding this here since there is no proto defs for
+    // flows. This needs to be cleaned up
+    sdk_ret_t ret = SDK_RET_OK;
+
+    ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, false);
+    if (ret != sdk::SDK_RET_OK) {
+        return Status::CANCELLED;
+    }
+
+    ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, true);
+    if (ret != sdk::SDK_RET_OK) {
+        return Status::CANCELLED;
+    }
+#endif
     
     printf("%s: Batch commit START\n", __FUNCTION__);
     /* Batch commit */

@@ -23,20 +23,6 @@ BatchSvcImpl::BatchStart(ServerContext *context,
 Status
 BatchSvcImpl::BatchCommit(ServerContext *context, const Empty *proto_spec,
                           Empty *proto_status) {
-#if 0
-    sdk_ret_t ret = SDK_RET_OK;
-
-    ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, false);
-    if (ret != sdk::SDK_RET_OK) {
-        return Status::CANCELLED;
-    }
-
-    ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, true);
-    if (ret != sdk::SDK_RET_OK) {
-        return Status::CANCELLED;
-    }
-#endif
-
     if (pds_batch_commit() == sdk::SDK_RET_OK) {
         return Status::OK;
     }

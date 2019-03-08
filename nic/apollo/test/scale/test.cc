@@ -15,7 +15,7 @@
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/apollo/agent/testapp/test_app.hpp"
+#include "nic/apollo/agent/test/scale/app.hpp"
 #ifndef TEST_GRPC_APP
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 #endif

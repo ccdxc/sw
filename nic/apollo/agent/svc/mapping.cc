@@ -40,6 +40,8 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
     if (proto_spec) {
         pds_agent_mapping_api_spec_fill(proto_spec, &api_spec);
 #if 0
+        // TODO: Adding this here since there is no proto defs for
+        // flows. This needs to be cleaned up
         if (api_spec.tep.ip_addr == 0x01000001u) {
             g_flow_test_obj->add_local_ep(api_spec.key.vcn.id,
                                           api_spec.key.ip_addr);
