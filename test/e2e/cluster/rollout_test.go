@@ -30,6 +30,7 @@ var _ = Describe("Rollout object tests", func() {
 
 		// setup
 		It("Rollout setup: upload image should succeed", func() {
+			Skip(fmt.Sprintf("Skipping upload venice image test"))
 			//TODO integrate image pickup with the hourly build
 			upgImageName := "/import/src/github.com/pensando/sw/bin/venice.tgz"
 
@@ -50,6 +51,7 @@ var _ = Describe("Rollout object tests", func() {
 
 		// run tests
 		It("Rollout operations should succeed", func() {
+			Skip(fmt.Sprintf("Skipping rollout tests"))
 			seconds := time.Now().Unix()
 			scheduledStartTime := &api.Timestamp{
 				Timestamp: types.Timestamp{
@@ -193,6 +195,7 @@ var _ = Describe("Rollout object tests", func() {
 		})
 
 		It("Rollout suspend operations should succeed", func() {
+			Skip(fmt.Sprintf("Skipping suspend rollout tests"))
 			if ts.tu.NumQuorumNodes < 2 {
 				Skip(fmt.Sprintf("Skipping suspend rollout tests :%d quorum nodes found, need >= 2", ts.tu.NumQuorumNodes))
 			}
