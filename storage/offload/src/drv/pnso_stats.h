@@ -9,6 +9,7 @@
 #include <linux/atomic.h>
 #include "pnso_api.h"
 #include "osal_atomic.h"
+#include "osal_time.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -190,16 +191,16 @@ struct pnso_api_stats {
 	PNSO_STAT_ADD(pcr, num_chksums, count)
 
 /* for measuring the time spent in both software and hardware */
-#define PAS_DECL_PERF()		ktime_t s
-#define PAS_START_PERF()	s = ktime_get_raw_ns()
+#define PAS_DECL_PERF()		uint64_t s
+#define PAS_START_PERF()	s = osal_get_clock_nsec()
 #define PAS_END_PERF(pcr)						\
-	PNSO_STAT_ADD(pcr, total_latency, (ktime_get_raw_ns() - s))
+	PNSO_STAT_ADD(pcr, total_latency, (osal_get_clock_nsec() - s))
 
 /* for measuring the time spent just in hardware */
-#define PAS_DECL_HW_PERF()	ktime_t h
-#define PAS_START_HW_PERF()	h = ktime_get_raw_ns()
+#define PAS_DECL_HW_PERF()	uint64_t h
+#define PAS_START_HW_PERF()	h = osal_get_clock_nsec()
 #define PAS_END_HW_PERF(pcr)						\
-	PNSO_STAT_ADD(pcr, total_hw_latency, (ktime_get_raw_ns() - h))
+	PNSO_STAT_ADD(pcr, total_hw_latency, (osal_get_clock_nsec() - h))
 
 #define PAS_SHOW_STATS(pcr)	pas_show_stats(&pcr->api_stats);
 
