@@ -192,8 +192,8 @@ func validateNICPlatformCert(cert *x509.Certificate, nic *cluster.SmartNIC) erro
 		return fmt.Errorf("Serial number mismatch. AdmissionRequest: %s, Certificate: %s", sn, nic.Status.SerialNum)
 	}
 
-	if cert.Subject.CommonName != nic.Name {
-		return fmt.Errorf("Name mismatch. AdmissionRequest: %s, Certificate: %s", nic.Name, cert.Subject.CommonName)
+	if cert.Subject.CommonName != nic.Status.PrimaryMAC {
+		return fmt.Errorf("Name mismatch. AdmissionRequest: %s, Certificate: %s", nic.Status.PrimaryMAC, cert.Subject.CommonName)
 	}
 
 	return nil

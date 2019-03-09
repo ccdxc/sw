@@ -46,7 +46,7 @@ func (np *NaplesPlatformAgent) initPlatformCredentials(nic *cluster.SmartNIC) er
 			Organization:       []string{"Pensando Systems"},
 			OrganizationalUnit: []string{"Pensando Manufacturing CA"},
 			SerialNumber:       "PID=NAPLESv1 SN=" + nic.Status.SerialNum,
-			CommonName:         nic.Name,
+			CommonName:         nic.Status.PrimaryMAC,
 		},
 		SerialNumber: sn,
 		SubjectKeyId: skid[:],
