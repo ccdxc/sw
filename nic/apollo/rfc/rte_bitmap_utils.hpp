@@ -14,17 +14,33 @@
 #include <sstream>
 #include <rte_bitmap.h>
 
+// Set the corresponding slab1 bit given a slab2 index
+// This is pure internal function, shouldn't be called directly by app
+static inline void
+__rte_bitmap_set_slab1 (struct rte_bitmap *bmp, uint32_t index2)
+{
+    uint32_t index1, offset1;
+    uint64_t *slab1;
+
+    index1 = index2 >> RTE_BITMAP_CL_BIT_SIZE_LOG2;
+    offset1 = (index2 >> (RTE_BITMAP_CL_BIT_SIZE_LOG2 -
+                          RTE_BITMAP_SLAB_BIT_SIZE_LOG2))
+                & RTE_BITMAP_SLAB_BIT_MASK;
+    slab1 = bmp->array1 + index1;
+    *slab1 |= 1llu << offset1;
+}
+
 static inline void
 rte_bitmap_and (struct rte_bitmap *ibmp1, struct rte_bitmap *ibmp2,
                 struct rte_bitmap *obmp)
 {
-    uint32_t index;
+    uint32_t index2;
 
-    for (index = 0; index < ibmp1->array2_size; index++) {
-        obmp->array2[index] = ibmp1->array2[index] & ibmp2->array2[index];
-        if (obmp->array2[index]) {
-            obmp->array1[index >> RTE_BITMAP_SLAB_BIT_SIZE_LOG2] |=
-                1 << (index % RTE_BITMAP_SLAB_BIT_SIZE_LOG2);
+    for (index2 = 0; index2 < ibmp1->array2_size; index2++) {
+        obmp->array2[index2] = ibmp1->array2[index2] & ibmp2->array2[index2];
+
+        if (obmp->array2[index2]) {
+            __rte_bitmap_set_slab1(obmp, index2);
         }
     }
 }
@@ -33,13 +49,13 @@ static inline void
 rte_bitmap_or (struct rte_bitmap *ibmp1, struct rte_bitmap *ibmp2,
                struct rte_bitmap *obmp)
 {
-    uint32_t index;
+    uint32_t index2;
 
-    for (index = 0; index < ibmp1->array2_size; index++) {
-        obmp->array2[index] = ibmp1->array2[index] | ibmp2->array2[index];
-        if (obmp->array2[index]) {
-            obmp->array1[index >> RTE_BITMAP_SLAB_BIT_SIZE_LOG2] |=
-                1 << (index % RTE_BITMAP_SLAB_BIT_SIZE_LOG2);
+    for (index2 = 0; index2 < ibmp1->array2_size; index2++) {
+        obmp->array2[index2] = ibmp1->array2[index2] | ibmp2->array2[index2];
+
+        if (obmp->array2[index2]) {
+            __rte_bitmap_set_slab1(obmp, index2);
         }
     }
 }
