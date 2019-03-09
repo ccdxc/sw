@@ -8,6 +8,7 @@
 #if !defined (__MAPPING_IMPL_HPP__)
 #define __MAPPING_IMPL_HPP__
 
+#include "nic/sdk/include/sdk/table.hpp"
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -15,6 +16,8 @@
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
+
+using sdk::table::sdk_table_handle_t;
 
 namespace api {
 namespace impl {
@@ -114,11 +117,12 @@ public:
 private:
     /**< @brief    constructor */
     mapping_impl() {
-        nat_idx1_ = nat_idx2_ = 0xFFFFFFFF;
-        local_ip_mapping_data_idx1_ = 0xFFFFFFFF;
-        local_ip_mapping_data_idx2_ = 0xFFFFFFFF;
-        remote_vnic_mapping_rx_idx_ = 0xFFFFFFFF;
-        remote_vnic_mapping_tx_idx_ = 0xFFFFFFFF;
+        overlay_ip_to_public_ip_nat_hdl_ = 0xFFFFFFFF;
+        public_ip_to_overlay_ip_nat_hdl_ = 0xFFFFFFFF;
+        overlay_ip_hdl_ = 0xFFFFFFFF;
+        overlay_ip_remote_vnic_tx_hdl_ = 0xFFFFFFFF;
+        public_ip_hdl_ = 0xFFFFFFFF;
+        public_ip_remote_vnic_tx_hdl_ = 0xFFFFFFFF;
     }
 
     /**< @brief    destructor */
@@ -132,7 +136,18 @@ private:
     sdk_ret_t add_nat_entries_(pds_mapping_spec_t *spec);
 
     /**
-     * @brief     add necessary entries to LOCAL_IP_MAPPING table
+     * @brief     reserve necessary entries in local mapping tables
+     * @param[in] api_obj    API object being processed
+     * @param[in] vcn        VCN of this IP
+     * @param[in] spec       IP mapping details
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t reserve_local_ip_mapping_resources_(api_base *api_obj,
+                                                  vcn_entry *vcn,
+                                                  pds_mapping_spec_t *spec);
+
+    /**
+     * @brief     add necessary entries to local mapping tables
      * @param[in] vcn             VCN of this IP
      * @param[in] spec            IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
@@ -141,7 +156,18 @@ private:
                                             pds_mapping_spec_t *spec);
 
     /**
-     * @brief     add necessary entries to REMOTE_VNIC_MAPPING_RX table
+     * @brief     reserve necessary entries in remote mapping tables
+     * @param[in] api_obj    API object being processed
+     * @param[in] vcn        VCN of this IP
+     * @param[in] spec       IP mapping details
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t reserve_remote_ip_mapping_resources_(api_base *api_obj,
+                                                   vcn_entry *vcn,
+                                                   pds_mapping_spec_t *spec);
+
+    /**
+     * @brief     add necessary entries to remote mapping tables
      * @param[in] vcn             VCN of this IP
      * @param[in] subnet          subnet of this IP
      * @param[in] spec            IP mapping details
@@ -170,12 +196,23 @@ private:
                          pds_mapping_spec_t *spec);
 
 private:
-    bool        is_local_;
-    uint32_t    nat_idx1_, nat_idx2_;
-    uint32_t    local_ip_mapping_data_idx1_;
-    uint32_t    local_ip_mapping_data_idx2_;
-    uint32_t    remote_vnic_mapping_rx_idx_;
-    uint32_t    remote_vnic_mapping_tx_idx_;
+    bool    is_local_;
+    union {
+        // table handles for local mapping
+        struct {
+            sdk_table_handle_t    overlay_ip_to_public_ip_nat_hdl_;
+            sdk_table_handle_t    public_ip_to_overlay_ip_nat_hdl_;
+            sdk_table_handle_t    overlay_ip_hdl_;
+            sdk_table_handle_t    overlay_ip_remote_vnic_tx_hdl_;
+            sdk_table_handle_t    public_ip_hdl_;
+            sdk_table_handle_t    public_ip_remote_vnic_tx_hdl_;
+        };
+        // table handles for remote mapping
+        struct {
+            sdk_table_handle_t    remote_vnic_rx_hdl_;
+            sdk_table_handle_t    remote_vnic_tx_hdl_;
+        };
+    };
 };
 
 /** @} */    // end of PDS_MAPPING_IMPL

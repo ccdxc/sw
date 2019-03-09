@@ -1158,7 +1158,7 @@ rfc_compute_p2_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
         result = 0;
     } else {
         do {
-            PDS_TRACE_DEBUG("posn %u", new_posn);
+            //PDS_TRACE_DEBUG("posn %u", new_posn);
             posn = new_posn;
             // TODO: which bit is SL bit, which bit is SF bit ?
             if (rfc_ctxt->policy->rules[posn].stateful) {

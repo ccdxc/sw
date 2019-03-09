@@ -36,6 +36,20 @@ public:
     /**< @brief    destructor */
     ~vnic_impl_state();
 
+    /**
+     * @brief    API to initiate transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t table_transaction_begin(void);
+
+    /**
+     * @brief    API to end transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t table_transaction_end(void);
+
 private:
     indexer *vnic_idxr(void) { return vnic_idxr_; }
     directmap *local_vnic_by_vlan_tx_tbl(void) { return local_vnic_by_vlan_tx_tbl_; }

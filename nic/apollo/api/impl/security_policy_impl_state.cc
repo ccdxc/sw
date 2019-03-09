@@ -44,6 +44,30 @@ security_policy_impl_state::~security_policy_impl_state() {
     indexer::destroy(v4_idxr_);
 }
 
+/**
+ * @brief    API to initiate transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+security_policy_impl_state::table_transaction_begin(void) {
+    //v4_idxr_->txn_start();
+    //v6_idxr_->txn_start();
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    API to end transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+security_policy_impl_state::table_transaction_end(void) {
+    //v4_idxr_->txn_end();
+    //v6_idxr_->txn_end();
+    return SDK_RET_OK;
+}
+
 /** @} */    // end of PDS_SECURITY_POLICY_IMPL_STATE
 
 }    // namespace impl

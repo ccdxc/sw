@@ -35,6 +35,20 @@ public:
     /**< @brief    destructor */
     ~tep_impl_state();
 
+    /**
+     * @brief    API to initiate transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t table_transaction_begin(void);
+
+    /**
+     * @brief    API to end transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t table_transaction_end(void);
+
 private:
     indexer *tep_idxr(void) { return tep_idxr_; }
     directmap *tep_tx_tbl(void) { return tep_tx_tbl_; }

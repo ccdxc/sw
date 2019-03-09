@@ -56,6 +56,32 @@ tep_impl_state::~tep_impl_state() {
     directmap::destroy(nh_tx_tbl_);
 }
 
+/**
+ * @brief    API to initiate transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+tep_impl_state::table_transaction_begin(void) {
+    //tep_idxr_->txn_start();
+    //tep_tx_tbl_->txn_start();
+    //nh_tx_tbl_->txn_start();
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    API to end transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+tep_impl_state::table_transaction_end(void) {
+    //tep_idxr_->txn_end();
+    //tep_tx_tbl_->txn_end();
+    //nh_tx_tbl_->txn_end();
+    return SDK_RET_OK;
+}
+
 /** @} */    // end of PDS_TEP_IMPL_STATE
 
 }    // namespace impl

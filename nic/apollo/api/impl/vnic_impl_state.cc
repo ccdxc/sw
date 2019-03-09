@@ -78,6 +78,34 @@ vnic_impl_state::~vnic_impl_state() {
     directmap::destroy(egress_local_vnic_info_rx_tbl_);
 }
 
+/**
+ * @brief    API to initiate transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_impl_state::table_transaction_begin(void) {
+    //vnic_idxr_->txn_start();
+    //local_vnic_by_vlan_tx_tbl_->txn_start();
+    //local_vnic_by_slot_rx_tbl_->txn_start();
+    //egress_local_vnic_info_rx_tbl_->txn_start();
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    API to end transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_impl_state::table_transaction_end(void) {
+    //vnic_idxr_->txn_end();
+    //local_vnic_by_vlan_tx_tbl_->txn_end();
+    //local_vnic_by_slot_rx_tbl_->txn_end();
+    //egress_local_vnic_info_rx_tbl_->txn_end();
+    return SDK_RET_OK;
+}
+
 /** @} */    // end of PDS_VNIC_IMPL_STATE
 
 }    // namespace impl

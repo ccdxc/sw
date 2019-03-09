@@ -176,4 +176,4 @@ private:
 
 using api::subnet_entry;
 
-#endif    // __API_SUBNET_HPP__ */
+#endif    // __API_SUBNET_HPP__

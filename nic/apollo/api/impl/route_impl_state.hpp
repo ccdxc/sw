@@ -36,6 +36,20 @@ public:
     /**< @brief    destructor */
     ~route_table_impl_state();
 
+    /**
+     * @brief    API to initiate transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t table_transaction_begin(void);
+
+    /**
+     * @brief    API to end transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t table_transaction_end(void);
+
     /**< @brief    return v4 lpm region's base/start address in memory */
     mem_addr_t v4_region_addr(void) const { return v4_region_addr_; }
 

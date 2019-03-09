@@ -12,8 +12,10 @@ pkt_enqueue:
     // k.p4_to_rxdma_header_sacl_result,
     // == 0X : txdma
     // == 10 : fte
-    // == 11 : fte
-    bbeq         k.p4_to_rxdma_header_sacl_result[1], 1, q_pkt_to_fte
+    // == 11 : txdma
+    seq         c1, k.p4_to_rxdma_header_sacl_result, 2
+    bcf         [c1], q_pkt_to_fte
+
     // common case, send to txdma
     // check q full
     add         r1, r0, d.pkt_enqueue_d.sw_pindex0

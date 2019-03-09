@@ -31,7 +31,8 @@ typedef union mem_hash_handle_ {
         uint32_t is_hint:1;
         uint32_t index:28;
         uint32_t hint:24;
-        uint32_t spare:11;
+        uint32_t valid:1;
+        uint32_t spare:10;
     };
     uint64_t value;
 } __attribute__((__packed__)) mem_hash_handle_t;
@@ -39,9 +40,11 @@ typedef union mem_hash_handle_ {
 #define MEM_HASH_HANDLE_SET_HINT(_ctx, _hint) { \
         ((_ctx)->handle)->hint = (_hint); \
         ((_ctx)->handle)->is_hint = true; \
+        ((_ctx)->handle)->valid = true; \
 }
 #define MEM_HASH_HANDLE_SET_INDEX(_ctx, _index) {\
         ((_ctx)->handle)->index = (_index); \
+        ((_ctx)->handle)->valid = true; \
 }
 
 #define HINT_SLOT_IS_INVALID(_slot) \

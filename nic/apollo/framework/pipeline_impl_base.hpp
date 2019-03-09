@@ -92,6 +92,24 @@ public:
     }
 
     /**
+     * @brief    API to initiate transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t table_transaction_begin(void) {
+        return SDK_RET_ERR;
+    }
+
+    /**
+     * @brief    API to end transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t table_transaction_end(void) {
+        return SDK_RET_ERR;
+    }
+
+    /**
      * @brief    dump all the debug information to given file
      * @param[in] fp    file handle
      */

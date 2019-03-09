@@ -35,6 +35,20 @@ public:
     /**< @brief    destructor */
     ~mapping_impl_state();
 
+    /**
+     * @brief    API to initiate transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t table_transaction_begin(void);
+
+    /**
+     * @brief    API to end transaction over all the table manamgement
+     *           library instances
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t table_transaction_end(void);
+
 private:
     mem_hash *local_ip_mapping_tbl(void) { return local_ip_mapping_tbl_; }
     mem_hash *remote_vnic_mapping_rx_tbl(void) { return remote_vnic_mapping_rx_tbl_; }

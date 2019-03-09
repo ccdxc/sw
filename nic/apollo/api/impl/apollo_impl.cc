@@ -449,6 +449,36 @@ apollo_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
 
+/**
+ * @brief    API to initiate transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::table_transaction_begin(void) {
+    tep_impl_db()->table_transaction_begin();
+    vnic_impl_db()->table_transaction_begin();
+    mapping_impl_db()->table_transaction_begin();
+    route_table_impl_db()->table_transaction_begin();
+    security_policy_impl_db()->table_transaction_begin();
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    API to end transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::table_transaction_end(void) {
+    tep_impl_db()->table_transaction_end();
+    vnic_impl_db()->table_transaction_end();
+    mapping_impl_db()->table_transaction_end();
+    route_table_impl_db()->table_transaction_end();
+    security_policy_impl_db()->table_transaction_end();
+    return SDK_RET_OK;
+}
+
 /** @} */    // end of PDS_PIPELINE_IMPL
 
 }    // namespace impl

@@ -170,6 +170,10 @@ mem_hash_api_context::factory(uint32_t op,
 
     // Save the transaction
     ctx->txn = txn;
+    //if (SDK_TABLE_API_OP_IS_CRUD(ctx->op) && txn->is_valid()) {
+    //    SDK_ASSERT(ctx->is_handle_valid());
+    //}
+
     return ctx;
 }
 
@@ -187,8 +191,8 @@ mem_hash_api_context::destroy(mem_hash_api_context* ctx) {
 
 void
 mem_hash_api_context::print_handle() {
-    MEMHASH_TRACE_DEBUG("- Handle: IsHint=%d Index=%d Hint=%d",
-                        handle->is_hint, handle->index, handle->hint);
+    MEMHASH_TRACE_DEBUG("- Handle: IsHint=%d Index=%d Hint=%d Value:%d",
+                        handle->is_hint, handle->index, handle->hint, handle->value);
 }
 
 void

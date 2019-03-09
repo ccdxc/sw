@@ -13,6 +13,8 @@
 #define SDK_TABLE_ALIGN_TO_64B(_s) \
         (((_s)*8) <= 512) ? (_s) : (((_s)%64) ? ((_s)+(64-((_s)%64))) : (_s))
 
+#define SDK_TABLE_HANDLE_INVALID    0
+
 namespace sdk {
 namespace table {
 

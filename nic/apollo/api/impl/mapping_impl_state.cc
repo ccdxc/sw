@@ -77,6 +77,34 @@ mapping_impl_state::~mapping_impl_state() {
     mem_hash::destroy(remote_vnic_mapping_tx_tbl_);
 }
 
+/**
+ * @brief    API to initiate transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+mapping_impl_state::table_transaction_begin(void) {
+    local_ip_mapping_tbl_->txn_start();
+    remote_vnic_mapping_rx_tbl_->txn_start();
+    remote_vnic_mapping_tx_tbl_->txn_start();
+    //nat_tbl_->txn_start();
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    API to end transaction over all the table manamgement
+ *           library instances
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+mapping_impl_state::table_transaction_end(void) {
+    local_ip_mapping_tbl_->txn_end();
+    remote_vnic_mapping_rx_tbl_->txn_end();
+    remote_vnic_mapping_tx_tbl_->txn_end();
+    //nat_tbl_->txn_end();
+    return SDK_RET_OK;
+}
+
 /** @} */    // end of PDS_MAPPING_IMPL_STATE
 
 }    // namespace impl

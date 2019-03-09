@@ -7,6 +7,7 @@
  */
 
 #include "nic/apollo/framework/api_engine.hpp"
+#include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 
@@ -670,6 +671,9 @@ api_engine::batch_commit(void) {
         return ret;
     }
 
+    // start table mgmt. lib transaction
+    impl_base::pipeline_impl()->table_transaction_begin();
+
     /**
      * walk over the dirty object list, performe the de-duped operation on
      * each object including allocating resources and h/w programming (with the
@@ -689,6 +693,9 @@ api_engine::batch_commit(void) {
     PDS_TRACE_INFO("Starting activate config stage ...");
     ret = activate_config_stage_();
     PDS_TRACE_INFO("Finished activate config stage");
+
+    // end the table mgmt. lib transaction
+    impl_base::pipeline_impl()->table_transaction_end();
     if (ret != SDK_RET_OK) {
         return ret;
     }
