@@ -202,6 +202,11 @@ ionic_lif_addr_add(struct lif *lif, const u8 *addr);
 VMK_ReturnStatus
 ionic_lif_addr_del(struct lif *lif, const u8 *addr);
 
+VMK_ReturnStatus
+ionic_qcq_enable(struct qcq *qcq);
+
+VMK_ReturnStatus
+ionic_qcq_disable(struct qcq *qcq);
 
 VMK_ReturnStatus
 ionic_vlan_rx_add_vid(struct lif *lif,

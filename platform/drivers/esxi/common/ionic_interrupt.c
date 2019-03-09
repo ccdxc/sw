@@ -22,11 +22,7 @@
  * Implement interrupt related APIs 
  */
 
-#include "ionic_utilities.h"
-#include "ionic_memory.h"
-#include "ionic_locks.h"
-#include "ionic_log.h"
-#include "ionic_interrupt.h"
+#include "ionic.h"
 
 /*
  ******************************************************************************

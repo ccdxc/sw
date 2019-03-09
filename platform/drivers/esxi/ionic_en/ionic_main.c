@@ -28,11 +28,9 @@ struct ionic_driver ionic_driver;
 
 unsigned int ntxq_descs = 1024 * 8;
 unsigned int nrxq_descs = 1024;
-unsigned int ntxqs = 32;
-unsigned int nrxqs = 32;
 unsigned int DRSS = 0;
 unsigned int devcmd_timeout = 50;
-
+vmk_uint32 log_level = IONIC_LOG_LEVEL_INFO;
 
 VMK_MODPARAM(ntxq_descs,
              uint,
@@ -40,29 +38,74 @@ VMK_MODPARAM(ntxq_descs,
 VMK_MODPARAM(nrxq_descs,
              uint,
              "Descriptors per Rx queue, must be power of 2");
-VMK_MODPARAM(ntxqs,
-             uint,
-             "Hard set the number of Tx queues per LIF");
-VMK_MODPARAM(nrxqs,
-             uint,
-             "Hard set the number of Rx queues per LIF");
 VMK_MODPARAM(DRSS,
              uint,
              "Number of HW queues for Device RSS");
-
 VMK_MODPARAM(devcmd_timeout,
              uint,
-             "Devcmd timeout in seconds (default 30 secs)");
+             "Devcmd timeout in seconds (default 50 secs)");
+VMK_MODPARAM(log_level,
+             uint,
+             "Log level, 0 - No Log, 1 - Error, 2 - Warning,"\
+             " 3 - Info, 4 - Debug. Default level: 3(Info)");
+
+
 
 #ifdef FAKE_ADMINQ
 unsigned int use_AQ = 0;
-
+/*
 VMK_MODPARAM(use_AQ,
              uint,
-             "Set to non-0 to enable AQ testing, defaults to 1");
+             "Set to non-0 to enable AQ testing, defaults to 0");
+             */
 #endif
 
+static VMK_ReturnStatus
+ionic_validate_module_params()
+{
+        VMK_ReturnStatus status = VMK_FAILURE;
+        if (ntxq_descs < MIN_NUM_TX_DESC || ntxq_descs > MAX_NUM_TX_DESC) {
+                vmk_AlertMessage("Number of Tx desc should be set"
+                                 " between %d and %d",
+                                 MIN_NUM_TX_DESC, MAX_NUM_TX_DESC);
+                return status;
+        }
 
+        if (!ionic_is_power_of_2(ntxq_descs)) {
+                vmk_AlertMessage("Number of Tx desc  must be power of 2");
+                return status;
+        }
+
+        if (nrxq_descs < MIN_NUM_RX_DESC || nrxq_descs > MAX_NUM_RX_DESC) {
+                vmk_AlertMessage("Number of Rx desc should be set"
+                                 " between %d and %d",
+                                 MIN_NUM_RX_DESC, MAX_NUM_RX_DESC);
+                return status;
+        }
+
+        if (!ionic_is_power_of_2(nrxq_descs)) {
+                vmk_AlertMessage("Number of Rx desc must be power of 2");
+                return status;
+        }
+
+        if (DRSS) {
+                if (!ionic_is_power_of_2(DRSS)) {
+                        vmk_AlertMessage("Number of HW queues for Device RSS"
+                                         " must be power of 2");
+                        return status;
+                }
+        }
+
+        if (devcmd_timeout > IONIC_MAX_DEVCMD_TIMEOUT) {
+                vmk_WarningMessage("Devcmd timeout: %d is too big, "
+                                   "change it to default value: %d",
+                                   devcmd_timeout,
+                                   IONIC_DEFAULT_DEVCMD_TIMEOUT);
+                devcmd_timeout = IONIC_DEFAULT_DEVCMD_TIMEOUT;
+        }
+
+        return VMK_OK;
+}
 
 
 VMK_ReturnStatus
@@ -70,7 +113,6 @@ ionic_adminq_check_err(struct lif *lif,
                        struct ionic_admin_ctx *ctx,
                        vmk_Bool is_timeout)
 {
-//	struct net_device *netdev = lif->netdev;
 	static struct cmds {
 		unsigned int cmd;
 		char *name;
@@ -110,7 +152,6 @@ ionic_adminq_check_err(struct lif *lif,
 		return VMK_FAILURE;
 	}
 
-//	return 0;
 	return VMK_OK;
 }
 
@@ -126,13 +167,10 @@ ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 			  vmk_StatusToString(status));
 		return status;
 	}
-//		return err;
 
 	is_timeout = ionic_wait_for_completion_timeout(&ctx->work,
                                                devcmd_timeout *
                                                VMK_MSEC_PER_SEC);
-//	wait_for_completion(&ctx->work);
-
 	return ionic_adminq_check_err(lif,
                                       ctx,
                                       is_timeout);
@@ -179,21 +217,16 @@ ionic_dev_cmd_check_error(struct ionic_dev *idev)
         return VMK_FAILURE;
 }
 
-// TODO: We don't need to convert max_wait at the first place, check its caller
 static VMK_ReturnStatus
 ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 {
         VMK_ReturnStatus status;
         unsigned long time;
-//        signed long wait;
         int done;
 
-//        WARN_ON(in_interrupt());
 
         /* Wait for dev cmd to complete...but no more than max_wait
          */
-
-//        time = jiffies + max_wait;
         time = vmk_GetTimerCycles() + max_wait;
         do {
 
@@ -231,7 +264,6 @@ VMK_ReturnStatus
 ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 {
         VMK_ReturnStatus status;
-//        int err;
 
         status = ionic_dev_cmd_wait(idev, max_wait);
         if (status != VMK_OK) {
@@ -416,9 +448,6 @@ ionic_setup(struct ionic *ionic)
         }                
 
 #ifdef FAKE_ADMINQ
-//        spin_lock_init(&ionic->cmd_lock);
-//        INIT_LIST_HEAD(&ionic->cmd_list);
-//        INIT_WORK(&ionic->cmd_work, ionic_dev_cmd_work);
         status = ionic_spinlock_create("ionic->cmd_lock",
                                        ionic_driver.module_id,
                                        ionic_driver.heap_id,
@@ -497,27 +526,16 @@ ionic_reset(struct ionic *ionic)
 VMK_ReturnStatus
 ionic_identify(struct ionic *ionic)
 {
-//        struct device *dev = ionic->dev;
         VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data;
         struct ionic_dev *idev = &ionic->en_dev.idev;
         union identity *ident;
-        //dma_addr_t ident_pa;
         vmk_IOA ident_pa;
-//        int err;
+        vmk_SystemVersionInfo sys_info;
 #ifdef HAPS
         unsigned int i;
 #endif
 
-/*
-        ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL | GFP_DMA);
-        if (!ident)
-                return -ENOMEM;
-        ident_pa = dma_map_single(dev, ident, sizeof(*ident),
-                                  DMA_BIDIRECTIONAL);
-        if (dma_mapping_error(dev, ident_pa))
-                return -EIO;
-*/
 	ionic_dbg("ionic_identify() called");
 
         priv_data = IONIC_CONTAINER_OF(ionic,
@@ -534,24 +552,22 @@ ionic_identify(struct ionic *ionic)
                 return VMK_NO_MEMORY;
         }
 
+        status = vmk_SystemGetVersionInfo(&sys_info);
+        VMK_ASSERT(status == VMK_OK);
+
         ident->drv.os_type = OS_TYPE_ESXI;
-        ident->drv.os_dist = 0;
 
-#if 0
-        //TODO: we need to go back here later to finalize this part
-        vmk_Strncpy(ident->drv.os_dist_str, utsname()->release,
+        vmk_Strncpy(ident->drv.os_dist_str,
+                    sys_info.buildVersion,
                     sizeof(ident->drv.os_dist_str) - 1);
-
-        ident->drv.kernel_ver = LINUX_VERSION_CODE;
-        vmk_Strncpy(ident->drv.kernel_ver_str, utsname()->version,
+        vmk_Strncpy(ident->drv.kernel_ver_str,
+                    sys_info.productVersion,
                     sizeof(ident->drv.kernel_ver_str) - 1);
         vmk_Strncpy(ident->drv.driver_ver_str, DRV_VERSION,
                     sizeof(ident->drv.driver_ver_str) - 1);
-#endif 
 
 #ifdef HAPS
         for (i = 0; i < 512; i++)
-//                iowrite32(idev->ident->words[i], &ident->words[i]);
                 ionic_writel_raw(idev->ident->words[i],
                                  (vmk_VA)&ident->words[i]);
 #endif
@@ -569,16 +585,11 @@ ionic_identify(struct ionic *ionic)
 
 #ifdef HAPS
         for (i = 0; i < 512; i++)
-//                ident->words[i] = ioread32(&idev->ident->words[i]);
                 ident->words[i] = ionic_readl_raw((vmk_VA)&idev->ident->words[i]);
 #endif
-
         ionic->ident = ident;
         ionic->ident_pa = ident_pa;
 
-//        err = ionic_debugfs_add_ident(ionic);
-//        if (err)
-//                goto err_out_unmap;
 	ionic_dbg("ionic_identify() completed successfully!");
 
         return status;
@@ -1044,21 +1055,27 @@ init_module(void)
 {
         VMK_ReturnStatus status;
         vmk_DriverProps drv_props;
+        vmk_LogProperties log_props;
 
-        ionic_info("%s: init module...", IONIC_DRV_NAME);
+        vmk_LogMessage("%s: init module...", IONIC_DRV_NAME);
 
         status = vmk_NameInitialize(&ionic_driver.name,
                                     IONIC_DRV_NAME);
         if (VMK_UNLIKELY(status != VMK_OK)) {
-                ionic_err("%s, vmk_NameInitialize() failed, status: %s",
-                          IONIC_DRV_NAME, vmk_StatusToString(status));
+                vmk_AlertMessage("%s, vmk_NameInitialize() failed, "
+                                 "status: %s", IONIC_DRV_NAME,
+                                 vmk_StatusToString(status));
                 return status;
         }
 
         ionic_driver.module_id = vmk_ModuleCurrentID;
 
-        /*TODO: We need to add a function to validate module parameters */
-
+        status = ionic_validate_module_params();
+        if (status != VMK_OK) {
+                vmk_AlertMessage("ionic_validate_module_params() failed, "
+                                 "please check your module parameters.");
+                return status;
+        }
 
         /* Create a memory pool */
         status = ionic_mem_pool_init(IONIC_DRV_NAME,
@@ -1069,8 +1086,9 @@ init_module(void)
                                      MEMPOOL_MAX_SIZE,
                                      &ionic_driver.mem_pool);
         if (status != VMK_OK) {
-                ionic_err("%s: ionic_mem_pool_init failed, status: %s",
-                          IONIC_DRV_NAME, vmk_StatusToString(status));
+                vmk_AlertMessage("%s: ionic_mem_pool_init failed, "
+                                 "status: %s", IONIC_DRV_NAME,
+                                 vmk_StatusToString(status));
                 return status;
         }
 
@@ -1084,12 +1102,28 @@ init_module(void)
                                  VMK_MEM_PHYS_CONTIGUOUS,
                                  &ionic_driver.heap_id);
         if (status != VMK_OK) {
-                ionic_err("%s: ionic_HeapInit() failed, status: %s",
-                          IONIC_DRV_NAME, vmk_StatusToString(status));
+                vmk_AlertMessage("%s: ionic_HeapInit() failed, "
+                                 "status: %s", IONIC_DRV_NAME,
+                                 vmk_StatusToString(status));
                 goto heap_init_err;
         }
 
         vmk_ModuleSetHeapID(ionic_driver.module_id, ionic_driver.heap_id);
+
+        vmk_Memset(&log_props, 0, sizeof(vmk_LogProperties));
+        log_props.defaultLevel  = log_level;
+        log_props.heap          = ionic_driver.heap_id;
+        log_props.module        = ionic_driver.module_id;
+        status = vmk_NameInitialize(&log_props.name, IONIC_DRV_NAME);
+        VMK_ASSERT(status == VMK_OK);
+
+        status = vmk_LogRegister(&log_props,
+                                 &ionic_driver.log_component);
+        if (status != VMK_OK) {
+                vmk_AlertMessage("%s: vmk_LogRegister failed: %s",
+                                 IONIC_DRV_NAME, vmk_StatusToString(status));
+                goto log_reg_err;
+        }
 
         /* Create a lock domain */
         status = vmk_LockDomainCreate(ionic_driver.module_id,
@@ -1129,21 +1163,27 @@ init_module(void)
         if (status != VMK_OK) {
                 ionic_err("ionic_device_list_init() failed, status: %s",
                           vmk_StatusToString(status));
-                goto name_init_err;
+                goto dev_list_init_err;
         }
 
         return status;
 
+dev_list_init_err:
+        vmk_DriverUnregister(ionic_driver.drv_handle);
+
 name_init_err:
-   vmk_LockDomainDestroy(ionic_driver.lock_domain);
+        vmk_LockDomainDestroy(ionic_driver.lock_domain);
 
 lock_domain_err:
-   ionic_heap_destroy(ionic_driver.heap_id);
+        vmk_LogUnregister(ionic_driver.log_component);
+
+log_reg_err:
+        ionic_heap_destroy(ionic_driver.heap_id);
 
 heap_init_err:
-   ionic_mem_pool_destroy(ionic_driver.mem_pool);
+        ionic_mem_pool_destroy(ionic_driver.mem_pool);
 
-   return status;
+        return status;
 }
 
 
@@ -1172,6 +1212,7 @@ cleanup_module()
         ionic_device_list_destroy(&ionic_driver.uplink_dev_list);
 	vmk_DriverUnregister(ionic_driver.drv_handle);
 	vmk_LockDomainDestroy(ionic_driver.lock_domain);	
-	ionic_heap_destroy(ionic_driver.heap_id);
+        vmk_LogUnregister(ionic_driver.log_component);
+        ionic_heap_destroy(ionic_driver.heap_id);
 	ionic_mem_pool_destroy(ionic_driver.mem_pool);
 }

@@ -22,8 +22,7 @@
  * Implement API to register logical device
  */
 
-#include "ionic_logical_dev_register.h"
-#include "ionic_log.h"
+#include "ionic.h"
 
 static vmk_DeviceOps ionic_device_ops = {
         .removeDevice = ionic_logical_dev_remove,

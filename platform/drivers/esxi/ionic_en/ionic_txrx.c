@@ -537,87 +537,6 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
         return poll_again;
 }
 
-
-VMK_ReturnStatus
-ionic_tx_tcp_pseudo_csum(vmk_PktHandle *pkt,
-                         ionic_tx_ctx *ctx)
-{
- //       skb_cow_head(skb, 0); // TODO is this necessary before modifying hdrs?
-        VMK_ReturnStatus status;
-        vmk_TCPHdr *tcp_hdr;
-        vmk_IPv4Hdr *ipv4_hdr = NULL;
-        vmk_IPv6Hdr *ipv6_hdr = NULL;
-
-        status = vmk_PktHeaderDataGet(pkt,
-                                      ctx->l4_hdr_entry,
-                                      (void **)&tcp_hdr);
-        if (VMK_UNLIKELY(status != VMK_OK) ) {
-                ionic_err("Failed at getting TCP header, status: %s",
-                          vmk_StatusToString(status));
-                return status;
-        }
-
-
-        if (ctx->l3_hdr_entry->type == VMK_PKT_HEADER_L3_IPv4) {
-                status = vmk_PktHeaderDataGet(pkt,
-                                              ctx->l3_hdr_entry,
-                                              (void **)&ipv4_hdr);
-                if ((VMK_UNLIKELY(status != VMK_OK))) { 
-                        ionic_err("Failed at getting IPv4 header, status: %s",
-                                  vmk_StatusToString(status));
-                        goto ip_header_err;
-                }
-
-                ipv4_hdr->checksum = 0;
-                tcp_hdr->checksum = ~ vmk_NetCsumIPv4Pseudo(&ipv4_hdr->saddr,
-                                                            &ipv4_hdr->daddr,
-                                                            &ipv4_hdr->protocol,
-                                                            0,
-                                                            0);
-                vmk_PktHeaderDataRelease(pkt,
-                                         ctx->l3_hdr_entry,
-                                         ipv4_hdr,
-                                         VMK_TRUE);
-                vmk_PktHeaderDataRelease(pkt,
-                                         ctx->l4_hdr_entry,
-                                         tcp_hdr,
-                                         VMK_TRUE);
-        } else if (ctx->l3_hdr_entry->type == VMK_PKT_HEADER_L3_IPv6) {
-                status = vmk_PktHeaderDataGet(pkt,
-                                              ctx->l3_hdr_entry,
-                                              (void **)&ipv6_hdr);
-                if ((VMK_UNLIKELY(status != VMK_OK))) { 
-                        ionic_err("Failed at getting IPv6 header, status: %s",
-                                  vmk_StatusToString(status));
-                        goto ip_header_err;
-                }
- 
-                tcp_hdr->checksum = ~ vmk_NetCsumIPv6Pseudo(ipv6_hdr->saddr,
-                                                            ipv6_hdr->daddr,
-                                                            &ipv6_hdr->nextHeader,
-                                                            0,
-                                                            0);
-                vmk_PktHeaderDataRelease(pkt,
-                                         ctx->l3_hdr_entry,
-                                         ipv6_hdr,
-                                         VMK_TRUE);
-                vmk_PktHeaderDataRelease(pkt,
-                                         ctx->l4_hdr_entry,
-                                         tcp_hdr,
-                                         VMK_TRUE);
-        }
-
-        return status;               
-
-ip_header_err:
-        vmk_PktHeaderDataRelease(pkt,
-                                 ctx->l4_hdr_entry,
-                                 tcp_hdr,
-                                 VMK_FALSE);
-
-        return status;
-}
-
 static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
                               vmk_PktHandle *pkt, unsigned int hdrlen,
                               unsigned int mss, u16 vlan_tci, bool has_vlan,
@@ -950,7 +869,8 @@ map_err:
 static VMK_ReturnStatus
 ionic_tx(struct queue *q,
          vmk_PktHandle *pkt,
-         ionic_tx_ctx *ctx)
+         ionic_tx_ctx *ctx,
+         vmk_Bool is_last_pkt)
 {
         VMK_ReturnStatus status;
 
@@ -979,7 +899,7 @@ ionic_tx(struct queue *q,
                 return status;
         }
 
-        ionic_q_post(q, VMK_TRUE, ionic_tx_clean, pkt);
+        ionic_q_post(q, is_last_pkt, ionic_tx_clean, pkt);
 
         stats->pkts++;
         stats->bytes += ctx->frame_len;
@@ -1135,7 +1055,8 @@ out:
 VMK_ReturnStatus
 ionic_start_xmit(vmk_PktHandle *pkt,
                  struct ionic_en_uplink_handle *uplink_handle,
-                 struct ionic_en_tx_ring *tx_ring)
+                 struct ionic_en_tx_ring *tx_ring,
+                 vmk_Bool is_last_pkt)
 {
         VMK_ReturnStatus status;
         struct queue *q = &(tx_ring->txqcq->q);
@@ -1203,7 +1124,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         if (ctx.is_tso_needed) {
                 status = ionic_tx_tso(q, pkt, &ctx);
         } else {
-                status = ionic_tx(q, pkt, &ctx);
+                status = ionic_tx(q, pkt, &ctx, is_last_pkt);
         
         }
         //TODO: improve logging
@@ -1336,7 +1257,7 @@ ionic_en_tx_ring_deinit(vmk_uint32 ring_idx,
  ******************************************************************************
  */
 
-inline void
+VMK_ReturnStatus
 ionic_en_rx_ring_init(vmk_uint32 ring_idx,
                       vmk_uint32 shared_q_data_idx,
                       struct ionic_en_priv_data *priv_data,
@@ -1371,13 +1292,17 @@ ionic_en_rx_ring_init(vmk_uint32 ring_idx,
                                                    netpoll_name,
                                                    VMK_TRUE);
                 VMK_ASSERT(status == VMK_OK);
-                if (!rx_ring->rxqcq->is_netpoll_enabled) {
-                        vmk_NetPollEnable(rx_ring->netpoll);
-                        rx_ring->rxqcq->is_netpoll_enabled = VMK_TRUE;
-                }
         } else {
                 ionic_en_rxq_start(uplink_handle, shared_q_data_idx);
         }
+
+        status = ionic_qcq_enable(rx_ring->rxqcq);
+        if (status != VMK_OK) {
+                ionic_err("ionic_qcq_enable() failed, status: %s",
+                          vmk_StatusToString(status));
+        }
+
+        return status;
 }
 
 
@@ -1419,12 +1344,6 @@ ionic_en_rx_ring_deinit(vmk_uint32 ring_idx,
         rx_ring->is_actived        = VMK_FALSE;
 
         if (rx_ring->shared_q_data_idx == uplink_handle->max_rx_normal_queues) {
-/*                if (rx_ring->rxqcq->is_netpoll_enabled) {
-                        vmk_NetPollDisable(rx_ring->rxqcq->netpoll);
-                        rx_ring->rxqcq->is_netpoll_enabled = VMK_FALSE;
-                        vmk_NetPollFlushRx(rx_ring->rxqcq->netpoll);
-                }
-*/
                 vmk_NetPollUnregisterUplink(rx_ring->netpoll);
         } else {
                 ionic_en_rxq_quiesce(&priv_data->uplink_handle,

@@ -22,8 +22,7 @@
  * Implement utilities functions 
  */
 
-#include "ionic_utilities.h"
-#include "ionic_log.h"
+#include "ionic.h"
 
 /*
  ******************************************************************************
@@ -213,11 +212,11 @@ ionic_hex_dump(char *desc,                                         // IN
         }
 
         if (len == 0) {
-                ionic_print("  ZERO LENGTH\n");
+                ionic_print("Length is zero\n");
                 return;
         }
         if (len < 0) {
-                ionic_print("  NEGATIVE LENGTH: %i\n",len);
+                ionic_print("Length is negative: %i\n",len);
                 return;
         }
 

@@ -70,22 +70,10 @@ static void ionic_lif_deferred_work(struct ionic_work *work)
 	}
 }
 
-#if 0
-static void ionic_lif_deferred_enqueue(struct deferred *def,
-				       struct deferred_work *work)
+VMK_ReturnStatus
+ionic_qcq_enable(struct qcq *qcq)
 {
-	spin_lock_bh(&def->lock);
-	list_add_tail(&work->list, &def->list);
-	spin_unlock_bh(&def->lock);
-	schedule_work(&def->work);
-}
-#endif
-
-static VMK_ReturnStatus
-ionic_qcq_enable(struct qcq *qcq,
-                 vmk_Bool is_enable_netpoll_now)
-{
-	VMK_ReturnStatus status;//, status1;
+	VMK_ReturnStatus status;
 	struct queue *q = &qcq->q;
 	struct lif *lif = q->lif;
         struct ionic_admin_ctx ctx = {
@@ -124,10 +112,8 @@ ionic_qcq_enable(struct qcq *qcq,
         if (!qcq->is_netpoll_enabled) {
                 vmk_NetPollInterruptSet(qcq->netpoll,
                                         qcq->intr.cookie);
-                if (is_enable_netpoll_now) { 
-                        vmk_NetPollEnable(qcq->netpoll);
-                        qcq->is_netpoll_enabled = VMK_TRUE;
-                }
+                vmk_NetPollEnable(qcq->netpoll);
+                qcq->is_netpoll_enabled = VMK_TRUE;
                 vmk_IntrEnable(qcq->intr.cookie);
                 ionic_intr_mask(&qcq->intr, VMK_FALSE);
         }
@@ -135,9 +121,8 @@ ionic_qcq_enable(struct qcq *qcq,
         return status;
 }
 
-static VMK_ReturnStatus
-ionic_qcq_disable(struct qcq *qcq,
-                  vmk_Bool is_disable_netpoll_now)
+VMK_ReturnStatus
+ionic_qcq_disable(struct qcq *qcq)
 {
         VMK_ReturnStatus status;
 
@@ -184,11 +169,9 @@ ionic_qcq_disable(struct qcq *qcq,
         if (qcq->is_netpoll_enabled) {
                 vmk_IntrDisable(qcq->intr.cookie);
                 vmk_IntrSync(qcq->intr.cookie);
-                if (is_disable_netpoll_now) {
-                        vmk_NetPollDisable(qcq->netpoll);
-                        qcq->is_netpoll_enabled = VMK_FALSE;
-                        vmk_NetPollFlushRx(qcq->netpoll);
-                }
+                vmk_NetPollDisable(qcq->netpoll);
+                qcq->is_netpoll_enabled = VMK_FALSE;
+                vmk_NetPollFlushRx(qcq->netpoll);
                 vmk_NetPollInterruptUnSet(qcq->netpoll);
         }
 
@@ -212,23 +195,22 @@ ionic_open(struct lif *lif)
         max_rx_normal_queues = uplink_handle->max_rx_normal_queues;
         for (i = 0; i < lif->nrxqcqs; i++) {
 		ionic_rx_fill(&lif->rxqcqs[i]->q);
-                status = ionic_qcq_enable(lif->rxqcqs[i],
-                                          i < max_rx_normal_queues ?
-                                          VMK_TRUE : VMK_FALSE);
-		if (status != VMK_OK) {
-                        ionic_err("ionic_qcq_enable() failed, status: %s",
-                                  vmk_StatusToString(status));
-			goto rxqcqs_err;
-                };
-
                 if (i < max_rx_normal_queues) {
                         ionic_dbg("INIT normal rxq, ring_idx: %d, "
                                   "shared_q_idx: %d",
                                    i, i);
-                        ionic_en_rx_ring_init(i,
-                                              i,
-                                              priv_data,
-                                              lif);
+                        status = ionic_en_rx_ring_init(i,
+                                                       i,
+                                                       priv_data,
+                                                       lif);
+        		if (status != VMK_OK) {
+                                ionic_err("ionic_en_rx_ring_init() failed, "
+                                          "status: %s",
+                                          vmk_StatusToString(status));
+                                i--;
+                                goto rxqcqs_err;
+                        }
+
                 }
         }
 
@@ -240,8 +222,7 @@ ionic_open(struct lif *lif)
         }
         
         for (i = 0; i < lif->ntxqcqs; i++) {
-		status = ionic_qcq_enable(lif->txqcqs[i],
-                                          VMK_TRUE);
+		status = ionic_qcq_enable(lif->txqcqs[i]);
 		if (status != VMK_OK) {
                         ionic_err("ionic_qcq_enable() failed, status: %s",
                                   vmk_StatusToString(status));
@@ -264,8 +245,7 @@ ionic_open(struct lif *lif)
 
 txqcqs_err:
         for (; i > 0; i--) {
-                ionic_qcq_disable(lif->txqcqs[i-1],
-                                  VMK_TRUE);
+                ionic_qcq_disable(lif->txqcqs[i-1]);
                 ionic_en_tx_ring_deinit(i,
                                         priv_data);
         }
@@ -275,11 +255,10 @@ txqcqs_err:
                                        lif);
         }
 
+        i = lif->nrxqcqs;
+
 rxqcqs_err:
         for (; i > 0; i--) {
-                ionic_qcq_disable(lif->rxqcqs[i-1],
-                                  i < max_rx_normal_queues ?
-                                  VMK_TRUE : VMK_FALSE);
                 if (i < max_rx_normal_queues) {
                         ionic_en_rx_ring_deinit(i,
                                                 priv_data);
@@ -304,8 +283,7 @@ ionic_stop(struct lif *lif)
         max_rx_normal_queues = priv_data->uplink_handle.max_rx_normal_queues;
 
         for (i = 0; i < lif->nrxqcqs; i++) {
-                status = ionic_qcq_disable(lif->rxqcqs[i],
-                                           VMK_TRUE);
+                status = ionic_qcq_disable(lif->rxqcqs[i]);
 		if (status != VMK_OK) {
                         ionic_err("ionic_qcq_disable() failed, status: %s",
                                   vmk_StatusToString(status));
@@ -320,8 +298,7 @@ ionic_stop(struct lif *lif)
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		// TODO post NOP Tx desc and wait for its completion
 		// TODO before disabling Tx queue
-		status = ionic_qcq_disable(lif->txqcqs[i],
-                                           VMK_TRUE);
+		status = ionic_qcq_disable(lif->txqcqs[i]);
 		if (status != VMK_OK) {
                         ionic_err("ionic_qcq_disable() failed, status: %s",
                                   vmk_StatusToString(status));
@@ -2676,16 +2653,11 @@ ionic_lifs_size(struct ionic *ionic)
         unsigned int ntxqs_per_lif = ident->dev.tx_qtype.qid_count;
         unsigned int nrxqs_per_lif = ident->dev.rx_qtype.qid_count;
         unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
-//        int err;
 
-        if (ntxqs > 0) {
-                ntxqs_per_lif = IONIC_MIN(ntxqs_per_lif, ntxqs);
-                VMK_ASSERT(ntxqs_per_lif <= IONIC_MAX_NUM_TX_QUEUE);
-        }
-        if (nrxqs > 0) {
-                nrxqs_per_lif = IONIC_MIN(nrxqs_per_lif, nrxqs);
-                VMK_ASSERT(nrxqs_per_lif <= IONIC_MAX_NUM_RX_QUEUE);
-        }
+        ntxqs_per_lif = IONIC_MIN(ntxqs_per_lif,
+                                  IONIC_MAX_NUM_TX_QUEUE);
+        nrxqs_per_lif = IONIC_MIN(nrxqs_per_lif,
+                                  IONIC_MAX_NUM_RX_QUEUE);
 
 try_again:
         nintrs = nlifs * (nnqs_per_lif +

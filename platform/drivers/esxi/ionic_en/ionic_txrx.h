@@ -140,7 +140,8 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
 VMK_ReturnStatus
 ionic_start_xmit(vmk_PktHandle *pkt,
                  struct ionic_en_uplink_handle *uplink_handle,
-                 struct ionic_en_tx_ring *tx_ring);
+                 struct ionic_en_tx_ring *tx_ring,
+                 vmk_Bool is_last_pkt);
 
 inline void
 ionic_en_tx_ring_init(vmk_uint32 ring_idx,
@@ -152,7 +153,7 @@ inline void
 ionic_en_tx_ring_deinit(vmk_uint32 ring_idx,
                         struct ionic_en_priv_data *priv_data);
 
-inline void
+VMK_ReturnStatus
 ionic_en_rx_ring_init(vmk_uint32 ring_idx,
                       vmk_uint32 shared_q_data_idx,
                       struct ionic_en_priv_data *priv_data,

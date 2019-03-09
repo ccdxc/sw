@@ -28,8 +28,8 @@
 #include "ionic_txrx.h"
 
 // TODO: Figure out the max
-#define IONIC_MAX_NUM_TX_QUEUE                  32
-#define IONIC_MAX_NUM_RX_QUEUE                  32
+#define IONIC_MAX_NUM_TX_QUEUE                  16
+#define IONIC_MAX_NUM_RX_QUEUE                  16
 #define IONIX_MAX_NUM_RX_RSS_QUEUE               1
 
 #define IONIC_EN_DEFAULT_MTU_SIZE               1500

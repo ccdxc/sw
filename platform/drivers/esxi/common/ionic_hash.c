@@ -22,7 +22,7 @@
  * Implement hash related functions
  */
 
-#include "ionic_hash.h"
+#include "ionic.h"
 
 /*
  *******************************************************************************

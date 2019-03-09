@@ -22,8 +22,7 @@
  * Implement all DMA functions
  */
 
-#include "ionic_log.h"
-#include "ionic_memory.h"
+#include "ionic.h"
 
 /*
  ******************************************************************************

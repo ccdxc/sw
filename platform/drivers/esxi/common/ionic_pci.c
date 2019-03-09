@@ -22,8 +22,7 @@
  * Implement all PCI related functions
  */
 
-#include "ionic_pci.h"
-#include "ionic_log.h"
+#include "ionic.h"
 
 /*
  ******************************************************************************

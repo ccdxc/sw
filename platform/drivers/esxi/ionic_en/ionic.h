@@ -39,6 +39,8 @@
 #include "ionic_dma.h"
 #include "ionic_interrupt.h"
 #include "ionic_logical_dev_register.h"
+#include "ionic_hash.h"
+#include "ionic_completion.h"
 #include "ionic_lif.h"
 #include "ionic_en_uplink.h"
 #include "ionic_device_list.h"
@@ -47,21 +49,24 @@
 #include "ionic_api.h"
 //#define ADMINQ
 #define HAPS
-#define IONIC_DRV_NAME        "ionic_en"
 #define DRV_DESCRIPTION       "Pensando Ethernet NIC Driver"
 #define DRV_VERSION           "0.2"
 #define DRV_REL_DATE          "Jan-31-2019"
-
+#define IONIC_MAX_DEVCMD_TIMEOUT 60
+#define IONIC_DEFAULT_DEVCMD_TIMEOUT 50
 /* In bytes */
 #define MEMPOOL_INIT_SIZE     (16 * 1024)
 #define MEMPOOL_MAX_SIZE      (1024 * 1024 * 1024)
 #define HEAP_INIT_SIZE        (16 * 1024)
 #define HEAP_MAX_SIZE         (1024 * 1024 * 1024)
+#define MIN_NUM_TX_DESC       128
+#define MAX_NUM_TX_DESC       1024 * 16
+#define MIN_NUM_RX_DESC       128
+#define MAX_NUM_RX_DESC       1024 * 8
+
 
 extern unsigned int ntxq_descs;
 extern unsigned int nrxq_descs;
-extern unsigned int ntxqs;
-extern unsigned int nrxqs;
 extern unsigned int DRSS;
 extern unsigned int devcmd_timeout;
 extern struct ionic_driver ionic_driver;
@@ -95,16 +100,7 @@ struct ionic_en_device {
 };
 
 struct ionic {
-//        struct pci_dev *pdev;
-//        struct platform_device *pfdev;
-//        struct device *dev;
-//        vmk_PCIDevice *pdev;
-//        vmk_Device *dev;
-
         struct ionic_en_device en_dev;
-
-// Put it under ionic_en_device
-//        struct ionic_dev idev;
         struct dentry *dentry;
 	vmk_uint32 bar0_size;
         struct ionic_dev_bar bars[IONIC_BARS_MAX];
@@ -150,6 +146,7 @@ struct ionic_driver {
         vmk_MemPool                   mem_pool;
         vmk_LockDomainID              lock_domain;
         vmk_Driver                    drv_handle;
+        vmk_LogComponent              log_component;
         struct ionic_device_list      uplink_dev_list;        
 };
 
@@ -190,16 +187,5 @@ ionic_reset(struct ionic *ionic);
 
 VMK_ReturnStatus
 ionic_identify(struct ionic *ionic);
-
-#if 0
-int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx);
-int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
-int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
-               void *cb_arg);
-int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
-int ionic_set_dma_mask(struct ionic *ionic);
-int ionic_setup(struct ionic *ionic);
-void ionic_forget_identity(struct ionic *ionic);
-#endif
 
 #endif /* End of _IONIC_H_ */

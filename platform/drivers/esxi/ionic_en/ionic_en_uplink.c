@@ -654,7 +654,8 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
         struct ionic_en_priv_data *priv_data =
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle; 
-      
+        vmk_Bool is_last_pkt;
+
         VMK_PKTLIST_ITER_STACK_DEF(iter);
         vmk_PktListIterStart(iter, pkt_list);
 
@@ -678,22 +679,26 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
                 goto tx_ring_err;
         }
  
-        while(!vmk_PktListIterIsAtEnd(iter)) {
+        do {
                 vmk_PktListIterRemovePkt(iter, &pkt);
+
                 /* Debug if pkt is not valid */
                 VMK_ASSERT(pkt);
                 VMK_ASSERT(vmk_PktQueueIDGet(pkt) == vmk_qid);
 
+                is_last_pkt = vmk_PktListIterIsAtEnd(iter);
+
                 status = ionic_start_xmit(pkt,
                                           uplink_handle,
-                                          tx_ring);
+                                          tx_ring,
+                                          is_last_pkt);
                 if (status == VMK_BUSY) {
                         status = vmk_PktListIterInsertPktBefore(iter, pkt);
                         VMK_ASSERT(status == VMK_OK);
                         status = VMK_BUSY;
                         break;
                 }
-        }
+        } while(!is_last_pkt);
 
         return status;
 
@@ -1831,7 +1836,11 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                                              nrxqs_per_lif,
                                              &expected_max_tx_queues,
                                              &expected_max_rx_queues);
-        
+
+        if (DRSS > expected_max_rx_queues) {
+                DRSS = expected_max_rx_queues;
+        }
+
         if (!uplink_handle->is_mgmt_nic) {
                 uplink_handle->max_rx_rss_queues = DRSS? IONIX_MAX_NUM_RX_RSS_QUEUE : 0;
                 uplink_handle->rx_rings_per_rss_queue = DRSS;
