@@ -25,16 +25,30 @@ func isJSONString(s string) bool {
 	return json.Unmarshal([]byte(s), &js) == nil
 }
 
-func printHTTPReq(req *http.Request) {
+const (
+	kiB = 1024 // kilobyte
+)
+const twoKB int64 = 2 * kiB
+
+func printHTTPReq(r *http.Request) {
 	if verbose {
 		fmt.Println("==== HTTP Request Start ====")
-		requestDump, err := httputil.DumpRequestOut(req, true)
-		if err != nil {
-			fmt.Println(err)
+		if r.ContentLength > twoKB {
+			fmt.Printf("RevProxy: ContentLength: %d\n", r.ContentLength)
+			dump, err := httputil.DumpRequest(r, false)
+			if err != nil {
+				fmt.Printf("%s\n", fmt.Sprint(err))
+			} else {
+				fmt.Printf("%s %v\n", dump, r.Header)
+			}
+		} else {
+			dump, err := httputil.DumpRequest(r, true)
+			if err != nil {
+				fmt.Printf("%s\n", fmt.Sprint(err))
+			} else {
+				fmt.Printf("%s\n", dump)
+			}
 		}
-		//hack for not printing binary image when trying to upload image
-		result := strings.Split(string(requestDump), "MANIFEST")
-		fmt.Printf("%s\n", result[0])
 		fmt.Println("==== HTTP Request End ====")
 	}
 }
