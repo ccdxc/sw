@@ -39,11 +39,11 @@ pcieport_info_map(pciemgr_initmode_t initmode)
      */
     env = getenv("PCIEPORT_DATA");
     if (env) {
-        strncpy(path, env, sizeof(path));
+        strncpy0(path, env, sizeof(path));
         pciesys_loginfo("PCIEPORT_DATA override %s\n", path);
     } else {
 #ifdef __aarch64__
-        strncpy(path, "/var/run/pcieport_data", sizeof(path));
+        strncpy0(path, "/var/run/pcieport_data", sizeof(path));
 #else
         env = getenv("HOME");
         snprintf(path, sizeof(path), "%s/.pcieport_data", env ? env : "");
@@ -425,7 +425,7 @@ pcieport_showports(void)
     for (port = 0; port < PCIEPORT_NPORTS; port++) {
         pcieport_t *p = pcieport_get(port);
 
-        if (!p->open) continue;
+        if (p == NULL || !p->open) continue;
 
         pciesys_loginfo("%-4d gen%dx%-2d 0x%02x %s\n",
                         port,

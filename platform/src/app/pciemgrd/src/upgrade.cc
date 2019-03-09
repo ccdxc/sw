@@ -114,6 +114,7 @@ writefile(const char *file, const void *buf, const size_t bufsz)
         goto error_out;
     }
     if (fclose(fp) == EOF) {
+        fp = NULL;
         goto error_out;
     }
     return bufsz;
@@ -154,6 +155,7 @@ copyfile(const char *srcfile, const char *dstfile)
         goto error_out;
     }
     if (fclose(dstfp) == EOF) {
+        dstfp = NULL;
         goto error_out;
     }
     (void)fclose(srcfp);
