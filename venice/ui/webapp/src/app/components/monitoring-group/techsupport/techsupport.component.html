@@ -1,11 +1,4 @@
 <app-pagebody class="techsupportrequests" header="Tech Support" [icon]="bodyicon">
-  <!-- <app-newtechsupport [@slideInOut] (formClose)="creationFormClose()" fxFlex="none" *ngIf="creatingMode"
-  [existingTechSupportRequest]="techsupportrequests" 
-  ></app-newtechsupport>
-   
-  <div fxFlex class="techsupportrequests-table-container">
-    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
-  </div> -->
   <app-tableviewedit fxLayout="column" class="techsupportrequests-widget"
                     [creatingMode]="creatingMode" 
                     [showEditingForm]="showEditingForm"

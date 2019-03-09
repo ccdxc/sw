@@ -28,7 +28,7 @@ export class FwlogPolicies {
         await browser.sleep(2000);
 
         // set name
-        await E2EuiTools.setInputBoxValue('app-newfwlogpolicy .newfwlogpolicy-name.ui-inputtext', monitoringFwlogPolicy.meta.name );
+        await E2EuiTools.setInputBoxValue('app-newfwlogpolicy .newfwlogpolicy-name.ui-inputtext', monitoringFwlogPolicy.meta.name);
 
         // set  destination
         await E2EuiTools.setInputBoxValue('app-newfwlogpolicy  .syslog-input.ui-inputtext[formcontrolname="destination"]', monitoringFwlogPolicy.spec.targets[0].destination);
@@ -37,23 +37,16 @@ export class FwlogPolicies {
         // set  transport
         await E2EuiTools.setInputBoxValue('app-newfwlogpolicy .syslog-input.ui-inputtext[formcontrolname="transport"]', monitoringFwlogPolicy.spec.targets[0].transport);
         await browser.sleep(2000);
-         // click save button
-         await E2EuiTools.clickElement('.toolbar-button.global-button-primary.fwlogpolicies-button.fwlogpolicies-button-SAVE');
-    }
-
-    private getFwLogPoliciesTableRowActionBlockCSS( flowExportValueMetaName: string) {
-        return '.global-column-action-icon-container.global-column-action-icon-container-fwlogpolicies_' + flowExportValueMetaName;
+        // click save button
+        await E2EuiTools.clickElement('.toolbar-button.global-button-primary.fwlogpolicies-button.fwlogpolicies-button-SAVE');
     }
 
     async deleteFwlogPolicy(monitoringFwlogPolicy: IMonitoringFwlogPolicy) {
-        const tsTableRowActionBlockCSS = this.getFwLogPoliciesTableRowActionBlockCSS(monitoringFwlogPolicy.meta.name);
-        await E2EuiTools.clickElement(tsTableRowActionBlockCSS);
-        const tsTableRowActionBlockDeleteIconCSS = tsTableRowActionBlockCSS + ' .fwlogpolicies-table-action-icon-delete';
-        await E2EuiTools.clickElement(tsTableRowActionBlockDeleteIconCSS);
-        await browser.sleep(2000);
-    /*  TODO: wait for fwlogpolicies.component.* to extend TableEditView and use confirm box
-         await E2EuiTools.clickConfirmAlertFirstButton();
-     */
+        const tsTableRowActionDeletBuuttonCSS = E2EuiTools.getTableEditViewTableRowDeleteBtnCSS(monitoringFwlogPolicy.meta.name);
+        await E2EuiTools.clickElement(tsTableRowActionDeletBuuttonCSS);
+        await browser.sleep(5000); // wait for alert pop-up
+        await E2EuiTools.clickConfirmAlertFirstButton();
+
     }
 
 
