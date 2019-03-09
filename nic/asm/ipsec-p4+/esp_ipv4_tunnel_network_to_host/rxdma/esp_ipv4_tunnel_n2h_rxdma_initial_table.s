@@ -123,8 +123,8 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     nop
 
 esp_ipv4_tunnel_n2h_rxdma_initial_table_drop_pkt:
-    add r5, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}, IPSEC_N2H_STATS_CB_OFFSET 
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_rxmda_ring_full_error, r5, TABLE_SIZE_512_BITS)
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_RXDMA_CB_RING_FULL_OFFSET, 1)
     nop.e
     nop
 

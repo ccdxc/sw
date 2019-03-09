@@ -23,6 +23,13 @@
 #include "esp_v4_tunnel_n2h_headers.p4"
 #include "../ipsec_defines.h"
 
+header_type ipsec_to_stage1_t {
+    fields {
+        cb_ring_base_addr : ADDRESS_WIDTH;
+        pad : ADDRESS_WIDTH;
+    }
+}
+
 header_type ipsec_to_stage2_t {
     fields {
         ipsec_cb_addr : ADDRESS_WIDTH;
@@ -143,6 +150,9 @@ metadata ipsec_rxdma_global_t ipsec_global;
 metadata ipsec_rxdma_global_t ipsec_global_scratch;
 
 //to_stage
+@pragma pa_header_union ingress to_stage_1
+metadata ipsec_to_stage1_t ipsec_to_stage1;
+
 @pragma pa_header_union ingress to_stage_2
 metadata ipsec_to_stage2_t ipsec_to_stage2;
 
@@ -200,6 +210,8 @@ metadata p4_to_p4plus_ipsec_header_t p42p4plus_hdr_scratch;
 metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
 @pragma scratch_metadata
 metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
+@pragma scratch_metadata
+metadata ipsec_to_stage1_t ipsec_to_stage1_scratch;
  
 @pragma scratch_metadata
 metadata n2h_stats_header_t ipsec_stats_scratch;
@@ -246,6 +258,9 @@ metadata ipsec_sem_read_t ipsec_sem_read_scratch;
 
 #define IPSEC_TO_STAGE2_SCRATCH \
     modify_field(ipsec_to_stage2_scratch.ipsec_cb_addr, ipsec_to_stage2.ipsec_cb_addr); \
+
+#define IPSEC_TO_STAGE1_SCRATCH \
+    modify_field(ipsec_to_stage1_scratch.cb_ring_base_addr, ipsec_to_stage1.cb_ring_base_addr); \
 
 action ipsec_rxdma_stats_update(N2H_STATS_UPDATE_PARAMS)
 {
@@ -417,6 +432,8 @@ action rxmda_ring_full_error(N2H_STATS_UPDATE_PARAMS)
 //stage 1
 action esp_v4_tunnel_n2h_allocate_input_desc_semaphore(in_desc_ring_index, full)
 {
+    IPSEC_TO_STAGE1_SCRATCH
+
     modify_field(p42p4plus_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0); 
     modify_field(common_te0_phv.table_raw_table_size, 3);

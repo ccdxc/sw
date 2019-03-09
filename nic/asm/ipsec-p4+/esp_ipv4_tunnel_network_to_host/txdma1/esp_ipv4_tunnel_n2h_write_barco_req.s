@@ -21,6 +21,10 @@ esp_v4_tunnel_n2h_write_barco_req:
     phvwr.!c1 p.barco_req_key_desc_index, d.{key_index}.wx
 
 esp_v4_tunnel_n2h_post_to_barco_ring:
+    add r4, d.barco_pindex, 1
+    seq c1, d.barco_cindex, r4
+    bcf [c1], esp_v4_tunnel_n2h_barco_ring_error
+    nop
     and r3, d.barco_pindex, IPSEC_BARCO_RING_INDEX_MASK
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr
@@ -50,6 +54,12 @@ esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_req:
 esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_cb:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_BARCO_CB_OFFSET, 1)    
+    phvwri.e p.txdma1_global_flags, 1
+    nop
+
+esp_v4_tunnel_n2h_barco_ring_error:
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_BARCO_RING_FULL_OFFSSET, 1)    
     phvwri.e p.txdma1_global_flags, 1
     nop
 
