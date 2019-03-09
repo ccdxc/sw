@@ -47,7 +47,7 @@ def Verify(tc):
         if tc.controller_ip_penctl_before[i] != tc.controller_ip_penctl_after[i] \
            or tc.controller_ip_penctl_before[i] != tc.venice_ips[i] \
            or tc.naples_status_before[i] != "REBOOT_PENDING" \
-           or tc.naples_status_after[i] != "VENICE_REGISTRATION_DONE":
+           or tc.naples_status_after[i] != "VENICE_REGISTRATION_SENT":
                api.Logger.info("FAILED - CNTRL EXPECTED {} RECEIVED {} \
                                      - STATUS BEFORE EXPECTED [REBOOT_PENDING] RECEIVED [{}]] \
                                      - STATUS AFTER EXPECTED [VENICE_REGISTRATION_DONE] RECEIVED [{}]".format(tc.venice_ips[i],\

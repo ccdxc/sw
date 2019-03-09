@@ -49,7 +49,6 @@ message NaplesStatus {
         REBOOT_PENDING                      = 8;
     }
 
-
     delphi.ObjectMeta               Meta    = 1;
     // Resolved Controllers/Venice IPs
     repeated string Controllers             = 3;
@@ -69,4 +68,3 @@ message NaplesStatus {
 
     NaplesFru                   Fru          = 9;
 }
-

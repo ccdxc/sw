@@ -109,6 +109,8 @@ const (
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
 	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
 	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
+
+	fakeNICMAC = "00:AE:CD:01:02:03"
 )
 
 var (
@@ -268,7 +270,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 			Spec: pencluster.HostSpec{
 				SmartNICs: []pencluster.SmartNICID{
 					{
-						MACAddress: hostID,
+						MACAddress: fakeNICMAC,
 					},
 				},
 			},
@@ -609,6 +611,9 @@ func (it *veniceIntegSuite) startAgent() {
 		if aerr != nil {
 			log.Fatalf("Error creating netagent. Err: %v", aerr)
 		}
+		// FIXME -- we should not override NodeUUID
+		// currently needed to get TestVeniceIntegSecuritygroup to pass with specific MAC address
+		agent.NetworkAgent.NodeUUID = fakeNICMAC
 
 		// TODO Remove this when nmd and delphi hub are integrated with venice_integ and npm_integ
 		npmClient, err := ctrlerif.NewNpmClient(agent.NetworkAgent, globals.Npm, rc)

@@ -123,6 +123,9 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 				DNSServers: nil,
 			},
 		},
+		Status: nmd.NaplesStatus{
+			Fru: ReadFruFromJSON(),
+		},
 	}
 	// List available NaplesProfiles
 

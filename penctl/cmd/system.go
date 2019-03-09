@@ -5,12 +5,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	cluster "github.com/pensando/sw/api/generated/cluster"
 	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
 )
 
@@ -48,13 +50,20 @@ var getSystemQueueStatsCmd = &cobra.Command{
 	Run:   getSystemQueueStatsCmdHandler,
 }
 
+var getSmartNicCmd = &cobra.Command{
+	Use:   "smartnic",
+	Short: "Shows the SmartNIC object",
+	Long:  "\n-----------------------------------------\n Shows current Spec and Status of SmartNIC object \n-----------------------------------------\n",
+	RunE:  getSmartNicCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(getSysMemCmd)
 	showCmd.AddCommand(getProcMemInfoCmd)
 	showCmd.AddCommand(getSystemCmd)
+	showCmd.AddCommand(getSmartNicCmd)
 	getSystemCmd.AddCommand(getSystemStatusCmd)
 	getSystemCmd.AddCommand(getSystemQueueStatsCmd)
-
 }
 
 func getSysMemCmdHandler(cmd *cobra.Command, args []string) error {
@@ -154,4 +163,19 @@ func getSystemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	return
+}
+
+func getSmartNicCmdHandler(cmd *cobra.Command, args []string) error {
+	resp, err := restGet("api/v1/naples-info/")
+
+	if err != nil {
+		if verbose {
+			fmt.Println(err.Error())
+		}
+		return err
+	}
+	cfg := cluster.SmartNIC{}
+	json.Unmarshal(resp, &cfg)
+	fmt.Println(cfg)
+	return nil
 }

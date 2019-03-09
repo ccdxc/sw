@@ -20,6 +20,7 @@ import (
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	conv "github.com/pensando/sw/venice/utils/strconv"
 )
 
 const dhclientConfStr string = "timeout 3600; request subnet-mask, broadcast-address, time-offset, routers, domain-name, domain-name-servers, host-name, netbios-name-servers, netbios-scope, vendor-encapsulated-options; send vendor-class-identifier \"Pensando\";"
@@ -285,11 +286,22 @@ func (c *IPClient) updateDelphiNaplesObject() error {
 		TransitionPhase: transitionPhase,
 		MgmtIP:          c.nmdState.config.Status.IPConfig.IPAddress,
 		Hostname:        c.nmdState.config.Spec.Hostname,
+		SmartNicName:    c.nmdState.config.Status.SmartNicName,
+		Fru: &delphiProto.NaplesFru{
+			ManufacturingDate: c.nmdState.config.Status.Fru.ManufacturingDate,
+			Manufacturer:      c.nmdState.config.Status.Fru.Manufacturer,
+			ProductName:       c.nmdState.config.Status.Fru.ProductName,
+			SerialNum:         c.nmdState.config.Status.Fru.SerialNum,
+			PartNum:           c.nmdState.config.Status.Fru.PartNum,
+			BoardId:           c.nmdState.config.Status.Fru.BoardId,
+			EngChangeLevel:    c.nmdState.config.Status.Fru.EngChangeLevel,
+			NumMacAddr:        c.nmdState.config.Status.Fru.NumMacAddr,
+			MacStr:            c.nmdState.config.Status.Fru.MacStr,
+		},
 	}
 
 	// Update corresponding delphi object and write to delphi db
-	//if c.delphiClient != nil && c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
-	if c.delphiClient != nil {
+	if c.delphiClient != nil && c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
 		if err := c.delphiClient.SetObject(&naplesStatus); err != nil {
 			log.Errorf("Error writing the naples status object. Err: %v", err)
 			return err
@@ -310,6 +322,12 @@ func (c *IPClient) updateDelphiNaplesObject() error {
 // 4. Stops/Starts REST server to NMD
 func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) error {
 	log.Infof("Found Controllers: %v", controllers)
+
+	var macStr string
+	if _, err := conv.ParseMacAddr(c.nmdState.config.Status.Fru.MacStr); err != nil {
+		macStr = strings.Replace(c.nmdState.config.Status.Fru.MacStr, ":", ".", -1)
+		c.nmdState.config.Status.SmartNicName = macStr
+	}
 
 	if c.nmdState.config.Status.IPConfig == nil {
 		c.nmdState.config.Status.IPConfig = &cluster.IPConfig{
@@ -350,6 +368,9 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 				log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
 			}
 
+			// TODO : Remove Auto-admit
+			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
+
 			go func() {
 				c.nmdState.Add(1)
 				defer c.nmdState.Done()
@@ -359,8 +380,10 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 					log.Errorf("Error starting NIC managed mode: %v", err)
 				}
 			}()
-			// TODO Remove manual nic admitted state.
-			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
+
+			// TODO : Reenable these lines
+			//c.waitForRegistration()
+
 			// Reflect reboot pending state only if the nic is admitted.
 			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
 				c.nmdState.config.Status.Controllers = controllers
@@ -409,14 +432,15 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 			// c.nmdState.StopClassicMode(false)
 			log.Info("Moving Naples to Network managed mode.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
-			// TODO Remove manual nic admitted state.
-			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 
 			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
 			c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 			if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
 				log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
 			}
+
+			// TODO : Remove Auto-admit
+			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 
 			go func() {
 				c.nmdState.Add(1)
@@ -430,7 +454,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 
 			// wait for registration
 			// TODO : Uncomment this section
-			// c.waitForRegistration()
+			//c.waitForRegistration()
 			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
 				c.nmdState.config.Status.Controllers = controllers
 				if c.isDynamic && len(c.nmdState.config.Spec.Controllers) != 0 {
@@ -464,6 +488,9 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 			}
 		}
 	}
+
+	// Update smart NIc
+	//c.nmdState.UpdateNaplesInfoFromConfig()
 
 	// Persist HAL Configuration
 	if err := c.nmdState.PersistHALConfiguration(c.nmdState.config.Spec.NaplesProfile); err != nil {
@@ -593,12 +620,14 @@ func (c *IPClient) doStaticIPConfig() error {
 
 	staticIPCommandString := staticIPCmdStr + c.nmdState.config.Spec.IPConfig.IPAddress + " dev " + c.iface
 	if err := runCmd(staticIPCommandString); err != nil {
+		log.Errorf("Failed to assign static IP.")
 		return err
 	}
 
 	if c.nmdState.config.Spec.IPConfig.DefaultGW != "" {
 		err = runCmd("ip route add default via " + c.nmdState.config.Spec.IPConfig.DefaultGW)
 		if err != nil {
+			log.Errorf("Failed to add Default GW.")
 			return err
 		}
 	}

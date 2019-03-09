@@ -10,6 +10,18 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/protos/smartnic.proto";
 
+// Naples Fru object
+message NaplesFru {
+    string ManufacturingDate = 1[(gogoproto.jsontag) = "manufacturing-date,omitempty"];
+    string Manufacturer      = 2[(gogoproto.jsontag) = "manufacturer,omitempty"];
+    string ProductName       = 3[(gogoproto.jsontag) = "product-name,omitempty"];
+    string SerialNum         = 4[(gogoproto.jsontag) = "serial-number,omitempty"];
+    string PartNum           = 5[(gogoproto.jsontag) = "part-number,omitempty"];
+    string BoardId           = 6[(gogoproto.jsontag) = "board-id,omitempty"];
+    string EngChangeLevel    = 7[(gogoproto.jsontag) = "change-level,omitempty"];
+    string NumMacAddr        = 8[(gogoproto.jsontag) = "number-mac-addresses,omitempty"];
+    string MacStr            = 9[(gogoproto.jsontag) = "mac-string,omitempty"];
+}
 
 // Naples config object
 message Naples {
@@ -59,7 +71,7 @@ message NaplesSpec {
 
     // Operational mode of the NIC
     string Mode                     = 4 [(gogoproto.jsontag) = "mode",
-                                                 (venice.check) = "StrEnum(Naples.MgmtMode)"];
+                                         (venice.check) = "StrEnum(Naples.MgmtMode)"];
 
     // Operational mode of the NIC
     string NetworkMode              = 5 [(gogoproto.jsontag) = "network-mode",
@@ -104,6 +116,12 @@ message NaplesStatus {
     // Operational mode of the NIC
     string Mode                   	        = 5 [(gogoproto.jsontag) = "mode",
                                                  (venice.check) = "StrEnum(Naples.MgmtMode)"];
+
+    // FRU information read from FRU.json
+    NaplesFru Fru                = 7  [(gogoproto.jsontag) = "fru,omitempty"];
+
+    // Naples generated SmartNIC name which should be used as UUID for Naples
+    string SmartNicName           = 8 [(gogoproto.jsontag) = "smartnic-name,omitempty"];
 }
 
 // NaplesCmdExecute contains information on what command to execute

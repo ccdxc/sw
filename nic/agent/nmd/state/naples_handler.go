@@ -40,6 +40,9 @@ const (
 	// ProfileURL is the URL to create naples profiles
 	ProfileURL = "/api/v1/naples/profiles/"
 
+	// NaplesInfoURL is the URL to GET smartnic object
+	NaplesInfoURL = "/api/v1/naples/naples-info/"
+
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped
 	// at 30min.
@@ -131,7 +134,7 @@ func (n *NMD) StartManagedMode() error {
 	}
 
 	// Set Registration in progress flag
-	log.Infof("NIC in managed mode, mac: %v", n.config.Spec.PrimaryMAC)
+	log.Infof("NIC in managed mode, mac: %v", n.config.Status.Fru.MacStr)
 	n.setRegStatus(true)
 
 	for {
@@ -151,10 +154,11 @@ func (n *NMD) StartManagedMode() error {
 
 			// For the NIC in Naples Config, start the registration
 			var name, macStr string
-			mac := n.config.Spec.PrimaryMAC
-			if macStr, err = strconv.ParseMacAddr(n.config.Spec.PrimaryMAC); err != nil {
-				macStr = n.config.Spec.PrimaryMAC
+			mac := n.config.Status.Fru.MacStr
+			if macStr, err = strconv.ParseMacAddr(mac); err != nil {
+				macStr = n.config.Status.Fru.MacStr
 			}
+
 			if len(mac) == 0 {
 				name = n.config.Spec.Hostname
 			} else if len(n.config.Spec.Hostname) == 0 {
@@ -176,12 +180,17 @@ func (n *NMD) StartManagedMode() error {
 				nicObj.ObjectMeta.Name = name
 				nicObj.Spec.IPConfig = n.config.Spec.IPConfig
 				nicObj.Spec.Hostname = n.config.Spec.Hostname
-				nicObj.Spec.MgmtMode = cmd.SmartNICSpec_NETWORK.String()
+				nicObj.Spec.MgmtMode = n.config.Spec.Mode
+				nicObj.Spec.NetworkMode = n.config.Spec.NetworkMode
 				nicObj.Spec.MgmtVlan = n.config.Spec.MgmtVlan
 				nicObj.Spec.Controllers = n.config.Spec.Controllers
-				nicObj.Status.PrimaryMAC = mac
 				nicObj.Status.AdmissionPhase = cmd.SmartNICStatus_REGISTERING.String()
-				nicObj.Status.SerialNum = "0x0123456789ABCDEFghijk"
+				nicObj.Status.SerialNum = n.config.Status.Fru.SerialNum
+				nicObj.Status.PrimaryMAC = n.config.Status.Fru.MacStr
+				nicObj.Status.IPConfig = n.config.Status.IPConfig
+				nicObj.Status.Interfaces = updateInterfaces()
+				nicObj.Status.SmartNICVersion = n.config.Status.Fru.EngChangeLevel
+				nicObj.Status.SmartNICSku = n.config.Status.Fru.PartNum
 			} else {
 
 				// Construct new smartNIC object
@@ -193,20 +202,28 @@ func (n *NMD) StartManagedMode() error {
 					Spec: cmd.SmartNICSpec{
 						Hostname:    n.config.Spec.Hostname,
 						IPConfig:    n.config.Spec.IPConfig,
-						MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
-						NetworkMode: cmd.SmartNICSpec_OOB.String(),
+						MgmtMode:    n.config.Spec.Mode,
+						NetworkMode: n.config.Spec.NetworkMode,
 						MgmtVlan:    n.config.Spec.MgmtVlan,
 						Controllers: n.config.Spec.Controllers,
 					},
 					// TODO: get these from platform
 					Status: cmd.SmartNICStatus{
 						AdmissionPhase:  cmd.SmartNICStatus_REGISTERING.String(),
-						SerialNum:       "0x0123456789ABCDEFghijk",
-						PrimaryMAC:      mac,
-						SmartNICVersion: "ver1",
-						SmartNICSku:     "naples1",
+						SerialNum:       n.config.Status.Fru.SerialNum,
+						PrimaryMAC:      n.config.Status.Fru.MacStr,
+						IPConfig:        n.config.Status.IPConfig,
+						SystemInfo:      nil,
+						Interfaces:      updateInterfaces(),
+						SmartNICVersion: n.config.Status.Fru.EngChangeLevel,
+						SmartNICSku:     n.config.Status.Fru.PartNum,
 					},
 				}
+			}
+
+			// SystemInfo has static information of Naples which does not change during the lifetime of Naples.
+			if nicObj.Status.SystemInfo == nil {
+				nicObj.Status.SystemInfo = UpdateNaplesInfo()
 			}
 
 			// Send NIC register request to CMD
@@ -266,7 +283,7 @@ func (n *NMD) StartManagedMode() error {
 							TypeMeta: api.TypeMeta{
 								Kind: "SmartNICRollout"},
 							ObjectMeta: api.ObjectMeta{
-								Name:   n.config.Spec.PrimaryMAC,
+								Name:   n.config.Status.Fru.MacStr,
 								Tenant: n.config.Tenant,
 							},
 							Spec: protos.SmartNICRolloutSpec{
@@ -441,7 +458,7 @@ func (n *NMD) StartClassicMode() error {
 	log.Infof("Starting Classic Mode.")
 	if !n.GetRestServerStatus() {
 		// Start RestServer
-		log.Infof("NIC in classic mode, mac: %v", n.config.Spec.PrimaryMAC)
+		log.Infof("NIC in classic mode, mac: %v", n.config.Status.Fru.MacStr)
 		return n.StartRestServer()
 	}
 
