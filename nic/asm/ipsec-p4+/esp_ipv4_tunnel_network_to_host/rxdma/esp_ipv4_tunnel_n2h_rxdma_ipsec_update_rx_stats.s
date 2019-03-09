@@ -13,7 +13,6 @@ esp_ipv4_tunnel_n2h_rxdma_ipsec_update_rx_stats:
     tbladd d.n2h_rx_pkts, 1
     add r1, k.ipsec_global_packet_length, 4 
     tbladd.f d.n2h_rx_bytes, r1 
-    phvwri p.app_header_table2_valid, 0
   
     and r6, k.ipsec_global_flags, IPSEC_N2H_GLOBAL_FLAGS 
     seq c1, r6, IPSEC_N2H_GLOBAL_FLAGS

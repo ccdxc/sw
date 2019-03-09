@@ -34,6 +34,7 @@ esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore:
     nop
      
 esp_ipv4_tunnel_n2h_desc_ring_full:
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_DESC_RING_OFFSET, 1)
     phvwri p.p4_rxdma_intr_dma_cmd_ptr, N2H_RXDMA_IPSEC_DMA_COMMANDS_OFFSET

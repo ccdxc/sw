@@ -34,9 +34,8 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
     phvwr p.barco_req_auth_tag_addr, r1.dx
 
     phvwri p.app_header_table0_valid, 1
-    phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_write_barco_req[33:6]
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14 
-    phvwr p.common_te0_phv_table_addr, k.txdma1_global_ipsec_cb_addr 
+    add r5, r0, k.txdma1_global_ipsec_cb_addr
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_v4_tunnel_n2h_write_barco_req, r5, TABLE_SIZE_512_BITS)
     add r2, d.in_desc, 96
     add r3, d.out_desc, 96
     phvwr p.brq_in_desc_zero_dma_cmd_addr, r2 

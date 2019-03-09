@@ -33,12 +33,9 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
 
     sll r2, r2, IPSEC_CB_RING_ENTRY_SHIFT_SIZE 
     add r2, r2, d.cb_ring_base_addr
-    phvwr p.common_te0_phv_table_addr, r2
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex, r2, TABLE_SIZE_64_BITS)
 
     add r4, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}, 64
-    phvwr p.common_te2_phv_table_addr, r4 
-
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, esp_v4_tunnel_n2h_load_part2, r4, TABLE_SIZE_64_BITS)
 
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H

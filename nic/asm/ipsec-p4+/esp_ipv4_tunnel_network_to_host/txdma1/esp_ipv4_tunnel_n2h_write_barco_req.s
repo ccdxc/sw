@@ -34,10 +34,8 @@ esp_v4_tunnel_n2h_post_to_barco_ring:
 
     tblmincri.f d.barco_pindex, IPSEC_BARCO_RING_WIDTH, 1
 
-    phvwri p.app_header_table0_valid, 1
-    phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_txdma1_update_cb[33:6]
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14 
-    phvwr p.common_te0_phv_table_addr, k.txdma1_global_ipsec_cb_addr
+    add r2, r0, k.txdma1_global_ipsec_cb_addr
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_v4_tunnel_n2h_txdma1_update_cb, r2, TABLE_SIZE_512_BITS)
 
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP)
     phvwr p.barco_req_doorbell_address, r4.dx

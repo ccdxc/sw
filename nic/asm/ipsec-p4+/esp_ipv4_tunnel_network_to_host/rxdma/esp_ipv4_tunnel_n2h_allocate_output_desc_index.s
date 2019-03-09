@@ -12,7 +12,7 @@ struct phv_ p;
 
 esp_ipv4_tunnel_n2h_allocate_output_desc_index:
     add r2, r0, d.out_desc_index
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, esp_ipv4_tunnel_n2h_update_output_desc_aol, r2, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, esp_ipv4_tunnel_n2h_update_output_desc_aol)
     phvwr p.t1_s2s_out_desc_addr, d.out_desc_index
     add r6, d.out_desc_index, IPSEC_PAGE_OFFSET
     phvwr p.t1_s2s_out_page_addr, r6

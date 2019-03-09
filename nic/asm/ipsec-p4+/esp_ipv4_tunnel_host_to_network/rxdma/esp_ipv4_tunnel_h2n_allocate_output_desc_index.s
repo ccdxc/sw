@@ -14,7 +14,7 @@ esp_ipv4_tunnel_h2n_allocate_output_desc_index:
     phvwr p.ipsec_int_header_out_desc, d.out_desc_index 
     phvwr p.t1_s2s_out_desc_addr, d.out_desc_index
     add r5, r0, d.out_desc_index
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_update_output_desc_aol, r5, TABLE_SIZE_128_BITS)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, esp_ipv4_tunnel_h2n_update_output_desc_aol)
     add r6, d.out_desc_index, IPSEC_PAGE_OFFSET 
     phvwr p.ipsec_int_header_out_page, r6 
     phvwr p.barco_desc_out_A0_addr, r6.dx

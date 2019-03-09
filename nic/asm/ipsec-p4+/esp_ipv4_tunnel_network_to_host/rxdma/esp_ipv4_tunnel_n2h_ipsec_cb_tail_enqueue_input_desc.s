@@ -71,7 +71,8 @@ esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_out_desc:
 esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_cb_ring:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_CB_RING_OFFSET, 1)
-    phvwri.e p.p4_intr_global_drop, 1  
+    phvwri.e p.p4_intr_global_drop, 1 
+    nop 
     //b esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_dummy_desc
     //nop
 
