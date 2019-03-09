@@ -32,6 +32,9 @@ topdir = os.path.dirname(sys.argv[0])
 topdir = os.path.abspath(topdir)
 iota_test_data_dir = topdir + "/test_data"
 
+def GetTestDataDirectory():
+    return iota_test_data_dir 
+
 def Init():
     server = 'localhost:' + str(GlobalOptions.svcport)
     Logger.info("Creating GRPC Channel to IOTA Service %s" % server)
@@ -532,7 +535,10 @@ def __CopyCommon(direction, node_name, entity_name, files, dest_dir):
 
     req.dest_dir = dest_dir
     if direction == topo_svc.DIR_IN:
-        req.dest_dir = __gl_rundir + '/' + dest_dir
+        # IN is to go to naples .. why do we need to prefix with local running directory?
+        # This is some thing not needed as per my understanding, but need confirmation before removing.
+        if __gl_rundir != None:
+            req.dest_dir = __gl_rundir + '/' + dest_dir
 
     for f in files:
         srcfile = f
@@ -558,6 +564,8 @@ def CopyToHostTools(node_name, files):
     return EntityCopy(req)
 
 def CopyToNaples(node_name, files, dest_dir):
+    # Assumption is that destination directory is always / and then user should move the file by executing a command.
+    # Will change this function to perform that operation as consumer test case is only 1 
     copy_resp = __CopyCommon(topo_svc.DIR_IN, node_name,
                              "%s_host" % node_name, files, dest_dir)
     if not copy_resp:
