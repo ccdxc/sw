@@ -50,6 +50,7 @@ pnso_error_t pnso_register_compression_header_format(
 		uint16_t hdr_fmt_idx)
 {
 	size_t i, total_hdr_len;
+	uint32_t tmp;
 	struct sim_cp_header_format *format;
 
 	/* Basic validation */
@@ -59,6 +60,18 @@ pnso_error_t pnso_register_compression_header_format(
 	if (!cp_hdr_fmt || cp_hdr_fmt->num_fields > PNSO_MAX_HEADER_FIELDS) {
 		return EINVAL;
 	}
+
+	/* Find the total header length */
+	total_hdr_len = 0;
+	for (i = 0; i < cp_hdr_fmt->num_fields; i++) {
+		tmp = cp_hdr_fmt->fields[i].offset +
+			cp_hdr_fmt->fields[i].length;
+		if (tmp > total_hdr_len) {
+			total_hdr_len = tmp;
+		}
+	}
+	if (!total_hdr_len)
+		return EINVAL;
 
 	/* Find a suitable table entry */
 	format = sim_lookup_hdr_format(hdr_fmt_idx, true);
@@ -70,15 +83,6 @@ pnso_error_t pnso_register_compression_header_format(
 	format->fmt_idx = hdr_fmt_idx;
 	format->fmt = *cp_hdr_fmt;
 
-	/* Find the total header length */
-	total_hdr_len = 0;
-	for (i = 0; i < cp_hdr_fmt->num_fields; i++) {
-		uint32_t tmp = cp_hdr_fmt->fields[i].offset +
-			       cp_hdr_fmt->fields[i].length;
-		if (tmp > total_hdr_len) {
-			total_hdr_len = tmp;
-		}
-	}
 
 	/* Allocate static header */
 	if (format->static_hdr && (total_hdr_len > format->total_hdr_sz)) {

@@ -22,11 +22,17 @@ is_power_of_2(unsigned long n)
 }
 #endif
 
+static inline void
+pbuf_alloc_buf(struct pnso_flat_buffer *flat_buf, uint32_t len)
+{
+	flat_buf->buf = (uint64_t) osal_alloc(len);
+	flat_buf->len = len;
+}
+
 struct pnso_flat_buffer *__attribute__((unused))
 pbuf_alloc_flat_buffer(uint32_t len)
 {
 	struct pnso_flat_buffer *flat_buf;
-	void *buf;
 
 	flat_buf = osal_alloc(sizeof(struct pnso_flat_buffer));
 	if (!flat_buf) {
@@ -34,14 +40,11 @@ pbuf_alloc_flat_buffer(uint32_t len)
 		goto out;
 	}
 
-	buf = osal_alloc(len);
-	if (!buf) {
+	pbuf_alloc_buf(flat_buf, len);
+	if (!flat_buf->buf) {
 		OSAL_ASSERT(0);
 		goto out_free;
 	}
-
-	flat_buf->buf = (uint64_t) buf;
-	flat_buf->len = len;
 
 	return flat_buf;
 
@@ -51,11 +54,18 @@ out:
 	return NULL;
 }
 
+static inline void
+pbuf_aligned_alloc_buf(struct pnso_flat_buffer *flat_buf, uint32_t align_size,
+		       uint32_t len)
+{
+	flat_buf->buf = (uint64_t) osal_aligned_alloc(align_size, len);
+	flat_buf->len = len;
+}
+
 struct pnso_flat_buffer *__attribute__((unused))
 pbuf_aligned_alloc_flat_buffer(uint32_t align_size, uint32_t len)
 {
 	struct pnso_flat_buffer *flat_buf;
-	void *buf;
 
 	if (!is_power_of_2(align_size))
 		goto out;
@@ -66,14 +76,11 @@ pbuf_aligned_alloc_flat_buffer(uint32_t align_size, uint32_t len)
 		goto out;
 	}
 
-	buf = osal_aligned_alloc(align_size, len);
-	if (!buf) {
+	pbuf_aligned_alloc_buf(flat_buf, align_size, len);
+	if (!flat_buf->buf) {
 		OSAL_ASSERT(0);
 		goto out_free;
 	}
-
-	flat_buf->buf = (uint64_t) buf;
-	flat_buf->len = len;
 
 	return flat_buf;
 
@@ -120,13 +127,12 @@ pbuf_alloc_buffer_list(uint32_t count, uint32_t len)
 	}
 
 	for (i = 0; i < count; i++) {
-		flat_buf = pbuf_alloc_flat_buffer(len);
-		if (!flat_buf) {
+		flat_buf = &buf_list->buffers[i];
+		pbuf_alloc_buf(flat_buf, len);
+		if (!flat_buf->buf) {
 			OSAL_ASSERT(0);
 			goto out_free;
 		}
-		memcpy(&buf_list->buffers[i], flat_buf,
-		       sizeof(struct pnso_flat_buffer));
 	}
 	buf_list->count = count;
 
@@ -161,13 +167,12 @@ pbuf_aligned_alloc_buffer_list(uint32_t count, uint32_t align_size,
 	}
 
 	for (i = 0; i < count; i++) {
-		flat_buf = pbuf_aligned_alloc_flat_buffer(len, align_size);
-		if (!flat_buf) {
+		flat_buf = &buf_list->buffers[i];
+		pbuf_aligned_alloc_buf(flat_buf, align_size, len);
+		if (!flat_buf->buf) {
 			OSAL_ASSERT(0);
 			goto out_free;
 		}
-		memcpy(&buf_list->buffers[i], flat_buf,
-		       sizeof(struct pnso_flat_buffer));
 	}
 	buf_list->count = count;
 

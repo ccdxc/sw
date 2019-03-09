@@ -4,7 +4,6 @@
  *
  */
 
-/* TODO: remove userspace specific includes */
 #include <ctype.h>
 #include "osal.h"
 
@@ -788,7 +787,7 @@ static pnso_error_t lookup_svc_param_csv_flags(struct svc_param_desc *param_map,
 static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 			  const char *val) \
 { \
-	long long param; \
+	unsigned long long param; \
  \
 	ALIAS_SWAP(root, val); \
 	param = safe_strtoll(val); \
@@ -811,7 +810,7 @@ static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 	len = strlen(val); \
 	PNSO_LOG_TRACE("Calling %s(%s)\n", #fname, val ? val : ""); \
 	if (len < maxlen) { \
-		strncpy((char*)(field), val, maxlen); \
+		safe_strcpy((char*)(field), val, maxlen); \
 		return PNSO_OK; \
 	} \
 	PNSO_LOG_ERROR("Invalid string length %u in %s, max %u\n", \
@@ -954,7 +953,8 @@ static pnso_error_t test_set_alias(struct test_desc *root,
 			break;
 		}
 	}
-	if (val[name_len] != '=') {
+	if (name_len == 0 || name_len >= TEST_ALIAS_MAX_NAME_LEN ||
+	    val[name_len] != '=') {
 		PNSO_LOG_ERROR("Invalid alias 'name=value' pair\n");
 		return EINVAL;
 	}
@@ -995,7 +995,7 @@ static pnso_error_t test_set_validation_svc_retcodes(struct test_desc *root,
 {
 	const char *search_str = val;
 	struct test_validation *validation = (struct test_validation *) parent;
-	long long svc_retcode;
+	pnso_error_t svc_retcode;
 	size_t len;
 
 	ALIAS_SWAP(root, val);
@@ -1027,7 +1027,7 @@ static pnso_error_t test_set_testcase_svc_chains(struct test_desc *root,
 {
 	const char *search_str = val;
 	struct test_testcase *testcase = (struct test_testcase *) parent;
-	long long chain_idx;
+	unsigned long long chain_idx;
 	size_t len;
 
 	ALIAS_SWAP(root, val);

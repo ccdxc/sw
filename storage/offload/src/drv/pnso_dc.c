@@ -311,10 +311,6 @@ decompress_write_result(struct service_info *svc_info)
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
-	if (!status_desc) {
-		OSAL_LOG_ERROR("invalid dc status desc! err: %d", err);
-		OSAL_ASSERT(err);
-	}
 
 	if (!status_desc->csd_valid) {
 		svc_status->err = err;
