@@ -56,9 +56,13 @@ def Trigger(tc):
     tc.cmd_cookies.append("sleep")
 
     api.Trigger_AddNaplesCommand(req, naples.node_name,
+                "/nic/bin/halctl show nwsec policy")
+    tc.cmd_cookies.append("show policy")
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
                 "/nic/bin/halctl show session --alg dns --yaml")
     tc.cmd_cookies.append("Show session")
- 
+
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)

@@ -56,6 +56,7 @@ func init() {
 	showCmd.AddCommand(nwsecShowCmd)
 	nwsecShowCmd.AddCommand(nwsecProfShowCmd)
 	nwsecShowCmd.AddCommand(nwsecPolicyShowCmd)
+	nwsecPolicyShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	nwsecShowCmd.AddCommand(nwsecFlowGateShowCmd)
 
 	nwsecProfShowCmd.Flags().Uint32Var(&nwsecProfID, "id", 1, "Specify security profile ID")
@@ -125,7 +126,246 @@ func nwsecProfShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleNwsecProfShowCmd(cmd, nil)
 }
 
-func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
+func nwsecPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	if cmd.Flags().Changed("yaml") {
+		nwsecPolicyDetailShowCmdHandler(cmd, args)
+		return
+	}
+
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewNwSecurityClient(c)
+
+	var req *halproto.SecurityPolicyGetRequest
+	if cmd != nil && cmd.Flags().Changed("vrf-id") && cmd.Flags().Changed("policy-id") {
+		req = &halproto.SecurityPolicyGetRequest{
+			KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
+				PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
+					SecurityPolicyKey: &halproto.SecurityPolicyKey{
+						SecurityPolicyId: nwsecPolicyID,
+						VrfIdOrHandle: &halproto.VrfKeyHandle{
+							KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+								VrfId: nwsecVrfID,
+							},
+						},
+					},
+				},
+			},
+		}
+	} else {
+		// Get all Security Policies
+		req = &halproto.SecurityPolicyGetRequest{}
+	}
+
+	secPolicyGetReqMsg := &halproto.SecurityPolicyGetRequestMsg{
+		Request: []*halproto.SecurityPolicyGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.SecurityPolicyGet(context.Background(), secPolicyGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Security Policy failed. %v\n", err)
+		return
+	}
+
+	// Print Security Policy
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			fmt.Println("Policy Show not ok")
+			continue
+		}
+		nwsecPolicyShowOneResp(resp)
+	}
+}
+
+func nwsecPolicyShowOneResp(resp *halproto.SecurityPolicyGetResponse) {
+	spec := resp.GetSpec()
+	stats := resp.GetPolStats()
+
+	hdrLine := strings.Repeat("-", 50)
+	fmt.Println(hdrLine)
+	fmt.Printf("\nSecurity Policy Id: %d%s%d\n", spec.GetKeyOrHandle().GetSecurityPolicyKey().GetSecurityPolicyId(),
+		" Vrf id: ", spec.GetKeyOrHandle().GetSecurityPolicyKey().GetVrfIdOrHandle().GetVrfId())
+	fmt.Println(hdrLine)
+	fmt.Println("\nRules:")
+	for _, rule := range spec.Rule {
+		fmt.Printf("\nRule Id: %-5d\n", rule.GetRuleId())
+		fmt.Println("Rule Match:")
+		fmt.Printf("   Src IP Address:  ")
+		if len(rule.Match.SrcAddress) == 0 {
+			fmt.Printf("Any")
+		}
+		for _, src := range rule.Match.SrcAddress {
+			switch src.Formats.(type) {
+			case *halproto.IPAddressObj_Type:
+				iptype := strings.ToLower(strings.Replace(src.GetType().String(), "IP_ADDRESS_", "", -1))
+				fmt.Printf(iptype)
+			case *halproto.IPAddressObj_Address:
+				address := src.GetAddress()
+				switch address.Address.(type) {
+				case *halproto.Address_Range:
+					addrrange := address.GetRange()
+					switch addrrange.Range.(type) {
+					case *halproto.AddressRange_Ipv4Range:
+						low := addrrange.GetIpv4Range().GetLowIpaddr().GetV4Addr()
+						high := addrrange.GetIpv4Range().GetHighIpaddr().GetV4Addr()
+						fmt.Printf("%-5s - %-5s", Uint32IPAddrToStr(low), Uint32IPAddrToStr(high))
+					default:
+						break
+					}
+				case *halproto.Address_Prefix:
+					prefix := address.GetPrefix()
+					switch prefix.Subnet.(type) {
+					case *halproto.IPSubnet_Ipv4Subnet:
+						addr := prefix.GetIpv4Subnet().GetAddress().GetV4Addr()
+						fmt.Printf("%-5s%s%-5d", Uint32IPAddrToStr(addr), "/",
+							prefix.GetIpv4Subnet().GetPrefixLen())
+					default:
+						break
+					}
+				default:
+					break
+				}
+			default:
+				break
+			}
+			fmt.Println(",")
+		}
+		fmt.Printf("   Dst IP Address:  ")
+		if len(rule.Match.DstAddress) == 0 {
+			fmt.Printf("Any")
+		}
+		for _, dst := range rule.Match.DstAddress {
+			switch dst.Formats.(type) {
+			case *halproto.IPAddressObj_Type:
+				iptype := strings.ToLower(strings.Replace(dst.GetType().String(), "IP_ADDRESS_", "", -1))
+				fmt.Printf(iptype)
+			case *halproto.IPAddressObj_Address:
+				address := dst.GetAddress()
+				switch address.Address.(type) {
+				case *halproto.Address_Range:
+					addrrange := address.GetRange()
+					switch addrrange.Range.(type) {
+					case *halproto.AddressRange_Ipv4Range:
+						low := addrrange.GetIpv4Range().GetLowIpaddr().GetV4Addr()
+						high := addrrange.GetIpv4Range().GetHighIpaddr().GetV4Addr()
+						fmt.Printf("%s-%s", Uint32IPAddrToStr(low), Uint32IPAddrToStr(high))
+					default:
+						break
+					}
+				case *halproto.Address_Prefix:
+					prefix := address.GetPrefix()
+					switch prefix.Subnet.(type) {
+					case *halproto.IPSubnet_Ipv4Subnet:
+						addr := prefix.GetIpv4Subnet().GetAddress().GetV4Addr()
+						fmt.Printf("%s%s%d", Uint32IPAddrToStr(addr), "/",
+							prefix.GetIpv4Subnet().GetPrefixLen())
+					default:
+						break
+					}
+				default:
+					break
+				}
+			default:
+				break
+			}
+			fmt.Println(",")
+		}
+		proto := strings.Replace(rule.Match.GetProtocol().String(), "IPPROTO_", "", -1)
+		if proto == "NONE" {
+			proto = "ANY"
+		}
+		fmt.Println("   Protocol: ", proto)
+		switch rule.Match.AppMatch.App.(type) {
+		case *halproto.RuleMatch_AppMatch_PortInfo:
+			fmt.Printf("   Source Ports: ")
+			for _, portrange := range rule.Match.AppMatch.GetPortInfo().SrcPortRange {
+				fmt.Printf(" %d-%d,", portrange.GetPortLow(), portrange.GetPortHigh())
+			}
+			fmt.Printf("\n   Destination Ports: ")
+			for _, portrange := range rule.Match.AppMatch.GetPortInfo().DstPortRange {
+				fmt.Printf("%d-%d,", portrange.GetPortLow(), portrange.GetPortHigh())
+			}
+		case *halproto.RuleMatch_AppMatch_IcmpInfo:
+			fmt.Printf("\n   ICMP Type: %d Code: %d\n", rule.Match.AppMatch.GetIcmpInfo().GetIcmpType(),
+				rule.Match.AppMatch.GetIcmpInfo().GetIcmpCode())
+		case *halproto.RuleMatch_AppMatch_EspInfo:
+			fmt.Printf("\n   ESP SPI: %d\n", rule.Match.AppMatch.GetEspInfo().GetSpi())
+		default:
+			break
+		}
+		fmt.Printf("\n   Apps: ")
+		for _, app := range rule.Appid {
+			fmt.Printf("%s", app)
+		}
+		fmt.Println("\nRule Actions:")
+		secAction := strings.Replace(rule.Action.GetSecAction().String(), "SECURITY_RULE_ACTION_", "", -1)
+		fmt.Println("   Security Action: ", secAction)
+		logAction := strings.Replace(rule.Action.GetLogAction().String(), "LOG_", "", -1)
+		fmt.Println("   Log Action: ", logAction)
+		alg := strings.Replace(rule.Action.GetAppData().GetAlg().String(), "APP_SVC_", "", -1)
+		fmt.Println("   ALG: ", alg)
+		fmt.Println("   Alg Info:")
+		appData := rule.Action.GetAppData()
+		switch rule.Action.GetAppData().GetAlg() {
+		case 2: /* APP_SVC_FTP */
+			fmt.Printf("      Allow Mismatch IP: %t\n", appData.GetFtpOptionInfo().GetAllowMismatchIpAddress())
+		case 3: /* APP_SVC_DNS */
+			fmt.Println("      Drop Multi Question Packets: ", appData.GetDnsOptionInfo().GetDropMultiQuestionPackets())
+			fmt.Println("      Drop Large Domain Name Packets: ", appData.GetDnsOptionInfo().GetDropLargeDomainNamePackets())
+			fmt.Println("      Drop Long Label Packets: ", appData.GetDnsOptionInfo().GetDropLongLabelPackets())
+			fmt.Println("      Drop Multi Zone Packets: ", appData.GetDnsOptionInfo().GetDropMultizonePackets())
+			fmt.Println("      Maximum DNS Message Length: ", appData.GetDnsOptionInfo().GetMaxMsgLength())
+			fmt.Println("      Query Response Timeout: ", appData.GetDnsOptionInfo().GetQueryResponseTimeout())
+		case 5: /* APP_SVC_SUN_RPC */
+			fmt.Printf("      ProgramId%sIdletimeout: ", "/")
+			for _, rpcData := range appData.GetSunRpcOptionInfo().Data {
+				fmt.Printf(" (%s%s%d),", rpcData.GetProgramId(), "/", rpcData.GetIdleTimeout())
+			}
+			fmt.Printf("\n")
+		case 6: /*APP_SVC_MSFT_RPC */
+			fmt.Printf("      ProgramId%sIdletimeout: ", "/")
+			for _, rpcData := range appData.GetMsrpcOptionInfo().Data {
+				fmt.Printf(" (%s%s%d),", rpcData.GetProgramId(), "/", rpcData.GetIdleTimeout())
+			}
+			fmt.Printf("\n")
+		default:
+			break
+		}
+		fmt.Println("Rule Stats: ")
+		for _, stat := range stats.RuleStats {
+			if stat.GetRuleId() == rule.GetRuleId() {
+				fmt.Println("   Total Hits: ", stat.GetNumHits())
+				fmt.Println("   Number of TCP Hits: ", stat.GetNumTcpHits())
+				fmt.Println("   Number of UDP Hits: ", stat.GetNumUdpHits())
+				fmt.Println("   Number of ICMP Hits: ", stat.GetNumIcmpHits())
+				break
+			}
+		}
+	}
+}
+
+func nwsecPolicyDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	handleNwsecPolicyDetailShowCmd(cmd, nil)
+}
+
+func handleNwsecPolicyDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -186,14 +426,6 @@ func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
 			fmt.Println("---")
 		}
 	}
-}
-
-func nwsecPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
-	handleNwsecPolicyShowCmd(cmd, nil)
 }
 
 func nwsecFlowGateShowCmdHandler(cmd *cobra.Command, args []string) {

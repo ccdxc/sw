@@ -1707,6 +1707,39 @@ security_policy_rule_spec_build (nwsec_rule_t                          *rule,
         spec->add_appid(hal::app_redir::appid_to_app(nwsec_plcy_appid->appid));
     }
 
+    spec->mutable_action()->mutable_app_data()->set_alg(rule->fw_rule_action.alg);
+    if (rule->fw_rule_action.alg == nwsec::APP_SVC_FTP) {
+        spec->mutable_action()->mutable_app_data()->mutable_ftp_option_info()->set_allow_mismatch_ip_address(\
+                                      rule->fw_rule_action.app_options.opt.ftp_opts.allow_mismatch_ip_address);
+    } else if (rule->fw_rule_action.alg == nwsec::APP_SVC_DNS) {
+        spec->mutable_action()->mutable_app_data()->mutable_dns_option_info()->set_drop_multi_question_packets(\
+                                      rule->fw_rule_action.app_options.opt.dns_opts.drop_multi_question_packets);
+        spec->mutable_action()->mutable_app_data()->mutable_dns_option_info()->set_drop_large_domain_name_packets(\
+                                      rule->fw_rule_action.app_options.opt.dns_opts.drop_large_domain_name_packets);
+        spec->mutable_action()->mutable_app_data()->mutable_dns_option_info()->set_drop_long_label_packets(\
+                                      rule->fw_rule_action.app_options.opt.dns_opts.drop_long_label_packets);
+        spec->mutable_action()->mutable_app_data()->mutable_dns_option_info()->set_drop_multizone_packets(\
+                                      rule->fw_rule_action.app_options.opt.dns_opts.drop_multizone_packets);
+        spec->mutable_action()->mutable_app_data()->mutable_dns_option_info()->set_max_msg_length(\
+                                      rule->fw_rule_action.app_options.opt.dns_opts.max_msg_length);
+        spec->mutable_action()->mutable_app_data()->mutable_dns_option_info()->set_query_response_timeout(\
+                                      rule->fw_rule_action.app_options.opt.dns_opts.query_response_timeout);
+    } else if (rule->fw_rule_action.alg == nwsec::APP_SVC_SUN_RPC) {
+        for (uint8_t idx = 0; idx < rule->fw_rule_action.app_options.opt.sunrpc_opts.programid_sz; idx++) {
+            nwsec::AppData_RPCData* data = spec->mutable_action()->mutable_app_data()->mutable_sun_rpc_option_info()->add_data();
+ 
+            data->set_program_id(rule->fw_rule_action.app_options.opt.sunrpc_opts.program_ids[idx].program_id);
+            data->set_idle_timeout(rule->fw_rule_action.app_options.opt.sunrpc_opts.program_ids[idx].timeout);
+        }
+    } else if (rule->fw_rule_action.alg == nwsec::APP_SVC_MSFT_RPC) {
+        for (uint8_t idx = 0; idx < rule->fw_rule_action.app_options.opt.msrpc_opts.uuid_sz; idx++) {
+            nwsec::AppData_RPCData* data = spec->mutable_action()->mutable_app_data()->mutable_msrpc_option_info()->add_data();
+
+            data->set_program_id(rule->fw_rule_action.app_options.opt.msrpc_opts.uuids[idx].program_id);
+            data->set_idle_timeout(rule->fw_rule_action.app_options.opt.msrpc_opts.uuids[idx].timeout);
+        }
+    }
+
     return ret;
 }
 
