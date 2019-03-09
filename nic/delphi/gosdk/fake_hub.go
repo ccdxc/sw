@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"sync"
 
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
@@ -26,9 +27,10 @@ type hubClient struct {
 }
 
 type hub struct {
-	listener net.Listener
-	quit     chan struct{}
-	clients  map[net.Conn]*hubClient
+	listener   net.Listener
+	quit       chan struct{}
+	clients    map[net.Conn]*hubClient
+	clientsMux sync.Mutex
 }
 
 // NewFakeHub creates a new hub instance
@@ -58,14 +60,19 @@ func (h *hub) Stop() {
 }
 
 func (h *hub) runReceiver(conn net.Conn) {
+	h.clientsMux.Lock()
 	h.clients[conn] = &hubClient{
 		connection:    conn,
 		subscriptions: make(map[string]struct{}),
 	}
+	h.clientsMux.Unlock()
 	r := bufio.NewReader(conn)
 	for {
 		buf, err := r.Peek(4)
 		if err != nil {
+			h.clientsMux.Lock()
+			delete(h.clients, conn)
+			h.clientsMux.Unlock()
 			return
 		}
 		length, used := proto.DecodeVarint(buf)
@@ -106,9 +113,11 @@ func (h *hub) runLoop() {
 	for {
 		select {
 		case _ = <-h.quit:
+			h.clientsMux.Lock()
 			for _, c := range h.clients {
 				c.connection.Close()
 			}
+			h.clientsMux.Unlock()
 			return
 		}
 	}
@@ -118,13 +127,17 @@ func (h *hub) handleMessage(conn net.Conn, message *messenger.Message) {
 	log.Printf("Hub: MesssageIn: %v", message)
 	switch message.GetType() {
 	case messenger.MessageType_MountReq:
+		h.clientsMux.Lock()
 		h.sendMountResp(h.clients[conn], message)
+		h.clientsMux.Unlock()
 	case messenger.MessageType_ChangeReq:
 		log.Printf("Hub: ChangeReq")
+		h.clientsMux.Lock()
 		for _, c := range h.clients {
 			log.Printf("Hub: Handle Message sending Notify")
 			h.sendNotify(c, message)
 		}
+		h.clientsMux.Unlock()
 		h.sendStatus(conn)
 	}
 }
