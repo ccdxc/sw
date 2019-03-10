@@ -15,7 +15,7 @@ namespace iris {
 //-----------------------------------------------------------------------------
 // Factory method to instantiate the class
 //-----------------------------------------------------------------------------
-devapi_iris *
+devapi *
 devapi_iris::factory(void)
 {
     sdk_ret_t ret      = SDK_RET_OK;
@@ -52,16 +52,10 @@ devapi_iris::init_(void)
 void
 devapi_iris::destroy(devapi *dapi)
 {
-    devapi_iris *dapi_iris = dynamic_cast<devapi_iris*>(dapi);
-    devapi_iris::destroy(dapi_iris);
-}
-
-void
-devapi_iris::destroy(devapi_iris *dapi)
-{
     NIC_LOG_DEBUG("Destroy devapi_iris");
-    dapi->~devapi_iris();
-    DEVAPI_FREE(DEVAPI_MEM_ALLOC_DEVAPI_IRIS, dapi);
+    devapi_iris *dapi_iris = dynamic_cast<devapi_iris*>(dapi);
+    dapi_iris->~devapi_iris();
+    DEVAPI_FREE(DEVAPI_MEM_ALLOC_DEVAPI_IRIS, dapi_iris);
 }
 
 sdk_ret_t

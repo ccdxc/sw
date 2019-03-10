@@ -6,7 +6,7 @@
 /// \file
 /// This module defines mapping API
 ///
-///----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 #ifndef __INCLUDE_API_PDS_MAPPING_HPP__
 #define __INCLUDE_API_PDS_MAPPING_HPP__

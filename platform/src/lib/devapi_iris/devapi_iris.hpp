@@ -14,24 +14,9 @@ namespace iris {
 using std::string;
 
 class devapi_iris : public devapi {
-private:
-    fwd_mode_t fwd_mode_;
-    sdk_spinlock_t slock_;
-
-private:
-    sdk_ret_t init_(void);
-
 public:
-    static devapi_iris *factory(void);
+    static devapi *factory(void);
     static void destroy(devapi *dapi);
-    static void destroy(devapi_iris *dapi);
-
-    devapi_iris() {
-        SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
-    }
-    ~devapi_iris(){
-        SDK_SPINLOCK_DESTROY(&slock_);
-    }
 
     // Lif APIs
     sdk_ret_t lif_create(lif_info_t *info);
@@ -87,6 +72,20 @@ public:
     sdk_ret_t crypto_key_index_upd(uint32_t key_index,
                                    crypto_key_type_t type,
                                    void *key, uint32_t key_size);
+
+private:
+    devapi_iris() {
+        SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    }
+    ~devapi_iris(){
+        SDK_SPINLOCK_DESTROY(&slock_);
+    }
+    sdk_ret_t init_(void);
+
+private:
+    fwd_mode_t fwd_mode_;
+    sdk_spinlock_t slock_;
+
 };
 
 } // namespace iris

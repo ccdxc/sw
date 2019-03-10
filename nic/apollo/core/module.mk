@@ -3,4 +3,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdscore.so
 MODULE_PIPELINE = apollo
+MODULE_SOLIBS   = pdsnicmgr
 include ${MKDEFS}/post.mk

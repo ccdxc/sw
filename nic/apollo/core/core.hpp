@@ -19,6 +19,7 @@ enum {
     THREAD_ID_NONE       = 0,
     THREAD_ID_CONTROL    = 1,
     THREAD_ID_PERIODIC   = 2,
+    THREAD_ID_NICMGR     = 3,
     THREAD_ID_DATA_START = 16,
     THREAD_ID_DATA_END   = 47,
     THREAD_ID_MAX        = 38

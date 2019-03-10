@@ -5,25 +5,22 @@
 #define __DEVAPI_HPP__
 
 #include <string>
+#include <vector>
 #include "include/sdk/base.hpp"
-#include "devapi_types.hpp"
+#include "platform/devapi/devapi_types.hpp"
 
 namespace sdk {
 namespace platform {
 
 using std::string;
+using std::vector;
 
 class devapi {
-private:
-
 public:
     static devapi *factory(void);
     static void destroy(devapi *dapi);
 
-    devapi() {}
-    virtual ~devapi(){}
-
-    // Lif APIs
+    // lif APIs
     virtual sdk_ret_t lif_create(lif_info_t *info) = 0;
     virtual sdk_ret_t lif_destroy(uint32_t lif_id) = 0;
     virtual sdk_ret_t lif_reset(uint32_t lif_id) = 0;
@@ -37,50 +34,84 @@ public:
                                            bool vlan_insert) = 0;
     virtual sdk_ret_t lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
                                       bool all_multicast, bool promiscuous) = 0;
-    virtual sdk_ret_t lif_upd_name(uint32_t lif_id, std::string name) = 0 ;
-    // Qos APIs
-    virtual sdk_ret_t qos_get_txtc_cos(const std::string &group, uint32_t uplink_port,
+    virtual sdk_ret_t lif_upd_name(uint32_t lif_id, string name) = 0 ;
+
+    // qos APIs
+    virtual sdk_ret_t qos_get_txtc_cos(const string &group, uint32_t uplink_port,
                                        uint8_t *cos) = 0;
-    // Uplink APIs
+
+    // uplink APIs
     virtual sdk_ret_t uplink_create(uint32_t id, uint32_t port, bool is_oob) = 0;
     virtual sdk_ret_t uplink_destroy(uint32_t port) = 0;
-    // Port APIs
+
+    // port APIs
     virtual sdk_ret_t port_get_status(uint32_t port_num,
                                       port_status_t *status /* o/p */) = 0;
     virtual sdk_ret_t port_get_config(uint32_t port_num,
                                       port_config_t *config /* o/p */) = 0;
     virtual sdk_ret_t port_set_config(uint32_t port_num,
                                       port_config_t *config) = 0;
-    // Generic APIs
-    virtual sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode) = 0;
-    // Accel APIs
-    virtual sdk_ret_t accel_rgroup_add(string name) = 0;
-    virtual sdk_ret_t accel_rgroup_del(string name) = 0;
+
+    // generic APIs
+    virtual sdk_ret_t set_fwd_mode(fwd_mode_t fwd_mode) {
+        return SDK_RET_INVALID_OP;
+    }
+
+    // accel APIs
+    virtual sdk_ret_t accel_rgroup_add(string name) {
+        return SDK_RET_INVALID_OP;
+    }
+    virtual sdk_ret_t accel_rgroup_del(string name) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t accel_rgroup_ring_add(string name,
-                                            std::vector<std::pair<const std::string,uint32_t>>& ring_vec) = 0;
+                                            vector<std::pair<const string, uint32_t>>& ring_vec) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t accel_rgroup_ring_del(string name,
-                                            std::vector<std::pair<const std::string,uint32_t>>& ring_vec) = 0;
+                                            vector<std::pair<const string,uint32_t>>& ring_vec) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t accel_rgroup_reset_set(string name, uint32_t sub_ring,
-                                             bool reset_sense) = 0;
+                                             bool reset_sense) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t accel_rgroup_enable_set(string name, uint32_t sub_ring,
-                                              bool enable_sense) = 0;
+                                              bool enable_sense) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t accel_rgroup_pndx_set(string name, uint32_t sub_ring,
-                                            uint32_t val, bool conditional) = 0;
+                                            uint32_t val, bool conditional) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t accel_rgroup_info_get(string name, uint32_t sub_ring,
                                             accel_rgroup_rinfo_rsp_cb_t rsp_cb_func,
                                             void *user_ctx,
-                                            uint32_t *ret_num_entries) = 0;
+                                            uint32_t *ret_num_entries) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t accel_rgroup_indices_get(string name, uint32_t sub_ring,
                                                accel_rgroup_rindices_rsp_cb_t rsp_cb_func,
                                                void *user_ctx,
-                                               uint32_t *ret_num_entries) = 0;
+                                               uint32_t *ret_num_entries) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t accel_rgroup_metrics_get(string name, uint32_t sub_ring,
                                                accel_rgroup_rmetrics_rsp_cb_t rsp_cb_func,
                                                void *user_ctx,
-                                               uint32_t *ret_num_entries) = 0;
+                                               uint32_t *ret_num_entries) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t crypto_key_index_upd(uint32_t key_index,
                                            crypto_key_type_t type,
-                                           void *key, uint32_t key_size) = 0;
+                                           void *key, uint32_t key_size) {
+        return SDK_RET_INVALID_OP;
+    }
+
+protected:
+    devapi() {}
+    virtual ~devapi() {}
+
 };
 
 }    // namespace platform
