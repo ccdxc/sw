@@ -431,7 +431,9 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
     t_fwlg.set_sport(key.sport);
     t_fwlg.set_dport(key.dport);
     t_fwlg.set_ipprot(key.proto);
-    t_fwlg.set_direction(key.dir);
+    t_fwlg.set_direction((key.dir == hal::FLOW_DIR_FROM_UPLINK) ?
+                         types::FLOW_DIRECTION_FROM_UPLINK :\
+                         types::FLOW_DIRECTION_FROM_HOST);
     if (pipeline_event() == FTE_SESSION_DELETE)
         t_fwlg.set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
     t_fwlg.set_session_id(sess_hdl);
