@@ -83,6 +83,15 @@ def Trigger(tc):
     else:
         tcpdump_flags_extra = ""
 
+    # For further debug, listen for packets on peer node as well
+    if tc.args.mode == "promiscuous":
+        req_node2 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+        for workload in tc.peer_workloads:
+            cmd = "tcpdump -l -i " + workload.interface + " -tne arp host " + tc.target_IP + " or icmp"
+            api.Trigger_AddHostCommand(req_node2, tc.peer_node, cmd, True)
+        trig_resp_node2 = api.Trigger(req_node2)
+
     for intf1 in tc.host_intfs:
 
         if result == api.types.status.FAILURE:
@@ -90,6 +99,7 @@ def Trigger(tc):
 
         # Create a static ARP entry for the target IP with MAC addr belonging to current host interface
         mac_addr = host_utils.GetMACAddress(tc.naples_node, intf1)
+        api.Logger.info("%s MAC ADDR: %s" %(intf1, mac_addr))
         if  host_utils.AddStaticARP(tc.peer_node, tc.peer_workloads[0].interface, tc.target_IP, mac_addr) != api.types.status.SUCCESS:
                 api.Logger.error("Failed to add Static ARP entry on %s %s %s" %(tc.peer_node, tc.target_IP, mac_addr))
                 result = api.types.status.FAILURE
@@ -98,7 +108,7 @@ def Trigger(tc):
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
         # Warm N3K FDB table with current interface MAC address (to avoid future flooding of packets with DST MAC matching this interface)
-        cmd = "arping -c 1 " + tc.target_IP + " -I " + intf1
+        cmd = "arping -c 1 -I " + intf1 + " " + tc.target_IP
         api.Trigger_AddHostCommand(req, tc.naples_node, cmd)
 
         # Run tcpdump on all interfaces
@@ -132,12 +142,22 @@ def Trigger(tc):
                 api.Logger.error("Failed to delete Static ARP entry on %s %s" %(tc.peer_node, tc.target_IP))
                 result = api.types.status.FAILURE
 
+    if tc.args.mode == "promiscuous":
+        term_resp_node2 = api.Trigger_TerminateAllCommands(trig_resp_node2)
+        resp_node2 = api.Trigger_AggregateCommandsResponse(trig_resp_node2, term_resp_node2)
+
     # Incase of testcase failure, dump the entire command output for further debug
     if result == api.types.status.FAILURE:
         api.Logger.error(" ============================= COMMAND DUMP ================================================")
         for cmd in resp.commands:
             api.PrintCommandResults(cmd)
-        api.Logger.error(" =============================  END  ========================================================")
+
+        # Dump tcpdump o/p from peer node
+        if tc.args.mode == "promiscuous":
+            api.Logger.error(" ============================= COMMAND DUMP from NODE 2 ================================================")
+            for cmd in resp_node2.commands:
+                api.PrintCommandResults(cmd)
+            api.Logger.error(" =============================  END NODE 2 DUMP ========================================================")
 
     return result
 
