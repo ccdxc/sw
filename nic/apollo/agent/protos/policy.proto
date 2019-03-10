@@ -1,0 +1,96 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for policies
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package tpc;
+
+import public "gogo.proto";
+import "meta/meta.proto";
+import "types/types.proto";
+
+// type of the private cloud network
+enum RuleDir {
+  RULE_DIR_NONE      = 0;
+  RULE_DIR_INGRESS   = 1;
+  RULE_DIR_EGRESS    = 2;
+}
+
+// L3 rule match criteria
+message RuleL3Match {
+  // IP protocol
+  uint32         Protocol = 1 [(gogoproto.moretags) = "meta:range:0-255"];
+  // source or destination IP prefix
+  types.IPPrefix Prefix   = 2;
+}
+
+// TCP/UDP rule match criteria
+message PortMatch {
+  // source port range
+  types.PortRange SrcPortRange = 1;
+  // destination port range
+  types.PortRange DstPortRange = 2;
+}
+
+// ICMPv4/ICMPv6 rule match criteria
+message ICMPMatch {
+  // ICMP type
+  uint32 type = 1;
+  // ICMP code
+  uint32 code = 2;
+}
+
+// L4 rule match criteria
+message RuleL4Match {
+  oneof L4Info {
+    // port match criteria
+    PortMatch Ports    = 1;
+    // ICMP match criteria
+    ICMPMatch TypeCode = 2;
+  }
+}
+
+// rule match criteria
+message RuleMatch {
+  // Layer 3 match criteria
+  RuleL3Match L3Match = 1;
+  // Layer 4 match criteria
+  RuleL4Match L4Match = 2;
+}
+
+// SecurityRule is a single rule in the security policy
+// Security policy is a white list policy (hence action is not explicitly
+// configurable), hence if no rule is matched packets are dropped
+message SecurityRule {
+  // stateful rule results in flow/session creation whereas stateless rule
+  // will not result in flow creation
+  bool      Stateful = 1;
+  // rule match criteria
+  RuleMatch Match    = 2;
+}
+
+// security policy configuration
+message SecurityPolicySpec {
+  // unique identifier of security policy
+  uint32                Id         = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // IPv4 or IPv6 policy
+  types.IPAF            AddrFamily = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // direction in which the policy should be enforced
+  RuleDir               Direction  = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // list of security rules
+  repeated SecurityRule Rules      = 4 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
+// Operational status of security policy, if any
+message SecurityPolicyStatus {
+}
+
+// Security Policy object
+message SecurityPolicy {
+  meta.TypeMeta        TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta         ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  SecurityPolicySpec   Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  SecurityPolicyStatus Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

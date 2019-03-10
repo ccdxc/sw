@@ -47,6 +47,12 @@ message IPPrefix {
   uint32    Len  = 2 [(gogoproto.moretags) = "meta:range=0-128"];
 }
 
+// PortRange object has low and high end of the port ranges
+message PortRange {
+  uint32 PortLow  = 1 [(gogoproto.moretags) = "meta:range:0-65535"];
+  uint32 PortHigh = 2 [(gogoproto.moretags) = "meta:range:0-65535"];
+}
+
 // encap types in the network
 enum EncapType {
   ENCAP_TYPE_NONE     = 0;
