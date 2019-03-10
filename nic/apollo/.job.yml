@@ -8,6 +8,13 @@ targets:
     sub-area:
     feature:
 
+  apollo/aarch64build:
+    commands: ["make", "PIPELINE=apollo", "ARCH=aarch64", "PLATFORM=hw"]
+    owners: ["email:saratk@pensando.io","email:avinash@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

@@ -992,12 +992,7 @@ port_update (void *pd_p, port_args_t *args)
         SDK_TRACE_DEBUG("speed updated. new: %d, old: %d",
                         args->port_speed, port_p->port_speed());
 
-        // TODO when to reset mac config?
-        if (port_p->port_speed() == port_speed_t::PORT_SPEED_100G ||
-            port_p->port_speed() == port_speed_t::PORT_SPEED_40G) {
-            port_p->port_deinit();
-        }
-
+        port_p->port_deinit();
         port_p->set_port_speed(args->port_speed);
         configured = true;
     }
