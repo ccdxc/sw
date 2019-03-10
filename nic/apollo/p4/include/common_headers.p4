@@ -381,3 +381,53 @@ header_type policer_scratch_metadata_t {
         policer_tbkt        : 40;
     }
 }
+
+/* BARCO Descriptor definition */
+//128B
+header_type barco_desc_t {
+    fields {
+        input_list_address                  : 64;
+        output_list_address                 : 64;
+        command                             : 32;
+        key_desc_index                      : 32;
+        iv_address                          : 64;
+        auth_tag_addr                       : 64;
+        header_size                         : 32;
+        status_address                      : 64;
+        opaque_tag_value                    : 32;
+        opaque_tag_write_en                 : 1;
+        rsvd1                               : 31;
+        sector_size                         : 16;
+        application_tag                     : 16;
+        sector_num                          : 32;
+        doorbell_address                    : 64;
+        doorbell_data                       : 64;
+        second_key_desc_index               : 32;
+    }
+}
+
+header_type barco_iv_t {
+    fields {
+        iv_0                                : 64;
+        iv_1                                : 64;
+    }
+}
+
+header_type ptr64_t {
+    fields {
+        ptr : 64;
+    }
+}
+
+header_type ptr32_t {
+    fields {
+        ptr : 32;
+    }
+}
+
+header_type index16_t {
+  fields {
+    index   : 16;
+  }
+}
+

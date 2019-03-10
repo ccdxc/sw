@@ -116,7 +116,7 @@ header_type sqcb_t {
         CAPRI_QSTATE_HEADER_COMMON
         // 4 Bytes SQ ring
         CAPRI_QSTATE_HEADER_RING(0)
-        /* 20 Bytes/160 bits Fixed header */
+        /* 12 Bytes/96 bits Fixed header */
 
         sq_base_addr                    : 64;
         log_num_wqes                    : 5;
@@ -242,42 +242,145 @@ pad
     modify_field(sessprodcb_d.dgst_q_ci, dgst_q_ci);                           \
     modify_field(sessprodcb_d.pad, pad);                                       \
 
-// session producer cb
+// session xts tx cb
+// 64B
+header_type sessxtstxcb_t {
+    fields {
+        //16B
+        pc                             : 8;
+        // 7 Bytes intrinsic header
+        CAPRI_QSTATE_HEADER_COMMON
+        // 4 Bytes Ring 0
+        CAPRI_QSTATE_HEADER_RING(0)
+        // 4 Bytes Ring 1
+        CAPRI_QSTATE_HEADER_RING(1)
+
+        //6B
+        base_addr                       : 34;
+        log_num_entries                 : 5;
+        log_lba_size                    : 5;
+        rsvd0                           : 4;
+        
+        //stage0 flags
+        //1B
+        busy                            : 1;
+        rsvd1                           : 7;
+
+        //writeback stage flags
+        //1B
+        wb_busy                         : 1;
+        in_progress                     : 1;
+        rsvd2                           : 6;
+
+        //2B
+        nxt_lba_offset                  : 16;
+
+        //2B
+        rsvd3                           : 16;
+
+        //8B
+        key_index                       : 32;
+        sec_key_index                   : 32;
+
+        //28B
+        pad                             : 224;
+    }
+}
+
+#define SESSXTSTXCB_PARAMS                                                      \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, \
+base_addr, log_num_entries, log_lba_size, rsvd0, busy, rsvd1, \
+wb_busy, in_progress, rsvd2, nxt_lba_offset, rsvd3,  \
+key_index, sec_key_index, pad
+
+#define GENERATE_SESSXTSTXCB_D  \
+    modify_field(sessxtstxcb_d.rsvd, rsvd);                              \
+    modify_field(sessxtstxcb_d.cosA, cosA);                              \
+    modify_field(sessxtstxcb_d.cosB, cosB);                              \
+    modify_field(sessxtstxcb_d.cos_sel, cos_sel);                        \
+    modify_field(sessxtstxcb_d.eval_last, eval_last);                    \
+    modify_field(sessxtstxcb_d.host, host);                              \
+    modify_field(sessxtstxcb_d.total, total);                            \
+    modify_field(sessxtstxcb_d.pid, pid);                                \
+    modify_field(sessxtstxcb_d.pi_0, pi_0);                              \
+    modify_field(sessxtstxcb_d.ci_0, ci_0);                              \
+    modify_field(sessxtstxcb_d.base_addr, base_addr);  \
+    modify_field(sessxtstxcb_d.log_num_entries, log_num_entries);  \
+    modify_field(sessxtstxcb_d.log_lba_size, log_lba_size);  \
+    modify_field(sessxtstxcb_d.rsvd0, rsvd0);  \
+    modify_field(sessxtstxcb_d.busy, busy);  \
+    modify_field(sessxtstxcb_d.rsvd1, rsvd1);  \
+    modify_field(sessxtstxcb_d.wb_busy, wb_busy);  \
+    modify_field(sessxtstxcb_d.in_progress, in_progress);  \
+    modify_field(sessxtstxcb_d.rsvd2, rsvd2);  \
+    modify_field(sessxtstxcb_d.nxt_lba_offset, nxt_lba_offset);  \
+    modify_field(sessxtstxcb_d.rsvd3, rsvd3);  \
+    modify_field(sessxtstxcb_d.key_index, key_index);  \
+    modify_field(sessxtstxcb_d.sec_key_index, sec_key_index);  \
+    modify_field(sessxtstxcb_d.pad, pad);  \
+
+// resource cb
 header_type resourcecb_t {
     fields {
+        // ring of free data pages
         page_ring_pi                    : 16;
+        page_ring_proxy_ci              : 16;
         page_ring_ci                    : 16;
+        page_ring_log_sz                :  5;
+        page_ring_rsvd                  :  3;
+        page_ring_choke_counter         :  8;
 
+        // ring of free AOL descriptor pairs
+        aol_ring_pi                     : 16;
+        aol_ring_proxy_ci               : 16;
+        aol_ring_ci                     : 16;
+        aol_ring_log_sz                 :  5;
+        aol_ring_rsvd                   :  3;
+        aol_ring_choke_counter          :  3;
+
+        // ring of free cmdids
         cmdid_ring_pi                   : 16;
+        cmdid_ring_proxy_ci             : 16;
         cmdid_ring_ci                   : 16;
+        cmdid_ring_log_sz               :  5;
+        cmdid_ring_rsvd                 :  3;
+        cmdid_ring_choke_counter        :  3;
 
-        log_page_ring_sz                : 5;
-        rsvd0                           : 3;
-
-        log_cmdid_ring_sz               : 5;
-        rsvd1                           : 3;
-
-        //54 Bytes
-        pad                             : 432;
+        //40 Bytes
+        pad                             : 320;
     }
 }
 
 #define RESOURCECB_PARAMS                                                      \
-page_ring_pi, page_ring_ci, cmdid_ring_pi, cmdid_ring_ci,                      \
-log_page_ring_sz, rsvd0, log_cmdid_ring_sz, rsvd1,                             \
+page_ring_pi, page_ring_proxy_ci, page_ring_ci, page_ring_log_sz, \
+page_ring_rsvd, page_ring_choke_counter, \
+aol_ring_pi, aol_ring_proxy_ci, aol_ring_ci, aol_ring_log_sz, \
+aol_ring_rsvd, aol_ring_choke_counter, \
+cmdid_ring_pi, cmdid_ring_proxy_ci, cmdid_ring_ci, cmdid_ring_log_sz, \
+cmdid_ring_rsvd, cmdid_ring_choke_counter, \
 pad
 
 
-#define GENERATE_RESOURCECB_D                                                  \
-    modify_field(resourcecb_d.page_ring_pi, page_ring_pi);                     \
-    modify_field(resourcecb_d.page_ring_ci, page_ring_ci);                     \
-    modify_field(resourcecb_d.cmdid_ring_pi, cmdid_ring_pi);                   \
-    modify_field(resourcecb_d.cmdid_ring_ci, cmdid_ring_ci);                   \
-    modify_field(resourcecb_d.log_page_ring_sz, log_page_ring_sz);             \
-    modify_field(resourcecb_d.rsvd0, rsvd0);                                   \
-    modify_field(resourcecb_d.log_cmdid_ring_sz, log_cmdid_ring_sz);           \
-    modify_field(resourcecb_d.rsvd1, rsvd1);                                   \
-    modify_field(resourcecb_d.pad, pad);                                       \
+#define GENERATE_RESOURCECB_D                                                   \
+    modify_field(resourcecb_d.page_ring_pi, page_ring_pi);                      \
+    modify_field(resourcecb_d.page_ring_proxy_ci, page_ring_proxy_ci);          \
+    modify_field(resourcecb_d.page_ring_ci, page_ring_ci);                      \
+    modify_field(resourcecb_d.page_ring_log_sz, page_ring_log_sz);              \
+    modify_field(resourcecb_d.page_ring_rsvd, page_ring_rsvd);                  \
+    modify_field(resourcecb_d.page_ring_choke_counter, page_ring_choke_counter);\
+    modify_field(resourcecb_d.aol_ring_pi, aol_ring_pi);                        \
+    modify_field(resourcecb_d.aol_ring_proxy_ci, aol_ring_proxy_ci);            \
+    modify_field(resourcecb_d.aol_ring_ci, aol_ring_ci);                        \
+    modify_field(resourcecb_d.aol_ring_log_sz, aol_ring_log_sz);                \
+    modify_field(resourcecb_d.aol_ring_rsvd, aol_ring_rsvd);                    \
+    modify_field(resourcecb_d.aol_ring_choke_counter, aol_ring_choke_counter);  \
+    modify_field(resourcecb_d.cmdid_ring_pi, cmdid_ring_pi);                    \
+    modify_field(resourcecb_d.cmdid_ring_proxy_ci, cmdid_ring_proxy_ci);        \
+    modify_field(resourcecb_d.cmdid_ring_ci, cmdid_ring_ci);                    \
+    modify_field(resourcecb_d.cmdid_ring_log_sz, cmdid_ring_log_sz);            \
+    modify_field(resourcecb_d.cmdid_ring_rsvd, cmdid_ring_rsvd);                \
+    modify_field(resourcecb_d.cmdid_ring_choke_counter, cmdid_ring_choke_counter);\
+    modify_field(resourcecb_d.pad, pad);                                        \
 
 
 // SQ stats cb
@@ -304,3 +407,139 @@ pad
     modify_field(sq_statscb_d.num_write_lbas, num_write_lbas);                 \
     modify_field(sq_statscb_d.pad, pad);                                       \
 
+//32B
+header_type nvme_wqe_t {
+  fields {
+    // NVME command Dword 0
+    opc		: 8;	// Opcode
+    fuse	: 2;	// Fusing 2 simple commands
+    rsvd0	: 4; 
+    psdt	: 2;	// PRP or SGL
+    cid		: 16;	// Command identifier
+  
+    // NVME command Dword 1
+    nsid	: 32;	// Namespace identifier
+
+    // NVME command Dwords 10 and 11 
+    slba	: 64;	// Starting LBA (for Read/Write) commands
+
+    // NVME command Dword 12
+    nlb		: 16;	// Number of logical blocks
+    rsvd1   : 16;
+
+    // backend info
+    // when a response is received, lif/session_id/state etc. variables are used to 
+    // cross check whether the received response is sane.
+    // sq_id is used to retrieve the head_pointer and also associated cq_id of this sq 
+    // so that completions can be posted.
+    sq_id           : 16;
+    session_id      : 16;    
+    lif             : 12;
+    state           :  4;
+
+    //TODO: remember number of prps, number of data page ptrs, number of aol descs etc.
+    pad             : 48;
+  }
+}
+
+#define NVME_WQE_PARAMS \
+opc, fuse, rsvd0, psdt, cid, nsid, slba, nlb, rsvd1, \
+sq_id, session_id, lif, state, pad
+
+#define GENERATE_NVME_WQE_D \
+    modify_field(nvme_wqe_d.opc, opc); \
+    modify_field(nvme_wqe_d.fuse, fuse); \
+    modify_field(nvme_wqe_d.rsvd0, rsvd0); \
+    modify_field(nvme_wqe_d.psdt, psdt); \
+    modify_field(nvme_wqe_d.cid, cid); \
+    modify_field(nvme_wqe_d.nsid, nsid); \
+    modify_field(nvme_wqe_d.slba, slba); \
+    modify_field(nvme_wqe_d.nlb, nlb); \
+    modify_field(nvme_wqe_d.rsvd1, rsvd1); \
+    modify_field(nvme_wqe_d.sq_id, sq_id); \
+    modify_field(nvme_wqe_d.session_id, session_id); \
+    modify_field(nvme_wqe_d.lif, lif); \
+    modify_field(nvme_wqe_d.state, state); \
+    modify_field(nvme_wqe_d.pad, pad); \
+
+// wqe that gets posted into session XTS/DGST queues
+// for now, the allocated backend command ID is what gets posted, but we may
+// add more fields later, hence defining a separate structure
+header_type sess_wqe_t {
+    fields {
+        cid : 16;
+    }
+}
+#define SESS_WQE_PARAMS  \
+cid
+
+#define GENERATE_SESS_WQE_D \
+    modify_field(sess_wqe_d.cid, cid);
+
+
+// this is the cb that is used to track the barco xts engine ring.
+// before an element is produced, pi and ci is checked to make sure there is space
+// in the ring.
+// whenever an element is produced, pi is incremented.
+// when barco xts engine consumes an element, it uses opaque tag address/data to update
+// the new ci value. 
+// since opaque tag is used, this cb CANNOT be in p4+ cache enabled area.
+// in case of a multi lba wqe, each lba of the wqe generates a new barco xts request.
+// For each such request, upon completing, barco updates the ci using opaque tag.
+// The last lba of a given wqe also enables doorbell so that barco can wakeup the 
+// corresponding session q to move the wqe to next phase.
+// since opaque tag data is 32 bits, to simplify the implementation, allocating 32 bit
+// value for ci/pi.
+
+//16B
+header_type xtscb_t {
+  fields {
+    pi                  : 32;
+    ci                  : 32;
+    xts_ring_base_addr  : 34;
+    log_sz              :  5;
+    rsvd                :  1;
+    choke_counter       :  8;
+    pad                 : 16;
+  }
+}
+
+#define XTSCB_PARAMS \
+pi, ci, xts_ring_base_addr, log_sz, rsvd, choke_counter, pad
+
+#define GENERATE_XTSCB_D    \
+    modify_field(xtscb_d.pi, pi); \
+    modify_field(xtscb_d.ci, ci); \
+    modify_field(xtscb_d.xts_ring_base_addr, xts_ring_base_addr); \
+    modify_field(xtscb_d.log_sz, log_sz); \
+    modify_field(xtscb_d.rsvd, rsvd); \
+    modify_field(xtscb_d.choke_counter, choke_counter); \
+    modify_field(xtscb_d.pad, pad);
+
+// this is the cb that is used to track the dgst accelerator engine ring.
+// rest of the details are same as above.
+
+//16B
+header_type dgstcb_t {
+  fields {
+    pi                  : 32;
+    ci                  : 32;
+    dgst_ring_base_addr : 34;
+    log_sz              :  5;
+    rsvd                :  1;
+    choke_counter       :  8;
+    pad                 : 16;
+  }
+}
+
+#define DGSTCB_PARAMS \
+pi, ci, dgst_ring_base_addr, log_sz, rsvd, choke_counter, pad
+
+#define GENERATE_DGSTCB_D \
+    modify_field(dgstcb_d.pi, pi); \
+    modify_field(dgstcb_d.ci, ci); \
+    modify_field(dgstcb_d.dgst_ring_base_addr, dgst_ring_base_addr); \
+    modify_field(dgstcb_d.log_sz, log_sz); \
+    modify_field(dgstcb_d.rsvd, rsvd); \
+    modify_field(dgstcb_d.choke_counter, choke_counter); \
+    modify_field(dgstcb_d.pad, pad); \

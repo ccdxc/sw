@@ -314,6 +314,63 @@ metadata nvme_req_tx_resourcecb_to_metapage_fetch_t t1_s2s_resourcecb_to_metapag
 //Table-2
 
 /**** PHV Layout ****/
+@pragma dont_trim
+metadata nvme_wqe_t wqe;
+@pragma dont_trim
+metadata doorbell_data_t session_db;
+@pragma dont_trim
+metadata index16_t data_cindex;
+@pragma dont_trim
+metadata index16_t aol_cindex;
+@pragma dont_trim
+metadata index16_t cmdid_cindex;
+@pragma dont_trim
+metadata sess_wqe_t sess_wqe;
+@pragma dont_trim
+metadata ptr64_t prp1;
+@pragma dont_trim
+metadata ptr64_t prp2;
+
+@pragma pa_align 128
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t wqe_dma;             //dma cmd 0
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t prp1_dma;            //dma cmd 1
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t prp2_src_dma;        //dma cmd 2
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t prp2_dst_dma;        //dma cmd 3
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t prp3_src_dma;        //dma cmd 4
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t prp3_dst_dma;        //dma cmd 5
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t data_page1_src_dma;  //dma cmd 6
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t data_page1_dst_dma;  //dma cmd 7
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t data_page2_src_dma;  //dma cmd 8
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t data_page2_dst_dma;  //dma cmd 9
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t aol_desc1_src_dma;   //dma cmd 10
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t aol_desc1_dst_dma;   //dma cmd 11
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t aol_desc2_src_dma;   //dma cmd 12
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t aol_desc2_dst_dma;   //dma cmd 13
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t data_cindex_dma;     //dma cmd 14
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t aol_cindex_dma;      //dma cmd 15
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t cmdid_cindex_dma;    //dma cmd 16
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t session_wqe_dma;     //dma cmd 17
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t session_db_dma;      //dma cmd 18
+
 
 /*
  * Stage 0 table 0 action
