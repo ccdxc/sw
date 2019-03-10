@@ -110,8 +110,7 @@ public:
      * @param[out] info pointer to vnic info
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_hw(pds_vnic_key_t *key,
-                              pds_vnic_info_t *info) ;
+    sdk_ret_t read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info);
 
     uint16_t hw_id(void) { return hw_id_; }
 

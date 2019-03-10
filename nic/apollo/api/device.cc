@@ -33,7 +33,7 @@ device_entry *
 device_entry::factory(pds_device_spec_t *pds_device) {
     device_entry *device;
 
-    device = device_db()->device_alloc();
+    device = device_db()->alloc();
     if (device) {
         new (device) device_entry();
         device->impl_ =
@@ -60,7 +60,7 @@ device_entry::destroy(device_entry *device) {
         impl_base::destroy(impl::IMPL_OBJ_ID_DEVICE, device->impl_);
     }
     device->~device_entry();
-    device_db()->device_free(device);
+    device_db()->free(device);
 }
 
 /**
@@ -79,17 +79,6 @@ device_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 /**
- * @brief    allocate h/w resources for this object
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-device_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
-}
-
-/**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any, during creation of the object
  * @param[in] obj_ctxt    transient state associated with this API
@@ -97,17 +86,7 @@ device_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 device_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming device config");
     return impl_->program_hw(this, obj_ctxt);
-}
-
-/**
- * @brief     free h/w resources used by this object, if any
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-device_entry::release_resources(void) {
-    return SDK_RET_OK;
 }
 
 /**
@@ -173,18 +152,17 @@ device_entry::add_to_db(void) {
 }
 
 /**
- * @brief delete device from database
+ * @brief delete device instance from database
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 device_entry::del_from_db(void) {
-    /**< this is a singleton obj, so this is no-op */
-    return SDK_RET_OK;
+    return device_db()->remove();
 }
 
 device_entry *
 device_entry::find_in_db(void) {
-    return device_db()->device_find();
+    return device_db()->find();
 }
 
 /**

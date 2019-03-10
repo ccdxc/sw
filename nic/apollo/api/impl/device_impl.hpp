@@ -51,20 +51,15 @@ public:
     ~device_impl() {}
 
     /**
-     * @brief read spec, statistics and status from hw tables
-     * @param[out] info pointer to device info
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    sdk_ret_t read_hw(pds_device_info_t *info);
-
-    /**
      * @brief    program all h/w tables relevant to this object except stage 0
      *           table(s), if any
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
+                                 obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
@@ -73,7 +68,9 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) override;
+                                 obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
@@ -83,7 +80,28 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
-                                obj_ctxt_t *obj_ctxt) override;
+                                obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
+
+    /**
+     * @brief    activate the epoch in the dataplane by programming stage 0
+     *           tables, if any
+     * @param[in] epoch       epoch being activated
+     * @param[in] api_op      api operation
+     * @param[in] obj_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t activate_hw(api_base *api_obj,
+                                  pds_epoch_t epoch,
+                                  api_op_t api_op,
+                                  obj_ctxt_t *obj_ctxt) override;
+    /**
+     * @brief read spec, statistics and status from hw tables
+     * @param[out] info pointer to device info
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read_hw(pds_device_info_t *info);
 
 private:
     /**
@@ -94,9 +112,9 @@ private:
 
     /**
      * @brief Populate ingress drop stats with hardware information
-     * @param[out] idrop_stats Ingress drop statistics
+     * @param[out] ing_drop_stats Ingress drop statistics
      */
-    void fill_idrop_stats_(pds_device_idrop_stats_t *idrop_stats);
+    void fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats);
 };
 
 /** @} */    // end of PDS_DEVICE_IMPL

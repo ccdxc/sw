@@ -23,17 +23,17 @@ namespace api {
  * @return    pointer to the allocated device , NULL if no memory
  */
 device_entry *
-device_state::device_alloc(void) {
+device_state::alloc(void) {
     return (device_entry *)SDK_CALLOC(PDS_MEM_ALLOC_DEVICE,
                                       sizeof(device_entry));
 }
 
 /**
- * @brief      free device instance back to slab
+ * @brief      free device instance back
  * @param[in]  device   pointer to the allocated device
  */
 void
-device_state::device_free(device_entry *device) {
+device_state::free(device_entry *device) {
     SDK_FREE(PDS_MEM_ALLOC_DEVICE, device);
 }
 

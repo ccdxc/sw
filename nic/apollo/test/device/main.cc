@@ -121,9 +121,6 @@ TEST_F(device_test, device_create_after_create_1) {}
 ///
 /// Delete device and validate with read
 TEST_F(device_test, device_delete) {
-    // TODO Even after delete, values are still present in DB.
-    // Commenting this test out, until that is fixed.
-#if 0
     pds_batch_params_t batch_params = {0};
     pds_device_info_t info;
     device_util    device_obj(k_device_ip_str, k_mac_addr_str,
@@ -141,10 +138,8 @@ TEST_F(device_test, device_delete) {
     ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // Verify with read
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.validate(&info) == sdk::SDK_RET_OK);
-#endif
+    // Verify that the read operation fails
+    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Delete Device after Delete

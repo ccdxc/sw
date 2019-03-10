@@ -32,19 +32,19 @@ typedef struct pds_device_status_s {
 } __PACK__ pds_device_status_t;
 
 /// \brief Ingress drop statistics
-typedef struct pds_device_idrop_stats_s {
+typedef struct pds_device_ing_drop_stats_s {
     uint64_t drop_stats_pkts[P4I_DROP_REASON_MAX];
-} __PACK__ pds_device_idrop_stats_t;
+} __PACK__ pds_device_ing_drop_stats_t;
 
 /// \brief Device egress drop statistics
-typedef struct pds_device_edrop_stats_s {
+typedef struct pds_device_egr_drop_stats_s {
     uint64_t drop_stats_pkts[0];
-} __PACK__ pds_device_edrop_stats_t;
+} __PACK__ pds_device_egr_drop_stats_t;
 
 /// \brief Device statistics
 typedef struct pds_device_stats_s {
-    pds_device_idrop_stats_t idrop_stats;    ///<< Ingress drop statistics
-    pds_device_edrop_stats_t edrop_stats;    ///<< Egress drop statistics
+    pds_device_ing_drop_stats_t ing_drop_stats;    ///<< Ingress drop statistics
+    pds_device_egr_drop_stats_t egr_drop_stats;    ///<< Egress drop statistics
 } __PACK__ pds_device_stats_t;
 
 /// \brief Device information

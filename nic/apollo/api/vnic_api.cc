@@ -7,6 +7,7 @@
 /// This module implements VNIC API
 ///
 //----------------------------------------------------------------------------
+
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/obj_api.hpp"
@@ -14,24 +15,26 @@
 #include "nic/apollo/api/impl/vnic_impl.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
-static sdk_ret_t
+static inline sdk_ret_t
 pds_vnic_api_handle (api::api_op_t op, pds_vnic_key_t *key,
                      pds_vnic_spec_t *spec)
 {
     sdk::sdk_ret_t rv;
     api_ctxt_t api_ctxt;
 
-    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK)
+    if ((rv = pds_obj_api_validate(op, key, spec)) != sdk::SDK_RET_OK) {
         return rv;
+    }
 
     api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_VNIC, op);
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = op;
         api_ctxt.obj_id = api::OBJ_ID_VNIC;
-        if (op == api::API_OP_DELETE)
+        if (op == api::API_OP_DELETE) {
             api_ctxt.api_params->vnic_key = *key;
-        else
+        } else {
             api_ctxt.api_params->vnic_spec = *spec;
+        }
         rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
     }
@@ -47,7 +50,6 @@ pds_vnic_entry_find (pds_vnic_key_t *key)
 //----------------------------------------------------------------------------
 // VNIC API entry point implementation
 //----------------------------------------------------------------------------
-
 sdk_ret_t
 pds_vnic_create (pds_vnic_spec_t *spec)
 {
@@ -60,14 +62,16 @@ pds_vnic_read (pds_vnic_key_t *key, pds_vnic_info_t *info)
     vnic_entry *entry = NULL;
     api::impl::vnic_impl *impl;
 
-    if (key == NULL || info == NULL)
+    if (key == NULL || info == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
+    }
 
-    if ((entry = pds_vnic_entry_find(key)) == NULL)
+    if ((entry = pds_vnic_entry_find(key)) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
-
+    }
     info->spec.key = *key;
-    // Call the vnic hw implementaion directly
+
+    // call the vnic hw implementaion directly
     impl = dynamic_cast<api::impl::vnic_impl*>(entry->impl());
     return impl->read_hw(key, info);
 }

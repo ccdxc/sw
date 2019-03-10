@@ -56,7 +56,9 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
-                                        obj_ctxt_t *obj_ctxt) override;
+                                        obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -70,7 +72,9 @@ public:
      * @brief     free h/w resources used by this object, if any
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t release_resources(void) override;
+    virtual sdk_ret_t release_resources(void) override {
+        return SDK_RET_OK;
+    }
 
     /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
@@ -114,6 +118,10 @@ public:
      */
     virtual sdk_ret_t del_from_db(void) override;
 
+    /**
+     * @brief    find and return the (singleton) instance of device obj
+     * @return    return device object or NULL, if not found
+     */
     static device_entry *find_in_db(void);
 
     /**

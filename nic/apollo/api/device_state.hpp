@@ -42,10 +42,10 @@ public:
      * @brief    allocate memory required for device object
      * @return pointer to the allocated device, NULL if no memory
      */
-    device_entry *device_alloc(void);
+    device_entry *alloc(void);
 
     /**
-     * @brief
+     * @brief    insert given device instance into the device db
      * @return   SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t insert(device_entry *device) {
@@ -57,16 +57,26 @@ public:
     }
 
     /**
+     * @brief      remove the (singleton) instance of device object from db
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t remove(void) {
+        device_cfg_ = NULL;
+        return SDK_RET_OK;
+    }
+
+    /**
      * @brief      free device instance back to slab
      * @param[in]  device   pointer to the allocated device
      */
-    void device_free(device_entry *device);
+    void free(device_entry *device);
 
     /**
      * @brief     lookup a device in database given the key
      * @param[in] device_key device key
+     * @return pointer to the instance of device config or NULL, if not found
      */
-    device_entry *device_find(void) {
+    device_entry *find(void) {
         return device_cfg_;
     }
 

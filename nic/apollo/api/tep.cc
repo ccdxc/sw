@@ -50,7 +50,6 @@ tep_entry::factory(pds_tep_spec_t *pds_tep) {
         }
     }
     return tep;
-
 }
 
 /**< @brief    destructor */

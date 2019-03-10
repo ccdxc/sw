@@ -41,7 +41,7 @@ mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
     impl = (mapping_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MAPPING_IMPL,
                                       sizeof(mapping_impl));
     new (impl) mapping_impl();
-    device = device_db()->device_find();
+    device = device_db()->find();
     if (device->ip_addr() == pds_mapping->tep.ip_addr) {
         impl->is_local_ = true;
     }

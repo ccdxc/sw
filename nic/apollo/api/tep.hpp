@@ -116,6 +116,10 @@ public:
      */
     virtual sdk_ret_t del_from_db(void) override;
 
+    /**
+     * @brief     find and return a TEP object given its key
+     * @return    return TEP object or NULL, if not found
+     */
     static tep_entry *find_in_db(pds_tep_key_t *tep_key);
 
     /**

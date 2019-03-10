@@ -68,7 +68,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
     switch (api_ctxt->obj_id) {
     case OBJ_ID_DEVICE:
-        obj = device_db()->device_find();
+        obj = device_db()->find();
         return obj;
 
     case OBJ_ID_VCN:
