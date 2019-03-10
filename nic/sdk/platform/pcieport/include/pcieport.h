@@ -96,6 +96,7 @@ typedef struct pciemgr_params_s pciemgr_params_t;
 
 int pcieport_hostconfig(const int port, const pciemgr_params_t *params);
 int pcieport_crs_off(const int port);
+int pcieport_is_accessible(const int port);
 
 int pcieport_poll(const int port);
 void pcieport_dbg(int argc, char *argv[]);
@@ -118,6 +119,9 @@ const char *pcieport_evname(const pcieportev_t ev);
  */
 #define PP_(REG) \
     (CAP_ADDR_BASE_PP_PP_OFFSET + CAP_PP_CSR_ ##REG## _BYTE_ADDRESS)
+
+#define PXB_(REG) \
+    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_ ##REG## _BYTE_ADDRESS)
 
 #define PXC_(REG, pn) \
     (CAP_ADDR_BASE_PP_PP_OFFSET + \

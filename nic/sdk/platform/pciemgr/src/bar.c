@@ -18,6 +18,10 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
+/* bar show flags */
+#define BARSF_NONE      0x0
+#define BARSF_VERBOSE   0x1
+
 static pciehwbar_t *
 pciehw_bar_get(pciehwdev_t *phwdev, const int idx)
 {
@@ -298,6 +302,7 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
     pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
     pciehw_sprt_t *sprt = &pshmem->sprt[prti];
     prt_t lprt, *prt;
+    char vfstr[80];
 
     /*
      * If loaded, grab hardware copy,
@@ -315,8 +320,14 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
         prt_res_t *r = &prt->res;
 
         if (prt->res.vfstride >= 2) {
+            snprintf(vfstr, sizeof(vfstr),
+                     "             %d", 1 << prt->res.vfstride);
+        } else {
+            vfstr[0] = '\0';
+        }
+
         pciesys_loginfo("    %-4d %-5s %c%c%c%c  %-5s 0x%013" PRIx64 " "
-                        "0x%09" PRIx64 "             %-8d\n",
+                        "0x%09" PRIx64 "%s\n",
                         prti,
                         prt_type_str(r->type),
                         r->indirect ? 'i' : '-',
@@ -326,28 +337,21 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
                         human_readable(prt_size_decode(r->sizedw)),
                         baraddr,
                         (u_int64_t)r->addrdw << 2,
-                        1 << prt->res.vfstride);
-        } else {
-        pciesys_loginfo("    %-4d %-5s %c%c%c%c  %-5s 0x%013" PRIx64 " "
-                        "0x%09" PRIx64 "\n",
-                        prti,
-                        prt_type_str(r->type),
-                        r->indirect ? 'i' : '-',
-                        r->notify ? 'n' : '-',
-                        r->pmvdis ? 'p' : '-',
-                        r->aspace ? 'h' : '-',
-                        human_readable(prt_size_decode(r->sizedw)),
-                        baraddr,
-                        (u_int64_t)r->addrdw << 2);
-        }
+                        vfstr);
         break;
     }
     case PRT_TYPE_DB64: {
         prt_db_t *db = &prt->db;
 
         if (prt->res.vfstride >= 2) {
+            snprintf(vfstr, sizeof(vfstr),
+                     "            %-8d", 1 << prt->res.vfstride);
+        } else {
+            vfstr[0] = '\0';
+        }
+
         pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013" PRIx64 " "
-                        "LIF=%-7d             %-8d\n",
+                        "LIF=%-7d%s\n",
                         prti,
                         prt_type_str(db->type),
                         db->indirect ? 'i' : '-',
@@ -355,18 +359,7 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
                         human_readable(64),
                         baraddr,
                         db->lif,
-                        1 << db->vfstride);
-        } else {
-        pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013" PRIx64 " "
-                        "LIF=%d\n",
-                        prti,
-                        prt_type_str(db->type),
-                        db->indirect ? 'i' : '-',
-                        db->notify ? 'n' : '-',
-                        human_readable(64),
-                        baraddr,
-                        db->lif);
-        }
+                        vfstr);
         break;
     }
     case PRT_TYPE_DB32:
@@ -379,7 +372,7 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
 }
 
 static void
-bar_show_prts(const int pmti, const pmt_t *pmt, const prt_t *prt)
+bar_show_prts(const int pmti, const pmt_t *pmt, const u_int32_t flags)
 {
     const pmr_bar_entry_t *pmr = &pmt->pmre.bar;
     const int prtb = pmr->prtb;
@@ -388,19 +381,6 @@ bar_show_prts(const int pmti, const pmt_t *pmt, const prt_t *prt)
     const u_int64_t baraddr = pmt_bar_getaddr(pmt);
     int i, prti;
 
-    if (prt->res.vfstride >= 2) {
-    pciesys_loginfo("    %-4s %-5s %-5s "
-                    "%-5s %-15s %-11s "
-                    "            %-8s\n",
-                    "PRT", "TYPE", "FLAGS",
-                    "SIZE", "BAR ADDR", "CAPRI ADDR",
-                    "VFSTRIDE");
-    } else {
-    pciesys_loginfo("    %-4s %-5s %-5s "
-                    "%-5s %-15s %-11s\n",
-                    "PRT", "TYPE", "FLAGS",
-                    "SIZE", "BAR ADDR", "CAPRI ADDR");
-    }
     for (prti = prtb, i = 0; i < prtc; i++, prti++) {
         const u_int64_t baroff = (const u_int64_t)i * prtsize;
         bar_show_prt(pmti, prti, baraddr + baroff);
@@ -601,7 +581,8 @@ bar_address_format(const pmt_t *pmt)
 }
 
 static void
-bar_show_pmt(const char *label, const pciehwbar_t *phwbar, const int pmti)
+bar_show_pmt(const char *label,
+             const int pmti, const pciehwbar_t *phwbar, const u_int32_t flags)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
@@ -615,29 +596,27 @@ bar_show_pmt(const char *label, const pciehwbar_t *phwbar, const int pmti)
     pmr = &pmt->pmre.bar;
     pmt_entry_dec(&pmt->pmte, &dm);
 
-    bar_address_format(pmt);
+    if (flags & BARSF_VERBOSE) {
+        bar_address_format(pmt);
 
-    pciesys_loginfo("vfe(V4) %d vfs(V3) %d prt_size(V2) %d pagesz(V1) %d "
-                    "qide(V7) %d qids(V6) %d\n",
-                    pmr->vfend - 1,
-                    pmr->vfstart,
-                    pmr->prtsize ,
-                    ffs(pmt_bar_get_pagesize(pmt)) - 1,
-                    pmr->qidstart + pmr->qidend,
-                    pmr->qidstart);
+        pciesys_loginfo("vfe(V4) %d vfs(V3) %d prt_size(V2) %d pagesz(V1) %d "
+                        "qide(V7) %d qids(V6) %d\n",
+                        pmr->vfend - 1,
+                        pmr->vfstart,
+                        pmr->prtsize ,
+                        ffs(pmt_bar_get_pagesize(pmt)) - 1,
+                        pmr->qidstart + pmr->qidend,
+                        pmr->qidstart);
+    }
 
     if (prt->res.vfstride >= 2) {
-    pciesys_loginfo("%-3s %-4s %-5s %-5s "
-                    "%-5s %-15s %-9s %-3s "
-                    "%-4s %-4s %-6s\n",
-                    "BAR", "PMT", "TYPE", "FLAGS",
-                    "SIZE", "BAR ADDR", "P:BB:DD.F", "TID",
-                    "SWRD", "SWWR", "VF");
-
-    snprintf(vfstr, sizeof(vfstr), "%d-%d", pmr->vfbase, pmr->vflimit);
+        snprintf(vfstr, sizeof(vfstr), " %d-%d", pmr->vfbase, pmr->vflimit);
+    } else {
+        vfstr[0] = '\0';
+    }
     pciesys_loginfo("%-3s %-4d %-5s %c%c%c   "
                     "%-5s 0x%013" PRIx64 " %1d:%s %-3d "
-                    "%-4" PRIu64 " %-4" PRIu64 " %-6s\n",
+                    "%-4" PRIu64 " %-4" PRIu64 "%s\n",
                     label,
                     pmti,
                     bar_type_str(dm.data.bar.type),
@@ -652,48 +631,24 @@ bar_show_pmt(const char *label, const pciehwbar_t *phwbar, const int pmti)
                     spmt->swrd,
                     spmt->swwr,
                     vfstr);
-    } else {
-    pciesys_loginfo("%-3s %-4s %-5s %-5s "
-                    "%-5s %-15s %-9s %-3s "
-                    "%-4s %-4s\n",
-                    "BAR", "PMT", "TYPE", "FLAGS",
-                    "SIZE", "BAR ADDR", "P:BB:DD.F", "TID",
-                    "SWRD", "SWWR");
 
-    pciesys_loginfo("%-3s %-4d %-5s %c%c%c   "
-                    "%-5s 0x%013" PRIx64 " %1d:%s %-3d "
-                    "%-4" PRIu64 " %-4" PRIu64 "\n",
-                    label,
-                    pmti,
-                    bar_type_str(dm.data.bar.type),
-                    pmt_allows_rd(pmt) ? 'r' : '-',
-                    pmt_allows_wr(pmt) ? 'w' : '-',
-                    spmt->loaded ? 'l' : '-',
-                    human_readable(pmt_bar_getsize(pmt)),
-                    pmt_bar_getaddr(pmt),
-                    dm.data.bar.port,
-                    bdf_to_str(pmr->bdf),
-                    dm.data.bar.tblid,
-                    spmt->swrd,
-                    spmt->swwr);
-    }
-
-    bar_show_prts(pmti, pmt, prt);
+    bar_show_prts(pmti, pmt, flags);
 }
 
 static void
-bar_show_bar(const char *label, const pciehwbar_t *phwbar)
+bar_show_bar(const char *label,
+             const pciehwbar_t *phwbar, const u_int32_t flags)
 {
     int i, pmti;
 
     pmti = phwbar->pmtb;
     for (i = 0; i < phwbar->pmtc; i++, pmti++) {
-        bar_show_pmt(label, phwbar, pmti);
+        bar_show_pmt(label, pmti, phwbar, flags);
     }
 }
 
 static void
-bar_show_dev(pciehwdev_t *phwdev)
+bar_show_dev(pciehwdev_t *phwdev, const u_int32_t flags)
 {
     pciehwbar_t *phwbar;
     int i, header;
@@ -707,32 +662,109 @@ bar_show_dev(pciehwdev_t *phwdev)
                 header = 1;
             }
             snprintf(label, sizeof(label), "%d", i);
-            bar_show_bar(label, phwbar);
+            bar_show_bar(label, phwbar, flags);
         }
     }
     if (phwdev->rombar.valid) {
-        bar_show_bar("rom", &phwdev->rombar);
+        bar_show_bar("rom", &phwdev->rombar, flags);
     }
     if (header) pciesys_loginfo("\n");
 }
 
+static void
+bar_show_hdr(void)
+{
+    pciesys_loginfo("%-3s %-4s %-5s %-5s "
+                    "%-5s %-15s %-9s %-3s "
+                    "%-4s %-4s %-s\n",
+                    "BAR", "PMT", "TYPE", "FLAGS",
+                    "SIZE", "BAR ADDR", "P:BB:DD.F", "TID",
+                    "SWRD", "SWWR", "VF");
+
+    pciesys_loginfo("    %-4s %-5s %-5s "
+                    "%-5s %-15s %-11s "
+                    "            %-s\n",
+                    "PRT", "TYPE", "FLAGS",
+                    "SIZE", "BAR ADDR", "CAPRI ADDR",
+                    "VFSTRIDE");
+}
+
 void
-pciehw_bar_show(void)
+pciehw_bar_show(int argc, char *argv[])
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    int opt, idx, i;
+    char *name;
     pciehwdev_t *phwdev;
-    int i;
+    u_int32_t flags;
 
-    phwdev = &pshmem->dev[1];
-    for (i = 1; i <= pshmem->allocdev; i++, phwdev++) {
-        bar_show_dev(phwdev);
+    idx = -1;
+    name = NULL;
+    flags = BARSF_NONE;
+    optind = 0;
+    while ((opt = getopt(argc, argv, "d:b:v")) != -1) {
+        switch (opt) {
+        case 'd':
+            name = optarg;
+            break;
+        case 'b':
+            idx = strtoul(optarg, NULL, 0);
+            break;
+        case 'v':
+            flags |= BARSF_VERBOSE;
+            break;
+        default:
+            return;
+        }
+    }
+
+    /*
+     * No device name specified, show all devs
+     */
+    if (name == NULL ) {
+        bar_show_hdr();
+        phwdev = &pshmem->dev[1];
+        for (i = 1; i <= pshmem->allocdev; i++, phwdev++) {
+            bar_show_dev(phwdev, flags);
+        }
+    } else {
+        phwdev = pciehwdev_find_by_name(name);
+        if (phwdev == NULL) {
+            pciesys_logerror("device %s not found\n", name);
+            return;
+        }
+        /*
+         * No idx given, show all bars of this device,
+         * else show only the specified bar idx.
+         */
+        if (idx == -1) {
+            bar_show_hdr();
+            bar_show_dev(phwdev, flags);
+        } else {
+            pciehwbar_t *phwbar;
+            char label[4];
+
+            phwbar = pciehw_bar_get(phwdev, idx);
+            if (phwbar == NULL) {
+                pciesys_logerror("device %s bar %d not found\n", name, idx);
+                return;
+            }
+            if (!phwbar->valid) {
+                pciesys_logerror("device %s bar %d invalid\n", name, idx);
+                return;
+            }
+
+            bar_show_hdr();
+            snprintf(label, sizeof(label), "%d", idx);
+            bar_show_bar(label, phwbar, flags);
+        }
     }
 }
 
 static void
 cmd_show(int argc, char *argv[])
 {
-    pciehw_bar_show();
+    pciehw_bar_show(argc, argv);
 }
 
 /*

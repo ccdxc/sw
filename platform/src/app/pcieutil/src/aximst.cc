@@ -106,4 +106,11 @@ aximst(int argc, char *argv[])
 
     pciehdev_close();
 }
-CMDFUNC(aximst, "aximst [-irt][-p port][entry]");
+CMDFUNC(aximst,
+"show aximst host transaction ring in LRU order",
+"aximst [-irt][-p port][entry]\n"
+"    -i         show indirect entry info (default)\n"
+"    -r         display entries in raw format\n"
+"    -t         show tlp info (default)\n"
+"    -p <port>  show ring for pcie port <port>\n"
+"    <entry>    show ring entry number <entry> [0-15]\n");

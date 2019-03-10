@@ -42,7 +42,10 @@ port(int argc, char *argv[])
 
     pcieport_close(port);
 }
-CMDFUNC(port, "port [-p<port>]");
+CMDFUNC(port,
+"port information",
+"port [-p <port>]\n"
+"    -p <port>  poll port <port> (default port 0)\n");
 
 static void
 ports(int argc, char *argv[])
@@ -56,7 +59,9 @@ ports(int argc, char *argv[])
 
     pcieport_close(0);
 }
-CMDFUNC(ports, "ports");
+CMDFUNC(ports,
+"display port summary",
+"ports\n");
 
 static void
 portstats(int argc, char *argv[])
@@ -98,4 +103,9 @@ portstats(int argc, char *argv[])
 
     pcieport_close(port);
 }
-CMDFUNC(portstats, "portstats [-ac][-p<port>]");
+CMDFUNC(portstats,
+"port statistics",
+"portstats [-ac][-p <port>]\n"
+"    -a         show all stats, even if 0\n"
+"    -c         clear all stats to 0\n"
+"    -p <port>  poll port <port> (default port 0)\n");

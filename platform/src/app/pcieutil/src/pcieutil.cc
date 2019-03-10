@@ -23,34 +23,6 @@
 extern cmd_t __start_cmdtab[];
 extern cmd_t __stop_cmdtab[];
 
-/*
- * Register convenience macros.
- */
-#define PP_(REG) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + CAP_PP_CSR_ ##REG## _BYTE_ADDRESS)
-
-#define PXC_(REG, pn) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + \
-     ((pn) * CAP_PXC_CSR_BYTE_SIZE) + \
-     CAP_PP_CSR_PORT_C_ ##REG## _BYTE_ADDRESS)
-
-#define PXP_(REG, pn) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + \
-     ((pn) * CAP_PXP_CSR_BYTE_SIZE) + \
-     CAP_PP_CSR_PORT_P_ ##REG## _BYTE_ADDRESS)
-
-/* sta_rst flags */
-#define STA_RSTF_(REG) \
-    (CAP_PXC_CSR_STA_C_PORT_RST_ ##REG## _FIELD_MASK)
-
-/* sta_mac flags */
-#define STA_MACF_(REG) \
-    (CAP_PXC_CSR_STA_C_PORT_MAC_ ##REG## _FIELD_MASK)
-
-/* cfg_mac flags */
-#define CFG_MACF_(REG) \
-    (CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_ ##REG## _FIELD_MASK)
-
 static void
 cmd_pending(int argc, char *argv[]) __attribute__((used));
 static void
@@ -128,21 +100,10 @@ help(int argc, char *argv[])
         qsort(cmdtab, ncmds, cmdsz, cmd_cmp);
 
         printf("Usage: pcieutil <cmd>[args...]\n"
-               "Available commands:");
-        int pos = 80;
-        const char *sep = "";
+               "Available commands:\n");
         for (cmd_t *c = cmdtab; c < &cmdtab[ncmds]; c++) {
-            int len = strlen(sep) + strlen(c->name);
-            if (pos + len >= 80) {
-                fputs("\n    ", stdout);
-                pos = 4;
-                sep = "";
-            }
-            printf("%s%s", sep, c->name);
-            sep = ", ";
-            pos += len;
+            printf("    %-*s %s\n", 16, c->name, c->desc);
         }
-        putchar('\n');
         return;
     }
 
@@ -152,9 +113,13 @@ help(int argc, char *argv[])
         return;
     }
 
-    printf("Usage: %s\n", c->help);
+    printf("Usage: %s\n", c->usage);
 }
-CMDFUNC(help, "help [<cmd>]");
+CMDFUNC(help,
+"display command help",
+"help [<cmd>]\n"
+"    no args    display all commands and description\n"
+"    <cmd>      usage for <cmd>\n");
 
 int
 main(int argc, char *argv[])

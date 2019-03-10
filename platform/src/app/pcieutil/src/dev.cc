@@ -25,4 +25,7 @@ dev(int argc, char *argv[])
 
     pciehdev_close();
 }
-CMDFUNC(dev, "dev");
+CMDFUNC(dev,
+        "provisioned pcie device info",
+        "dev [-a]\n"
+        "    -a         all devices, including virtual bridges\n");

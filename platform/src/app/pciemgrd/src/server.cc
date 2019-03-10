@@ -59,7 +59,7 @@ do_finalize(pmmsg_t *m)
 
     // log some info about the final config
     pciehw_dev_show(0, NULL);
-    pciehw_bar_show();
+    pciehw_bar_show(0, NULL);
     pciesys_loginfo("finalize: port %d ready\n", port);
 }
 

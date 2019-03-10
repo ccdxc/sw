@@ -181,4 +181,7 @@ prt(int argc, char *argv[])
 
     pciehdev_close();
 }
-CMDFUNC(prt, "prt [-r]");
+CMDFUNC(prt,
+"pcie resource table entries",
+"prt [-r]\n"
+"    -r         raw format\n");

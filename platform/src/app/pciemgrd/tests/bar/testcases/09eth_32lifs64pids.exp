@@ -1,4 +1,6 @@
 eth0
+BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR VF
+    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR              VFSTRIDE
 bridgedn0:
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
@@ -6,9 +8,7 @@ bridgedn0:
 |............0000000000000000000000000000000000..................|
 +----------------------------------------------------------------+
 vfe(V4) 17 vfs(V3) 18 prt_size(V2) 18 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 0   0    mem   rw-   256K  0x0000000000000 0:01:00.0 0   0    0   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     0    res   --p-  256K  0x0000000000000 0x0c7fc0000
 
 eth0:
@@ -18,9 +18,7 @@ eth0:
 |............00000000000000000000000100010001000100010000000000..|
 +----------------------------------------------------------------+
 vfe(V4) 1 vfs(V3) 2 prt_size(V2) 2 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 0   33   mem   -wl   4     0x0000011111000 0:02:00.0 0   0    0   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     1    res   --p-  0     0x0000011111000 0x13e000000
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
@@ -28,9 +26,7 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 |............000000000000000000000001000100010001000r............|
 +----------------------------------------------------------------+
 vfe(V4) 11 vfs(V3) 13 prt_size(V2) 12 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 0   34   mem   rwl   8K    0x0000011110000 0:02:00.0 0   0    0   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     2    res   --p-  4K    0x0000011110000 0x13e000000
     3    res   -np-  4     0x0000011111000 0x13e001000
 +----------------------------------------------------------------+
@@ -39,9 +35,7 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 |............0000000000000000000000010001000100010011000000000...|
 +----------------------------------------------------------------+
 vfe(V4) 2 vfs(V3) 3 prt_size(V2) 3 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 0   35   mem   r-l   8     0x0000011113000 0:02:00.0 0   0    0   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     4    res   ----  8     0x0000011113000 0x006064020
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
@@ -49,29 +43,23 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 |............000000000000000000000001000100010001010000000vv.....|
 +----------------------------------------------------------------+
 vfe(V4) 6 vfs(V3) 5 prt_size(V2) 5 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR VF    
-0   36   mem   rwl   128   0x0000011114000 0:02:00.0 0   0    0    0-3   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR              VFSTRIDE
-    5    res   ----  128   0x0000011114000 0x006040000             32      
+0   36   mem   rwl   128   0x0000011114000 0:02:00.0 0   0    0    0-3
+    5    res   ----  128   0x0000011114000 0x006040000             32
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
 |3210987654321098765432109876543210987654321098765432109876543210|
 |............0000000000000000000000010001000100010111000000vv....|
 +----------------------------------------------------------------+
 vfe(V4) 5 vfs(V3) 4 prt_size(V2) 4 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR VF    
-0   37   mem   rwl   64    0x0000011117000 0:02:00.0 0   0    0    0-3   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR              VFSTRIDE
-    6    res   ----  64    0x0000011117000 0x006010000             16      
+0   37   mem   rwl   64    0x0000011117000 0:02:00.0 0   0    0    0-3
+    6    res   ----  64    0x0000011117000 0x006010000             16
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
 |3210987654321098765432109876543210987654321098765432109876543210|
 |............0000000000000000000000010001000100011000000000000...|
 +----------------------------------------------------------------+
 vfe(V4) 2 vfs(V3) 3 prt_size(V2) 3 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 0   38   mem   r-l   8     0x0000011118000 0:02:00.0 0   0    0   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     7    res   ----  8     0x0000011118000 0x006064020
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
@@ -79,10 +67,8 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 |............00000000000000000000001000100vvvvvpppppp......ttt...|
 +----------------------------------------------------------------+
 vfe(V4) 22 vfs(V3) 18 prt_size(V2) 18 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR VF    
-2   39   mem   -wl   8M    0x0000022000000 0:02:00.0 0   0    0    4-35  
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR              VFSTRIDE
-    8    db64  --    64    0x0000022000000 LIF=4                   64      
+2   39   mem   -wl   8M    0x0000022000000 0:02:00.0 0   0    0    4-35
+    8    db64  --    64    0x0000022000000 LIF=4                  64      
 
 idx  id typ rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
 33    0 mem -w 0:02:00.0 0x11111000 4                                  1   
@@ -93,10 +79,10 @@ idx  id typ rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
 38    0 mem r- 0:02:00.0 0x11118000 8                                  7   
 39    0 mem -w 0:02:00.0 0x22000000 8M   22:18             17:12  5:3  8   
 idx  x                y                pmr
-33   0000001111100209 0fffffeeeeeffdf0 20020003 00208400 00004000 00000000
-34   0000001111000009 0fffffeeeee001f0 40040003 00c35800 00004000 00000000
-35   0000001111300009 0fffffeeeecffbf0 20080003 0030c600 00004000 00000000
-36   0000001111400009 0fffffeeeebf81f0 200a0003 0c714a00 00004000 00000000
-37   0000001111700009 0fffffeeee8fc1f0 200c0003 0c610800 00004000 00000000
-38   0000001111800009 0fffffeeee7ffbf0 200e0003 0030c600 00004000 00000000
-39   0000002200000209 0fffffdd800001f0 20100043 8d74a400 c6004000 00000001
+33   0000001111100209 0fffffeeeeeffdf0 00000000 00004000 00208400 20020003
+34   0000001111000009 0fffffeeeee001f0 00000000 00004000 00c35800 40040003
+35   0000001111300009 0fffffeeeecffbf0 00000000 00004000 0030c600 20080003
+36   0000001111400009 0fffffeeeebf81f0 00000000 00004000 0c714a00 200a0003
+37   0000001111700009 0fffffeeee8fc1f0 00000000 00004000 0c610800 200c0003
+38   0000001111800009 0fffffeeee7ffbf0 00000000 00004000 0030c600 200e0003
+39   0000002200000209 0fffffdd800001f0 00000001 c6004000 8d74a400 20100043

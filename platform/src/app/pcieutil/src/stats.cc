@@ -49,4 +49,9 @@ stats(int argc, char *argv[])
 
     pciehdev_close();
 }
-CMDFUNC(stats, "stats [-ac][-p<port>]");
+CMDFUNC(stats,
+"show pcie stats",
+"counters [-ac][-p <port>]\n"
+"    -a         show all stats, even if 0\n"
+"    -c         clear all stats to 0\n"
+"    -p <port>  poll port <port> (default port 0)\n");

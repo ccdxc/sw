@@ -93,7 +93,7 @@ pcieport_get(const int port)
     pcieport_info_t *pi = pcieport_info_get();
     pcieport_t *p = NULL;
 
-    if (port >= 0 && port < PCIEPORT_NPORTS) {
+    if (pi != NULL && port >= 0 && port < PCIEPORT_NPORTS) {
         p = &pi->pcieport[port];
     }
     return p;
@@ -361,6 +361,32 @@ pcieport_crs_off(const int port)
         pcieport_set_crs(p, p->crs);
     }
     return 0;
+}
+
+
+/*
+ * We don't get with pcieport_get(port) here.
+ * This is used by some callers who are not
+ * going to pcieport_open() but want to read
+ * registers directly (e.g. pcieutil);
+ */
+int
+pcieport_is_accessible(const int port)
+{
+    const u_int32_t sta_rst = pal_reg_rd32(PXC_(STA_C_PORT_RST, port));
+    const u_int32_t sta_mac = pal_reg_rd32(PXC_(STA_C_PORT_MAC, port));
+    const u_int8_t ltssm_st = sta_mac & 0x1f;
+
+    /*
+     * port is accessible if out of reset so pcie refclk is good and
+     * ltssm_st == 0x10 (UP).
+     *
+     * Note: this is a bit conservative, we don't need to be all the
+     * way to 0x10 (UP) to have a stable refclk.  But the link might
+     * still be settling and refclk could go away during the settling
+     * time so we check ltssm_st to be sure we've settled.
+     */
+    return (sta_rst & STA_RSTF_(PERSTN)) != 0 && ltssm_st == 0x10;
 }
 
 /******************************************************************

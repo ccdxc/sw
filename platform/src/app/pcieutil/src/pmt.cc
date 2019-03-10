@@ -33,4 +33,9 @@ pmt(int argc, char *argv[])
 
     pciehdev_close();
 }
-CMDFUNC(pmt, "pmt [-bcr]");
+CMDFUNC(pmt,
+"all valid pcie match table tcam entries",
+"pmt [-bcr]\n"
+"    -b         include bar PMT entries\n"
+"    -c         include cfg PMT entries\n"
+"    -r         raw format\n");

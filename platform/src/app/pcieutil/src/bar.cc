@@ -16,23 +16,18 @@
 static void
 bar(int argc, char *argv[])
 {
-    int opt;
-
-    optind = 0;
-    while ((opt = getopt(argc, argv, "")) != -1) {
-        switch (opt) {
-        default:
-            return;
-        }
-    }
-
     if (pciehdev_open(NULL) < 0) {
         printf("pciehdev_open failed\n");
         exit(1);
     }
 
-    pciehw_bar_show();
+    pciehw_bar_show(argc, argv);
 
     pciehdev_close();
 }
-CMDFUNC(bar, "bar");
+CMDFUNC(bar,
+"device bar details",
+"bar [-v][-d <dev>][-b <idx>]\n"
+"    -d <dev>   display bars for <dev> (default all devices)\n"
+"    -b <idx>   display bar <idx> (default all bars)\n"
+"    -v         verbose output\n");

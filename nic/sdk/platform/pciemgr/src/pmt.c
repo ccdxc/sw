@@ -592,7 +592,7 @@ pmt_show_raw_entry(const int pmti,
 
     pciesys_loginfo("%-4d %016" PRIx64 " %016" PRIx64 " %08x %08x %08x %08x\n",
                     pmti, tcam->x, tcam->y,
-                    w[0], w[1], w[2], w[3]);
+                    w[3], w[2], w[1], w[0]);
 }
 
 static void

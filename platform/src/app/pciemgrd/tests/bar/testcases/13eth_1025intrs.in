@@ -9,6 +9,6 @@ dbg pciehw bar setaddr -d eth1 -b 0 0x111b0000
 dbg pciehw bar setaddr -d eth1 -b 2 0x222b0000
 dbg pciehw bar load -d eth1 -b 0
 dbg pciehw bar load -d eth1 -b 2
-dbg pciehw bar show
+dbg pciehw bar show -v
 dbg pciehw pmt -b
 dbg pciehw pmt -br

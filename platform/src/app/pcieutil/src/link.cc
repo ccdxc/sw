@@ -106,13 +106,13 @@ linkpoll(int argc, char *argv[])
         }
     }
 
-    printf("              perstn\n");
-    printf("              |phystatus\n");
-    printf("              ||portgate_open\n");
-    printf("              |||cfg_retry\n");
-    printf("              ||||ltssm_en\n");
+    printf("              perstn (pcie refclk good)\n");
+    printf("              |phystatus (phy out of reset)\n");
+    printf("              ||ltssm_en (link training ready)\n");
+    printf("              |||portgate_open (traffic can flow)\n");
+    printf("              ||||cfg_retry off (cfg transactions allowed)\n");
     printf("              |||||  fifo\n");
-    printf(" +time (sec)  Ppgrl  rd/wr  genGxW  ltssm\n");
+    printf(" +time (sec)  Pplgr  rd/wr  genGxW  ltssm\n");
 
     memset(&ost, 0, sizeof(ost));
     memset(&nst, 0, sizeof(nst));
@@ -123,9 +123,6 @@ linkpoll(int argc, char *argv[])
         const u_int32_t sta_mac = pal_reg_rd32(PXC_(STA_C_PORT_MAC, port));
         const u_int32_t cfg_mac = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, port));
         u_int16_t portfifo[8], depths;
-#define PORTFIFO_DEPTH \
-        (CAP_ADDR_BASE_PXB_PXB_OFFSET +                 \
-         CAP_PXB_CSR_STA_ITR_PORTFIFO_DEPTH_BYTE_ADDRESS)
 
         nst.perstn = (sta_rst & STA_RSTF_(PERSTN)) != 0;
         nst.phystatus = (sta_rst & STA_RSTF_(PHYSTATUS_OR)) != 0;
@@ -137,14 +134,14 @@ linkpoll(int argc, char *argv[])
         // protect against mac reset events
         // gen/width registers are inaccessible when mac is reset.
         // (this is not perfect, still racy)
-        if (nst.perstn && nst.ltssm_st == 0x10) {
+        if (pcieport_is_accessible(port)) {
             portcfg_read_genwidth(port, &nst.gen, &nst.width);
         } else {
             nst.gen = 0;
             nst.width = 0;
         }
 
-        pal_reg_rd32w(PORTFIFO_DEPTH, (u_int32_t *)portfifo, 4);
+        pal_reg_rd32w(PXB_(STA_ITR_PORTFIFO_DEPTH), (u_int32_t *)portfifo, 4);
         depths = portfifo[port];
 
         nst.fifo_wr = depths;
@@ -163,11 +160,11 @@ linkpoll(int argc, char *argv[])
 
             printf("[+%010.6lf] %c%c%c%c%c %3u/%-3u gen%dx%-2d 0x%02x %s\n",
                    (ntm - otm) / 1000000.0,
-                   nst.perstn ? 'P' : '-',
-                   nst.phystatus ? 'p' :'-',
-                   nst.portgate ? 'g' : '-',
-                   nst.crs ? 'r' : '-',
-                   nst.ltssm_en ? 'l' : '-',
+                   nst.perstn           ? 'P' : '-',
+                   nst.phystatus == 0   ? 'p' :'-',
+                   nst.ltssm_en         ? 'l' : '-',
+                   nst.portgate         ? 'g' : '-',
+                   nst.crs == 0         ? 'r' : '-',
                    nst.fifo_rd,
                    nst.fifo_wr,
                    nst.gen,
@@ -182,4 +179,9 @@ linkpoll(int argc, char *argv[])
         if (polltm_us) usleep(polltm_us);
     }
 }
-CMDFUNC(linkpoll, "linkpoll [-a][-p<port>][-t <polltm>]");
+CMDFUNC(linkpoll,
+"poll pcie link state",
+"linkpoll [-a][-p <port>][-t <polltm>]\n"
+"    -a         show all state changes (default ignores small changes)\n"
+"    -p <port>  poll port <port> (default port 0)\n"
+"    -t <polltm> <polltm> microseconds between poll events (default 0)\n");

@@ -1,4 +1,6 @@
 pciestress0
+BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR VF
+    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR              VFSTRIDE
 bridgedn0:
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
@@ -6,9 +8,7 @@ bridgedn0:
 |............0000000000000000000000000000000000..................|
 +----------------------------------------------------------------+
 vfe(V4) 17 vfs(V3) 18 prt_size(V2) 18 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 0   0    mem   rw-   256K  0x0000000000000 0:01:00.0 0   0    0   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     0    res   --p-  256K  0x0000000000000 0x0c7fc0000
 
 pciestress0:
@@ -18,9 +18,7 @@ pciestress0:
 |............11111111111111111111111111111111111111rr............|
 +----------------------------------------------------------------+
 vfe(V4) 11 vfs(V3) 14 prt_size(V2) 12 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 0   33   mem   rwl   16K   0x3ffffffffc000 0:02:00.0 0   0    0   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     1    res   --p-  4K    0x3ffffffffc000 0x13f000000
     2    res   -n--  4K    0x3ffffffffd000 0x13f000000
     3    res   i---  4K    0x3ffffffffe000 0x13f000000
@@ -31,9 +29,7 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 |............111111111111111111111111111111111111111111111rr.....|
 +----------------------------------------------------------------+
 vfe(V4) 4 vfs(V3) 7 prt_size(V2) 5 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID SWRD SWWR
 2   34   mem   rwl   128   0x3ffffffffff80 0:02:00.0 0   0    0   
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     5    res   --p-  32    0x3ffffffffff80 0x13f000000
     6    res   -n--  32    0x3ffffffffffa0 0x13f000000
     7    res   i---  32    0x3ffffffffffc0 0x13f000000
@@ -43,5 +39,5 @@ idx  id typ rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
 33    0 mem rw 0:02:00.0 0xfffffffffc000 16K              13:12             1-4 
 34    0 io  rw 0:02:00.0 0xfffffffffff80 128               6:5              5-8 
 idx  x                y                pmr
-33   0fffffffffc00009 00000000000001f0 80020003 00c39800 00004000 00000000
-34   0fffffffffff8029 00000000000001d0 800a000b 0051ca00 00004000 00000000
+33   0fffffffffc00009 00000000000001f0 00000000 00004000 00c39800 80020003
+34   0fffffffffff8029 00000000000001d0 00000000 00004000 0051ca00 800a000b
