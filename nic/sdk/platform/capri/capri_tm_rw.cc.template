@@ -4214,6 +4214,62 @@ capri_tm_get_pb_debug_stats(tm_port_t port,
     return sdk::SDK_RET_OK;
 }
 
+uint32_t
+capri_tm_get_port_occupancy (tm_port_t port, uint32_t iq)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cpp_int port_payload_occupancy_val;
+    uint32_t payload_occupancy = 0;
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            pbc_csr.hbm.hbm_port_${p}.cfg_hbm_eth_payload_occupancy.read();
+            port_payload_occupancy_val = pbc_csr.hbm.hbm_port_${p}.cfg_hbm_eth_payload_occupancy.threshold();
+            payload_occupancy = cpp_helper.get_slc(port_payload_occupancy_val, iq*19, ((iq+1)*19)-1).convert_to<uint32_t>();
+            break;
+//::    #endif
+//:: #endfor
+        default:
+            break;
+    }
+
+    return (payload_occupancy << 10);
+}
+
+uint32_t
+capri_tm_get_xon_threshold (uint32_t ctx)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    uint32_t xon_threshold = 0;
+    cpp_int xon_val;
+
+    pbc_csr.hbm.cfg_hbm_threshold.read();
+    xon_val = pbc_csr.hbm.cfg_hbm_threshold.xon();
+    xon_threshold = cpp_helper.get_slc(xon_val, ctx*20, ((ctx+1)*20)-1).convert_to<uint32_t>();
+
+    return (xon_threshold << 9);
+}
+
+uint32_t
+capri_tm_get_xoff_threshold (uint32_t ctx)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    uint32_t xoff_threshold = 0;
+    cpp_int xoff_val;
+
+    pbc_csr.hbm.cfg_hbm_threshold.read();
+    xoff_val = pbc_csr.hbm.cfg_hbm_threshold.xoff();
+    xoff_threshold = cpp_helper.get_slc(xoff_val, ctx*20, ((ctx+1)*20)-1).convert_to<uint32_t>();
+
+    return (xoff_threshold << 9);
+}
+
 } // namespace capri
 } // namespace platform
 } // namespace sdk

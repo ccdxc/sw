@@ -17,6 +17,7 @@ service QOS {
   rpc QosClassUpdate(QosClassRequestMsg) returns (QosClassResponseMsg) {}
   rpc QosClassDelete(QosClassDeleteRequestMsg) returns (QosClassDeleteResponseMsg) {}
   rpc QosClassGet(QosClassGetRequestMsg) returns (QosClassGetResponseMsg) {}
+  rpc QosClassThresholdsGet(QosClassThresholdsGetRequestMsg) returns (QosClassThresholdsGetResponseMsg) {}
 
   // Copp related APIs
   rpc CoppUpdate(CoppRequestMsg) returns (CoppResponseMsg) {}
@@ -66,7 +67,7 @@ message QosSched {
 
   // Strict Priority specific information for the class
   message StrictPriorityInfo {
-    uint32             bps           = 1;    // Rate in bytes-per-sec, 0 for disabling rate-limit
+    uint64             bps           = 1;    // Rate in bytes-per-sec, 0 for disabling rate-limit
   }
 
   oneof SchedType {
@@ -234,15 +235,48 @@ message QosClassGetRequestMsg {
 
 // QosClassGetResponse captures all the information about a QosClass
 message QosClassGetResponse {
-  types.ApiStatus   api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  QosClassSpec      spec        = 2;    // QosClass configuration
-  QosClassStatus    status      = 3;    // QosClass operational status
-  QosClassStats     stats       = 4;    // QosClass statistics
+  types.ApiStatus    api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  QosClassSpec       spec        = 2;    // QosClass configuration
+  QosClassStatus     status      = 3;    // QosClass operational status
+  QosClassStats      stats       = 4;    // QosClass statistics
+}
+
+message OccupancyPerQueue {
+  uint32 queue_idx = 1;
+  uint32 occupancy = 2;
+}
+
+message PortOccupancy {
+  uint32 port_num                      = 1;
+  repeated OccupancyPerQueue occupancy = 2;
+}
+
+message Thresholds {
+  uint32 hbm_context    = 1;
+  uint32 xon_threshold  = 2;
+  uint32 xoff_threshold = 3;
+}
+
+message QosClassThresholdsGetResponse {
+  types.ApiStatus        api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  repeated PortOccupancy port_occupancy = 2;
+  repeated Thresholds    thresholds     = 3;
+}
+
+message QosClassThresholdsGetResponseMsg {
+  repeated QosClassThresholdsGetResponse response = 1;
+}
+
+message QosClassThresholdsGetRequest {
+}
+
+message QosClassThresholdsGetRequestMsg {
+  repeated QosClassThresholdsGetRequest request = 1;
 }
 
 // QosClassGetResponseMsg is response to QosClassGetRequestMsg
 message QosClassGetResponseMsg {
-  repeated QosClassGetResponse response = 1;    // batched get responses
+  repeated QosClassGetResponse response  = 1;    // batched get responses
 }
 
 // Specifications of a Copp

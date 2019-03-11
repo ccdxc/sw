@@ -29,7 +29,7 @@ var (
 	qosXon         uint32
 	qosXoff        uint32
 	qosBw          uint32
-	qosBps         uint32
+	qosBps         uint64
 	qosPfc         bool
 	qosPfcCos      uint32
 )
@@ -97,11 +97,19 @@ var qosQueuesCmd = &cobra.Command{
 	Run:   qosQueuesCmdHandler,
 }
 
+var qosThresholdsCmd = &cobra.Command{
+	Use:   "thresholds",
+	Short: "Show qos-class thresholds",
+	Long:  "Show qos-class thresholds",
+	Run:   qosThresholdsCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(qosShowCmd)
 	showCmd.AddCommand(coppShowCmd)
 	qosShowCmd.AddCommand(qosStatsCmd)
 	qosShowCmd.AddCommand(qosQueuesCmd)
+	qosShowCmd.AddCommand(qosThresholdsCmd)
 	qosStatsCmd.AddCommand(qosInputStatsCmd)
 	qosStatsCmd.AddCommand(qosOutputStatsCmd)
 
@@ -117,11 +125,11 @@ func init() {
 
 	debugCreateCmd.AddCommand(qosClassCreateCmd)
 	qosClassCreateCmd.Flags().StringVar(&qosGroup, "qosgroup", "", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
-	qosClassCreateCmd.Flags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
+	qosClassCreateCmd.Flags().Uint32Var(&qosMtu, "mtu", 9216, "Specify MTU (64-9216)")
 	qosClassCreateCmd.Flags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
 	qosClassCreateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
 	qosClassCreateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
-	qosClassCreateCmd.Flags().Uint32Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
+	qosClassCreateCmd.Flags().Uint64Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps (1-100Gbps)")
 	qosClassCreateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
 	qosClassCreateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
 	qosClassCreateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
@@ -135,11 +143,11 @@ func init() {
 
 	debugUpdateCmd.AddCommand(qosClassUpdateCmd)
 	qosClassUpdateCmd.Flags().StringVar(&qosGroup, "qosgroup", "", "Specify qos group. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
-	qosClassUpdateCmd.Flags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosMtu, "mtu", 9216, "Specify MTU (64-9216)")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
 	qosClassUpdateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
-	qosClassUpdateCmd.Flags().Uint32Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
+	qosClassUpdateCmd.Flags().Uint64Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
 	qosClassUpdateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
@@ -240,6 +248,13 @@ func qosClassCmdCheck(cmd *cobra.Command, isCreate bool) bool {
 		}
 	}
 
+	if cmd.Flags().Changed("mtu") == true {
+		if qosMtu < 64 || qosMtu > 9216 {
+			fmt.Printf("Invalid MTU. MTU must be in the range 64-9216")
+			return false
+		}
+	}
+
 	if cmd.Flags().Changed("xon-threshold") != cmd.Flags().Changed("xoff-threshold") {
 		fmt.Printf("Cannot specify only one of xon and xoff thresholds\n")
 		return false
@@ -305,8 +320,8 @@ func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
 		pfc = true
 	} else if cmd.Flags().Changed("pfc-enable") {
 		pfc = true
-		qosXon = 2 * qosMtu
-		qosXoff = 8 * qosMtu
+		qosXon = 0x4B88000
+		qosXoff = 0x4C8200
 		fmt.Printf("Xon default threshold: %d, Xoff default threshold: %d\n", qosXon, qosXoff)
 	}
 
@@ -592,6 +607,78 @@ func stringToDscpArray(qosDscp string) []uint32 {
 	}
 
 	return dscp
+}
+
+func qosThresholdsCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewQOSClient(c)
+
+	var req *halproto.QosClassThresholdsGetRequest
+	qosThreshGetReqMsg := &halproto.QosClassThresholdsGetRequestMsg{
+		Request: []*halproto.QosClassThresholdsGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.QosClassThresholdsGet(context.Background(), qosThreshGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting qos class failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+			continue
+		}
+		qosClassThresholdsPrint(resp)
+	}
+}
+
+func qosClassPortOccupancyHeaderPrint() {
+	hdrLine := strings.Repeat("-", 30)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-10s%-10s\n", "PortId", "QueueIdx", "Occupancy")
+	fmt.Println(hdrLine)
+}
+
+func qosClassThresholdsHeaderPrint() {
+	hdrLine := strings.Repeat("-", 32)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-12s%-10s%-10s\n", "HbmContext", "Xon", "Xoff")
+	fmt.Println(hdrLine)
+}
+
+func qosClassThresholdsPrint(resp *halproto.QosClassThresholdsGetResponse) {
+	first := true
+
+	qosClassPortOccupancyHeaderPrint()
+	for _, portOccupancy := range resp.GetPortOccupancy() {
+		first = true
+		fmt.Printf("%-10d", portOccupancy.GetPortNum())
+		for _, occupancy := range portOccupancy.GetOccupancy() {
+			if first == false {
+				fmt.Printf("%-10s", "")
+			}
+			fmt.Printf("%-10d%-10d\n", occupancy.GetQueueIdx(), occupancy.GetOccupancy())
+			first = false
+		}
+	}
+
+	fmt.Printf("\n")
+	qosClassThresholdsHeaderPrint()
+	for _, threshold := range resp.GetThresholds() {
+		fmt.Printf("%-12d%-10d%-10d\n",
+			threshold.GetHbmContext(),
+			threshold.GetXonThreshold(),
+			threshold.GetXoffThreshold())
+	}
 }
 
 func qosQueuesCmdHandler(cmd *cobra.Command, args []string) {

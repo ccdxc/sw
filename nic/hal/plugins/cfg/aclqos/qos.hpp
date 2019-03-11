@@ -30,6 +30,10 @@ using qos::QosClassGetRequest;
 using qos::QosClassGetRequestMsg;
 using qos::QosClassGetResponse;
 using qos::QosClassGetResponseMsg;
+using qos::QosClassThresholdsGetRequest;
+using qos::QosClassThresholdsGetRequestMsg;
+using qos::QosClassThresholdsGetResponse;
+using qos::QosClassThresholdsGetResponseMsg;
 using qos::QosClassStats;
 using kh::CoppKeyHandle;
 using qos::CoppSpec;
@@ -105,7 +109,7 @@ typedef struct qos_sched_s {
             uint32_t  bw;                // Bandwidth percentage for DWRR
         } dwrr;
         struct {
-            uint32_t  bps;               // Rate for strict priority scheduling
+            uint64_t  bps;               // Rate for strict priority scheduling
         } strict;
     } __PACK__;
 } __PACK__ qos_sched_t;
@@ -293,6 +297,8 @@ hal_ret_t qosclass_delete(qos::QosClassDeleteRequest& req,
                           qos::QosClassDeleteResponse *rsp);
 hal_ret_t qosclass_get(qos::QosClassGetRequest& req,
                        qos::QosClassGetResponseMsg *rsp);
+hal_ret_t qos_class_thresholds_get(qos::QosClassThresholdsGetRequest& req,
+                                   qos::QosClassThresholdsGetResponseMsg *rsp);
 hal_ret_t qos_class_store_cb(void *obj, uint8_t *mem,
                              uint32_t len, uint32_t *mlen);
 uint32_t qos_class_restore_cb(void *obj, uint32_t len);

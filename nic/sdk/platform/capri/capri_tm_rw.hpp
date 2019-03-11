@@ -173,7 +173,7 @@ typedef struct tm_queue_node_params_s {
             uint32_t  weight;
         } dwrr;
         struct {
-            uint32_t  rate;
+            uint64_t  rate;
         } strict;
     };
 } tm_queue_node_params_t;
@@ -389,6 +389,9 @@ cap_pb_sched_spq_pgm (uint32_t chip_id,
                       tm_port_t port,
                       tm_q_t oq,
                       pb_sched_node_input_info_t *input_info);
+uint32_t capri_tm_get_port_occupancy(tm_port_t port, uint32_t iq);
+uint32_t capri_tm_get_xon_threshold(uint32_t ctx);
+uint32_t capri_tm_get_xoff_threshold(uint32_t ctx);
 
 }    // namespace capri
 }    // namespace platform

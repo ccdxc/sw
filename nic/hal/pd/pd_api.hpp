@@ -1641,6 +1641,10 @@ typedef struct pd_qos_class_get_args_s {
     QosClassGetResponse *rsp;
 } __PACK__ pd_qos_class_get_args_t;
 
+typedef struct pd_qos_class_thresholds_get_args_s {
+    QosClassThresholdsGetResponse *rsp;
+} __PACK__ pd_qos_class_thresholds_get_args_t;
+
 typedef struct pd_qos_class_periodic_stats_update_args_s {
 } __PACK__ pd_qos_class_periodic_stats_update_args_t;
 
@@ -3283,7 +3287,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_CPU_SEND_NEW,             295, "PD_FUNC_ID_CPU_SEND_NEW")\
     ENTRY(PD_FUNC_ID_UPLINK_TM_CONTROL,        296, "PD_FUNC_ID_UPLINK_TM_CONTROL") \
     ENTRY(PD_FUNC_ID_LIF_SCHED_CONTROL,        297, "PD_FUNC_ID_LIF_SCHED_CONTROL") \
-    ENTRY(PD_FUNC_ID_MAX,                      298, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET, 298, "PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET") \
+    ENTRY(PD_FUNC_ID_MAX,                      299, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3464,6 +3469,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_qos_class_mem_free);
         PD_UNION_ARGS_FIELD(pd_qos_class_make_clone);
         PD_UNION_ARGS_FIELD(pd_qos_class_get);
+        PD_UNION_ARGS_FIELD(pd_qos_class_thresholds_get);
         PD_UNION_ARGS_FIELD(pd_qos_class_periodic_stats_update);
 
         // copp
@@ -3893,6 +3899,7 @@ PD_FUNCP_TYPEDEF(pd_qos_class_update);
 PD_FUNCP_TYPEDEF(pd_qos_class_mem_free);
 PD_FUNCP_TYPEDEF(pd_qos_class_make_clone);
 PD_FUNCP_TYPEDEF(pd_qos_class_get);
+PD_FUNCP_TYPEDEF(pd_qos_class_thresholds_get);
 PD_FUNCP_TYPEDEF(pd_qos_class_periodic_stats_update);
 
 // copp

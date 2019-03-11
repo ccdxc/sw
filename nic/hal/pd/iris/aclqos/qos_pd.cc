@@ -1444,6 +1444,36 @@ pd_qos_class_get (pd_func_args_t *pd_func_args)
 }
 
 // ----------------------------------------------------------------------------
+// pd qos_class thresholds get
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_qos_class_thresholds_get (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd_qos_class_thresholds_get_args_t *args = pd_func_args->pd_qos_class_thresholds_get;
+    QosClassThresholdsGetResponse *rsp = args->rsp;
+
+    for (uint32_t port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        auto port_occupancy = rsp->add_port_occupancy();
+        port_occupancy->set_port_num(port);
+        for (uint32_t i = 0; i < 8; i ++) {
+            auto occupancy = port_occupancy->add_occupancy();
+            occupancy->set_queue_idx(i);
+            occupancy->set_occupancy(capri_tm_get_port_occupancy(port, i));
+        }
+    }
+
+    for (uint32_t i = 0; i < 32; i ++) {
+        auto threshold = rsp->add_thresholds();
+        threshold->set_hbm_context(i);
+        threshold->set_xon_threshold(capri_tm_get_xon_threshold(i));
+        threshold->set_xoff_threshold(capri_tm_get_xoff_threshold(i));
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // pd qos_class restore from response
 // ----------------------------------------------------------------------------
 static hal_ret_t

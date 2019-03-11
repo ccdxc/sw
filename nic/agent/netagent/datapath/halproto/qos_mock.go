@@ -339,6 +339,24 @@ func (mr *MockQOSClientMockRecorder) QosClassGet(ctx, in interface{}, opts ...in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassGet", reflect.TypeOf((*MockQOSClient)(nil).QosClassGet), varargs...)
 }
 
+// QosClassThresholdsGet mocks base method
+func (m *MockQOSClient) QosClassThresholdsGet(ctx context.Context, in *QosClassThresholdsGetRequestMsg, opts ...grpc.CallOption) (*QosClassThresholdsGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QosClassThresholdsGet", varargs...)
+	ret0, _ := ret[0].(*QosClassThresholdsGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QosClassThresholdsGet indicates an expected call of QosClassThresholdsGet
+func (mr *MockQOSClientMockRecorder) QosClassThresholdsGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassThresholdsGet", reflect.TypeOf((*MockQOSClient)(nil).QosClassThresholdsGet), varargs...)
+}
+
 // CoppUpdate mocks base method
 func (m *MockQOSClient) CoppUpdate(ctx context.Context, in *CoppRequestMsg, opts ...grpc.CallOption) (*CoppResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -448,6 +466,19 @@ func (m *MockQOSServer) QosClassGet(arg0 context.Context, arg1 *QosClassGetReque
 // QosClassGet indicates an expected call of QosClassGet
 func (mr *MockQOSServerMockRecorder) QosClassGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassGet", reflect.TypeOf((*MockQOSServer)(nil).QosClassGet), arg0, arg1)
+}
+
+// QosClassThresholdsGet mocks base method
+func (m *MockQOSServer) QosClassThresholdsGet(arg0 context.Context, arg1 *QosClassThresholdsGetRequestMsg) (*QosClassThresholdsGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "QosClassThresholdsGet", arg0, arg1)
+	ret0, _ := ret[0].(*QosClassThresholdsGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QosClassThresholdsGet indicates an expected call of QosClassThresholdsGet
+func (mr *MockQOSServerMockRecorder) QosClassThresholdsGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassThresholdsGet", reflect.TypeOf((*MockQOSServer)(nil).QosClassThresholdsGet), arg0, arg1)
 }
 
 // CoppUpdate mocks base method

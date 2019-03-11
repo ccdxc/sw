@@ -1043,6 +1043,13 @@ It has these top-level messages:
 	QosClassGetRequest
 	QosClassGetRequestMsg
 	QosClassGetResponse
+	OccupancyPerQueue
+	PortOccupancy
+	Thresholds
+	QosClassThresholdsGetResponse
+	QosClassThresholdsGetResponseMsg
+	QosClassThresholdsGetRequest
+	QosClassThresholdsGetRequestMsg
 	QosClassGetResponseMsg
 	CoppSpec
 	CoppRequestMsg

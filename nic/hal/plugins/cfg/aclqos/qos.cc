@@ -355,6 +355,27 @@ qos_class_get_ht_cb(void *ht_entry, void *ctxt)
 }
 
 hal_ret_t
+qos_class_thresholds_get (qos::QosClassThresholdsGetRequest& req,
+                          qos::QosClassThresholdsGetResponseMsg *rsp)
+{
+    auto response = rsp->add_response();
+    pd::pd_qos_class_thresholds_get_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    hal_ret_t                   ret    = HAL_RET_OK;
+
+    args.rsp = response;
+    pd_func_args.pd_qos_class_thresholds_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        response->set_api_status(types::API_STATUS_ERR);
+        HAL_TRACE_ERR("Unable to do PD get for qos class threshold. ret : {}", ret);
+    } else {
+        response->set_api_status(types::API_STATUS_OK);
+    }
+    return ret;
+}
+
+hal_ret_t
 qosclass_get (qos::QosClassGetRequest& req,
               qos::QosClassGetResponseMsg *rsp)
 {

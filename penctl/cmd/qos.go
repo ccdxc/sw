@@ -60,7 +60,7 @@ func init() {
 
 	createCmd.AddCommand(qosClassCreateCmd)
 	qosClassCreateCmd.Flags().StringVar(&qosGroup, "qosgroup", "", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
-	qosClassCreateCmd.Flags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
+	qosClassCreateCmd.Flags().Uint32Var(&qosMtu, "mtu", 9216, "Specify MTU (64-9216)")
 	qosClassCreateCmd.Flags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
 	qosClassCreateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
 	qosClassCreateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
@@ -74,7 +74,7 @@ func init() {
 
 	updateCmd.AddCommand(qosClassUpdateCmd)
 	qosClassUpdateCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
-	qosClassUpdateCmd.Flags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosMtu, "mtu", 9216, "Specify MTU (64-9216)")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
 	qosClassUpdateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
@@ -174,6 +174,10 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 	halctlStr += ("--qosgroup " + qosGroup)
 
 	if cmd.Flags().Changed("mtu") == true {
+		if qosMtu < 64 || qosMtu > 9216 {
+			fmt.Printf("Invalid MTU. MTU must be in the range 64-9216")
+			return
+		}
 		halctlStr += (" --mtu " + fmt.Sprint(qosMtu))
 	}
 
