@@ -8,6 +8,7 @@
 #include "nic/hal/hal_trace.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/sdk/linkmgr/port_mac.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_utils.hpp"
@@ -615,5 +616,27 @@ PortServiceImpl::PortInfoGet(ServerContext *context,
 
     hal_cfg_db_close();
 
+    return Status::OK;
+}
+
+Status
+PortServiceImpl::StartAacsServer (ServerContext *context,
+                                  const AacsRequestMsg *req,
+                                  types::Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Port AACS server Request");
+
+    hal_cfg_db_open(CFG_OP_WRITE);
+    sdk::linkmgr::start_aacs_server(req->aacs_server_port());
+    hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+PortServiceImpl::StopAacsServer (ServerContext *context,
+                                 const types::Empty *req,
+                                 types::Empty *rsp)
+{
     return Status::OK;
 }

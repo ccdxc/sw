@@ -26,6 +26,7 @@ var (
 	portMtu        uint32
 	portAdminState string
 	portSpeed      string
+	aacsServerPort int32
 )
 
 var portClearStatsCmd = &cobra.Command{
@@ -70,6 +71,20 @@ var portDebugCmd = &cobra.Command{
 	Run:   portDebugCmdHandler,
 }
 
+var portDebugAacsStartCmd = &cobra.Command{
+	Use:   "aacs-server-start",
+	Short: "debug port aacs-server-start",
+	Long:  "debug port aacs-server-start",
+	Run:   portDebugAacsStartCmdHandler,
+}
+
+var portDebugAacsStopCmd = &cobra.Command{
+	Use:   "aacs-server-stop",
+	Short: "debug port aacs-server-stop",
+	Long:  "debug port aacs-server-stop",
+	Run:   portDebugAacsStopCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatusShowCmd)
@@ -90,6 +105,12 @@ func init() {
 	portDebugCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - up, down")
 	portDebugCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portDebugCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
+
+	// debug port aacs-server-start
+	portDebugCmd.AddCommand(portDebugAacsStartCmd)
+	portDebugAacsStartCmd.Flags().Int32Var(&aacsServerPort, "server-port", 9000, "Specify AACS server listen port")
+	// debug port aacs-server-stop
+	portDebugCmd.AddCommand(portDebugAacsStopCmd)
 }
 
 func handlePortDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -562,6 +583,58 @@ func portShowStatsOneResp(resp *halproto.PortGetResponse) {
 	}
 
 	fmt.Println(hdrLine)
+}
+
+func portDebugAacsStartCmdHandler(cmd *cobra.Command, args []string) {
+	var aacsRequestMsg *halproto.AacsRequestMsg
+
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	if (cmd == nil) ||
+		(cmd.Flags().Changed("server-port") == false) {
+		fmt.Printf("Specify server port\n")
+		return
+	}
+
+	aacsRequestMsg = &halproto.AacsRequestMsg{
+		AacsServerPort: aacsServerPort,
+	}
+
+	client := halproto.NewPortClient(c)
+
+	// HAL call
+	_, err = client.StartAacsServer(context.Background(), aacsRequestMsg)
+	if err != nil {
+		fmt.Printf("Start AACS server failed. %v\n", err)
+		return
+	}
+}
+
+func portDebugAacsStopCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewPortClient(c)
+
+	var empty *halproto.Empty
+
+	// HAL call
+	_, err = client.StopAacsServer(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Stop AACS server failed. %v\n", err)
+		return
+	}
 }
 
 func portDebugCmdHandler(cmd *cobra.Command, args []string) {

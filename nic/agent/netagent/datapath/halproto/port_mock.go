@@ -125,6 +125,42 @@ func (mr *MockPortClientMockRecorder) PortInfoGet(ctx, in interface{}, opts ...i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PortInfoGet", reflect.TypeOf((*MockPortClient)(nil).PortInfoGet), varargs...)
 }
 
+// StartAacsServer mocks base method
+func (m *MockPortClient) StartAacsServer(ctx context.Context, in *AacsRequestMsg, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "StartAacsServer", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartAacsServer indicates an expected call of StartAacsServer
+func (mr *MockPortClientMockRecorder) StartAacsServer(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartAacsServer", reflect.TypeOf((*MockPortClient)(nil).StartAacsServer), varargs...)
+}
+
+// StopAacsServer mocks base method
+func (m *MockPortClient) StopAacsServer(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "StopAacsServer", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StopAacsServer indicates an expected call of StopAacsServer
+func (mr *MockPortClientMockRecorder) StopAacsServer(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopAacsServer", reflect.TypeOf((*MockPortClient)(nil).StopAacsServer), varargs...)
+}
+
 // MockPortServer is a mock of PortServer interface
 type MockPortServer struct {
 	ctrl     *gomock.Controller
@@ -211,4 +247,30 @@ func (m *MockPortServer) PortInfoGet(arg0 context.Context, arg1 *PortInfoGetRequ
 // PortInfoGet indicates an expected call of PortInfoGet
 func (mr *MockPortServerMockRecorder) PortInfoGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PortInfoGet", reflect.TypeOf((*MockPortServer)(nil).PortInfoGet), arg0, arg1)
+}
+
+// StartAacsServer mocks base method
+func (m *MockPortServer) StartAacsServer(arg0 context.Context, arg1 *AacsRequestMsg) (*Empty, error) {
+	ret := m.ctrl.Call(m, "StartAacsServer", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartAacsServer indicates an expected call of StartAacsServer
+func (mr *MockPortServerMockRecorder) StartAacsServer(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartAacsServer", reflect.TypeOf((*MockPortServer)(nil).StartAacsServer), arg0, arg1)
+}
+
+// StopAacsServer mocks base method
+func (m *MockPortServer) StopAacsServer(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "StopAacsServer", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StopAacsServer indicates an expected call of StopAacsServer
+func (mr *MockPortServerMockRecorder) StopAacsServer(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopAacsServer", reflect.TypeOf((*MockPortServer)(nil).StopAacsServer), arg0, arg1)
 }

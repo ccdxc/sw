@@ -20,6 +20,8 @@ service Port {
   rpc PortDelete  (PortDeleteRequestMsg)  returns (PortDeleteResponseMsg)  {}
   rpc PortGet     (PortGetRequestMsg)     returns (PortGetResponseMsg)     {}
   rpc PortInfoGet (PortInfoGetRequestMsg) returns (PortInfoGetResponseMsg) {}
+  rpc StartAacsServer (AacsRequestMsg)    returns (types.Empty)            {}
+  rpc StopAacsServer  (types.Empty)       returns (types.Empty)            {}
 }
 
 // Port breakout modes
@@ -455,4 +457,11 @@ message PortEvent {
   PortOperStatus    oper_status   = 2;
   PortAdminState    admin_status  = 3;
   string            msg           = 4;    // message with relevant information about the event
+}
+
+//------------------------------------------------------------------------------
+// AACS server
+//------------------------------------------------------------------------------
+message AacsRequestMsg {
+    int32 aacs_server_port = 1;  // AACS server listen port
 }

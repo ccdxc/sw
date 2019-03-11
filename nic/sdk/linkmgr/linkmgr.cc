@@ -13,6 +13,8 @@
 namespace sdk {
 namespace linkmgr {
 
+static int aacs_server_port_num = -1;
+
 // global log buffer
 char log_buf[MAX_LOG_SIZE];
 
@@ -1263,6 +1265,77 @@ port_has_admin_state_changed (port_args_t *args)
 {
     port *port_p = (port *)args->port_p;
     return (args->admin_state != port_p->admin_state());
+}
+
+//-----------------------------------------
+// AACS server
+//-----------------------------------------
+static void*
+linkmgr_aacs_start (void* ctxt)
+{
+    if (aacs_server_port_num != -1) {
+        sdk::linkmgr::serdes_fns.serdes_aacs_start(aacs_server_port_num);
+    }
+
+    return NULL;
+}
+
+sdk_ret_t
+start_aacs_server (int port)
+{
+    int thread_prio  = 0;
+    int thread_id    = 0;
+    int sched_policy = SCHED_OTHER;
+
+    if (aacs_server_port_num != -1) {
+        SDK_TRACE_DEBUG("AACS server already started on port: %d",
+                        aacs_server_port_num);
+        return SDK_RET_OK;
+    }
+
+    thread_prio = sched_get_priority_max(sched_policy);
+    if (thread_prio < 0) {
+        return SDK_RET_ERR;
+    }
+
+    thread_id = LINKMGR_THREAD_ID_AACS_SERVER;
+    sdk::lib::thread *thread =
+        sdk::lib::thread::factory(
+                        std::string("linkmgr-aacs-server").c_str(),
+                        thread_id,
+                        sdk::lib::THREAD_ROLE_CONTROL,
+                        0x0 /* use all control cores */,
+                        linkmgr_aacs_start,
+                        thread_prio,
+                        sched_policy,
+                        true);
+    if (thread == NULL) {
+        SDK_TRACE_ERR("Failed to create linkmgr aacs server thread");
+        return SDK_RET_ERR;
+    }
+
+    g_linkmgr_threads[thread_id] = thread;
+    aacs_server_port_num = port;
+    thread->start(NULL);
+
+    return SDK_RET_OK;
+}
+
+void
+stop_aacs_server (void)
+{
+    int thread_id = LINKMGR_THREAD_ID_AACS_SERVER;
+
+    if (g_linkmgr_threads[thread_id] != NULL) {
+        // stop the thread
+        g_linkmgr_threads[thread_id]->stop();
+        // free the allocated thread
+        SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, g_linkmgr_threads[thread_id]);
+        g_linkmgr_threads[thread_id] = NULL;
+    }
+
+    // reset the server port
+    aacs_server_port_num = -1;
 }
 
 }    // namespace linkmgr

@@ -1221,55 +1221,6 @@ port_metrics_update (void)
     return port_get_all(port_metrics_update_helper, NULL);
 }
 
-static void*
-linkmgr_aacs_start (void* ctxt)
-{
-    sdk::linkmgr::serdes_fns.serdes_aacs_start(*(int*)ctxt);
-    return NULL;
-}
-
-static hal_ret_t
-start_aacs_server (int port)
-{
-    int    thread_prio = 0, thread_id = 0;
-
-    thread_prio = sched_get_priority_max(SCHED_OTHER);
-    if (thread_prio < 0) {
-        return HAL_RET_ERR;
-    }
-
-    thread_id = linkmgr_thread_id_t::LINKMGR_THREAD_ID_AACS_SERVER;
-    sdk::lib::thread *thread =
-        sdk::lib::thread::factory(
-                        std::string("linkmgr-aacs-server").c_str(),
-                        thread_id,
-                        sdk::lib::THREAD_ROLE_CONTROL,
-                        0x0 /* use all control cores */,
-                        linkmgr_aacs_start,
-                        thread_prio - 1,
-                        SCHED_OTHER,
-                        true);
-    if (thread == NULL) {
-        SDK_TRACE_ERR("Failed to create linkmgr aacs server thread");
-        return HAL_RET_ERR;
-    }
-
-    int *int_port = NULL;
-
-    LINKMGR_CALLOC(int_port, HAL_MEM_ALLOC_LINKMGR, int);
-
-    *int_port = port;
-
-    thread->start(int_port);
-
-    return HAL_RET_OK;
-}
-
-static void
-stop_aacs_server (void)
-{
-}
-
 hal_ret_t
 linkmgr_generic_debug_opn (GenericOpnRequest& req, GenericOpnResponse *resp)
 {
@@ -1649,12 +1600,12 @@ linkmgr_generic_debug_opn (GenericOpnRequest& req, GenericOpnResponse *resp)
 
         case 26:
             aacs_server_port = req.val1();
-            start_aacs_server(aacs_server_port);
+            sdk::linkmgr::start_aacs_server(aacs_server_port);
             HAL_TRACE_DEBUG("AACS server started");
             break;
 
         case 27:
-            stop_aacs_server();
+            sdk::linkmgr::stop_aacs_server();
             HAL_TRACE_DEBUG("AACS server stopped");
             break;
 

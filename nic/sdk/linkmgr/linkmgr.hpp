@@ -81,6 +81,8 @@ sdk_ret_t port_args_set_by_xcvr_state(port_args_t *port_args);
 sdk_ret_t port_update_xcvr_event(
             void *port_p, xcvr_event_info_t *xcvr_event_info);
 void port_set_leds(uint32_t port_num, port_event_t event);
+sdk_ret_t start_aacs_server(int port);
+void stop_aacs_server(void);
 
 static inline void
 port_args_init (port_args_t *args)

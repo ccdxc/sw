@@ -43,6 +43,8 @@ using port::PortFecType;
 using port::MacStatsType;
 using port::MgmtMacStatsType;
 
+using port::AacsRequestMsg;
+
 class PortServiceImpl final : public Port::Service {
 public:
     Status PortCreate(ServerContext *context,
@@ -64,6 +66,14 @@ public:
     Status PortInfoGet(ServerContext *context,
                        const PortInfoGetRequestMsg *req,
                        PortInfoGetResponseMsg *rsp) override;
+
+    Status StartAacsServer(ServerContext *context,
+                           const AacsRequestMsg *req,
+                           types::Empty *rsp) override;
+
+    Status StopAacsServer(ServerContext *context,
+                          const types::Empty *req,
+                          types::Empty *rsp) override;
 };
 
 using sdk::linkmgr::port_args_t;

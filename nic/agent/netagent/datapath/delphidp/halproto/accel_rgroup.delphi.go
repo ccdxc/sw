@@ -986,6 +986,7 @@ It has these top-level messages:
 	PortInfoGetResponse
 	PortInfoGetResponseMsg
 	PortEvent
+	AacsRequestMsg
 	ProxyKeyHandle
 	ProxySpec
 	ProxyRequestMsg
