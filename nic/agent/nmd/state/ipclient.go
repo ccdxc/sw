@@ -314,21 +314,7 @@ func (c *IPClient) updateDelphiNaplesObject() error {
 	return nil
 }
 
-// updateNaplesStatus does the heavy lifting of mode change.
-// This function has many side-effects -
-// 1. Creates the /tmp/.reboot_pending file
-// 2. Updates and triggers Delphi Naples Status object
-// 3. Triggers Naples Admission to Venice cluster using the controller IPs made available
-// 4. Stops/Starts REST server to NMD
-func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) error {
-	log.Infof("Found Controllers: %v", controllers)
-
-	var macStr string
-	if _, err := conv.ParseMacAddr(c.nmdState.config.Status.Fru.MacStr); err != nil {
-		macStr = strings.Replace(c.nmdState.config.Status.Fru.MacStr, ":", ".", -1)
-		c.nmdState.config.Status.SmartNicName = macStr
-	}
-
+func (c *IPClient) updateNaplesStatusIP(ipaddress string, defaultGW string, dnsServers []string) error {
 	if c.nmdState.config.Status.IPConfig == nil {
 		c.nmdState.config.Status.IPConfig = &cluster.IPConfig{
 			IPAddress:  "",
@@ -337,7 +323,35 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 		}
 	}
 
+	if ipaddress == "" {
+		return errors.New("ipaddress is empty")
+	}
+
 	c.nmdState.config.Status.IPConfig.IPAddress = ipaddress
+	c.nmdState.config.Status.IPConfig.DefaultGW = defaultGW
+	c.nmdState.config.Status.IPConfig.DNSServers = dnsServers
+
+	return nil
+}
+
+// updateNaplesStatus does the heavy lifting of mode change.
+// This function has many side-effects -
+// 1. Creates the /tmp/.reboot_pending file
+// 2. Updates and triggers Delphi Naples Status object
+// 3. Triggers Naples Admission to Venice cluster using the controller IPs made available
+// 4. Stops/Starts REST server to NMD
+func (c *IPClient) updateNaplesStatus(controllers []string) error {
+	log.Infof("Found Controllers: %v", controllers)
+
+	var macStr string
+	if _, err := conv.ParseMacAddr(c.nmdState.config.Status.Fru.MacStr); err != nil {
+		macStr = strings.Replace(c.nmdState.config.Status.Fru.MacStr, ":", ".", -1)
+		c.nmdState.config.Status.SmartNicName = macStr
+	}
+
+	if controllers == nil {
+		return errors.New("controllers is nil")
+	}
 
 	// TODO : Reenable these lines
 	// Disable any updates to Naples Admission once Naples has been admitted into a Venice Cluster.
@@ -523,17 +537,19 @@ func (c *IPClient) watchLeaseEvents() {
 			log.Infof("EVENT! %#v\n", event)
 
 			if event.Op&fsnotify.Write == fsnotify.Write && getFileSize(c.leaseFile) > 0 {
-				controllers, err := readAndParseLease(c.leaseFile)
 				ip, _ := getIPFromLease(c.leaseFile)
-				if controllers != nil && err == nil {
-					err := c.updateNaplesStatus(controllers, ip)
-					if err != nil {
-						log.Errorf("Failed to update naples Status.")
-					}
-				} else {
+				err := c.updateNaplesStatusIP(ip, "", nil)
+				if err != nil {
+					log.Errorf("Lease file does not have IP address in it.")
+					return
+				}
+
+				controllers, _ := readAndParseLease(c.leaseFile)
+				err = c.updateNaplesStatus(controllers)
+				if err != nil {
 					// Vendor specified attributes is nil
 					c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
-					log.Errorf("Controllers is nil.")
+					log.Errorf("Failed to update naples status : %v", err)
 				}
 
 			}
@@ -618,22 +634,26 @@ func (c *IPClient) doStaticIPConfig() error {
 		return err
 	}
 
-	staticIPCommandString := staticIPCmdStr + c.nmdState.config.Spec.IPConfig.IPAddress + " dev " + c.iface
+	staticIPCommandString := staticIPCmdStr + c.nmdState.config.Spec.IPConfig.IPAddress + "  brd + dev " + c.iface
 	if err := runCmd(staticIPCommandString); err != nil {
 		log.Errorf("Failed to assign static IP.")
 		return err
 	}
 
 	if c.nmdState.config.Spec.IPConfig.DefaultGW != "" {
-		err = runCmd("ip route add default via " + c.nmdState.config.Spec.IPConfig.DefaultGW)
+		err = runCmd("route add default gw " + c.nmdState.config.Spec.IPConfig.DefaultGW + " " + c.iface)
 		if err != nil {
 			log.Errorf("Failed to add Default GW.")
 			return err
 		}
 	}
+	err = c.updateNaplesStatusIP(c.nmdState.config.Spec.IPConfig.IPAddress, c.nmdState.config.Spec.IPConfig.DefaultGW, c.nmdState.config.Spec.IPConfig.DNSServers)
+	if err != nil {
+		return err
+	}
 
 	// Update Naples Status only once all the Static IP configuration has completed.
-	err = c.updateNaplesStatus(c.nmdState.config.Spec.Controllers, c.nmdState.config.Spec.IPConfig.IPAddress)
+	err = c.updateNaplesStatus(c.nmdState.config.Spec.Controllers)
 	if err != nil {
 		return err
 	}
@@ -740,7 +760,8 @@ func (c *IPClient) Start() error {
 		// DHCP configuration mode can be added to mock mode in future.
 		log.Info("IPClient in MOCK Mode. Calling Update Naples Status directly.")
 		// Hardcoding "1.1.1.1" as it is Mock mode and it will be ignored anyway
-		return c.updateNaplesStatus(c.nmdState.config.Spec.Controllers, "1.1.1.1")
+		c.updateNaplesStatusIP("1.1.1.1", "", nil)
+		return c.updateNaplesStatus(c.nmdState.config.Spec.Controllers)
 	}
 
 	if c.nmdState.config.Spec.NetworkMode == nmd.NetworkMode_OOB.String() && c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK.String() {
@@ -760,8 +781,9 @@ func (c *IPClient) Start() error {
 		//}
 		// Admission of Naples
 	} else { // Moving to HOST mode
+		c.updateNaplesStatusIP("", "", nil)
 		c.nmdState.config.Spec.NetworkMode = ""
-		return c.updateNaplesStatus(nil, "")
+		return c.updateNaplesStatus(nil)
 	}
 }
 

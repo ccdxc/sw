@@ -274,8 +274,8 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			}
 		}
 
-		if len(defaultGW) != 0 && !vldtor.CIDR(defaultGW) {
-			err = fmt.Errorf("invalid default gateway %v. Must be in CIDR Format", defaultGW)
+		if len(defaultGW) != 0 && !vldtor.IPAddr(defaultGW) {
+			err = fmt.Errorf("invalid default gateway %v", defaultGW)
 			return
 		}
 
