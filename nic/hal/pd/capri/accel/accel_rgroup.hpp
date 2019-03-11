@@ -147,6 +147,13 @@ typedef accel_rgroup_elem_map_t::const_iterator             accel_rgroup_elem_it
 class accel_rgroup_t
 {
 public:
+    accel_rgroup_t(uint64_t metrics_mem_addr,
+                   uint32_t metrics_mem_size) :
+        metrics_mem_addr(metrics_mem_addr),
+        metrics_mem_size(metrics_mem_size)
+    {
+    }
+
     ~accel_rgroup_t()
     {
         elem_map.clear();
@@ -177,8 +184,13 @@ public:
                           accel_rgroup_ring_metrics_cb_t cb_func,
                           void *user_ctx);
 
+    uint64_t  metrics_addr_get(void) { return metrics_mem_addr; }
+    uint64_t  metrics_size_get(void) { return metrics_mem_size; }
+
 private:
     accel_rgroup_elem_map_t     elem_map;
+    uint64_t                    metrics_mem_addr;
+    uint32_t                    metrics_mem_size;
 };
 
 /*
@@ -188,8 +200,12 @@ typedef std::unordered_map<std::string, accel_rgroup_t*>    accel_rgroup_map_t;
 typedef accel_rgroup_map_t::iterator                        accel_rgroup_iter_t;
 typedef accel_rgroup_map_t::const_iterator                  accel_rgroup_iter_c;
 
+hal_ret_t accel_rgroup_init(int tid);
+hal_ret_t accel_rgroup_fini(int tid);
 
-hal_ret_t accel_rgroup_add(const char *rgroup_name);
+hal_ret_t accel_rgroup_add(const char *rgroup_name,
+                           uint64_t metrics_mem_addr,
+                           uint32_t metrics_mem_size);
 hal_ret_t accel_rgroup_del(const char *rgroup_name);
 hal_ret_t accel_rgroup_ring_add(const char *rgroup_name,
                                 const char *ring_name,

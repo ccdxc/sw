@@ -22,6 +22,11 @@
 #ifdef __FreeBSD__
 #include <linux/types.h>
 #endif
+
+#define ACCEL_DEV_STRINGIFY(x)          #x
+#define ACCEL_DEV_INDEX_STRINGIFY(x)    [x] = ACCEL_DEV_STRINGIFY(x)
+#define ACCEL_DEV_CASE_STRINGIFY(x)     case x: return ACCEL_DEV_STRINGIFY(x)
+
 /**
  * devcmd HBM handle as defined in nic/conf/iris/hbm_mem.json
  */
@@ -44,23 +49,75 @@ enum cmd_opcode {
 	CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE = 11,
 	CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE = 12,
 	CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE = 13,
+	CMD_OPCODE_LIF_RESET    	= 14,
 
 	CMD_OPCODE_SEQ_QUEUE_DUMP	= 0xf0,
 };
 
-#ifndef __DEV_HPP__
-
-/**
- * Devcmd Status codes
- */
-enum DevcmdStatus
-{
-    DEVCMD_SUCCESS,
-    DEVCMD_BUSY,
-    DEVCMD_ERROR,
-    DEVCMD_UNKNOWN,
+#define ACCEL_DEVCMD_OPCODE_CASE_TABLE                                  \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_NOP);                           \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_RESET);                         \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_IDENTIFY);                      \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_LIF_INIT);                      \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_ADMINQ_INIT);                   \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_INIT);                \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_ENABLE);              \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_DISABLE);             \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_CRYPTO_KEY_UPDATE);             \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_HANG_NOTIFY);                   \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_BATCH_INIT);          \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE);        \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE);       \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE);       \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_LIF_RESET);                     \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_DUMP);                \
+    
+enum accel_status_code {
+	ACCEL_RC_SUCCESS	= 0,	/* Success */
+	ACCEL_RC_EVERSION	= 1,	/* Incorrect version for request */
+	ACCEL_RC_EOPCODE	= 2,	/* Invalid cmd opcode */
+	ACCEL_RC_EIO		= 3,	/* I/O error */
+	ACCEL_RC_EPERM		= 4,	/* Permission denied */
+	ACCEL_RC_EQID		= 5, 	/* Bad qid */
+	ACCEL_RC_EQTYPE		= 6, 	/* Bad qtype */
+	ACCEL_RC_ENOENT		= 7,	/* No such element */
+	ACCEL_RC_EINTR		= 8,	/* operation interrupted */
+	ACCEL_RC_EAGAIN		= 9,	/* Try again */
+	ACCEL_RC_ENOMEM		= 10,	/* Out of memory */
+	ACCEL_RC_EFAULT		= 11,	/* Bad address */
+	ACCEL_RC_EBUSY		= 12,	/* Device or resource busy */
+	ACCEL_RC_EEXIST		= 13,	/* object already exists */
+	ACCEL_RC_EINVAL		= 14,	/* Invalid argument */
+	ACCEL_RC_ENOSPC		= 15,	/* No space left or alloc failure */
+	ACCEL_RC_ERANGE		= 16,	/* Parameter out of range */
+	ACCEL_RC_BAD_ADDR	= 17,	/* Descriptor contains a bad ptr */
+	ACCEL_RC_DEV_CMD	= 18,	/* Device cmd attempted on AdminQ */
+	ACCEL_RC_ERROR		= 19,	/* Generic error */
 };
-#endif
+
+#define ACCEL_RC_STR_TABLE                              \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_SUCCESS),        \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EVERSION),       \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EOPCODE),        \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EIO),            \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EPERM),          \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EQID),           \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EQTYPE),         \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_ENOENT),         \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EINTR),          \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EAGAIN),         \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_ENOMEM),         \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EFAULT),         \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EBUSY),          \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EEXIST),         \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_EINVAL),         \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_ENOSPC),         \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_ERANGE),         \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_BAD_ADDR),       \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_DEV_CMD),        \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_ERROR),          \
+
+typedef int accel_status_code_t;
 
 #pragma pack(push, 1)
 
@@ -283,6 +340,21 @@ typedef struct lif_init_cpl {
 	            rsvd    :24;
 	uint32_t    rsvd2[3];
 } lif_init_cpl_t;
+
+/**
+ * struct lif_reset_cmd - LIF reset command
+ * @opcode:    opcode = 12
+ * @index:     LIF index
+ */
+typedef struct lif_reset_cmd {
+	uint16_t opcode;
+	uint16_t rsvd;
+	uint32_t index:24;
+	uint32_t rsvd2:8;
+	uint32_t rsvd3[14];
+} lif_reset_cmd_t;
+
+typedef struct admin_cpl lif_reset_cpl_t;
 
 /**
  * adminq_init_cmd_t - Admin queue init command
@@ -600,18 +672,22 @@ typedef struct seq_queue_dump_cpl {
 typedef union adminq_cmd {
 	admin_cmd_t             cmd;
 	nop_cmd_t               nop;
+	lif_init_cmd_t          lif_init;
+	lif_reset_cmd_t         lif_reset;
 	seq_queue_init_cmd_t    seq_queue_init;
 	seq_queue_control_cmd_t seq_queue_control;
 	seq_queue_dump_cmd_t    seq_queue_dump;
-	crypto_key_update_cmd_t crypto_key_update;
 	seq_queue_batch_init_cmd_t seq_queue_batch_init;
 	seq_queue_batch_control_cmd_t seq_queue_batch_control;
 	seq_queue_init_complete_cmd_t seq_queue_init_complete;
+	crypto_key_update_cmd_t crypto_key_update;
 } adminq_cmd_t;
 
 typedef union adminq_cpl {
 	admin_cpl_t             cpl;
 	nop_cpl_t               nop;
+	lif_init_cpl_t          lif_init;
+	lif_reset_cpl_t         lif_reset;
 	seq_queue_init_cpl_t    seq_queue_init;
 	seq_queue_dump_cpl_t    seq_queue_dump;
 	seq_queue_init_complete_cpl_t seq_queue_init_complete;

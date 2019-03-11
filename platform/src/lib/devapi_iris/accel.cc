@@ -79,7 +79,9 @@ end:
 }
 
 sdk_ret_t
-devapi_accel::accel_rgroup_add(string name)
+devapi_accel::accel_rgroup_add(string name,
+                               uint64_t metrics_mem_addr,
+                               uint32_t metrics_mem_size)
 {
     sdk_ret_t                   ret = SDK_RET_OK;
     AccelRGroupAddRequestMsg    req_msg;
@@ -88,6 +90,8 @@ devapi_accel::accel_rgroup_add(string name)
 
     auto req = req_msg.add_request();
     req->set_rgroup_name(name);
+    req->set_metrics_mem_addr(metrics_mem_addr);
+    req->set_metrics_mem_size(metrics_mem_size);
     VERIFY_HAL_RETURN();
     status = hal->accel_rgroup_add(req_msg, rsp_msg);
     if (!status.ok()) {

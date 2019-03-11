@@ -26,12 +26,13 @@ enum AccelSeqQGroup {
     QGroupCryptoStatus                       = 3;     // Crypto sequencer status queue group
 }
 
-message AccelSeqQueueInfo {
-    delphi.ObjectMeta   Meta                 = 1;
-    AccelSeqQueueKey    Key                  = 2;
-    uint64              QStateAddr           = 3;
-    AccelSeqQGroup      QGroup               = 4;
-    uint32              CoreId               = 5;
+message AccelSeqQueueInfoMetrics {
+    option (delphi.datapath_metrics) = true;
+    AccelSeqQueueKey    Key                  = 1;
+
+    delphi.Counter      QStateAddr           = 2;
+    delphi.Counter      QGroup               = 3;     // AccelSeqQGroup
+    delphi.Counter      CoreId               = 4;
 }
 
 message AccelSeqQueueMetrics {
@@ -64,17 +65,14 @@ message AccelHwRingKey {
     string              SubRId               = 2;     // Sub-ring id
 }
 
-message AccelHwRingInfo {
-    delphi.ObjectMeta   Meta                 = 1;
-    AccelHwRingKey      Key                  = 2;
-    uint32              PIndex               = 3;     // Producer index
-    uint32              CIndex               = 4;     // Consumer index
-}
-
 message AccelHwRingMetrics {
+    option (delphi.datapath_metrics) = true;
     AccelHwRingKey      Key                  = 1;
-    delphi.Counter      InputBytes           = 2;     // Total input bytes (not available on some rings)
-    delphi.Counter      OutputBytes          = 3;     // Total output bytes (not available on some rings)
-    delphi.Counter      SoftResets           = 4;     // # soft resets executed
+
+    delphi.Counter      PIndex               = 2;     // Producer index
+    delphi.Counter      CIndex               = 3;     // Consumer index
+    delphi.Counter      InputBytes           = 4;     // Total input bytes (not available on some rings)
+    delphi.Counter      OutputBytes          = 5;     // Total output bytes (not available on some rings)
+    delphi.Counter      SoftResets           = 6;     // # soft resets executed
 }
 

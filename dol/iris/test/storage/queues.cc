@@ -381,9 +381,18 @@ int seq_admin_queue_setup(queues_t *q_ptr, uint16_t num_entries,
 
       ret = nicmgr_if::nicmgr_if_lif_init(seq_lif);
       if (ret == 0) {
+          ret = nicmgr_if::nicmgr_if_lif_reset(seq_lif);
+      }
+#if 0
+      /*
+       * lib_driver is going away so we no longer use it
+       * to drive the adminQ in DOL.
+       */
+      if (ret == 0) {
           ret = nicmgr_if::nicmgr_if_admin_queue_init(seq_lif, num_entries,
                                                       q_ptr->mem->pa());
       }
+#endif
 
       if (ret) {
           printf("Failed to setup Seq AdminQ state \n");
@@ -1111,19 +1120,11 @@ seq_queues_setup() {
   int i, j;
 
   // Initialize storage_seq AdminQ
-#if 0
-  /*
-   * NOTE: standard handshake with nicmgr after the identify phase is to
-   * init the sequencer LIF adminQ. However, because DOL needed to use
-   * the sequencer LIF adminQ itself to bootstrap with nicmgr, it had 
-   * already initialized that queue during nicmgr_if_init().
-   */
   if (seq_admin_queue_setup(&admin_qs[0], kSeqAdminNumEntries,
                             kSeqAdminQEntrySize, DP_MEM_TYPE_HOST_MEM) < 0) {
     printf("Failed to setup Seq AdminQ state\n");
     return -1;
   }
-#endif
 
   // Initialize PVM SQs for processing Sequencer commands for PDMA
   pvm_seq_pdma_sq_base = 0;
@@ -1224,6 +1225,13 @@ seq_queues_setup() {
     }
 
     printf("Setup PVM Seq Compression Status queue %d \n", i);
+  }
+
+  if (run_nicmgr_tests) {
+    if (nicmgr_if::nicmgr_if_seq_queue_init_complete()) {
+      printf("Failed Seq queue init complete\n");
+      return -1;
+    }
   }
 
   return 0;

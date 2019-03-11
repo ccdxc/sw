@@ -8,6 +8,30 @@
 namespace hal {
 
 hal_ret_t
+accel_rgroup_init(int tid)
+{
+   pd::pd_accel_rgroup_init_args_t  args = {0};
+   pd::pd_func_args_t               pd_func_args = {0};
+
+   args.tid = tid;
+   pd_func_args.pd_accel_rgroup_init = &args;
+   return  pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_INIT, &pd_func_args);
+}
+
+
+hal_ret_t
+accel_rgroup_fini(int tid)
+{
+   pd::pd_accel_rgroup_fini_args_t  args = {0};
+   pd::pd_func_args_t               pd_func_args = {0};
+
+   args.tid = tid;
+   pd_func_args.pd_accel_rgroup_fini = &args;
+   return  pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_FINI, &pd_func_args);
+}
+
+
+hal_ret_t
 accel_rgroup_add(const AccelRGroupAddRequest& request,
                  AccelRGroupAddResponse *response)
 {
@@ -16,6 +40,8 @@ accel_rgroup_add(const AccelRGroupAddRequest& request,
     hal_ret_t                       ret;
 
     args.rgroup_name = request.rgroup_name().c_str();
+    args.metrics_mem_addr = request.metrics_mem_addr();
+    args.metrics_mem_size = request.metrics_mem_size();
     pd_func_args.pd_accel_rgroup_add = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_ADD, &pd_func_args);
     response->set_api_status(ret == HAL_RET_OK ? types::API_STATUS_OK :

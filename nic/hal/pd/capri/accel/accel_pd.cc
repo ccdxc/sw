@@ -11,10 +11,25 @@ namespace pd {
 
 
 hal_ret_t
+pd_accel_rgroup_init (pd_func_args_t *pd_func_args)
+{
+    pd_accel_rgroup_init_args_t *args = pd_func_args->pd_accel_rgroup_init;
+    return accel_rgroup_init(args->tid);
+}
+
+hal_ret_t
+pd_accel_rgroup_fini (pd_func_args_t *pd_func_args)
+{
+    pd_accel_rgroup_fini_args_t *args = pd_func_args->pd_accel_rgroup_fini;
+    return accel_rgroup_fini(args->tid);
+}
+
+hal_ret_t
 pd_accel_rgroup_add (pd_func_args_t *pd_func_args)
 {
     pd_accel_rgroup_add_args_t *args = pd_func_args->pd_accel_rgroup_add;
-    return accel_rgroup_add(args->rgroup_name);
+    return accel_rgroup_add(args->rgroup_name, args->metrics_mem_addr,
+                            args->metrics_mem_size);
 }
 
 hal_ret_t

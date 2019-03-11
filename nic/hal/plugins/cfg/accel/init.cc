@@ -1,6 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 #include "nic/hal/svc/accel_rgroup_svc.hpp"
+#include "nic/hal/plugins/cfg/accel/accel_rgroup.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -41,6 +42,18 @@ accelcfg_init (hal_cfg_t *hal_cfg)
 extern "C" void
 accelcfg_exit (void)
 {
+}
+
+extern "C" void
+accelcfg_thread_init(int tid)
+{
+    HAL_ABORT(hal::accel_rgroup_init(tid) == HAL_RET_OK);
+}
+
+extern "C" void
+accelcfg_thread_exit(int tid)
+{
+    hal::accel_rgroup_fini(tid);
 }
 
 }    // namespace accel

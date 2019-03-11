@@ -2768,8 +2768,18 @@ typedef struct pd_capri_barco_sym_hash_process_request_args_s {
 } __PACK__ pd_capri_barco_sym_hash_process_request_args_t;
 
 // Accelerator ring group
+typedef struct pd_accel_rgroup_init_args_s {
+    int tid;
+} __PACK__ pd_accel_rgroup_init_args_t;
+
+typedef struct pd_accel_rgroup_fini_args_s {
+    int tid;
+} __PACK__ pd_accel_rgroup_fini_args_t;
+
 typedef struct pd_accel_rgroup_add_args_s {
     const char *rgroup_name;
+    uint64_t metrics_mem_addr;
+    uint32_t metrics_mem_size;
 } __PACK__ pd_accel_rgroup_add_args_t;
 
 typedef struct pd_accel_rgroup_del_args_s {
@@ -3288,7 +3298,9 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_UPLINK_TM_CONTROL,        296, "PD_FUNC_ID_UPLINK_TM_CONTROL") \
     ENTRY(PD_FUNC_ID_LIF_SCHED_CONTROL,        297, "PD_FUNC_ID_LIF_SCHED_CONTROL") \
     ENTRY(PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET, 298, "PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET") \
-    ENTRY(PD_FUNC_ID_MAX,                      299, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INIT,        299, "PD_FUNC_ID_ACCEL_RGROUP_INIT")\
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_FINI,        300, "PD_FUNC_ID_ACCEL_RGROUP_FINI")\
+    ENTRY(PD_FUNC_ID_MAX,                      301, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3687,6 +3699,8 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_pb_stats_get);
 
         // accelerator ring group
+        PD_UNION_ARGS_FIELD(pd_accel_rgroup_init);
+        PD_UNION_ARGS_FIELD(pd_accel_rgroup_fini);
         PD_UNION_ARGS_FIELD(pd_accel_rgroup_add);
         PD_UNION_ARGS_FIELD(pd_accel_rgroup_del);
         PD_UNION_ARGS_FIELD(pd_accel_rgroup_ring_add);
@@ -4136,6 +4150,8 @@ PD_FUNCP_TYPEDEF(pd_pb_stats_get);
 PD_FUNCP_TYPEDEF(pd_pb_stats_clear);
 
 // accelerator ring group
+PD_FUNCP_TYPEDEF(pd_accel_rgroup_init);
+PD_FUNCP_TYPEDEF(pd_accel_rgroup_fini);
 PD_FUNCP_TYPEDEF(pd_accel_rgroup_add);
 PD_FUNCP_TYPEDEF(pd_accel_rgroup_del);
 PD_FUNCP_TYPEDEF(pd_accel_rgroup_ring_add);

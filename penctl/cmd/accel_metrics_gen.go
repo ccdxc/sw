@@ -33,6 +33,27 @@ func accelhwringmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+var accelseqqueueinfometricsShowCmd = &cobra.Command{
+
+	Use:   "accelseqqueueinfo",
+	Short: "Show AccelSeqQueueInfoMetrics from Naples",
+	Long:  "\n---------------------------------\n Show AccelSeqQueueInfoMetrics From Naples \n---------------------------------\n",
+	RunE:  accelseqqueueinfometricsShowCmdHandler,
+}
+
+func accelseqqueueinfometricsShowCmdHandler(cmd *cobra.Command, args []string) error {
+	jsonFormat = true
+	bodyBytes, err := restGet("telemetry/v1/metrics/accelseqqueueinfometrics/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if bodyBytes == nil {
+		fmt.Println("No accelseqqueueinfo object(s) found")
+	}
+	return nil
+}
+
 var accelseqqueuemetricsShowCmd = &cobra.Command{
 
 	Use:   "accelseqqueue",
@@ -57,6 +78,8 @@ func accelseqqueuemetricsShowCmdHandler(cmd *cobra.Command, args []string) error
 func init() {
 
 	metricsShowCmd.AddCommand(accelhwringmetricsShowCmd)
+
+	metricsShowCmd.AddCommand(accelseqqueueinfometricsShowCmd)
 
 	metricsShowCmd.AddCommand(accelseqqueuemetricsShowCmd)
 

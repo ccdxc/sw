@@ -10,6 +10,8 @@
 namespace hal {
 namespace pd {
 
+hal_ret_t pd_accel_rgroup_init (pd_func_args_t *pd_func_args);
+hal_ret_t pd_accel_rgroup_fini (pd_func_args_t *pd_func_args);
 hal_ret_t pd_accel_rgroup_add (pd_func_args_t *pd_func_args);
 hal_ret_t pd_accel_rgroup_del (pd_func_args_t *pd_func_args);
 hal_ret_t pd_accel_rgroup_ring_add (pd_func_args_t *pd_func_args);

@@ -463,6 +463,8 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_PB_STATS_CLEAR, pd_pb_stats_clear);
 
     // accelerator ring group
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_INIT, pd_accel_rgroup_init);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_FINI, pd_accel_rgroup_fini);
     PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_ADD, pd_accel_rgroup_add);
     PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_DEL, pd_accel_rgroup_del);
     PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_RING_ADD, pd_accel_rgroup_ring_add);

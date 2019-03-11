@@ -52,6 +52,7 @@ void NicMgrService::OnMountComplete() {
          port!=list.end(); ++port) {
         g_port_status_handler->update_port_status(*port);
     }
+    devmgr->DelphiMountEventHandler(true);
 }
 
 // get_port_handler gets the port reactor object
@@ -162,8 +163,6 @@ error hal_status_handler::OnHalStatusUpdate(HalStatusPtr halStatus) {
 // init_accel_objects mounts accelerator objects
 Status init_accel_objects(delphi::SdkPtr sdk) {
     dobj::AccelPfInfo::Mount(sdk, delphi::ReadWriteMode);
-    dobj::AccelSeqQueueInfo::Mount(sdk, delphi::ReadWriteMode);
-    dobj::AccelHwRingInfo::Mount(sdk, delphi::ReadWriteMode);
     return Status::OK;
 }
 

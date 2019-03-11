@@ -12,9 +12,8 @@ func init() {
 	tstr := ntranslate.MustGetTranslator()
 
 	tstr.Register("AccelPfInfoKey", &accelPfTranslatorFns{})
-	tstr.Register("AccelSeqQueueInfoKey", &accelSeqQueueTranslatorFns{})
+	tstr.Register("AccelSeqQueueInfoMetricsKey", &accelSeqQueueTranslatorFns{})
 	tstr.Register("AccelSeqQueueMetricsKey", &accelSeqQueueTranslatorFns{})
-	tstr.Register("AccelHwRingInfoKey", &accelHwRingTranslatorFns{})
 	tstr.Register("AccelHwRingMetricsKey", &accelHwRingTranslatorFns{})
 }
 

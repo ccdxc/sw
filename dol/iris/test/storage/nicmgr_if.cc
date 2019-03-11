@@ -37,7 +37,7 @@ namespace nicmgr {
 namespace nicmgr_if {
 
 static DeviceManager *devmgr;
-static Accel_PF     *accel_dev;
+static AccelDev     *accel_dev;
 static dp_mem_t     *accel_devcmdpa_buf;
 static dp_mem_t     *accel_devcmddbpa_buf;
 static dp_mem_t     *accel_devcmdpa_cmdcpl;
@@ -77,23 +77,23 @@ nicmgr_if_init(void)
     sdk::platform::capri::capri_state_pd_init(NULL);
 
     /*
-     * Interface with the Accel_PF device directly
+     * Interface with the Accel device directly
      */
     devmgr = new DeviceManager(FLAGS_nicmgr_config_file,
                                sdk::platform::FWD_MODE_CLASSIC, PLATFORM_SIM);
     devmgr->LoadConfig(FLAGS_nicmgr_config_file);
     devmgr->HalEventHandler(true);
-    accel_dev = (Accel_PF *)devmgr->GetDevice("accel");
+    accel_dev = (AccelDev *)devmgr->GetDevice("accel");
     if (!accel_dev) {
-        printf("Failed to locate Accel_PF device\n");
+        printf("Failed to locate Accel device\n");
         return -1;
     }
     qstate_if::set_nicmgr_pd_client(devmgr->GetPdClient());
 
-    accel_devcmdpa_buf = new dp_mem_t((uint8_t *)accel_dev->devcmd_page_get(),
+    accel_devcmdpa_buf = new dp_mem_t((uint8_t *)accel_dev->DevcmdPageGet(),
                                       1, ACCEL_DEV_PAGE_SIZE,
                                       DP_MEM_TYPE_HBM, DP_MEM_ALLOC_NO_FILL);
-    accel_devcmddbpa_buf = new dp_mem_t((uint8_t *)accel_dev->devcmddb_page_get(),
+    accel_devcmddbpa_buf = new dp_mem_t((uint8_t *)accel_dev->DevcmddbPageGet(),
                                         1, sizeof(dev_cmd_db_t),
                                         DP_MEM_TYPE_HBM, DP_MEM_ALLOC_NO_FILL);
     accel_devcmdpa_cmdcpl =
@@ -108,9 +108,6 @@ nicmgr_if_init(void)
 void
 nicmgr_if_fini(void)
 {
-    if (devmgr) {
-        devmgr->ThreadsWaitJoin();
-    }
     if (utils::logger::logger()) {
         utils::logger::logger()->flush();
     }
@@ -200,6 +197,17 @@ nicmgr_if_lif_init(uint64_t seq_lif)
 
 
 int
+nicmgr_if_lif_reset(uint64_t seq_lif)
+{
+    dev_cmd_t   cmd = {0};
+
+    cmd.lif_reset.opcode = CMD_OPCODE_LIF_RESET;
+    cmd.lif_reset.index = seq_lif;
+    return nicmgr_if_push(cmd) ? 0 : -1;
+}
+
+
+int
 nicmgr_if_admin_queue_init(uint64_t seq_lif,
                            uint16_t log2_num_entries,
                            uint64_t base_addr)
@@ -241,34 +249,63 @@ nicmgr_if_seq_queue_init(uint64_t lif,
 }
 
 
+int
+nicmgr_if_seq_queue_init_complete(void)
+{
+    dev_cmd_t   cmd = {0};
+
+    cmd.seq_q_init_complete.opcode = CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE;
+    return nicmgr_if_push(cmd) ? 0 : -1;
+}
+
+
 static dev_cmd_regs_t *
 nicmgr_if_push(dev_cmd_t& cmd)
 {
     dev_cmd_regs_t  *dev_cmd;
+    bool            cmd_complete = false;
 
     accel_devcmdpa_buf->clear();
     dev_cmd = (dev_cmd_regs_t *)accel_devcmdpa_buf->read();
 
-    dev_cmd->signature = DEV_CMD_SIGNATURE;
-    memcpy(&dev_cmd->cmd, &cmd, sizeof(dev_cmd->cmd));
-    accel_devcmdpa_buf->fragment_find(0, DEV_CMDREGS_CMDCPL_SIZE)->write_thru();
+    while (!cmd_complete) {
+        dev_cmd->signature = DEV_CMD_SIGNATURE;
+        dev_cmd->done = false;
+        memcpy(&dev_cmd->cmd, &cmd, sizeof(dev_cmd->cmd));
+        accel_devcmdpa_buf->fragment_find(0, DEV_CMDREGS_CMDCPL_SIZE)->write_thru();
 
-    /*
-     * Sending command thru devcmdpa so ring its doorbell.
-     *
-     * Note: we don't have a way to trigger Accel_PF timer so just go
-     * directly to its DevcmdHandler.
-    dev_cmd_db = (dev_cmd_db_t *)accel_devcmddbpa_buf->read();
-    dev_cmd_db->v = true;
-    accel_devcmddbpa_buf->write_thru();
-     */
-    accel_dev->DevcmdHandler();
+        /*
+         * Sending command thru devcmdpa so ring its doorbell.
+         *
+         * Note: we don't have a way to trigger Accel timer so just go
+         * directly to its DevcmdHandler.
+        dev_cmd_db = (dev_cmd_db_t *)accel_devcmddbpa_buf->read();
+        dev_cmd_db->v = true;
+        accel_devcmddbpa_buf->write_thru();
+         */
+        accel_dev->DevcmdHandler();
 
-    dev_cmd = (dev_cmd_regs_t *)accel_devcmdpa_cmdcpl->read_thru();
-    if ((dev_cmd->cpl.status != 0) || !dev_cmd->done) {
-        printf("%s command %u failed status %u done %u\n", __FUNCTION__,
-               dev_cmd->cmd.nop.opcode, dev_cmd->cpl.status, dev_cmd->done);
-        return nullptr;
+        dev_cmd = (dev_cmd_regs_t *)accel_devcmdpa_cmdcpl->read_thru();
+        if (!dev_cmd->done) {
+            printf("%s command %u failed done %u\n", __FUNCTION__,
+                   dev_cmd->cmd.nop.opcode, dev_cmd->done);
+            return nullptr;
+        }
+        switch (dev_cmd->cpl.status) {
+
+        case ACCEL_RC_EAGAIN:
+            usleep(10000);
+            break;
+
+        case ACCEL_RC_SUCCESS:
+            cmd_complete = true;
+            break;
+
+        default:
+            printf("%s command %u failed status %u\n", __FUNCTION__,
+                   dev_cmd->cmd.nop.opcode, dev_cmd->cpl.status);
+            return nullptr;
+        }
     }
 
     return dev_cmd;

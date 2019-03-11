@@ -66,42 +66,36 @@ MODULE_PARM_DESC(interm_buf_size, "Intermediate buffer size (default=8KB)");
 
 int body(void);
 
+static const char *sonic_error_str_table[] = {
+    ACCEL_RC_STR_TABLE
+};
+
+static const char *sonic_error_to_str(enum accel_status_code code)
+{
+	if (code < ARRAY_SIZE(sonic_error_str_table))
+		return sonic_error_str_table[code];
+	return "ACCEL_RC_UNKNOWN";
+}
+
+static const char *sonic_opcode_to_str(enum cmd_opcode opcode)
+{
+	switch (opcode) {
+
+	ACCEL_DEVCMD_OPCODE_CASE_TABLE
+	default:
+		return "DEVCMD_UNKNOWN";
+	}
+}
+
 int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 {
-	static struct cmds {
-		unsigned int cmd;
-		char *name;
-	} cmds[] = {
-		{ CMD_OPCODE_SEQ_QUEUE_INIT, "CMD_OPCODE_SEQ_QUEUE_INIT" },
-		{ CMD_OPCODE_SEQ_QUEUE_ENABLE, "CMD_OPCODE_SEQ_QUEUE_ENABLE" },
-		{ CMD_OPCODE_SEQ_QUEUE_DISABLE,
-			"CMD_OPCODE_SEQ_QUEUE_DISABLE" },
-		{ CMD_OPCODE_HANG_NOTIFY, "CMD_OPCODE_HANG_NOTIFY" },
-		{ CMD_OPCODE_SEQ_QUEUE_DUMP, "CMD_OPCODE_SEQ_QUEUE_DUMP" },
-		{ CMD_OPCODE_CRYPTO_KEY_UPDATE,
-			"CMD_OPCODE_CRYPTO_KEY_UPDATE" },
-		{ CMD_OPCODE_SEQ_QUEUE_BATCH_INIT, "CMD_OPCODE_SEQ_QUEUE_BATCH_INIT" },
-		{ CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE, "CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE" },
-		{ CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE, "CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE" },
-		{ CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE, "CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE" },
-		{ 0, 0 }, /* keep last */
-	};
-	struct cmds *cmd = cmds;
-	char *name = "UNKNOWN";
-
 	if (ctx->comp.cpl.status) {
-		while (cmd->cmd) {
-			if (cmd->cmd == ctx->cmd.cmd.opcode) {
-				name = cmd->name;
-				break;
-			}
-			cmd++;
-		}
-		if (ctx->comp.cpl.status == DEVCMD_UNKNOWN)
+		if (ctx->comp.cpl.status == ACCEL_RC_EOPCODE)
 		       return SONIC_DEVCMD_UNKNOWN;
 
-		OSAL_LOG_ERROR("(%d) %s failed: %d",
-			       ctx->cmd.cmd.opcode, name, ctx->comp.cpl.status);
+		OSAL_LOG_ERROR("(%d) %s failed: %d", ctx->cmd.cmd.opcode,
+				sonic_opcode_to_str(ctx->cmd.cmd.opcode),
+				ctx->comp.cpl.status);
 		return SONIC_DEVCMD_ERROR;
 	}
 
@@ -150,40 +144,72 @@ int sonic_napi(struct napi_struct *napi, int budget, sonic_cq_cb cb,
 	return work_done;
 }
 
-static int sonic_dev_cmd_wait(struct sonic_dev *idev, unsigned long max_wait)
+#ifdef __FreeBSD__
+#define DEV_CMD_DELAY_MS(n)  DELAY((n) * 1000)
+#else
+#define DEV_CMD_DELAY_MS(n)  msleep(n)
+#endif
+
+static int sonic_dev_cmd_wait(struct sonic_dev *idev, unsigned long max_seconds)
 {
-	unsigned long time;
-	signed long wait;
+	unsigned long max_wait, start_time, duration;
 	int done;
+	int err;
 
 #ifndef __FreeBSD__
 	WARN_ON(in_interrupt());
 #endif
 
-	/* Wait for dev cmd to complete...but no more than max_wait
+	/* Wait for dev cmd to complete, retrying if we get EAGAIN,
+	 * but don't wait any longer than max_seconds.
 	 */
-
-	time = jiffies + max_wait;
+	max_wait = jiffies + (max_seconds * HZ);
+try_again:
+	start_time = jiffies;
 	do {
-
 		done = sonic_dev_cmd_done(idev);
-#ifdef HAPS
 		if (done)
-			OSAL_LOG_INFO("DEVCMD done took %ld secs (%ld jiffies)",
-			       (jiffies + max_wait - time)/HZ,
-			       jiffies + max_wait - time);
-#endif
-		if (done)
-			return 0;
+			break;
+		DEV_CMD_DELAY_MS(10);
+	} while (!done && time_before(jiffies, max_wait));
+	duration = jiffies - start_time;
 
-		wait = schedule_timeout_interruptible(HZ / 10);
+	OSAL_LOG_INFO(
+		 "DEVCMD %s (%d) done=%d took %ld secs (%ld jiffies)",
+		 sonic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
+		 idev->dev_cmd->cmd.cmd.opcode,
+		 done, duration/HZ, duration);
 
-	} while (time_after(time, jiffies));
+	if (!done && !time_before(jiffies, max_wait)) {
+		OSAL_LOG_WARN("DEVCMD %s (%d) timeout after %ld secs",
+			 sonic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
+			 idev->dev_cmd->cmd.cmd.opcode, max_seconds);
+		return -ETIMEDOUT;
+	}
 
-#ifdef HAPS
-	OSAL_LOG_ERROR("DEVCMD timeout after %ld secs", max_wait/HZ);
-#endif
-	return -ETIMEDOUT;
+	err = sonic_dev_cmd_status(idev);
+	if (err) {
+		if (err == ACCEL_RC_EAGAIN && !time_after(jiffies, max_wait)) {
+			OSAL_LOG_DEBUG("DEV_CMD %s (%d) error, %s (%d) retrying...",
+				sonic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
+				idev->dev_cmd->cmd.cmd.opcode,
+				sonic_error_to_str(err), err);
+
+			DEV_CMD_DELAY_MS(200);
+			iowrite32(0, &idev->dev_cmd->done);
+			iowrite32(1, &idev->dev_cmd_db->v);
+			goto try_again;
+		}
+
+		OSAL_LOG_ERROR("DEV_CMD %s (%d) error, %s (%d) failed",
+			sonic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
+			idev->dev_cmd->cmd.cmd.opcode,
+			sonic_error_to_str(err), err);
+
+		return -EIO;
+	}
+
+	return 0;
 }
 
 static int sonic_dev_cmd_check_error(struct sonic_dev *idev)
@@ -199,11 +225,11 @@ static int sonic_dev_cmd_check_error(struct sonic_dev *idev)
 	return -EIO;
 }
 
-int sonic_dev_cmd_wait_check(struct sonic_dev *idev, unsigned long max_wait)
+int sonic_dev_cmd_wait_check(struct sonic_dev *idev, unsigned long max_seconds)
 {
 	int err;
 
-	err = sonic_dev_cmd_wait(idev, max_wait);
+	err = sonic_dev_cmd_wait(idev, max_seconds);
 	if (err)
 		return err;
 	return sonic_dev_cmd_check_error(idev);
@@ -318,7 +344,7 @@ static void sonic_dev_cmd_work(struct work_struct *work)
 
 	sonic_dev_cmd_go(&sonic->idev, (void *)&ctx->cmd);
 
-	err = sonic_dev_cmd_wait_check(&sonic->idev, HZ * devcmd_timeout);
+	err = sonic_dev_cmd_wait_check(&sonic->idev, devcmd_timeout);
 	if (err)
 		goto err_out;
 
@@ -419,7 +445,7 @@ int sonic_identify(struct sonic *sonic)
 
 	sonic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
 
-	err = sonic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	err = sonic_dev_cmd_wait_check(idev, devcmd_timeout);
 	if (err)
 		goto err_out_unmap;
 
@@ -462,7 +488,7 @@ int sonic_reset(struct sonic *sonic)
 	struct sonic_dev *idev = &sonic->idev;
 
 	sonic_dev_cmd_reset(idev);
-	return sonic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	return sonic_dev_cmd_wait_check(idev, devcmd_timeout);
 }
 
 static int __init sonic_init_module(void)
@@ -576,6 +602,16 @@ void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index)
 	union dev_cmd cmd = {
 		.lif_init.opcode = CMD_OPCODE_LIF_INIT,
 		.lif_init.index = index,
+	};
+
+	sonic_dev_cmd_go(idev, &cmd);
+}
+
+void sonic_dev_cmd_lif_reset(struct sonic_dev *idev, u32 index)
+{
+	union dev_cmd cmd = {
+		.lif_reset.opcode = CMD_OPCODE_LIF_RESET,
+		.lif_reset.index = index,
 	};
 
 	sonic_dev_cmd_go(idev, &cmd);

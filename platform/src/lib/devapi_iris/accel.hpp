@@ -24,7 +24,9 @@ public:
     static devapi_accel *get_accel() {return accel_; };
     static devapi_accel *find_or_create();
 
-    sdk_ret_t accel_rgroup_add(string name);
+    sdk_ret_t accel_rgroup_add(string name,
+                               uint64_t metrics_mem_addr,
+                               uint32_t metrics_mem_size);
     sdk_ret_t accel_rgroup_del(string name);
     sdk_ret_t accel_rgroup_ring_add(string name,
                                     std::vector<std::pair<const std::string,uint32_t>>& ring_vec);

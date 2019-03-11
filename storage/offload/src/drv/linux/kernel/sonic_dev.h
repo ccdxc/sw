@@ -32,6 +32,7 @@ union dev_cmd {
 	struct nop_cmd nop;
 	struct identify_cmd identify;
 	struct lif_init_cmd lif_init;
+	struct lif_reset_cmd lif_reset;
 	struct adminq_init_cmd adminq_init;
 };
 
@@ -375,6 +376,7 @@ void sonic_dev_cmd_reset(struct sonic_dev *idev);
 void sonic_dev_cmd_hang_notify(struct sonic_dev *idev);
 void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr);
 void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index);
+void sonic_dev_cmd_lif_reset(struct sonic_dev *idev, u32 index);
 void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct queue *adminq,
 			       unsigned int index, unsigned int lif_index,
 			       unsigned int intr_index);

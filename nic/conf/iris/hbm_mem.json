@@ -480,6 +480,15 @@
             "name": "p4_hwerr_stats",
             "size": "1K",
             "reset": true
+        },
+        {
+            "name": "storage-qinfo",
+            "size": "1M"
+        },
+        {
+            "name": "storage-rgroup",
+            "size": "4K",
+            "reset": true
         }
     ]
 }

@@ -25,6 +25,8 @@ service AccelRGroup {
 
 message AccelRGroupAddRequest {
     string rgroup_name = 1;
+    fixed64 metrics_mem_addr = 2;
+    uint32 metrics_mem_size = 3;
 }
 
 message AccelRGroupAddRequestMsg {

@@ -156,10 +156,6 @@ int setup_seq_q_state(int src_lif, int src_qtype,
      * Seq LIF was created thru nicmgr so we must use its PDClient API
      * to access the qstate. (The HAL itself was not informed about this LIF).
      */
-#if 0
-    ret = nicmgr_pd_client->lm_->WriteQState(src_lif, src_qtype, src_qid,
-                                             (uint8_t *)&q_state, sizeof(q_state));
-#endif
     ret = nicmgr_pd_client->lm_->write_qstate(src_lif, src_qtype, src_qid,
                                              (uint8_t *)&q_state, sizeof(q_state));
     if (ret < 0) {

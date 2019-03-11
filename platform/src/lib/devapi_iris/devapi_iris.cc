@@ -389,7 +389,9 @@ end:
 }
 
 sdk_ret_t
-devapi_iris::accel_rgroup_add(string name)
+devapi_iris::accel_rgroup_add(string name,
+                              uint64_t metrics_mem_addr,
+                              uint32_t metrics_mem_size)
 {
     sdk_ret_t ret = SDK_RET_OK;
     devapi_accel *accel = NULL;
@@ -400,7 +402,7 @@ devapi_iris::accel_rgroup_add(string name)
         ret = SDK_RET_ERR;
         goto end;
     }
-    ret = accel->accel_rgroup_add(name);
+    ret = accel->accel_rgroup_add(name, metrics_mem_addr, metrics_mem_size);
 
 end:
     return ret;

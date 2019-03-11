@@ -148,6 +148,7 @@ class Device {
 public:
     enum DeviceType GetType() { return type; }
     void SetType(enum DeviceType type) { this->type = type;}
+    virtual void DelphiMountEventHandler(bool mounted) {}
 private:
     enum DeviceType type;
 };
@@ -167,11 +168,10 @@ public:
 
     void HalEventHandler(bool is_up);
     void LinkEventHandler(port_status_t *evd);
+    void DelphiMountEventHandler(bool mounted);
 
     void CreateUplinkVRFs();
     void SetHalClient(devapi *dev_api);
-
-    void ThreadsWaitJoin(void);
 
     int GenerateQstateInfoJson(std::string qstate_info_file);
     static string ParseDeviceConf(string input_arg);

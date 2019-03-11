@@ -9,6 +9,8 @@
  * Storage HBM handle as defined in nic/conf/iris/hbm_mem.json
  */
 #define STORAGE_SEQ_HBM_HANDLE                  "storage"
+#define STORAGE_QINFO_HBM_HANDLE                "storage-qinfo"
+#define STORAGE_RMETRICS_HBM_HANDLE             "storage-rgroup"
 
 /**
  * Storage Sequencer p4+ program names

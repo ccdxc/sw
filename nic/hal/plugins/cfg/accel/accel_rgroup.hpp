@@ -80,6 +80,8 @@ typedef void (*accel_rgroup_ring_metrics_cb_t)(void *user_ctx,
                                                const accel_rgroup_ring_metrics_t& metrics);
 
 
+hal_ret_t accel_rgroup_init(int tid);
+hal_ret_t accel_rgroup_fini(int tid);
 hal_ret_t accel_rgroup_add(const AccelRGroupAddRequest& request,
                            AccelRGroupAddResponse *response);
 hal_ret_t accel_rgroup_del(const AccelRGroupDelRequest& request,

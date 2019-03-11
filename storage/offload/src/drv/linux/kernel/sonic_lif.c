@@ -702,6 +702,14 @@ int sonic_lifs_alloc(struct sonic *sonic)
 	return 0;
 }
 
+static void sonic_lif_reset(struct lif *lif)
+{
+	struct sonic_dev *idev = &lif->sonic->idev;
+
+	sonic_dev_cmd_lif_reset(idev, lif->index);
+	sonic_dev_cmd_wait_check(idev, devcmd_timeout);
+}
+
 static void sonic_per_core_resources_free(struct lif *lif)
 {
 #ifndef __FreeBSD__
@@ -761,6 +769,20 @@ static int sonic_sysctl_init(struct lif *lif)
 }
 #endif
 
+static void sonic_lif_free(struct lif *lif)
+{
+	sonic_lif_reset(lif);
+
+        flush_scheduled_work();
+        sonic_qcqs_free(lif);
+        sonic_per_core_resources_free(lif);
+#if 0
+	cancel_work_sync(&lif->deferred.work);
+#endif
+	list_del(&lif->list);
+        devm_kfree(lif->sonic->dev, lif);
+}
+
 void sonic_lifs_free(struct sonic *sonic)
 {
 	struct list_head *cur, *tmp;
@@ -768,10 +790,7 @@ void sonic_lifs_free(struct sonic *sonic)
 
 	list_for_each_safe(cur, tmp, &sonic->lifs) {
 		lif = list_entry(cur, struct lif, list);
-		list_del(&lif->list);
-		flush_scheduled_work();
-		sonic_qcqs_free(lif);
-		sonic_per_core_resources_free(lif);
+		sonic_lif_free(lif);
 	}
 }
 
@@ -901,7 +920,7 @@ static int sonic_lif_adminq_init(struct lif *lif)
 	int err;
 
 	sonic_dev_cmd_adminq_init(idev, q, 0, lif->index, 0);
-	err = sonic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	err = sonic_dev_cmd_wait_check(idev, devcmd_timeout);
 	if (err)
 		return err;
 
@@ -1360,7 +1379,12 @@ static int sonic_lif_init(struct lif *lif)
 		return err;
 
 	sonic_dev_cmd_lif_init(idev, lif->index);
-	err = sonic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	err = sonic_dev_cmd_wait_check(idev, devcmd_timeout);
+	if (err)
+		return err;
+
+	sonic_dev_cmd_lif_reset(idev, lif->index);
+	err = sonic_dev_cmd_wait_check(idev, devcmd_timeout);
 	if (err)
 		return err;
 
@@ -1399,6 +1423,7 @@ err_out_per_core_res_deinit:
 
 err_out_adminq_deinit:
 	sonic_lif_qcq_deinit(lif, lif->adminqcq);
+	sonic_lif_reset(lif);
 
 	return err;
 }

@@ -357,6 +357,15 @@
             "name": "eth_desc_cache",
             "size" : "65536K",
             "cache": "p4plus-all"
+        },
+        {
+            "name": "storage-qinfo",
+            "size": "1M"
+        },
+        {
+            "name": "storage-rgroup",
+            "size": "4K",
+            "reset": true
         }
     ]
 }

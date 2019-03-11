@@ -20,6 +20,170 @@ func (m *AccelSeqQueueKey) Reset()         { *m = AccelSeqQueueKey{} }
 func (m *AccelSeqQueueKey) String() string { return proto.CompactTextString(m) }
 func (*AccelSeqQueueKey) ProtoMessage()    {}
 
+type AccelSeqQueueInfoMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key AccelSeqQueueKey
+
+	QStateAddr metrics.Counter
+
+	QGroup metrics.Counter
+
+	CoreId metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *AccelSeqQueueInfoMetrics) GetKey() AccelSeqQueueKey {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *AccelSeqQueueInfoMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.QStateAddr.Size()
+
+	sz += mtr.QGroup.Size()
+
+	sz += mtr.CoreId.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *AccelSeqQueueInfoMetrics) Unmarshal() error {
+	var offset int
+
+	proto.Unmarshal(mtr.metrics.GetKey(), &mtr.key)
+
+	mtr.QStateAddr = mtr.metrics.GetCounter(offset)
+	offset += mtr.QStateAddr.Size()
+
+	mtr.QGroup = mtr.metrics.GetCounter(offset)
+	offset += mtr.QGroup.Size()
+
+	mtr.CoreId = mtr.metrics.GetCounter(offset)
+	offset += mtr.CoreId.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *AccelSeqQueueInfoMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "QStateAddr" {
+		return offset
+	}
+	offset += mtr.QStateAddr.Size()
+
+	if fldName == "QGroup" {
+		return offset
+	}
+	offset += mtr.QGroup.Size()
+
+	if fldName == "CoreId" {
+		return offset
+	}
+	offset += mtr.CoreId.Size()
+
+	return offset
+}
+
+// SetQStateAddr sets cunter in shared memory
+func (mtr *AccelSeqQueueInfoMetrics) SetQStateAddr(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("QStateAddr"))
+	return nil
+}
+
+// SetQGroup sets cunter in shared memory
+func (mtr *AccelSeqQueueInfoMetrics) SetQGroup(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("QGroup"))
+	return nil
+}
+
+// SetCoreId sets cunter in shared memory
+func (mtr *AccelSeqQueueInfoMetrics) SetCoreId(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CoreId"))
+	return nil
+}
+
+// AccelSeqQueueInfoMetricsIterator is the iterator object
+type AccelSeqQueueInfoMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *AccelSeqQueueInfoMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *AccelSeqQueueInfoMetricsIterator) Next() *AccelSeqQueueInfoMetrics {
+	mtr := it.iter.Next()
+	tmtr := &AccelSeqQueueInfoMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *AccelSeqQueueInfoMetricsIterator) Find(key AccelSeqQueueKey) (*AccelSeqQueueInfoMetrics, error) {
+
+	buf, _ := proto.Marshal(&key)
+	mtr, err := it.iter.Find(buf)
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &AccelSeqQueueInfoMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *AccelSeqQueueInfoMetricsIterator) Create(key AccelSeqQueueKey) (*AccelSeqQueueInfoMetrics, error) {
+	tmtr := &AccelSeqQueueInfoMetrics{}
+
+	buf, _ := proto.Marshal(&key)
+	mtr := it.iter.Create(buf, tmtr.Size())
+
+	tmtr = &AccelSeqQueueInfoMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *AccelSeqQueueInfoMetricsIterator) Delete(key AccelSeqQueueKey) error {
+
+	buf, _ := proto.Marshal(&key)
+	return it.iter.Delete(buf)
+
+}
+
+// Free frees the iterator memory
+func (it *AccelSeqQueueInfoMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewAccelSeqQueueInfoMetricsIterator returns an iterator
+func NewAccelSeqQueueInfoMetricsIterator() (*AccelSeqQueueInfoMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("AccelSeqQueueInfoMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &AccelSeqQueueInfoMetricsIterator{iter: iter}, nil
+}
+
 type AccelSeqQueueMetrics struct {
 	ObjectMeta api.ObjectMeta
 
@@ -487,6 +651,10 @@ type AccelHwRingMetrics struct {
 
 	key AccelHwRingKey
 
+	PIndex metrics.Counter
+
+	CIndex metrics.Counter
+
 	InputBytes metrics.Counter
 
 	OutputBytes metrics.Counter
@@ -505,6 +673,10 @@ func (mtr *AccelHwRingMetrics) GetKey() AccelHwRingKey {
 func (mtr *AccelHwRingMetrics) Size() int {
 	sz := 0
 
+	sz += mtr.PIndex.Size()
+
+	sz += mtr.CIndex.Size()
+
 	sz += mtr.InputBytes.Size()
 
 	sz += mtr.OutputBytes.Size()
@@ -519,6 +691,12 @@ func (mtr *AccelHwRingMetrics) Unmarshal() error {
 	var offset int
 
 	proto.Unmarshal(mtr.metrics.GetKey(), &mtr.key)
+
+	mtr.PIndex = mtr.metrics.GetCounter(offset)
+	offset += mtr.PIndex.Size()
+
+	mtr.CIndex = mtr.metrics.GetCounter(offset)
+	offset += mtr.CIndex.Size()
 
 	mtr.InputBytes = mtr.metrics.GetCounter(offset)
 	offset += mtr.InputBytes.Size()
@@ -536,6 +714,16 @@ func (mtr *AccelHwRingMetrics) Unmarshal() error {
 func (mtr *AccelHwRingMetrics) getOffset(fldName string) int {
 	var offset int
 
+	if fldName == "PIndex" {
+		return offset
+	}
+	offset += mtr.PIndex.Size()
+
+	if fldName == "CIndex" {
+		return offset
+	}
+	offset += mtr.CIndex.Size()
+
 	if fldName == "InputBytes" {
 		return offset
 	}
@@ -552,6 +740,18 @@ func (mtr *AccelHwRingMetrics) getOffset(fldName string) int {
 	offset += mtr.SoftResets.Size()
 
 	return offset
+}
+
+// SetPIndex sets cunter in shared memory
+func (mtr *AccelHwRingMetrics) SetPIndex(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PIndex"))
+	return nil
+}
+
+// SetCIndex sets cunter in shared memory
+func (mtr *AccelHwRingMetrics) SetCIndex(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("CIndex"))
+	return nil
 }
 
 // SetInputBytes sets cunter in shared memory

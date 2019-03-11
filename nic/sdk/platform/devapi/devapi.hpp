@@ -58,7 +58,9 @@ public:
     }
 
     // accel APIs
-    virtual sdk_ret_t accel_rgroup_add(string name) {
+    virtual sdk_ret_t accel_rgroup_add(string name,
+                                       uint64_t metrics_mem_addr,
+                                       uint32_t metrics_mem_size) {
         return SDK_RET_INVALID_OP;
     }
     virtual sdk_ret_t accel_rgroup_del(string name) {

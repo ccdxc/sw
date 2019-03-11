@@ -21,6 +21,7 @@ int nicmgr_if_identify(uint64_t *ret_seq_lif,
                        accel_ring_t *ret_accel_ring_tbl = nullptr,
                        uint32_t accel_ring_tbl_size = 0);
 int nicmgr_if_lif_init(uint64_t seq_lif);
+int nicmgr_if_lif_reset(uint64_t seq_lif);
 int nicmgr_if_admin_queue_init(uint64_t seq_lif,
                                uint16_t log2_num_entries,
                                uint64_t base_addr);
@@ -32,6 +33,8 @@ int nicmgr_if_seq_queue_init(uint64_t lif,
                              uint16_t log2_num_entries,
                              uint64_t base_addr,
                              uint16_t log2_entry_size);
+int nicmgr_if_seq_queue_init_complete(void);
+
 }  // namespace nicmgr_if
 
 #endif /* _NICMGR_IF_HPP_ */

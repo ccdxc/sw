@@ -8,7 +8,9 @@
 /*
  * Operations on user selected group of Accelerator rings and sub-rings.
  */
- 
+
+#define ACCEL_RGROUP_METRICS_TIMER_MS   500
+
 namespace hal {
 
 namespace pd {
@@ -119,6 +121,21 @@ namespace pd {
     } while (false)
     
 /*
+ * Calculate offset into metrics memory
+ */
+#define ACCEL_METRICS_MEM_OFFSET(ring, sub_ring)                            \
+    (((ring) * (ACCEL_SUB_RING_MAX * sizeof(accel_ring_metrics_t))) +       \
+     ((sub_ring) * sizeof(accel_ring_metrics_t)))
+
+/*
+ * Write to metrics memory
+ */
+#define ACCEL_METRICS_MEM_WRITE(addr, buf, size)                            \
+    do {                                                                    \
+        sdk::asic::asic_mem_write(addr, buf, size);                         \
+    } while (false)
+
+/*
  * Get handle to Accelerator control block
  */
 static inline cap_hens_csr_dhs_crypto_ctl_t&
@@ -168,6 +185,10 @@ accel_shadow_pndx_write(types::BarcoRings ring_type,
     return HAL_RET_OK;
 }
 
+static void accel_rgroup_timer(void *timer,
+                               uint32_t timer_id,
+                               void *user_ctx);
+
 static accel_ring_cp_t          ring_cp(types::BarcoRings::BARCO_RING_CP);
 static accel_ring_cp_hot_t      ring_cp_hot(types::BarcoRings::BARCO_RING_CP_HOT);
 static accel_ring_dc_t          ring_dc(types::BarcoRings::BARCO_RING_DC);
@@ -190,6 +211,39 @@ static accel_ring_ops_map_t     supported_ring_ops_map = {
 };
 
 static accel_rgroup_map_t       rgroup_map;
+static void                     *rgroup_timer;
+
+hal_ret_t
+accel_rgroup_init(int tid)
+{
+    if (!rgroup_timer && (tid == hal::HAL_THREAD_ID_PERIODIC)) {
+
+        while (!sdk::lib::periodic_thread_is_running()) {
+            pthread_yield();
+        }
+
+        rgroup_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_ACCEL_RGROUP,
+                                 ACCEL_RGROUP_METRICS_TIMER_MS, nullptr,
+                                 accel_rgroup_timer, true);
+        if (!rgroup_timer) {
+            HAL_TRACE_ERR("Failed to start periodic rgroup timer");
+            return HAL_RET_ERR;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+
+hal_ret_t
+accel_rgroup_fini(int tid)
+{
+     if (rgroup_timer && (tid == hal::HAL_THREAD_ID_PERIODIC)) {
+         sdk::lib::timer_delete(rgroup_timer);
+         rgroup_timer = nullptr;
+     }
+     return HAL_RET_OK;
+}
+
 
 /*
  * Located supported ring_ops given a ring name.
@@ -219,7 +273,9 @@ accel_rgroup_find(const char *rgroup_name)
  * Add a new ring group.
  */
 hal_ret_t
-accel_rgroup_add(const char *rgroup_name)
+accel_rgroup_add(const char *rgroup_name,
+                 uint64_t metrics_mem_addr,
+                 uint32_t metrics_mem_size)
 {
     accel_rgroup_t  *rgroup;
 
@@ -227,7 +283,16 @@ accel_rgroup_add(const char *rgroup_name)
         return HAL_RET_ENTRY_EXISTS;
     }
 
-    rgroup = new (std::nothrow) accel_rgroup_t();
+    if (metrics_mem_size) {
+        if (metrics_mem_size < ACCEL_METRICS_MEM_OFFSET(ACCEL_RING_ID_MAX, 0)) {
+            HAL_TRACE_ERR("rgroup {} metrics_mem_size {} too small",
+                          rgroup_name, metrics_mem_size);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
+    rgroup = new (std::nothrow) accel_rgroup_t(metrics_mem_addr,
+                                               metrics_mem_size);
     if (!rgroup) {
         HAL_TRACE_ERR("Failed to allocate rgroup {}", rgroup_name);
         return HAL_RET_OOM;
@@ -1469,6 +1534,65 @@ accel_ring_gcm1_t::metrics_get(uint32_t ring_handle,
     (*cb_func)(usr_ctx, metrics);
     return HAL_RET_OK;
 }
+
+static void
+rgroup_indices_get_cb(void *user_ctx,
+                      const accel_rgroup_ring_indices_t& indices)
+{
+    accel_ring_metrics_t *fill_ctx;
+
+    if ((indices.ring_handle < ACCEL_RING_ID_MAX) &&
+        (indices.sub_ring < ACCEL_SUB_RING_MAX)) {
+
+        fill_ctx = (accel_ring_metrics_t *)((char *)user_ctx +
+            ACCEL_METRICS_MEM_OFFSET(indices.ring_handle, indices.sub_ring));
+        fill_ctx->pndx = indices.pndx;
+        fill_ctx->cndx = indices.cndx;
+    }
+}
+
+static void
+rgroup_metrics_get_cb(void *user_ctx,
+                      const accel_rgroup_ring_metrics_t& metrics)
+{
+    accel_ring_metrics_t *fill_ctx;
+
+    if ((metrics.ring_handle < ACCEL_RING_ID_MAX) &&
+        (metrics.sub_ring < ACCEL_SUB_RING_MAX)) {
+
+        fill_ctx = (accel_ring_metrics_t *)((char *)user_ctx +
+            ACCEL_METRICS_MEM_OFFSET(metrics.ring_handle, metrics.sub_ring));
+        fill_ctx->input_bytes  = metrics.input_bytes;
+        fill_ctx->output_bytes = metrics.output_bytes;
+        fill_ctx->soft_resets  = metrics.soft_resets;
+    }
+}
+
+static void
+accel_rgroup_timer(void *timer,
+                   uint32_t timer_id,
+                   void *user_ctx)
+{
+    accel_rgroup_t           *rgroup;
+    accel_rgroup_iter_c      iter;
+    accel_ring_metrics_t     metrics[ACCEL_RING_ID_MAX][ACCEL_SUB_RING_MAX];
+
+    iter = rgroup_map.begin();
+    while (iter != rgroup_map.end()) {
+        rgroup = iter->second;
+        if (rgroup->metrics_size_get() >= sizeof(metrics)) {
+            memset(metrics, 0, sizeof(metrics));
+            rgroup->indices_get(ACCEL_SUB_RING_ALL,
+                                rgroup_indices_get_cb, metrics);
+            rgroup->metrics_get(ACCEL_SUB_RING_ALL,
+                                rgroup_metrics_get_cb, metrics);
+            ACCEL_METRICS_MEM_WRITE(rgroup->metrics_addr_get(),
+                                    (uint8_t *)metrics, sizeof(metrics));
+        }
+        iter++;
+    }
+}
+
 
 } // namespace pd
 

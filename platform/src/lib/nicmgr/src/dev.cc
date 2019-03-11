@@ -407,7 +407,7 @@ Device *
 DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 {
     Eth *eth_dev;
-    Accel_PF *accel_dev;
+    AccelDev *accel_dev;
 
     switch (type) {
     case MNIC:
@@ -424,7 +424,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         devices[eth_dev->GetName()] = eth_dev;
         return (Device *)eth_dev;
     case ACCEL:
-        accel_dev = new Accel_PF(dev_api, dev_spec, pd);
+        accel_dev = new AccelDev(dev_api, dev_spec, pd);
         accel_dev->SetType(type);
         devices[accel_dev->GetName()] = accel_dev;
         return (Device *)accel_dev;
@@ -457,7 +457,7 @@ DeviceManager::SetHalClient(devapi *dev_api)
             eth_dev->SetHalClient(dev_api);
         }
         if (dev->GetType() == ACCEL) {
-            Accel_PF *accel_dev = (Accel_PF *)dev;
+            AccelDev *accel_dev = (AccelDev *)dev;
             accel_dev->SetHalClient(dev_api);
         }
     }
@@ -510,7 +510,7 @@ DeviceManager::HalEventHandler(bool status)
             eth_dev->HalEventHandler(status);
         }
         if (dev->GetType() == ACCEL) {
-            Accel_PF *accel_dev = (Accel_PF *)dev;
+            AccelDev *accel_dev = (AccelDev *)dev;
             accel_dev->HalEventHandler(status);
         }
     }
@@ -527,6 +527,17 @@ DeviceManager::LinkEventHandler(port_status_t *evd)
             Eth *eth_dev = (Eth *) dev;
             eth_dev->LinkEventHandler(evd);
         }
+    }
+}
+
+void
+DeviceManager::DelphiMountEventHandler(bool mounted)
+{
+    NIC_HEADER_TRACE("Mount Event");
+
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        dev->DelphiMountEventHandler(mounted);
     }
 }
 
@@ -548,14 +559,3 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
     return 0;
 }
 
-void
-DeviceManager::ThreadsWaitJoin(void)
-{
-    for (auto it = devices.begin(); it != devices.end(); it++) {
-        Device *dev = it->second;
-        if (dev->GetType() == ACCEL) {
-            Accel_PF *accel_dev = (Accel_PF *)dev;
-            accel_dev->ThreadsWaitJoin();
-        }
-    }
-}
