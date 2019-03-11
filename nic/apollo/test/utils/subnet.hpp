@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/include/api/pds_vcn.hpp"
 #include "nic/apollo/include/api/pds_subnet.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {
 
@@ -30,6 +31,8 @@ public:
     pds_subnet_id_t id;
     pds_vcn_key_t vcn;
     std::string cidr_str;
+    std::string vr_ip;
+    std::string vr_mac;
     pds_route_table_id_t v4_route_table;    /// Route table id
     pds_route_table_id_t v6_route_table;    /// Route table id
 

@@ -23,6 +23,7 @@ namespace impl {
 
  /**< forward declaration */
 class tep_impl;
+class mapping_impl;
 
 /**
  * @brief    state maintained for teps
@@ -54,6 +55,7 @@ private:
     directmap *tep_tx_tbl(void) { return tep_tx_tbl_; }
     directmap *nh_tx_tbl(void) { return nh_tx_tbl_; }
     friend class tep_impl;   /**< tep_impl class is friend of tep_impl_state */
+    friend class mapping_impl;   /**< mapping_impl class is friend of tep_impl_state */
 
 private:
     indexer      *tep_idxr_;    /**< indexer to allocate hw ids for TEPs */

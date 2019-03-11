@@ -46,7 +46,8 @@ public:
     /// \brief Read VNIC info
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_vnic_id_t vnic_id, pds_vnic_info_t *info);
+    sdk_ret_t read(pds_vnic_id_t vnic_id, pds_vnic_info_t *info,
+                   bool compare_spec = true);
 
     /// \brief Update VNIC configuration
     ///

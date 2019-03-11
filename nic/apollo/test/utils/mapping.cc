@@ -21,20 +21,17 @@ mapping_util::mapping_util() {
 }
 
 mapping_util::mapping_util(pds_vcn_id_t vcn_id, std::string vnic_ip,
-                           std::string vnic_mac, uint8_t vnic_ip_af) {
+                           std::string vnic_mac) {
     this->vcn_id = vcn_id;
     this->vnic_ip = vnic_ip;
     this->vnic_mac = vnic_mac;
-    this->vnic_ip_af = vnic_ip_af;
 }
 
 mapping_util::mapping_util(pds_vcn_id_t vcn_id, std::string vnic_ip,
-                           std::string vnic_mac, pds_vnic_id_t vnic_id,
-                           uint8_t vnic_ip_af) {
+                           std::string vnic_mac, pds_vnic_id_t vnic_id) {
     this->vcn_id = vcn_id;
     this->vnic_ip = vnic_ip;
     this->vnic_mac = vnic_mac;
-    this->vnic_ip_af = vnic_ip_af;
     this->vnic_id = vnic_id;
 }
 
@@ -42,35 +39,58 @@ mapping_util::~mapping_util() {}
 
 sdk::sdk_ret_t
 mapping_util::create(void) {
-    pds_mapping_spec_t map = {0};
+    pds_mapping_spec_t spec = {0};
     struct in_addr ipaddr;
 
-    map.key.vcn.id = vcn_id;
-    extract_ip_addr(vnic_ip.c_str(), vnic_ip_af, &map.key.ip_addr);
-    map.subnet.id     = sub_id;
-    map.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-    map.fabric_encap.val.mpls_tag = mpls_slot;
+    spec.key.vcn.id = vcn_id;
+    extract_ip_addr(vnic_ip.c_str(), &spec.key.ip_addr);
+    spec.subnet.id     = sub_id;
+    spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+    spec.fabric_encap.val.mpls_tag = mpls_slot;
     inet_aton(tep_ip.c_str(), &ipaddr);
-    map.tep.ip_addr = ntohl(ipaddr.s_addr);
-    mac_str_to_addr((char *)vnic_mac.c_str(), map.overlay_mac);
-    map.vnic.id         = vnic_id;
-    map.public_ip_valid = false;
+    spec.tep.ip_addr = ntohl(ipaddr.s_addr);
+    mac_str_to_addr((char *)vnic_mac.c_str(), spec.overlay_mac);
+    spec.vnic.id         = vnic_id;
+    spec.public_ip_valid = false;
     if (!public_ip.empty()) {
-        extract_ip_addr(public_ip.c_str(), public_ip_af, &map.public_ip);
-        map.public_ip_valid = true;
+        extract_ip_addr(public_ip.c_str(), &spec.public_ip);
+        spec.public_ip_valid = true;
     }
-    return pds_mapping_create(&map);
+    return pds_mapping_create(&spec);
 }
 
 sdk::sdk_ret_t
-mapping_util::read(pds_vcn_id_t vcn_id, std::string vnic_ip, uint8_t vnic_ip_af,
-                   pds_mapping_info_t *info) {
+mapping_util::read(pds_vcn_id_t vcn_id, std::string vnic_ip,
+                   pds_mapping_info_t *info, bool compare_spec) {
+    sdk_ret_t rv;
     pds_mapping_key_t key = {0};
 
     key.vcn.id = vcn_id;
-    extract_ip_addr(vnic_ip.c_str(), vnic_ip_af, &key.ip_addr);
+    extract_ip_addr(vnic_ip.c_str(), &key.ip_addr);
     memset(info, 0, sizeof(*info));
-    return pds_mapping_read(&key, info);
+    rv = pds_mapping_read(&key, info);
+    if (rv != SDK_RET_OK) {
+        return rv;
+    }
+    if (compare_spec) {
+        mac_addr_t mac;
+        mac_str_to_addr((char *)vnic_mac.c_str(), mac);
+        // SDK_ASSERT(vcn_id == info->spec.key.vcn.id); // Read returns hw_id
+        // SDK_ASSERT(sub_id == info->spec.subnet.id); // This is hw_id during read
+        SDK_ASSERT(strcmp(vnic_ip.c_str(), ipaddr2str(&info->spec.key.ip_addr)) == 0);
+        SDK_ASSERT(PDS_ENCAP_TYPE_MPLSoUDP == info->spec.fabric_encap.type);
+        SDK_ASSERT(mpls_slot == info->spec.fabric_encap.val.mpls_tag);
+        SDK_ASSERT(memcmp(mac, info->spec.overlay_mac, sizeof(mac)) == 0);
+        SDK_ASSERT(strcmp(tep_ip.c_str(), ipv4addr2str(info->spec.tep.ip_addr)) == 0);
+        if (!public_ip.empty()) {
+            SDK_ASSERT(true == info->spec.public_ip_valid);
+            SDK_ASSERT(strcmp(public_ip.c_str(), ipaddr2str(&info->spec.public_ip)) == 0);
+            // SDK_ASSERT(vnic_id == info->spec.vnic.id); // Read returns hw_id
+        } else {
+            SDK_ASSERT(false == info->spec.public_ip_valid);
+        }
+    }
+    return SDK_RET_OK;
 }
 
 sdk::sdk_ret_t
@@ -99,7 +119,7 @@ mapping_util::remove(void) {
     pds_mapping_key_t key;
 
     key.vcn.id = vcn_id;
-    extract_ip_addr(vnic_ip.c_str(), vnic_ip_af, &key.ip_addr);
+    extract_ip_addr(vnic_ip.c_str(), &key.ip_addr);
     return pds_mapping_delete(&key);
 #endif
     return SDK_RET_ERR;

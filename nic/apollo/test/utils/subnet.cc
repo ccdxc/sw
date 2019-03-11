@@ -24,19 +24,28 @@ subnet_util::~subnet_util() {}
 
 sdk::sdk_ret_t
 subnet_util::create() {
-    pds_subnet_spec_t pds_subnet;
+    pds_subnet_spec_t spec;
     ip_prefix_t ip_pfx;
 
     SDK_ASSERT(str2ipv4pfx((char *)this->cidr_str.c_str(), &ip_pfx) == 0);
-    memset(&pds_subnet, 0, sizeof(pds_subnet_spec_t));
-    pds_subnet.vcn.id = this->vcn.id;
-    pds_subnet.key.id = this->id;
-    pds_subnet.pfx = ip_pfx;
-    MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
-                       (uint64_t)pds_subnet.vr_ip.addr.v4_addr);
-    pds_subnet.v4_route_table.id = this->v4_route_table;
-    pds_subnet.v6_route_table.id = this->v6_route_table;
-    return (pds_subnet_create(&pds_subnet));
+    memset(&spec, 0, sizeof(pds_subnet_spec_t));
+    spec.vcn.id = this->vcn.id;
+    spec.key.id = this->id;
+    spec.pfx = ip_pfx;
+    // Set the subnets IP (virtual router interface IP)
+    if (!vr_ip.empty()) {
+        extract_ip_addr(this->vr_ip.c_str(), &spec.vr_ip);
+    }
+    // Derive mac address from vr_ip if it has not been configured
+    if (vr_mac.empty()) {
+        MAC_UINT64_TO_ADDR(spec.vr_mac,
+                       (uint64_t)spec.vr_ip.addr.v4_addr);
+    } else {
+        mac_str_to_addr((char *)vr_mac.c_str(), spec.vr_mac);
+    }
+    spec.v4_route_table.id = this->v4_route_table;
+    spec.v6_route_table.id = this->v6_route_table;
+    return (pds_subnet_create(&spec));
 }
 
 sdk::sdk_ret_t

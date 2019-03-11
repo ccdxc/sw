@@ -58,9 +58,8 @@ device_impl::fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats) {
     p4i_drop_stats_actiondata_t data = { 0 };
 
     for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; ++i) {
-        // @kalyanbade - please get this fixed, lets not bypass table mgmt APIs
-        if (p4pd_entry_read(P4TBL_ID_P4I_DROP_STATS, i,
-                            &key, &key_mask, &data) == P4PD_SUCCESS) {
+        if (p4pd_global_entry_read(P4TBL_ID_P4I_DROP_STATS, i,
+                                   &key, &key_mask, &data) == P4PD_SUCCESS) {
             memcpy(&pkts,
                    data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts,
                    sizeof(data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts));

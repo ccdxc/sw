@@ -37,27 +37,45 @@ vnic_util::~vnic_util() {}
 
 sdk::sdk_ret_t
 vnic_util::create(void) {
-    pds_vnic_spec_t vnic = {0};
+    pds_vnic_spec_t spec = {0};
 
-    vnic.vcn.id = vcn_id;
-    vnic.subnet.id = sub_id;
-    vnic.key.id = vnic_id;
-    vnic.wire_vlan = vlan_tag;
-    vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-    vnic.fabric_encap.val.mpls_tag = mpls_slot;
-    mac_str_to_addr((char *)vnic_mac.c_str(), vnic.mac_addr);
-    vnic.rsc_pool_id = rsc_pool_id;
-    vnic.src_dst_check = src_dst_check;
-    return pds_vnic_create(&vnic);
+    spec.vcn.id = vcn_id;
+    spec.subnet.id = sub_id;
+    spec.key.id = vnic_id;
+    spec.wire_vlan = vlan_tag;
+    spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+    spec.fabric_encap.val.mpls_tag = mpls_slot;
+    mac_str_to_addr((char *)vnic_mac.c_str(), spec.mac_addr);
+    spec.rsc_pool_id = rsc_pool_id;
+    spec.src_dst_check = src_dst_check;
+    return pds_vnic_create(&spec);
 }
 
 sdk::sdk_ret_t
-vnic_util::read(pds_vnic_id_t vnic_id, pds_vnic_info_t *info) {
+vnic_util::read(pds_vnic_id_t vnic_id, pds_vnic_info_t *info, bool compare_spec) {
+    sdk_ret_t rv;
     pds_vnic_key_t key;
 
     key.id = vnic_id;
     memset(info, 0, sizeof(*info));
-    return pds_vnic_read(&key, info);
+    rv = pds_vnic_read(&key, info);
+    if (rv != SDK_RET_OK) {
+        return rv;
+    }
+    if (compare_spec) {
+        mac_addr_t mac;
+        mac_str_to_addr((char *)vnic_mac.c_str(), mac);
+        SDK_ASSERT(vnic_id == info->spec.key.id);
+        //SDK_ASSERT(vcn_id == info->spec.vcn.id);  //This is hw_id during read
+        //SDK_ASSERT(sub_id == info->spec.subnet.id); //This is hw_id during read
+        SDK_ASSERT(vlan_tag == info->spec.wire_vlan);
+        SDK_ASSERT(PDS_ENCAP_TYPE_MPLSoUDP == info->spec.fabric_encap.type);
+        SDK_ASSERT(mpls_slot == info->spec.fabric_encap.val.mpls_tag);
+        SDK_ASSERT(memcmp(mac, info->spec.mac_addr, sizeof(mac)) == 0);
+        SDK_ASSERT(rsc_pool_id == info->spec.rsc_pool_id);
+        SDK_ASSERT(src_dst_check == info->spec.src_dst_check);
+    }
+    return rv;
 }
 
 sdk::sdk_ret_t

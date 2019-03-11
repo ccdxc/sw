@@ -121,14 +121,13 @@ tep_impl::read_hw(pds_tep_info_t *info) {
     nexthop_tx_actiondata_t nh_tx_data;
     tep_tx_actiondata_t tep_tx_data;
 
-    // TODO p4pd_entry_read does NOT seem to return proper data?
-    if (p4pd_entry_read(P4TBL_ID_NEXTHOP_TX, nh_id_, NULL, NULL,
-                        &nh_tx_data) != P4PD_SUCCESS) {
+    if (tep_impl_db()->nh_tx_tbl()->retrieve(nh_id_, &nh_tx_data) !=
+        SDK_RET_OK) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if (p4pd_entry_read(P4TBL_ID_TEP_TX, hw_id_, NULL, NULL,
-                        &tep_tx_data) != P4PD_SUCCESS) {
+    if (tep_impl_db()->tep_tx_tbl()->retrieve(hw_id_, &tep_tx_data) !=
+        SDK_RET_OK) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 

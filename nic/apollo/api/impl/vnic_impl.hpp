@@ -171,13 +171,27 @@ private:
                                               policy *v4_policy,
                                               policy *v6_policy);
     /**
-     * @brief Read statistics from the hw table and fill the vnic stats
+     * @brief Fill the vnic stats
      * @param[in] tx_stats Transmit statistics table data
      * @param[in] rx_stats Receive statistics table data
      */
     void fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
                          vnic_rx_stats_actiondata_t *rx_stats,
                          pds_vnic_stats_t *stats);
+    /**
+     * @breif Fill the vnic specification
+     * @param[in] egress_vnic_data EGRESS_LOCAL_VNIC_INFO_RX table data
+     * @param[in] vnic_by_vlan_data LOCAL_VNIC_BY_VLAN_TX table data
+     * @param[in] vnic_by_slot_key LOCAL_VNIC_BY_SLOT_RX table key
+     * @param[in] vnic_by_slot_data LOCAL_VNIC_BY_SLOT_RX table data
+     * @param[out] spec specification
+     */
+    void fill_vnic_spec_(
+                egress_local_vnic_info_rx_actiondata_t *egress_vnic_data,
+                local_vnic_by_vlan_tx_actiondata_t     *vnic_by_vlan_data,
+                local_vnic_by_slot_rx_swkey_t          *vnic_by_slot_key,
+                local_vnic_by_slot_rx_actiondata_t     *vnic_by_slot_data,
+                pds_vnic_spec_t *spec);
 private:
     /**< P4 datapath specific state */
     uint16_t          hw_id_;      /**< hardware id */

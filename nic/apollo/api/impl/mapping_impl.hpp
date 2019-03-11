@@ -188,12 +188,33 @@ private:
                                                   pds_mapping_spec_t *spec);
 
    /**
-     * @brief     Read the configured values from table and fill to the spec
-     * @param[in] remote_vnic_map_tx Pointer to REMOTE_VNIC_MAPPING_TX table data
-     * @param[out] spec specification
+     * @brief     Fill the table values to the spec
+     * @param[in] remote_vnic_map_tx_data  REMOTE_VNIC_MAPPING_TX table data
+     * @param[in] nh_tx_data               NH_TX table data
+     * @param[in] tep_tx_data              TEP_TX table data
+     * @param[out] spec                    specification
      */
-    void fill_mapping_spec_(remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx,
-                         pds_mapping_spec_t *spec);
+    void fill_mapping_spec_(
+                remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx_dta,
+                nexthop_tx_actiondata_t          *nh_tx_data,
+                tep_tx_actiondata_t              *tep_tx_data,
+                pds_mapping_spec_t               *spec);
+
+   /**
+     * @brief     Read the configured values from the local mapping tables
+     * @param[in]     vcn  pointer to the vcn entry
+     * @param[in/out] spec pointer to the spec
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read_local_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec);
+
+   /**
+     * @brief     Read the configured values from the local mapping tables
+     * @param[in]     vcn  pointer to the vcn entry
+     * @param[in/out] spec pointer to the spec
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read_remote_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec);
 
 private:
     bool    is_local_;

@@ -23,7 +23,7 @@
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-pds_policy_create (_In_ pds_policy_spec_t *spec)
+pds_policy_create (pds_policy_spec_t *spec)
 {
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
@@ -47,7 +47,7 @@ pds_policy_create (_In_ pds_policy_spec_t *spec)
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-pds_policy_delete (_In_ pds_policy_key_t *key)
+pds_policy_delete (pds_policy_key_t *key)
 {
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;

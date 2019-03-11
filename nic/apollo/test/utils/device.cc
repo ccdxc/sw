@@ -30,19 +30,19 @@ device_util::~device_util() {}
 
 sdk::sdk_ret_t
 device_util::create() {
-    pds_device_spec_t pds_device;
+    pds_device_spec_t spec;
     ip_prefix_t device_ip_pfx, gateway_ip_pfx;
 
     SDK_ASSERT(str2ipv4pfx((char *)this->device_ip_str.c_str(),
                            &device_ip_pfx) == 0);
     SDK_ASSERT(str2ipv4pfx((char *)this->gateway_ip_str.c_str(),
                            &gateway_ip_pfx) == 0);
-    memset(&pds_device, 0, sizeof(pds_device_spec_t));
-    pds_device.switch_ip_addr = device_ip_pfx.addr.addr.v4_addr;
-    pds_device.gateway_ip_addr = gateway_ip_pfx.addr.addr.v4_addr;
+    memset(&spec, 0, sizeof(pds_device_spec_t));
+    spec.switch_ip_addr = device_ip_pfx.addr.addr.v4_addr;
+    spec.gateway_ip_addr = gateway_ip_pfx.addr.addr.v4_addr;
     mac_str_to_addr((char *)this->mac_addr_str.c_str(),
-                    pds_device.switch_mac_addr);
-    return (pds_device_create(&pds_device));
+                    spec.switch_mac_addr);
+    return (pds_device_create(&spec));
 }
 
 sdk::sdk_ret_t

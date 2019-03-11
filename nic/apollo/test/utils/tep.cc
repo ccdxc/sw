@@ -31,14 +31,14 @@ tep_util::~tep_util() {}
 
 sdk::sdk_ret_t
 tep_util::create() {
-    pds_tep_spec_t pds_tep;
+    pds_tep_spec_t spec;
     ip_prefix_t ip_pfx;
 
     SDK_ASSERT(str2ipv4pfx((char *)this->ip_str.c_str(), &ip_pfx) == 0);
-    memset(&pds_tep, 0, sizeof(pds_tep));
-    pds_tep.encap_type = this->type;
-    pds_tep.key.ip_addr = ip_pfx.addr.addr.v4_addr;
-    return (pds_tep_create(&pds_tep));
+    memset(&spec, 0, sizeof(pds_tep_spec_t));
+    spec.encap_type = this->type;
+    spec.key.ip_addr = ip_pfx.addr.addr.v4_addr;
+    return (pds_tep_create(&spec));
 }
 
 sdk::sdk_ret_t

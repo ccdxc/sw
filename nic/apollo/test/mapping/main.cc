@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <gtest/gtest.h>
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/include/api/pds_batch.hpp"
 #include "nic/apollo/include/api/pds_subnet.hpp"
 #include "nic/apollo/test/utils/base.hpp"
@@ -19,7 +20,7 @@
 #include "nic/apollo/test/utils/vcn.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
+#include "nic/apollo/test/utils/subnet.hpp"
 
 const char *g_cfg_file = "hal.json";
 
@@ -115,7 +116,9 @@ TEST_F(mapping_test, mapping_create) {
     pds_vnic_info_t vnic_info;
     pds_mapping_info_t map_info;
     pds_route_table_spec_t rt_tbl;
-    pds_subnet_spec_t sub;
+    pds_policy_spec_t policy;
+    rule_t *rule;
+    uint32_t policy_id = 1, ingress = 1, num_rules = 1;
 
     batch_params.epoch = 1;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
@@ -147,17 +150,11 @@ TEST_F(mapping_test, mapping_create) {
     ASSERT_TRUE(pds_route_table_create(&rt_tbl) == SDK_RET_OK);
 
     // Create Subnet on the VCN
-    sub.key.id = sub_id;
-    sub.vcn.id = vcn_id;
-    // Subnet cidr
-    ASSERT_TRUE(str2ipv4pfx((char *)sub_cidr.c_str(), &sub.pfx) == SDK_RET_OK);
-    // Set the subnets IP ( Basically virtual router interface IP)
-    inet_aton(sub_vr_ip, &ipaddr);
-    sub.vr_ip.af = IP_AF_IPV4;
-    sub.vr_ip.addr.v4_addr = ntohl(ipaddr.s_addr);
-    mac_str_to_addr((char *)sub_vr_mac, sub.vr_mac);
-    sub.v4_route_table.id = rt_id;
-    ASSERT_TRUE(pds_subnet_create(&sub) == SDK_RET_OK);
+    subnet_util sub(vcn_id, sub_id, sub_cidr);
+    sub.vr_ip = sub_vr_ip;
+    sub.vr_mac = sub_vr_mac;
+    sub.v4_route_table = rt_id;
+    ASSERT_TRUE(sub.create() == SDK_RET_OK);
 
     // Create vnic
     vnic_util vnic(vcn_id, sub_id, vnic_id, vnic_mac);
@@ -181,14 +178,47 @@ TEST_F(mapping_test, mapping_create) {
     rmap.tep_ip = sub_rem_gw;
     ASSERT_TRUE(rmap.create() == SDK_RET_OK);
 
+#if 0
+    // Allow all tcp traffic
+policy_config:
+    policy.policy_type = POLICY_TYPE_FIREWALL;
+    policy.af = IP_AF_IPV4;
+    policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;
+    policy.num_rules = num_rules;
+    policy.rules = (rule_t *)malloc(num_rules * sizeof(rule_t));
+    memset(policy.rules, 0, num_rules * sizeof(rule_t));
+    policy.key.id = policy_id++;
+    rule = &policy.rules[0];
+    rule->stateful = false;
+    rule->match.l3_match.ip_proto = 0x6;    // TCP
+    ASSERT_TRUE(str2ipv4pfx((char *)vcn_cidr.c_str(),
+                            &rule->match.l3_match.ip_pfx) == SDK_RET_OK);
+    rule->match.l4_match.sport_range.port_lo = 0;
+    rule->match.l4_match.sport_range.port_hi = 65535;
+    rule->match.l4_match.dport_range.port_lo = 0;
+    rule->match.l4_match.dport_range.port_hi = 65535;
+    rule->action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
+    ASSERT_TRUE(pds_policy_create(&policy) == SDK_RET_OK);
+    // Apply egress rule for the same configuration
+    if (ingress == 1)  {
+        ingress = 0;
+        goto policy_config;
+    }
+#endif
     // Completed the configuration
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
     // Read vnic info and compare the configuration packet count
-    vnic.read(vnic_id, &vnic_info);
+    // TODO : Enable once the read is working
+    // ASSERT_TRUE(vnic.read(vnic_id, &vnic_info) == SDK_RET_OK);
 
-    // Read mapping info and compare the configuration
-    rmap.read(vcn_id, vnic_rem_ip, IP_AF_IPV4, &map_info);
+    // Read remote mapping info and compare the configuration
+    // ASSERT_TRUE(rmap.read(vcn_id, vnic_rem_ip, &map_info) == SDK_RET_OK);
+
+    // Read local mapping info and compare the configuration.
+    // TODO : Enable this after splitting the API
+    // lmap.read(vcn_id, vnic_ip, &map_info);
+
 
 #if 0
     api_test::send_packet(g_snd_pkt1, sizeof(g_snd_pkt1), TM_PORT_UPLINK_0, g_rcv_pkt1,
@@ -234,7 +264,6 @@ TEST_F(mapping_test, mapping_delete)
 
     map.vcn_id     = vcn_id;
     map.vnic_ip    = vnic_ip;
-    map.vnic_ip_af = IP_AF_IPV4;
     ASSERT_TRUE(map.destroy() == SDK_RET_OK);
 
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);

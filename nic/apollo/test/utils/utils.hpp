@@ -18,9 +18,22 @@
 
 namespace api_test {
 
-static inline void
-extract_ip_addr (const char *ip, uint8_t af, ip_addr_t *ip_addr)
+static inline int
+ip_version (const char *ip)
 {
+    char buf[16];
+    if (inet_pton(AF_INET, ip, buf)) {
+        return IP_AF_IPV4;
+    } else if (inet_pton(AF_INET6, ip, buf)) {
+        return IP_AF_IPV6;
+    }
+    return -1;
+}
+
+static inline void
+extract_ip_addr (const char *ip, ip_addr_t *ip_addr)
+{
+    int af = ip_version(ip);
     if (af == IP_AF_IPV4) {
         struct in_addr v4;
         inet_aton(ip, &v4);

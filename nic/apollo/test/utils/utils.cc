@@ -19,6 +19,7 @@ namespace api_test {
 void
 dump_packet (std::vector<uint8_t> data) {
     int count = 0;
+    std::cout << "Packet length : " << data.size() << "\n";
     for (std::vector<uint8_t>::const_iterator i = data.begin(); i != data.end();
          ++i) {
         if (count != 0 && count % 16 == 0)
@@ -71,7 +72,7 @@ send_packet (const uint8_t *tx_pkt, uint32_t tx_pkt_len, uint32_t tx_port,
         step_network_pkt(ipkt, tx_port);
         if (!getenv("SKIP_VERIFY")) {
             get_next_pkt(opkt, port, cos);
-            // dump_packet(opkt);
+            dump_packet(opkt);
             EXPECT_TRUE(opkt == epkt);
             EXPECT_TRUE(port == exp_rx_port);
         }
