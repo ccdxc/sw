@@ -615,7 +615,6 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     SDK_ASSERT_GOTO(IS_PAL_API_SUCCESS(palrv), cleanup);
 
     // do asic initialization
-    asic_cfg.loader_info_file = hal_cfg->loader_info_file;
     asic_cfg.default_config_dir = hal_cfg->default_config_dir;
     asic_cfg.admin_cos = 1;
     asic_cfg.cfg_path = hal_cfg->cfg_path;

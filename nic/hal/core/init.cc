@@ -406,9 +406,6 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             hal_cfg->platform = platform_type_t::PLATFORM_TYPE_MOCK;
         }
 
-        hal_cfg->loader_info_file =
-                pt.get<std::string>("asic.loader_info_file");
-
         hal_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
         if (getenv("HAL_GRPC_PORT")) {
             hal_cfg->grpc_port = getenv("HAL_GRPC_PORT");

@@ -109,14 +109,13 @@ sdk_ret_t p4_program_to_base_addr(const char *handle,
                                char *prog_name, uint64_t *base_addr);
 
 /**
- * p4_list_program_addr: List each program's name, start address and end address
+ * p4_dump_program_info: Save the MPU program information to mpu_prog_info.json
  *
- * @cfg_path:Config path
- * @filename:The program address filename with full path where the output is to be stored
+ * @cfg_path: Config path
  *
- * Return: sdk_ret_t
+ * Return sdk_ret_t
  */
-sdk_ret_t p4_list_program_addr(const char *cfg_path, const char *filename);
+sdk_ret_t p4_dump_program_info (const char *cfg_path);
 
 }    // namespace p4
 }    // namnespace sdk

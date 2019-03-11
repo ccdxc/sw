@@ -21,7 +21,6 @@
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
 
 hal_ret_t capri_default_config_init(capri_cfg_t *cfg);
-using boost::property_tree::ptree;
 
 #define VLAN_ID 100
 #define VNIC_ID 10
@@ -500,9 +499,6 @@ TEST_F(apollo_test, test1) {
                                   asm_base_addr, NULL, 0, NULL);
     ASSERT_NE(ret, -1);
     std::ifstream json_cfg(hal_conf_file);
-    ptree pt;
-    read_json(json_cfg, pt);
-    sdk::platform::p4_list_program_addr(pt.get<std::string>("asic.loader_info_file").c_str());
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
     ret = capri_table_rw_init(NULL);

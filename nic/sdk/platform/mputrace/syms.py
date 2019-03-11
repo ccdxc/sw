@@ -19,8 +19,16 @@ NoneLabel = dict(name='', at_pc=0)
 
 def parse_loader_conf(loader_conf):
     with open(loader_conf, 'r') as f:
-        for pgm_or_label, start_pc, end_pc in csv.reader(f):
-            yield pgm_or_label, int(start_pc, 16), int(end_pc, 16)
+        data = json.load(f)
+        for p in data['programs']:
+            pgm_or_label = p['name']
+            start_pc = p['base_addr']
+            end_pc = p['end_addr']
+            yield pgm_or_label, int(start_pc), int(end_pc)
+            for s in p['symbols']:
+                pgm_or_label = s['name']
+                s_pc = int(start_pc) + int(s['addr'])
+                yield pgm_or_label + '.LAB', s_pc, s_pc
 
 
 def create_loader_db(loader_file):

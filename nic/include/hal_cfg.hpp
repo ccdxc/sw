@@ -54,7 +54,6 @@ typedef struct hal_cfg_s {
     void                     *server_builder;    // grpc server builder
     platform_type_t          platform;
     std::string              grpc_port;
-    std::string              loader_info_file;
     char                     feature_set[HAL_MAX_NAME_STR];
     hal_feature_set_t        features;
     hal_forwarding_mode_t    forwarding_mode;

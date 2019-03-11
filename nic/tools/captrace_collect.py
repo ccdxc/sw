@@ -109,13 +109,13 @@ def collect(ch, args):
 
     # dump
     op = sendCmd(ch, '/platform/bin/captrace dump captrace.bin', '#')
-        
+
     logging.info("Copying captrace.bin to {0}".format(args.host))
     sendCmd(ch, 'scp -o StrictHostKeyChecking=no captrace.bin root@169.254.0.2:/tmp/', '[Pp]assword.*')
     sendCmd(ch, 'docker', '#')
 
-    logging.info("Copying capri_loader.conf to {0}".format(args.host))
-    sendCmd(ch, 'scp -o StrictHostKeyChecking=no /capri_loader.conf root@169.254.0.2:/tmp/', '[Pp]assword.*')
+    logging.info("Copying mpu_prog_info.json to {0}".format(args.host))
+    sendCmd(ch, 'scp -o StrictHostKeyChecking=no /nic/conf/gen/mpu_prog_info.json root@169.254.0.2:/tmp/', '[Pp]assword.*')
     sendCmd(ch, 'docker', '#')
 
     ch.close()
@@ -229,12 +229,12 @@ if __name__ == "__main__":
         logging.info("ERROR: failed to copy captrace.bin from {0}".format(args.host))
         exit()
 
-    # copy capri_loader.conf
-    logging.info("Copying capri_loader.conf from {0} to the workspace\n".format(args.host))
-    cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no root@' + args.host + ':/tmp/capri_loader.conf ' + ws
+    # copy mpu_prog_info.json
+    logging.info("Copying mpu_prog_info.json from {0} to the workspace\n".format(args.host))
+    cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no root@' + args.host + ':/tmp/mpu_prog_info.json ' + ws
     ret = os.system(cmd)
     if (ret != 0):
-        logging.info("ERROR: failed to copy capri_loader.conf from {0}".format(args.host))
+        logging.info("ERROR: failed to copy mpu_prog_info.json from {0}".format(args.host))
         exit()
 
     cmd = pwd + '/../sdk/platform/mputrace/captrace.py gen_syms'

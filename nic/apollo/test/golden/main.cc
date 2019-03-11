@@ -39,7 +39,6 @@
     (SACL_SPORT_TABLE_SIZE + SACL_IPV4_TABLE_SIZE +                          \
      SACL_PROTO_DPORT_TABLE_SIZE)
 
-using boost::property_tree::ptree;
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
 
@@ -951,12 +950,6 @@ TEST_F(apollo_test, test1)
     cfg.catalog = catalog;
     cfg.mempartition =
         sdk::platform::utils::mpartition::factory(mpart_json.c_str());
-
-    std::ifstream json_cfg(cfg.cfg_path + hal_conf_file);
-    ptree hal_conf;
-    read_json(json_cfg, hal_conf);
-    cfg.loader_info_file =
-        hal_conf.get<std::string>("asic.loader_info_file").c_str();
 
     default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
     if (default_config_dir) {

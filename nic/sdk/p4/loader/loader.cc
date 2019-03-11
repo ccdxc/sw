@@ -528,7 +528,7 @@ p4_program_to_base_addr(const char *handle,
     return SDK_RET_ERR;
 }
 
-static int
+sdk_ret_t
 p4_dump_program_info (const char *cfg_path)
 {
     struct stat             st = { 0 };
@@ -628,62 +628,6 @@ p4_dump_program_info (const char *cfg_path)
     return SDK_RET_OK;
 }
 
-/**
- * p4_list_program_addr: List each program's name, start address and end address
- *
- * @cfg_path:Config path 
- * @filename:The program address filename with full path where the output is to be stored
- *
- * Return: sdk_ret_t
- */
-sdk_ret_t
-p4_list_program_addr (const char *cfg_path, const char *filename)
-{
-    p4_loader_ctx_t *ctx;
-    p4_program_info_t *program_info;
-    FILE *fp = NULL;
-    MpuSymbol *symbol;
 
-    // dump ldd info in json format
-    // TODO: the folowing text format should go away once tools are migrated
-    // to consume the json output
-    p4_dump_program_info(cfg_path);
-
-    /* Input check  */
-    if ((!filename) || (!(fp = fopen(filename, "w+")))) {
-        SDK_TRACE_ERR("Cannot open input file for listing program addresses");
-        return SDK_RET_ERR;
-    }
-
-    chmod(filename, 0666);
-    /* Iterate through the loader instances, programs and list the valid ones */
-    for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
-        if ((ctx = loader_instances[it->first]) != NULL) {
-            SDK_TRACE_DEBUG("Listing programs for handle name %s", it->first.c_str());
-            program_info = ctx->program_info;
-            for (int i = 0; i < ctx->num_programs; i++) {
-                fprintf(fp, "%s,%lx,%lx\n", program_info[i].name.c_str(),
-                        program_info[i].base_addr,
-                        ((program_info[i].base_addr +
-                          program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
-                for (int j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
-                    symbol = program_info[i].prog.symtab.get_byid(j);
-                    if (symbol != NULL && symbol->type == MPUSYM_LABEL &&
-                            symbol->val) {
-                        fprintf(fp, "%s.LAB,%lx,%lx\n", symbol->name.c_str(),
-                                program_info[i].base_addr + symbol->val,
-                                program_info[i].base_addr + symbol->val);
-                    }
-                }
-                fflush(fp);
-            }
-        } else {
-            SDK_TRACE_DEBUG("Cannot list programs for handle name %s",
-                            it->first.c_str());
-        }
-    }
-
-    return SDK_RET_OK;
-}
 }    // namespace p4
 }    // namespace sdk

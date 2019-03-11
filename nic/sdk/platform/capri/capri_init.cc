@@ -463,10 +463,7 @@ capri_init (capri_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri replication init failure, err : %d", ret);
 
-    if (!cfg->loader_info_file.empty()) {
-        sdk::p4::p4_list_program_addr(
-            cfg->cfg_path.c_str(), cfg->loader_info_file.c_str());
-    }
+    sdk::p4::p4_dump_program_info(cfg->cfg_path.c_str());
 
     ret = capri_quiesce_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
@@ -498,7 +495,6 @@ asic_init (asic_cfg_t *cfg)
     capri_cfg_t    capri_cfg;
 
     SDK_ASSERT(cfg != NULL);
-    capri_cfg.loader_info_file = cfg->loader_info_file;
     capri_cfg.default_config_dir = cfg->default_config_dir;
     capri_cfg.cfg_path = cfg->cfg_path;
     capri_cfg.admin_cos = cfg->admin_cos;

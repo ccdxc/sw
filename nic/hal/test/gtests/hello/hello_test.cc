@@ -22,7 +22,6 @@
 #include "nic/p4/common/defines.h"
 #include "gen/p4gen/hello/include/p4pd.h"
 
-using boost::property_tree::ptree;
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
 
@@ -309,11 +308,6 @@ TEST_F(hello_test, test1) {
     }
     ASSERT_TRUE(catalog != NULL);
     cfg.catalog = catalog;
-
-    std::ifstream json_cfg(hal_conf_file);
-    ptree hal_conf;
-    read_json(json_cfg, hal_conf);
-    cfg.loader_info_file = hal_conf.get<std::string>("asic.loader_info_file").c_str();
 
     default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
     if (default_config_dir) {

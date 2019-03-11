@@ -39,8 +39,6 @@ asic_global_config_init (pds_init_params_t *params, asic_cfg_t *asic_cfg)
     asic_cfg->cfg_path = g_pds_state.cfg_path();
     asic_cfg->catalog =  g_pds_state.catalogue();
     asic_cfg->mempartition = g_pds_state.mempartition();
-    // TODO: @sai please deprecate capri_loader.conf
-    asic_cfg->loader_info_file = "capri_loader.conf";
     asic_cfg->default_config_dir = "2x100_hbm";
     asic_cfg->platform = g_pds_state.platform_type();
     asic_cfg->admin_cos = 1;

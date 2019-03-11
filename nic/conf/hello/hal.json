@@ -1,9 +1,5 @@
 {
   "mode" : "sim",
-  "asic" :
-  {
-    "loader_info_file" : "capri_loader.conf"
-  },
   "sw" : {
     "grpc_port" : "50054",
     "feature_set" : "hello",

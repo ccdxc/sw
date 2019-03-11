@@ -32,7 +32,6 @@ typedef struct capri_asm_cfg_s {
 } capri_asm_cfg_t;
 
 typedef struct capri_cfg_s {
-    std::string                 loader_info_file;
     std::string                 default_config_dir;
     uint32_t                    admin_cos;
     uint32_t                    repl_entry_width;
