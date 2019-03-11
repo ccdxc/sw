@@ -14,7 +14,7 @@ aliases:
     - &INPUT_LEN_8K 8192
     - &INPUT_LEN_16K 16384
     - &INPUT_LEN_32K 32768
-    - &CPUS_ITER_LIST [ 1, 2, 4, 6, 8, 16, 24 ]
+    - &CPUS_ITER_LIST [ 1, 2, 4, 6 ]
 
 # TBD: Zero Pad Resource limitation
     - &CPUS_ITER_LIST_ZERO_PAD [ 1, 2, 4 ]
@@ -305,17 +305,14 @@ testcases:
 
     -   name    : DecompressFail
         testcase: testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
-            cpus        : [ 2 ]
-            batch_depth : [ 1, 33 ]
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            inputlen    : [ 8192 ]
+            inputlen    : [ *INPUT_LEN_8K ]
         args    :
-            dir     : *STORAGE_TEST_DIR
             wait    : '1.0'
-            cfg     : [ 4k.yml, globals.yml ]
             test    : *DC_FAIL_TEST_YML
 
     -   name        : Hash4K8KSha2_256

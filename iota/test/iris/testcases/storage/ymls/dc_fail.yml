@@ -4,13 +4,13 @@ svc_chains:
       name: "generate compressed input 256k"
       input:
         pattern: aaaaaaaaaaaaaaaaaaaaaaa
-        len: 262144
+        len: 65536
       ops:
         - compress:
             flags: 'insert_header'
             hdr_fmt_idx: 1
             hdr_algo: 1
-            output_file: 'cp_hdr_256k.bin'
+            output_file: 'cp_hdr_64k.bin'
   - svc_chain:
       idx: 1
       name: "Decompression bad input failure"
@@ -37,7 +37,7 @@ svc_chains:
       idx: 3
       name: "Decompression output too large"
       input:
-        file: 'cp_hdr_256k.bin'
+        file: 'cp_hdr_64k.bin'
       ops:
         - decompress:
             flags: 'header_present'
@@ -46,6 +46,16 @@ svc_chains:
             output_flags: tiny
 
 tests:
+  - test:
+      idx: 99
+      name: "Large decompression pre-test"
+      svc_chains: 99
+      repeat: 1
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
   - test:
       idx: 1
       name: "Decompression bad input failure"
@@ -71,17 +81,9 @@ tests:
   - test:
       idx: 3
       name: "Decompression output too large"
-      svc_chains: 99,3
+      svc_chains: 3
       repeat: 1
       validations:
         - retcode_compare:
             idx: 1
-            svc_chain: 99
-            retcode: 0
-            svc_retcodes: 0
-        - retcode_compare:
-            idx: 2
-            type: ne
-            svc_chain: 3
-            retcode: 12
-            svc_retcodes: 12
+            req_retcode: 22
