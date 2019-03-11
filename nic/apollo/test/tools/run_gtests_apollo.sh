@@ -25,7 +25,7 @@ trap finish EXIT
 export PATH=${PATH}:${BUILD_DIR}/bin
 
 # gtests
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > apollo_scale_test.log.txt
 $GDB apollo_device_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_device_test.xml"
 $GDB apollo_vcn_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vcn_test.xml"
 $GDB apollo_subnet_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_subnet_test.xml"
@@ -35,4 +35,4 @@ $GDB apollo_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
 
 MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so
-LD_PRELOAD=${MEMHASH_PRELOADS} $ARGS memhash_test
+LD_PRELOAD=${MEMHASH_PRELOADS} $ARGS memhash_test > memhash_test.log.txt
