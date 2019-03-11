@@ -10,7 +10,7 @@ struct phv_ p;
 %%
         .align
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
-
+        .param IPSEC_PAGE_ADDR_RX 
 esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc:
     phvwr p.ipsec_int_header_in_desc, k.t0_s2s_in_desc_addr
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
@@ -80,7 +80,13 @@ esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_dummy_desc:
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_type, 0
     phvwri p.dma_cmd_in_desc_aol_dma_cmd_type, 0
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_type, 0
-    phvwri p.dma_cmd_pkt2mem_dma_cmd_type, 0
+    phvwri p.{dma_cmd_pkt2mem_dma_cmd_cache...dma_cmd_pkt2mem_dma_cmd_type}, (IPSEC_PKT2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PKT_TO_MEM)
+    addui r3, r0, hiword(IPSEC_PAGE_ADDR_RX)
+    addi r3, r3, loword(IPSEC_PAGE_ADDR_RX)
+    addi r3, r3, 9600
+    phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r3
+    phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_global_packet_length
+
     phvwri p.dma_cmd_pkt2mem2_dma_cmd_type, 0
     phvwri p.dma_cmd_iv_salt_dma_cmd_type, 0
     add r2, r0, d.cb_ring_base_addr

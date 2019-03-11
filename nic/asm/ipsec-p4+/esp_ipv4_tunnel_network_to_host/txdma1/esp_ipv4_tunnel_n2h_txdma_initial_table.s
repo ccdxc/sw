@@ -16,13 +16,17 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     //bcf [c6], txdma1_freeze2
     //nop
 
-    add r1, d.{barco_ring_pindex}.hx, 1
-    and r1, r1, IPSEC_BARCO_RING_INDEX_MASK
-    seq c5, d.{barco_ring_cindex}.hx, r1
-    bcf [c5], esp_ipv4_tunnel_n2h_txdma_initial_table_drop_pkt
+    add r4, d.barco_pindex, 1
+    and r4, r4, IPSEC_BARCO_RING_INDEX_MASK 
+    seq c1, d.barco_cindex, r4
+    bcf [c1], esp_v4_tunnel_n2h_barco_ring_error
+    nop
+    phvwr p.ipsec_to_stage3_barco_pindex, d.barco_pindex
+    tblmincri d.barco_pindex, IPSEC_BARCO_RING_WIDTH, 1
+
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
-    b.c1 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing
-    phvwri.c1 p.p4_intr_global_drop, 1
+    bcf [c1], esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing
+    nop
 
     and r2, d.cb_cindex, IPSEC_CB_RING_INDEX_MASK 
     tblmincri d.cb_cindex, IPSEC_PER_CB_RING_WIDTH, 1
@@ -41,20 +45,31 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_ENTER_OFFSET, 1)
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
-    b.!c1 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing 
+    b.!c1 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing2 
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, 0)
     memwr.dx  r4, r3
-
-
-esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing:
     nop.e
     nop
+
+esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing:
+    phvwri p.p4_intr_global_drop, 1
+esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing2:
+    nop.e
+    nop
+
 
 esp_ipv4_tunnel_n2h_txdma_initial_table_drop_pkt:
     phvwri p.p4_intr_global_drop, 1
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_ENTER_DROP_OFFSET, 1)
+    nop.e
+    nop
+
+esp_v4_tunnel_n2h_barco_ring_error:
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_BARCO_RING_FULL_OFFSSET, 1)
+    phvwri p.p4_intr_global_drop, 1
     nop.e
     nop
 

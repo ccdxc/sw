@@ -80,7 +80,8 @@ header_type ipsec_to_stage3_t {
     fields {
         barco_req_addr   : ADDRESS_WIDTH;
         new_key          : 1;
-        stage3_pad1      : 31;
+        stage3_pad1      : 15;
+        barco_pindex     : 16;
         sem_cindex       : 32;
     }
 }
@@ -243,10 +244,11 @@ metadata barco_shadow_params_d_t barco_shadow_params_d;
     modify_field(scratch_to_s2.new_spi, ipsec_to_stage2.new_spi);
 
 #define IPSEC_TXDMA1_TO_STAGE3_INIT \
-    modify_field(scratch_to_s3.barco_req_addr, ipsec_to_stage2.barco_req_addr); \
+    modify_field(scratch_to_s3.barco_req_addr, ipsec_to_stage3.barco_req_addr); \
     modify_field(scratch_to_s3.new_key, ipsec_to_stage3.new_key); \
+    modify_field(scratch_to_s3.barco_pindex, ipsec_to_stage3.barco_pindex); \
     modify_field(scratch_to_s3.sem_cindex, ipsec_to_stage3.sem_cindex); \
-    modify_field(scratch_to_s3.stage3_pad1, ipsec_to_stage2.stage3_pad1);
+    modify_field(scratch_to_s3.stage3_pad1, ipsec_to_stage3.stage3_pad1); \
 
 
 //stage 5
@@ -292,18 +294,17 @@ action esp_v4_tunnel_n2h_txdma1_write_barco_req(pc, rsvd, cosA, cosB,
                                        iv_salt, vrf_vlan, is_v6)
 {
     IPSEC_CB_SCRATCH_WITH_PC
-
-    DMA_COMMAND_PHV2MEM_FILL(brq_req_write, ipsec_to_stage3.barco_req_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END, 0, 0, 0, 0) 
+    IPSEC_TXDMA1_TO_STAGE3_INIT
+    IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA1_DMA_COMMANDS_OFFSET);
-    modify_field(scratch_to_s3.new_key, ipsec_to_stage3.new_key);
  
-
-    // RING Barco-doorbell
+     // RING Barco-doorbell
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 6);
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, txdma1_global.ipsec_cb_addr);
+
 }
 
 //stage 2 - table1

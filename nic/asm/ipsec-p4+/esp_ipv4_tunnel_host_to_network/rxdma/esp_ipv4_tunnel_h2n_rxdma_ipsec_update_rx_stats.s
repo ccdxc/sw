@@ -9,6 +9,7 @@ struct phv_ p;
 
 %%
         .align
+        .param IPSEC_PAGE_ADDR_RX
 esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats:
     tbladd.f d.h2n_rx_pkts, 1
     and r6, k.ipsec_to_stage4_flags, IPSEC_N2H_GLOBAL_FLAGS
@@ -16,18 +17,22 @@ esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats:
     bcf [c1], esp_ipv4_tunnel_h2n_rxdma_disbale_dma_cmds
     nop
     phvwri p.{dma_cmd_phv2mem_ipsec_int_dma_cmd_phv_end_addr...dma_cmd_phv2mem_ipsec_int_dma_cmd_type}, ((IPSEC_INT_END_OFFSET << 18) | (IPSEC_INT_START_OFFSET << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
-    phvwri p.{dma_cmd_pkt2mem_dma_cmd_cache...dma_cmd_pkt2mem_dma_cmd_type}, (IPSEC_MEM2PKT_CACHE_ENABLE | CAPRI_DMA_COMMAND_PKT_TO_MEM)
     phvwri p.{tail_2_bytes_dma_cmd_phv_end_addr...tail_2_bytes_dma_cmd_type}, ((IPSEC_TAIL_2_BYTES_PHV_END << 18) | (IPSEC_TAIL_2_BYTES_PHV_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     phvwri p.{dma_cmd_iv_salt_dma_cmd_phv_end_addr...dma_cmd_iv_salt_dma_cmd_type}, ((IPSEC_IN_DESC_IV_SALT_END << 18) | (IPSEC_IN_DESC_IV_SALT_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     phvwri p.{dma_cmd_out_desc_aol_dma_cmd_phv_end_addr...dma_cmd_out_desc_aol_dma_cmd_type}, ((IPSEC_OUT_DESC_AOL_END << 18) | (IPSEC_OUT_DESC_AOL_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     phvwri p.{dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr...dma_cmd_fill_esp_hdr_dma_cmd_type}, ((IPSEC_ESP_HDR_PHV_END << 18) | (IPSEC_ESP_HDR_PHV_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     phvwri p.{dma_cmd_pkt2mem_dma_cmd_cache...dma_cmd_pkt2mem_dma_cmd_type}, (IPSEC_MEM2PKT_CACHE_ENABLE | CAPRI_DMA_COMMAND_PKT_TO_MEM)
-    phvwri.e p.app_header_table2_valid, 0
+    phvwri.e p.app_header_table1_valid, 0
     nop
 
 esp_ipv4_tunnel_h2n_rxdma_disbale_dma_cmds:
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_type, 0
-    phvwri p.dma_cmd_pkt2mem_dma_cmd_type, 0
+    phvwri p.{dma_cmd_pkt2mem_dma_cmd_cache...dma_cmd_pkt2mem_dma_cmd_type}, (IPSEC_MEM2PKT_CACHE_ENABLE | CAPRI_DMA_COMMAND_PKT_TO_MEM)
+    addui r3, r0, hiword(IPSEC_PAGE_ADDR_RX)
+    addi r3, r3, loword(IPSEC_PAGE_ADDR_RX)
+    addi r3, r3, 9600
+    phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r3 
+    phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage4_packet_len[13:0]
     phvwri p.dma_cmd_iv_salt_dma_cmd_type, 0
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_type, 0
     phvwri p.dma_cmd_fill_esp_hdr_dma_cmd_type, 0

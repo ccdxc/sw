@@ -18,13 +18,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     bcf [c1], esp_ipv4_tunnel_h2n_hit_errors
     nop
 
-    add r1, d.barco_pindex, 1
-    and r1, r1, IPSEC_BARCO_RING_INDEX_MASK
-    seq c5, d.barco_cindex, r1
-    bcf [c5], esp_ipv4_tunnel_h2n_barco_ring_full_error
-    nop
-    sll r3, d.barco_pindex, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
-    tblmincri.f d.barco_pindex, IPSEC_BARCO_RING_WIDTH, 1 
+    sll r3, k.ipsec_to_stage4_barco_pindex, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr 
     blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_ring 
     nop
@@ -33,6 +27,8 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
 
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP)
     phvwr p.barco_req_doorbell_address, r4.dx
+    add r1, k.ipsec_to_stage4_barco_pindex, 1
+    and r1, r1, IPSEC_BARCO_RING_INDEX_MASK 
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, r1)
     phvwr p.barco_req_doorbell_data, r3.dx
 
@@ -57,12 +53,6 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_ring:
 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_req:
     addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_BARCO_REQ_OFFSET, 1)
-    b esp_ipv4_tunnel_h2n_hit_errors
-    nop
-
-esp_ipv4_tunnel_h2n_barco_ring_full_error:
-    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_TXDMA1_BARCO_RING_FULL, 1)
     b esp_ipv4_tunnel_h2n_hit_errors
     nop
 

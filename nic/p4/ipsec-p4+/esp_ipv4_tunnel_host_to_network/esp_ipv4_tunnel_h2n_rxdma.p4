@@ -54,7 +54,8 @@ header_type ipsec_to_stage4_t {
     fields {
         out_desc_addr : ADDRESS_WIDTH;
         flags         : 8; 
-        to_stage_4_pad : 56;
+        packet_len    : 16;
+        to_stage_4_pad : 40;
     }
 }
 
@@ -275,6 +276,7 @@ action ipsec_cb_tail_enqueue_input_desc2(pc, rsvd, cosA, cosB, cos_sel,
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T2_S2S
     modify_field(ipsec_to_stage4_scratch.flags, ipsec_to_stage4.flags); 
+    modify_field(ipsec_to_stage4_scratch.packet_len, ipsec_to_stage4.packet_len); 
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
     
 }
@@ -286,6 +288,8 @@ action ipsec_rxdma_stats_update(H2N_STATS_UPDATE_PARAMS)
     IPSEC_SCRATCH_T1_S2S
     H2N_STATS_UPDATE_SET
     modify_field(ipsec_to_stage4_scratch.flags, ipsec_to_stage4.flags); 
+    modify_field(ipsec_to_stage4_scratch.packet_len, ipsec_to_stage4.packet_len); 
+    
 }
 
 //stage 4 - table 0
@@ -313,6 +317,7 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
 
     modify_field(ipsec_to_stage4_scratch.flags, ipsec_to_stage4.flags); 
+    modify_field(ipsec_to_stage4_scratch.packet_len, ipsec_to_stage4.packet_len); 
 
     modify_field(p4_rxdma_intr.dma_cmd_ptr, RXDMA_IPSEC_DMA_COMMANDS_OFFSET);
     // Ring Doorbell for IPSec-CB (svc_lif, type, ipsec-cb-index(qid))

@@ -19,7 +19,7 @@ esp_ipv4_tunnel_h2n_update_output_desc_aol:
     add r4, k.t1_s2s_ipsec_cb_addr, IPSEC_H2N_STATS_CB_OFFSET
     add r1, r0, k.t1_s2s_ipsec_cb_addr 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc, r1, TABLE_SIZE_512_BITS)
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats, r4, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats, r4, TABLE_SIZE_512_BITS)
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2, r1, TABLE_SIZE_512_BITS)
     nop.e
     nop

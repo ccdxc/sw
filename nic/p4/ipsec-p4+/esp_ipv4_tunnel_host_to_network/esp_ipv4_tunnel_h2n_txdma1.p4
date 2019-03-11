@@ -261,6 +261,7 @@ metadata h2n_stats_header_t ipsec_stats_scratch;
 #define IPSEC_TXDMA1_TO_STAGE4_INIT \
     modify_field(scratch_to_s4.barco_req_addr, ipsec_to_stage4.barco_req_addr); \
     modify_field(scratch_to_s4.barco_pindex, ipsec_to_stage4.barco_pindex); \
+    modify_field(scratch_to_s4.sem_cindex, ipsec_to_stage4.sem_cindex); \
     modify_field(scratch_to_s4.stage4_pad1, ipsec_to_stage4.stage4_pad1);
 
 //stage 5

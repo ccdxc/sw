@@ -33,7 +33,6 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
     add r1, d.tailroom_offset, d.in_page
     phvwr p.barco_req_auth_tag_addr, r1.dx
 
-    phvwri p.app_header_table0_valid, 1
     add r5, r0, k.txdma1_global_ipsec_cb_addr
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_v4_tunnel_n2h_write_barco_req, r5, TABLE_SIZE_512_BITS)
     add r2, d.in_desc, 96
