@@ -1,0 +1,4 @@
+python naples_helper.py --console-ip chamber-ts7 --console-port 2007
+python naples_helper.py --console-ip chamber-ts4 --console-port 2016
+python naples_helper.py --console-ip chamber-ts7 --console-port 2016
+
