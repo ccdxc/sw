@@ -41,10 +41,10 @@ tep_impl_state::tep_impl_state(pds_state *state) {
     p4pd_table_properties_get(P4TBL_ID_NEXTHOP_TX, &tinfo);
     // TODO: table_health_monitor_cb is passed as NULL here !!
     nh_tx_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NEXTHOP_TX,
-                                     tinfo.tabledepth,
-                                     tinfo.actiondata_struct_size,
-                                     false, true, NULL);
-    SDK_ASSERT(tep_tx_tbl_ != NULL);
+                                    tinfo.tabledepth,
+                                    tinfo.actiondata_struct_size,
+                                    false, true, NULL);
+    SDK_ASSERT(nh_tx_tbl_ != NULL);
 }
 
 /**

@@ -307,6 +307,67 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// reserve a given id
+// TODO: @bharat, please add sharing_en_ support here when u get to this lib
+//       and stat support
+//-----------------------------------------------------------------------------
+sdk_ret_t
+directmap::reserve(uint32_t index) {
+    sdk_ret_t ret;
+
+    if (index > capacity_) {
+        ret = SDK_RET_INVALID_ARG;
+        goto end;
+    }
+    ret = alloc_index_withid_(index);
+    if ((ret != SDK_RET_OK) && sharing_en_ && (ret == SDK_RET_ENTRY_EXISTS)) {
+        return SDK_RET_OK;
+    }
+
+    ret = free_index_(index);
+    if (ret != SDK_RET_OK) {
+        goto end;
+    }
+
+end:
+
+    //stats_update(RESERVE, ret);
+    //trigger_health_monitor();
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// reserve a given id
+// TODO: @bharat, please add sharing_en_ support here when u get to this lib
+//       and stat support
+//-----------------------------------------------------------------------------
+sdk_ret_t
+directmap::release(uint32_t index) {
+    sdk_ret_t ret;
+
+    if (index > capacity_) {
+        ret = SDK_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if (!indexer_->is_index_allocated(index)) {
+        ret = SDK_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    ret = free_index_(index);
+    if (ret != SDK_RET_OK) {
+       goto end;
+    }
+
+end:
+
+    //stats_update(RELEASE, ret);
+    //trigger_health_monitor();
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
 // update entry in HW
 //-----------------------------------------------------------------------------
 sdk_ret_t
@@ -541,7 +602,8 @@ directmap::alloc_index_withid_(uint32_t idx)
     // allocate an index
     indexer::status irs = indexer_->alloc_withid(idx);
     if (irs != indexer::SUCCESS) {
-        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_ENTRY_EXISTS : SDK_RET_OOB;
+        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_ENTRY_EXISTS :
+                                                 SDK_RET_OOB;
     }
 
     return rs;

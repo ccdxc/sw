@@ -81,62 +81,6 @@ tep_impl::release_resources(api_base *api_obj) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
-void
-tep_impl::fill_status_(tep_tx_actiondata_t *tep_tx_data,
-                       pds_tep_status_t *status)
-{
-    status->nh_id = nh_id_;
-    status->hw_id = hw_id_;
-
-    switch (tep_tx_data->action_id) {
-    case TEP_TX_GRE_TEP_TX_ID:
-        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_gre_tep_tx.dmac,
-               ETH_ADDR_LEN);
-        break;
-    case TEP_TX_MPLS_UDP_TEP_TX_ID:
-        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dmac,
-               ETH_ADDR_LEN);
-        break;
-    }
-}
-
-void
-tep_impl::fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
-                     tep_tx_actiondata_t *tep_tx_data, pds_tep_spec_t *spec)
-{
-    switch (nh_tx_data->action_u.nexthop_tx_nexthop_info.encap_type) {
-    case GW_ENCAP:
-        spec->encap_type = PDS_TEP_ENCAP_TYPE_GW_ENCAP;
-        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
-        break;
-    case VNIC_ENCAP:
-        spec->encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
-        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
-        break;
-    }
-}
-
-sdk_ret_t
-tep_impl::read_hw(pds_tep_info_t *info) {
-    nexthop_tx_actiondata_t nh_tx_data;
-    tep_tx_actiondata_t tep_tx_data;
-
-    if (tep_impl_db()->nh_tx_tbl()->retrieve(nh_id_, &nh_tx_data) !=
-        SDK_RET_OK) {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
-    }
-
-    if (tep_impl_db()->tep_tx_tbl()->retrieve(hw_id_, &tep_tx_data) !=
-        SDK_RET_OK) {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
-    }
-
-    fill_spec_(&nh_tx_data, &tep_tx_data, &info->spec);
-    fill_status_(&tep_tx_data, &info->status);
-
-    return sdk::SDK_RET_OK;
-}
-
 /**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any
@@ -238,6 +182,62 @@ sdk_ret_t
 tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                     obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
+}
+
+void
+tep_impl::fill_status_(tep_tx_actiondata_t *tep_tx_data,
+                       pds_tep_status_t *status)
+{
+    status->nh_id = nh_id_;
+    status->hw_id = hw_id_;
+
+    switch (tep_tx_data->action_id) {
+    case TEP_TX_GRE_TEP_TX_ID:
+        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_gre_tep_tx.dmac,
+               ETH_ADDR_LEN);
+        break;
+    case TEP_TX_MPLS_UDP_TEP_TX_ID:
+        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dmac,
+               ETH_ADDR_LEN);
+        break;
+    }
+}
+
+void
+tep_impl::fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
+                     tep_tx_actiondata_t *tep_tx_data, pds_tep_spec_t *spec)
+{
+    switch (nh_tx_data->action_u.nexthop_tx_nexthop_info.encap_type) {
+    case GW_ENCAP:
+        spec->encap_type = PDS_TEP_ENCAP_TYPE_GW_ENCAP;
+        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
+        break;
+    case VNIC_ENCAP:
+        spec->encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
+        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
+        break;
+    }
+}
+
+sdk_ret_t
+tep_impl::read_hw(pds_tep_info_t *info) {
+    nexthop_tx_actiondata_t nh_tx_data;
+    tep_tx_actiondata_t tep_tx_data;
+
+    if (tep_impl_db()->nh_tx_tbl()->retrieve(nh_id_,
+                                             &nh_tx_data) != SDK_RET_OK) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    if (tep_impl_db()->tep_tx_tbl()->retrieve(hw_id_,
+                                              &tep_tx_data) != SDK_RET_OK) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    fill_spec_(&nh_tx_data, &tep_tx_data, &info->spec);
+    fill_status_(&tep_tx_data, &info->status);
+
+    return sdk::SDK_RET_OK;
 }
 
 /** @} */    // end of PDS_TEP_IMPL

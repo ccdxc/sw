@@ -30,7 +30,7 @@ typedef bool (*direct_map_iterate_func_t)(uint32_t index, void *data,
 
 class directmap {
 public:
-    // NOTE: Stats are mutually exclusive for every API. Only one stat will
+    // NOTE: stats are mutually exclusive for every API, only one stat will
     //       be incremented for an API call.
     enum stats {
         STATS_INS_SUCCESS,
@@ -70,6 +70,8 @@ public:
     // policers etc
     sdk_ret_t insert(void *data, uint32_t *index, void *data_mask = NULL);
     sdk_ret_t insert_withid(void *data, uint32_t index, void *data_mask = NULL);
+    sdk_ret_t reserve(uint32_t index);
+    sdk_ret_t release(uint32_t index);
     sdk_ret_t update(uint32_t index, void *data, void *data_mask = NULL);
     sdk_ret_t remove(uint32_t index, void *data = NULL);
     sdk_ret_t retrieve(uint32_t index, void *data);
@@ -100,21 +102,6 @@ private:
         RETRIEVE,
         ITERATE
     };
-
-    char                        name_[SDK_MAX_NAME_LEN];    // table name
-    uint32_t                    id_;                        // table id
-    uint32_t                    capacity_;                  // size of table
-    indexer                     *indexer_;                  // entry indices
-    uint32_t                    swdata_len_;                // sw data len
-    uint32_t                    hwdata_len_;                // hw data len
-    ht                          *entry_ht_;                 // hash table to store entries
-    uint64_t                    stats_[STATS_MAX];          // statistics
-    bool                        sharing_en_;                // enable sharing
-    bool                        entry_trace_en_;            // enable entry trace
-    table_health_state_t        health_state_;              // health state
-    table_health_monitor_func_t health_monitor_func_;       // health mon. cb
-
-private:
     directmap();
     ~directmap() {}
     bool init(char *name, uint32_t id, uint32_t capacity, uint32_t swdata_len,
@@ -136,6 +123,20 @@ private:
     void *del_directmap_entry_from_db(directmap_entry_t *dme);
     directmap_entry_t *find_directmap_entry(directmap_entry_t *key);
     void trigger_health_monitor(void);
+
+private:
+    char                        name_[SDK_MAX_NAME_LEN];    // table name
+    uint32_t                    id_;                        // table id
+    uint32_t                    capacity_;                  // size of table
+    indexer                     *indexer_;                  // entry indices
+    uint32_t                    swdata_len_;                // sw data len
+    uint32_t                    hwdata_len_;                // hw data len
+    ht                          *entry_ht_;                 // hash table to store entries
+    uint64_t                    stats_[STATS_MAX];          // statistics
+    bool                        sharing_en_;                // enable sharing
+    bool                        entry_trace_en_;            // enable entry trace
+    table_health_state_t        health_state_;              // health state
+    table_health_monitor_func_t health_monitor_func_;       // health mon. cb
 };
 
 }    // namespace table
@@ -144,4 +145,3 @@ private:
 using sdk::table::directmap;
 
 #endif    // __SDK_DIRECT_MAP_HPP__
-
