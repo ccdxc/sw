@@ -176,6 +176,15 @@ ionic_is_rx_ipv4(uint8_t pkt_type)
 		(pkt_type == PKT_TYPE_IPV4_UDP));
 }
 
+static inline bool
+ionic_is_rx_ipv6(uint8_t pkt_type)
+{
+
+	return ((pkt_type == PKT_TYPE_IPV6) ||
+		(pkt_type == PKT_TYPE_IPV6_TCP) ||
+		(pkt_type == PKT_TYPE_IPV6_UDP));
+}
+
 static void ionic_dump_mbuf(struct mbuf* m)
 {
 	IONIC_INFO("len %u\n", m->m_len);
@@ -198,42 +207,39 @@ static void ionic_dump_mbuf(struct mbuf* m)
 static void ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
 	struct rxq_comp *comp, struct rx_stats *stats)
 {
-	bool ipv4;
+	bool ipv6;
 
-	ipv4 = ionic_is_rx_ipv4(comp->pkt_type);
+	ipv6 = ionic_is_rx_ipv6(comp->pkt_type);
 	m->m_pkthdr.csum_flags = 0;
 
 	/* XXX: for debug only. */
-	if ((comp->csum_ip_ok || comp->csum_ip_bad) && !ipv4)
-		IONIC_NETDEV_ERROR(ifp, "csum ip is set(%d:%d) for non-IP packet\n",
+	if ((comp->csum_ip_ok || comp->csum_ip_bad) && ipv6)
+		IONIC_NETDEV_ERROR(ifp, "csum ip is set(%d:%d) for IPv6 packet\n",
 			comp->csum_ip_ok, comp->csum_ip_bad);
 	if ((comp->csum_tcp_ok || comp->csum_tcp_bad) && !ionic_is_rx_tcp(comp->pkt_type))
 		IONIC_NETDEV_ERROR(ifp, "csum TCP is set(%d:%d) for non-TCP packet\n",
 			comp->csum_tcp_ok, comp->csum_tcp_bad);
 	if ((comp->csum_udp_ok || comp->csum_udp_bad) && !ionic_is_rx_tcp(comp->pkt_type))
-		IONIC_NETDEV_ERROR(ifp, "csum UDP is set(%d:%d) for non-TCP packet\n",
+		IONIC_NETDEV_ERROR(ifp, "csum UDP is set(%d:%d) for non-UDP packet\n",
 			comp->csum_udp_ok, comp->csum_udp_bad);
 
-	if (comp->csum_ip_ok) {
-		if ((if_getcapenable(ifp) & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6))) {
-			m->m_pkthdr.csum_flags = CSUM_IP_CHECKED | CSUM_IP_VALID;
-			m->m_pkthdr.csum_data = htons(0xffff);
-			if (ipv4)
-				stats->csum_ip_ok++;
-			if (comp->csum_tcp_ok || comp->csum_udp_ok) {
-				m->m_pkthdr.csum_flags |= CSUM_DATA_VALID | CSUM_PSEUDO_HDR;
-				stats->csum_l4_ok++;
-			}
+	if ((if_getcapenable(ifp) & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6)) == 0)
+		return;
+
+	if (ipv6 || comp->csum_ip_ok) {
+		m->m_pkthdr.csum_flags = CSUM_IP_CHECKED | CSUM_IP_VALID;
+		m->m_pkthdr.csum_data = htons(0xffff);
+		if (comp->csum_tcp_ok || comp->csum_udp_ok) {
+			m->m_pkthdr.csum_flags |= CSUM_DATA_VALID | CSUM_PSEUDO_HDR;
 		}
 	}
 
-	if (comp->csum_ip_bad) {
-		if (ipv4)
-			stats->csum_ip_bad++;
-		if (comp->csum_tcp_ok || comp->csum_udp_ok)
-			stats->csum_l4_ok++;
-	}
-
+	if (comp->csum_ip_ok)
+		stats->csum_ip_ok++;
+	if (comp->csum_ip_bad)
+		stats->csum_ip_bad++;
+	if (comp->csum_tcp_ok || comp->csum_udp_ok)
+		stats->csum_l4_ok++;
 	if (comp->csum_tcp_bad || comp->csum_udp_bad)
 		stats->csum_l4_bad++;
 }
@@ -2260,7 +2266,11 @@ static uint16_t
 ionic_set_rss_type(void)
 {
 #ifdef RSS
-	uint32_t rss_hash_config = rss_gethashconfig();
+	uint32_t rss_hash_config;
+	uint16_t rss_types;
+
+	rss_hash_config = rss_gethashconfig();
+	rss_types = 0;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_IPV4)
 		rss_types |= IONIC_RSS_TYPE_IPV4;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_TCP_IPV4)
