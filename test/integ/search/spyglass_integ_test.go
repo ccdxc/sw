@@ -379,13 +379,6 @@ func TestSpyglassErrorHandeling(t *testing.T) {
 		return true, nil
 	}, "failed to create gRPC client", "20ms", "2m")
 
-	// Give time for API Server to setup
-	// Needed due to issue with how APi server creates the watch event queue
-	// If the data is written before spyglass reconnects, the event will not be
-	// played.
-	// TODO: Remove once this issue is fixed with API Server
-	// time.Sleep(10 * time.Second)
-
 	DefaultTenantPolicyGenerator(ctx, tInfo.apiClient, objectCount, objectCount)
 	expectedIndexes += uint64(objectCount)
 
@@ -565,6 +558,7 @@ func TestSpyglass(t *testing.T) {
 func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 
 	t.Logf("@@@ performSearchTests, method: %d", searchMethod)
+	log.Infof("@@@ performSearchTests, method: %d", searchMethod)
 
 	// Http error for InvalidArgument test cases
 	httpInvalidArgErrCode := grpcruntime.HTTPStatusFromCode(grpccodes.InvalidArgument)
@@ -1889,7 +1883,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							&fields.Requirement{
 								Key:      "meta.creation-time",
 								Operator: "gte",
-								Values:   []string{time.Now().Add(-3 * time.Minute).Format(time.RFC3339Nano)},
+								Values:   []string{time.Now().Add(-10 * time.Minute).Format(time.RFC3339Nano)},
 							},
 							&fields.Requirement{
 								Key:      "meta.creation-time",
@@ -1931,7 +1925,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							&fields.Requirement{
 								Key:      "meta.mod-time",
 								Operator: "gte",
-								Values:   []string{time.Now().Add(-3 * time.Minute).Format(time.RFC3339Nano)},
+								Values:   []string{time.Now().Add(-10 * time.Minute).Format(time.RFC3339Nano)},
 							},
 							&fields.Requirement{
 								Key:      "meta.mod-time",
@@ -2247,7 +2241,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							tc.err, err)
 						return false, nil
 					}
-					log.Debugf("Query: %s, result : %+v", searchURL, resp)
+					log.Infof("Query: %s, result : %+v", searchURL, resp)
 					return checkSearchQueryResponse(t, &tc.query, &resp, tc.expectedHits, tc.previewResults, tc.aggResults), nil
 				}, fmt.Sprintf("Query failed for: %s", tc.query.QueryString), "100ms", "1m")
 		})
@@ -2258,6 +2252,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 
 	t.Logf("@@@ performPolicySearchTests, method: %d", searchMethod)
+	log.Infof("@@@ performPolicySearchTests, method: %d", searchMethod)
 
 	// Testcases for various queries on config objects
 	queryTestcases := []struct {
@@ -3348,7 +3343,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 							tc.err, err)
 						return false, nil
 					}
-					log.Debugf("Query: %s, result : %+v", searchURL, resp)
+					log.Infof("Query: %s, result : %+v", searchURL, resp)
 					return checkSearchQueryResponse(t, tc.query, &resp, tc.expectedHits, tc.previewResults, tc.aggResults), nil
 				}, fmt.Sprintf("Query failed for: %s", tc.query.QueryString), "100ms", "1m")
 		})
