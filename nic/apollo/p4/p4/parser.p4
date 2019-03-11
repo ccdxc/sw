@@ -432,3 +432,33 @@ parser deparse_egress {
 
     return parse_packet;
 }
+
+/******************************************************************************
+ * Checksums : Layer 0 (compute only, no verification)
+ *****************************************************************************/
+field_list ipv4_0_checksum_list {
+    ipv4_0.version;
+    ipv4_0.ihl;
+    ipv4_0.diffserv;
+    ipv4_0.totalLen;
+    ipv4_0.identification;
+    ipv4_0.flags;
+    ipv4_0.fragOffset;
+    ipv4_0.ttl;
+    ipv4_0.protocol;
+    ipv4_0.srcAddr;
+    ipv4_0.dstAddr;
+}
+
+@pragma checksum update_len capri_deparser_len.ipv4_0_hdr_len
+field_list_calculation ipv4_0_checksum {
+    input {
+        ipv4_0_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_0.hdrChecksum  {
+    update ipv4_0_checksum;
+}

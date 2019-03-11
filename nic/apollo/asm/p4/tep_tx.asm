@@ -10,7 +10,9 @@ struct phv_         p;
 
 mpls_udp_tep_tx:
     phvwr       p.{ctag_1_valid,ethernet_1_valid}, 0
-    phvwr       p.{ipv4_0_valid,ctag_0_valid,ethernet_0_valid}, 0x5
+    phvwr       p.{ipv4_0_valid,ipv4_0_udp_csum,ipv4_0_tcp_csum,ipv4_0_csum, \
+                    ctag_0_valid,ethernet_0_valid}, 0x25
+    phvwr       p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwrpair   p.mpls_dst_0_valid, 1, p.udp_0_valid, 1
     phvwrpair   p.ethernet_0_dstAddr, d.u.mpls_udp_tep_tx_d.dmac, \
                     p.ethernet_0_srcAddr, r5
@@ -40,7 +42,9 @@ mpls_udp_tep_tx:
 .align
 vxlan_tep_tx:
     phvwr       p.ctag_1_valid, 0
-    phvwr       p.{ipv4_0_valid,ctag_0_valid,ethernet_0_valid}, 0x5
+    phvwr       p.{ipv4_0_valid,ipv4_0_udp_csum,ipv4_0_tcp_csum,ipv4_0_csum, \
+                    ctag_0_valid,ethernet_0_valid}, 0x25
+    phvwr       p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwrpair   p.vxlan_0_valid, 1, p.udp_0_valid, 1
     phvwrpair   p.ethernet_0_dstAddr, d.u.vxlan_tep_tx_d.dmac, \
                     p.ethernet_0_srcAddr, r5
@@ -67,7 +71,9 @@ vxlan_tep_tx:
 .align
 gre_tep_tx:
     phvwr       p.{ctag_1_valid,ethernet_1_valid}, 0
-    phvwr       p.{ipv4_0_valid,ctag_0_valid,ethernet_0_valid}, 0x5
+    phvwr       p.{ipv4_0_valid,ipv4_0_udp_csum,ipv4_0_tcp_csum,ipv4_0_csum, \
+                    ctag_0_valid,ethernet_0_valid}, 0x25
+    phvwr       p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwrpair   p.mpls_dst_0_valid, 1, p.gre_0_valid, 1
     phvwrpair   p.ethernet_0_dstAddr, d.u.gre_tep_tx_d.dmac, \
                     p.ethernet_0_srcAddr, r5

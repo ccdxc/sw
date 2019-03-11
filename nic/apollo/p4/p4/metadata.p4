@@ -1,11 +1,18 @@
+header_type capri_deparser_len_t {
+    fields {
+        trunc_pkt_len       : 16;
+        ipv4_0_hdr_len      : 16;
+    }
+}
+
 header_type key_metadata_t {
     fields {
-        ktype   : 4;
-        src     : 128;
-        dst     : 128;
-        proto   : 8;
-        dport   : 16;
-        sport   : 16;
+        ktype               : 4;
+        src                 : 128;
+        dst                 : 128;
+        proto               : 8;
+        dport               : 16;
+        sport               : 16;
     }
 }
 
@@ -42,11 +49,11 @@ header_type control_metadata_t {
 
 header_type rewrite_metadata_t {
     fields {
-        encap_type              : 1;
-        dst_slot_id_valid       : 1;
-        tep_index               : 10;
-        dst_slot_id             : 24;
-        mytep_ip                : 32;
+        encap_type          : 1;
+        dst_slot_id_valid   : 1;
+        tep_index           : 10;
+        dst_slot_id         : 24;
+        mytep_ip            : 32;
     }
 }
 
@@ -130,6 +137,10 @@ metadata control_metadata_t     control_metadata;
 metadata rewrite_metadata_t     rewrite_metadata;
 metadata policer_metadata_t     policer_metadata;
 metadata nat_metadata_t         nat_metadata;
+
+@pragma deparser_variable_length_header
+@pragma dont_trim
+metadata capri_deparser_len_t   capri_deparser_len;
 
 @pragma scratch_metadata
 metadata scratch_metadata_t     scratch_metadata;

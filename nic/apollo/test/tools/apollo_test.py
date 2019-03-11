@@ -16,7 +16,7 @@ def dump_pkt(pkt):
         print(', '.join('0x{:02X}'.format(b) for b in chunk), end=",\n")
 
 ###############################################################################
-# golden/main.cc
+# begin golden/main.cc
 ###############################################################################
 
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
@@ -26,13 +26,13 @@ spkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 
 urpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
-        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64, chksum=0) / \
-        UDP(sport=0xEE08, dport=6635, chksum=0) / MPLS(label=200, s=1) / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0xA7B2, dport=6635, chksum=0) / MPLS(label=200, s=1) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 
 grpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
-        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64, chksum=0) / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
         GRE(proto=0x8847) / MPLS(label=200, s=1) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
@@ -62,8 +62,8 @@ spkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 
 rpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
-        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64, chksum=0) / \
-        UDP(sport=0x2BA9, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0x0164, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.1.2', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
@@ -88,10 +88,8 @@ dump_pkt(spkt)
 dump_pkt(rpkt)
 
 ###############################################################################
-# golden/main.cc
+# end golden/main.cc
 ###############################################################################
-
-#exit(0)
 
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
 spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
@@ -142,8 +140,6 @@ rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
 dump_pkt(spkt)
 dump_pkt(rpkt)
 
-print('Hello')
-
 spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
         Dot1Q(vlan=1) / \
         IPv6( src='2019::0200:0001', dst='2021::c000:0201') / \
@@ -159,4 +155,3 @@ rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
 
 dump_pkt(spkt)
 dump_pkt(rpkt)
-
