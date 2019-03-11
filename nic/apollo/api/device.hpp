@@ -66,7 +66,9 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /**
      * @brief     free h/w resources used by this object, if any
@@ -83,7 +85,9 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
@@ -117,12 +121,6 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t del_from_db(void) override;
-
-    /**
-     * @brief    find and return the (singleton) instance of device obj
-     * @return    return device object or NULL, if not found
-     */
-    static device_entry *find_in_db(void);
 
     /**
      * @brief    this method is called on new object that needs to replace the

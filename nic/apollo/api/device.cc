@@ -79,29 +79,6 @@ device_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 /**
- * @brief    program all h/w tables relevant to this object except stage 0
- *           table(s), if any, during creation of the object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-device_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    return impl_->program_hw(this, obj_ctxt);
-}
-
-/**
- * @brief    cleanup all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- *           and setting invalid bit (if any) in the h/w entries
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-device_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    return impl_->cleanup_hw(this, obj_ctxt);
-}
-
-/**
  * @brief    update all h/w tables relevant to this object except stage 0
  *           table(s), if any, by updating packed entries with latest epoch#
  * @param[in] orig_obj    old version of the unmodified object
@@ -123,9 +100,10 @@ device_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                  obj_ctxt_t *obj_ctxt) {
+                              obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 programming for device cfg, so this is a no-op
-    PDS_TRACE_DEBUG("Activated device config");
+    PDS_TRACE_DEBUG("Activating device config");
+    //impl_->activate_hw(this, epoch, api_op, obj_ctxt);
     return SDK_RET_OK;
 }
 
@@ -161,11 +139,6 @@ device_entry::del_from_db(void) {
         return SDK_RET_OK;
     }
     return SDK_RET_ENTRY_NOT_FOUND;
-}
-
-device_entry *
-device_entry::find_in_db(void) {
-    return device_db()->find();
 }
 
 /**

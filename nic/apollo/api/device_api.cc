@@ -46,7 +46,7 @@ pds_device_read (pds_device_info_t *info)
         return sdk::SDK_RET_INVALID_ARG;
     }
 
-    entry = device_entry::find_in_db();
+    entry = device_db()->find();
     if (entry == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
