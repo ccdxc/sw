@@ -91,14 +91,14 @@ action local_ip_mapping_info(entry_valid,
         } else {
             if (vnic_metadata.skip_src_dst_check == FALSE) {
                 modify_field(control_metadata.p4i_drop_reason,
-                             1 << DROP_SRC_DST_CHECK_FAIL);
+                             1 << P4I_DROP_SRC_DST_CHECK_FAIL);
                 drop_packet();
             }
         }
     } else {
         if (vnic_metadata.skip_src_dst_check == FALSE) {
             modify_field(control_metadata.p4i_drop_reason,
-                         1 << DROP_SRC_DST_CHECK_FAIL);
+                         1 << P4I_DROP_SRC_DST_CHECK_FAIL);
             drop_packet();
         }
     }

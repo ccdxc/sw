@@ -15,7 +15,7 @@ action remote_vnic_mapping_rx_info(entry_valid, vcn_id, subnet_id, overlay_mac,
         modify_field(scratch_metadata.vcn_id, vcn_id);
         if (vnic_metadata.vcn_id != scratch_metadata.vcn_id) {
             modify_field(control_metadata.p4i_drop_reason,
-                         1 << DROP_RVPATH_VCN_MISMATCH);
+                         1 << P4I_DROP_RVPATH_VCN_MISMATCH);
             drop_packet();
         } else {
             modify_field(p4i_apollo_i2e.rvpath_subnet_id, subnet_id);
@@ -91,12 +91,12 @@ action remote_vnic_mapping_rx_info(entry_valid, vcn_id, subnet_id, overlay_mac,
             modify_field(control_metadata.remote_vnic_mapping_rx_ohash_lkp, TRUE);
         } else {
             modify_field(control_metadata.p4i_drop_reason,
-                         1 << DROP_RVPATH_SRC_IP_MISMATCH);
+                         1 << P4I_DROP_RVPATH_SRC_IP_MISMATCH);
             drop_packet();
         }
     } else {
         modify_field(control_metadata.p4i_drop_reason,
-                     1 << DROP_RVPATH_SRC_IP_MISMATCH);
+                     1 << P4I_DROP_RVPATH_SRC_IP_MISMATCH);
         drop_packet();
     }
 

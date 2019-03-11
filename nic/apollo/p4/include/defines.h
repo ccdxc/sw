@@ -45,16 +45,20 @@
 /*****************************************************************************/
 /* drop reasons - these are bit positions to be used in ASM                  */
 /*****************************************************************************/
-#define DROP_SRC_MAC_ZERO               0
-#define DROP_SRC_MAC_MISMATCH           1
-#define DROP_SRC_DST_CHECK_FAIL         2
-#define DROP_FLOW_HIT                   3
-#define DROP_TEP_RX_DST_IP_MISMATCH     4
-#define DROP_DST_SLOT_ID_MISS           5
-#define DROP_RVPATH_SRC_IP_MISMATCH     6
-#define DROP_RVPATH_VCN_MISMATCH        7
-#define P4I_DROP_REASON_MIN             DROP_SRC_MAC_ZERO
-#define P4I_DROP_REASON_MAX             DROP_RVPATH_VCN_MISMATCH
+#define P4I_DROP_SRC_MAC_ZERO           0
+#define P4I_DROP_SRC_MAC_MISMATCH       1
+#define P4I_DROP_SRC_DST_CHECK_FAIL     2
+#define P4I_DROP_FLOW_HIT               3
+#define P4I_DROP_TEP_RX_DST_IP_MISMATCH 4
+#define P4I_DROP_DST_SLOT_ID_MISS       5
+#define P4I_DROP_RVPATH_SRC_IP_MISMATCH 6
+#define P4I_DROP_RVPATH_VCN_MISMATCH    7
+#define P4I_DROP_REASON_MIN             P4I_DROP_SRC_MAC_ZERO
+#define P4I_DROP_REASON_MAX             P4I_DROP_RVPATH_VCN_MISMATCH
+
+#define P4E_DROP_INVALID_NEXTHOP        0
+#define P4E_DROP_REASON_MIN             P4E_DROP_INVALID_NEXTHOP
+#define P4E_DROP_REASON_MAX             P4E_DROP_INVALID_NEXTHOP
 
 /*****************************************************************************/
 /* flow role                                                                 */

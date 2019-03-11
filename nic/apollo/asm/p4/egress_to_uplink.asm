@@ -23,5 +23,5 @@ egress_to_uplink:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 egress_to_uplink_error:
-    phvwr.e         p.capri_intrinsic_drop, 1
-    nop
+    phvwr.e     p.capri_intrinsic_drop, 1
+    phvwr       p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq

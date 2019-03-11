@@ -31,7 +31,7 @@ flow_info_drop:
     or              r7, r7, r5[32:27], 58
     add             r6, r6, r5[26:0]
     memwr.dx        r6, r7
-    phvwr.e         p.control_metadata_p4i_drop_reason[DROP_FLOW_HIT], 1
+    phvwr.e         p.control_metadata_p4i_drop_reason[P4I_DROP_FLOW_HIT], 1
     phvwr           p.capri_intrinsic_drop, 1
 
 /*****************************************************************************/

@@ -111,7 +111,7 @@ action flow_info(drop, iflow_tcp_state, rflow_tcp_state, flow_stats_addr) {
     modify_field(scratch_metadata.flag, drop);
     modify_field(scratch_metadata.in_bytes, capri_p4_intrinsic.packet_len);
     if (drop == TRUE) {
-        modify_field(control_metadata.p4i_drop_reason, 1 << DROP_FLOW_HIT);
+        modify_field(control_metadata.p4i_drop_reason, 1 << P4I_DROP_FLOW_HIT);
         drop_packet();
     }
 

@@ -47,12 +47,13 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
                           epoch1, epoch2, overlay_mac, src_slot_id) {
     // validate source mac
     if (ethernet_1.srcAddr == 0) {
-        modify_field(control_metadata.p4i_drop_reason, 1 << DROP_SRC_MAC_ZERO);
+        modify_field(control_metadata.p4i_drop_reason,
+                     1 << P4I_DROP_SRC_MAC_ZERO);
         drop_packet();
     }
     if (ethernet_1.srcAddr != overlay_mac) {
         modify_field(control_metadata.p4i_drop_reason,
-                     1 << DROP_SRC_MAC_MISMATCH);
+                     1 << P4I_DROP_SRC_MAC_MISMATCH);
         drop_packet();
     }
 
@@ -73,12 +74,12 @@ action local_vnic_info_rx(local_vnic_tag, vcn_id, skip_src_dst_check,
                           sacl_v6addr_1, sacl_v6addr_2, epoch1, epoch2) {
     // if c1 indicate miss, drop
     //  modify_field(control_metadata.p4i_drop_reason,
-    //               1 << DROP_DST_SLOT_ID_MISS);
+    //               1 << P4I_DROP_DST_SLOT_ID_MISS);
 
     // validate dst ip; mytep_ip is a table constant
     if (ipv4_1.dstAddr != scratch_metadata.mytep_ip) {
         modify_field(control_metadata.p4i_drop_reason,
-                     1 << DROP_TEP_RX_DST_IP_MISMATCH);
+                     1 << P4I_DROP_TEP_RX_DST_IP_MISMATCH);
         drop_packet();
     }
 

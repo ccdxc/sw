@@ -32,9 +32,9 @@ local_vnic_info_tx:
                                d.local_vnic_info_tx_d.epoch2)
 
 local_vnic_info_tx_src_mac_error:
-    phvwr.c1        p.control_metadata_p4i_drop_reason[DROP_SRC_MAC_ZERO], 1
+    phvwr.c1        p.control_metadata_p4i_drop_reason[P4I_DROP_SRC_MAC_ZERO], 1
     phvwr.e         p.capri_intrinsic_drop, TRUE
-    phvwr.c2        p.control_metadata_p4i_drop_reason[DROP_SRC_MAC_MISMATCH], 1
+    phvwr.c2        p.control_metadata_p4i_drop_reason[P4I_DROP_SRC_MAC_MISMATCH], 1
 
 /*****************************************************************************/
 /* error function                                                            */

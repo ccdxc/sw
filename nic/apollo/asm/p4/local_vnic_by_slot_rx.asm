@@ -11,9 +11,9 @@ struct phv_ p;
 local_vnic_info_rx:
     sne         c2, k.ipv4_1_dstAddr, r5
     bcf         [c2], local_vnic_info_rx_dipo_miss
-    phvwr.c2    p.control_metadata_p4i_drop_reason[DROP_TEP_RX_DST_IP_MISMATCH], TRUE
+    phvwr.c2    p.control_metadata_p4i_drop_reason[P4I_DROP_TEP_RX_DST_IP_MISMATCH], 1
     bcf         [!c1], local_vnic_info_rx_miss
-    phvwr.!c1   p.control_metadata_p4i_drop_reason[DROP_DST_SLOT_ID_MISS], TRUE
+    phvwr.!c1   p.control_metadata_p4i_drop_reason[P4I_DROP_DST_SLOT_ID_MISS], 1
     phvwr       p.vnic_metadata_src_slot_id, k.{mpls_src_label_sbit0_ebit15, \
                                                 mpls_src_label_sbit16_ebit19}
     add         r1, d.local_vnic_info_rx_d.resource_group_2_sbit1_ebit9, \

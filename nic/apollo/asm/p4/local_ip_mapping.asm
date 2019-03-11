@@ -73,7 +73,7 @@ local_ip_mapping_info:
     add         r2, r2, d.local_ip_mapping_info_d.more_hints
 local_ip_mapping_miss:
     seq         c1, k.vnic_metadata_skip_src_dst_check, FALSE
-    phvwr.c1    p.control_metadata_p4i_drop_reason[DROP_SRC_DST_CHECK_FAIL], 1
+    phvwr.c1    p.control_metadata_p4i_drop_reason[P4I_DROP_SRC_DST_CHECK_FAIL], 1
     phvwr.e     p.service_header_local_ip_mapping_done, TRUE
     phvwr.c1    p.capri_intrinsic_drop, TRUE
 

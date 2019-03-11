@@ -1,5 +1,11 @@
 action nexthop_info(tep_index, snat_required, encap_type,
                     dst_slot_id, traffic_class) {
+    if (txdma_to_p4e_header.nexthop_index == 0) {
+        modify_field(control_metadata.p4e_drop_reason,
+                     1 << P4E_DROP_INVALID_NEXTHOP);
+        drop_packet();
+    }
+
     modify_field(rewrite_metadata.tep_index, tep_index);
     modify_field(nat_metadata.snat_required, snat_required);
     modify_field(rewrite_metadata.encap_type, encap_type);
