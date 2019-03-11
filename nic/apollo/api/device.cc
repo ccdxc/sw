@@ -157,7 +157,10 @@ device_entry::add_to_db(void) {
  */
 sdk_ret_t
 device_entry::del_from_db(void) {
-    return device_db()->remove();
+    if (device_db()->remove()) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 device_entry *

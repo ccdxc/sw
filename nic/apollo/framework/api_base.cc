@@ -73,9 +73,9 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
     case OBJ_ID_VCN:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_key);
+            obj = vcn_db()->find(&api_ctxt->api_params->vcn_key);
         } else {
-            obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_spec.key);
+            obj = vcn_db()->find(&api_ctxt->api_params->vcn_spec.key);
         }
         return obj;
 

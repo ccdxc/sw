@@ -33,16 +33,25 @@ public:
 
     /// \brief      allocate memory required for a vcn instance
     /// \return     pointer to the allocated vcn, NULL if no memory
-    vcn_entry *vcn_alloc(void);
+    vcn_entry *alloc(void);
+
+    /// \brief    insert given vcn instance into the vcn db
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(vcn_entry *vcn);
+
+     /// \brief     remove the (singleton) instance of device object from db
+     //  \param[in] key  key for the VCN object
+     /// \return    pointer to the removed vcn instance or NULL, if not found
+    vcn_entry *remove(pds_vcn_key_t *key);
 
     /// \brief      free vcn instance back to slab
     /// \param[in]  vcn   pointer to the allocated vcn
-    void vcn_free(vcn_entry *vcn);
+    void free(vcn_entry *vcn);
 
     /// \brief      lookup a vcn in database given the key
-    /// \param[in]  vcn_key vcn key
+    /// \param[in]  vcn  key for the VCN object
     /// \return     pointer to the vcn instance found or NULL
-    vcn_entry *vcn_find(pds_vcn_key_t *vcn_key) const;
+    vcn_entry *find(pds_vcn_key_t *key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
@@ -53,8 +62,8 @@ private:
     friend class vcn_entry;    ///< vcn_entry class is friend of vcn_state
 
 private:
-    ht *vcn_ht_;           ///< Hash table root
-    indexer *vcn_idxr_;    ///< Indexer to allocate hw vcn id
+    ht *vcn_ht_;           ///< hash table root
+    indexer *vcn_idxr_;    ///< indexer to allocate hw vcn id
     slab *vcn_slab_;       ///< slab for allocating vcn entry
 };
 

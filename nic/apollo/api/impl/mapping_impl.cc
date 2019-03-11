@@ -272,7 +272,7 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     vcn_entry             *vcn;
 
     spec = &obj_ctxt->api_params->mapping_spec;
-    vcn = vcn_db()->vcn_find(&spec->key.vcn);
+    vcn = vcn_db()->find(&spec->key.vcn);
 
     PDS_TRACE_DEBUG("Reserving resources for mapping (vcn %u, ip %s), "
                     "subnet %u, tep %s, vnic %u",
@@ -494,7 +494,7 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     subnet_entry          *subnet;
 
     spec = &obj_ctxt->api_params->mapping_spec;
-    vcn = vcn_db()->vcn_find(&spec->key.vcn);
+    vcn = vcn_db()->find(&spec->key.vcn);
     subnet = subnet_db()->subnet_find(&spec->subnet);
     PDS_TRACE_DEBUG("Programming mapping (vcn %u, ip %s), subnet %u, tep %s, "
                     "overlay mac %s, fabric encap type %u "
@@ -578,7 +578,7 @@ mapping_impl::read_hw(pds_mapping_key_t *key,
     remote_vnic_mapping_tx_appdata_t remote_vnic_mapping_tx_data;
     sdk_table_api_params_t api_params = { 0 };
 
-    vcn = vcn_db()->vcn_find(&key->vcn);
+    vcn = vcn_db()->find(&key->vcn);
     memcpy(remote_vnic_mapping_tx_key.p4e_apollo_i2e_dst,
            key->ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
     remote_vnic_mapping_tx_key.txdma_to_p4e_header_vcn_id = vcn->hw_id();

@@ -93,7 +93,6 @@ TEST_F(vcn, vcn_read_existing_vcn) {
 ///
 /// Delete existing vcn
 TEST_F(vcn, vcn_delete_existing_vcn) {
-#if 0
     pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
@@ -101,7 +100,6 @@ TEST_F(vcn, vcn_delete_existing_vcn) {
     vcn_util *vcn1 = new vcn_util(PDS_VCN_TYPE_TENANT, 1, "10/8");
     vcn1->del();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
-#endif
 }
 
 /// \brief Read a VCN
@@ -184,7 +182,6 @@ TEST_F(vcn, vcn_read_multiple_vcns_single_batch) {
 ///
 /// Delete multiple vcns in the same batch
 TEST_F(vcn, vcn_delete_multiple_vcns_single_batch) {
-#if 0
     pds_batch_params_t batch_params = {0};
 
     vcn_util *vcn1, *vcn2, *vcn3, *vcn4, *vcn5;
@@ -203,7 +200,6 @@ TEST_F(vcn, vcn_delete_multiple_vcns_single_batch) {
     vcn5->del();
 
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
-#endif
 }
 
 /// \brief Create multiple VCNs in multiple batches
@@ -249,7 +245,6 @@ TEST_F(vcn, vcn_create_multiple_vcns_multiple_batches) {
 ///
 /// Delete multiple vcns in multiple batches
 TEST_F(vcn, vcn_delete_multiple_vcns_multiple_batches) {
-#if 0
     pds_batch_params_t batch_params = {0};
 
     vcn_util *vcn7, *vcn8, *vcn9, *vcn10, *vcn11;
@@ -283,7 +278,6 @@ TEST_F(vcn, vcn_delete_multiple_vcns_multiple_batches) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     vcn11->del();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
-#endif
 }
 
 /// \brief Read multiple VCNs created in the multiple batches
@@ -308,12 +302,12 @@ TEST_F(vcn, vcn_combine_create_delete_single_batch) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     vcn12->create();
     vcn13->create();
-    // vcn12->del();
+    vcn12->del();
     vcn14->create();
-    // vcn13->del();
+    vcn13->del();
     vcn15->create();
     vcn16->create();
-    // vcn14->del();
+    vcn14->del();
 
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 }
@@ -341,20 +335,20 @@ TEST_F(vcn, vcn_combine_create_delete_multiple_batches) {
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     vcn25->create();
-    // vcn22->del();
-    // vcn23->del();
+    vcn22->del();
+    vcn23->del();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     vcn26->create();
-    // vcn24->del();
-    // vcn25->del();
+    vcn24->del();
+    vcn25->del();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
-    // vcn26->del();
+    vcn26->del();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 }
 
@@ -372,7 +366,6 @@ TEST_F(vcn, vcn_create_more_than_max) {}
 ///
 /// Try to create a vcn with invalid data
 TEST_F(vcn, vcn_create_invalid_vcn) {
-#if 0
     // There is a core seen for this test case in pre_process_create_
     pds_batch_params_t batch_params = {0};
 
@@ -382,7 +375,6 @@ TEST_F(vcn, vcn_create_invalid_vcn) {
     vcn5 = new vcn_util(PDS_VCN_TYPE_TENANT, 5, "0/0");
     vcn5->create();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
-#endif
 }
 
 /// @}

@@ -422,7 +422,7 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     policy                   *egr_v4_policy, *egr_v6_policy;
 
     spec = &obj_ctxt->api_params->vnic_spec;
-    vcn = vcn_db()->vcn_find(&spec->vcn);
+    vcn = vcn_db()->find(&spec->vcn);
     if (vcn == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }

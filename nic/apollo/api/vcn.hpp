@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#if !defined(__API_VCN_HPP__)
+#ifndef __API_VCN_HPP__
 #define __API_VCN_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
@@ -16,6 +16,9 @@
 #include "nic/apollo/include/api/pds_vcn.hpp"
 
 namespace api {
+
+// forwared declaration
+class vcn_state;
 
 /// \defgroup PDS_VCN_ENTRY - vcn entry functionality
 /// \ingroup PDS_VCN
@@ -48,22 +51,26 @@ public:
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief          free h/w resources used by this object, if any
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) override;
+
     /// \brief          program all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief          free h/w resources used by this object, if any
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t release_resources(void) override;
+    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief          cleanup all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
     ///                 with latest epoch#
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief          update all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
@@ -72,7 +79,9 @@ public:
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_config(api_base *orig_obj,
-                                    obj_ctxt_t *obj_ctxt) override;
+                                    obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief          activate the epoch in the dataplane by programming
     ///                 stage 0 tables, if any
@@ -81,7 +90,9 @@ public:
     /// \param          obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                      obj_ctxt_t *obj_ctxt) override;
+                                      obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief          add given vcn to the database
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -153,7 +164,8 @@ private:
 
     // P4 datapath specific state
     uint16_t hw_id_;       ///< hardware id
-    // TODO Statistics for vcn, there arent any as of now
+    friend class vcn_state;    ///< vcn_state class is friend of vcn_entry
+
 } __PACK__;
 
 /// \@}    // end of PDS_VCN_ENTRY

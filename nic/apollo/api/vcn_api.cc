@@ -60,7 +60,7 @@ pds_vcn_spec_fill (vcn_entry *entry, pds_vcn_spec_t *spec)
 static inline vcn_entry *
 pds_vcn_entry_find (pds_vcn_key_t *key)
 {
-    return (vcn_db()->vcn_find(key));
+    return (vcn_db()->find(key));
 }
 
 //----------------------------------------------------------------------------

@@ -33,18 +33,28 @@ vcn_state::~vcn_state() {
 }
 
 vcn_entry *
-vcn_state::vcn_alloc(void) {
+vcn_state::alloc(void) {
     return ((vcn_entry *)vcn_slab_->alloc());
 }
 
+sdk_ret_t
+vcn_state::insert(vcn_entry *vcn) {
+    return vcn_ht_->insert_with_key(&vcn->key_, vcn, &vcn->ht_ctxt_);
+}
+
+vcn_entry *
+vcn_state::remove(pds_vcn_key_t *key) {
+    return (vcn_entry *)(vcn_ht_->remove(key));
+}
+
 void
-vcn_state::vcn_free(vcn_entry *vcn) {
+vcn_state::free(vcn_entry *vcn) {
     vcn_slab_->free(vcn);
 }
 
 vcn_entry *
-vcn_state::vcn_find(pds_vcn_key_t *vcn_key) const {
-    return (vcn_entry *)(vcn_ht_->lookup(vcn_key));
+vcn_state::find(pds_vcn_key_t *key) const {
+    return (vcn_entry *)(vcn_ht_->lookup(key));
 }
 
 }    // namespace api

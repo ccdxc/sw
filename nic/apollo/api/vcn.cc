@@ -29,7 +29,7 @@ vcn_entry::factory(pds_vcn_spec_t *spec) {
     vcn_entry *vcn;
 
     // create vcn entry with defaults, if any
-    vcn = vcn_db()->vcn_alloc();
+    vcn = vcn_db()->alloc();
     if (vcn) {
         new (vcn) vcn_entry();
     }
@@ -44,13 +44,15 @@ void
 vcn_entry::destroy(vcn_entry *vcn) {
     vcn->release_resources();
     vcn->~vcn_entry();
-    vcn_db()->vcn_free(vcn);
+    vcn_db()->free(vcn);
 }
 
 sdk_ret_t
 vcn_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vcn_spec_t *spec = &api_ctxt->api_params->vcn_spec;
 
+    PDS_TRACE_DEBUG("Intializing vcn %u, type %u, pfx %s", spec->key.id,
+                    spec->type, ippfx2str(&spec->pfx));
     memcpy(&this->key_, &spec->key, sizeof(pds_vcn_key_t));
     return SDK_RET_OK;
 }
@@ -65,40 +67,10 @@ vcn_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for VCN config but a h/w id is needed so we
-    // can use while programming vnics, routes etc.
-    pds_vcn_spec_t *spec = &obj_ctxt->api_params->vcn_spec;
-    PDS_TRACE_DEBUG("Programming vcn %u, type %u, pfx %s", key_.id,
-                    spec->type, ippfx2str(&spec->pfx));
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 vcn_entry::release_resources(void) {
     if (hw_id_ != 0xFF) {
         vcn_db()->vcn_idxr()->free(hw_id_);
     }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-vcn_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for VCN config, so nothing to cleanup
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-vcn_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for VCN config, so nothing to update
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-vcn_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                           obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for vcn config, so nothing to activate
-    PDS_TRACE_DEBUG("Created vcn %u", key_.id);
     return SDK_RET_OK;
 }
 
@@ -110,14 +82,17 @@ vcn_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vcn_entry::add_to_db(void) {
-    return vcn_db()->vcn_ht()->insert_with_key(&key_, this, &ht_ctxt_);
+    PDS_TRACE_VERBOSE("Adding vcn %u to db", key_.id);
+    return vcn_db()->insert(this);
 }
 
 sdk_ret_t
 vcn_entry::del_from_db(void) {
-    PDS_TRACE_VERBOSE("Deleting vcn %u", key_.id);
-    vcn_db()->vcn_ht()->remove(&key_);
-    return SDK_RET_OK;
+    PDS_TRACE_VERBOSE("Deleting vcn %u from db", key_.id);
+    if (vcn_db()->remove(&key_)) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t
