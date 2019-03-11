@@ -253,7 +253,7 @@ void ionic_rx_fill(struct queue *q)
 	struct net_device *netdev = q->lif->netdev;
 	struct rxq_desc *desc;
 	struct sk_buff *skb;
-	unsigned int len = netdev->mtu + VLAN_ETH_HLEN;
+	unsigned int len = netdev->mtu + ETH_HLEN;
 	unsigned int i;
 	dma_addr_t dma_addr;
 	bool ring_doorbell;
