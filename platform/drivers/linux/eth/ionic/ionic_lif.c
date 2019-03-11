@@ -460,12 +460,7 @@ static struct rtnl_link_stats64 *ionic_get_stats64(struct net_device *netdev,
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic_lif_stats *ls = lif->lif_stats;
 
-	if (!test_bit(LIF_UP, lif->state))
-#ifdef HAVE_VOID_NDO_GET_STATS64
-		return;
-#else
-		return ns;
-#endif
+	memset(ns, 0, sizeof(*ns));
 
 	ns->rx_packets = ls->rx_ucast_packets +
 			 ls->rx_mcast_packets +
