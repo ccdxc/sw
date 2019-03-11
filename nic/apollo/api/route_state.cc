@@ -47,7 +47,7 @@ route_table_state::~route_table_state() {
  * @return    pointer to the allocated route table, NULL if no memory
  */
 route_table *
-route_table_state::route_table_alloc(void) {
+route_table_state::alloc(void) {
     return ((route_table *)route_table_slab_->alloc());
 }
 
@@ -56,7 +56,7 @@ route_table_state::route_table_alloc(void) {
  * @param[in]  rtrable pointer to the allocated route table instance
  */
 void
-route_table_state::route_table_free(route_table *rtable) {
+route_table_state::free(route_table *rtable) {
     route_table_slab_->free(rtable);
 }
 
@@ -66,7 +66,7 @@ route_table_state::route_table_free(route_table *rtable) {
  * @return       pointer to the route table instance found or NULL
  */
 route_table *
-route_table_state::route_table_find(pds_route_table_key_t *route_table_key) const {
+route_table_state::find(pds_route_table_key_t *route_table_key) const {
     return (route_table *)(route_table_ht_->lookup(route_table_key));
 }
 

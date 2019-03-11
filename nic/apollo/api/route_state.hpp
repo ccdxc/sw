@@ -40,19 +40,19 @@ public:
      * @brief    allocate memory required for a route table instance
      * @return pointer to the allocated route table instance, NULL if no memory
      */
-    route_table *route_table_alloc(void);
+    route_table *alloc(void);
 
     /**
      * @brief      free route table instance back to slab
      * @param[in]  route_table   pointer to the allocated route table instance
      */
-    void route_table_free(route_table *table);
+    void free(route_table *table);
 
     /**
      * @brief     lookup a route table in database given the key
      * @param[in] route_table_key route table key
      */
-    route_table *route_table_find(pds_route_table_key_t *route_table_key) const;
+    route_table *find(pds_route_table_key_t *route_table_key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 

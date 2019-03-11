@@ -110,9 +110,9 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
     case OBJ_ID_ROUTE_TABLE:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            obj = route_table_db()->route_table_find(&api_ctxt->api_params->route_table_key);
+            obj = route_table_db()->find(&api_ctxt->api_params->route_table_key);
         } else {
-            obj = route_table_db()->route_table_find(&api_ctxt->api_params->route_table_spec.key);
+            obj = route_table_db()->find(&api_ctxt->api_params->route_table_spec.key);
         }
         break;
 

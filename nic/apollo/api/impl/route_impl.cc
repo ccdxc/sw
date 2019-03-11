@@ -25,11 +25,6 @@ namespace impl {
  * @{
  */
 
-/**
- * @brief    factory method to allocate & initialize route table impl instance
- * @param[in] spec route table configuration
- * @return    new instance of route table or NULL, in case of error
- */
 route_table_impl *
 route_table_impl::factory(pds_route_table_spec_t *spec) {
     route_table_impl    *impl;
@@ -41,32 +36,20 @@ route_table_impl::factory(pds_route_table_spec_t *spec) {
     return impl;
 }
 
-/**
- * @brief    release all the s/w state associated with the given
- *           route table impl instance, if any, and free the memory
- * @param[in] impl route table impl instance to be freed
- */
 void
 route_table_impl::destroy(route_table_impl *impl) {
     impl->~route_table_impl();
     SDK_FREE(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL, impl);
 }
 
-/**
- * @brief    allocate/reserve h/w resources for this object
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 route_table_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t                  lpm_block_id;
     pds_route_table_spec_t    *spec;
 
     spec = &obj_ctxt->api_params->route_table_spec;
-    /**< allocate free lpm slab for this route table */
+    // allocate free lpm slab for this route table
     if (spec->af == IP_AF_IPV4) {
-        PDS_TRACE_DEBUG("Allocation IPv4 index for route-table %u", spec->key.id);
         if (route_table_impl_db()->v4_idxr()->alloc(&lpm_block_id) !=
                 sdk::lib::indexer::SUCCESS) {
             return sdk::SDK_RET_NO_RESOURCE;
@@ -75,7 +58,6 @@ route_table_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
             route_table_impl_db()->v4_region_addr() +
                 (route_table_impl_db()->v4_table_size() * lpm_block_id);
     } else {
-        PDS_TRACE_DEBUG("Allocation IPv6 index for route-table %u", spec->key.id);
         if (route_table_impl_db()->v6_idxr()->alloc(&lpm_block_id) !=
                 sdk::lib::indexer::SUCCESS) {
             return sdk::SDK_RET_NO_RESOURCE;
@@ -87,10 +69,6 @@ route_table_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief     free h/w resources used by this object, if any
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 route_table_impl::release_resources(api_base *api_obj) {
     uint32_t       lpm_block_id;
@@ -110,12 +88,6 @@ route_table_impl::release_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    program all h/w tables relevant to this object except stage 0
- *           table(s), if any
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                 ret;
@@ -130,7 +102,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return SDK_RET_OK;
     }
 
-    /**< allocate memory for the library to build route table */
+    // allocate memory for the library to build route table
     rtable =
         (route_table_t *)
             SDK_MALLOC(PDS_MEM_ALLOC_ROUTE_TABLE,
@@ -166,39 +138,12 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     return ret;
 }
 
-/**
- * @brief    cleanup all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-route_table_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-/**
- * @brief    update all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] curr_obj    cloned and updated version of the object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 route_table_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                             obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**
- * @brief    activate the epoch in the dataplane by programming stage 0
- *           tables, if any
- * @param[in] epoch       epoch being activated
- * @param[in] api_op      api operation
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                               api_op_t api_op, obj_ctxt_t *obj_ctxt)
