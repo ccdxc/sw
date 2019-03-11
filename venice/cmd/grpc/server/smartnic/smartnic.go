@@ -593,10 +593,12 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 
 		status, version := s.versionChecker.CheckNICVersionForAdmission(nic.Status.GetSmartNICSku(), nic.Status.GetSmartNICVersion())
 		if status != "" {
-			log.Infof("NIC %s with SKU %s and version %s is requested to rollout to version %s", name, nic.Status.GetSmartNICSku(), nic.Status.GetSmartNICVersion(), version)
-			okResp.AdmissionResponse.Phase = cluster.SmartNICStatus_PENDING.String()
-			okResp.AdmissionResponse.Reason = status
-			okResp.AdmissionResponse.RolloutVersion = version
+			log.Infof("NIC %s with SKU %s and version %s is requested to rollout to version %s because %s. Skip temporarily.", name, nic.Status.GetSmartNICSku(), nic.Status.GetSmartNICVersion(), version, status)
+			/*
+				okResp.AdmissionResponse.Phase = cluster.SmartNICStatus_PENDING.String()
+				okResp.AdmissionResponse.Reason = status
+				okResp.AdmissionResponse.RolloutVersion = version
+			*/
 		}
 
 		return okResp, nil
