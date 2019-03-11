@@ -300,7 +300,7 @@ func (n *NMD) GetAgentID() string {
 
 // GetPrimaryMAC returns primaryMac of NMD
 func (n *NMD) GetPrimaryMAC() string {
-	return n.config.Spec.PrimaryMAC
+	return n.config.Status.Fru.MacStr
 }
 
 // GetControllerIps returns Controllers IP
