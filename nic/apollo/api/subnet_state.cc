@@ -36,17 +36,28 @@ subnet_state::~subnet_state() {
 }
 
 subnet_entry *
-subnet_state::subnet_alloc(void) {
+subnet_state::alloc(void) {
     return ((subnet_entry *)subnet_slab_->alloc());
 }
 
+sdk_ret_t
+subnet_state::insert(subnet_entry *subnet) {
+    return subnet_ht_->insert_with_key(&subnet->key_, subnet,
+                                       &subnet->ht_ctxt_);
+}
+
+subnet_entry *
+subnet_state::remove(subnet_entry *subnet) {
+    return (subnet_entry *)(subnet_ht_->remove(&subnet->key_));
+}
+
 void
-subnet_state::subnet_free(subnet_entry *subnet) {
+subnet_state::free(subnet_entry *subnet) {
     subnet_slab_->free(subnet);
 }
 
 subnet_entry *
-subnet_state::subnet_find(pds_subnet_key_t *subnet_key) const {
+subnet_state::find(pds_subnet_key_t *subnet_key) const {
     return (subnet_entry *)(subnet_ht_->lookup(subnet_key));
 }
 

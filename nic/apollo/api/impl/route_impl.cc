@@ -119,7 +119,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
         rtable->routes[i].prefix = spec->routes[i].prefix;
         tep_key.ip_addr = spec->routes[i].nh_ip.addr.v4_addr;
-        tep = tep_db()->tep_find(&tep_key);
+        tep = tep_db()->find(&tep_key);
         SDK_ASSERT(tep != NULL);
         rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
         PDS_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, TEP %s",

@@ -13,6 +13,10 @@
 
 namespace api {
 
+/// \defgroup PDS_VCN_STATE - vcn database functionality
+/// \ingroup PDS_VCN
+/// \@{
+
 vcn_state::vcn_state() {
     // TODO: need to tune multi-threading related params later
     vcn_ht_ = ht::factory(PDS_MAX_VCN >> 1, vcn_entry::vcn_key_func_get,
@@ -43,8 +47,8 @@ vcn_state::insert(vcn_entry *vcn) {
 }
 
 vcn_entry *
-vcn_state::remove(pds_vcn_key_t *key) {
-    return (vcn_entry *)(vcn_ht_->remove(key));
+vcn_state::remove(vcn_entry *vcn) {
+    return (vcn_entry *)(vcn_ht_->remove(&vcn->key_));
 }
 
 void
@@ -56,5 +60,7 @@ vcn_entry *
 vcn_state::find(pds_vcn_key_t *key) const {
     return (vcn_entry *)(vcn_ht_->lookup(key));
 }
+
+/// \@}    // end of PDS_VCN_STATE
 
 }    // namespace api

@@ -71,7 +71,6 @@ TEST_F(subnet, subnet_create) {
 ///
 /// Detailed description
 TEST_F(subnet, subnet_delete) {
-#if 0
     pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
@@ -80,7 +79,6 @@ TEST_F(subnet, subnet_delete) {
     subnet_util s = subnet_util(g_vcn_id, g_subnet_id, "10.1.1.0/16");
     s.del();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
-#endif
 }
 
 /// \brief Create and delete a subnet in the same batch
@@ -97,8 +95,8 @@ TEST_F(subnet, create_delete_in_same_batch) {
     v1.create();
     subnet_util s = subnet_util(g_vcn_id, g_subnet_id, "10.1.1.0/16");
     s.create();
-    // s.del();
-    // v1.del();
+    s.del();
+    v1.del();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 }
 

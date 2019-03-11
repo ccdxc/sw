@@ -36,13 +36,14 @@ public:
     vcn_entry *alloc(void);
 
     /// \brief    insert given vcn instance into the vcn db
+    /// \param[in] vcn    vcn entry to be added to the db
     /// \return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(vcn_entry *vcn);
 
-     /// \brief     remove the (singleton) instance of device object from db
-     //  \param[in] key  key for the VCN object
-     /// \return    pointer to the removed vcn instance or NULL, if not found
-    vcn_entry *remove(pds_vcn_key_t *key);
+    /// \brief     remove the given instance of vcn object from db
+    /// \param[in] vcn    vcn entry to be deleted from the db
+    /// \return    pointer to the removed vcn instance or NULL, if not found
+    vcn_entry *remove(vcn_entry *vcn);
 
     /// \brief      free vcn instance back to slab
     /// \param[in]  vcn   pointer to the allocated vcn

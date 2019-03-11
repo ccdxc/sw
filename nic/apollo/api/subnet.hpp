@@ -17,6 +17,9 @@
 
 namespace api {
 
+// forward declaration
+class subnet_state;
+
 /// \defgroup PDS_SUBNET_ENTRY - subnet entry functionality
 /// \ingroup PDS_SUBNET
 /// @{
@@ -52,7 +55,10 @@ public:
     ///                 stage 0 table(s), if any
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
+        // no hardware programming required for subnet config
+        return SDK_RET_OK;
+    }
 
     /// \brief          free h/w resources used by this object, if any
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -63,7 +69,9 @@ public:
     ///                 with latest epoch#
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief          update all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
@@ -167,7 +175,8 @@ private:
 
     // P4 datapath specific state
     uint16_t hw_id_;                 ///< hardware id
-    // TODO Statistics for subnet, there arent any as of now
+
+    friend class subnet_state;    ///< subnet_state is friend of subnet_entry
 } __PACK__;
 
 /// \@}    // end of PDS_SUBNET_ENTRY

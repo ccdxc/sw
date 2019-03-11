@@ -50,7 +50,7 @@ pds_tep_read (pds_tep_key_t *key, pds_tep_info_t *info)
         return sdk::SDK_RET_INVALID_ARG;
     }
 
-    if ((entry = tep_entry::find_in_db(key)) == NULL) {
+    if ((entry = tep_db()->find(key)) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 

@@ -75,6 +75,19 @@ vcn_entry::release_resources(void) {
 }
 
 sdk_ret_t
+vcn_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+vcn_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
+                           obj_ctxt_t *obj_ctxt) {
+    // there is no h/w programming for vcn config, so nothing to activate
+    PDS_TRACE_DEBUG("Activated vcn api op %u, vcn %u", api_op, key_.id);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 vcn_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // nothing to update on vcn, so no updates supported
     return sdk::SDK_RET_INVALID_OP;
@@ -89,7 +102,7 @@ vcn_entry::add_to_db(void) {
 sdk_ret_t
 vcn_entry::del_from_db(void) {
     PDS_TRACE_VERBOSE("Deleting vcn %u from db", key_.id);
-    if (vcn_db()->remove(&key_)) {
+    if (vcn_db()->remove(this)) {
         return SDK_RET_OK;
     }
     return SDK_RET_ENTRY_NOT_FOUND;

@@ -42,19 +42,29 @@ public:
      * @brief    allocate memory required for a tep
      * @return pointer to the allocated tep, NULL if no memory
      */
-    tep_entry *tep_alloc(void);
+    tep_entry *alloc(void);
+
+    /// \brief    insert given TEP instance into the TEP db
+    /// \param[in] tep    TEP entry to be added to the db
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(tep_entry *tep);
+
+    /// \brief     remove given instance of TEP object from db
+    /// \param[in] tep    TEP entry to be deleted from the db
+    /// \return    pointer to the removed TEP instance or NULL, if not found
+    tep_entry *remove(tep_entry *tep);
 
     /**
      * @brief      free tep instance back to slab
      * @param[in]  tep   pointer to the allocated tep
      */
-    void tep_free(tep_entry *tep);
+    void free(tep_entry *tep);
 
     /**
      * @brief     lookup a tep in database given the key
      * @param[in] tep_key tep key
      */
-    tep_entry *tep_find(pds_tep_key_t *tep_key) const;
+    tep_entry *find(pds_tep_key_t *tep_key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 

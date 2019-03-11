@@ -17,7 +17,7 @@
 
 namespace api {
 
-// forwared declaration
+// forward declaration
 class vcn_state;
 
 /// \defgroup PDS_VCN_ENTRY - vcn entry functionality
@@ -79,9 +79,7 @@ public:
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_config(api_base *orig_obj,
-                                    obj_ctxt_t *obj_ctxt) override {
-        return SDK_RET_OK;
-    }
+                                    obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          activate the epoch in the dataplane by programming
     ///                 stage 0 tables, if any
@@ -90,9 +88,7 @@ public:
     /// \param          obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                      obj_ctxt_t *obj_ctxt) override {
-        return SDK_RET_OK;
-    }
+                                      obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          add given vcn to the database
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -164,8 +160,8 @@ private:
 
     // P4 datapath specific state
     uint16_t hw_id_;       ///< hardware id
-    friend class vcn_state;    ///< vcn_state class is friend of vcn_entry
 
+    friend class vcn_state;    ///< vcn_state is friend of vcn_entry
 } __PACK__;
 
 /// \@}    // end of PDS_VCN_ENTRY

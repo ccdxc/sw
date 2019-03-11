@@ -35,7 +35,7 @@ subnet_entry::factory(pds_subnet_spec_t *spec) {
     subnet_entry *subnet;
 
     // create subnet entry with defaults, if any
-    subnet = subnet_db()->subnet_alloc();
+    subnet = subnet_db()->alloc();
     if (subnet) {
         new (subnet) subnet_entry();
     }
@@ -51,12 +51,23 @@ void
 subnet_entry::destroy(subnet_entry *subnet) {
     subnet->release_resources();
     subnet->~subnet_entry();
-    subnet_db()->subnet_free(subnet);
+    subnet_db()->free(subnet);
 }
 
 sdk_ret_t
 subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_subnet_spec_t *spec = &api_ctxt->api_params->subnet_spec;
+
+    PDS_TRACE_DEBUG(
+        "Initializing subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
+        "vr_mac %s, v4 route table %u, v6 route table %u, "
+        "ingress v4 policy %u, ingress v6 policy %u, "
+        "egress v4 policy %u, egress v6 policy %u",
+        spec->vcn.id, key_.id, ippfx2str(&spec->pfx),
+        ipaddr2str(&spec->vr_ip), macaddr2str(spec->vr_mac),
+        spec->v4_route_table.id, spec->v6_route_table.id,
+        spec->ing_v4_policy.id, spec->ing_v6_policy.id,
+        spec->egr_v4_policy.id, spec->egr_v6_policy.id);
 
     key_.id = spec->key.id;
     v4_route_table_.id = spec->v4_route_table.id;
@@ -80,36 +91,10 @@ subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for subnet config but a h/w id is needed so
-    // we can use while programming vnics, routes etc.
-    pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
-
-    PDS_TRACE_DEBUG(
-        "Creating subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
-        "vr_mac %s, v4 route table %u, v6 route table %u, "
-        "ingress v4 policy %u, ingress v6 policy %u, "
-        "egress v4 policy %u, egress v6 policy %u",
-        spec->vcn.id, key_.id, ippfx2str(&spec->pfx),
-        ipaddr2str(&spec->vr_ip), macaddr2str(spec->vr_mac),
-        spec->v4_route_table.id, spec->v6_route_table.id,
-        spec->ing_v4_policy.id, spec->ing_v6_policy.id,
-        spec->egr_v4_policy.id, spec->egr_v6_policy.id);
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 subnet_entry::release_resources(void) {
     if (hw_id_ != 0xFF) {
         subnet_db()->subnet_idxr()->free(hw_id_);
     }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-subnet_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    // impl->cleanup_hw();
-    // there is no h/w programming for VCN config, so nothing to cleanup
     return SDK_RET_OK;
 }
 
@@ -122,10 +107,8 @@ subnet_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
-    pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
-
     // there is no h/w programming for subnet config, so nothing to activate
-    PDS_TRACE_DEBUG("Created subnet (vcn %u, subnet %u)", spec->vcn.id,
+    PDS_TRACE_DEBUG("Activated subnet api op %u, subnet %u", api_op,
                     key_.id);
     return SDK_RET_OK;
 }
@@ -138,13 +121,16 @@ subnet_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 subnet_entry::add_to_db(void) {
-    return subnet_db()->subnet_ht()->insert_with_key(&key_, this, &ht_ctxt_);
+    PDS_TRACE_VERBOSE("Adding subnet %u to db", key_.id);
+    return subnet_db()->insert(this);
 }
 
 sdk_ret_t
 subnet_entry::del_from_db(void) {
-    subnet_db()->subnet_ht()->remove(&key_);
-    return SDK_RET_OK;
+    if (subnet_db()->remove(this)) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

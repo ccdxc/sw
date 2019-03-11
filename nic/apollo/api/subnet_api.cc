@@ -62,7 +62,7 @@ pds_subnet_spec_fill (subnet_entry *entry, pds_subnet_spec_t *spec)
 static inline subnet_entry *
 pds_subnet_entry_find (pds_subnet_key_t *key)
 {
-    return (subnet_db()->subnet_find(key));
+    return (subnet_db()->find(key));
 }
 
 //----------------------------------------------------------------------------

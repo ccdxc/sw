@@ -301,7 +301,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
     sdk_table_api_params_t api_params;
 
     tep_impl_obj =
-        (tep_impl *)tep_db()->tep_find(&spec->tep)->impl();
+        (tep_impl *)tep_db()->find(&spec->tep)->impl();
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vcn->hw_id(),
                                                &spec->key.ip_addr);
@@ -495,7 +495,7 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     spec = &obj_ctxt->api_params->mapping_spec;
     vcn = vcn_db()->find(&spec->key.vcn);
-    subnet = subnet_db()->subnet_find(&spec->subnet);
+    subnet = subnet_db()->find(&spec->subnet);
     PDS_TRACE_DEBUG("Programming mapping (vcn %u, ip %s), subnet %u, tep %s, "
                     "overlay mac %s, fabric encap type %u "
                     "fabric encap value %u, vnic %u",

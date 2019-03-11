@@ -223,7 +223,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vnic_tx_stats_actiondata_t                vnic_tx_stats_data = { 0 };
 
     spec = &obj_ctxt->api_params->vnic_spec;
-    subnet = subnet_db()->subnet_find(&spec->subnet);
+    subnet = subnet_db()->find(&spec->subnet);
     if (subnet == NULL) {
         PDS_TRACE_ERR("Unable to find subnet : %u, vcn : %u",
                       spec->subnet.id, spec->vcn.id);
@@ -493,7 +493,7 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     if (vcn == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }
-    subnet = subnet_db()->subnet_find(&spec->subnet);
+    subnet = subnet_db()->find(&spec->subnet);
     if (subnet == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }

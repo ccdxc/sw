@@ -81,17 +81,17 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
     case OBJ_ID_SUBNET:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_key);
+            obj = subnet_db()->find(&api_ctxt->api_params->subnet_key);
         } else {
-            obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_spec.key);
+            obj = subnet_db()->find(&api_ctxt->api_params->subnet_spec.key);
         }
         return obj;
 
     case OBJ_ID_TEP:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            obj = tep_db()->tep_find(&api_ctxt->api_params->tep_key);
+            obj = tep_db()->find(&api_ctxt->api_params->tep_key);
         } else {
-            obj = tep_db()->tep_find(&api_ctxt->api_params->tep_spec.key);
+            obj = tep_db()->find(&api_ctxt->api_params->tep_spec.key);
         }
         return obj;
         break;

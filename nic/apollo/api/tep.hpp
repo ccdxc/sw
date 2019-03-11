@@ -117,12 +117,6 @@ public:
     virtual sdk_ret_t del_from_db(void) override;
 
     /**
-     * @brief     find and return a TEP object given its key
-     * @return    return TEP object or NULL, if not found
-     */
-    static tep_entry *find_in_db(pds_tep_key_t *tep_key);
-
-    /**
      * @brief    this method is called on new object that needs to replace the
      *           old version of the object in the DBs
      * @param[in] orig_obj    old version of the object being swapped out
@@ -203,6 +197,8 @@ private:
     pds_tep_key_t    key_;        /**< tep key */
     ht_ctxt_t        ht_ctxt_;    /**< hash table context */
     impl_base        *impl_;      /**< impl object instance */
+
+    friend class tep_state;    /**< tep_state is friend of tep_entry */
 } __PACK__;
 
 /** @} */    // end of PDS_TEP_ENTRY

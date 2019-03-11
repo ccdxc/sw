@@ -16,17 +16,10 @@
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_TEP_IMPL - tep entry datapath implementation
- * @ingroup PDS_TEP
- * @{
- */
+/// \defgroup PDS_TEP_IMPL - tep entry datapath implementation
+/// \ingroup PDS_TEP
+/// @{
 
-/**
- * @brief    factory method to allocate & initialize tep impl instance
- * @param[in] pds_tep    tep information
- * @return    new instance of tep or NULL, in case of error
- */
 tep_impl *
 tep_impl::factory(pds_tep_spec_t *pds_tep) {
     tep_impl *impl;
@@ -38,29 +31,14 @@ tep_impl::factory(pds_tep_spec_t *pds_tep) {
     return impl;
 }
 
-/**
- * @brief    release all the s/w state associated with the given tep,
- *           if any, and free the memory
- * @param[in] tep     tep to be freed
- * NOTE: h/w entries should have been cleaned up (by calling
- *       impl->cleanup_hw() before calling this
- */
 void
 tep_impl::destroy(tep_impl *impl) {
     impl->~tep_impl();
     SDK_FREE(SDK_MEM_ALLOC_PDS_TEP_IMPL, impl);
 }
 
-/**
- * @brief    allocate/reserve h/w resources for this object
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // TODO: if directmap provides a way to reserve() we dont need this indexer
-    //       at all !!
     if (tep_impl_db()->tep_idxr()->alloc((uint32_t *)&hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
@@ -68,25 +46,16 @@ tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief     free h/w resources used by this object, if any
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 tep_impl::release_resources(api_base *api_obj) {
     if (hw_id_ != 0xFF) {
         tep_impl_db()->tep_idxr()->free(hw_id_);
         tep_impl_db()->tep_tx_tbl()->remove(hw_id_);
+        hw_id_ = 0xFF;
     }
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**
- * @brief    program all h/w tables relevant to this object except stage 0
- *           table(s), if any
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 #define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
 #define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
 #define nh_tx_action              action_u.nexthop_tx_nexthop_info
@@ -158,26 +127,12 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     return ret;
 }
 
-/**
- * @brief    cleanup all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    //TODO: need to unprogram HW.
+    //TODO: need to cleanup HW
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**
- * @brief    update all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] curr_obj    cloned and updated version of the object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                     obj_ctxt_t *obj_ctxt) {
@@ -240,7 +195,7 @@ tep_impl::read_hw(pds_tep_info_t *info) {
     return sdk::SDK_RET_OK;
 }
 
-/** @} */    // end of PDS_TEP_IMPL
+/// \@}    // end of PDS_TEP_IMPL
 
 }    // namespace impl
 }    // namespace api
