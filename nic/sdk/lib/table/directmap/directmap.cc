@@ -241,7 +241,7 @@ end:
 // insert entry in HW at index
 //-----------------------------------------------------------------------------
 sdk_ret_t
-directmap::insert_withid(void *data, uint32_t index, void* data_mask)
+directmap::insert_withid(void *data, uint32_t index, void *data_mask)
 {
     sdk_ret_t rs = SDK_RET_OK;
     p4pd_error_t pd_err = P4PD_SUCCESS;
@@ -307,12 +307,81 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// insert entry in HW at index
+//-----------------------------------------------------------------------------
+sdk_ret_t
+directmap::insert_atid(void *data, uint32_t index, void *data_mask)
+{
+    sdk_ret_t rs = SDK_RET_OK;
+    p4pd_error_t pd_err = P4PD_SUCCESS;
+    directmap_entry_t   dme = { 0 }, *dme_elem = NULL;
+
+    if (!indexer_->is_index_allocated(index)) {
+        rs = SDK_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    if (sharing_en_) {
+        dme.data = data;
+        dme.len = swdata_len_;
+        dme_elem = find_directmap_entry(&dme);
+        if (dme_elem) {
+            // increment ref count
+            dme_elem->ref_cnt++;
+
+            SDK_TRACE_DEBUG("sharing enabled, reusing index : %u ref_cnt : %d\n",
+                            dme_elem->index, dme_elem->ref_cnt);
+            // You cant do insert_withid() for already existing entry at a
+            // different index
+            SDK_ASSERT(index == dme_elem->index);
+            goto end;
+        }
+    }
+
+    // print entry
+    if (entry_trace_en_) {
+        entry_trace_(data, index);
+    }
+
+    // program P4
+    pd_err = p4pd_global_entry_write_with_datamask(id_, index, NULL, NULL,
+                                                   data, data_mask);
+    if (pd_err != P4PD_SUCCESS) {
+        rs = SDK_RET_HW_PROGRAM_ERR;
+        SDK_ASSERT(0);
+    }
+
+    if (sharing_en_) {
+        dme_elem = directmap_entry_alloc_init();
+        dme_elem->data = (void *)SDK_MALLOC(SDK_MEM_ALLOC_LIB_DIRECT_MAP_DATA,
+                                            swdata_len_);
+        memcpy(dme_elem->data, data, swdata_len_);
+        dme_elem->len = swdata_len_;
+        dme_elem->index = index;
+        dme_elem->ref_cnt = 1;
+
+        SDK_TRACE_DEBUG("sharing enabled, index : %d ref_cnt : %d\n",
+                        dme_elem->index, dme_elem->ref_cnt);
+
+        // insert into hash table
+        rs = add_directmap_entry_to_db(dme_elem);
+        SDK_ASSERT(rs == SDK_RET_OK);
+    }
+
+end:
+
+    //stats_update(INSERT_WITHID, rs);
+    trigger_health_monitor();
+    return rs;
+}
+
+//-----------------------------------------------------------------------------
 // reserve a given id
 // TODO: @bharat, please add sharing_en_ support here when u get to this lib
 //       and stat support
 //-----------------------------------------------------------------------------
 sdk_ret_t
-directmap::reserve(uint32_t index) {
+directmap::reserve_index(uint32_t index) {
     sdk_ret_t ret;
 
     if (index > capacity_) {
@@ -324,7 +393,21 @@ directmap::reserve(uint32_t index) {
         return SDK_RET_OK;
     }
 
-    ret = free_index_(index);
+end:
+
+    //stats_update(RESERVE, ret);
+    //trigger_health_monitor();
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// reserve a free id and return the allocated index
+//-----------------------------------------------------------------------------
+sdk_ret_t
+directmap::reserve(uint32_t *index) {
+    sdk_ret_t ret;
+
+    ret = alloc_index_(index);
     if (ret != SDK_RET_OK) {
         goto end;
     }
@@ -337,7 +420,7 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// reserve a given id
+// release a given index
 // TODO: @bharat, please add sharing_en_ support here when u get to this lib
 //       and stat support
 //-----------------------------------------------------------------------------

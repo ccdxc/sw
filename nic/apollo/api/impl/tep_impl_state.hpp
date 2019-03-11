@@ -1,11 +1,14 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    tep_impl_state.hpp
- *
- * @brief   TEP implementation state
- */
-#if !defined (__TEP_IMPL_STATE_HPP__)
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// TEP implementation state
+///
+//----------------------------------------------------------------------------
+
+#ifndef __TEP_IMPL_STATE_HPP__
 #define __TEP_IMPL_STATEHPP__
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
@@ -15,25 +18,21 @@
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_TEP_IMPL_STATE - tep state functionality
- * @ingroup PDS_TEP
- * @{
- */
+/// \defgroup PDS_TEP_IMPL_STATE - tep state functionality
+/// \ingroup PDS_TEP
+/// \@{
 
  /**< forward declaration */
 class tep_impl;
 class mapping_impl;
 
-/**
- * @brief    state maintained for teps
- */
+/// \brief    state maintained for teps
 class tep_impl_state : public obj_base {
 public:
-    /**< @brief    constructor */
+    // constructor
     tep_impl_state(pds_state *state);
 
-    /**< @brief    destructor */
+    // destructor
     ~tep_impl_state();
 
     /**
@@ -51,21 +50,19 @@ public:
     sdk_ret_t table_transaction_end(void);
 
 private:
-    indexer *tep_idxr(void) { return tep_idxr_; }
     directmap *tep_tx_tbl(void) { return tep_tx_tbl_; }
     directmap *nh_tx_tbl(void) { return nh_tx_tbl_; }
-    friend class tep_impl;   /**< tep_impl class is friend of tep_impl_state */
-    friend class mapping_impl;   /**< mapping_impl class is friend of tep_impl_state */
+    friend class tep_impl;       // tep_impl class is friend of tep_impl_state
+    friend class mapping_impl;   // mapping_impl class is friend of tep_impl_state
 
 private:
-    indexer      *tep_idxr_;    /**< indexer to allocate hw ids for TEPs */
-    directmap    *tep_tx_tbl_;  /**< directmap table for TEP_TX */
-    directmap    *nh_tx_tbl_;   /**< directmap table for NH_TX */
+    directmap    *tep_tx_tbl_;  // directmap table for TEP_TX
+    directmap    *nh_tx_tbl_;   // directmap table for NH_TX
 };
 
-/** * @} */    // end of PDS_TEP_IMPL_STATE
+///   \@}    // end of PDS_TEP_IMPL_STATE
 
 }    // namespace impl
 }    // namespace api
 
-#endif    /** __TEP_IMPL_STATE_HPP__ */
+#endif    // __TEP_IMPL_STATE_HPP__

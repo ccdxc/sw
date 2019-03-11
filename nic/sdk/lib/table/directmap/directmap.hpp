@@ -70,7 +70,9 @@ public:
     // policers etc
     sdk_ret_t insert(void *data, uint32_t *index, void *data_mask = NULL);
     sdk_ret_t insert_withid(void *data, uint32_t index, void *data_mask = NULL);
-    sdk_ret_t reserve(uint32_t index);
+    sdk_ret_t insert_atid(void *data, uint32_t index, void *data_mask = NULL);
+    sdk_ret_t reserve_index(uint32_t index);
+    sdk_ret_t reserve(uint32_t *index);
     sdk_ret_t release(uint32_t index);
     sdk_ret_t update(uint32_t index, void *data, void *data_mask = NULL);
     sdk_ret_t remove(uint32_t index, void *data = NULL);

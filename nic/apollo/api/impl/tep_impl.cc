@@ -39,21 +39,33 @@ tep_impl::destroy(tep_impl *impl) {
 
 sdk_ret_t
 tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    if (tep_impl_db()->tep_idxr()->alloc((uint32_t *)&hw_id_) !=
-            sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
+    sdk_ret_t ret;
+
+    // reserve an entry in TEP_TX table
+    ret = tep_impl_db()->tep_tx_tbl()->reserve((uint32_t *)&hw_id_);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // reserve an entry in NH_TX table
+    ret = tep_impl_db()->nh_tx_tbl()->reserve((uint32_t *)&nh_id_);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 tep_impl::release_resources(api_base *api_obj) {
-    if (hw_id_ != 0xFF) {
-        tep_impl_db()->tep_idxr()->free(hw_id_);
-        tep_impl_db()->tep_tx_tbl()->remove(hw_id_);
-        hw_id_ = 0xFF;
+    if (hw_id_ != 0xFFFF) {
+        tep_impl_db()->tep_tx_tbl()->release(hw_id_);
+        hw_id_ = 0xFFFF;
     }
-    return sdk::SDK_RET_INVALID_OP;
+    if (nh_id_ != 0xFFFF) {
+        tep_impl_db()->nh_tx_tbl()->release(nh_id_);
+        nh_id_ = 0xFFFF;
+    }
+    return SDK_RET_OK;
 }
 
 #define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
@@ -89,7 +101,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         ret = SDK_RET_INVALID_ARG;
         break;
     }
-    ret = tep_impl_db()->tep_tx_tbl()->insert_withid(&tep_tx_data, hw_id_);
+    ret = tep_impl_db()->tep_tx_tbl()->insert_atid(&tep_tx_data, hw_id_);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("TEP Tx table programming failed for TEP %s, "
                       "TEP hw id %u, err %u", api_obj->key2str().c_str(),
@@ -114,11 +126,11 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         ret = SDK_RET_INVALID_ARG;
         break;
     }
-    ret = tep_impl_db()->nh_tx_tbl()->insert(&nh_tx_data, (uint32_t *)&nh_id_);
+    ret = tep_impl_db()->nh_tx_tbl()->insert_atid(&nh_tx_data, nh_id_);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Nexthop Tx table programming failed for TEP %s, "
                       "nexthop hw id %u, err %u", api_obj->key2str().c_str(),
-                      hw_id_, ret);
+                      nh_id_, ret);
     }
     PDS_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nexthop id %u",
                     ipv4addr2str(tep_spec->key.ip_addr),
@@ -129,7 +141,13 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    //TODO: need to cleanup HW
+    //TODO: need to unprogram HW
+    //if (hw_id_ != 0xFFFF) {
+    //      tep_impl_db()->tep_tx_tbl()->remove(hw_id_);
+    //}
+    //if (nh_id_ != 0xFFFF) {
+    //    tep_impl_db()->nh_tx_tbl()->remove(nh_id_);
+    //}
     return sdk::SDK_RET_INVALID_OP;
 }
 
