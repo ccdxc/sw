@@ -16,9 +16,9 @@ setup:
     topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
     config  :
         
-        - step : utils.naples_workloads
         - step : testcases.frequency.clock_settings
         - step : utils.reboot_all
+        - step : utils.naples_workloads
         - step : config.config_link_flap
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf
