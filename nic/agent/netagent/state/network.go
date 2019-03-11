@@ -53,13 +53,12 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
-	nt.Status.NetworkID, err = na.Store.GetNextID(types.NetworkID)
+	networkID, err := na.Store.GetNextID(types.NetworkID)
 	if err != nil {
 		log.Errorf("Could not allocate network id. {%+v}", err)
 		return err
 	}
-	// TODO: Fix it cleanly.
-	nt.Status.NetworkID += 16
+	nt.Status.NetworkID = networkID + types.NetworkOffset
 
 	uplinks := na.getUplinks()
 

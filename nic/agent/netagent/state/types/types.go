@@ -15,11 +15,11 @@ import (
 
 const (
 	// UplinkOffset will ensure that the agent will allocate uplink IDs starting from 128 and this will not clash with any of
-	// the internal hal interfaces
+	// the internal hal interfaces i.e NETAGENT_IF_ID_UPLINK_MIN
 	UplinkOffset = 127
 
-	// SecurityProfileOffset will ensure that agent will allocate security profiles stating from 10
-	SecurityProfileOffset = 10
+	// SecurityProfileOffset will ensure that agent will allocate security profiles stating from 16 i.e NETAGENT_NWSEC_PROFILE_ID_MIN
+	SecurityProfileOffset = 15
 
 	// EnicOffset will ensure that agent will allocate enic IDs starting from UplinkOffset + 10000
 	EnicOffset = UplinkOffset + 10000
@@ -29,6 +29,9 @@ const (
 
 	// VrfOffset will ensure that agent will allocate VRF IDs starting from 65.i.e. NETAGENT_VRF_ID_MIN
 	VrfOffset = 64
+
+	// NetworkOffset will ensure that agent will allocate VRD IDs starting from 16 i.e NETAGENT_L2SEG_ID_MIN
+	NetworkOffset = 15
 )
 
 // ID types

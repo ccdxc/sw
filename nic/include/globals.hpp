@@ -32,6 +32,9 @@
 #define NETAGENT_NWSEC_PROFILE_ID_MIN      16     // netagent security profile id min
 #define NETAGENT_NWSEC_PROFILE_ID_MAX      255    // netagent security profile id max
 
+// l2segment if ranges
+#define NETAGENT_L2SEG_ID_MIN              16
+
 #define SERVICE_LIF_START                       HAL_LIF_ID_SVC_LIF_MIN
 #define HAL_PROXY_MAX_ST_LIF_PER_SVC            5
 #define HAL_PROXY_MAX_QTYPE_PER_LIF             8
