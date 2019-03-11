@@ -326,26 +326,14 @@ def is_snma_mac(mac_addr_str):
         return True
     return False
 """
-def is_gvrp_mcast_mac(mac_addr_str):
-    # GARP VLAN Registration Protocol (also known as IEEE 802.1q GVRP)
-    if "01:80:c2:00:00:21" == mac_addr_str:
-        return True
-    return False
-
-def is_all_node_mc_mac(mac_addr_str):
-    #TODO Move it to address utils?
-    # All Node Multicast Address
-    if "33:33:00:00:00:01" == mac_addr_str:
-        return True
-    return False
 
 def add_mc_mac_for_all_vlans(mac_addr_str):
     #TODO: Make it proper API
-    if is_gvrp_mcast_mac(mac_addr_str):
+    if address_utils.is_gvrp_mcast_mac(mac_addr_str):
         return True
     if "33:33:ff:00:00:01" == mac_addr_str:
         return False
-    if is_all_node_mc_mac(mac_addr_str):
+    if address_utils.is_all_node_mc_mac(mac_addr_str):
         return False
     if "01:00:5e:00:00:01" == mac_addr_str:
         return False

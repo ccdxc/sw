@@ -107,6 +107,13 @@ def Get_TxVlanOffload_Status(node, interface):
     resp = api.Trigger(req)
     return resp
 
+def GetNaplesNodeName():
+    nodes = api.GetWorkloadNodeHostnames()
+    for node in nodes:
+        if api.IsNaplesNode(node):
+            return node, True
+    return "", False
+
 def GetHostInternalMgmtInterfaces(node):
     interface_names = []
 

@@ -21,6 +21,21 @@ def debug_dump_interface_info(node, interface):
             result = api.types.status.FAILURE
     return result
 
+def debug_dump_workload_info(workload):
+    w = workload
+    api.Logger.verbose("workload info : ", w.workload_name, w.node_name, w.IsNaples(), w.uplink_vlan, w.encap_vlan, id(w))
+    api.Logger.verbose("workload info : ", w.ip_address, w.ipv6_address, w.mac_address, w.interface, w.parent_interface)
+    debug_dump_interface_info(w.node_name, w.interface)
+    return
+
+def debug_dump_all_workloads():
+    api.Logger.verbose("debug_dump_all_workloads : START")
+    workloads = api.GetWorkloads()
+    for w in workloads:
+        debug_dump_workload_info(w)
+    api.Logger.verbose("debug_dump_all_workloads : END")
+    return
+
 def GetHostMgmtInterface(node):
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)

@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.iris.utils.host as host_utils
+import iota.test.iris.utils.traffic as traffic_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
 from collections import defaultdict
 
@@ -131,7 +132,7 @@ def Trigger(tc):
     # Triggers done - Now build endpoint view of Host and Naples
     tc.wload_ep_set, tc.host_ep_set, tc.naples_ep_set, tc.hal_ep_set = getAllEndPointsView(tc)
 
-    tc.cmd_cookies, tc.resp = filters_utils.pingAllRemoteWloadPairs(tc.workloads, tc.iterators)
+    tc.cmd_cookies, tc.resp = traffic_utils.pingAllRemoteWloadPairs(mtu=tc.iterators.pktsize, af=str(tc.iterators.ipaf))
 
     api.Logger.info("UC MAC filter : Trigger final result - ", result)
     return result
@@ -159,11 +160,6 @@ def Verify(tc):
     else:
         api.Logger.debug("UC MAC filter : Verify - verifyEndPoints SUCCESS ")
     
-    if tc.resp is None:
-        api.Logger.error("UC MAC filter : Verify failed - no response")
-        result = api.types.status.FAILURE
-        return result
-
     """
        # If "filters" bundle run as first bundle in a suite,
        # there are chances that STP might not have converged yet and as a result of that
@@ -175,14 +171,7 @@ def Verify(tc):
        # Last 2 solutions mean increase in script execution time which is a big NO.
        # so leaving it for now as this will not happen in sanity
     """
-    for cmd in tc.resp.commands:
-        #api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
-        #api.PrintCommandResults(cmd)
-        if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            api.Logger.error("UC MAC filter : Verify failed for %s" % (tc.cmd_cookies[cookie_idx]))
-            api.PrintCommandResults(cmd)
-            result = api.types.status.FAILURE
-        cookie_idx += 1
+    result = traffic_utils.verifyPing(tc.cmd_cookies, tc.resp)
     
     api.Logger.info("UC MAC filter : Verify final result - ", result)
 
