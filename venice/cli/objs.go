@@ -50,7 +50,7 @@ func populateGenCtx(ctx *cliContext) error {
 	}
 
 	ctx.restDeleteFunc, err = ctx.genInfo.FindRestDeleteFunc(ctx.subcmd, "v1")
-	if ctx.cmd == "delete" && err != nil {
+	if ctx.cmd == "clear" || ctx.cmd == "delete" && err != nil {
 		return err
 	}
 

@@ -136,6 +136,11 @@ func processRec(ctx *cliContext, inp, kind string) error {
 		return nil
 	}
 
+	// repopulate the context because rest functions change for each kind
+	if err := populateGenCtx(ctx); err != nil {
+		return fmt.Errorf("error populating generated cliContext: %s", err)
+	}
+
 	if err := createObjFromBytes(ctx, inp); err != nil {
 		return fmt.Errorf("Error creating from raw bytes: %s\nrec: %s", err, inp)
 	}

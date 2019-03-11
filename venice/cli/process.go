@@ -203,25 +203,38 @@ func readCmd(c *cli.Context) {
 
 // deleteCmd is called for all verbs that perform delete on an object; it invokes REST delete APIs in turn
 func deleteCmd(c *cli.Context) {
+	deleteCmdInternal(c, "delete")
+}
+
+func deleteCmdInternal(c *cli.Context, cmd string) {
 	ctx := &cliContext{cli: c, tenant: defaultTenant}
 
-	if err := processGlobalFlags(ctx, "delete"); err != nil {
+	if err := processGlobalFlags(ctx, cmd); err != nil {
 		return
 	}
 
-	names := ctx.names
-	if ctx.labels != nil && len(ctx.labels) > 0 {
+	if ctx.re != nil || ctx.labels != nil && len(ctx.labels) > 0 {
 		nc := *c
 		readCmd(&nc)
-		names = getFilteredNames(ctx)
+		ctx.names = getFilteredNames(ctx)
+		fmt.Printf("get filtered names re = %+v names = %s\n", ctx.re, ctx.names)
 	}
 
-	for _, name := range names {
+	for _, name := range ctx.names {
+		ctx.names[0] = name
 		err := restDelete(ctx)
 		if err != nil {
 			fmt.Printf("Error deleting %s '%s': %v\n", c.Command.Name, name, err)
 			return
 		}
+	}
+}
+
+// clearCmd deletes all objects or objects of a specific type
+func clearCmd(c *cli.Context) {
+	for _, objKind := range []string{"app", "sgpolicy"} {
+		c.Command.Name = objKind
+		deleteCmdInternal(c, "clear")
 	}
 }
 
@@ -340,6 +353,23 @@ func exampleCmd(c *cli.Context) {
 	}
 
 	fmt.Printf("%s\n", walkStruct(ctx.structInfo, 0))
+}
+
+// uploadCmd uploads the content (json/yml) ifrom a directory, file, or a URL into Venice
+func uploadCmd(c *cli.Context) {
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
+	if err := processGlobalFlags(ctx, "upload"); err != nil {
+		return
+	}
+	if len(ctx.names) == 0 {
+		fmt.Printf("must provide a filename to upload from")
+		return
+	}
+
+	for _, filename := range ctx.names {
+		fmt.Printf("upload from file %s\n", filename)
+		processFiles(ctx, filename)
+	}
 }
 
 // definitionCmd shows object definition

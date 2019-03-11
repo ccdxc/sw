@@ -162,6 +162,18 @@ var Commands = []cli.Command{
 		BashComplete: bashDefinitionCompleter,
 	},
 	{
+		Name:      "upload",
+		Usage:     "upload objects from a file, directory, or a URL",
+		ArgsUsage: "file-name",
+		Action:    uploadCmd,
+	},
+	{
+		Name:   "clear",
+		Usage:  "clear all objects - use caution when using this",
+		Action: clearCmd,
+		Hidden: true,
+	},
+	{
 		Name:      "auto-completion",
 		ArgsUsage: " ",
 		Usage:     "Run \"sudo `which venice` auto-completion\" on a linux system to enable bash autocompletion",
@@ -405,7 +417,7 @@ func processGlobalFlags(ctx *cliContext, cmd string) error {
 	ctx.subcmd = c.Command.Name
 	ctx.token = getLoginToken()
 
-	if err := populateGenCtx(ctx); cmd != "login" && cmd != "snapshot" && err != nil {
+	if err := populateGenCtx(ctx); cmd != "upload" && cmd != "login" && cmd != "snapshot" && err != nil {
 		return fmt.Errorf("error populating generated cliContext: %s", err)
 	}
 
@@ -431,7 +443,11 @@ func processGlobalFlags(ctx *cliContext, cmd string) error {
 		}
 	}
 
-	if reStr := c.String("re"); reStr != "" {
+	reStr := c.String("re")
+	if cmd == "clear" {
+		reStr = ".*"
+	}
+	if reStr != "" {
 		var err error
 		ctx.re, err = regexp.Compile(reStr)
 		if err != nil {

@@ -54,6 +54,10 @@ func bashSnapshotCompleter(c *cli.Context) {
 	bashCompleter(c, []cli.Command{}, snapshotFlags)
 }
 
+func bashClearCompleter(c *cli.Context) {
+	bashCompleter(c, readCommands, []cli.Flag{})
+}
+
 func bashEditObjCompleter(c *cli.Context) {
 	bashCompleter(c, []cli.Command{}, editFlags)
 	bashObjNameCompleter(c)
