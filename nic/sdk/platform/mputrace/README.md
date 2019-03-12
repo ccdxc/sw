@@ -1,7 +1,7 @@
 # MPUTRACE
 
-captrace is a tool to enable tracing on each MPU using the independent trace
-facility available for each capri MPU.
+captrace is a tool to enable tracing on each Match Processing Unit (MPU) using
+the independent trace facility provided by the ASIC.
 
 captrace supports the following operations
 config <cfg.json>
@@ -147,9 +147,9 @@ enabled for that MPU until the end of the current program is reached.
     assumed for those.
 Create a captrace_cfg.json file on NAPLES device specifying the MPUs that
 require to be traced.
-If two json objects have the same pipeline, stage and mpu combination the
-first one takes effect and the later one is ignored with a warning
-shown to the user.
+If two json objects have the same pipeline, stage and mpu combination, then
+the former takes effect while the latter is ignored and a warning is shown to
+the user.
 
 Following is a sample config.json file for reference -
 ```
@@ -277,26 +277,15 @@ Following is a sample config.json file for reference -
 ## Steps to decode the dump file in the container -
     1 Copy the following files into the container
         - the dump file from 'captrace dump' command
-        - /capri_loader.conf file from the naples device
+        - /nic/conf/gen/mpu_prog_info.json file from the naples device
     2 Generate captrace.syms symbol file in container (from sw/nic dir).
         - sdk/platform/mputrace/captrace.py gen_syms
         - this will generate captrace.syms in nic/
-    2 Run captrace.py script on the binary with capri_loader.conf and
+    2 Run captrace.py script on the binary with mpu_prog_info.conf and
       captrace.syms files
         To list all packets
-            sdk/platform/mputrace/captrace.py decode captrace.bin --load=capri_loader.conf --sym=captrace.syms —list
+            sdk/platform/mputrace/captrace.py decode captrace.bin --load=mpu_prog_info.json --sym=captrace.syms —list
         To track packet with PHV timestamp “0x1c07a80c” across stages
-            sdk/platform/mputrace/captrace.py decode captrace.bin --fltr phv_timestamp_capture=0x1c07a80c --load=capri_loader.conf --sym=captrace.syms > pkt1c07.log
+            sdk/platform/mputrace/captrace.py decode captrace.bin --fltr phv_timestamp_capture=0x1c07a80c --load=mpu_prog_info.json --sym=captrace.syms > pkt1c07.log
         To dump info about the packet
             grep -e pipeline -e stage -e PROGRAM -e BRANCH -e table_hit pkt1c07.log
-
-## License
-
-
-## Acknowledgments
-
-
-## TODO items
-(this secition will go away eventually)
-    1 Use mpartition class instead of hardcoded addresses
-    2 move away from capri_loader.conf file
