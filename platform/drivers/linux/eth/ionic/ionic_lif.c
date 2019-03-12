@@ -2509,11 +2509,11 @@ static int ionic_lif_notify(struct notifier_block *nb,
 	case NETDEV_CHANGELOWERSTATE:
 		ionic_lif_changelowerstate(ionic, lif, info);
 		break;
+#endif
+#endif /* DISABLE_LINK_AG_SUPPORT */
 	case NETDEV_CHANGENAME:
 		ionic_lif_set_netdev_info(lif);
 		break;
-#endif
-#endif /* DISABLE_LINK_AG_SUPPORT */
 	default:
 		return NOTIFY_DONE;
 	}
