@@ -110,6 +110,10 @@ update_submodule
 echo "Starting docker instance"
 DOCKER_ID=$(start_shell)
 echo Docker_ID $DOCKER_ID
+
+#sleeping to let pull-asset finish
+sleep 90
+
 alias docker_exec="docker exec $DOCKER_ID sudo -i -u $USERNAME /bin/bash -c"
 alias docker_root="docker exec $DOCKER_ID /bin/bash -c"
 
