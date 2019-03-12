@@ -74,7 +74,7 @@
             <div class="naplesdetail-details-panel-virtual-ip">{{ selectedObj?.status['primary-mac'] }}</div>
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="naplesdetail-node-value">
-            <div class="naplesdetail-details-panel-virtual-ip">{{ selectedObj?.spec['ip-config'] ? selectedObj?.spec['ip-config']["ip-address"] : '' }}</div>
+            <div class="naplesdetail-details-panel-virtual-ip">{{ selectedObj?.status['ip-config'] ? selectedObj?.status['ip-config']["ip-address"] : '' }}</div>
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="naplesdetail-node-value">
             <div class="naplesdetail-details-panel-ntp-servers">{{ selectedObj?.spec['hostname'] }}</div>
