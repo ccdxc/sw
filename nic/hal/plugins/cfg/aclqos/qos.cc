@@ -423,7 +423,6 @@ qos_class_free (qos_class_t *qos_class, bool free_pd)
         }
     }
 
-    SDK_SPINLOCK_DESTROY(&qos_class->slock);
     hal::delay_delete_to_slab(HAL_SLAB_QOS_CLASS, qos_class);
     return ret;
 }
@@ -433,6 +432,7 @@ qos_class_cleanup (qos_class_t *qos_class, bool free_pd)
 {
     block_list::destroy(qos_class->lif_list_rx);
     block_list::destroy(qos_class->lif_list_tx);
+    SDK_SPINLOCK_DESTROY(&qos_class->slock);
     return qos_class_free(qos_class, free_pd);
 }
 
@@ -577,7 +577,7 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("qos group not set in request"); 
+        HAL_TRACE_ERR("qos group not set in request");
         return HAL_RET_INVALID_ARG;
     }
 
@@ -1128,9 +1128,14 @@ qos_class_make_clone (qos_class_t *qos_class,
     qos_class_t *qos_class_clone;
     pd::pd_func_args_t pd_func_args = {0};
 
-    *qos_class_clone_p = qos_class_alloc_init();
+    *qos_class_clone_p = qos_class_alloc();
     qos_class_clone = *qos_class_clone_p;
+    // Assumption is clone will have empty cmap. So not doing memcpy
+    // memcpy(qos_class_clone, qos_class, sizeof(qos_class_t));
 
+    qos_class_clone->slock = qos_class->slock;
+    qos_class_clone->lif_list_rx = qos_class->lif_list_rx;
+    qos_class_clone->lif_list_tx = qos_class->lif_list_tx;
     qos_class_clone->key = qos_class->key;
     qos_class_clone->hal_handle = qos_class->hal_handle;
     qos_class_clone->pd = NULL;
@@ -2956,7 +2961,7 @@ copp_delete (CoppDeleteRequest& req, CoppDeleteResponse *rsp)
     HAL_TRACE_DEBUG("deleting copp {} handle {}",
                     copp->key, copp->hal_handle);
 
-    // validate if there no objects referring this copp 
+    // validate if there no objects referring this copp
     ret = validate_copp_delete(copp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("copp delete validation failed, err : {}", ret);

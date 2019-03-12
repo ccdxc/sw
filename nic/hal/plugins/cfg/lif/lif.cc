@@ -1156,7 +1156,8 @@ lif_make_clone (lif_t *lif, lif_t **lif_clone, LifSpec& spec)
     pd::pd_lif_make_clone_args_t args;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    *lif_clone = lif_alloc_init();
+    // Just alloc, no need to init. We dont want new block lists
+    *lif_clone = lif_alloc();
     memcpy(*lif_clone, lif, sizeof(lif_t));
 
     // After clone always reset lists

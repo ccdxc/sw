@@ -110,7 +110,6 @@ nexthop_alloc_init (void)
 static inline hal_ret_t
 nexthop_free (nexthop_t *nexthop)
 {
-    SDK_SPINLOCK_DESTROY(&nexthop->slock);
     hal::delay_delete_to_slab(HAL_SLAB_NEXTHOP, nexthop);
     return HAL_RET_OK;
 }
@@ -119,6 +118,7 @@ static inline hal_ret_t
 nexthop_cleanup (nexthop_t *nexthop)
 {
     block_list::destroy(nexthop->route_list);
+    SDK_SPINLOCK_DESTROY(&nexthop->slock);
     return nexthop_free(nexthop);
 }
 

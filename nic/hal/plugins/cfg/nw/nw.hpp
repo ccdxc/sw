@@ -149,7 +149,6 @@ network_alloc_init (void)
 static inline hal_ret_t
 network_free (network_t *network)
 {
-    SDK_SPINLOCK_DESTROY(&network->slock);
     hal::delay_delete_to_slab(HAL_SLAB_NETWORK, network);
     return HAL_RET_OK;
 }
@@ -160,6 +159,7 @@ network_cleanup (network_t *network)
 {
     // Destroy block lists if there are any
 
+    SDK_SPINLOCK_DESTROY(&network->slock);
     return network_free(network);
 }
 

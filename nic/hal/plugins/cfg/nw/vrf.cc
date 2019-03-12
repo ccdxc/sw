@@ -119,7 +119,6 @@ vrf_alloc_init (void)
 static inline hal_ret_t
 vrf_free (vrf_t *vrf)
 {
-    SDK_SPINLOCK_DESTROY(&vrf->slock);
     hal::delay_delete_to_slab(HAL_SLAB_VRF, vrf);
     return HAL_RET_OK;
 }
@@ -137,6 +136,7 @@ vrf_cleanup (vrf_t *vrf)
     if (vrf->route_list) {
         block_list::destroy(vrf->route_list);
     }
+    SDK_SPINLOCK_DESTROY(&vrf->slock);
     vrf_free(vrf);
 
     return HAL_RET_OK;
@@ -445,11 +445,11 @@ vrf_init_from_spec (vrf_t *vrf, const VrfSpec& spec)
     } else if (ret == HAL_RET_KEY_HANDLE_NOT_SPECIFIED) {
         HAL_TRACE_DEBUG("No nwsec prof passed, "
                         "using default security profile");
-        vrf->nwsec_profile_handle = 
+        vrf->nwsec_profile_handle =
                     g_hal_state->oper_db()->default_security_profile_hdl();
     } else {
         // either invalid key or handle
-        HAL_TRACE_ERR("Security Profile not found handle invalid"); 
+        HAL_TRACE_ERR("Security Profile not found handle invalid");
         return HAL_RET_SECURITY_PROFILE_NOT_FOUND;
     }
 
@@ -804,7 +804,8 @@ vrf_make_clone (vrf_t *ten, vrf_t **ten_clone)
 
     pd::pd_vrf_make_clone_args_init(&args);
 
-    *ten_clone = vrf_alloc_init();
+    // Just alloc, no need to init. We dont want new block lists
+    *ten_clone = vrf_alloc();
     memcpy(*ten_clone, ten, sizeof(vrf_t));
 
     args.vrf = ten;
@@ -987,7 +988,7 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     if (app_ctxt.nwsec_profile_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_DEBUG("No nwsec prof passed, "
                         "using default security profile");
-        app_ctxt.nwsec_profile_handle =  
+        app_ctxt.nwsec_profile_handle =
                     g_hal_state->oper_db()->default_security_profile_hdl();
     }
     app_ctxt.nwsec_prof = find_nwsec_profile_by_handle(app_ctxt.nwsec_profile_handle);

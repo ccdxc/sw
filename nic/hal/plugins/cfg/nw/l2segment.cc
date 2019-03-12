@@ -183,7 +183,6 @@ l2seg_alloc_init (void)
 static inline hal_ret_t
 l2seg_free (l2seg_t *l2seg)
 {
-    SDK_SPINLOCK_DESTROY(&l2seg->slock);
     hal::delay_delete_to_slab(HAL_SLAB_L2SEG, l2seg);
     return HAL_RET_OK;
 }
@@ -257,6 +256,7 @@ l2seg_cleanup (l2seg_t *l2seg)
     if (l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list) {
         hal_cleanup_handle_block_list(&l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list);
     }
+    SDK_SPINLOCK_DESTROY(&l2seg->slock);
     l2seg_free(l2seg);
     return HAL_RET_OK;
 }
@@ -1624,7 +1624,8 @@ l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
     pd::pd_l2seg_make_clone_args_t  args;
     pd::pd_func_args_t              pd_func_args = {};
 
-    *l2seg_clone = l2seg_alloc_init();
+    // Just alloc, no need to init. We dont want new block lists
+    *l2seg_clone = l2seg_alloc();
     memcpy(*l2seg_clone, l2seg, sizeof(l2seg_t));
 
     args.l2seg = l2seg;

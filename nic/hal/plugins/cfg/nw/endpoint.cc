@@ -144,7 +144,6 @@ ep_alloc_init (void)
 static inline hal_ret_t
 ep_free (ep_t *ep)
 {
-    SDK_SPINLOCK_DESTROY(&ep->slock);
 
     // TODO: may have to free list of ip entries
     hal::delay_delete_to_slab(HAL_SLAB_EP, ep);
@@ -161,6 +160,7 @@ ep_cleanup (ep_t *ep)
 {
     block_list::destroy(ep->nh_list);
 
+    SDK_SPINLOCK_DESTROY(&ep->slock);
     ep_free(ep);
 
     return HAL_RET_OK;
@@ -1216,7 +1216,8 @@ ep_make_clone (ep_t *ep, ep_t **ep_clone)
     pd::pd_ep_make_clone_args_t args;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    *ep_clone = ep_alloc_init();
+    // Just alloc, no need to init. We dont want new block lists
+    *ep_clone = ep_alloc();
 
     memcpy(*ep_clone, ep, sizeof(ep_t));
 
@@ -2200,9 +2201,9 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // Free EP
-    ret = ep_free(ep);
+    ret = ep_cleanup(ep);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to free EP");
+        HAL_TRACE_ERR("Failed to cleanup EP");
         goto end;
     }
 end:
@@ -2391,7 +2392,7 @@ ep_handle_ipsg_change_cb (void *ht_entry, void *ctxt)
     if (ep->vrf_handle != vrf->hal_handle) {
         return false;
     }
-    
+
     nwsec = ep_get_pi_nwsec(ep);
     if (!nwsec) {
         return false;
@@ -2406,9 +2407,9 @@ ep_handle_ipsg_change_cb (void *ht_entry, void *ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program/deprogram ep ipsg entries, err : {}", ret);
     }
-    
+
     return false;
-}   
+}
 
 //------------------------------------------------------------------------------
 // process a endpoint get request
@@ -2619,7 +2620,7 @@ ep_del_session (ep_t *ep, session_t *session)
 
     HAL_TRACE_DEBUG("delete ep =/=> session, ep id: {}, "
                     "hdls: {} => {}, ret:{}",
-                    ep_l2_key_to_str(ep), 
+                    ep_l2_key_to_str(ep),
                     ep->hal_handle, session->hal_handle, ret);
     /* For now calling empty callback only if all sessions are deleted
      * Might not be the case as some IPs sessions might be cleared up earlier.

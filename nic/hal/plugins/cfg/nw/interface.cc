@@ -137,7 +137,6 @@ if_alloc_init (void)
 static inline hal_ret_t
 if_free (if_t *hal_if)
 {
-    SDK_SPINLOCK_DESTROY(&hal_if->slock);
     hal::delay_delete_to_slab(HAL_SLAB_IF, hal_if);
     return HAL_RET_OK;
 }
@@ -153,6 +152,7 @@ if_cleanup (if_t *hal_if)
     for (unsigned i = 0; i < SDK_ARRAY_SIZE(hal_if->acl_list); i++) {
         block_list::destroy(hal_if->acl_list[i]);
     }
+    SDK_SPINLOCK_DESTROY(&hal_if->slock);
     return if_free(hal_if);
 }
 
@@ -1202,8 +1202,8 @@ if_make_clone (if_t *hal_if, if_t **if_clone)
     pd::pd_if_make_clone_args_t args;
     pd::pd_func_args_t          pd_func_args = {0};
 
-
-    *if_clone = if_alloc_init();
+    // Just alloc, no need to init. We dont want new block lists
+    *if_clone = if_alloc();
 
     memcpy(*if_clone, hal_if, sizeof(if_t));
 

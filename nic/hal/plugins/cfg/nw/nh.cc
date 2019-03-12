@@ -468,7 +468,8 @@ nexthop_lookup_key_or_handle_to_str (const NexthopKeyHandle& kh)
 hal_ret_t
 nexthop_make_clone (nexthop_t *nh, nexthop_t **nh_clone)
 {
-    *nh_clone = nexthop_alloc_init();
+    // Just alloc, no need to init. We dont want new block lists
+    *nh_clone = nexthop_alloc();
     memcpy(*nh_clone, nh, sizeof(nexthop_t));
 
     return HAL_RET_OK;
