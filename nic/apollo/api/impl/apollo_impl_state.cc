@@ -57,6 +57,13 @@ apollo_impl_state::apollo_impl_state(pds_state *state) {
                       tinfo.actiondata_struct_size,
                       false, false, NULL);
     SDK_ASSERT(egress_drop_stats_tbl_ != NULL);
+
+    p4pd_table_properties_get(P4TBL_ID_NACL, &tinfo);
+    nacl_tbl_ =
+        tcam::factory(tinfo.tablename, P4TBL_ID_NACL, tinfo.tabledepth,
+                      tinfo.key_struct_size, tinfo.actiondata_struct_size,
+                      false, true, NULL);
+     SDK_ASSERT(nacl_tbl_ != NULL);
 }
 
 // destructor
