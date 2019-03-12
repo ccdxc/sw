@@ -108,6 +108,7 @@ nic/build/x86_64/iris/lib/libsdkcapri_asicrw_if.so               /nic/lib/
 nic/build/x86_64/iris/lib/libsdkcapri_csrint.so                  /nic/lib/
 nic/build/x86_64/iris/lib/liblif_mgr.so                          /nic/lib/
 nic/build/x86_64/iris/lib/libdevapi_iris.so                      /nic/lib/
+nic/build/x86_64/iris/lib/librdmamgr_iris.so                     /nic/lib/
 
 # linkmgr
 nic/build/x86_64/iris/bin/port_client                            /nic/bin

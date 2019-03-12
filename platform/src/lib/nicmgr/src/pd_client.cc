@@ -12,6 +12,7 @@
 #include "pd_client.hpp"
 #include "eth_dev.hpp"
 #include "rdma_dev.hpp"
+#include "nicmgr_init.hpp"
 
 using namespace sdk::platform::capri;
 using namespace sdk::platform::utils;
@@ -21,11 +22,13 @@ using namespace sdk::platform::utils;
 
 const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 
+#if 0
 const static char *kRdmaHBMLabel = "rdma";
 const static uint32_t kRdmaAllocUnit = 4096;
 
 const static char *kRdmaHBMBarLabel = "rdma-hbm-bar";
 const static uint32_t kRdmaBarAllocUnit = 8 * 1024 * 1024;
+#endif
 
 const static char *kNicmgrHBMLabel = "nicmgr";
 const static uint32_t kNicmgrAllocUnit = 64;
@@ -45,6 +48,7 @@ static uint8_t *memrev(uint8_t *block, size_t elnum)
     return block;
 }
 
+#if 0
 static uint32_t
 roundup_to_pow_2(uint32_t x)
 {
@@ -57,6 +61,7 @@ roundup_to_pow_2(uint32_t x)
         power*=2;
     return power;
 }
+#endif
 
 void table_health_monitor(uint32_t table_id,
                           char *name,
@@ -185,6 +190,7 @@ PdClient::p4plus_txdma_init_tables()
     return 0;
 }
 
+#if 0
 void PdClient::rdma_manager_init (void)
 {
     uint64_t hbm_addr = mp_->start_addr(kRdmaHBMLabel);
@@ -264,7 +270,11 @@ uint64_t PdClient::rdma_mem_bar_alloc (uint32_t size)
                     size, alloc_offset, rdma_hbm_bar_base_ + alloc_offset);
     return rdma_hbm_bar_base_ + alloc_offset;
 }
-
+#endif
+uint64_t PdClient::rdma_mem_bar_alloc (uint32_t size)
+{
+    return rdma_mgr_->rdma_mem_bar_alloc(size);
+}
 void PdClient::nicmgr_mem_init (void)
 {
     uint64_t hbm_addr = mp_->start_addr(kNicmgrHBMLabel);
@@ -422,7 +432,6 @@ void PdClient::init(void)
     mp_ = mpartition::factory(mpart_json.c_str());
     assert(mp_);
     NIC_LOG_DEBUG("Initializing LIF Manager ...");
-    // lm_ = LIFManager::factory(mp_, NULL, kLif2QstateHBMLabel);
     lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);
 
@@ -452,7 +461,9 @@ void PdClient::init(void)
     ret = capri_p4plus_table_rw_init();
     assert(ret == 0);
 
-    rdma_manager_init();
+    rdma_mgr_ = rdma_manager_init(mp_, lm_);
+
+    // rdma_manager_init();
     nicmgr_mem_init();
     devcmd_mem_init();
     intr_allocator = sdk::lib::indexer::factory(4096);
@@ -826,6 +837,7 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_ke
     return 0;
 }
 
+#if 0
 int
 PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (
     uint32_t idx,
@@ -876,7 +888,6 @@ PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (
                  idx, pd_err);
     return 0;
 }
-
 
 int
 PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get (uint32_t idx, rx_stage0_load_rdma_params_actiondata_t *data)
@@ -980,10 +991,13 @@ PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get (
                  "txdma, idx : {}, err : {}", idx, pd_err);
     return 0;
 }
+#endif
 
 uint64_t
 PdClient::rdma_get_pt_base_addr (uint32_t lif)
 {
+    return rdma_mgr_->rdma_get_pt_base_addr(lif);
+#if 0
     uint64_t            pt_table_base_addr;
     int                 rc;
     rx_stage0_load_rdma_params_actiondata_t data = {0};
@@ -1003,8 +1017,10 @@ PdClient::rdma_get_pt_base_addr (uint32_t lif)
 
     pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
     return(pt_table_base_addr);
+#endif
 }
 
+#if 0
 uint64_t
 PdClient::rdma_get_kt_base_addr (uint32_t lif)
 {
@@ -1061,12 +1077,20 @@ PdClient::rdma_get_ah_base_addr (uint32_t lif)
     ah_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
     return(ah_table_base_addr);
 }
+#endif
 
-int
+sdk_ret_t
 PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                          uint32_t max_ahs, uint32_t max_ptes,
                          uint64_t mem_bar_addr, uint32_t mem_bar_size)
 {
+    if (rdma_mgr_) {
+        return rdma_mgr_->lif_init(lif, max_keys, max_ahs, max_ptes,
+                                   mem_bar_addr, mem_bar_size);
+    }
+    return SDK_RET_ERR;
+
+#if 0
     sram_lif_entry_t    sram_lif_entry;
     uint32_t            pt_size, key_table_size, ah_table_size;
     uint32_t            total_size;
@@ -1235,6 +1259,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     NIC_FUNC_DEBUG("lif-{}: rdma_params_table init successful", lif);
 
     return HAL_RET_OK;
+#endif
 }
 
 mem_addr_t

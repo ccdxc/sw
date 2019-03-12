@@ -16,6 +16,7 @@
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
+#include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
 
 #include "common_rxdma_actions_p4pd.h"
 #include "common_rxdma_actions_p4pd_table.h"
@@ -94,7 +95,6 @@ public:
     platform_t platform_;
     sdk::platform::utils::program_info *pinfo_;
     sdk::platform::utils::mpartition *mp_;
-    // sdk::platform::capri::LIFManager *lm_;
     sdk::platform::utils::lif_mgr *lm_;
     directmap    **p4plus_rxdma_dm_tables_;
     directmap    **p4plus_txdma_dm_tables_;
@@ -135,11 +135,12 @@ public:
 
     mem_addr_t mem_start_addr(const char *region);
 
-/* RDMA routines */
-    int rdma_lif_init(uint32_t lif, uint32_t max_keys,
-                      uint32_t max_ahs, uint32_t max_ptes,
-                      uint64_t mem_bar_addr, uint32_t mem_bar_size);
+    /* RDMA routines */
+    sdk_ret_t rdma_lif_init(uint32_t lif, uint32_t max_keys,
+                            uint32_t max_ahs, uint32_t max_ptes,
+                            uint64_t mem_bar_addr, uint32_t mem_bar_size);
 
+#if 0
     int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(
         uint32_t idx,
         uint8_t rdma_en_qtype_mask,
@@ -174,6 +175,7 @@ public:
 
     void rdma_manager_init(void);
     uint64_t rdma_mem_alloc(uint32_t size);
+#endif
     uint64_t rdma_mem_bar_alloc(uint32_t size);
 
     void nicmgr_mem_init(void);
@@ -185,14 +187,17 @@ public:
     int32_t intr_alloc(uint32_t count);
 
     uint64_t rdma_get_pt_base_addr(uint32_t lif);
+#if 0
     uint64_t rdma_get_kt_base_addr(uint32_t lif);
     uint64_t rdma_get_ah_base_addr(uint32_t lif);
+#endif
 
 private:
     PdClient(){}
     ~PdClient(){}
     void init(void);
 
+#if 0
     uint64_t rdma_hbm_base_;
     std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_allocator_;
     std::map<uint64_t, uint64_t> rdma_allocation_sizes_;
@@ -200,6 +205,9 @@ private:
     uint64_t rdma_hbm_bar_base_;
     std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_bar_allocator_;
     std::map<uint64_t, uint64_t> rdma_bar_allocation_sizes_;
+#endif
+
+    rdmamgr *rdma_mgr_;
 
     uint64_t nicmgr_hbm_base_;
     std::unique_ptr<sdk::lib::BMAllocator> nicmgr_hbm_allocator_;
@@ -211,10 +219,12 @@ private:
 
     sdk::lib::indexer *intr_allocator;
 
-    int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
+#if 0
+    sdk_ret_t p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
         uint32_t idx, rx_stage0_load_rdma_params_actiondata_t *data);
     int p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(
         uint32_t idx, tx_stage0_lif_params_table_actiondata_t *data);
+#endif
 
 };
 

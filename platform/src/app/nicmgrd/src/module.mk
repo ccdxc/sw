@@ -16,7 +16,7 @@ MODULE_SOLIBS   := nicmgr mnet \
                     sdkasicpd pdcapri pdcommon hal_mock \
                     sdkp4 sdkp4utils sdkxcvrdriver sdkfru p4pd_${PIPELINE} \
                     p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
-                    asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} lif_mgr devapi_iris
+                    asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} lif_mgr devapi_iris rdmamgr_iris
 MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \
                     ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                     ${NIC_CAPSIM_LDLIBS}
