@@ -5,7 +5,6 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -39,24 +38,14 @@ func init() {
 }
 
 func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
-	printRes := true
 	timezone, err := ioutil.ReadFile("/etc/timezone")
 	if err == nil {
 		v := &nmd.NaplesCmdExecute{
 			Executable: "pensettimezone",
 			Opts:       strings.Join([]string{string(timezone)}, ""),
 		}
-		resp, err := restGetWithBody(v, "cmd/v1/naples/")
-		if err != nil && printRes {
-			fmt.Println(err)
+		if err := naplesExecCmd(v); err != nil {
 			return err
-		}
-		if len(resp) > 3 {
-			s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-			fmt.Println(strings.Replace(s, "\\", "", -1))
-		}
-		if verbose {
-			fmt.Println(string(resp))
 		}
 	}
 	symlink, err := filepath.EvalSymlinks("/etc/localtime")
@@ -65,58 +54,25 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 			Executable: "/bin/ln",
 			Opts:       strings.Join([]string{"-sf", symlink, "/etc/localtime"}, " "),
 		}
-		resp, err := restGetWithBody(v, "cmd/v1/naples/")
-		if err != nil && printRes {
-			fmt.Println(err)
+		if err := naplesExecCmd(v); err != nil {
 			return err
-		}
-		if len(resp) > 3 {
-			s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-			fmt.Println(strings.Replace(s, "\\", "", -1))
-		}
-		if verbose {
-			fmt.Println(string(resp))
 		}
 	}
 	dateString := time.Now().Format("Jan 2 15:04:05 2006")
-	if cmd.Name() != cmdName {
-		printRes = false
-	}
 	opts := strings.Join([]string{"--set ", dateString}, "")
 	v := &nmd.NaplesCmdExecute{
 		Executable: "/bin/date",
 		Opts:       opts,
 	}
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil && printRes {
-		fmt.Println(err)
+	if err := naplesExecCmd(v); err != nil {
 		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(strings.Replace(s, "\\", "", -1))
-	}
-	if verbose {
-		fmt.Println(string(resp))
 	}
 
 	v = &nmd.NaplesCmdExecute{
 		Executable: "/sbin/hwclock",
 		Opts:       strings.Join([]string{"-w"}, ""),
 	}
-	resp, err = restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil && printRes {
-		fmt.Println(err)
-		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(strings.Replace(s, "\\", "", -1))
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-	return nil
+	return naplesExecCmd(v)
 }
 
 func showSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
@@ -124,17 +80,5 @@ func showSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 		Executable: "/bin/date",
 		Opts:       "",
 	}
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(strings.Replace(s, "\\", "", -1))
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-	return nil
+	return naplesExecCmd(v)
 }

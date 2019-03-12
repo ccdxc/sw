@@ -92,7 +92,6 @@ func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
 		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-r"}, ""),
 	}
-
 	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
@@ -159,20 +158,7 @@ func showStartupFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-S"}, ""),
 	}
-
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-	return nil
+	return naplesExecCmd(v)
 }
 
 func setStartupFirmwareMainfwaCmdHandler(cmd *cobra.Command, args []string) error {
@@ -180,20 +166,7 @@ func setStartupFirmwareMainfwaCmdHandler(cmd *cobra.Command, args []string) erro
 		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-s ", "mainfwa"}, ""),
 	}
-
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-	return nil
+	return naplesExecCmd(v)
 }
 
 func setStartupFirmwareMainfwbCmdHandler(cmd *cobra.Command, args []string) error {
@@ -201,20 +174,7 @@ func setStartupFirmwareMainfwbCmdHandler(cmd *cobra.Command, args []string) erro
 		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-s ", "mainfwb"}, ""),
 	}
-
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-	return nil
+	return naplesExecCmd(v)
 }
 
 func canOpen(f string) error {
@@ -261,53 +221,24 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join([]string{"-p ", "/update/" + firmware, " -i " + fw}, ""),
 	}
 
-	resp, err = restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
+	if err = naplesExecCmd(v); err != nil {
 		fmt.Println(err)
 		v = &nmd.NaplesCmdExecute{
 			Executable: "rm",
 			Opts:       strings.Join([]string{"-rf ", "/update/" + firmware}, ""),
 		}
-
-		resp, err = restGetWithBody(v, "cmd/v1/naples/")
-		if err != nil {
-			fmt.Println(err)
+		if err := naplesExecCmd(v); err != nil {
 			return err
 		}
-		if len(resp) > 3 {
-			s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-			fmt.Println(s)
-		}
-		if verbose {
-			fmt.Println(string(resp))
-		}
-
 		return errors.New("Unable to install firmware " + firmware)
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
-	}
-	if verbose {
-		fmt.Println(string(resp))
 	}
 
 	v = &nmd.NaplesCmdExecute{
 		Executable: "rm",
 		Opts:       strings.Join([]string{"-rf ", "/update/" + firmware}, ""),
 	}
-
-	resp, err = restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
+	if err := naplesExecCmd(v); err != nil {
 		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
-	}
-	if verbose {
-		fmt.Println(string(resp))
 	}
 
 	if goldfw == false {
@@ -315,18 +246,8 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 			Executable: "/nic/tools/fwupdate",
 			Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
 		}
-
-		resp, err = restGetWithBody(v, "cmd/v1/naples/")
-		if err != nil {
-			fmt.Println(err)
+		if err := naplesExecCmd(v); err != nil {
 			return err
-		}
-		if len(resp) > 3 {
-			s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-			fmt.Println(s)
-		}
-		if verbose {
-			fmt.Println(string(resp))
 		}
 		fmt.Printf("Package %s installed\n", uploadFile)
 	} else {

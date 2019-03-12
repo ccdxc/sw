@@ -121,16 +121,7 @@ func handleIfShowCmd(intf bool, tunnel bool, mpls bool) {
 		Opts:       strings.Join(execCmd[1:], " "),
 	}
 
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
-	}
+	naplesExecCmd(v)
 }
 
 func ifShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -154,19 +145,13 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join(execCmd[1:], " "),
 	}
 
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
+	if err := naplesExecCmd(v); err != nil {
 		str := err.Error()
 		str = strings.Replace(str, "exit status 1:Error: ", "", -1)
 		str = strings.Replace(str, "\\n", "", -1)
 		str = strings.Replace(str, "\n", "", -1)
 		str = strings.Replace(str, "\"", "", -1)
 		return errors.New(str)
-	}
-
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
 	}
 
 	return nil
@@ -196,20 +181,13 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 		Executable: execCmd[0],
 		Opts:       strings.Join(execCmd[1:], " "),
 	}
-
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
+	if err := naplesExecCmd(v); err != nil {
 		str := err.Error()
 		str = strings.Replace(str, "exit status 1:Error: ", "", -1)
 		str = strings.Replace(str, "\\n", "", -1)
 		str = strings.Replace(str, "\n", "", -1)
 		str = strings.Replace(str, "\"", "", -1)
 		return errors.New(str)
-	}
-
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
 	}
 
 	return nil

@@ -15,7 +15,7 @@ penctl update port [flags]
 
 ```
       --admin-state string   Set port admin state - up, down (default "up")
-      --auto-neg string      Enable or disable auto-neg using enable | disable (default "disable")
+      --auto-neg string      Enable or disable auto-neg using enable | disable (default "enable") (default "enable")
       --fec-type string      Specify fec-type - rs, fc, none (default "none")
   -h, --help                 help for port
       --mtu uint32           Specify port MTU

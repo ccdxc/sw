@@ -71,20 +71,7 @@ func getSysMemCmdHandler(cmd *cobra.Command, args []string) error {
 		Executable: "free",
 		Opts:       strings.Join([]string{"-m"}, ""),
 	}
-
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-	return nil
+	return naplesExecCmd(v)
 }
 
 func getProcMemInfoCmdHandler(cmd *cobra.Command, args []string) error {
@@ -92,20 +79,7 @@ func getProcMemInfoCmdHandler(cmd *cobra.Command, args []string) error {
 		Executable: "cat",
 		Opts:       strings.Join([]string{"/proc/meminfo"}, ""),
 	}
-
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Println(s)
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-	return nil
+	return naplesExecCmd(v)
 }
 
 func getSystemStatusCmdCmdHandler(cmd *cobra.Command, args []string) error {

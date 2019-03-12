@@ -28,5 +28,6 @@ show system information
 
 ### SEE ALSO
 * [penctl show](penctl_show.md)	 - Show Object and Information
-* [penctl show system status](penctl_show_system_status.md)	 - Show current system status
+* [penctl show system queue-statistics](penctl_show_system_queue-statistics.md)	 - show system queue-statistics
+* [penctl show system status](penctl_show_system_status.md)	 - show current system status
 

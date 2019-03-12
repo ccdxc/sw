@@ -1,24 +1,24 @@
-## penctl show system status
+## penctl show system queue-statistics
 
-show current system status
+show system queue-statistics
 
 ### Synopsis
 
 
 
 ------------------------------------
- show current system status 
+ show system queue-statistics 
 ------------------------------------
 
 
 ```
-penctl show system status [flags]
+penctl show system queue-statistics [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for status
+  -h, --help   help for queue-statistics
 ```
 
 ### Options inherited from parent commands

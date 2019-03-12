@@ -24,7 +24,7 @@ Options
       --dscp string                   Specify dscp values 0-63 as --dscp 10,20,30 (default "0")
       --dwrr-bw uint32                Specify DWRR BW percentage (0-100)
   -h, --help                          help for qos-class
-      --mtu uint32                    Specify MTU (default 1500)
+      --mtu uint32                    Specify MTU (64-9216) (default 9216)
       --pfc-cos uint32                Specify COS value for PFC
       --pfc-enable                    Enable PFC with default values
       --qosgroup string               Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6
