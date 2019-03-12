@@ -58,6 +58,7 @@ func (o *clusterCreateOp) Validate() error {
 // populateClusterDefaults fills in the defaults for cluster object.
 func (o *clusterCreateOp) populateClusterDefaults() {
 	o.cluster.Kind = "Cluster"
+	o.cluster.APIVersion = "v1"
 	o.cluster.UUID = uuid.NewV4().String()
 	o.cluster.SelfLink = o.cluster.MakeKey("cluster")
 	o.cluster.Status.BuildVersion = env.GitVersion
