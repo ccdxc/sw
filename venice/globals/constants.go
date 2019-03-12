@@ -204,3 +204,8 @@ const (
 	// Rollout
 	RolloutRPCPort = "9015"
 )
+
+var (
+	// PensandoOUI is the Pensando organizationally unique identifier, as it appears in a MAC address
+	PensandoOUI = []byte{0x00, 0xAE, 0xCD}
+)

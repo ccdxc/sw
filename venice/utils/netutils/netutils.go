@@ -3,6 +3,7 @@
 package netutils
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net"
@@ -13,6 +14,8 @@ import (
 	"unsafe"
 
 	"github.com/vishvananda/netlink"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 var errPortAllocFailed = errors.New("could not find a free port")
@@ -270,4 +273,10 @@ func AppendIPIfNotPresent(ip net.IP, ips []net.IP) []net.IP {
 		}
 	}
 	return append(ips, ip)
+}
+
+// IsPensandoMACAddress returns true if the supplied string represents a valid, 48-bit MAC address for a Pensando device
+func IsPensandoMACAddress(addr string) bool {
+	mac, err := net.ParseMAC(addr)
+	return err == nil && len(mac) == 6 && bytes.HasPrefix(mac, globals.PensandoOUI)
 }

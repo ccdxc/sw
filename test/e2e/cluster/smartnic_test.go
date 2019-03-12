@@ -10,6 +10,7 @@ import (
 
 	api "github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 var _ = Describe("SmartNIC tests", func() {
@@ -45,7 +46,7 @@ var _ = Describe("SmartNIC tests", func() {
 						return false
 					}
 					numAdmittedNICs++
-					By(fmt.Sprintf("SmartNIC [%s] is created & admitted", snic.Name))
+					By(fmt.Sprintf("SmartNIC [%s] is created & admitted, MAC: %s", snic.Name, snic.Status.PrimaryMAC))
 				}
 				if numAdmittedNICs != ts.tu.NumNaplesHosts {
 					return false
@@ -53,6 +54,16 @@ var _ = Describe("SmartNIC tests", func() {
 				By(fmt.Sprintf("ts:%s SmartNIC admission validated for [%d] nics", time.Now().String(), numAdmittedNICs))
 				return true
 			}, 90, 1).Should(BeTrue(), "SmartNIC nic-admission check failed")
+
+			// Validate MAC Addresses. Each NIC should have a valid, unique Pensando MAC address
+			nicMACMap := make(map[string]string)
+			for _, snic := range snics {
+				mac := snic.Status.PrimaryMAC
+				Expect(netutils.IsPensandoMACAddress(mac)).Should(BeTrue(), fmt.Sprintf("Invalid MAC Address: %s", mac))
+				_, ok := nicMACMap[mac]
+				Expect(ok).Should(BeFalse(), fmt.Sprintf("SmartNIC %s had duplicate MAC Address: %s, NIC with same MAC: %s", snic.Name, mac, nicMACMap[mac]))
+				nicMACMap[mac] = snic.Name
+			}
 		})
 	})
 

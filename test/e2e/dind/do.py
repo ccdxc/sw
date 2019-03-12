@@ -27,6 +27,15 @@ registry = "registry.test.pensando.io:5000"
 debug = False
 exposedPortBase = 10000
 
+def makeNaplesFRU(containerIndex):
+    fruSrcFile = os.path.join(src_dir, "nic/agent/nmd/state/example-configs/fru.json")
+    with open(fruSrcFile, 'r') as f:
+        fru = json.load(f)
+        macAddr = fru['Mac Address']
+        newMac = macAddr[:-2] + str(int(macAddr[-2:]) + containerIndex)
+        fru['Mac Address'] = newMac
+        return json.dumps(fru)
+
 def runCommand(cmd, ignore_error=False):
     # subprocess.call() is multithreaded but can mess up terminal settings
     if debug:
@@ -162,6 +171,7 @@ class NaplesNode(Node):
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/tmagent" """.format(self.name))
         else:
             runCommand("""docker run --dns-search my.dummy -td {} -P -l pens -l pens-naples --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name, self.name))
+            runCommand("""docker exec {}  bash -c "echo '{}' > /tmp/fru.json" """.format(self.name, makeNaplesFRU(self.containerIndex).replace('"', '\\"')))
         runCommand("""docker exec {}  mkdir -p /var/log/pensando """.format(self.name))
         runCommand("""docker exec {}  mkdir -p /var/log/pensando/elastic """.format(self.name))
         runCommand("""docker exec {}  mkdir -p /var/lib/pensando """.format(self.name))
@@ -201,7 +211,7 @@ class NaplesNode(Node):
         else:
             runCommand("""docker exec -d {} /fakedelphihub  & """.format(self.name))
             time.sleep(3)
-            runCommand("""docker exec -d {} /nmd -hostif eth1 -primary-mac 44:44:44:44:00:{:02d} -hostname {}-host -mode host -updinterval 2 -standalone=false & """.format(self.name, self.containerIndex, self.name))
+            runCommand("""docker exec -d {} /nmd -hostif eth1 -hostname {}-host -mode host -updinterval 2 -standalone=false & """.format(self.name, self.name))
             runCommand("""docker exec -d {} /netagent -datapath mock -disabletsa &""".format(self.name))
             runCommand("""docker exec -d {} /tmagent -hostif eth1 -primary-mac 44:44:44:44:00:{:02d} &""".format(self.name, self.containerIndex))
             runCommand("""docker exec -d {} /nevtsproxy &""".format(self.name))
