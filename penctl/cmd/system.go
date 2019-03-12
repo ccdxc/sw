@@ -140,7 +140,7 @@ func getSystemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func getSmartNicCmdHandler(cmd *cobra.Command, args []string) error {
-	resp, err := restGet("api/v1/naples-info/")
+	resp, err := restGet("api/v1/naples/info/")
 
 	if err != nil {
 		if verbose {

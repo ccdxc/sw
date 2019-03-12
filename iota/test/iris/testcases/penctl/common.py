@@ -246,7 +246,7 @@ def GetNaplesSystemInfoJson(n):
 
     return cmd_resp.stdout
 
-def GetNaplesCfgSpecJson(n):
+def ShowNaples(n):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     AddPenctlCommand(req, n, "show naples --json")
@@ -255,10 +255,56 @@ def GetNaplesCfgSpecJson(n):
     cmd_resp = resp.commands[0]
     api.PrintCommandResults(cmd_resp)
 
+def GetNaplesCfgSpecJson(n):
+
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    AddPenctlCommand(req, n, "show naples --json")
+
+    resp = api.Trigger(req)
+    cmd_resp = resp.commands[0]
+
     if cmd_resp.exit_code != 0:
         return None
 
     return cmd_resp.stdout
+
+def GetNaplesSpec(n):
+    penctl_json = GetNaplesCfgSpecJson(n)
+    penctl_json_parsed = json.loads(penctl_json)
+    try :
+        result = penctl_json_parsed["spec"]
+    except:
+        return "FAILED"
+
+    return result
+
+def GetNaplesStatus(n):
+    penctl_json = GetNaplesCfgSpecJson(n)
+    penctl_json_parsed = json.loads(penctl_json)
+    try :
+        result = penctl_json_parsed["status"]
+    except:
+        return "FAILED"
+
+    return result
+
+def IsNaplesHostManagedDefault(n):
+    naples_spec = GetNaplesSpec(n)
+    naples_status = GetNaplesStatus(n)
+
+    if naples_spec["mode"] != naples_status["mode"] and naples_spec["mode"] != "HOST":
+        return api.types.status.FAILURE
+
+    if naples_spec["naples-profile"] != "default":
+        return api.types.status.FAILURE
+
+    if naples_spec["network-mode"] != "":
+        return api.types.status.FAILURE
+
+    if naples_spec["ip-config"] != {} and naples_status["ip-config"] != {}:
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
 
 def GetDelphictlNapleStatusJson(n):
 
@@ -352,6 +398,16 @@ def PenctlGetMode(n):
 
     return result
 
+def PenctlGetModeStatus(n):
+    penctl_json = GetNaplesCfgSpecJson(n)
+    penctl_json_parsed = json.loads(penctl_json)
+    try :
+        result = penctl_json_parsed["status"]["mode"]
+    except:
+        return "FAILED"
+
+    return result
+
 def PenctlGetNaplesMgtmIp(n):
     api.Logger.info("Getting Naples network management IP for {}.".format(n))
     penctl_json = GetNaplesCfgSpecJson(n)
@@ -368,7 +424,7 @@ def PenctlGetNetworkMode(n):
     penctl_json = GetNaplesCfgSpecJson(n)
     penctl_json_parsed = json.loads(penctl_json)
     try :
-        result = penctl_json_parsed["spec"]["management-network"]
+        result = penctl_json_parsed["spec"]["network-mode"]
     except:
         return "FAILED"
 
@@ -393,6 +449,18 @@ def PenctlGetControllersStatus(n):
         return "FAILED"
 
     return result
+
+def PenctlStaticControllersCheck(n):
+    spec_controllers = PenctlGetControllers(n)
+    status_controllers = PenctlGetControllersStatus(n)
+
+    if len(spec_controllers) <= 0 or len(status_controllers) <= 0:
+        return api.types.status.FAILURE 
+
+    if spec_controllers[0] != status_controllers[0]:
+        api.types.status.FAILURE
+
+    api.types.status.SUCCESS
 
 def PenctlGetTransitionPhaseStatus(n):
     penctl_json = GetNaplesCfgSpecJson(n)
@@ -487,6 +555,49 @@ def ResetNMDState(n):
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/nmd.db")
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/app-start.conf")
     resp = api.Trigger(req)
+
+def GetNaplesFruJson(n):
+    api.Logger.info("Getting FRU information from Nalpes.")
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddNaplesCommand(req, n, "cat /tmp/fru.json")
+    resp = api.Trigger(req)
+
+    if resp.commands[0].exit_code != 0:
+        api.Logger.info("Failed to read fru.json")
+        return None
+    else:
+        return json.loads(resp.commands[0].stdout)
+
+def GetPenctlFruJson(n):
+    penctl_json = GetNaplesCfgSpecJson(n)
+    penctl_json_parsed = json.loads(penctl_json)
+
+    return penctl_json_parsed["status"]["fru"]
+
+def CheckFruInfo(n):
+    naples_fru = GetNaplesFruJson(n)
+    penctl_fru = GetPenctlFruJson(n)
+
+    if penctl_fru["manufacturing-date"] != naples_fru["Manufacturing date"]:
+        api.types.status.FAILURE
+    if penctl_fru["manufacturer"] != naples_fru["Manufacturer"]:
+        api.types.status.FAILURE
+    if penctl_fru["product-name"] != naples_fru["Product Name"]:
+        api.types.status.FAILURE
+    if penctl_fru["serial-number"] != naples_fru["Serial Number"]:
+        api.types.status.FAILURE
+    if penctl_fru["part-number"] != naples_fru["Part Number"]:
+        api.types.status.FAILURE
+    if penctl_fru["board-id"] != naples_fru["Board Id Number"]:
+        api.types.status.FAILURE
+    if penctl_fru["change-level"] != naples_fru["Engineering Change level"]:
+        api.types.status.FAILURE
+    if penctl_fru["number-mac-addresses"] != naples_fru["NumMac Address"]:
+        api.types.status.FAILURE
+    if penctl_fru["mac-string"] != naples_fru["Mac Address"]:
+        api.types.status.FAILURE
+
+    api.types.status.SUCCESS
 
 
 #def IsNaplesHostManaged(n):

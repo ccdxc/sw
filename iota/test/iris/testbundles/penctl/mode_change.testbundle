@@ -5,6 +5,9 @@ meta:
     targetcount : 9 
 
 testcases:
+    -   name    : MODE_VERIFY_PARAMS
+        testcase: testcases.penctl.mode_verify_show_naples
+
     -   name    : MODE_UPDATE_OOB_STATIC_REBOOT
         testcase: testcases.penctl.mode_oob_static_reboot
 

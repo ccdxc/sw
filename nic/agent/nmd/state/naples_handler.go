@@ -41,7 +41,7 @@ const (
 	ProfileURL = "/api/v1/naples/profiles/"
 
 	// NaplesInfoURL is the URL to GET smartnic object
-	NaplesInfoURL = "/api/v1/naples/naples-info/"
+	NaplesInfoURL = "/api/v1/naples/info/"
 
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped
