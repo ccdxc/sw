@@ -33,6 +33,7 @@ static void ionic_get_stats(struct net_device *netdev,
 
 	lif = netdev_priv(netdev);
 
+	memset(buf, 0, stats->n_stats * sizeof(*buf));
 	for (i = 0; i < ionic_num_stats_grps; i++)
 		ionic_stats_groups[i].get_values(lif, &buf);
 }
