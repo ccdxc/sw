@@ -1,20 +1,65 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    rfc_bitmap_utils.hpp
- *
- * @brief   bitmap library enhancements needed for RFC library
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// Bitmap library enhancements needed for RFC library
+///
+//----------------------------------------------------------------------------
 
-#if !defined (__RFC_BITMAP_UTILS_HPP__)
-#define __RFC_BITMAP_UTILS_HPP__
+#ifndef __INCLUDE_RFC_RTE_BITMAP_UTILS_HPP__
+#define __INCLUDE_RFC_RTE_BITMAP_UTILS_HPP__
 
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <rte_bitmap.h>
+#include "nic/sdk/include/sdk/base.hpp"
+
+#define RTE_BITMAP_START_SLAB_SCAN_POS 0xFFFF
+
+// Bitmap slab scan
+//
+// \param[in] slab2 current slab for scan
+// \param[in] cur_pos current position of bit set in the slab, 0 based
+// \param[out] next_pos next position where the next bit is set, 0 based
+//
+// \return 0 if no bit set in the slab starting current postion, 1 otherwise
+static inline int
+rte_bitmap_slab_scan (uint64_t slab2, uint32_t cur_pos, uint32_t *next_pos)
+{
+    //  completely un-scanned slab will have default current postion
+    if (cur_pos == RTE_BITMAP_START_SLAB_SCAN_POS) {
+       return (rte_bsf64_safe(slab2, next_pos));
+    } else {
+        slab2 = slab2 >> cur_pos >> 1;
+        if (rte_bsf64_safe(slab2, next_pos)) {
+            *next_pos += cur_pos + 1;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// Given the slab2 index and relative position of the bit within the slab,
+// return the global position of the bit
+//
+// \param[in] index2 Slab2 index
+// \param[in] pos Position of the bit within the slab
+//
+//  \return Global position of the bit
+static inline uint32_t
+rte_bitmap_get_global_bit_pos (uint32_t index2, uint32_t pos)
+{
+    return ((index2 << RTE_BITMAP_SLAB_BIT_SIZE_LOG2) + pos);
+}
 
 // Set the corresponding slab1 bit given a slab2 index
+//
+// \param[in] bmp bitmap
+// \param[in] index2 Slab2 index
+//
 // This is pure internal function, shouldn't be called directly by app
 static inline void
 __rte_bitmap_set_slab1 (struct rte_bitmap *bmp, uint32_t index2)
