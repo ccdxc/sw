@@ -124,7 +124,7 @@ vnic_impl::fill_vnic_spec_(
                 local_vnic_by_slot_rx_swkey_t          *vnic_by_slot_key,
                 local_vnic_by_slot_rx_actiondata_t     *vnic_by_slot_data,
                 pds_vnic_spec_t *spec) {
-    // From EGRESS_LOCAL_VNIC_INFO_RX table
+    // from EGRESS_LOCAL_VNIC_INFO_RX table
     sdk::lib::memrev(
         spec->mac_addr,
         egress_vnic_data->egress_local_vnic_info_rx_action.overlay_mac,
@@ -133,14 +133,14 @@ vnic_impl::fill_vnic_spec_(
         egress_vnic_data->egress_local_vnic_info_rx_action.overlay_vlan_id;
     spec->subnet.id =
         egress_vnic_data->egress_local_vnic_info_rx_action.subnet_id;
-    // From VNIC_BY_VLAN_TX table
+    // from VNIC_BY_VLAN_TX table
     spec->vcn.id = vnic_by_vlan_data->local_vnic_by_vlan_tx_info.vcn_id;
     spec->src_dst_check =
         vnic_by_vlan_data->local_vnic_by_vlan_tx_info.skip_src_dst_check == true
             ? false : true;
     spec->rsc_pool_id =
         vnic_by_vlan_data->local_vnic_by_vlan_tx_info.resource_group_1;
-    // From VNIC_BY_SLOT_RX table
+    // from VNIC_BY_SLOT_RX table
     if (vnic_by_slot_key->vxlan_1_vni != 0) {
         spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         spec->fabric_encap.val.vnid = vnic_by_slot_key->vxlan_1_vni;
@@ -161,31 +161,31 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
     local_vnic_by_slot_rx_swkey_t          vnic_by_slot_key = { 0 };
     local_vnic_by_slot_rx_actiondata_t     vnic_by_slot_data = { 0 };
 
-    // Read VNIC_TX_STATS and VNIC_RX_STATS
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_TX_STATS, hw_id_, NULL, NULL,
-                                      &vnic_tx_stats_data);
+    // read VNIC_TX_STATS and VNIC_RX_STATS
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_TX_STATS, hw_id_, NULL,
+                                      NULL, &vnic_tx_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_RX_STATS, hw_id_, NULL, NULL,
-                                      &vnic_rx_stats_data);
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_RX_STATS, hw_id_, NULL,
+                                      NULL, &vnic_rx_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
-    // Read EGRESS_LOCAL_VNIC_INFO_RX table
+    // read EGRESS_LOCAL_VNIC_INFO_RX table
     ret = vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(
                                             hw_id_, &egress_vnic_data);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    // Read VNIC_BY_VLAN_TX table
+    // read VNIC_BY_VLAN_TX table
     ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->retrieve(
-                egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
-                &vnic_by_vlan_data);
+              egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+              &vnic_by_vlan_data);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    // Read VNIC_BY_SLOT_RX table, this is to get encap type
+    // read VNIC_BY_SLOT_RX table, this is to get encap type
     ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->retrieve(
                                             vnic_by_slot_hash_idx_,
                                             &vnic_by_slot_key,
@@ -194,7 +194,7 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
         return ret;
     }
 
-    // Fill stats
+    // fill stats
     fill_vnic_stats_(&vnic_tx_stats_data, &vnic_rx_stats_data, &info->stats);
     fill_vnic_spec_(&egress_vnic_data, &vnic_by_vlan_data,
                     &vnic_by_slot_key, &vnic_by_slot_data, &info->spec);

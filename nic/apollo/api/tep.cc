@@ -18,11 +18,9 @@ using sdk::lib::ht;
 
 namespace api {
 
-/**
- * @defgroup PDS_TEP_ENTRY - tep entry functionality
- * @ingroup PDS_TEP
- * @{
- */
+/// \defgroup PDS_TEP_ENTRY - tep entry functionality
+/// \ingroup PDS_TEP
+/// \@{
 
 tep_entry::tep_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
@@ -63,9 +61,10 @@ tep_entry::destroy(tep_entry *tep) {
 
 sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
-    pds_tep_spec_t *pds_tep = &api_ctxt->api_params->tep_spec;
+    pds_tep_spec_t *spec = &api_ctxt->api_params->tep_spec;
 
-    memcpy(&this->key_, &pds_tep->key, sizeof(pds_tep_key_t));
+    PDS_TRACE_DEBUG("Initializing TEP %s", ipv4addr2str(spec->key.ip_addr));
+    memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
     return SDK_RET_OK;
 }
 
@@ -148,6 +147,6 @@ tep_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_TEP, this);
 }
 
-/** @} */    // end of PDS_TEP_ENTRY
+/// \@}    // end of PDS_TEP_ENTRY
 
 }    // namespace api

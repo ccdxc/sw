@@ -142,7 +142,6 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     }
     overlay_ip_hdl_ = tparams.handle;
 
-#if 0
     // reserve an entry in REMOTE_VNIC_MAPPING_TX for overlay IP
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vcn->hw_id(),
@@ -157,7 +156,6 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
         goto error;
     }
     overlay_ip_remote_vnic_tx_hdl_ = tparams.handle;
-#endif
 
     PDS_TRACE_DEBUG("Reserved overlay_ip_hdl %lu, "
                     "overlay_ip_remote_vnic_tx_hdl %lu",
@@ -183,7 +181,6 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     }
     public_ip_hdl_ = tparams.handle;
 
-#if 0
     // reserve an entry in REMOTE_VNIC_MAPPING_TX for public IP
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vcn->hw_id(), &spec->public_ip);
@@ -198,7 +195,6 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
         goto error;
     }
     public_ip_remote_vnic_tx_hdl_ = tparams.handle;
-#endif
 
     PDS_TRACE_DEBUG("Reserved public_ip_hdl %lu, "
                     "public_ip_remote_vnic_tx_hdl %u",
@@ -476,8 +472,8 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
                                    REMOTE_VNIC_MAPPING_RX_REMOTE_VNIC_MAPPING_RX_INFO_ID,
                                    remote_vnic_rx_hdl_);
     ret = mapping_impl_db()->remote_vnic_mapping_rx_tbl()->insert(&api_params);
-    // TODO: Remote mapping key is SIPo, we need to handle the refcounts, if
-    // there are multiple inserts with same key (e.g. dual-stack)
+    // TODO: remote mapping key is SIPo, we need to handle the refcounts, if
+    //       there are multiple inserts with same key (e.g. dual-stack)
     if (ret == sdk::SDK_RET_ENTRY_EXISTS || ret == SDK_RET_OK) {
         return SDK_RET_OK;
     }
@@ -515,9 +511,6 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             goto error;
         }
     } else {
-        // TODO: right now locals are not added to remote_vnic_mapping_rx/tx
-        //       tables but once host-to-host path is finalized we can relax
-        //       this, if needed !!
         ret = add_remote_vnic_mapping_rx_entries_(vcn, subnet, spec);
         if (ret != SDK_RET_OK) {
             goto error;
@@ -532,13 +525,6 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 error:
 
-#if 0
-    // TODO: cleanup everything thats allocated here !!
-    if (nat_idx1_ != 0xFFFFFFFF) {
-    }
-    ...
-    ...
-#endif
     return ret;
 }
 

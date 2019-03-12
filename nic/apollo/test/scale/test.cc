@@ -502,9 +502,9 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
     // leave the 1st IP in this prefix for MyTEP
     for (uint32_t i = 1; i <= num_teps; i++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
-        // 1st IP in the TEP prefix is local TEP, 2nd is gateway IP,
-        // so skip them
-        pds_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
+        // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
+        // so we skip the 1st (even for MyTEP we create a TEP)
+        pds_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 1 + i;
         if (g_test_params.tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
             pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VXLAN;
         } else {
@@ -721,8 +721,8 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    // create TEPs
-    ret = create_teps(g_test_params.num_teps, &g_test_params.tep_pfx);
+    // create TEPs including MyTEP
+    ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
     if (ret != SDK_RET_OK) {
         return ret;
     }
