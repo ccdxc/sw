@@ -401,6 +401,19 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Validate(ver, path s
 
 func (m *AutoMsgRoleBindingWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgRoleBindingWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -410,6 +423,18 @@ func (m *AutoMsgRoleBindingWatchHelper) Validate(ver, path string, ignoreStatus 
 
 func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
@@ -495,6 +520,19 @@ func (m *AutoMsgUserWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 
 func (m *RoleBindingList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *RoleBindingList) Validate(ver, path string, ignoreStatus bool) []error {

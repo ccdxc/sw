@@ -1125,6 +1125,16 @@ func (m *RoleBinding) References(tenant string, path string, resp map[string]api
 		if path == "" {
 			dlmtr = ""
 		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
 		tag := path + dlmtr + "meta.tenant"
 		uref, ok := resp[tag]
 		if !ok {
@@ -1157,6 +1167,27 @@ func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *RoleBindingSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "role"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Role != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/auth/"+"roles/"+tenant+"/"+m.Role)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *RoleBindingSpec) Validate(ver, path string, ignoreStatus bool) []error {

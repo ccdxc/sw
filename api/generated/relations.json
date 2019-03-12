@@ -1,4 +1,11 @@
 {
+  "auth.RoleBindingSpec": [
+    {
+      "Type": "NamedRef",
+      "To": "auth/Role",
+      "Field": "Role"
+    }
+  ],
   "bookstore.BookSpec": [
     {
       "Type": "NamedRef",

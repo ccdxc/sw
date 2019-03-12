@@ -298,7 +298,7 @@ message Role {
 message RoleBindingSpec {
     repeated string Users      = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "users,omitempty"];
     repeated string UserGroups = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-groups,omitempty"];
-    string Role                = 3 [(gogoproto.jsontag) = "role,omitempty"];
+    string Role                = 3 [(gogoproto.jsontag) = "role,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "auth/Role"}];
 }
 
 // status part of role binding object
