@@ -22,6 +22,9 @@ namespace api {
  * @{
  */
 
+// forward declaration
+class route_table_state;
+
 /**
  * @brief    route table
  */
@@ -192,6 +195,9 @@ private:
     uint8_t                  af_;         /**< IP_AF_IPV4 or IP_AF_IPV6 */
     ht_ctxt_t                ht_ctxt_;    /**< hash table context */
     impl_base                *impl_;      /**< impl object instance */
+
+    friend class route_table_state;    // route_table_state is friend
+                                       // of route_table
 } __PACK__;
 
 /** @} */    // end of PDS_ROUTE_TABLE

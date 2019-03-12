@@ -16,7 +16,7 @@
 #include "nic/apollo/include/api/pds.hpp"
 #include "nic/apollo/include/api/pds_vcn.hpp"
 
-/// \defgroup PDS_ROUTE Route API
+/// \defgroup PDS_ROUTE route API
 /// @{
 
 // TODO: should be same as PDS_MAX_SUBNET
@@ -30,40 +30,41 @@ typedef enum pds_nh_type_e {
     PDS_NH_TYPE_REMOTE_TEP    =  2,    ///< remote server's physical IP
 } pds_nh_type_t;
 
-/// \brief Route
+/// \brief route
 typedef struct pds_route_s {
-    ip_prefix_t        prefix;     ///< Prefix
-    ip_addr_t          nh_ip;      ///< Nexthop IP address
-    pds_nh_type_t      nh_type;    ///< Nexthop type
-    pds_vcn_id_t       vcn_id;     ///< Result VCN ID
+    ip_prefix_t        prefix;     ///< prefix
+    ip_addr_t          nh_ip;      ///< nexthop IP address
+    pds_nh_type_t      nh_type;    ///< nexthop type
+    pds_vcn_id_t       vcn_id;     ///< result vcn id
 } __PACK__ pds_route_t;
 
-/// \brief Route table key
+/// \brief route table key
 /// \remark
-///  - route table id is not scoped under vcn, it is unique across vcns
+///  - route table id is not scoped under vcn, it is unique on
+//   - the device (across VCNs and IPv4/IPv6 route tables)
 typedef struct pds_route_table_key_s {
-    pds_route_table_id_t    id;    ///< Route table ID
+    pds_route_table_id_t    id;    ///< route table id
 } __PACK__ pds_route_table_key_t;
 
-/// \brief Route table configuration
+/// \brief route table configuration
 typedef struct pds_route_table_spec_s    pds_route_table_spec_t;
 struct pds_route_table_spec_s {
-    pds_route_table_key_t    key;          ///< Key
-    uint8_t                  af;           ///< Address family - v4 or v6
-    uint32_t                 num_routes;   ///< Number of routes in the list
-    pds_route_t              *routes;      ///< List or route rules
+    pds_route_table_key_t    key;          ///< key
+    uint8_t                  af;           ///< address family - v4 or v6
+    uint32_t                 num_routes;   ///< number of routes in the list
+    pds_route_t              *routes;      ///< list or route rules
 
-    /// Constructor
+    // constructor
     pds_route_table_spec_s() { routes = NULL; }
 
-    /// Destructor
+    // destructor
     ~pds_route_table_spec_s() {
         if (routes) {
             SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE, routes);
         }
     }
 
-    //// Assignment
+    // assignment operator
     pds_route_table_spec_t& operator= (const pds_route_table_spec_t& route_table) {
         // self-assignment guard
         if (this == &route_table) {
@@ -82,20 +83,16 @@ struct pds_route_table_spec_s {
     }
 } __PACK__;
 
-/// \brief Create route table
-///
+/// \brief create route table
 /// \param[in] spec route table configuration
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_route_table_create(pds_route_table_spec_t *spec);
 
-/// \brief Delete route table
-///
-/// \param[in] key Key
-///
+/// \brief delete route table
+/// \param[in] key key
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_route_table_delete(pds_route_table_key_t *key);
 
-/// \@}
+/// \@}    // end of PDS_ROUTE
 
 #endif    // __INCLUDE_API_PDS_ROUTE_HPP__

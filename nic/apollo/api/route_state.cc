@@ -1,25 +1,22 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    route_state.cc
- *
- * @brief   route table database handling
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// route table database handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/route_state.hpp"
 
 namespace api {
 
-/**
- * @defgroup PDS_ROUTE_TABLE_STATE - route table database functionality
- * @ingroup PDS_ROUTE
- * @{
- */
+/// \defgroup PDS_ROUTE_TABLE_STATE - route table state/db functionality
+/// \ingroup PDS_ROUTE
+/// \@{
 
-/**
- * @brief    constructor
- */
 route_table_state::route_table_state() {
     // TODO: need to tune multi-threading related params later
     route_table_ht_ = ht::factory(PDS_MAX_ROUTE_TABLE >> 2,
@@ -34,42 +31,37 @@ route_table_state::route_table_state() {
     SDK_ASSERT(route_table_slab_ != NULL);
 }
 
-/**
- * @brief    destructor
- */
 route_table_state::~route_table_state() {
     ht::destroy(route_table_ht_);
     slab::destroy(route_table_slab_);
 }
 
-/**
- * @brief     allocate route table instance
- * @return    pointer to the allocated route table, NULL if no memory
- */
 route_table *
 route_table_state::alloc(void) {
     return ((route_table *)route_table_slab_->alloc());
 }
 
-/**
- * @brief      free route table instance back to slab
- * @param[in]  rtrable pointer to the allocated route table instance
- */
+sdk_ret_t
+route_table_state::insert(route_table *table) {
+    return route_table_ht_->insert_with_key(&table->key_, table,
+                                            &table->ht_ctxt_);
+}
+
+route_table *
+route_table_state::remove(route_table *table) {
+    return (route_table *)(route_table_ht_->remove(&table->key_));
+}
+
 void
 route_table_state::free(route_table *rtable) {
     route_table_slab_->free(rtable);
 }
 
-/**
- * @brief        lookup route table in database with given key
- * @param[in]    route_table_key route table key
- * @return       pointer to the route table instance found or NULL
- */
 route_table *
 route_table_state::find(pds_route_table_key_t *route_table_key) const {
     return (route_table *)(route_table_ht_->lookup(route_table_key));
 }
 
-/** @} */    // end of PDS_ROUTE_TABLE_STATE
+/// \@}    // end of PDS_ROUTE_TABLE_STATE
 
 }    // namespace api

@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    route.cc
- *
- * @brief   route table handling
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// route table handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -16,11 +18,9 @@
 
 namespace api {
 
-/**
- * @defgroup PDS_ROUTE_TABLE - route table functionality
- * @ingroup PDS_ROUTE
- * @{
- */
+/// \@defgroup PDS_ROUTE_TABLE - route table functionality
+/// \@ingroup PDS_ROUTE
+/// \@{
 
 route_table::route_table() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
@@ -105,14 +105,16 @@ route_table::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 route_table::add_to_db(void) {
-    return route_table_db()->route_table_ht()->insert_with_key(&key_, this,
-                                                               &ht_ctxt_);
+    PDS_TRACE_VERBOSE("Adding route table %u to db", key_.id);
+    return route_table_db()->insert(this);
 }
 
 sdk_ret_t
 route_table::del_from_db(void) {
-    route_table_db()->route_table_ht()->remove(&key_);
-    return SDK_RET_OK;
+    if (route_table_db()->remove(this)) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t
@@ -120,6 +122,6 @@ route_table::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_ROUTE_TABLE, this);
 }
 
-/** @} */    // end of PDS_ROUTE_TABLE
+/// \@}    // end of PDS_ROUTE_TABLE
 
 }    // namespace api

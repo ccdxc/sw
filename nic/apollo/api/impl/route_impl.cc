@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    route_impl.cc
- *
- * @brief   datapath implementation of route table
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// datapath implementation of route table
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -19,11 +21,9 @@
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_ROUTE_TABLE_IMPL - route table datapath implementation
- * @ingroup PDS_ROUTE
- * @{
- */
+/// \defgroup PDS_ROUTE_TABLE_IMPL - route table datapath implementation
+/// \ingroup PDS_ROUTE
+/// \@{
 
 route_table_impl *
 route_table_impl::factory(pds_route_table_spec_t *spec) {
@@ -57,7 +57,7 @@ route_table_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         lpm_root_addr_ =
             route_table_impl_db()->v4_region_addr() +
                 (route_table_impl_db()->v4_table_size() * lpm_block_id);
-    } else {
+    } else if (spec->af == IP_AF_IPV6) {
         if (route_table_impl_db()->v6_idxr()->alloc(&lpm_block_id) !=
                 sdk::lib::indexer::SUCCESS) {
             return sdk::SDK_RET_NO_RESOURCE;
@@ -150,20 +150,20 @@ route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 {
     switch (api_op) {
     case api::API_OP_CREATE:
-        /**< for route table create, there is no stage 0 programming */
+    case api::API_OP_DELETE:
+        // for route table create, there is no stage 0 programming
+        // for route table delete, since all objects (e.g., subnets)
+        // referring to this route table are already modified to point
+        // to other routing table(s) or deleted (agent is expected to
+        // ensure this), there is no need to program any tables during
+        // activation stage
         break;
 
     case api::API_OP_UPDATE:
-        /**
-         * need to walk all vnics AND subnets to see which of them are using
-         * this routing table and then walk all the vnics that are part of the
-         * vcns and subnets and write new epoch data
-         */
-        return SDK_RET_ERR;
-        break;
-
-    case api::API_OP_DELETE:
-        /**< same as update but every entry written will have invalid bit set */
+         // TODO:
+         // need to walk all vnics AND subnets to see which of them are using
+         // this routing table and then walk all the vnics that are part of the
+         // vcns and subnets and write new epoch data
         return SDK_RET_ERR;
         break;
 
@@ -173,7 +173,7 @@ route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_OK;
 }
 
-/** @} */    // end of PDS_ROUTE_TABLE_IMPL
+/// \@}    // end of PDS_ROUTE_TABLE_IMPL
 
 }    // namespace impl
 }    // namespace api

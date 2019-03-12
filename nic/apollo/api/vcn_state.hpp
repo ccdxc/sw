@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#if !defined(__API_VCN_STATE_HPP__)
+#ifndef __API_VCN_STATE_HPP__
 #define __API_VCN_STATE_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
