@@ -179,7 +179,7 @@ class _Testbed:
         logfiles = []
         for instance in self.__tbspec.Instances:
             cmd = ["timeout", "2400"]
-            if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP == '':
+            if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP.replace(" ", "") == '':
                 instance.NicMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
 
             instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")

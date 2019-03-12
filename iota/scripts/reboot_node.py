@@ -45,14 +45,14 @@ def IpmiReset():
 class HostManagement:
     def __init__(self):
         self.__ssh_host = "%s@%s" % (GlobalOptions.host_username, GlobalOptions.host_ip)
-        self.__scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % GlobalOptions.host_password
-        self.__ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % GlobalOptions.host_password
+        self.__scp_pfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % GlobalOptions.host_password
+        self.__ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % GlobalOptions.host_password
         self._wait_for_ssh()
         self._connect()
         return
 
     def _connect(self):
-        self.hdl = pexpect.spawn("ssh -o StrictHostKeyChecking=no %s" % self.__ssh_host)
+        self.hdl = pexpect.spawn("ssh  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no %s" % self.__ssh_host)
         self.hdl.timeout = GlobalOptions.timeout
         self.hdl.logfile = sys.stdout.buffer
         self.hdl.expect(["[Pp]assword:", "Password for root@"])

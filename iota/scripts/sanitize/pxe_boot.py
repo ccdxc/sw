@@ -104,7 +104,6 @@ def __pxe_boot(host_spec):
     
     server = Server(defines.NODE_TYPE_PXE, defines.GetPxeServerIp())
     host   = Server(defines.NODE_TYPE_HOST, host_spec.NodeMgmtIP, host_spec.NodeCimcIP)
-    
     macs = host.GetOobMacFromCimc()
     __setup_pxe_server(server, PXE_OP_CREATE, macs, osname)
     
@@ -127,7 +126,7 @@ def __pxe_boot(host_spec):
     host.SetBootOrder("hdd")
     host.WaitForReboot("bios setting changed to hdd: waiting to reboot")
     host.WaitForReachability("bios setting changed to hdd: rebooting")
-    
+    time.sleep(5)
     # Initialize few things on node for iota run
     __init_node(host, host_spec.NodeOs)
 
