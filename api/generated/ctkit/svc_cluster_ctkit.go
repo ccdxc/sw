@@ -311,16 +311,55 @@ type clusterAPI struct {
 
 // Create creates Cluster object
 func (api *clusterAPI) Create(obj *cluster.Cluster) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Cluster().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on Cluster object
 func (api *clusterAPI) Update(obj *cluster.Cluster) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Cluster().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes Cluster object
 func (api *clusterAPI) Delete(obj *cluster.Cluster) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Cluster().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -641,16 +680,55 @@ type nodeAPI struct {
 
 // Create creates Node object
 func (api *nodeAPI) Create(obj *cluster.Node) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Node().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on Node object
 func (api *nodeAPI) Update(obj *cluster.Node) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Node().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes Node object
 func (api *nodeAPI) Delete(obj *cluster.Node) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Node().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -971,16 +1049,55 @@ type hostAPI struct {
 
 // Create creates Host object
 func (api *hostAPI) Create(obj *cluster.Host) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Host().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleHostEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on Host object
 func (api *hostAPI) Update(obj *cluster.Host) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Host().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleHostEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes Host object
 func (api *hostAPI) Delete(obj *cluster.Host) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Host().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleHostEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -1301,16 +1418,55 @@ type smartnicAPI struct {
 
 // Create creates SmartNIC object
 func (api *smartnicAPI) Create(obj *cluster.SmartNIC) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().SmartNIC().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleSmartNICEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on SmartNIC object
 func (api *smartnicAPI) Update(obj *cluster.SmartNIC) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleSmartNICEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes SmartNIC object
 func (api *smartnicAPI) Delete(obj *cluster.SmartNIC) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().SmartNIC().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleSmartNICEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -1631,16 +1787,55 @@ type tenantAPI struct {
 
 // Create creates Tenant object
 func (api *tenantAPI) Create(obj *cluster.Tenant) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Tenant().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on Tenant object
 func (api *tenantAPI) Update(obj *cluster.Tenant) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Tenant().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes Tenant object
 func (api *tenantAPI) Delete(obj *cluster.Tenant) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.ClusterV1().Tenant().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 

@@ -311,16 +311,55 @@ type endpointAPI struct {
 
 // Create creates Endpoint object
 func (api *endpointAPI) Create(obj *workload.Endpoint) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.WorkloadV1().Endpoint().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on Endpoint object
 func (api *endpointAPI) Update(obj *workload.Endpoint) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes Endpoint object
 func (api *endpointAPI) Delete(obj *workload.Endpoint) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.WorkloadV1().Endpoint().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -641,16 +680,55 @@ type workloadAPI struct {
 
 // Create creates Workload object
 func (api *workloadAPI) Create(obj *workload.Workload) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.WorkloadV1().Workload().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on Workload object
 func (api *workloadAPI) Update(obj *workload.Workload) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.WorkloadV1().Workload().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes Workload object
 func (api *workloadAPI) Delete(obj *workload.Workload) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.WorkloadV1().Workload().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 

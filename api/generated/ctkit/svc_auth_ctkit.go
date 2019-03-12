@@ -311,16 +311,55 @@ type userAPI struct {
 
 // Create creates User object
 func (api *userAPI) Create(obj *auth.User) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().User().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on User object
 func (api *userAPI) Update(obj *auth.User) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().User().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes User object
 func (api *userAPI) Delete(obj *auth.User) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().User().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -641,16 +680,55 @@ type authenticationpolicyAPI struct {
 
 // Create creates AuthenticationPolicy object
 func (api *authenticationpolicyAPI) Create(obj *auth.AuthenticationPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on AuthenticationPolicy object
 func (api *authenticationpolicyAPI) Update(obj *auth.AuthenticationPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes AuthenticationPolicy object
 func (api *authenticationpolicyAPI) Delete(obj *auth.AuthenticationPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().AuthenticationPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -971,16 +1049,55 @@ type roleAPI struct {
 
 // Create creates Role object
 func (api *roleAPI) Create(obj *auth.Role) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().Role().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on Role object
 func (api *roleAPI) Update(obj *auth.Role) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().Role().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes Role object
 func (api *roleAPI) Delete(obj *auth.Role) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().Role().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -1301,16 +1418,55 @@ type rolebindingAPI struct {
 
 // Create creates RoleBinding object
 func (api *rolebindingAPI) Create(obj *auth.RoleBinding) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().RoleBinding().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on RoleBinding object
 func (api *rolebindingAPI) Update(obj *auth.RoleBinding) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes RoleBinding object
 func (api *rolebindingAPI) Delete(obj *auth.RoleBinding) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.AuthV1().RoleBinding().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 

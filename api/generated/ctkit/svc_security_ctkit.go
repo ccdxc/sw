@@ -311,16 +311,55 @@ type securitygroupAPI struct {
 
 // Create creates SecurityGroup object
 func (api *securitygroupAPI) Create(obj *security.SecurityGroup) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on SecurityGroup object
 func (api *securitygroupAPI) Update(obj *security.SecurityGroup) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes SecurityGroup object
 func (api *securitygroupAPI) Delete(obj *security.SecurityGroup) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().SecurityGroup().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -641,16 +680,55 @@ type sgpolicyAPI struct {
 
 // Create creates SGPolicy object
 func (api *sgpolicyAPI) Create(obj *security.SGPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().SGPolicy().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on SGPolicy object
 func (api *sgpolicyAPI) Update(obj *security.SGPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes SGPolicy object
 func (api *sgpolicyAPI) Delete(obj *security.SGPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().SGPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -971,16 +1049,55 @@ type appAPI struct {
 
 // Create creates App object
 func (api *appAPI) Create(obj *security.App) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().App().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on App object
 func (api *appAPI) Update(obj *security.App) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().App().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes App object
 func (api *appAPI) Delete(obj *security.App) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().App().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -1301,16 +1418,55 @@ type firewallprofileAPI struct {
 
 // Create creates FirewallProfile object
 func (api *firewallprofileAPI) Create(obj *security.FirewallProfile) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().FirewallProfile().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on FirewallProfile object
 func (api *firewallprofileAPI) Update(obj *security.FirewallProfile) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes FirewallProfile object
 func (api *firewallprofileAPI) Delete(obj *security.FirewallProfile) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().FirewallProfile().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -1631,16 +1787,55 @@ type certificateAPI struct {
 
 // Create creates Certificate object
 func (api *certificateAPI) Create(obj *security.Certificate) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().Certificate().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on Certificate object
 func (api *certificateAPI) Update(obj *security.Certificate) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes Certificate object
 func (api *certificateAPI) Delete(obj *security.Certificate) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().Certificate().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -1961,16 +2156,55 @@ type trafficencryptionpolicyAPI struct {
 
 // Create creates TrafficEncryptionPolicy object
 func (api *trafficencryptionpolicyAPI) Create(obj *security.TrafficEncryptionPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on TrafficEncryptionPolicy object
 func (api *trafficencryptionpolicyAPI) Update(obj *security.TrafficEncryptionPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes TrafficEncryptionPolicy object
 func (api *trafficencryptionpolicyAPI) Delete(obj *security.TrafficEncryptionPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 

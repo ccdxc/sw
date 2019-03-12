@@ -311,16 +311,55 @@ type eventpolicyAPI struct {
 
 // Create creates EventPolicy object
 func (api *eventpolicyAPI) Create(obj *monitoring.EventPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().EventPolicy().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on EventPolicy object
 func (api *eventpolicyAPI) Update(obj *monitoring.EventPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes EventPolicy object
 func (api *eventpolicyAPI) Delete(obj *monitoring.EventPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().EventPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -641,16 +680,55 @@ type statspolicyAPI struct {
 
 // Create creates StatsPolicy object
 func (api *statspolicyAPI) Create(obj *monitoring.StatsPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().StatsPolicy().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleStatsPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on StatsPolicy object
 func (api *statspolicyAPI) Update(obj *monitoring.StatsPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleStatsPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes StatsPolicy object
 func (api *statspolicyAPI) Delete(obj *monitoring.StatsPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().StatsPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleStatsPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -971,16 +1049,55 @@ type fwlogpolicyAPI struct {
 
 // Create creates FwlogPolicy object
 func (api *fwlogpolicyAPI) Create(obj *monitoring.FwlogPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().FwlogPolicy().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on FwlogPolicy object
 func (api *fwlogpolicyAPI) Update(obj *monitoring.FwlogPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes FwlogPolicy object
 func (api *fwlogpolicyAPI) Delete(obj *monitoring.FwlogPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().FwlogPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -1301,16 +1418,55 @@ type flowexportpolicyAPI struct {
 
 // Create creates FlowExportPolicy object
 func (api *flowexportpolicyAPI) Create(obj *monitoring.FlowExportPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().FlowExportPolicy().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on FlowExportPolicy object
 func (api *flowexportpolicyAPI) Update(obj *monitoring.FlowExportPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes FlowExportPolicy object
 func (api *flowexportpolicyAPI) Delete(obj *monitoring.FlowExportPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().FlowExportPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -1631,16 +1787,55 @@ type alertAPI struct {
 
 // Create creates Alert object
 func (api *alertAPI) Create(obj *monitoring.Alert) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().Alert().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on Alert object
 func (api *alertAPI) Update(obj *monitoring.Alert) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().Alert().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes Alert object
 func (api *alertAPI) Delete(obj *monitoring.Alert) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().Alert().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -1961,16 +2156,55 @@ type alertpolicyAPI struct {
 
 // Create creates AlertPolicy object
 func (api *alertpolicyAPI) Create(obj *monitoring.AlertPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().AlertPolicy().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on AlertPolicy object
 func (api *alertpolicyAPI) Update(obj *monitoring.AlertPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes AlertPolicy object
 func (api *alertpolicyAPI) Delete(obj *monitoring.AlertPolicy) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().AlertPolicy().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -2291,16 +2525,55 @@ type alertdestinationAPI struct {
 
 // Create creates AlertDestination object
 func (api *alertdestinationAPI) Create(obj *monitoring.AlertDestination) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().AlertDestination().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on AlertDestination object
 func (api *alertdestinationAPI) Update(obj *monitoring.AlertDestination) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes AlertDestination object
 func (api *alertdestinationAPI) Delete(obj *monitoring.AlertDestination) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().AlertDestination().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -2621,16 +2894,55 @@ type mirrorsessionAPI struct {
 
 // Create creates MirrorSession object
 func (api *mirrorsessionAPI) Create(obj *monitoring.MirrorSession) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().MirrorSession().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on MirrorSession object
 func (api *mirrorsessionAPI) Update(obj *monitoring.MirrorSession) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes MirrorSession object
 func (api *mirrorsessionAPI) Delete(obj *monitoring.MirrorSession) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().MirrorSession().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -2951,16 +3263,55 @@ type troubleshootingsessionAPI struct {
 
 // Create creates TroubleshootingSession object
 func (api *troubleshootingsessionAPI) Create(obj *monitoring.TroubleshootingSession) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().TroubleshootingSession().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on TroubleshootingSession object
 func (api *troubleshootingsessionAPI) Update(obj *monitoring.TroubleshootingSession) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes TroubleshootingSession object
 func (api *troubleshootingsessionAPI) Delete(obj *monitoring.TroubleshootingSession) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().TroubleshootingSession().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
@@ -3281,16 +3632,55 @@ type techsupportrequestAPI struct {
 
 // Create creates TechSupportRequest object
 func (api *techsupportrequestAPI) Create(obj *monitoring.TechSupportRequest) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().TechSupportRequest().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on TechSupportRequest object
 func (api *techsupportrequestAPI) Update(obj *monitoring.TechSupportRequest) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes TechSupportRequest object
 func (api *techsupportrequestAPI) Delete(obj *monitoring.TechSupportRequest) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.MonitoringV1().TechSupportRequest().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 

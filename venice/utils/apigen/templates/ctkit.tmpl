@@ -317,16 +317,55 @@ type {{ToLower .}}API struct {
 
 // Create creates {{.}} object
 func (api *{{ToLower .}}API) Create(obj *{{$pkgname}}.{{.}}) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.{{$srvname}}().{{.}}().Create(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
 }
 
 // Update triggers update on {{.}} object
 func (api *{{ToLower .}}API) Update(obj *{{$pkgname}}.{{.}}) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 }
 
 // Delete deletes {{.}} object
 func (api *{{ToLower .}}API) Delete(obj *{{$pkgname}}.{{.}}) error {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		_, err = apicl.{{$srvname}}().{{.}}().Delete(context.Background(), &obj.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+
 	return api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 

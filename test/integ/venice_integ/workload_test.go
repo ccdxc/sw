@@ -119,6 +119,18 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 		AssertOk(c, err, "Error deleting workload")
 	}
 
+	// verify all endpoints are gone from api server
+	AssertEventually(c, func() (bool, interface{}) {
+		eplist, err := it.restClient.WorkloadV1().Endpoint().List(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			return false, nil
+		}
+		if len(eplist) > 0 {
+			return false, eplist
+		}
+		return true, nil
+	}, "Endpoint still found in venice", "100ms", it.pollTimeout())
+
 	// verify all endpoints are gone
 	for _, ag := range it.agents {
 		go func(ag *netagent.Agent) {
