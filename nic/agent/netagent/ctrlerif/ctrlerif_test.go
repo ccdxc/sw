@@ -584,6 +584,32 @@ func (ag *fakeAgent) DeleteSecurityProfile(tn, ns, name string) error {
 	return nil
 }
 
+// CreateVrf creates a vrf. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateVrf(profile *netproto.Vrf) error {
+	return nil
+}
+
+// FindVrf finds a vrf. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindVrf(meta api.ObjectMeta) (*netproto.Vrf, error) {
+	return nil, nil
+}
+
+// ListVrf lists a vrf. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListVrf() []*netproto.Vrf {
+	return nil
+}
+
+// UpdateVrf updates a vrf. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateVrf(profile *netproto.Vrf) error {
+
+	return nil
+}
+
+// DeleteVrf deletes a vrf. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteVrf(tn, ns, name string) error {
+	return nil
+}
+
 // CreateApp creates an app. Stubbed out to satisfy interface
 func (ag *fakeAgent) CreateApp(app *netproto.App) error {
 	ag.appAdded[objectKey(app.ObjectMeta)] = app

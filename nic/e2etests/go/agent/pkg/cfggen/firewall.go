@@ -70,7 +70,7 @@ func (c *CfgGen) GenerateFirewallPolicies() error {
 			},
 			Spec: netproto.SGPolicySpec{
 				AttachTenant: true,
-				Rules:        policyRules,
+				Rules:     policyRules,
 			},
 		}
 		sgPolicies = append(sgPolicies, &sgPolicy)

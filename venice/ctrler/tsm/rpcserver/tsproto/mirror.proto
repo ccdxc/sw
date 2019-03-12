@@ -18,23 +18,24 @@ import "matchrule.proto";
 //---- MirrorSessionSpec
 //-----------------------
 message MirrorSessionSpec {
-    bool                    Enable          = 1 [(gogoproto.jsontag) = "enable"];
+    string                  VrfName         = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+    bool                    Enable          = 2 [(gogoproto.jsontag) = "enable"];
     // Original packets can be truncated when being mirrored to save bandwidth and storage
     // When mirrored packets are sent to Venice, default size is 128 (venice)??? or complete packet (erspan)?
-    uint32                  PacketSize      = 2 [(gogoproto.jsontag) = "packet-size,omitempty"];
+    uint32                  PacketSize      = 3 [(gogoproto.jsontag) = "packet-size,omitempty"];
 
-    MirrorStopConditions    StopConditions  = 3 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "stop-condition,inline"];
+    MirrorStopConditions    StopConditions  = 4 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "stop-condition,inline"];
 
     // Mirrored packet collectors
-    repeated MirrorCollector Collectors     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "collectors,inline"];
+    repeated MirrorCollector Collectors     = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "collectors,inline"];
 
     // Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions
-    repeated MatchRule      MatchRules      = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,inline"];
+    repeated MatchRule      MatchRules      = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,inline"];
 
     // CaptureAt and PacketDirection for capturing
     // When Src and Dst is on the same NIC, only one mirror copy in each direction is made
-    MirrorSrcDst        CaptureAt           = 6 [(gogoproto.jsontag) = "capture-at,omitempty", (venice.check) = "StrEnum(MirrorSrcDst)"];
-    MirrorDir           PacketDir           = 7 [(gogoproto.jsontag) = "packet-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
+    MirrorSrcDst        CaptureAt           = 7 [(gogoproto.jsontag) = "capture-at,omitempty", (venice.check) = "StrEnum(MirrorSrcDst)"];
+    MirrorDir           PacketDir           = 8 [(gogoproto.jsontag) = "packet-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
 
     // Filter selected packets further - mirror only those packets that match atleast one of the PacketFilers
     enum MirrorPacketFilter {
@@ -43,7 +44,7 @@ message MirrorSessionSpec {
         NETWORK_POLICY_DROP     = 2;
         FIREWALL_POLICY_DROP    = 3;
     }
-    repeated string PacketFilters           = 8 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
+    repeated string PacketFilters           = 9 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
 }
 
 enum MirrorDir {

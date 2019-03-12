@@ -50,6 +50,13 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 		return fmt.Errorf("invalid attachment point for %s. Must specify one attachment point. Either attach-tenant or attach-group", sgp.Name)
 	}
 
+	// find the corresponding vrf for the sg policy
+	vrf, err := na.ValidateVrf(sgp.Tenant, sgp.Namespace, sgp.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", sgp.Spec.VrfName)
+		return err
+	}
+
 	for _, grp := range sgp.Spec.AttachGroup {
 		sgMeta := api.ObjectMeta{
 			Tenant:    sgp.Tenant,
@@ -97,7 +104,7 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateSGPolicy(sgp, ns.Status.NamespaceID, securityGroups, &na.RuleIDAppLUT)
+	err = na.Datapath.CreateSGPolicy(sgp, vrf.Status.VrfID, securityGroups, &na.RuleIDAppLUT)
 	if err != nil {
 		log.Errorf("Error creating security group policy in datapath. SGPolicy {%+v}. Err: %v", sgp, err)
 		return err
@@ -105,6 +112,13 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 
 	// Flush the look up table as it always reconstructed
 	na.RuleIDAppLUT = sync.Map{}
+
+	// Add the current sg policy as a dependency to the namespace.
+	err = na.Solver.Add(ns, sgp)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, sgp)
+		return err
+	}
 
 	// Add dependencies depending on the attachment points
 	if len(sgp.Spec.AttachGroup) > 0 {
@@ -116,9 +130,9 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 			}
 		}
 	} else if sgp.Spec.AttachTenant {
-		err = na.Solver.Add(ns, sgp)
+		err = na.Solver.Add(vrf, sgp)
 		if err != nil {
-			log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, sgp)
+			log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, sgp)
 			return err
 		}
 	}
@@ -169,7 +183,7 @@ func (na *Nagent) ListSGPolicy() []*netproto.SGPolicy {
 // UpdateSGPolicy updates a security group policy
 func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(sgp.Tenant, sgp.Namespace)
+	_, err := na.FindNamespace(sgp.Tenant, sgp.Namespace)
 	if err != nil {
 		return err
 	}
@@ -183,6 +197,14 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 		log.Infof("Nothing to update.")
 		return nil
 	}
+
+	// find the corresponding vrf for the sg policy
+	vrf, err := na.ValidateVrf(existingSgp.Tenant, existingSgp.Namespace, existingSgp.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingSgp.Spec.VrfName)
+		return err
+	}
+
 	// Populate the ID from existing sg policy to ensure that HAL recognizes this.
 	sgp.Status.SGPolicyID = existingSgp.Status.SGPolicyID
 
@@ -206,7 +228,7 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 		}
 	}
 
-	err = na.Datapath.UpdateSGPolicy(sgp, ns.Status.NamespaceID, &na.RuleIDAppLUT)
+	err = na.Datapath.UpdateSGPolicy(sgp, vrf.Status.VrfID, &na.RuleIDAppLUT)
 	if err != nil {
 		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", existingSgp, err)
 		return err
@@ -249,6 +271,13 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 		return ErrSGPolicyNotFound
 	}
 
+	// find the corresponding vrf for the sg policy
+	vrf, err := na.ValidateVrf(existingSGPolicy.Tenant, existingSGPolicy.Namespace, existingSGPolicy.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingSGPolicy.Spec.VrfName)
+		return err
+	}
+
 	// check if the current sg policy has any objects referring to it
 	err = na.Solver.Solve(existingSGPolicy)
 	if err != nil {
@@ -257,7 +286,7 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteSGPolicy(existingSGPolicy, ns.Status.NamespaceID)
+	err = na.Datapath.DeleteSGPolicy(existingSGPolicy, vrf.Status.VrfID)
 	if err != nil {
 		log.Errorf("Error deleting security group policy {%+v}. Err: %v", sgp, err)
 		return err
@@ -283,11 +312,17 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 	}
 
 	if existingSGPolicy.Spec.AttachTenant {
-		err = na.Solver.Remove(ns, existingSGPolicy)
+		err = na.Solver.Remove(vrf, existingSGPolicy)
 		if err != nil {
 			log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, err)
 			return err
 		}
+	}
+
+	err = na.Solver.Remove(vrf, existingSGPolicy)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingSGPolicy.Spec.VrfName, err)
+		return err
 	}
 
 	// delete from db

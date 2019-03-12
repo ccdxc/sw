@@ -49,6 +49,7 @@ func TestTunnelPost(t *testing.T) {
 			Name:      "testPostTunnel",
 		},
 		Spec: netproto.TunnelSpec{
+			VrfName:     "default",
 			Type:        "VXLAN",
 			AdminStatus: "UP",
 			Src:         "10.1.1.1",
@@ -86,6 +87,7 @@ func TestTunnelDelete(t *testing.T) {
 			Name:      "testDeleteTunnel",
 		},
 		Spec: netproto.TunnelSpec{
+			VrfName:     "default",
 			Type:        "VXLAN",
 			AdminStatus: "UP",
 			Src:         "10.1.1.1",
@@ -118,7 +120,8 @@ func TestTunnelUpdate(t *testing.T) {
 
 	var actualTunnelSpec netproto.TunnelSpec
 	updatedTunnelSpec := netproto.TunnelSpec{
-		Src: "172.0.0.1",
+		VrfName: "default",
+		Src:     "172.0.0.1",
 	}
 	putData := netproto.Tunnel{
 		TypeMeta: api.TypeMeta{Kind: "Tunnel"},

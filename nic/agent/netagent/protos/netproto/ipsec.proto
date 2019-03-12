@@ -38,8 +38,10 @@ message IPSecPolicy {
 
 // IPSecPolicySpec
 message IPSecPolicySpec {
+    // VrfName specifies the name of the VRF that the current IPSec Policy belongs to
+    string VrfName           = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
     // IPSecRules in a given policy
-    repeated IPSecRule rules = 1   [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
+    repeated IPSecRule rules = 2   [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
 }
 
 message IPSecRule {
@@ -108,34 +110,37 @@ message IPSecSAEncrypt {
 
 // IPSecSAEncryptSpec
 message IPSecSAEncryptSpec {
+    // VrfName specifies the name of the VRF that the current IPSec Encrypt SA belongs to
+    string VrfName          = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+
     // SA Encrypt protocol
-    string Protocol         = 1 [(venice.check) = "StrEnum(Protocol.Type)",
+    string Protocol         = 2 [(venice.check) = "StrEnum(Protocol.Type)",
                                  (gogoproto.jsontag) = "protocol,omitempty"];
     // SA Encrypt Auth Algorithm
-    string AuthAlgo         = 2 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
+    string AuthAlgo         = 3 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
                                  (gogoproto.jsontag) = "authentication-algorithm,omitempty"];
 
     // Authentication Key
-    string AuthKey          = 3 [(gogoproto.jsontag) = "authentication-key,omitempty"];
+    string AuthKey          = 4 [(gogoproto.jsontag) = "authentication-key,omitempty"];
 
     // SA Encrypt Algorithm
-    string EncryptAlgo      = 4 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
+    string EncryptAlgo      = 5 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
                                  (gogoproto.jsontag) = "encryption-algorithm,omitempty"];
 
     // Encryption Key
-    string EncryptionKey    = 5 [(gogoproto.jsontag) = "encryption-key,omitempty"];
+    string EncryptionKey    = 6 [(gogoproto.jsontag) = "encryption-key,omitempty"];
 
     // Local Gateway IP
-    string LocalGwIP        = 6 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
+    string LocalGwIP        = 7 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
 
     // Remote Gateway IP
-    string RemoteGwIP       = 7 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
+    string RemoteGwIP       = 8 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
 
     // SPI Value
-    uint32 SPI              = 8 [(gogoproto.jsontag) = "spi,omitempty"];
+    uint32 SPI              = 9 [(gogoproto.jsontag) = "spi,omitempty"];
 
-    // TepNS holds the namespace that holds outer IP for the tunnel
-    string TepNS          = 9 [(gogoproto.jsontag) = "tep-namespace,omitempty"];
+    // TepVrf holds the vrf that holds outer IP for the tunnel
+    string TepVrf            = 10 [(gogoproto.jsontag) = "tep-vrf,omitempty"];
 
 }
 
@@ -216,45 +221,47 @@ message IPSecSADecrypt {
 
 // IPSecSADecryptSpec
 message IPSecSADecryptSpec {
+    // VrfName specifies the name of the VRF that the current IPSec Decrypt SA belongs to
+    string VrfName              = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
 
     // SA Decrypt protocol
-    string Protocol             = 1 [(venice.check) = "StrEnum(Protocol.Type)",
+    string Protocol             = 2 [(venice.check) = "StrEnum(Protocol.Type)",
                                      (gogoproto.jsontag) = "protocol,omitempty"];
     // SA Decrypt Auth Algorithm
-    string AuthAlgo             = 2 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
+    string AuthAlgo             = 3 [(venice.check) = "StrEnum(AuthAlgorithm.Type)",
                                      (gogoproto.jsontag) = "authentication-algorithm,omitempty"];
 
     // Authentication Key
-    string AuthKey              = 3 [(gogoproto.jsontag) = "authentication-key,omitempty"];
+    string AuthKey              = 4 [(gogoproto.jsontag) = "authentication-key,omitempty"];
 
     // SA Decrypt Algorithm
-    string DecryptAlgo          = 4 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
+    string DecryptAlgo          = 5 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
                                      (gogoproto.jsontag) = "decryption-algorithm,omitempty"];
 
     // Rekey Decrypt Algorithm
-    string RekeyDecryptAlgo     = 5 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
+    string RekeyDecryptAlgo     = 6 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
                                      (gogoproto.jsontag) = "rekey-decryption-algorithm,omitempty"];
 
     // Decryption Key
-    string DecryptionKey        = 6 [(gogoproto.jsontag) = "decryption-key,omitempty"];
+    string DecryptionKey        = 7 [(gogoproto.jsontag) = "decryption-key,omitempty"];
 
     // Rekey Auth Key
-    string RekeyAuthKey         = 7 [(gogoproto.jsontag) = "rekey-auth-key,omitempty"];
+    string RekeyAuthKey         = 8 [(gogoproto.jsontag) = "rekey-auth-key,omitempty"];
 
     // Rekey Decryption Key
-    string RekeyDecryptionKey   = 8 [(gogoproto.jsontag) = "rekey-decryption-key,omitempty"];
+    string RekeyDecryptionKey   = 9 [(gogoproto.jsontag) = "rekey-decryption-key,omitempty"];
 
     // Local Gateway IP
-    string LocalGwIP            = 9 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
+    string LocalGwIP            = 10 [(gogoproto.jsontag) = "local-gateway-ip,omitempty"];
 
     // Remote Gateway IP
-    string RemoteGwIP           = 10 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
+    string RemoteGwIP           = 11 [(gogoproto.jsontag) = "remote-gateway-ip,omitempty"];
 
     // SPI information
-    uint32 SPI                  = 11 [(gogoproto.jsontag) = "spi,omitempty"];
+    uint32 SPI                  = 12 [(gogoproto.jsontag) = "spi,omitempty"];
 
-    // TepNS holds the namespace that holds outer IP for the tunnel
-    string TepNS              = 12 [(gogoproto.jsontag) = "tep-namespace,omitempty"];
+    // TepVrf holds the vrf that holds outer IP for the tunnel
+    string TepVrf               = 13 [(gogoproto.jsontag) = "tep-vrf,omitempty"];
 
 }
 

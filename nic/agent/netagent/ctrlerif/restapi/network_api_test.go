@@ -49,6 +49,7 @@ func TestNetworkPost(t *testing.T) {
 			Name:      "testPostNetwork",
 		},
 		Spec: netproto.NetworkSpec{
+			VrfName:     "default",
 			IPv4Subnet:  "10.1.1.0/24",
 			IPv4Gateway: "10.1.1.254",
 		},
@@ -76,6 +77,7 @@ func TestNetworkUpdate(t *testing.T) {
 	var networkList []*netproto.Network
 
 	updatedNetworkSpec := netproto.NetworkSpec{
+		VrfName:     "default",
 		IPv4Subnet:  "192.168.1.1/24",
 		IPv4Gateway: "192.168.1.254",
 	}
@@ -118,6 +120,7 @@ func TestNetworkDelete(t *testing.T) {
 			Name:      "testDeleteNetwork",
 		},
 		Spec: netproto.NetworkSpec{
+			VrfName:     "default",
 			IPv4Subnet:  "10.1.3.0/24",
 			IPv4Gateway: "10.1.3.254",
 		},

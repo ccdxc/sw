@@ -133,6 +133,7 @@ func TestFindNumExports(t *testing.T) {
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
+		VrfDB:       map[string]*netproto.Vrf{},
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
@@ -163,6 +164,17 @@ func TestFindNumExports(t *testing.T) {
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "vrf"})
+	na.VrfDB[key] = &netproto.Vrf{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: uint64(101),
 		},
 	}
 
@@ -266,6 +278,7 @@ func TestValidatePolicy(t *testing.T) {
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
+		VrfDB:       map[string]*netproto.Vrf{},
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
@@ -296,6 +309,17 @@ func TestValidatePolicy(t *testing.T) {
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "vrf"})
+	na.VrfDB[key] = &netproto.Vrf{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: uint64(101),
 		},
 	}
 
@@ -542,6 +566,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
+		VrfDB:       map[string]*netproto.Vrf{},
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
@@ -572,6 +597,17 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "vrf"})
+	na.VrfDB[key] = &netproto.Vrf{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: uint64(101),
 		},
 	}
 
@@ -710,6 +746,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
+		VrfDB:       map[string]*netproto.Vrf{},
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
@@ -740,6 +777,17 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "vrf"})
+	na.VrfDB[key] = &netproto.Vrf{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: uint64(101),
 		},
 	}
 
@@ -1001,6 +1049,7 @@ func TestTpaDebug(t *testing.T) {
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
+		VrfDB:       map[string]*netproto.Vrf{},
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
@@ -1103,6 +1152,17 @@ func TestTpaDebug(t *testing.T) {
 		},
 	}
 
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "vrf"})
+	na.VrfDB[key] = &netproto.Vrf{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: uint64(101),
+		},
+	}
+
 	collResp := &halproto.CollectorResponseMsg{
 		Response: []*halproto.CollectorResponse{
 			{
@@ -1160,6 +1220,7 @@ func TestPolicyOps(t *testing.T) {
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
+		VrfDB:       map[string]*netproto.Vrf{},
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
@@ -1190,6 +1251,17 @@ func TestPolicyOps(t *testing.T) {
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "vrf"})
+	na.VrfDB[key] = &netproto.Vrf{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: uint64(101),
 		},
 	}
 
@@ -1433,6 +1505,7 @@ func TestMatchRule(t *testing.T) {
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
+		VrfDB:       map[string]*netproto.Vrf{},
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
@@ -1463,6 +1536,17 @@ func TestMatchRule(t *testing.T) {
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: uint64(101),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "vrf"})
+	na.VrfDB[key] = &netproto.Vrf{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: uint64(101),
 		},
 	}
 

@@ -177,7 +177,7 @@ func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.C
 	}
 
 	// get vrf
-	vrf, err := s.getVrfID(p.GetTenant(), p.GetNamespace())
+	vrf, err := s.getVrfID(p.GetTenant(), p.GetNamespace(), p.Spec.VrfName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find vrf for %s/%s", p.GetTenant(), p.GetNamespace())
 	}
@@ -218,14 +218,14 @@ func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.C
 	return collKeys, nil
 }
 
-// get vrf from tenant/namespace
-func (s *PolicyState) getVrfID(tenant string, namespace string) (uint64, error) {
-	nsObj, err := s.netAgent.FindNamespace(tenant, namespace)
+// get vrf from vrf name
+func (s *PolicyState) getVrfID(tenant, namespace, vrfName string) (uint64, error) {
+	vrfObj, err := s.netAgent.ValidateVrf(tenant, namespace, vrfName)
 	if err != nil {
-		log.Errorf("failed to find tenant/namespace {%s/%s}", tenant, namespace)
-		return uint64(0), fmt.Errorf("failed to find tenant, %s", err)
+		log.Errorf("failed to find vrf %s. Err: %v", vrfName, err)
+		return uint64(0), fmt.Errorf("failed to find vrf %s. Err: %v", vrfName, err)
 	}
-	return nsObj.Status.NamespaceID, nil
+	return vrfObj.Status.VrfID, nil
 }
 
 // get vrf from tenant/namespace
@@ -827,7 +827,7 @@ func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*polic
 	policyCtx.flowMonitorTable, _ = policyCtx.readFlowMonitorTable()
 
 	// get vrf
-	vrf, err := s.getVrfID(p.GetTenant(), p.GetNamespace())
+	vrf, err := s.getVrfID(p.Tenant, p.Namespace, p.Spec.VrfName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find tenant/namespace, %s/%s", p.GetTenant(), p.GetNamespace())
 	}

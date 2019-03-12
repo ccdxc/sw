@@ -133,17 +133,37 @@ func TestStateDependencies_Solve(t *testing.T) {
 func TestStateDependencies_ResolveTypeSelfLink(t *testing.T) {
 	s := NewDepSolver()
 	var m meta
+	// resolve vrf
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "testTenant",
+			Namespace: "testNS",
+			Name:      "testVrf"},
+	}
+	tMeta, oMeta, err := s.resolveObjectType(&vrf)
+	AssertOk(t, err, "failed to resolve vrf object type")
+	m.T = tMeta
+	m.O = oMeta
+	key, selfLink, err := s.composeKeySelfLink(&m)
+
+	meta := s.composeMetaFromKey(key)
+	Assert(t, meta != nil, "regenerating meta from object key failed")
+	AssertOk(t, err, "failed to compose self link for vrf")
+	AssertEquals(t, "vrf|testTenant|testNS|testVrf", key, "failed to compose key for vrf object")
+	AssertEquals(t, "/api/vrfs/testTenant/testNS/testVrf", selfLink, "failed to compose key for network")
+
 	// resolve tenant
 	tn := netproto.Tenant{
 		TypeMeta:   api.TypeMeta{Kind: "tenant"},
 		ObjectMeta: api.ObjectMeta{Name: "testTenant"},
 	}
-	tMeta, oMeta, err := s.resolveObjectType(&tn)
+	tMeta, oMeta, err = s.resolveObjectType(&tn)
 	AssertOk(t, err, "failed to resolve tenant object type")
 	m.T = tMeta
 	m.O = oMeta
-	key, selfLink, err := s.composeKeySelfLink(&m)
-	meta := s.composeMetaFromKey(key)
+	key, selfLink, err = s.composeKeySelfLink(&m)
+	meta = s.composeMetaFromKey(key)
 	Assert(t, meta != nil, "regenerating meta from object key failed")
 	AssertOk(t, err, "failed to compose self link for tenant")
 	AssertEquals(t, "tenant|testTenant", key, "failed to compose key for tenant object")

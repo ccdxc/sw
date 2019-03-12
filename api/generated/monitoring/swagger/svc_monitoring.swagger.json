@@ -4104,6 +4104,13 @@
             "type": "string"
           },
           {
+            "name": "spec.vrf-name",
+            "description": "VrfName specifies the name of the VRF that the current Firewall Log Policy belongs to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "spec.format",
             "description": "fwlog format, SYSLOG_BSD default.",
             "in": "query",
@@ -9288,6 +9295,13 @@
             "type": "string"
           },
           {
+            "name": "spec.vrf-name",
+            "description": "VrfName specifies the name of the VRF that the current Firewall Log Policy belongs to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "spec.format",
             "description": "fwlog format, SYSLOG_BSD default.",
             "in": "query",
@@ -14034,6 +14048,10 @@
         "filter"
       ],
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current Firewall Log Policy belongs to"
+        },
         "targets": {
           "type": "array",
           "items": {

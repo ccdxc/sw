@@ -461,6 +461,10 @@
     "netprotoRouteSpec": {
       "type": "object",
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current Route belongs to"
+        },
         "ip-prefix": {
           "type": "string",
           "description": "CIDR based ip prefix."

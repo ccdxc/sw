@@ -2,7 +2,7 @@ OutDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/resta
 NimbusDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/protos/generated/nimbus
 
 # all the sources for which .pb.go is generated
-SRC := app.proto endpoint.proto copp.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto qos.proto route.proto security.proto service.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto tcp_proxy.proto
+SRC := app.proto endpoint.proto copp.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto qos.proto route.proto security.proto service.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto tcp_proxy.proto vrf.proto
 NIMBUS_SRC := app.proto endpoint.proto namespace.proto  network.proto  security.proto sgpolicy.proto secprofile.proto tenant.proto
 
 #these wont have _api.go generated
@@ -19,7 +19,7 @@ NIMBUS_DEST := $(NIMBUS_SRC:%.proto=$(NimbusDir)/%_mserver.go)
 
 default: ${DEST} nimbus
 
-copp.pb.% app.pb.% endpoint.pb.% interface.pb.% ipsec.pb.% match.pb.% namespace.pb.% nat.pb.% network.pb.% port.pb.% route.pb.% security.pb.% secprofile.pb.% service.pb.% sgpolicy.pb.% tenant.pb.% tunnel.pb.% tcp_proxy.pb.%:  ${SRC}
+copp.pb.% app.pb.% endpoint.pb.% interface.pb.% ipsec.pb.% match.pb.% namespace.pb.% nat.pb.% network.pb.% port.pb.% route.pb.% security.pb.% secprofile.pb.% service.pb.% sgpolicy.pb.% tenant.pb.% tunnel.pb.% tcp_proxy.pb.% vrf.pb.%:  ${SRC}
 	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
 	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \

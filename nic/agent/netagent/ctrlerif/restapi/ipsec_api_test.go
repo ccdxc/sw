@@ -49,6 +49,7 @@ func TestIPSecPolicyPost(t *testing.T) {
 			Name:      "testPostIPSecPolicy",
 		},
 		Spec: netproto.IPSecPolicySpec{
+			VrfName: "default",
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
@@ -98,6 +99,7 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 
 	var actualIPSecPolicySpec netproto.IPSecPolicySpec
 	updatedIPSecPolicySpec := netproto.IPSecPolicySpec{
+		VrfName: "default",
 		Rules: []netproto.IPSecRule{
 			{
 				SAName: "updatedEncryptSA",
@@ -142,6 +144,7 @@ func TestIPSecPolicyDelete(t *testing.T) {
 			Name:      "testDeleteIPSecPolicy",
 		},
 		Spec: netproto.IPSecPolicySpec{
+			VrfName: "default",
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
@@ -292,6 +295,7 @@ func TestIPSecSADecryptPost(t *testing.T) {
 			Name:      "testPostIPSecSADecrypt",
 		},
 		Spec: netproto.IPSecSADecryptSpec{
+			VrfName:            "default",
 			Protocol:           "ESP",
 			AuthAlgo:           "AES_GCM",
 			AuthKey:            "someRandomString",
@@ -302,7 +306,7 @@ func TestIPSecSADecryptPost(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
-			TepNS:              "default",
+			TepVrf:             "default",
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &postData, &resp)
@@ -329,6 +333,7 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 
 	var actualIPSecSADecryptSpec netproto.IPSecSADecryptSpec
 	updatedIPSecSADecryptSpec := netproto.IPSecSADecryptSpec{
+		VrfName:  "default",
 		Protocol: "AH",
 	}
 	putData := netproto.IPSecSADecrypt{
@@ -369,6 +374,7 @@ func TestIPSecSADecryptDelete(t *testing.T) {
 			Name:      "testDeleteIPSecSADecrypt",
 		},
 		Spec: netproto.IPSecSADecryptSpec{
+			VrfName:       "default",
 			Protocol:      "ESP",
 			AuthAlgo:      "AES_GCM",
 			AuthKey:       "someRandomString",
@@ -377,7 +383,7 @@ func TestIPSecSADecryptDelete(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &deleteData, &resp)
@@ -478,6 +484,7 @@ func TestIPSecSAEncryptPost(t *testing.T) {
 			Name:      "testPostIPSecSAEncrypt",
 		},
 		Spec: netproto.IPSecSAEncryptSpec{
+			VrfName:       "default",
 			Protocol:      "ESP",
 			AuthAlgo:      "AES_GCM",
 			AuthKey:       "someRandomString",
@@ -486,7 +493,7 @@ func TestIPSecSAEncryptPost(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &postData, &resp)
@@ -513,6 +520,7 @@ func TestIPSecSAEncryptUpdate(t *testing.T) {
 
 	var actualIPSecSAEncryptSpec netproto.IPSecSAEncryptSpec
 	updatedIPSecSAEncryptSpec := netproto.IPSecSAEncryptSpec{
+		VrfName:  "default",
 		Protocol: "AH",
 	}
 	putData := netproto.IPSecSAEncrypt{
@@ -553,6 +561,7 @@ func TestIPSecSAEncryptDelete(t *testing.T) {
 			Name:      "testDeleteIPSecSAEncrypt",
 		},
 		Spec: netproto.IPSecSAEncryptSpec{
+			VrfName:       "default",
 			Protocol:      "ESP",
 			AuthAlgo:      "AES_GCM",
 			AuthKey:       "someRandomString",
@@ -561,7 +570,7 @@ func TestIPSecSAEncryptDelete(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &deleteData, &resp)

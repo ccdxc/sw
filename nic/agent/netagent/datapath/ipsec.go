@@ -15,7 +15,7 @@ import (
 // ----------------------- IPSec Encrypt SA CRUDs ----------------------- //
 
 // CreateIPSecSAEncrypt creates an IPSecSA encrypt rule in the datapath
-func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns, tep *netproto.Namespace) error {
+func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf, tepVrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -23,12 +23,12 @@ func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns, tep *n
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 	tepVrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: tep.Status.NamespaceID,
+			VrfId: tepVrf.Status.VrfID,
 		},
 	}
 
@@ -107,12 +107,7 @@ func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns, tep *n
 }
 
 // UpdateIPSecSAEncrypt updates an IPSecSA encrypt rule in the datapath
-func (hd *Datapath) UpdateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
-	return nil
-}
-
-// DeleteIPSecSAEncrypt deletes an IPSecSA encrypt rule in the datapath
-func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf, tepVrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -120,26 +115,72 @@ func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
+		},
+	}
+	tepVrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: tepVrf.Status.VrfID,
 		},
 	}
 
-	ipSecSADecryptDelReqMsg := &halproto.IpsecSAEncryptDeleteRequestMsg{
-		Request: []*halproto.IpsecSAEncryptDeleteRequest{
+	localGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.LocalGwIP))
+	if len(localGwIP) == 0 {
+		return fmt.Errorf("could not parse IP from {%v}", localGwIP)
+	}
+	remoteGwIP := net.ParseIP(strings.TrimSpace(sa.Spec.RemoteGwIP))
+	if len(remoteGwIP) == 0 {
+		return fmt.Errorf("could not parse IP from {%v}", remoteGwIP)
+	}
+
+	localGw := &halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(localGwIP),
+		},
+	}
+
+	remoteGw := &halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(remoteGwIP),
+		},
+	}
+
+	ipSecSAEncryptReqMsg := &halproto.IpsecSAEncryptRequestMsg{
+		Request: []*halproto.IpsecSAEncrypt{
 			{
+				TepVrf: tepVrfKey,
 				KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle{
 					KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle_CbId{
 						CbId: sa.Status.IPSecSAEncryptID,
 					},
 					VrfKeyOrHandle: vrfKey,
 				},
+				Protocol:                halproto.IpsecProtocol_IPSEC_PROTOCOL_ESP,
+				AuthenticationAlgorithm: convertAuthAlgorithm(sa.Spec.AuthAlgo),
+				AuthenticationKey: &halproto.Key{
+					KeyInfo: &halproto.Key_Key{
+						Key: []byte(sa.Spec.AuthKey),
+					},
+				},
+				EncryptionAlgorithm: convertEncryptionAlgorithm(sa.Spec.EncryptAlgo),
+				EncryptionKey: &halproto.Key{
+					KeyInfo: &halproto.Key_Key{
+						Key: []byte(sa.Spec.EncryptionKey),
+					},
+				},
+				LocalGatewayIp:  localGw,
+				RemoteGatewayIp: remoteGw,
+				Spi:             sa.Spec.SPI,
 			},
 		},
 	}
+
 	if hd.Kind == "hal" {
-		resp, err := hd.Hal.IPSecclient.IpsecSAEncryptDelete(context.Background(), ipSecSADecryptDelReqMsg)
+		resp, err := hd.Hal.IPSecclient.IpsecSAEncryptCreate(context.Background(), ipSecSAEncryptReqMsg)
 		if err != nil {
-			log.Errorf("Error deleting IPSec Encrypt SA Rule. Err: %v", err)
+			log.Errorf("Error creating IPSec Encrypt SA Rule. Err: %v", err)
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
@@ -147,19 +188,25 @@ func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
-		_, err := hd.Hal.IPSecclient.IpsecSAEncryptDelete(context.Background(), ipSecSADecryptDelReqMsg)
+		_, err := hd.Hal.IPSecclient.IpsecSAEncryptCreate(context.Background(), ipSecSAEncryptReqMsg)
 		if err != nil {
-			log.Errorf("Error deleting IPSec Encrypt SA Rule. Err: %v", err)
+			log.Errorf("Error creating IPSec Encrypt SA Rule. Err: %v", err)
 			return err
 		}
 	}
+
+	return nil
+}
+
+// DeleteIPSecSAEncrypt deletes an IPSecSA encrypt rule in the datapath
+func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf *netproto.Vrf) error {
 	return nil
 }
 
 // ----------------------- IPSec Encrypt SA CRUDs ----------------------- //
 
 // CreateIPSecSADecrypt creates an IPSecSA decrypt rule in the datapath
-func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns, tep *netproto.Namespace) error {
+func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf, tepVrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -167,12 +214,12 @@ func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns, tep *n
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 	tepVrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: tep.Status.NamespaceID,
+			VrfId: tepVrf.Status.VrfID,
 		},
 	}
 
@@ -238,12 +285,12 @@ func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns, tep *n
 }
 
 // UpdateIPSecSADecrypt updates an IPSecSA decrypt rule in the datapath
-func (hd *Datapath) UpdateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf, tepVrf *netproto.Vrf) error {
 	return nil
 }
 
 // DeleteIPSecSADecrypt deletes an IPSecSA decrypt rule in the datapath
-func (hd *Datapath) DeleteIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -251,7 +298,7 @@ func (hd *Datapath) DeleteIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netpro
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 
@@ -290,7 +337,7 @@ func (hd *Datapath) DeleteIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netpro
 // ----------------------- IPSec Policy CRUDs ----------------------- //
 
 // CreateIPSecPolicy creates an IPSec Policy in the datapath
-func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*types.IPSecRuleRef) error {
+func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf, ipSecLUT map[string]*types.IPSecRuleRef) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -298,7 +345,7 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 
@@ -388,12 +435,12 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 }
 
 // UpdateIPSecPolicy updates an IPSec Policy in the datapath
-func (hd *Datapath) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf, ipSecLUT map[string]*types.IPSecRuleRef) error {
 	return nil
 }
 
 // DeleteIPSecPolicy deletes an IPSec Policy in the datapath
-func (hd *Datapath) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -401,7 +448,7 @@ func (hd *Datapath) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 

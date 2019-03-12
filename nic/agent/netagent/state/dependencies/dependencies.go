@@ -148,6 +148,9 @@ func (s *StateDependencies) Solve(o interface{}) error {
 // resolveObjectType will resolve the interface to a concrete type and return its self link and lookup key
 func (s *StateDependencies) resolveObjectType(o interface{}) (api.TypeMeta, api.ObjectMeta, error) {
 	switch o.(type) {
+	case *netproto.Vrf:
+		vrf := o.(*netproto.Vrf)
+		return vrf.TypeMeta, vrf.ObjectMeta, nil
 	case *netproto.Tenant:
 		tn := o.(*netproto.Tenant)
 		return tn.TypeMeta, tn.ObjectMeta, nil
@@ -243,6 +246,9 @@ func (s *StateDependencies) composeKeySelfLink(m *meta) (key, selfLink string, e
 		return
 	case "namespace":
 		selfLink = fmt.Sprintf("/api/namespaces/%v/%v", m.O.Tenant, m.O.Name)
+		return
+	case "vrf":
+		selfLink = fmt.Sprintf("/api/vrfs/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
 	case "network":
 		selfLink = fmt.Sprintf("/api/networks/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)

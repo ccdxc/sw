@@ -38,8 +38,10 @@ message NatPool {
 
 // NatPoolSpec captures all nat pool configuration.
 message NatPoolSpec {
+    // VrfName specifies the name of the VRF that the current Nat Pool belongs to
+    string VrfName   = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
     // Hyphen separated range of IP Addresses for the nat pool. Required
-    string IPRange   = 1 [(gogoproto.jsontag) = "ip-range,omitempty"];
+    string IPRange   = 2 [(gogoproto.jsontag) = "ip-range,omitempty"];
 }
 
 // nat pool status
@@ -96,12 +98,14 @@ message NatBinding {
 
 // NatBindingSpec captures all nat binding configuration.
 message NatBindingSpec {
+    // VrfName specifies the name of the VRF that the current Nat Binding belongs to
+    string VrfName         = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
     // Nat pool name from which the nat address is to allocated.
     // By default named references are scoped to the current namespace.
-    // Should specify namespace/poolName to allow pools to be shared across the namespaces. Required
-    string NatPoolName     = 1[(gogoproto.jsontag) = "nat-pool,omitempty"];
+    // Should specify vrf/poolName to allow pools to be shared across the namespaces. Required
+    string NatPoolName     = 2[(gogoproto.jsontag) = "nat-pool,omitempty"];
     // Specify the IPAddress to be allocated from the nat pool. Required
-    string IPAddress       = 2[(gogoproto.jsontag) = "ip-address,omitempty"];
+    string IPAddress       = 3[(gogoproto.jsontag) = "ip-address,omitempty"];
 }
 
 message NatBindingStatus {
@@ -150,7 +154,9 @@ message NatPolicy {
 
 
 message NatPolicySpec {
-    repeated NatRule rules = 1   [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
+    // VrfName specifies the name of the VRF that the current Nat Policy belongs to
+    string VrfName         = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+    repeated NatRule rules = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
 }
 
 // nat rule

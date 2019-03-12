@@ -16,7 +16,7 @@ import (
 
 // CreateSecurityProfile creates a security profile
 func (na *Nagent) CreateSecurityProfile(profile *netproto.SecurityProfile) error {
-	var attachmentVrfs []*netproto.Namespace
+	var attachmentVrfs []*netproto.Vrf
 	err := na.validateMeta(profile.Kind, profile.ObjectMeta)
 	if err != nil {
 		return err
@@ -39,14 +39,14 @@ func (na *Nagent) CreateSecurityProfile(profile *netproto.SecurityProfile) error
 		return err
 	}
 
-	// Find the attachment namespaces
-	for _, namespace := range profile.Spec.AttachNamespaces {
-		ns, err := na.FindNamespace(profile.Tenant, namespace)
+	// Find the attachment vrfs
+	for _, v := range profile.Spec.AttachVrfs {
+		vrf, err := na.ValidateVrf(profile.Tenant, profile.Namespace, v)
 		if err != nil {
-			log.Errorf("Failed to find the attachment namespace: %v. Err: %v", namespace, err)
+			log.Errorf("Failed to find the attachment vrf: %v. Err: %v", v, err)
 			return err
 		}
-		attachmentVrfs = append(attachmentVrfs, ns)
+		attachmentVrfs = append(attachmentVrfs, vrf)
 	}
 
 	profile.Status.SecurityProfileID, err = na.Store.GetNextID(types.SecurityProfileID)
@@ -115,7 +115,7 @@ func (na *Nagent) ListSecurityProfile() []*netproto.SecurityProfile {
 
 // UpdateSecurityProfile updates a security profile
 func (na *Nagent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error {
-	var attachmentVrfs []*netproto.Namespace
+	var attachmentVrfs []*netproto.Vrf
 
 	// find the corresponding namespace
 	_, err := na.FindNamespace(profile.Tenant, profile.Namespace)
@@ -134,14 +134,14 @@ func (na *Nagent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error
 		return nil
 	}
 
-	// Find the attachment namespaces
-	for _, namespace := range profile.Spec.AttachNamespaces {
-		ns, err := na.FindNamespace(profile.Tenant, namespace)
+	// Find the attachment vrfs
+	for _, v := range profile.Spec.AttachVrfs {
+		vrf, err := na.ValidateVrf(profile.Tenant, profile.Namespace, v)
 		if err != nil {
-			log.Errorf("Failed to find the attachment namespace: %v. Err: %v", namespace, err)
+			log.Errorf("Failed to find the attachment vrf: %v. Err: %v", v, err)
 			return err
 		}
-		attachmentVrfs = append(attachmentVrfs, ns)
+		attachmentVrfs = append(attachmentVrfs, vrf)
 	}
 
 	// Populate the ID from existing security profile to ensure that HAL recognizes this.
@@ -162,7 +162,7 @@ func (na *Nagent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error
 
 // DeleteSecurityProfile deletes a security profile
 func (na *Nagent) DeleteSecurityProfile(tn, namespace, name string) error {
-	var attachmentVrfs []*netproto.Namespace
+	var attachmentVrfs []*netproto.Vrf
 
 	sgp := &netproto.SecurityProfile{
 		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
@@ -188,14 +188,14 @@ func (na *Nagent) DeleteSecurityProfile(tn, namespace, name string) error {
 		return errors.New("security profile not found")
 	}
 
-	// Find the attachment namespaces
-	for _, namespace := range existingSecurityProfile.Spec.AttachNamespaces {
-		ns, err := na.FindNamespace(existingSecurityProfile.Tenant, namespace)
+	// Find the attachment vrfs
+	for _, v := range existingSecurityProfile.Spec.AttachVrfs {
+		vrf, err := na.ValidateVrf(existingSecurityProfile.Tenant, existingSecurityProfile.Namespace, v)
 		if err != nil {
-			log.Errorf("Failed to find the attachment namespace: %v. Err: %v", namespace, err)
+			log.Errorf("Failed to find the attachment vrf: %v. Err: %v", v, err)
 			return err
 		}
-		attachmentVrfs = append(attachmentVrfs, ns)
+		attachmentVrfs = append(attachmentVrfs, vrf)
 	}
 
 	// check if the current security profile has any objects referring to it

@@ -141,18 +141,26 @@ func (s *PolicyState) getCollectorKey(vrf uint64, policy *tpmprotos.FwlogPolicy,
 }
 
 // get vrf from netagent
-func (s *PolicyState) getvrf(tenant, namespace string) (uint64, error) {
+func (s *PolicyState) getvrf(tenant, namespace, vrfName string) (uint64, error) {
 	var err error
-	reqURL := fmt.Sprintf("%s/api/namespaces/", s.netAgentURL)
+	reqURL := fmt.Sprintf("%s/api/vrfs/", s.netAgentURL)
 
-	// find vrf  from netagent
-	nslist := []netproto.Namespace{}
+	// find vrf from netagent
+	var vrfList []netproto.Vrf
+	// TODO to use native netagent state's ValidateVrf method instead of repeated curls.
+	if len(vrfName) == 0 {
+		// Set the name to default. If we move to using ValidateVrf from netagent, it is automatically handled there.
+		tenant = globals.DefaultTenant
+		namespace = globals.DefaultVrf
+		vrfName = globals.DefaultVrf
+
+	}
 	for i := 0; i < maxRetry; i++ {
-		err = netutils.HTTPGet(reqURL, &nslist)
+		err = netutils.HTTPGet(reqURL, &vrfList)
 		if err == nil {
-			for _, ns := range nslist {
-				if ns.Name == namespace && ns.Tenant == tenant {
-					return ns.Status.NamespaceID, nil
+			for _, vrf := range vrfList {
+				if vrfName == vrfName && vrf.Tenant == tenant && vrf.Namespace == namespace {
+					return vrf.Status.VrfID, nil
 				}
 			}
 		}
@@ -347,7 +355,7 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		return fmt.Errorf("policy %s already exists", p.Name)
 	}
 
-	vrf, err := s.getvrf(p.Tenant, p.Namespace)
+	vrf, err := s.getvrf(p.Tenant, p.Namespace, p.Spec.VrfName)
 	if err != nil {
 		return fmt.Errorf("failed to get vrf for %s/%s, %s", p.Tenant, p.Namespace, err)
 	}
@@ -388,7 +396,7 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		return fmt.Errorf("policy %s doesn't exist", p.Name)
 	}
 
-	vrf, err := s.getvrf(p.Tenant, p.Namespace)
+	vrf, err := s.getvrf(p.Tenant, p.Namespace, p.Spec.VrfName)
 	if err != nil {
 		return fmt.Errorf("failed to get tenant for %s/%s", p.Tenant, p.Namespace)
 	}
@@ -461,7 +469,7 @@ func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		return fmt.Errorf("policy %s doesn't exist", p.Name)
 	}
 
-	vrf, err := s.getvrf(p.Tenant, p.Namespace)
+	vrf, err := s.getvrf(p.Tenant, p.Namespace, p.Spec.VrfName)
 	if err != nil {
 		return fmt.Errorf("failed to get vrf for %s/%s", p.Tenant, p.Namespace)
 	}

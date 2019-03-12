@@ -429,14 +429,12 @@ func buildMirrorTrafficCollectorProtoObj(mirrorSession *tsproto.MirrorSession, m
 }
 
 func getVrfID(mirrorSession *tsproto.MirrorSession) (vrfID uint64, err error) {
-	// Map Namespace-Name to Vrf
-	nsObj, err := nAgent.FindNamespace(mirrorSession.Tenant, mirrorSession.Namespace)
-	if err == nil {
-		vrfID = nsObj.Status.NamespaceID
-		return
+	vrfObj, err := nAgent.ValidateVrf(mirrorSession.Tenant, mirrorSession.Namespace, mirrorSession.Spec.VrfName)
+	if err != nil {
+		log.Errorf("failed to find vrf %s. Err: %v", mirrorSession.Spec.VrfName, err)
+		return uint64(0), fmt.Errorf("failed to find vrf %s. Err: %v", mirrorSession.Spec.VrfName, err)
 	}
-	log.Errorf("mirror session tenant %s not found", mirrorSession.Tenant)
-	return
+	return vrfObj.Status.VrfID, nil
 }
 
 func (tsa *Tagent) createHALMirrorSessionProtoObj(mirrorSession *tsproto.MirrorSession, sessID uint64) (*halproto.MirrorSessionRequestMsg, error) {

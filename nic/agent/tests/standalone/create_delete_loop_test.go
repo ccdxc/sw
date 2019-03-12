@@ -43,6 +43,9 @@ var _ = Describe("Agent create delete loop tests", func() {
 					Kind: "Namespace",
 				},
 				{
+					Kind: "Vrf",
+				},
+				{
 					Kind: "Network",
 				},
 				{
@@ -106,13 +109,23 @@ var _ = Describe("Agent create delete loop tests", func() {
 
 		It("agent gets for namespaces should work and have only defaults", func() {
 
-			// validate namespaces
-			var nsList []*netproto.Namespace
-			err := netutils.HTTPGet(namespaceURL, &nsList)
+			// validate vrfs
+			var vrfList []*netproto.Vrf
+			err := netutils.HTTPGet(namespaceURL, &vrfList)
 			if err != nil {
 				Fail(fmt.Sprintf("could not get default namespaces, %v", err))
 			}
-			if len(nsList) != 2 {
+			if len(vrfList) != 1 {
+				Fail(fmt.Sprintf("expected only default vrf, after symmetric create delete. But found %v. Err: %v", vrfList, err))
+			}
+
+			// validate namespaces
+			var nsList []*netproto.Namespace
+			err = netutils.HTTPGet(namespaceURL, &nsList)
+			if err != nil {
+				Fail(fmt.Sprintf("could not get default namespaces, %v", err))
+			}
+			if len(nsList) != 1 {
 				Fail(fmt.Sprintf("expected only default namespace, after symmetric create delete. But found %v. Err: %v", nsList, err))
 			}
 
@@ -216,6 +229,34 @@ var _ = Describe("Agent create delete loop tests", func() {
 
 func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 	switch tMeta.Kind {
+	case "Vrf":
+		// Create backing namespaces
+		err := createNS(baseURL)
+		if err != nil {
+			fmt.Println("Namespace creates failed during network create delete loops")
+			return err
+		}
+		for i := 0; i < crudLoopCount; i++ {
+			fmt.Printf("####### Creating Vrfs Iteration: %v #######\n", i)
+			err := createVrf(baseURL)
+			if err != nil {
+				return fmt.Errorf("looped create vrfs failed. %v", err)
+			}
+			fmt.Println("OK")
+			fmt.Printf("####### Deleting Vrfs Iteration: %v #######\n", i)
+			time.Sleep(addDelSleepDuration)
+			err = deleteVrf(baseURL)
+			if err != nil {
+				return fmt.Errorf("looped delete vrfs failed. %v", err)
+			}
+			fmt.Println("OK")
+		}
+		// delete the backing namespaces
+		err = deleteNS(baseURL)
+		if err != nil {
+			fmt.Println("Namespace deletes failed during vrf create delete loops")
+			return err
+		}
 	case "Namespace":
 		for i := 0; i < crudLoopCount; i++ {
 			fmt.Printf("####### Creating Namespaces Iteration: %v #######\n", i)
@@ -445,6 +486,13 @@ func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 			return err
 		}
 
+		// Create backing infra vrf
+		err = createVrf(baseURL)
+		if err != nil {
+			fmt.Println("Vrf creates failed during ipsec sa encrypt create delete loops")
+			return err
+		}
+
 		for i := 0; i < crudLoopCount; i++ {
 			fmt.Printf("####### Creating IPSec SA Encrypt Iteration: %v #######\n", i)
 			err := createIPSecSAEncrypt(baseURL)
@@ -460,6 +508,13 @@ func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 			}
 			fmt.Println("OK")
 		}
+		// delete the backing vrf
+		err = deleteVrf(baseURL)
+		if err != nil {
+			fmt.Println("Vrf deletes failed during ipsec sa encrypt create delete loops")
+			return err
+		}
+
 		// delete the backing namespaces
 		err = deleteNS(baseURL)
 		if err != nil {
@@ -471,6 +526,13 @@ func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 		err := createNS(baseURL)
 		if err != nil {
 			fmt.Println("Namespace creates failed during ipsec sa decrypt create delete loops")
+			return err
+		}
+
+		// Create backing infra vrf
+		err = createVrf(baseURL)
+		if err != nil {
+			fmt.Println("Vrf creates failed during ipsec sa encrypt create delete loops")
 			return err
 		}
 
@@ -489,6 +551,13 @@ func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 			}
 			fmt.Println("OK")
 		}
+		// delete the backing vrf
+		err = deleteVrf(baseURL)
+		if err != nil {
+			fmt.Println("Vrf deletes failed during ipsec sa encrypt create delete loops")
+			return err
+		}
+
 		// delete the backing namespaces
 		err = deleteNS(baseURL)
 		if err != nil {
@@ -500,6 +569,13 @@ func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 		err := createNS(baseURL)
 		if err != nil {
 			fmt.Println("Namespace creates failed during ipsec policy create delete loops")
+			return err
+		}
+
+		// Create backing infra vrf
+		err = createVrf(baseURL)
+		if err != nil {
+			fmt.Println("Vrf creates failed during ipsec sa encrypt create delete loops")
 			return err
 		}
 
@@ -540,6 +616,14 @@ func testLoopedAddDelete(tMeta api.TypeMeta, baseURL string) error {
 			fmt.Println("IPSec SA Decrypt deletes failed during ipsec policy create delete loops")
 			return err
 		}
+
+		// delete the backing vrf
+		err = deleteVrf(baseURL)
+		if err != nil {
+			fmt.Println("Vrf deletes failed during ipsec sa encrypt create delete loops")
+			return err
+		}
+
 		err = deleteNS(baseURL)
 		if err != nil {
 			fmt.Println("Namespace deletes failed during ipsec policy create delete loops")
@@ -673,8 +757,8 @@ func createNetwork(baseURL string) error {
 			Name:      "kg2",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.0.0.0/16",
-			IPv4Gateway: "10.0.2.1",
+			IPv4Subnet:  "10.1.0.0/16",
+			IPv4Gateway: "10.1.2.1",
 			VlanID:      300,
 		},
 	}
@@ -1194,7 +1278,7 @@ func createIPSecSAEncrypt(baseURL string) error {
 			LocalGwIP:     "20.1.1.1",
 			RemoteGwIP:    "20.1.1.2",
 			SPI:           1,
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
 	// Create the nat pool
@@ -1249,10 +1333,10 @@ func createIPSecSADecrypt(baseURL string) error {
 			DecryptAlgo:   "AES_GCM_256",
 			DecryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
 			SPI:           1,
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
-	// Create the nat pool
+	// Create the ipsec sa decrypt
 	err := netutils.HTTPPost(ipSecSADecryptURL, &sa1, &resp)
 	if err != nil {
 		fmt.Println("Could not create ipsec sa decrypt")
@@ -1339,6 +1423,62 @@ func deleteIPSecPolicy(baseURL string) error {
 	err := netutils.HTTPDelete(ipSecPolicyDeleteURL, &ipSec, &resp)
 	if err != nil {
 		fmt.Println("Could not delete ipsec policy")
+		return err
+	}
+
+	return nil
+}
+
+// creates a vrf
+func createVrf(baseURL string) error {
+	var resp restapi.Response
+
+	vrfURL := fmt.Sprintf("http://%s/api/vrfs/", baseURL)
+	// create backing vrf
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "kg2",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	// Create the infra vrf
+	err := netutils.HTTPPost(vrfURL, &vrf, &resp)
+	if err != nil {
+		fmt.Println("Could not create infra vrf")
+		return err
+
+	}
+	return nil
+}
+
+// deletes a vrf
+func deleteVrf(baseURL string) error {
+	var resp restapi.Response
+
+	// delete backing vrf
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "kg2",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	vrfDeleteURL := fmt.Sprintf("http://%s/api/vrfs/default/kg2/infra", baseURL)
+
+	err := netutils.HTTPDelete(vrfDeleteURL, &vrf, &resp)
+	if err != nil {
+		fmt.Println("Could not delete infra vrf")
 		return err
 	}
 

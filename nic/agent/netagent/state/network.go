@@ -41,6 +41,13 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
+	// find the corresponding vrf for the network
+	vrf, err := na.ValidateVrf(nt.Tenant, nt.Namespace, nt.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", nt.Spec.VrfName)
+		return err
+	}
+
 	// reject config that specifies both vlan and vxlan configs.
 	if nt.Spec.VlanID != 0 && nt.Spec.VxlanVNI != 0 {
 		log.Errorf("Should specify either vlan-id or vxlan-vni, but not both")
@@ -48,7 +55,7 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	}
 
 	// reject duplicate network prefixes
-	if err = na.validateDuplicateNetworks(nt.Namespace, nt.Spec.IPv4Subnet, nt.Spec.VlanID); err != nil {
+	if err = na.validateDuplicateNetworks(nt.Spec.VrfName, nt.Spec.IPv4Subnet, nt.Spec.VlanID); err != nil {
 		log.Errorf("Invalid network parameters for network %v. Err: %v", nt.Name, err)
 		return err
 	}
@@ -63,7 +70,7 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	uplinks := na.getUplinks()
 
 	// create it in datapath
-	err = na.Datapath.CreateNetwork(nt, uplinks, ns)
+	err = na.Datapath.CreateNetwork(nt, uplinks, vrf)
 	if err != nil {
 		log.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
 		return err
@@ -73,6 +80,13 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	err = na.Solver.Add(ns, nt)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, nt)
+		return err
+	}
+
+	// Add the current network as a dependency to the vrf.
+	err = na.Solver.Add(vrf, nt)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, nt)
 		return err
 	}
 
@@ -124,23 +138,30 @@ func (na *Nagent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
 // UpdateNetwork updates a network. ToDo implement network updates in datapath
 func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(nt.Tenant, nt.Namespace)
+	_, err := na.FindNamespace(nt.Tenant, nt.Namespace)
 	if err != nil {
 		return err
 	}
 
-	oldNt, err := na.FindNetwork(nt.ObjectMeta)
+	existingNetwork, err := na.FindNetwork(nt.ObjectMeta)
 	if err != nil {
 		log.Errorf("Network %v not found", nt.ObjectMeta)
 		return err
 	}
 
-	if proto.Equal(nt, oldNt) {
+	if proto.Equal(nt, existingNetwork) {
 		log.Infof("Nothing to update.")
 		return nil
 	}
 
-	err = na.Datapath.UpdateNetwork(nt, ns)
+	// find the corresponding vrf for the network
+	vrf, err := na.ValidateVrf(existingNetwork.Tenant, existingNetwork.Namespace, existingNetwork.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingNetwork.Spec.VrfName)
+		return err
+	}
+
+	err = na.Datapath.UpdateNetwork(nt, vrf)
 	key := na.Solver.ObjectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
 	na.NetworkDB[key] = nt
@@ -176,6 +197,13 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 		return ErrNetworkNotFound
 	}
 
+	// find the corresponding vrf for the network
+	vrf, err := na.ValidateVrf(nw.Tenant, nw.Namespace, nw.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", nw.Spec.VrfName)
+		return err
+	}
+
 	// get all the uplinks
 	uplinks := na.getUplinks()
 
@@ -186,9 +214,15 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 		return err
 	}
 	// clear for deletion. delete the network in datapath
-	err = na.Datapath.DeleteNetwork(nw, uplinks, ns)
+	err = na.Datapath.DeleteNetwork(nw, uplinks, vrf)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", nt, err)
+		return err
+	}
+
+	err = na.Solver.Remove(vrf, nw)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", nw.Spec.VrfName, err)
 		return err
 	}
 
@@ -209,9 +243,9 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 	return err
 }
 
-func (na *Nagent) validateDuplicateNetworks(namespace, prefix string, vlanID uint32) (err error) {
+func (na *Nagent) validateDuplicateNetworks(vrfName, prefix string, vlanID uint32) (err error) {
 	for _, net := range na.ListNetwork() {
-		if net.Namespace == namespace {
+		if net.Spec.VrfName == vrfName {
 			switch {
 			// Dup prefixes
 			case len(net.Spec.IPv4Subnet) != 0 && net.Spec.IPv4Subnet == prefix:

@@ -465,6 +465,10 @@
         "interface-type"
       ],
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current EP belongs to"
+        },
         "endpoint-uuid": {
           "type": "string"
         },

@@ -684,9 +684,13 @@
     "netprotoNatBindingSpec": {
       "type": "object",
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current Nat Binding belongs to"
+        },
         "nat-pool": {
           "type": "string",
-          "title": "Nat pool name from which the nat address is to allocated.\nBy default named references are scoped to the current namespace.\nShould specify namespace/poolName to allow pools to be shared across the namespaces. Required"
+          "title": "Nat pool name from which the nat address is to allocated.\nBy default named references are scoped to the current namespace.\nShould specify vrf/poolName to allow pools to be shared across the namespaces. Required"
         },
         "ip-address": {
           "type": "string",
@@ -757,6 +761,10 @@
     "netprotoNatPolicySpec": {
       "type": "object",
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current Nat Policy belongs to"
+        },
         "rules": {
           "type": "array",
           "items": {
@@ -822,6 +830,10 @@
     "netprotoNatPoolSpec": {
       "type": "object",
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current Nat Pool belongs to"
+        },
         "ip-range": {
           "type": "string",
           "title": "Hyphen separated range of IP Addresses for the nat pool. Required"

@@ -24,6 +24,7 @@
 		tenant.proto
 		tunnel.proto
 		tcp_proxy.proto
+		vrf.proto
 
 	It has these top-level messages:
 		App
@@ -163,6 +164,11 @@
 		TCPProxyPolicyStatus
 		TCPProxyPolicyList
 		TCPProxyEvent
+		Vrf
+		VrfSpec
+		VrfStatus
+		VrfList
+		VrfEvent
 */
 package netproto
 

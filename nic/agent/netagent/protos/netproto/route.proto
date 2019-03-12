@@ -40,12 +40,14 @@ message Route {
 
 // RouteSpec captures all the route configuration
 message RouteSpec {
+    // VrfName specifies the name of the VRF that the current Route belongs to
+    string VrfName          = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
     // CIDR based ip prefix.
-    string IPPrefix         = 1 [(gogoproto.jsontag) = "ip-prefix,omitempty"];
+    string IPPrefix         = 2 [(gogoproto.jsontag) = "ip-prefix,omitempty"];
     // Next Hop interface
-    string Interface        = 2 [(gogoproto.jsontag) = "interface,omitempty"];
+    string Interface        = 3 [(gogoproto.jsontag) = "interface,omitempty"];
     // Next Hop gateway IP. This should resolve to a valid endpoint. Required
-    string GatewayIP        = 3 [(gogoproto.jsontag) = "gateway-ip,omitempty"];
+    string GatewayIP        = 4 [(gogoproto.jsontag) = "gateway-ip,omitempty"];
 }
 
 // RouteStatus captures the route status

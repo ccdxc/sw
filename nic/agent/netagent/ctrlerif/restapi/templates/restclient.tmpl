@@ -96,6 +96,8 @@ import (
                           	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/security/profiles/", &{{lower .}}Data, &resp)
 												{{else if strEq $crudObject "App"}}
 														err := netutils.HTTPPost("http://"+cl.agentURL+"/api/apps/", &{{lower .}}Data, &resp)
+												{{else if strEq $crudObject "Vrf"}}
+														err := netutils.HTTPPost("http://"+cl.agentURL+"/api/vrfs/", &{{lower .}}Data, &resp)
                         {{end}}
 
                         return err
@@ -143,6 +145,8 @@ import (
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/system/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "App"}}
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/apps/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+															{{else if strEq $crudObject "Vrf"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/vrfs/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                             {{end}}
 
                             return err
@@ -189,7 +193,8 @@ import (
                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/system/ports/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "App"}}
                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/apps/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-
+															{{else if strEq $crudObject "Vrf"}}
+                            			err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/vrfs/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         {{end}}
                         return err
                     }

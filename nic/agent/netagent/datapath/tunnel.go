@@ -11,7 +11,7 @@ import (
 )
 
 // CreateTunnel creates a tunnel
-func (hd *Datapath) CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -20,7 +20,7 @@ func (hd *Datapath) CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) e
 
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 
@@ -72,7 +72,7 @@ func (hd *Datapath) CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) e
 }
 
 // UpdateTunnel updates a tunnel
-func (hd *Datapath) UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -80,7 +80,7 @@ func (hd *Datapath) UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) e
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 
@@ -131,7 +131,7 @@ func (hd *Datapath) UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) e
 }
 
 // DeleteTunnel deletes a tunnel
-func (hd *Datapath) DeleteTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking

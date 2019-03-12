@@ -537,6 +537,10 @@
     "netprotoSGPolicySpec": {
       "type": "object",
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current SG Policy belongs to"
+        },
         "attach-group": {
           "type": "array",
           "items": {
@@ -547,7 +551,7 @@
         "attach-tenant": {
           "type": "boolean",
           "format": "boolean",
-          "title": "specifies if the set of rules need to be attached globally to a tenant"
+          "title": "specifies if the set of rules need to be attached globally to all the vrfs within a tenant"
         },
         "policy-rules": {
           "type": "array",

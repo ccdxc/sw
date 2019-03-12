@@ -502,6 +502,10 @@
     "netprotoTCPProxyPolicySpec": {
       "type": "object",
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current TCP Proxy Policy belongs to"
+        },
         "rules": {
           "type": "array",
           "items": {

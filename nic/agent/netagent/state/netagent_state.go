@@ -67,8 +67,8 @@ func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath string) 
 			emdb.Close()
 			return nil, err
 		}
-		// We need to create an infra namespace at startup. This will create an infra vrf in the datapath
-		err = na.createInfraNamespace()
+		// We need to create a default vrf in the datapath at startup
+		err = na.createDefaultVrf()
 		if err != nil {
 			emdb.Close()
 			return nil, err
@@ -132,14 +132,15 @@ func (na *Nagent) createDefaultTenant() error {
 	return na.CreateTenant(&tn)
 }
 
-func (na *Nagent) createInfraNamespace() error {
+func (na *Nagent) createDefaultVrf() error {
 	c, _ := gogoproto.TimestampProto(time.Now())
 
-	infraNS := netproto.Namespace{
-		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+	defVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
 		ObjectMeta: api.ObjectMeta{
-			Name:   "infra",
-			Tenant: "default",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
 			CreationTime: api.Timestamp{
 				Timestamp: *c,
 			},
@@ -147,11 +148,11 @@ func (na *Nagent) createInfraNamespace() error {
 				Timestamp: *c,
 			},
 		},
-		Spec: netproto.NamespaceSpec{
-			NamespaceType: "INFRA",
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
 		},
 	}
-	return na.CreateNamespace(&infraNS)
+	return na.CreateVrf(&defVrf)
 }
 
 func (na *Nagent) validateMeta(kind string, oMeta api.ObjectMeta) error {
@@ -186,6 +187,7 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.PortDB = make(map[string]*netproto.Port)
 	na.SecurityProfileDB = make(map[string]*netproto.SecurityProfile)
 	na.AppDB = make(map[string]*netproto.App)
+	na.VrfDB = make(map[string]*netproto.Vrf)
 	na.Solver = dependencies.NewDepSolver()
 }
 

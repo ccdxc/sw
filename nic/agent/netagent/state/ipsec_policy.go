@@ -41,6 +41,13 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	if err != nil {
 		return err
 	}
+
+	vrf, err := na.ValidateVrf(ipSec.Tenant, ipSec.Namespace, ipSec.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", ipSec.Spec.VrfName)
+		return err
+	}
+
 	// validate SA Policies
 	for _, r := range ipSec.Spec.Rules {
 		r.ID, err = na.Store.GetNextID(types.IPSecRuleID)
@@ -97,7 +104,7 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateIPSecPolicy(ipSec, ns, na.IPSecPolicyLUT)
+	err = na.Datapath.CreateIPSecPolicy(ipSec, vrf, na.IPSecPolicyLUT)
 	if err != nil {
 		log.Errorf("Error creating ipsec policy in datapath. IPSecPolicy {%+v}. Err: %v", ipSec, err)
 		return err
@@ -130,6 +137,13 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 			return err
 		}
 
+	}
+
+	// Add the current ipSec policy Rule as a dependency to the vrf.
+	err = na.Solver.Add(vrf, ipSec)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, ipSec)
+		return err
 	}
 
 	// save it in db
@@ -178,10 +192,17 @@ func (na *Nagent) ListIPSecPolicy() []*netproto.IPSecPolicy {
 // UpdateIPSecPolicy updates an IPSec policy
 func (na *Nagent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(ipSec.Tenant, ipSec.Namespace)
+	_, err := na.FindNamespace(ipSec.Tenant, ipSec.Namespace)
 	if err != nil {
 		return err
 	}
+
+	vrf, err := na.ValidateVrf(ipSec.Tenant, ipSec.Namespace, ipSec.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", ipSec.Spec.VrfName)
+		return err
+	}
+
 	existingIPSec, err := na.FindIPSecPolicy(ipSec.ObjectMeta)
 	if err != nil {
 		log.Errorf("IPSecPolicy %v not found", ipSec.ObjectMeta)
@@ -193,7 +214,7 @@ func (na *Nagent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateIPSecPolicy(ipSec, ns)
+	err = na.Datapath.UpdateIPSecPolicy(ipSec, vrf, nil)
 	key := na.Solver.ObjectKey(ipSec.ObjectMeta, ipSec.TypeMeta)
 	na.Lock()
 	na.IPSecPolicyDB[key] = ipSec
@@ -224,6 +245,12 @@ func (na *Nagent) DeleteIPSecPolicy(tn, namespace, name string) error {
 		return err
 	}
 
+	vrf, err := na.ValidateVrf(ipSec.Tenant, ipSec.Namespace, ipSec.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", ipSec.Spec.VrfName)
+		return err
+	}
+
 	existingIPSec, err := na.FindIPSecPolicy(ipSec.ObjectMeta)
 	if err != nil {
 		log.Errorf("IPSecPolicy %+v not found", ipSec.ObjectMeta)
@@ -238,7 +265,7 @@ func (na *Nagent) DeleteIPSecPolicy(tn, namespace, name string) error {
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteIPSecPolicy(existingIPSec, ns)
+	err = na.Datapath.DeleteIPSecPolicy(existingIPSec, vrf)
 	if err != nil {
 		log.Errorf("Error deleting IPSec policy {%+v}. Err: %v", ipSec, err)
 	}
@@ -280,6 +307,12 @@ func (na *Nagent) DeleteIPSecPolicy(tn, namespace, name string) error {
 			log.Errorf("Invalid IPSec Policy rule type")
 			return errors.New("invalid IPSec Policy rule type")
 		}
+	}
+
+	err = na.Solver.Remove(vrf, existingIPSec)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingIPSec.Spec.VrfName, err)
+		return err
 	}
 
 	// protectCurrentNS is true if we have added a dependency to the current namespace of the ipsec policy.

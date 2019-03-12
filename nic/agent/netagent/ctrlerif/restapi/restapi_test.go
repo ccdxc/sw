@@ -84,6 +84,23 @@ func setup() (*RestServer, error) {
 }
 
 func populatePreTestData(nagent *state.Nagent) (err error) {
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedVrf",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+	}
+	err = nagent.CreateVrf(&vrf)
+	if err != nil {
+		log.Errorf("Failed to create vrf. {%v}", vrf)
+		return
+	}
+
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
@@ -271,7 +288,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "default",
 		},
 	}
 	err = nagent.CreateIPSecSAEncrypt(&ipSecEncrypt)
@@ -295,7 +312,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			DecryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "default",
 		},
 	}
 	err = nagent.CreateIPSecSADecrypt(&ipSecDecrypt)

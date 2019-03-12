@@ -38,6 +38,13 @@ func (na *Nagent) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error {
 		return err
 	}
 
+	// find the corresponding vrf for the tcp proxy policy
+	vrf, err := na.ValidateVrf(tcp.Tenant, tcp.Namespace, tcp.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", tcp.Spec.VrfName)
+		return err
+	}
+
 	tcp.Status.TCPProxyPolicyID, err = na.Store.GetNextID(types.TCPProxyPolicyID)
 	if err != nil {
 		log.Errorf("Could not allocate tcp proxy policy id. {%+v}", err)
@@ -45,9 +52,16 @@ func (na *Nagent) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateTCPProxyPolicy(tcp, ns)
+	err = na.Datapath.CreateTCPProxyPolicy(tcp, vrf)
 	if err != nil {
 		log.Errorf("Error creating tcp proxy policy in datapath. Nw {%+v}. Err: %v", tcp, err)
+		return err
+	}
+
+	// Add the current route as a dependency to the vrf.
+	err = na.Solver.Add(vrf, tcp)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, tcp)
 		return err
 	}
 
@@ -106,7 +120,7 @@ func (na *Nagent) FindTCPProxyPolicy(meta api.ObjectMeta) (*netproto.TCPProxyPol
 // UpdateTCPProxyPolicy updates a tcp proxy policy. ToDo implement tcp proxy policy updates in datapath
 func (na *Nagent) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(tcp.Tenant, tcp.Namespace)
+	_, err := na.FindNamespace(tcp.Tenant, tcp.Namespace)
 	if err != nil {
 		return err
 	}
@@ -122,7 +136,14 @@ func (na *Nagent) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateTCPProxyPolicy(existingTCPProxyPolicy, ns)
+	// find the corresponding vrf for the route
+	vrf, err := na.ValidateVrf(existingTCPProxyPolicy.Tenant, existingTCPProxyPolicy.Namespace, existingTCPProxyPolicy.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingTCPProxyPolicy.Spec.VrfName)
+		return err
+	}
+
+	err = na.Datapath.UpdateTCPProxyPolicy(existingTCPProxyPolicy, vrf)
 	if err != nil {
 		log.Errorf("Error updating the tcp proxy policy {%+v} in datapath. Err: %v", existingTCPProxyPolicy, err)
 		return err
@@ -162,6 +183,13 @@ func (na *Nagent) DeleteTCPProxyPolicy(tn, namespace, name string) error {
 		return errors.New("tcp proxy policy not found")
 	}
 
+	// find the corresponding vrf for the route
+	vrf, err := na.ValidateVrf(existingTCPProxyPolicy.Tenant, existingTCPProxyPolicy.Namespace, existingTCPProxyPolicy.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingTCPProxyPolicy.Spec.VrfName)
+		return err
+	}
+
 	// check if the current tcp proxy policy has any objects referring to it
 	err = na.Solver.Solve(existingTCPProxyPolicy)
 	if err != nil {
@@ -170,9 +198,15 @@ func (na *Nagent) DeleteTCPProxyPolicy(tn, namespace, name string) error {
 	}
 
 	// delete the existingTCPProxyPolicy in datapath
-	err = na.Datapath.DeleteTCPProxyPolicy(existingTCPProxyPolicy, ns)
+	err = na.Datapath.DeleteTCPProxyPolicy(existingTCPProxyPolicy, vrf)
 	if err != nil {
 		log.Errorf("Error deleting tcp proxy policy {%+v}. Err: %v", tcp, err)
+		return err
+	}
+
+	err = na.Solver.Remove(vrf, existingTCPProxyPolicy)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingTCPProxyPolicy.Spec.VrfName, err)
 		return err
 	}
 

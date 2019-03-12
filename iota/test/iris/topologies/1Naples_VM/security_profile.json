@@ -8,7 +8,7 @@
         "namespace": "default"
       },
       "spec": {
-        "attach-namespaces": [
+        "attach-vrfs": [
           "default"
         ],
         "timeouts": {

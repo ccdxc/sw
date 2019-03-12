@@ -41,6 +41,13 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 		return err
 	}
 
+	// find the corresponding vrf for the nat binding
+	vrf, err := na.ValidateVrf(np.Tenant, np.Namespace, np.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", np.Spec.VrfName)
+		return err
+	}
+
 	for _, rule := range np.Spec.Rules {
 		rule.ID, err = na.Store.GetNextID(types.NatRuleID)
 		natPool, err := na.findNatPool(np.ObjectMeta, rule.NatPool)
@@ -72,7 +79,7 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateNatPolicy(np, na.NatPoolLUT, ns)
+	err = na.Datapath.CreateNatPolicy(np, na.NatPoolLUT, vrf)
 	if err != nil {
 		log.Errorf("Error creating nat policy in datapath. NatPolicy {%+v}. Err: %v", np, err)
 		return err
@@ -97,6 +104,13 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 			log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, np)
 			return err
 		}
+	}
+
+	// Add the current ipsecDecryptSA Rule as a dependency to the vrf.
+	err = na.Solver.Add(vrf, np)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, np)
+		return err
 	}
 
 	// save it in db
@@ -145,7 +159,7 @@ func (na *Nagent) ListNatPolicy() []*netproto.NatPolicy {
 // UpdateNatPolicy updates a nat policy
 func (na *Nagent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	_, err := na.FindNamespace(np.Tenant, np.Namespace)
 	if err != nil {
 		return err
 	}
@@ -160,7 +174,14 @@ func (na *Nagent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateNatPolicy(existingNp, na.NatPoolLUT, ns)
+	// find the corresponding vrf for the nat binding
+	vrf, err := na.ValidateVrf(np.Tenant, np.Namespace, np.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", np.Spec.VrfName)
+		return err
+	}
+
+	err = na.Datapath.UpdateNatPolicy(existingNp, na.NatPoolLUT, vrf)
 	if err != nil {
 		log.Errorf("Error updating the NatPolicy {%+v} in datapath. Err: %v", existingNp, err)
 		return err
@@ -194,6 +215,13 @@ func (na *Nagent) DeleteNatPolicy(tn, namespace, name string) error {
 		return err
 	}
 
+	// find the corresponding vrf for the nat binding
+	vrf, err := na.ValidateVrf(np.Tenant, np.Namespace, np.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", np.Spec.VrfName)
+		return err
+	}
+
 	existingNatPolicy, err := na.FindNatPolicy(np.ObjectMeta)
 	if err != nil {
 		log.Errorf("NatPolicy %+v not found", np.ObjectMeta)
@@ -208,7 +236,7 @@ func (na *Nagent) DeleteNatPolicy(tn, namespace, name string) error {
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteNatPolicy(existingNatPolicy, ns)
+	err = na.Datapath.DeleteNatPolicy(existingNatPolicy, vrf)
 	if err != nil {
 		log.Errorf("Error deleting nat policy {%+v}. Err: %v", np, err)
 	}
@@ -245,6 +273,12 @@ func (na *Nagent) DeleteNatPolicy(tn, namespace, name string) error {
 			log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, existingNatPolicy)
 			return err
 		}
+	}
+
+	err = na.Solver.Remove(vrf, existingNatPolicy)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingNatPolicy.Spec.VrfName, err)
+		return err
 	}
 
 	// delete from db

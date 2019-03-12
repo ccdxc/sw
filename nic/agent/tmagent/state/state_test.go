@@ -198,6 +198,20 @@ func startNetagent() (*state.Nagent, *restapi.RestServer, error) {
 			log.Errorf("Failed to create tenant. {%v}", tn)
 			return nil, nil, err
 		}
+
+		vrf := &netproto.Vrf{
+			TypeMeta: api.TypeMeta{Kind: "Vrf"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    fmt.Sprintf("vpc-%d", i),
+				Namespace: "default",
+				Name:      fmt.Sprintf("vpc-%d", i),
+			},
+		}
+		err = nagent.CreateVrf(vrf)
+		if err != nil {
+			log.Errorf("Failed to create vrf. {%v}", i)
+			return nil, nil, err
+		}
 	}
 
 	return nagent, nRest, nil
@@ -608,6 +622,7 @@ func TestFwPolicyOps(t *testing.T) {
 				Tenant:    tenant,
 			},
 			Spec: monitoring.FwlogPolicySpec{
+				VrfName: tenant,
 				Targets: []monitoring.ExportConfig{
 					{
 						Destination: fmt.Sprintf("192.168.100.%d", i+10),
@@ -645,7 +660,7 @@ func TestFwPolicyOps(t *testing.T) {
 
 		// verify
 		cmap := map[string]bool{}
-		vrf, err := ps.getvrf(i.Tenant, i.Namespace)
+		vrf, err := ps.getvrf(i.Tenant, i.Namespace, i.Spec.VrfName)
 		AssertOk(t, err, "failed to get vrf %+v", i)
 
 		// get all collectors
@@ -673,7 +688,7 @@ func TestFwPolicyOps(t *testing.T) {
 		AssertOk(t, err, "failed to delete fwlog policy %+v", i)
 
 		// verify
-		vrf, err := ps.getvrf(i.Tenant, i.Namespace)
+		vrf, err := ps.getvrf(i.Tenant, i.Namespace, i.Spec.VrfName)
 		AssertOk(t, err, "failed to get vrf %+v", i)
 		c, ok := ps.getCollector(vrf)
 		Assert(t, ok == false, "collectors exists after delete %+v", c)
@@ -696,7 +711,7 @@ func TestProcessFWEvent(t *testing.T) {
 		rest.Stop()
 	}()
 
-	nm, err := ag.FindNamespace("default", "default")
+	nm, err := ag.ValidateVrf("default", "default", "default")
 	AssertOk(t, err, "failed to find name space")
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -837,8 +852,8 @@ func TestProcessFWEvent(t *testing.T) {
 	}{
 		{
 			fwEvent: &halproto.FWEvent{
-				SourceVrf: nm.Status.NamespaceID,
-				DestVrf:   nm.Status.NamespaceID,
+				SourceVrf: nm.Status.VrfID,
+				DestVrf:   nm.Status.VrfID,
 				Fwaction:  halproto.SecurityAction_SECURITY_RULE_ACTION_ALLOW,
 				Sipv4:     srcIP,
 				Dipv4:     destIP,
@@ -1039,7 +1054,7 @@ func TestPolicyUpdate(t *testing.T) {
 		},
 	}
 
-	vrf, err := ps.getvrf(globals.DefaultTenant, globals.DefaultNamespace)
+	vrf, err := ps.getvrf(globals.DefaultTenant, globals.DefaultNamespace, globals.DefaultVrf)
 	AssertOk(t, err, "failed to get vrf")
 
 	for _, fwPolicyEvent := range collList {

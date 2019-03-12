@@ -64,12 +64,12 @@ func (dp *DelphiDatapath) CreateInterface(intfs ...*netproto.Interface) error {
 }
 
 // UpdateInterface updates an interface
-func (dp *DelphiDatapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
+func (dp *DelphiDatapath) UpdateInterface(intf *netproto.Interface) error {
 	return nil
 }
 
 // DeleteInterface deletes an interface
-func (dp *DelphiDatapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
+func (dp *DelphiDatapath) DeleteInterface(intf *netproto.Interface) error {
 	switch intf.Spec.Type {
 	case "UPLINK_ETH", "UPLINK_MGMT":
 		ifSpec := &halproto.InterfaceSpec{

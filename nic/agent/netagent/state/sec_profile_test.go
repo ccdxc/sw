@@ -24,7 +24,7 @@ func TestSecurityProfileCreateDelete(t *testing.T) {
 			Name:      "testSecurityProfile",
 		},
 		Spec: netproto.SecurityProfileSpec{
-			AttachNamespaces: []string{"default"},
+			AttachVrfs: []string{"default"},
 			Timeouts: &netproto.Timeouts{
 				SessionIdle:        "10s",
 				TCP:                "1m",
@@ -132,7 +132,7 @@ func TestSecurityProfileMissingAttachmentNamespaces(t *testing.T) {
 			Name:      "testSecurityProfile",
 		},
 		Spec: netproto.SecurityProfileSpec{
-			AttachNamespaces: []string{"non-existent-namespace"},
+			AttachVrfs: []string{"non-existent-namespace"},
 			Timeouts: &netproto.Timeouts{
 				SessionIdle:        "10s",
 				TCP:                "1m",

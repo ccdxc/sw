@@ -104,7 +104,7 @@ func (ds *delphidpTestSuite) TestDelphiInterface(t *C) {
 	Assert(t, ifSpec.Type == halproto.IfType_IF_TYPE_ENIC, "invalid interface type")
 
 	// delete the interface
-	err = ds.datapath.DeleteInterface(intf, nil)
+	err = ds.datapath.DeleteInterface(intf)
 	AssertOk(t, err, "Error deleting interface")
 
 	// verify interface is acutually gone
@@ -186,7 +186,7 @@ func (ds *delphidpTestSuite) TestDelphiUplinkInterface(t *C) {
 	Assert(t, ifSpec.Type == halproto.IfType_IF_TYPE_UPLINK, "invalid interface type")
 
 	// delete the interface
-	err = ds.datapath.DeleteInterface(intf, nil)
+	err = ds.datapath.DeleteInterface(intf)
 	AssertOk(t, err, "Error deleting interface")
 
 	// verify interface is acutually gone
@@ -199,12 +199,13 @@ func (ds *delphidpTestSuite) TestDelphiUplinkInterface(t *C) {
 }
 
 func (ds *delphidpTestSuite) TestDelphiRemoteEndpoint(t *C) {
-	// namespace
-	ns := netproto.Namespace{
-		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+	// vrf
+	vrf := &netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
-			Name:   "testTenant",
+			Tenant:    "testTenant",
+			Namespace: "testNamespace",
+			Name:      "testTenant",
 		},
 	}
 
@@ -241,7 +242,7 @@ func (ds *delphidpTestSuite) TestDelphiRemoteEndpoint(t *C) {
 	}
 
 	// create an endpoint
-	err := ds.datapath.CreateRemoteEndpoint(&epinfo, &nt, nil, 0, &ns)
+	err := ds.datapath.CreateRemoteEndpoint(&epinfo, &nt, nil, 0, vrf)
 	AssertOk(t, err, "Error creating endpoint in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -265,12 +266,13 @@ func (ds *delphidpTestSuite) TestDelphiRemoteEndpoint(t *C) {
 }
 
 func (ds *delphidpTestSuite) TestDelphiLocalEndpoint(t *C) {
-	// namespace
-	ns := netproto.Namespace{
-		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+	// vrf
+	vrf := &netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
-			Name:   "testTenant",
+			Tenant:    "testTenant",
+			Namespace: "testNamespace",
+			Name:      "testTenant",
 		},
 	}
 
@@ -307,7 +309,7 @@ func (ds *delphidpTestSuite) TestDelphiLocalEndpoint(t *C) {
 	}
 
 	// create an endpoint
-	_, err := ds.datapath.CreateLocalEndpoint(&epinfo, &nt, nil, 0, 0, &ns)
+	_, err := ds.datapath.CreateLocalEndpoint(&epinfo, &nt, nil, 0, 0, vrf)
 	AssertOk(t, err, "Error creating endpoint in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -331,15 +333,15 @@ func (ds *delphidpTestSuite) TestDelphiLocalEndpoint(t *C) {
 }
 
 func (ds *delphidpTestSuite) TestDelphiNetwork(t *C) {
-	// namespace
-	ns := netproto.Namespace{
-		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+	// vrf
+	vrf := &netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
-			Name:   "testTenant",
+			Tenant:    "testTenant",
+			Namespace: "testNamespace",
+			Name:      "testTenant",
 		},
 	}
-
 	// uplink
 	intf := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
@@ -375,7 +377,7 @@ func (ds *delphidpTestSuite) TestDelphiNetwork(t *C) {
 	}
 
 	// create a network
-	err := ds.datapath.CreateNetwork(&nt, []*netproto.Interface{&intf}, &ns)
+	err := ds.datapath.CreateNetwork(&nt, []*netproto.Interface{&intf}, vrf)
 	AssertOk(t, err, "Error creating network in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -384,11 +386,11 @@ func (ds *delphidpTestSuite) TestDelphiNetwork(t *C) {
 		return (len(ntlist) == 1), ntlist
 	}, "invalid number of networks")
 
-	err = ds.datapath.UpdateNetwork(&nt, &ns)
+	err = ds.datapath.UpdateNetwork(&nt, vrf)
 	AssertOk(t, err, "Error updating network in delphi")
 
 	// delete the network
-	err = ds.datapath.DeleteNetwork(&nt, nil, &ns)
+	err = ds.datapath.DeleteNetwork(&nt, nil, vrf)
 	AssertOk(t, err, "Error deleting network")
 
 	// verify interface is acutually gone
@@ -585,16 +587,16 @@ func (ds *delphidpTestSuite) TestDelphiDatapathStubs(c *C) {
 	ds.datapath.UpdateRoute(nil, nil)
 	ds.datapath.DeleteRoute(nil, nil)
 	ds.datapath.CreateNatBinding(nil, nil, 0, nil)
-	ds.datapath.UpdateNatBinding(nil, nil)
+	ds.datapath.UpdateNatBinding(nil, nil, 0, nil)
 	ds.datapath.DeleteNatBinding(nil, nil)
 	ds.datapath.CreateIPSecPolicy(nil, nil, nil)
-	ds.datapath.UpdateIPSecPolicy(nil, nil)
+	ds.datapath.UpdateIPSecPolicy(nil, nil, nil)
 	ds.datapath.DeleteIPSecPolicy(nil, nil)
 	ds.datapath.CreateIPSecSAEncrypt(nil, nil, nil)
-	ds.datapath.UpdateIPSecSAEncrypt(nil, nil)
+	ds.datapath.UpdateIPSecSAEncrypt(nil, nil, nil)
 	ds.datapath.DeleteIPSecSAEncrypt(nil, nil)
 	ds.datapath.CreateIPSecSADecrypt(nil, nil, nil)
-	ds.datapath.UpdateIPSecSADecrypt(nil, nil)
+	ds.datapath.UpdateIPSecSADecrypt(nil, nil, nil)
 	ds.datapath.DeleteIPSecSADecrypt(nil, nil)
 	ds.datapath.CreateTunnel(nil, nil)
 	ds.datapath.UpdateTunnel(nil, nil)

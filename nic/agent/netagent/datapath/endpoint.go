@@ -17,7 +17,7 @@ import (
 // --------------------------- Local Endpoint CRUDs --------------------------- //
 
 // CreateLocalEndpoint creates a local endpoint in the datapath
-func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*types.IntfInfo, error) {
+func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) (*types.IntfInfo, error) {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -50,7 +50,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 
 	vrfKey := halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 
@@ -390,7 +390,7 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 // --------------------------- Remote Endpoint CRUDs --------------------------- //
 
 // CreateRemoteEndpoint creates remote endpoint
-func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -471,7 +471,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		EndpointAttrs: &epAttrs,
 		VrfKeyHandle: &halproto.VrfKeyHandle{
 			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-				VrfId: ns.Status.NamespaceID,
+				VrfId: vrf.Status.VrfID,
 			},
 		},
 	}

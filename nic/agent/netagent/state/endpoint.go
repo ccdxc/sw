@@ -89,6 +89,13 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 		return nil, err
 	}
 
+	// find the corresponding vrf.
+	vrf, err := na.ValidateVrf(ep.Tenant, ep.Namespace, ep.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", ep.Spec.VrfName)
+		return nil, err
+	}
+
 	// check if we have the network endpoint is referring to
 	// FIXME: if network gets deleted after endpoint is created, how do we handle it?
 	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: ep.Spec.NetworkName})
@@ -131,7 +138,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 		enicID = enicID + types.EnicOffset
 		// save the enic id in the ep status for deletions
 		ep.Status.EnicID = enicID
-		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, enicID, ns)
+		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, enicID, vrf)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
@@ -143,15 +150,27 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 			log.Errorf("could not find an interface to associate to the endpoint")
 			return nil, err
 		}
-		err = na.Datapath.CreateRemoteEndpoint(ep, nw, sgs, intfID, ns)
+		err = na.Datapath.CreateRemoteEndpoint(ep, nw, sgs, intfID, vrf)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
 		}
 	}
-	na.Solver.Add(nw, ep)
+	err = na.Solver.Add(nw, ep)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", nw, ep)
+		return nil, err
+	}
+
+	err = na.Solver.Add(ns, ep)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, ep)
+		return nil, err
+	}
+
+	err = na.Solver.Add(vrf, ep)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, ep)
 		return nil, err
 	}
 
@@ -172,6 +191,14 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	if err != nil {
 		return err
 	}
+
+	// find the corresponding vrf.
+	_, err = na.ValidateVrf(ep.Tenant, ep.Namespace, ep.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", ep.Spec.VrfName)
+		return err
+	}
+
 	// check if the endpoint already exists and convert it to an update
 	key := na.Solver.ObjectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
@@ -254,10 +281,11 @@ func (na *Nagent) DeleteEndpoint(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	_, err = na.FindNamespace(ep.Tenant, ep.Namespace)
+	ns, err := na.FindNamespace(ep.Tenant, ep.Namespace)
 	if err != nil {
 		return err
 	}
+
 	// check if we have the endpoint
 	key := na.Solver.ObjectKey(ep.ObjectMeta, ep.TypeMeta)
 	na.Lock()
@@ -272,6 +300,13 @@ func (na *Nagent) DeleteEndpoint(tn, namespace, name string) error {
 	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Namespace: ep.Namespace, Name: ep.Spec.NetworkName})
 	if err != nil {
 		log.Errorf("Error finding the network %v. Err: %v", ep.Spec.NetworkName, err)
+		return err
+	}
+
+	// find the corresponding vrf.
+	vrf, err := na.ValidateVrf(ep.Tenant, ep.Namespace, ep.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", ep.Spec.VrfName)
 		return err
 	}
 
@@ -295,6 +330,17 @@ func (na *Nagent) DeleteEndpoint(tn, namespace, name string) error {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
 		}
+	}
+	err = na.Solver.Remove(vrf, ep)
+	if err != nil {
+		log.Errorf("Could not remove dependency. Parent: %v. Child: %v", vrf, ep)
+		return err
+	}
+
+	err = na.Solver.Remove(ns, ep)
+	if err != nil {
+		log.Errorf("Could not remove dependency. Parent: %v. Child: %v", ns, ep)
+		return err
 	}
 
 	err = na.Solver.Remove(nw, ep)

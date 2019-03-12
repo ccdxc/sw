@@ -461,12 +461,12 @@
     "netprotoSecurityProfileSpec": {
       "type": "object",
       "properties": {
-        "attach-namespaces": {
+        "attach-vrfs": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "Namespaces the security profile is attached to"
+          "title": "Vrfs the security profile is attached to"
         },
         "timeouts": {
           "$ref": "#/definitions/netprotoTimeouts",

@@ -355,7 +355,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"kind\":\"IPSecSAEncrypt\",\"meta\":{\"name\":\"kg1-ipsec-sa-encrypt\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"encryption-algorithm\":\"AES_GCM_256\",\"encryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"local-gateway-ip\":\"192.168.10.12\",\"remote-gateway-ip\":\"192.168.10.11\", \"spi\":1,\"tep-namespace\":\"infra\"}}"
+                    "raw": "{\"kind\":\"IPSecSAEncrypt\",\"meta\":{\"name\":\"kg1-ipsec-sa-encrypt\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"encryption-algorithm\":\"AES_GCM_256\",\"encryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"local-gateway-ip\":\"192.168.10.12\",\"remote-gateway-ip\":\"192.168.10.11\", \"spi\":1,\"tep-vrf\":\"infra\"}}"
                 },
                 "description": ""
             },
@@ -375,7 +375,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"kind\":\"IPSecSADecrypt\",\"meta\":{\"name\":\"kg1-ipsec-sa-decrypt\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"decryption-algorithm\":\"AES_GCM_256\",\"decryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"spi\":1,\"tep-namespace\":\"infra\"}}"
+                    "raw": "{\"kind\":\"IPSecSADecrypt\",\"meta\":{\"name\":\"kg1-ipsec-sa-decrypt\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"decryption-algorithm\":\"AES_GCM_256\",\"decryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"spi\":1,\"tep-vrf\":\"infra\"}}"
                 },
                 "description": ""
             },

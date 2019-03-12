@@ -125,7 +125,7 @@ func (na *Nagent) ListInterface() []*netproto.Interface {
 // UpdateInterface updates an interface
 func (na *Nagent) UpdateInterface(intf *netproto.Interface) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(intf.Tenant, intf.Namespace)
+	_, err := na.FindNamespace(intf.Tenant, intf.Namespace)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func (na *Nagent) UpdateInterface(intf *netproto.Interface) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateInterface(intf, ns)
+	err = na.Datapath.UpdateInterface(intf)
 	key := na.Solver.ObjectKey(intf.ObjectMeta, intf.TypeMeta)
 	na.Lock()
 	na.EnicDB[key] = intf
@@ -165,7 +165,7 @@ func (na *Nagent) DeleteInterface(tn, namespace, name string) error {
 		return err
 	}
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(intf.Tenant, intf.Namespace)
+	_, err = na.FindNamespace(intf.Tenant, intf.Namespace)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (na *Nagent) DeleteInterface(tn, namespace, name string) error {
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteInterface(existingIntf, ns)
+	err = na.Datapath.DeleteInterface(existingIntf)
 	if err != nil {
 		log.Errorf("Error deleting interface {%+v}. Err: %v", intf, err)
 	}

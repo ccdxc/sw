@@ -49,6 +49,7 @@ func TestTCPProxyPolicyPost(t *testing.T) {
 			Name:      "testPostTCPProxyPolicy",
 		},
 		Spec: netproto.TCPProxyPolicySpec{
+			VrfName: "default",
 			Rules: []netproto.TCPProxyRule{
 				{
 					Action: "ENABLE",
@@ -86,6 +87,7 @@ func TestTCPProxyPolicyUpdate(t *testing.T) {
 
 	var actualTCPProxyPolicySpec netproto.TCPProxyPolicySpec
 	updatedTCPProxyPolicySpec := netproto.TCPProxyPolicySpec{
+		VrfName: "default",
 		Rules: []netproto.TCPProxyRule{
 			{
 				Action: "ENABLE",
@@ -136,6 +138,7 @@ func TestTCPProxyPolicyDelete(t *testing.T) {
 			Name:      "testDeleteTCPProxyPolicy",
 		},
 		Spec: netproto.TCPProxyPolicySpec{
+			VrfName: "default",
 			Rules: []netproto.TCPProxyRule{
 				{
 					Src: &netproto.MatchSelector{

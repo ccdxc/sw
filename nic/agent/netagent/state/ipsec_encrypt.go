@@ -38,15 +38,17 @@ func (na *Nagent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) 
 		return err
 	}
 
-	// validate that the spec has a tep name
-	if len(ipSecSAEncrypt.Spec.TepNS) == 0 {
-		return fmt.Errorf("IPSecSAEncrypt needs to specify a tep-name")
+	vrf, err := na.ValidateVrf(ipSecSAEncrypt.Tenant, ipSecSAEncrypt.Namespace, ipSecSAEncrypt.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", ipSecSAEncrypt.Spec.VrfName)
+		return err
 	}
 
-	// ensure that the tep-name resolves to a valid namespace.
-	tep, err := na.FindNamespace(ipSecSAEncrypt.Tenant, ipSecSAEncrypt.Spec.TepNS)
+	// ensure that the tep-name resolves to a valid vrf.
+	tepVrf, err := na.ValidateVrf(ipSecSAEncrypt.Tenant, ipSecSAEncrypt.Namespace, ipSecSAEncrypt.Spec.TepVrf)
 	if err != nil {
-		return fmt.Errorf("tep-name %v doesn't refer to a valid namespace", ipSecSAEncrypt.Spec.TepNS)
+		log.Errorf("Failed to find the TEP vrf %v", ipSecSAEncrypt.Spec.TepVrf)
+		return err
 	}
 
 	// Only ESP Protocol supported for encrypt SA
@@ -62,7 +64,7 @@ func (na *Nagent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) 
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateIPSecSAEncrypt(ipSecSAEncrypt, ns, tep)
+	err = na.Datapath.CreateIPSecSAEncrypt(ipSecSAEncrypt, vrf, tepVrf)
 	if err != nil {
 		log.Errorf("Error creating IPSec Encrypt rule in datapath. IPSecSAEncrypt {%+v}. Err: %v", ipSecSAEncrypt, err)
 		return err
@@ -75,10 +77,17 @@ func (na *Nagent) CreateIPSecSAEncrypt(ipSecSAEncrypt *netproto.IPSecSAEncrypt) 
 		return err
 	}
 
-	// Add the current ipSecSAEncrypt Rule as a dependency to the tep namespace as well.
-	err = na.Solver.Add(tep, ipSecSAEncrypt)
+	// Add the current ipSecSAEncrypt Rule as a dependency to the vrf.
+	err = na.Solver.Add(vrf, ipSecSAEncrypt)
 	if err != nil {
-		log.Errorf("Could not add dependency. Parent: %v. Child: %v", tep, ipSecSAEncrypt)
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, ipSecSAEncrypt)
+		return err
+	}
+
+	// Add the current ipSecSAEncrypt Rule as a dependency to the tep namespace as well.
+	err = na.Solver.Add(tepVrf, ipSecSAEncrypt)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", tepVrf, ipSecSAEncrypt)
 		return err
 	}
 
@@ -128,7 +137,7 @@ func (na *Nagent) ListIPSecSAEncrypt() []*netproto.IPSecSAEncrypt {
 // UpdateIPSecSAEncrypt updates an IPSec encrypt SA
 func (na *Nagent) UpdateIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(ipSecEncryptSA.Tenant, ipSecEncryptSA.Namespace)
+	_, err := na.FindNamespace(ipSecEncryptSA.Tenant, ipSecEncryptSA.Namespace)
 	if err != nil {
 		return err
 	}
@@ -143,7 +152,20 @@ func (na *Nagent) UpdateIPSecSAEncrypt(ipSecEncryptSA *netproto.IPSecSAEncrypt) 
 		return nil
 	}
 
-	err = na.Datapath.UpdateIPSecSAEncrypt(ipSecEncryptSA, ns)
+	vrf, err := na.ValidateVrf(existingIPSecSAEncrypt.Tenant, existingIPSecSAEncrypt.Namespace, existingIPSecSAEncrypt.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingIPSecSAEncrypt.Spec.VrfName)
+		return err
+	}
+
+	// ensure that the tep-name resolves to a valid vrf.
+	tepVrf, err := na.ValidateVrf(existingIPSecSAEncrypt.Tenant, existingIPSecSAEncrypt.Namespace, existingIPSecSAEncrypt.Spec.TepVrf)
+	if err != nil {
+		log.Errorf("Failed to find the TEP vrf %v", existingIPSecSAEncrypt.Spec.TepVrf)
+		return err
+	}
+
+	err = na.Datapath.UpdateIPSecSAEncrypt(ipSecEncryptSA, vrf, tepVrf)
 	key := na.Solver.ObjectKey(ipSecEncryptSA.ObjectMeta, ipSecEncryptSA.TypeMeta)
 	na.Lock()
 	na.IPSecSAEncryptDB[key] = ipSecEncryptSA
@@ -179,9 +201,16 @@ func (na *Nagent) DeleteIPSecSAEncrypt(tn, namespace, name string) error {
 		return err
 	}
 
-	// find the corresponding tep namespace
-	tep, err := na.FindNamespace(existingIPSecSAEncrypt.Tenant, existingIPSecSAEncrypt.Spec.TepNS)
+	vrf, err := na.ValidateVrf(existingIPSecSAEncrypt.Tenant, existingIPSecSAEncrypt.Namespace, existingIPSecSAEncrypt.Spec.VrfName)
 	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingIPSecSAEncrypt.Spec.VrfName)
+		return err
+	}
+
+	// ensure that the tep-name resolves to a valid vrf.
+	tepVrf, err := na.ValidateVrf(existingIPSecSAEncrypt.Tenant, existingIPSecSAEncrypt.Namespace, existingIPSecSAEncrypt.Spec.TepVrf)
+	if err != nil {
+		log.Errorf("Failed to find the TEP vrf %v", existingIPSecSAEncrypt.Spec.TepVrf)
 		return err
 	}
 
@@ -193,15 +222,21 @@ func (na *Nagent) DeleteIPSecSAEncrypt(tn, namespace, name string) error {
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteIPSecSAEncrypt(existingIPSecSAEncrypt, ns)
+	err = na.Datapath.DeleteIPSecSAEncrypt(existingIPSecSAEncrypt, vrf)
 	if err != nil {
 		log.Errorf("Error deleting IPSec encrypt SA {%+v}. Err: %v", ipSecEncryptSA, err)
 	}
 
 	// update parent references
-	err = na.Solver.Remove(tep, existingIPSecSAEncrypt)
+	err = na.Solver.Remove(tepVrf, existingIPSecSAEncrypt)
 	if err != nil {
-		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", tep.Name, err)
+		log.Errorf("Could not remove the reference to the tepVrf: %v. Err: %v", tepVrf.Name, err)
+		return err
+	}
+
+	err = na.Solver.Remove(vrf, existingIPSecSAEncrypt)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", vrf.Name, err)
 		return err
 	}
 

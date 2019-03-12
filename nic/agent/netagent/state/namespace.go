@@ -32,12 +32,12 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 		return nil
 	}
 
-	vrfID, err := na.Store.GetNextID(types.VrfID)
+	namespaceID, err := na.Store.GetNextID(types.NamespaceID)
 	if err != nil {
 		log.Errorf("Could not allocate namespace id. {%+v}", err)
 		return err
 	}
-	ns.Status.NamespaceID = vrfID + types.VrfOffset
+	ns.Status.NamespaceID = namespaceID
 
 	if err != nil {
 		log.Errorf("Could not allocate namespace id. {%+v}", err)
@@ -50,14 +50,7 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 		return err
 	}
 
-	// create it in datapath
-	err = na.Datapath.CreateVrf(ns.Status.NamespaceID, ns.Spec.NamespaceType)
-	if err != nil {
-		log.Errorf("Error creating namespace in datapath. Namespace {%+v}. Err: %v", ns, err)
-		return err
-	}
-
-	// Add a dependency on successful datapath create
+	// Add a dependency on successful create
 	err = na.Solver.Add(tn, ns)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", tn, ns)
@@ -130,13 +123,11 @@ func (na *Nagent) UpdateNamespace(ns *netproto.Namespace) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateVrf(ns.Status.NamespaceID)
 	key := na.Solver.ObjectKey(ns.ObjectMeta, ns.TypeMeta)
 	na.Lock()
 	na.NamespaceDB[key] = ns
 	na.Unlock()
-	err = na.Store.Write(ns)
-	return err
+	return na.Store.Write(ns)
 }
 
 // DeleteNamespace deletes a namespace
@@ -164,13 +155,6 @@ func (na *Nagent) DeleteNamespace(tn, name string) error {
 		log.Errorf("Found active references to %v. Err: %v", existingNamespace.Name, err)
 		return err
 
-	}
-
-	// clear for deletion. delete it in the datapath
-	err = na.Datapath.DeleteVrf(existingNamespace.Status.NamespaceID)
-	if err != nil {
-		log.Errorf("Error deleting namespace {%+v}. Err: %v", ns, err)
-		return err
 	}
 
 	// update the parent references.

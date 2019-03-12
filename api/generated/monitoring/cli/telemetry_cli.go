@@ -57,6 +57,13 @@ var CreateFwlogPolicyFlags = []gen.CliFlag{
 		Skip:   false,
 		Insert: "",
 	},
+	{
+		ID:     "vrf-name",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
 }
 
 func removeFwlogPolicyOper(obj interface{}) error {

@@ -12,7 +12,7 @@ import (
 )
 
 // CreateNetwork creates a network
-func (dp *DelphiDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
+func (dp *DelphiDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error {
 	var nwKey halproto.NetworkKeyHandle
 	var nwKeyOrHandle []*halproto.NetworkKeyHandle
 	var macAddr uint64
@@ -21,7 +21,7 @@ func (dp *DelphiDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netprot
 	// construct vrf key that gets passed on to hal
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 
@@ -130,7 +130,7 @@ func (dp *DelphiDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netprot
 }
 
 // UpdateNetwork updates a network in datapath
-func (dp *DelphiDatapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
+func (dp *DelphiDatapath) UpdateNetwork(nw *netproto.Network, vrf *netproto.Vrf) error {
 	// build l2 segment data
 	seg := &halproto.L2SegmentSpec{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
@@ -159,11 +159,11 @@ func (dp *DelphiDatapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Names
 }
 
 // DeleteNetwork deletes a network from datapath
-func (dp *DelphiDatapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
+func (dp *DelphiDatapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error {
 	// build vrf key
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 	// build the segment message

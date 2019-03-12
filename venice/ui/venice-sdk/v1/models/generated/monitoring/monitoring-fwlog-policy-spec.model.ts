@@ -13,6 +13,7 @@ import { MonitoringFwlogPolicySpec_filter,  MonitoringFwlogPolicySpec_filter_uih
 import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './monitoring-syslog-export-config.model';
 
 export interface IMonitoringFwlogPolicySpec {
+    'vrf-name'?: string;
     'targets'?: Array<IMonitoringExportConfig>;
     'format': MonitoringFwlogPolicySpec_format;
     'filter': Array<MonitoringFwlogPolicySpec_filter>;
@@ -21,11 +22,16 @@ export interface IMonitoringFwlogPolicySpec {
 
 
 export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringFwlogPolicySpec {
+    'vrf-name': string = null;
     'targets': Array<MonitoringExportConfig> = null;
     'format': MonitoringFwlogPolicySpec_format = null;
     'filter': Array<MonitoringFwlogPolicySpec_filter> = null;
     'config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'vrf-name': {
+            required: false,
+            type: 'string'
+        },
         'targets': {
             required: false,
             type: 'object'
@@ -81,6 +87,13 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['vrf-name'] != null) {
+            this['vrf-name'] = values['vrf-name'];
+        } else if (fillDefaults && MonitoringFwlogPolicySpec.hasDefaultValue('vrf-name')) {
+            this['vrf-name'] = MonitoringFwlogPolicySpec.propInfo['vrf-name'].default;
+        } else {
+            this['vrf-name'] = null
+        }
         if (values) {
             this.fillModelArray<MonitoringExportConfig>(this, 'targets', values['targets'], MonitoringExportConfig);
         } else {
@@ -112,6 +125,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'vrf-name': CustomFormControl(new FormControl(this['vrf-name']), MonitoringFwlogPolicySpec.propInfo['vrf-name']),
                 'targets': new FormArray([]),
                 'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFwlogPolicySpec_format), ]), MonitoringFwlogPolicySpec.propInfo['format']),
                 'filter': CustomFormControl(new FormControl(this['filter']), MonitoringFwlogPolicySpec.propInfo['filter']),
@@ -139,6 +153,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['vrf-name'].setValue(this['vrf-name']);
             this.fillModelArray<MonitoringExportConfig>(this, 'targets', this['targets'], MonitoringExportConfig);
             this._formGroup.controls['format'].setValue(this['format']);
             this._formGroup.controls['filter'].setValue(this['filter']);

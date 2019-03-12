@@ -38,6 +38,13 @@ func (na *Nagent) CreateRoute(rt *netproto.Route) error {
 		return err
 	}
 
+	// find the corresponding vrf for the route
+	vrf, err := na.ValidateVrf(rt.Tenant, rt.Namespace, rt.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", rt.Spec.VrfName)
+		return err
+	}
+
 	rt.Status.RouteID, err = na.Store.GetNextID(types.RouteID)
 	if err != nil {
 		log.Errorf("Could not allocate route id. {%+v}", err)
@@ -45,9 +52,16 @@ func (na *Nagent) CreateRoute(rt *netproto.Route) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateRoute(rt, ns)
+	err = na.Datapath.CreateRoute(rt, vrf)
 	if err != nil {
 		log.Errorf("Error creating route in datapath. Nw {%+v}. Err: %v", rt, err)
+		return err
+	}
+
+	// Add the current route as a dependency to the vrf.
+	err = na.Solver.Add(vrf, rt)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, rt)
 		return err
 	}
 
@@ -106,7 +120,7 @@ func (na *Nagent) FindRoute(meta api.ObjectMeta) (*netproto.Route, error) {
 // UpdateRoute updates a route. ToDo implement route updates in datapath
 func (na *Nagent) UpdateRoute(rt *netproto.Route) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(rt.Tenant, rt.Namespace)
+	_, err := na.FindNamespace(rt.Tenant, rt.Namespace)
 	if err != nil {
 		return err
 	}
@@ -121,8 +135,14 @@ func (na *Nagent) UpdateRoute(rt *netproto.Route) error {
 		log.Infof("Nothing to update.")
 		return nil
 	}
+	// find the corresponding vrf for the route
+	vrf, err := na.ValidateVrf(existingRoute.Tenant, existingRoute.Namespace, existingRoute.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingRoute.Spec.VrfName)
+		return err
+	}
 
-	err = na.Datapath.UpdateRoute(existingRoute, ns)
+	err = na.Datapath.UpdateRoute(existingRoute, vrf)
 	if err != nil {
 		log.Errorf("Error updating the route {%+v} in datapath. Err: %v", existingRoute, err)
 		return err
@@ -162,10 +182,23 @@ func (na *Nagent) DeleteRoute(tn, namespace, name string) error {
 		return errors.New("route not found")
 	}
 
+	// find the corresponding vrf for the route
+	vrf, err := na.ValidateVrf(existingRoute.Tenant, existingRoute.Namespace, existingRoute.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingRoute.Spec.VrfName)
+		return err
+	}
+
 	// delete the route in datapath
-	err = na.Datapath.DeleteRoute(existingRoute, ns)
+	err = na.Datapath.DeleteRoute(existingRoute, vrf)
 	if err != nil {
 		log.Errorf("Error deleting route {%+v}. Err: %v", existingRoute, err)
+		return err
+	}
+
+	err = na.Solver.Remove(vrf, existingRoute)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingRoute.Spec.VrfName, err)
 		return err
 	}
 

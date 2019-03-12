@@ -14,7 +14,7 @@ import (
 )
 
 // CreateSecurityProfile creates a security profile in the datapath
-func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error {
+func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -23,7 +23,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, att
 	var vrfSpec []*halproto.VrfSpec
 	var vrfType halproto.VrfType
 	for _, vrf := range attachmentVrfs {
-		if strings.ToLower(vrf.Spec.NamespaceType) == "infra" {
+		if strings.ToLower(vrf.Spec.VrfType) == "infra" {
 			vrfType = halproto.VrfType_VRF_TYPE_INFRA
 		} else {
 			vrfType = halproto.VrfType_VRF_TYPE_CUSTOMER
@@ -33,7 +33,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, att
 		spec := halproto.VrfSpec{
 			KeyOrHandle: &halproto.VrfKeyHandle{
 				KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-					VrfId: vrf.Status.NamespaceID,
+					VrfId: vrf.Status.VrfID,
 				},
 			},
 			SecurityKeyHandle: &halproto.SecurityProfileKeyHandle{
@@ -264,7 +264,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, att
 }
 
 // UpdateSecurityProfile updates a security profile in the datapath
-func (hd *Datapath) UpdateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error {
+func (hd *Datapath) UpdateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -274,7 +274,7 @@ func (hd *Datapath) UpdateSecurityProfile(profile *netproto.SecurityProfile, att
 	var vrfSpec []*halproto.VrfSpec
 	var vrfType halproto.VrfType
 	for _, vrf := range attachmentVrfs {
-		if strings.ToLower(vrf.Spec.NamespaceType) == "infra" {
+		if strings.ToLower(vrf.Spec.VrfType) == "infra" {
 			vrfType = halproto.VrfType_VRF_TYPE_INFRA
 		} else {
 			vrfType = halproto.VrfType_VRF_TYPE_CUSTOMER
@@ -284,7 +284,7 @@ func (hd *Datapath) UpdateSecurityProfile(profile *netproto.SecurityProfile, att
 		spec := halproto.VrfSpec{
 			KeyOrHandle: &halproto.VrfKeyHandle{
 				KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-					VrfId: vrf.Status.NamespaceID,
+					VrfId: vrf.Status.VrfID,
 				},
 			},
 			SecurityKeyHandle: &halproto.SecurityProfileKeyHandle{
@@ -517,7 +517,7 @@ func (hd *Datapath) UpdateSecurityProfile(profile *netproto.SecurityProfile, att
 }
 
 // DeleteSecurityProfile deletes a security profile in the datapath
-func (hd *Datapath) DeleteSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error {
+func (hd *Datapath) DeleteSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -527,7 +527,7 @@ func (hd *Datapath) DeleteSecurityProfile(profile *netproto.SecurityProfile, att
 
 	for _, vrf := range attachmentVrfs {
 		var vrfType halproto.VrfType
-		if strings.ToLower(vrf.Spec.NamespaceType) == "infra" {
+		if strings.ToLower(vrf.Spec.VrfType) == "infra" {
 			vrfType = halproto.VrfType_VRF_TYPE_INFRA
 		} else {
 			vrfType = halproto.VrfType_VRF_TYPE_CUSTOMER
@@ -537,7 +537,7 @@ func (hd *Datapath) DeleteSecurityProfile(profile *netproto.SecurityProfile, att
 		spec := halproto.VrfSpec{
 			KeyOrHandle: &halproto.VrfKeyHandle{
 				KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-					VrfId: vrf.Status.NamespaceID,
+					VrfId: vrf.Status.VrfID,
 				},
 			},
 			// All tenant creates are currently customer type as we don't intend to expose infra vrf creates to the user.

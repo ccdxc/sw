@@ -38,6 +38,13 @@ func (na *Nagent) CreateNatPool(np *netproto.NatPool) error {
 		return err
 	}
 
+	// find the corresponding vrf for the nat binding
+	vrf, err := na.ValidateVrf(np.Tenant, np.Namespace, np.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", np.Spec.VrfName)
+		return err
+	}
+
 	// validate nat pool message
 
 	np.Status.NatPoolID, err = na.Store.GetNextID(types.NatPoolID)
@@ -48,7 +55,7 @@ func (na *Nagent) CreateNatPool(np *netproto.NatPool) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateNatPool(np, ns)
+	err = na.Datapath.CreateNatPool(np, vrf)
 	if err != nil {
 		log.Errorf("Error creating nat pool in datapath. NatPool {%+v}. Err: %v", np, err)
 		return err
@@ -58,6 +65,13 @@ func (na *Nagent) CreateNatPool(np *netproto.NatPool) error {
 	err = na.Solver.Add(ns, np)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, np)
+		return err
+	}
+
+	// Add the current nat pool as a dependency to the vrf.
+	err = na.Solver.Add(vrf, np)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, np)
 		return err
 	}
 
@@ -107,7 +121,7 @@ func (na *Nagent) ListNatPool() []*netproto.NatPool {
 // UpdateNatPool updates a nat pool
 func (na *Nagent) UpdateNatPool(np *netproto.NatPool) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(np.Tenant, np.Namespace)
+	_, err := na.FindNamespace(np.Tenant, np.Namespace)
 	if err != nil {
 		return err
 	}
@@ -121,8 +135,14 @@ func (na *Nagent) UpdateNatPool(np *netproto.NatPool) error {
 		log.Infof("Nothing to update.")
 		return nil
 	}
+	// find the corresponding vrf for the nat binding
+	vrf, err := na.ValidateVrf(existingNp.Tenant, existingNp.Namespace, existingNp.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingNp.Spec.VrfName)
+		return err
+	}
 
-	err = na.Datapath.UpdateNatPool(existingNp, ns)
+	err = na.Datapath.UpdateNatPool(existingNp, vrf)
 	if err != nil {
 		log.Errorf("Error updating the nat pool {%+v} in datapath. Err: %v", existingNp, err)
 		return err
@@ -161,6 +181,13 @@ func (na *Nagent) DeleteNatPool(tn, namespace, name string) error {
 		return errors.New("nat pool not found")
 	}
 
+	// find the corresponding vrf for the nat binding
+	vrf, err := na.ValidateVrf(existingNatPool.Tenant, existingNatPool.Namespace, existingNatPool.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingNatPool.Spec.VrfName)
+		return err
+	}
+
 	// check if the current nat pool has any objects referring to it
 	err = na.Solver.Solve(existingNatPool)
 	if err != nil {
@@ -169,9 +196,15 @@ func (na *Nagent) DeleteNatPool(tn, namespace, name string) error {
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteNatPool(existingNatPool, ns)
+	err = na.Datapath.DeleteNatPool(existingNatPool, vrf)
 	if err != nil {
 		log.Errorf("Error deleting nat pool {%+v}. Err: %v", np, err)
+	}
+
+	err = na.Solver.Remove(vrf, existingNatPool)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingNatPool.Spec.VrfName, err)
+		return err
 	}
 
 	// update parent references

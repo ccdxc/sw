@@ -34,7 +34,7 @@ func TestIPSecSADecryptCreateDelete(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
-			TepNS:              "default",
+			TepVrf:             "default",
 		},
 	}
 
@@ -56,7 +56,7 @@ func TestIPSecSADecryptCreateDelete(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                42,
-			TepNS:              "default",
+			TepVrf:             "default",
 		},
 	}
 	err := ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -114,7 +114,7 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
-			TepNS:              "default",
+			TepVrf:             "default",
 		},
 	}
 	saDecryptUpdate := netproto.IPSecSADecrypt{
@@ -135,7 +135,7 @@ func TestIPSecSADecryptUpdate(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                42,
-			TepNS:              "default",
+			TepVrf:             "default",
 		},
 	}
 	err := ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -155,17 +155,18 @@ func TestIPSecSADecryptCreateOnValidTep(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
-	// create backing namespace
-	ns := netproto.Namespace{
-		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+	// create backing vrf
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "public",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "public",
 		},
 	}
 
-	err := ag.CreateNamespace(&ns)
-	AssertOk(t, err, "Creating namespace failed")
+	err := ag.CreateVrf(&vrf)
+	AssertOk(t, err, "Creating vrf failed")
 
 	// Create backing Decrypt and Decrypt rules
 	saDecrypt := netproto.IPSecSADecrypt{
@@ -186,7 +187,7 @@ func TestIPSecSADecryptCreateOnValidTep(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                42,
-			TepNS:              "public",
+			TepVrf:             "public",
 		},
 	}
 
@@ -220,7 +221,7 @@ func TestIPSecSADecryptCreateOnNonExistingNamespace(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
-			TepNS:              "default",
+			TepVrf:             "default",
 		},
 	}
 
@@ -253,7 +254,7 @@ func TestIPSecSADecryptCreateOnInvalidProtocol(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
-			TepNS:              "default",
+			TepVrf:             "default",
 		},
 	}
 
@@ -286,7 +287,7 @@ func TestIPSecSADecryptUpdateOnNonExistingRule(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                1,
-			TepNS:              "default",
+			TepVrf:             "default",
 		},
 	}
 
@@ -351,7 +352,7 @@ func TestIPSecSADecryptCreateOnInValidTep(t *testing.T) {
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
 			SPI:                42,
-			TepNS:              "badTep",
+			TepVrf:             "badTep",
 		},
 	}
 

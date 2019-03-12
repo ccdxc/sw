@@ -659,6 +659,10 @@
     "netprotoIPSecPolicySpec": {
       "type": "object",
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current IPSec Policy belongs to"
+        },
         "rules": {
           "type": "array",
           "items": {
@@ -772,6 +776,10 @@
         "rekey-decryption-algorithm"
       ],
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current IPSec Decrypt SA belongs to"
+        },
         "protocol": {
           "type": "string",
           "enum": [
@@ -859,9 +867,9 @@
           "format": "int64",
           "title": "SPI information"
         },
-        "tep-namespace": {
+        "tep-vrf": {
           "type": "string",
-          "title": "TepNS holds the namespace that holds outer IP for the tunnel"
+          "title": "TepVrf holds the vrf that holds outer IP for the tunnel"
         }
       },
       "title": "IPSecSADecryptSpec"
@@ -929,6 +937,10 @@
         "encryption-algorithm"
       ],
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current IPSec Encrypt SA belongs to"
+        },
         "protocol": {
           "type": "string",
           "enum": [
@@ -990,9 +1002,9 @@
           "format": "int64",
           "title": "SPI Value"
         },
-        "tep-namespace": {
+        "tep-vrf": {
           "type": "string",
-          "title": "TepNS holds the namespace that holds outer IP for the tunnel"
+          "title": "TepVrf holds the vrf that holds outer IP for the tunnel"
         }
       },
       "title": "IPSecSAEncryptSpec"

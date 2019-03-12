@@ -15,6 +15,22 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	// Create backing Encrypt and Decrypt rules
 	saEncrypt := netproto.IPSecSAEncrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
@@ -31,10 +47,10 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
 
 	saDecrypt := netproto.IPSecSADecrypt{
@@ -54,7 +70,7 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 			RekeyDecryptionKey: "someRandomString",
 			LocalGwIP:          "10.0.0.1",
 			RemoteGwIP:         "192.168.1.1",
-			TepNS:              "infra",
+			TepVrf:             "infra",
 		},
 	}
 	err = ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -126,6 +142,22 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	// Create backing Encrypt and Decrypt rules
 	saEncrypt := netproto.IPSecSAEncrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
@@ -142,10 +174,10 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
 
 	ipSecPolicy := netproto.IPSecPolicy{
@@ -220,6 +252,22 @@ func TestIPSecPolicyCreateDeleteOnRemoteSARule(t *testing.T) {
 	err := ag.CreateNamespace(&rns)
 	AssertOk(t, err, "Could not create remote namespace")
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "remoteNS",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err = ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	// Create remote NS backing Encrypt and Decrypt rules
 	saEncrypt := netproto.IPSecSAEncrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
@@ -237,7 +285,7 @@ func TestIPSecPolicyCreateDeleteOnRemoteSARule(t *testing.T) {
 			LocalGwIP:     "20.1.1.1",
 			RemoteGwIP:    "20.1.1.2",
 			SPI:           1,
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
 	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -257,7 +305,7 @@ func TestIPSecPolicyCreateDeleteOnRemoteSARule(t *testing.T) {
 			DecryptAlgo:   "AES_GCM_256",
 			DecryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
 			SPI:           1,
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
 	err = ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -319,6 +367,22 @@ func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	saEncrypt := netproto.IPSecSAEncrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
 		ObjectMeta: api.ObjectMeta{
@@ -334,11 +398,11 @@ func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
 
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
 
 	saDecrypt := netproto.IPSecSADecrypt{
@@ -355,7 +419,7 @@ func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
 			DecryptAlgo:   "AES_GCM_256",
 			DecryptionKey: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
 			SPI:           1,
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
 	err = ag.CreateIPSecSADecrypt(&saDecrypt)
@@ -500,6 +564,22 @@ func TestIPSecPolicyCreateInvalidRule(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	// Create backing Encrypt and Decrypt rules
 	saEncrypt := netproto.IPSecSAEncrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
@@ -516,10 +596,10 @@ func TestIPSecPolicyCreateInvalidRule(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
 
 	ipSecPolicy := netproto.IPSecPolicy{
@@ -555,6 +635,22 @@ func TestIPSecPolicyDatapathFailure(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	// Create backing Encrypt and Decrypt rules
 	saEncrypt := netproto.IPSecSAEncrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
@@ -571,10 +667,10 @@ func TestIPSecPolicyDatapathFailure(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
 
 	ipSecPolicy := netproto.IPSecPolicy{
@@ -610,6 +706,22 @@ func TestIPSecPolicyCreateOnNonExistentNamespace(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	// Create backing Encrypt and Decrypt rules
 	saEncrypt := netproto.IPSecSAEncrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
@@ -626,10 +738,10 @@ func TestIPSecPolicyCreateOnNonExistentNamespace(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
 
 	ipSecPolicy := netproto.IPSecPolicy{
@@ -664,6 +776,22 @@ func TestIPSecPolicyUpdateOnNonExistentIPSecPolicy(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	// Create backing Encrypt and Decrypt rules
 	saEncrypt := netproto.IPSecSAEncrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
@@ -680,10 +808,10 @@ func TestIPSecPolicyUpdateOnNonExistentIPSecPolicy(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
 
 	ipSecPolicy := netproto.IPSecPolicy{
@@ -718,6 +846,22 @@ func TestIPSecPolicyCreateOnInvalidEncryptSA(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	// Create backing Encrypt and Decrypt rules
 	saEncrypt := netproto.IPSecSAEncrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
@@ -734,10 +878,10 @@ func TestIPSecPolicyCreateOnInvalidEncryptSA(t *testing.T) {
 			EncryptionKey: "someRandomKey",
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
-			TepNS:         "infra",
+			TepVrf:        "infra",
 		},
 	}
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
 
 	ipSecPolicy := netproto.IPSecPolicy{
@@ -772,6 +916,22 @@ func TestIPSecPolicyCreateOnInvalidDecryptSA(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
 	// Create backing Encrypt and Decrypt rules
 	saDecrypt := netproto.IPSecSADecrypt{
 		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
@@ -786,10 +946,10 @@ func TestIPSecPolicyCreateOnInvalidDecryptSA(t *testing.T) {
 			AuthKey:    "someRandomString",
 			LocalGwIP:  "10.0.0.1",
 			RemoteGwIP: "192.168.1.1",
-			TepNS:      "infra",
+			TepVrf:     "infra",
 		},
 	}
-	err := ag.CreateIPSecSADecrypt(&saDecrypt)
+	err = ag.CreateIPSecSADecrypt(&saDecrypt)
 	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
 
 	ipSecPolicy := netproto.IPSecPolicy{

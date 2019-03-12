@@ -34,19 +34,12 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	vrfID, err := na.Store.GetNextID(types.VrfID)
+	tenantID, err := na.Store.GetNextID(types.TenantID)
 	if err != nil {
 		log.Errorf("Could not allocate tenant id. {%+v}", err)
 		return err
 	}
-	tn.Status.TenantID = vrfID + types.VrfOffset
-
-	// create it in datapath
-	err = na.Datapath.CreateVrf(tn.Status.TenantID, "")
-	if err != nil {
-		log.Errorf("Error creating tenant in datapath. Tenant {%+v}. Err: %v", tn, err)
-		return err
-	}
+	tn.Status.TenantID = tenantID
 
 	// save it in db
 	key := na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)
@@ -126,7 +119,6 @@ func (na *Nagent) UpdateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateVrf(tn.Status.TenantID)
 	key := na.Solver.ObjectKey(tn.ObjectMeta, tn.TypeMeta)
 	na.Lock()
 	na.TenantDB[key] = tn
@@ -178,13 +170,6 @@ func (na *Nagent) DeleteTenant(name string) error {
 	err = na.DeleteNamespace(defaultNS.Tenant, defaultNS.Name)
 	if err != nil {
 		log.Errorf("Failed to delete default namespace under %v tenant. Err: %v", existingTenant.Name, err)
-		return err
-	}
-
-	// clear for deletion, call datapath delete
-	err = na.Datapath.DeleteVrf(existingTenant.Status.TenantID)
-	if err != nil {
-		log.Errorf("Error deleting tenant {%+v}. Err: %v", tn, err)
 		return err
 	}
 

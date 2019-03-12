@@ -12,7 +12,7 @@ import (
 // ----------------------- TCPProxy Policy CRUDs ----------------------- //
 
 // CreateTCPProxyPolicy creates an TCPProxy Policy in the datapath
-func (hd *Datapath) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -20,7 +20,7 @@ func (hd *Datapath) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netpr
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 
@@ -83,7 +83,7 @@ func (hd *Datapath) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netpr
 }
 
 // UpdateTCPProxyPolicy updates an TCPProxy Policy in the datapath
-func (hd *Datapath) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -91,7 +91,7 @@ func (hd *Datapath) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netpr
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 
@@ -154,7 +154,7 @@ func (hd *Datapath) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netpr
 }
 
 // DeleteTCPProxyPolicy deletes an TCPProxy Policy in the datapath
-func (hd *Datapath) DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
@@ -162,7 +162,7 @@ func (hd *Datapath) DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netpr
 	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 

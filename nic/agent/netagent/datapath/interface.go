@@ -111,7 +111,7 @@ func (hd *Datapath) CreateInterface(intfs ...*netproto.Interface) error {
 }
 
 // DeleteInterface deletes an interface
-func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
+func (hd *Datapath) DeleteInterface(intf *netproto.Interface) error {
 	var ifDelReq *halproto.InterfaceDeleteRequest
 	switch intf.Spec.Type {
 	case "UPLINK", "ENIC":
@@ -141,7 +141,7 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Names
 }
 
 // UpdateInterface updates an interface
-func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateInterface(intf *netproto.Interface) error {
 	var ifSpec *halproto.InterfaceSpec
 	switch intf.Spec.Type {
 	case "UPLINK":
@@ -177,9 +177,6 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Names
 		log.Errorf("Error updating interface. Err: %v", err)
 		return err
 	}
-	//hd.Lock()
-	hd.DB.InterfaceDB[objectKey(&ns.ObjectMeta)] = ifReqMsg
-	//hd.Unlock()
 	return nil
 }
 

@@ -215,6 +215,19 @@ func TestNetworkDuplicatePrefixAcrossDifferentNamespaces(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	// create backing vrf
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testVrf",
+		},
+	}
+
+	err := ag.CreateVrf(&vrf)
+	AssertOk(t, err, "Creating vrf failed")
+
 	// network message
 	nt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
@@ -224,6 +237,7 @@ func TestNetworkDuplicatePrefixAcrossDifferentNamespaces(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: netproto.NetworkSpec{
+			VrfName:     "testVrf",
 			IPv4Subnet:  "10.1.1.0/24",
 			IPv4Gateway: "10.1.1.254",
 			VlanID:      42,
@@ -231,7 +245,7 @@ func TestNetworkDuplicatePrefixAcrossDifferentNamespaces(t *testing.T) {
 	}
 
 	// make create network call
-	err := ag.CreateNetwork(&nt)
+	err = ag.CreateNetwork(&nt)
 	AssertOk(t, err, "Error creating network")
 	tnt, err := ag.FindNetwork(nt.ObjectMeta)
 	AssertOk(t, err, "Network was not found in DB")

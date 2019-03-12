@@ -39,8 +39,10 @@ message TCPProxyPolicy{
 
 // TCPProxyPolicySpec
 message TCPProxyPolicySpec {
+    // VrfName specifies the name of the VRF that the current TCP Proxy Policy belongs to
+    string VrfName              = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
     // TCPProxy rules in a given policy
-    repeated TCPProxyRule rules = 1   [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
+    repeated TCPProxyRule rules = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
 }
 
 message TCPProxyRule {

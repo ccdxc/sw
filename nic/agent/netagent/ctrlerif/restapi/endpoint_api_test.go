@@ -49,6 +49,7 @@ func TestEndpointPost(t *testing.T) {
 			Name:      "testPostEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
+			VrfName:       "default",
 			EndpointUUID:  "testEndpointUUID",
 			WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "preCreatedNetwork",
@@ -82,6 +83,7 @@ func TestEndpointUpdate(t *testing.T) {
 
 	var actualEndpointSpec netproto.EndpointSpec
 	updatedEndpointSpec := netproto.EndpointSpec{
+		VrfName:       "default",
 		EndpointUUID:  "testEndpointUUID",
 		WorkloadUUID:  "updatedWorkloadUUID",
 		NetworkName:   "preCreatedNetwork",
@@ -129,6 +131,7 @@ func TestEndpointDelete(t *testing.T) {
 			Name:      "testDeleteEndpoint",
 		},
 		Spec: netproto.EndpointSpec{
+			VrfName:       "default",
 			EndpointUUID:  "testEndpointUUID",
 			WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "preCreatedNetwork",

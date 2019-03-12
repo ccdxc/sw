@@ -1,0 +1,72 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for vrf
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ---------------------------- Vrf API ----------------------------
+
+// Vrf controller api
+service VrfApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Vrf",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/vrfs"
+    };
+
+    rpc GetVrf (api.ObjectMeta) returns (Vrf) {};
+    rpc ListVrfs (api.ObjectMeta) returns (VrfList) {};
+    rpc WatchVrfs (api.ObjectMeta) returns (stream VrfEvent) {};
+}
+
+// Vrf object
+message Vrf {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    VrfSpec         Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    VrfStatus       Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// VrfSpec captures all the vrf level configuration
+message VrfSpec {
+    enum Type
+    {
+        CUSTOMER  = 0;  // Customer type tenant.
+        INFRA     = 1;  // Infra tenant. This will create an infra VRF in HAL
+    }
+    // Type of the Vrf.
+    // Infra type creates a overlay VRF in the datapath. This is automatically created on bringup.
+    // Customer type creates a VRF in the datapath.
+    // default and infra vrf under default tenant are automatically created during init time.
+    string VrfType  = 1 [(venice.check) = "StrEnum(VrfSpec.Type)",
+                         (gogoproto.nullable) = true, (gogoproto.jsontag) = "vrf-type,omitempty"];
+
+
+}
+// Vrf Status
+message VrfStatus {
+    // VRF ID in the datapath
+    uint64 VrfID  = 1 [(gogoproto.jsontag) = "vrf-id,omitempty"];     // Vrf identifier
+}
+
+
+message VrfList {
+    repeated Vrf vrfs = 1;
+}
+
+// vrf watch event
+message VrfEvent {
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Vrf       Vrf   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "vrf,omitempty"];
+}

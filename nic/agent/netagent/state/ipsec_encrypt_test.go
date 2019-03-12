@@ -32,7 +32,7 @@ func TestIPSecSAEncryptCreateDelete(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 	dupSAEncrypt := netproto.IPSecSAEncrypt{
@@ -106,7 +106,7 @@ func TestIPSecSAEncryptUpdate(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 	saEncryptUpdate := netproto.IPSecSAEncrypt{
@@ -125,7 +125,7 @@ func TestIPSecSAEncryptUpdate(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           42,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
@@ -145,17 +145,18 @@ func TestIPSecSAEncryptCreateOnValidTep(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
-	// create backing namespace
-	ns := netproto.Namespace{
-		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+	// create backing vrf
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "public",
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "public",
 		},
 	}
 
-	err := ag.CreateNamespace(&ns)
-	AssertOk(t, err, "Creating namespace failed")
+	err := ag.CreateVrf(&vrf)
+	AssertOk(t, err, "Creating vrf failed")
 
 	// Create backing Encrypt and Encrypt rules
 	saEncrypt := netproto.IPSecSAEncrypt{
@@ -174,12 +175,42 @@ func TestIPSecSAEncryptCreateOnValidTep(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "public",
+			TepVrf:        "public",
 		},
 	}
 
 	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
 	AssertOk(t, err, "IPSec Encrypt Rule creation pointing to a valid tep failed")
+}
+
+func TestIPSecSAEncryptCreateOnEmptyTep(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// Create backing Encrypt and Encrypt rules
+	saEncrypt := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSAEncrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "someRandomString",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "someRandomKey",
+			LocalGwIP:     "10.0.0.1",
+			RemoteGwIP:    "192.168.1.1",
+			SPI:           1,
+		},
+	}
+
+	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
+	AssertOk(t, err, "IPSec Encrypt Rule creation pointing to an empty tep must succeed")
 }
 
 //--------------------- Corner Case Tests ---------------------//
@@ -206,7 +237,7 @@ func TestIPSecSAEncryptCreateOnNonExistingNamespace(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 
@@ -237,7 +268,7 @@ func TestIPSecSAEncryptCreateOnInvalidProtocol(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 
@@ -268,7 +299,7 @@ func TestIPSecSAEncryptDatapathFailure(t *testing.T) {
 			LocalGwIP:     "BadLocalGwIP",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 
@@ -299,42 +330,12 @@ func TestIPSecSAEncryptUpdateOnNonExistingRule(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "default",
+			TepVrf:        "default",
 		},
 	}
 
 	err := ag.UpdateIPSecSAEncrypt(&saEncrypt)
 	Assert(t, err != nil, "IPSec Encrypt Rule creation on invalid protocol spec")
-}
-
-func TestIPSecSAEncryptCreateOnEmptyTep(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-
-	// Create backing Encrypt and Encrypt rules
-	saEncrypt := netproto.IPSecSAEncrypt{
-		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testIPSecSAEncrypt",
-		},
-		Spec: netproto.IPSecSAEncryptSpec{
-			Protocol:      "ESP",
-			AuthAlgo:      "AES_GCM",
-			AuthKey:       "someRandomString",
-			EncryptAlgo:   "AES_GCM_256",
-			EncryptionKey: "someRandomKey",
-			LocalGwIP:     "10.0.0.1",
-			RemoteGwIP:    "192.168.1.1",
-			SPI:           1,
-		},
-	}
-
-	err := ag.CreateIPSecSAEncrypt(&saEncrypt)
-	Assert(t, err != nil, "IPSec Encrypt Rule creation pointing to an empty tep succeeded")
 }
 
 func TestIPSecSAEncryptCreateOnInValidTep(t *testing.T) {
@@ -360,7 +361,7 @@ func TestIPSecSAEncryptCreateOnInValidTep(t *testing.T) {
 			LocalGwIP:     "10.0.0.1",
 			RemoteGwIP:    "192.168.1.1",
 			SPI:           1,
-			TepNS:         "badTep",
+			TepVrf:        "badTep",
 		},
 	}
 

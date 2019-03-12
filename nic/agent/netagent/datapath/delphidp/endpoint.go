@@ -30,7 +30,7 @@ func ipv4Touint32(ip net.IP) uint32 {
 }
 
 // CreateLocalEndpoint creates a local endpoint in datapath
-func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*types.IntfInfo, error) {
+func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) (*types.IntfInfo, error) {
 	var halIPAddresses []*halproto.IPAddress
 	var lifHandle *halproto.LifKeyHandle
 
@@ -58,7 +58,7 @@ func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 
 	vrfKey := halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-			VrfId: ns.Status.NamespaceID,
+			VrfId: vrf.Status.VrfID,
 		},
 	}
 
@@ -282,7 +282,7 @@ func (dp *DelphiDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netprot
 }
 
 // CreateRemoteEndpoint creates a remote endpoint in datapath
-func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, ns *netproto.Namespace) error {
+func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, vrf *netproto.Vrf) error {
 	var halIPAddresses []*halproto.IPAddress
 
 	// convert mac address
@@ -355,7 +355,7 @@ func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netpro
 		EndpointAttrs: &epAttrs,
 		VrfKeyHandle: &halproto.VrfKeyHandle{
 			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-				VrfId: ns.Status.NamespaceID,
+				VrfId: vrf.Status.VrfID,
 			},
 		},
 	}

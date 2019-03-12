@@ -39,6 +39,13 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 		return err
 	}
 
+	// find the corresponding vrf for the nat binding
+	vrf, err := na.ValidateVrf(nb.Tenant, nb.Namespace, nb.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", nb.Spec.VrfName)
+		return err
+	}
+
 	// find the corresponding natpool
 	np, err := na.findNatPool(nb.ObjectMeta, nb.Spec.NatPoolName)
 	if err != nil {
@@ -52,6 +59,10 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
 	}
 
+	natPoolVrf, err := na.ValidateVrf(np.Tenant, np.Namespace, np.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
+	}
 	nb.Status.NatBindingID, err = na.Store.GetNextID(types.NatBindingID)
 
 	if err != nil {
@@ -60,7 +71,7 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// create it in datapath
-	nb, err = na.Datapath.CreateNatBinding(nb, np, natPoolNS.Status.NamespaceID, ns)
+	nb, err = na.Datapath.CreateNatBinding(nb, np, natPoolVrf.Status.VrfID, vrf)
 	if err != nil {
 		log.Errorf("Error creating nat binding in datapath. NatBinding {%+v}. Err: %v", nb, err)
 		return err
@@ -81,6 +92,13 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 			log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, nb)
 			return err
 		}
+	}
+
+	// Add the current nat binding Rule as a dependency to the vrf.
+	err = na.Solver.Add(vrf, nb)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, nb)
+		return err
 	}
 
 	// save it in db
@@ -129,22 +147,42 @@ func (na *Nagent) ListNatBinding() []*netproto.NatBinding {
 // UpdateNatBinding updates a nat binding
 func (na *Nagent) UpdateNatBinding(nb *netproto.NatBinding) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(nb.Tenant, nb.Namespace)
+	_, err := na.FindNamespace(nb.Tenant, nb.Namespace)
 	if err != nil {
 		return err
 	}
-	existingNp, err := na.FindNatBinding(nb.ObjectMeta)
+	existingNb, err := na.FindNatBinding(nb.ObjectMeta)
 	if err != nil {
 		log.Errorf("NatBinding %v not found", nb.ObjectMeta)
 		return err
 	}
 
-	if proto.Equal(nb, existingNp) {
+	if proto.Equal(nb, existingNb) {
 		log.Infof("Nothing to update.")
 		return nil
 	}
 
-	err = na.Datapath.UpdateNatBinding(nb, ns)
+	// find the corresponding vrf for the nat binding
+	vrf, err := na.ValidateVrf(nb.Tenant, nb.Namespace, nb.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", nb.Spec.VrfName)
+		return err
+	}
+
+	// find the corresponding natpool
+	np, err := na.findNatPool(nb.ObjectMeta, nb.Spec.NatPoolName)
+	if err != nil {
+		log.Infof("Could not find the specified NatPool. %v", nb.Spec.NatPoolName)
+		return err
+	}
+
+	nb.Status.NatBindingID = existingNb.Status.NatBindingID
+	natPoolVrf, err := na.ValidateVrf(np.Tenant, np.Namespace, np.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
+	}
+
+	err = na.Datapath.UpdateNatBinding(nb, np, natPoolVrf.Status.VrfID, vrf)
 	key := na.Solver.ObjectKey(nb.ObjectMeta, nb.TypeMeta)
 	na.Lock()
 	na.NatBindingDB[key] = nb
@@ -192,6 +230,13 @@ func (na *Nagent) DeleteNatBinding(tn, namespace, name string) error {
 		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
 	}
 
+	// find the corresponding vrf for the nat binding
+	vrf, err := na.ValidateVrf(nb.Tenant, nb.Namespace, nb.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", nb.Spec.VrfName)
+		return err
+	}
+
 	// check if the current nat binding has any objects referring to it
 	err = na.Solver.Solve(existingNatBinding)
 	if err != nil {
@@ -200,9 +245,15 @@ func (na *Nagent) DeleteNatBinding(tn, namespace, name string) error {
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteNatBinding(existingNatBinding, ns)
+	err = na.Datapath.DeleteNatBinding(existingNatBinding, vrf)
 	if err != nil {
 		log.Errorf("Error deleting nat binding {%+v}. Err: %v", nb, err)
+	}
+
+	err = na.Solver.Remove(vrf, existingNatBinding)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingNatBinding.Spec.VrfName, err)
+		return err
 	}
 
 	// remove the reference to the nat pool

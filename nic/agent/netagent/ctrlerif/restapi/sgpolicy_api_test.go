@@ -49,6 +49,7 @@ func TestSGPolicyPost(t *testing.T) {
 			Name:      "testPostSGPolicy",
 		},
 		Spec: netproto.SGPolicySpec{
+			VrfName:      "default",
 			AttachGroup:  []string{"preCreatedSecurityGroup"},
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
@@ -101,6 +102,7 @@ func TestSGPolicyDelete(t *testing.T) {
 			Name:      "testDeleteSGPolicy",
 		},
 		Spec: netproto.SGPolicySpec{
+			VrfName:      "default",
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
@@ -156,6 +158,7 @@ func TestSGPolicyUpdate(t *testing.T) {
 
 	var actualSGPolicySpec netproto.SGPolicySpec
 	updatedSGPolicySpec := netproto.SGPolicySpec{
+		VrfName:     "default",
 		AttachGroup: []string{"preCreatedSecurityGroup"},
 		Rules: []netproto.PolicyRule{
 			{

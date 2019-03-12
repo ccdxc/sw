@@ -50,6 +50,8 @@ message InterfaceSpec {
                                 (gogoproto.jsontag) = "type,omitempty"];
     string AdminStatus      = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
                                 (gogoproto.jsontag) = "admin-status,omitempty"];
+    // VrfName specifies the name of the VRF that the current Interface belongs to
+    string VrfName          = 3 [(gogoproto.jsontag) = "vrf-name,omitemtpy"];
 }
 
 // Interface Status

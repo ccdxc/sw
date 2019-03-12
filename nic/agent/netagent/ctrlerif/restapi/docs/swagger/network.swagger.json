@@ -462,6 +462,10 @@
     "netprotoNetworkSpec": {
       "type": "object",
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current Network belongs to"
+        },
         "ipv4-subnet": {
           "type": "string",
           "title": "IPv4Subnet of the L3 Network in CIDR format. Required"

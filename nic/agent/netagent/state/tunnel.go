@@ -38,6 +38,13 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 		return err
 	}
 
+	// find the corresponding vrf for the route
+	vrf, err := na.ValidateVrf(tun.Tenant, tun.Namespace, tun.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", tun.Spec.VrfName)
+		return err
+	}
+
 	// Tunnel IDs and Interface IDs must be unique in the datapath as tunnel is modeled as an interface in HAL.
 	tunnelID, err := na.Store.GetNextID(types.InterfaceID)
 	if err != nil {
@@ -47,7 +54,7 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 	tun.Status.TunnelID = tunnelID + types.UplinkOffset + types.TunnelOffset
 
 	// create it in datapath
-	err = na.Datapath.CreateTunnel(tun, ns)
+	err = na.Datapath.CreateTunnel(tun, vrf)
 	if err != nil {
 		log.Errorf("Error creating tunnel in datapath. Nw {%+v}. Err: %v", tun, err)
 		return err
@@ -57,6 +64,13 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 	err = na.Solver.Add(ns, tun)
 	if err != nil {
 		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, tun)
+		return err
+	}
+
+	// Add the current tunnel as a dependency to the vrf.
+	err = na.Solver.Add(vrf, tun)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", vrf, tun)
 		return err
 	}
 
@@ -108,7 +122,7 @@ func (na *Nagent) FindTunnel(meta api.ObjectMeta) (*netproto.Tunnel, error) {
 // UpdateTunnel updates a tunnel. ToDo implement tunnel updates in datapath
 func (na *Nagent) UpdateTunnel(tun *netproto.Tunnel) error {
 	// find the corresponding namespace
-	ns, err := na.FindNamespace(tun.Tenant, tun.Namespace)
+	_, err := na.FindNamespace(tun.Tenant, tun.Namespace)
 	if err != nil {
 		return err
 	}
@@ -119,12 +133,19 @@ func (na *Nagent) UpdateTunnel(tun *netproto.Tunnel) error {
 		return err
 	}
 
+	// find the corresponding vrf for the route
+	vrf, err := na.ValidateVrf(existingTunnel.Tenant, existingTunnel.Namespace, existingTunnel.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingTunnel.Spec.VrfName)
+		return err
+	}
+
 	if proto.Equal(tun, existingTunnel) {
 		log.Infof("Nothing to update.")
 		return nil
 	}
 
-	err = na.Datapath.UpdateTunnel(existingTunnel, ns)
+	err = na.Datapath.UpdateTunnel(existingTunnel, vrf)
 	if err != nil {
 		log.Errorf("Error updating the tunnel {%+v} in datapath. Err: %v", existingTunnel, err)
 		return err
@@ -164,6 +185,13 @@ func (na *Nagent) DeleteTunnel(tn, namespace, name string) error {
 		return errors.New("tunnel not found")
 	}
 
+	// find the corresponding vrf for the route
+	vrf, err := na.ValidateVrf(existingTunnel.Tenant, existingTunnel.Namespace, existingTunnel.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", existingTunnel.Spec.VrfName)
+		return err
+	}
+
 	// check if the current tunnel has any objects referring to it
 	err = na.Solver.Solve(existingTunnel)
 	if err != nil {
@@ -172,9 +200,15 @@ func (na *Nagent) DeleteTunnel(tn, namespace, name string) error {
 	}
 
 	// delete the existingTunnel in datapath
-	err = na.Datapath.DeleteTunnel(existingTunnel, ns)
+	err = na.Datapath.DeleteTunnel(existingTunnel, vrf)
 	if err != nil {
 		log.Errorf("Error deleting tunnel {%+v}. Err: %v", tun, err)
+		return err
+	}
+
+	err = na.Solver.Remove(vrf, existingTunnel)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the vrf: %v. Err: %v", existingTunnel.Spec.VrfName, err)
 		return err
 	}
 

@@ -38,6 +38,8 @@ const (
 const (
 	NetworkID         = "networkID"
 	SecurityGroupID   = "sgID"
+	TenantID          = "tenantID"
+	NamespaceID       = "namespaceID"
 	VrfID             = "vrfID"
 	InterfaceID       = "interfaceID"
 	NatPoolID         = "natPoolID"
@@ -109,33 +111,34 @@ type DepSolver interface {
 
 // NetAgent is the network agent instance
 type NetAgent struct {
-	sync.Mutex                                             // global lock for the agent
-	Store             emstore.Emstore                      // embedded db
-	NodeUUID          string                               // Node's UUID
-	Datapath          NetDatapathAPI                       // network datapath
-	Ctrlerif          CtrlerAPI                            // controller object
-	Solver            DepSolver                            // Object dependency resolver
-	NetworkDB         map[string]*netproto.Network         // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
-	EndpointDB        map[string]*netproto.Endpoint        // Endpoint object db
-	SecgroupDB        map[string]*netproto.SecurityGroup   // security group object db
-	TenantDB          map[string]*netproto.Tenant          // tenant object db
-	NamespaceDB       map[string]*netproto.Namespace       // tenant object db
-	EnicDB            map[string]*netproto.Interface       // ENIC interface object db
-	NatPoolDB         map[string]*netproto.NatPool         // Nat Pool object DB
-	NatPolicyDB       map[string]*netproto.NatPolicy       // Nat Policy Object DB
-	NatBindingDB      map[string]*netproto.NatBinding      // Nat Binding Object DB
-	RouteDB           map[string]*netproto.Route           // Route Object DB
-	IPSecPolicyDB     map[string]*netproto.IPSecPolicy     // IPSecPolicy Object DB
-	IPSecSAEncryptDB  map[string]*netproto.IPSecSAEncrypt  // IPSecSAEncrypt Object DB
-	IPSecSADecryptDB  map[string]*netproto.IPSecSADecrypt  // IPSecSADecrypt Object DB
-	SGPolicyDB        map[string]*netproto.SGPolicy        // Security group policy DB
-	TunnelDB          map[string]*netproto.Tunnel          // Tunnel object DB
-	TCPProxyPolicyDB  map[string]*netproto.TCPProxyPolicy  // TCP Proxy Policy DB
-	IPSecPolicyLUT    map[string]*IPSecRuleRef             // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
-	NatPoolLUT        map[string]*NatPoolRef               // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
-	HwIfDB            map[string]*netproto.Interface       // Has all the Uplinks and Lifs
-	PortDB            map[string]*netproto.Port            // HW Port DB
-	AppDB             map[string]*netproto.App             // App DB
+	sync.Mutex                                            // global lock for the agent
+	Store             emstore.Emstore                     // embedded db
+	NodeUUID          string                              // Node's UUID
+	Datapath          NetDatapathAPI                      // network datapath
+	Ctrlerif          CtrlerAPI                           // controller object
+	Solver            DepSolver                           // Object dependency resolver
+	NetworkDB         map[string]*netproto.Network        // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
+	EndpointDB        map[string]*netproto.Endpoint       // Endpoint object db
+	SecgroupDB        map[string]*netproto.SecurityGroup  // security group object db
+	TenantDB          map[string]*netproto.Tenant         // tenant object db
+	NamespaceDB       map[string]*netproto.Namespace      // tenant object db
+	EnicDB            map[string]*netproto.Interface      // ENIC interface object db
+	NatPoolDB         map[string]*netproto.NatPool        // Nat Pool object DB
+	NatPolicyDB       map[string]*netproto.NatPolicy      // Nat Policy Object DB
+	NatBindingDB      map[string]*netproto.NatBinding     // Nat Binding Object DB
+	RouteDB           map[string]*netproto.Route          // Route Object DB
+	IPSecPolicyDB     map[string]*netproto.IPSecPolicy    // IPSecPolicy Object DB
+	IPSecSAEncryptDB  map[string]*netproto.IPSecSAEncrypt // IPSecSAEncrypt Object DB
+	IPSecSADecryptDB  map[string]*netproto.IPSecSADecrypt // IPSecSADecrypt Object DB
+	SGPolicyDB        map[string]*netproto.SGPolicy       // Security group policy DB
+	TunnelDB          map[string]*netproto.Tunnel         // Tunnel object DB
+	TCPProxyPolicyDB  map[string]*netproto.TCPProxyPolicy // TCP Proxy Policy DB
+	IPSecPolicyLUT    map[string]*IPSecRuleRef            // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
+	NatPoolLUT        map[string]*NatPoolRef              // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
+	HwIfDB            map[string]*netproto.Interface      // Has all the Uplinks and Lifs
+	PortDB            map[string]*netproto.Port           // HW Port DB
+	AppDB             map[string]*netproto.App            // App DB
+	VrfDB             map[string]*netproto.Vrf
 	SecurityProfileDB map[string]*netproto.SecurityProfile //Security Profile DB
 	RuleIDAppLUT      sync.Map                             // SGPolicy Rule ID to App Objects look up table.
 	ControllerIPs     []string                             // Controller IPs that NetAgent is using
@@ -245,6 +248,11 @@ type CtrlerIntf interface {
 	ListApp() []*netproto.App                                                   // lists App
 	UpdateApp(app *netproto.App) error                                          // updates an App
 	DeleteApp(app, ns, name string) error                                       // deletes an App
+	CreateVrf(vrf *netproto.Vrf) error                                          // creates an Vrf
+	FindVrf(meta api.ObjectMeta) (*netproto.Vrf, error)                         // finds an Vrf
+	ListVrf() []*netproto.Vrf                                                   // lists Vrf
+	UpdateVrf(vrf *netproto.Vrf) error                                          // updates an Vrf
+	DeleteVrf(tn, namespace, name string) error                                 // deletes an Vrf
 	GetHwInterfaces() error                                                     // Gets all the uplinks created on the hal by nic mgr
 	GetNaplesInfo() (*NaplesInfo, error)                                        // Returns Naples information
 	GetNetagentUptime() (string, error)                                         // Returns NetAgent Uptime
@@ -259,62 +267,78 @@ type PluginIntf interface {
 // NetDatapathAPI is the API provided by datapath modules
 type NetDatapathAPI interface {
 	SetAgent(ag DatapathIntf) error
-	CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*IntfInfo, error) // creates a local endpoint in datapath
-	UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                            // updates a local endpoint in datapath
-	DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, enicID uint64) error                                                                            // deletes a local endpoint in datapath
-	CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, ns *netproto.Namespace) error                  // creates a remote endpoint in datapath
-	UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error                                                           // updates a remote endpoint in datapath
-	DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error                                                                                          // deletes a remote endpoint in datapath
-	CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error                                                                 // creates a network
-	UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error                                                                                                // updates a network in datapath
-	DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error                                                                 // deletes a network from datapath
-	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                            // creates a security group
-	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                            // updates a security group
-	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                                                                            // deletes a security group
-	CreateVrf(vrfID uint64, vrfType string) error                                                                                                                    // creates a vrf
-	DeleteVrf(vrfID uint64) error                                                                                                                                    // deletes a vrf
-	UpdateVrf(vrfID uint64) error                                                                                                                                    // updates a vrf
-	CreateInterface(intfs ...*netproto.Interface) error                                                                                                              // creates an interface
-	UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                          // updates an interface
-	DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                          // deletes an interface
-	ListInterfaces() ([]*netproto.Interface, []*netproto.Port, error)                                                                                                // Lists all the lifs and uplinks from the datapath state
-	CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // creates a nat pool in the datapath
-	UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // updates a nat pool in the datapath
-	DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // deletes a nat pool in the datapath
-	CreateNatPolicy(np *netproto.NatPolicy, npLUT map[string]*NatPoolRef, ns *netproto.Namespace) error                                                              // creates a nat policy in the datapath
-	UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*NatPoolRef, ns *netproto.Namespace) error                                                         // updates a nat policy in the datapath
-	DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                            // deletes a nat policy in the datapath
-	CreateRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                                    // creates a route
-	UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                                    // updates a route
-	DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                                    // deletes a route
-	CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) (*netproto.NatBinding, error)                       // creates a nat policy in the datapath
-	UpdateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error                                                                                          // updates a nat policy in the datapath
-	DeleteNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error                                                                                          // deletes a nat policy in the datapath
-	CreateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace, ipSecLUT map[string]*IPSecRuleRef) error                                                     // creates a IPSec policy in the datapath
-	UpdateIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error                                                                                        // updates a IPSec policy in the datapath
-	DeleteIPSecPolicy(np *netproto.IPSecPolicy, ns *netproto.Namespace) error                                                                                        // deletes a IPSec policy in the datapath
-	CreateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns, tep *netproto.Namespace) error                                                                             // creates a IPSecSA encrypt rule in the datapath
-	UpdateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error                                                                                  // updates a IPSecSA encrypt rule in the datapath
-	DeleteIPSecSAEncrypt(np *netproto.IPSecSAEncrypt, ns *netproto.Namespace) error                                                                                  // deletes a IPSecSA encrypt rule in the datapath
-	CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns, tep *netproto.Namespace) error                                                                             // creates a IPSecSA decrypt rule in the datapath
-	UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                                  // updates a IPSecSA decrypt rule in the datapath
-	DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                                  // deletes a IPSecSA decrypt rule in the datapath
-	CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error                                                // creates a security group policy in the datapath
-	UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error                                                                               // updates a security group policy in the datapath
-	DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error                                                                                                       // deletes a security group policy in the datapath
-	CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                                 // creates a tunnel in the datapath
-	UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                                 // updates a tunnel in the datapath
-	DeleteTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                                 // deletes a tunnel in the datapath
-	CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // creates a tcp proxy policy in the datapath
-	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // updates a tcp proxy policy in the datapath
-	DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // deletes a tcp proxy policy in the datapath
-	CreatePort(ports ...*netproto.Port) error                                                                                                                        // Creates a port in the datapath
-	UpdatePort(port *netproto.Port) (*netproto.Port, error)                                                                                                          // Updates a port in the datapath
-	DeletePort(port *netproto.Port) error                                                                                                                            // Deletes a port in the datapath
-	CreateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error                                                             // Creates a security profile in the datapath
-	UpdateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error                                                             // Updates a  security profile in the datapath
-	DeleteSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error                                                             // Deletes a security profile in the datapath
-	GetUUID() (string, error)                                                                                                                                        // GetUUID gets the FRU information for the NAPLES from HAL.
+	CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, vrf *netproto.Vrf) (*IntfInfo, error)
+	UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error
+	DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, enicID uint64) error
+	CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, vrf *netproto.Vrf) error
+	UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error
+	DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error
+
+	CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error
+	UpdateNetwork(nw *netproto.Network, vrf *netproto.Vrf) error
+	DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error
+
+	CreateSecurityGroup(sg *netproto.SecurityGroup) error
+	UpdateSecurityGroup(sg *netproto.SecurityGroup) error
+	DeleteSecurityGroup(sg *netproto.SecurityGroup) error
+
+	CreateVrf(vrfID uint64, vrfType string) error
+	DeleteVrf(vrfID uint64) error
+	UpdateVrf(vrfID uint64) error
+
+	CreateInterface(intfs ...*netproto.Interface) error
+	UpdateInterface(intf *netproto.Interface) error
+	DeleteInterface(intf *netproto.Interface) error
+	ListInterfaces() ([]*netproto.Interface, []*netproto.Port, error)
+
+	CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, vrf *netproto.Vrf) (*netproto.NatBinding, error)
+	UpdateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, vrf *netproto.Vrf) error
+	DeleteNatBinding(nb *netproto.NatBinding, vrf *netproto.Vrf) error
+
+	CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*NatPoolRef, vrf *netproto.Vrf) error
+	UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*NatPoolRef, vrf *netproto.Vrf) error
+	DeleteNatPolicy(np *netproto.NatPolicy, vrf *netproto.Vrf) error
+
+	CreateNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error
+	UpdateNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error
+	DeleteNatPool(np *netproto.NatPool, vrf *netproto.Vrf) error
+
+	CreateRoute(rt *netproto.Route, vrf *netproto.Vrf) error
+	UpdateRoute(rt *netproto.Route, vrf *netproto.Vrf) error
+	DeleteRoute(rt *netproto.Route, vrf *netproto.Vrf) error
+
+	CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf, tepVrf *netproto.Vrf) error
+	UpdateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf, tepVrf *netproto.Vrf) error
+	DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf *netproto.Vrf) error
+
+	CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf, tepVrf *netproto.Vrf) error
+	UpdateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf, tepVrf *netproto.Vrf) error
+	DeleteIPSecSADecrypt(sa *netproto.IPSecSADecrypt, vrf *netproto.Vrf) error
+
+	CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf, ipSecLUT map[string]*IPSecRuleRef) error
+	UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf, ipSecLUT map[string]*IPSecRuleRef) error
+	DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto.Vrf) error
+
+	CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error
+	UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error
+	DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error
+
+	CreateTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error
+	UpdateTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error
+	DeleteTunnel(tun *netproto.Tunnel, vrf *netproto.Vrf) error
+
+	CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error
+	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error
+	DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, vrf *netproto.Vrf) error
+
+	CreatePort(ports ...*netproto.Port) error
+	UpdatePort(port *netproto.Port) (*netproto.Port, error)
+	DeletePort(port *netproto.Port) error
+
+	CreateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Vrf) error
+	UpdateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Vrf) error
+	DeleteSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Vrf) error
+	GetUUID() (string, error)
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

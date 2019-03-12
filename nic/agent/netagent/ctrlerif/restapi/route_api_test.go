@@ -49,6 +49,7 @@ func TestRoutePost(t *testing.T) {
 			Name:      "testPostRoute",
 		},
 		Spec: netproto.RouteSpec{
+			VrfName:   "default",
 			IPPrefix:  "10.1.1.0/24",
 			Interface: "uplink129",
 			GatewayIP: "10.1.1.1",
@@ -85,6 +86,7 @@ func TestRouteDelete(t *testing.T) {
 			Name:      "testDeleteRoute",
 		},
 		Spec: netproto.RouteSpec{
+			VrfName:   "default",
 			GatewayIP: "10.1.1.1",
 			IPPrefix:  "10.1.1.0/24",
 		},
@@ -115,6 +117,7 @@ func TestRouteUpdate(t *testing.T) {
 
 	var actualRouteSpec netproto.RouteSpec
 	updatedRouteSpec := netproto.RouteSpec{
+		VrfName:   "default",
 		Interface: "uplink129",
 	}
 	putData := netproto.Route{

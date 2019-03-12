@@ -42,14 +42,17 @@ message SGPolicy {
 
 // SGPolicySpec captures all the security policy configuration
 message SGPolicySpec {
-    // list of security groups on which the policy is applied.
-    repeated string AttachGroup = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-group,omitempty"];
+    // VrfName specifies the name of the VRF that the current SG Policy belongs to
+    string VrfName              = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
 
-    // specifies if the set of rules need to be attached globally to a tenant
-    bool AttachTenant           = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-tenant,omitempty"];
+    // list of security groups on which the policy is applied.
+    repeated string AttachGroup = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-group,omitempty"];
+
+    // specifies if the set of rules need to be attached globally to all the vrfs within a tenant
+    bool AttachTenant           = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-tenant,omitempty"];
 
     // list of rules
-    repeated PolicyRule Rules   = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "policy-rules,omitempty"];
+    repeated PolicyRule Rules   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "policy-rules,omitempty"];
 }
 
 message PolicyRule {

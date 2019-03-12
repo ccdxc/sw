@@ -88,19 +88,21 @@ enum FwlogFilter {
 
 // Venice collects fwlog irrespective of the export config
 message FwlogPolicySpec {
+    //  VrfName specifies the name of the VRF that the current Firewall Log Policy belongs to
+    string VrfName                  = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
     // Target contains ip/port/protocol
-    repeated ExportConfig Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
+    repeated ExportConfig Targets   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
 
      // fwlog format, SYSLOG_BSD default
-    string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(MonitoringExportFormat)"];
+    string Format                   = 3 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(MonitoringExportFormat)"];
 
     // filter firewall logs, FWLOG_ALL default
-    repeated string Filter = 3 [(gogoproto.jsontag) = "filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)", (venice.default)="FIREWALL_ACTION_ALL"];
+    repeated string Filter          = 4 [(gogoproto.jsontag) = "filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)", (venice.default)="FIREWALL_ACTION_ALL"];
 
     // configuration to use for syslog format
     // default facility is set to "local4", can be overridden with FacilityOverride
     // fwlog severity is set to "Informational"
-    SyslogExportConfig Config = 4 [(gogoproto.jsontag) = "config,omitempty"];
+    SyslogExportConfig Config       = 5 [(gogoproto.jsontag) = "config,omitempty"];
 }
 
 message FwlogPolicy {

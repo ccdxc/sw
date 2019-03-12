@@ -49,6 +49,7 @@ func TestNatBindingPost(t *testing.T) {
 			Name:      "testPostNatBinding",
 		},
 		Spec: netproto.NatBindingSpec{
+			VrfName:     "default",
 			NatPoolName: "preCreatedNatPool",
 			IPAddress:   "10.1.1.2",
 		},
@@ -77,6 +78,7 @@ func TestNatBindingUpdate(t *testing.T) {
 
 	var actualNatBindingSpec netproto.NatBindingSpec
 	updatedNatBindingSpec := netproto.NatBindingSpec{
+		VrfName:     "default",
 		NatPoolName: "preCreatedNatPool",
 		IPAddress:   "192.168.1.2",
 	}
@@ -118,6 +120,7 @@ func TestNatBindingDelete(t *testing.T) {
 			Name:      "testDeleteNatBinding",
 		},
 		Spec: netproto.NatBindingSpec{
+			VrfName:     "default",
 			NatPoolName: "preCreatedNatPool",
 			IPAddress:   "10.1.1.1",
 		},
@@ -220,6 +223,7 @@ func TestNatPolicyPost(t *testing.T) {
 			Name:      "testPostNatPolicy",
 		},
 		Spec: netproto.NatPolicySpec{
+			VrfName: "default",
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
@@ -258,6 +262,7 @@ func TestNatPolicyUpdate(t *testing.T) {
 
 	var actualNatPolicySpec netproto.NatPolicySpec
 	updatedNatPolicySpec := netproto.NatPolicySpec{
+		VrfName: "default",
 		Rules: []netproto.NatRule{
 			{
 				NatPool: "updatedNatPool",
@@ -302,6 +307,7 @@ func TestNatPolicyDelete(t *testing.T) {
 			Name:      "testDeleteNatPolicy",
 		},
 		Spec: netproto.NatPolicySpec{
+			VrfName: "default",
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
@@ -414,6 +420,7 @@ func TestNatPoolPost(t *testing.T) {
 			Name:      "testPostNatPool",
 		},
 		Spec: netproto.NatPoolSpec{
+			VrfName: "default",
 			IPRange: "10.1.2.1-10.1.2.200",
 		},
 	}
@@ -441,6 +448,7 @@ func TestNatPoolUpdate(t *testing.T) {
 
 	var actualNatPoolSpec netproto.NatPoolSpec
 	updatedNatPoolSpec := netproto.NatPoolSpec{
+		VrfName: "default",
 		IPRange: "192.168.1.1-198.168.1.200",
 	}
 	putData := netproto.NatPool{
@@ -481,6 +489,7 @@ func TestNatPoolDelete(t *testing.T) {
 			Name:      "testDeleteNatPool",
 		},
 		Spec: netproto.NatPoolSpec{
+			VrfName: "default",
 			IPRange: "10.1.2.1-10.1.2.200",
 		},
 	}

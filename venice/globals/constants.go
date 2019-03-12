@@ -11,6 +11,9 @@ const (
 	// Default Namespace
 	DefaultNamespace = "default"
 
+	// Default Vrf
+	DefaultVrf = "default"
+
 	// Localhost name
 	// The Go resolver by default will contact the DNS servers listed in /etc/resolver.conf,
 	// by passing /etc/hosts and ignoring /etc/nsswitch.conf

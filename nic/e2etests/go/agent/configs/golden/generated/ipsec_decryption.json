@@ -16,7 +16,7 @@
       "decryption-algorithm": "AES_GCM_256",
       "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
       "spi": 1,
-      "tep-namespace": "scale-vrf-0"
+      "tep-vrf": "scale-vrf-0"
     },
     "status": {}
   },
@@ -37,7 +37,7 @@
       "decryption-algorithm": "AES_GCM_256",
       "decryption-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
       "spi": 2,
-      "tep-namespace": "scale-vrf-0"
+      "tep-vrf": "scale-vrf-0"
     },
     "status": {}
   },
@@ -58,7 +58,7 @@
       "decryption-algorithm": "AES_GCM_256",
       "decryption-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
       "spi": 3,
-      "tep-namespace": "scale-vrf-0"
+      "tep-vrf": "scale-vrf-0"
     },
     "status": {}
   },
@@ -79,7 +79,7 @@
       "decryption-algorithm": "AES_GCM_256",
       "decryption-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
       "spi": 4,
-      "tep-namespace": "scale-vrf-0"
+      "tep-vrf": "scale-vrf-0"
     },
     "status": {}
   }

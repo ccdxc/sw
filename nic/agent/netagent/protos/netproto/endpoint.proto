@@ -51,36 +51,38 @@ message EndpointSpec {
         UPLINK  = 2; // For Remote EPs
         TUNNEL  = 3; // For Remote EPs going over tunnels
     }
-    string EndpointUUID                     = 1 [(gogoproto.jsontag) = "endpoint-uuid,omitempty"];
-    string WorkloadUUID                     = 2 [(gogoproto.jsontag) = "workload-uuid,omitempty"];
-    string WorkloadName                     = 3 [(gogoproto.jsontag) = "workload-name,omitempty"];
+    // VrfName specifies the name of the VRF that the current EP belongs to
+    string VrfName                          = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+    string EndpointUUID                     = 2 [(gogoproto.jsontag) = "endpoint-uuid,omitempty"];
+    string WorkloadUUID                     = 3 [(gogoproto.jsontag) = "workload-uuid,omitempty"];
+    string WorkloadName                     = 4 [(gogoproto.jsontag) = "workload-name,omitempty"];
     // Name of the network to which the current endpoint belongs to. Required
-    string NetworkName                      = 4 [(gogoproto.jsontag) = "network-name,omitempty"];
-    map<string,string> WorkloadAttributes   = 5 [(gogoproto.jsontag) = "workload-attributes,omitempty"];
-    repeated string SecurityGroups          = 6 [(gogoproto.jsontag) = "security-groups,omitempty"];
+    string NetworkName                      = 5 [(gogoproto.jsontag) = "network-name,omitempty"];
+    map<string,string> WorkloadAttributes   = 6 [(gogoproto.jsontag) = "workload-attributes,omitempty"];
+    repeated string SecurityGroups          = 7 [(gogoproto.jsontag) = "security-groups,omitempty"];
     // Interface type of the endpoint. For LocalEPs this should be LIF.
     // For Remote EPs this should either be of type UPLINK or TUNNEL. Required
-    string InterfaceType                    = 7 [(venice.check) = "StrEnum(EndpointSpec.Type)",
+    string InterfaceType                    = 8 [(venice.check) = "StrEnum(EndpointSpec.Type)",
                                                  (gogoproto.jsontag) = "interface-type,omitempty"];
     // Interface name of the endpoint. Required
-    string Interface                        = 8 [(gogoproto.jsontag) = "interface,omitempty"];
+    string Interface                        = 9 [(gogoproto.jsontag) = "interface,omitempty"];
     // IP Address of the endpoint in CIDR IP/Prefix format. Required
-    string IPv4Address                      = 9  [(gogoproto.jsontag) = "ipv4-address,omitempty"];
+    string IPv4Address                      = 10  [(gogoproto.jsontag) = "ipv4-address,omitempty"];
     // IP Gateway of the endpoint. Optional
-    string IPv4Gateway                      = 10  [(gogoproto.jsontag) = "ipv4-gateway,omitempty"];
+    string IPv4Gateway                      = 11  [(gogoproto.jsontag) = "ipv4-gateway,omitempty"];
     // IPv6 Address of the endpoint. Optional
-    string IPv6Address                      = 11  [(gogoproto.jsontag) = "ipv6-address,omitempty"];
+    string IPv6Address                      = 12  [(gogoproto.jsontag) = "ipv6-address,omitempty"];
     // IPv6 Gateway of the endpoint. Optional
-    string IPv6Gateway                      = 12  [(gogoproto.jsontag) = "ipv6-gateway,omitempty"];
+    string IPv6Gateway                      = 13  [(gogoproto.jsontag) = "ipv6-gateway,omitempty"];
     // MAC Address of the endpoint. Required
-    string MacAddress                       = 13  [(gogoproto.jsontag) = "mac-address,omitempty"];
-    string HomingHostAddr                   = 14  [(gogoproto.jsontag) = "homing-host-address,omitempty"];
-    string HomingHostName                   = 15  [(gogoproto.jsontag) = "homing-host-name,omitempty"];
+    string MacAddress                       = 14  [(gogoproto.jsontag) = "mac-address,omitempty"];
+    string HomingHostAddr                   = 15  [(gogoproto.jsontag) = "homing-host-address,omitempty"];
+    string HomingHostName                   = 16  [(gogoproto.jsontag) = "homing-host-name,omitempty"];
     // Specifies the name of the node where the endpoint lives.
     // Optional for LocalEPs and mandatory for RemoteEPs.
-    string NodeUUID                         = 16  [(gogoproto.jsontag) = "node-uuid,omitempty"];
+    string NodeUUID                         = 17  [(gogoproto.jsontag) = "node-uuid,omitempty"];
     // Microsegment VLAN for the endpoint. Required only for Local EPs.
-    uint32 UsegVlan                         = 17  [(gogoproto.jsontag) = "useg-vlan,omitempty"];
+    uint32 UsegVlan                         = 18  [(gogoproto.jsontag) = "useg-vlan,omitempty"];
 }
 
 // endpoint status

@@ -66,12 +66,26 @@ import (
 
                     }
                 {{else if strEq . "post"}}
-                    func Test{{title $crudObject}}{{title .}}(t *testing.T){
-                        t.Parallel()
-                        var resp Response
-                        var ok bool
-                        var {{lower $crudObject}}List []*netproto.{{title $crudObject}}
-                        {{if strEq $crudObject "Network"}}
+                  func Test{{title $crudObject}}{{title .}}(t *testing.T){
+                    t.Parallel()
+                    var resp Response
+                    var ok bool
+                    var {{lower $crudObject}}List []*netproto.{{title $crudObject}}
+                    {{if strEq $crudObject "Vrf"}}
+                        {{lower .}}Data := netproto.{{title $crudObject}}{
+                            TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
+                            ObjectMeta: api.ObjectMeta{
+                                Tenant: "default",
+                                Namespace: "default",
+                                Name: "test{{title .}}{{title $crudObject}}",
+                            },
+                            Spec:   netproto.{{title $crudObject}}Spec{
+                                VrfType: "CUSTOMER",
+                            },
+                        }
+                        err := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
+                        getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                        {{else if strEq $crudObject "Network"}}
                             {{lower .}}Data := netproto.{{title $crudObject}}{
                                 TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                                 ObjectMeta: api.ObjectMeta{
@@ -80,6 +94,7 @@ import (
                                     Name: "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec:   netproto.{{title $crudObject}}Spec{
+                                    VrfName: "default",
                                     IPv4Subnet: "10.1.1.0/24",
                                     IPv4Gateway:   "10.1.1.254",
                                 },
@@ -109,6 +124,7 @@ import (
                                     Name:   "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec: netproto.{{title $crudObject}}Spec{
+                                    VrfName: "default",
                                     EndpointUUID:   "testEndpointUUID",
                                     WorkloadUUID:   "testWorkloadUUID",
                                     NetworkName:    "preCreatedNetwork",
@@ -160,6 +176,7 @@ import (
                                                               Name:   "test{{title .}}{{title $crudObject}}",
                                                           },
                                                           Spec: netproto.{{title $crudObject}}Spec{
+                                                            VrfName: "default",
                                                             Rules: []netproto.NatRule{
                                                                 {
                                                                  Src: &netproto.MatchSelector{
@@ -187,6 +204,7 @@ import (
                                                                Name:   "test{{title .}}{{title $crudObject}}",
                                                            },
                                                            Spec: netproto.{{title $crudObject}}Spec{
+                                                             VrfName: "default",
                                                              AttachGroup: []string{"preCreatedSecurityGroup"},
                                                              AttachTenant: false,
                                                              Rules: []netproto.PolicyRule{
@@ -219,7 +237,7 @@ import (
                                                                     Name:   "test{{title .}}{{title $crudObject}}",
                                                                 },
                                                                 Spec: netproto.SecurityProfileSpec{
-                                                                    AttachNamespaces: []string{"default"},
+                                                                    AttachVrfs: []string{"default"},
                                                               			Timeouts: &netproto.Timeouts{
                                                               				SessionIdle: "10s",
                                                               				TCP: "1m",
@@ -245,6 +263,7 @@ import (
                                                            Name:   "test{{title .}}{{title $crudObject}}",
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
+                                                           VrfName: "default",
                                                            IPRange: "10.1.2.1-10.1.2.200",
 
                                                        },
@@ -261,6 +280,7 @@ import (
                                                               Name:   "test{{title .}}{{title $crudObject}}",
                                                           },
                                                           Spec: netproto.{{title $crudObject}}Spec{
+                                                            VrfName: "default",
                                                             Rules: []netproto.IPSecRule{
                                                                 {
                                                                  Src: &netproto.MatchSelector{
@@ -299,6 +319,7 @@ import (
                                                            Name:   "test{{title .}}{{title $crudObject}}",
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
+                                                           VrfName: "default",
                                                            Protocol: "ESP",
                                                            AuthAlgo: "AES_GCM",
                                                            AuthKey: "someRandomString",
@@ -307,7 +328,7 @@ import (
                                                            LocalGwIP: "10.0.0.1",
                                                            RemoteGwIP: "192.168.1.1",
                                                            SPI: 1,
-                                                           TepNS: "default",
+                                                           TepVrf: "default",
                                                        },
                                                    }
                            err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &{{lower .}}Data, &resp)
@@ -322,6 +343,7 @@ import (
                                                            Name:   "test{{title .}}{{title $crudObject}}",
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
+                                                           VrfName: "default",
                                                            Protocol: "ESP",
                                                            AuthAlgo: "AES_GCM",
                                                            AuthKey: "someRandomString",
@@ -332,7 +354,7 @@ import (
                                                            LocalGwIP: "10.0.0.1",
                                                            RemoteGwIP: "192.168.1.1",
                                                            SPI: 1,
-                                                           TepNS: "default",
+                                                           TepVrf: "default",
                                                        },
                                                    }
                            err := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &{{lower .}}Data, &resp)
@@ -348,6 +370,7 @@ import (
                                                            Name:   "test{{title .}}{{title $crudObject}}",
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
+                                                       VrfName: "default",
                                                        IPPrefix: "10.1.1.0/24",
                                                        Interface: "uplink129",
                                                        GatewayIP: "10.1.1.1",
@@ -365,6 +388,7 @@ import (
                                                           Name:   "test{{title .}}{{title $crudObject}}",
                                                       },
                                                       Spec: netproto.{{title $crudObject}}Spec{
+                                                        VrfName: "default",
                                                         Speed: "SPEED_100G",
                                                         Type: "TYPE_ETHERNET",
                                                         AdminStatus: "UP",
@@ -406,6 +430,7 @@ import (
                                     Name:   "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec: netproto.{{title $crudObject}}Spec{
+                                    VrfName: "default",
                                     Type: "VXLAN",
                                     AdminStatus: "UP",
                                     Src: "10.1.1.1",
@@ -423,6 +448,7 @@ import (
                                     Name:   "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec: netproto.{{title $crudObject}}Spec{
+                                    VrfName: "default",
                                     Rules: []netproto.TCPProxyRule{
                                        {
                                          Action: "ENABLE",
@@ -448,6 +474,7 @@ import (
                                                            Name:   "test{{title .}}{{title $crudObject}}",
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
+                                                         VrfName: "default",
                                                          NatPoolName: "preCreatedNatPool",
                                                          IPAddress: "10.1.1.2",
                                                      },
@@ -470,12 +497,39 @@ import (
 
                     }
                     {{else if strEq . "put"}}
-                        func Test{{title $crudObject}}Update(t *testing.T){
-                            t.Parallel()
-                            var resp Response
-                            var {{lower $crudObject}}List []*netproto.{{title $crudObject}}
-                            {{if strEq $crudObject "Network"}}
+                    func Test{{title $crudObject}}Update(t *testing.T){
+                        t.Parallel()
+                        var resp Response
+                        var {{lower $crudObject}}List []*netproto.{{title $crudObject}}
+                        {{if strEq $crudObject "Vrf"}}
+                            updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                    VrfType: "INFRA",
+                                                                }
+                            var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
+                            {{lower .}}Data := netproto.{{title $crudObject}}{
+                                TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
+                                ObjectMeta: api.ObjectMeta{
+                                    Tenant: "default",
+                                    Namespace: "default",
+                                    Name: "preCreated{{title $crudObject}}",
+                                },
+                                Spec:  updated{{title $crudObject}}Spec,
+                            }
+                            err := netutils.HTTPPut("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
+
+                            getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                            AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
+                            for _, o := range {{lower $crudObject}}List{
+                                if o.Name == "preCreated{{title $crudObject}}" {
+                                    actual{{title $crudObject}}Spec = o.Spec
+                                    break
+                                }
+                            }
+                            AssertEquals(t, updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validated updated spec.")
+                            {{else if strEq $crudObject "Network"}}
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                        VrfName: "default",
                                                                         IPv4Subnet:  "192.168.1.1/24",
                                                                         IPv4Gateway: "192.168.1.254",
                                                                     }
@@ -533,6 +587,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                       VrfName: "default",
                                                                        Rules: [] netproto.NatRule{
                                                                             {
                                                                                    NatPool: "updatedNatPool",
@@ -565,6 +620,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                       VrfName: "default",
                                                                        Rules: [] netproto.IPSecRule{
                                                                             {
                                                                                    SAName: "updatedEncryptSA",
@@ -597,6 +653,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                       VrfName: "default",
                                                                        Protocol: "AH",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -625,6 +682,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                       VrfName: "default",
                                                                        Protocol: "AH",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -654,6 +712,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                       VrfName: "default",
                                                                        IPRange: "192.168.1.1-198.168.1.200",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -681,6 +740,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                       VrfName: "default",
                                                                        Interface: "uplink129",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -802,6 +862,7 @@ import (
 
                                    var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                    updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                          VrfName: "default",
                                                                           Rules: []netproto.TCPProxyRule{
                                                                                {
                                                                                  Action: "ENABLE",
@@ -840,6 +901,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                       VrfName: "default",
                                                                        NatPoolName: "preCreatedNatPool",
                                                                        IPAddress: "192.168.1.2",
                                                                     }
@@ -895,6 +957,7 @@ import (
                             {{else if strEq $crudObject "Endpoint"}}
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                    VrfName: "default",
                                 		                                EndpointUUID: "testEndpointUUID",
                                 			                              WorkloadUUID: "updatedWorkloadUUID",
                                 			                              NetworkName:  "preCreatedNetwork",
@@ -960,6 +1023,7 @@ import (
                            {{else if strEq $crudObject "SGPolicy"}}
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                      VrfName: "default",
                                                                       AttachGroup: []string{"preCreatedSecurityGroup"},
                                                                       Rules: [] netproto.PolicyRule{
                                                                            {
@@ -997,6 +1061,7 @@ import (
 
                                   var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                   updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                         VrfName: "default",
                                                                          Src: "172.0.0.1",
                                                                       }
                                   {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -1054,12 +1119,27 @@ import (
                             {{end}}
                         }
                 {{else if strEq . "delete"}}
-                    func Test{{title $crudObject}}{{title .}}(t *testing.T){
-                        t.Parallel()
-                        var resp Response
-                        var found bool
-                        var {{lower $crudObject}}List []*netproto.{{title $crudObject}}
-                        {{if strEq $crudObject "Network"}}
+                func Test{{title $crudObject}}{{title .}}(t *testing.T){
+                    t.Parallel()
+                    var resp Response
+                    var found bool
+                    var {{lower $crudObject}}List []*netproto.{{title $crudObject}}
+                    {{if strEq $crudObject "Vrf"}}
+                        {{lower .}}Data := netproto.{{title $crudObject}}{
+                            TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
+                            ObjectMeta: api.ObjectMeta{
+                                Tenant: "default",
+                                Namespace: "default",
+                                Name: "test{{title .}}{{title $crudObject}}",
+                            },
+                            Spec:   netproto.{{title $crudObject}}Spec{
+                                VrfType: "CUSTOMER",
+                            },
+                        }
+                        postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
+                        err := netutils.HTTPDelete("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                        {{ else if strEq $crudObject "Network"}}
                             {{lower .}}Data := netproto.{{title $crudObject}}{
                                 TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
                                 ObjectMeta: api.ObjectMeta{
@@ -1068,6 +1148,7 @@ import (
                                     Name: "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec:   netproto.{{title $crudObject}}Spec{
+                                    VrfName: "default",
                                     IPv4Subnet: "10.1.3.0/24",
                                     IPv4Gateway:   "10.1.3.254",
                                 },
@@ -1084,6 +1165,7 @@ import (
                                        Name: "test{{title .}}{{title $crudObject}}",
                                    },
                                    Spec:   netproto.{{title $crudObject}}Spec{
+                                       VrfName: "default",
                                        IPRange: "10.1.2.1-10.1.2.200",
                                    },
                                }
@@ -1100,6 +1182,7 @@ import (
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
                             Spec:   netproto.{{title $crudObject}}Spec{
+                              VrfName: "default",
                               GatewayIP: "10.1.1.1",
                               IPPrefix:  "10.1.1.0/24",
                             },
@@ -1159,7 +1242,7 @@ import (
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
                             Spec:   netproto.SecurityProfileSpec{
-                                AttachNamespaces: []string{"default"},
+                                AttachVrfs: []string{"default"},
                           			Timeouts: &netproto.Timeouts{
                           				SessionIdle: "10s",
                           				TCP: "1m",
@@ -1187,6 +1270,7 @@ import (
                                         Name: "test{{title .}}{{title $crudObject}}",
                                     },
                                     Spec:   netproto.{{title $crudObject}}Spec{
+                                               VrfName: "default",
                                                NatPoolName: "preCreatedNatPool",
                                                IPAddress: "10.1.1.1",
                                            },
@@ -1204,6 +1288,7 @@ import (
                                        Name: "test{{title .}}{{title $crudObject}}",
                                    },
                                    Spec: netproto.{{title $crudObject}}Spec{
+                                       VrfName: "default",
                                        Rules: []netproto.NatRule{
                                            {
                                             Src: &netproto.MatchSelector{
@@ -1232,6 +1317,7 @@ import (
                                        Name: "test{{title .}}{{title $crudObject}}",
                                    },
                                    Spec: netproto.{{title $crudObject}}Spec{
+                                        VrfName: "default",
                                         Rules: []netproto.IPSecRule{
                                             {
                                              Src: &netproto.MatchSelector{
@@ -1298,6 +1384,7 @@ import (
                                                            Name:   "test{{title .}}{{title $crudObject}}",
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
+                                                           VrfName: "default",
                                                            Protocol: "ESP",
                                                            AuthAlgo: "AES_GCM",
                                                            AuthKey: "someRandomString",
@@ -1306,7 +1393,7 @@ import (
                                                            LocalGwIP: "10.0.0.1",
                                                            RemoteGwIP: "192.168.1.1",
                                                            SPI: 1,
-                                                           TepNS: "default",
+                                                           TepVrf: "default",
                                                        },
                                                    }
                                postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/encryption/", &{{lower .}}Data, &resp)
@@ -1322,6 +1409,7 @@ import (
                                                            Name:   "test{{title .}}{{title $crudObject}}",
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
+                                                           VrfName: "default",
                                                            Protocol: "ESP",
                                                            AuthAlgo: "AES_GCM",
                                                            AuthKey: "someRandomString",
@@ -1330,7 +1418,7 @@ import (
                                                            LocalGwIP: "10.0.0.1",
                                                            RemoteGwIP: "192.168.1.1",
                                                            SPI: 1,
-                                                           TepNS: "default",
+                                                           TepVrf: "default",
                                                        },
                                                    }
                                postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/decryption/", &{{lower .}}Data, &resp)
@@ -1363,6 +1451,7 @@ import (
                                     Name:   "test{{title .}}{{title $crudObject}}",
                                 },
                                 Spec: netproto.{{title $crudObject}}Spec{
+                                    VrfName: "default",
                                     EndpointUUID:   "testEndpointUUID",
                                     WorkloadUUID:   "testWorkloadUUID",
                                     NetworkName:    "preCreatedNetwork",
@@ -1408,6 +1497,7 @@ import (
                                       Name: "test{{title .}}{{title $crudObject}}",
                                   },
                                   Spec: netproto.{{title $crudObject}}Spec{
+                                      VrfName: "default",
                                       AttachTenant:  true,
                                       Rules: []netproto.PolicyRule{
                                              {
@@ -1468,6 +1558,7 @@ import (
                                   Name: "test{{title .}}{{title $crudObject}}",
                               },
                               Spec:   netproto.{{title $crudObject}}Spec{
+                                  VrfName: "default",
                                   Type: "VXLAN",
                                   AdminStatus: "UP",
                                   Src: "10.1.1.1",
@@ -1487,6 +1578,7 @@ import (
                                           Name: "test{{title .}}{{title $crudObject}}",
                                       },
                                       Spec: netproto.{{title $crudObject}}Spec{
+                                           VrfName: "default",
                                            Rules: []netproto.TCPProxyRule{
                                                {
                                                 Src: &netproto.MatchSelector{
@@ -1582,6 +1674,8 @@ import (
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/profiles/", &badPostData, &resp)
           {{else if strEq $crudObject "App"}}
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/apps/", &badPostData, &resp)
+          {{else if strEq $crudObject "Vrf"}}
+            err := netutils.HTTPPost("http://"+agentRestURL+"/api/vrfs/", &badPostData, &resp)
           {{end}}
           Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
         }
@@ -1634,6 +1728,8 @@ import (
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/profiles/default/default/badObject", &badDelData, &resp)
        {{else if strEq $crudObject "App"}}
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/apps/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "Vrf"}}
+         err := netutils.HTTPDelete("http://"+agentRestURL+"/api/vrfs/default/default/badObject", &badDelData, &resp)
 
        {{end}}
        Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
@@ -1687,6 +1783,8 @@ import (
       err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/profiles/default/default/badObject", &badDelData, &resp)
    {{else if strEq $crudObject "App"}}
       err := netutils.HTTPPut("http://"+agentRestURL+"/api/apps/default/default/badObject", &badDelData, &resp)
+   {{else if strEq $crudObject "Vrf"}}
+     err := netutils.HTTPPut("http://"+agentRestURL+"/api/vrfs/default/default/badObject", &badDelData, &resp)
    {{end}}
     Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
   }
