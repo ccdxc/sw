@@ -27,6 +27,8 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 )
 
+const maxVeniceUpWait = 300
+
 // VeniceLoggedInCtx returns loggedin context for venice
 func (tb *TestBed) VeniceLoggedInCtx() (context.Context, error) {
 	if tb.veniceLoggedinCtx != nil {
@@ -113,7 +115,7 @@ func (tb *TestBed) VeniceNodeRestClient(nodeURL string) (apiclient.Services, err
 // WaitForVeniceClusterUp wait for venice cluster to come up
 func (tb *TestBed) WaitForVeniceClusterUp() error {
 	// wait for cluster to come up
-	for i := 0; i < 100; i++ {
+	for i := 0; i < maxVeniceUpWait; i++ {
 		restcls, err := tb.VeniceRestClient()
 		if err == nil {
 			ctx, err := tb.VeniceLoggedInCtx()
@@ -155,7 +157,13 @@ func (tb *TestBed) InitVeniceConfig() error {
 
 	log.Infof("Setting up Auth on Venice cluster...")
 
-	err = tb.SetupAuth("admin", common.UserPassword)
+	for i := 0; i < maxVeniceUpWait; i++ {
+		err = tb.SetupAuth("admin", common.UserPassword)
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Second)
+	}
 	if err != nil {
 		log.Errorf("Setting up Auth failed. Err: %v", err)
 		return err
@@ -169,6 +177,11 @@ func (tb *TestBed) InitVeniceConfig() error {
 
 // SetupAuth bootstraps default tenant, authentication policy, local user and super admin role
 func (tb *TestBed) SetupAuth(userID, password string) error {
+	// no need to setup auth in mock mode
+	if tb.mockMode {
+		return nil
+	}
+
 	apicl, err := apiclient.NewRestAPIClient(tb.GetVeniceURL()[0])
 	if err != nil {
 		return fmt.Errorf("cannot create rest client, err: %v", err)
@@ -482,6 +495,26 @@ func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.SmartNIC, err error) {
 	}
 
 	return sn, err
+}
+
+// GetSmartNICInMacRange returns a smartnic object in mac address range
+func (tb *TestBed) GetSmartNICInMacRange(macAddr string) (sn *cluster.SmartNIC, err error) {
+	const maxMacDiff = 24
+	snicList, err := tb.ListSmartNIC()
+	if err != nil {
+		return nil, err
+	}
+
+	// walk all smartnics and see if the mac addr range matches
+	for _, snic := range snicList {
+		snicMacNum := macAddrToUint64(snic.Status.PrimaryMAC)
+		reqMacNum := macAddrToUint64(macAddr)
+		if (snicMacNum == reqMacNum) || ((reqMacNum - snicMacNum) < maxMacDiff) {
+			return snic, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Could not find smartnic with mac addr %s", macAddr)
 }
 
 // ListSmartNIC gets a list of smartnics

@@ -17,6 +17,7 @@ import (
 type Host struct {
 	iotaNode    *iota.Node
 	veniceHost  *cluster.Host
+	naples      *Naples
 	vlanBitmask *bitset.BitSet
 	maxVlans    uint32
 	sm          *SysModel // pointer back to the model
@@ -71,6 +72,11 @@ const (
 
 // createHost creates a new host instance
 func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
+	// find the naples
+	naples, ok := sm.naples[n.NodeName]
+	if !ok || naples.smartNic == nil {
+		return nil, fmt.Errorf("Could not find the naples object for snic: %v", n.NodeName)
+	}
 	host := cluster.Host{
 		TypeMeta: api.TypeMeta{Kind: "Host"},
 		ObjectMeta: api.ObjectMeta{
@@ -80,7 +86,7 @@ func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
 			SmartNICs: []cluster.SmartNICID{
 				{
 					Name:       n.NodeName,
-					MACAddress: n.NodeUUID,
+					MACAddress: naples.smartNic.Status.PrimaryMAC,
 				},
 			},
 		},
@@ -99,6 +105,7 @@ func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
 	h := Host{
 		iotaNode:    n.iotaNode,
 		veniceHost:  &host,
+		naples:      naples,
 		maxVlans:    4094,
 		vlanBitmask: bs,
 		sm:          sm,
@@ -179,9 +186,16 @@ func (hc *HostCollection) NewWorkload(namePrefix string, snc *NetworkCollection)
 
 // createNaples creates a naples instance
 func (sm *SysModel) createNaples(node *TestNode) error {
+	snic, err := sm.tb.GetSmartNICInMacRange(node.NodeUUID)
+	if err != nil {
+		err := fmt.Errorf("Failed to get smartnc object for macAddr %v. Err: %+v", node.NodeUUID, err)
+		log.Errorf("%v", err)
+		return err
+	}
 	naples := Naples{
 		iotaNode: node.iotaNode,
 		testNode: node,
+		smartNic: snic,
 		sm:       sm,
 	}
 

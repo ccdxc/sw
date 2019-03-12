@@ -3,6 +3,8 @@ package iotakit
 import (
 	"sort"
 	"strings"
+	"regexp"
+        "strconv"
 )
 
 // parses and returns one of the port number from `halctl show port status` output
@@ -20,4 +22,12 @@ func getPortNum(portStatusOut string) string {
 	}
 
 	return ""
+}
+
+// macAddrToUint64 converts mac address string to hex uint64
+func macAddrToUint64(macAddr string) uint64 {
+	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
+	hex := macStripRegexp.ReplaceAllLiteralString(macAddr, "")
+	hexAddr, _ := strconv.ParseUint(hex, 16, 64)
+	return hexAddr
 }

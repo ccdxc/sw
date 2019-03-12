@@ -109,8 +109,6 @@ const (
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
 	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
 	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
-
-	fakeNICMAC = "00:AE:CD:01:02:03"
 )
 
 var (
@@ -210,6 +208,11 @@ func (it *veniceIntegSuite) CheckNICVersionForAdmission(nicSku string, nicVersio
 	return "", ""
 }
 
+// getNaplesMac returns naples mac for a naples instance
+func (it *veniceIntegSuite) getNaplesMac(nidx int) string {
+	return fmt.Sprintf("00:AE:CD:01:02:%02d", nidx+3)
+}
+
 func (it *veniceIntegSuite) launchCMDServer() {
 	// create an RPC server for SmartNIC service
 	rpcServer, err := rpckit.NewRPCServer("smartNIC", smartNICServerURL, rpckit.WithTLSProvider(nil))
@@ -270,7 +273,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 			Spec: pencluster.HostSpec{
 				SmartNICs: []pencluster.SmartNICID{
 					{
-						MACAddress: fakeNICMAC,
+						MACAddress: it.getNaplesMac(i),
 					},
 				},
 			},
@@ -613,7 +616,7 @@ func (it *veniceIntegSuite) startAgent() {
 		}
 		// FIXME -- we should not override NodeUUID
 		// currently needed to get TestVeniceIntegSecuritygroup to pass with specific MAC address
-		agent.NetworkAgent.NodeUUID = fakeNICMAC
+		agent.NetworkAgent.NodeUUID = it.getNaplesMac(i)
 
 		// TODO Remove this when nmd and delphi hub are integrated with venice_integ and npm_integ
 		npmClient, err := ctrlerif.NewNpmClient(agent.NetworkAgent, globals.Npm, rc)

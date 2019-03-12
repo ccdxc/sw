@@ -212,6 +212,11 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			log.Infof("Updating Venice Co-ordinates with %v", controllers)
 		}
 
+		// set Node UUID from FRU mac addr
+		if obj.Fru != nil {
+			ag.NetworkAgent.NodeUUID = obj.Fru.MacStr
+		}
+
 		// initialize netagent's tsdb client
 		opts := &tsdb.Opts{
 			ClientName:              globals.Netagent + ag.NetworkAgent.NodeUUID,

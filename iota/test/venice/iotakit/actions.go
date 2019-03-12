@@ -98,9 +98,9 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 		if err != nil {
 			macStr = np.iotaNode.NodeUuid
 		}
-		snic, err := act.model.tb.GetSmartNIC(np.iotaNode.Name + "-" + macStr)
+		snic, err := act.model.tb.GetSmartNICInMacRange(macStr)
 		if err != nil {
-			err := fmt.Errorf("Failed to get smartnc object for uuid %v. Err: %+v", np.iotaNode.NodeUuid, err)
+			err := fmt.Errorf("Failed to get smartnc object for macAddr %v. Err: %+v", macStr, err)
 			log.Errorf("%v", err)
 			return err
 		}

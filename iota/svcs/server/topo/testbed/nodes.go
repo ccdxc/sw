@@ -62,15 +62,20 @@ func (n *TestNode) AddNode() error {
 func (n *TestNode) waitForNodeUp(timeout time.Duration) error {
 	cTimeout := time.After(time.Second * time.Duration(timeout))
 	for {
-		conn, _ := net.DialTimeout("tcp", net.JoinHostPort(n.Node.GetIpAddress(), "22"), 2*time.Second)
+		addr := n.Node.GetIpAddress()
+		if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+			addr = n.Node.EsxConfig.GetIpAddress()
+		}
+
+		conn, _ := net.DialTimeout("tcp", net.JoinHostPort(addr, "22"), 2*time.Second)
 		if conn != nil {
-			log.Printf("Connected to host : %s", n.Node.GetIpAddress())
+			log.Infof("Connected to host : %s", addr)
 			conn.Close()
 			break
 		}
 		select {
 		case <-cTimeout:
-			msg := fmt.Sprintf("Timeout system to be up %s ", n.Node.GetIpAddress())
+			msg := fmt.Sprintf("Timeout system to be up %s ", addr)
 			log.Errorf(msg)
 			return errors.New(msg)
 		default:
@@ -136,6 +141,8 @@ func (n *TestNode) RestartNode() error {
 	var sshCfg *ssh.ClientConfig
 	var nrunner *runner.Runner
 
+	log.Infof("Restarting node: %#v", n.Node)
+
 	if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		//First shutdown control node
 		nrunner = runner.NewRunner(n.SSHCfg)
@@ -174,7 +181,6 @@ func (n *TestNode) RestartNode() error {
 		return fmt.Errorf("TOPO SVC | Failed to get Node IP")
 	}
 
-	n.Node.IpAddress = ip
 	addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
 	sshclient, err := ssh.Dial("tcp", addr, n.SSHCfg)
 	if sshclient == nil || err != nil {

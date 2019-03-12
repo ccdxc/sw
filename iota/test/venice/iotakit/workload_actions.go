@@ -320,7 +320,7 @@ func (act *ActionCtx) VerifyWorkloadStatus(wc *WorkloadCollection) error {
 		if ep.Status.HomingHostName != wr.veniceWorkload.Spec.HostName {
 			return fmt.Errorf("Invalid host name %v for endpoint on workload %v", ep.Status.HomingHostName, wr.veniceWorkload.Name)
 		}
-		if ep.Status.NodeUUID != wr.host.iotaNode.NodeUuid {
+		if ep.Status.NodeUUID != wr.host.naples.smartNic.Status.PrimaryMAC {
 			return fmt.Errorf("Invalid node uuid %v for endpoint on workload %v", ep.Status.NodeUUID, wr.veniceWorkload.Name)
 		}
 		if ep.Status.Network != wr.subnet.Name {
