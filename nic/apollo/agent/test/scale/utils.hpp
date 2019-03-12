@@ -15,7 +15,7 @@
 #include "gen/proto/switch.grpc.pb.h"
 #include "gen/proto/tunnel.grpc.pb.h"
 #include "gen/proto/vnic.grpc.pb.h"
-#include "gen/proto/types/types.grpc.pb.h"
+#include "gen/proto/types.grpc.pb.h"
 #include "nic/apollo/include/api/pds_tep.hpp"
 #include "nic/apollo/include/api/pds_vcn.hpp"
 #include "nic/apollo/include/api/pds_subnet.hpp"

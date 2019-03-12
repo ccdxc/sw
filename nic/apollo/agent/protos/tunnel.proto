@@ -9,7 +9,7 @@ package tpc;
 
 import public "gogo.proto";
 import public "meta/meta.proto";
-import public "types/types.proto";
+import public "types.proto";
 
 service TunnelSvc {
   rpc TunnelCreate (TunnelSpec) returns (TunnelStatus) {}

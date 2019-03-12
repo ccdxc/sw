@@ -10,6 +10,5 @@ MODULE_LDLIBS        = pthread
 MODULE_FLAGS         = -O3
 MODULE_EXCLUDE_FLAGS = -O2
 MODULE_SRCS          = $(wildcard ${BLD_PROTOGEN_DIR}/*.cc) \
-                       $(wildcard ${BLD_PROTOGEN_DIR}/meta/*.cc) \
-                       $(wildcard ${BLD_PROTOGEN_DIR}/types/*.cc)
+                       $(wildcard ${BLD_PROTOGEN_DIR}/meta/*.cc)
 include ${MKDEFS}/post.mk

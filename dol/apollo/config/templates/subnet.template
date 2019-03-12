@@ -1,0 +1,10 @@
+# PCN Object Template
+meta:
+    id      : SUBNET
+    package : config.objects
+    module  : subnet
+    feature_set:
+        - apollo
+
+Id: None
+PCNId: None

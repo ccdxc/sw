@@ -4,7 +4,7 @@
 #define __AGENT_SVC_SUBNET_HPP__
 
 #include "grpc++/grpc++.h"
-#include "gen/proto/types/types.pb.h"
+#include "gen/proto/types.pb.h"
 #include "gen/proto/meta/meta.pb.h"
 #include "gen/proto/subnet.grpc.pb.h"
 

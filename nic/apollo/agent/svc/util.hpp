@@ -6,7 +6,7 @@
 #define __AGENT_SVC_UTIL_HPP__
 
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "gen/proto/types/types.pb.h"
+#include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
 // convert IP address spec in proto to ip_addr

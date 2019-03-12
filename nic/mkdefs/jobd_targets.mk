@@ -148,6 +148,10 @@ jobd/dol/gft/rdma_l2l: ${JOBD_PREREQS}
 #jobd/dol/agent/up2up: ${JOBD_PREREQS}
 #	${NICDIR}/run.py ${COVERAGE_OPTS} --topo agentup2up --feature agentup2up
 
+.PHONY: jobd/dol/apollo/networking
+jobd/dol/apollo/networking: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo oci --feature networking
+
 .PHONY: jobd/mbt/base
 jobd/mbt/base: ${JOBD_PREREQS}
 	DISABLE_AGING=1 ${NICDIR}/run.py ${COVERAGE_OPTS} --mbt --mbtrandomseed 6003702

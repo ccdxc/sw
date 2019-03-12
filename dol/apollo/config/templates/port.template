@@ -1,0 +1,10 @@
+# Port Object Template
+meta:
+    id      : PORT
+    package : config.objects
+    module  : port
+    feature_set:
+        - apollo
+
+port    : None # Port Number of the object
+type    : None # Host or Switch port

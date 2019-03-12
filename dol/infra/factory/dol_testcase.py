@@ -146,6 +146,9 @@ class DOLTestCase(TestCase):
             tpkt.ports = spkt.packet.port.call(self)
         else:
             tpkt.ports = [ spkt.packet.port ]
+
+        if not isinstance(tpkt.ports, list):
+            tpkt.ports = [ tpkt.ports ]
         return
 
     def __setup_packets(self, step_id, tcsn, spsn, stats):

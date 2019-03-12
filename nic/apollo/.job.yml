@@ -15,6 +15,13 @@ targets:
     sub-area:
     feature:
 
+  apollo/dol/networking:
+    commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/networking"]
+    owners: ["email:vikasd@pensando.io", "email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

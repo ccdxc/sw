@@ -28,9 +28,10 @@ class ConfigFileParser(parser.ParserBase):
 
     def ParseSpecs(self, store, path, topo_path):
         assert(store)
-        assert(path)
-        splist = self.__parse(path, defs.SPEC_FILE_EXTN)
-        self.__resolve(splist, store)
+        splist = []
+        if path:
+            splist = self.__parse(path, defs.SPEC_FILE_EXTN)
+            self.__resolve(splist, store)
 
         tsplist = self.__parse(topo_path, defs.SPEC_FILE_EXTN)
         self.__resolve(tsplist, store)

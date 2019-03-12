@@ -1,0 +1,43 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=SUBNET
+    maxlimit: 4
+    filters:
+        pcn : filter://type=TENANT
+
+packets:
+    - packet:
+        id          : IN_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : 00:01:01:01:01:01
+                dst     : 00:02:02:02:02:02
+            qtag:
+                vlan    : ref://testcase/config/pcn/VlanId
+            ipv4:
+                src     : ref://testcase/config/sip
+                dst     : ref://testcase/config/dip
+                ttl     : 64
+            tcp:
+                sport   : 100
+                dport   : 100
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/hostport
+
+expect:
+    packets:
+        - packet:
+#            object  : ref://testcase/packets/id=IN_PKT
+#            TODO: Packet is dropped till we push all config objects
+            object  : None
+            port    : ref://testcase/config/switchport

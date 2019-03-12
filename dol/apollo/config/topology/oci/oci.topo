@@ -1,0 +1,34 @@
+# Topology Specification
+meta:
+    id: TOPO_OCI
+
+uplink:
+    - entry:
+        id      : host
+        port    : 1
+        mode    : host
+        status  : UP
+
+    - entry:
+        id      : switch
+        port    : 2
+        mode    : switch
+        status  : UP
+
+switch:
+    ipaddress   : None
+    gateway     : 172.31.255.255
+    macaddress  : macaddr/0002.0100.0001
+    dual_stack  : True
+    tunnel      : 
+        - count : 256
+          encap : mplsudp_tags1
+
+pcn:
+    - count : 32
+      type  : tenant
+      subnet:
+        - count     : 2
+          prefixlen : 24
+        - count     : 2
+          prefixlen : 28

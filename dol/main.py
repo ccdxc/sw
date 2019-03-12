@@ -36,6 +36,7 @@ import infra.e2e.main as e2e
 from infra.common.logging import logger
 from infra.asic.pktcollector import PacketCollector
 
+
 def GetPipeline():
     pipeline = loader.ImportModule(glopts.GlobalOptions.pipeline,
                                    glopts.GlobalOptions.pipeline)

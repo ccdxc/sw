@@ -10,12 +10,13 @@ import infra.common.parser      as parser
 from infra.common.logging       import logger
 from infra.config.parser        import ConfigParser as ConfigParser
 
-def Init(store, template_path, spec_path, topo_spec_path):
+def Init(store, template_path, spec_path = None, topo_spec_path = None):
     logger.info("Loading Config Object Templates.")
     objlist = ConfigParser.ParseTemplates(store, template_path)
     store.templates.SetAll(objlist)
-
-    logger.info("Loading CONFIG Object Specs")
-    specs = ConfigParser.ParseSpecs(store, spec_path, topo_spec_path)
-    store.specs.SetAll(specs)
+    
+    if spec_path or topo_spec_path:
+        logger.info("Loading CONFIG Object Specs")
+        specs = ConfigParser.ParseSpecs(store, spec_path, topo_spec_path)
+        store.specs.SetAll(specs)
     return

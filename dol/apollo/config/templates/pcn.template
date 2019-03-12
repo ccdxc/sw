@@ -1,0 +1,9 @@
+# PCN Object Template
+meta:
+    id      : PCN
+    package : config.objects
+    module  : pcn
+    feature_set:
+        - apollo
+
+pcnid: None

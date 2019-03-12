@@ -9,7 +9,7 @@ package tpc;
 
 import public "gogo.proto";
 import "meta/meta.proto";
-import "types/types.proto";
+import "types.proto";
 
 service SwitchSvc {
   rpc SwitchCreate (SwitchSpec) returns (SwitchStatus) {}
