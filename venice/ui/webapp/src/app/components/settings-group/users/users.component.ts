@@ -360,12 +360,16 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
                 },
                 error => {
                   console.error('Fail to commit Buffer');
-                  this.invokeRESTErrorToaster('Fail to commit Buffer', error);
+                  this.invokeRESTErrorToaster('Failed to commit Buffer', error);
                 }
               );
             } else {
-              this.deleteStagingBuffer(buffername, 'Fail to delete user ' + deletedUser.meta.name);
+              this.deleteStagingBuffer(buffername, 'Failed to delete user ' + deletedUser.meta.name);
             }
+          },
+          (error) => {
+            this.invokeRESTErrorToaster('Failed to commit buffer when deleting user ', error);
+            this.deleteStagingBuffer(buffername, 'Failed to delete user', false);
           });
         },
         error => {
@@ -374,10 +378,12 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       );
   }
 
-  deleteStagingBuffer(buffername: string, reason: string) {
+  deleteStagingBuffer(buffername: string, reason: string, isToshowToaster: boolean = true) {
     this.stagingService.DeleteBuffer(buffername).subscribe(
       response => {
-        this.invokeSuccessToaster('Successful delete buffer', 'Delete Buffer ' + buffername + '\n' + reason);
+        if (isToshowToaster) {
+           this.invokeSuccessToaster('Successful deleted buffer', 'Deleted Buffer ' + buffername + '\n' + reason);
+        }
       },
       this.restErrorHandler('Delete Staging Buffer Failed')
     );
@@ -446,11 +452,15 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
                 this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' Role ' + deletedRole.meta.name);
                 this.creationRoleFormClose(true);
               },
-              this.restErrorHandler('Fail to commit buffer when deleting role ')
+              this.restErrorHandler('Failed to commit buffer when deleting role ')
             );
           } else {
-            this.deleteStagingBuffer(buffername, 'Fail to delete role ' + deletedRole.meta.name);
+            this.deleteStagingBuffer(buffername, 'Failed to delete role ' + deletedRole.meta.name);
           }
+        },
+        (error) => {
+          this.invokeRESTErrorToaster('Failed to commit buffer when deleting role', error);
+          this.deleteStagingBuffer(buffername, 'Failed to delete', false);
         });
       },
       this.restErrorHandler('Create Buffer Failed When Deleting An Role ')
@@ -727,16 +737,19 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
                 this.getData();
               },
               error => {
-                console.error('Fail to commit Buffer', error);
-                this.invokeRESTErrorToaster('Fail to commit buffer when updating user ', error);
+                this.invokeRESTErrorToaster('Failed to commit buffer when updating user ', error);
               }
             );
           } else {
-            this.deleteStagingBuffer(buffername, 'Fail to add user');
+            this.deleteStagingBuffer(buffername, 'Failed to add user');
           }
+        },
+        (error) => {
+          this.invokeRESTErrorToaster('Failed to commit buffer when updating user ', error);
+          this.deleteStagingBuffer(buffername, 'Failed to update user', false);
         });
       },
-      this.restErrorHandler('Fail to create commit buffer when updating user')
+      this.restErrorHandler('Failed to create commit buffer when updating user')
     );
   }
 

@@ -638,7 +638,8 @@ export class Utility {
     let uiHintMap;
     if (useUIHints && inputObject.getPropInfo != null) {
       // We have an object from venice-sdk, so we can find its property info
-      uiHintMap = this.getNestedPropInfo(inputObject, fields).enum;
+      const propInfo = this.getNestedPropInfo(inputObject, fields);
+      uiHintMap = (propInfo) ? propInfo.enum : null;
     }
     value = _.get(inputObject, fields);
     if (uiHintMap != null) {
@@ -668,8 +669,8 @@ export class Utility {
     } else {
       propInfo = instance.getPropInfo(keys[keys.length - 1]);
     }
-    if (propInfo == null) {
-      console.error('propInfo was null, supplied property path is likely invalid');
+    if (propInfo == null ) {
+      console.error('propInfo was null, supplied property path is likely invalid. Input keys: ' + keys);
     }
     return propInfo;
   }
@@ -1177,9 +1178,9 @@ export class Utility {
     return retData;
   }
 
-  public static displayColumn(data, col): any {
+  public static displayColumn(data, col, hasUiHintMap: boolean = true): any {
     const fields = col.field.split('.');
-    const value = Utility.getObjectValueByPropertyPath(data, fields);
+    const value = Utility.getObjectValueByPropertyPath(data, fields, hasUiHintMap);
     const column = col.field;
     switch (column) {
       default:

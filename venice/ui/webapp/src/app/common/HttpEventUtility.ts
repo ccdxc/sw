@@ -1,3 +1,4 @@
+import { Utility } from '@app/common/Utility';
 
 enum EventTypes {
   create = 'Created',
@@ -25,6 +26,7 @@ export class HttpEventUtility<T> {
   private filter: (object: T) => boolean;
   private objectConstructor: any;
   private isSingleton: boolean;
+  private isToTrim: boolean = false;
 
   /**
    * @param objectConstructor   Constructor that will be called on all
@@ -36,10 +38,11 @@ export class HttpEventUtility<T> {
    * @param filter              If the filter returns false for an object,
    *                            it won't be added to the array
    */
-  constructor(objectConstructor: any = null, isSingleton: boolean = false, filter: (object: any) => boolean = null) {
+  constructor(objectConstructor: any = null, isSingleton: boolean = false, filter: (object: any) => boolean = null, isToTrim: boolean = false) {
     this.objectConstructor = objectConstructor;
     this.isSingleton = isSingleton;
     this.filter = filter;
+    this.isToTrim = isToTrim;
   }
 
   /**
@@ -56,7 +59,11 @@ export class HttpEventUtility<T> {
       events.forEach(event => {
         let obj;
         if (this.objectConstructor != null) {
-          obj = new this.objectConstructor(event.object);
+          obj = new this.objectConstructor(event.object, false); // By default, we don't want to add default properties to the sever returned object.
+          if (this.isToTrim) {
+               // https://pensando.atlassian.net/browse/VS-93 . We should trim the object.
+              obj = Utility.TrimDefaultsAndEmptyFields(obj);
+          }
         } else {
           obj = event.object;
         }

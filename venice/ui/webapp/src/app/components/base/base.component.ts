@@ -221,8 +221,8 @@ export class BaseComponent extends CommonComponent implements OnInit {
   }
 
 
-  displayColumn(data, col): any {
-    return Utility.displayColumn(data, col);
+  displayColumn(data, col, hasUiHints: boolean = true): any {
+    return Utility.displayColumn(data, col, hasUiHints);
   }
 
 }

@@ -137,16 +137,21 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
                 this.formClose.emit(true);
               },
               error => {
-                console.error('Fail to commit Buffer', error);
-                this.invokeRESTErrorToaster('Fail to commit buffer when adding user ', error);
+                console.error('Failed to commit Buffer', error);
+                this.invokeRESTErrorToaster('Failed to commit buffer when adding user ', error);
               }
             );
           } else {
-            this.deleteStagingBuffer(buffername, 'Fail to add user');
+            this.deleteStagingBuffer(buffername, 'Failed to add user');
           }
-        });
+        },
+          (error) => {
+            this.invokeRESTErrorToaster('Failed to commit buffer when adding user ', error);
+            this.deleteStagingBuffer(buffername, 'Failed to add user', false);
+          }
+        );
       },
-      this.restErrorHandler('Fail to create commit buffer when adding user')
+      this.restErrorHandler('Failed to create commit buffer when adding user')
     );
   }
 

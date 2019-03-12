@@ -241,14 +241,14 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
                 );
               },
               error => {
-                this._controllerService.invokeErrorToaster('Error', 'Create Rolebinding Failed (with commit buffer)');
-                this.deleteStagingBuffer(buffername, 'Fail to create role-binding');
+                this.invokeRESTErrorToaster('Create Role-binding Failed', error);
+                this.deleteStagingBuffer(buffername, 'Failed to create role-binding');
               }
             );
           },
           error => {
-            this._controllerService.invokeErrorToaster('Error', 'Create Role Failed');
-            this.deleteStagingBuffer(buffername, 'Fail to create role');
+            this.invokeRESTErrorToaster('Create Role Failed', error);
+            this.deleteStagingBuffer(buffername, 'Failed to create role', false);
           }
         );
       },

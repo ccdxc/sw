@@ -36,6 +36,9 @@
             <div *ngSwitchCase="'meta.creation-time'">
               {{rowData.meta['creation-time'] | PrettyDate }}
             </div>
+            <div *ngSwitchCase="'spec.alg.type'">
+              {{displaySpecAlgType(rowData, col)}}
+            </div>
             <ng-container *ngSwitchDefault>
               {{displayColumn(rowData, col)}}
             </ng-container>
