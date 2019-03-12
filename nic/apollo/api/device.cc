@@ -103,7 +103,7 @@ device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 programming for device cfg, so this is a no-op
     PDS_TRACE_DEBUG("Activating device config");
-    //impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+    impl_->activate_hw(this, epoch, api_op, obj_ctxt);
     return SDK_RET_OK;
 }
 

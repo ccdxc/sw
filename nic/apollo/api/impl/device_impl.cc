@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    device_impl.cc
- *
- * @brief   datapath implementation of device
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// datapath implementation of device
+///
+//----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
@@ -18,13 +20,11 @@
 namespace api {
 namespace impl {
 
-/**
- * @defgroup PDS_DEVICE_IMPL - device entry datapath implementation
- * @ingroup PDS_DEVICE
- * @{
- */
+/// \defgroup PDS_DEVICE_IMPL - device entry datapath implementation
+/// \ingroup PDS_DEVICE
+/// \@{
 
-/**< as there is no state in this impl, single instance is good enough */
+// as there is no state in this impl, single instance is good enough
 device_impl    g_device_impl;
 
 device_impl *
@@ -86,10 +86,10 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     switch (api_op) {
     case API_OP_CREATE:
     case API_OP_UPDATE:
+        device = (device_entry *)api_obj;
         PDS_TRACE_DEBUG("Activating device IP %s, MAC %s as table constants",
                         ipv4addr2str(device->ip_addr()),
                         macaddr2str(device->mac_addr()));
-        device = (device_entry *)api_obj;
         sdk::lib::memrev(tmp, device->mac_addr(), ETH_ADDR_LEN);
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                                      device->ip_addr());
@@ -112,7 +112,7 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_OK;
 }
 
-/** @} */    // end of PDS_DEVICE_IMPL
+/// \@}    // end of PDS_DEVICE_IMPL
 
 }    // namespace impl
 }    // namespace api
