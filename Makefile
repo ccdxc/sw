@@ -353,10 +353,6 @@ e2e:
 e2e-test:
 	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 25m'
 
-e2e-api:
-	$(MAKE) dind-cluster
-	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/api -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG}'
-
 e2e-ui:
 	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g) -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=https://192.168.30.10:443" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} /bin/bash -c "npm run webdriver-update-ci ; ng e2e --configuration=e2e-ci  --webdriverUpdate=false --suite=all| tee  /import/src/github.com/pensando/sw/e2e-ui.log" 
 
@@ -368,7 +364,7 @@ e2e-sanities:
 	$(MAKE) -C nic e2e-sanity-build
 	./test/e2e/dind/do.py -configFile test/e2e/cluster/tb_config_sanities.json
 	@stty sane
-	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/test/e2e/cluster/tb_config_sanities.json '
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/test/e2e/cluster/tb_config_sanities.json -ginkgo.v -timeout 25m'
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
 
