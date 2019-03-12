@@ -41,6 +41,25 @@ def Trigger(tc):
         result = ret['res']
         ret_count = ret['count']
         count = count + ret_count
+        
+        # Update collector
+        newObjects = agent_api.QueryConfigs(kind='MirrorSession')
+        for obj in newObjects:
+            obj.spec.collectors[0].export_config.destination = "192.168.100.102"
+        # Now push the update as we modified
+        agent_api.UpdateConfigObjects(newObjects)
+        # Get new collector
+        for wl in tc.workloads:
+            if wl.ip_address == "192.168.100.102":
+                collector_wl = wl
+                break
+        # Rerun the tests
+        ret = utils.RunAll(collector_wl, verif_json, tc, 'mirror')
+        result = ret['res']
+        ret_count = ret['count']
+        count = count + ret_count
+        
+        # Delete the objects
         agent_api.DeleteConfigObjects(newObjects)
         agent_api.RemoveConfigObjects(newObjects)
         #agent_api.ConfigureMirror(mirror_json_obj.mirrors, oper = agent_api.CfgOper.DELETE)
