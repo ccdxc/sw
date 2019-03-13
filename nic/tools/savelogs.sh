@@ -12,7 +12,7 @@ if ls ${NICDIR}/core.* 1> /dev/null 2>&1; then
 fi
 
 tar cvzf ${NICDIR}/nic_sanity_logs.tar.gz -P --ignore-failed-read \
-    ${NICDIR}/core.* ${NICDIR}/gen/capri_loader.conf \
+    ${NICDIR}/core.* ${NICDIR}/conf/gen/mpu_prog_info.json \
     ${NICDIR}/*log* \
     ${DOLDIR}/*log* \
     /root/naples/data/logs/* \

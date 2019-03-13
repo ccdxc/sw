@@ -4,7 +4,7 @@ set -e
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export WS_TOP="/sw"
-export NICDIR=`dirname $ABS_TOOLS_DIR`
+export NICDIR=`dirname $ABS_TOOLS_DIR`/../..
 export HAL_LOG_DIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export CAPRI_MOCK_MODE=1
@@ -21,7 +21,7 @@ fi
 
 #function finish {
 #   echo "===== Collecting logs ====="
-#   ${NICDIR}/tools/savelogs.sh
+#   ${NICDIR}/apollo/test/tools/savelogs.sh
 #}
 #trap finish EXIT
 

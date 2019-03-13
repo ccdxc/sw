@@ -18,7 +18,7 @@ fi
 
 function finish {
    echo "===== Collecting logs ====="
-   ${NICDIR}/tools/savelogs.sh
+   ${NICDIR}/apollo/test/tools/savelogs.sh
 }
 trap finish EXIT
 
