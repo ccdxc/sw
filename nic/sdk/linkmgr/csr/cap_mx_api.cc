@@ -1322,3 +1322,30 @@ void cap_mx_bist_chk(int chip_id, int inst_id) {
      PLOG_API_MSG("PASSED: MX[" << inst_id << "]", ": cap_mx_bist_chk\n");
   }
 }
+
+int
+cap_mx_base_r_pcs_status2 (int chip_id, int inst_id, int mac_ch)
+{
+    int addr = 0x0;
+
+    switch (mac_ch) {
+    case 1:
+        addr = 0x921;
+        break;
+
+    case 2:
+        addr = 0xA21;
+        break;
+
+    case 3:
+        addr = 0xB21;
+        break;
+
+    case 0:
+    default:
+        addr = 0x821;
+        break;
+    }
+
+    return cap_mx_apb_read(chip_id, inst_id, addr);
+}

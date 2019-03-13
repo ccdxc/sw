@@ -72,5 +72,6 @@ void cap_mx_serdes_lpbk_set (int chip_id, int inst_id, int ch, int value);
 void cap_mx_stats_reset(int chip_id, int inst_id, int ch, int value);
 int cap_mx_set_pause(int chip_id, int inst_id, int ch, int pri_vec, int legacy);
 int cap_mx_set_pause_src_addr(int chip_id, int inst_id, int ch, uint8_t *mac_addr);
+int cap_mx_base_r_pcs_status2(int chip_id, int inst_id, int mac_ch);
 
 #endif // __SDK_LINKMGR_CAP_MX_API_H__

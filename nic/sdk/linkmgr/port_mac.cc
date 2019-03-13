@@ -619,9 +619,10 @@ mac_intr_enable_hw (uint32_t port_num, uint32_t speed,
 }
 
 static bool
-mac_faults_get_hw (uint32_t port_num)
+mac_faults_get_hw (uint32_t inst_id, uint32_t mac_ch)
 {
-    return false;
+    int chip_id = 0;
+    return cap_mx_base_r_pcs_status2(chip_id, inst_id, mac_ch) != 0;
 }
 
 static bool
@@ -815,7 +816,7 @@ mac_mgmt_soft_reset_hw (uint32_t port_num, uint32_t speed,
 }
 
 static bool
-mac_mgmt_faults_get_hw (uint32_t port_num)
+mac_mgmt_faults_get_hw (uint32_t inst_id, uint32_t mac_ch)
 {
     return false;
 }
@@ -929,7 +930,7 @@ mac_intr_enable_default (uint32_t port_num, uint32_t speed,
 }
 
 static bool
-mac_faults_get_default (uint32_t port_num)
+mac_faults_get_default (uint32_t inst_id, uint32_t mac_ch)
 {
     return false;
 }

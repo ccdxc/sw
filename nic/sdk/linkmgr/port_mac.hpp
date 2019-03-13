@@ -37,7 +37,7 @@ typedef struct mac_fn_s_ {
                           uint32_t num_lanes);
     int (*mac_intr_enable)(uint32_t port_num, uint32_t speed,
                            uint32_t num_lanes, bool enable);
-    bool (*mac_faults_get)(uint32_t port_num);
+    bool (*mac_faults_get)(uint32_t inst_id, uint32_t mac_ch);
     bool (*mac_sync_get)(uint32_t port_num);
     int  (*mac_flush_set)(uint32_t port_num, bool enable);
     int  (*mac_stats_get)(uint32_t mac_inst, uint32_t mac_ch,

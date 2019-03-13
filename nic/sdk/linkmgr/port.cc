@@ -184,9 +184,7 @@ port::port_mac_intr_clr(void)
 bool
 port::port_mac_faults_get(void)
 {
-    uint32_t mac_port_num = port_mac_port_num_calc();
-
-    return mac_fns()->mac_faults_get(mac_port_num);
+    return mac_fns()->mac_faults_get(this->mac_id(), this->mac_ch());
 }
 
 bool
@@ -1079,14 +1077,11 @@ port::port_link_sm_process(void)
 
                 mac_faults = port_mac_faults_get();
 
+                // If there are PCS faults/errors after MAC sync, restart SM
                 if(mac_faults == true) {
-                    this->bringup_timer_val_ += timeout;
-
-                    this->link_bring_up_timer_ =
-                        sdk::lib::timer_schedule(
-                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
-                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                            false);
+                    SDK_PORT_SM_DEBUG(this, "MAC faults detected");
+                    retry_sm = true;
+                    port_link_sm_reset();
                     break;
                 }
 

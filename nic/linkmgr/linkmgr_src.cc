@@ -1410,9 +1410,10 @@ linkmgr_generic_debug_opn (GenericOpnRequest& req, GenericOpnResponse *resp)
 
         case 5:
             mac_port_num = req.val1();
-            HAL_TRACE_DEBUG("mac_faults mac_port: {}, faults: {}",
+            /* HAL_TRACE_DEBUG("mac_faults mac_port: {}, faults: {}",
                             mac_port_num,
                             sdk::linkmgr::mac_fns.mac_faults_get(mac_port_num));
+            */
             break;
 
         case 6:
