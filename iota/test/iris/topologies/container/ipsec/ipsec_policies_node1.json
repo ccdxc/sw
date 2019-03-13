@@ -1,0 +1,175 @@
+{
+  "type" : "netagent",
+  "rest-endpoint"    : "/api/ipsec/policies/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects" : [
+  {
+    "kind": "IPSecPolicy",
+    "meta": {
+      "name": "ipsec-encrypt-rules",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "rules": [
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.101"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "20000-21000"
+              },
+              {
+                "protocol": "udp",
+                "port": "20000-21000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa1",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.101"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "21001-22000"
+              },
+              {
+                "protocol": "udp",
+                "port": "21001-22000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa2",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.101"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "22001-23000"
+              },
+              {
+                "protocol": "udp",
+                "port": "22001-23000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa3",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.101"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "23001-24000"
+              },
+              {
+                "protocol": "udp",
+                "port": "23001-24000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa4",
+          "sa-type": "ENCRYPT"
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "IPSecPolicy",
+    "meta": {
+      "name": "ipsec-decrypt-rules",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "rules": [
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.104"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.102"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa1",
+          "sa-type": "DECRYPT",
+          "spi": 1
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.104"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.102"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa2",
+          "sa-type": "DECRYPT",
+          "spi": 2
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.104"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.102"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa3",
+          "sa-type": "DECRYPT",
+          "spi": 3
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.104"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.102"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa4",
+          "sa-type": "DECRYPT",
+          "spi": 4
+        }
+      ]
+    },
+    "status": {}
+  }
+ ]
+}

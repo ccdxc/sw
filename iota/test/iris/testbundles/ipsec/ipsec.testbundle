@@ -1,0 +1,13 @@
+meta:
+    name    : ipsec
+    os      : [ linux, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    targetcount : 35
+
+testcases:
+    -   name    : iperf_over_ipsec
+        testcase: testcases.ipsec.iperf
+        iterators:
+            type  : nested
+            port  : [ 20000, 20001 ]
+            pktsize : [128, 256, 512, 1024, 2048, 4096, 8192]
