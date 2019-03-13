@@ -131,21 +131,21 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 
 	// check if naples config exists in emdb
 	cfgObj, err := emdb.Read(&config)
-	if cfgObj != nil && err == nil {
 
+	if cfgObj != nil && err == nil {
+		log.Info("Object found in NMD DB. Using persisted values.")
 		// Use the persisted config moving forward
 		config = *cfgObj.(*nmd.Naples)
 	} else {
-
 		// persist the default naples config
+		log.Info("Object not found in NMD DB. Persisting it in the DB.")
+		config.CreationTime = ts
+		config.ModTime = ts
 		err = emdb.Write(&config)
 		if err != nil {
-			log.Fatalf("Error persisting the default naples config in EmDB, err: %+v", err)
+			log.Errorf("Error persisting the default naples config in EmDB, err: %+v", err)
 		}
 	}
-
-	config.CreationTime = ts
-	config.ModTime = ts
 
 	// create NMD object
 	nm := NMD{
