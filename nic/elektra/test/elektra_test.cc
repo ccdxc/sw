@@ -22,7 +22,6 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "gen/p4gen/elektra/include/p4pd.h"
 
-using boost::property_tree::ptree;
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
 
@@ -222,8 +221,7 @@ input_properties_init() {
 
     data.action_id = INPUT_PROPERTIES_SET_INPUT_PROPERTIES_ID;
     dptr->nic_mode = NIC_MODE_CLASSIC;
-    dptr->vrf_4_0  = 0x0;
-    dptr->vrf_15_5 = g_vrf_id1;
+    dptr->vrf = g_vrf_id1;
 
     entry_write(P4TBL_ID_INPUT_PROPERTIES, 0, &key,
                 NULL, &data, true, INPUT_PROPERTIES_TABLE_SIZE);
@@ -294,7 +292,6 @@ TEST_F(elektra_test, test1) {
     };
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    const char *hal_conf_file = "elektra/hal.json";
     std::string mpart_json = cfg.cfg_path + "/elektra/hbm_mem.json";
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
     printf("Parsing sim catalog ...\n");
@@ -303,11 +300,6 @@ TEST_F(elektra_test, test1) {
     cfg.catalog = catalog;
     printf("\nMPART_JSON %s\n", mpart_json.c_str());
     cfg.mempartition = sdk::platform::utils::mpartition::factory(mpart_json.c_str());
-
-    std::ifstream json_cfg(cfg.cfg_path + hal_conf_file);
-    ptree hal_conf;
-    read_json(json_cfg, hal_conf);
-    cfg.loader_info_file = hal_conf.get<std::string>("asic.loader_info_file").c_str();
 
     default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
     if (default_config_dir) {
