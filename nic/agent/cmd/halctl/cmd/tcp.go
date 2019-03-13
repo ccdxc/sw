@@ -8,9 +8,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
@@ -66,9 +68,13 @@ func init() {
 	tcpProxyShowCmd.AddCommand(tcpProxyCbShowCmd)
 	tcpProxyShowCmd.AddCommand(tcpProxyStatusShowCmd)
 	tcpProxyShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
+	tcpProxyShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	tcpProxyCbShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
+	tcpProxyCbShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	tcpProxyStatusShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
+	tcpProxyStatusShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	tcpProxyStatisticsShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
+	tcpProxyStatisticsShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	tcpProxySessionShowCmd.Flags().StringVar(&tcpProxySessionSrcIP, "srcip",
 		"0.0.0.0", "Specify session src ip")
 	tcpProxySessionShowCmd.Flags().StringVar(&tcpProxySessionDstIP, "dstip",
@@ -77,6 +83,7 @@ func init() {
 		0, "Specify session src port")
 	tcpProxySessionShowCmd.Flags().Uint32Var(&tcpProxySessionDstPort, "dstport",
 		0, "Specify session dst port")
+	tcpProxySessionShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 }
 
 func tcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -141,19 +148,27 @@ func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("TCP Global Statistics\n")
-	fmt.Printf("%s\n", strings.Repeat("-", 60))
-	fmt.Printf("%-30s : %-6d\n", "RnmdrFull", respMsg.GlobalStats.RnmdrFull)
-	fmt.Printf("%-30s : %-6d\n", "InvalidSesqDescr", respMsg.GlobalStats.InvalidSesqDescr)
-	fmt.Printf("%-30s : %-6d\n", "InvalidRetxSesqDescr",
-		respMsg.GlobalStats.InvalidRetxSesqDescr)
-	fmt.Printf("%-30s : %-6d\n", "PartialPktAck", respMsg.GlobalStats.PartialPktAck)
-	fmt.Printf("%-30s : %-6d\n", "RetxNopSchedule", respMsg.GlobalStats.RetxNopSchedule)
-	fmt.Printf("%-30s : %-6d\n", "GcFull", respMsg.GlobalStats.GcFull)
-	fmt.Printf("%-30s : %-6d\n", "TlsGcFull", respMsg.GlobalStats.TlsGcFull)
-	fmt.Printf("%-30s : %-6d\n", "InvalidNmdrDescr", respMsg.GlobalStats.InvalidNmdrDescr)
-	fmt.Printf("%-30s : %-6d\n", "RcvdCePkts", respMsg.GlobalStats.RcvdCePkts)
-	fmt.Printf("%-30s : %-6d\n", "RetxPkts", respMsg.GlobalStats.RetxPkts)
+	if cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(respMsg)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b) + "\n")
+		fmt.Println("---")
+	} else {
+		fmt.Printf("TCP Global Statistics\n")
+		fmt.Printf("%s\n", strings.Repeat("-", 60))
+		fmt.Printf("%-30s : %-6d\n", "RnmdrFull", respMsg.GlobalStats.RnmdrFull)
+		fmt.Printf("%-30s : %-6d\n", "InvalidSesqDescr", respMsg.GlobalStats.InvalidSesqDescr)
+		fmt.Printf("%-30s : %-6d\n", "InvalidRetxSesqDescr",
+			respMsg.GlobalStats.InvalidRetxSesqDescr)
+		fmt.Printf("%-30s : %-6d\n", "PartialPktAck", respMsg.GlobalStats.PartialPktAck)
+		fmt.Printf("%-30s : %-6d\n", "RetxNopSchedule", respMsg.GlobalStats.RetxNopSchedule)
+		fmt.Printf("%-30s : %-6d\n", "GcFull", respMsg.GlobalStats.GcFull)
+		fmt.Printf("%-30s : %-6d\n", "TlsGcFull", respMsg.GlobalStats.TlsGcFull)
+		fmt.Printf("%-30s : %-6d\n", "OoqFull", respMsg.GlobalStats.OoqFull)
+		fmt.Printf("%-30s : %-6d\n", "InvalidNmdrDescr", respMsg.GlobalStats.InvalidNmdrDescr)
+		fmt.Printf("%-30s : %-6d\n", "RcvdCePkts", respMsg.GlobalStats.RcvdCePkts)
+		fmt.Printf("%-30s : %-6d\n", "RetxPkts", respMsg.GlobalStats.RetxPkts)
+	}
 }
 
 func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -214,11 +229,16 @@ func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	flowIndx := 1
 	if len(respMsg.Response) != 0 {
-		fmt.Printf("%s\n", strings.Repeat("-", 96))
-		fmt.Printf("%-12s%-16s%-16s%-12s%-12s%-12s%-12s%-12s\n",
-			"Flow", "Source IP", "Dest IP", "Source Port", "Dest Port",
-			"Queue Id1", "Queue Id2", "Flow Type")
-		fmt.Printf("%s\n", strings.Repeat("-", 96))
+		if cmd.Flags().Changed("yaml") {
+			fmt.Println("YAML OUTPUT")
+			fmt.Printf("%s\n", strings.Repeat("-", 96))
+		} else {
+			fmt.Printf("%s\n", strings.Repeat("-", 96))
+			fmt.Printf("%-12s%-16s%-16s%-12s%-12s%-12s%-12s%-12s\n",
+				"Flow", "Source IP", "Dest IP", "Source Port", "Dest Port",
+				"Queue Id1", "Queue Id2", "Flow Type")
+			fmt.Printf("%s\n", strings.Repeat("-", 96))
+		}
 	}
 
 	for _, resp := range respMsg.Response {
@@ -226,18 +246,24 @@ func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
-
-		fmt.Printf("%-12d", flowIndx)
-		fmt.Printf("%-16s", utils.IPAddrToStr(resp.TcpproxyFlow.SrcIp))
-		fmt.Printf("%-16s", utils.IPAddrToStr(resp.TcpproxyFlow.DstIp))
-		fmt.Printf("%-12d", resp.TcpproxyFlow.Sport)
-		fmt.Printf("%-12d", resp.TcpproxyFlow.Dport)
-		fmt.Printf("%-12d", resp.TcpproxyFlow.Qid1)
-		fmt.Printf("%-12d", resp.TcpproxyFlow.Qid2)
-		fmt.Printf("%-12d\n", resp.TcpproxyFlow.FlowType)
+		if cmd.Flags().Changed("yaml") {
+			fmt.Printf("YAML DUMP FOR FLOW %d\n", flowIndx)
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		} else {
+			fmt.Printf("%-12d", flowIndx)
+			fmt.Printf("%-16s", utils.IPAddrToStr(resp.TcpproxyFlow.SrcIp))
+			fmt.Printf("%-16s", utils.IPAddrToStr(resp.TcpproxyFlow.DstIp))
+			fmt.Printf("%-12d", resp.TcpproxyFlow.Sport)
+			fmt.Printf("%-12d", resp.TcpproxyFlow.Dport)
+			fmt.Printf("%-12d", resp.TcpproxyFlow.Qid1)
+			fmt.Printf("%-12d", resp.TcpproxyFlow.Qid2)
+			fmt.Printf("%-12d\n", resp.TcpproxyFlow.FlowType)
+		}
 		flowIndx++
 	}
-
 	if flowIndx > 1 {
 		fmt.Printf("%s\n", strings.Repeat("-", 96))
 		fmt.Printf("Found %d flows.\n\n", flowIndx-1)
@@ -280,6 +306,10 @@ func doTCPProxyCbShowCmd(cmd *cobra.Command, args []string, showCbs bool,
 		return
 	}
 
+	yamlOut := false
+	if cmd.Flags().Changed("yaml") {
+		yamlOut = true
+	}
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("HAL Returned error status. %v\n", resp.ApiStatus)
@@ -287,120 +317,140 @@ func doTCPProxyCbShowCmd(cmd *cobra.Command, args []string, showCbs bool,
 		}
 
 		if showCbs {
-			fmt.Printf("%s\n", strings.Repeat("-", 80))
-			fmt.Printf("\nTCP Control block(TCB)\n")
-			fmt.Printf("%s\n", strings.Repeat("-", 80))
-			showTCPCb(resp)
-			fmt.Printf("%s\n\n", strings.Repeat("-", 80))
+			showTCPCb(resp, yamlOut)
 		}
 
 		if showStats {
-			fmt.Printf("%s\n", strings.Repeat("-", 80))
-			fmt.Printf("\nTCP Statistics\n")
-			fmt.Printf("%s\n", strings.Repeat("-", 80))
-			showTCPStats(resp)
-			fmt.Printf("%s\n\n", strings.Repeat("-", 80))
+			showTCPStats(resp, yamlOut)
 		}
 
 		if showStatus {
-			fmt.Printf("%s\n", strings.Repeat("-", 80))
-			fmt.Printf("\nTCP Status\n")
-			fmt.Printf("%s\n", strings.Repeat("-", 80))
-			showTCPStatus(resp)
-			fmt.Printf("%s\n\n", strings.Repeat("-", 80))
+			showTCPStatus(resp, yamlOut)
 		}
 	}
 }
 
-func showTCPCb(resp *halproto.TcpCbGetResponse) {
+func showTCPCb(resp *halproto.TcpCbGetResponse, yamlOut bool) {
 
 	spec := resp.GetSpec()
-
-	fmt.Printf("%-30s : %-6X\n", "tcb_base_addr", spec.CbBase)
-	fmt.Printf("%-30s : %-6X\n", "sesq_base", spec.SesqBase)
-	fmt.Printf("%-30s : %-6X\n", "serq_base", spec.SerqBase)
-	fmt.Printf("%-30s : %-6d\n", "rcv_nxt", spec.RcvNxt)
-	fmt.Printf("%-30s : %-6d\n", "snd_nxt", spec.SndNxt)
-	fmt.Printf("%-30s : %-6d\n", "snd_una", spec.SndUna)
-	fmt.Printf("%-30s : %-6d\n", "retx_snd_una", spec.RetxSndUna)
-	fmt.Printf("%-30s : %-6d\n", "rcv_tsval", spec.RcvTsval)
-	fmt.Printf("%-30s : %-6d\n", "ts_recent", spec.TsRecent)
-	fmt.Printf("%-30s : %-6X\n", "debug_dol", spec.DebugDol)
-	fmt.Printf("%-30s : %-6X\n", "ooo_rx2tx_qbase", spec.OooRx2TxQbase)
-	fmt.Printf("%-30s : %-6d\n", "rcv_wnd", spec.RcvWnd)
-	fmt.Printf("%-30s : %-6d\n", "snd_wnd", spec.SndWnd<<spec.SndWscale)
-	fmt.Printf("%-30s : %-6d\n", "snd_cwnd", spec.SndCwnd)
-	fmt.Printf("%-30s : %-6d\n", "initial_window", spec.InitialWindow)
-	fmt.Printf("%-30s : %-6d\n", "snd_ssthresh", spec.SndSsthresh)
-	fmt.Printf("%-30s : %-6d\n", "rcv_wscale", spec.RcvWscale)
-	fmt.Printf("%-30s : %-6d\n", "snd_wscale", spec.SndWscale)
-	fmt.Printf("%-30s : %-6d\n", "rcv_mss", spec.RcvMss)
-	fmt.Printf("%-30s : %-6d\n", "smss", spec.Smss)
-	fmt.Printf("%-30s : %-6d\n", "source_port", spec.SourcePort)
-	fmt.Printf("%-30s : %-6d\n", "dest_port", spec.DestPort)
-	fmt.Printf("%-30s : %-6d\n", "state", spec.State)
-	fmt.Printf("%-30s : %-6d\n", "source_lif", spec.SourceLif)
-	fmt.Printf("%-30s : %-6X\n", "debug_dol_tx", spec.DebugDolTx)
-	fmt.Printf("%-30s : %-6d\n", "header_len", spec.HeaderLen)
-	fmt.Printf("%-30s : %-6t\n", "pending_ack_send", spec.PendingAckSend)
-	fmt.Printf("%-30s : %-6d\n", "other_qid", spec.OtherQid)
-	fmt.Printf("%-30s : %-6d\n", "rto_backoff", spec.RtoBackoff)
+	if yamlOut {
+		respType := reflect.ValueOf(spec)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b) + "\n")
+		fmt.Println("---")
+	} else {
+		fmt.Printf("%s\n", strings.Repeat("-", 80))
+		fmt.Printf("\nTCP Control block(TCB)\n")
+		fmt.Printf("%s\n", strings.Repeat("-", 80))
+		fmt.Printf("%-30s : %-6X\n", "tcb_base_addr", spec.CbBase)
+		fmt.Printf("%-30s : %-6X\n", "sesq_base", spec.SesqBase)
+		fmt.Printf("%-30s : %-6X\n", "serq_base", spec.SerqBase)
+		fmt.Printf("%-30s : %-6d\n", "rcv_nxt", spec.RcvNxt)
+		fmt.Printf("%-30s : %-6d\n", "snd_nxt", spec.SndNxt)
+		fmt.Printf("%-30s : %-6d\n", "snd_una", spec.SndUna)
+		fmt.Printf("%-30s : %-6d\n", "retx_snd_una", spec.RetxSndUna)
+		fmt.Printf("%-30s : %-6d\n", "rcv_tsval", spec.RcvTsval)
+		fmt.Printf("%-30s : %-6d\n", "ts_recent", spec.TsRecent)
+		fmt.Printf("%-30s : %-6X\n", "debug_dol", spec.DebugDol)
+		fmt.Printf("%-30s : %-6X\n", "ooo_rx2tx_qbase", spec.OooRx2TxQbase)
+		fmt.Printf("%-30s : %-6d\n", "rcv_wnd", spec.RcvWnd)
+		fmt.Printf("%-30s : %-6d\n", "snd_wnd", spec.SndWnd<<spec.SndWscale)
+		fmt.Printf("%-30s : %-6d\n", "snd_cwnd", spec.SndCwnd)
+		fmt.Printf("%-30s : %-6d\n", "initial_window", spec.InitialWindow)
+		fmt.Printf("%-30s : %-6d\n", "snd_ssthresh", spec.SndSsthresh)
+		fmt.Printf("%-30s : %-6d\n", "rcv_wscale", spec.RcvWscale)
+		fmt.Printf("%-30s : %-6d\n", "snd_wscale", spec.SndWscale)
+		fmt.Printf("%-30s : %-6d\n", "rcv_mss", spec.RcvMss)
+		fmt.Printf("%-30s : %-6d\n", "smss", spec.Smss)
+		fmt.Printf("%-30s : %-6d\n", "source_port", spec.SourcePort)
+		fmt.Printf("%-30s : %-6d\n", "dest_port", spec.DestPort)
+		fmt.Printf("%-30s : %-6d\n", "state", spec.State)
+		fmt.Printf("%-30s : %-6d\n", "source_lif", spec.SourceLif)
+		fmt.Printf("%-30s : %-6X\n", "debug_dol_tx", spec.DebugDolTx)
+		fmt.Printf("%-30s : %-6d\n", "header_len", spec.HeaderLen)
+		fmt.Printf("%-30s : %-6t\n", "pending_ack_send", spec.PendingAckSend)
+		fmt.Printf("%-30s : %-6d\n", "other_qid", spec.OtherQid)
+		fmt.Printf("%-30s : %-6d\n", "rto_backoff", spec.RtoBackoff)
+		fmt.Printf("%s\n\n", strings.Repeat("-", 80))
+	}
 }
 
-func showTCPStats(resp *halproto.TcpCbGetResponse) {
+func showTCPStats(resp *halproto.TcpCbGetResponse, yamlOut bool) {
 
 	stats := resp.GetStats()
 
-	fmt.Printf("%-30s : %-6d\n", "pkts_rcvd", stats.PktsRcvd)
-	fmt.Printf("%-30s : %-6d\n", "bytes_rcvd", stats.BytesRcvd)
-	fmt.Printf("%-30s : %-6d\n", "bytes_acked", stats.BytesAcked)
-	fmt.Printf("%-30s : %-6d\n", "pkts_sent", stats.PktsSent)
-	fmt.Printf("%-30s : %-6d\n", "bytes_sent", stats.BytesSent)
-	fmt.Printf("%-30s : %-6d\n", "slow_path_cnt", stats.SlowPathCnt)
-	fmt.Printf("%-30s : %-6d\n", "serq_full_cnt", stats.SerqFullCnt)
-	fmt.Printf("%-30s : %-6d\n", "ooo_cnt", stats.OooCnt)
-	fmt.Printf("%-30s : %-6d\n", "sesq_pi", stats.SesqPi)
-	fmt.Printf("%-30s : %-6d\n", "sesq_ci", stats.SesqCi)
-	fmt.Printf("%-30s : %-6d\n", "sesq_retx_ci", stats.SesqRetxCi)
-	fmt.Printf("%-30s : %-6d\n", "sesq_tx_ci", stats.SesqTxCi)
-	fmt.Printf("%-30s : %-6d\n", "send_ack_pi", stats.SendAckPi)
-	fmt.Printf("%-30s : %-6d\n", "send_ack_ci", stats.SendAckCi)
-	fmt.Printf("%-30s : %-6d\n", "fast_timer_pi", stats.FastTimerPi)
-	fmt.Printf("%-30s : %-6d\n", "fast_timer_ci", stats.FastTimerCi)
-	fmt.Printf("%-30s : %-6d\n", "del_ack_pi", stats.DelAckPi)
-	fmt.Printf("%-30s : %-6d\n", "del_ack_ci", stats.DelAckCi)
-	fmt.Printf("%-30s : %-6d\n", "asesq_pi", stats.AsesqPi)
-	fmt.Printf("%-30s : %-6d\n", "asesq_ci", stats.AsesqCi)
-	fmt.Printf("%-30s : %-6d\n", "asesq_retx_ci", stats.AsesqRetxCi)
-	fmt.Printf("%-30s : %-6d\n", "pending_tx_pi", stats.PendingTxPi)
-	fmt.Printf("%-30s : %-6d\n", "pending_tx_ci", stats.PendingTxCi)
-	fmt.Printf("%-30s : %-6d\n", "fast_retrans_pi", stats.FastRetransPi)
-	fmt.Printf("%-30s : %-6d\n", "fast_retrans_ci", stats.FastRetransCi)
-	fmt.Printf("%-30s : %-6d\n", "clean_retx_pi", stats.CleanRetxPi)
-	fmt.Printf("%-30s : %-6d\n", "clean_retx_ci", stats.CleanRetxCi)
-	fmt.Printf("%-30s : %-6d\n", "ooq_rx2tx_pi", stats.OoqRx2TxPi)
-	fmt.Printf("%-30s : %-6d\n", "ooq_rx2tx_ci", stats.OoqRx2TxCi)
-	fmt.Printf("%-30s : %-6d\n", "packets_out", stats.PacketsOut)
-	fmt.Printf("%-30s : %-6d\n", "tx_ring_pi", stats.TxRingPi)
-	fmt.Printf("%-30s : %-6d\n", "partial_pkt_ack_cnt", stats.PartialPktAckCnt)
-	fmt.Printf("%-30s : %-6d\n", "rto_deadline", stats.RtoDeadline)
-	fmt.Printf("%-30s : %-6d\n", "ato_deadline", stats.AtoDeadline)
-	fmt.Printf("%-30s : %-6d\n", "idle_timeout_deadline", stats.IdleDeadline)
-	fmt.Printf("%-30s : %-6d\n", "window_full_cnt", stats.WindowFullCnt)
-	fmt.Printf("%-30s : %-6d\n", "retx_cnt", stats.RetxCnt)
+	if yamlOut {
+		respType := reflect.ValueOf(stats)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b) + "\n")
+		fmt.Println("---")
+	} else {
+		fmt.Printf("%s\n", strings.Repeat("-", 80))
+		fmt.Printf("\nTCP Statistics\n")
+		fmt.Printf("%s\n", strings.Repeat("-", 80))
+		fmt.Printf("%-30s : %-6d\n", "pkts_rcvd", stats.PktsRcvd)
+		fmt.Printf("%-30s : %-6d\n", "bytes_rcvd", stats.BytesRcvd)
+		fmt.Printf("%-30s : %-6d\n", "bytes_acked", stats.BytesAcked)
+		fmt.Printf("%-30s : %-6d\n", "pkts_sent", stats.PktsSent)
+		fmt.Printf("%-30s : %-6d\n", "bytes_sent", stats.BytesSent)
+		fmt.Printf("%-30s : %-6d\n", "slow_path_cnt", stats.SlowPathCnt)
+		fmt.Printf("%-30s : %-6d\n", "serq_full_cnt", stats.SerqFullCnt)
+		fmt.Printf("%-30s : %-6d\n", "ooo_cnt", stats.OooCnt)
+		fmt.Printf("%-30s : %-6d\n", "sesq_pi", stats.SesqPi)
+		fmt.Printf("%-30s : %-6d\n", "sesq_ci", stats.SesqCi)
+		fmt.Printf("%-30s : %-6d\n", "sesq_retx_ci", stats.SesqRetxCi)
+		fmt.Printf("%-30s : %-6d\n", "sesq_tx_ci", stats.SesqTxCi)
+		fmt.Printf("%-30s : %-6d\n", "send_ack_pi", stats.SendAckPi)
+		fmt.Printf("%-30s : %-6d\n", "send_ack_ci", stats.SendAckCi)
+		fmt.Printf("%-30s : %-6d\n", "fast_timer_pi", stats.FastTimerPi)
+		fmt.Printf("%-30s : %-6d\n", "fast_timer_ci", stats.FastTimerCi)
+		fmt.Printf("%-30s : %-6d\n", "del_ack_pi", stats.DelAckPi)
+		fmt.Printf("%-30s : %-6d\n", "del_ack_ci", stats.DelAckCi)
+		fmt.Printf("%-30s : %-6d\n", "asesq_pi", stats.AsesqPi)
+		fmt.Printf("%-30s : %-6d\n", "asesq_ci", stats.AsesqCi)
+		fmt.Printf("%-30s : %-6d\n", "asesq_retx_ci", stats.AsesqRetxCi)
+		fmt.Printf("%-30s : %-6d\n", "pending_tx_pi", stats.PendingTxPi)
+		fmt.Printf("%-30s : %-6d\n", "pending_tx_ci", stats.PendingTxCi)
+		fmt.Printf("%-30s : %-6d\n", "fast_retrans_pi", stats.FastRetransPi)
+		fmt.Printf("%-30s : %-6d\n", "fast_retrans_ci", stats.FastRetransCi)
+		fmt.Printf("%-30s : %-6d\n", "clean_retx_pi", stats.CleanRetxPi)
+		fmt.Printf("%-30s : %-6d\n", "clean_retx_ci", stats.CleanRetxCi)
+		fmt.Printf("%-30s : %-6d\n", "ooq_rx2tx_pi", stats.OoqRx2TxPi)
+		fmt.Printf("%-30s : %-6d\n", "ooq_rx2tx_ci", stats.OoqRx2TxCi)
+		fmt.Printf("%-30s : %-6d\n", "packets_out", stats.PacketsOut)
+		fmt.Printf("%-30s : %-6d\n", "tx_ring_pi", stats.TxRingPi)
+		fmt.Printf("%-30s : %-6d\n", "partial_pkt_ack_cnt", stats.PartialPktAckCnt)
+		fmt.Printf("%-30s : %-6d\n", "rto_deadline", stats.RtoDeadline)
+		fmt.Printf("%-30s : %-6d\n", "ato_deadline", stats.AtoDeadline)
+		fmt.Printf("%-30s : %-6d\n", "idle_timeout_deadline", stats.IdleDeadline)
+		fmt.Printf("%-30s : %-6d\n", "window_full_cnt", stats.WindowFullCnt)
+		fmt.Printf("%-30s : %-6d\n", "retx_cnt", stats.RetxCnt)
+		fmt.Printf("%s\n\n", strings.Repeat("-", 80))
+	}
 }
 
-func showTCPStatus(resp *halproto.TcpCbGetResponse) {
+func showTCPStatus(resp *halproto.TcpCbGetResponse, yamlOut bool) {
 
 	status := resp.GetStatus()
 
-	fmt.Printf("%-30s : %-6t\n", "ooq_not_empty", status.OoqNotEmpty)
-	fmt.Printf("%-30s\n", "Out-Of-Order Queues :")
-	for i, ooqStatus := range status.OoqStatus {
-		fmt.Printf("\n    Out-Of-Order Queue : %d\n", i)
-		fmt.Printf("%-30s : %-6X\n", "        queue_addr", ooqStatus.QueueAddr)
-		fmt.Printf("%-30s : %-6d\n", "        start_seq", ooqStatus.StartSeq)
-		fmt.Printf("%-30s : %-6d\n", "        end_seq", ooqStatus.EndSeq)
-		fmt.Printf("%-30s : %-6d\n", "        num_entries", ooqStatus.NumEntries)
+	if yamlOut {
+		respType := reflect.ValueOf(status)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b) + "\n")
+		fmt.Println("---")
+	} else {
+		fmt.Printf("%s\n", strings.Repeat("-", 80))
+		fmt.Printf("\nTCP Status\n")
+		fmt.Printf("%s\n", strings.Repeat("-", 80))
+		fmt.Printf("%-30s : %-6t\n", "ooq_not_empty", status.OoqNotEmpty)
+		fmt.Printf("%-30s\n", "Out-Of-Order Queues :")
+		for i, ooqStatus := range status.OoqStatus {
+			fmt.Printf("\n    Out-Of-Order Queue : %d\n", i)
+			fmt.Printf("%-30s : %-6X\n", "        queue_addr", ooqStatus.QueueAddr)
+			fmt.Printf("%-30s : %-6d\n", "        start_seq", ooqStatus.StartSeq)
+			fmt.Printf("%-30s : %-6d\n", "        end_seq", ooqStatus.EndSeq)
+			fmt.Printf("%-30s : %-6d\n", "        num_entries", ooqStatus.NumEntries)
+		}
+		fmt.Printf("%s\n\n", strings.Repeat("-", 80))
 	}
 }

@@ -628,6 +628,8 @@ tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
                   pd_tcp_global_stats_get_args.gc_full);
     rsp->mutable_global_stats()->set_tls_gc_full(
                   pd_tcp_global_stats_get_args.tls_gc_full);
+    rsp->mutable_global_stats()->set_ooq_full(
+                  pd_tcp_global_stats_get_args.ooq_full);
     rsp->mutable_global_stats()->set_invalid_nmdr_descr(
                   pd_tcp_global_stats_get_args.invalid_nmdr_descr);
     rsp->mutable_global_stats()->set_rcvd_ce_pkts(
