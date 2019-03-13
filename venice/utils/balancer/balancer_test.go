@@ -103,19 +103,19 @@ func TestBalancer(t *testing.T) {
 	Assert(t, (addr.Addr == ""), fmt.Sprintf("Expected empty Get, got %v", addr.Addr))
 
 	// Mark instance1 up.
-	b.Up(grpc.Address{Addr: "node1:8888"})
+	downFn1 := b.Up(grpc.Address{Addr: "node1:8888"})
 	addr, _, err = b.Get(context.Background(), grpc.BalancerGetOptions{})
 	AssertOk(t, err, fmt.Sprintf("Failed to get with error: %v", err))
 	AssertEquals(t, "node1:8888", addr.Addr, fmt.Sprintf("Expected to get node1:8888, got %v", addr.Addr))
 
 	// Mark instance2 up.
-	downFn := b.Up(grpc.Address{Addr: "node2:8888"})
+	downFn2 := b.Up(grpc.Address{Addr: "node2:8888"})
 	addr, _, err = b.Get(context.Background(), grpc.BalancerGetOptions{})
 	AssertOk(t, err, fmt.Sprintf("Failed to get with error: %v", err))
 	AssertOneOf(t, addr.Addr, []string{"node1:8888", "node2:8888"})
 
 	// Mark instance2 down.
-	downFn(fmt.Errorf("Test down"))
+	downFn2(fmt.Errorf("Test down"))
 	addr, _, err = b.Get(context.Background(), grpc.BalancerGetOptions{})
 	AssertOk(t, err, fmt.Sprintf("Failed to get with error: %v", err))
 	AssertEquals(t, "node1:8888", addr.Addr, fmt.Sprintf("Expected to get node1:8888, got %v", addr.Addr))
@@ -129,5 +129,30 @@ func TestBalancer(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatalf("Timed out waiting for resolver notification")
 	}
+
+	// bring down all conns and try get
+	br := b.(*balancer)
+	br.resetTime = time.Now().Add(-10 * time.Second)
+	downFn1(fmt.Errorf("Test down"))
+	_, _, err = b.Get(context.Background(), grpc.BalancerGetOptions{})
+	addrs := [][]grpc.Address{}
+WaitLoop:
+	for {
+		select {
+		case n := <-notifyCh:
+			addrs = append(addrs, n)
+
+		case <-time.After(time.Second):
+			if len(addrs) == 2 {
+				break WaitLoop
+			}
+			t.Fatalf("Timed out waiting for resolver notification")
+		}
+	}
+
+	Assert(t, len(addrs) == 2, "expecting 2 notifications got [%d]", len(addrs))
+	Assert(t, len(addrs[0]) == 0, "expecting first notification to be empty")
+	Assert(t, len(addrs[1]) == 1, "expecting second notification to be empty")
+	AssertEquals(t, "node1:8888", addrs[1][0].Addr, fmt.Sprintf("Expected node1:8888, got %v", addrs[1][0].Addr))
 	b.Close()
 }

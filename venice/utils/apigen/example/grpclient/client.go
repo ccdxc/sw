@@ -6,31 +6,120 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"net"
 	"reflect"
+	"strings"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
 
+func monitorConns(url, reslvrs string, count int, logger log.Logger) {
+	servers := strings.Split(reslvrs, ",")
+	if len(servers) < 1 {
+		logger.Fatalf("list of resolver addresses needed")
+	}
+	ropts := []rpckit.Option{}
+	tlsp, err := tlsproviders.NewDefaultCMDBasedProvider("node1:9002", globals.APIGw)
+	if err != nil {
+		log.Fatalf("error getting tls provider (%s)", err)
+	}
+	ropts = append(ropts, rpckit.WithTLSProvider(tlsp))
+	reslvr := resolver.New(&resolver.Config{Name: globals.APIGw, Servers: servers, Options: ropts})
+	clnts := make([]apiclient.Services, count)
+	for i := 0; i < count; i++ {
+		clnts[i], err = apiclient.NewGrpcAPIClient("TestFix", url, logger, rpckit.WithBalancer(balancer.New(reslvr)), rpckit.WithTLSProvider(tlsp))
+		if err != nil {
+			logger.Fatalf("failed to create API Client")
+		}
+	}
+	errors := make([]error, count)
+	ctx := context.Background()
+	for {
+		<-time.After(3 * time.Second)
+		for i := 0; i < len(clnts); i++ {
+			_, errors[i] = clnts[i].ClusterV1().Cluster().Get(ctx, &api.ObjectMeta{})
+		}
+		errs := make([]error, 0)
+		ecnt := 0
+	ErroLoop:
+		for i := 0; i < len(clnts); i++ {
+			if errors[i] != nil {
+				ecnt++
+				for _, e := range errs {
+					if errors[i] == e {
+						continue ErroLoop
+					}
+				}
+				errs = append(errs, errors[i])
+			}
+		}
+		if ecnt == 0 {
+			logger.Infof("No errors found on [%d] clients", count)
+			fmt.Printf("[%v]No errors found on [%d] clients\n", time.Now(), count)
+		} else {
+			logger.Infof("Found [%d] errors on [%d] clients (%s)", ecnt, count, errs)
+			fmt.Printf("[%v]Found [%d] errors on [%d] clients (%s)\n", time.Now(), ecnt, count, errs)
+		}
+	}
+}
 func main() {
 	var (
-		grpcaddr = flag.String("grpc-server", "localhost:9003", "GRPC Port to connect to")
-		watch    = flag.Bool("watch", false, "watch publishers")
-		sort     = flag.Bool("sort", false, "prep for sort tests")
+		grpcaddr  = flag.String("grpc-server", "localhost:9003", "GRPC Port to connect to")
+		watch     = flag.Bool("watch", false, "watch publishers")
+		sort      = flag.Bool("sort", false, "prep for sort tests")
+		resolvers = flag.String("res", "192.168.30.11,192.168.30.12,192.168.30.13", "list of comma seperated resolvers")
+		monitor   = flag.Bool("mon", false, "monitor GRPC connections")
+		moncount  = flag.Int("count", 10, "monitor connection count")
+		out       = flag.String("out", "", "send log output to")
 	)
 	flag.Parse()
 
 	ctx := context.Background()
 	config := log.GetDefaultConfig("GrpcClientExample")
-	l := log.GetNewLogger(config)
+	if *out != "" {
+		config.LogToFile = true
+		config.LogToStdout = false
+		config.FileCfg = log.FileConfig{Filename: *out, MaxSize: 10000000, MaxBackups: 3}
+	}
+	l := log.SetConfig(config)
 	url := *grpcaddr
 
-	apicl, err := client.NewGrpcUpstream("example", url, l)
+	var apicl apiclient.Services
+
+	if *monitor {
+		monitorConns(*grpcaddr, *resolvers, *moncount, l)
+		return
+	}
+
+	_, _, err := net.SplitHostPort(*grpcaddr)
 	if err != nil {
-		l.Fatalf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
+		opts := []rpckit.Option{}
+		servers := strings.Split(*resolvers, ",")
+		if len(servers) < 1 {
+			l.Fatalf("list of resolver addresses needed")
+		}
+		reslvr := resolver.New(&resolver.Config{Name: "TestFix", Servers: servers})
+		opts = append(opts, rpckit.WithBalancer(balancer.New(reslvr)))
+		apicl, err = apiclient.NewGrpcAPIClient("TestFix", *grpcaddr, l, opts...)
+		if err != nil {
+			l.Fatalf("failed to create API Client")
+		}
+	} else {
+		apicl, err = client.NewGrpcUpstream("example", url, l)
+		if err != nil {
+			l.Fatalf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
+		}
 	}
 
 	if *epCreate {

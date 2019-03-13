@@ -55,16 +55,31 @@ func testAPICRUDOps() func() {
 		wctx, wcancel := context.WithCancel(lctx)
 		Expect(grpcClient).ShouldNot(BeNil())
 		go func() {
-			defer GinkgoRecover()
+			success := false
+			defer func() {
+				if !success {
+					close(waitWatch)
+				}
+				GinkgoRecover()
+			}()
 			opts := api.ListWatchOptions{}
 			opts.FieldChangeSelector = []string{"."}
 			opts.Name = "e2etenant"
-			tWatcher, err := grpcClient.ClusterV1().Tenant().Watch(wctx, &opts)
-			Expect(err).To(BeNil())
+			var tWatcher, nWatcher kvstore.Watcher
+			var err error
+			Eventually(func() error {
+				tWatcher, err = grpcClient.ClusterV1().Tenant().Watch(wctx, &opts)
+				return err
+			}, 30, 1).Should(BeNil(), "Watch should be successful")
 			opts = api.ListWatchOptions{}
 			opts.Tenant = "e2etenant"
-			nWatcher, err := grpcClient.NetworkV1().Network().Watch(wctx, &opts)
+			Eventually(func() error {
+				nWatcher, err = grpcClient.NetworkV1().Network().Watch(wctx, &opts)
+				return err
+			}, 30, 1).Should(BeNil(), "Watch should be successful")
+
 			Expect(err).To(BeNil())
+			success = true
 			close(waitWatch)
 			active := true
 			for active {
@@ -226,8 +241,12 @@ func testAPICRUDOps() func() {
 				},
 			}
 			{ // Create network via REST
-				ret, err := restClient.NetworkV1().Network().Create(lctx, &netw)
-				Expect(err).To(BeNil())
+				var ret *network.Network
+				var err error
+				Eventually(func() error {
+					ret, err = restClient.NetworkV1().Network().Create(lctx, &netw)
+					return err
+				}, 30, 1).Should(BeNil(), "should be able to create Network")
 				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
 				expNEvents = addToWatchList(expNEvents, ret, kvstore.Created)
 			}
@@ -330,8 +349,9 @@ var _ = Describe("API Crud tests", func() {
 	}
 
 	restartDockerContainer := func(node, id string) {
+		ip := ts.tu.NameToIPMap[node]
 		cmd := fmt.Sprintf("docker kill %s > /dev/null", id)
-		_ = ts.tu.CommandOutputIgnoreError(node, cmd)
+		_ = ts.tu.CommandOutputIgnoreError(ip, cmd)
 	}
 
 	waitETCDHealthy := func(node string) bool {
@@ -527,6 +547,45 @@ var _ = Describe("API Crud tests", func() {
 		})
 
 		It("Restart API Server and validate CRUD ops", testAPICRUDOps())
+
+		AfterEach(func() {
+			Consistently(func() int {
+				newRestarts, _, _, err := getAPIServerNodeNRestartCount()
+				Expect(err).To(BeNil(), "Could not get API server restart count")
+				return int(newRestarts)
+			}, 30, 1).Should(BeNumerically("==", restarts), "API server should not have restarted again")
+		})
+	})
+
+	Context("API CRUD operations via gRPC and API Gateway should work after a restart", func() {
+		var (
+			restarts int64
+		)
+
+		BeforeEach(func() {
+			starts, apiServerNode, name, err := getAPIServerNodeNRestartCount()
+			Expect(err).To(BeNil())
+			ip := ts.tu.NameToIPMap[apiServerNode]
+			container := getDockerContainerID(ip, name)
+			restartDockerContainer(apiServerNode, container)
+			Eventually(func() string {
+				newRestarts, _, _, err := getAPIServerNodeNRestartCount()
+				Expect(err).To(BeNil(), "Could not get API server restart count")
+				if newRestarts != starts+1 {
+					return fmt.Sprintf("waiting for restart got want: %d/got :%d", starts+1, newRestarts)
+				}
+				restarts = newRestarts
+				return ""
+			}, 30, 1).Should(BeEmpty(), "API server should have restarted")
+			Consistently(func() int {
+				newRestarts, _, _, err := getAPIServerNodeNRestartCount()
+				Expect(err).To(BeNil(), "Could not get API server restart count")
+				return int(newRestarts)
+			}, 90, 1).Should(BeNumerically("==", restarts), "API server should not have restarted again")
+
+		})
+
+		It("Restart API Server container and validate CRUD ops", testAPICRUDOps())
 
 		AfterEach(func() {
 			Consistently(func() int {

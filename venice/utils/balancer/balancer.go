@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"sync"
+	"time"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -22,13 +23,14 @@ type Balancer interface {
 type balancer struct {
 	sync.RWMutex
 	sync.WaitGroup
-	service  string             // name of the service
-	resolver resolver.Interface // resolver to use
-	upConns  []grpc.Address     // connections reported up by grpc
-	upCh     chan struct{}      // used to wake up blocked Gets
-	idx      int                // used for round robin selection of Up conns
-	running  bool
-	notifyCh chan []grpc.Address // notification channel to grpc
+	service   string             // name of the service
+	resolver  resolver.Interface // resolver to use
+	upConns   []grpc.Address     // connections reported up by grpc
+	upCh      chan struct{}      // used to wake up blocked Gets
+	idx       int                // used for round robin selection of Up conns
+	running   bool
+	notifyCh  chan []grpc.Address // notification channel to grpc
+	resetTime time.Time
 }
 
 // New creates a new balancer.
@@ -52,6 +54,7 @@ func (b *balancer) Start(target string, config grpc.BalancerConfig) error {
 	b.running = true
 	b.service = target
 	b.resolver.Register(b)
+	b.resetTime = time.Now()
 	b.Unlock()
 	// Send the current state
 	b.Add(1)
@@ -91,6 +94,7 @@ func (b *balancer) get() (grpc.Address, func(), error) {
 	b.Lock()
 	running := b.running
 	numInsts := len(b.upConns)
+	resetTime := b.resetTime
 	addr := grpc.Address{Addr: ""}
 	if numInsts > 0 {
 		// Round robin
@@ -102,6 +106,19 @@ func (b *balancer) get() (grpc.Address, func(), error) {
 		return addr, nil, grpc.ErrClientConnClosing
 	}
 	if numInsts == 0 {
+		if time.Since(resetTime) > 5*time.Second {
+			// The balancer could have seen non-temporary errors and stopped retrying the notified
+			// addresses. Reset the balancer state to recover.
+			nodes := make([]grpc.Address, 0)
+			b.Lock()
+			if b.running {
+				b.notifyCh <- nodes
+			}
+			b.resetTime = time.Now()
+			b.Unlock()
+			b.Add(1)
+			b.notifyServiceInstances()
+		}
 		return addr, nil, status.Errorf(codes.Unavailable, "%s is unavailable", b.service)
 	}
 	return addr, func() {}, nil
