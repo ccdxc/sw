@@ -1,19 +1,19 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    obj_base.hpp
- *
- * @brief   base object definition for all objects
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// Basic object definition for all objects
+///
+//----------------------------------------------------------------------------
 
-#if !defined (__OBJ_BASE_HPP__)
-#define __OBJ_BASE_HPP__
+#ifndef __FRAMEWORK_OBJ_BASE_HPP__
+#define __FRAMEWORK_OBJ_BASE_HPP__
 
 namespace api {
 
-/**
- * @brief    base class for all objects
- */
+///  \brief Base class for all objects
 class obj_base {
 };
 
@@ -21,6 +21,4 @@ class obj_base {
 
 using api::obj_base;
 
-
-#endif    /** __OBJ_BASE_HPP__ */
-
+#endif    // __FRAMEWORK_OBJ_BASE_HPP__

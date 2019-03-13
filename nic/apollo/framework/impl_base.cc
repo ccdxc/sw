@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    impl_base.cc
- *
- * @brief   base object definition for all impl objects
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// Base object definition for all impl objects
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/framework/impl.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -22,53 +24,38 @@ namespace impl {
 asic_impl_base *impl_base::asic_impl_  = NULL;
 pipeline_impl_base *impl_base::pipeline_impl_  = NULL;
 
-/**
- * @brief    one time init function that must be called during bring up
- * @param[in]    params      initialization parameters passed by application
- * @param[in]    asic_cfg    asic configuration parameters
- * @return       SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 impl_base::init(pds_init_params_t *params, asic_cfg_t *asic_cfg) {
     pipeline_cfg_t        pipeline_cfg;
 
-    /**< instanitiate asic implementaiton object */
+    // instanitiate asic implementaiton object
     asic_impl_ = asic_impl_base::factory(asic_cfg);
     SDK_ASSERT(asic_impl_ != NULL);
 
-    /**< instanitiate pipeline implementaiton object */
+    // instanitiate pipeline implementaiton object
     pipeline_cfg.name = params->pipeline;
     pipeline_impl_ = pipeline_impl_base::factory(&pipeline_cfg);
     SDK_ASSERT(pipeline_impl_ != NULL);
 
-    /**< initialize program and asm specific configs */
+    // initialize program and asm specific configs
     pipeline_impl_->program_config_init(params, asic_cfg);
     pipeline_impl_->asm_config_init(params, asic_cfg);
 
-    /**< perform asic initialization */
+    // perform asic initialization
     asic_impl_->asic_init(asic_cfg);
 
-    /**< followed by pipeline initialization */
+    // followed by pipeline initialization
     pipeline_impl_->pipeline_init();
 
     return SDK_RET_OK;
 }
 
-/**
- * @brief    dump all the debug information to given file
- * @param[in] fp    file handle
- */
 void
 impl_base::debug_dump(FILE *fp) {
     asic_impl_->debug_dump(fp);
     pipeline_impl_->debug_dump(fp);
 }
 
-/**
- * @brief        factory method to instantiate an impl object
- * @param[in]    impl    object id
- * @param[in]    args    args (not interpreted by this class)
- */
 impl_base *
 impl_base::factory(impl_obj_id_t obj_id, void *args) {
     switch (obj_id) {
@@ -99,11 +86,6 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     return NULL;
 }
 
-/**
- * @brief    release all the resources associated with this object
- *           and free the memory
- * @param[in] impl_obj    impl instance to be freed
- */
 void
 impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
     switch (obj_id) {

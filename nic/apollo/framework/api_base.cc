@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    api_base.cc
- *
- * @brief   base object definition for all API objects
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This file deals with base object definition for all API objects
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_base.hpp"
@@ -12,9 +14,6 @@
 
 namespace api {
 
-/** @brief        factory method to instantiate an object
- *  @param[in]    api_ctxt API context carrying object related configuration
- */
 api_base *
 api_base::factory(api_ctxt_t *api_ctxt) {
     api_base    *obj;
@@ -58,10 +57,6 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     return NULL;
 }
 
-/** @brief        find an object based on the object id & key information
- *  @param[in]    api_ctxt API context carrying object related information
- * TODO: ignore_dirty is on shaky ground, will try to get rid of it later
- */
 api_base *
 api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
     api_base    *obj;

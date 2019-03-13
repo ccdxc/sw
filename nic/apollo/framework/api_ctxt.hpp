@@ -1,13 +1,15 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    api_ctxt.hpp
- *
- * @brief   Internal API context information
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This file deals with internal API context information
+///
+//----------------------------------------------------------------------------
 
-#if !defined(__API_CTXT_HPP__)
-#define __API_CTXT_HPP__
+#ifndef __FRAMEWORK_API_CTXT_HPP__
+#define __FRAMEWORK_API_CTXT_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api.hpp"
@@ -22,7 +24,7 @@
 
 namespace api {
 
-/**< API specific parameters */
+/// \brief API specific parameters
 typedef union api_params_u {
     pds_device_spec_t         device_spec;
     pds_tep_key_t             tep_key;
@@ -41,14 +43,15 @@ typedef union api_params_u {
     pds_policy_spec_t         policy_spec;
 } api_params_t;
 
-/**< @brief    per API context maintained by framework while processing */
+/// \brief Per API context maintained by framework while processing
 typedef struct api_ctxt_s {
-    api_op_t      api_op;     /**< api operation */
-    obj_id_t      obj_id;     /**< object identifier */
-    api_params_t *api_params; /**< API specific params */
+    api_op_t      api_op;        ///< API operation
+    obj_id_t      obj_id;        ///< Object identifier
+    api_params_t *api_params;    ///< API specific params
 } api_ctxt_t;
 
 slab *api_params_slab(void);
+
 static inline api_params_t *
 api_params_alloc (obj_id_t obj_id, api_op_t api_op)
 {
@@ -73,4 +76,4 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
 using api::api_ctxt_t;
 using api::api_params_t;
 
-#endif    /** __API_CTXT_HPP__ */
+#endif    // __FRAMEWORK_API_CTXT_HPP__

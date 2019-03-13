@@ -1,44 +1,42 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    api.hpp
- *
- * @brief   basic types for API processing
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This file defines basic types for API processing
+///
+//----------------------------------------------------------------------------
 
-#if !defined (__API_HPP__)
-#define __API_HPP__
+#ifndef __FRAMEWORK_API_HPP__
+#define __FRAMEWORK_API_HPP__
 
 namespace api {
 
-/**< forward declarations */
+// forward declarations
 typedef struct api_ctxt_s api_ctxt_t;
 typedef struct obj_ctxt_s obj_ctxt_t;
 
-/**
- * @brief    API operation
- */
+/// \brief API operation
 typedef enum api_op_e {
-    API_OP_NONE,
-    API_OP_CREATE,
-    API_OP_DELETE,
-    API_OP_UPDATE,
-    API_OP_INVALID,
+    API_OP_NONE,       ///< None
+    API_OP_CREATE,     ///< Create
+    API_OP_DELETE,     ///< Delete
+    API_OP_UPDATE,     ///< Update
+    API_OP_INVALID,    ///< Invalid
 } api_op_t;
 
-/**
- * @brief    object identifiers
- */
+/// \brief Object identifiers
 typedef enum obj_id_e {
-    OBJ_ID_NONE,
-    OBJ_ID_DEVICE,
-    OBJ_ID_VCN,
-    OBJ_ID_SUBNET,
-    OBJ_ID_TEP,
-    OBJ_ID_VNIC,
-    OBJ_ID_MAPPING,
-    OBJ_ID_ROUTE_TABLE,
-    OBJ_ID_POLICY,
+    OBJ_ID_NONE,           ///< None
+    OBJ_ID_DEVICE,         ///< Device
+    OBJ_ID_VCN,            ///< VCN
+    OBJ_ID_SUBNET,         ///< Subnet
+    OBJ_ID_TEP,            ///< TEP
+    OBJ_ID_VNIC,           ///< VNIC
+    OBJ_ID_MAPPING,        ///< Mapping
+    OBJ_ID_ROUTE_TABLE,    ///< Route table
+    OBJ_ID_POLICY,         ///< Policy
     OBJ_ID_MAX,
 } obj_id_t;
 
@@ -49,4 +47,4 @@ using api::obj_id_t;
 using api::api_ctxt_t;
 using api::obj_ctxt_t;
 
-#endif    /** __API_HPP__ */
+#endif    // __FRAMEWORK_API_HPP__

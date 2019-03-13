@@ -1,20 +1,20 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    impl.hpp
- *
- * @brief   basic types for impl classes
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// Basic types for impl classes
+///
+//----------------------------------------------------------------------------
 
-#if !defined (__IMPL_HPP__)
-#define __IMPL_HPP__
+#ifndef __FRAMEWORK_IMPL_HPP__
+#define __FRAMEWORK_IMPL_HPP__
 
 namespace api {
 namespace impl {
 
-/**
- * @brief    impl object identifiers
- */
+/// \brief Impl object identifiers
 typedef enum impl_obj_id_e {
     IMPL_OBJ_ID_NONE,
     IMPL_OBJ_ID_DEVICE,
@@ -33,4 +33,4 @@ typedef enum impl_obj_id_e {
 
 using api::impl::impl_obj_id_t;
 
-#endif    /** __IMPL_HPP__ */
+#endif    // __FRAMEWORK_IMPL_HPP__
