@@ -224,7 +224,7 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case API_OP_CREATE:
         ret = api_obj->reserve_resources(api_obj, obj_ctxt);
-        api_obj->set_rsvd_rscs();
+        obj_ctxt->rsvd_rscs = 1;
         break;
 
     case API_OP_DELETE:
@@ -233,7 +233,7 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case API_OP_UPDATE:
         ret = obj_ctxt->cloned_obj->reserve_resources(api_obj, obj_ctxt);
-        api_obj->set_rsvd_rscs();
+        obj_ctxt->rsvd_rscs = 1;
         break;
 
     default:
@@ -300,7 +300,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // the above callbacks must read current state of respective entries from
     // hw, stash them in the obj_ctxt_t, so the same state can be rewritten back
     // to hw
-    api_obj->set_hw_dirty();
+    obj_ctxt->hw_dirty = 1;
 
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failure in program config stage, "
@@ -369,7 +369,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         ret = api_obj->activate_config(batch_ctxt_.epoch, API_OP_CREATE,
                                        obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
-        api_obj->clear_hw_dirty();
+        obj_ctxt->hw_dirty = 0;
         if (api_obj->stateless()) {
             // destroy this object as it is not needed anymore
             PDS_TRACE_VERBOSE("delay deleting %p", api_obj);
@@ -463,9 +463,9 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         //    in dirty list) before failing (i.e., set hw_dirty bit to true)
         // so, now we have to undo these actions
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
-        if (api_obj->hw_dirty()) {
+        if (obj_ctxt->hw_dirty) {
             api_obj->cleanup_config(obj_ctxt);
-            api_obj->clear_hw_dirty();
+            obj_ctxt->hw_dirty = 0;
         }
         api_obj->del_from_db();
         api_obj->delay_delete();
@@ -478,9 +478,9 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // 3. potentially called cleanup_config() to clear entries in hw and
         // 4. called set_hw_dirty()
         // so, now we have to undo these actions
-        if (api_obj->hw_dirty()) {
+        if (obj_ctxt->hw_dirty) {
             api_obj->program_config(obj_ctxt);  // TODO: don't see a need for this !!
-            api_obj->clear_hw_dirty();
+            obj_ctxt->hw_dirty = 0;
         }
         if (obj_ctxt->cloned_obj) {
             obj_ctxt->cloned_obj->delay_delete();
@@ -495,10 +495,10 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // 4. called update_config() on cloned obj
         // 5. called set_hw_dirty() on original object
         // so, now we have to undo these actions
-        if (api_obj->hw_dirty()) {
+        if (obj_ctxt->hw_dirty) {
             obj_ctxt->cloned_obj->cleanup_config(obj_ctxt);
             // api_obj->program_config(obj_ctxt);
-            api_obj->clear_hw_dirty();
+            obj_ctxt->hw_dirty = 0;
         }
         obj_ctxt->cloned_obj->delay_delete();
         break;

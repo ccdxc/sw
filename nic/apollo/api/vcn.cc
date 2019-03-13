@@ -70,7 +70,7 @@ sdk_ret_t
 vcn_entry::nuke_resources_(void) {
     // other than an index allocation, no other h/w resources are used for vcn,
     // so this is same as release_resources()
-    return release_resources();
+    return this->release_resources();
 }
 
 sdk_ret_t

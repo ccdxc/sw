@@ -57,6 +57,8 @@ public:
      */
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) override {
+        // this object results in register programming only, hence no resources
+        // need to be reserved for this object
         return SDK_RET_OK;
     }
 
@@ -67,6 +69,8 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
+        // all configuration is programmed only during activate stage
+        // for this object, hence this is a no-op
         return SDK_RET_OK;
     }
 
@@ -76,6 +80,9 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t release_resources(void) override {
+        // no resources are resreved for this object and until
+        // activate stage, no hw programming done as well, hence
+        // this is a no-op
         return SDK_RET_OK;
     }
 
@@ -87,6 +94,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+        // as program_config() is no-op, cleanup_config() is no-op as well
         return SDK_RET_OK;
     }
 
@@ -168,14 +176,15 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t nuke_resources_(void) {
+        // no resources are used by this object, hence this is a no-op
         return SDK_RET_OK;
     }
 
 private:
-    ipv4_addr_t    ip_addr_;       /**< physical IP (aka. MyTEP IP) in substrate */
-    mac_addr_t     mac_addr_;      /**< MyTEP mac address */
-    ipv4_addr_t    gw_ip_addr_;    /**< IP of default gw in the substrate */
-    impl_base      *impl_;         /**< impl object instance */
+    ipv4_addr_t    ip_addr_;       ///< physical IP (aka. MyTEP IP) in substrate
+    mac_addr_t     mac_addr_;      ///< MyTEP mac address
+    ipv4_addr_t    gw_ip_addr_;    ///< IP of default gw in the substrate
+    impl_base      *impl_;         ///< impl object instance
 } __PACK__;
 
 /** @} */    // end of PDS_DEVICE_ENTRY

@@ -60,6 +60,10 @@ struct obj_ctxt_s {
     void          *cb_ctxt;       ///< Object handlers can save & free state
                                   ///< across callbacks here and is opaque to
                                   ///< the api engine
+    uint8_t rsvd_rscs:1;          ///< True if resource reservation stage is done
+    uint8_t hw_dirty:1;           ///< True if hw entries are updated,
+                                  ///< but not yet activated
+
     obj_ctxt_s() {
         api_op = API_OP_INVALID;
         api_params = NULL;

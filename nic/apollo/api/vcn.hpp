@@ -60,6 +60,7 @@ public:
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
+        // no programming is done for this object, hence this is a no-op
         return SDK_RET_OK;
     }
 
@@ -69,6 +70,7 @@ public:
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+        // no programming is done for this object, hence this is a no-op
         return SDK_RET_OK;
     }
 

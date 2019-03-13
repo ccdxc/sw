@@ -156,29 +156,8 @@ public:
     /// \brief Clear the dirty bit on this object
     void clear_in_dirty_list(void) { in_dirty_list_ = 0; }
 
-    /// \brief Set hardware dirty
-    ///
-    /// Set hardware dirty bit to indicate that hw entries are updated
-    /// with the config in this object, but epoch not yet activated
-    void set_hw_dirty(void) { hw_dirty_ = 1; }
-
-    /// \brief Return true if hw is "touched" with the config
-    uint8_t hw_dirty(void) const { return hw_dirty_; }
-
-    /// \brief Clear hw dirty bit on this object
-    void clear_hw_dirty(void) { hw_dirty_ = 0; }
-
     /// \brief Return true if this is 'stateless' object
     bool stateless(void) { return stateless_; }
-
-    /// \brief    set a bit to indicate that hw entries are reserved, if any
-    void set_rsvd_rscs(void) { rsvd_rscs_ = 1; }
-
-    /// \@brief    return true if this obj is past resource reservation stage
-    uint8_t rsvd_rscs(void) const { return rsvd_rscs_; }
-
-    /// \brief    clear the rsvd resources bit on this object
-    void clear_rsvd_rscs(void) { rsvd_rscs_ = 0; }
 
     /// \brief Return stringified key of the object (for debugging)
     virtual string key2str(void) const { return "api_base_key"; }
@@ -187,11 +166,8 @@ public:
     virtual string tostr(void) const { return "api_base"; }
 
 protected:
-    uint8_t in_dirty_list_:1;    ///< True if object is in the dirty list
-    uint8_t rsvd_rscs_:1;        ///< True if resource reservation stage is done
-    uint8_t hw_dirty_:1;         ///< True if hw entries are updated,
-                                 ///< but not yet activated
-    uint8_t stateless_:1;        ///< True this object doesn't go into any databases
+    uint8_t in_dirty_list_:1;        ///< True if object is in the dirty list
+    uint8_t stateless_:1;            ///< True this object doesn't go into any databases
 } __PACK__;
 
 }    // namespace api

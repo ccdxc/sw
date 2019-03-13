@@ -168,7 +168,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_subnet_key_t key_;                    ///< subnet Key
+    pds_subnet_key_t key_;                    ///< subnet key
     pds_route_table_key_t v4_route_table_;    ///< route table id
     pds_route_table_key_t v6_route_table_;    ///< route table id
     pds_policy_key_t ing_v4_policy_;          ///< ingress IPv4 policy id
