@@ -593,6 +593,26 @@ static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 {
 	struct deferred_work *work;
 
+	if (add) {
+		/* Do we have space for this filter?  We test the counters
+		 * here before checking the need for deferral so that we
+		 * can return an overflow error to the stack.
+		 */
+		if ((is_multicast_ether_addr(addr) &&
+		     lif->nmcast < lif->ionic->ident->dev.nmcasts_per_lif))
+			lif->nmcast++;
+		else if ((!is_multicast_ether_addr(addr) &&
+		     lif->nucast < lif->ionic->ident->dev.nucasts_per_lif))
+			lif->nucast++;
+		else
+			return -ENOSPC;
+	} else {
+		if (is_multicast_ether_addr(addr) && lif->nmcast)
+			lif->nmcast--;
+		else if (!is_multicast_ether_addr(addr) && lif->nucast)
+			lif->nucast--;
+	}
+
 	if (in_interrupt()) {
 		work = kzalloc(sizeof(*work), GFP_ATOMIC);
 		if (!work) {
@@ -681,8 +701,8 @@ static void _ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 
 static void ionic_set_rx_mode(struct net_device *netdev)
 {
-	struct lif *master_lif = netdev_priv(netdev);
-	union identity *ident = master_lif->ionic->ident;
+	struct lif *lif = netdev_priv(netdev);
+	union identity *ident = lif->ionic->ident;
 	unsigned int rx_mode;
 
 	rx_mode = RX_MODE_F_UNICAST;
@@ -691,16 +711,36 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 	rx_mode |= (netdev->flags & IFF_PROMISC) ? RX_MODE_F_PROMISC : 0;
 	rx_mode |= (netdev->flags & IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
 
-	if (netdev_uc_count(netdev) + 1 > ident->dev.nucasts_per_lif)
-		rx_mode |= RX_MODE_F_PROMISC;
-	if (netdev_mc_count(netdev) > ident->dev.nmcasts_per_lif)
-		rx_mode |= RX_MODE_F_ALLMULTI;
-
-	if (master_lif->rx_mode != rx_mode)
-		_ionic_lif_rx_mode(master_lif, rx_mode);
-
+	/* sync unicast addresses
+	 * next check to see if we're in an overflow state
+	 *    if so, we track that we overflowed and enable NIC PROMISC
+	 *    else if the overflow is set and not needed
+	 *       we remove our overflow flag and check the netdev flags
+	 *       to see if we can disable NIC PROMISC
+	 */
 	__dev_uc_sync(netdev, ionic_addr_add, ionic_addr_del);
+	if (netdev_uc_count(netdev) + 1 > ident->dev.nucasts_per_lif) {
+		rx_mode |= RX_MODE_F_PROMISC;
+		lif->uc_overflow = true;
+	} else if (lif->uc_overflow) {
+		lif->uc_overflow = false;
+		if (!(netdev->flags & IFF_PROMISC))
+			rx_mode &= ~RX_MODE_F_PROMISC;
+	}
+
+	/* same for multicast */
 	__dev_mc_sync(netdev, ionic_addr_add, ionic_addr_del);
+	if (netdev_mc_count(netdev) > ident->dev.nmcasts_per_lif) {
+		rx_mode |= RX_MODE_F_ALLMULTI;
+		lif->mc_overflow = true;
+	} else if (lif->mc_overflow) {
+		lif->mc_overflow = false;
+		if (!(netdev->flags & IFF_ALLMULTI))
+			rx_mode &= ~RX_MODE_F_ALLMULTI;
+	}
+
+	if (lif->rx_mode != rx_mode)
+		_ionic_lif_rx_mode(lif, rx_mode);
 }
 
 static int ionic_set_features(struct net_device *netdev,

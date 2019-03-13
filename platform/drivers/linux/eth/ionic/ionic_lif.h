@@ -157,6 +157,10 @@ struct lif {
 	u32 rx_copybreak;
 	unsigned int rx_mode;
 	u32 hw_features;
+	bool mc_overflow;
+	unsigned int nmcast;
+	bool uc_overflow;
+	unsigned int nucast;
 	struct ionic_lif_stats *lif_stats;
 	dma_addr_t lif_stats_pa;
 	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
