@@ -44,7 +44,7 @@ testbundles:
         - linktest/linktest.testbundle
         - filters/filters.testbundle
         - subifs/subifs.testbundle
-        #- rx_mode/rx_mode.testbundle
+        - rx_mode/rx_mode.testbundle
         - networking/connectivity.testbundle
         - vlanoffload/vlanoffload.testbundle
         - multicast/multicast.testbundle
