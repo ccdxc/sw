@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -81,18 +82,21 @@ type TestNode struct {
 
 // TestBed is the state of the testbed
 type TestBed struct {
-	Topo                 Topology             // testbed topology
-	Params               TestBedParams        // testbed params - provided by warmd
-	Nodes                []*TestNode          // nodes in the testbed
-	mockMode             bool                 // mock iota server and venice node for testing purposes
-	mockIota             *mockIotaServer      // mock iota server
-	skipSetup            bool                 // skip setting up the cluster
-	hasNaplesSim         bool                 // has Naples sim nodes in the topology
-	hasNaplesHW          bool                 // testbed has Naples HW in the topology
-	allocatedVlans       []uint32             // VLANs allocated for this testbed
-	veniceLoggedinCtx    context.Context      // venice logged in context
-	veniceRestClient     []apiclient.Services // Venice REST API client
-	unallocatedInstances []*InstanceParams    // currently unallocated instances
+	Topo                 Topology                   // testbed topology
+	Params               TestBedParams              // testbed params - provided by warmd
+	Nodes                []*TestNode                // nodes in the testbed
+	mockMode             bool                       // mock iota server and venice node for testing purposes
+	mockIota             *mockIotaServer            // mock iota server
+	skipSetup            bool                       // skip setting up the cluster
+	hasNaplesSim         bool                       // has Naples sim nodes in the topology
+	hasNaplesHW          bool                       // testbed has Naples HW in the topology
+	allocatedVlans       []uint32                   // VLANs allocated for this testbed
+	veniceLoggedinCtx    context.Context            // venice logged in context
+	veniceRestClient     []apiclient.Services       // Venice REST API client
+	unallocatedInstances []*InstanceParams          // currently unallocated instances
+	testResult           map[string]bool            // test result
+	taskResult           map[string]error           // sub task result
+	caseResult           map[string]*TestCaseResult // test case result counts
 
 	// cached message responses from iota server
 	iotaClient      *common.GRPCClient   // iota grpc client
@@ -100,6 +104,12 @@ type TestBed struct {
 	addNodeResp     *iota.NodeMsg        // add node resp from iota server
 	makeClustrResp  *iota.MakeClusterMsg // resp to make cluster message
 	authCfgResp     *iota.AuthMsg        // auth response
+}
+
+// TestCaseResult stores test case results
+type TestCaseResult struct {
+	passCount int
+	failCount int
 }
 
 // NewTestBed initializes a new testbed and returns a testbed handler
@@ -150,9 +160,12 @@ func NewTestBed(topoName string, paramsFile string) (*TestBed, error) {
 
 	// create a testbed instance
 	tb := TestBed{
-		Topo:   *topo,
-		Params: params,
-		Nodes:  make([]*TestNode, len(topo.Nodes)),
+		Topo:       *topo,
+		Params:     params,
+		Nodes:      make([]*TestNode, len(topo.Nodes)),
+		testResult: make(map[string]bool),
+		taskResult: make(map[string]error),
+		caseResult: make(map[string]*TestCaseResult),
 	}
 
 	// initialize node state
@@ -858,7 +871,66 @@ func (tb *TestBed) AfterTestCommon() error {
 		os.Exit(1)
 	}
 
+	// remember the result
+	tb.testResult[strings.Join(testInfo.ComponentTexts, "\t")] = testInfo.Failed
+	tb.AddTaskResult("", nil)
 	return nil
+}
+
+// AddTaskResult adds a sub task result to summary
+func (tb *TestBed) AddTaskResult(taskName string, err error) {
+	testInfo := ginkgo.CurrentGinkgoTestDescription()
+	if err != nil && os.Getenv("STOP_ON_ERROR") != "" {
+		fmt.Printf("\n ------ %v |%v ------\n", strings.Join(testInfo.ComponentTexts, "|"), taskName)
+		fmt.Printf("\n------------------ Test Failed exiting--------------------\n")
+		os.Exit(1)
+	}
+
+	// remember the result
+	testName := strings.Join(testInfo.ComponentTexts, "\t")
+	tb.taskResult[fmt.Sprintf("%s\t%s", testName, taskName)] = err
+	if tb.caseResult[testName] == nil {
+		tb.caseResult[testName] = &TestCaseResult{}
+	}
+	if err == nil {
+		tb.caseResult[testName].passCount++
+	} else {
+		tb.caseResult[testName].failCount++
+	}
+}
+
+// PrintResult prints test result summary
+func (tb *TestBed) PrintResult() {
+	fmt.Printf("==================================================================\n")
+	fmt.Printf("                Cases \n")
+	fmt.Printf("==================================================================\n")
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.AlignRight|tabwriter.Debug)
+
+	fmt.Fprintf(w, "Test Bundle\t Group\t Case\t Pass\t Fail\n")
+	for key, res := range tb.caseResult {
+		fmt.Fprintf(w, "%s\t    %d\t    %d\n", key, res.passCount, res.failCount)
+	}
+	w.Flush()
+
+	// print test results
+	fmt.Printf("\n\n\n")
+	fmt.Printf("==================================================================\n")
+	fmt.Printf("                Test Results\n")
+	fmt.Printf("==================================================================\n")
+
+	w = tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.AlignRight|tabwriter.Debug)
+
+	for key, failed := range tb.testResult {
+
+		if !failed {
+			fmt.Fprintf(w, "%s\t         PASS\n", key)
+		} else {
+			fmt.Fprintf(w, "%s\t         FAIL\n", key)
+		}
+	}
+	w.Flush()
+	fmt.Print("==================================================================\n")
 }
 
 // CollectLogs collects all logs files from the testbed

@@ -156,6 +156,9 @@ var _ = Describe("firewall whitelist tests", func() {
 
 				// change the boundary port
 				boundaryPort = rand.Intn(maxRules) + startPort
+
+				// increment task count for each iteration
+				ts.tb.AddTaskResult("", nil)
 			}
 		})
 	})

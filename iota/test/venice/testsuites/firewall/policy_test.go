@@ -268,9 +268,9 @@ var _ = Describe("firewall policy model tests", func() {
 		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()).Should(Succeed())
 	})
 	Context("policy model tests", func() {
-		It("Should be able to verify policy model", func() {
-			if !ts.tb.IsMockMode() {
-				Skip("Skipping policy model tests till its debugged")
+		It("Should be able to verify whitelist policies", func() {
+			if !ts.tb.IsMockMode() && os.Getenv("REGRESSION") == "" {
+				Skip("Skipping policy model tests on PR tests")
 			}
 			Expect(ts.model.NewSGPolicy("test-policy").Commit()).Should(Succeed())
 
@@ -290,22 +290,49 @@ var _ = Describe("firewall policy model tests", func() {
 									}
 								}
 								whitelistResult[fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port)] = err
+								ts.tb.AddTaskResult(fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port), err)
 							}
 						} else {
 							err := testWhitelistPolicy(fromIP, toIP, proto, "")
 							if err != nil {
 								log.Errorf("Error during whitelist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 								if os.Getenv("STOP_ON_ERROR") != "" {
-										log.Errorf("Whitelist Test failed for: %s\t%s\t%s. Err: %v", fromIP, toIP, proto, err)
+									log.Errorf("Whitelist Test failed for: %s\t%s\t%s. Err: %v", fromIP, toIP, proto, err)
 									os.Exit(1)
 								}
 							}
 							whitelistResult[fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto)] = err
+							ts.tb.AddTaskResult(fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 
 						}
 					}
 				}
 			}
+
+			// print the whitelist results
+			fmt.Print("==================================================================\n")
+			fmt.Printf("                Whitelist Test Results\n")
+			fmt.Print("==================================================================\n")
+
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.AlignRight|tabwriter.Debug)
+
+			for key, err := range whitelistResult {
+
+				if err == nil {
+					fmt.Fprintf(w, "%s\t    PASS\n", key)
+				} else {
+					fmt.Fprintf(w, "%s\t    FAIL\n", key)
+				}
+			}
+			w.Flush()
+
+		})
+
+		It("Should be able to verify blacklist policies", func() {
+			if !ts.tb.IsMockMode() && os.Getenv("REGRESSION") == "" {
+				Skip("Skipping policy model tests on PR tests")
+			}
+			Expect(ts.model.NewSGPolicy("test-policy").Commit()).Should(Succeed())
 
 			// blacklist tests
 			blacklistResult := make(map[string]error)
@@ -324,6 +351,7 @@ var _ = Describe("firewall policy model tests", func() {
 									}
 								}
 								blacklistResult[fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port)] = err
+								ts.tb.AddTaskResult(fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port), err)
 							}
 						} else {
 							err := testBlacklistPolicy(fromIP, toIP, proto, "")
@@ -331,40 +359,24 @@ var _ = Describe("firewall policy model tests", func() {
 								log.Errorf("Error during blacklist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 
 								if os.Getenv("STOP_ON_ERROR") != "" {
-										log.Errorf("Blacklist Test failed for: %s\t%s\t%s. Err: %v", fromIP, toIP, proto, err)
+									log.Errorf("Blacklist Test failed for: %s\t%s\t%s. Err: %v", fromIP, toIP, proto, err)
 									os.Exit(1)
 								}
 							}
 							blacklistResult[fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto)] = err
+							ts.tb.AddTaskResult(fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 
 						}
 					}
 				}
 			}
 
-			// print the whitelist results
-			fmt.Print("==================================================================\n")
-			fmt.Printf("                Whitelist Test Results\n")
-			fmt.Print("==================================================================\n")
-
-			w := tabwriter.NewWriter(os.Stdout, 18, 2, 1, ' ', tabwriter.AlignRight|tabwriter.Debug)
-
-			for key, err := range whitelistResult {
-
-				if err == nil {
-					fmt.Fprintf(w, "%s\t    PASS\n", key)
-				} else {
-					fmt.Fprintf(w, "%s\t    FAIL\n", key)
-				}
-			}
-			w.Flush()
-
 			// print the blacklist results
 			fmt.Print("==================================================================\n")
 			fmt.Printf("                Blacklist Test Results\n")
 			fmt.Print("==================================================================\n")
 
-			w = tabwriter.NewWriter(os.Stdout, 18, 2, 1, ' ', tabwriter.AlignRight|tabwriter.Debug)
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.AlignRight|tabwriter.Debug)
 			for key, err := range blacklistResult {
 
 				if err == nil {

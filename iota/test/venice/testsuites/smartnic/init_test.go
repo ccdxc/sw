@@ -81,5 +81,6 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	if ts != nil && ts.tb != nil {
 		ts.tb.Cleanup()
+		ts.tb.PrintResult()
 	}
 })

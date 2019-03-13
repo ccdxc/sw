@@ -33,16 +33,17 @@ references:
   - iota/test/venice
   - platform/drivers/linux
   - iota/test/venice/hwtest
+  - iota/test/venice/hwtest/hwregression
 
 dependencies:
   test: nic
   test: platform
   nic: platform
-  nic: test/venice_naples_e2e
+  nic: iota/test/venice/hwtest
   platform: nic
-  platform: test/venice_naples_e2e
-  venice: test/venice_naples_e2e
-  iota: test/venice_naples_e2e
+  platform: iota/test/venice/hwtest
+  venice: iota/test/venice/hwtest
+  iota: iota/test/venice/hwtest
   dol: nic
   dol/test/networking : nic
   nic/agent: venice

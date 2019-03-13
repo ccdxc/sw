@@ -58,6 +58,7 @@ var _ = Describe("firewall ALG tests", func() {
 			Eventually(func() error {
 				return ts.model.Action().FTPGetFails(workloadPairs.ReversePairs())
 			}).Should(Succeed())
+
 		})
 
 		It("Should be able to update FTP ALG policy", func() {
