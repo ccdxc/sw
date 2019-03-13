@@ -188,6 +188,13 @@ private:
     /**< @brief    destructor */
     ~tep_entry();
 
+    /**
+     * @brief     free h/w resources used by this object, if any
+     *            (this API is invoked during object deletes)
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t nuke_resources_(void);
+
 private:
     /**
      * NOTE: the mac address for this TEP will be learnt in the datapath from

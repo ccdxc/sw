@@ -6,7 +6,7 @@
  * @brief   This file contains core helper functions
  */
 
-#if !defined (__PDS_CORE_HPP__)
+#ifndef __PDS_CORE_HPP__
 #define __PDS_CORE_HPP__
 
 #include <signal.h>
@@ -32,7 +32,8 @@ enum {
 };
 
 sdk_ret_t thread_spawn(pds_state *state);
-sdk_ret_t parse_global_config(string pipeline, string cfg_file, pds_state *state);
+sdk_ret_t parse_global_config(string pipeline, string cfg_file,
+                              pds_state *state);
 sdk_ret_t parse_pipeline_config(string pipeline, pds_state *state);
 
 typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
@@ -41,4 +42,4 @@ sdk_ret_t schedule_timers(void);
 
 }    // namespace core
 
-#endif    /** __PDS_CORE_HPP__ */
+#endif    // __PDS_CORE_HPP__

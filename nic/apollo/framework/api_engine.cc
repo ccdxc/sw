@@ -58,7 +58,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         // this could be XXX-DEL-ADD/ADD-XXX-DEL-XXX-ADD kind of scenario in
         // same batch, as we don't expect to see ADD-XXX-ADD (unless we want
         // to support idempotency)
-        SDK_ASSERT(api_obj->is_in_dirty_list() == true);
+        SDK_ASSERT(api_obj->in_dirty_list() == true);
         obj_ctxt_t& octxt = batch_ctxt_.dirty_obj_map.find(api_obj)->second;
         SDK_ASSERT((octxt.api_op == API_OP_NONE) ||
                    (octxt.api_op == API_OP_DELETE));
@@ -72,7 +72,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
             if (octxt.api_op == API_OP_UPDATE) {
                 // XXX-DEL-ADD scenario, clone & re-init cfg
                 octxt.api_params = api_ctxt->api_params;
-                octxt.cloned_obj = api_obj->clone();
+                octxt.cloned_obj = api_obj->clone(api_ctxt);
                 ret = octxt.cloned_obj->init_config(api_ctxt);
                 SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
             } else {
@@ -101,7 +101,7 @@ api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
 
     api_obj = api_base::find_obj(api_ctxt);
     if (api_obj) {
-        if (api_obj->is_in_dirty_list()) {
+        if (api_obj->in_dirty_list()) {
             // note that we could have cloned_obj as non-NULL in this case
             // (e.g., UPD-XXX-DEL), but that doesn't matter here
             batch_ctxt_.dirty_obj_map[api_obj].api_op =
@@ -128,7 +128,7 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
 
     api_obj = api_base::find_obj(api_ctxt);
     if (api_obj) {
-        if (api_obj->is_in_dirty_list()) {
+        if (api_obj->in_dirty_list()) {
             obj_ctxt_t& octxt =
                 batch_ctxt_.dirty_obj_map.find(api_obj)->second;
             octxt.api_op = api_op_(octxt.api_op, API_OP_UPDATE);
@@ -147,7 +147,7 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
             }
         } else {
             obj_ctxt.api_op = API_OP_UPDATE;
-            obj_ctxt.cloned_obj = api_obj->clone();
+            obj_ctxt.cloned_obj = api_obj->clone(api_ctxt);
             obj_ctxt.api_params = api_ctxt->api_params;
             add_to_dirty_list_(api_obj, obj_ctxt);
             ret = obj_ctxt.cloned_obj->init_config(api_ctxt);
@@ -224,6 +224,7 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case API_OP_CREATE:
         ret = api_obj->reserve_resources(api_obj, obj_ctxt);
+        api_obj->set_rsvd_rscs();
         break;
 
     case API_OP_DELETE:
@@ -232,6 +233,7 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case API_OP_UPDATE:
         ret = obj_ctxt->cloned_obj->reserve_resources(api_obj, obj_ctxt);
+        api_obj->set_rsvd_rscs();
         break;
 
     default:
@@ -461,7 +463,7 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         //    in dirty list) before failing (i.e., set hw_dirty bit to true)
         // so, now we have to undo these actions
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
-        if (api_obj->is_hw_dirty()) {
+        if (api_obj->hw_dirty()) {
             api_obj->cleanup_config(obj_ctxt);
             api_obj->clear_hw_dirty();
         }
@@ -476,8 +478,8 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // 3. potentially called cleanup_config() to clear entries in hw and
         // 4. called set_hw_dirty()
         // so, now we have to undo these actions
-        if (api_obj->is_hw_dirty()) {
-            api_obj->program_config(obj_ctxt); // TODO: don't see need for this
+        if (api_obj->hw_dirty()) {
+            api_obj->program_config(obj_ctxt);  // TODO: don't see a need for this !!
             api_obj->clear_hw_dirty();
         }
         if (obj_ctxt->cloned_obj) {
@@ -493,7 +495,7 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // 4. called update_config() on cloned obj
         // 5. called set_hw_dirty() on original object
         // so, now we have to undo these actions
-        if (api_obj->is_hw_dirty()) {
+        if (api_obj->hw_dirty()) {
             obj_ctxt->cloned_obj->cleanup_config(obj_ctxt);
             // api_obj->program_config(obj_ctxt);
             api_obj->clear_hw_dirty();

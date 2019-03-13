@@ -67,7 +67,8 @@ public:
     virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
 
     /**
-     * @brief     free h/w resources used by this object, if any
+     * @brief     release h/w resources reserved for this object, if any
+     *            (this API is invoked during the rollback stage)
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t release_resources(void) override;
@@ -152,6 +153,13 @@ private:
 
     /**< @brief    destructor */
     ~mapping_entry();
+
+    /**
+     * @brief     free h/w resources used by this object, if any
+     *            (this API is invoked during object deletes)
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t nuke_resources_(void);
 
 private:
     impl_base        *impl_;      /**< impl object instance */

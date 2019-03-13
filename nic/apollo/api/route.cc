@@ -51,7 +51,7 @@ route_table::~route_table() {
 
 void
 route_table::destroy(route_table *rtable) {
-    rtable->release_resources();
+    rtable->nuke_resources_();
     if (rtable->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_ROUTE_TABLE, rtable->impl_);
     }
@@ -81,14 +81,18 @@ route_table::program_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+route_table::nuke_resources_(void) {
+    return impl_->nuke_resources(this);
+}
+
+sdk_ret_t
 route_table::release_resources(void) {
     return impl_->release_resources(this);
 }
 
 sdk_ret_t
 route_table::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    //return impl_->update_hw();
-    return sdk::SDK_RET_INVALID_OP;
+    return impl_->program_hw(this, obj_ctxt);
 }
 
 sdk_ret_t

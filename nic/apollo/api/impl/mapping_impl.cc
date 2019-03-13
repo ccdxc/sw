@@ -109,11 +109,6 @@ mapping_impl::destroy(mapping_impl *impl) {
     (api_params)->handle = (hdl);                                            \
 }
 
-// TODO:
-// 1. index tables don't support reserve()/release() yet, so NAT entries
-// are not reserved
-// 2. not installing REMOTE_VNIC_MAPPING_TX for local IP mappings because
-//    TEP doesn't exist for local vnic IP yet
 sdk_ret_t
 mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                                                   vcn_entry *vcn,
@@ -200,6 +195,24 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                     "public_ip_remote_vnic_tx_hdl %u",
                     public_ip_hdl_, public_ip_remote_vnic_tx_hdl_);
 
+    // reserve an entry for overaly IP to public IP xlation in NAT_TX table
+    // TODO: typecasting to uint32_t should be removed once DM APIs are
+    //       standardized
+    ret = mapping_impl_db()->nat_tbl()->reserve((uint32_t *)&overlay_ip_to_public_ip_nat_hdl_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in NAT_TX table for mapping %s, "
+                      "err %u", api_obj->key2str().c_str(), ret);
+        goto error;
+    }
+
+    // reserve an entry for public IP to overaly IP xlation in NAT_TX table
+    ret = mapping_impl_db()->nat_tbl()->reserve((uint32_t *)&public_ip_to_overlay_ip_nat_hdl_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in NAT_TX table for mapping %s, "
+                      "err %u", api_obj->key2str().c_str(), ret);
+        goto error;
+    }
+
     return SDK_RET_OK;
 
 error:
@@ -283,8 +296,66 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-mapping_impl::release_resources(api_base *api_obj) {
+mapping_impl::nuke_resources(api_base *api_obj) {
     return sdk::SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+mapping_impl::release_local_ip_mapping_resources_(api_base *api_obj) {
+    sdk_table_api_params_t    api_params = { 0 };
+
+    if (overlay_ip_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+        api_params.handle = overlay_ip_hdl_;
+        mapping_impl_db()->local_ip_mapping_tbl()->release(&api_params);
+    }
+    if (overlay_ip_remote_vnic_tx_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+        api_params.handle = overlay_ip_remote_vnic_tx_hdl_;
+        mapping_impl_db()->remote_vnic_mapping_tx_tbl()->release(&api_params);
+    }
+    if (public_ip_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+        api_params.handle = public_ip_hdl_;
+        mapping_impl_db()->local_ip_mapping_tbl()->release(&api_params);
+    }
+    if (public_ip_remote_vnic_tx_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+        api_params.handle = public_ip_remote_vnic_tx_hdl_;
+        mapping_impl_db()->remote_vnic_mapping_tx_tbl()->release(&api_params);
+    }
+
+    // TODO: change the api calls here once DM APIs are standardized
+    if (overlay_ip_to_public_ip_nat_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+        //api_params.handle = overlay_ip_to_public_ip_nat_hdl_;
+        //mapping_impl_db()->nat_tbl()->release(&api_params);
+        mapping_impl_db()->nat_tbl()->release((uint32_t)overlay_ip_to_public_ip_nat_hdl_);
+    }
+    if (public_ip_to_overlay_ip_nat_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+        //api_params.handle = public_ip_to_overlay_ip_nat_hdl_;
+        //mapping_impl_db()->nat_tbl()->release(&api_params);
+        mapping_impl_db()->nat_tbl()->release((uint32_t)public_ip_to_overlay_ip_nat_hdl_);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mapping_impl::release_remote_ip_mapping_resources_(api_base *api_obj) {
+    sdk_table_api_params_t    api_params = { 0 };
+
+    if (remote_vnic_tx_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+        api_params.handle = remote_vnic_tx_hdl_;
+        mapping_impl_db()->remote_vnic_mapping_tx_tbl()->release(&api_params);
+    }
+    if (remote_vnic_rx_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+        api_params.handle = remote_vnic_rx_hdl_;
+        mapping_impl_db()->remote_vnic_mapping_rx_tbl()->release(&api_params);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mapping_impl::release_resources(api_base *api_obj) {
+    if (is_local_) {
+        return release_local_ip_mapping_resources_(api_obj);
+    }
+    return release_remote_ip_mapping_resources_(api_obj);
 }
 
 sdk_ret_t
@@ -305,10 +376,9 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
                                                  tep_impl_obj->nh_id(),
                                                  &spec->fabric_encap);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &remote_vnic_mapping_tx_key,
-                                   &remote_vnic_mapping_tx_data,
-                                   REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID,
-                                   is_local_ ? overlay_ip_remote_vnic_tx_hdl_ :
-                                               remote_vnic_tx_hdl_);
+        &remote_vnic_mapping_tx_data,
+        REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID,
+        is_local_ ? overlay_ip_remote_vnic_tx_hdl_ : remote_vnic_tx_hdl_);
     ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add program entry in REMOTE_VNIC_MAPPING_TX "
@@ -363,8 +433,8 @@ mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
                spec->public_ip.addr.v6_addr.addr8,
                IP6_ADDR8_LEN);
         ret =
-            mapping_impl_db()->nat_tbl()->insert(&nat_data,
-                                                 (uint32_t *)&overlay_ip_to_public_ip_nat_hdl_);
+            mapping_impl_db()->nat_tbl()->insert_atid(&nat_data,
+                                                      overlay_ip_to_public_ip_nat_hdl_);
         if (ret != SDK_RET_OK) {
             return ret;
         }
@@ -374,8 +444,8 @@ mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
                spec->key.ip_addr.addr.v6_addr.addr8,
                IP6_ADDR8_LEN);
         ret =
-            mapping_impl_db()->nat_tbl()->insert(&nat_data,
-                                                 (uint32_t *)&public_ip_to_overlay_ip_nat_hdl_);
+            mapping_impl_db()->nat_tbl()->insert_atid(&nat_data,
+                                                      public_ip_to_overlay_ip_nat_hdl_);
         if (ret != SDK_RET_OK) {
             goto error;
         }
@@ -437,7 +507,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
     }
 
     // TODO: add entry to REMOTE_VNIC_MAPPING_TX table for overlay IP
-    // add_remote_vnic_mapping_tx_entries_(vcn, spec);
+    add_remote_vnic_mapping_tx_entries_(vcn, spec);
 
     return SDK_RET_OK;
 

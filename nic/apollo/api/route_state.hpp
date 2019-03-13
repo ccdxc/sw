@@ -46,6 +46,13 @@ public:
     ///            if not found
     route_table *remove(route_table *table);
 
+    /// \brief    remove current object from the databse(s) and swap it with the
+    ///           new instance of the obj (with same key)
+    /// \param[in] curr_table    current instance of the route table
+    /// \param[in] new_table     new instance of the route table
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update(route_table *curr_table, route_table *new_table);
+
     /// \brief      free route table instance back to slab
     /// \param[in]  route_table   pointer to the allocated route table instance
     void free(route_table *table);

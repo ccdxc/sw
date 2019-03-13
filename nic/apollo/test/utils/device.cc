@@ -19,8 +19,8 @@ device_util::device_util() {
 }
 
 device_util::device_util(std::string device_ip_str,
-                                 std::string mac_addr_str,
-                                 std::string gateway_ip_str) {
+                         std::string mac_addr_str,
+                         std::string gateway_ip_str) {
     this->device_ip_str = device_ip_str;
     this->mac_addr_str = mac_addr_str;
     this->gateway_ip_str = gateway_ip_str;

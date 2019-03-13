@@ -51,7 +51,7 @@ tep_entry::~tep_entry() {
 
 void
 tep_entry::destroy(tep_entry *tep) {
-    tep->release_resources();
+    tep->nuke_resources_();
     if (tep->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_TEP, tep->impl_);
     }
@@ -79,6 +79,11 @@ tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
+}
+
+sdk_ret_t
+tep_entry::nuke_resources_(void) {
+    return impl_->nuke_resources(this);
 }
 
 sdk_ret_t

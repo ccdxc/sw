@@ -70,7 +70,7 @@ policy::~policy() {
  */
 void
 policy::destroy(policy *policy) {
-    policy->release_resources();
+    policy->nuke_resources_();
     if (policy->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_SECURITY_POLICY, policy->impl_);
     }
@@ -114,6 +114,11 @@ sdk_ret_t
 policy::program_config(obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming security policy %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
+}
+
+sdk_ret_t
+policy::nuke_resources_(void) {
+    return impl_->nuke_resources(this);
 }
 
 /**

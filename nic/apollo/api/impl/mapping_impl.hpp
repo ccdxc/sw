@@ -60,13 +60,23 @@ public:
 
     /**
      * @brief     free h/w resources used by this object, if any
+     * @param[in] api_obj    api object holding the resources
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t release_resources(api_base *api_obj) override;
 
     /**
+     * @brief     free h/w resources used by this object, if any
+     *            (this API is invoked during object deletes)
+     * @param[in] api_obj    api object holding the resources
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t nuke_resources(api_base *api_obj) override;
+
+    /**
      * @brief    program all h/w tables relevant to this object except stage 0
      *           table(s), if any
+     * @param[in] api_obj     api object being programmed
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
@@ -76,6 +86,7 @@ public:
     /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
      *           table(s), if any, by updating packed entries with latest epoch#
+     * @param[in] api_obj     api object being cleaned up
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
@@ -117,12 +128,12 @@ public:
 private:
     /**< @brief    constructor */
     mapping_impl() {
-        overlay_ip_to_public_ip_nat_hdl_ = 0xFFFFFFFF;
-        public_ip_to_overlay_ip_nat_hdl_ = 0xFFFFFFFF;
-        overlay_ip_hdl_ = 0xFFFFFFFF;
-        overlay_ip_remote_vnic_tx_hdl_ = 0xFFFFFFFF;
-        public_ip_hdl_ = 0xFFFFFFFF;
-        public_ip_remote_vnic_tx_hdl_ = 0xFFFFFFFF;
+        overlay_ip_to_public_ip_nat_hdl_ = SDK_TABLE_HANDLE_INVALID;
+        public_ip_to_overlay_ip_nat_hdl_ = SDK_TABLE_HANDLE_INVALID;
+        overlay_ip_hdl_ = SDK_TABLE_HANDLE_INVALID;
+        overlay_ip_remote_vnic_tx_hdl_ = SDK_TABLE_HANDLE_INVALID;
+        public_ip_hdl_ = SDK_TABLE_HANDLE_INVALID;
+        public_ip_remote_vnic_tx_hdl_ = SDK_TABLE_HANDLE_INVALID;
     }
 
     /**< @brief    destructor */
@@ -215,6 +226,20 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t read_remote_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec);
+
+    /**
+     * @brief    release all the resources reserved for local IP mapping
+     * @param[in] api_obj    mapping object
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t release_local_ip_mapping_resources_(api_base *api_obj);
+
+    /**
+     * @brief    release all the resources reserved for remote IP mapping
+     * @param[in] api_obj    mapping object
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t release_remote_ip_mapping_resources_(api_base *api_obj);
 
 private:
     bool    is_local_;

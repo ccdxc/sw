@@ -93,7 +93,8 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t update_config(api_base *orig_obj,
+                                    obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    activate the epoch in the dataplane by programming stage 0
@@ -125,7 +126,8 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t update_db(api_base *orig_obj,
+                                obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    initiate delay deletion of this object
@@ -154,7 +156,8 @@ public:
      * @return    hash value
      */
     static uint32_t route_table_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(pds_route_table_key_t)) % ht_size;
+        return hash_algo::fnv_hash(key,
+                                   sizeof(pds_route_table_key_t)) % ht_size;
     }
 
     /**
@@ -189,6 +192,13 @@ private:
 
     /**< @brief    destructor */
     ~route_table();
+
+    /**
+     * @brief     free h/w resources used by this object, if any
+     *            (this API is invoked during object deletes)
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t nuke_resources_(void);
 
 private:
     pds_route_table_key_t    key_;        /**< route table key */

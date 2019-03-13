@@ -24,11 +24,6 @@ namespace api {
  * @{
  */
 
-/**
- * @brief    factory method to allocate and initialize a device entry
- * @param[in] pds_device device information
- * @return    new instance of device or NULL, in case of error
- */
 device_entry *
 device_entry::factory(pds_device_spec_t *pds_device) {
     device_entry *device;
@@ -46,16 +41,9 @@ device_entry::factory(pds_device_spec_t *pds_device) {
     return device;
 }
 
-/**
- * @brief    release all the s/w state associate with the given device,
- *           if any, and free the memory
- * @param[in] device device to be freed
- * NOTE: h/w entries should have been cleaned up (by calling
- *       impl->cleanup_hw() before calling this
- */
 void
 device_entry::destroy(device_entry *device) {
-    device->release_resources();
+    device->nuke_resources_();
     if (device->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_DEVICE, device->impl_);
     }
@@ -63,11 +51,6 @@ device_entry::destroy(device_entry *device) {
     device_db()->free(device);
 }
 
-/**
- * @brief     initialize device entry with the given config
- * @param[in] api_ctxt API context carrying the configuration
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 device_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_device_spec_t *pds_device = &api_ctxt->api_params->device_spec;
@@ -78,26 +61,11 @@ device_entry::init_config(api_ctxt_t *api_ctxt) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    update all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 device_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
-/**
- * @brief    activate the epoch in the dataplane by programming stage 0
- *           tables, if any
- * @param[in] epoch       epoch being activated
- * @param[in] api_op      api operation
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
@@ -107,32 +75,16 @@ device_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return SDK_RET_OK;
 }
 
-/**
- * @brief    this method is called on new object that needs to replace the
- *           old version of the object in the DBs
- * @param[in] orig_obj    old version of the object being swapped out
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 device_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // TODO: will address this later !!
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**
- * @brief add device to database
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 device_entry::add_to_db(void) {
     return device_db()->insert(this);
 }
 
-/**
- * @brief delete device instance from database
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 device_entry::del_from_db(void) {
     if (device_db()->remove()) {
@@ -141,9 +93,6 @@ device_entry::del_from_db(void) {
     return SDK_RET_ENTRY_NOT_FOUND;
 }
 
-/**
- * @brief    initiate delay deletion of this object
- */
 sdk_ret_t
 device_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_DEVICE, this);

@@ -131,6 +131,10 @@ TEST_F(mapping_test, mapping_create) {
     vcn_util vcn(PDS_VCN_TYPE_TENANT, vcn_id, vcn_cidr);
     ASSERT_TRUE(vcn.create() == SDK_RET_OK);
 
+    // Create local tep
+    tep_util mytep(my_ip, PDS_TEP_ENCAP_TYPE_VNIC);
+    ASSERT_TRUE(mytep.create() == SDK_RET_OK);
+
     // Create remote tep
     tep_util rtep(sub_rem_gw, PDS_TEP_ENCAP_TYPE_VNIC);
     ASSERT_TRUE(rtep.create() == SDK_RET_OK);

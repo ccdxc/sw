@@ -162,6 +162,11 @@ private:
     /// \brief destructor
     ~subnet_entry();
 
+    /// \brief    free h/w resources used by this object, if any
+    ///           (this API is invoked during object deletes)
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t nuke_resources_(void);
+
 private:
     pds_subnet_key_t key_;                    ///< subnet Key
     pds_route_table_key_t v4_route_table_;    ///< route table id

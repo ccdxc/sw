@@ -42,7 +42,7 @@ vcn_entry::~vcn_entry() {
 
 void
 vcn_entry::destroy(vcn_entry *vcn) {
-    vcn->release_resources();
+    vcn->nuke_resources_();
     vcn->~vcn_entry();
     vcn_db()->free(vcn);
 }
@@ -67,8 +67,15 @@ vcn_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+vcn_entry::nuke_resources_(void) {
+    // other than an index allocation, no other h/w resources are used for vcn,
+    // so this is same as release_resources()
+    return release_resources();
+}
+
+sdk_ret_t
 vcn_entry::release_resources(void) {
-    if (hw_id_ != 0xFF) {
+    if (hw_id_ != 0xFFFF) {
         vcn_db()->vcn_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;

@@ -69,19 +69,27 @@ public:
     }
 
     /// \brief Free h/w resources used by this object, if any
-    ///
+    ///        (this API is invoked during object deletes)
+    /// \param[in] api_obj    api object holding the resources
     /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t nuke_resources(api_base *api_obj) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
+    /// \brief Release h/w resources reserved for this object, if any
+    ///        (this API is invoked during the rollback stage)
+    /// \param[in] api_obj    api object holding the resources
+    /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t release_resources(api_base *api_obj) {
         return sdk::SDK_RET_INVALID_OP;
     }
 
     /// \brief Program hardware
-    ///
     /// Program all h/w tables relevant to this object except stage 0 table(s),
     /// if any
     ///
+    /// \param[in] api_obj     api object being programmed
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
                                  obj_ctxt_t *obj_ctxt) {
@@ -93,8 +101,8 @@ public:
     /// Cleanup all h/w tables relevant to this object except stage 0 table(s),
     /// if any, by updating packed entries with latest epoch
     ///
+    /// \param[in] api_obj     api object being cleaned up
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
                                  obj_ctxt_t *obj_ctxt) {

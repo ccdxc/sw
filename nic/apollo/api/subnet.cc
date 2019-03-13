@@ -49,7 +49,7 @@ subnet_entry::~subnet_entry() {
 
 void
 subnet_entry::destroy(subnet_entry *subnet) {
-    subnet->release_resources();
+    subnet->nuke_resources_();
     subnet->~subnet_entry();
     subnet_db()->free(subnet);
 }
@@ -91,8 +91,15 @@ subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+subnet_entry::nuke_resources_(void) {
+    // other than an index allocation, no other h/w resources are used
+    // for subnet, so this is same as release_resources()
+    return release_resources();
+}
+
+sdk_ret_t
 subnet_entry::release_resources(void) {
-    if (hw_id_ != 0xFF) {
+    if (hw_id_ != 0xFFFF) {
         subnet_db()->subnet_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;

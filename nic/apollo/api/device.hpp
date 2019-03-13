@@ -50,7 +50,7 @@ public:
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
     /**
-     * @brief    allocate h/w resources for this object
+     * @brief    allocate/reserve h/w resources for this object
      * @param[in] orig_obj    old version of the unmodified object
      * @param[in] obj_ctxt    transient state associated with this API
      * @return    SDK_RET_OK on success, failure status code on error
@@ -71,7 +71,8 @@ public:
     }
 
     /**
-     * @brief     free h/w resources used by this object, if any
+     * @brief     release h/w resources reserved for this object, if any
+     *            (this API is invoked during the rollback stage)
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t release_resources(void) override {
@@ -160,6 +161,15 @@ private:
 
     /**< @brief    destructor */
     ~device_entry() {}
+
+    /**
+     * @brief     free h/w resources used by this object, if any
+     *            (this API is invoked during object deletes)
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t nuke_resources_(void) {
+        return SDK_RET_OK;
+    }
 
 private:
     ipv4_addr_t    ip_addr_;       /**< physical IP (aka. MyTEP IP) in substrate */
