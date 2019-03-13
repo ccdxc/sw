@@ -52,6 +52,5 @@ dependencies:
   #venice: test
   venice: test/ci_targets/e2e
   #test: test/ci_targets/e2e
-  #nic/apollo: nic
-  nic/apollo: iota/test/venice/hwtest 
+  nic/apollo: nic
   #nic: nic/apollo
