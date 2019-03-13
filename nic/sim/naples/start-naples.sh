@@ -19,6 +19,29 @@ export CMD_RESOLVER_PORT=9009
 export CMD_GRPC_UNAUTH_PORT=9002
 export NPM_RPC_PORT=9005
 
+fru_base='{
+    "Manufacturing date": "1539734400",
+    "Manufacturer": "PENSANDO SYSTEMS INC.",
+    "Product Name": "NAPLES 100",
+    "Serial Number": "FLM18440000",
+    "Part Number": "68-0003-02 01",
+    "Engineering Change level": "00",
+    "Board Id Number": "1000",
+    "NumMac Address": "24",
+    "Mac Address":'
+
+mac_base="00:ae:cd:01:02:"
+rand=$((RANDOM%100))
+
+if (( $rand > 9 )); then
+    mac='"00:ae:cd:01:02:'$rand'"'
+else
+    mac='"00:ae:cd:01:02:0'$rand'"'
+fi
+
+fru_final=$fru_base$mac"}"
+echo $fru_final > /tmp/fru.json
+
 if [ -z "$WITH_QEMU" ]; then
     WITH_QEMU=0
     echo "Running naples-sim in standalone mode"

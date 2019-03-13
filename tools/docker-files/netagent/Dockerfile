@@ -7,4 +7,6 @@ COPY nmd /
 COPY nevtsproxy /
 COPY tmagent /
 COPY fakedelphihub /
+CMD mkdir -p /nic/bin
+COPY fwupdate /nic/bin
 CMD /netagent -npm pen-npm -resolver-urls pen-master:9002 -hostif s0 -datapath mock -mode managed -disabletsa"

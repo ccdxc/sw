@@ -278,6 +278,9 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 				},
 			},
 		}
+
+		tutils.CreateFruJSON(it.getNaplesMac(i))
+
 		_, err := it.apisrvClient.ClusterV1().Host().Create(it.ctx, host)
 		if err != nil {
 			log.Fatalf("Error creating Host object %v, err: %v", host, err)

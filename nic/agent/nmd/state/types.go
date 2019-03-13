@@ -329,17 +329,7 @@ func ReadFruFromJSON() *nmd.NaplesFru {
 	fruJSON, err := os.Open("/tmp/fru.json")
 	if err != nil {
 		log.Errorf("Failed to open /tmp/fru.json.")
-		return &nmd.NaplesFru{
-			ManufacturingDate: "00000000",
-			Manufacturer:      "PENSANDO SYSTEM INC.",
-			ProductName:       "NAPLES MOCK",
-			SerialNum:         "PEN12345678",
-			PartNum:           "PENMOCK123",
-			BoardId:           "NOBOARD",
-			EngChangeLevel:    "00",
-			NumMacAddr:        "1",
-			MacStr:            "00:AE:CD:01:02:03",
-		}
+		return nil
 	}
 	defer fruJSON.Close()
 	var dat map[string]interface{}

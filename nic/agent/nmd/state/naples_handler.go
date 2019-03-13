@@ -172,6 +172,8 @@ func (n *NMD) StartManagedMode() error {
 			}
 
 			nicObj, _ := n.GetSmartNIC()
+			ver, _ := getRunningSoftwareVersion()
+			log.Infof("VERSION IS : %v", ver)
 
 			if nicObj != nil {
 
@@ -188,8 +190,8 @@ func (n *NMD) StartManagedMode() error {
 				nicObj.Status.SerialNum = n.config.Status.Fru.SerialNum
 				nicObj.Status.PrimaryMAC = n.config.Status.Fru.MacStr
 				nicObj.Status.IPConfig = n.config.Status.IPConfig
-				nicObj.Status.Interfaces = updateInterfaces()
-				nicObj.Status.SmartNICVersion = n.config.Status.Fru.EngChangeLevel
+				nicObj.Status.Interfaces = listInterfaces()
+				nicObj.Status.SmartNICVersion = ver
 				nicObj.Status.SmartNICSku = n.config.Status.Fru.PartNum
 			} else {
 
@@ -214,8 +216,8 @@ func (n *NMD) StartManagedMode() error {
 						PrimaryMAC:      n.config.Status.Fru.MacStr,
 						IPConfig:        n.config.Status.IPConfig,
 						SystemInfo:      nil,
-						Interfaces:      updateInterfaces(),
-						SmartNICVersion: n.config.Status.Fru.EngChangeLevel,
+						Interfaces:      listInterfaces(),
+						SmartNICVersion: ver,
 						SmartNICSku:     n.config.Status.Fru.PartNum,
 					},
 				}

@@ -1,0 +1,32 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package nmd;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+message ImageInfo {
+    string BuildDate = 1[(gogoproto.jsontag) = "build_date,omitempty"];
+    string BuildUser = 2[(gogoproto.jsontag) = "build_user,omitempty"];
+    string BaseVersion = 3[(gogoproto.jsontag) = "base_version,omitempty"];
+    string SoftwareVersion = 4[(gogoproto.jsontag) = "software_version,omitempty"];
+    string NicmgrCompatVersion = 5[(gogoproto.jsontag) = "nicmgr_compat_version,omitempty"];
+    string KernelCompatVersion = 6[(gogoproto.jsontag) = "kernel_compat_version,omitempty"];
+}
+
+message FwVersion {
+    ImageInfo SystemImage = 1[(gogoproto.jsontag) = "system_image,omitempty"];
+    ImageInfo KernelFit = 2[(gogoproto.jsontag) = "kernel_fit,omitempty"];
+}
+
+// Naples Software object
+message NaplesSoftwareVersion {
+    ImageInfo Uboot = 1 [(gogoproto.jsontag) = "uboot,omitempty"];
+    FwVersion MainFwA = 2 [(gogoproto.jsontag) = "mainfwa,omitempty"];
+    FwVersion MainFwB = 3 [(gogoproto.jsontag) = "mainfwb,omitempty"];
+    ImageInfo GoldFw = 4 [(gogoproto.jsontag) = "goldfw,omitempty"];
+    ImageInfo DiagFw = 5 [(gogoproto.jsontag) = "diagfw,omitempty"];
+}

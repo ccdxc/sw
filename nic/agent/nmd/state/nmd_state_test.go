@@ -289,6 +289,13 @@ func (f *mockUpgAgent) StartPreCheckForUpgOnNextHostReboot(version string) error
 func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mockCtrler, *mockUpgAgent, *mockRolloutCtrler) {
 	// Start a fake delphi hub
 	log.Info("Creating NMD")
+	// Hardcode the MacAddress for now. If we want multiple instances of fru.json with unique MAC, then a getMac() function can be written.
+	err := CreateFruJSON("00:AE:CD:01:02:03")
+	if err != nil {
+		log.Errorf("Error creating /tmp/fru.json file. Err: %v", err)
+		return nil, nil, nil, nil, nil
+	}
+
 	ag := &mockAgent{
 		nicDB: make(map[string]*cmd.SmartNIC),
 	}

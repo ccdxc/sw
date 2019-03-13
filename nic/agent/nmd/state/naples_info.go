@@ -1,18 +1,66 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 
 package state
 
 import (
+	"encoding/json"
+	"errors"
 	"net"
+	"os/exec"
 	"time"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// updateInterfaces - updates all the interfaces present within Naples
-func updateInterfaces() []string {
+func getRunningSoftware() (string, error) {
+	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -r").Output()
+	if err != nil {
+		return "", err
+	}
+
+	log.Infof("Got running software version : %v", string(out))
+	return string(out), err
+}
+
+func getNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersion, error) {
+	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -l").Output()
+	if err != nil {
+		return nil, err
+	}
+
+	var naplesVersion nmd.NaplesSoftwareVersion
+	json.Unmarshal([]byte(out), &naplesVersion)
+
+	return &naplesVersion, nil
+}
+
+func getRunningSoftwareVersion() (string, error) {
+	currentFw, err := getRunningSoftware()
+
+	if err != nil {
+		return "", err
+	}
+
+	naplesVersion, err := getNaplesSoftwareInfo()
+	if err != nil {
+		return "", err
+	}
+
+	switch currentFw {
+	case "mainfwa\n":
+		return naplesVersion.MainFwA.SystemImage.SoftwareVersion, nil
+	case "mainfwb\n":
+		return naplesVersion.MainFwB.SystemImage.SoftwareVersion, nil
+	default:
+		return "", errors.New("unknown firmware version")
+	}
+}
+
+// listInterfaces - updates all the interfaces present within Naples
+func listInterfaces() []string {
 	log.Info("updating interfaces in the SmartNIC object")
 	var interfaces []string
 
@@ -26,17 +74,6 @@ func updateInterfaces() []string {
 		interfaces = append(interfaces, f.Name)
 	}
 	return interfaces
-}
-
-// updateBiosInfo - queries cardconfig and gets the BIOS information
-func updateBiosInfo() *cmd.BiosInfo {
-	log.Info("updating Bios Info in SmartNIC object")
-	return &cmd.BiosInfo{
-		Vendor:         "Pensando",
-		Version:        "12345",
-		FwMajorVersion: "1",
-		FwMinorVersion: "0",
-	}
 }
 
 // updateCPUInfo - queries cardconfig and gets the CPU information
@@ -95,7 +132,6 @@ func UpdateNaplesHealth() []cmd.SmartNICCondition {
 func UpdateNaplesInfo() *cmd.SmartNICInfo {
 	SystemInfo := &cmd.SmartNICInfo{}
 
-	SystemInfo.BiosInfo = updateBiosInfo()
 	SystemInfo.OsInfo = updateOSInfo()
 	SystemInfo.CpuInfo = updateCPUInfo()
 	SystemInfo.MemoryInfo = updateMemoryInfo()
@@ -109,6 +145,11 @@ func UpdateNaplesInfo() *cmd.SmartNICInfo {
 func (n *NMD) UpdateNaplesInfoFromConfig() error {
 	log.Info("Updating Smart NIC information.")
 	nic, _ := n.GetSmartNIC()
+
+	ver, err := getRunningSoftwareVersion()
+	if err != nil {
+		log.Errorf("Failed to get running software version. : %v", err)
+	}
 
 	// TODO : Improve the code below. Too clunky
 	if nic != nil {
@@ -130,8 +171,8 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 		nic.Status.PrimaryMAC = n.config.Status.Fru.MacStr
 		nic.Status.IPConfig = n.config.Status.IPConfig
 		nic.Status.SystemInfo = nil
-		nic.Status.Interfaces = updateInterfaces()
-		nic.Status.SmartNICVersion = n.config.Status.Fru.EngChangeLevel
+		nic.Status.Interfaces = listInterfaces()
+		nic.Status.SmartNICVersion = ver
 		nic.Status.SmartNICSku = n.config.Status.Fru.PartNum
 	} else {
 
@@ -157,8 +198,8 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 				PrimaryMAC:      n.config.Status.Fru.MacStr,
 				IPConfig:        n.config.Status.IPConfig,
 				SystemInfo:      nil,
-				Interfaces:      updateInterfaces(),
-				SmartNICVersion: n.config.Status.Fru.EngChangeLevel,
+				Interfaces:      listInterfaces(),
+				SmartNICVersion: ver,
 				SmartNICSku:     n.config.Status.Fru.PartNum,
 			},
 		}

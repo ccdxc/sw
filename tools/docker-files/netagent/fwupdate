@@ -1,0 +1,54 @@
+#!/bin/sh
+
+#
+# FIRMWARE UPDATE UTILITY
+#
+
+R=""
+if [ `arch` != aarch64 ]; then
+    export PATH=`pwd`/bin:$PATH
+    R=`pwd`/data
+fi
+
+main()
+{
+    while getopts "rl" opt; do
+        case "$opt" in
+        r) action=GET_RUNNING_FW; ;;
+        l) action=LIST_FW; ;;
+        esac
+    done
+
+    case "$action" in
+    NONE)
+        echo "===> Nothing to do"
+        ;;
+
+    GET_RUNNING_FW)
+        echo "mainfwa"
+        ;;
+
+    LIST_FW)
+        list_firmware
+        ;;
+    *)
+        ;;
+    esac
+}
+
+# The list of running firmware comes from /var/run/fwupdate.cache
+# which is created at startup.  Firmware update operations can
+# proceed to overwrite these images that we booted from, so
+# the cache ensures that we always have a record of where we came from
+list_firmware()
+{
+version=`cat VERSION`
+sft_version="\"software_version\": \"$version\","
+image="{\"build_date\": \"Mon Mar 11 17:43:11 PDT 2019\", \"build_user\": \"mock-test\", \"base_version\": \"2018.08-git-gbd4f006\", $sft_version\"nicmgr_compat_version\": \"1\", \"kernel_compat_version\": \"1\"}"
+#echo $image
+#echo $sft_version
+
+echo "{\"uboot\": {\"image\":$image}, \"mainfwa\" : {\"system_image\" : $image , \"kernel_fit\":$image},\"mainfwb\" : {\"system_image\" : $image , \"kernel_fit\":$image}, \"goldfw\": {\"kernel_fit\":$image},\"diagfw\" : {} }"
+}
+
+main "$@"

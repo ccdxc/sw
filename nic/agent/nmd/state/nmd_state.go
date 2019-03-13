@@ -210,6 +210,9 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		}
 	}
 
+	// Create the SmartNIC object if it does not exist, and populate it with appropriate information from NaplesConfig.
+	nm.UpdateNaplesInfoFromConfig()
+
 	//// Start the control loop based on configured Mode
 	//if nm.config.Spec.Mode == nmd.MgmtMode_HOST {
 	//	// Start in Classic Mode
@@ -517,7 +520,7 @@ func (n *NMD) StartRestServer() error {
 
 	t2 := router.Methods("GET").Subrouter()
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
-	t2.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileGetHandler))
+	t2.HandleFunc(NaplesInfoURL, httputils.MakeHTTPHandler(n.NaplesInfoGetHandler))
 	t2.HandleFunc(CmdEXECUrl, NaplesCmdExecHandler)
 	t2.HandleFunc("/api/{*}", unknownAction)
 	t2.HandleFunc("/debug/pprof/", pprof.Index)
@@ -794,4 +797,11 @@ func NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.Write([]byte(stdErrOut))
+}
+
+// NaplesInfoGetHandler is the REST handler for Naples Profiles GET
+func (n *NMD) NaplesInfoGetHandler(r *http.Request) (interface{}, error) {
+	n.UpdateNaplesInfoFromConfig()
+	info := n.nic
+	return info, nil
 }

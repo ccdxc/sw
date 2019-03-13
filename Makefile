@@ -172,6 +172,7 @@ install:
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
 	@cp -p ${PWD}/bin/cbin/nevtsproxy tools/docker-files/netagent/nevtsproxy
 	@cp -p ${PWD}/bin/cbin/tmagent tools/docker-files/netagent/tmagent
+	@echo  ${GIT_VERSION} > tools/docker-files/netagent/VERSION
 	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done

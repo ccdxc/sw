@@ -5,6 +5,7 @@ package testutils
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -240,4 +241,19 @@ func CheckEventually(eval Evaluator, intervals ...string) bool {
 			return true
 		}
 	}
+}
+
+// CreateFruJSON Creates the fru.json file for Mock test cases.
+func CreateFruJSON(MacAddress string) error {
+	fru := `{"Manufacturing date": "1539734400", "Manufacturer": "PENSANDO SYSTEMS INC.",
+                  "Product Name": "NAPLES 100", "Serial Number": "FLM18440006",
+                  "Part Number": "68-0003-02 01", "Engineering Change level": "00",
+                  "Board Id Number": "1000", "NumMac Address": "24",
+                  "Mac Address": "%s"
+                }`
+
+	fru = fmt.Sprintf(fru, MacAddress)
+
+	data := []byte(fru)
+	return ioutil.WriteFile("/tmp/fru.json", data, 0644)
 }
