@@ -1,0 +1,24 @@
+[
+  {
+    "kind": "Vrf",
+    "meta": {
+      "name": "scale-vrf-2",
+      "tenant": "default",
+      "namespace": "scale-vrf-0"
+    },
+    "spec": {
+      "vrf-type": "CUSTOMER"
+    }
+  },
+  {
+    "kind": "Vrf",
+    "meta": {
+      "name": "scale-vrf-0",
+      "tenant": "default",
+      "namespace": "scale-vrf-2"
+    },
+    "spec": {
+      "vrf-type": "CUSTOMER"
+    }
+  }
+]

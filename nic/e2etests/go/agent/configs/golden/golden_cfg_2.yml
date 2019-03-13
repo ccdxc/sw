@@ -7,6 +7,11 @@ objects:
   count: 4
   rest-endpoint: "/api/namespaces/"
   spec-file: "generated/namespaces.json"
+- kind: Vrf
+  name: scale-vrf
+  count: 2
+  rest-endpoint: "/api/vrfs/"
+  spec-file: "generated/vrfs.json"
 - kind: Network
   name: scale-nw
   count: 8

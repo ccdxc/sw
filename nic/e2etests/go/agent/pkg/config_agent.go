@@ -28,6 +28,7 @@ func ConfigAgent(c *Config, manifestFile string) error {
 
 type AgentConfig struct {
 	Namespaces         []netproto.Namespace
+	Vrfs               []netproto.Vrf
 	Networks           []netproto.Network
 	Endpoints          []netproto.Endpoint
 	SgPolicies         []netproto.SGPolicy
@@ -70,6 +71,7 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 	}
 
 	kindMap := map[string]interface{}{
+		"Vrf":              &agentCfg.Vrfs,
 		"Namespace":        &agentCfg.Namespaces,
 		"Network":          &agentCfg.Networks,
 		"Endpoint":         &agentCfg.Endpoints,
@@ -114,6 +116,13 @@ func (agentCfg *AgentConfig) push() error {
 	for _, ns := range agentCfg.Namespaces {
 		doConfig(ns, restURL)
 
+	}
+
+	fmt.Printf("Creating %d VRFs...\n", len(agentCfg.Vrfs))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.Vrfs)])
+	for _, vrf := range agentCfg.Vrfs {
+		doConfig(vrf, restURL)
 	}
 
 	fmt.Printf("Creating %d Networks...\n", len(agentCfg.Networks))

@@ -7,6 +7,11 @@ objects:
   count: 4
   rest-endpoint: "/api/namespaces/"
   spec-file: "generated/namespaces.json"
+- kind: Vrf
+  name: scale-vrf
+  count: 2
+  rest-endpoint: "/api/vrfs/"
+  spec-file: "generated/vrfs.json"
 - kind: Network
   name: scale-nw
   count: 8
@@ -32,21 +37,21 @@ objects:
   count: 1
   rest-endpoint: "/api/tcp/proxies/"
   spec-file: "generated/tcp_proxy_policies.json"
-#- kind: IPSecSAEncrypt
-#  name: scale-ipsec-encrypt-sa
-#  count: 4
-#  rest-endpoint: "/api/ipsec/encryption/"
-#  spec-file: "generated/ipsec_encryption.json"
-#- kind: IPSecSADecrypt
-#  name: scale-ipsec-decrypt-sa
-#  count: 4
-#  rest-endpoint: "/api/ipsec/decryption/"
-#  spec-file: "generated/ipsec_decryption.json"
-#- kind: IPSecPolicy
-#  name: scale-ipsec-policies
-#  count: 2
-#  rest-endpoint: "/api/ipsec/policies/"
-#  spec-file: "generated/ipsec_policies.json"
+- kind: IPSecSAEncrypt
+  name: scale-ipsec-encrypt-sa
+  count: 4
+  rest-endpoint: "/api/ipsec/encryption/"
+  spec-file: "generated/ipsec_encryption.json"
+- kind: IPSecSADecrypt
+  name: scale-ipsec-decrypt-sa
+  count: 4
+  rest-endpoint: "/api/ipsec/decryption/"
+  spec-file: "generated/ipsec_decryption.json"
+- kind: IPSecPolicy
+  name: scale-ipsec-policies
+  count: 2
+  rest-endpoint: "/api/ipsec/policies/"
+  spec-file: "generated/ipsec_policies.json"
 
 # TODO Uncomment this section while validating mirror sessions and ipfix in dev
 #- kind: FlowExportPolicy
