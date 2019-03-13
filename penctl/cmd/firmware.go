@@ -98,7 +98,7 @@ func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		s := strings.Replace(string(resp), `\n`, "\n", -1)
 		firmware = s
 	}
 	if verbose {
@@ -143,7 +143,7 @@ func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		s := strings.Replace(string(resp), `\n`, "\n", -1)
 		fmt.Println(s)
 		fmt.Println("(To be deprecated. Please use: penctl show firmware-version)")
 	}

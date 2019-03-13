@@ -132,7 +132,7 @@ func getSystemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if len(resp) > 3 {
-		s := strings.Replace(string(resp[0:len(resp)-2]), `\n`, "\n", -1)
+		s := strings.Replace(string(resp), `\n`, "\n", -1)
 		fmt.Println(s)
 	}
 

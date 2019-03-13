@@ -789,6 +789,9 @@ func NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stdErrOut, _ := naplesExecCmd(&req)
-	fmt.Fprintln(w, stdErrOut)
+	stdErrOut, err := naplesExecCmd(&req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.Write([]byte(stdErrOut))
 }
