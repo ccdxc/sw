@@ -115,11 +115,9 @@ static inline int to_ionic_mr_flags(int access)
 
 enum ionic_qp_flags {
 	/* bits that determine qp access */
-	IONIC_QPF_LOCAL_WRITE		= BIT(0),
-	IONIC_QPF_REMOTE_WRITE		= BIT(1),
-	IONIC_QPF_REMOTE_READ		= BIT(2),
-	IONIC_QPF_REMOTE_ATOMIC		= BIT(3),
-	IONIC_QPF_MW_BIND		= BIT(4),
+	IONIC_QPF_REMOTE_WRITE		= BIT(0),
+	IONIC_QPF_REMOTE_READ		= BIT(1),
+	IONIC_QPF_REMOTE_ATOMIC		= BIT(2),
 
 	/* bits that determine other qp behavior */
 	IONIC_QPF_REMOTE_PRIVILEGED	= BIT(10),
@@ -134,9 +132,6 @@ static inline int from_ionic_qp_flags(int flags)
 {
 	int access_flags = 0;
 
-	if (flags & IONIC_QPF_LOCAL_WRITE)
-		access_flags |= IB_ACCESS_LOCAL_WRITE;
-
 	if (flags & IONIC_QPF_REMOTE_WRITE)
 		access_flags |= IB_ACCESS_REMOTE_WRITE;
 
@@ -145,9 +140,6 @@ static inline int from_ionic_qp_flags(int flags)
 
 	if (flags & IONIC_QPF_REMOTE_ATOMIC)
 		access_flags |= IB_ACCESS_REMOTE_ATOMIC;
-
-	if (flags & IONIC_QPF_MW_BIND)
-		access_flags |= IB_ACCESS_MW_BIND;
 
 	return access_flags;
 }
@@ -158,9 +150,6 @@ static inline int to_ionic_qp_flags(int access, bool sqd_notify,
 {
 	int flags = 0;
 
-	if (access & IB_ACCESS_LOCAL_WRITE)
-		flags |= IONIC_QPF_LOCAL_WRITE;
-
 	if (access & IB_ACCESS_REMOTE_WRITE)
 		flags |= IONIC_QPF_REMOTE_WRITE;
 
@@ -169,9 +158,6 @@ static inline int to_ionic_qp_flags(int access, bool sqd_notify,
 
 	if (access & IB_ACCESS_REMOTE_ATOMIC)
 		flags |= IONIC_QPF_REMOTE_ATOMIC;
-
-	if (access & IB_ACCESS_MW_BIND)
-		flags |= IONIC_QPF_MW_BIND;
 
 	if (sqd_notify)
 		flags |= IONIC_QPF_SQD_NOTIFY;
@@ -661,7 +647,8 @@ struct ionic_v1_admin_wqe {
 		} qp;
 		struct {
 			__be32		attr_mask;
-			__be32		access_flags;
+			__u8		rsvd1[2];
+			__be16		access_flags;
 			__le32		rq_psn;
 			__le32		sq_psn;
 			__le32		qkey_dest_qpn;

@@ -211,14 +211,22 @@ rnr_retry:
     
 pmtu:
 
-    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_PATH_MTU], 1, setup_sqcb_stages
+    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_PATH_MTU], 1, access_flags
     nop
     
     phvwrpair       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, pmtu_log2), d.mod_qp.pmtu[4:0], CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, pmtu_valid), 1
     phvwrpair       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, pmtu_log2), d.mod_qp.pmtu[4:0], CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, pmtu_valid), 1
 
     phvwrpair   p.rdma_feedback.modify_qp.pmtu_log2, d.mod_qp.pmtu[4:0], p.rdma_feedback.modify_qp.pmtu_valid, 1
-    
+
+access_flags:
+    seq         c1, d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_ACCESS_FLAGS], 1
+    phvwrpair.c1    p.rdma_feedback.modify_qp.access_flags_valid, 1, p.rdma_feedback.modify_qp.access_flags, d.mod_qp.access_flags[2:0]
+
+sqd_async_notify:
+    seq         c1, d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_EN_SQD_ASYNC_NOTIFY], 1
+    phvwr.c1    p.rdma_feedback.modify_qp.sqd_async_notify_en, 1
+
 setup_sqcb_stages:
 
     phvwr       p.rdma_feedback.aq_completion.op, AQ_OP_TYPE_MODIFY_QP

@@ -51,6 +51,11 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_MQP_PMTU_LOG2 k.{rdma_aq_feedback_mqp_pmtu_log2_sbit0_ebit1...rdma_aq_feedback_mqp_pmtu_log2_sbit2_ebit4}    
 #define K_MQP_PMTU_VALID k.{rdma_aq_feedback_mqp_pmtu_valid}
 #define K_MQP_RQ_ID k.{rdma_aq_feedback_mqp_rq_id_sbit0_ebit6...rdma_aq_feedback_mqp_rq_id_sbit23_ebit23}
+#define K_SQD_ASYNC_NOTIFY_EN k.{rdma_aq_feedback_mqp_sqd_async_notify_en}
+#define K_ACCESS_FLAGS_VALID k.{rdma_aq_feedback_mqp_access_flags_valid}
+#define K_ACCESS_FLAGS k.{rdma_aq_feedback_mqp_access_flags}
+
+//query_qp params
 #define K_QQP_DMA_ADDR k.{rdma_aq_feedback_qqp_dma_addr_sbit0_ebit7...rdma_aq_feedback_qqp_dma_addr_sbit56_ebit63}
 #define K_QQP_RQ_ID k.{rdma_aq_feedback_qqp_rq_id_sbit0_ebit7...rdma_aq_feedback_qqp_rq_id_sbit16_ebit23}
 
@@ -184,7 +189,8 @@ modify_qp:
 
     CAPRI_RESET_TABLE_2_ARG() 
     phvwr       CAPRI_PHV_RANGE(AQCB_TO_SQCB_P, ah_len, pmtu_valid), k.{rdma_aq_feedback_mqp_ah_len...rdma_aq_feedback_mqp_pmtu_valid}
-    phvwr       CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, rq_id), K_MQP_RQ_ID
+    phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, rq_id), K_MQP_RQ_ID, CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, sqd_async_notify_en), K_SQD_ASYNC_NOTIFY_EN
+    phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, access_flags_valid), K_ACCESS_FLAGS_VALID, CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, access_flags), K_ACCESS_FLAGS
     phvwr       CAPRI_PHV_RANGE(TO_S4_INFO, rrq_base_addr, rnr_retry_count_valid), k.{rdma_aq_feedback_mqp_rrq_base_addr_sbit0_ebit4...rdma_aq_feedback_mqp_rnr_retry_valid}
     phvwr       CAPRI_PHV_RANGE(TO_S5_INFO, rsq_base_addr, rsq_valid), k.{rdma_aq_feedback_mqp_rsq_base_addr_sbit0_ebit5...rdma_aq_feedback_mqp_rsq_valid}
     phvwr       CAPRI_PHV_RANGE(TO_S5_INFO, q_key, q_key_valid), k.{rdma_aq_feedback_mqp_q_key_sbit0_ebit15...rdma_aq_feedback_mqp_q_key_valid}

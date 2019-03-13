@@ -383,7 +383,10 @@ header_type rdma_aq_completion_feedback_header_modify_qp_t {
         rsq_base_addr         :  32;
         rsq_depth_log2        :   5;
         rsq_valid             :   1;
-        rsvd2                 :  16;
+        sqd_async_notify_en   :   1;
+        access_flags_valid    :   1;
+        access_flags          :   3;
+        rsvd2                 :  11;
     }
 }
 

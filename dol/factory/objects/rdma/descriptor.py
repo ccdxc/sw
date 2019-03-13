@@ -297,7 +297,8 @@ class RdmaAqDescriptorQP(Packet):
 class RdmaAqDescriptorModQP(Packet):
     fields_desc = [
         IntField("attr_mask", 0),
-        IntField("access_flags", 0),
+        ShortField("rsvd2", 0),
+        ShortField("access_flags", 0),
         LEIntField("rq_psn", 0),
         LEIntField("sq_psn", 0),
         LEIntField("qkey_dest_qpn", 0),
@@ -857,6 +858,37 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
            desc = self.desc/queryQp
            self.__set_desc(desc)
            logger.ShowScapyObject(queryQp)
+
+        if self.spec != None and hasattr(self.spec.fields, 'modify_qp'):
+            logger.info("Reading Admin Modify QP")
+            # TODO: Read values from spec as and when relevant adminQ ModQP tests are added.
+            attr_mask = self.spec.fields.modify_qp.attr_mask if hasattr(self.spec.fields.modify_qp, 'attr_mask') else 0
+            access_flags = self.spec.fields.modify_qp.access_flags if hasattr(self.spec.fields.modify_qp, 'access_flags') else 0
+            rq_psn = 0
+            sq_psn = 0
+            qkey_dest_qpn = 0
+            rate_limit_kbps = 0
+            pmtu = 0
+            retry = 0
+            rnr_timer = 0
+            retry_timeout = 0
+            rsq_depth = 0
+            rrq_depth = 0
+            pkey_id = 0
+            ah_id_len = 0
+            rrq_index = 0
+            rsq_index = 0
+            dma_addr = 0
+            mod_qp = RdmaAqDescriptorModQP(attr_mask = attr_mask, access_flags = access_flags,
+                                rq_psn = rq_psn, sq_psn = sq_psn, qkey_dest_qpn = qkey_dest_qpn,
+                                rate_limit_kbps = rate_limit_kbps, pmtu = pmtu, retry = retry,
+                                rnr_timer = rnr_timer, retry_timeout = retry_timeout,
+                                rsq_depth = rsq_depth, rrq_depth = rrq_depth, pkey_id = pkey_id,
+                                ah_id_len = ah_id_len, rrq_index = rrq_index,
+                                rsq_index = rsq_index, dma_addr = dma_addr)
+            desc = self.desc/mod_qp
+            self.__set_desc(desc)
+            logger.ShowScapyObject(mod_qp)
 
         if debug is True:
             logger.info("Writing AQ Desciptor @0x%x = op: %d type_state: %d dbid_flags: 0x%x id_ver: %d len: %d" %

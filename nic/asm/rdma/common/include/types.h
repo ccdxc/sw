@@ -1396,7 +1396,10 @@ struct rdma_aq_feedback_t {
             rsq_base_addr            : 32;
             rsq_depth_log2           :  5;
             rsq_valid                :  1;
-            rsvd                     : 16;
+            sqd_async_notify_en      :  1;
+            access_flags_valid       :  1;
+            access_flags             :  3;
+            rsvd                     : 11;
         } modify_qp;
         struct {
             rq_id                    : 24;
@@ -1593,7 +1596,8 @@ struct aqwqe_t {
         } qp;
         struct {
             attr_mask:32;
-            access_flags:32;
+            rsvd2:16;
+            access_flags:16;
             rq_psn:32;
             sq_psn:32;
             qkey_dest_qpn:32;

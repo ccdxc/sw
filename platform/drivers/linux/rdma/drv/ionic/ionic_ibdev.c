@@ -3412,7 +3412,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 			.id_ver = cpu_to_le32(qp->qpid),
 			.mod_qp = {
 				.attr_mask = cpu_to_be32(mask),
-				.access_flags = cpu_to_be32(flags),
+				.access_flags = cpu_to_be16(flags),
 				.rq_psn = attr->rq_psn,
 				.sq_psn = attr->sq_psn,
 #ifdef HAVE_QP_RATE_LIMIT

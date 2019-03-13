@@ -35,6 +35,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_AQ_TX_MODIFY_QP_SQD_ASYNC
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_modify_sqd_async
+        spec    : aq_tx_modify_sqd_async.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY
         enable  : True
         package : test.rdma
