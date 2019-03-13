@@ -258,7 +258,7 @@ func (ug *defaultAuthGetter) processClusterEvent(evt *kvstore.WatchEvent, cluste
 	}
 }
 
-func (ug *defaultAuthGetter) processEventCb(evt *kvstore.WatchEvent) {
+func (ug *defaultAuthGetter) processEventCb(evt *kvstore.WatchEvent) error {
 	switch tp := evt.Object.(type) {
 	case *auth.User:
 		ug.processUserEvent(evt, tp)
@@ -268,8 +268,8 @@ func (ug *defaultAuthGetter) processEventCb(evt *kvstore.WatchEvent) {
 		ug.processClusterEvent(evt, tp)
 	default:
 		ug.logger.Errorf("watcher found object of invalid type: %+v", tp)
-		return
 	}
+	return nil
 }
 
 func (ug *defaultAuthGetter) resetCacheCb() {

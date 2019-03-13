@@ -7,9 +7,10 @@ Input file: svc_events.proto
 package events
 
 const (
-	ServiceStarted = "ServiceStarted"
-	ServiceStopped = "ServiceStopped"
-	ServiceRunning = "ServiceRunning"
+	ServiceStarted      = "ServiceStarted"
+	ServiceStopped      = "ServiceStopped"
+	ServiceRunning      = "ServiceRunning"
+	ServiceUnresponsive = "ServiceUnresponsive"
 )
 
 // GetEventTypes returns the list of event types; this will be set of event types supported,
@@ -19,5 +20,6 @@ func GetEventTypes() []string {
 		ServiceStarted,
 		ServiceStopped,
 		ServiceRunning,
+		ServiceUnresponsive,
 	}
 }

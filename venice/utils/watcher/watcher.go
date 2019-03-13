@@ -11,11 +11,19 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/runtime"
+)
+
+const (
+	// processEvent is aborted after this timeout and watches re-established
+	defProcessEventTimeout = time.Second
 )
 
 // KindOptions defines API Server kind and its ListWatchOptions
@@ -28,7 +36,7 @@ type KindOptions struct {
 type InitiateWatchCb func()
 
 // ProcessEventCb is a callback called when a watch event is received
-type ProcessEventCb func(event *kvstore.WatchEvent)
+type ProcessEventCb func(event *kvstore.WatchEvent) error
 
 type syncFlag struct {
 	sync.RWMutex
@@ -55,14 +63,16 @@ func (f *syncFlag) isSet() bool {
 
 // Watcher watches API server
 type Watcher struct {
-	waitGrp          sync.WaitGroup     // wait group to wait on all go routines to exit
-	watchCtx         context.Context    // ctx for watchers
-	watchCancel      context.CancelFunc // cancel for watchers
-	stopFlag         syncFlag           // boolean flag to exit the API watchers
-	kinds            []*KindOptions     // api server objects to watch
-	logger           log.Logger
-	processEventCb   ProcessEventCb
-	inititateWatchCb InitiateWatchCb
+	module              string             // module using this watcher
+	waitGrp             sync.WaitGroup     // wait group to wait on all go routines to exit
+	watchCtx            context.Context    // ctx for watchers
+	watchCancel         context.CancelFunc // cancel for watchers
+	stopFlag            syncFlag           // boolean flag to exit the API watchers
+	kinds               []*KindOptions     // api server objects to watch
+	logger              log.Logger
+	processEventCb      ProcessEventCb
+	processEventTimeout time.Duration // processEvent is aborted after this timeout
+	inititateWatchCb    InitiateWatchCb
 }
 
 // initiateWatches watches on api server objects
@@ -101,7 +111,10 @@ func (w *Watcher) initiateWatches(apicl apiclient.Services) {
 			w.logger.ErrorLog("method", "initiateWatches", "msg", fmt.Sprintf("unknown object type returned from [%s] watch: [%+v]", watchList[chosen], value.Interface()))
 			return
 		}
-		w.processEventCb(event)
+		if err := w.processEvent(event); err != nil {
+			w.logger.ErrorLog("method", "initiateWatches", "msg", fmt.Sprintf("error processing event from [%s] watcher", watchList[chosen]))
+			return
+		}
 	}
 }
 
@@ -145,6 +158,7 @@ func (w *Watcher) Stop() {
 
 // Start re-starts the Watcher. It should be only be called after Stop() has been called.
 func (w *Watcher) Start(name, apiServerURL string, rslver resolver.Interface) {
+	w.module = name
 	// create context and cancel
 	w.watchCtx, w.watchCancel = context.WithCancel(context.Background())
 	// unset stop flag
@@ -168,15 +182,17 @@ func NewWatcher(name, apiServer string, rslver resolver.Interface, l log.Logger,
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	watcher := &Watcher{
+		module:      name,
 		watchCtx:    watchCtx,
 		watchCancel: watchCancel,
 		stopFlag: syncFlag{
 			flag: false,
 		},
-		logger:           l,
-		kinds:            kinds,
-		inititateWatchCb: initiateWatchCb,
-		processEventCb:   processEventCb,
+		logger:              l,
+		kinds:               kinds,
+		inititateWatchCb:    initiateWatchCb,
+		processEventCb:      processEventCb,
+		processEventTimeout: defProcessEventTimeout,
 	}
 	// setup wait group
 	watcher.waitGrp.Add(1)
@@ -211,4 +227,25 @@ func (w *Watcher) watch(ctx context.Context, apicl apiclient.Services, kind *Kin
 		return nil, fmt.Errorf("unsupported kind: %s", kind)
 	}
 	return watcher, err
+}
+
+func (w *Watcher) processEvent(event *kvstore.WatchEvent) error {
+	ctx, cancel := context.WithTimeout(w.watchCtx, w.processEventTimeout)
+	defer cancel()
+	c := make(chan error, 1)
+	go func() {
+		c <- w.processEventCb(event)
+		return
+	}()
+	select {
+	case <-ctx.Done():
+		obj, _ := runtime.GetObjectMeta(event.Object)
+		w.logger.ErrorLog("method", "processEvent",
+			"msg", fmt.Sprintf("watch event processing timed out for watch event obj kind [%s], objmeta [%v]", event.Object.GetObjectKind(), obj),
+			"error", ctx.Err())
+		recorder.Event(events.ServiceUnresponsive, events.SeverityLevel_CRITICAL, fmt.Sprintf("module [%s] timed out processing watch events, please check system resources", w.module), event.Object)
+		return ctx.Err()
+	case err := <-c:
+		return err
+	}
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
@@ -78,7 +79,7 @@ var (
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "spyglass_integ_test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
+		EvtTypes:      append(evtsapi.GetEventTypes(), append(cluster.GetEventTypes(), auth.GetEventTypes()...)...),
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true}, logger)
 )

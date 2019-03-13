@@ -1,7 +1,11 @@
 package watcher
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,7 +32,6 @@ const (
 
 var (
 	logger = log.WithContext("Pkg", "watcher_test")
-
 	// create mock events recorder
 	_ = recorder.Override(mockevtsrecorder.NewRecorder("watcher_test", logger))
 )
@@ -44,16 +47,19 @@ func createAPIClient(apiSrvAddr string) apiclient.Services {
 }
 
 type mockCbs struct {
-	initiateWatch int
-	processEvent  int
+	initiateWatch  int
+	processEvent   int
+	processingTime time.Duration
 }
 
 func (m *mockCbs) initiateWatchCb() {
 	m.initiateWatch++
 }
 
-func (m *mockCbs) processEventCb(event *kvstore.WatchEvent) {
+func (m *mockCbs) processEventCb(event *kvstore.WatchEvent) error {
 	m.processEvent++
+	time.Sleep(m.processingTime)
+	return nil
 }
 
 func TestWatcher(t *testing.T) {
@@ -138,4 +144,52 @@ func TestStopStart(t *testing.T) {
 		return cbs.initiateWatch > 1, nil
 	}, "initiateWatchCb should be called at least twice")
 
+}
+
+func TestProcessEvent(t *testing.T) {
+	tests := []struct {
+		name        string
+		processTime time.Duration
+		err         error
+		eventlog    string
+	}{
+		{
+			"processEventCb times out",
+			2 * time.Second,
+			context.DeadlineExceeded,
+			"type=ServiceUnresponsive",
+		},
+		{
+			"processEventCb successful",
+			100 * time.Millisecond,
+			nil,
+			"",
+		},
+	}
+	for _, test := range tests {
+		buf := &bytes.Buffer{}
+		logConfig := log.GetDefaultConfig("watcher_test")
+		logConfig.Filter = log.AllowAllFilter
+		l := log.GetNewLogger(logConfig).SetOutput(buf)
+		_ = recorder.Override(mockevtsrecorder.NewRecorder("watcher_test", l))
+		cbs := &mockCbs{processingTime: test.processTime}
+		watcher := &Watcher{
+			module:              "watcher_test",
+			watchCtx:            context.TODO(),
+			processEventCb:      cbs.processEventCb,
+			processEventTimeout: defProcessEventTimeout,
+			logger:              logger.SetFilter(log.AllowAllFilter),
+		}
+		obj := &auth.User{}
+		obj.Defaults("all")
+		err := watcher.processEvent(&kvstore.WatchEvent{
+			Type:   kvstore.Created,
+			Key:    obj.MakeKey("auth"),
+			Object: obj,
+		})
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, exected error [%v], got [%v]", test.name, test.err, err))
+		Assert(t, strings.Contains(buf.String(), test.eventlog), "[%s] test failed, expected log [%s] to contain event string [%s]", test.name, buf.String(), test.eventlog)
+		t.Log(buf.String())
+	}
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("watcher_test", logger))
 }
