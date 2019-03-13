@@ -4,12 +4,13 @@
     "meta": {
       "name": "scale-nw-0",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "ipv4-subnet": "10.5.7.8/24",
       "ipv4-gateway": "10.5.7.1",
       "vlan-id": 100
@@ -21,12 +22,13 @@
     "meta": {
       "name": "scale-nw-1",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "ipv4-subnet": "10.0.3.5/24",
       "ipv4-gateway": "10.0.3.1",
       "vlan-id": 101
@@ -38,12 +40,13 @@
     "meta": {
       "name": "scale-nw-2",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "ipv4-subnet": "10.7.6.8/24",
       "ipv4-gateway": "10.7.6.1",
       "vlan-id": 102
@@ -55,12 +58,13 @@
     "meta": {
       "name": "scale-nw-3",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "ipv4-subnet": "10.3.9.7/24",
       "ipv4-gateway": "10.3.9.1",
       "vlan-id": 103
@@ -72,12 +76,13 @@
     "meta": {
       "name": "scale-nw-4",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "ipv4-subnet": "10.5.8.2/24",
       "ipv4-gateway": "10.5.8.1",
       "vlan-id": 104
@@ -89,12 +94,13 @@
     "meta": {
       "name": "scale-nw-5",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "ipv4-subnet": "10.3.2.1/24",
       "ipv4-gateway": "10.3.2.1",
       "vlan-id": 105
@@ -106,12 +112,13 @@
     "meta": {
       "name": "scale-nw-6",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "ipv4-subnet": "10.5.4.2/24",
       "ipv4-gateway": "10.5.4.1",
       "vlan-id": 106
@@ -123,12 +130,13 @@
     "meta": {
       "name": "scale-nw-7",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "ipv4-subnet": "10.4.4.5/24",
       "ipv4-gateway": "10.4.4.1",
       "vlan-id": 107

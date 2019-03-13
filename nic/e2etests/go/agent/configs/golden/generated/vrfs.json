@@ -2,9 +2,9 @@
   {
     "kind": "Vrf",
     "meta": {
-      "name": "scale-vrf-2",
+      "name": "scale-vrf-0",
       "tenant": "default",
-      "namespace": "scale-vrf-0"
+      "namespace": "default"
     },
     "spec": {
       "vrf-type": "CUSTOMER"
@@ -13,9 +13,31 @@
   {
     "kind": "Vrf",
     "meta": {
-      "name": "scale-vrf-0",
+      "name": "scale-vrf-1",
       "tenant": "default",
-      "namespace": "scale-vrf-2"
+      "namespace": "default"
+    },
+    "spec": {
+      "vrf-type": "CUSTOMER"
+    }
+  },
+  {
+    "kind": "Vrf",
+    "meta": {
+      "name": "scale-vrf-2",
+      "tenant": "default",
+      "namespace": "default"
+    },
+    "spec": {
+      "vrf-type": "CUSTOMER"
+    }
+  },
+  {
+    "kind": "Vrf",
+    "meta": {
+      "name": "scale-vrf-3",
+      "tenant": "default",
+      "namespace": "default"
     },
     "spec": {
       "vrf-type": "CUSTOMER"

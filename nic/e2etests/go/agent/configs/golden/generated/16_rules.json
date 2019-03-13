@@ -4,11 +4,12 @@
     "meta": {
       "name": "global-fw-rules-vrf-0",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "attach-tenant": true,
       "policy-rules": [
         {
@@ -369,11 +370,12 @@
     "meta": {
       "name": "global-fw-rules-vrf-1",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "attach-tenant": true,
       "policy-rules": [
         {
@@ -388,11 +390,12 @@
     "meta": {
       "name": "global-fw-rules-vrf-2",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "attach-tenant": true,
       "policy-rules": [
         {
@@ -407,11 +410,12 @@
     "meta": {
       "name": "global-fw-rules-vrf-3",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "attach-tenant": true,
       "policy-rules": [
         {

@@ -4,12 +4,13 @@
     "meta": {
       "name": "scale-mirror-0",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "enable": true,
       "packet-size": 128,
       "stop-condition": {},
@@ -66,12 +67,13 @@
     "meta": {
       "name": "scale-mirror-1",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "enable": true,
       "packet-size": 128,
       "stop-condition": {},
@@ -128,12 +130,13 @@
     "meta": {
       "name": "scale-mirror-2",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "enable": true,
       "packet-size": 128,
       "stop-condition": {},
@@ -190,12 +193,13 @@
     "meta": {
       "name": "scale-mirror-3",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "enable": true,
       "packet-size": 128,
       "stop-condition": {},
@@ -252,12 +256,13 @@
     "meta": {
       "name": "scale-mirror-4",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "enable": true,
       "packet-size": 128,
       "stop-condition": {},
@@ -314,12 +319,13 @@
     "meta": {
       "name": "scale-mirror-5",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "enable": true,
       "packet-size": 128,
       "stop-condition": {},
@@ -376,12 +382,13 @@
     "meta": {
       "name": "scale-mirror-6",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "enable": true,
       "packet-size": 128,
       "stop-condition": {},
@@ -438,12 +445,13 @@
     "meta": {
       "name": "scale-mirror-7",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "enable": true,
       "packet-size": 128,
       "stop-condition": {},

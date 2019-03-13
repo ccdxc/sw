@@ -4,12 +4,13 @@
     "meta": {
       "name": "scale-ep-0",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "network-name": "scale-nw-0",
       "interface-type": "uplink",
       "interface": "uplink128",
@@ -25,12 +26,13 @@
     "meta": {
       "name": "scale-ep-1",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "network-name": "scale-nw-1",
       "interface-type": "uplink",
       "interface": "uplink128",
@@ -46,12 +48,13 @@
     "meta": {
       "name": "scale-ep-2",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "network-name": "scale-nw-2",
       "interface-type": "uplink",
       "interface": "uplink128",
@@ -67,12 +70,13 @@
     "meta": {
       "name": "scale-ep-3",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "network-name": "scale-nw-3",
       "interface-type": "uplink",
       "interface": "uplink128",
@@ -88,12 +92,13 @@
     "meta": {
       "name": "scale-ep-4",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "network-name": "scale-nw-4",
       "interface-type": "uplink",
       "interface": "uplink128",
@@ -109,12 +114,13 @@
     "meta": {
       "name": "scale-ep-5",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "network-name": "scale-nw-5",
       "interface-type": "uplink",
       "interface": "uplink128",
@@ -130,12 +136,13 @@
     "meta": {
       "name": "scale-ep-6",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "network-name": "scale-nw-6",
       "interface-type": "uplink",
       "interface": "uplink128",
@@ -151,12 +158,13 @@
     "meta": {
       "name": "scale-ep-7",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "network-name": "scale-nw-7",
       "interface-type": "uplink",
       "interface": "uplink128",
@@ -172,12 +180,13 @@
     "meta": {
       "name": "scale-ep-8",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "network-name": "scale-nw-0",
       "interface-type": "uplink",
       "interface": "uplink129",
@@ -193,12 +202,13 @@
     "meta": {
       "name": "scale-ep-9",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "network-name": "scale-nw-1",
       "interface-type": "uplink",
       "interface": "uplink129",
@@ -214,12 +224,13 @@
     "meta": {
       "name": "scale-ep-10",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "network-name": "scale-nw-2",
       "interface-type": "uplink",
       "interface": "uplink129",
@@ -235,12 +246,13 @@
     "meta": {
       "name": "scale-ep-11",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "network-name": "scale-nw-3",
       "interface-type": "uplink",
       "interface": "uplink129",
@@ -256,12 +268,13 @@
     "meta": {
       "name": "scale-ep-12",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "network-name": "scale-nw-4",
       "interface-type": "uplink",
       "interface": "uplink129",
@@ -277,12 +290,13 @@
     "meta": {
       "name": "scale-ep-13",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "network-name": "scale-nw-5",
       "interface-type": "uplink",
       "interface": "uplink129",
@@ -298,12 +312,13 @@
     "meta": {
       "name": "scale-ep-14",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "network-name": "scale-nw-6",
       "interface-type": "uplink",
       "interface": "uplink129",
@@ -319,12 +334,13 @@
     "meta": {
       "name": "scale-ep-15",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "network-name": "scale-nw-7",
       "interface-type": "uplink",
       "interface": "uplink129",
@@ -340,12 +356,13 @@
     "meta": {
       "name": "scale-ep-16",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "network-name": "scale-nw-0",
       "ipv4-address": "10.5.7.4/32",
       "mac-address": "46:46:a6:4d:ed:e3",
@@ -358,12 +375,13 @@
     "meta": {
       "name": "scale-ep-17",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "network-name": "scale-nw-1",
       "ipv4-address": "10.0.3.4/32",
       "mac-address": "66:fc:b4:a7:4f:8b",
@@ -376,12 +394,13 @@
     "meta": {
       "name": "scale-ep-18",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "network-name": "scale-nw-2",
       "ipv4-address": "10.7.6.4/32",
       "mac-address": "16:ed:75:1a:fa:ba",
@@ -394,12 +413,13 @@
     "meta": {
       "name": "scale-ep-19",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "network-name": "scale-nw-3",
       "ipv4-address": "10.3.9.4/32",
       "mac-address": "16:9a:c3:b0:b8:86",
@@ -412,12 +432,13 @@
     "meta": {
       "name": "scale-ep-20",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "network-name": "scale-nw-4",
       "ipv4-address": "10.5.8.4/32",
       "mac-address": "7a:19:12:b5:b3:d2",
@@ -430,12 +451,13 @@
     "meta": {
       "name": "scale-ep-21",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "network-name": "scale-nw-5",
       "ipv4-address": "10.3.2.4/32",
       "mac-address": "66:8d:44:bf:3a:53",
@@ -448,12 +470,13 @@
     "meta": {
       "name": "scale-ep-22",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "network-name": "scale-nw-6",
       "ipv4-address": "10.5.4.4/32",
       "mac-address": "46:33:75:60:32:9d",
@@ -466,12 +489,13 @@
     "meta": {
       "name": "scale-ep-23",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "network-name": "scale-nw-7",
       "ipv4-address": "10.4.4.4/32",
       "mac-address": "1e:f0:1c:cc:c8:14",
@@ -484,12 +508,13 @@
     "meta": {
       "name": "scale-ep-24",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "network-name": "scale-nw-0",
       "ipv4-address": "10.5.7.5/32",
       "mac-address": "3a:02:9d:92:0e:9e",
@@ -502,12 +527,13 @@
     "meta": {
       "name": "scale-ep-25",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "network-name": "scale-nw-1",
       "ipv4-address": "10.0.3.5/32",
       "mac-address": "26:7b:39:69:b1:bc",
@@ -520,12 +546,13 @@
     "meta": {
       "name": "scale-ep-26",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "network-name": "scale-nw-2",
       "ipv4-address": "10.7.6.5/32",
       "mac-address": "06:01:6e:0a:ef:e7",
@@ -538,12 +565,13 @@
     "meta": {
       "name": "scale-ep-27",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "network-name": "scale-nw-3",
       "ipv4-address": "10.3.9.5/32",
       "mac-address": "22:24:e4:5f:eb:4d",
@@ -556,12 +584,13 @@
     "meta": {
       "name": "scale-ep-28",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "network-name": "scale-nw-4",
       "ipv4-address": "10.5.8.5/32",
       "mac-address": "76:f5:91:08:21:ac",
@@ -574,12 +603,13 @@
     "meta": {
       "name": "scale-ep-29",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-1",
       "network-name": "scale-nw-5",
       "ipv4-address": "10.3.2.5/32",
       "mac-address": "56:aa:b8:a2:2a:29",
@@ -592,12 +622,13 @@
     "meta": {
       "name": "scale-ep-30",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "network-name": "scale-nw-6",
       "ipv4-address": "10.5.4.5/32",
       "mac-address": "16:73:33:b3:cd:61",
@@ -610,12 +641,13 @@
     "meta": {
       "name": "scale-ep-31",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "default",
       "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-3",
       "network-name": "scale-nw-7",
       "ipv4-address": "10.4.4.5/32",
       "mac-address": "5e:c0:98:a0:27:2c",

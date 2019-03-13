@@ -4,11 +4,12 @@
     "meta": {
       "name": "ipsec-encrypt-rules",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-0",
       "attach-tenant": true,
       "rules": [
         {
@@ -96,11 +97,12 @@
     "meta": {
       "name": "ipsec-decrypt-rules",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "attach-tenant": true,
       "rules": [
         {

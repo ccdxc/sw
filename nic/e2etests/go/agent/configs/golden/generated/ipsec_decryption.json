@@ -4,11 +4,12 @@
     "meta": {
       "name": "ipsec-decrypt-sa1",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "attach-tenant": true,
       "protocol": "ESP",
       "authentication-algorithm": "AES_GCM",
@@ -25,11 +26,12 @@
     "meta": {
       "name": "ipsec-decrypt-sa2",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "attach-tenant": true,
       "protocol": "ESP",
       "authentication-algorithm": "AES_GCM",
@@ -46,11 +48,12 @@
     "meta": {
       "name": "ipsec-decrypt-sa3",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "attach-tenant": true,
       "protocol": "ESP",
       "authentication-algorithm": "AES_GCM",
@@ -67,11 +70,12 @@
     "meta": {
       "name": "ipsec-decrypt-sa4",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
+      "vrf-name": "scale-vrf-2",
       "attach-tenant": true,
       "protocol": "ESP",
       "authentication-algorithm": "AES_GCM",
