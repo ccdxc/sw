@@ -656,7 +656,7 @@ func (it *veniceIntegSuite) startAgent() {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		log.Infof("creating telemetry policy agent")
-		tpa, aerr := tpa.NewPolicyAgent(fmt.Sprintf("dummy-uuid-%d", i), globals.Tpm, rc, state.AgentMode_MANAGED, "mock", agent.NetworkAgent, "/tmp/tpa.sock")
+		tpa, aerr := tpa.NewPolicyAgent(fmt.Sprintf("dummy-uuid-%d", i), globals.Tpm, rc, state.AgentMode_MANAGED, "mock", agent.NetworkAgent, agent.GetMgmtIPAddr)
 		if aerr != nil {
 			log.Fatalf("Error creating TPAgent. Err: %v", aerr)
 		}

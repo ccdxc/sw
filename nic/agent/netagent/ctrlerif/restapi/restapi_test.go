@@ -73,7 +73,7 @@ func setup() (*RestServer, error) {
 		return nil, err
 	}
 
-	tpa, err := tpstate.NewTpAgent(nagent, tpdatapath.MockHal())
+	tpa, err := tpstate.NewTpAgent(nagent, func() string { return "192.168.100.101" }, tpdatapath.MockHal())
 	if err != nil {
 		log.Fatalf("Error creating telemetry policy agent. Err: %v", err)
 	}

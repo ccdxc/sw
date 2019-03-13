@@ -159,7 +159,7 @@ func main() {
 		log.Printf("TroubleShooting Agent {%+v} instantiated", tsa)
 
 		// telemetry policy agent
-		tpa, err := tpa.NewPolicyAgent(ag.NetworkAgent.NodeUUID, *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent, "")
+		tpa, err := tpa.NewPolicyAgent(ag.NetworkAgent.NodeUUID, *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent, ag.GetMgmtIPAddr)
 		if err != nil {
 			log.Fatalf("Error creating telemetry policy agent, Err: %v", err)
 		}

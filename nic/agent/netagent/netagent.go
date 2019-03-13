@@ -63,6 +63,7 @@ type Agent struct {
 	NpmClient      *ctrlerif.NpmClient
 	RestServer     *restapi.RestServer
 	Mode           protos.AgentMode
+	mgmtIPAddr     string
 	SysmgrClient   *sysmgr.Client
 	DelphiClient   clientApi.Client
 	NaplesStatus   delphiProto.NaplesStatus
@@ -216,6 +217,7 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		if obj.Fru != nil {
 			ag.NetworkAgent.NodeUUID = obj.Fru.MacStr
 		}
+		ag.mgmtIPAddr = obj.MgmtIP
 
 		// initialize netagent's tsdb client
 		opts := &tsdb.Opts{
@@ -259,4 +261,11 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 // IsNpmClientConnected returns true if NPM client is connected to server
 func (ag *Agent) IsNpmClientConnected() bool {
 	return ag.NpmClient.IsConnected()
+}
+
+// GetMgmtIPAddr returns management ip address received in Naple status
+func (ag *Agent) GetMgmtIPAddr() string {
+	ag.Lock()
+	defer ag.Unlock()
+	return ag.mgmtIPAddr
 }

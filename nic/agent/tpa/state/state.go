@@ -12,8 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/venice/globals"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
@@ -23,6 +21,7 @@ import (
 	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -38,9 +37,10 @@ const (
 type PolicyState struct {
 	// global lock
 	sync.Mutex
-	netAgent *agstate.Nagent
-	store    emstore.Emstore
-	hal      halproto.TelemetryClient
+	netAgent      *agstate.Nagent
+	getMgmtIPAddr func() string
+	store         emstore.Emstore
+	hal           halproto.TelemetryClient
 }
 
 // internal state from db
@@ -66,11 +66,12 @@ type policyDb struct {
 }
 
 // NewTpAgent creates new telemetry policy agent state
-func NewTpAgent(netAgent *agstate.Nagent, halTm halproto.TelemetryClient) (*PolicyState, error) {
+func NewTpAgent(netAgent *agstate.Nagent, getMgmtIPAddr func() string, halTm halproto.TelemetryClient) (*PolicyState, error) {
 	state := &PolicyState{
-		store:    netAgent.Store,
-		netAgent: netAgent,
-		hal:      halTm,
+		store:         netAgent.Store,
+		netAgent:      netAgent,
+		getMgmtIPAddr: getMgmtIPAddr,
+		hal:           halTm,
 	}
 
 	return state, nil
@@ -298,25 +299,27 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 		}
 	}()
 
-	// todo: get local ip from mnic
-	var halSrcAddr *halproto.IPAddress
+	srcIPAddr := p.state.getMgmtIPAddr()
+	if srcIPAddr == "" {
+		// get local endpoint
+		if ep, err := p.state.netAgent.FindLocalEndpoint(p.objMeta.Tenant, p.objMeta.Namespace); err == nil {
+			epAddr := ep.Spec.GetIPv4Address()
+			if epAddr == "" {
+				// pick ipv6
+				epAddr = ep.Spec.GetIPv6Address()
+			}
+			srcAddr, _, err := net.ParseCIDR(epAddr)
+			if err != nil {
+				log.Errorf("failed to parse local endpoint address {%+v} ", epAddr)
+				return fmt.Errorf("invalid local endpoint address %s, %s", srcAddr, err)
+			}
+			srcIPAddr = srcAddr.String()
+		}
+	}
 
-	if ep, err := p.state.netAgent.FindLocalEndpoint(p.objMeta.Tenant, p.objMeta.Namespace); err == nil {
-		epAddr := ep.Spec.GetIPv4Address()
-		if epAddr == "" {
-			// pick ipv6
-			epAddr = ep.Spec.GetIPv6Address()
-		}
-		srcAddr, _, err := net.ParseCIDR(epAddr)
-		if err != nil {
-			log.Errorf("failed to parse local endpoint address {%+v} ", epAddr)
-			return fmt.Errorf("invalid local endpoint address %s, %s", srcAddr, err)
-		}
-
-		halSrcAddr, _, err = convertToHalIPAddr(srcAddr.String())
-		if err != nil {
-			return fmt.Errorf("invalid source address %s, %s", srcAddr, err)
-		}
+	halSrcAddr, _, err := convertToHalIPAddr(srcIPAddr)
+	if err != nil {
+		return fmt.Errorf("invalid source address %s, %s", srcIPAddr, err)
 	}
 
 	for ckey := range p.collectorKeys {
@@ -368,7 +371,6 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 				},
 			},
 
-			//todo: set src ip from mnic
 			SrcIp:          halSrcAddr,
 			DestIp:         halDestAddr,
 			Protocol:       ckey.Protocol,

@@ -53,6 +53,10 @@ func createDataStore() (emstore.Emstore, error) {
 	return mstore, nil
 }
 
+func mockGetMgmtIPAddr() string {
+	return "192.168.1.199"
+}
+
 func TestValidateMeta(t *testing.T) {
 	ds, err := createDataStore()
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
@@ -64,7 +68,7 @@ func TestValidateMeta(t *testing.T) {
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -92,7 +96,7 @@ func TestStoreOps(t *testing.T) {
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -204,7 +208,7 @@ func TestFindNumExports(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockdatapath.MockHal())
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, s)
 
@@ -323,7 +327,7 @@ func TestValidatePolicy(t *testing.T) {
 		},
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, ag)
 
@@ -517,7 +521,7 @@ func TestNewTpAgent(t *testing.T) {
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -625,7 +629,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockdatapath.MockHal())
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, s)
 
@@ -805,7 +809,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -908,7 +912,7 @@ func TestNetagentInfo(t *testing.T) {
 		Store:       ds,
 	}
 
-	s, err := NewTpAgent(na, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -1054,7 +1058,7 @@ func TestTpaDebug(t *testing.T) {
 		Store:       ds,
 	}
 
-	s, err := NewTpAgent(na, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -1279,7 +1283,7 @@ func TestPolicyOps(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -1564,7 +1568,7 @@ func TestMatchRule(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
