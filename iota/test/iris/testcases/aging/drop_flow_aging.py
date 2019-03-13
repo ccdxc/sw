@@ -45,7 +45,7 @@ def Trigger(tc):
     update_sgpolicy(client.ip_address, server.ip_address, tc.iterators.proto, server_port)
 
     profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
+    api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 16")
     profcommandresp = api.Trigger(profilereq)
     cmd = profcommandresp.commands[-1]
     for command in profcommandresp.commands:
