@@ -25,7 +25,6 @@
 #define XLATE_VLAN_HOST_TO_NW_TABLE_SIZE        2048
 #define XLATE_VLAN_NW_TO_HOST_TABLE_SIZE        2048
 
-using boost::property_tree::ptree;
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
 
@@ -179,7 +178,6 @@ TEST_F(l2switch_test, test1) {
     };
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    const char *hal_conf_file = "l2switch/hal.json";
     std::string mpart_json = cfg.cfg_path + "/l2switch/hbm_mem.json";
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
     printf("Parsing sim catalog ...\n");
@@ -188,11 +186,6 @@ TEST_F(l2switch_test, test1) {
     cfg.catalog = catalog;
     printf("\nMPART_JSON %s\n", mpart_json.c_str());
     cfg.mempartition = sdk::platform::utils::mpartition::factory(mpart_json.c_str());
-
-    std::ifstream json_cfg(cfg.cfg_path + hal_conf_file);
-    ptree hal_conf;
-    read_json(json_cfg, hal_conf);
-    cfg.loader_info_file = hal_conf.get<std::string>("asic.loader_info_file").c_str();
 
     default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
     if (default_config_dir) {
