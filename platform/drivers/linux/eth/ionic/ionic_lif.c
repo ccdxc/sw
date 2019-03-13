@@ -37,6 +37,7 @@ static int ionic_station_set(struct lif *lif);
 static int ionic_lif_rss_setup(struct lif *lif);
 static void ionic_lif_set_netdev_info(struct lif *lif);
 static int ionic_intr_remaining(struct ionic *ionic);
+static int ionic_set_nic_features(struct lif *lif, netdev_features_t features);
 
 
 static void ionic_lif_deferred_work(struct work_struct *work)
@@ -702,6 +703,20 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 	__dev_mc_sync(netdev, ionic_addr_add, ionic_addr_del);
 }
 
+static int ionic_set_features(struct net_device *netdev,
+				     netdev_features_t features)
+{
+	struct lif *lif = netdev_priv(netdev);
+	int err;
+
+	netdev_dbg(netdev, "%s: lif->features=0x%08llx new_features=0x%08llx\n",
+		   __func__, (u64)lif->netdev->features, (u64)features);
+
+	err = ionic_set_nic_features(lif, features);
+
+	return err;
+}
+
 static int ionic_set_mac_address(struct net_device *netdev, void *sa)
 {
 	struct sockaddr *addr = sa;
@@ -1032,6 +1047,7 @@ static const struct net_device_ops ionic_netdev_ops = {
 #endif
 	.ndo_get_stats64	= ionic_get_stats64,
 	.ndo_set_rx_mode	= ionic_set_rx_mode,
+	.ndo_set_features	= ionic_set_features,
 	.ndo_set_mac_address	= ionic_set_mac_address,
 	.ndo_validate_addr	= eth_validate_addr,
 #ifdef HAVE_RHEL7_EXTENDED_MIN_MAX_MTU
@@ -1985,7 +2001,51 @@ int ionic_lif_notifyq_init(struct lif *lif)
 	return 0;
 }
 
-static int ionic_get_features(struct lif *lif)
+static u32 ionic_netdev_features_to_nic(netdev_features_t features)
+{
+	u32 wanted = 0;
+
+	if (features & NETIF_F_HW_VLAN_CTAG_TX)
+		wanted |= ETH_HW_VLAN_TX_TAG;
+	if (features & NETIF_F_HW_VLAN_CTAG_RX)
+		wanted |= ETH_HW_VLAN_RX_STRIP;
+	if (features & NETIF_F_HW_VLAN_CTAG_FILTER)
+		wanted |= ETH_HW_VLAN_RX_FILTER;
+	if (features & NETIF_F_RXHASH)
+		wanted |= ETH_HW_RX_HASH;
+	if (features & NETIF_F_RXCSUM)
+		wanted |= ETH_HW_RX_CSUM;
+	if (features & NETIF_F_SG)
+		wanted |= ETH_HW_TX_SG;
+	if (features & NETIF_F_HW_CSUM)
+		wanted |= ETH_HW_TX_CSUM;
+	if (features & NETIF_F_TSO)
+		wanted |= ETH_HW_TSO;
+	if (features & NETIF_F_TSO6)
+		wanted |= ETH_HW_TSO_IPV6;
+	if (features & NETIF_F_TSO_ECN)
+		wanted |= ETH_HW_TSO_ECN;
+	if (features & NETIF_F_GSO_GRE)
+		wanted |= ETH_HW_TSO_GRE;
+	if (features & NETIF_F_GSO_GRE_CSUM)
+		wanted |= ETH_HW_TSO_GRE_CSUM;
+#ifdef NETIF_F_GSO_IPXIP4
+	if (features & NETIF_F_GSO_IPXIP4)
+		wanted |= ETH_HW_TSO_IPXIP4;
+#endif
+#ifdef NETIF_F_GSO_IPXIP6
+	if (features & NETIF_F_GSO_IPXIP6)
+		wanted |= ETH_HW_TSO_IPXIP6;
+#endif
+	if (features & NETIF_F_GSO_UDP_TUNNEL)
+		wanted |= ETH_HW_TSO_UDP;
+	if (features & NETIF_F_GSO_UDP_TUNNEL_CSUM)
+		wanted |= ETH_HW_TSO_UDP_CSUM;
+
+	return wanted;
+}
+
+static int ionic_set_nic_features(struct lif *lif, netdev_features_t features)
 {
 	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
@@ -1993,16 +2053,6 @@ static int ionic_get_features(struct lif *lif)
 		.cmd.features = {
 			.opcode = CMD_OPCODE_FEATURES,
 			.set = FEATURE_SET_ETH_HW_FEATURES,
-			.wanted = ETH_HW_VLAN_TX_TAG
-				| ETH_HW_VLAN_RX_STRIP
-				| ETH_HW_VLAN_RX_FILTER
-				| ETH_HW_RX_HASH
-				| ETH_HW_TX_SG
-				| ETH_HW_TX_CSUM
-				| ETH_HW_RX_CSUM
-				| ETH_HW_TSO
-				| ETH_HW_TSO_IPV6
-				| ETH_HW_TSO_ECN,
 		},
 	};
 	int err;
@@ -2010,6 +2060,7 @@ static int ionic_get_features(struct lif *lif)
 				   ETH_HW_VLAN_RX_STRIP |
 				   ETH_HW_VLAN_RX_FILTER;
 
+	ctx.cmd.features.wanted = ionic_netdev_features_to_nic(features);
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
@@ -2017,8 +2068,9 @@ static int ionic_get_features(struct lif *lif)
 	lif->hw_features = ctx.cmd.features.wanted &
 			   ctx.comp.features.supported;
 
-	if (!(vlan_flags & ctx.comp.features.supported))
-		dev_info(lif->ionic->dev, "NIC is not supporting vlan offload, likely in SmartNIC mode\n");
+	if ((vlan_flags & features) &&
+	    !(vlan_flags & ctx.comp.features.supported))
+		dev_info_once(lif->ionic->dev, "NIC is not supporting vlan offload, likely in SmartNIC mode\n");
 
 	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
 		dev_dbg(dev, "feature ETH_HW_VLAN_TX_TAG\n");
@@ -2056,18 +2108,32 @@ static int ionic_get_features(struct lif *lif)
 	return 0;
 }
 
-static int ionic_set_features(struct lif *lif)
+static int ionic_init_nic_features(struct lif *lif)
 {
 	struct net_device *netdev = lif->netdev;
+	netdev_features_t features;
 	int err;
 
-	err = ionic_get_features(lif);
+	/* set up what we expect to support by default */
+	features = NETIF_F_HW_VLAN_CTAG_TX |
+		   NETIF_F_HW_VLAN_CTAG_RX |
+		   NETIF_F_HW_VLAN_CTAG_FILTER |
+		   NETIF_F_RXHASH |
+		   NETIF_F_SG |
+		   NETIF_F_HW_CSUM |
+		   NETIF_F_RXCSUM |
+		   NETIF_F_TSO |
+		   NETIF_F_TSO6 |
+		   NETIF_F_TSO_ECN;
+
+	err = ionic_set_nic_features(lif, features);
 	if (err)
 		return err;
 
 	if (!is_master_lif(lif))
 		return 0;
 
+	/* tell the netdev what we actually can support */
 	netdev->features |= NETIF_F_HIGHDMA;
 
 	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
@@ -2335,7 +2401,7 @@ static int ionic_lif_init(struct lif *lif)
 			goto err_out_notifyq_deinit;
 	}
 
-	err = ionic_set_features(lif);
+	err = ionic_init_nic_features(lif);
 	if (err)
 		goto err_out_notifyq_deinit;
 
