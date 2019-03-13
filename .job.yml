@@ -36,20 +36,22 @@ references:
   - iota/test/venice/hwtest/hwregression
 
 dependencies:
-  test: nic
+  #test: nic
   test: platform
-  nic: platform
+  #  nic: platform
   nic: iota/test/venice/hwtest
-  platform: nic
+  #platform: nic
   platform: iota/test/venice/hwtest
   venice: iota/test/venice/hwtest
   iota: iota/test/venice/hwtest
-  dol: nic
+  #dol: nic
+  dol: iota/test/venice/hwtest 
   dol/test/networking : nic
-  nic/agent: venice
+  #nic/agent: venice
   nic/agent: test/ci_targets/e2e
-  venice: test
+  #venice: test
   venice: test/ci_targets/e2e
-  test: test/ci_targets/e2e
-  nic/apollo: nic
-  nic: nic/apollo
+  #test: test/ci_targets/e2e
+  #nic/apollo: nic
+  nic/apollo: iota/test/venice/hwtest 
+  #nic: nic/apollo
