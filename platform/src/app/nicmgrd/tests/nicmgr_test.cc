@@ -5,6 +5,7 @@
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
+#include "platform/src/lib/nicmgr/include/eth_if.h"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 #include <grpc++/grpc++.h>

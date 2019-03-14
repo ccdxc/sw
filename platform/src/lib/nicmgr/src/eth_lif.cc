@@ -26,6 +26,7 @@
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 
 #include "logger.hpp"
+#include "eth_if.h"
 #include "eth_dev.hpp"
 #include "rdma_dev.hpp"
 #include "pd_client.hpp"
@@ -50,7 +51,6 @@ macaddr2str (mac_t mac_addr)
              mac_byte[2], mac_byte[1], mac_byte[0]);
     return buf;
 }
-
 
 sdk::lib::indexer *EthLif::fltr_allocator = sdk::lib::indexer::factory(4096);
 
@@ -86,7 +86,7 @@ EthLif::lif_state_to_str(enum lif_state state)
 }
 
 const char*
-EthLif::opcode_to_str(enum cmd_opcode opcode)
+EthLif::opcode_to_str(cmd_opcode_t opcode)
 {
     switch(opcode) {
         CASE(CMD_OPCODE_TXQ_INIT);
@@ -115,20 +115,8 @@ EthLif::opcode_to_str(enum cmd_opcode opcode)
     }
 }
 
-types::LifType
-EthLif::ConvertDevTypeToLifType(EthDevType dev_type)
-{
-    switch(dev_type) {
-        case ETH_HOST: return types::LIF_TYPE_HOST;
-        case ETH_HOST_MGMT: return types::LIF_TYPE_HOST_MANAGEMENT;
-        case ETH_MNIC_OOB_MGMT: return types::LIF_TYPE_MNIC_OOB_MANAGEMENT;
-        case ETH_MNIC_INTERNAL_MGMT: return types::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT;
-        case ETH_MNIC_INBAND_MGMT: return types::LIF_TYPE_MNIC_INBAND_MANAGEMENT;
-        default: return types::LIF_TYPE_NONE;
-    }
-}
-
 EthLif::EthLif(devapi *dev_api,
+                // HalCommonClient *hal_common_client,
                 void *dev_spec,
                 PdClient *pd_client,
                 eth_lif_res_t *res)
@@ -146,7 +134,7 @@ EthLif::EthLif(devapi *dev_api,
     hal_lif_info_.lif_id = res->lif_id;
     std::string lif_name = spec->name + std::string("/lif") + std::to_string(res->lif_id);
     strcpy(hal_lif_info_.name, lif_name.c_str());
-    hal_lif_info_.type = (sdk::platform::lif_type_t)ConvertDevTypeToLifType(spec->eth_type);
+    hal_lif_info_.type = (sdk::platform::lif_type_t)Eth::ConvertDevTypeToLifType(spec->eth_type);
     hal_lif_info_.pinned_uplink_port_num = spec->uplink_port_num;
     hal_lif_info_.enable_rdma = spec->enable_rdma;
 
@@ -302,7 +290,7 @@ EthLif::EthLif(devapi *dev_api,
     state = LIF_STATE_CREATED;
 }
 
-enum status_code
+status_code_t
 EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
@@ -524,7 +512,7 @@ EthLif::FreeUpMacVlanFilters()
     }
 }
 
-enum status_code
+status_code_t
 EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
 {
     int ret;
@@ -629,7 +617,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr, nicmgr_qstate_addr;
@@ -734,16 +722,16 @@ EthLif::AdminCmdHandler(void *obj,
     lif->CmdHandler(req, req_data, resp, resp_data);
 }
 
-enum status_code
+status_code_t
 EthLif::CmdHandler(void *req, void *req_data,
     void *resp, void *resp_data)
 {
     union dev_cmd *cmd = (union dev_cmd *)req;
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
-    enum status_code status = IONIC_RC_SUCCESS;
+    status_code_t status = IONIC_RC_SUCCESS;
 
     NIC_LOG_DEBUG("{}: Handling cmd: {}", hal_lif_info_.name,
-        opcode_to_str((enum cmd_opcode)cmd->cmd.opcode));
+        opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
 
     switch (cmd->cmd.opcode) {
 
@@ -848,12 +836,12 @@ EthLif::CmdHandler(void *req, void *req_data,
     comp->comp.status = status;
     comp->comp.rsvd = 0xff;
     NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", hal_lif_info_.name,
-        opcode_to_str((enum cmd_opcode)cmd->cmd.opcode), status);
+        opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
 
     return (status);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -924,8 +912,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-
-enum status_code
+status_code_t
 EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -1027,7 +1014,7 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -1125,7 +1112,7 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -1249,7 +1236,7 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct features_cmd *cmd = (struct features_cmd *)req;
@@ -1337,7 +1324,7 @@ EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct set_netdev_info_cmd *cmd = (struct set_netdev_info_cmd *)req;
@@ -1367,7 +1354,7 @@ EthLif::_CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -1454,7 +1441,7 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -1541,7 +1528,7 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdSetMode(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rx_mode_set_cmd *cmd = (struct rx_mode_set_cmd *)req;
@@ -1585,7 +1572,7 @@ EthLif::_CmdSetMode(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
 {
     //int status;
@@ -1678,7 +1665,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
 {
     //int status;
@@ -1738,7 +1725,7 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data)
 {
     uint64_t mac_addr;
@@ -1762,7 +1749,7 @@ EthLif::_CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct stats_dump_cmd *cmd = (struct stats_dump_cmd *)req;
@@ -1791,7 +1778,7 @@ EthLif::_CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_dat
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data)
 {
     NIC_LOG_DEBUG("{}: CMD_OPCODE_STATS_DUMP_STOP: host_stats_mem_addr {:#x}",
@@ -1813,7 +1800,7 @@ EthLif::_CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
 {
     int ret;
@@ -1841,7 +1828,7 @@ EthLif::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
     return IONIC_RC_SUCCESS;
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rss_indir_set_cmd *cmd = (struct rss_indir_set_cmd *)req;
@@ -1940,7 +1927,7 @@ EthLif::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
 /*
  * RDMA Commands
  */
-enum status_code
+status_code_t
 EthLif::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;
@@ -1982,7 +1969,7 @@ EthLif::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd *cmd = (struct rdma_queue_cmd *) req;
@@ -2068,7 +2055,7 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;

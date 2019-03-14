@@ -31,10 +31,12 @@
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 
 #include "logger.hpp"
+#include "eth_if.h"
 #include "eth_dev.hpp"
 #include "rdma_dev.hpp"
 #include "pd_client.hpp"
 
+using namespace std;
 using namespace nicmgr;
 using namespace nicmgr_status_msgs;
 
@@ -48,6 +50,25 @@ using nicmgr_status_msgs::EthDeviceHostDownStatusMsg;
 using nicmgr_status_msgs::EthDeviceHostUpStatusMsg;
 
 extern class pciemgr *pciemgr;
+
+EthDevType
+Eth::eth_dev_type_str_to_type(std::string const& s)
+{
+    if (s == "host") {
+        return ETH_HOST;
+    } else if (s == "host_mgmt") {
+        return ETH_HOST_MGMT;
+    } else if (s == "oob_mgmt") {
+        return ETH_MNIC_OOB_MGMT;
+    } else if (s == "internal_mgmt") {
+        return ETH_MNIC_INTERNAL_MGMT;
+    } else if (s == "inband_mgmt") {
+        return ETH_MNIC_INBAND_MGMT;
+    } else {
+        NIC_LOG_ERR("Unknown ETH dev type: {}", s);
+        return ETH_UNKNOWN;
+    }
+}
 
 Eth::Eth(devapi *dev_api,
          void *dev_spec,
@@ -165,6 +186,66 @@ create_mnet(void *obj)
 
     free(obj);
     return NULL;
+}
+
+struct eth_devspec *
+Eth::ParseConfig(boost::property_tree::ptree::value_type node)
+{
+    eth_devspec* eth_spec;
+    auto val = node.second;
+
+    eth_spec = new struct eth_devspec;
+    memset(eth_spec, 0, sizeof(*eth_spec));
+
+    eth_spec->name = val.get<string>("name");
+    eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
+    eth_spec->lif_count = val.get<uint64_t>("lif_count");
+    eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
+    eth_spec->txq_count = val.get<uint64_t>("txq_count");
+    eth_spec->eq_count = val.get<uint64_t>("eq_count");
+    eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
+    eth_spec->intr_count = val.get<uint64_t>("intr_count");
+
+    if (val.get_optional<string>("rdma")) {
+        eth_spec->enable_rdma = true;
+        eth_spec->rdma_sq_count = val.get<uint64_t>("rdma.sq_count");
+        eth_spec->rdma_rq_count = val.get<uint64_t>("rdma.rq_count");
+        eth_spec->rdma_cq_count = val.get<uint64_t>("rdma.cq_count");
+        eth_spec->rdma_eq_count = val.get<uint64_t>("rdma.eq_count");
+        eth_spec->rdma_adminq_count = val.get<uint64_t>("rdma.adminq_count");
+        eth_spec->rdma_pid_count = val.get<uint64_t>("rdma.pid_count");
+        eth_spec->key_count = val.get<uint64_t>("rdma.key_count");
+        eth_spec->pte_count = val.get<uint64_t>("rdma.pte_count");
+        eth_spec->ah_count = val.get<uint64_t>("rdma.ah_count");
+        //eth_spec->barmap_size = val.get<uint64_t>("rdma.barmap_size");
+        eth_spec->barmap_size = 1;
+    }
+
+    if (val.get_optional<string>("network")) {
+        eth_spec->uplink_port_num = val.get<uint64_t>("network.uplink");
+    }
+
+    eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
+    if (val.get_optional<string>("pcie.oprom")) {
+        eth_spec->oprom = Device::oprom_type_str_to_type(val.get<string>("pcie.oprom"));
+    }
+
+    if (val.get_optional<string>("type")) {
+        eth_spec->eth_type = eth_dev_type_str_to_type(val.get<string>("type"));
+    } else {
+        eth_spec->eth_type = ETH_UNKNOWN;
+    }
+
+    eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
+
+    NIC_LOG_DEBUG("Creating eth device with name: {}, type: {}, "
+            "pinned_uplink: {}, qos_group {}",
+            eth_spec->name,
+            eth_dev_type_to_str(eth_spec->eth_type),
+            eth_spec->uplink_port_num,
+            eth_spec->qos_group);
+
+    return eth_spec;
 }
 
 bool
@@ -376,7 +457,7 @@ Eth::DevcmdPoll(void *obj)
 void
 Eth::DevcmdHandler()
 {
-    enum status_code status;
+    status_code_t status;
 
     NIC_HEADER_TRACE("Devcmd");
 
@@ -387,7 +468,7 @@ Eth::DevcmdHandler()
     if (devcmd->done != 0) {
         NIC_LOG_ERR("{}: Devcmd done is set before processing command, opcode {}",
             spec->name,
-            opcode_to_str((enum cmd_opcode)devcmd->cmd.cmd.opcode));
+            opcode_to_str((cmd_opcode_t)devcmd->cmd.cmd.opcode));
         status = IONIC_RC_ERROR;
         goto devcmd_done;
     }
@@ -395,7 +476,7 @@ Eth::DevcmdHandler()
     if (devcmd->signature != DEV_CMD_SIGNATURE) {
         NIC_LOG_ERR("{}: Devcmd signature mismatch, opcode {}",
             spec->name,
-            opcode_to_str((enum cmd_opcode)devcmd->cmd.cmd.opcode));
+            opcode_to_str((cmd_opcode_t)devcmd->cmd.cmd.opcode));
         status = IONIC_RC_ERROR;
         goto devcmd_done;
     }
@@ -429,7 +510,7 @@ devcmd_done:
 #define CASE(opcode) case opcode: return #opcode
 
 const char*
-Eth::opcode_to_str(enum cmd_opcode opcode)
+Eth::opcode_to_str(cmd_opcode_t opcode)
 {
     switch(opcode) {
         CASE(CMD_OPCODE_NOP);
@@ -443,16 +524,16 @@ Eth::opcode_to_str(enum cmd_opcode opcode)
     }
 }
 
-enum status_code
+status_code_t
 Eth::CmdHandler(void *req, void *req_data,
     void *resp, void *resp_data)
 {
     union dev_cmd *cmd = (union dev_cmd *)req;
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
-    enum status_code status = IONIC_RC_SUCCESS;
+    status_code_t status = IONIC_RC_SUCCESS;
 
     NIC_LOG_DEBUG("{}: Handling cmd: {}", spec->name,
-        opcode_to_str((enum cmd_opcode)cmd->cmd.opcode));
+        opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
 
     switch (cmd->cmd.opcode) {
 
@@ -495,12 +576,12 @@ Eth::CmdHandler(void *req, void *req_data,
     comp->comp.status = status;
     comp->comp.rsvd = 0xff;
     NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", spec->name,
-        opcode_to_str((enum cmd_opcode)cmd->cmd.opcode), status);
+        opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
 
     return (status);
 }
 
-enum status_code
+status_code_t
 Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     union identity *rsp = (union identity *)resp_data;
@@ -626,10 +707,10 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 {
-    enum status_code status;
+    status_code_t status;
     EthLif *eth_lif = NULL;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_RESET", spec->name);
@@ -651,7 +732,7 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
@@ -680,7 +761,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     return eth_lif->Init(req, req_data, resp, resp_data);
 }
 
-enum status_code
+status_code_t
 Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_reset_cmd *cmd = (struct lif_reset_cmd *)req;
@@ -709,7 +790,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
     return eth_lif->Reset(req, req_data, resp, resp_data);
 }
 
-enum status_code
+status_code_t
 Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct adminq_init_cmd *cmd = (struct adminq_init_cmd *)req;
@@ -733,7 +814,7 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     return eth_lif->AdminQInit(req, req_data, resp, resp_data);
 }
 
-enum status_code
+status_code_t
 Eth::_CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t ret = SDK_RET_OK;
@@ -759,7 +840,7 @@ Eth::_CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data)
     return (IONIC_RC_SUCCESS);
 }
 
-enum status_code
+status_code_t
 Eth::AdminCmdHandler(uint64_t lif_id,
     void *req, void *req_data,
     void *resp, void *resp_data)
@@ -831,5 +912,18 @@ Eth::SetHalClient(devapi *dapi)
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
         eth_lif->SetHalClient(dapi);
+    }
+}
+
+types::LifType
+Eth::ConvertDevTypeToLifType(EthDevType dev_type)
+{
+    switch(dev_type) {
+        case ETH_HOST: return types::LIF_TYPE_HOST;
+        case ETH_HOST_MGMT: return types::LIF_TYPE_HOST_MANAGEMENT;
+        case ETH_MNIC_OOB_MGMT: return types::LIF_TYPE_MNIC_OOB_MANAGEMENT;
+        case ETH_MNIC_INTERNAL_MGMT: return types::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT;
+        case ETH_MNIC_INBAND_MGMT: return types::LIF_TYPE_MNIC_INBAND_MANAGEMENT;
+        default: return types::LIF_TYPE_NONE;
     }
 }

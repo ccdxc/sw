@@ -16,6 +16,7 @@
 
 #define ACCEL_DEV_CMD_ENUMERATE
 #include "accel_dev.hpp"
+#include "dev.hpp"
 
 /*
  * Size of dev_cmd_regs_t's cmd/cpl area without the data portion.

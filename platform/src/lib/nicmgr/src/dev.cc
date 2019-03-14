@@ -32,26 +32,6 @@ namespace pt = boost::property_tree;
 
 DeviceManager *DeviceManager::instance;
 
-
-EthDevType
-eth_dev_type_str_to_type(std::string const& s)
-{
-    if (s == "host") {
-        return ETH_HOST;
-    } else if (s == "host_mgmt") {
-        return ETH_HOST_MGMT;
-    } else if (s == "oob_mgmt") {
-        return ETH_MNIC_OOB_MGMT;
-    } else if (s == "internal_mgmt") {
-        return ETH_MNIC_INTERNAL_MGMT;
-    } else if (s == "inband_mgmt") {
-        return ETH_MNIC_INBAND_MGMT;
-    } else {
-        NIC_LOG_ERR("Unknown ETH dev type: {}", s);
-        return ETH_UNKNOWN;
-    }
-}
-
 #define CASE(type) case type: return #type
 
 const char *
@@ -65,21 +45,6 @@ eth_dev_type_to_str(EthDevType type)
         CASE(ETH_MNIC_INTERNAL_MGMT);
         CASE(ETH_MNIC_INBAND_MGMT);
         default: return "Unknown";
-    }
-}
-
-OpromType
-oprom_type_str_to_type(std::string const& s)
-{
-    if (s == "legacy") {
-        return OPROM_LEGACY;
-    } else if (s == "uefi") {
-        return OPROM_UEFI;
-    } else if (s == "unified") {
-        return OPROM_UNIFIED;
-    } else {
-        NIC_LOG_ERR("Unknown OPROM type: {}", s);
-        return OPROM_UNKNOWN;
     }
 }
 
@@ -168,7 +133,6 @@ int
 DeviceManager::LoadConfig(string path)
 {
     struct eth_devspec *eth_spec;
-    struct accel_devspec *accel_spec;
 
     NIC_HEADER_TRACE("Loading Config");
     NIC_LOG_DEBUG("Json: {}", path);
@@ -255,39 +219,10 @@ DeviceManager::LoadConfig(string path)
     // Create MNICs
     if (spec.get_child_optional("mnic_dev")) {
         for (const auto &node : spec.get_child("mnic_dev")) {
-            eth_spec = new struct eth_devspec;
-            memset(eth_spec, 0, sizeof(*eth_spec));
 
-            auto val = node.second;
-
-            eth_spec->name = val.get<string>("name");
-            eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
-            eth_spec->lif_count = val.get<uint64_t>("lif_count");
-            eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
-            eth_spec->txq_count = val.get<uint64_t>("txq_count");
-            eth_spec->eq_count = val.get<uint64_t>("eq_count");
-            eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
-            eth_spec->intr_count = val.get<uint64_t>("intr_count");
+            eth_spec = Eth::ParseConfig(node);
             eth_spec->mac_addr = mnic_mac_base--;
 
-            if (val.get_optional<string>("network")) {
-                eth_spec->uplink_port_num = val.get<uint64_t>("network.uplink");
-            }
-
-            if (val.get_optional<string>("type")) {
-                eth_spec->eth_type = eth_dev_type_str_to_type(val.get<string>("type"));
-            } else {
-                eth_spec->eth_type = ETH_UNKNOWN;
-            }
-
-            eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_DEBUG("Creating mnic device with name: {}, type: {}, "
-                         " pinned_uplink: {}, intr_count: {}, qos_group {}",
-                         eth_spec->name,
-                         eth_dev_type_to_str(eth_spec->eth_type),
-                         eth_spec->uplink_port_num,
-                         eth_spec->intr_count,
-                         eth_spec->qos_group);
             AddDevice(ETH, (void *)eth_spec);
         }
     }
@@ -296,109 +231,33 @@ DeviceManager::LoadConfig(string path)
     // Create Ethernet devices
     if (spec.get_child_optional("eth_dev")) {
         for (const auto &node : spec.get_child("eth_dev")) {
-            eth_spec = new struct eth_devspec;
-            memset(eth_spec, 0, sizeof(*eth_spec));
 
-            auto val = node.second;
-
-            eth_spec->name = val.get<string>("name");
-            eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
-            eth_spec->lif_count = val.get<uint64_t>("lif_count");
-            eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
-            eth_spec->txq_count = val.get<uint64_t>("txq_count");
-            eth_spec->eq_count = val.get<uint64_t>("eq_count");
-            eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
-            eth_spec->intr_count = val.get<uint64_t>("intr_count");
+            eth_spec = Eth::ParseConfig(node);
             if (host_mac_base == mnic_mac_base) {
                 NIC_LOG_ERR("Number of macs {} not enough for Host ifs and Mnic ifs.",
-                            num_macs);
+                        num_macs);
             }
             eth_spec->mac_addr = host_mac_base++;
-
-            if (val.get_optional<string>("rdma")) {
-                eth_spec->enable_rdma = true;
-                eth_spec->rdma_sq_count = val.get<uint64_t>("rdma.sq_count");
-                eth_spec->rdma_rq_count = val.get<uint64_t>("rdma.rq_count");
-                eth_spec->rdma_cq_count = val.get<uint64_t>("rdma.cq_count");
-                eth_spec->rdma_eq_count = val.get<uint64_t>("rdma.eq_count");
-                eth_spec->rdma_adminq_count = val.get<uint64_t>("rdma.adminq_count");
-                eth_spec->rdma_pid_count = val.get<uint64_t>("rdma.pid_count");
-                eth_spec->key_count = val.get<uint64_t>("rdma.key_count");
-                eth_spec->pte_count = val.get<uint64_t>("rdma.pte_count");
-                eth_spec->ah_count = val.get<uint64_t>("rdma.ah_count");
-                //eth_spec->barmap_size = val.get<uint64_t>("rdma.barmap_size");
-                eth_spec->barmap_size = 1;
-            }
-
-            if (val.get_optional<string>("network")) {
-                eth_spec->uplink_port_num = val.get<uint64_t>("network.uplink");
-            }
-
-            eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
-            if (val.get_optional<string>("pcie.oprom")) {
-                eth_spec->oprom = oprom_type_str_to_type(val.get<string>("pcie.oprom"));
-            }
-
             eth_spec->host_dev = true;
-            if (val.get_optional<string>("type")) {
-                eth_spec->eth_type = eth_dev_type_str_to_type(val.get<string>("type"));
-            } else {
-                eth_spec->eth_type = ETH_UNKNOWN;
-            }
 
-            eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_DEBUG("Creating eth device with name: {}, type: {}, "
-                         "pinned_uplink: {}, qos_group {}",
-                         eth_spec->name,
-                         eth_dev_type_to_str(eth_spec->eth_type),
-                         eth_spec->uplink_port_num,
-                         eth_spec->qos_group);
             AddDevice(ETH, (void *)eth_spec);
         }
     }
 
+#ifdef IRIS
     NIC_HEADER_TRACE("Loading Accel devices");
     // Create Accelerator devices
     if (spec.get_child_optional("accel_dev")) {
+        struct accel_devspec *accel_spec;
+
         for (const auto &node : spec.get_child("accel_dev")) {
-            accel_spec = new struct accel_devspec;
-            memset(accel_spec, 0, sizeof(*accel_spec));
 
-            auto val = node.second;
+            accel_spec = AccelDev::ParseConfig(node);
 
-            accel_spec->name = val.get<string>("name");
-            accel_spec->lif_count    = val.get<uint64_t>("lif_count");
-            accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
-            accel_spec->adminq_count = val.get<uint32_t>("adminq_count");
-            accel_spec->intr_count = val.get<uint32_t>("intr_count");
-            if (val.get_optional<string>("rate_limit")) {
-                if (val.get_optional<string>("rate_limit.rx_limit_gbps")) {
-                    accel_spec->rx_limit_gbps = val.get<uint32_t>("rate_limit.rx_limit_gbps");
-                }
-                if (val.get_optional<string>("rate_limit.rx_burst_gb")) {
-                    accel_spec->rx_burst_gb = val.get<uint32_t>("rate_limit.rx_burst_gb");
-                }
-                if (val.get_optional<string>("rate_limit.tx_limit_gbps")) {
-                    accel_spec->tx_limit_gbps = val.get<uint32_t>("rate_limit.tx_limit_gbps");
-                }
-                if (val.get_optional<string>("rate_limit.tx_burst_gb")) {
-                    accel_spec->tx_burst_gb = val.get<uint32_t>("rate_limit.tx_burst_gb");
-                }
-            }
-
-            accel_spec->pub_intv_frac = ACCEL_DEV_PUB_INTV_FRAC_DFLT;
-            if (val.get_optional<string>("publish_interval")) {
-                accel_spec->pub_intv_frac = val.get<uint32_t>("publish_interval.sec_fraction");
-            }
-
-            accel_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
-            accel_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_DEBUG("Creating accel device with name: {}, qos_group: {}",
-                         accel_spec->name,
-                         accel_spec->qos_group);
             AddDevice(ACCEL, (void *)accel_spec);
         }
     }
+#endif //IRIS
 
     return 0;
 }
@@ -407,7 +266,10 @@ Device *
 DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 {
     Eth *eth_dev;
+
+#ifdef IRIS
     AccelDev *accel_dev;
+#endif //IRIS
 
     switch (type) {
     case MNIC:
@@ -423,11 +285,13 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         eth_dev->SetType(type);
         devices[eth_dev->GetName()] = eth_dev;
         return (Device *)eth_dev;
+#ifdef IRIS
     case ACCEL:
         accel_dev = new AccelDev(dev_api, dev_spec, pd);
         accel_dev->SetType(type);
         devices[accel_dev->GetName()] = accel_dev;
         return (Device *)accel_dev;
+#endif //IRIS
     case NVME:
         NIC_LOG_ERR("Unsupported Device Type NVME");
         return NULL;
@@ -456,10 +320,14 @@ DeviceManager::SetHalClient(devapi *dev_api)
             Eth *eth_dev = (Eth *)dev;
             eth_dev->SetHalClient(dev_api);
         }
+
+#ifdef IRIS
         if (dev->GetType() == ACCEL) {
             AccelDev *accel_dev = (AccelDev *)dev;
             accel_dev->SetHalClient(dev_api);
         }
+#endif //IRIS
+
     }
 }
 
@@ -509,10 +377,13 @@ DeviceManager::HalEventHandler(bool status)
             Eth *eth_dev = (Eth *)dev;
             eth_dev->HalEventHandler(status);
         }
+
+#ifdef IRIS
         if (dev->GetType() == ACCEL) {
             AccelDev *accel_dev = (AccelDev *)dev;
             accel_dev->HalEventHandler(status);
         }
+#endif //IRIS
     }
 }
 
@@ -558,4 +429,3 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
     pt::write_json(qstate_info_file, root);
     return 0;
 }
-

@@ -5,16 +5,16 @@
 #ifndef __ETH_LIF_HPP__
 #define __ETH_LIF_HPP__
 
-#include "eth_if.h"
+using namespace std;
+
 #include "pd_client.hpp"
 #include "nic/sdk/platform/devapi/devapi.hpp"
 
-using namespace std;
 namespace pt = boost::property_tree;
 
-
 class AdminQ;
-
+typedef uint8_t status_code_t;
+typedef uint16_t cmd_opcode_t;
 
 /**
  * ETH Qtype Enum
@@ -58,6 +58,9 @@ enum EthQtype {
 #define LG2_ETH_ADMINQ_RESP_RING_SIZE   4
 #define ETH_ADMINQ_RESP_RING_SIZE       (1 << LG2_ETH_ADMINQ_RESP_RING_SIZE)
 
+#define RSS_HASH_KEY_SIZE	40
+#define RSS_IND_TBL_SIZE	128
+
 /**
  * LIF Resource structure
  */
@@ -89,12 +92,12 @@ public:
            PdClient *pd_client,
            eth_lif_res_t *res);
 
-    enum status_code Init(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code Reset(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code AdminQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t Init(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t Reset(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t AdminQInit(void *req, void *req_data, void *resp, void *resp_data);
 
     // Event Handlers
-    enum status_code CmdHandler(void *req, void *req_data,
+    status_code_t CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
     void LinkEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
@@ -154,26 +157,26 @@ private:
     static void AdminCmdHandler(void *obj,
         void *req, void *req_data, void *resp, void *resp_data);
 
-    enum status_code _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdFeatures(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdQEnable(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdQDisable(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdSetMode(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdFeatures(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdQEnable(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdQDisable(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdSetMode(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
 
-    enum status_code _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);
 
     // Callbacks
     static void StatsUpdate(void *obj);
@@ -186,9 +189,7 @@ private:
     void FreeUpMacVlanFilters();
 
     const char *lif_state_to_str(enum lif_state state);
-    const char *opcode_to_str(enum cmd_opcode opcode);
-
-    types::LifType ConvertDevTypeToLifType(EthDevType dev_type);
+    const char *opcode_to_str(cmd_opcode_t opcode);
 };
 
 #endif   /* __ETH_LIF_HPP__*/

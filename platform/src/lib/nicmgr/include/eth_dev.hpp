@@ -16,12 +16,19 @@
 #include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 
+#ifdef __aarch64__
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#endif
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+
 // #include "platform/src/lib/hal_api/include/hal_types.hpp"
 #include "platform/src/lib/mnet/include/mnet.h"
 
-#include "dev.hpp"
-#include "eth_if.h"
+#include "device.hpp"
+#include "pd_client.hpp"
 #include "eth_lif.hpp"
+#include "gen/proto/types.pb.h"
 
 namespace pt = boost::property_tree;
 
@@ -31,6 +38,57 @@ namespace pt = boost::property_tree;
 
 #define DOORBELL_ADDR(lif_num) \
     ((0x8400000) | (0xb << UPD_BITS_POSITION) | (lif_num << LIF_BITS_POSITION))
+
+/**
+ * ETH Device type
+ */
+typedef enum EthDevType_s {
+    ETH_UNKNOWN,
+    ETH_HOST,
+    ETH_HOST_MGMT,
+    ETH_MNIC_OOB_MGMT,
+    ETH_MNIC_INTERNAL_MGMT,
+    ETH_MNIC_INBAND_MGMT,
+} EthDevType;
+
+const char *eth_dev_type_to_str(EthDevType type);
+
+/**
+ * Eth Device Spec
+ */
+struct eth_devspec {
+    // Delphi
+    uint64_t dev_uuid;
+    // Device
+    EthDevType eth_type;
+    std::string name;
+    OpromType oprom;
+    uint8_t pcie_port;
+    bool host_dev;
+    // Network
+    uint32_t uplink_port_num;
+    std::string qos_group;
+    // RES
+    uint32_t lif_count;
+    uint32_t rxq_count;
+    uint32_t txq_count;
+    uint32_t eq_count;
+    uint32_t adminq_count;
+    uint32_t intr_count;
+    uint64_t mac_addr;
+    // RDMA
+    bool enable_rdma;
+    uint32_t pte_count;
+    uint32_t key_count;
+    uint32_t ah_count;
+    uint32_t rdma_sq_count;
+    uint32_t rdma_rq_count;
+    uint32_t rdma_cq_count;
+    uint32_t rdma_eq_count;
+    uint32_t rdma_adminq_count;
+    uint32_t rdma_pid_count;
+    uint32_t barmap_size;    // in 8MB units
+};
 
 /**
  * ETH PF Device
@@ -44,8 +102,11 @@ public:
     std::string GetName() { return spec->name; }
 
     void DevcmdHandler();
-    enum status_code CmdHandler(void *req, void *req_data,
+    status_code_t CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
+    static struct eth_devspec *ParseConfig(boost::property_tree::ptree::value_type node);
+
+    static types::LifType ConvertDevTypeToLifType(EthDevType dev_type);
 
     void LinkEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
@@ -88,21 +149,24 @@ private:
     //
     bool LoadOprom();
 
+    static EthDevType eth_dev_type_str_to_type(std::string const& s);
+
     /* Command Handlers */
     static void DevcmdPoll(void *obj);
-    enum status_code _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);
-    enum status_code _CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data);
 
     /* AdminCmd Proxy Handler */
-    enum status_code AdminCmdHandler(uint64_t lif_id,
+    status_code_t AdminCmdHandler(uint64_t lif_id,
         void *req, void *req_data,
         void *resp, void *resp_data);
 
-    const char *opcode_to_str(enum cmd_opcode opcode);
+    const char *opcode_to_str(cmd_opcode_t opcode);
+
 };
 
 #endif

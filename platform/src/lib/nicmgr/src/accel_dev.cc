@@ -16,9 +16,6 @@
 #include "cap_wa_c_hdr.h"
 #include "cap_ms_c_hdr.h"
 
-// Tell accel_dev.hpp to emumerate definitions of all devcmds
-#define ACCEL_DEV_CMD_ENUMERATE  1
-
 #include "nic/include/base.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
@@ -31,7 +28,15 @@
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 
+#ifdef __aarch64__
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#endif
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+
+
 #include "logger.hpp"
+#include "accel_if.h"
 #include "accel_dev.hpp"
 #include "accel_lif.hpp"
 #include "pd_client.hpp"
@@ -218,6 +223,49 @@ AccelDev::SetHalClient(devapi *dapi)
         AccelLif *lif = iter->second;
         lif->SetHalClient(dapi);
     }
+}
+
+struct accel_devspec *
+AccelDev::ParseConfig(boost::property_tree::ptree::value_type node)
+{
+    accel_devspec* accel_spec;
+    auto val = node.second;
+
+    accel_spec = new struct accel_devspec;
+    memset(accel_spec, 0, sizeof(*accel_spec));
+
+    accel_spec->name = val.get<string>("name");
+    accel_spec->lif_count = val.get<uint64_t>("lif_count");
+    accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
+    accel_spec->adminq_count = val.get<uint32_t>("adminq_count");
+    accel_spec->intr_count = val.get<uint32_t>("intr_count");
+    if (val.get_optional<string>("rate_limit")) {
+        if (val.get_optional<string>("rate_limit.rx_limit_gbps")) {
+            accel_spec->rx_limit_gbps = val.get<uint32_t>("rate_limit.rx_limit_gbps");
+        }
+        if (val.get_optional<string>("rate_limit.rx_burst_gb")) {
+            accel_spec->rx_burst_gb = val.get<uint32_t>("rate_limit.rx_burst_gb");
+        }
+        if (val.get_optional<string>("rate_limit.tx_limit_gbps")) {
+            accel_spec->tx_limit_gbps = val.get<uint32_t>("rate_limit.tx_limit_gbps");
+        }
+        if (val.get_optional<string>("rate_limit.tx_burst_gb")) {
+            accel_spec->tx_burst_gb = val.get<uint32_t>("rate_limit.tx_burst_gb");
+        }
+    }
+
+    accel_spec->pub_intv_frac = ACCEL_DEV_PUB_INTV_FRAC_DFLT;
+    if (val.get_optional<string>("publish_interval")) {
+        accel_spec->pub_intv_frac = val.get<uint32_t>("publish_interval.sec_fraction");
+    }
+
+    accel_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
+    accel_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
+    NIC_LOG_DEBUG("Creating accel device with name: {}, qos_group: {}",
+            accel_spec->name,
+            accel_spec->qos_group);
+
+    return accel_spec;
 }
 
 bool
