@@ -1456,10 +1456,7 @@ capri_hbm_table_entry_write (uint32_t tableid,
     assert((entry_size >> 3) <= tbl_info.entry_width);
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
-
-    SDK_TRACE_DEBUG("table-id:%u index:%u entry-width:%u address:%#lx", 
-                    tableid, index, tbl_info.entry_width,
-                    get_mem_addr(tbl_info.tablename) + entry_start_addr);
+    
     sdk::asic::asic_mem_write(get_mem_addr(tbl_info.tablename) + entry_start_addr,
                               hwentry, (entry_size >> 3));
     time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE);
@@ -1499,9 +1496,7 @@ capri_hbm_table_entry_read (uint32_t tableid,
 {
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
-    SDK_TRACE_DEBUG("table-id:%u index:%u entry-width:%u address:%#lx", 
-                    tableid, index, tbl_info.entry_width,
-                    get_mem_addr(tbl_info.tablename) + entry_start_addr);
+    
     sdk::asic::asic_mem_read(get_mem_addr(tbl_info.tablename) + entry_start_addr,
                              hwentry, tbl_info.entry_width);
     *entry_size = tbl_info.entry_width;
