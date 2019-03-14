@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    vnic_impl.cc
- *
- * @brief   datapath implementation of vnic
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// datapath implementation of vnic
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -117,10 +119,6 @@ vnic_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
-#define vnic_tx_stats_action action_u.vnic_tx_stats_vnic_tx_stats
-#define vnic_rx_stats_action action_u.vnic_rx_stats_vnic_rx_stats
-#define local_vnic_by_vlan_tx_info    action_u.local_vnic_by_vlan_tx_local_vnic_info_tx
-#define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 // TODO: undo stuff if something goes wrong here !!
 sdk_ret_t
 vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
@@ -195,11 +193,14 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return sdk::SDK_RET_INVALID_OP;
 }
 
+#define vnic_tx_stats_action action_u.vnic_tx_stats_vnic_tx_stats
+#define vnic_rx_stats_action action_u.vnic_rx_stats_vnic_rx_stats
+#define local_vnic_by_vlan_tx_info    action_u.local_vnic_by_vlan_tx_local_vnic_info_tx
+#define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 #define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
     for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \
         p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
     }
-
 sdk_ret_t
 vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
                                            pds_epoch_t epoch, vcn_entry *vcn,
@@ -211,10 +212,12 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
                                            policy *v6_policy) {
     sdk_ret_t                             ret;
     mem_addr_t                            addr;
-    local_vnic_by_vlan_tx_actiondata_t    vnic_by_vlan_data = { 0 };
+    local_vnic_by_vlan_tx_actiondata_t        vnic_by_vlan_data;
+    egress_local_vnic_info_rx_actiondata_t    egress_vnic_data;
 
     switch (api_op) {
     case api::API_OP_CREATE:
+        memset(&vnic_by_vlan_data, 0, sizeof(vnic_by_vlan_data));
         vnic_by_vlan_data.action_id =
             LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.local_vnic_tag = hw_id_;
@@ -268,7 +271,42 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
         break;
 
     case API_OP_DELETE:
-        ret = SDK_RET_INVALID_OP;
+        // read EGRESS_LOCAL_VNIC_INFO_RX table entry first
+        ret = vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(
+                  hw_id_, &egress_vnic_data);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to read EGRESS_LOCAL_VNIC_INFO_RX entry "
+                          "at %u, err %u", hw_id_, ret);
+            return ret;
+        }
+
+        // then read LOCAL_VNIC_BY_VLAN_TX table entry for this VNIC using the
+        // wire vlan
+        ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->retrieve(
+                  egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+                  &vnic_by_vlan_data);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to read LOCAL_VNIC_BY_VLAN_TX entry "
+                          "at %u, err %u",
+                          egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+                          ret);
+            return ret;
+        }
+
+        if (vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 <
+            vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2) {
+            // update data corresponding to epoch1
+            vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;
+            //vnic_by_vlan_data.local_vnic_by_vlan_tx_info.valid1 = FALSE;
+        } else {
+            // update data corresponding to epoch2
+            vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2 = epoch;
+            //vnic_by_vlan_data.local_vnic_by_vlan_tx_info.valid2 = FALSE;
+        }
+        ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->update(spec->wire_vlan,
+                                                                  &vnic_by_vlan_data);
+        PDS_TRACE_ERR("Failed at deactivate LOCAL_VNIC_BY_VLAN_TX entry "
+                      "at %u, err %u", spec->wire_vlan, ret);
         break;
 
     default:
@@ -478,7 +516,7 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
     }
     // read EGRESS_LOCAL_VNIC_INFO_RX table
     ret = vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(
-                                            hw_id_, &egress_vnic_data);
+              hw_id_, &egress_vnic_data);
     if (ret != SDK_RET_OK) {
         return ret;
     }
