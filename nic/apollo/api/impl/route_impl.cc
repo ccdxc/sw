@@ -74,6 +74,7 @@ route_table_impl::release_resources(api_base *api_obj) {
     uint32_t       lpm_block_id;
     route_table    *rtable = (route_table *)api_obj;
 
+    // just free the lpm block we are using
     if (lpm_root_addr_ != 0xFFFFFFFFFFFFFFFFUL) {
         if (rtable->af() == IP_AF_IPV4) {
             lpm_block_id =
@@ -86,6 +87,12 @@ route_table_impl::release_resources(api_base *api_obj) {
         }
     }
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+route_table_impl::nuke_resources(api_base *api_obj) {
+    // just free the lpm block we are using
+    return this->release_resources(api_obj);
 }
 
 sdk_ret_t

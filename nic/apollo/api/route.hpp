@@ -83,6 +83,9 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
+        // there is no need cleanup in either the rollback case or
+        // route table delete case, we simply have to free the resources in
+        // either case
         return SDK_RET_OK;
     }
 
