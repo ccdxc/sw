@@ -1,0 +1,17 @@
+{
+    "prompt": "]#",
+    "ipaddr": "pxe",
+    "username": "root",
+    "password": "N0isystem$",
+    "images": {
+        "linux_centos_75": "pxe-centos-7.5",
+        "linux_ubuntu_1804": "pxe-ubuntu-18.04", 
+        "linux_freebsd112": "pxe-freebsd11.2",
+        "linux_rh_73": "pxe-linux-rh-7.3",
+        "linux_rh_75": "pxe-linux-rh-7.5",
+        "linux_oracle_76": "pxe-linux-oracle-7.6",
+        "linux_oracle_75": "pxe-linux-oracle-7.5",
+        "esxi_65": "pxe-esxi-6.5",
+        "esxi_67": "pxe-esxi-6.7"
+        }
+}

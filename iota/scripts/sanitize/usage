@@ -1,4 +1,5 @@
- #python pxe_boot.py --testbed /home/sudsampa/tb46.json --os lunux --os-ver redhat_73
- #python pxe_boot.py --testbed /home/sudsampa/testbed/tb46.json --os linux --sub-ver ubuntu
- #python pxe_boot.py --testbed /home/sudsampa/testbed/tb46.json --os esxi
- #python pxe_boot.py --testbed /home/sudsampa/testbed/tb46.json --os linux --sub-ver redhat_75
+ #python pxe_boot.py --testbed /home/sudsampa/tb46.json --os linux_freebsd112
+ #python pxe_boot.py --testbed /home/sudsampa/testbed/tb46.json --os linux_rh_73
+ #python pxe_boot.py --testbed /home/sudsampa/testbed/tb46.json --os linux_oracle_76
+ #python pxe_boot.py --testbed /home/sudsampa/testbed/tb46.json --os esxi_65
+ #python pxe_boot.py --testbed /home/sudsampa/testbed/tb46.json --os esxi_67
