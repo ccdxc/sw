@@ -228,7 +228,7 @@ func (n *NMD) PersistHALConfiguration(profileName string) (err error) {
 		}
 
 		if !ok {
-			log.Errorf("could not find profile %v in nmd state", profileName)
+			log.Errorf("could not find profile %v in nmd state, profs: %+v", profileName, n.profiles)
 			err = fmt.Errorf("could not find profile %v in nmd state", profileName)
 			return
 		}

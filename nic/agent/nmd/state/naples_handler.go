@@ -259,7 +259,7 @@ func (n *NMD) StartManagedMode() error {
 				if resp == nil {
 					log.Errorf("Protocol error: no AdmissionResponse in message, mac: %s", mac)
 				}
-				log.Infof("Received register response: %+v", resp)
+				log.Infof("Received register response, phase: %+v", resp.Phase)
 				switch resp.Phase {
 
 				case cmd.SmartNICStatus_REJECTED.String():

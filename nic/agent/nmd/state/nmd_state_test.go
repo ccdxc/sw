@@ -126,7 +126,7 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 
 	key := objectKey(nic.ObjectMeta)
 	m.nicDB[key] = nic
-	if nic.Name == nicKey1 {
+	if strings.HasPrefix(nic.Name, nicKey1) {
 		// we don't have the actual csr from the NIC request, so we just make up
 		// a certificate on the spot
 		key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -164,7 +164,7 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 		return resp, nil
 	}
 
-	if nic.Name == nicKey2 {
+	if strings.HasPrefix(nic.Name, nicKey2) {
 		return grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
 				Phase: cmd.SmartNICStatus_PENDING.String(),
@@ -334,6 +334,11 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 
 	if cfg.Spec.IPConfig == nil {
 		cfg.Spec.IPConfig = &cmd.IPConfig{}
+	}
+
+	if mode == "network" {
+		// Add a fake controller to the spec so that mock IPClient starts managed mode
+		cfg.Spec.Controllers = []string{"127.0.0.1"}
 	}
 
 	nm.SetNaplesConfig(cfg.Spec)
@@ -512,7 +517,6 @@ func TestNaplesRestartHostMode(t *testing.T) {
 }
 
 func TestNaplesNetworkMode(t *testing.T) {
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
 	ctx, cancel := context.WithCancel(context.Background())
 	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
 	defer cancel()
@@ -538,19 +542,14 @@ func TestNaplesNetworkMode(t *testing.T) {
 		// Verify nic state
 		nic, err := nm.GetSmartNIC()
 		if nic == nil || err != nil {
-			log.Errorf("NIC not found in nicDB, mac:%s", nicKey1)
+			log.Errorf("NIC %s not found in nicDB, nic: %v err: %v", nicKey1, nic, err)
 			return false, nil
 		}
+		log.Infof("NIC: %v", nic)
 
 		// Verify NIC admission
 		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
 			log.Errorf("NIC is not admitted")
-			return false, nil
-		}
-
-		// Verify rest server status
-		if nm.GetRestServerStatus() == true {
-			log.Errorf("REST server is still up")
 			return false, nil
 		}
 
@@ -636,7 +635,6 @@ func TestNaplesNetworkMode(t *testing.T) {
 // TestNaplesModeTransitions tests the mode transition
 // host -> network -> host
 func TestNaplesModeTransitions(t *testing.T) {
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
 	ctx, cancel := context.WithCancel(context.Background())
 	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
 	defer cancel()
@@ -720,17 +718,14 @@ func TestNaplesModeTransitions(t *testing.T) {
 			return false, nil
 		}
 
-		if nm.GetRestServerStatus() == true {
-			log.Errorf("REST server is still up")
-			return false, nil
-		}
-
 		return true, nil
 	}
 	AssertEventually(t, f3, "Failed to verify mode is in network Mode", string("10ms"), string("30s"))
 
 	// Switch to host mode
 	naplesCfg.Spec.Mode = nmd.MgmtMode_HOST.String()
+	naplesCfg.Spec.NaplesProfile = "default"
+
 	AssertEventually(t, f2, "Failed to post the naples config")
 
 	// Verify it is in host mode
@@ -738,8 +733,6 @@ func TestNaplesModeTransitions(t *testing.T) {
 }
 
 func TestNaplesNetworkModeManualApproval(t *testing.T) {
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
-
 	ctx, cancel := context.WithCancel(context.Background())
 	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
 	defer cancel()
@@ -804,21 +797,12 @@ func TestNaplesNetworkModeManualApproval(t *testing.T) {
 			return false, nil
 		}
 
-		if nm.GetRestServerStatus() == true {
-			log.Errorf("REST server is still up")
-			return false, nil
-		}
-
 		return true, nil
 	}
 	AssertEventually(t, f2, "Failed to verify PendingNIC in network Mode", string("10ms"), string("30s"))
 }
 
 func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
-
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
-
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
 	ctx, cancel := context.WithCancel(context.Background())
 	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
 	defer cancel()
@@ -885,11 +869,6 @@ func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 
 		if nm.GetUpdStatus() == true {
 			log.Errorf("UpdateNIC is still in progress")
-			return false, nil
-		}
-
-		if nm.GetRegStatus() == true {
-			log.Errorf("REST server is still up")
 			return false, nil
 		}
 
