@@ -2,6 +2,9 @@
     "Properties": {
         "SmartNICDeadInterval": "10s",
         "SmartNICHealthWatchInterval": "5s"
-    }
+    },
+    "DisabledModules": [
+        "pen-ntp"
+    ]
 }
 

@@ -36,10 +36,10 @@ var _ = Describe("alert test", func() {
 		Expect(err).Should(BeNil())
 		defer ts.tu.APIClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
-		// stop pen-ntp daemon service
-		podName, serviceStoppedOn := getRunningPod("pen-ntp")
+		// stop pen-citadel daemon service
+		podName, serviceStoppedOn := getRunningPod("pen-citadel")
 		if utils.IsEmpty(podName) {
-			Skip("no running pod found for service {pen-ntp} on a READY node")
+			Skip("no running pod found for service {pen-citadel} on a READY node")
 		}
 		ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl delete pod %s", podName))
 
@@ -52,7 +52,7 @@ var _ = Describe("alert test", func() {
 
 			for _, alert := range alerts {
 				if alert.Status.Reason.GetPolicyID() == alertPolicy1.GetName() &&
-					strings.Contains(alert.Status.GetMessage(), fmt.Sprintf("pen-ntp stopped on %s", serviceStoppedOn)) {
+					strings.Contains(alert.Status.GetMessage(), fmt.Sprintf("pen-citadel stopped on %s", serviceStoppedOn)) {
 					return true
 				}
 			}

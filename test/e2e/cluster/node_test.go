@@ -66,7 +66,7 @@ var _ = Describe("node tests", func() {
 			}
 
 			Eventually(func() bool {
-				out := ts.tu.LocalCommandOutput("kubectl get pods  -l name=pen-ntp -o json")
+				out := ts.tu.LocalCommandOutput("kubectl get pods  -l name=pen-citadel -o json")
 				json.Unmarshal([]byte(out), &kubeOut)
 				for _, i := range kubeOut.Items {
 					if i.Spec.NodeName == nonQnode {
@@ -74,11 +74,11 @@ var _ = Describe("node tests", func() {
 					}
 				}
 				return false
-			}, 95, 1).Should(BeTrue(), "pen-ntp container should be scheduled by kubernetes on node %s", nonQnode)
+			}, 95, 1).Should(BeTrue(), "pen-citadel container should be scheduled by kubernetes on node %s", nonQnode)
 
 			Eventually(func() string {
-				return ts.tu.CommandOutput(ts.tu.NameToIPMap[nonQnode], "/usr/bin/docker ps -q -f 'label=io.kubernetes.container.name=pen-ntp'")
-			}, 95, 1).ShouldNot(BeEmpty(), "pen-ntp docker container should be running on %s", nonQnode)
+				return ts.tu.CommandOutput(ts.tu.NameToIPMap[nonQnode], "/usr/bin/docker ps -q -f 'label=io.kubernetes.container.name=pen-citadel'")
+			}, 95, 1).ShouldNot(BeEmpty(), "pen-citadel docker container should be running on %s", nonQnode)
 
 			// daemon services should be running
 			for _, service := range daemonVeniceServices {
