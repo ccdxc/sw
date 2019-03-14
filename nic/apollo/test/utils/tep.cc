@@ -46,7 +46,7 @@ tep_util::many_create(uint32_t num_tep, std::string pfxstr,
                       pds_tep_encap_type_t type) {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
     ip_prefix_t ip_pfx;
-    SDK_ASSERT(num_tep <= PDS_MAX_TEP);
+    //SDK_ASSERT(num_tep <= PDS_MAX_TEP);
 
     SDK_ASSERT(str2ipv4pfx((char *)pfxstr.c_str(), &ip_pfx) == 0);
     for (uint32_t idx = 1; idx <= num_tep; ++idx) {
@@ -100,19 +100,8 @@ debug_dump_tep_info (pds_tep_info_t *info)
 }
 
 sdk::sdk_ret_t
-tep_util::validate(pds_tep_info_t *info) {
-    if (info == NULL)
-        return sdk::SDK_RET_INVALID_ARG;
-
-    // TODO: Temporary untill p4pd_entry_read() works
-    debug_dump_tep_info(info);
-
-    // TODO: validation code to compare test parameters against info
-    return sdk::SDK_RET_OK;
-}
-
-sdk::sdk_ret_t
-tep_util::read(pds_tep_info_t *info) {
+tep_util::read(pds_tep_info_t *info, bool compare_spec) {
+    sdk_ret_t rv;
     pds_tep_key_t key;
     ip_prefix_t ip_pfx;
 
@@ -120,7 +109,25 @@ tep_util::read(pds_tep_info_t *info) {
     memset(&key, 0, sizeof(pds_tep_key_t));
     memset(info, 0, sizeof(pds_tep_info_t));
     key.ip_addr = ip_pfx.addr.addr.v4_addr;
-    return (pds_tep_read(&key, info));
+    rv = pds_tep_read(&key, info);
+    if (rv != sdk::SDK_RET_OK) {
+        return rv;
+    }
+    if (compare_spec) {
+        // TODO: Temporary untill p4pd_entry_read() works for directmap
+        debug_dump_tep_info(info);
+        // validate tep ip
+        if (strcmp(this->ip_str.c_str(),
+                   ipv4addr2str(info->spec.key.ip_addr))) {
+            // TODO: what error to return
+            return sdk::SDK_RET_ERR;
+        }
+        // validate tep encap type
+        if (this->type != info->spec.encap_type) {
+            return sdk::SDK_RET_ERR;
+        }
+    }
+    return sdk::SDK_RET_OK;
 }
 
 sdk::sdk_ret_t
@@ -132,6 +139,25 @@ tep_util::del() {
     memset(&pds_tep_key, 0, sizeof(pds_tep_key));
     pds_tep_key.ip_addr = ip_pfx.addr.addr.v4_addr;
     return (pds_tep_delete(&pds_tep_key));
+}
+
+sdk::sdk_ret_t
+tep_util::many_delete(uint32_t num_tep, std::string pfxstr,
+                      pds_tep_encap_type_t type) {
+    sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
+    ip_prefix_t ip_pfx;
+    SDK_ASSERT(num_tep <= PDS_MAX_TEP);
+
+    SDK_ASSERT(str2ipv4pfx((char *)pfxstr.c_str(), &ip_pfx) == 0);
+    for (uint32_t idx = 1; idx <= num_tep; ++idx) {
+        tep_util tep_obj(ippfx2str(&ip_pfx), type);
+        if ((rv = tep_obj.del()) != sdk::SDK_RET_OK)
+            return rv;
+        // Increment IPv4 address by 1 for next TEP
+        ip_pfx.addr.addr.v4_addr += 1;
+    }
+
+    return rv;
 }
 
 }    // namespace api_test

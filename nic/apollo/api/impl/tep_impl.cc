@@ -6,6 +6,7 @@
  * @brief   datapath implementation of tep
  */
 
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -166,12 +167,19 @@ tep_impl::fill_status_(tep_tx_actiondata_t *tep_tx_data,
 
     switch (tep_tx_data->action_id) {
     case TEP_TX_GRE_TEP_TX_ID:
-        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_gre_tep_tx.dmac,
-               ETH_ADDR_LEN);
+        sdk::lib::memrev(status->dmac,
+                         tep_tx_data->action_u.tep_tx_gre_tep_tx.dmac,
+                         ETH_ADDR_LEN);
         break;
     case TEP_TX_MPLS_UDP_TEP_TX_ID:
-        memcpy(status->dmac, tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dmac,
-               ETH_ADDR_LEN);
+        sdk::lib::memrev(status->dmac,
+                         tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dmac,
+                         ETH_ADDR_LEN);
+        break;
+    case TEP_TX_VXLAN_TEP_TX_ID:
+        sdk::lib::memrev(status->dmac,
+                         tep_tx_data->action_u.tep_tx_vxlan_tep_tx.dmac,
+                         ETH_ADDR_LEN);
         break;
     }
 }
