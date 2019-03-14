@@ -195,9 +195,7 @@ ${table}_hwentry_query(uint32_t tableid,
     // For hash case always return key length as 512 bits.
     *hwkey_len = 512;
 //::            #endif
-
     *hwactiondata_len = ${max_actionfld_len};
-
     return;
 }
 
@@ -210,9 +208,6 @@ hash_${table}_key_len(uint32_t tableid,
     return;
 }
 //::        #endif
-
-
-
 //::        if (pddict['tables'][table]['type'] != 'Ternary' and pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu') or pddict['tables'][table]['otcam']:
 
 static uint32_t
@@ -230,7 +225,6 @@ ${table}_pack_action_data(uint32_t tableid,
     bool     copy_before_key = true;
     uint8_t  *packed_action_data;
     uint16_t mat_key_start_bit, mat_key_bit_length, bits_to_copy;
-
     (void)bits_before_mat_key;
     (void)before_key_adata_start_bit;
     (void)after_key_adata_start_bit;
@@ -241,11 +235,9 @@ ${table}_pack_action_data(uint32_t tableid,
     (void)bits_to_copy;
     (void)source_start_bit;
     (void)dest_start_bit;
-
     dest_start_bit = 0;
     *actiondata_len_before_key = 0;
     *actiondata_len_after_key = 0;
-
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
@@ -258,13 +250,11 @@ ${table}_pack_action_data(uint32_t tableid,
 //::                spilled_adata_bits = max_actionfld_len % 16
 //::                max_adata_bits_before_key = max_actionfld_len - spilled_adata_bits if max_actionfld_len > spilled_adata_bits else max_actionfld_len
 //::            #endif
-
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                add_action_pc = True
 //::            else:
 //::                add_action_pc = False
 //::            #endif
-
     switch(actiondata->action_id) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
@@ -397,10 +387,8 @@ ${table}_pack_action_data(uint32_t tableid,
 
 {
     uint16_t dest_start_bit;
-
     dest_start_bit = 0;
     (void)dest_start_bit;
-
     switch(actiondata->action_id) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
@@ -439,9 +427,6 @@ ${table}_pack_action_data(uint32_t tableid,
     return (${max_actionfld_len});
 }
 //::        #endif
-
-
-
 //::        if pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
 /* Build hardware key function for p4-table '${table}'
 //::            if pddict['tables'][table]['type'] == 'Ternary':
@@ -634,10 +619,8 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     m = *((uint8_t*)&(swkey_mask->${p4fldname}_mask[${kbyte}]));
 //::                                #endif
 //::                            #endif
-
     trit_x = k & m;
     trit_y = ~k & m;
-
 //::                            if width == 1:
     p4pd_utils_copy_into_hwentry(hwkey_x,
                    (${tablebyte} * 8) + (7 - ${containerstart}) - ${mat_key_start_bit}, /* Dest bit position */
@@ -681,7 +664,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                            #endif
     trit_x = ((k & m) >> ${kbit}) & 0x1;
     trit_y = ((~k & m) >>${kbit}) & 0x1;
-
     p4pd_utils_copy_into_hwentry(hwkey_x,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8))) - (${mat_key_start_bit}), /* Dest bit position */
                    &trit_x,
@@ -696,7 +678,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                        #endfor
 //::                    #endif
 //::                #endfor
-
 //::                i = 1
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
@@ -734,7 +715,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     m = *((uint8_t*)&(swkey_mask->${ustr_mask}${p4fldname}_mask[${kbyte}]));
 //::                                    #endif
 //::                                #endif
-
     trit_x = k & m;
     trit_y = ~k & m;
     p4pd_utils_copy_into_hwentry(hwkey_x,
@@ -783,7 +763,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                    #endfor
 //::                    i += 1
 //::                #endfor
-
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
@@ -821,8 +800,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     m = *((uint8_t*)&(swkey_mask->${ustr_mask}${p4fldname}_mask[${kbyte}]));
 //::                                    #endif
 //::                                #endif
-
-
     trit_x = k & m;
     trit_y = ~k & m;
     p4pd_utils_copy_into_hwentry(hwkey_x,
@@ -851,7 +828,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     k = *((uint8_t*)&(swkey->${ustr}${p4fldname}[${kbyte}]));
     m = *((uint8_t*)&(swkey_mask->${ustr}${p4fldname}_mask[${kbyte}]));
 //::                                #endif
-
     trit_x = ((k & m) >> ${kbit}) & 0x1;
     trit_y = ((~k & m) >>${kbit}) & 0x1;
     p4pd_utils_copy_into_hwentry(hwkey_x,
@@ -859,7 +835,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
                    &trit_x,
                    0, /* start bit */
                    1 /* bits to copy */);
-
     p4pd_utils_copy_into_hwentry(hwkey_y,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
                    &trit_y,
@@ -871,8 +846,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                    #endfor
 //::                    i += 1
 //::                #endfor
-
-
 //::                for kbyte in pddict['tables'][table]['not_my_key_bytes']:
 //::                    tablebyte = kbyte
     /* ${kbyte} does not belong to my table. Hence set do not match */
@@ -889,7 +862,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
                    0, /* Start bit in source */
                    8 /* 8 bits */);
     key_len += 8;
-
 //::                #endfor
 //::                for kmbit in pddict['tables'][table]['not_my_key_bits']:
 //::                    tablebit = kmbit
@@ -907,7 +879,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
                    0, /* Start bit in source */
                    1 /* 1 bits */);
     key_len += 1;
-
 //::                #endfor
     time_profile_end(sdk::utils::time_profile::P4PD_HWKEY_HWMASK_BUILD);
     return (key_len);
@@ -1051,7 +1022,6 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                        #endfor
 //::                    #endif
 //::                #endfor
-
 //::                i = 1
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
@@ -1097,7 +1067,6 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                    i += 1
     key_len += 1;
 //::                #endfor
-
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
@@ -1148,7 +1117,6 @@ ${table}_hwkey_build(uint32_t tableid,
 
 //::            #endif
 //::        #endif
-
 //::        if pddict['tables'][table]['type'] == 'Index':
 static uint64_t
 ${table}_index_mapper(uint32_t tableid,
@@ -1280,7 +1248,6 @@ ${table}_index_mapper(uint32_t tableid,
 //::                        #endfor
 //::                    #endif
 //::                #endfor
-
 //::                i = 1
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
@@ -1317,7 +1284,6 @@ ${table}_index_mapper(uint32_t tableid,
 //::                    #endfor
 //::                    i += 1
 //::                #endfor
-
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
@@ -1417,16 +1383,13 @@ ${table}_entry_write(uint32_t tableid,
     uint16_t entry_size, actiondatalen, axi_shift_len;
     uint16_t actiondata_len_before_key, actiondata_len_after_key;
     uint8_t  *_sram_entry = &sram_entry[0];
-
     if (actiondata_mask) {
         return P4PD_FAIL;
     }
-
     (void)packed_actiondata_before_key;
     (void)actiondata_len_after_key;
     (void)actiondata_len_before_key;
     (void)actiondatalen;
-
     tcam_${table}_hwkey_len(tableid, &hwkey_len, &hwkeymask_len);
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                add_action_pc = True
@@ -1438,7 +1401,6 @@ ${table}_entry_write(uint32_t tableid,
 //::            else:
     action_pc = 0xff;
 //::            #endif
-
     /* For hash otcam tables, action data packing in TCAM's SRAM should be
      * same as how it is packed for regular hash table.
      */
@@ -1475,7 +1437,6 @@ ${table}_entry_write(uint32_t tableid,
     sdk::asic::pd::asicpd_table_entry_write(tableid,
                        index + ${pddict['tables'][table]['parent_hash_table_size']},
                        _sram_entry, entry_size, NULL);
-
     // Install Key in TCAM
     // Swizzle Key installed in TCAM before writing to TCAM memory
     // because TCAM entry is not built using p4pd_utils_p4table_entry_prepare
@@ -1501,11 +1462,9 @@ ${table}_entry_write(uint32_t tableid,
     uint8_t  sram_hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint32_t hwkey_len, hwkeymask_len, actiondatalen;
     uint16_t action_pc, entry_size;
-
     if (actiondata_mask) {
         return P4PD_FAIL;
     }
-
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                add_action_pc = True
 //::            else:
@@ -1527,7 +1486,6 @@ ${table}_entry_write(uint32_t tableid,
     p4pd_utils_swizzle_bytes(sram_hwentry, entry_size);
     sdk::asic::pd::asicpd_table_entry_write(tableid, index, sram_hwentry,
                                             entry_size, NULL);
-
     // Install Key in TCAM
     tcam_${table}_hwkey_len(tableid, &hwkey_len, &hwkeymask_len);
     // Swizzle Key installed in TCAM before writing to TCAM memory
@@ -1538,7 +1496,6 @@ ${table}_entry_write(uint32_t tableid,
     int pad = (hwkey_len % 16) ? (16 - (hwkey_len % 16)) : 0;
     sdk::asic::pd::asicpd_tcam_table_entry_write(tableid, index, hwkey,
                                                  hwkey_y, hwkey_len + pad);
-
     return (P4PD_SUCCESS);
 }
 //::        elif pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
@@ -1556,7 +1513,6 @@ ${table}_entry_write(uint32_t tableid,
     uint8_t  *_hwentry_mask = NULL;
     uint16_t entry_size, actiondatalen;
     (void)_hwentry_mask;
-
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                add_action_pc = True
 //::            else:
@@ -1619,17 +1575,14 @@ ${table}_entry_write(uint32_t tableid,
     uint16_t entry_size, actiondatalen, key_len, axi_shift_len;
     uint16_t actiondata_len_before_key, actiondata_len_after_key;
     uint8_t  *_hwentry = &hwentry[0];
-
     (void)packed_actiondata_before_key;
     (void)actiondata_len_after_key;
     (void)actiondata_len_before_key;
     (void)actiondatalen;
     (void)hwkey_len; // always 512 for hash tables..
-
     if (actiondata_mask) {
         return P4PD_FAIL;
     }
-
     ${table}_hwentry_query(tableid, &hwkey_len, &hwactiondata_len);
     hash_${table}_key_len(tableid, &key_len);
 //::            if len(pddict['tables'][table]['actions']) > 1:
@@ -1642,7 +1595,6 @@ ${table}_entry_write(uint32_t tableid,
 //::            else:
     action_pc = 0xff;
 //::            #endif
-
     /* For hash tables in both pipe and HBM, pack entries such that
      * key bits in memory is aligned with key bits in KM
      */
@@ -1689,7 +1641,6 @@ ${table}_entry_write(uint32_t tableid,
         _hwentry += axi_shift_len;
     }
 //::            #endif
-
 //::            if pddict['tables'][table]['location'] == 'HBM':
     sdk::asic::pd::asicpd_hbm_table_entry_write(tableid, hashindex,
                                                 _hwentry, entry_size);
@@ -1698,11 +1649,9 @@ ${table}_entry_write(uint32_t tableid,
     sdk::asic::pd::asicpd_table_entry_write(tableid, hashindex, _hwentry,
                                             entry_size, NULL);
 //::            #endif
-
     return (P4PD_SUCCESS);
 }
 //::        #endif
-
 //::        #Hash tables in both HBM and PIPE are unpacked the same way
 //::        if pddict['tables'][table]['type'] != 'Ternary' and pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
 static uint32_t
@@ -1720,7 +1669,6 @@ hash_${table}_unpack_action_data(uint32_t tableid,
     uint8_t *packed_action_data;
     uint16_t bits_to_copy;
     uint16_t dest_start_bit;
-
     (void)src_start_bit;
     (void)bits_from_adata_before_key;
     (void)copy_before_key;
@@ -1728,21 +1676,16 @@ hash_${table}_unpack_action_data(uint32_t tableid,
     (void)bits_to_copy;
     (void)dest_start_bit;
     (void)copy_before_key;
-
     actiondatalen = 0;
-    src_start_bit = 0; /* TODO: When mat-key start bit is in middle of byte ?? */
-
+    src_start_bit = 0;
     memset(actiondata, 0, sizeof(${table}_actiondata_t));
-
     actiondata->action_id = actionid;
-
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
 //::            if pddict['tables'][table]['is_wide_key']:
 //::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
 //::            #endif
-
     switch(actiondata->action_id) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
@@ -1808,8 +1751,6 @@ hash_${table}_unpack_action_data(uint32_t tableid,
                            bits_to_copy);
             actiondatalen += bits_to_copy;
             src_start_bit += bits_to_copy;
-
-
         //::        #endfor
         break;
 //::            #endfor
@@ -1825,15 +1766,11 @@ ${table}_unpack_action_data(uint32_t tableid,
 {
     uint16_t src_start_bit;
     uint16_t actiondatalen;
-
     (void)src_start_bit;
-
     actiondatalen = 0;
     src_start_bit = 0;
-
     memset(actiondata, 0, sizeof(${table}_actiondata_t));
     actiondata->action_id = actionid;
-
     switch(actiondata->action_id) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
@@ -1869,8 +1806,6 @@ ${table}_unpack_action_data(uint32_t tableid,
     return (actiondatalen);
 }
 //::        #endif
-
-
 //::        if pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
 /* Unbuild hardware key function for p4-table '${table}'
  * Arguments:
@@ -2049,7 +1984,6 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
                            hw_key_mask,
                            (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
                            ${width});
-
     m = trit_x ^ trit_y;
     k = trit_x & m;
 //::                            if p4fldwidth <= 32:
@@ -2068,7 +2002,6 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                            #endif
 //::                        #endfor
 //::                    #endif
-
 //::                    if len(key_bit_format):
 //::                        for kmbit, _kbit in key_bit_format:
 //::                            kbyte = (p4fldwidth - 1 - _kbit) / 8
@@ -2102,7 +2035,6 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                        #endfor
 //::                    #endif
 //::                #endfor
-
 //::                i = 1
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
@@ -2134,7 +2066,6 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
                            hw_key_mask,
                            (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
                            ${width});
-
     m = trit_x ^ trit_y;
     k = trit_x & m;
 //::                                if p4fldwidth <= 32:
@@ -2150,7 +2081,6 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     *((uint8_t*)&(swkey->${ustr}${p4fldname}[${kbyte}])) = k;
     *((uint8_t*)&(swkey_mask->${ustr_mask}${p4fldname}_mask[${kbyte}])) = m;
 //::                                #endif
-
 //::                            #endfor
 //::                        #endif
 //::                        if len(key_bit_format):
@@ -2172,7 +2102,6 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
                            1 /* bits to copy */);
     m = trit_x ^ trit_y;
     k = trit_x & m;
-
 //::                                if p4fldwidth <= 32:
     *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}) &= ~(1 << ${kbit});
     *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}) |= k << (${kbit});
@@ -2189,7 +2118,6 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                    #endfor
 //::                    i += 1
 //::                #endfor
-
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
@@ -2221,7 +2149,6 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
                            hw_key_mask,
                            (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
                            ${width});
-
     m = trit_x ^ trit_y;
     k = trit_x & m;
 //::                                kbyte = kbit/8
@@ -2240,7 +2167,6 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                                #endif
 //::                            #endfor
 //::                        #endif
-
 //::                        if len(key_bit_format):
 //::                            for kmbit, _kbit in key_bit_format:
 //::                                kbyte = (p4fldwidth - 1 - _kbit) / 8
@@ -2417,7 +2343,6 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                        #endfor
 //::                    #endif
 //::                #endfor
-
 //::                i = 1
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
@@ -2463,7 +2388,6 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                    #endfor
 //::                    i += 1
 //::                #endfor
-
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
@@ -2514,7 +2438,6 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::            #endif
 //::        #endif
 
-
 /* Read hardware entry from P4-table '${table}'. Read hw entry is decoded
  * and used to fill up matchkey and actiondata structures.
  *
@@ -2561,7 +2484,6 @@ ${table}_entry_read(uint32_t tableid,
     uint8_t  hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
-
     sdk::asic::pd::asicpd_tcam_table_hw_entry_read(tableid, index, hwentry_x,
                                                    hwentry_y, &hwentry_bit_len);
     if (!hwentry_bit_len) {
@@ -2609,7 +2531,6 @@ ${table}_entry_read(uint32_t tableid,
     uint8_t  hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
-
     sdk::asic::pd::asicpd_tcam_table_hw_entry_read(tableid, index, hwentry_x,
                                                    hwentry_y, &hwentry_bit_len);
     if (!hwentry_bit_len) {
@@ -2654,11 +2575,9 @@ ${table}_entry_read(uint32_t tableid,
     uint16_t hwentry_bit_len;
     uint8_t *packed_actiondata_after_key;
     uint16_t actiondata_len_after_key, key_bit_len;
-
     (void)packed_actiondata_after_key;
     (void)actiondata_len_after_key;
     (void)key_bit_len;
-
 //::            if pddict['tables'][table]['location'] == 'HBM':
     sdk::asic::pd::asicpd_hbm_table_entry_read(tableid, index,
                                                hwentry, &hwentry_bit_len);
@@ -2667,7 +2586,6 @@ ${table}_entry_read(uint32_t tableid,
                                               hwentry, &hwentry_bit_len);
     p4pd_utils_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
-
     if (!hwentry_bit_len) {
         // Zero len!!
         return (P4PD_SUCCESS);
@@ -2687,7 +2605,6 @@ ${table}_entry_read(uint32_t tableid,
 //::            #endif
     ${table}_unpack_action_data(tableid, actiondata->action_id,
                                 hwentry + adatabyte, actiondata);
-
     return (P4PD_SUCCESS);
 }
 //::        else:
@@ -2707,7 +2624,6 @@ ${table}_entry_read(uint32_t tableid,
     uint8_t *packed_actiondata_after_key;
     uint16_t actiondata_len_before_key;
     uint16_t actiondata_len_after_key, key_bit_len;
-
     (void)key_bit_len;
 //::            if pddict['tables'][table]['location'] == 'HBM':
     sdk::asic::pd::asicpd_hbm_table_entry_read(tableid, hashindex,
@@ -2752,12 +2668,10 @@ ${table}_entry_read(uint32_t tableid,
     int adatabyte = 0;
 //::            #endif
 //::            max_adata_bits_before_key -= delta_bits
-
     uint16_t axi_shift_bytes = ((${delta_bits} >> 4) << 1);
     // when axi_shift_bytes > 0, table entry is left shifted by positive number of bytes.
     ${table}_hwkey_unbuild(tableid, hwentry,
                            ${mat_key_bit_length}, swkey, axi_shift_bytes);
-
     packed_actiondata_before_key = (hwentry + adatabyte);
     packed_actiondata_after_key = (hwentry + ${mat_key_start_byte} + (${mat_key_bit_length} >> 3));
     actiondata_len_before_key = ${max_adata_bits_before_key};
@@ -2769,7 +2683,6 @@ ${table}_entry_read(uint32_t tableid,
                                     packed_actiondata_after_key,
                                     actiondata_len_after_key,
                                     actiondata);
-
     return (P4PD_SUCCESS);
 }
 //::        #endif
@@ -2801,7 +2714,6 @@ ${table}_key_decode(uint32_t tableid,
                     ${table}_swkey_t *swkey,
                     ${table}_swkey_mask_t *swkey_mask)
 {
-
     ${table}_hwkey_hwmask_unbuild(tableid, hwentry_x, hwentry_y, hwentry_len,
                                   swkey, swkey_mask);
     return (P4PD_SUCCESS);
@@ -2826,10 +2738,8 @@ ${table}_entry_decode(uint32_t tableid,
     actiondata->action_id = 0;
     int adatabyte = 0;
 //::            #endif
-
     ${table}_unpack_action_data(tableid, actiondata->action_id,
                                 hwentry + adatabyte, actiondata);
-
     return (P4PD_SUCCESS);
 }
 //::        else:
@@ -2871,7 +2781,6 @@ ${table}_entry_decode(uint32_t tableid,
     int adatabyte = 0;
 //::            #endif
 //::            max_adata_bits_before_key -= delta_bits
-
     uint16_t axi_shift_bytes = ((${delta_bits} >> 4) << 1);
     // when axi_shift_bytes > 0, table entry is left shifted by positive number of bytes.
     ${table}_hwkey_unbuild(tableid, hwentry, hwentry_len, swkey, axi_shift_bytes);
@@ -2893,12 +2802,8 @@ ${table}_entry_decode(uint32_t tableid,
     return (P4PD_SUCCESS);
 }
 //::        #endif
-
 //::     #endfor
-
-
 //::    if len(tabledict):
-
 //::        if pddict['p4plus']:
 //::            if pddict['p4plus_module']:
 //::                api_prefix = 'p4pd_' + pddict['p4plus_module']
@@ -2922,7 +2827,6 @@ ${table}_entry_decode(uint32_t tableid,
 //::                break
 //::            #endif
 //::        #endfor
-
 
 /* Query key details for p4-table
  *
@@ -2982,7 +2886,6 @@ ${api_prefix}_hwentry_query(uint32_t tableid,
     }
 }
 
-
 /* Build hardware key function for p4-table. The returned hw key
  * is byte stream that cannot be interpreted in meaningful way.
  * This byte stream of key should be used to compute hash
@@ -3030,7 +2933,6 @@ ${api_prefix}_hwkey_hwmask_build(uint32_t   tableid,
                                  uint8_t    *hw_key,
                                  uint8_t    *hw_key_y)
 {
-
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            if pddict['tables'][table]['is_toeplitz_hash'] or pddict['tables'][table]['is_raw']:
@@ -3090,7 +2992,6 @@ uint64_t
 ${api_prefix}_index_to_hwindex_map(uint32_t   tableid,
                                    void       *swkey)
 {
-
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            if pddict['tables'][table]['is_toeplitz_hash'] or pddict['tables'][table]['is_raw']:
@@ -3103,7 +3004,6 @@ ${api_prefix}_index_to_hwindex_map(uint32_t   tableid,
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
             return (${table}_index_mapper(tableid, (${table}_swkey_t *)swkey));
         break;
-
 //::        #endfor
         default:
             // Invalid tableid
@@ -3159,72 +3059,6 @@ ${api_prefix}_entry_write_with_datamask(uint32_t tableid,
                                         void    *actiondata,
                                         void    *actiondata_mask)
 {
-    /* P4 Table can reside in P4pipe or in HBM. Depending on where it resides
-     * and depending on if table is lookedup using hash or using index
-     * table line format is as described below.
-     */
-    /*
-     * Case 1:
-     *  Table is looked using hash and Table resides in P4pipe.
-     *
-     *  +-----------------------------------------+
-     *  | Action-PC[8] | Match-Key  | Action-Data |
-     *  +-----------------------------------------+
-     *
-     *  Action-PC   : is dervied from actiondata.action_id
-     *  Match-Key   : is byte stream built using ${table}_hwkey_build()
-     *  Action-Data : ${table}_actiondata_t* actiondata is
-     *                bit packed and installed in HW memory.
-     *                Action Field order in Action-data should match
-     *                with ASM output that MPU uses to fetch action-data
-     */
-    /*
-     * Case 2:
-     *  Table is looked using hash and Table resides in HBM.
-     *
-     *  HBM Hash Table Entry Format has to be aligned with Key-Maker format.
-     *  Match Key position in both HBM memory and in KM has to at same position.
-     *
-     *  when Key maker format is
-     *     +--------------------------------------------------------------------+
-     *     | Action-PC[8] (not part  | Zero or more | Match-Key  | Zero or more |
-     *     | of KM but should be     | I1 bytes     |            | I2 bytes     |
-     *     | allocated so that key   |              |            |              |
-     *     | in KM and SRAM can align|              |            |              |
-     *     +--------------------------------------------------------------------+
-     *
-     *  HBM memory line should be
-     *     +------------------------------------------------------------------+
-     *     | Action-PC[8]            | Zero or more | Match-Key  | Remaining  |
-     *     |                         | Action-Data  |            | Action-Data|
-     *     |                         | bytes        |            | bytes      |
-     *     +------------------------------------------------------------------+
-     *  Note: Match-key start in both KM and HBM memory are aligned.
-     *
-     *  Action-PC   : is dervied from actiondata.action_id
-     *  Match-Key   : is byte stream built using ${table}_hwkey_build()
-     *  Action-Data : ${table}_actiondata_t* actiondata is
-     *                bit packed and installed in HW memory. This Action-Data
-     *                can be overlayed in byte positions where I1 / I2 bytes
-     *                occupy in KM. HBM memory doesn't (cannot) store I1/I2
-     *                Hence to optimize HBM memory width, it makes sense to
-     *                reuse I1/I2 byte locations in KM for action data.
-     */
-    /*
-     * Case 3:
-     *  Table is looked using Index and Table resides in HBM or P4pipe.
-     *
-     * +----------------------------+
-     * | Action-PC[8] | Action-Data |
-     * +----------------------------+
-     *
-     * Action-PC   : is dervied from actiondata.action_id
-     * Action-Data : ${table}_actiondata_t* actiondata is
-     *               bit packed and installed in HW memory.
-     *               Action Field order in Action-data should match
-     *               with ASM output that MPU uses to fetch action-data
-     */
-
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            if pddict['tables'][table]['is_toeplitz_hash'] or pddict['tables'][table]['is_raw']:
@@ -3360,7 +3194,7 @@ ${api_prefix}_entry_install(uint32_t tableid,
     uint8_t  hwkey_mask[P4PD_MAX_PHV_LEN] = {0};
     p4pd_error_t ret = P4PD_SUCCESS;
 
-    time_profile_begin(sdk::utils::time_profile::P4PD_ENTRY_INSTALL); 
+    time_profile_begin(sdk::utils::time_profile::P4PD_ENTRY_INSTALL);
     ${api_prefix}_hwkey_hwmask_build(tableid, swkey, swkey_mask, hwkey, hwkey_mask);
     ret = ${api_prefix}_entry_write_with_datamask(tableid, index, hwkey,
                                                   hwkey_mask, actiondata, NULL);
@@ -3444,7 +3278,6 @@ ${api_prefix}_entry_read(uint32_t   tableid,
                             (${table}_actiondata_t*) actiondata));
 //::            #endif
         break;
-
 //::        #endfor
         default:
             // Invalid tableid
@@ -3455,7 +3288,14 @@ ${api_prefix}_entry_read(uint32_t   tableid,
     return (ret);
 }
 
-
+#define MOVE_BUFFER_PTR(buf, b, blen) \
+{                                     \
+    buf += b;                         \
+    blen -= b;                        \
+    if (blen <= 0) {                  \
+        return (P4PD_SUCCESS);        \
+    }                                 \
+}
 /* Return Log string of decoded P4 table hardware entry.
  *
  * Arguments:
@@ -3488,26 +3328,19 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 {
     char *buf = buffer;
     int  blen = buf_len, b;
-
     uint8_t  _hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  _hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
-
     if (hwentry_y) {
         memcpy(_hwentry_y, hwentry_y, (hwentry_len + 7) >> 3);
         p4pd_utils_swizzle_bytes(_hwentry_y, hwentry_len);
     }
-
     memset(buffer, 0, buf_len);
     if (hwentry_y) {
         b = snprintf(buf, blen, "!!!! Decode HW table entry into Table Key !!!! \n");
     } else {
         b = snprintf(buf, blen, "!!!! Decode HW table entry into (Table Key + Actiondata)/Actiondata!!!! \n");
     }
-    buf += b;
-    blen -= b;
-    if (blen <= 0) {
-        return (P4PD_SUCCESS);
-    }
+    MOVE_BUFFER_PTR(buf, b, blen);
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            if pddict['tables'][table]['is_toeplitz_hash'] or pddict['tables'][table]['is_raw']:
@@ -3540,11 +3373,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
             b = snprintf(buf, blen, "Table: %s, Index 0x%x/%u\n",
                          "P4TBL_ID_${caps_tablename}", index, index);
 //::            #endif
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             ${table}_actiondata_t actiondata;
             ${table}_entry_decode(tableid, _hwentry,  hwentry_len,
@@ -3556,46 +3385,26 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                 case ${caps_tablename}_${actname}_ID:
                 {
                     b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                     b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
                              actiondata.action_u.\
                              ${table}_${actionname}.${actionfldname});
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
                     b = snprintf(buf, blen, "%s: \n", "${actionfldname}");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "  0x%x : ",
                                  actiondata.action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
-                        buf += b;
-                        blen -= b;
-                        if (blen <= 0) {
-                            return (P4PD_SUCCESS);
-                        }
+                        MOVE_BUFFER_PTR(buf, b, blen);
                     }
                     b = snprintf(buf, blen, "\n");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
                 }
@@ -3613,33 +3422,17 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if (p4fldwidth <= 32):
             b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}", swkey.${p4fldname});
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::                    else:
 //::                        p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
             b = snprintf(buf, blen, "%s: \n", "${p4fldname}");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
             for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                 b = snprintf(buf, blen, "0x%x : ", swkey.${p4fldname}[j]);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
             }
             b = snprintf(buf, blen, "\n");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::                    #endif
 //::                #endfor
 //::                i = 1
@@ -3661,26 +3454,14 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                         (swkey.${ustr}${p4fldname}));
 //::                                else:
             b = snprintf(buf, blen, "%s: \n", "${p4fldname}");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::                                    p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
             for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                 b = snprintf(buf, blen, "  0x%x : ", swkey.${ustr}${p4fldname}[j]);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
             }
             b = snprintf(buf, blen, "\n");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::                                #endif
 //::                            #endfor
 //::                        #endif
@@ -3707,25 +3488,13 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                                else:
 //::                                    p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
             b = snprintf(buf, blen, "%s: \n", "${p4fldname}");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
             for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                 b = snprintf(buf, blen, "  0x%x : ", swkey.${ustr}${p4fldname}[j]);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
             }
             b = snprintf(buf, blen, "\n");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::                                #endif
 //::                            #endfor
 //::                        #endif
@@ -3739,46 +3508,26 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                 case ${caps_tablename}_${actname}_ID:
                 {
                     b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                     b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
                              actiondata.action_u.\
                              ${table}_${actionname}.${actionfldname});
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
                     b = snprintf(buf, blen, "%s: \n", "${actionfldname}");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "  0x%x : ",
                                  actiondata.action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
-                        buf += b;
-                        blen -= b;
-                        if (blen <= 0) {
-                            return (P4PD_SUCCESS);
-                        }
+                        MOVE_BUFFER_PTR(buf, b, blen);
                     }
                     b = snprintf(buf, blen, "\n");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
                 }
@@ -3798,59 +3547,27 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if (p4fldwidth <= 32):
                 b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}", swkey.${p4fldname});
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}_mask", swkey_mask.${p4fldname}_mask);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                    else:
 //::                        p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
                 b = snprintf(buf, blen, "%s: \n", "${p4fldname}");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "0x%x : ", swkey.${p4fldname}[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s: \n", "${p4fldname}_mask");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "0x%x : ", swkey_mask.${p4fldname}_mask[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                    #endif
 //::                #endfor
 //::                i = 1
@@ -3869,59 +3586,27 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
                 b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}", swkey.${ustr}${p4fldname});
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}_mask", swkey_mask.${ustr_mask}${p4fldname}_mask);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
                 b = snprintf(buf, blen, "%s: \n", "${p4fldname}");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "0x%x : ", swkey.${ustr}${p4fldname}[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s: \n", "${p4fldname}_mask");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "0x%x : ", swkey_mask.${ustr_mask}${p4fldname}_mask[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
 //::                    i += 1
@@ -3940,70 +3625,34 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
                 b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}", swkey.${ustr}${p4fldname});
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}_mask", swkey_mask.${ustr_mask}${p4fldname}_mask);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
                 b = snprintf(buf, blen, "%s: \n", "${p4fldname}");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "0x%x : ", swkey.${ustr}${p4fldname}[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s: \n", "${p4fldname}_mask");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "0x%x : ", swkey_mask.${ustr_mask}${p4fldname}_mask[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
 //::                    i += 1
 //::                #endfor
             } else { /* Decode actiondata associated with TCAM key */
                 b = snprintf(buf, blen, "!!!! Decode Tcam table Action Data !!!! \n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 ${table}_actiondata_t actiondata;
                 actiondata.action_id = sdk::asic::pd::asicpd_get_action_id(tableid, _hwentry[0]);
                 ${table}_unpack_action_data(tableid, actiondata.action_id, _hwentry+1,
@@ -4015,46 +3664,26 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                     case ${caps_tablename}_${actname}_ID:
                     {
                         b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
-                        buf += b;
-                        blen -= b;
-                        if (blen <= 0) {
-                            return (P4PD_SUCCESS);
-                        }
+                        MOVE_BUFFER_PTR(buf, b, blen);
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                         b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
                              actiondata.action_u.\
                              ${table}_${actionname}.${actionfldname});
-                        buf += b;
-                        blen -= b;
-                        if (blen <= 0) {
-                            return (P4PD_SUCCESS);
-                        }
+                        MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
                         b = snprintf(buf, blen, "%s: \n", "${actionfldname}");
-                        buf += b;
-                        blen -= b;
-                        if (blen <= 0) {
-                            return (P4PD_SUCCESS);
-                        }
+                        MOVE_BUFFER_PTR(buf, b, blen);
                         for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                             b = snprintf(buf, blen, "  0x%x : ",
                                      actiondata.action_u.\
                                      ${table}_${actionname}.${actionfldname}[j]);
-                            buf += b;
-                            blen -= b;
-                            if (blen <= 0) {
-                                return (P4PD_SUCCESS);
-                            }
+                            MOVE_BUFFER_PTR(buf, b, blen);
                         }
                         b = snprintf(buf, blen, "\n");
-                        buf += b;
-                        blen -= b;
-                        if (blen <= 0) {
-                            return (P4PD_SUCCESS);
-                        }
+                        MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
                     }
@@ -4106,21 +3735,12 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 {
     char *buf = buffer;
     int  blen = buf_len, b;
-
     (void)sw_key;
     (void)sw_key_mask;
     (void)action_data;
-
     memset(buffer, 0, buf_len);
-
     b = snprintf(buf, blen, "Table Entry Fields\n");
-
-    buf += b;
-    blen -= b;
-    if (blen <= 0) {
-        return (P4PD_SUCCESS);
-    }
-
+    MOVE_BUFFER_PTR(buf, b, blen);
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            if pddict['tables'][table]['is_toeplitz_hash'] or pddict['tables'][table]['is_raw']:
@@ -4149,11 +3769,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
             b = snprintf(buf, blen, "Table : %s, Index : 0x%x/%u\n",
                          "P4TBL_ID_${caps_tablename}", index, index);
 //::            #endif
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             ${table}_actiondata_t *actiondata = (${table}_actiondata_t *)action_data;
             if (!actiondata) {
@@ -4167,46 +3783,26 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 {
                     b = snprintf(buf, blen, "Action : %s\n",
                                  "${caps_tablename}_${actname}_ID");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                     b = snprintf(buf, blen, "%s : 0x%x\n", "${actionfldname}",
                              actiondata->action_u.\
                              ${table}_${actionname}.${actionfldname});
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
                     b = snprintf(buf, blen, "%s : 0x", "${actionfldname}");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "%02x",
                                  actiondata->action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
-                        buf += b;
-                        blen -= b;
-                        if (blen <= 0) {
-                            return (P4PD_SUCCESS);
-                        }
+                        MOVE_BUFFER_PTR(buf, b, blen);
                     }
                     b = snprintf(buf, blen, "\n");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
                 }
@@ -4221,42 +3817,22 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 break;
             }
             b = snprintf(buf, blen, "Key :\n");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if (p4fldwidth <= 32):
             b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}", swkey->${p4fldname});
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::                    else:
 //::                        p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
             b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
             for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                 b = snprintf(buf, blen, "%02x", swkey->${p4fldname}[j]);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
             }
             b = snprintf(buf, blen, "\n");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
 //::                    #endif
 //::                #endfor
 //::                i = 1
@@ -4270,41 +3846,21 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
-//::                                kbyte = kbit / 8
-//::                                tablebyte = kmbyte
-//::                                if p4fldwidth <= 32:
+//::                            if p4fldwidth <= 32:
             b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}",
                         (swkey->${ustr}${p4fldname}));
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
-//::                                else:
+            MOVE_BUFFER_PTR(buf, b, blen);
+//::                            else:
             b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
-//::                                    p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
+            MOVE_BUFFER_PTR(buf, b, blen);
+//::                                p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
             for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                 b = snprintf(buf, blen, "%02x", swkey->${ustr}${p4fldname}[j]);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
             }
             b = snprintf(buf, blen, "\n");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
-//::                                #endif
-//::                            #endfor
+            MOVE_BUFFER_PTR(buf, b, blen);
+//::                            #endif
 //::                        #endif
 //::                    #endfor
 //::                    i += 1
@@ -4320,25 +3876,14 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
-//::                                kbyte = kbit / 8
-//::                                tablebyte = kmbyte
-//::                                if p4fldwidth <= 32:
+//::                            if p4fldwidth <= 32:
             b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}",
                          (swkey->${ustr}${p4fldname}));
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
-//::                                else:
-//::                                    p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
+            MOVE_BUFFER_PTR(buf, b, blen);
+//::                            else:
             b = snprintf(buf, blen, "%s : ", "${p4fldname}");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
+            MOVE_BUFFER_PTR(buf, b, blen);
+//::                                p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
             for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                 b = snprintf(buf, blen, "%02x", swkey->${ustr}${p4fldname}[j]);
                 buf += b;
@@ -4348,13 +3893,8 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 }
             }
             b = snprintf(buf, blen, "\n");
-            buf += b;
-            blen -= b;
-            if (blen <= 0) {
-                return (P4PD_SUCCESS);
-            }
-//::                                #endif
-//::                            #endfor
+            MOVE_BUFFER_PTR(buf, b, blen);
+//::                            #endif
 //::                        #endif
 //::                    #endfor
 //::                    i += 1
@@ -4380,35 +3920,19 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                     b = snprintf(buf, blen, "%s : 0x%x\n", "${actionfldname}",
                              actiondata->action_u.\
                              ${table}_${actionname}.${actionfldname});
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
                     b = snprintf(buf, blen, "%s : 0x", "${actionfldname}");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "%02x",
                                  actiondata->action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
-                        buf += b;
-                        blen -= b;
-                        if (blen <= 0) {
-                            return (P4PD_SUCCESS);
-                        }
+                        MOVE_BUFFER_PTR(buf, b, blen);
                     }
                     b = snprintf(buf, blen, "\n");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
                 }
@@ -4421,54 +3945,26 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
             ${table}_swkey_mask_t *swkey_mask = (${table}_swkey_mask_t *)sw_key_mask;
             if (swkey && swkey_mask) {
                 b = snprintf(buf, blen, "Key :\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if (p4fldwidth <= 32):
                 b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}", swkey->${p4fldname});
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}_mask", swkey_mask->${p4fldname}_mask);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                    else:
 //::                        p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
                 b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "%02x", swkey->${p4fldname}[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s : 0x", "${p4fldname}_mask");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "%02x", swkey_mask->${p4fldname}_mask[j]);
                     buf += b;
@@ -4478,11 +3974,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                     }
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                    #endif
 //::                #endfor
 //::                i = 1
@@ -4501,59 +3993,27 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
                 b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}", swkey->${ustr}${p4fldname});
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}_mask", swkey_mask->${ustr_mask}${p4fldname}_mask);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
                 b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "%02x", swkey->${ustr}${p4fldname}[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s : ", "${p4fldname}_mask");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "%02x", swkey_mask->${ustr_mask}${p4fldname}_mask[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
 //::                    i += 1
@@ -4572,59 +4032,27 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
                 b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}", swkey->${ustr}${p4fldname});
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}_mask", swkey_mask->${ustr_mask}${p4fldname}_mask);
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
                 b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "%02x", swkey->${ustr}${p4fldname}[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 b = snprintf(buf, blen, "%s : 0x", "${p4fldname}_mask");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
                 for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                     b = snprintf(buf, blen, "%02x", swkey_mask->${ustr_mask}${p4fldname}_mask[j]);
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                 }
                 b = snprintf(buf, blen, "\n");
-                buf += b;
-                blen -= b;
-                if (blen <= 0) {
-                    return (P4PD_SUCCESS);
-                }
+                MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
 //::                    i += 1
@@ -4641,46 +4069,26 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 case ${caps_tablename}_${actname}_ID:
                 {
                     b = snprintf(buf, blen, "Action : %s\n", "${caps_tablename}_${actname}_ID");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                     b = snprintf(buf, blen, "%s : 0x%x\n", "${actionfldname}",
                              actiondata->action_u.\
                              ${table}_${actionname}.${actionfldname});
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        else:
 //::                            p4fldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
                     b = snprintf(buf, blen, "%s : 0x", "${actionfldname}");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "%02x",
                                  actiondata->action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
-                        buf += b;
-                        blen -= b;
-                        if (blen <= 0) {
-                            return (P4PD_SUCCESS);
-                        }
+                        MOVE_BUFFER_PTR(buf, b, blen);
                     }
                     b = snprintf(buf, blen, "\n");
-                    buf += b;
-                    blen -= b;
-                    if (blen <= 0) {
-                        return (P4PD_SUCCESS);
-                    }
+                    MOVE_BUFFER_PTR(buf, b, blen);
 //::                        #endif
 //::                    #endfor
                 }
