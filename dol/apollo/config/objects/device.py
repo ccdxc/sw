@@ -8,16 +8,16 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.tunnel as tunnel
 
-import switch_pb2 as switch_pb2
+import device_pb2 as device_pb2
 import types_pb2 as types_pb2
 
 from infra.common.logging import logger
 from apollo.config.store import Store
 
-class SwitchObject(base.ConfigObjectBase):
+class DeviceObject(base.ConfigObjectBase):
     def __init__(self, spec):
         super().__init__()
-        self.GID("Switch1")
+        self.GID("Device1")
         
         ################# PUBLIC ATTRIBUTES OF SWITCH OBJECT #####################
         self.LocalIP = next(resmgr.TepIpAddressAllocator)
@@ -32,24 +32,24 @@ class SwitchObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Switch1/LocalIP:%s/Gateway:%s/MAC:%s" %\
+        return "Device1/LocalIP:%s/Gateway:%s/MAC:%s" %\
                (self.LocalIP, self.Gateway, self.MACAddress.get())
 
     def GetGrpcCreateMessage(self):
-        swspec = switch_pb2.SwitchSpec()
-        swspec.IPAddr.Af = types_pb2.IP_AF_INET
-        swspec.IPAddr.V4Addr = int(self.LocalIP)
-        swspec.GatewayIP.Af = types_pb2.IP_AF_INET
-        swspec.GatewayIP.V4Addr = int(self.Gateway)
-        swspec.MACAddr = self.MACAddress.getnum()
-        return swspec
+        grpcmsg = device_pb2.DeviceRequest()
+        grpcmsg.Request.IPAddr.Af = types_pb2.IP_AF_INET
+        grpcmsg.Request.IPAddr.V4Addr = int(self.LocalIP)
+        grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
+        grpcmsg.Request.GatewayIP.V4Addr = int(self.Gateway)
+        grpcmsg.Request.MACAddr = self.MACAddress.getnum()
+        return grpcmsg
    
     def Show(self):
-        logger.info("Switch Object: %s" % self)
+        logger.info("Device Object: %s" % self)
         logger.info("- %s" % repr(self))
         return
 
-class SwitchObjectClient:
+class DeviceObjectClient:
     def __init__(self):
         self.__objs = []
         return
@@ -58,7 +58,7 @@ class SwitchObjectClient:
         return self.__objs
 
     def GenerateObjects(self, topospec):
-        obj = SwitchObject(topospec.switch)
+        obj = DeviceObject(topospec.device)
         self.__objs.append(obj)
         return
 
@@ -68,7 +68,7 @@ class SwitchObjectClient:
         tunnel.client.CreateObjects()
         return
 
-client = SwitchObjectClient()
+client = DeviceObjectClient()
 
 def GetMatchingObjects(selectors):
     return client.Objects()

@@ -11,6 +11,12 @@ import public "gogo.proto";
 import "meta/meta.proto";
 import "types.proto";
 
+service SecurityPolicySvc {
+  rpc SecurityPolicyCreate (SecurityPolicyRequest) returns (SecurityPolicyResponse) {}
+  rpc SecurityPolicyGet (SecurityPolicyGetRequest) returns (SecurityPolicyGetResponse) {}
+  rpc SecurityPolicyDelete (SecurityPolicyDeleteRequest) returns (SecurityPolicyDeleteResponse) {}
+}
+
 // type of the private cloud network
 enum RuleDir {
   RULE_DIR_NONE      = 0;
@@ -83,14 +89,51 @@ message SecurityPolicySpec {
   repeated SecurityRule Rules      = 4 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
-// Operational status of security policy, if any
+// operational status of security policy, if any
 message SecurityPolicyStatus {
 }
 
-// Security Policy object
+// stats of security policy, if any
+message SecurityPolicyStats {
+}
+
+// security policy object
 message SecurityPolicy {
   meta.TypeMeta        TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   meta.ObjMeta         ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
   SecurityPolicySpec   Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
   SecurityPolicyStatus Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  SecurityPolicyStats  Stats    = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// security policy create and update request
+message SecurityPolicyRequest {
+  repeated SecurityPolicySpec Request = 1;
+}
+
+// security policy create and update response
+message SecurityPolicyResponse {
+  types.ApiStatus               ApiStatus = 1;
+  repeated SecurityPolicyStatus Response  = 2;
+}
+
+// security policy get request
+message SecurityPolicyGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// security policy get response
+message SecurityPolicyGetResponse {
+  types.ApiStatus         ApiStatus = 1;
+  repeated SecurityPolicy Response  = 2;
+}
+
+// security policy delete request
+message SecurityPolicyDeleteRequest {
+  repeated uint32 Id = 1;
+}
+
+// security policy delete response
+message SecurityPolicyDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
 }

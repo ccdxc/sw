@@ -13,32 +13,32 @@ extern flow_test *g_flow_test_obj;
 
 // Build PCN API spec from protobuf spec
 static inline void
-pds_agent_mapping_api_spec_fill (const tpc::MappingSpec *proto_spec,
+pds_agent_mapping_api_spec_fill (const tpc::MappingSpec &proto_spec,
                                  pds_mapping_spec_t *api_spec)
 {
     tpc::MappingKey key;
 
-    key = proto_spec->id();
+    key = proto_spec.id();
     api_spec->key.vcn.id = key.pcnid();
     pds_agent_util_ipaddr_fill(key.ipaddr(), &api_spec->key.ip_addr);
-    api_spec->subnet.id = proto_spec->subnetid();
-    api_spec->vnic.id = proto_spec->vnicid();
-    pds_agent_util_ipaddr_fill(proto_spec->publicip(), &api_spec->public_ip);
-    MAC_UINT64_TO_ADDR(api_spec->overlay_mac, proto_spec->macaddr());
-    api_spec->tep.ip_addr = proto_spec->tunnelid();
-    api_spec->subnet.id = proto_spec->subnetid();
-    api_spec->vnic.id = proto_spec->vnicid();
-    api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec->encap());
+    api_spec->subnet.id = proto_spec.subnetid();
+    api_spec->vnic.id = proto_spec.vnicid();
+    pds_agent_util_ipaddr_fill(proto_spec.publicip(), &api_spec->public_ip);
+    MAC_UINT64_TO_ADDR(api_spec->overlay_mac, proto_spec.macaddr());
+    api_spec->tep.ip_addr = proto_spec.tunnelid();
+    api_spec->subnet.id = proto_spec.subnetid();
+    api_spec->vnic.id = proto_spec.vnicid();
+    api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
 }
 
 Status
 MappingSvcImpl::MappingCreate(ServerContext *context,
-                              const tpc::MappingSpec *proto_spec,
-                              tpc::MappingStatus *proto_status) {
-    pds_mapping_spec_t api_spec = {0};
-
-    if (proto_spec) {
-        pds_agent_mapping_api_spec_fill(proto_spec, &api_spec);
+                              const tpc::MappingRequest *proto_req,
+                              tpc::MappingResponse *proto_rsp) {
+    if (proto_req) {
+        for (int i = 0; i < proto_req->request_size(); i ++) {
+            pds_mapping_spec_t api_spec = {0};
+            pds_agent_mapping_api_spec_fill(proto_req->request(i), &api_spec);
 #if 0
         // TODO: Adding this here since there is no proto defs for
         // flows. This needs to be cleaned up
@@ -50,8 +50,9 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
                                            api_spec.key.ip_addr);
         }
 #endif
-        if (pds_mapping_create(&api_spec) == sdk::SDK_RET_OK)
-            return Status::OK;
+            if (pds_mapping_create(&api_spec) == sdk::SDK_RET_OK)
+                return Status::OK;
+        }
     }
     return Status::CANCELLED;
 }

@@ -12,7 +12,9 @@ import "meta/meta.proto";
 import "types.proto";
 
 service RouteSvc {
-  rpc RouteTableCreate (RouteTableSpec) returns (RouteTableStatus) {}
+  rpc RouteTableCreate (RouteTableRequest) returns (RouteTableResponse) {}
+  rpc RouteTableGet (RouteTableGetRequest) returns (RouteTableGetResponse) {}
+  rpc RouteTableDelete (RouteTableDeleteRequest) returns (RouteTableDeleteResponse) {}
 }
 
 // route object
@@ -40,10 +42,47 @@ message RouteTableSpec {
 message RouteTableStatus {
 }
 
+// stats of the route table, if any
+message RouteTableStats {
+}
+
 // route table object
 message RouteTable {
   meta.TypeMeta     TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   meta.ObjMeta      ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
   RouteTableSpec    Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
   RouteTableStatus  Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  RouteTableStats   Stats    = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// route table create and update request
+message RouteTableRequest {
+  repeated RouteTableSpec Request = 1; // batched request
+}
+
+// route table create and update response
+message RouteTableResponse {
+  types.ApiStatus           ApiStatus = 1;
+  repeated RouteTableStatus Response  = 2;
+}
+
+// route table get request
+message RouteTableGetRequest {
+  repeated uint32 Id = 1; // batched request
+}
+
+// route table get response
+message RouteTableGetResponse {
+  types.ApiStatus     ApiStatus = 1;
+  repeated RouteTable Response  = 2;
+}
+
+// route table delete request
+message RouteTableDeleteRequest {
+  repeated uint32 Id = 1; // batched request
+}
+
+// route table delete response
+message RouteTableDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
 }

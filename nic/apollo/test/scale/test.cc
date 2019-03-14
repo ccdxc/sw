@@ -226,7 +226,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                         pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
                         pds_mapping.fabric_encap.val.mpls_tag = vnic_key;
                     }
-                    pds_mapping.tep.ip_addr = g_device.switch_ip_addr;
+                    pds_mapping.tep.ip_addr = g_device.device_ip_addr;
                     MAC_UINT64_TO_ADDR(pds_mapping.overlay_mac,
                                        (((((uint64_t)i & 0x7FF) << 22) |
                                          ((j & 0x7FF) << 11) | (k & 0x7FF))));
@@ -530,12 +530,12 @@ create_device_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
 {
     sdk_ret_t            rv;
     memset(&g_device, 0, sizeof(g_device));
-    g_device.switch_ip_addr = ipaddr;
-    MAC_UINT64_TO_ADDR(g_device.switch_mac_addr, macaddr);
+    g_device.device_ip_addr = ipaddr;
+    MAC_UINT64_TO_ADDR(g_device.device_mac_addr, macaddr);
     g_device.gateway_ip_addr = gwip;
 
 #ifdef TEST_GRPC_APP
-    rv = create_switch_grpc(&g_device);
+    rv = create_device_grpc(&g_device);
 #else
     rv = pds_device_create(&g_device);
 #endif

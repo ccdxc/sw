@@ -47,14 +47,15 @@ class TunnelObject(base.ConfigObjectBase):
                (self.Id, self.Encap, self.LocalIP, self.RemoteIP)
 
     def GetGrpcCreateMessage(self):
-        grpcmsg = tunnel_pb2.TunnelSpec()
-        grpcmsg.Id = self.Id
-        grpcmsg.PCNId = 0 # TODO: Create Substrate PCN
-        grpcmsg.Encap = self.Encap
-        grpcmsg.LocalIP.Af = types_pb2.IP_AF_INET
-        grpcmsg.LocalIP.V4Addr = int(self.LocalIP)
-        grpcmsg.RemoteIP.Af = types_pb2.IP_AF_INET
-        grpcmsg.RemoteIP.V4Addr = int(self.RemoteIP)
+        grpcmsg = tunnel_pb2.TunnelRequest()
+        spec = grpcmsg.Request.add()
+        spec.Id = self.Id
+        spec.PCNId = 0 # TODO: Create Substrate PCN
+        spec.Encap = self.Encap
+        spec.LocalIP.Af = types_pb2.IP_AF_INET
+        spec.LocalIP.V4Addr = int(self.LocalIP)
+        spec.RemoteIP.Af = types_pb2.IP_AF_INET
+        spec.RemoteIP.V4Addr = int(self.RemoteIP)
         return grpcmsg
    
     def Show(self):

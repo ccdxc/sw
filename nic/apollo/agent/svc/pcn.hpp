@@ -12,13 +12,14 @@ using grpc::Status;
 using grpc::ServerContext;
 
 using tpc::PCNSvc;
+using tpc::PCNRequest;
 using tpc::PCNSpec;
-using tpc::PCNStatus;
+using tpc::PCNResponse;
 
 class PCNSvcImpl final : public PCNSvc::Service {
 public:
-    Status PCNCreate(ServerContext *context, const tpc::PCNSpec *spec,
-                     tpc::PCNStatus *status) override;
+    Status PCNCreate(ServerContext *context, const tpc::PCNRequest *req,
+                     tpc::PCNResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_PCN_HPP__

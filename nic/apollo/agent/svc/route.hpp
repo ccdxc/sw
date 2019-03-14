@@ -12,14 +12,15 @@ using grpc::Status;
 using grpc::ServerContext;
 
 using tpc::RouteSvc;
+using tpc::RouteTableRequest;
 using tpc::RouteTableSpec;
-using tpc::RouteTableStatus;
+using tpc::RouteTableResponse;
 
 class RouteSvcImpl final : public RouteSvc::Service {
 public:
     Status RouteTableCreate(ServerContext *context,
-                            const tpc::RouteTableSpec *spec,
-                            tpc::RouteTableStatus *status) override;
+                            const tpc::RouteTableRequest *req,
+                            tpc::RouteTableResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_ROUTE_HPP__

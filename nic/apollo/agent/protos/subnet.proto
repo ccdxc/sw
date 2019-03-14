@@ -12,7 +12,9 @@ import "meta/meta.proto";
 import "types.proto";
 
 service SubnetSvc {
-  rpc SubnetCreate (SubnetSpec) returns (SubnetStatus) {}
+  rpc SubnetCreate (SubnetRequest) returns (SubnetResponse) {}
+  rpc SubnetGet (SubnetGetRequest) returns (SubnetGetResponse) {}
+  rpc SubnetDelete (SubnetDeleteRequest) returns (SubnetDeleteResponse) {}
 }
 
 // SubnetSpec captures subnet specific coniguration
@@ -43,14 +45,51 @@ message SubnetSpec {
   uint32           EgV6SecurityPolicyId  = 11;
 }
 
-// Operational status of the subnet, if any
+// operational status of the subnet, if any
 message SubnetStatus {
 }
 
-// Subnet object
+// stats of the subnet, if any
+message SubnetStats {
+}
+
+// subnet object
 message Subnet {
   meta.TypeMeta TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   meta.ObjMeta  ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
   SubnetSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
   SubnetStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  SubnetStats   Stats      = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// subnet create and update request
+message SubnetRequest {
+  repeated SubnetSpec Request = 1;
+}
+
+// subnet create and update response
+message SubnetResponse {
+  types.ApiStatus       ApiStatus = 1;
+  repeated SubnetStatus Response  = 2;
+}
+
+// subnet get request
+message SubnetGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// subnet get response
+message SubnetGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated Subnet Response  = 2;
+}
+
+// subnet delete request
+message SubnetDeleteRequest {
+  repeated uint32 Id = 1;
+}
+
+// subnet delete response
+message SubnetDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
 }

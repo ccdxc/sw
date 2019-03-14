@@ -12,7 +12,9 @@ import "meta/meta.proto";
 import "types.proto";
 
 service MappingSvc {
-  rpc MappingCreate (MappingSpec) returns (MappingStatus) {}
+  rpc MappingCreate (MappingRequest) returns (MappingResponse) {}
+  rpc MappingGet (MappingGetRequest) returns (MappingGetResponse) {}
+  rpc MappingDelete (MappingDeleteRequest) returns (MappingDeleteResponse) {}
 }
 
 // MappingKey uniquley identifies the IP in the entire fabric
@@ -42,14 +44,51 @@ message MappingSpec {
   types.IPAddress PublicIP    = 7;
 }
 
-// Operational status of a mapping
+// operational status of a mapping
 message MappingStatus {
 }
 
-// Mapping object
+// stats of a mapping
+message MappingStats {
+}
+
+// mapping object
 message Mapping {
   meta.TypeMeta  TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   meta.ObjMeta   ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
   MappingSpec   Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
   MappingStatus Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  MappingStats  Stats     = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// mapping create and update request
+message MappingRequest {
+  repeated MappingSpec Request = 1;
+}
+
+// mapping create and update response
+message MappingResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated MappingStatus Response  = 2;
+}
+
+// mapping get request
+message MappingGetRequest {
+  repeated MappingKey Id = 1;
+}
+
+// mapping get response
+message MappingGetResponse {
+  types.ApiStatus  ApiStatus = 1;
+  repeated Mapping Response = 2;
+}
+
+// mapping delete request
+message MappingDeleteRequest {
+  repeated MappingKey Id = 1;
+}
+
+// mapping delete response
+message MappingDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
 }

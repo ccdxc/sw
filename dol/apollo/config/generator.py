@@ -14,7 +14,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as agentapi
 
 import apollo.config.objects.batch as batch
-import apollo.config.objects.switch as switch
+import apollo.config.objects.device as device
 import apollo.config.objects.pcn as pcn
 
 from infra.common.logging import logger as logger
@@ -27,7 +27,7 @@ def __generate(topospec):
     batch.client.GenerateObjects(topospec)
 
     # Generate Device Configuration
-    switch.client.GenerateObjects(topospec)
+    device.client.GenerateObjects(topospec)
 
     # Generate PCN configuration
     pcn.client.GenerateObjects(topospec)
@@ -38,7 +38,7 @@ def __create():
     batch.client.Start()
 
     # Create Switch Object
-    switch.client.CreateObjects()
+    device.client.CreateObjects()
 
     # Create PCN Objects
     pcn.client.CreateObjects()

@@ -12,10 +12,12 @@ import public "meta/meta.proto";
 import public "types.proto";
 
 service TunnelSvc {
-  rpc TunnelCreate (TunnelSpec) returns (TunnelStatus) {}
+  rpc TunnelCreate (TunnelRequest) returns (TunnelResponse) {}
+  rpc TunnelGet (TunnelGetRequest) returns (TunnelGetResponse) {}
+  rpc TunnelDelete (TunnelDeleteRequest) returns (TunnelDeleteResponse) {}
 }
 
-// Encapsulation types
+// encapsulation types
 enum TunnelEncapType {
   TUNNEL_ENCAP_NONE            = 0;
   TUNNEL_ENCAP_VXLAN           = 1;  // VXLAN encapsulation
@@ -23,7 +25,7 @@ enum TunnelEncapType {
   TUNNEL_ENCAP_MPLSoUDP_TAGS_2 = 3;  // MPLS over UDP for East-West traffic
 }
 
-// Tunnel configuration
+// tunnel configuration
 message TunnelSpec {
   // unique tunnel identifier
   // NOTE: Tunnel id of 0 is reserve for local TEP/host
@@ -38,14 +40,51 @@ message TunnelSpec {
   types.IPAddress RemoteIP = 5 [(gogoproto.nullable) = false];
 }
 
-// Operational status of the tunnel, if any
+// operational status of the tunnel, if any
 message TunnelStatus {
 }
 
-// Tunnel object
+// stats of the tunnel, if any
+message TunnelStats {
+}
+
+// tunnel object
 message Tunnel {
   meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
   TunnelSpec   Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
   TunnelStatus Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  TunnelStats  Stats     = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// tunnel create and update request
+message TunnelRequest {
+  repeated TunnelSpec Request = 1;
+}
+
+// tunnel create and update response
+message TunnelResponse {
+  types.ApiStatus       ApiStatus = 1;
+  repeated TunnelStatus Response  = 2;
+}
+
+// tunnel get request
+message TunnelGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// tunnel get response
+message TunnelGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated Tunnel Response  = 2;
+}
+
+// tunnel delete request
+message TunnelDeleteRequest {
+  repeated uint32 Id = 1;
+}
+
+// tunnel delete response
+message TunnelDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
 }

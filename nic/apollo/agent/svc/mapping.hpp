@@ -12,13 +12,14 @@ using grpc::Status;
 using grpc::ServerContext;
 
 using tpc::MappingSvc;
+using tpc::MappingRequest;
 using tpc::MappingSpec;
-using tpc::MappingStatus;
+using tpc::MappingResponse;
 
 class MappingSvcImpl final : public MappingSvc::Service {
 public:
-    Status MappingCreate(ServerContext *context, const tpc::MappingSpec *spec,
-                         tpc::MappingStatus *status) override;
+    Status MappingCreate(ServerContext *context, const tpc::MappingRequest *req,
+                         tpc::MappingResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_MAPPING_HPP__

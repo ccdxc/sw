@@ -31,20 +31,20 @@ std::unique_ptr<tpc::VnicSvc::Stub>      g_vnic_stub_;
 std::unique_ptr<tpc::SubnetSvc::Stub>    g_subnet_stub_;
 std::unique_ptr<tpc::PCNSvc::Stub>       g_pcn_stub_;
 std::unique_ptr<tpc::TunnelSvc::Stub>    g_tunnel_stub_;
-std::unique_ptr<tpc::SwitchSvc::Stub>    g_switch_stub_;
+std::unique_ptr<tpc::DeviceSvc::Stub>    g_device_stub_;
 std::unique_ptr<tpc::BatchSvc::Stub>     g_batch_stub_;
 
 sdk_ret_t
 create_route_table_grpc (pds_route_table_spec_t *rt)
 {
-    RouteTableSpec      spec;
+    RouteTableRequest   request;
     ClientContext       context;
-    RouteTableStatus    status;
+    RouteTableResponse  response;
     Status              ret_status;
 
-    populate_route_table_spec(&spec, rt);
-    ret_status = g_route_table_stub_->RouteTableCreate(&context, spec, &status);
-    if (!ret_status.ok()) {
+    populate_route_table_request(&request, rt);
+    ret_status = g_route_table_stub_->RouteTableCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
@@ -55,14 +55,14 @@ create_route_table_grpc (pds_route_table_spec_t *rt)
 sdk_ret_t
 create_mapping_grpc (pds_mapping_spec_t *mapping)
 {
-    MappingSpec     spec;
+    MappingRequest  request;
     ClientContext   context;
-    MappingStatus   status;
+    MappingResponse response;
     Status          ret_status;
 
-    populate_mapping_spec(&spec, mapping);
-    ret_status = g_mapping_stub_->MappingCreate(&context, spec, &status);
-    if (!ret_status.ok()) {
+    populate_mapping_request(&request, mapping);
+    ret_status = g_mapping_stub_->MappingCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
@@ -73,14 +73,14 @@ create_mapping_grpc (pds_mapping_spec_t *mapping)
 sdk_ret_t
 create_vnic_grpc (pds_vnic_spec_t *vnic)
 {
-    VnicSpec        spec;
+    VnicRequest     request;
     ClientContext   context;
-    VnicStatus      status;
+    VnicResponse    response;
     Status          ret_status;
 
-    populate_vnic_spec(&spec, vnic);
-    ret_status = g_vnic_stub_->VnicCreate(&context, spec, &status);
-    if (!ret_status.ok()) {
+    populate_vnic_request(&request, vnic);
+    ret_status = g_vnic_stub_->VnicCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
@@ -91,32 +91,32 @@ create_vnic_grpc (pds_vnic_spec_t *vnic)
 sdk_ret_t
 create_subnet_grpc (pds_subnet_spec_t *subnet)
 {
-    SubnetSpec      spec;
+    SubnetRequest   request;
     ClientContext   context;
-    SubnetStatus    status;
+    SubnetResponse  response;
     Status          ret_status;
 
-    populate_subnet_spec(&spec, subnet);
-    ret_status = g_subnet_stub_->SubnetCreate(&context, spec, &status);
-    if (!ret_status.ok()) {
+    populate_subnet_request(&request, subnet);
+    ret_status = g_subnet_stub_->SubnetCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    
+ 
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 create_vcn_grpc (pds_vcn_spec_t *vcn)
 {
-    PCNSpec         spec;
+    PCNRequest      request;
     ClientContext   context;
-    PCNStatus       status;
+    PCNResponse     response;
     Status          ret_status;
 
-    populate_pcn_spec(&spec, vcn);
-    ret_status = g_pcn_stub_->PCNCreate(&context, spec, &status);
-    if (!ret_status.ok()) {
+    populate_pcn_request(&request, vcn);
+    ret_status = g_pcn_stub_->PCNCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
@@ -127,14 +127,14 @@ create_vcn_grpc (pds_vcn_spec_t *vcn)
 sdk_ret_t
 create_tunnel_grpc (pds_tep_spec_t *tep)
 {
-    TunnelSpec      spec;
+    TunnelRequest   request;
     ClientContext   context;
-    TunnelStatus    status;
+    TunnelResponse  response;
     Status          ret_status;
 
-    populate_tunnel_spec(&spec, tep);
-    ret_status = g_tunnel_stub_->TunnelCreate(&context, spec, &status);
-    if (!ret_status.ok()) {
+    populate_tunnel_request(&request, tep);
+    ret_status = g_tunnel_stub_->TunnelCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
@@ -143,16 +143,16 @@ create_tunnel_grpc (pds_tep_spec_t *tep)
 }
 
 sdk_ret_t
-create_switch_grpc (pds_device_spec_t *device)
+create_device_grpc (pds_device_spec_t *device)
 {
-    SwitchSpec      spec;
+    DeviceRequest   request;
     ClientContext   context;
-    SwitchStatus    status;
+    DeviceResponse  response;
     Status          ret_status;
 
-    populate_switch_spec(&spec, device);
-    ret_status = g_switch_stub_->SwitchCreate(&context, spec, &status);
-    if (!ret_status.ok()) {
+    populate_device_request(&request, device);
+    ret_status = g_device_stub_->DeviceCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
@@ -227,7 +227,7 @@ test_app_init (void)
     g_subnet_stub_ = tpc::SubnetSvc::NewStub(channel);
     g_pcn_stub_ = tpc::PCNSvc::NewStub(channel);
     g_tunnel_stub_ = tpc::TunnelSvc::NewStub(channel);
-    g_switch_stub_ = tpc::SwitchSvc::NewStub(channel);
+    g_device_stub_ = tpc::DeviceSvc::NewStub(channel);
     g_batch_stub_ = tpc::BatchSvc::NewStub(channel);
     
     return;

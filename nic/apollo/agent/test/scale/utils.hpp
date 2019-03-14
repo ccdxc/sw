@@ -12,7 +12,7 @@
 #include "gen/proto/pcn.grpc.pb.h"
 #include "gen/proto/route.grpc.pb.h"
 #include "gen/proto/subnet.grpc.pb.h"
-#include "gen/proto/switch.grpc.pb.h"
+#include "gen/proto/device.grpc.pb.h"
 #include "gen/proto/tunnel.grpc.pb.h"
 #include "gen/proto/vnic.grpc.pb.h"
 #include "gen/proto/types.grpc.pb.h"
@@ -34,27 +34,34 @@ using tpc::BatchSpec;
 using tpc::BatchStatus;
 using tpc::Batch;
 using tpc::MappingKey;
+using tpc::MappingRequest;
 using tpc::MappingSpec;
-using tpc::MappingStatus;
+using tpc::MappingResponse;
 using tpc::Mapping;
+using tpc::PCNRequest;
 using tpc::PCNSpec;
-using tpc::PCNStatus;
+using tpc::PCNResponse;
 using tpc::PCN;
 using tpc::Route;
+using tpc::RouteTableRequest;
 using tpc::RouteTableSpec;
-using tpc::RouteTableStatus;
+using tpc::RouteTableResponse;
 using tpc::RouteTable;
+using tpc::SubnetRequest;
 using tpc::SubnetSpec;
-using tpc::SubnetStatus;
+using tpc::SubnetResponse;
 using tpc::Subnet;
-using tpc::SwitchSpec;
-using tpc::SwitchStatus;
-using tpc::Switch;
+using tpc::DeviceRequest;
+using tpc::DeviceSpec;
+using tpc::DeviceResponse;
+using tpc::Device;
+using tpc::TunnelRequest;
 using tpc::TunnelSpec;
-using tpc::TunnelStatus;
+using tpc::TunnelResponse;
 using tpc::Tunnel;
+using tpc::VnicRequest;
 using tpc::VnicSpec;
-using tpc::VnicStatus;
+using tpc::VnicResponse;
 using tpc::Vnic;
 
 //----------------------------------------------------------------------------
@@ -128,8 +135,10 @@ encap_to_spec (types::Encap *encap_spec, pds_encap_t *encap)
 }
 
 static void
-populate_route_table_spec (RouteTableSpec *spec, pds_route_table_spec_t *rt)
+populate_route_table_request (RouteTableRequest *req, pds_route_table_spec_t *rt)
 {
+    RouteTableSpec *spec = req->add_request();
+
     if (rt->af == IP_AF_IPV4) {
         spec->set_af(types::IP_AF_INET);
     } else if (rt->af == IP_AF_IPV6) {
@@ -148,8 +157,9 @@ populate_route_table_spec (RouteTableSpec *spec, pds_route_table_spec_t *rt)
 }
 
 static void
-populate_mapping_spec (MappingSpec *spec, pds_mapping_spec_t *mapping)
+populate_mapping_request (MappingRequest *req, pds_mapping_spec_t *mapping)
 {
+    MappingSpec *spec = req->add_request();
     spec->mutable_id()->set_pcnid(mapping->key.vcn.id);
     ip_addr_to_spec(spec->mutable_id()->mutable_ipaddr(),
                     &mapping->key.ip_addr);
@@ -163,8 +173,9 @@ populate_mapping_spec (MappingSpec *spec, pds_mapping_spec_t *mapping)
 }
 
 static void
-populate_vnic_spec (VnicSpec *spec, pds_vnic_spec_t *vnic)
+populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
 {
+    VnicSpec *spec = req->add_request();
     spec->set_vnicid(vnic->vcn.id);
     spec->set_subnetid(vnic->subnet.id);
     spec->set_pcnid(vnic->key.id);
@@ -177,8 +188,9 @@ populate_vnic_spec (VnicSpec *spec, pds_vnic_spec_t *vnic)
 }
 
 static void
-populate_subnet_spec (SubnetSpec *spec, pds_subnet_spec_t *subnet)
+populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
 {
+    SubnetSpec *spec = req->add_request();
     ip_pfx_to_spec(spec->mutable_prefix(), &subnet->pfx);
     ip_addr_to_spec(spec->mutable_virtualrouterip(), &subnet->vr_ip);
 
@@ -197,8 +209,9 @@ populate_subnet_spec (SubnetSpec *spec, pds_subnet_spec_t *subnet)
 }
 
 static void
-populate_pcn_spec (PCNSpec *spec, pds_vcn_spec_t *vcn)
+populate_pcn_request (PCNRequest *req, pds_vcn_spec_t *vcn)
 {
+    PCNSpec *spec = req->add_request();
     ip_pfx_to_spec(spec->mutable_prefix(), &vcn->pfx);
     spec->set_id(vcn->key.id);
     if (vcn->type == PDS_VCN_TYPE_TENANT) {
@@ -211,8 +224,9 @@ populate_pcn_spec (PCNSpec *spec, pds_vcn_spec_t *vcn)
 }
 
 static void
-populate_tunnel_spec (TunnelSpec *spec, pds_tep_spec_t *tep)
+populate_tunnel_request (TunnelRequest *req, pds_tep_spec_t *tep)
 {
+    TunnelSpec *spec = req->add_request();
     types::IPAddress ip_addr_spec;
     
     //TODO: Only filling up remote-ip for now
@@ -235,11 +249,12 @@ populate_tunnel_spec (TunnelSpec *spec, pds_tep_spec_t *tep)
 }
 
 static void
-populate_switch_spec (SwitchSpec *spec, pds_device_spec_t *device)
+populate_device_request (DeviceRequest *req, pds_device_spec_t *device)
 {
-    ipv4_addr_to_spec(spec->mutable_ipaddr(), &device->switch_ip_addr);
+    DeviceSpec *spec = req->mutable_request();
+    ipv4_addr_to_spec(spec->mutable_ipaddr(), &device->device_ip_addr);
     ipv4_addr_to_spec(spec->mutable_gatewayip(), &device->gateway_ip_addr);
-    spec->set_macaddr(MAC_TO_UINT64(device->switch_mac_addr));
+    spec->set_macaddr(MAC_TO_UINT64(device->device_mac_addr));
     return;
 }
 

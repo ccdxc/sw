@@ -15,7 +15,7 @@ uplink:
         mode    : switch
         status  : UP
 
-switch:
+device:
     ipaddress   : None
     gateway     : 172.31.255.255
     macaddress  : macaddr/0002.0100.0001

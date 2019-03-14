@@ -38,21 +38,21 @@ device_util::create() {
     SDK_ASSERT(str2ipv4pfx((char *)this->gateway_ip_str.c_str(),
                            &gateway_ip_pfx) == 0);
     memset(&spec, 0, sizeof(pds_device_spec_t));
-    spec.switch_ip_addr = device_ip_pfx.addr.addr.v4_addr;
+    spec.device_ip_addr = device_ip_pfx.addr.addr.v4_addr;
     spec.gateway_ip_addr = gateway_ip_pfx.addr.addr.v4_addr;
     mac_str_to_addr((char *)this->mac_addr_str.c_str(),
-                    spec.switch_mac_addr);
+                    spec.device_mac_addr);
     return (pds_device_create(&spec));
 }
 
 sdk::sdk_ret_t
 device_util::validate(pds_device_info_t *info) {
     if (this->device_ip_str.compare(
-            ipv4addr2str(info->spec.switch_ip_addr)) != 0) {
+            ipv4addr2str(info->spec.device_ip_addr)) != 0) {
         return SDK_RET_ERR;
     }
 
-    if (this->mac_addr_str.compare(macaddr2str(info->spec.switch_mac_addr)) !=
+    if (this->mac_addr_str.compare(macaddr2str(info->spec.device_mac_addr)) !=
         0) {
         return SDK_RET_ERR;
     }

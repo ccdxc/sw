@@ -12,7 +12,9 @@ import "meta/meta.proto";
 import "types.proto";
 
 service VnicSvc {
-  rpc VnicCreate (VnicSpec) returns (VnicStatus) {}
+  rpc VnicCreate (VnicRequest) returns (VnicResponse) {}
+  rpc VnicGet (VnicGetRequest) returns (VnicGetResponse) {}
+  rpc VnicDelete (VnicDeleteRequest) returns (VnicDeleteResponse) {}
 }
 
 // VNIC specification
@@ -38,14 +40,51 @@ message VnicSpec {
   types.Encap Encap                     = 8 [(gogoproto.nullable) = false];
 }
 
-// Operational status of Vnic, if any
+// operational status of Vnic, if any
 message VnicStatus {
 }
 
-// Vnic object
+// stats of Vnic, if any
+message VnicStats {
+}
+
+// vnic object
 message Vnic {
-  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-  VnicSpec     Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  VnicStatus   Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  meta.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta    ObjMeta    = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  VnicSpec        Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  VnicStatus      Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  VnicStats       Stats      = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// vnic create and update request
+message VnicRequest {
+  repeated VnicSpec Request = 1; // batched request
+}
+
+// vnic create and update response
+message VnicResponse {
+  types.ApiStatus     ApiStatus = 1;
+  repeated VnicStatus Response  = 2; // batched response
+}
+
+// vnic get request
+message VnicGetRequest {
+  repeated uint32 VnicId = 1; // batched request
+}
+
+// vnic get response
+message VnicGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated Vnic   Response  = 2; // batched response
+}
+
+// vnic delete request
+message VnicDeleteRequest {
+  repeated uint32 VnicId = 1; // batched request
+}
+
+// vnic delete response
+message VnicDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1; // batched response
 }

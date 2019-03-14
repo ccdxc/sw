@@ -7,7 +7,7 @@
 #include <limits.h>
 #include <string>
 #include "nic/apollo/agent/svc/batch.hpp"
-#include "nic/apollo/agent/svc/switch.hpp"
+#include "nic/apollo/agent/svc/device.hpp"
 #include "nic/apollo/agent/svc/pcn.hpp"
 #include "nic/apollo/agent/svc/subnet.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
@@ -32,7 +32,7 @@ svc_reg (void)
 {
     ServerBuilder     *server_builder;
     BatchSvcImpl      batch_svc;
-    SwitchSvcImpl     switch_svc;
+    DeviceSvcImpl     device_svc;
     PCNSvcImpl        pcn_svc;
     SubnetSvcImpl     subnet_svc;
     TunnelSvcImpl     tunnel_svc;
@@ -53,7 +53,7 @@ svc_reg (void)
 
     // register for all the services
     server_builder->RegisterService(&batch_svc);
-    server_builder->RegisterService(&switch_svc);
+    server_builder->RegisterService(&device_svc);
     server_builder->RegisterService(&pcn_svc);
     server_builder->RegisterService(&subnet_svc);
     server_builder->RegisterService(&tunnel_svc);

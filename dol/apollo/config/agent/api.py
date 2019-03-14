@@ -6,7 +6,7 @@ import grpc
 import enum
 
 import batch_pb2_grpc as batch_pb2_grpc
-import switch_pb2_grpc as switch_pb2_grpc
+import device_pb2_grpc as device_pb2_grpc
 import pcn_pb2_grpc as pcn_pb2_grpc
 import subnet_pb2_grpc as subnet_pb2_grpc
 import tunnel_pb2_grpc as tunnel_pb2_grpc
@@ -109,8 +109,8 @@ class ApolloAgentClient:
         if GlobalOptions.dryrun: return
         self.__stubs[ObjectTypes.BATCH] = ClientStub(batch_pb2_grpc.BatchSvcStub,
                                                      self.__channel, 'Batch')
-        self.__stubs[ObjectTypes.SWITCH] = ClientStub(switch_pb2_grpc.SwitchSvcStub,
-                                                      self.__channel, 'Switch')
+        self.__stubs[ObjectTypes.SWITCH] = ClientStub(device_pb2_grpc.DeviceSvcStub,
+                                                      self.__channel, 'Device')
         self.__stubs[ObjectTypes.PCN] = ClientStub(pcn_pb2_grpc.PCNSvcStub,
                                                    self.__channel, 'PCN')
         self.__stubs[ObjectTypes.SUBNET] = ClientStub(subnet_pb2_grpc.SubnetSvcStub,

@@ -12,7 +12,9 @@ import "meta/meta.proto";
 import "types.proto";
 
 service PCNSvc {
-  rpc PCNCreate (PCNSpec) returns (PCNStatus) {}
+  rpc PCNCreate (PCNRequest) returns (PCNResponse) {}
+  rpc PCNGet (PCNGetRequest) returns (PCNGetResponse) {}
+  rpc PCNDelete (PCNDeleteRequest) returns (PCNDeleteResponse) {}
 }
 
 // type of the private cloud network
@@ -32,14 +34,51 @@ message PCNSpec {
   types.IPPrefix Prefix = 3 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
-// Operational status of a PCN, if any
+// operational status of a PCN, if any
 message PCNStatus {
+}
+
+// stats for a PCN, if any
+message PCNStats {
 }
 
 // Private Cloud Network object
 message PCN {
-  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-  PCNSpec       Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  PCNStatus     Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  meta.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta    ObjMeta    = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  PCNSpec         Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  PCNStatus       Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  PCNStats        Stats      = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// PCN create and update request
+message PCNRequest {
+  repeated PCNSpec Request = 1; // batched requests
+}
+
+// PCN create and update response
+message PCNResponse {
+  types.ApiStatus    ApiStatus = 1;
+  repeated PCNStatus Response  = 2; // batched response
+}
+
+// PCN get request
+message PCNGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// PCN get response
+message PCNGetResponse {
+  types.ApiStatus ApiStatus = 1; // API status code
+  repeated PCN    Response  = 2;
+}
+
+// PCN delete request
+message PCNDeleteRequest {
+  repeated uint32 Id = 1;
+}
+
+// PCN delete response
+message PCNDeleteResponse {
+  repeated types.ApiStatus Api_Status = 1; // API status code  
 }

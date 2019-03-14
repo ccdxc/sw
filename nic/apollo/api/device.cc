@@ -55,8 +55,8 @@ sdk_ret_t
 device_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_device_spec_t *pds_device = &api_ctxt->api_params->device_spec;
 
-    ip_addr_ = pds_device->switch_ip_addr;
-    memcpy(mac_addr_, pds_device->switch_mac_addr, ETH_ADDR_LEN);
+    ip_addr_ = pds_device->device_ip_addr;
+    memcpy(mac_addr_, pds_device->device_mac_addr, ETH_ADDR_LEN);
     gw_ip_addr_ = pds_device->gateway_ip_addr;
     return SDK_RET_OK;
 }

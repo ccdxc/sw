@@ -42,13 +42,14 @@ class PcnObject(base.ConfigObjectBase):
                (self.PCNId, self.Type, str(self.Prefix))
 
     def GetGrpcCreateMessage(self):
-        grpcmsg = pcn_pb2.PCNSpec()
-        grpcmsg.Id = self.PCNId
-        grpcmsg.Type = self.Type
+        grpcmsg = pcn_pb2.PCNRequest()
+        spec = grpcmsg.Request.add()
+        spec.Id = self.PCNId
+        spec.Type = self.Type
 
-        grpcmsg.Prefix.Len = self.Prefix.prefixlen
-        grpcmsg.Prefix.Addr.Af = types_pb2.IP_AF_INET
-        grpcmsg.Prefix.Addr.V4Addr = int(self.Prefix.network_address)
+        spec.Prefix.Len = self.Prefix.prefixlen
+        spec.Prefix.Addr.Af = types_pb2.IP_AF_INET
+        spec.Prefix.Addr.V4Addr = int(self.Prefix.network_address)
         return grpcmsg
 
     def Show(self):

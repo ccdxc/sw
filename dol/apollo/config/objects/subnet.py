@@ -47,21 +47,22 @@ class SubnetObject(base.ConfigObjectBase):
                (self.SubnetId, self.PCN.PCNId, str(self.Prefix))
 
     def GetGrpcCreateMessage(self):
-        grpcmsg = subnet_pb2.SubnetSpec()
-        grpcmsg.Id = self.SubnetId
-        grpcmsg.PCNId = self.PCN.PCNId
-        grpcmsg.Prefix.Len = self.Prefix.prefixlen
-        grpcmsg.Prefix.Addr.Af = types_pb2.IP_AF_INET
-        grpcmsg.Prefix.Addr.V4Addr = int(self.Prefix.network_address)
-        grpcmsg.VirtualRouterIP.Af = types_pb2.IP_AF_INET
-        grpcmsg.VirtualRouterIP.V4Addr = int(self.VirtualRouterIP)
-        grpcmsg.VirtualRouterMac = self.VirtualRouterMac.getnum()
-        grpcmsg.V4RouteTableId = self.V4RouteTableId
-        grpcmsg.V6RouteTableId = self.V6RouteTableId
-        grpcmsg.IngV4SecurityPolicyId = self.IngV4SecurityPolicyId
-        grpcmsg.IngV6SecurityPolicyId = self.IngV6SecurityPolicyId
-        grpcmsg.EgV4SecurityPolicyId = self.EgV4SecurityPolicyId
-        grpcmsg.EgV6SecurityPolicyId = self.EgV6SecurityPolicyId
+        grpcmsg = subnet_pb2.SubnetRequest()
+        spec = grpcmsg.Request.add()
+        spec.Id = self.SubnetId
+        spec.PCNId = self.PCN.PCNId
+        spec.Prefix.Len = self.Prefix.prefixlen
+        spec.Prefix.Addr.Af = types_pb2.IP_AF_INET
+        spec.Prefix.Addr.V4Addr = int(self.Prefix.network_address)
+        spec.VirtualRouterIP.Af = types_pb2.IP_AF_INET
+        spec.VirtualRouterIP.V4Addr = int(self.VirtualRouterIP)
+        spec.VirtualRouterMac = self.VirtualRouterMac.getnum()
+        spec.V4RouteTableId = self.V4RouteTableId
+        spec.V6RouteTableId = self.V6RouteTableId
+        spec.IngV4SecurityPolicyId = self.IngV4SecurityPolicyId
+        spec.IngV6SecurityPolicyId = self.IngV6SecurityPolicyId
+        spec.EgV4SecurityPolicyId = self.EgV4SecurityPolicyId
+        spec.EgV6SecurityPolicyId = self.EgV6SecurityPolicyId
         return grpcmsg
 
     def Show(self):

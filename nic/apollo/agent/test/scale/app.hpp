@@ -20,7 +20,7 @@ sdk_ret_t create_vnic_grpc(pds_vnic_spec_t *vnic);
 sdk_ret_t create_subnet_grpc(pds_subnet_spec_t *subnet);
 sdk_ret_t create_vcn_grpc(pds_vcn_spec_t *vcn);
 sdk_ret_t create_tunnel_grpc(pds_tep_spec_t *tep);
-sdk_ret_t create_switch_grpc(pds_device_spec_t *device);
+sdk_ret_t create_device_grpc(pds_device_spec_t *device);
 void test_app_init(void);
 sdk_ret_t test_app_push_configs(void);
 
