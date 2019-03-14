@@ -25,14 +25,14 @@ using std::string;
 
 std::string  svc_endpoint_  = "localhost:50054";
 
-std::unique_ptr<tpc::RouteSvc::Stub>     g_route_table_stub_;
-std::unique_ptr<tpc::MappingSvc::Stub>   g_mapping_stub_;
-std::unique_ptr<tpc::VnicSvc::Stub>      g_vnic_stub_;
-std::unique_ptr<tpc::SubnetSvc::Stub>    g_subnet_stub_;
-std::unique_ptr<tpc::PCNSvc::Stub>       g_pcn_stub_;
-std::unique_ptr<tpc::TunnelSvc::Stub>    g_tunnel_stub_;
-std::unique_ptr<tpc::DeviceSvc::Stub>    g_device_stub_;
-std::unique_ptr<tpc::BatchSvc::Stub>     g_batch_stub_;
+std::unique_ptr<pds::RouteSvc::Stub>     g_route_table_stub_;
+std::unique_ptr<pds::MappingSvc::Stub>   g_mapping_stub_;
+std::unique_ptr<pds::VnicSvc::Stub>      g_vnic_stub_;
+std::unique_ptr<pds::SubnetSvc::Stub>    g_subnet_stub_;
+std::unique_ptr<pds::PCNSvc::Stub>       g_pcn_stub_;
+std::unique_ptr<pds::TunnelSvc::Stub>    g_tunnel_stub_;
+std::unique_ptr<pds::DeviceSvc::Stub>    g_device_stub_;
+std::unique_ptr<pds::BatchSvc::Stub>     g_batch_stub_;
 
 sdk_ret_t
 create_route_table_grpc (pds_route_table_spec_t *rt)
@@ -221,14 +221,14 @@ test_app_init (void)
     grpc_init();
     std::shared_ptr<Channel> channel = grpc::CreateChannel(svc_endpoint_,
                                grpc::InsecureChannelCredentials());
-    g_route_table_stub_ = tpc::RouteSvc::NewStub(channel);
-    g_mapping_stub_ = tpc::MappingSvc::NewStub(channel);
-    g_vnic_stub_ = tpc::VnicSvc::NewStub(channel);
-    g_subnet_stub_ = tpc::SubnetSvc::NewStub(channel);
-    g_pcn_stub_ = tpc::PCNSvc::NewStub(channel);
-    g_tunnel_stub_ = tpc::TunnelSvc::NewStub(channel);
-    g_device_stub_ = tpc::DeviceSvc::NewStub(channel);
-    g_batch_stub_ = tpc::BatchSvc::NewStub(channel);
+    g_route_table_stub_ = pds::RouteSvc::NewStub(channel);
+    g_mapping_stub_ = pds::MappingSvc::NewStub(channel);
+    g_vnic_stub_ = pds::VnicSvc::NewStub(channel);
+    g_subnet_stub_ = pds::SubnetSvc::NewStub(channel);
+    g_pcn_stub_ = pds::PCNSvc::NewStub(channel);
+    g_tunnel_stub_ = pds::TunnelSvc::NewStub(channel);
+    g_device_stub_ = pds::DeviceSvc::NewStub(channel);
+    g_batch_stub_ = pds::BatchSvc::NewStub(channel);
     
     return;
 }

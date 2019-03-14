@@ -8,7 +8,7 @@
 
 // Build subnet API spec from proto buf spec
 static inline void
-pds_agent_subnet_api_spec_fill (const tpc::SubnetSpec &proto_spec,
+pds_agent_subnet_api_spec_fill (const pds::SubnetSpec &proto_spec,
                                 pds_subnet_spec_t *api_spec)
 {
     api_spec->key.id = proto_spec.id();
@@ -26,8 +26,8 @@ pds_agent_subnet_api_spec_fill (const tpc::SubnetSpec &proto_spec,
 
 Status
 SubnetSvcImpl::SubnetCreate(ServerContext *context,
-                            const tpc::SubnetRequest *proto_req,
-                            tpc::SubnetResponse *proto_rsp) {
+                            const pds::SubnetRequest *proto_req,
+                            pds::SubnetResponse *proto_rsp) {
     if (proto_req) {
         for (int i = 0; i < proto_req->request_size(); i ++) {
             pds_subnet_spec_t api_spec = {0};

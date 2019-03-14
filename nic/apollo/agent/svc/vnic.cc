@@ -8,7 +8,7 @@
 
 // Build VNIC API spec from proto buf spec
 static inline void
-pds_agent_vnic_api_spec_fill (const tpc::VnicSpec &proto_spec,
+pds_agent_vnic_api_spec_fill (const pds::VnicSpec &proto_spec,
                               pds_vnic_spec_t *api_spec)
 {
     api_spec->vcn.id = proto_spec.pcnid();
@@ -22,8 +22,8 @@ pds_agent_vnic_api_spec_fill (const tpc::VnicSpec &proto_spec,
 }
 
 Status
-VnicSvcImpl::VnicCreate(ServerContext *context, const tpc::VnicRequest *proto_req,
-                        tpc::VnicResponse *proto_rsp) {
+VnicSvcImpl::VnicCreate(ServerContext *context, const pds::VnicRequest *proto_req,
+                        pds::VnicResponse *proto_rsp) {
     if (proto_req) {
         for (int i = 0; i < proto_req->request_size(); i ++) {
             pds_vnic_spec_t api_spec = {0};

@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET        = libtpcproto.so
+MODULE_TARGET        = libpdsproto.so
 MODULE_PIPELINE      = apollo
 MODULE_INCS          = /usr/local/include \
                        ${TOPDIR}/nic/hal/third-party/google/include \

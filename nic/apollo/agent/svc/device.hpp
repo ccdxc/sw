@@ -11,15 +11,15 @@
 using grpc::Status;
 using grpc::ServerContext;
 
-using tpc::DeviceSvc;
-using tpc::DeviceRequest;
-using tpc::DeviceSpec;
-using tpc::DeviceResponse;
+using pds::DeviceSvc;
+using pds::DeviceRequest;
+using pds::DeviceSpec;
+using pds::DeviceResponse;
 
 class DeviceSvcImpl final : public DeviceSvc::Service {
 public:
-    Status DeviceCreate(ServerContext *context, const tpc::DeviceRequest *req,
-                        tpc::DeviceResponse *rsp) override;
+    Status DeviceCreate(ServerContext *context, const pds::DeviceRequest *req,
+                        pds::DeviceResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_SWITCH_HPP__

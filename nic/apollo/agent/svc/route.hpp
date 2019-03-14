@@ -11,16 +11,16 @@
 using grpc::Status;
 using grpc::ServerContext;
 
-using tpc::RouteSvc;
-using tpc::RouteTableRequest;
-using tpc::RouteTableSpec;
-using tpc::RouteTableResponse;
+using pds::RouteSvc;
+using pds::RouteTableRequest;
+using pds::RouteTableSpec;
+using pds::RouteTableResponse;
 
 class RouteSvcImpl final : public RouteSvc::Service {
 public:
     Status RouteTableCreate(ServerContext *context,
-                            const tpc::RouteTableRequest *req,
-                            tpc::RouteTableResponse *rsp) override;
+                            const pds::RouteTableRequest *req,
+                            pds::RouteTableResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_ROUTE_HPP__

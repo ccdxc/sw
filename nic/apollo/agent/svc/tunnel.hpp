@@ -11,15 +11,15 @@
 using grpc::Status;
 using grpc::ServerContext;
 
-using tpc::TunnelSvc;
-using tpc::TunnelRequest;
-using tpc::TunnelSpec;
-using tpc::TunnelResponse;
+using pds::TunnelSvc;
+using pds::TunnelRequest;
+using pds::TunnelSpec;
+using pds::TunnelResponse;
 
 class TunnelSvcImpl final : public TunnelSvc::Service {
 public:
-    Status TunnelCreate(ServerContext *context, const tpc::TunnelRequest *req,
-                        tpc::TunnelResponse *rsp) override;
+    Status TunnelCreate(ServerContext *context, const pds::TunnelRequest *req,
+                        pds::TunnelResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_TUNNEL_HPP__

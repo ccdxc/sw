@@ -13,10 +13,10 @@ extern flow_test *g_flow_test_obj;
 
 // Build PCN API spec from protobuf spec
 static inline void
-pds_agent_mapping_api_spec_fill (const tpc::MappingSpec &proto_spec,
+pds_agent_mapping_api_spec_fill (const pds::MappingSpec &proto_spec,
                                  pds_mapping_spec_t *api_spec)
 {
-    tpc::MappingKey key;
+    pds::MappingKey key;
 
     key = proto_spec.id();
     api_spec->key.vcn.id = key.pcnid();
@@ -33,8 +33,8 @@ pds_agent_mapping_api_spec_fill (const tpc::MappingSpec &proto_spec,
 
 Status
 MappingSvcImpl::MappingCreate(ServerContext *context,
-                              const tpc::MappingRequest *proto_req,
-                              tpc::MappingResponse *proto_rsp) {
+                              const pds::MappingRequest *proto_req,
+                              pds::MappingResponse *proto_rsp) {
     if (proto_req) {
         for (int i = 0; i < proto_req->request_size(); i ++) {
             pds_mapping_spec_t api_spec = {0};

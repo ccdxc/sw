@@ -7,7 +7,7 @@
 #include "nic/apollo/agent/svc/route.hpp"
 
 static inline void
-pds_agent_route_table_api_spec_fill (const tpc::RouteTableSpec &proto_spec,
+pds_agent_route_table_api_spec_fill (const pds::RouteTableSpec &proto_spec,
                                      pds_route_table_spec_t *api_spec)
 {
     api_spec->key.id = proto_spec.id();
@@ -28,7 +28,7 @@ pds_agent_route_table_api_spec_fill (const tpc::RouteTableSpec &proto_spec,
                                                  sizeof(pds_route_t) *
                                                  api_spec->num_routes);
     for (int i = 0; i < proto_spec.routes_size(); i++) {
-        const tpc::Route &proto_route = proto_spec.routes(i);
+        const pds::Route &proto_route = proto_spec.routes(i);
         pds_agent_util_ip_pfx_fill(proto_route.prefix(), &api_spec->routes[i].prefix);
         pds_agent_util_ipaddr_fill(proto_route.nexthop(), &api_spec->routes[i].nh_ip);
         api_spec->routes[i].vcn_id = proto_route.pcnid();
@@ -48,8 +48,8 @@ pds_agent_route_table_api_spec_free (pds_route_table_spec_t *api_spec)
 
 Status
 RouteSvcImpl::RouteTableCreate(ServerContext *context,
-                               const tpc::RouteTableRequest *proto_req,
-                               tpc::RouteTableResponse *proto_rsp) {
+                               const pds::RouteTableRequest *proto_req,
+                               pds::RouteTableResponse *proto_rsp) {
     sdk_ret_t ret;
 
     if (proto_req) {

@@ -11,15 +11,15 @@
 using grpc::Status;
 using grpc::ServerContext;
 
-using tpc::SubnetSvc;
-using tpc::SubnetRequest;
-using tpc::SubnetSpec;
-using tpc::SubnetResponse;
+using pds::SubnetSvc;
+using pds::SubnetRequest;
+using pds::SubnetSpec;
+using pds::SubnetResponse;
 
 class SubnetSvcImpl final : public SubnetSvc::Service {
 public:
-    Status SubnetCreate(ServerContext *context, const tpc::SubnetRequest *req,
-                        tpc::SubnetResponse *rsp) override;
+    Status SubnetCreate(ServerContext *context, const pds::SubnetRequest *req,
+                        pds::SubnetResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_SUBNET_HPP__

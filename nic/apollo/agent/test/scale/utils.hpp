@@ -30,39 +30,39 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 using grpc::ClientContext;
-using tpc::BatchSpec;
-using tpc::BatchStatus;
-using tpc::Batch;
-using tpc::MappingKey;
-using tpc::MappingRequest;
-using tpc::MappingSpec;
-using tpc::MappingResponse;
-using tpc::Mapping;
-using tpc::PCNRequest;
-using tpc::PCNSpec;
-using tpc::PCNResponse;
-using tpc::PCN;
-using tpc::Route;
-using tpc::RouteTableRequest;
-using tpc::RouteTableSpec;
-using tpc::RouteTableResponse;
-using tpc::RouteTable;
-using tpc::SubnetRequest;
-using tpc::SubnetSpec;
-using tpc::SubnetResponse;
-using tpc::Subnet;
-using tpc::DeviceRequest;
-using tpc::DeviceSpec;
-using tpc::DeviceResponse;
-using tpc::Device;
-using tpc::TunnelRequest;
-using tpc::TunnelSpec;
-using tpc::TunnelResponse;
-using tpc::Tunnel;
-using tpc::VnicRequest;
-using tpc::VnicSpec;
-using tpc::VnicResponse;
-using tpc::Vnic;
+using pds::BatchSpec;
+using pds::BatchStatus;
+using pds::Batch;
+using pds::MappingKey;
+using pds::MappingRequest;
+using pds::MappingSpec;
+using pds::MappingResponse;
+using pds::Mapping;
+using pds::PCNRequest;
+using pds::PCNSpec;
+using pds::PCNResponse;
+using pds::PCN;
+using pds::Route;
+using pds::RouteTableRequest;
+using pds::RouteTableSpec;
+using pds::RouteTableResponse;
+using pds::RouteTable;
+using pds::SubnetRequest;
+using pds::SubnetSpec;
+using pds::SubnetResponse;
+using pds::Subnet;
+using pds::DeviceRequest;
+using pds::DeviceSpec;
+using pds::DeviceResponse;
+using pds::Device;
+using pds::TunnelRequest;
+using pds::TunnelSpec;
+using pds::TunnelResponse;
+using pds::Tunnel;
+using pds::VnicRequest;
+using pds::VnicSpec;
+using pds::VnicResponse;
+using pds::Vnic;
 
 //----------------------------------------------------------------------------
 // convert HAL IP address to spec
@@ -215,9 +215,9 @@ populate_pcn_request (PCNRequest *req, pds_vcn_spec_t *vcn)
     ip_pfx_to_spec(spec->mutable_prefix(), &vcn->pfx);
     spec->set_id(vcn->key.id);
     if (vcn->type == PDS_VCN_TYPE_TENANT) {
-        spec->set_type(tpc::PCN_TYPE_TENANT);
+        spec->set_type(pds::PCN_TYPE_TENANT);
     } else if (vcn->type == PDS_VCN_TYPE_SUBSTRATE) {
-        spec->set_type(tpc::PCN_TYPE_SUBSTRATE);
+        spec->set_type(pds::PCN_TYPE_SUBSTRATE);
     }
 
     return;
@@ -233,13 +233,13 @@ populate_tunnel_request (TunnelRequest *req, pds_tep_spec_t *tep)
     ipv4_addr_to_spec(spec->mutable_remoteip(), &tep->key.ip_addr);
     switch (tep->encap_type) {
     case PDS_TEP_ENCAP_TYPE_GW_ENCAP:
-        spec->set_encap(tpc::TUNNEL_ENCAP_NONE);
+        spec->set_encap(pds::TUNNEL_ENCAP_NONE);
         break;
     case PDS_TEP_ENCAP_TYPE_VNIC:
-        spec->set_encap(tpc::TUNNEL_ENCAP_NONE);
+        spec->set_encap(pds::TUNNEL_ENCAP_NONE);
         break;
     case PDS_TEP_ENCAP_TYPE_VXLAN:
-        spec->set_encap(tpc::TUNNEL_ENCAP_VXLAN);
+        spec->set_encap(pds::TUNNEL_ENCAP_VXLAN);
         break;
     default:
         break;

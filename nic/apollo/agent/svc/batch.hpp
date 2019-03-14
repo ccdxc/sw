@@ -12,14 +12,14 @@ using grpc::Status;
 using grpc::ServerContext;
 
 using types::Empty;
-using tpc::BatchSvc;
-using tpc::BatchSpec;
-using tpc::BatchStatus;
+using pds::BatchSvc;
+using pds::BatchSpec;
+using pds::BatchStatus;
 
 class BatchSvcImpl final : public BatchSvc::Service {
 public:
-    Status BatchStart(ServerContext *context, const tpc::BatchSpec *spec,
-                      tpc::BatchStatus *status) override;
+    Status BatchStart(ServerContext *context, const pds::BatchSpec *spec,
+                      pds::BatchStatus *status) override;
     Status BatchCommit(ServerContext *context, const Empty *spec,
                        Empty *status) override;
     Status BatchAbort(ServerContext *context, const Empty *spec,

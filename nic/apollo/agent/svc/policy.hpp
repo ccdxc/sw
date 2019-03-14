@@ -11,15 +11,15 @@
 using grpc::Status;
 using grpc::ServerContext;
 
-using tpc::SecurityPolicySvc;
-using tpc::SecurityPolicyRequest;
-using tpc::SecurityPolicySpec;
-using tpc::SecurityPolicyResponse;
+using pds::SecurityPolicySvc;
+using pds::SecurityPolicyRequest;
+using pds::SecurityPolicySpec;
+using pds::SecurityPolicyResponse;
 
 class SecurityPolicySvcImpl final : public SecurityPolicySvc::Service {
 public:
-    Status SecurityPolicyCreate(ServerContext *context, const tpc::SecurityPolicyRequest *req,
-                         tpc::SecurityPolicyResponse *rsp) override;
+    Status SecurityPolicyCreate(ServerContext *context, const pds::SecurityPolicyRequest *req,
+                         pds::SecurityPolicyResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_MAPPING_HPP__

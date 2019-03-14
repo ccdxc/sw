@@ -11,15 +11,15 @@
 using grpc::Status;
 using grpc::ServerContext;
 
-using tpc::PCNSvc;
-using tpc::PCNRequest;
-using tpc::PCNSpec;
-using tpc::PCNResponse;
+using pds::PCNSvc;
+using pds::PCNRequest;
+using pds::PCNSpec;
+using pds::PCNResponse;
 
 class PCNSvcImpl final : public PCNSvc::Service {
 public:
-    Status PCNCreate(ServerContext *context, const tpc::PCNRequest *req,
-                     tpc::PCNResponse *rsp) override;
+    Status PCNCreate(ServerContext *context, const pds::PCNRequest *req,
+                     pds::PCNResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_PCN_HPP__

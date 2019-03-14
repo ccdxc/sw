@@ -7,20 +7,20 @@
 
 // Build TEP API spec from protobuf spec
 static inline void
-pds_agent_tep_api_spec_fill (const tpc::TunnelSpec &proto_spec,
+pds_agent_tep_api_spec_fill (const pds::TunnelSpec &proto_spec,
                              pds_tep_spec_t *api_spec)
 {
     types::IPAddress remoteip = proto_spec.remoteip();
 
     memset(api_spec, 0, sizeof(pds_tep_spec_t));
     switch (proto_spec.encap()) {
-    case tpc::TUNNEL_ENCAP_VXLAN:
+    case pds::TUNNEL_ENCAP_VXLAN:
         api_spec->encap_type = PDS_TEP_ENCAP_TYPE_VXLAN;
         break;
-    case tpc::TUNNEL_ENCAP_MPLSoUDP_TAGS_1:
+    case pds::TUNNEL_ENCAP_MPLSoUDP_TAGS_1:
         api_spec->encap_type = PDS_TEP_ENCAP_TYPE_GW_ENCAP;
         break;
-    case tpc::TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
+    case pds::TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
         api_spec->encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
         break;
     default:
@@ -35,8 +35,8 @@ pds_agent_tep_api_spec_fill (const tpc::TunnelSpec &proto_spec,
 // Create Tunnel Object
 Status
 TunnelSvcImpl::TunnelCreate(ServerContext *context,
-                            const tpc::TunnelRequest *proto_req,
-                            tpc::TunnelResponse *proto_rsp) {
+                            const pds::TunnelRequest *proto_req,
+                            pds::TunnelResponse *proto_rsp) {
     if (proto_req) {
         for (int i = 0; i < proto_req->request_size(); i ++) {
             pds_tep_spec_t api_spec = {0};

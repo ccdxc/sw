@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
-package tpc;
+package pds;
 
 import public "gogo.proto";
 import public "meta/meta.proto";

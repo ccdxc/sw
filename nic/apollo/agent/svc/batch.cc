@@ -9,8 +9,8 @@ extern flow_test *g_flow_test_obj;
 
 Status
 BatchSvcImpl::BatchStart(ServerContext *context,
-                         const tpc::BatchSpec *proto_spec,
-                         tpc::BatchStatus *proto_status) {
+                         const pds::BatchSpec *proto_spec,
+                         pds::BatchStatus *proto_status) {
     pds_batch_params_t api_batch_params = {0};
 
     api_batch_params.epoch = proto_spec->epoch();

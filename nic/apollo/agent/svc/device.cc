@@ -7,7 +7,7 @@
 #include "nic/apollo/agent/svc/device.hpp"
 
 static inline void
-pds_agent_device_api_spec_fill (const tpc::DeviceSpec &proto_spec,
+pds_agent_device_api_spec_fill (const pds::DeviceSpec &proto_spec,
                                 pds_device_spec_t *api_spec)
 {
     types::IPAddress ipaddr = proto_spec.ipaddr();
@@ -28,8 +28,8 @@ pds_agent_device_api_spec_fill (const tpc::DeviceSpec &proto_spec,
 }
 
 Status
-DeviceSvcImpl::DeviceCreate(ServerContext *context, const tpc::DeviceRequest *proto_req,
-                            tpc::DeviceResponse *proto_rsp) {
+DeviceSvcImpl::DeviceCreate(ServerContext *context, const pds::DeviceRequest *proto_req,
+                            pds::DeviceResponse *proto_rsp) {
     sdk_ret_t ret = SDK_RET_OK;
 
     if (proto_req) {

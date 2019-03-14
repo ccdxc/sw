@@ -6,10 +6,10 @@ HAL_PB_GO_FILES = $(patsubst %.proto,%.pb.go,$(HAL_PROTO_FILES))
 $(info ${HAL_PROTO_FILES})
 $(info ${HAL_PB_GO_FILES})
 
-default: tpc-proto
+default: pds-proto
 	goimports -w -l *.go
 
-tpc-proto: clean-proto
+pds-proto: clean-proto
     # compile proto definitions
 	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(TOP_DIR)/nic/hal/third-party/google/x86_64/bin/protoc --proto_path=${CURDIR} -I${CURDIR} \
     -I${TOP_DIR} -I$(TOP_DIR)/vendor -I${CURDIR}/api -I$(TOP_DIR)/nic/hal/third-party/google/include \

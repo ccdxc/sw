@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET       = tpc.proto
+MODULE_TARGET       = pds.proto
 MODULE_PIPELINE     = apollo
 MODULE_PREREQS      = gogo.proto
 MODULE_GEN_TYPES    = PY CC GO

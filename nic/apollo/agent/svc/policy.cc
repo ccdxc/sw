@@ -13,7 +13,7 @@ extern flow_test *g_flow_test_obj;
 
 // Build policy API spec from protobuf spec
 static inline void
-pds_agent_policy_api_spec_fill (const tpc::SecurityPolicySpec &proto_spec,
+pds_agent_policy_api_spec_fill (const pds::SecurityPolicySpec &proto_spec,
                                  pds_policy_spec_t *api_spec)
 {
     // TODO
@@ -21,8 +21,8 @@ pds_agent_policy_api_spec_fill (const tpc::SecurityPolicySpec &proto_spec,
 
 Status
 SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
-                              const tpc::SecurityPolicyRequest *proto_req,
-                              tpc::SecurityPolicyResponse *proto_rsp) {
+                              const pds::SecurityPolicyRequest *proto_req,
+                              pds::SecurityPolicyResponse *proto_rsp) {
     if (proto_req) {
         for (int i = 0; i < proto_req->request_size(); i ++) {
             pds_policy_spec_t api_spec; 

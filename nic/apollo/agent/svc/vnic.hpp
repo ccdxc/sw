@@ -11,15 +11,15 @@
 using grpc::Status;
 using grpc::ServerContext;
 
-using tpc::VnicSvc;
-using tpc::VnicRequest;
-using tpc::VnicSpec;
-using tpc::VnicResponse;
+using pds::VnicSvc;
+using pds::VnicRequest;
+using pds::VnicSpec;
+using pds::VnicResponse;
 
 class VnicSvcImpl final : public VnicSvc::Service {
 public:
-    Status VnicCreate(ServerContext *context, const tpc::VnicRequest *req,
-                      tpc::VnicResponse *rsp) override;
+    Status VnicCreate(ServerContext *context, const pds::VnicRequest *req,
+                      pds::VnicResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_VNIC_HPP__
