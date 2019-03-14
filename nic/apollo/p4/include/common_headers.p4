@@ -382,9 +382,9 @@ header_type policer_scratch_metadata_t {
     }
 }
 
-/* BARCO Descriptor definition */
+/* XTS Descriptor definition */
 //128B
-header_type barco_desc_t {
+header_type xts_desc_t {
     fields {
         input_list_address                  : 64;
         output_list_address                 : 64;
@@ -406,12 +406,66 @@ header_type barco_desc_t {
     }
 }
 
-header_type barco_iv_t {
+//64B
+header_type xts_aol_desc_t {
+    fields {
+        A0      : 64;
+        O0      : 32;
+        L0      : 32;
+        A1      : 64;
+        O1      : 32;
+        L1      : 32;
+        A2      : 64;
+        O2      : 32;
+        L2      : 32;
+        nxt     : 64;
+        rsvd    : 64;
+    }
+}
+
+header_type xts_iv_t {
     fields {
         iv_0                                : 64;
         iv_1                                : 64;
     }
 }
+
+/* dgst Descriptor definition */
+//64B
+header_type dgst_desc_t {
+    fields {
+        src             : 64;
+        dst             : 64;
+        cmd             : 16;
+        datain_len      : 16;
+        extended_len    : 16;
+        threshold_len   : 16;
+        status_addr     : 64;
+        doorbell_addr   : 64;
+        doorbell_data   : 64;
+        opaque_tag_addr : 64;
+        opaque_tag_data : 32;
+        status_data     : 32;
+    }
+}
+
+//64B
+header_type dgst_aol_desc_t {
+    fields {
+        A0      : 64;
+        L0      : 32;
+        R0      : 32;
+        A1      : 64;
+        L1      : 32;
+        R1      : 32;
+        A2      : 64;
+        L2      : 32;
+        R2      : 32;
+        nxt     : 64;
+        rsvd    : 64;
+    }
+}
+
 
 header_type ptr64_t {
     fields {

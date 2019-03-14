@@ -204,11 +204,21 @@ header_type sessprodcb_t {
     fields {
         xts_q_base_addr                 : 34;
         log_num_xts_q_entries           : 5;
-        rsvd0                           : 25;
+        rsvd0                           : 1;
+        xts_q_choke_counter             : 8;
+        rsvd1                           : 16;
 
         dgst_q_base_addr                : 34;
         log_num_dgst_q_entries          : 5;
-        rsvd1                           : 25;
+        rsvd2                           : 1; 
+        dgst_q_choke_counter            : 8;
+        rsvd3                           : 16;
+
+        tcp_q_base_addr                 : 34;
+        log_num_tcp_q_entries           : 5;
+        rsvd4                           : 1; 
+        tcp_q_choke_counter             : 8;
+        rsvd5                           : 16;
 
         xts_q_pi                        : 16;
         xts_q_ci                        : 16;
@@ -216,16 +226,21 @@ header_type sessprodcb_t {
         dgst_q_pi                       : 16;
         dgst_q_ci                       : 16;
 
-        //40 Bytes
-        pad                             : 320;
+        tcp_q_pi                        : 16;
+        tcp_q_ci                        : 16;
+
+        //28 Bytes
+        pad                             : 224;
     }
 }
 
 #define SESSPRODCB_PARAMS                                                      \
-xts_q_base_addr, log_num_xts_q_entries, rsvd0,                                 \
-dgst_q_base_addr, log_num_dgst_q_entries, rsvd1,                               \
+xts_q_base_addr, log_num_xts_q_entries, rsvd0, xts_q_choke_counter, rsvd1,     \
+dgst_q_base_addr, log_num_dgst_q_entries, rsvd2, dgst_q_choke_counter, rsvd3,  \
+tcp_q_base_addr, log_num_tcp_q_entries, rsvd4, tcp_q_choke_counter, rsvd5,     \
 xts_q_pi, xts_q_ci,                                                            \
 dgst_q_pi, dgst_q_ci,                                                          \
+tcp_q_pi, tcp_q_ci,                                                            \
 pad
 
 
@@ -233,13 +248,24 @@ pad
     modify_field(sessprodcb_d.xts_q_base_addr, xts_q_base_addr);               \
     modify_field(sessprodcb_d.log_num_xts_q_entries, log_num_xts_q_entries);   \
     modify_field(sessprodcb_d.rsvd0, rsvd0);                                   \
+    modify_field(sessprodcb_d.xts_q_choke_counter, xts_q_choke_counter);       \
+    modify_field(sessprodcb_d.rsvd1, rsvd1);                                   \
     modify_field(sessprodcb_d.dgst_q_base_addr, dgst_q_base_addr);             \
     modify_field(sessprodcb_d.log_num_dgst_q_entries, log_num_dgst_q_entries); \
-    modify_field(sessprodcb_d.rsvd1, rsvd1);                                   \
+    modify_field(sessprodcb_d.rsvd2, rsvd2);                                   \
+    modify_field(sessprodcb_d.dgst_q_choke_counter, dgst_q_choke_counter);     \
+    modify_field(sessprodcb_d.rsvd3, rsvd3);                                   \
+    modify_field(sessprodcb_d.tcp_q_base_addr, tcp_q_base_addr);               \
+    modify_field(sessprodcb_d.log_num_tcp_q_entries, log_num_tcp_q_entries);   \
+    modify_field(sessprodcb_d.rsvd4, rsvd4);                                   \
+    modify_field(sessprodcb_d.tcp_q_choke_counter, tcp_q_choke_counter);       \
+    modify_field(sessprodcb_d.rsvd5, rsvd5);                                   \
     modify_field(sessprodcb_d.xts_q_pi, xts_q_pi);                             \
     modify_field(sessprodcb_d.xts_q_ci, xts_q_ci);                             \
     modify_field(sessprodcb_d.dgst_q_pi, dgst_q_pi);                           \
     modify_field(sessprodcb_d.dgst_q_ci, dgst_q_ci);                           \
+    modify_field(sessprodcb_d.tcp_q_pi, tcp_q_pi);                             \
+    modify_field(sessprodcb_d.tcp_q_ci, tcp_q_ci);                             \
     modify_field(sessprodcb_d.pad, pad);                                       \
 
 // session xts tx cb
@@ -261,22 +287,29 @@ header_type sessxtstxcb_t {
         log_lba_size                    : 5;
         rsvd0                           : 4;
         
-        //stage0 flags
+        //R0 stage0 flags
         //1B
-        busy                            : 1;
+        r0_busy                         : 1;
         rsvd1                           : 7;
 
-        //writeback stage flags
+        //R0 writeback stage flags
         //1B
-        wb_busy                         : 1;
-        in_progress                     : 1;
+        wb_r0_busy                      : 1;
+        r0_in_progress                  : 1;
         rsvd2                           : 6;
 
         //2B
         nxt_lba_offset                  : 16;
 
-        //2B
-        rsvd3                           : 16;
+        //R1 stage0 flags
+        //1B
+        r1_busy                         : 1;
+        rsvd3                           : 7;
+
+        //R1 writeback stage flags
+        //1B
+        wb_r1_busy                      : 1;
+        rsvd4                           : 7;
 
         //8B
         key_index                       : 32;
@@ -289,8 +322,9 @@ header_type sessxtstxcb_t {
 
 #define SESSXTSTXCB_PARAMS                                                      \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, \
-base_addr, log_num_entries, log_lba_size, rsvd0, busy, rsvd1, \
-wb_busy, in_progress, rsvd2, nxt_lba_offset, rsvd3,  \
+base_addr, log_num_entries, log_lba_size, rsvd0, r0_busy, rsvd1, \
+wb_r0_busy, r0_in_progress, rsvd2, nxt_lba_offset, \
+r1_busy, rsvd3, wb_r1_busy, rsvd4,  \
 key_index, sec_key_index, pad
 
 #define GENERATE_SESSXTSTXCB_D  \
@@ -308,16 +342,91 @@ key_index, sec_key_index, pad
     modify_field(sessxtstxcb_d.log_num_entries, log_num_entries);  \
     modify_field(sessxtstxcb_d.log_lba_size, log_lba_size);  \
     modify_field(sessxtstxcb_d.rsvd0, rsvd0);  \
-    modify_field(sessxtstxcb_d.busy, busy);  \
+    modify_field(sessxtstxcb_d.r0_busy, r0_busy);  \
     modify_field(sessxtstxcb_d.rsvd1, rsvd1);  \
-    modify_field(sessxtstxcb_d.wb_busy, wb_busy);  \
-    modify_field(sessxtstxcb_d.in_progress, in_progress);  \
+    modify_field(sessxtstxcb_d.wb_r0_busy, wb_r0_busy);  \
+    modify_field(sessxtstxcb_d.r0_in_progress, r0_in_progress);  \
     modify_field(sessxtstxcb_d.rsvd2, rsvd2);  \
     modify_field(sessxtstxcb_d.nxt_lba_offset, nxt_lba_offset);  \
+    modify_field(sessxtstxcb_d.r1_busy, r1_busy);  \
     modify_field(sessxtstxcb_d.rsvd3, rsvd3);  \
+    modify_field(sessxtstxcb_d.wb_r1_busy, wb_r1_busy);  \
+    modify_field(sessxtstxcb_d.rsvd4, rsvd4);  \
     modify_field(sessxtstxcb_d.key_index, key_index);  \
     modify_field(sessxtstxcb_d.sec_key_index, sec_key_index);  \
     modify_field(sessxtstxcb_d.pad, pad);  \
+
+// session dgst tx cb
+// 64B
+header_type sessdgsttxcb_t {
+    fields {
+        //16B
+        pc                             : 8;
+        // 7 Bytes intrinsic header
+        CAPRI_QSTATE_HEADER_COMMON
+        // 4 Bytes Ring 0
+        CAPRI_QSTATE_HEADER_RING(0)
+        // 4 Bytes Ring 1
+        CAPRI_QSTATE_HEADER_RING(1)
+
+        //6B
+        base_addr                       : 34;
+        log_num_entries                 : 5;
+        rsvd0                           : 9;
+        
+        //R0 stage0 flags
+        //1B
+        r0_busy                         : 1;
+        rsvd1                           : 7;
+
+        //R0 writeback stage flags
+        //1B
+        wb_r0_busy                      : 1;
+        rsvd2                           : 7;
+
+        //R1 stage0 flags
+        //1B
+        r1_busy                         : 1;
+        rsvd3                           : 7;
+
+        //R1 writeback stage flags
+        //1B
+        wb_r1_busy                      : 1;
+        rsvd4                           : 7;
+
+        //38B
+        pad                             : 304;
+    }
+}
+
+#define SESSDGSTTXCB_PARAMS                                                      \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, \
+base_addr, log_num_entries, rsvd0, r0_busy, rsvd1, \
+wb_r0_busy, rsvd2, r1_busy, rsvd3, wb_r1_busy, rsvd4, pad
+
+#define GENERATE_SESSDGSTTXCB_D  \
+    modify_field(sessdgsttxcb_d.rsvd, rsvd);                              \
+    modify_field(sessdgsttxcb_d.cosA, cosA);                              \
+    modify_field(sessdgsttxcb_d.cosB, cosB);                              \
+    modify_field(sessdgsttxcb_d.cos_sel, cos_sel);                        \
+    modify_field(sessdgsttxcb_d.eval_last, eval_last);                    \
+    modify_field(sessdgsttxcb_d.host, host);                              \
+    modify_field(sessdgsttxcb_d.total, total);                            \
+    modify_field(sessdgsttxcb_d.pid, pid);                                \
+    modify_field(sessdgsttxcb_d.pi_0, pi_0);                              \
+    modify_field(sessdgsttxcb_d.ci_0, ci_0);                              \
+    modify_field(sessdgsttxcb_d.base_addr, base_addr);  \
+    modify_field(sessdgsttxcb_d.log_num_entries, log_num_entries);  \
+    modify_field(sessdgsttxcb_d.rsvd0, rsvd0);  \
+    modify_field(sessdgsttxcb_d.r0_busy, r0_busy);  \
+    modify_field(sessdgsttxcb_d.rsvd1, rsvd1);  \
+    modify_field(sessdgsttxcb_d.wb_r0_busy, wb_r0_busy);  \
+    modify_field(sessdgsttxcb_d.rsvd2, rsvd2);  \
+    modify_field(sessdgsttxcb_d.r1_busy, r1_busy);  \
+    modify_field(sessdgsttxcb_d.rsvd3, rsvd3);  \
+    modify_field(sessdgsttxcb_d.wb_r1_busy, wb_r1_busy);  \
+    modify_field(sessdgsttxcb_d.rsvd4, rsvd4);  \
+    modify_field(sessdgsttxcb_d.pad, pad);  \
 
 // resource cb
 header_type resourcecb_t {

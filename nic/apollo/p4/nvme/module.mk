@@ -2,7 +2,11 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = apollo_nvme.p4bin
-MODULE_SRCS     = ${MODULE_SRC_DIR}/nvme_req_tx.p4 ${MODULE_SRC_DIR}/nvme_sess_xts_tx.p4
+MODULE_SRCS     = ${MODULE_SRC_DIR}/nvme_req_tx.p4 \
+				  ${MODULE_SRC_DIR}/nvme_sess_pre_xts_tx.p4 \
+				  ${MODULE_SRC_DIR}/nvme_sess_post_xts_tx.p4 \
+				  ${MODULE_SRC_DIR}/nvme_sess_pre_dgst_tx.p4 \
+				  ${MODULE_SRC_DIR}/nvme_sess_post_dgst_tx.p4
 MODULE_PIPELINE = apollo
 MODULE_NCC_OPTS = --pipeline=apollo --asm-out --p4-plus --no-ohi --two-byte-profile \
                   --pd-gen --p4-plus-module txdma \
