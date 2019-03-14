@@ -23,8 +23,8 @@ vnic_util::vnic_util() {
     this->src_dst_check = false;
 }
 
-vnic_util::vnic_util(pds_vcn_id_t vcn_id, pds_subnet_id_t sub_id,
-                     pds_vnic_id_t vnic_id, std::string vnic_mac,
+vnic_util::vnic_util(pds_vcn_id_t vcn_id, pds_vnic_id_t vnic_id,
+                     pds_subnet_id_t sub_id, std::string vnic_mac,
                      bool src_dst_check) {
     this->vcn_id = vcn_id;
     this->sub_id = sub_id;
@@ -52,7 +52,7 @@ vnic_util::create(void) {
 }
 
 sdk::sdk_ret_t
-vnic_util::read(pds_vnic_id_t vnic_id, pds_vnic_info_t *info, bool compare_spec) {
+vnic_util::read(pds_vnic_info_t *info, bool compare_spec) {
     sdk_ret_t rv;
     pds_vnic_key_t key;
 
@@ -85,9 +85,11 @@ vnic_util::update(void) {
 }
 
 sdk::sdk_ret_t
-vnic_util::remove(void) {
-    // TODO
-    return SDK_RET_ERR;
+vnic_util::del(void) {
+    pds_vnic_key_t key;
+
+    key.id = vnic_id;
+    return pds_vnic_delete(&key);
 }
 
 sdk::sdk_ret_t

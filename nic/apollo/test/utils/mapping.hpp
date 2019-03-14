@@ -35,11 +35,12 @@ public:
     mapping_util();
 
     /// \brief Parameterized constructor
-    mapping_util(pds_vcn_id_t vcn_id, std::string vnic_ip, std::string vnic_mac);
+    mapping_util(pds_vcn_id_t vcn_id, std::string vnic_rem_ip,
+                 std::string vnic_rem_mac = "");
 
     /// \brief Parameterized constructor with local vnic params
-    mapping_util(pds_vcn_id_t vcn_id, std::string vnic_ip, std::string vnic_mac,
-                 pds_vnic_id_t vnic_id);
+    mapping_util(pds_vcn_id_t vcn_id, std::string vnic_ip,
+                 pds_vnic_id_t vnic_id, std::string vnic_mac = "");
 
     /// \brief Destructor
     ~mapping_util();
@@ -52,18 +53,17 @@ public:
     /// \brief Read local/remote ip mapping
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_vcn_id_t vcn_id, std::string vnic_ip,
-                   pds_mapping_info_t *info, bool compare_spec = true);
+    sdk_ret_t read(pds_mapping_info_t *info, bool compare_spec = true);
 
     /// \brief Update local/remote ip mapping
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
     sdk_ret_t update(void);
 
-    /// \brief Remove local/remote ip mapping
+    /// \brief Delete local/remote ip mapping
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t remove(void);
+    sdk_ret_t del(void);
 
     /// \brief Create many local/remote ip mapping for the given VNIC
     ///

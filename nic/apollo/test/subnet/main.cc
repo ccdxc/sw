@@ -60,7 +60,7 @@ TEST_F(subnet, subnet_create) {
 
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
-    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10.0.0.0/8");
     v1.create();
     subnet_util s = subnet_util(g_vcn_id, g_subnet_id, "10.1.1.0/16");
     s.create();
@@ -75,7 +75,7 @@ TEST_F(subnet, subnet_delete) {
 
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
-    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10.0.0.0/8");
     subnet_util s = subnet_util(g_vcn_id, g_subnet_id, "10.1.1.0/16");
     s.del();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
@@ -91,7 +91,7 @@ TEST_F(subnet, create_delete_in_same_batch) {
     g_subnet_id++;
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
-    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10.0.0.0/8");
     v1.create();
     subnet_util s = subnet_util(g_vcn_id, g_subnet_id, "10.1.1.0/16");
     s.create();
@@ -145,7 +145,7 @@ TEST_F(subnet, multiple_subnets_single_VCN_single_batch_workflow) {
 
     g_vcn_id++;
     g_subnet_id++;
-    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "10.0.0.0/8");
     v1.create();
     subnet_util s1 = subnet_util(g_vcn_id, g_subnet_id, "11.1.1.0/16");
     g_subnet_id++;
@@ -188,7 +188,7 @@ TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
 
     g_vcn_id = g_vcn_id + 4;
     g_subnet_id = g_subnet_id + 4;
-    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "11/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "11.0.0.0/8");
     subnet_util v1_s1 = subnet_util(g_vcn_id, g_subnet_id, "11.1.1.0/16");
     g_subnet_id++;
     subnet_util v1_s2 = subnet_util(g_vcn_id, g_subnet_id, "11.2.1.0/16");
@@ -197,7 +197,7 @@ TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
     g_subnet_id++;
 
     g_vcn_id++;
-    vcn_util v2 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "12/8");
+    vcn_util v2 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "12.0.0.0/8");
     g_subnet_id++;
     subnet_util v2_s1 = subnet_util(g_vcn_id, g_subnet_id, "12.1.1.0/16");
     g_subnet_id++;
@@ -206,7 +206,7 @@ TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
     subnet_util v2_s3 = subnet_util(g_vcn_id, g_subnet_id, "12.3.1.0/16");
 
     g_vcn_id++;
-    vcn_util v3 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "13/8");
+    vcn_util v3 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "13.0.0.0/8");
     g_subnet_id++;
     subnet_util v3_s1 = subnet_util(g_vcn_id, g_subnet_id, "13.1.1.0/16");
     g_subnet_id++;
@@ -310,7 +310,7 @@ TEST_F(subnet, multiple_subnets_single_VCN_multiple_batches_workflow) {
     g_vcn_id++;
     g_subnet_id++;
     g_subnet_id++;
-    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "21/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "21.0.0.0/8");
     subnet_util v1_s1 = subnet_util(g_vcn_id, g_subnet_id, "21.1.1.0/16");
     g_subnet_id++;
     subnet_util v1_s2 = subnet_util(g_vcn_id, g_subnet_id, "21.2.1.0/16");
@@ -365,7 +365,7 @@ TEST_F(subnet, multiple_subnets_multiple_vcns_multiple_batches_workflow) {
 
     g_vcn_id++;
     g_subnet_id = g_subnet_id + 2;
-    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "11/8");
+    vcn_util v1 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "11.0.0.0/8");
     subnet_util v1_s1 = subnet_util(g_vcn_id, g_subnet_id, "11.1.1.0/16");
 
     v1.create();
@@ -376,7 +376,7 @@ TEST_F(subnet, multiple_subnets_multiple_vcns_multiple_batches_workflow) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
 
     g_vcn_id++;
-    vcn_util v2 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "12/8");
+    vcn_util v2 = vcn_util(PDS_VCN_TYPE_TENANT, g_vcn_id, "12.0.0.0/8");
     g_subnet_id++;
     subnet_util v2_s1 = subnet_util(g_vcn_id, g_subnet_id, "12.1.1.0/16");
     g_subnet_id++;

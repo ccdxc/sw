@@ -32,8 +32,9 @@ public:
     vnic_util();
 
     /// \brief Parameterized constructor
-    vnic_util(pds_vcn_id_t vcn_id, pds_subnet_id_t sub_id, pds_vnic_id_t vnic_id,
-              std::string vnic_mac, bool src_dst_check = false);
+    vnic_util(pds_vcn_id_t vcn_id, pds_vnic_id_t vnic_id,
+              pds_subnet_id_t sub_id = -1, std::string vnic_mac = "",
+              bool src_dst_check = false);
 
     /// \brief Destructor
     ~vnic_util();
@@ -46,18 +47,17 @@ public:
     /// \brief Read VNIC info
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_vnic_id_t vnic_id, pds_vnic_info_t *info,
-                   bool compare_spec = true);
+    sdk_ret_t read(pds_vnic_info_t *info, bool compare_spec = true);
 
     /// \brief Update VNIC configuration
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
     sdk_ret_t update(void);
 
-    /// \brief Remove VNIC
+    /// \brief Delete VNIC
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t remove(void);
+    sdk_ret_t del(void);
 
     /// \brief Create many VNIC for the given subnet and VCN
     ///

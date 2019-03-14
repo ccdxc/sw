@@ -113,7 +113,6 @@ TEST_F(mapping_test, mapping_create) {
     const char *vnic_rem_ip = "20.1.1.3";
     const char *vnic_rem_mac = "00:00:14:01:01:03";
     const char *sub_rem_gw = "100.0.0.4";    // Part of my-tep subnet
-    pds_vnic_info_t vnic_info;
     pds_mapping_info_t map_info;
     pds_route_table_spec_t rt_tbl;
     pds_policy_spec_t policy;
@@ -161,14 +160,14 @@ TEST_F(mapping_test, mapping_create) {
     ASSERT_TRUE(sub.create() == SDK_RET_OK);
 
     // Create vnic
-    vnic_util vnic(vcn_id, sub_id, vnic_id, vnic_mac);
+    vnic_util vnic(vcn_id, vnic_id, sub_id, vnic_mac);
     vnic.vlan_tag = vlan_tag;
     vnic.mpls_slot = mpls_slot;
     vnic.rsc_pool_id = 0;
     ASSERT_TRUE(vnic.create() == SDK_RET_OK);
 
     // Create Local Mappings
-    mapping_util lmap(vcn_id, vnic_ip, vnic_mac, vnic_id);
+    mapping_util lmap(vcn_id, vnic_ip, vnic_id, vnic_mac);
     lmap.sub_id = sub_id;
     lmap.mpls_slot = mpls_slot;
     lmap.tep_ip = my_ip;
@@ -212,18 +211,6 @@ policy_config:
     // Completed the configuration
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 
-    // Read vnic info and compare the configuration packet count
-    // TODO : Enable once the read is working
-    // ASSERT_TRUE(vnic.read(vnic_id, &vnic_info) == SDK_RET_OK);
-
-    // Read remote mapping info and compare the configuration
-    // ASSERT_TRUE(rmap.read(vcn_id, vnic_rem_ip, &map_info) == SDK_RET_OK);
-
-    // Read local mapping info and compare the configuration.
-    // TODO : Enable this after splitting the API
-    // lmap.read(vcn_id, vnic_ip, &map_info);
-
-
 #if 0
     api_test::send_packet(g_snd_pkt1, sizeof(g_snd_pkt1), TM_PORT_UPLINK_0, g_rcv_pkt1,
                           sizeof(g_rcv_pkt1), TM_PORT_UPLINK_1);
@@ -244,7 +231,24 @@ TEST_F(mapping_test, mapping_many_create) {}
 ///
 /// Configure the mapping and make-sure the parameters are configured properly
 /// by getting the configured values back
-TEST_F(mapping_test, mapping_get) {}
+// TODO : Enable this after fixing the read issue
+TEST_F(mapping_test, DISABLED_mapping_get) {
+    const char *vnic_rem_ip = "20.1.1.3";
+    pds_vcn_id_t vcn_id = 1;
+    pds_vnic_id_t vnic_id = 1;
+    pds_mapping_info_t map_info;
+    const char *vnic_ip = "10.1.1.3";
+
+    mapping_util rmap(vcn_id, vnic_rem_ip);
+    mapping_util lmap(vcn_id, vnic_ip, vnic_id);
+
+    // Read remote mapping info and compare the configuration
+    ASSERT_TRUE(rmap.read(&map_info) == SDK_RET_OK);
+
+    // Read local mapping info and compare the configuration.
+    ASSERT_TRUE(lmap.read(&map_info) == SDK_RET_OK);
+
+}
 
 // \brief Mapping Delete
 //
@@ -255,23 +259,21 @@ TEST_F(mapping_test, mapping_get) {}
 //
 // Deletion while the traffic is going on . This has to be done in the Naples.
 // There should not be any traffic hit.
-TEST_F(mapping_test, mapping_delete)
+// TODO : Enable this after fixing the delete issue
+TEST_F(mapping_test, DISABLED_mapping_delete)
 {
-#if 0
     pds_batch_params_t batch_params = {0};
-    const char *vnic_ip             = "10.1.1.3";
-    pds_vcn_id_t vcn_id             = 1;
-    api_test::mapping_util map;
+    const char *vnic_rem_ip = "20.1.1.3";
+    pds_vcn_id_t vcn_id = 1;
+    const char *vnic_ip = "10.1.1.3";
 
+    mapping_util rmap(vcn_id, vnic_rem_ip);
+    mapping_util lmap(vcn_id, vnic_ip);
     batch_params.epoch = 2;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
-
-    map.vcn_id     = vcn_id;
-    map.vnic_ip    = vnic_ip;
-    ASSERT_TRUE(map.destroy() == SDK_RET_OK);
-
+    ASSERT_TRUE(rmap.del() == SDK_RET_OK);
+    ASSERT_TRUE(lmap.del() == SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
-#endif
 }
 
 // \brief Mapping memory utilization

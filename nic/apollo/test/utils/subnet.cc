@@ -10,6 +10,7 @@
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {
 
@@ -27,7 +28,7 @@ subnet_util::create() {
     pds_subnet_spec_t spec;
     ip_prefix_t ip_pfx;
 
-    SDK_ASSERT(str2ipv4pfx((char *)this->cidr_str.c_str(), &ip_pfx) == 0);
+    extract_ip_pfx(this->cidr_str.c_str(), &ip_pfx);
     memset(&spec, 0, sizeof(pds_subnet_spec_t));
     spec.vcn.id = this->vcn.id;
     spec.key.id = this->id;

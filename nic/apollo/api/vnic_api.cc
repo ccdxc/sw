@@ -85,5 +85,5 @@ pds_vnic_update (pds_vnic_spec_t *spec)
 sdk_ret_t
 pds_vnic_delete (pds_vnic_key_t *key)
 {
-    return (pds_vnic_api_handle(api::API_OP_UPDATE, key, NULL));
+    return (pds_vnic_api_handle(api::API_OP_DELETE, key, NULL));
 }

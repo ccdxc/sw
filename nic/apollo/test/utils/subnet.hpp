@@ -14,7 +14,6 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/include/api/pds_vcn.hpp"
 #include "nic/apollo/include/api/pds_subnet.hpp"
-#include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {
 

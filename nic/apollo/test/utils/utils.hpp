@@ -22,6 +22,7 @@ static inline int
 ip_version (const char *ip)
 {
     char buf[16];
+
     if (inet_pton(AF_INET, ip, buf)) {
         return IP_AF_IPV4;
     } else if (inet_pton(AF_INET6, ip, buf)) {
@@ -33,20 +34,42 @@ ip_version (const char *ip)
 static inline void
 extract_ip_addr (const char *ip, ip_addr_t *ip_addr)
 {
-    int af = ip_version(ip);
+    int af;
+    ip_prefix_t pfx;
+
+    af = ip_version(ip);
     if (af == IP_AF_IPV4) {
-        struct in_addr v4;
-        inet_aton(ip, &v4);
-        ip_addr->af = IP_AF_IPV4;
-        ip_addr->addr.v4_addr = ntohl(v4.s_addr);
+        SDK_ASSERT(str2ipv4pfx((char *)ip, &pfx) == 0);
+        *ip_addr = pfx.addr;
     } else if (af == IP_AF_IPV6) {
-        struct in6_addr v6;
-        inet_pton(AF_INET6, ip, &v6);
-        ip_addr->af = IP_AF_IPV6;
-        for (int i = 0; i < 16; i++) {
-            // Address in network byte order
-            ip_addr->addr.v6_addr.addr8[i] = v6.s6_addr[15 - i];
-        }
+        SDK_ASSERT(str2ipv6pfx((char *)ip, &pfx) == 0);
+        *ip_addr = pfx.addr;
+    } else {
+        SDK_ASSERT(0);
+    }
+}
+
+static inline void
+extract_ip_pfx (const char *str, ip_prefix_t *ip_pfx)
+{
+    char ip[64];
+    char *slash;
+    int af;
+
+    // Input may get modified. Copying hence
+    strncpy(ip, str, sizeof(ip) - 1);
+    slash = strchr(ip, '/');
+    if (slash != NULL) {
+        *slash = '\0';
+    }
+    af = ip_version(ip);
+    if (slash != NULL) {
+        *slash = '/';
+    }
+    if (af == IP_AF_IPV4) {
+        SDK_ASSERT(str2ipv4pfx((char *)ip, ip_pfx) == 0);
+    } else if (af == IP_AF_IPV6) {
+        SDK_ASSERT(str2ipv6pfx((char *)ip, ip_pfx) == 0);
     } else {
         SDK_ASSERT(0);
     }

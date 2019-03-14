@@ -54,7 +54,7 @@ TEST_F(vcn, vcn_create) {
     pds_batch_params_t batch_params = {0};
 
     vcn_util *vcn1 = NULL;
-    vcn1 = new vcn_util(PDS_VCN_TYPE_TENANT, 1, "10/8");
+    vcn1 = new vcn_util(PDS_VCN_TYPE_TENANT, 1, "10.0.0.0/8");
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     vcn1->create();
@@ -97,7 +97,7 @@ TEST_F(vcn, vcn_delete_existing_vcn) {
 
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
-    vcn_util *vcn1 = new vcn_util(PDS_VCN_TYPE_TENANT, 1, "10/8");
+    vcn_util *vcn1 = new vcn_util(PDS_VCN_TYPE_TENANT, 1, "10.0.0.0/8");
     vcn1->del();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 }
@@ -143,11 +143,11 @@ TEST_F(vcn, vcn_create_multiple_vcns_single_batch) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     vcn_util *vcn1, *vcn2, *vcn3, *vcn4, *vcn5, *vcn6;
 
-    vcn1 = new vcn_util(PDS_VCN_TYPE_TENANT, 2, "10/8");
-    vcn2 = new vcn_util(PDS_VCN_TYPE_TENANT, 3, "11/8");
-    vcn3 = new vcn_util(PDS_VCN_TYPE_TENANT, 4, "12/8");
-    vcn4 = new vcn_util(PDS_VCN_TYPE_TENANT, 5, "13/8");
-    vcn5 = new vcn_util(PDS_VCN_TYPE_TENANT, 6, "14/8");
+    vcn1 = new vcn_util(PDS_VCN_TYPE_TENANT, 2, "10.0.0.0/8");
+    vcn2 = new vcn_util(PDS_VCN_TYPE_TENANT, 3, "11.0.0.0/8");
+    vcn3 = new vcn_util(PDS_VCN_TYPE_TENANT, 4, "12.0.0.0/8");
+    vcn4 = new vcn_util(PDS_VCN_TYPE_TENANT, 5, "13.0.0.0/8");
+    vcn5 = new vcn_util(PDS_VCN_TYPE_TENANT, 6, "14.0.0.0/8");
 
     vcn1->create();
     vcn2->create();
@@ -209,11 +209,11 @@ TEST_F(vcn, vcn_create_multiple_vcns_multiple_batches) {
     pds_batch_params_t batch_params = {0};
 
     vcn_util *vcn7, *vcn8, *vcn9, *vcn10, *vcn11;
-    vcn7 = new vcn_util(PDS_VCN_TYPE_TENANT, 7, "10/8");
-    vcn8 = new vcn_util(PDS_VCN_TYPE_TENANT, 8, "11/8");
-    vcn9 = new vcn_util(PDS_VCN_TYPE_TENANT, 9, "12/8");
-    vcn10 = new vcn_util(PDS_VCN_TYPE_TENANT, 10, "13/8");
-    vcn11 = new vcn_util(PDS_VCN_TYPE_TENANT, 11, "14/8");
+    vcn7 = new vcn_util(PDS_VCN_TYPE_TENANT, 7, "10.0.0.0/8");
+    vcn8 = new vcn_util(PDS_VCN_TYPE_TENANT, 8, "11.0.0.0/8");
+    vcn9 = new vcn_util(PDS_VCN_TYPE_TENANT, 9, "12.0.0.0/8");
+    vcn10 = new vcn_util(PDS_VCN_TYPE_TENANT, 10, "13.0.0.0/8");
+    vcn11 = new vcn_util(PDS_VCN_TYPE_TENANT, 11, "14.0.0.0/8");
 
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
@@ -292,11 +292,11 @@ TEST_F(vcn, vcn_combine_create_delete_single_batch) {
     pds_batch_params_t batch_params = {0};
 
     vcn_util *vcn12, *vcn13, *vcn14, *vcn15, *vcn16;
-    vcn12 = new vcn_util(PDS_VCN_TYPE_TENANT, 12, "12/8");
-    vcn13 = new vcn_util(PDS_VCN_TYPE_TENANT, 13, "13/8");
-    vcn14 = new vcn_util(PDS_VCN_TYPE_TENANT, 14, "14/8");
-    vcn15 = new vcn_util(PDS_VCN_TYPE_TENANT, 15, "15/8");
-    vcn16 = new vcn_util(PDS_VCN_TYPE_TENANT, 16, "16/8");
+    vcn12 = new vcn_util(PDS_VCN_TYPE_TENANT, 12, "12.0.0.0/8");
+    vcn13 = new vcn_util(PDS_VCN_TYPE_TENANT, 13, "13.0.0.0/8");
+    vcn14 = new vcn_util(PDS_VCN_TYPE_TENANT, 14, "14.0.0.0/8");
+    vcn15 = new vcn_util(PDS_VCN_TYPE_TENANT, 15, "15.0.0.0/8");
+    vcn16 = new vcn_util(PDS_VCN_TYPE_TENANT, 16, "16.0.0.0/8");
 
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
@@ -319,11 +319,11 @@ TEST_F(vcn, vcn_combine_create_delete_multiple_batches) {
     pds_batch_params_t batch_params = {0};
 
     vcn_util *vcn22, *vcn23, *vcn24, *vcn25, *vcn26;
-    vcn22 = new vcn_util(PDS_VCN_TYPE_TENANT, 22, "22/8");
-    vcn23 = new vcn_util(PDS_VCN_TYPE_TENANT, 23, "23/8");
-    vcn24 = new vcn_util(PDS_VCN_TYPE_TENANT, 24, "24/8");
-    vcn25 = new vcn_util(PDS_VCN_TYPE_TENANT, 25, "25/8");
-    vcn26 = new vcn_util(PDS_VCN_TYPE_TENANT, 26, "26/8");
+    vcn22 = new vcn_util(PDS_VCN_TYPE_TENANT, 22, "22.0.0.0/8");
+    vcn23 = new vcn_util(PDS_VCN_TYPE_TENANT, 23, "23.0.0.0/8");
+    vcn24 = new vcn_util(PDS_VCN_TYPE_TENANT, 24, "24.0.0.0/8");
+    vcn25 = new vcn_util(PDS_VCN_TYPE_TENANT, 25, "25.0.0.0/8");
+    vcn26 = new vcn_util(PDS_VCN_TYPE_TENANT, 26, "26.0.0.0/8");
 
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
@@ -372,7 +372,7 @@ TEST_F(vcn, vcn_create_invalid_vcn) {
     batch_params.epoch = g_batch_epoch++;
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     vcn_util *vcn5;
-    vcn5 = new vcn_util(PDS_VCN_TYPE_TENANT, 5, "0/0");
+    vcn5 = new vcn_util(PDS_VCN_TYPE_TENANT, 5, "0.0.0.0/0");
     vcn5->create();
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 }

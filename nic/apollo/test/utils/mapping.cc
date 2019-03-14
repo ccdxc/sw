@@ -20,15 +20,15 @@ mapping_util::mapping_util() {
     this->vnic_id = PDS_MAX_VNIC + 1;
 }
 
-mapping_util::mapping_util(pds_vcn_id_t vcn_id, std::string vnic_ip,
-                           std::string vnic_mac) {
+mapping_util::mapping_util(pds_vcn_id_t vcn_id, std::string vnic_rem_ip,
+                           std::string vnic_rem_mac) {
     this->vcn_id = vcn_id;
-    this->vnic_ip = vnic_ip;
-    this->vnic_mac = vnic_mac;
+    this->vnic_ip = vnic_rem_ip;
+    this->vnic_mac = vnic_rem_mac;
 }
 
 mapping_util::mapping_util(pds_vcn_id_t vcn_id, std::string vnic_ip,
-                           std::string vnic_mac, pds_vnic_id_t vnic_id) {
+                           pds_vnic_id_t vnic_id, std::string vnic_mac) {
     this->vcn_id = vcn_id;
     this->vnic_ip = vnic_ip;
     this->vnic_mac = vnic_mac;
@@ -60,8 +60,7 @@ mapping_util::create(void) {
 }
 
 sdk::sdk_ret_t
-mapping_util::read(pds_vcn_id_t vcn_id, std::string vnic_ip,
-                   pds_mapping_info_t *info, bool compare_spec) {
+mapping_util::read(pds_mapping_info_t *info, bool compare_spec) {
     sdk_ret_t rv;
     pds_mapping_key_t key = {0};
 
@@ -114,15 +113,12 @@ mapping_util::many_create(uint32_t num_mappings)
 }
 
 sdk::sdk_ret_t
-mapping_util::remove(void) {
-#if 0 // TODO
+mapping_util::del(void) {
     pds_mapping_key_t key;
 
     key.vcn.id = vcn_id;
     extract_ip_addr(vnic_ip.c_str(), &key.ip_addr);
     return pds_mapping_delete(&key);
-#endif
-    return SDK_RET_ERR;
 }
 
 } // namespace api_test

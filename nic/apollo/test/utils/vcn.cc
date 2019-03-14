@@ -10,6 +10,7 @@
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/utils/vcn.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {
 
@@ -26,14 +27,12 @@ vcn_util::create() {
     pds_vcn_spec_t spec;
     ip_prefix_t ip_pfx;
 
-    SDK_ASSERT(str2ipv4pfx((char *)this->cidr_str.c_str(), &ip_pfx) == 0);
+    extract_ip_pfx(this->cidr_str.c_str(), &ip_pfx);
 
     memset(&spec, 0, sizeof(spec));
     spec.type = this->type;
     spec.key.id = this->id;
     spec.pfx = ip_pfx;
-    printf("vcn:%d %s %x\n", spec.key.id, (char *)cidr_str.c_str(),
-           spec.pfx.addr.addr.v4_addr);
     return (pds_vcn_create(&spec));
 }
 

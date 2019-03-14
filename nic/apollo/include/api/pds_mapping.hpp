@@ -87,7 +87,7 @@ sdk_ret_t pds_mapping_update(pds_mapping_spec_t *spec);
 /// \param[in] key Key
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mappnig_delete(pds_mapping_key_t *key);
+sdk_ret_t pds_mapping_delete(pds_mapping_key_t *key);
 
 /// @}
 
