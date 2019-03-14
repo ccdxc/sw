@@ -849,6 +849,9 @@ port::port_link_sm_process(void)
                 // set operational status as down
                 this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_DOWN);
 
+                // reset MAC faults counter
+                set_mac_faults(0);
+
                 // disable and clear mac interrupts
                 port_mac_intr_en(false);
                 port_mac_intr_clr();
@@ -1077,12 +1080,37 @@ port::port_link_sm_process(void)
 
                 mac_faults = port_mac_faults_get();
 
+                if (mac_faults == true) {
+                    set_mac_faults(this->mac_faults() + 1);
+                } else {
+                    set_mac_faults(0);
+                }
+
                 // If there are PCS faults/errors after MAC sync, restart SM
-                if(mac_faults == true) {
-                    SDK_PORT_SM_DEBUG(this, "MAC faults detected");
-                    retry_sm = true;
-                    port_link_sm_reset();
-                    break;
+                if (this->mac_faults() > 0) {
+                    if (this->mac_faults() < 2) {
+                        SDK_PORT_SM_DEBUG(this, "MAC faults detected");
+                        timeout = 100;
+                        this->bringup_timer_val_ += timeout;
+
+                        this->link_bring_up_timer_ =
+                            sdk::lib::timer_schedule(
+                                SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
+                                (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                                false);
+
+                        break;
+                    } else {
+                        SDK_PORT_SM_DEBUG(this, "MAC faults persistent, retry SM");
+                        retry_sm = true;
+                        set_mac_faults(0);
+                        port_link_sm_reset();
+
+                        // start the bringup from enabled state
+                        this->set_port_link_sm(
+                                port_link_sm_t::PORT_LINK_SM_ENABLED);
+                        break;
+                    }
                 }
 
                 // transition to link up state
