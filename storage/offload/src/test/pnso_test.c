@@ -2797,7 +2797,7 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core)
 		return EINVAL;
 	}
 
-	if (ctl_core >= 0 &&
+	if (ctl_core >= 0 && ctl_core < 64 &&
 	    (desc->cpu_mask & (1ULL << ctl_core))) {
 		PNSO_LOG_ERROR("failed to run testcases, cpu_mask 0x%llx overlaps with ctl_core_id %d\n",
 			       (unsigned long long) desc->cpu_mask,
