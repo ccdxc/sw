@@ -15,10 +15,8 @@ struct phv_ p;
 
         .align
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table2:
-
     smeqb c3, d.flags, IPSEC_FLAGS_RANDOM_MASK, IPSEC_FLAGS_RANDOM_MASK
     phvwr.c3 p.ipsec_to_stage2_is_random, 1
-
     phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt
     phvwrpair p.esp_header_spi, d.spi, p.esp_header_seqno, d.esn_lo

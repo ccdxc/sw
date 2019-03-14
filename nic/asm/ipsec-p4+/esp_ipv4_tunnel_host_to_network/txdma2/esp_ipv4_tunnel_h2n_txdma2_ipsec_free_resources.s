@@ -22,7 +22,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_free_resources:
  
     addui r4, r3, hiword(IPSEC_RNMPR_TABLE_BASE)
     addi r4, r4, loword(IPSEC_RNMPR_TABLE_BASE)
-    sub r5, k.txdma2_global_in_desc_addr, 64
+    sub r5, k.txdma2_global_in_desc_addr, IPSEC_SCRATCH_OFFSET 
     phvwr p.txdma2_global_in_desc_addr, r5
     bgti r5, IPSEC_PAGE_ADDR_RX, h2n_txdma2_bad_indesc_free
     CAPRI_DMA_CMD_PHV2MEM_SETUP(rnmdr_dma_cmd, r4, txdma2_global_in_desc_addr, txdma2_global_in_desc_addr)

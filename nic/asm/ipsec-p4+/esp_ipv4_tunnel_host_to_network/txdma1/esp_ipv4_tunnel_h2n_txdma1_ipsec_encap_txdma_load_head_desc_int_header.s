@@ -13,8 +13,8 @@ struct phv_ p;
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
-    add r2, d.in_desc, 56
-    add r3, d.in_desc, 64
+    add r2, d.in_desc, IPSEC_STATUS_ADDR_OFFSET 
+    add r3, d.in_desc, IPSEC_SCRATCH_OFFSET 
 
     bgti r2, IPSEC_PAGE_ADDR_RX, esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_bad_barco_in_desc
       

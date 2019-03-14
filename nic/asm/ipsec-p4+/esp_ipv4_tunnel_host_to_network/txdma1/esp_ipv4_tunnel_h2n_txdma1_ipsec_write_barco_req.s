@@ -13,7 +13,6 @@ struct phv_ p;
         .param esp_ipv4_tunnel_h2n_txdma1_ipsec_free_resources
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
-
     seq c1, k.txdma1_global_flags, 1
     bcf [c1], esp_ipv4_tunnel_h2n_hit_errors
     nop
@@ -24,16 +23,13 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     nop
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
-
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP)
     phvwr p.barco_req_doorbell_address, r4.dx
     add r1, k.ipsec_to_stage4_barco_pindex, 1
     and r1, r1, IPSEC_BARCO_RING_INDEX_MASK 
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, r1)
     phvwr p.barco_req_doorbell_data, r3.dx
-
     phvwri p.barco_req_header_size, ESP_FIXED_HDR_SIZE_LI
-
     add r2, r0, k.ipsec_to_stage4_barco_req_addr
     blti r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_req
     nop

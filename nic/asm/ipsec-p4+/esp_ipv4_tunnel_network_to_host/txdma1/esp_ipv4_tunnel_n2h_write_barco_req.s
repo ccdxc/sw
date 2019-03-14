@@ -27,11 +27,8 @@ esp_v4_tunnel_n2h_post_to_barco_ring:
     blti  r3, CAPRI_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_cb
     nop
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
-
-
     add r2, r0, k.txdma1_global_ipsec_cb_addr
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_v4_tunnel_n2h_txdma1_update_cb, r2, TABLE_SIZE_512_BITS)
-
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP)
     phvwr p.barco_req_doorbell_address, r4.dx
     add r1, k.ipsec_to_stage3_barco_pindex, 1

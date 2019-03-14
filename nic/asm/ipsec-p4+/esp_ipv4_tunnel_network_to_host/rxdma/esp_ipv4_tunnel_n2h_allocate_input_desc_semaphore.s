@@ -16,18 +16,14 @@ struct phv_ p;
 
 esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore:
     seq c1, d.full, 1
-
     and r1, d.{in_desc_ring_index}.wx, IPSEC_DESC_RING_INDEX_MASK 
     sll r1, r1, IPSEC_DESC_RING_ENTRY_SHIFT_SIZE 
-
     addui r2, r1, hiword(IPSEC_BIG_RNMPR_TABLE_BASE)
     addi r2, r2, loword(IPSEC_BIG_RNMPR_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_input_desc_index, r2, TABLE_SIZE_64_BITS)
-
     addui r4, r1, hiword(IPSEC_BIG_TNMPR_TABLE_BASE)
     addi r4, r4, loword(IPSEC_BIG_TNMPR_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_output_desc_index, r4, TABLE_SIZE_64_BITS)
-
     bcf [c1], esp_ipv4_tunnel_n2h_desc_ring_full
     nop
     nop.e

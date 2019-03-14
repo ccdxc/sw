@@ -51,21 +51,17 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     add r2, r0, k.p42p4plus_hdr_ipsec_payload_end 
     addi.c1 r2, r2, IPV6_HDR_SIZE
     phvwr p.ipsec_global_packet_length, r2 
-     
     addi r6, r3, ESP_FIXED_HDR_SIZE 
     phvwr p.ipsec_to_stage3_iv_salt_off, r6
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     phvwr p.ipsec_to_stage2_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_RXDMA_ENTER_OFFSET, 1)
-
     addi r1, r0, INDESC_SEMAPHORE_ADDR_DEC
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore, r1, TABLE_SIZE_64_BITS)
-
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.ipsec_to_stage3_iv_size, d.iv_size
-
     // seq-no logic
     seq c4, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31}, d.expected_seq_no
     bcf [c4], ipsec_esp_v4_tunnel_n2h_exp_seqno_eq_pak_seq_no

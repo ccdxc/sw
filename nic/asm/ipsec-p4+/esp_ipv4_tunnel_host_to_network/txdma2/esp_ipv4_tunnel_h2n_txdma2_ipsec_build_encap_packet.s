@@ -33,7 +33,6 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     blti r4, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_in_page
     nop 
     phvwr p.esp_iv_hdr_dma_cmd_addr, k.t0_s2s_in_page_addr 
-    //add r2, k.txdma2_global_iv_size, ESP_FIXED_HDR_SIZE 
     addi r2, r0, IPSEC_DEFAULT_IV_SIZE+ESP_FIXED_HDR_SIZE 
     phvwr p.esp_iv_hdr_dma_cmd_size, r2
     // Payload

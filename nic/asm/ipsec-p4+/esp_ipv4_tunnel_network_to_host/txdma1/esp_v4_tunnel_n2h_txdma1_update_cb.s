@@ -15,7 +15,6 @@ esp_v4_tunnel_n2h_txdma1_update_cb:
     seq c1, k.txdma1_global_flags, 1
     bcf [c1], esp_ipv4_tunnel_n2h_hit_errors
     nop
-
     phvwri p.app_header_table0_valid, 0
     CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd_incr_pindex_dma_cmd, CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX, barco_dbell_pi, barco_dbell_pi)
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd_incr_pindex_dma_cmd)

@@ -32,16 +32,13 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     phvwr p.ipsec_to_stage4_vrf_vlan, d.vrf_vlan
     seq c1, d.is_v6, 1
     cmov r6, c1, IPV6_ETYPE, IPV4_ETYPE
-
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_load_barco_req, r1, TABLE_SIZE_512_BITS)
     phvwr p.ipsec_to_stage4_ip_etype, r6
-
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_v4_tunnel_n2h_txdma2_increment_global_ci, r5, TABLE_SIZE_512_BITS)
     //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA2_ENTER_OFFSET, 1)
-
     seq c2, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx
     b.!c2 esp_ipv4_tunnel_n2h_txdma2_initial_table_do_nothing
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)

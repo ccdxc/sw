@@ -20,12 +20,5 @@ esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats:
     phvwri p.{dma_cmd_out_desc_aol_dma_cmd_phv_end_addr...dma_cmd_out_desc_aol_dma_cmd_type}, ((IPSEC_OUT_DESC_AOL_END << 18) | (IPSEC_OUT_DESC_AOL_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     phvwri p.{dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr...dma_cmd_fill_esp_hdr_dma_cmd_type}, ((IPSEC_ESP_HDR_PHV_END << 18) | (IPSEC_ESP_HDR_PHV_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     phvwri.e p.{dma_cmd_pkt2mem_dma_cmd_cache...dma_cmd_pkt2mem_dma_cmd_type}, (IPSEC_MEM2PKT_CACHE_ENABLE | CAPRI_DMA_COMMAND_PKT_TO_MEM)
-    //phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_type}, ((IPSEC_H2N_CB_RING_IN_DESC_END << 18) | (IPSEC_H2N_CB_RING_IN_DESC_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
-
-
-    //phvwr p.dma_cmd_phv2mem_ipsec_int_dma_cmd_addr, k.ipsec_global_in_desc_addr
-    //phvwr.e p.ipsec_int_header_in_desc, k.ipsec_global_in_desc_addr
-  
-
     nop
 
