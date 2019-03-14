@@ -14,7 +14,7 @@ parser.add_argument('--esx-bld-vm-username', dest='esx_bld_vm_username',
 parser.add_argument('--esx-bld-vm-password', dest='esx_bld_vm_password',
                     default="vmware", help='esx build vm password')
 parser.add_argument('--esx-bld-vm', dest='esx_bld_vm',
-                    default="esx-vib-wb1.pensando.io", help='esx build vm')
+                    default="esx-6.7-vib.pensando.io", help='esx build vm')
 
 parser.add_argument('--drivers-pkg', dest='drivers_pkg',
                     default=None, help='Esx Source Driver Package.')
@@ -57,7 +57,7 @@ def bld_vm_copyout(src_filename, dest_dir):
 
 pkg_name = os.path.basename(GlobalOptions.drivers_pkg)
 dst_pkg_base_name = "_".join([pkg_name, socket.gethostname(), getpass.getuser()])
-stdout, _, exit_status  = bld_vm_run("find  /opt/vmware/  -type d  -name   nativeddk-6.5*")
+stdout, _, exit_status  = bld_vm_run("find  /opt/vmware/  -type d  -name   nativeddk-6.7*")
 print ("Native DDK dir out ", stdout)
 if len(stdout) != 1:
     print ("Invalid output when discovering native ddk", stdout)
