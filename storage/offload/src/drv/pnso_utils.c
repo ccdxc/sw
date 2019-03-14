@@ -541,7 +541,7 @@ putil_put_interm_buf_list(struct service_info *svc_info)
 	}
 }
 
-#define POLL_LOOP_BASE_TIMEOUT (50 * OSAL_NSEC_PER_MSEC)
+#define POLL_LOOP_BASE_TIMEOUT (2000 * OSAL_NSEC_PER_MSEC)
 
 uint64_t
 svc_poll_expiry_start(const struct service_info *svc_info)
