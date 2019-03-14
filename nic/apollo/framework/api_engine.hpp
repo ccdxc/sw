@@ -254,8 +254,6 @@ private:
     void del_from_dirty_list_(dirty_obj_list_t::iterator it,
                               api_base *api_obj) {
         batch_ctxt_.dirty_obj_list.erase(it);
-        //batch_ctxt_.dirty_obj_list.remove(
-            //std::make_pair(api_obj, batch_ctxt_.dirty_obj_map[api_obj]));
         batch_ctxt_.dirty_obj_map.erase(api_obj);
         api_obj->clear_in_dirty_list();
     }

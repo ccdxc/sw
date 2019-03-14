@@ -83,17 +83,36 @@ vnic_impl::release_resources(api_base *api_obj) {
     egress_local_vnic_info_rx_actiondata_t    egress_vnic_data = { 0 };
 
     if (hw_id_ != 0xFFFF) {
-        vnic_impl_db()->vnic_idxr()->free(hw_id_);
-        // TODO: how do we know whether we actually programmed h/w or not ?
+        //if (vnic_by_slot_hash_idx_ != SDK_TABLE_HANDLE_INVALID) {
+            //vnic_impl_db()->local_vnic_by_slot_rx_tbl()->release(vnic_by_slot_hash_idx_);
+        //}
         vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(hw_id_,
                                                                   &egress_vnic_data);
-        vnic_impl_db()->egress_local_vnic_info_rx_tbl()->remove(hw_id_);
-
-        vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->remove(
+        vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->release(
             egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id);
+        vnic_impl_db()->egress_local_vnic_info_rx_tbl()->release(hw_id_);
+        vnic_impl_db()->vnic_idxr()->free(hw_id_);
+
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vnic_impl::nuke_resources(api_base *api_obj) {
+    egress_local_vnic_info_rx_actiondata_t    egress_vnic_data = { 0 };
+
+    if (hw_id_ != 0xFFFF) {
+        // TODO: uncomment the below once sdk_hash moves to standard API model
+        //if (vnic_by_slot_hash_idx_ != SDK_TABLE_HANDLE_INVALID) {
         if (vnic_by_slot_hash_idx_ != 0xFFFF) {
             vnic_impl_db()->local_vnic_by_slot_rx_tbl()->remove(vnic_by_slot_hash_idx_);
         }
+        vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(hw_id_,
+                                                                  &egress_vnic_data);
+        vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->remove(
+            egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id);
+        vnic_impl_db()->egress_local_vnic_info_rx_tbl()->remove(hw_id_);
+        vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;
 }
@@ -161,6 +180,12 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vnic_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    // TODO:
+    // 1. leave P4TBL_ID_VNIC_TX_STATS table entry as-is
+    // 2. leave VNIC_RX_STATS_VNIC_RX_STATS_ID table entry as-is
+    // 3. do update() on EGRESS_LOCAL_VNIC_INFO_RX_TBL by picking
+    //    oldest epoch contents and setting valid = 0 and
+    //    epoch = new-epoch
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -240,6 +265,10 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
         }
         ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->insert_atid(&vnic_by_vlan_data,
                                                                        spec->wire_vlan);
+        break;
+
+    case API_OP_DELETE:
+        ret = SDK_RET_INVALID_OP;
         break;
 
     default:
@@ -358,6 +387,7 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 
     switch (api_op) {
     case api::API_OP_CREATE:
+    case api::API_OP_DELETE:
         // program local_vnic_by_vlan_tx table entry
         ret = activate_vnic_by_vlan_tx_table_(api_op, api_obj, epoch, vcn,
                                               subnet, spec, v4_route_table,
@@ -371,6 +401,7 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
         }
         break;
 
+    case api::API_OP_UPDATE:
     default:
         ret = SDK_RET_INVALID_OP;
         break;

@@ -15,13 +15,21 @@
 
 namespace api {
 
-api_engine    g_api_engine;
-
 /// \defgroup PDS_API_ENGINE Framework for processing APIs
 /// @{
 
+static pds_epoch_t    g_current_epoch_ = PDS_EPOCH_INVALID;
+api_engine     g_api_engine;
+
+pds_epoch_t
+get_current_epoch (void)
+{
+    return g_current_epoch_;
+}
+
 slab *
-api_params_slab (void) {
+api_params_slab (void)
+{
     return g_api_engine.api_params_slab();
 }
 
@@ -538,9 +546,11 @@ api_engine::batch_commit(void) {
     // pre process the APIs by walking over the stashed API contexts to form
     // dirty object list
     PDS_TRACE_INFO("API context vector size %u", batch_ctxt_.api_ctxts.size());
-    PDS_TRACE_INFO("Starting pre-process stage ...");
+    PDS_TRACE_INFO("Starting pre-process stage for epoch %u",
+                   batch_ctxt_.epoch);
     ret = pre_process_stage_();
-    PDS_TRACE_INFO("Finished pre-process stage");
+    PDS_TRACE_INFO("Finished pre-process stage for epoch %u",
+                   batch_ctxt_.epoch);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -554,17 +564,21 @@ api_engine::batch_commit(void) {
     PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
                    batch_ctxt_.dirty_obj_list.size(),
                    batch_ctxt_.dirty_obj_map.size());
-    PDS_TRACE_INFO("Starting program config stage ...");
+    PDS_TRACE_INFO("Starting program config stage for epoch %u",
+                   batch_ctxt_.epoch);
     ret = program_config_stage_();
-    PDS_TRACE_INFO("Finished program config stage");
+    PDS_TRACE_INFO("Finished program config stage for epoch %u",
+                   batch_ctxt_.epoch);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
     // activate the epoch in h/w & s/w by programming stage0 tables, if any
-    PDS_TRACE_INFO("Starting activate config stage ...");
+    PDS_TRACE_INFO("Starting activate config stage for epoch %u",
+                   batch_ctxt_.epoch);
     ret = activate_config_stage_();
-    PDS_TRACE_INFO("Finished activate config stage");
+    PDS_TRACE_INFO("Finished activate config stage for epoch %u",
+                   batch_ctxt_.epoch);
 
     // end the table mgmt. lib transaction
     impl_base::pipeline_impl()->table_transaction_end();
@@ -595,6 +609,11 @@ api_engine::batch_commit(void) {
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
     PDS_TRACE_INFO("Finished clearing dirty object map/list ...");
+
+    // update the epoch to current epoch
+    PDS_TRACE_INFO("Advancing from epoch %u to epoch %u",
+                   g_current_epoch_, batch_ctxt_.epoch);
+    g_current_epoch_ = batch_ctxt_.epoch;
     return SDK_RET_OK;
 }
 

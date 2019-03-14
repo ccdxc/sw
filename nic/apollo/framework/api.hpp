@@ -11,6 +11,8 @@
 #ifndef __FRAMEWORK_API_HPP__
 #define __FRAMEWORK_API_HPP__
 
+#include "nic/apollo/include/api/pds.hpp"
+
 namespace api {
 
 // forward declarations
@@ -39,6 +41,9 @@ typedef enum obj_id_e {
     OBJ_ID_POLICY,         ///< Policy
     OBJ_ID_MAX,
 } obj_id_t;
+
+/// \brief    return current epoch value
+pds_epoch_t get_current_epoch(void);
 
 }    // namespace api
 

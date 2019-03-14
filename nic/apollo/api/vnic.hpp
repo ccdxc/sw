@@ -145,6 +145,11 @@ private:
     /// \brief    destructor
     ~vnic_entry();
 
+    /// \brief    free h/w resources used by this object, if any
+    ///           (this API is invoked during object deletes)
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t nuke_resources_(void);
+
 private:
     pds_vnic_key_t    key_;        ///< vnic key
     ht_ctxt_t         ht_ctxt_;    ///< hash table context
