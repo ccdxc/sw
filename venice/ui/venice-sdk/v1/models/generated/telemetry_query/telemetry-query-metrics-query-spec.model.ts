@@ -212,14 +212,14 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
             this._formGroup = new FormGroup({
                 'kind': CustomFormControl(new FormControl(this['kind']), Telemetry_queryMetricsQuerySpec.propInfo['kind']),
                 'api-version': CustomFormControl(new FormControl(this['api-version']), Telemetry_queryMetricsQuerySpec.propInfo['api-version']),
-                'name': CustomFormControl(new FormControl(this['name'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'Name is the name of the API object.'), ]), Telemetry_queryMetricsQuerySpec.propInfo['name']),
+                'name': CustomFormControl(new FormControl(this['name'], [patternValidator('^[a-zA-Z0-9][\\w\\-\\.\\:]*[a-zA-Z0-9]$', 'Name is the name of the API object.'), ]), Telemetry_queryMetricsQuerySpec.propInfo['name']),
                 'selector': CustomFormGroup(this['selector'].$formGroup, Telemetry_queryMetricsQuerySpec.propInfo['selector'].required),
                 'fields': CustomFormControl(new FormControl(this['fields']), Telemetry_queryMetricsQuerySpec.propInfo['fields']),
                 'function': CustomFormControl(new FormControl(this['function'], [required, enumValidator(Telemetry_queryMetricsQuerySpec_function), ]), Telemetry_queryMetricsQuerySpec.propInfo['function']),
                 'start-time': CustomFormControl(new FormControl(this['start-time']), Telemetry_queryMetricsQuerySpec.propInfo['start-time']),
                 'end-time': CustomFormControl(new FormControl(this['end-time']), Telemetry_queryMetricsQuerySpec.propInfo['end-time']),
                 'group-by-time': CustomFormControl(new FormControl(this['group-by-time']), Telemetry_queryMetricsQuerySpec.propInfo['group-by-time']),
-                'group-by-field': CustomFormControl(new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, ., :'), ]), Telemetry_queryMetricsQuerySpec.propInfo['group-by-field']),
+                'group-by-field': CustomFormControl(new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\\w\\-\\.\\:]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, ., :'), ]), Telemetry_queryMetricsQuerySpec.propInfo['group-by-field']),
                 'pagination': CustomFormGroup(this['pagination'].$formGroup, Telemetry_queryMetricsQuerySpec.propInfo['pagination'].required),
             });
             // We force recalculation of controls under a form group
