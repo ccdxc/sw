@@ -37,7 +37,6 @@ public:
     /// \brief Initiaize the api object with given config
     ///
     /// \param[in] api_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
@@ -47,7 +46,6 @@ public:
     ///
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) {
@@ -55,12 +53,10 @@ public:
     }
 
     /// \brief Program config in the hardware
-    ///
     /// Program all hardware tables relevant to this object except stage 0
     /// table(s), if any and also set the valid bit
     ///
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
@@ -74,26 +70,22 @@ public:
     }
 
     /// \brief Cleanup config from the hardware
-    ///
     /// Cleanup all hardware tables relevant to this object except stage 0
     /// table(s), if any, by updating packed entries with latest epoch#
     /// and setting invalid bit (if any) in the hardware entries
     ///
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
 
     /// \brief Update config in the hardware
-    ///
     /// Update all hardware tables relevant to this object except stage 0
     /// table(s), if any, by updating packed entries with latest epoch#
     ///
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
@@ -103,7 +95,6 @@ public:
     ///
     /// \param[in] api_op API operation
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) {
@@ -111,13 +102,11 @@ public:
     }
 
     /// \brief Update software database with new object
-    ///
     /// This method is called on new object that needs to replace the
     /// old version of the object in the DBs
     ///
     /// \param[in] old Old version of the object being swapped out
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_db(api_base *old_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
@@ -166,8 +155,8 @@ public:
     virtual string tostr(void) const { return "api_base"; }
 
 protected:
-    uint8_t in_dirty_list_:1;        ///< True if object is in the dirty list
-    uint8_t stateless_:1;            ///< True this object doesn't go into any databases
+    uint8_t in_dirty_list_:1;    ///< True if object is in the dirty list
+    uint8_t stateless_:1;        ///< True this object doesn't go into any dbs
 } __PACK__;
 
 }    // namespace api

@@ -33,7 +33,6 @@ public:
     /// \brief Factory method to instantiate pipeline impl instance
     ///
     /// \param[in] pipeline_cfg Pipeline configuration information
-    ///
     /// \return new instance of pipeline impl or NULL, in case of error
     static pipeline_impl_base *factory(pipeline_cfg_t *pipeline_cfg);
 
@@ -63,7 +62,6 @@ public:
     /// \param[in] tableid Table id
     /// \param[in] action_id Action id to write
     /// \param[in] action_data Action data to write
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
                                            uint8_t action_id,
@@ -77,8 +75,7 @@ public:
     /// \param[in] tableid Table id
     /// \param[in] action_id Action id to write
     /// \param[in] action_data Action data to write
-    ///
-    /// \return    SDK_RET_OK on success, failure status code on error
+    /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
                                            uint8_t action_id,
                                            void *actiondata) {

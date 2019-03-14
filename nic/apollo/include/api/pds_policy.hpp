@@ -76,7 +76,7 @@ typedef union rule_action_data_s {
     fw_action_data_t    fw_action;    ///< Firewall action data
 } rule_action_data_t;
 
-/// \@brief Generic rule
+/// \brief Generic rule
 typedef struct rule_s {
     bool                  stateful;       ///< true, if rule is stateful
     rule_match_t          match;          ///< rule match

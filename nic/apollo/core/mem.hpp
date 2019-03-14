@@ -1,19 +1,21 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    mem.hpp
- *
- * @brief   This file captures PDS memory related helpers
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This file captures PDS memory related helpers
+///
+//----------------------------------------------------------------------------
 
-#if !defined (__MEM_HPP_)
-#define __MEM_HPP_
+#ifndef __CORE_MEM_HPP__
+#define __CORE_MEM_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
 
 namespace api {
 
-/** unique slab identifiers */
+/// \brief Unique slab identifiers
 enum {
     PDS_SLAB_ID_MIN = 0,
     PDS_SLAB_ID_API_PARAMS = PDS_SLAB_ID_MIN,
@@ -37,21 +39,20 @@ enum {
 
 #define PDS_DELAY_DELETE_MSECS       (TIME_MSECS_PER_SEC << 1)
 
-/**
- * @brief wrapper function to delay delete slab elements
- *
- * @param[in]     slab_id    identifier of the slab to free the element to
- * @param[int]    elem       element to free to the given slab
- * @return #SDK_RET_OK on success, failure status code on error
- *
- * NOTE: currently delay delete timeout is PDS_DELAY_DELETE_MSECS, it is
- *       expected that other thread(s) using (a pointer to) this object should
- *       be done using this object within this timeout or else this memory can
- *       be freed and allocated for other objects and can result in corruptions.
- *       Essentially, PDS_DELAY_DELETE is assumed to be infinite
- */
+/// \brief Wrapper function to delay delete slab elements
+///
+/// \param[in] slab_id Identifier of the slab to free the element to
+/// \param[int] elem Element to free to the given slab
+/// \return #SDK_RET_OK on success, failure status code on error
+///
+/// \remark
+///   - Currently delay delete timeout is PDS_DELAY_DELETE_MSECS, it is
+///     expected that other thread(s) using (a pointer to) this object should
+///     be done using this object within this timeout or else this memory can
+///     be freed and allocated for other objects and can result in corruptions.
+///     Essentially, PDS_DELAY_DELETE is assumed to be infinite
 sdk_ret_t delay_delete_to_slab(uint32_t slab_id, void *elem);
 
 }    // namespace api
 
-#endif /** __MEM_HPP_ */
+#endif // __CORE_MEM_HPP__

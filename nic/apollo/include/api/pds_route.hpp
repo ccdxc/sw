@@ -16,7 +16,7 @@
 #include "nic/apollo/include/api/pds.hpp"
 #include "nic/apollo/include/api/pds_vcn.hpp"
 
-/// \defgroup PDS_ROUTE route API
+/// \defgroup PDS_ROUTE Route API
 /// @{
 
 // TODO: should be same as PDS_MAX_SUBNET
@@ -30,7 +30,7 @@ typedef enum pds_nh_type_e {
     PDS_NH_TYPE_REMOTE_TEP    =  2,    ///< remote server's physical IP
 } pds_nh_type_t;
 
-/// \brief route
+/// \brief Route
 typedef struct pds_route_s {
     ip_prefix_t        prefix;     ///< prefix
     ip_addr_t          nh_ip;      ///< nexthop IP address
@@ -38,10 +38,11 @@ typedef struct pds_route_s {
     pds_vcn_id_t       vcn_id;     ///< result vcn id
 } __PACK__ pds_route_t;
 
-/// \brief route table key
+/// \brief Route table key
+///
 /// \remark
-///  - route table id is not scoped under vcn, it is unique on
-//   - the device (across VCNs and IPv4/IPv6 route tables)
+///  - Route table id is not scoped under vcn, it is unique on
+//     the device (across VCNs and IPv4/IPv6 route tables)
 typedef struct pds_route_table_key_s {
     pds_route_table_id_t    id;    ///< route table id
 } __PACK__ pds_route_table_key_t;
@@ -84,15 +85,19 @@ struct pds_route_table_spec_s {
 } __PACK__;
 
 /// \brief create route table
+///
 /// \param[in] spec route table configuration
+///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_route_table_create(pds_route_table_spec_t *spec);
 
 /// \brief delete route table
+///
 /// \param[in] key key
+///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_route_table_delete(pds_route_table_key_t *key);
 
-/// \@}    // end of PDS_ROUTE
+/// \@}
 
 #endif    // __INCLUDE_API_PDS_ROUTE_HPP__

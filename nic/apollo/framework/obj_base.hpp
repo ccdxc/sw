@@ -13,7 +13,7 @@
 
 namespace api {
 
-///  \brief Base class for all objects
+/// \brief Base class for all objects
 class obj_base {
 };
 

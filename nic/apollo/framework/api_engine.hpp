@@ -44,8 +44,7 @@ typedef enum api_batch_stage_e {
     API_BATCH_STAGE_ABORT,                ///< Abort stage
 } api_batch_stage_t;
 
-/// \brief Per api object context
-///
+/// \brief Per API object context
 /// Transient information maintained while a batch of APIs are being processed
 ///
 /// \remark
@@ -85,7 +84,7 @@ struct obj_ctxt_s {
 typedef unordered_map<api_base *, obj_ctxt_t>      dirty_obj_map_t;
 typedef list<std::pair<api_base *, obj_ctxt_t>>    dirty_obj_list_t;
 
-/// \brief  Per batch context which is a list of all API contexts
+/// \brief Batch context, which is a list of all API contexts
 typedef struct api_batch_ctxt_s {
     pds_epoch_t           epoch;           ///< epoch in progress, passed in
                                            ///< pds_batch_begin()
@@ -116,7 +115,6 @@ public:
     sdk_ret_t batch_begin(pds_batch_params_t *batch_params);
 
     /// \brief Commit all the APIs in this batch
-    ///
     /// Release any temporary state or resources like memory, per API context
     /// info etc.
     ///
@@ -124,7 +122,6 @@ public:
     sdk_ret_t batch_commit(void);
 
     /// \brief Abort all the APIs in this batch
-    ///
     /// Release any temporary state or resources like memory, per API context
     /// info etc.
     ///
@@ -141,79 +138,66 @@ public:
 private:
 
     /// \brief De-dup given API operation
-    ///
     /// This is based on the currently computed operation and new API operation
     /// seen on the object
     ///
     /// \param[in] curr_op Current outstanding API operation on the object
     /// \param[in] new_op Newly encountered API operation on the object
-    ///
     /// \return De-duped/compressed API operation
     api_op_t api_op_(api_op_t curr_op, api_op_t new_op);
 
     /// \brief Pre-process create operation and form effected list of objs
     ///
     /// \param[in] api_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t pre_process_create_(api_ctxt_t *api_ctxt);
 
     /// \brief Pre-process delete operation and form effected list of objs
     ///
     /// \param[in] api_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t pre_process_delete_(api_ctxt_t *api_ctxt);
 
     /// \brief Pre-process update operation and form effected list of objs
     ///
     /// \param[in] api_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t pre_process_update_(api_ctxt_t *api_ctxt);
 
     /// \brief Process an API and form effected list of objs
     ///
     /// \param[in] api_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t pre_process_api_(api_ctxt_t *api_ctxt);
 
     /// \brief Process given object from the dirty list
-    ///
     /// This is done by doing add/update of corresponding h/w entries, based
     /// on accumulated configuration without activating the epoch
     ///
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
     /// \brief Activate configuration by switching to new epoch
-    ///
     /// If object has effected any stage 0 datapath table(s), switch to new
     /// epoch in this stage NOTE: NO failures must happen in this stage
     ///
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
     /// \brief Abort all changes made to an object, rollback to its prev state
-    ///
     /// NOTE: this is not expected to fail and also epoch is not activated if
     /// we are here
     ///
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
     /// \brief Pre-process all API calls in a given batch
-    ///
     /// Form a dirty list of effected obejcts as a result
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
@@ -223,7 +207,6 @@ private:
     ///
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
 

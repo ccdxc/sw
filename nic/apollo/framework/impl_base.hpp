@@ -37,7 +37,6 @@ public:
     ///
     /// \param[in] params Initialization parameters passed by application
     /// \param[in] asic_cfg ASIC configuration parameters
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t init(pds_init_params_t *params, asic_cfg_t *asic_cfg);
 
@@ -61,7 +60,6 @@ public:
     ///
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) {
@@ -69,17 +67,19 @@ public:
     }
 
     /// \brief Free h/w resources used by this object, if any
-    ///        (this API is invoked during object deletes)
-    /// \param[in] api_obj    api object holding the resources
+    /// This API is invoked during object deletes
+    ///
+    /// \param[in] api_obj API object holding the resources
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t nuke_resources(api_base *api_obj) {
         return sdk::SDK_RET_INVALID_OP;
     }
 
     /// \brief Release h/w resources reserved for this object, if any
-    ///        (this API is invoked during the rollback stage)
-    /// \param[in] api_obj    api object holding the resources
-    /// \return    SDK_RET_OK on success, failure status code on error
+    /// This API is invoked during the rollback stage
+    ///
+    /// \param[in] api_obj API object holding the resources
+    /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t release_resources(api_base *api_obj) {
         return sdk::SDK_RET_INVALID_OP;
     }
@@ -88,7 +88,7 @@ public:
     /// Program all h/w tables relevant to this object except stage 0 table(s),
     /// if any
     ///
-    /// \param[in] api_obj     api object being programmed
+    /// \param[in] api_obj API object being programmed
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
@@ -97,11 +97,10 @@ public:
     }
 
     /// \brief Cleanup hardware
-    ///
     /// Cleanup all h/w tables relevant to this object except stage 0 table(s),
     /// if any, by updating packed entries with latest epoch
     ///
-    /// \param[in] api_obj     api object being cleaned up
+    /// \param[in] api_obj API object being cleaned up
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
@@ -110,14 +109,12 @@ public:
     }
 
     /// \brief Update hardware
-    ///
     /// Update all h/w tables relevant to this object except stage 0 table(s),
     /// if any, by updating packed entries with latest epoch
     ///
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] curr_obj Cloned and updated version of the object
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_hw(api_base *orig_obj, api_base *curr_obj,
                                 obj_ctxt_t *obj_ctxt) {
@@ -125,14 +122,12 @@ public:
     }
 
     /// \brief Activate hardware
-    ///
     /// Activate the epoch in the dataplane by programming stage 0 tables,
     /// if any
     ///
     /// \param[in] epoch Epoch being activated
     /// \param[in] api_op API operation
     /// \param[in] obj_ctxt Transient state associated with this API
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_hw(api_base *api_obj,
                                   pds_epoch_t epoch,

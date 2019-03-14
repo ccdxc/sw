@@ -1,12 +1,15 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    trace.hpp
- *
- * @brief   trace macros for PDS APIs
- */
-#if !defined (__TRACE_HPP__)
-#define __TRACE_HPP__
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This file captures PDS memory related helpers
+///
+//----------------------------------------------------------------------------
+
+#ifndef __CORE_TRACE_HPP__
+#define __CORE_TRACE_HPP__
 
 #include "nic/sdk/lib/logger/logger.hpp"
 
@@ -67,4 +70,4 @@ register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
                ##__VA_ARGS__);                                            \
 }
 
-#endif    /** __TRACE_HPP__ */
+#endif    // __CORE_TRACE_HPP__

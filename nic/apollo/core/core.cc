@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    core.cc
- *
- * @brief   This file contains core helper functions
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This file contains core helper functions
+///
+//----------------------------------------------------------------------------
 
 #include <string>
 #include "boost/property_tree/ptree.hpp"
@@ -39,10 +41,8 @@ parse_cores_config (ptree &pt, pds_state *state)
     state->set_num_data_cores(
         sdk::lib::count_bits_set(state->data_cores_mask()));
 
-    /**
-     * update thread library so it knows which threads to pin to
-     * which cores
-     */
+    // pdate thread library so it knows which threads to pin to
+    // which cores
     sdk::lib::thread::control_cores_mask_set(state->control_cores_mask());
     sdk::lib::thread::data_cores_mask_set(state->data_cores_mask());
 
@@ -57,14 +57,14 @@ parse_pipeline_config (string pipeline, pds_state *state)
 
     cfg_file = state->cfg_path() + pipeline + "/" + pipeline + ".json";
 
-    /**< make sure cfg file exists */
+    // make sure cfg file exists
     if (access(cfg_file.c_str(), R_OK) < 0) {
         PDS_TRACE_ERR("config file %s doesn't exist or not accessible\n",
                       cfg_file.c_str());
         return SDK_RET_ERR;
     }
 
-    /**< parse the config now */
+    // parse the config now
     std::ifstream json_cfg(cfg_file.c_str());
     read_json(json_cfg, pt);
     parse_cores_config(pt, state);
@@ -78,14 +78,14 @@ parse_global_config (string pipeline, string cfg_file, pds_state *state)
 
     cfg_file = state->cfg_path() + pipeline + "/" + cfg_file;
 
-    /**< make sure global config file exists */
+    // make sure global config file exists
     if (access(cfg_file.c_str(), R_OK) < 0) {
         fprintf(stderr, "Config file %s doesn't exist or not accessible\n",
                 cfg_file.c_str());
         return SDK_RET_ERR;
     }
 
-    /**< parse the config now */
+    // parse the config now
     std::ifstream json_cfg(cfg_file.c_str());
     read_json(json_cfg, pt);
     try {
@@ -155,23 +155,19 @@ schedule_timers (void)
     return SDK_RET_OK;
 }
 
-/**
- * starting point for the periodic thread loop
- */
+// starting point for the periodic thread loop
 static void *
 periodic_thread_start (void *ctxt)
 {
-    /**< initialize timer wheel */
+    // initialize timer wheel
     sdk::lib::periodic_thread_init(ctxt);
-    /**< run main loop */
+    // run main loop
     sdk::lib::periodic_thread_run(ctxt);
 
     return NULL;
 }
 
-/**
- * wrapper API to create all threads
- */
+// wrapper API to create all threads
 static sdk::lib::thread *
 thread_create (const char *name, uint32_t thread_id,
                sdk::lib::thread_role_t thread_role,
@@ -191,15 +187,13 @@ thread_create (const char *name, uint32_t thread_id,
     return g_thread_store[thread_id];
 }
 
-/**
- * spawn all the necessary threads
- */
+// spawn all the necessary threads
 sdk_ret_t
 thread_spawn (pds_state *state)
 {
     sdk::lib::thread    *new_thread;
 
-    /**< spawn periodic thread that does background tasks */
+    // spawn periodic thread that does background tasks
     new_thread = 
         thread_create(std::string("periodic").c_str(),
             THREAD_ID_PERIODIC,
@@ -213,7 +207,7 @@ thread_spawn (pds_state *state)
                             "Periodic thread create failure");
     new_thread->start(new_thread);
 
-    /**< spawn nicmgr thread */
+    // spawn nicmgr thread
     new_thread =
         thread_create("nicmgr", THREAD_ID_NICMGR,
             sdk::lib::THREAD_ROLE_CONTROL,
@@ -228,9 +222,7 @@ thread_spawn (pds_state *state)
     return SDK_RET_OK;
 }
 
-/**
- * install signal handler for given signal
- */
+// install signal handler for given signal
 sdk_ret_t
 sig_init (int signal, sig_handler_t sig_handler)
 {

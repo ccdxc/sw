@@ -1,13 +1,15 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    core.cc
- *
- * @brief   This file contains core helper functions
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This file contains core helper functions
+///
+//----------------------------------------------------------------------------
 
-#ifndef __PDS_CORE_HPP__
-#define __PDS_CORE_HPP__
+#ifndef __CORE_CORE_HPP__
+#define __CORE_CORE_HPP__
 
 #include <signal.h>
 #include "nic/sdk/include/sdk/base.hpp"
@@ -42,4 +44,4 @@ sdk_ret_t schedule_timers(void);
 
 }    // namespace core
 
-#endif    // __PDS_CORE_HPP__
+#endif    // __CORE_CORE_HPP__
