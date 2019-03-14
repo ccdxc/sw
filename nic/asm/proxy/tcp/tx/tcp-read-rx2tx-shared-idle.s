@@ -17,7 +17,6 @@ struct s1_t0_tcp_tx_read_rx2tx_extra_d d;
 
 %%
     .align
-    .param      tcp_tx_process_pending_start
     .param      tcp_tx_s2_bubble_start
 
 tcp_tx_read_rx2tx_shared_extra_idle_start:

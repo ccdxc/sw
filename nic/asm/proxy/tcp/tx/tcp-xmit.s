@@ -144,7 +144,7 @@ tcp_snd_wnd_test:
     slt             c1, k.to_s4_snd_cwnd, r2
     add.c1          r2, r0, k.to_s4_snd_cwnd
     add             r2, r2, k.common_phv_snd_una
-    scwle           c1, r1, r2
+    scwle           c1, r1[31:0], r2[31:0]
     slt             c2, d.limited_transmit, k.t0_s2s_limited_transmit
 
     // window not available but limited_transmit != 0

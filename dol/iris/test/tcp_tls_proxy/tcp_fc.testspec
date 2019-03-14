@@ -101,7 +101,7 @@ packets:
                 dport   : ref://testcase/config/flow/sport
                 seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
-                window  : 8176
+                window  : 8184
                 flags   : ack, ece
                 options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
 

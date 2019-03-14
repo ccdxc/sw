@@ -17,7 +17,6 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
 %%
 
-    .param          tcp_rx_read_tls_stage0_start
     .align
 tcp_rx_read_shared_stage0_start_ext:
     /* Setup the to-stage/stage-to-stage variables based

@@ -337,10 +337,10 @@ header_type tcp_fc_d_t {
         rcv_wup                 : 32;
         consumer_ring_slots_mask: 16;
         consumer_ring_slots     : 16;
-        high_thresh1            : 8;
-        high_thresh2            : 8;
-        high_thresh3            : 8;
-        high_thresh4            : 8;
+        high_thresh1            : 16;
+        high_thresh2            : 16;
+        high_thresh3            : 16;
+        high_thresh4            : 16;
         rcv_wnd                 : 32;
         rcv_scale               : 8;
         cpu_id                  : 8;

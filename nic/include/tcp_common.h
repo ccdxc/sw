@@ -109,8 +109,8 @@
 #define TCP_ATO_MIN                         100 // 100 us
 #define TCP_ATO_TICKS                       (TCP_ATO_USEC / TCP_TIMER_TICK)
 
-#define TCP_RTO_MAX                         4000
-#define TCP_RTO_MIN                         1000
+#define TCP_RTO_MAX                         40000
+#define TCP_RTO_MIN                         4000
 #define TCP_RTO_MAX_TICK                    (TCP_RTO_MAX / TCP_TIMER_TICK)
 #define TCP_RTO_MIN_TICK                    (TCP_RTO_MIN / TCP_TIMER_TICK)
 
