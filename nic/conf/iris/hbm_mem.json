@@ -221,12 +221,20 @@
             "size": "24576K"
         },
         {
-            "name": "page-big-tx",
-            "size": "81920K"
+            "name": "enc-page-big-tx",
+            "size": "40960K"
         },
         {
-            "name": "page-big-rx",
-            "size": "81920K"
+            "name": "enc-page-big-rx",
+            "size": "40960K"
+        },
+        {
+            "name": "dec-page-big-tx",
+            "size": "40960K"
+        },
+        {
+            "name": "dec-page-big-rx",
+            "size": "40960K"
         },
         {
             "_comment": "4K Entry Ring",

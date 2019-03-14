@@ -474,6 +474,7 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     rsp->mutable_spec()->set_encrypt_txdma1_sem_free_errors(stats_cb.encrypt_txdma1_sem_free_errors);
     rsp->mutable_spec()->set_encrypt_txdma2_sem_free_errors(stats_cb.encrypt_txdma2_sem_free_errors);
     rsp->mutable_spec()->set_encrypt_txdma1_barco_ring_full_errors(stats_cb.encrypt_txdma1_barco_ring_full_errors);
+    rsp->mutable_spec()->set_encrypt_rxdma_cb_ring_full_errors(stats_cb.encrypt_rxdma_cb_ring_full_errors);
     
     rsp->mutable_spec()->set_decrypt_input_desc_errors(stats_cb.decrypt_input_desc_errors);
     rsp->mutable_spec()->set_decrypt_output_desc_errors(stats_cb.decrypt_output_desc_errors);

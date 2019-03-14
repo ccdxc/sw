@@ -250,7 +250,8 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         encrypt_txdma1_sem_free_errors;
     uint64_t         encrypt_txdma2_sem_free_errors;
     uint64_t         encrypt_txdma1_barco_ring_full_errors;
-    uint64_t         encrypt_pad[33];
+    uint64_t         encrypt_rxdma_cb_ring_full_errors;
+    uint64_t         encrypt_pad[32];
 
     uint64_t         decrypt_input_desc_errors;
     uint64_t         decrypt_output_desc_errors;
