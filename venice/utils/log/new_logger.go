@@ -97,6 +97,16 @@ func (l *kitLogger) Errorln(args ...interface{}) {
 	kitlevel.Error(l.logger).Log("msg", fmt.Sprint(args...))
 }
 
+func (l *kitLogger) Warningf(format string, args ...interface{}) {
+	l.Warnf(format, args...)
+}
+func (l *kitLogger) Warning(args ...interface{}) {
+	l.Warn(args...)
+}
+func (l *kitLogger) Warningln(args ...interface{}) {
+	l.WarnLn(args...)
+}
+
 func (l *kitLogger) Warn(args ...interface{}) {
 	kitlevel.Warn(l.logger).Log("msg", fmt.Sprint(args...))
 }

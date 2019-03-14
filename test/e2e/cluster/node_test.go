@@ -37,6 +37,8 @@ var _ = Describe("node tests", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			nodeIf = apiClient.ClusterV1().Node()
 
+			validateCluster()
+
 			node := &cmd.Node{
 				TypeMeta: api.TypeMeta{
 					Kind:       "Node",
@@ -51,6 +53,7 @@ var _ = Describe("node tests", func() {
 			node, err = nodeIf.Create(ts.tu.NewLoggedInContext(context.Background()), node)
 			Expect(err).ShouldNot(HaveOccurred())
 			By(fmt.Sprintf("Added %+v to cluster", node.Name))
+
 		})
 
 		It("Daemon services should be running on new node", func() {

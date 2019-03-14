@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/keepalive"
 
 	"github.com/pensando/sw/venice/utils/log"
@@ -36,6 +37,7 @@ var defaultClientFactory = &RPCClientFactory{}
 func init() {
 	once.Do(func() {
 		singletonMap = expvar.NewMap("rpcstats")
+		grpclog.SetLoggerV2(log.GetDefaultInstance())
 	})
 }
 

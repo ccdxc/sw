@@ -23,6 +23,9 @@ type Logger interface {
 	ErrorLog(keyvals ...interface{})
 	Errorln(args ...interface{})
 
+	Warning(args ...interface{})
+	Warningf(format string, args ...interface{})
+	Warningln(args ...interface{})
 	Warn(args ...interface{})
 	Warnf(format string, args ...interface{})
 	WarnLog(keyvals ...interface{})

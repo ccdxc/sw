@@ -185,3 +185,8 @@ func Debugln(args ...interface{}) {
 func Log(keyvals ...interface{}) error {
 	return kitlevel.Info(getDefaultInstance().logger).Log(keyvals...)
 }
+
+// GetDefaultInstance returns default logger instance
+func GetDefaultInstance() Logger {
+	return getDefaultInstance()
+}
