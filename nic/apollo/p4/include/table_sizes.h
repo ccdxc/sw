@@ -13,6 +13,7 @@
 #define VNIC_STATS_TABLE_SIZE                               1024        // 1K
 #define NACL_TABLE_SIZE                                     512
 #define DROP_STATS_TABLE_SIZE                               64
+#define APP_TABLE_SIZE                                      16
 
 #define EGRESS_LOCAL_VNIC_INFO_TABLE_SIZE                   1024        // 1K
 #define REMOTE_VNIC_MAPPING_TX_TABLE_SIZE                   2097152     // 2M

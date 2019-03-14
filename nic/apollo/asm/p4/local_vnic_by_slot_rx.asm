@@ -16,18 +16,18 @@ local_vnic_info_rx:
     phvwr.!c1   p.control_metadata_p4i_drop_reason[P4I_DROP_DST_SLOT_ID_MISS], 1
     phvwr       p.vnic_metadata_src_slot_id, k.{mpls_src_label_sbit0_ebit15, \
                                                 mpls_src_label_sbit16_ebit19}
-    add         r1, d.local_vnic_info_rx_d.resource_group_2_sbit1_ebit9, \
-                    d.local_vnic_info_rx_d.resource_group_2_sbit0_ebit0, 9
+    add         r1, d.local_vnic_info_rx_d.sacl_v4addr_1_sbit23_ebit33, \
+                    d.local_vnic_info_rx_d.sacl_v4addr_1_sbit0_ebit22, 11
     LOCAL_VNIC_INFO_COMMON_END(d.local_vnic_info_rx_d.local_vnic_tag,
                                d.local_vnic_info_rx_d.vcn_id,
                                d.local_vnic_info_rx_d.skip_src_dst_check,
                                d.local_vnic_info_rx_d.resource_group_1,
                                0,
                                0,
-                               d.local_vnic_info_rx_d.sacl_v4addr_1,
+                               r1,
                                d.local_vnic_info_rx_d.sacl_v6addr_1,
                                d.local_vnic_info_rx_d.epoch1,
-                               r1,
+                               d.local_vnic_info_rx_d.resource_group_2,
                                0,
                                0,
                                d.local_vnic_info_rx_d.sacl_v4addr_2,

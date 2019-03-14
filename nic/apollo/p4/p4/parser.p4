@@ -27,6 +27,18 @@ header predicate_header_t predicate_header;
 @pragma pa_field_union ingress p4_to_rxdma_header.local_vnic_tag    vnic_metadata.local_vnic_tag
 header p4_to_rxdma_header_t p4_to_rxdma_header;
 
+@pragma synthetic_header
+header p4_to_p4plus_classic_nic_header_t p4_to_p4plus_classic_nic;
+@pragma pa_field_union ingress p4_to_p4plus_classic_nic.l4_sport    key_metadata.sport
+@pragma pa_field_union ingress p4_to_p4plus_classic_nic.l4_dport    key_metadata.dport
+@pragma synthetic_header
+@pragma pa_field_union ingress p4_to_p4plus_classic_nic_ip.ip_sa    key_metadata.src
+@pragma pa_field_union ingress p4_to_p4plus_classic_nic_ip.ip_da    key_metadata.dst
+header p4_to_p4plus_ip_addr_t p4_to_p4plus_classic_nic_ip;
+header p4plus_to_p4_s1_t p4plus_to_p4;
+@pragma pa_header_union ingress ctag_1
+header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
+
 header p4_to_arm_header_t p4_to_arm_header;
 
 @pragma synthetic_header
@@ -112,6 +124,21 @@ parser parse_service_header {
 @pragma xgress ingress
 parser parse_txdma {
     extract(capri_txdma_intrinsic);
+    return select(current(0, 4)) {
+        0 : parse_txdma_ingress;
+        default : parse_txdma_app;
+    }
+}
+
+@pragma xgress ingress
+parser parse_txdma_app {
+    extract(p4plus_to_p4);
+    extract(p4plus_to_p4_vlan);
+    return parse_packet;
+}
+
+@pragma xgress ingress
+parser parse_txdma_ingress {
     extract(predicate_header);
     extract(txdma_to_p4e_header);
     extract(txdma_to_p4i_header);
@@ -394,8 +421,13 @@ parser deparse_ingress {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
+
     extract(p4_to_rxdma_header);
     extract(p4_to_arm_header);
+
+    extract(p4_to_p4plus_classic_nic);
+    extract(p4_to_p4plus_classic_nic_ip);
+
     // set the splitter offset to here
     extract(predicate_header);
     extract(p4_to_txdma_header);

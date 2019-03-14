@@ -36,11 +36,85 @@ action ingress_to_rxdma() {
     }
 }
 
+action p4plus_app_classic_nic() {
+    if (capri_intrinsic.tm_oport == TM_PORT_DMA) {
+        ingress_to_classic_nic();
+    } else {
+        ingress_to_uplink();
+    }
+}
+
+action ingress_to_classic_nic() {
+    add_header(capri_p4_intrinsic);
+    add_header(p4_to_p4plus_classic_nic);
+    add_header(p4_to_p4plus_classic_nic_ip);
+    add_header(capri_rxdma_intrinsic);
+
+    if ((control_metadata.vlan_strip == TRUE) and (ctag_1.valid == TRUE)) {
+        modify_field(ethernet_1.etherType, ctag_1.etherType);
+        modify_field(p4_to_p4plus_classic_nic.vlan_pcp, ctag_1.pcp);
+        modify_field(p4_to_p4plus_classic_nic.vlan_dei, ctag_1.dei);
+        modify_field(p4_to_p4plus_classic_nic.vlan_vid, ctag_1.vid);
+        modify_field(p4_to_p4plus_classic_nic.vlan_valid, TRUE);
+        remove_header(ctag_1);
+        subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 4);
+    }
+
+    if (key_metadata.ktype == KEY_TYPE_IPV4) {
+        if (key_metadata.proto == IP_PROTO_TCP) {
+            modify_field(p4_to_p4plus_classic_nic.pkt_type,
+                         CLASSIC_NIC_PKT_TYPE_IPV4_TCP);
+        } else {
+            if (key_metadata.proto == IP_PROTO_UDP) {
+                modify_field(p4_to_p4plus_classic_nic.pkt_type,
+                             CLASSIC_NIC_PKT_TYPE_IPV4_UDP);
+            } else {
+                modify_field(p4_to_p4plus_classic_nic.pkt_type,
+                             CLASSIC_NIC_PKT_TYPE_IPV4);
+            }
+        }
+    }
+    if (key_metadata.ktype == KEY_TYPE_IPV6) {
+        if (key_metadata.proto == IP_PROTO_TCP) {
+            modify_field(p4_to_p4plus_classic_nic.pkt_type,
+                         CLASSIC_NIC_PKT_TYPE_IPV6_TCP);
+        } else {
+            if (key_metadata.proto == IP_PROTO_UDP) {
+                modify_field(p4_to_p4plus_classic_nic.pkt_type,
+                             CLASSIC_NIC_PKT_TYPE_IPV6_UDP);
+            } else {
+                modify_field(p4_to_p4plus_classic_nic.pkt_type,
+                             CLASSIC_NIC_PKT_TYPE_IPV6);
+            }
+        }
+    }
+
+    modify_field(p4_to_p4plus_classic_nic.packet_len,
+                 capri_p4_intrinsic.packet_len);
+    modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
+                 control_metadata.p4plus_app_id);
+    modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                  P4PLUS_CLASSIC_NIC_HDR_SZ));
+}
+
+action ingress_to_uplink() {
+    add_header(capri_p4_intrinsic);
+    remove_header(p4plus_to_p4);
+    remove_header(p4plus_to_p4_vlan);
+}
+
 @pragma stage 5
+@pragma index_table
 table ingress_to_rxdma {
+    reads {
+        control_metadata.p4plus_app_id  : exact;
+    }
     actions {
         ingress_to_rxdma;
+        p4plus_app_classic_nic;
     }
+    size : APP_TABLE_SIZE;
 }
 
 control ingress_to_rxdma {

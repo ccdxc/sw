@@ -17,7 +17,9 @@ local_ip_mapping_info:
     bcf         [c1], local_ip_mapping_hit
 
     // Check hash1 and hint1
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash1
+    add         r3, d.local_ip_mapping_info_d.hash1_sbit4_ebit14, \
+                    d.local_ip_mapping_info_d.hash1_sbit0_ebit3, 11
+    seq         c1, r1[31:17], r3
     sne         c2, d.local_ip_mapping_info_d.hint1, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint1
@@ -84,10 +86,8 @@ local_ip_mapping_hit:
     seq.c2      c2, k.mpls_dst_valid, TRUE
     seq.c2      c2, d.local_ip_mapping_info_d.ip_type, IP_TYPE_PUBLIC
     phvwr.c2    p.p4i_apollo_i2e_dnat_required, TRUE
-    or          r1, d.local_ip_mapping_info_d.xlate_index_sbit14_ebit16, \
-                    d.local_ip_mapping_info_d.xlate_index_sbit0_ebit13, 3
     phvwr.e     p.service_header_local_ip_mapping_done, TRUE
-    phvwr       p.p4i_apollo_i2e_xlate_index, r1
+    phvwr       p.p4i_apollo_i2e_xlate_index, d.local_ip_mapping_info_d.xlate_index
 
 local_ip_mapping_hash_hit:
     phvwr.e     p.service_header_local_ip_mapping_ohash, r2

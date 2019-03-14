@@ -44,6 +44,8 @@ header_type control_metadata_t {
         p4e_drop_reason                     : 32;
         sacl_v6addr                         : 40;
         lpm_v6addr                          : 40;
+        p4plus_app_id                       : 8;
+        vlan_strip                          : 1;
     }
 }
 

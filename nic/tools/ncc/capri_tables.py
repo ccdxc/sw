@@ -973,8 +973,12 @@ class capri_table:
 
             new_num_km_k = (new_k_size + key_maker_width - 1) / key_maker_width
 
+            # don't change bit->byte for I if this is table has overflow(collision) table
+            # as the byte extraction can lead to banyon violation (ideally check if i-chunks are
+            # before k-chunks.. but this is just a HACK
             if (new_num_km <= num_km) and (ki_delta >= 0) and \
-                (ki_delta <= ((k_size+i_size) / allow_increase)):
+                (ki_delta <= ((k_size+i_size) / allow_increase)) and \
+                (not self.collision_ct or new_i_size == i_size):
 
                 k_phv_chunks = new_k_phv_chunks
                 i_phv_chunks = new_i_phv_chunks
