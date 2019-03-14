@@ -78,7 +78,7 @@ func (ag *agentSetup) SetUpSuite() error {
 	log.Printf("net-agent {%+v} instantiated", ag.naRest.GetListenURL())
 
 	port := strings.Split(ag.naRest.GetListenURL(), ":")[1]
-	ag.tpstate, err = tmstate.NewTpAgent(ctx, "agent-UUID", port)
+	ag.tpstate, err = tmstate.NewTpAgent(ctx, port)
 	if err != nil {
 		log.Errorf("Error creating telemetry policy agent. Err: %v", err)
 		return err
@@ -107,7 +107,7 @@ func (ag *agentSetup) SetUpSuite() error {
 	rc := resolver.New(cfg)
 
 	// Init the TSDB
-	if err := ag.tpstate.TsdbInit(rc); err != nil {
+	if err := ag.tpstate.TsdbInit("agent-uuid", rc); err != nil {
 		log.Errorf("failed to init tsdb, err: %v", err)
 		return err
 	}

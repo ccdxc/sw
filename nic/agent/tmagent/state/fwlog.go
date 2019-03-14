@@ -19,9 +19,9 @@ import (
 const FwlogIpcShm = "/fwlog_ipc_shm"
 
 // TsdbInit initilaizes tsdb and fwlog object
-func (s *PolicyState) TsdbInit(rc resolver.Interface) error {
+func (s *PolicyState) TsdbInit(nodeUUID string, rc resolver.Interface) error {
 	opts := &tsdb.Opts{
-		ClientName:              s.nodeUUID,
+		ClientName:              nodeUUID,
 		Collector:               globals.Collector,
 		ResolverClient:          rc,
 		DBName:                  "default",

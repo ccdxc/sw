@@ -228,7 +228,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -648,7 +648,7 @@ func TestFwPolicyOps(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -717,12 +717,12 @@ func TestProcessFWEvent(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
 
-	err = ps.TsdbInit(&mock.ResolverClient{})
+	err = ps.TsdbInit(t.Name(), &mock.ResolverClient{})
 	AssertOk(t, err, "failed to init tsdb ")
 
 	tcpch1 := make(chan []byte, 1024)
@@ -912,7 +912,7 @@ func TestPolicyUpdate(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -1124,7 +1124,7 @@ func TestSyslogConnect(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -1181,7 +1181,7 @@ func TestUnusedCb(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -1211,12 +1211,12 @@ func TestTsdbInit(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
 
-	err = ps.TsdbInit(&mock.ResolverClient{})
+	err = ps.TsdbInit(t.Name(), &mock.ResolverClient{})
 	AssertOk(t, err, "failed to init tsdb")
 }
 
@@ -1228,6 +1228,18 @@ func TestFwlogInit(t *testing.T) {
 		rest.Stop()
 	}()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	AssertOk(t, err, "failed to create tp agent")
+	Assert(t, ps != nil, "invalid policy state received")
+	defer ps.Close()
+
+	err = ps.TsdbInit(t.Name(), &mock.ResolverClient{})
+	AssertOk(t, err, "failed to init tsdb")
+	defer tsdb.Cleanup()
+
 	tmpFd, err := ioutil.TempFile("/tmp", t.Name())
 	AssertOk(t, err, "failed to create temp file")
 	defer os.Remove(tmpFd.Name()) // clean up
@@ -1237,24 +1249,11 @@ func TestFwlogInit(t *testing.T) {
 	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
 	log.Infof("memsize=%d instances=%d", mSize, instCount)
 
-	defer os.Remove(shmPath)
 	fd, err := syscall.Open(shmPath, syscall.O_RDWR|syscall.O_CREAT, 0666)
 	if err != nil || fd < 0 {
 		t.Fatalf("failed to create %s,%s", shmPath, err)
 	}
 	defer syscall.Close(fd)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	ps, err := NewTpAgent(ctx, t.Name(), strings.Split(rest.GetListenURL(), ":")[1])
-	AssertOk(t, err, "failed to create tp agent")
-	Assert(t, ps != nil, "invalid policy state received")
-	defer ps.Close()
-
-	err = ps.TsdbInit(&mock.ResolverClient{})
-	AssertOk(t, err, "failed to init tsdb")
-	defer tsdb.Cleanup()
 
 	err = ps.FwlogInit(shmPath)
 	AssertOk(t, err, "failed to init fwlog")

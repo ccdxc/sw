@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"net"
 	"path/filepath"
 
 	"github.com/pensando/sw/nic/agent/tmagent/state"
@@ -22,7 +21,6 @@ import (
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
@@ -100,8 +98,12 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 
 		s.tmagent.resolverClient = resolver.New(&resolver.Config{Name: globals.Tmagent, Servers: controllers})
 
+		// todo: move to the uniqe name published by NMD when it is ready
+		s.tmagent.nodeUUID = obj.Hostname + obj.Fru.NumMacAddr
+		log.Infof("tmagent uuid: %s", s.tmagent.nodeUUID)
+
 		// Init the TSDB
-		if err := s.tmagent.tpState.TsdbInit(s.tmagent.resolverClient); err != nil {
+		if err := s.tmagent.tpState.TsdbInit(s.tmagent.nodeUUID, s.tmagent.resolverClient); err != nil {
 			log.Fatalf("failed to init tsdb, err: %v", err)
 		}
 
@@ -145,8 +147,6 @@ func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		primaryMAC      = flag.String("primary-mac", "", "Primary MAC address")
-		hostIf          = flag.String("hostif", "ntrunk0", "Host facing interface")
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tmagent)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		restURL         = flag.String("rest-url", "127.0.0.1:"+globals.TmAGENTRestPort, "specify telemetry agent REST URL")
@@ -173,36 +173,19 @@ func main() {
 	// Initialize logger config
 	log.SetConfig(logConfig)
 
-	var macAddr net.HardwareAddr
-
-	if *primaryMAC != "" {
-		mac, err := net.ParseMAC(*primaryMAC)
-		if err != nil {
-			log.Fatalf("invalid primary-mac %v", *primaryMAC)
-		}
-		macAddr = mac
-	} else {
-		mac, err := netutils.GetIntfMac(*hostIf)
-		if err != nil {
-			log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
-		}
-		macAddr = mac
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	tmAgent := &TelemetryAgent{
-		ctx:      ctx,
-		nodeUUID: globals.Tmagent + macAddr.String(),
+		ctx: ctx,
 	}
 
 	var delphiService = &service{
-		name:    "tmagent_" + macAddr.String(),
+		name:    globals.Tmagent,
 		tmagent: tmAgent,
 	}
 
-	tpState, err := state.NewTpAgent(ctx, tmAgent.nodeUUID, globals.AgentRESTPort)
+	tpState, err := state.NewTpAgent(ctx, globals.AgentRESTPort)
 	if err != nil {
 		log.Fatalf("failed to init tmagent state, err: %v", err)
 	}

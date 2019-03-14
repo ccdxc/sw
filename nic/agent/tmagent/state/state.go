@@ -30,7 +30,6 @@ const maxCollectorsInVrf = 4
 type PolicyState struct {
 	ctx             context.Context
 	cancel          context.CancelFunc
-	nodeUUID        string
 	emstore         emstore.Emstore
 	netAgentURL     string
 	fwLogCollectors sync.Map
@@ -53,7 +52,7 @@ type fwlogCollector struct {
 }
 
 // NewTpAgent creates new telemetry policy agent state
-func NewTpAgent(pctx context.Context, nodeUUID string, agentPort string) (*PolicyState, error) {
+func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 
 	s, err := emstore.NewEmstore(emstore.MemStoreType, "")
 	if err != nil {
@@ -66,7 +65,6 @@ func NewTpAgent(pctx context.Context, nodeUUID string, agentPort string) (*Polic
 	state := &PolicyState{
 		ctx:             ctx,
 		cancel:          cancel,
-		nodeUUID:        nodeUUID,
 		emstore:         s,
 		netAgentURL:     "http://127.0.0.1:" + agentPort,
 		fwLogCollectors: sync.Map{},

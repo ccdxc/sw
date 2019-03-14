@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"syscall"
 	"time"
+
+	"github.com/pensando/sw/nic/agent/ipc"
 
 	"golang.org/x/net/context"
 	check "gopkg.in/check.v1"
@@ -698,13 +701,13 @@ func (it *veniceIntegSuite) startAgent() {
 				log.Fatalf("Error creating NodeWatcher. Err: %v", err)
 			}
 
-			tpState, err := tmstate.NewTpAgent(it.ctx, fmt.Sprintf("dummy-uuid-%d", i), globals.AgentRESTPort)
+			tpState, err := tmstate.NewTpAgent(it.ctx, globals.AgentRESTPort)
 			if err != nil {
 				log.Fatalf("failed to init tmagent state, err: %v", err)
 			}
 
 			// Init the TSDB
-			if err := tpState.TsdbInit(rc); err != nil {
+			if err := tpState.TsdbInit(fmt.Sprintf("dummy-uuid-%d", i), rc); err != nil {
 				log.Fatalf("failed to init tsdb, err: %v", err)
 			}
 
@@ -713,7 +716,24 @@ func (it *veniceIntegSuite) startAgent() {
 				log.Fatalf("failed to init tmagent controller client, err: %v", err)
 			}
 
-			if err := tpState.FwlogInit(tmstate.FwlogIpcShm); err != nil {
+			tmpFd, err := ioutil.TempFile("/tmp", "palazzo-shm")
+			if err != nil {
+				log.Fatalf("failed to create temp file, err: %v", err)
+			}
+
+			shmPath := tmpFd.Name()
+			it.tmpFiles = append(it.tmpFiles, shmPath)
+
+			mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
+			instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
+			log.Infof("memsize=%d instances=%d", mSize, instCount)
+
+			fd, err := syscall.Open(shmPath, syscall.O_RDWR|syscall.O_CREAT, 0666)
+			if err != nil || fd < 0 {
+				log.Fatalf("failed to create %s,%s", shmPath, err)
+			}
+
+			if err := tpState.FwlogInit(shmPath); err != nil {
 				log.Fatal(err)
 			}
 
