@@ -54,6 +54,11 @@ mapping_impl::destroy(mapping_impl *impl) {
     SDK_FREE(SDK_MEM_ALLOC_PDS_MAPPING_IMPL, impl);
 }
 
+mapping_impl *
+mapping_impl::build(pds_mapping_key_t *key) {
+    return NULL;
+}
+
 // TODO: IP address type (i.e., v4 or v6 bit) is not part of the key
 #define PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(key, vnic_hw_id, ip)            \
 {                                                                            \
@@ -742,7 +747,7 @@ mapping_impl::read_hw(pds_mapping_key_t *key,
                       pds_mapping_info_t    *info) {
     sdk_ret_t ret;
     vcn_entry *vcn;
-    nat_actiondata_t    nat_data = { 0 };
+    nat_actiondata_t nat_data = { 0 };
 
     vcn = vcn_db()->find(&key->vcn);
     if (is_local_) {
@@ -753,7 +758,7 @@ mapping_impl::read_hw(pds_mapping_key_t *key,
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    // Read public ip if it has been configured.
+    // read public IP if it has been configured.
     if (overlay_ip_to_public_ip_nat_hdl_ != 0xffffffff) {
         ret = mapping_impl_db()->nat_tbl()->retrieve(overlay_ip_to_public_ip_nat_hdl_,
                                                      &nat_data);

@@ -30,12 +30,18 @@ public:
     ~api_base(){};
 
     /// \brief Factory method to instantiate an object
-    ///
     /// \param[in] api_ctxt API context carrying object related configuration
     static api_base *factory(api_ctxt_t *api_ctxt);
 
+    /// \brief Build method to instantiate an object based on current (s/w
+    //         and/or hw state)
+    /// \param[in] api_ctxt API context carrying object related configuration
+    /// \remark
+    /// This API is expected to be used by the API engine only while handling
+    //  updates or deletes on stateless objects
+    static api_base *build(api_ctxt_t *api_ctxt);
+
     /// \brief Initiaize the api object with given config
-    ///
     /// \param[in] api_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) {
@@ -43,7 +49,6 @@ public:
     }
 
     /// \brief  Allocate hardware resources for this object
-    ///
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
@@ -55,7 +60,6 @@ public:
     /// \brief Program config in the hardware
     /// Program all hardware tables relevant to this object except stage 0
     /// table(s), if any and also set the valid bit
-    ///
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) {
@@ -63,7 +67,6 @@ public:
     }
 
     /// \brief Free hardware resources used by this object, if any
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t release_resources(void) {
         return sdk::SDK_RET_INVALID_OP;
@@ -73,7 +76,6 @@ public:
     /// Cleanup all hardware tables relevant to this object except stage 0
     /// table(s), if any, by updating packed entries with latest epoch#
     /// and setting invalid bit (if any) in the hardware entries
-    ///
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) {
@@ -83,7 +85,6 @@ public:
     /// \brief Update config in the hardware
     /// Update all hardware tables relevant to this object except stage 0
     /// table(s), if any, by updating packed entries with latest epoch#
-    ///
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
@@ -92,7 +93,6 @@ public:
     }
 
     /// \brief Activate the epoch in the dataplane
-    ///
     /// \param[in] api_op API operation
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
@@ -104,7 +104,6 @@ public:
     /// \brief Update software database with new object
     /// This method is called on new object that needs to replace the
     /// old version of the object in the DBs
-    ///
     /// \param[in] old Old version of the object being swapped out
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
@@ -122,9 +121,7 @@ public:
     virtual sdk_ret_t delay_delete(void) { return sdk::SDK_RET_INVALID_OP; }
 
     /// \brief Find an object based on the object id & key information
-    ///
     /// \param[in] api_ctxt API context carrying object related information
-    ///
     /// \remark
     ///   - TODO: skip_dirty is on shaky ground, will try to get rid of it later
     static api_base *find_obj(api_ctxt_t *api_ctxt, bool skip_dirty=false);
@@ -147,6 +144,9 @@ public:
 
     /// \brief Return true if this is 'stateless' object
     bool stateless(void) { return stateless_; }
+
+    /// \brief Return true if object is 'stateless' given an object id
+    static bool stateless(obj_id_t obj_id);
 
     /// \brief Return stringified key of the object (for debugging)
     virtual string key2str(void) const { return "api_base_key"; }

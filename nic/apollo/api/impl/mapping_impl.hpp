@@ -50,6 +50,14 @@ public:
     static void destroy(mapping_impl *impl);
 
     /**
+     * @brief    instantiate a mapping impl object based on current state
+     *           (sw and/or hw) given its key
+     * @param[in] key    mapping entry's key
+     * @return    new instance of mapping implementation object or NULL
+     */
+    static mapping_impl *build(pds_mapping_key_t *key);
+
+    /**
      * @brief    allocate/reserve h/w resources for this object
      * @param[in] orig_obj    old version of the unmodified object
      * @param[in] obj_ctxt    transient state associated with this API

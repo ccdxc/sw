@@ -53,8 +53,15 @@ public:
 
     /// \brief Release all the resources associated with this object
     ///
+    /// \param[in] obj_id Object id
     // \param[in] impl_obj Impl instance to be freed
     static void destroy(impl_obj_id_t obj_id, impl_base *impl_obj);
+
+    /// \brief Instantiate an impl object based on current state (sw and/or hw
+    //         state) given its key
+    /// \param[in] obj_id Object id
+    /// \param[in] args Args (not interpreted by this class)
+    static impl_base *build(impl_obj_id_t obj_id, void *args);
 
     /// \brief Allocate/reserve h/w resources for this object
     ///

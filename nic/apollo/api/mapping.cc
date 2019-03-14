@@ -55,6 +55,23 @@ mapping_entry::destroy(mapping_entry *mapping) {
     mapping_db()->mapping_free(mapping);
 }
 
+mapping_entry *
+mapping_entry::build(pds_mapping_key_t *key) {
+    mapping_entry *mapping;
+
+    // create mapping entry with defaults, if any
+    mapping = mapping_db()->mapping_alloc();
+    if (mapping) {
+        new (mapping) mapping_entry();
+        mapping->impl_ = impl_base::build(impl::IMPL_OBJ_ID_MAPPING, key);
+        if (mapping->impl_ == NULL) {
+            mapping_entry::destroy(mapping);
+            return NULL;
+        }
+    }
+    return mapping;
+}
+
 sdk_ret_t
 mapping_entry::init_config(api_ctxt_t *api_ctxt) {
     return SDK_RET_OK;

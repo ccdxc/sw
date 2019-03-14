@@ -43,6 +43,15 @@ public:
     static void destroy(mapping_entry *mapping);
 
     /**
+     * @brief    build object given its key from the (sw and/or hw state we
+     *           have) and return an instance of the object (this is useful for
+     *           stateless objects to be operated on by framework during DELETE
+     *           or UPDATE operations)
+     * @param[in] key    key of object instance of interest
+     */
+    static mapping_entry *build(pds_mapping_key_t *key);
+
+    /**
      * @brief     initialize mapping entry with the given config
      * @param[in] api_ctxt API context carrying the configuration
      * @return    SDK_RET_OK on success, failure status code on error

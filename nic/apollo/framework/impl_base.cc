@@ -64,21 +64,30 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 
     case IMPL_OBJ_ID_TEP:
         return tep_impl::factory((pds_tep_spec_t *)args);
-        break;
 
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::factory((pds_vnic_spec_t *)args);
-        break;
 
     case IMPL_OBJ_ID_MAPPING:
         return mapping_impl::factory((pds_mapping_spec_t *)args);
-        break;
 
     case IMPL_OBJ_ID_ROUTE_TABLE:
         return route_table_impl::factory((pds_route_table_spec_t *)args);
 
     case IMPL_OBJ_ID_SECURITY_POLICY:
         return security_policy_impl::factory((pds_policy_spec_t *)args);
+
+    default:
+        break;
+    }
+    return NULL;
+}
+
+impl_base *
+impl_base::build(impl_obj_id_t obj_id, void *args) {
+    switch (obj_id) {
+    case IMPL_OBJ_ID_MAPPING:
+        return mapping_impl::build((pds_mapping_key_t *)args);
 
     default:
         break;
