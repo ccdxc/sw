@@ -56,7 +56,6 @@ end:
         ep->~devapi_ep();
         DEVAPI_FREE(DEVAPI_MEM_ALLOC_EP, mem);
         ep = NULL;
-        goto end;
     }
     return ep;
 }

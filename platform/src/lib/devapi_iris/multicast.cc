@@ -53,7 +53,6 @@ end:
         mcast->~devapi_mcast();
         DEVAPI_FREE(DEVAPI_MEM_ALLOC_MCAST, mem);
         mcast = NULL;
-        goto end;
     }
     return mcast;
 }
