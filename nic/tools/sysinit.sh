@@ -67,12 +67,11 @@ if [[ ! -f $PLATFORM_DIR/drivers/mnet.ko ]]; then
     exit 1
 fi
 
-#remove the old drivers if they exist
-#TODO: Need to remove this rmmod once we remove mnic from plkatform-linux tree
-rmmod mnet ionic_mnic
+insmod $PLATFORM_DIR/drivers/ionic_mnic.ko &> /var/log/pensando/ionic_mnic_load.log
+[[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnic driver!" && exit 1
 
-insmod $PLATFORM_DIR/drivers/ionic_mnic.ko
-insmod $PLATFORM_DIR/drivers/mnet.ko
+insmod $PLATFORM_DIR/drivers/mnet.ko &> /var/log/pensando/mnet_load.log
+[[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnet driver!" && exit 1
 
 # start sysmgr
 rm -f *.log
