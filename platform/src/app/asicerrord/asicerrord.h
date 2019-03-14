@@ -183,6 +183,9 @@ enum etype {
     FATAL = 2,
     UNKNOWN = 3,
 };
+#define CATTRIP_STATUS 0x6a15004c
+#define AERR_STATUS 0x6a100020
+#define DERR_STATUS 0x6a143dc4
 
 void poll_capri_intr();
 const char* errortostring(etype errortype);
@@ -227,7 +230,32 @@ static inline void poll_##kind##metrics(uint32_t key, uint32_t addr) { \
         return; \
     } \
 
-#define CAPRI_INTR_KIND_FIELD(fld, offset, type) { \
+#define CAPRI_PRINT_HBM_ERROR() \
+    if (data) { \
+        uint32_t debugvalue = 0; \
+        uint32_t debugaddr = 0; \
+        uint32_t counter = 0; \
+        debugaddr = CATTRIP_STATUS; \
+        for (counter = 0; counter < 8; counter++) { \
+            debugvalue = 0; \
+            sdk::lib::pal_reg_read(debugaddr, &debugvalue, 1); \
+            INFO("Debugging::Address {:x} value {:x}", debugaddr, debugvalue); \
+            debugaddr += 0x100000; \
+        } \
+        debugaddr = AERR_STATUS; \
+        debugvalue = 0; \
+        sdk::lib::pal_reg_read(debugaddr, &debugvalue, 1); \
+        INFO("Debugging::Address {:x} value {:x}", debugaddr, debugvalue); \
+        debugaddr = DERR_STATUS; \
+        for (counter = 0; counter < 8; counter++) { \
+            debugvalue = 0; \
+            sdk::lib::pal_reg_read(debugaddr, &debugvalue, 1); \
+            INFO("Debugging::Address {:x} value {:x}", debugaddr, debugvalue); \
+            debugaddr += 0x000004; \
+        } \
+    }
+
+#define CAPRI_INTR_KIND_FIELD(fld, offset, type) \
     if (data & (1 << offset)) { \
         reg->fld++; \
         if (type == INFO) \
@@ -237,7 +265,6 @@ static inline void poll_##kind##metrics(uint32_t key, uint32_t addr) { \
             ERR("Register {} key {} at address {:x} interrupt {} type {} times {}", \
                  regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
     } \
-}
 
 #define CAPRI_INTR_KIND_END(classkind) \
     rc = sdk::lib::pal_reg_write(addr, &data, size); \
