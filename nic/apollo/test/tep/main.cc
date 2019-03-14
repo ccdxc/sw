@@ -1031,6 +1031,289 @@ TEST_F(tep_test, DISABLED_tep_read_all_when_empty) {}
 /// Read all currently programmed TEPs when table is full
 TEST_F(tep_test, DISABLED_tep_read_all_when_full) {}
 
+/// \brief TEP workflow 1
+///
+/// [ Create SetMax, Delete SetMax ] - Read
+TEST_F(tep_test, DISABLED_tep_workflow_1) {
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    uint32_t num_teps = PDS_MAX_TEP - 1;
+    std::string tep_first_ip_str = "50.50.1.1/8";
+    tep_util tep_obj_1(tep_first_ip_str);
+    tep_util tep_obj_2("50.50.4.255/8");
+
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // verify none of the TEPs are programmed
+    ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief TEP workflow 2
+///
+/// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+TEST_F(tep_test, DISABLED_tep_workflow_2) {
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    uint32_t num_teps = PDS_MAX_TEP - 1;
+    std::string tep_first_ip_str = "50.50.1.1/8";
+    tep_util tep_obj_1(tep_first_ip_str);
+    tep_util tep_obj_2("50.50.4.255/8");
+
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // verify first tep exists
+    ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_OK);
+    // verify last tep exists
+    ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_OK);
+
+    // teardown
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+}
+
+/// \brief TEP workflow 3
+///
+/// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
+TEST_F(tep_test, DISABLED_tep_workflow_3) {
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    std::string set1_first_ip_str = "10.10.1.1/8";
+    std::string set2_first_ip_str = "20.20.1.1/8";
+    std::string set3_first_ip_str = "30.30.1.1/8";
+    tep_util tep_obj_1(set1_first_ip_str);
+    tep_util tep_obj_2(set2_first_ip_str);
+    tep_util tep_obj_3(set3_first_ip_str);
+
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    // create set1 of 10 TEPs
+    ASSERT_TRUE(tep_util::many_create(10, set1_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    // create set2 of 20 TEPs
+    ASSERT_TRUE(tep_util::many_create(20, set2_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    // dreate set1 of 10 TEPs
+    ASSERT_TRUE(tep_util::many_delete(10, set1_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    // create set3 of 30 TEPs
+    ASSERT_TRUE(tep_util::many_create(30, set3_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // verify TEPs from set1 are NOT programmed
+    ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    // verify TEPs from set2 are programmed
+    ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_OK);
+    // verify TEPs from set3 are programmed
+    ASSERT_TRUE(tep_obj_3.read(&info) == sdk::SDK_RET_OK);
+
+    // teardown
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    // delete set2 of 20 TEPs
+    ASSERT_TRUE(tep_util::many_delete(20, set2_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    // delete set3 of 30 TEPs
+    ASSERT_TRUE(tep_util::many_delete(30, set3_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+}
+
+/// \brief TEP workflow 4
+///
+/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+TEST_F(tep_test, DISABLED_tep_workflow_4) {
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    uint32_t num_teps = PDS_MAX_TEP - 1;
+    std::string tep_first_ip_str = "50.50.1.1/8";
+    tep_util tep_obj_1(tep_first_ip_str);
+    tep_util tep_obj_2("50.50.4.255/8");
+
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // verify first tep exists
+    ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_OK);
+    // verify last tep exists
+    ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_OK);
+
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // verify none of the TEPs are programmed
+    ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief TEP workflow 5
+///
+/// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+TEST_F(tep_test, DISABLED_tep_workflow_5) {
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    std::string set1_first_ip_str = "10.10.1.1/8";
+    std::string set2_first_ip_str = "20.20.1.1/8";
+    std::string set3_first_ip_str = "30.30.1.1/8";
+    tep_util tep_obj_1(set1_first_ip_str);
+    tep_util tep_obj_2(set2_first_ip_str);
+    tep_util tep_obj_3(set3_first_ip_str);
+
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    // create set1 of 10 TEPs
+    ASSERT_TRUE(tep_util::many_create(10, set1_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    // create set2 of 20 TEPs
+    ASSERT_TRUE(tep_util::many_create(20, set2_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // verify TEPs from set1 are programmed
+    ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_OK);
+    // verify TEPs from set2 are programmed
+    ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_OK);
+
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    // create set1 of 10 TEPs
+    ASSERT_TRUE(tep_util::many_delete(10, set1_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    // create set3 of 30 TEPs
+    ASSERT_TRUE(tep_util::many_create(30, set3_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // verify TEPs from set1 are NOT programmed
+    ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    // verify TEPs from set2 are programmed
+    ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_OK);
+    // verify TEPs from set3 are programmed
+    ASSERT_TRUE(tep_obj_3.read(&info) == sdk::SDK_RET_OK);
+
+    // teardown
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    // delete set2 of 20 TEPs
+    ASSERT_TRUE(tep_util::many_delete(20, set2_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    // delete set3 of 30 TEPs
+    ASSERT_TRUE(tep_util::many_delete(30, set3_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+}
+
+/// \brief TEP workflow neg 1
+///
+/// [ Create SetMax ] - [ Create SetMax ] - Read
+TEST_F(tep_test, DISABLED_tep_workflow_neg_1) {
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    uint32_t num_teps = PDS_MAX_TEP - 1;
+    std::string tep_first_ip_str = "50.50.1.1/8";
+    tep_util tep_obj_1(tep_first_ip_str);
+    tep_util tep_obj_2("50.50.4.255/8");
+
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // following duplicate creation will result in crash
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // verify first tep exists
+    ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_OK);
+    // verify last tep exists
+    ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_OK);
+
+    // teardown
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+}
+#if 0
+/// \brief TEP workflow neg 2
+///
+/// [ Create SetMax+1] - Read
+TEST_F(tep_test, tep_workflow_neg_2) {
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    uint32_t num_teps = PDS_MAX_TEP;
+    std::string tep_first_ip_str = "50.50.1.1/8";
+    tep_util tep_obj_1(tep_first_ip_str);
+    tep_util tep_obj_2("50.50.5.0/8");
+
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+
+    // verify none of the TEPs are programmed
+    ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+#endif
+/// \brief TEP workflow neg 3
+///
+/// Read NonEx, [ Delete NonExMax ]
+TEST_F(tep_test, tep_workflow_neg_3) {
+    pds_batch_params_t batch_params = {0};
+    pds_tep_info_t info;
+    uint32_t num_teps = PDS_MAX_TEP;
+    std::string tep_invalid_ip_str = "150.150.1.1/8";
+    tep_util tep_obj("192.168.9.1/8");
+
+    // read non existing TEP entry
+    ASSERT_TRUE(tep_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    // delete non existing TEP entries
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_invalid_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+}
+
+/// \brief TEP workflow corner case 4
+///
+/// [ Create SetCorner ] - Read
+TEST_F(tep_test, DISABLED_tep_workflow_corner_case_4) {}
+
 /// @}
 }    // namespace api_test
 
