@@ -84,6 +84,11 @@ struct pds_route_table_spec_s {
     }
 } __PACK__;
 
+/// \brief route table information
+typedef struct pds_route_table_info_s {
+    pds_route_table_spec_t spec;        ///< Specification
+} __PACK__ pds_route_table_info_t;
+
 /// \brief create route table
 ///
 /// \param[in] spec route table configuration

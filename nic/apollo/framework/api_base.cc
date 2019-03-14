@@ -89,7 +89,6 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
             obj = tep_db()->find(&api_ctxt->api_params->tep_spec.key);
         }
         return obj;
-        break;
 
     case OBJ_ID_VNIC:
         if (api_ctxt->api_op == API_OP_DELETE) {
@@ -101,7 +100,6 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
     case OBJ_ID_MAPPING:
         return NULL;
-        break;
 
     case OBJ_ID_ROUTE_TABLE:
         if (api_ctxt->api_op == API_OP_DELETE) {
@@ -109,7 +107,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         } else {
             obj = route_table_db()->find(&api_ctxt->api_params->route_table_spec.key);
         }
-        break;
+        return obj;
 
     case OBJ_ID_POLICY:
         if (api_ctxt->api_op == API_OP_DELETE) {
@@ -117,7 +115,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         } else {
             obj = policy_db()->policy_find(&api_ctxt->api_params->policy_spec.key);
         }
-        break;
+        return obj;
 
     default:
         break;
