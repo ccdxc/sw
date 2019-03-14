@@ -232,6 +232,9 @@ func (tInfo *testInfo) teardown() {
 	// stop finder
 	tInfo.fdr.Stop()
 
+	// stop indexer
+	tInfo.idr.Stop()
+
 	// stop elasticsearch
 	testutils.StopElasticsearch(tInfo.elasticServerName, tInfo.elasticDir)
 
@@ -448,6 +451,8 @@ func TestSpyglass(t *testing.T) {
 
 	AssertOk(t, tInfo.setup(t), "failed to setup test")
 	defer tInfo.teardown()
+
+	log.Info("Setup complete")
 
 	ctx := context.Background()
 
