@@ -349,7 +349,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
 hal_ret_t
 p4pd_get_ipsec_cb_stats(pd_ipseccb_encrypt_t* ipseccb_pd)
 {
-    rx_table_s4_t1_ipsec_rxdma_stats_update_d stats_data;
+    rx_table_s5_t1_ipsec_rxdma_stats_update_d stats_data;
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_STATS);

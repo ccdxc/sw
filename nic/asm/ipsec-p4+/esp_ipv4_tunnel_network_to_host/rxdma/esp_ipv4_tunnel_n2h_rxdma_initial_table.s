@@ -56,8 +56,8 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_to_stage3_iv_salt_off, r6
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     phvwr p.ipsec_to_stage2_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
-    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_RXDMA_ENTER_OFFSET, 1)
+    //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_RXDMA_ENTER_OFFSET, 1)
 
     addi r1, r0, INDESC_SEMAPHORE_ADDR
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore, r1, TABLE_SIZE_64_BITS)

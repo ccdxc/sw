@@ -18,8 +18,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     //nop
 
     seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
-    b.c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
-    phvwri.c1 p.p4_intr_global_drop, 1
+    bcf [c1], esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
+    nop
 
     and r1, d.barco_cindex, IPSEC_BARCO_RING_INDEX_MASK 
     tblmincri d.barco_cindex, IPSEC_BARCO_RING_WIDTH, 1
@@ -38,15 +38,20 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwr.c3 p.ipsec_to_stage4_is_nat_t, 1
     addi r5, r0, TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy, r5, TABLE_SIZE_32_BITS)
-    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_TXDMA2_ENTER_OFFSET, 1)
+    //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
+    //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_TXDMA2_ENTER_OFFSET, 1)
     seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
-    b.!c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
+    bcf [!c1], esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing2
+    nop
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, 0)
     memwr.dx  r4, r3
+    nop.e
+    nop
 
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing:
+    phvwri p.p4_intr_global_drop, 1
+esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing2:
     nop.e
     nop
 

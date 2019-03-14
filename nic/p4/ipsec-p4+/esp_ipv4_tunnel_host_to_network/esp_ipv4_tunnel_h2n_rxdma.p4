@@ -18,8 +18,9 @@
 #define rx_table_s3_t3_action update_input_desc_aol2 
 
 #define rx_table_s4_t0_action ipsec_cb_tail_enqueue_input_desc 
-#define rx_table_s4_t1_action ipsec_rxdma_stats_update 
 #define rx_table_s4_t2_action ipsec_cb_tail_enqueue_input_desc2 
+
+#define rx_table_s5_t1_action ipsec_rxdma_stats_update 
 
 #include "../../common-p4+/common_rxdma.p4"
 #include "esp_ipv4_tunnel_h2n_headers.p4"
@@ -287,9 +288,6 @@ action ipsec_rxdma_stats_update(H2N_STATS_UPDATE_PARAMS)
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
     H2N_STATS_UPDATE_SET
-    modify_field(ipsec_to_stage4_scratch.flags, ipsec_to_stage4.flags); 
-    modify_field(ipsec_to_stage4_scratch.packet_len, ipsec_to_stage4.packet_len); 
-    
 }
 
 //stage 4 - table 0

@@ -41,8 +41,8 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     sll r2, r2, 3
     add r2, r2, d.cb_ring_base_addr
     phvwr p.ipsec_to_stage1_cb_ring_slot_addr, r2
-    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_TXDMA1_ENTER_OFFSET, 1)
+    //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
+    //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_TXDMA1_ENTER_OFFSET, 1)
     phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     bcf [!c1], esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing2

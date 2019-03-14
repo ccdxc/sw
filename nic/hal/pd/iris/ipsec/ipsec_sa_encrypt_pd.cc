@@ -364,7 +364,7 @@ hal_ret_t
 p4pd_get_ipsec_sa_encrypt_stats(pd_ipsec_t* ipsec_sa_pd)
 {
     ipsec_sa_t  *ipsec_sa = ipsec_sa_pd->ipsec_sa;
-    rx_table_s4_t1_ipsec_rxdma_stats_update_d stats_data;
+    rx_table_s5_t1_ipsec_rxdma_stats_update_d stats_data;
     // hardware index for this entry
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_ENCRYPT_STATS);

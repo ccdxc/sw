@@ -20,7 +20,8 @@ esp_ipv4_tunnel_n2h_update_output_desc_aol:
     phvwr p.barco_desc_out_L0, r2.wx 
     add r2, r0, k.ipsec_to_stage3_ipsec_cb_addr
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc, r2, TABLE_SIZE_512_BITS)
-    add r1, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_N2H_STATS_CB_OFFSET
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_rxdma_ipsec_update_rx_stats, r1, TABLE_SIZE_512_BITS)
+    //add r1, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_N2H_STATS_CB_OFFSET
+    //CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_rxdma_ipsec_update_rx_stats, r1, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, esp_ipv4_tunnel_n2h_rxdma_ipsec_update_rx_stats)
     nop.e
     nop

@@ -37,8 +37,8 @@ esp_ipv4_tunnel_n2h_txdma2_ipsec_free_resources:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(sem_cindex_dma_cmd, r1, ipsec_to_stage3_sem_cindex, ipsec_to_stage3_sem_cindex)
     CAPRI_DMA_CMD_STOP_FENCE(sem_cindex_dma_cmd)
 
-    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA2_SEM_FREE, 1)
+    //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA2_SEM_FREE, 1)
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     seq c1, k.txdma2_global_flags, IPSEC_N2H_GLOBAL_FLAGS_BAD_SIG
     bcf [c1], disable_pkt_dma_cmds
