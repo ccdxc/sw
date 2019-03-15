@@ -151,10 +151,6 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
 
     ret = hal_get_pc_offset("txdma_stage0.bin", "ipfix_tx_stage0", &pgm_offset);
 
-#if 0
-    ret = lif_manager()->GetPCOffset("p4plus", "txdma_stage0.bin",
-                                     "ipfix_tx_stage0", &pgm_offset);
-#endif
     HAL_ABORT(ret == 0);
     qstate.pc = pgm_offset;
     qstate.total_rings = 1;
@@ -171,8 +167,8 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
         // entries within that range
         // TODO: Ideally this should be removed and test environment should
         // drive the flow hash table entries
-        qstate.flow_hash_index_next = (100 * qid) + 100;
-        qstate.flow_hash_index_max = (100 * qid) + 111;
+        qstate.flow_hash_index_next = (100 * qid) + 1000;
+        qstate.flow_hash_index_max = (100 * qid) + 1011;
         ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max,
                         export_id);
     } else {
@@ -188,12 +184,6 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     lif_manager()->write_qstate(lif_id, 0, qid + 16,
                                 (uint8_t *)&qstate, sizeof(qstate));
 
-#if 0
-    lif_manager()->WriteQState(lif_id, 0, qid,
-                               (uint8_t *)&qstate, sizeof(qstate));
-    lif_manager()->WriteQState(lif_id, 0, qid + 16,
-                               (uint8_t *)&qstate, sizeof(qstate));
-#endif
     return HAL_RET_OK;
 }
 

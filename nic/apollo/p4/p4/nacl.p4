@@ -1,4 +1,5 @@
 action nacl_drop() {
+    modify_field(control_metadata.p4i_drop_reason, 1 << P4I_DROP_NACL);
     drop_packet();
 }
 

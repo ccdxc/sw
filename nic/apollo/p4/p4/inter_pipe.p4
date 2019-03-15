@@ -36,15 +36,15 @@ action ingress_to_rxdma() {
     }
 }
 
-action p4plus_app_classic_nic() {
+action classic_nic_app() {
     if (capri_intrinsic.tm_oport == TM_PORT_DMA) {
-        ingress_to_classic_nic();
+        classic_nic_to_rxdma();
     } else {
-        ingress_to_uplink();
+        classic_nic_to_uplink();
     }
 }
 
-action ingress_to_classic_nic() {
+action classic_nic_to_rxdma() {
     add_header(capri_p4_intrinsic);
     add_header(p4_to_p4plus_classic_nic);
     add_header(p4_to_p4plus_classic_nic_ip);
@@ -98,7 +98,7 @@ action ingress_to_classic_nic() {
                   P4PLUS_CLASSIC_NIC_HDR_SZ));
 }
 
-action ingress_to_uplink() {
+action classic_nic_to_uplink() {
     add_header(capri_p4_intrinsic);
     remove_header(p4plus_to_p4);
     remove_header(p4plus_to_p4_vlan);
@@ -112,7 +112,7 @@ table ingress_to_rxdma {
     }
     actions {
         ingress_to_rxdma;
-        p4plus_app_classic_nic;
+        classic_nic_app;
     }
     size : APP_TABLE_SIZE;
 }

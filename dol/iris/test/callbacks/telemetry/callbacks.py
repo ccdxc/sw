@@ -408,4 +408,4 @@ def GetErspanPayloadSize(testcase, inpkt, args):
     return plen
 
 def GetIPFIXRecordFlowId(testcase, inpkt, args):
-    return (0xdeaf + (args.sessionid * 100) + 100 + args.id)
+    return (0xdeaf + (args.sessionid * 100) + 1000 + args.id)
