@@ -58,6 +58,36 @@ message IPPrefix {
   uint32    Len  = 2 [(gogoproto.moretags) = "meta:range=0-128"];
 }
 
+// IPSubnet represents an IPv4 or IPv6 subnet
+message IPSubnet {
+  oneof subnet {
+    // IPv4 subnet
+    IPPrefix IPv4Subnet = 1;
+    // IPv6 subnet
+    IPPrefix IPv6Subnet = 2;
+  }
+}
+
+// AddressRange represents an IPv4 or IPv6 address range
+message AddressRange {
+  oneof range {
+    // IPv4 address range
+    IPRange IPv4Range = 1;
+    // IPv6 address range
+    IPRange IPv6range = 2;
+  }
+}
+
+// Address object is the prefix or range
+message Address {
+  oneof   Address {
+    // IPv4 or IPv6 prefix
+    IPSubnet     Prefix = 1;
+    // IPv4 or IPv6 address range
+    AddressRange Range  = 2;
+  }
+}
+
 // PortRange object has low and high end of the port ranges
 message PortRange {
   uint32 PortLow  = 1 [(gogoproto.moretags) = "meta:range:0-65535"];
@@ -92,3 +122,53 @@ message Encap {
   EncapType type  = 1;    // encap type
   EncapVal  value = 2;    // encap value
 }
+
+// type of the private cloud network
+enum RuleDir {
+  RULE_DIR_NONE      = 0;
+  RULE_DIR_INGRESS   = 1;
+  RULE_DIR_EGRESS    = 2;
+}
+
+// L3 rule match criteria
+message RuleL3Match {
+  // IP protocol
+  uint32         Protocol = 1 [(gogoproto.moretags) = "meta:range:0-255"];
+  // source or destination IP prefix
+  types.IPPrefix Prefix   = 2;
+}
+
+// TCP/UDP rule match criteria
+message PortMatch {
+  // source port range
+  types.PortRange SrcPortRange = 1;
+  // destination port range
+  types.PortRange DstPortRange = 2;
+}
+
+// ICMPv4/ICMPv6 rule match criteria
+message ICMPMatch {
+  // ICMP type
+  uint32 type = 1;
+  // ICMP code
+  uint32 code = 2;
+}
+
+// L4 rule match criteria
+message RuleL4Match {
+  oneof L4Info {
+    // port match criteria
+    PortMatch Ports    = 1;
+    // ICMP match criteria
+    ICMPMatch TypeCode = 2;
+  }
+}
+
+// rule match criteria
+message RuleMatch {
+  // Layer 3 match criteria
+  RuleL3Match L3Match = 1;
+  // Layer 4 match criteria
+  RuleL4Match L4Match = 2;
+}
+
