@@ -4,14 +4,44 @@ if ! [ -x "$(command -v locale)" ]; then
   echo 'Error: locale is not installed. Please follow the p4ctl README ' >&2
   exit 1
 fi
-
+repl=1
+platform=iris
+while getopts ":c:p:h" opt; do
+  case ${opt} in
+    c )
+      cmd=$OPTARG
+      repl=0
+      #echo $cmd
+      #echo $repl
+      ;;
+    p )
+      platform=$OPTARG
+      #echo $platform
+      ;;
+    h )
+      echo "Usage: p4ctl -p <iris|apollo> -c \"debug ...\""
+      exit
+      ;;
+    \? )
+      echo "Invalid option: $OPTARG" 1>&2
+      exit
+      ;;
+    : )
+      echo "Invalid option: $OPTARG requires an argument" 1>&2
+      exit
+      ;;
+  esac
+done
+shift $((OPTIND -1))
 localedef -i en_US -f UTF-8 en_US.UTF-8
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
 export LD_LIBRARY_PATH=/nic/lib:/platform/lib:/nic/cli
 export HAL_CONFIG_PATH=/nic/conf
-if [ "$1" = "iris" ] || [ "$1" = "" ]; then
-	python3 /nic/cli/debug_cli_iris.py repl
-elif [ "$1" = "apollo" ]; then
-	python3 /nic/cli/debug_cli_apollo.py repl
+if [[ "$repl" -eq 0 ]]; then
+        echo "python3 /nic/cli/debug_cli_$platform.py cmd"
+        python3 /nic/cli/debug_cli_$platform.py $cmd
+else
+        #echo "python3 /nic/cli/debug_cli_$platform.py repl"
+        python3 /nic/cli/debug_cli_$platform.py repl
 fi
