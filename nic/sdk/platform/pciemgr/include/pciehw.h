@@ -138,6 +138,7 @@ pciehw_shmem_t *pciehw_get_shmem(void);
 void pciehw_initialize_topology(const u_int8_t port);
 void pciehw_finalize_topology(pciehdev_t *proot);
 void pciehw_dev_show(int argc, char *argv[]);
+void pciehw_devintr_show(int argc, char *argv[]);
 void pciehw_pmt_show(int argc, char *argv[]);
 void pciehw_bar_show(int argc, char *argv[]);
 

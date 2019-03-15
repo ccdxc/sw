@@ -43,8 +43,7 @@ typedef union intr_fwcfg_u {
 typedef union intr_state_s {
     struct {
         u_int64_t msixcfg_msg_addr_51_2:50;
-        u_int64_t msixcfg_msg_data_lo:14;
-        u_int64_t msixcfg_msg_data_hi:18;
+        u_int64_t msixcfg_msg_data:32;
         u_int64_t msixcfg_vector_ctrl:1;
         u_int64_t fwcfg_function_mask:1;
         u_int64_t fwcfg_lif:11;
@@ -52,13 +51,12 @@ typedef union intr_state_s {
         u_int64_t fwcfg_legacy_int:1;
         u_int64_t fwcfg_legacy_pin:2;
         u_int64_t drvcfg_mask:1;
-        u_int64_t drvcfg_int_credits:16;
+          int64_t drvcfg_int_credits:16; /* signed */
         u_int64_t drvcfg_mask_on_assert:1;
         u_int64_t fwcfg_port_id:3;
-        u_int64_t rsvd;
-    };
+    } __attribute__((packed));
     u_int32_t w[4];
-} __attribute__((packed)) intr_state_t;
+} intr_state_t;
 
 u_int64_t intr_msixcfg_addr(const int intr);
 u_int64_t intr_fwcfg_addr(const int intr);

@@ -126,7 +126,7 @@ wrhdr_show(const uint32_t entry, wrhdr_t *h)
  * are used less frequently.
  */
 static void
-rdhdr(int argc, char *argv[])
+itr_rdhdr(int argc, char *argv[])
 {
     int opt, raw, i;
     rdhdr_t rdhdr[RDHDR_NENTRIES];
@@ -155,9 +155,9 @@ rdhdr(int argc, char *argv[])
         }
     }
 }
-CMDFUNC(rdhdr,
+CMDFUNC(itr_rdhdr,
 "show itr_rdhdr_entry[]",
-"rdhdr [-r]\n"
+"itr_rdhdr [-r]\n"
 "    -r         raw format\n");
 
 /*
@@ -171,7 +171,7 @@ CMDFUNC(rdhdr,
  * id will likely get reallocated soon and the table overwritten.
  */
 static void
-wrhdr(int argc, char *argv[])
+itr_wrhdr(int argc, char *argv[])
 {
     int opt, raw, i;
     wrhdr_t wrhdr[WRHDR_NENTRIES];
@@ -200,7 +200,7 @@ wrhdr(int argc, char *argv[])
         }
     }
 }
-CMDFUNC(wrhdr,
+CMDFUNC(itr_wrhdr,
 "show itr_wrhdr_entry[]",
-"wrhdr [-r]\n"
+"itr_wrhdr [-r]\n"
 "    -r         raw format\n");

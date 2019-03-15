@@ -20,6 +20,7 @@
 #include "platform/misc/include/misc.h"
 #include "platform/misc/include/bdf.h"
 #include "platform/pal/include/pal.h"
+#include "platform/intrutils/include/intrutils.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "platform/cfgspace/include/cfgspace.h"
 #include "platform/utils/mpart_rsvd.hpp"
@@ -817,12 +818,85 @@ pciehw_dev_show(int argc, char *argv[])
             if (phwdev != NULL) {
                 dev_show1(phwdev, flags);
             } else {
-                pciesys_loginfo("%s: not found\n", name);
+                pciesys_loginfo("%s: device not found\n", name);
             }
         }
     }
 }
 
+static void
+devintr_show1(const pciehwdev_t *phwdev, const int flags)
+{
+    int devidx, hwintr;
+    intr_state_t intrst;
+    char intx[8];
+
+    hwintr = phwdev->intrb;
+    for (devidx = 0; devidx < phwdev->intrc; devidx++, hwintr++) {
+
+        intr_state(hwintr, &intrst);
+        snprintf(intx, sizeof(intx), "int%c", "ABCD"[intrst.fwcfg_legacy_pin]);
+        pciesys_loginfo("%-16s %-6d %-6d %c%c%c%c %-5s "
+                        "0x%08" PRIx64 " 0x%-5x %d\n",
+                        pciehwdev_get_name(phwdev),
+                        devidx,
+                        hwintr,
+                        intrst.fwcfg_function_mask   ? 'f' : '-',
+                        intrst.msixcfg_vector_ctrl   ? 'v' : '-',
+                        intrst.drvcfg_mask           ? 'd' : '-',
+                        intrst.drvcfg_mask_on_assert ? 'a' : '-',
+                        intrst.fwcfg_local_int       ? "msixl" :
+                        intrst.fwcfg_legacy_int      ? intx : "msix",
+                        (uint64_t)intrst.msixcfg_msg_addr_51_2 << 2,
+                        intrst.msixcfg_msg_data,
+                        intrst.drvcfg_int_credits);
+    }
+}
+
+static void
+devintr_show_all(const int flags)
+{
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    pciehwdev_t *phwdev;
+    int i;
+
+    phwdev = &pshmem->dev[1];
+    for (i = 1; i <= pshmem->allocdev; i++, phwdev++) {
+        devintr_show1(phwdev, flags);
+    }
+}
+
+void
+pciehw_devintr_show(int argc, char *argv[])
+{
+    pciehwdev_t *phwdev = NULL;
+    int opt, flags = 0;
+
+    optind = 0;
+    while ((opt = getopt(argc, argv, "d:")) != -1) {
+        switch (opt) {
+        case 'd':
+            phwdev = pciehwdev_find_by_name(optarg);
+            if (phwdev == NULL) {
+                pciesys_logerror("%s: device not found\n", optarg);
+                return;
+            }
+            break;
+        case '?':
+            return;
+        }
+    }
+
+    pciesys_loginfo("%-16s %-6s %-6s %-4s %-5s "
+                    "%-10s %-7s %s\n",
+                    "name", "devidx", "hwintr", "mask", "mode",
+                    "msgaddr", "msgdata", "int_credits");
+    if (phwdev != NULL) {
+        devintr_show1(phwdev, flags);
+    } else {
+        devintr_show_all(flags);
+    }
+}
 static void
 cmd_dev(int argc, char *argv[])
 {
