@@ -625,11 +625,17 @@ message SecurityPolicyRequestMsg {
   repeated SecurityPolicySpec       request = 1;  //  batched request
 }
 
+message SecurityRuleStatus { 
+  uint64          rule_id  = 1;  // Identifier supplied by agent
+  uint64          priority = 2;  // Priority for the rule id
+}
+
 message SecurityPolicyStatus {
   option (delphi.update_event) = true;
   delphi.ObjectMeta             Meta                   = 1;
 
   kh.SecurityPolicyKeyHandle    key_or_handle   = 2[(gogoproto.moretags) = "venice:key"];      // Policy Name that identifies the security Policy
+  repeated SecurityRuleStatus   rule_status     = 3; //Identifies rule and priority
 }
 
 // SecurityPolicyResponse is the response to SecurityPolicyRequest

@@ -941,6 +941,7 @@ It has these top-level messages:
 	SecurityRule
 	SecurityPolicySpec
 	SecurityPolicyRequestMsg
+	SecurityRuleStatus
 	SecurityPolicyStatus
 	SecurityPolicyResponse
 	SecurityPolicyResponseMsg

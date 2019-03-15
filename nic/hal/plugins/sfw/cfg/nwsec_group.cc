@@ -1555,6 +1555,7 @@ end:
         // On successful update evaluate the sessions
         session_match_t match = {};
         match.match_fields |= SESSION_MATCH_SVRF;
+        match.match_fields |= SESSION_MATCH_V4_FLOW;
         match.key.svrf_id = policy->key.vrf_id;
         session_eval_matching_session(&match); 
     } else {
@@ -1746,7 +1747,8 @@ security_policy_rule_spec_build (nwsec_rule_t                          *rule,
 static hal_ret_t
 security_policy_spec_build (nwsec_policy_t               *policy,
                             nwsec::SecurityPolicySpec    *spec,
-                            nwsec::SecurityPolicyStats   *stats)
+                            nwsec::SecurityPolicyStats   *stats,
+                            nwsec::SecurityPolicyStatus  *status)
 {
     hal_ret_t               ret = HAL_RET_OK;
 
@@ -1758,9 +1760,10 @@ security_policy_spec_build (nwsec_policy_t               *policy,
     struct fn_ctx_t {
         nwsec::SecurityPolicySpec   *spec;
         nwsec::SecurityPolicyStats  *stats; 
+        nwsec::SecurityPolicyStatus *status; 
         hal_ret_t                     ret;
         rule_cfg_t                   *rcfg;
-    } fn_ctx = { spec, stats, HAL_RET_OK, rcfg };
+    } fn_ctx = { spec, stats, status, HAL_RET_OK, rcfg };
     if (rcfg == NULL) {
         HAL_TRACE_ERR("Couldnt find rule config for: {}", ctx_name);
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_GET_FAIL);
@@ -1768,9 +1771,10 @@ security_policy_spec_build (nwsec_policy_t               *policy,
     }
 
     policy->rules_ht[policy->version]->walk_safe([](void *data, void *ctxt) -> bool {
-        dllist_ctxt_t            *curr, *next;
-        nwsec::SecurityRule      *spec_rule;
-        nwsec::SecurityRuleStats *rule_stats; 
+        dllist_ctxt_t             *curr, *next;
+        nwsec::SecurityRule       *spec_rule;
+        nwsec::SecurityRuleStats  *rule_stats;
+        nwsec::SecurityRuleStatus *rule_status;  
         fn_ctx_t *fn_ctx = (fn_ctx_t *)ctxt;
         nwsec_rulelist_t *rulelist = (nwsec_rulelist_t *)data;
         if (rulelist == NULL) {
@@ -1795,6 +1799,13 @@ security_policy_spec_build (nwsec_policy_t               *policy,
                 fn_ctx->ret =   HAL_RET_OOM;
                 return true;
             }
+            rule_status = fn_ctx->status->add_rule_status();
+            if (rule_status == NULL) {
+                fn_ctx->ret = HAL_RET_OOM;
+                return true;
+            }
+            rule_status->set_rule_id(rule->rule_id);
+            rule_status->set_priority(rule->priority);
 
             fn_ctx->ret = security_policy_rule_spec_build(rule, spec_rule);
             if (fn_ctx->ret != HAL_RET_OK) {
@@ -1821,7 +1832,7 @@ security_policy_get_ht_cb (void *ht_entry, void *ctxt)
 
     policy = (nwsec_policy_t *)hal_handle_get_obj(entry->handle_id);
     
-    ret = security_policy_spec_build(policy, response->mutable_spec(), response->mutable_pol_stats());
+    ret = security_policy_spec_build(policy, response->mutable_spec(), response->mutable_pol_stats(), response->mutable_status());
     if (ret == HAL_RET_OK) {
         HAL_TRACE_DEBUG("Policy HT get ok");
         response->set_api_status(types::API_STATUS_OK);
@@ -1853,7 +1864,7 @@ securitypolicy_get (nwsec::SecurityPolicyGetRequest& req,
         return HAL_RET_SECURITY_POLICY_NOT_FOUND;
     }
 
-    ret = security_policy_spec_build(policy, response->mutable_spec(), response->mutable_pol_stats());
+    ret = security_policy_spec_build(policy, response->mutable_spec(), response->mutable_pol_stats(), response->mutable_status());
     if (ret == HAL_RET_OK) {
         response->set_api_status(types::API_STATUS_OK);
         return ret;

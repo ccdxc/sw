@@ -192,6 +192,7 @@ func nwsecPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 func nwsecPolicyShowOneResp(resp *halproto.SecurityPolicyGetResponse) {
 	spec := resp.GetSpec()
 	stats := resp.GetPolStats()
+	status := resp.GetStatus()
 
 	hdrLine := strings.Repeat("-", 50)
 	fmt.Println(hdrLine)
@@ -199,8 +200,10 @@ func nwsecPolicyShowOneResp(resp *halproto.SecurityPolicyGetResponse) {
 		" Vrf id: ", spec.GetKeyOrHandle().GetSecurityPolicyKey().GetVrfIdOrHandle().GetVrfId())
 	fmt.Println(hdrLine)
 	fmt.Println("\nRules:")
-	for _, rule := range spec.Rule {
+	for i, rule := range spec.Rule {
+		ruleStatus := status.RuleStatus[i]
 		fmt.Printf("\nRule Id: %-5d\n", rule.GetRuleId())
+		fmt.Printf("Rule Priority: %-5d\n", ruleStatus.GetPriority())
 		fmt.Println("Rule Match:")
 		fmt.Printf("   Src IP Address:  ")
 		if len(rule.Match.SrcAddress) == 0 {
@@ -302,6 +305,8 @@ func nwsecPolicyShowOneResp(resp *halproto.SecurityPolicyGetResponse) {
 				rule.Match.AppMatch.GetIcmpInfo().GetIcmpCode())
 		case *halproto.RuleMatch_AppMatch_EspInfo:
 			fmt.Printf("\n   ESP SPI: %d\n", rule.Match.AppMatch.GetEspInfo().GetSpi())
+		case nil:
+			// field not set
 		default:
 			break
 		}

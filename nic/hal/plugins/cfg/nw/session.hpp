@@ -308,11 +308,12 @@ enum {
     SESSION_MATCH_V6_SIP = 1 << 4,
     SESSION_MATCH_V6_DIP = 1 << 5,
     SESSION_MATCH_SMAC   = 1 << 6,
-    SESSION_MATCH_DMAC   = 1 << 7
+    SESSION_MATCH_DMAC   = 1 << 7,
+    SESSION_MATCH_V4_FLOW = 1 << 8
         /* Add more match cases here, if needed */
 };
 typedef struct session_match_s {
-    uint8_t         match_fields; 
+    uint16_t         match_fields; 
     flow_key_t      key;
     dllist_ctxt_t   *session_list;   
 } session_match_t;

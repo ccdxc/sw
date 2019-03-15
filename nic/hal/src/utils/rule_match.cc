@@ -1041,9 +1041,11 @@ rule_match_port_app_spec_build (rule_match_app_t *app, types::RuleMatch *spec)
 {
     hal_ret_t ret;
     types::RuleMatch_L4PortAppInfo *port_info;
+    types::RuleMatch_AppMatch *app_match = spec->mutable_app_match();
+    
     if (!dllist_empty(&app->l4srcport_list) ||
         !dllist_empty(&app->l4dstport_list)) {
-        port_info = spec->mutable_app_match()->mutable_port_info();
+        port_info = app_match->mutable_port_info();
 
         if ((ret = rule_match_src_port_spec_build(
                 app, port_info)) != HAL_RET_OK)
