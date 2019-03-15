@@ -1,4 +1,3 @@
-import defines
 import time
 import pexpect
 import os

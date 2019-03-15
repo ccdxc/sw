@@ -103,7 +103,7 @@ class HostHelper():
     @staticmethod
     def WaitForReachability(host, msg):
         i = 0 
-        while i < 100:
+        while i < 150:
             print ("%s: %s" % (str(host),msg))
             if host.IsPingable():
                 break
@@ -116,7 +116,7 @@ class HostHelper():
     @staticmethod
     def WaitForReboot(host, msg):
         i = 0 
-        while i < 100:
+        while i < 150:
             print ("%s: %s" % (str(host), msg))
             if not host.IsPingable():
                 break

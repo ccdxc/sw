@@ -10,6 +10,7 @@ from datetime import timedelta
 top_dir = os.path.dirname(sys.argv[0])
 sys.path.insert(0,'%s' % top_dir)
 sys.path.insert(0,'../../')
+sys.path.insert(0,'./')
 import helpers
 from helpers import *
 from server import Server
