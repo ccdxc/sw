@@ -80,6 +80,8 @@ type Config struct {
 	Auditor audit.Auditor
 	// Skip auditing
 	SkipAudit bool
+	// Resolver if set will be used instead of creating one. Used for tests only.
+	Resolver resolver.Interface
 }
 
 // Hooks definitions

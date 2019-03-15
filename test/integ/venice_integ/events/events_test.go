@@ -377,10 +377,11 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	AssertOk(t, err, "failed to start spyglass finder")
 	fdr := fdrTemp.(finder.Interface)
 	defer fdr.Stop()
+	ti.updateResolver(globals.Spyglass, fdrAddr)
 
 	// API gateway
 	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
-		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{"telemetry_query", "objstore"}, []string{}, ti.logger)
+		map[string]string{}, []string{"telemetry_query", "objstore"}, []string{}, ti.mockResolver, ti.logger)
 	AssertOk(t, err, "failed to start API gateway")
 	defer apiGw.Stop()
 
@@ -968,10 +969,11 @@ func TestEventsAlertEngine(t *testing.T) {
 	AssertOk(t, err, "failed to start spyglass finder, err: %v", err)
 	fdr := fdrTemp.(finder.Interface)
 	defer fdr.Stop()
+	ti.updateResolver(globals.Spyglass, fdrAddr)
 
 	// API gateway
 	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
-		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{"telemetry_query", "objstore"}, []string{}, ti.logger)
+		map[string]string{}, []string{"telemetry_query", "objstore"}, []string{}, ti.mockResolver, ti.logger)
 	AssertOk(t, err, "failed to start API gateway, err: %v", err)
 	defer apiGw.Stop()
 

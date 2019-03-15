@@ -337,7 +337,7 @@ func (a *apiGw) Run(config apigw.Config) {
 	}
 
 	a.auditor = config.Auditor
-
+	a.rslver = config.Resolver
 	// Http Connection
 	m := http.NewServeMux()
 
@@ -354,8 +354,10 @@ func (a *apiGw) Run(config apigw.Config) {
 	// Create the GRPC connection for the server.
 	s := grpc.NewServer()
 
-	if len(config.Resolvers) > 0 {
-		a.rslver = resolver.New(&resolver.Config{Name: globals.APIGw, Servers: config.Resolvers})
+	if a.rslver == nil {
+		if len(config.Resolvers) > 0 {
+			a.rslver = resolver.New(&resolver.Config{Name: globals.APIGw, Servers: config.Resolvers})
+		}
 	}
 	a.logger.Infof("Resolving via %v", config.Resolvers)
 

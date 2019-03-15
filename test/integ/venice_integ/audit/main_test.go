@@ -135,9 +135,9 @@ func (t *tInfo) startAPIGateway() error {
 	// start API gateway
 	var err error
 	t.apiGw, t.apiGwAddr, err = testutils.StartAPIGatewayWithAuditor(":0", false,
-		map[string]string{globals.APIServer: t.apiServerAddr, globals.Spyglass: t.fdrAddr},
+		map[string]string{},
 		[]string{"telemetry_query", "objstore"},
-		[]string{}, t.logger, auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(t.elasticSearchAddr, t.rslvr, t.logger, elasticauditor.WithElasticClient(t.esClient))))
+		[]string{}, t.rslvr, t.logger, auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(t.elasticSearchAddr, t.rslvr, t.logger, elasticauditor.WithElasticClient(t.esClient))))
 	if err != nil {
 		return err
 	}

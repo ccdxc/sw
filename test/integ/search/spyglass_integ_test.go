@@ -163,6 +163,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	}
 	tInfo.fdr = fdr.(finder.Interface)
 	tInfo.fdrAddr = fdrAddr
+	tInfo.updateResolver(globals.Spyglass, tInfo.fdrAddr)
 
 	// start API server
 	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", t.Name(), tInfo.l)
@@ -173,8 +174,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 
 	// start API gateway
 	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0", false,
-		map[string]string{globals.APIServer: tInfo.apiServerAddr, globals.Spyglass: tInfo.fdrAddr},
-		[]string{"telemetry_query", "objstore"}, []string{}, tInfo.l)
+		map[string]string{}, []string{"telemetry_query", "objstore"}, []string{}, tInfo.mockResolver, tInfo.l)
 	if err != nil {
 		return err
 	}
@@ -330,7 +330,7 @@ func getPolicySearchURL() string {
 // Startsup elastic again and checks new objects were indexed
 // Checks indexer's buffer overflows
 // Test for deleted objects while spyglass is down
-func TestSpyglassErrorHandeling(t *testing.T) {
+func TestSpyglassErrorHandling(t *testing.T) {
 	var err error
 	log.Info("Starting Spyglass Error Handeling Test")
 

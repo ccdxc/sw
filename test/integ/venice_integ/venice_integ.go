@@ -874,7 +874,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	// logConf.Filter = log.AllowAllFilter
 	l = log.GetNewLogger(logConf)
 	svcs := map[string]string{globals.APIServer: it.apiSrvAddr, globals.Spyglass: it.fdrAddr}
-	it.apiGw, it.apiGwAddr, err = testutils.StartAPIGateway(fmt.Sprintf(":%s", it.config.APIGatewayPort), it.config.APIGatewaySkipAuth, svcs, it.disabledServices, []string{"localhost:" + globals.CMDResolverPort}, l)
+	it.apiGw, it.apiGwAddr, err = testutils.StartAPIGateway(fmt.Sprintf(":%s", it.config.APIGatewayPort), it.config.APIGatewaySkipAuth, svcs, it.disabledServices, []string{"localhost:" + globals.CMDResolverPort}, nil, l)
 	c.Assert(err, check.IsNil)
 
 	// start agents

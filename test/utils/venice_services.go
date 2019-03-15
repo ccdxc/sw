@@ -144,12 +144,12 @@ func GetAuthorizationHeader(apiGwAddr string, creds *auth.PasswordCredential) (s
 }
 
 // StartAPIGateway helper function to start API gateway.
-func StartAPIGateway(serverAddr string, skipAuth bool, backends map[string]string, skipServices []string, resolvers []string, l log.Logger) (apigw.APIGateway, string, error) {
-	return StartAPIGatewayWithAuditor(serverAddr, skipAuth, backends, skipServices, resolvers, l, auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)))
+func StartAPIGateway(serverAddr string, skipAuth bool, backends map[string]string, skipServices []string, resolvers []string, rslver resolver.Interface, l log.Logger) (apigw.APIGateway, string, error) {
+	return StartAPIGatewayWithAuditor(serverAddr, skipAuth, backends, skipServices, resolvers, rslver, l, auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)))
 }
 
 // StartAPIGatewayWithAuditor helper function to start API Gateway with non default auditor
-func StartAPIGatewayWithAuditor(serverAddr string, skipAuth bool, backends map[string]string, skipServices []string, resolvers []string, l log.Logger, auditor audit.Auditor) (apigw.APIGateway, string, error) {
+func StartAPIGatewayWithAuditor(serverAddr string, skipAuth bool, backends map[string]string, skipServices []string, resolvers []string, rslver resolver.Interface, l log.Logger, auditor audit.Auditor) (apigw.APIGateway, string, error) {
 	log.Info("starting API gateway ...")
 
 	// Start the API Gateway
@@ -163,6 +163,7 @@ func StartAPIGatewayWithAuditor(serverAddr string, skipAuth bool, backends map[s
 		SkipAuthz:       skipAuth,
 		SkipBackends:    skipServices,
 		Auditor:         auditor,
+		Resolver:        rslver,
 	}
 	// skip services
 	gwConfig.SkipBackends = append(gwConfig.SkipBackends, skipServices...)
