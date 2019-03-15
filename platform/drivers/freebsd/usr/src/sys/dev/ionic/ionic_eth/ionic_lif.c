@@ -1024,8 +1024,6 @@ static int ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 	notifyq->intr.index = INTR_INDEX_NOT_ASSIGNED;
 	lif->last_eid = 1;	/* Valid events are non zero. */
 
-	IONIC_NOTIFYQ_LOCK_INIT(notifyq);
-
 	/* Allocate DMA for command and completion rings. They must be consecutive. */
 	cmd_ring_size = sizeof(*notifyq->cmd_ring) * num_descs;
 	comp_ring_size = sizeof(*notifyq->comp_ring) * num_descs;
@@ -1384,7 +1382,6 @@ static void ionic_adminq_free(struct lif *lif, struct adminq *adminq)
 static void ionic_notifyq_free(struct lif *lif, struct notifyq *notifyq)
 {
 
-	IONIC_NOTIFYQ_LOCK(notifyq);
 	if (notifyq->cmd_ring) {
 		/* completion ring is part of command ring allocation. */
 		ionic_dma_free(notifyq->lif->ionic, &notifyq->cmd_dma);
@@ -1393,9 +1390,6 @@ static void ionic_notifyq_free(struct lif *lif, struct notifyq *notifyq)
 	}
 
 	ionic_dev_intr_unreserve(lif, &notifyq->intr);
-
-	IONIC_NOTIFYQ_UNLOCK(notifyq);
-	IONIC_NOTIFYQ_LOCK_DESTROY(notifyq);
 
 	free(notifyq, M_IONIC);
 }
@@ -1789,6 +1783,12 @@ static void ionic_lif_notifyq_deinit(struct lif *lif)
 	ionic_q_enable_disable(lif, notifyq->qid, notifyq->qtype, false /* disable */);
 	ionic_intr_mask(&notifyq->intr, true);
 
+	if (notifyq->taskq) {
+		taskqueue_drain(notifyq->taskq, &notifyq->task);
+		taskqueue_free(notifyq->taskq);
+		notifyq->taskq = NULL;
+	}
+
 	if (notifyq->intr.vector)
 		free_irq(notifyq->intr.vector, notifyq);
 
@@ -1984,6 +1984,9 @@ static void ionic_process_event(struct notifyq* notifyq, union notifyq_comp *com
 	}
 }
 
+/*
+ * Process notifyQ events in a task.
+ */
 int ionic_notifyq_clean(struct notifyq* notifyq)
 {
 	struct lif *lif = notifyq->lif;
@@ -2019,21 +2022,29 @@ int ionic_notifyq_clean(struct notifyq* notifyq)
 	return 1;
 }
 
-static irqreturn_t ionic_notifyq_isr(int irq, void *data)
+static void
+ionic_notifyq_task_handler(void *arg, int pendindg)
 {
-	struct notifyq* notifyq = data;
+	struct notifyq* notifyq = arg;
 	int processed;
 
 	IONIC_QUE_INFO(notifyq, "Enter\n");
 	KASSERT(notifyq, ("notifyq == NULL"));
 
-	IONIC_NOTIFYQ_LOCK(notifyq);
+	/* XXX: process multiple events. */
 	processed = ionic_notifyq_clean(notifyq);
 
 	IONIC_QUE_INFO(notifyq, "processed %d\n", processed);
 
 	ionic_intr_return_credits(&notifyq->intr, processed, true, true);
-	IONIC_NOTIFYQ_UNLOCK(notifyq);
+}
+
+static irqreturn_t ionic_notifyq_isr(int irq, void *data)
+{
+	struct notifyq* notifyq = data;
+
+	/* Schedule the task to process the notifyQ events. */
+	taskqueue_enqueue(notifyq->taskq, &notifyq->task);
 
 	return IRQ_HANDLED;
 }
@@ -2071,6 +2082,7 @@ static int ionic_lif_notifyq_block_init(struct lif *lif)
 static int ionic_lif_notifyq_init(struct lif *lif, struct notifyq *notifyq)
 {
 	int err;
+	char namebuf[16];
 
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -2106,12 +2118,22 @@ static int ionic_lif_notifyq_init(struct lif *lif, struct notifyq *notifyq)
 	notifyq->qid = ctx.comp.rxq_init.qid;
 	notifyq->qtype = ctx.comp.rxq_init.qtype;
 
-	snprintf(notifyq->intr.name, sizeof(notifyq->intr.name), "%s", notifyq->name);
+	/*
+	 * Create notifyQ task to process notifyQ events - link flap, log
+	 */
+	TASK_INIT(&notifyq->task, 0, ionic_notifyq_task_handler, notifyq);
+	snprintf(namebuf, sizeof(namebuf), "task-%s", notifyq->name);
+	notifyq->taskq = taskqueue_create(namebuf, M_NOWAIT,
+		taskqueue_thread_enqueue, &notifyq->taskq);
+
+	taskqueue_start_threads(&notifyq->taskq, 1, PI_NET, "%s (que %s)",
+		device_get_nameunit(lif->ionic->dev), notifyq->name);
 
 	/* Legacy interrupt allocation is done once. */
 	if (ionic_enable_msix == 0)
 		return (0);
 
+	snprintf(notifyq->intr.name, sizeof(notifyq->intr.name), "%s", notifyq->name);
 	err = request_irq(notifyq->intr.vector, ionic_notifyq_isr, 0,
 					notifyq->intr.name, notifyq);
 	if (err) {

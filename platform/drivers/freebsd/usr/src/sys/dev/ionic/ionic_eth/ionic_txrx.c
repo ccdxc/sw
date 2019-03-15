@@ -160,23 +160,6 @@ ionic_is_rx_tcp(uint8_t pkt_type)
 }
 
 static inline bool
-ionic_is_rx_udp(uint8_t pkt_type)
-{
-
-	return ((pkt_type == PKT_TYPE_IPV4_UDP) ||
-		(pkt_type == PKT_TYPE_IPV6_UDP));
-}
-
-static inline bool
-ionic_is_rx_ipv4(uint8_t pkt_type)
-{
-
-	return ((pkt_type == PKT_TYPE_IPV4) ||
-		(pkt_type == PKT_TYPE_IPV4_TCP) ||
-		(pkt_type == PKT_TYPE_IPV4_UDP));
-}
-
-static inline bool
 ionic_is_rx_ipv6(uint8_t pkt_type)
 {
 
@@ -342,12 +325,11 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	struct rx_stats *stats = &rxq->stats;
 	struct ifnet *ifp = rxq->lif->netdev;
 	int left, error;
-	bool i;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 
 	/*
-	 * No-op case.k
+	 * No-op case.
 	 */
 	if (m == NULL) {
 		stats->mem_err++;
@@ -398,12 +380,16 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	 * Go through mbuf chain and adjust the length of chained mbufs depending
 	 * on data length.
 	 */
-	for (mb = m, i = 0; mb->m_next != NULL; mb = mb->m_next, i++) {
-		if (left > 0) {
+	if (rxbuf->sg_buf_len) {
+		for (mb = m; mb != NULL; mb = mb->m_next) {
 			mb->m_len = min(rxbuf->sg_buf_len, left);
 			left -= mb->m_len;
-		} else
-			mb->m_len = 0;
+			if (left == 0) {
+				m_freem(mb->m_next);
+				mb->m_next = NULL;
+				break;
+			}
+		}
 	}
 
 	ionic_rx_checksum(ifp, m, comp, stats);
@@ -449,37 +435,15 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	rxq->lif->netdev->if_input(rxq->lif->netdev, m);
 }
 
-static int
-ionic_split_mbuf(struct rxque *rxq, struct mbuf *m, int len, int size)
-{
-	struct mbuf *newm;
-	int i, remain_len;
-
-	remain_len = len;
-	while (remain_len > 0) {
-		m = m_getm2(m, size, M_NOWAIT,  MT_DATA, 0);
-		if (m == NULL) {
-			return (-1);
-		}
-		remain_len -= size;
-	}
-
-	/* Loop through mbufs and set their size. */
-	for (newm = m, i = 0; newm->m_next != NULL; newm = newm->m_next, i++) 
-		newm->m_len = size;
-
-	return (i);
-}
-
 int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 {
-	bus_dma_segment_t  seg[IONIC_RX_MAX_SG_ELEMS + 1];
+	bus_dma_segment_t *pseg, seg[IONIC_RX_MAX_SG_ELEMS + 1];
 	struct ionic_rx_buf *rxbuf;
 	struct rxq_desc *desc;
 	struct rxq_sg_desc *sg;
-	struct mbuf *m;
+	struct mbuf *m, *mb;
 	struct rx_stats *stats = &rxq->stats;
-	int i, nsegs, error, size, num = 0;
+	int i, nsegs, error, size;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	rxbuf = &rxq->rxbuf[index];
@@ -497,20 +461,23 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 		stats->alloc_err++;
 		return (ENOMEM);
 	}
+	m->m_pkthdr.len = m->m_len = size;
 	/*
 	 * Set the size of mbuf for non-SG path.
 	 */
-	m->m_len = size;
-	m->m_pkthdr.len = len;
-	
 	if (ionic_rx_sg_size) {
 		rxbuf->sg_buf_len = ionic_rx_sg_size;
-		num = ionic_split_mbuf(rxq, m, len, ionic_rx_sg_size);
-		if (num < 0) {
-			rxbuf->m = NULL;
-			m_freem(m);
-			stats->alloc_err++;
-			return (ENOMEM);
+		mb = m;
+		while (m->m_pkthdr.len < len) {
+			mb = mb->m_next = m_getjcl(M_NOWAIT, MT_DATA, 0, size);
+			if (mb == NULL) {
+				rxbuf->m = NULL;
+				m_freem(m);
+				stats->alloc_err++;
+				return (ENOMEM);
+			}
+			mb->m_len = size;
+			m->m_pkthdr.len += size;
 		}
 	}
 	IONIC_RX_TRACE(rxq, "m(%p) len: %d/%d flags: 0x%x\n", m, m->m_len, len, m->m_flags);
@@ -533,11 +500,12 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 
 	size = desc->len;	
 	for (i = 0; i < nsegs - 1; i++) {
-		if (!seg[i].ds_len || seg[i].ds_len > ionic_rx_sg_size)
-			panic("seg[%d] 0x%lx %lu > %u\n", i, seg[i].ds_addr, seg[i].ds_len,
+		pseg = &seg[i + 1];
+		if (!pseg->ds_len || pseg->ds_len > ionic_rx_sg_size)
+			panic("seg[%d] 0x%lx %lu > %u\n", i, pseg->ds_addr, pseg->ds_len,
 				ionic_rx_sg_size);
-		sg->elems[i].addr = seg[i + 1].ds_addr;
-		sg->elems[i].len = seg[i + 1].ds_len;
+		sg->elems[i].addr = pseg->ds_addr;
+		sg->elems[i].len = pseg->ds_len;
 		size += sg->elems[i].len;
 	}
 
@@ -733,11 +701,9 @@ static irqreturn_t ionic_legacy_isr(int irq, void *data)
 	}
 
 	if (status & (1 << notifyq->intr.index)) {
-		IONIC_NOTIFYQ_LOCK(notifyq);
 		ionic_intr_mask(&notifyq->intr, true);
 		work_done = ionic_notifyq_clean(notifyq);
 		ionic_intr_return_credits(&notifyq->intr, work_done, true, true);
-		IONIC_NOTIFYQ_UNLOCK(notifyq);
 	}
 
 	for (i = 0; i < lif->nrxqs ; i++) {
@@ -1387,7 +1353,9 @@ ionic_if_init(void *arg)
 {
 	struct lif *lif = arg;
 
+	IONIC_CORE_LOCK(lif);
 	ionic_open_or_stop(lif);
+	IONIC_CORE_UNLOCK(lif);
 }
 
 int

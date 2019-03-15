@@ -150,6 +150,9 @@ struct notifyq {
 	int comp_index;						/* Index for completion descriptors. */
 
 	struct intr intr;
+
+	struct task task;
+	struct taskqueue *taskq;
 	/*
 	 * H/w command and completion descriptor rings.
 	 * Points to area allocated by DMA.
@@ -343,12 +346,6 @@ struct lif {
 #define IONIC_ADMIN_LOCK(x)		mtx_lock(&(x)->mtx);
 #define IONIC_ADMIN_UNLOCK(x)		mtx_unlock(&(x)->mtx);
 #define IONIC_ADMIN_LOCK_OWNED(x) 	mtx_owned(&(x)->mtx)
-
-#define IONIC_NOTIFYQ_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->mtx_name, NULL, MTX_DEF)
-#define IONIC_NOTIFYQ_LOCK_DESTROY(x)	mtx_destroy(&(x)->mtx)
-#define IONIC_NOTIFYQ_LOCK(x)		mtx_lock(&(x)->mtx);
-#define IONIC_NOTIFYQ_UNLOCK(x)		mtx_unlock(&(x)->mtx);
-#define IONIC_NOTIFYQ_LOCK_OWNED(x) 	mtx_owned(&(x)->mtx)
 
 #define IONIC_TX_LOCK_INIT(x)		mtx_init(&(x)->tx_mtx, (x)->mtx_name, NULL, MTX_DEF)
 #define IONIC_TX_LOCK_DESTROY(x) 	mtx_destroy(&(x)->tx_mtx)
