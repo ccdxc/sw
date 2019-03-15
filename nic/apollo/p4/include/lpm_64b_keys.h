@@ -15,24 +15,24 @@ action action_name(key0, key1, key2, key3, key4, key5, key6) {
             if (key >= key6) {
                 modify_field(next_addr, curr_addr + \
                              ((curr_addr - base_addr) * LPM_STAGE_FANOUT) + \
-                             (8 * LPM_TBL_SIZE));
+                             (LPM_B08_OFFSET));
             }
             else {
                 modify_field(next_addr, curr_addr + \
                              ((curr_addr - base_addr) * LPM_STAGE_FANOUT) + \
-                             (7 * LPM_TBL_SIZE));
+                             (LPM_B07_OFFSET));
             }
         }
         else {
             if (key >= key4) {
                 modify_field(next_addr, curr_addr + \
                              ((curr_addr - base_addr) * LPM_STAGE_FANOUT) + \
-                             (6 * LPM_TBL_SIZE));
+                             (LPM_B06_OFFSET));
             }
             else {
                 modify_field(next_addr, curr_addr + \
                              ((curr_addr - base_addr) * LPM_STAGE_FANOUT) + \
-                             (5 * LPM_TBL_SIZE));
+                             (LPM_B05_OFFSET));
             }
         }
     }
@@ -41,24 +41,24 @@ action action_name(key0, key1, key2, key3, key4, key5, key6) {
             if (key >= key2) {
                 modify_field(next_addr, curr_addr + \
                              ((curr_addr - base_addr) * LPM_STAGE_FANOUT) + \
-                             (4 * LPM_TBL_SIZE));
+                             (LPM_B04_OFFSET));
             }
             else {
                 modify_field(next_addr, curr_addr + \
                              ((curr_addr - base_addr) * LPM_STAGE_FANOUT) + \
-                             (3 * LPM_TBL_SIZE));
+                             (LPM_B03_OFFSET));
             }
         }
         else {
             if (key >= key0) {
                 modify_field(next_addr, curr_addr + \
                              ((curr_addr - base_addr) * LPM_STAGE_FANOUT) + \
-                             (2 * LPM_TBL_SIZE));
+                             (LPM_B02_OFFSET));
             }
             else {
                 modify_field(next_addr, curr_addr + \
                              ((curr_addr - base_addr) * LPM_STAGE_FANOUT) + \
-                             (1 * LPM_TBL_SIZE));
+                             (LPM_B01_OFFSET));
             }
         }
     }

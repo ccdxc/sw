@@ -35,7 +35,7 @@ tree_base_addr_size (mem_addr_t rfc_block_base_addr, itree_type_t tree_type,
                      mem_addr_t *tree_base_addr, uint32_t *tree_size)
 {
     switch (tree_type) {
-    case ITREE_TYPE_IPV4:
+    case ITREE_TYPE_IPV4_ACL:
         *tree_base_addr = rfc_block_base_addr + SACL_IPV4_TABLE_OFFSET;
         *tree_size = SACL_IPV4_TABLE_SIZE;
         break;
@@ -77,8 +77,8 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
     itable_t     *itable = &rfc_tree->itable;
 
     for (uint32_t i = 0; i < lpm_itable->num_intervals; i++) {
-        if ((lpm_itable->tree_type == ITREE_TYPE_IPV4) ||
-            (lpm_itable->tree_type == ITREE_TYPE_IPV6)) {
+        if ((lpm_itable->tree_type == ITREE_TYPE_IPV4_ACL) ||
+            (lpm_itable->tree_type == ITREE_TYPE_IPV6_ACL)) {
             lpm_itable->nodes[i].ipaddr = itable->nodes[i].ipaddr;
         } else if (lpm_itable->tree_type == ITREE_TYPE_PORT) {
             lpm_itable->nodes[i].port = itable->nodes[i].port;
@@ -131,7 +131,7 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
 
     /**< build LPM tree for the prefix portion of the rules */
     itable.tree_type =
-        (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4 : ITREE_TYPE_IPV6;
+        (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_ACL : ITREE_TYPE_IPV6_ACL;
     itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);

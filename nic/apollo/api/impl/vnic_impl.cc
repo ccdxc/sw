@@ -357,6 +357,12 @@ vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
             PDS_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
             MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr_1,
                                     addr, 5);
+        } else {
+            // TODO: hack - pls don't commit
+            addr = security_policy_impl_db()->security_policy_region_addr();
+            PDS_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
+            MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr_1,
+                                    addr, 5);
         }
         if (v6_policy) {
             addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();

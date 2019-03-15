@@ -1,11 +1,14 @@
 /*****************************************************************************/
-/* IPv6 Route LPM lookup                                                          */
+/* IPv6 Route LPM lookup                                                     */
 /*****************************************************************************/
+
+#include "../include/lpm_defines.h"
 
 /* Global definitions */
 #define LPM_TBL_SIZE  (64)
 #define key           p4_to_txdma_header.lpm_dst
 #define key_field     scratch_metadata.field64
+#define dat_field     scratch_metadata.field16
 #define base_addr     p4_to_txdma_header.lpm_addr
 #define next_addr     txdma_control.lpm_addr
 #define res_field     txdma_to_p4e_header.nexthop_index
@@ -68,7 +71,8 @@ control route_ipv6_lookup {
 
 #undef key
 #undef key_field
+#undef dat_field
 #undef base_addr
 #undef curr_addr
 #undef next_addr
-#undef result
+#undef res_field

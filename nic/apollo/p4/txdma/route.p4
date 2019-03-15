@@ -1,52 +1,67 @@
 /*****************************************************************************/
-/* Route LPM lookup                                                          */
+/* IPv4 Route LPM lookup                                                     */
 /*****************************************************************************/
 
-#define LPM_KEY_SIZE        4
-#define LPM_DATA_SIZE       2
-#define LPM_S0_ENTRY_PAD    4
-#define LPM_S1_ENTRY_PAD    4
-#define LPM_S2_ENTRY_PAD    20
-#define s0_stage            2
-#define s1_stage            3
-#define s2_stage            4
-#define s0_name             route_lpm_s0
-#define s1_name             route_lpm_s1
-#define s2_name             route_lpm_s2
-#define s2_name_ext         route_lpm_s2_ext
-#define key_field           scratch_metadata.v4_addr
-#define res_field           scratch_metadata.nh_index
-#define key                 p4_to_txdma_header.lpm_dst
-#define next_addr           p4_to_txdma_header.lpm_addr
-#define s2_offset           txdma_control.lpm_s2_offset
-#define base_addr           p4_to_txdma_header.lpm_addr
-#define result              txdma_to_p4e_header.nexthop_index
+#include "../include/lpm_defines.h"
 
-action route_lpm_s2_ext() {
+/* Global definitions */
+#define key           p4_to_txdma_header.lpm_dst
+#define key_field     scratch_metadata.field32
+#define dat_field     scratch_metadata.field16
+#define base_addr     p4_to_txdma_header.lpm_addr
+#define next_addr     txdma_control.lpm_addr
+#define res_field     txdma_to_p4e_header.nexthop_index
+
+/* Stage 0 */
+#define curr_addr     base_addr
+#define table_name    route_ipv4_keys
+#define action_name   search_routes32b
+#define stage_num     2
+
+#include "../include/lpm_32b_keys.h"
+
+#undef curr_addr
+#undef table_name
+#undef action_name
+#undef stage_num
+
+/* Stage 1 */
+#define curr_addr     next_addr
+#define table_name    route_ipv4_keys1
+#define action_name   search_routes32b1
+#define stage_num     3
+
+#include "../include/lpm_32b_keys.h"
+
+#undef table_name
+#undef action_name
+#undef stage_num
+
+/* Stage 2 */
+#define table_name    route_ipv4_data
+#define action_name   search_routes32b_retrieve
+#define res_handler   route_ipv4_handler
+#define stage_num     4
+
+#include "../include/lpm_32b_data.h"
+
+action res_handler() {
 }
 
-#include "../include/lpm.h"
+#undef table_name
+#undef action_name
+#undef stage_num
 
-control route_lookup {
-    apply(route_lpm_s0);
-    apply(route_lpm_s1);
-    apply(route_lpm_s2);
+control route_ipv4_lookup {
+    apply(route_ipv4_keys);
+    apply(route_ipv4_keys1);
+    apply(route_ipv4_data);
 }
 
-#undef LPM_KEY_SIZE
-#undef LPM_DATA_SIZE
-#undef LPM_S0_ENTRY_PAD
-#undef LPM_S1_ENTRY_PAD
-#undef LPM_S2_ENTRY_PAD
-#undef s0_stage
-#undef s1_stage
-#undef s1_name
-#undef s2_name
-#undef s2_name_ext
-#undef key_field
-#undef res_field
 #undef key
-#undef next_addr
-#undef s2_offset
+#undef key_field
+#undef dat_field
 #undef base_addr
-#undef result
+#undef curr_addr
+#undef next_addr
+#undef res_field

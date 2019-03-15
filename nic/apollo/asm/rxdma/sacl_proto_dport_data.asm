@@ -1,26 +1,25 @@
+#include "../../p4/include/lpm_defines.h"
+
 #include "apollo_rxdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "INGRESS_sacl_proto_dport_lpm_s2_k.h"
+#include "INGRESS_sacl_proto_dport_data_k.h"
 
-struct phv_                         p;
-struct sacl_proto_dport_lpm_s2_k_   k;
-struct sacl_proto_dport_lpm_s2_d    d;
+struct phv_                       p;
+struct sacl_proto_dport_data_k_   k;
+struct sacl_proto_dport_data_d    d;
 
-#define prog_name       sacl_proto_dport_lpm_s2
-#define prog_name_ext   sacl_proto_dport_lpm_s2_ext
-#define key             k.sacl_metadata_proto_dport
-#define keys(a)         d.sacl_proto_dport_lpm_s2_d.key ## a
-#define data(a)         d.sacl_proto_dport_lpm_s2_d.data ## a
-
-#define LPM_KEY_SIZE    3
-#define LPM_DATA_SIZE   2
+#define action_name        search_sacl_proto_dport_retrieve
+#define key                k.sacl_metadata_proto_dport
+#define keys(a)            d.search_sacl_proto_dport_retrieve_d.key ## a
+#define data(a)            d.search_sacl_proto_dport_retrieve_d.data ## a
+#define res_handler        sacl_proto_dport_handler
 
 %%
 
-#include "../include/lpm2.h"
+#include "../include/lpm32b_data.h"
 
-sacl_proto_dport_lpm_s2_ext:
+res_handler:
     add             r1, r0, k.p4_to_rxdma_header_sacl_base_addr
     add             r1, r1, SACL_P2_TABLE_OFFSET
     add             r1, r1, k.sacl_metadata_p1_class_id, 6
@@ -32,6 +31,6 @@ sacl_proto_dport_lpm_s2_ext:
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-sacl_proto_dport_lpm_s2_error:
+error_handler(action_name):
     phvwr.e         p.capri_intr_drop, 1
     nop

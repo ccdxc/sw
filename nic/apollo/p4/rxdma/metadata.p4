@@ -14,14 +14,17 @@ header_type sacl_metadata_t {
         pad4                        : 6;
         p2_table_addr               : 34;
         proto_dport_class_id        : 8;
-        ipv4_lpm_s2_offset          : 16;
-        proto_dport_lpm_s2_offset   : 16;
         proto_dport                 : 24;
         sport_class_id              : 7;
         ip_sport_class_id           : 17;
         p1_class_id                 : 10;
-        pad7                        : 30;
+        pad5                        : 30;
         ip                          : 128;
+        pad6                        : 6;
+        ipv4_table_addr_next        : 34;
+        pad7                        : 6;
+        proto_dport_table_addr_next : 34;
+        pad8                        : 8;
     }
 }
 

@@ -16,11 +16,11 @@ header_type txdma_control_metadata_t {
 
 header_type scratch_metadata_t {
     fields {
-        v4_addr         : 32;
-        v6_addr         : 128;
+        field16         : 16;
+        field32         : 32;
         field64         : 64;
-        nh_index        : 16;
-        data512         : 512;
+        field128        : 128;
+        field512        : 512;
         payload_addr    : 40;
         payload_len     : 14;
         qid             : 24;

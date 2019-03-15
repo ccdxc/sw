@@ -60,7 +60,7 @@ table read_qstate {
 }
 
 action read_control_info (data) {
-    modify_field(scratch_metadata.data512, data);
+    modify_field(scratch_metadata.field512, data);
     // Data is the predicate-header and p4_to_txdma_header. Populate fields
     // Note: Skip copying into the txdma_drop_event predicate bit since
     // it is set by read_qstate table

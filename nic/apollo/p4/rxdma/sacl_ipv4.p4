@@ -2,27 +2,50 @@
 /* Security ACL IPv4 LPM lookup                                              */
 /*****************************************************************************/
 
-#define LPM_KEY_SIZE        4
-#define LPM_DATA_SIZE       2
-#define LPM_S0_ENTRY_PAD    4
-#define LPM_S1_ENTRY_PAD    4
-#define LPM_S2_ENTRY_PAD    20
-#define s0_stage            1
-#define s1_stage            2
-#define s2_stage            3
-#define s0_name             sacl_ipv4_lpm_s0
-#define s1_name             sacl_ipv4_lpm_s1
-#define s2_name             sacl_ipv4_lpm_s2
-#define s2_name_ext         sacl_ipv4_lpm_s2_ext
-#define key_field           scratch_metadata.ipv4_addr
-#define res_field           scratch_metadata.class_id16
-#define key                 sacl_metadata.ip
-#define next_addr           sacl_metadata.ipv4_table_addr
-#define s2_offset           sacl_metadata.ipv4_lpm_s2_offset
-#define base_addr           sacl_metadata.ipv4_table_addr
-#define result              scratch_metadata.class_id10
+#include "../include/lpm_defines.h"
 
-action sacl_ipv4_lpm_s2_ext() {
+/* Global definitions */
+#define key           sacl_metadata.ip
+#define key_field     scratch_metadata.ipv4_addr
+#define dat_field     scratch_metadata.class_id10
+#define base_addr     sacl_metadata.ipv4_table_addr
+#define next_addr     sacl_metadata.ipv4_table_addr_next
+#define res_field     scratch_metadata.class_id10
+
+/* Stage 0 */
+#define curr_addr     base_addr
+#define table_name    sacl_ipv4_keys
+#define action_name   search_sacl_ip32b
+#define stage_num     1
+
+#include "../include/lpm_32b_keys.h"
+
+#undef curr_addr
+#undef table_name
+#undef action_name
+#undef stage_num
+
+/* Stage 1 */
+#define curr_addr     next_addr
+#define table_name    sacl_ipv4_keys1
+#define action_name   search_sacl_ip32b1
+#define stage_num     2
+
+#include "../include/lpm_32b_keys.h"
+
+#undef table_name
+#undef action_name
+#undef stage_num
+
+/* Stage 2 */
+#define table_name    sacl_ipv4_data
+#define action_name   search_sacl_ip32b_retrieve
+#define res_handler   sacl_ipv4_handler
+#define stage_num     3
+
+#include "../include/lpm_32b_data.h"
+
+action res_handler() {
     modify_field(sacl_metadata.p1_table_addr,
         p4_to_rxdma_header.sacl_base_addr + SACL_P1_TABLE_OFFSET +
         (((scratch_metadata.class_id10 |
@@ -31,24 +54,14 @@ action sacl_ipv4_lpm_s2_ext() {
         (scratch_metadata.class_id10 | (sacl_metadata.sport_class_id << 10)));
 }
 
-#include "../include/lpm.h"
+#undef table_name
+#undef action_name
+#undef stage_num
 
-#undef LPM_KEY_SIZE
-#undef LPM_DATA_SIZE
-#undef LPM_S0_ENTRY_PAD
-#undef LPM_S1_ENTRY_PAD
-#undef LPM_S2_ENTRY_PAD
-#undef s0_stage
-#undef s1_stage
-#undef s2_stage
-#undef s0_name
-#undef s1_name
-#undef s2_name
-#undef s2_name_ext
-#undef key_field
-#undef res_field
 #undef key
-#undef next_addr
-#undef s2_offset
+#undef key_field
+#undef dat_field
 #undef base_addr
-#undef result
+#undef curr_addr
+#undef next_addr
+#undef res_field

@@ -404,12 +404,12 @@ control sacl {
          */
         apply(sacl_sport_lpm_s0);
         apply(sacl_sport_lpm_s1);
-        apply(sacl_ipv4_lpm_s0);
-        apply(sacl_ipv4_lpm_s1);
-        apply(sacl_ipv4_lpm_s2);
-        apply(sacl_proto_dport_lpm_s0);
-        apply(sacl_proto_dport_lpm_s1);
-        apply(sacl_proto_dport_lpm_s2);
+        apply(sacl_ipv4_keys);
+        apply(sacl_ipv4_keys1);
+        apply(sacl_ipv4_data);
+        apply(sacl_proto_dport_keys);
+        apply(sacl_proto_dport_keys1);
+        apply(sacl_proto_dport_data);
         apply(sacl_ip_sport_p1);
         apply(sacl_p2);
     }

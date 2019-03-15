@@ -1,26 +1,25 @@
+#include "../../p4/include/lpm_defines.h"
+
 #include "apollo_rxdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "INGRESS_sacl_ipv4_lpm_s2_k.h"
+#include "INGRESS_sacl_ipv4_data_k.h"
 
-struct phv_                 p;
-struct sacl_ipv4_lpm_s2_k_  k;
-struct sacl_ipv4_lpm_s2_d   d;
+struct phv_                p;
+struct sacl_ipv4_data_k_   k;
+struct sacl_ipv4_data_d    d;
 
-#define prog_name       sacl_ipv4_lpm_s2
-#define prog_name_ext   sacl_ipv4_lpm_s2_ext
-#define key             k.sacl_metadata_ip
-#define keys(a)         d.sacl_ipv4_lpm_s2_d.key ## a
-#define data(a)         d.sacl_ipv4_lpm_s2_d.data ## a
-
-#define LPM_KEY_SIZE   4
-#define LPM_DATA_SIZE  2
+#define action_name        search_sacl_ip32b_retrieve
+#define key                k.sacl_metadata_ip
+#define keys(a)            d.search_sacl_ip32b_retrieve_d.key ## a
+#define data(a)            d.search_sacl_ip32b_retrieve_d.data ## a
+#define res_handler        sacl_ipv4_handler
 
 %%
 
-#include "../include/lpm2.h"
+#include "../include/lpm32b_data.h"
 
-sacl_ipv4_lpm_s2_ext:
+res_handler:
     or              r2, r7, k.sacl_metadata_sport_class_id, 10
     div             r6, r2, 51
     phvwr           p.sacl_metadata_ip_sport_class_id, r2
@@ -34,6 +33,6 @@ sacl_ipv4_lpm_s2_ext:
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-sacl_ipv4_lpm_s2_error:
+error_handler(action_name):
     phvwr.e         p.capri_intr_drop, 1
     nop

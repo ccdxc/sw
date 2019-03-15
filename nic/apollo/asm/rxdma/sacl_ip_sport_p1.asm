@@ -1,3 +1,5 @@
+#include "../../p4/include/lpm_defines.h"
+
 #include "apollo_rxdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"

@@ -5,11 +5,11 @@
 #include "ingress.h"
 
 struct phv_                p;
-struct route_ipv6_keys2_k  k;
-struct route_ipv6_keys2_d  d;
+struct route_ipv4_keys1_k  k;
+struct route_ipv4_keys1_d  d;
 
-#define action_name        search2
-#define keys(a)            d.search2_d.key ## a
+#define action_name        search_routes32b1_d
+#define keys(a)            d.search_routes32b1_d.key ## a
 #define key                k.p4_to_txdma_header_lpm_dst
 #define base_addr          k.{p4_to_txdma_header_lpm_addr_sbit0_ebit1...\
                               p4_to_txdma_header_lpm_addr_sbit2_ebit33}
@@ -17,4 +17,4 @@ struct route_ipv6_keys2_d  d;
                               txdma_control_lpm_addr_sbit2_ebit33}
 #define next_addr          p.txdma_control_lpm_addr
 
-#include "../include/lpm64b_keys.h"
+#include "../include/lpm32b_keys.h"

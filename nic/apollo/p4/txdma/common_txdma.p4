@@ -1061,7 +1061,7 @@ control ingress {
             if (app_header.table1_valid == 1) {
                 route_ipv6_lookup();
             } else {
-                route_lookup();
+                route_ipv4_lookup();
             }
         }
         dma();
