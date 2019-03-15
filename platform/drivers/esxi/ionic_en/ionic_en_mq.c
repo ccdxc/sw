@@ -1561,13 +1561,6 @@ ionic_en_rx_validate_filter_attrs(struct ionic_en_priv_data *priv_data,    // IN
                 goto out;
         }
 
-        if (ring_index == 0 &&
-            !is_rss) {
-                ionic_warn("Ignore filter on default queue");
-                status = VMK_IGNORE;
-                goto out;
-        }
-
         status = VMK_OK;
 
 out:
