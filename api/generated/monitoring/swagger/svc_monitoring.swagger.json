@@ -67,21 +67,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -315,14 +315,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -612,21 +612,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -860,14 +860,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1215,21 +1215,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1463,14 +1463,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1741,21 +1741,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1989,14 +1989,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2313,21 +2313,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2500,14 +2500,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2791,21 +2791,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3039,14 +3039,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3299,21 +3299,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3547,14 +3547,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3799,21 +3799,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4047,14 +4047,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4324,21 +4324,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4511,14 +4511,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4705,21 +4705,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4953,14 +4953,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5160,14 +5160,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5413,7 +5413,7 @@
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5721,14 +5721,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5974,7 +5974,7 @@
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6340,14 +6340,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6593,7 +6593,7 @@
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6882,14 +6882,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -7135,7 +7135,7 @@
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -7470,14 +7470,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -7656,7 +7656,7 @@
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -7952,14 +7952,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8205,7 +8205,7 @@
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8476,14 +8476,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8729,7 +8729,7 @@
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8992,14 +8992,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -9245,7 +9245,7 @@
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -9533,14 +9533,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -9719,7 +9719,7 @@
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -9912,21 +9912,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -10079,21 +10079,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -10246,21 +10246,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -10413,21 +10413,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -10580,21 +10580,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -10747,21 +10747,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -10914,21 +10914,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -11081,21 +11081,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -11248,21 +11248,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -11421,14 +11421,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -11587,14 +11587,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -11753,14 +11753,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -11919,14 +11919,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -12085,14 +12085,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -12251,14 +12251,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -12417,14 +12417,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -12583,14 +12583,14 @@
           },
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -12725,10 +12725,18 @@
       ],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
+          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
         },
         "tenant": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "pattern": "^[a-zA-Z0-9]+$",
+          "description": "must be alpha-numericslength of string should be between 1 and 48"
         },
         "namespace": {
           "type": "string"
@@ -12815,18 +12823,29 @@
     },
     "apiObjectMeta": {
       "type": "object",
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
-          "title": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters"
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
+          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+          "title": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters"
         },
         "tenant": {
           "type": "string",
-          "title": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters"
+          "minLength": 1,
+          "maxLength": 48,
+          "pattern": "^[a-zA-Z0-9]+$",
+          "description": "must be alpha-numericslength of string should be between 1 and 48",
+          "title": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters"
         },
         "namespace": {
           "type": "string",
-          "title": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters"
+          "title": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters"
         },
         "generation-id": {
           "type": "string",
@@ -13458,7 +13477,7 @@
             "type": "string"
           },
           "example": "tcp/1234, arp",
-          "description": "should be a valid layer3 or layer 4 protocol and port/type\n",
+          "description": "should be a valid layer3 or layer 4 protocol and port/type",
           "title": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]"
         },
         "applications": {
@@ -13846,13 +13865,13 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 2048,
-          "description": "length of string should be between 1 and 2048\n",
+          "description": "length of string should be between 1 and 2048",
           "title": "IP address or URL of the collector/entity to which the data is to be exported"
         },
         "transport": {
           "type": "string",
           "example": "tcp/1234, arp",
-          "description": "should be a valid layer3 or layer 4 protocol and port/type\n",
+          "description": "should be a valid layer3 or layer 4 protocol and port/type",
           "title": "protocol and Port number where an external collector is gathering the data\nexample \"TCP/2055\""
         },
         "credentials": {
@@ -13969,7 +13988,7 @@
           "type": "string",
           "default": "10s",
           "example": "2h",
-          "description": "should be a valid time duration between 1s and 24h0m0s\n",
+          "description": "should be a valid time duration between 1s and 24h0m0s",
           "title": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'"
         },
         "format": {
@@ -14369,7 +14388,7 @@
           "type": "string",
           "default": "2h",
           "example": "2h",
-          "description": "should be a valid time duration of at most 2h0m0s\n",
+          "description": "should be a valid time duration of at most 2h0m0s",
           "title": "Stop after specified amount of time. E.g. 1h, 20min\nMaximum length allowed is 2h"
         }
       },

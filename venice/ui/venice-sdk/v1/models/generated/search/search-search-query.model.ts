@@ -24,11 +24,9 @@ export interface ISearchSearchQuery {
 
 export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     'texts': Array<SearchTextRequirement> = null;
-    /** length of string should be between 0 and 64
-     */
+    /** length of string should be between 0 and 64 */
     'categories': Array<SearchSearchQuery_categories> = null;
-    /** length of string should be between 0 and 64
-     */
+    /** length of string should be between 0 and 64 */
     'kinds': Array<SearchSearchQuery_kinds> = null;
     'fields': FieldsSelector = null;
     'labels': LabelsSelector = null;
@@ -40,14 +38,14 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
         'categories': {
             enum: SearchSearchQuery_categories,
             default: 'Cluster',
-            description:  'length of string should be between 0 and 64 ',
+            description:  'length of string should be between 0 and 64',
             required: false,
             type: 'Array<string>'
         },
         'kinds': {
             enum: SearchSearchQuery_kinds,
             default: 'Cluster',
-            description:  'length of string should be between 0 and 64 ',
+            description:  'length of string should be between 0 and 64',
             required: false,
             type: 'Array<string>'
         },

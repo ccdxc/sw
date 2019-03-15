@@ -763,13 +763,13 @@ func TestFieldProfiles(t *testing.T) {
 			Required:  map[string]bool{"all": true},
 		},
 		"regexp_field1": FieldProfile{
-			DocString: map[string]string{"all": "must start and end with alpha numeric and can have alphanumeric, -, _, ., :"},
-			Pattern:   map[string]string{"all": `^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`},
+			DocString: map[string]string{"all": "must start and end with alpha numeric and can have alphanumeric, -, _, ."},
+			Pattern:   map[string]string{"all": `^[a-zA-Z0-9][\w\-\.]*[a-zA-Z0-9]$`},
 			Required:  map[string]bool{"all": true},
 		},
 		"regexp_field2": FieldProfile{
-			DocString: map[string]string{"all": "must start and end with alpha numeric and can have alphanumeric, -, _, ., :"},
-			Pattern:   map[string]string{"all": `^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`},
+			DocString: map[string]string{"all": "must start and end with alpha numeric and can have alphanumeric, -, _, ."},
+			Pattern:   map[string]string{"all": `^[a-zA-Z0-9][\w\-\.]*[a-zA-Z0-9]$`},
 			Required:  map[string]bool{"all": false},
 		},
 		"duration1": FieldProfile{

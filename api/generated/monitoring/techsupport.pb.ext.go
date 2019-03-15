@@ -202,24 +202,31 @@ func (m *TechSupportRequest) References(tenant string, path string, resp map[str
 
 func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for TechSupportRequest"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
-	}
-	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for TechSupportRequest"))
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if !ignoreStatus {
 
@@ -242,23 +249,27 @@ func (m *TechSupportRequestSpec) References(tenant string, path string, resp map
 func (m *TechSupportRequestSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.CollectionSelector != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "CollectionSelector"
-		if errs := m.CollectionSelector.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "CollectionSelector"
+			if errs := m.CollectionSelector.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if m.NodeSelector != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "NodeSelector"
-		if errs := m.NodeSelector.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "NodeSelector"
+			if errs := m.NodeSelector.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -271,13 +282,15 @@ func (m *TechSupportRequestSpec_NodeSelectorSpec) References(tenant string, path
 func (m *TechSupportRequestSpec_NodeSelectorSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Labels != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Labels"
-		if errs := m.Labels.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Labels"
+			if errs := m.Labels.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret

@@ -188,21 +188,27 @@ func (m *Service) References(tenant string, path string, resp map[string]apiintf
 
 func (m *Service) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	return ret
 }
@@ -214,13 +220,15 @@ func (m *ServiceSpec) References(tenant string, path string, resp map[string]api
 func (m *ServiceSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.TLSServerPolicy != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "TLSServerPolicy"
-		if errs := m.TLSServerPolicy.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "TLSServerPolicy"
+			if errs := m.TLSServerPolicy.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret

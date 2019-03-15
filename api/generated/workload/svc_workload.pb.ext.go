@@ -189,6 +189,16 @@ func (m *AutoMsgEndpointWatchHelper) References(tenant string, path string, resp
 
 func (m *AutoMsgEndpointWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -198,6 +208,18 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) References(tenant string, path s
 
 func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	return ret
 }
 
@@ -227,13 +249,15 @@ func (m *AutoMsgWorkloadWatchHelper_WatchEvent) References(tenant string, path s
 func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -245,6 +269,16 @@ func (m *EndpointList) References(tenant string, path string, resp map[string]ap
 
 func (m *EndpointList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 

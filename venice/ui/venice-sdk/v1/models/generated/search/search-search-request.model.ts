@@ -22,14 +22,11 @@ export interface ISearchSearchRequest {
 
 
 export class SearchSearchRequest extends BaseModel implements ISearchSearchRequest {
-    /** length of string should be between 0 and 256
-     */
+    /** length of string should be between 0 and 256 */
     'query-string': string = null;
-    /** value should be between 0 and 1023
-     */
+    /** value should be between 0 and 1023 */
     'from': number = null;
-    /** value should be between 0 and 8192
-     */
+    /** value should be between 0 and 8192 */
     'max-results': number = null;
     /** SortyBy is an optional parameter and contains the field name 
     to be sorted by, For eg: "meta.name"
@@ -46,18 +43,18 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     'tenants': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'query-string': {
-            description:  'length of string should be between 0 and 256 ',
+            description:  'length of string should be between 0 and 256',
             required: false,
             type: 'string'
         },
         'from': {
-            description:  'value should be between 0 and 1023 ',
+            description:  'value should be between 0 and 1023',
             required: true,
             type: 'number'
         },
         'max-results': {
             default: parseInt('50'),
-            description:  'value should be between 0 and 8192 ',
+            description:  'value should be between 0 and 8192',
             required: true,
             type: 'number'
         },

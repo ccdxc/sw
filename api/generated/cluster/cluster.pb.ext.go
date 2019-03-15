@@ -593,15 +593,20 @@ func (m *Cluster) References(tenant string, path string, resp map[string]apiintf
 
 func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Cluster"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
-	}
-	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for Cluster"))
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	return ret
 }
@@ -648,15 +653,20 @@ func (m *Host) References(tenant string, path string, resp map[string]apiintf.Re
 
 func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Host"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
-	}
-	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for Host"))
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	return ret
 }
@@ -725,15 +735,20 @@ func (m *Node) References(tenant string, path string, resp map[string]apiintf.Re
 
 func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Node"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
-	}
-	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for Node"))
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if !ignoreStatus {
 
@@ -778,13 +793,15 @@ func (m *NodeInfo) References(tenant string, path string, resp map[string]apiint
 func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.MemoryInfo != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "MemoryInfo"
-		if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "MemoryInfo"
+			if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret

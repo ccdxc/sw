@@ -285,24 +285,31 @@ func (m *SmartNIC) References(tenant string, path string, resp map[string]apiint
 
 func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for SmartNIC"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
-	}
-	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for SmartNIC"))
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if !ignoreStatus {
 
@@ -347,13 +354,15 @@ func (m *SmartNICInfo) References(tenant string, path string, resp map[string]ap
 func (m *SmartNICInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.MemoryInfo != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "MemoryInfo"
-		if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "MemoryInfo"
+			if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -398,13 +407,15 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	if m.SystemInfo != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "SystemInfo"
-		if errs := m.SystemInfo.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "SystemInfo"
+			if errs := m.SystemInfo.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if vs, ok := validatorMapSmartnic["SmartNICStatus"][ver]; ok {

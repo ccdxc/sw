@@ -15,21 +15,19 @@ export interface ITelemetry_queryPaginationSpec {
 
 
 export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemetry_queryPaginationSpec {
-    /** value should be at least 0
-     */
+    /** value should be at least 0 */
     'offset': number = null;
-    /** value should be at least 1
-     */
+    /** value should be at least 1 */
     'count': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'offset': {
             default: parseInt('0'),
-            description:  'value should be at least 0 ',
+            description:  'value should be at least 0',
             required: true,
             type: 'number'
         },
         'count': {
-            description:  'value should be at least 1 ',
+            description:  'value should be at least 1',
             required: true,
             type: 'number'
         },

@@ -30,7 +30,9 @@ export interface IApiListWatchOptions {
 
 
 export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptions {
+    /** must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
     'name': string = null;
+    /** must be alpha-numericslength of string should be between 1 and 48 */
     'tenant': string = null;
     'namespace': string = null;
     'generation-id': string = null;
@@ -52,10 +54,12 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'sort-order': ApiListWatchOptions_sort_order = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
+            description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
             required: false,
             type: 'string'
         },
         'tenant': {
+            description:  'must be alpha-numericslength of string should be between 1 and 48',
             required: false,
             type: 'string'
         },
@@ -273,8 +277,8 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': CustomFormControl(new FormControl(this['name']), ApiListWatchOptions.propInfo['name']),
-                'tenant': CustomFormControl(new FormControl(this['tenant']), ApiListWatchOptions.propInfo['tenant']),
+                'name': CustomFormControl(new FormControl(this['name'], [minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64'), ]), ApiListWatchOptions.propInfo['name']),
+                'tenant': CustomFormControl(new FormControl(this['tenant'], [minLengthValidator(1), maxLengthValidator(48), patternValidator('^[a-zA-Z0-9]+$', 'must be alpha-numericslength of string should be between 1 and 48'), ]), ApiListWatchOptions.propInfo['tenant']),
                 'namespace': CustomFormControl(new FormControl(this['namespace']), ApiListWatchOptions.propInfo['namespace']),
                 'generation-id': CustomFormControl(new FormControl(this['generation-id']), ApiListWatchOptions.propInfo['generation-id']),
                 'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiListWatchOptions.propInfo['resource-version']),

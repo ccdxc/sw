@@ -249,10 +249,18 @@
       ],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
+          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
         },
         "tenant": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "pattern": "^[a-zA-Z0-9]+$",
+          "description": "must be alpha-numericslength of string should be between 1 and 48"
         },
         "namespace": {
           "type": "string"
@@ -339,18 +347,29 @@
     },
     "apiObjectMeta": {
       "type": "object",
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
-          "title": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters"
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
+          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+          "title": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters"
         },
         "tenant": {
           "type": "string",
-          "title": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters"
+          "minLength": 1,
+          "maxLength": 48,
+          "pattern": "^[a-zA-Z0-9]+$",
+          "description": "must be alpha-numericslength of string should be between 1 and 48",
+          "title": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters"
         },
         "namespace": {
           "type": "string",
-          "title": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters"
+          "title": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters"
         },
         "generation-id": {
           "type": "string",
@@ -803,7 +822,7 @@
           ],
           "default": "Cluster",
           "maxLength": 64,
-          "description": "length of string should be between 0 and 64\n",
+          "description": "length of string should be between 0 and 64",
           "title": "OR of Categories to be matched, AND and Exclude are not supported for this type\nThe max category string length is 64 bytes"
         },
         "kinds": {
@@ -847,7 +866,7 @@
           ],
           "default": "Cluster",
           "maxLength": 64,
-          "description": "length of string should be between 0 and 64\n",
+          "description": "length of string should be between 0 and 64",
           "title": "OR of Kinds to be matched, AND and Exclude are not supported for this type\nThe max kind string length is 64 bytes"
         },
         "fields": {
@@ -871,14 +890,14 @@
         "query-string": {
           "type": "string",
           "maxLength": 256,
-          "description": "length of string should be between 0 and 256\n",
+          "description": "length of string should be between 0 and 256",
           "title": "Simple query string\nThis can be specified as URI parameter.\nFor advanced query cases, Users should use specify SearchQuery\nand pass the SearchRequest in a GET/POST Body\nThe max query-string length is 256 bytes"
         },
         "from": {
           "type": "integer",
           "format": "int32",
           "maximum": 1023,
-          "description": "value should be between 0 and 1023\n",
+          "description": "value should be between 0 and 1023",
           "title": "From represents the start offset (zero based), used in paginated search requests\nThe results returned would be in the range [From ... From+MaxResults-1]\nThis can be specified as URI parameter. \nDefault value is 0 and valid range is 0..1023"
         },
         "max-results": {
@@ -886,7 +905,7 @@
           "format": "int32",
           "default": "50",
           "maximum": 8192,
-          "description": "value should be between 0 and 8192\n",
+          "description": "value should be between 0 and 8192",
           "title": "MaxResults is the max-count of search results\nThis can be specified as URI parameter.\nDefault value is 50 and valid range is 0..8192"
         },
         "sort-by": {
@@ -991,7 +1010,7 @@
             "type": "string"
           },
           "maxLength": 256,
-          "description": "length of string should be between 0 and 256\n",
+          "description": "length of string should be between 0 and 256",
           "title": "AND of words or phrases to be matched\nThe max text-string length is 256 bytes"
         }
       },

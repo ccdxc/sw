@@ -750,24 +750,31 @@ func (m *AuthenticationPolicy) References(tenant string, path string, resp map[s
 
 func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for AuthenticationPolicy"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
-	}
-	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for AuthenticationPolicy"))
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if !ignoreStatus {
 
@@ -790,13 +797,15 @@ func (m *AuthenticationPolicySpec) References(tenant string, path string, resp m
 func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Authenticators"
-	if errs := m.Authenticators.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Authenticators"
+		if errs := m.Authenticators.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if vs, ok := validatorMapAuth["AuthenticationPolicySpec"][ver]; ok {
 		for _, v := range vs {
@@ -850,13 +859,15 @@ func (m *Authenticators) References(tenant string, path string, resp map[string]
 func (m *Authenticators) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Radius != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Radius"
-		if errs := m.Radius.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Radius"
+			if errs := m.Radius.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if vs, ok := validatorMapAuth["Authenticators"][ver]; ok {
@@ -1043,13 +1054,15 @@ func (m *RadiusServerStatus) References(tenant string, path string, resp map[str
 func (m *RadiusServerStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Server != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Server"
-		if errs := m.Server.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Server"
+			if errs := m.Server.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if vs, ok := validatorMapAuth["RadiusServerStatus"][ver]; ok {
@@ -1097,21 +1110,27 @@ func (m *Role) References(tenant string, path string, resp map[string]apiintf.Re
 
 func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	return ret
 }
@@ -1155,12 +1174,16 @@ func (m *RoleBinding) References(tenant string, path string, resp map[string]api
 
 func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	return ret
 }
@@ -1270,21 +1293,27 @@ func (m *User) References(tenant string, path string, resp map[string]apiintf.Re
 
 func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if !ignoreStatus {
 

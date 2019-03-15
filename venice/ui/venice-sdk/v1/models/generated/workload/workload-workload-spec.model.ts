@@ -16,13 +16,12 @@ export interface IWorkloadWorkloadSpec {
 
 
 export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkloadSpec {
-    /** should be a valid host address, IP address or hostname
-     */
+    /** should be a valid host address, IP address or hostname */
     'host-name': string = null;
     'interfaces': Array<WorkloadWorkloadIntfSpec> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'host-name': {
-            description:  'should be a valid host address, IP address or hostname ',
+            description:  'should be a valid host address, IP address or hostname',
             hint:  '10.1.1.1, ff02::5, localhost, example.domain.com ',
             required: true,
             type: 'string'

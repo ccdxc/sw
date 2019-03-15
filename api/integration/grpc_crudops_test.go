@@ -2047,12 +2047,9 @@ func TestStaging(t *testing.T) {
 		ca := staging.CommitAction{}
 		ca.Name = bufName
 		ca.Tenant = tenantName
-		cresp, err := restcl.StagingV1().Buffer().Commit(ctx, &ca)
-		if err != nil {
-			t.Fatalf("commit operation failed (%s)", err)
-		}
-		if cresp.Status.Status == staging.CommitActionStatus_SUCCESS.String() {
-			t.Fatalf("commit operation succeeded, expected to fail")
+		_, err = restcl.StagingV1().Buffer().Commit(ctx, &ca)
+		if err == nil {
+			t.Fatalf("commit operation should have failed (%s)", err)
 		}
 		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
 		if err != nil {

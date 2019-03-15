@@ -28,8 +28,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     'ip-config': ClusterIPConfig = null;
     'mgmt-mode': ClusterSmartNICSpec_mgmt_mode = null;
     'network-mode': ClusterSmartNICSpec_network_mode = null;
-    /** value should be between 0 and 4095
-     */
+    /** value should be between 0 and 4095 */
     'mgmt-vlan': number = null;
     'controllers': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
@@ -58,7 +57,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
             type: 'string'
         },
         'mgmt-vlan': {
-            description:  'value should be between 0 and 4095 ',
+            description:  'value should be between 0 and 4095',
             required: true,
             type: 'number'
         },

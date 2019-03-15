@@ -152,7 +152,8 @@ WaitLoop:
 
 	Assert(t, len(addrs) == 2, "expecting 2 notifications got [%d]", len(addrs))
 	Assert(t, len(addrs[0]) == 0, "expecting first notification to be empty")
-	Assert(t, len(addrs[1]) == 1, "expecting second notification to be empty")
+	Assert(t, len(addrs[1]) == 1, "expecting second notification to have 1 entry")
 	AssertEquals(t, "node1:8888", addrs[1][0].Addr, fmt.Sprintf("Expected node1:8888, got %v", addrs[1][0].Addr))
 	b.Close()
+	b1.Close()
 }

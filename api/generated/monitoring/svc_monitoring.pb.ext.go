@@ -924,13 +924,15 @@ func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) References(tenant string
 func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -987,13 +989,15 @@ func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) References(tenant string, pat
 func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -1050,13 +1054,15 @@ func (m *AutoMsgAlertWatchHelper_WatchEvent) References(tenant string, path stri
 func (m *AutoMsgAlertWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -1088,13 +1094,15 @@ func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) References(tenant string, pat
 func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -1126,13 +1134,15 @@ func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) References(tenant string
 func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -1164,13 +1174,15 @@ func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) References(tenant string, pat
 func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -1202,13 +1214,15 @@ func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) References(tenant string, p
 func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -1240,13 +1254,15 @@ func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) References(tenant string, pat
 func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -1278,13 +1294,15 @@ func (m *AutoMsgTechSupportRequestWatchHelper_WatchEvent) References(tenant stri
 func (m *AutoMsgTechSupportRequestWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -1316,13 +1334,15 @@ func (m *AutoMsgTroubleshootingSessionWatchHelper_WatchEvent) References(tenant 
 func (m *AutoMsgTroubleshootingSessionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret

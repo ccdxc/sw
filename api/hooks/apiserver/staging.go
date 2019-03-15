@@ -6,10 +6,12 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
+	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
@@ -128,6 +130,7 @@ func (h *stagingHooks) deleteBuffer(ctx context.Context, oper apiintf.APIOperTyp
 
 func (h *stagingHooks) commitAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	h.l.InfoLog("msg", "received commitAction preCommit Hook")
+	var err error
 	buf, ok := i.(staging.CommitAction)
 	if !ok {
 		h.l.ErrorLog("invalid object in post commit hook for staging Commit")
@@ -143,14 +146,16 @@ func (h *stagingHooks) commitAction(ctx context.Context, kv kvstore.Interface, t
 	if err != nil {
 		buf.Status.Status = staging.CommitActionStatus_FAILED.String()
 		buf.Status.Reason = err.Error()
+		err = apierrors.ToGrpcError(err, []string{"commit of transaction failed"}, int32(codes.FailedPrecondition), "", nil)
 	} else {
 		buf.Status.Status = staging.CommitActionStatus_SUCCESS.String()
 	}
-	return buf, false, nil
+	return buf, false, err
 }
 
 func (h *stagingHooks) clearAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	h.l.InfoLog("msg", "received clearAction preCommit Hook")
+	var err error
 	buf, ok := i.(staging.ClearAction)
 	if !ok {
 		h.l.ErrorLog("invalid object in post commit hook for staging Clear")
@@ -174,10 +179,11 @@ func (h *stagingHooks) clearAction(ctx context.Context, kv kvstore.Interface, tx
 	if err != nil {
 		buf.Status.Status = staging.ClearActionStatus_FAILED.String()
 		buf.Status.Reason = err.Error()
+		err = apierrors.ToGrpcError(err, []string{"commit of transaction failed"}, int32(codes.FailedPrecondition), "", nil)
 	} else {
 		buf.Status.Status = staging.ClearActionStatus_SUCCESS.String()
 	}
-	return buf, false, nil
+	return buf, false, err
 }
 
 func registerStagingHooks(svc apiserver.Service, logger log.Logger) {

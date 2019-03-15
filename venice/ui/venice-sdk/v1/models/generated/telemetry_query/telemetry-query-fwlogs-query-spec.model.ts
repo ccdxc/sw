@@ -28,17 +28,13 @@ export interface ITelemetry_queryFwlogsQuerySpec {
 
 
 export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITelemetry_queryFwlogsQuerySpec {
-    /** should be a valid v4 or v6 IP address
-     */
+    /** should be a valid v4 or v6 IP address */
     'source-ips': Array<string> = null;
-    /** should be a valid v4 or v6 IP address
-     */
+    /** should be a valid v4 or v6 IP address */
     'dest-ips': Array<string> = null;
-    /** value should be between 0 and 65535
-     */
+    /** value should be between 0 and 65535 */
     'source-ports': Array<number> = null;
-    /** value should be between 0 and 65535
-     */
+    /** value should be between 0 and 65535 */
     'dest-ports': Array<number> = null;
     'protocols': Array<string> = null;
     'actions': Array<Telemetry_queryFwlogsQuerySpec_actions> = null;
@@ -50,24 +46,24 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
     'pagination': Telemetry_queryPaginationSpec = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'source-ips': {
-            description:  'should be a valid v4 or v6 IP address ',
+            description:  'should be a valid v4 or v6 IP address',
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'Array<string>'
         },
         'dest-ips': {
-            description:  'should be a valid v4 or v6 IP address ',
+            description:  'should be a valid v4 or v6 IP address',
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'Array<string>'
         },
         'source-ports': {
-            description:  'value should be between 0 and 65535 ',
+            description:  'value should be between 0 and 65535',
             required: true,
             type: 'Array<number>'
         },
         'dest-ports': {
-            description:  'value should be between 0 and 65535 ',
+            description:  'value should be between 0 and 65535',
             required: true,
             type: 'Array<number>'
         },

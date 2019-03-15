@@ -225,13 +225,15 @@ func (m *ExportConfig) References(tenant string, path string, resp map[string]ap
 func (m *ExportConfig) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Credentials != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Credentials"
-		if errs := m.Credentials.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Credentials"
+			if errs := m.Credentials.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if vs, ok := validatorMapExport["ExportConfig"][ver]; ok {
@@ -301,23 +303,27 @@ func (m *SNMPTrapServer) References(tenant string, path string, resp map[string]
 func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.AuthConfig != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "AuthConfig"
-		if errs := m.AuthConfig.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "AuthConfig"
+			if errs := m.AuthConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if m.PrivacyConfig != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "PrivacyConfig"
-		if errs := m.PrivacyConfig.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "PrivacyConfig"
+			if errs := m.PrivacyConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if vs, ok := validatorMapExport["SNMPTrapServer"][ver]; ok {

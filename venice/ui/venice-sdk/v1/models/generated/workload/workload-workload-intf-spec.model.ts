@@ -18,11 +18,9 @@ export interface IWorkloadWorkloadIntfSpec {
 
 export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWorkloadIntfSpec {
     'mac-address': string = null;
-    /** value should be between 1 and 4095
-     */
+    /** value should be between 1 and 4095 */
     'micro-seg-vlan': number = null;
-    /** value should be between 1 and 4095
-     */
+    /** value should be between 1 and 4095 */
     'external-vlan': number = null;
     'ip-addresses': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
@@ -31,12 +29,12 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
             type: 'string'
         },
         'micro-seg-vlan': {
-            description:  'value should be between 1 and 4095 ',
+            description:  'value should be between 1 and 4095',
             required: true,
             type: 'number'
         },
         'external-vlan': {
-            description:  'value should be between 1 and 4095 ',
+            description:  'value should be between 1 and 4095',
             required: true,
             type: 'number'
         },

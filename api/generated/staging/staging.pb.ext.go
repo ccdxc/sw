@@ -371,12 +371,16 @@ func (m *Buffer) References(tenant string, path string, resp map[string]apiintf.
 
 func (m *Buffer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if !ignoreStatus {
 
@@ -452,12 +456,16 @@ func (m *ClearAction) References(tenant string, path string, resp map[string]api
 
 func (m *ClearAction) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if !ignoreStatus {
 
@@ -533,12 +541,16 @@ func (m *CommitAction) References(tenant string, path string, resp map[string]ap
 
 func (m *CommitAction) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if !ignoreStatus {
 

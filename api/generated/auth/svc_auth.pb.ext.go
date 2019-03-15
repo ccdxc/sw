@@ -387,13 +387,15 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) References(tenant st
 func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -418,6 +420,16 @@ func (m *AutoMsgRoleBindingWatchHelper) References(tenant string, path string, r
 
 func (m *AutoMsgRoleBindingWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -439,6 +451,18 @@ func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) References(tenant string, pat
 
 func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	return ret
 }
 
@@ -468,13 +492,15 @@ func (m *AutoMsgRoleWatchHelper_WatchEvent) References(tenant string, path strin
 func (m *AutoMsgRoleWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -506,13 +532,15 @@ func (m *AutoMsgUserWatchHelper_WatchEvent) References(tenant string, path strin
 func (m *AutoMsgUserWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -537,6 +565,16 @@ func (m *RoleBindingList) References(tenant string, path string, resp map[string
 
 func (m *RoleBindingList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 

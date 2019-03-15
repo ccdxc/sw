@@ -544,13 +544,15 @@ func (m *AutoMsgAppWatchHelper_WatchEvent) References(tenant string, path string
 func (m *AutoMsgAppWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -582,13 +584,15 @@ func (m *AutoMsgCertificateWatchHelper_WatchEvent) References(tenant string, pat
 func (m *AutoMsgCertificateWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -620,13 +624,15 @@ func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) References(tenant string,
 func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -658,13 +664,15 @@ func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) References(tenant string, path s
 func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -696,13 +704,15 @@ func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) References(tenant string, p
 func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -714,6 +724,16 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) References(tenant string, pa
 
 func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -723,6 +743,18 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent) References(tenant
 
 func (m *AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	return ret
 }
 
@@ -808,6 +840,16 @@ func (m *TrafficEncryptionPolicyList) References(tenant string, path string, res
 
 func (m *TrafficEncryptionPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 

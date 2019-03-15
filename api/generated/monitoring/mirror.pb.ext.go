@@ -303,13 +303,15 @@ func (m *MatchRule) References(tenant string, path string, resp map[string]apiin
 func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.AppProtoSel != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "AppProtoSel"
-		if errs := m.AppProtoSel.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "AppProtoSel"
+			if errs := m.AppProtoSel.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -331,13 +333,15 @@ func (m *MirrorCollector) References(tenant string, path string, resp map[string
 func (m *MirrorCollector) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.ExportCfg != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "ExportCfg"
-		if errs := m.ExportCfg.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "ExportCfg"
+			if errs := m.ExportCfg.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if vs, ok := validatorMapMirror["MirrorCollector"][ver]; ok {
@@ -385,21 +389,27 @@ func (m *MirrorSession) References(tenant string, path string, resp map[string]a
 
 func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
 	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if !ignoreStatus {
 
@@ -442,13 +452,15 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []erro
 		}
 	}
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "StopConditions"
-	if errs := m.StopConditions.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "StopConditions"
+		if errs := m.StopConditions.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if vs, ok := validatorMapMirror["MirrorSessionSpec"][ver]; ok {
 		for _, v := range vs {

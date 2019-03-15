@@ -410,13 +410,15 @@ func (m *FwlogsQuerySpec) References(tenant string, path string, resp map[string
 func (m *FwlogsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Pagination != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Pagination"
-		if errs := m.Pagination.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Pagination"
+			if errs := m.Pagination.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if vs, ok := validatorMapTelemetry_query["FwlogsQuerySpec"][ver]; ok {
@@ -479,23 +481,27 @@ func (m *MetricsQuerySpec) References(tenant string, path string, resp map[strin
 func (m *MetricsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Pagination != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Pagination"
-		if errs := m.Pagination.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Pagination"
+			if errs := m.Pagination.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if m.Selector != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Selector"
-		if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Selector"
+			if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if vs, ok := validatorMapTelemetry_query["MetricsQuerySpec"][ver]; ok {

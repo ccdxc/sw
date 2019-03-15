@@ -22,11 +22,9 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    /** length of string should be at least 1
-     */
+    /** length of string should be at least 1 */
     'old-password': string = null;
-    /** length of string should be at least 1
-     */
+    /** length of string should be at least 1 */
     'new-password': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
@@ -42,12 +40,12 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
             type: 'object'
         },
         'old-password': {
-            description:  'length of string should be at least 1 ',
+            description:  'length of string should be at least 1',
             required: true,
             type: 'string'
         },
         'new-password': {
-            description:  'length of string should be at least 1 ',
+            description:  'length of string should be at least 1',
             required: true,
             type: 'string'
         },

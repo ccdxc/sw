@@ -109,13 +109,15 @@ func (m *Event) References(tenant string, path string, resp map[string]apiintf.R
 func (m *Event) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "EventAttributes"
-	if errs := m.EventAttributes.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "EventAttributes"
+		if errs := m.EventAttributes.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	return ret
 }

@@ -25,8 +25,7 @@ export class BrowserBrowseRequest extends BaseModel implements IBrowserBrowseReq
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    /** length of string should be between 2 and 512
-     */
+    /** length of string should be between 2 and 512 */
     'uri': string = null;
     'query-type': BrowserBrowseRequest_query_type = null;
     /** Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations
@@ -48,7 +47,7 @@ export class BrowserBrowseRequest extends BaseModel implements IBrowserBrowseReq
             type: 'object'
         },
         'uri': {
-            description:  'length of string should be between 2 and 512 ',
+            description:  'length of string should be between 2 and 512',
             required: true,
             type: 'string'
         },

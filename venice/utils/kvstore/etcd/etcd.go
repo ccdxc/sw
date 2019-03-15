@@ -31,7 +31,7 @@ import (
 
 const (
 	timeout            = time.Second * 5
-	maxCallSendMsgSize = 10 * 1024 * 1024
+	maxCallSendMsgSize = 35 * 1024 * 1024
 )
 
 // etcdStore implements a KVStore using etcd as storage.

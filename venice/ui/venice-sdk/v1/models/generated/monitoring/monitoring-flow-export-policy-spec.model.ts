@@ -20,8 +20,7 @@ export interface IMonitoringFlowExportPolicySpec {
 
 
 export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonitoringFlowExportPolicySpec {
-    /** should be a valid time duration between 1s and 24h0m0s
-     */
+    /** should be a valid time duration between 1s and 24h0m0s */
     'interval': string = null;
     'format': MonitoringFlowExportPolicySpec_format = null;
     'match-rules': Array<MonitoringMatchRule> = null;
@@ -30,7 +29,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interval': {
             default: '10s',
-            description:  'should be a valid time duration between 1s and 24h0m0s ',
+            description:  'should be a valid time duration between 1s and 24h0m0s',
             hint:  '2h',
             required: true,
             type: 'string'

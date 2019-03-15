@@ -9,7 +9,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiObjectMeta {
-    'name'?: string;
+    'name': string;
     'tenant'?: string;
     'namespace'?: string;
     'generation-id'?: string;
@@ -23,7 +23,9 @@ export interface IApiObjectMeta {
 
 
 export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
+    /** must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
     'name': string = null;
+    /** must be alpha-numericslength of string should be between 1 and 48 */
     'tenant': string = null;
     'namespace': string = null;
     /** GenerationID is the generation Id for the object. This is incremented anytime there
@@ -51,10 +53,12 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     'self-link': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
-            required: false,
+            description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
+            required: true,
             type: 'string'
         },
         'tenant': {
+            description:  'must be alpha-numericslength of string should be between 1 and 48',
             required: false,
             type: 'string'
         },
@@ -206,8 +210,8 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': CustomFormControl(new FormControl(this['name']), ApiObjectMeta.propInfo['name']),
-                'tenant': CustomFormControl(new FormControl(this['tenant']), ApiObjectMeta.propInfo['tenant']),
+                'name': CustomFormControl(new FormControl(this['name'], [required, minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64'), ]), ApiObjectMeta.propInfo['name']),
+                'tenant': CustomFormControl(new FormControl(this['tenant'], [minLengthValidator(1), maxLengthValidator(48), patternValidator('^[a-zA-Z0-9]+$', 'must be alpha-numericslength of string should be between 1 and 48'), ]), ApiObjectMeta.propInfo['tenant']),
                 'namespace': CustomFormControl(new FormControl(this['namespace']), ApiObjectMeta.propInfo['namespace']),
                 'generation-id': CustomFormControl(new FormControl(this['generation-id']), ApiObjectMeta.propInfo['generation-id']),
                 'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiObjectMeta.propInfo['resource-version']),

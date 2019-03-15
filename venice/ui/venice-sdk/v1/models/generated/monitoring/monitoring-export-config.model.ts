@@ -17,21 +17,19 @@ export interface IMonitoringExportConfig {
 
 
 export class MonitoringExportConfig extends BaseModel implements IMonitoringExportConfig {
-    /** length of string should be between 1 and 2048
-     */
+    /** length of string should be between 1 and 2048 */
     'destination': string = null;
-    /** should be a valid layer3 or layer 4 protocol and port/type
-     */
+    /** should be a valid layer3 or layer 4 protocol and port/type */
     'transport': string = null;
     'credentials': MonitoringExternalCred = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'destination': {
-            description:  'length of string should be between 1 and 2048 ',
+            description:  'length of string should be between 1 and 2048',
             required: true,
             type: 'string'
         },
         'transport': {
-            description:  'should be a valid layer3 or layer 4 protocol and port/type ',
+            description:  'should be a valid layer3 or layer 4 protocol and port/type',
             hint:  'tcp/1234, arp',
             required: true,
             type: 'string'

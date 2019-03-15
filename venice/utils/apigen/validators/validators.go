@@ -35,9 +35,9 @@ type regexpEntry struct {
 // the helpstring to appear in the swagger, and a pointer to a regexp
 var RegexpList = map[string]regexpEntry{
 	"name": {
-		Str:     `^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`,
-		Regexp:  regexp.MustCompile(`^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`),
-		HelpStr: "must start and end with alpha numeric and can have alphanumeric, -, _, ., :",
+		Str:     `^[a-zA-Z0-9][\w\-\.]*[a-zA-Z0-9]$`,
+		Regexp:  regexp.MustCompile(`^[a-zA-Z0-9][\w\-\.]*[a-zA-Z0-9]$`),
+		HelpStr: "must start and end with alpha numeric and can have alphanumeric, -, _, .",
 	},
 	"alphanum": {
 		Str:     `^[a-zA-Z0-9]+$`,

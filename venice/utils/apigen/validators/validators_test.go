@@ -345,7 +345,7 @@ func TestRegExp(t *testing.T) {
 	}{
 		{exp: "name", val: "", result: false},
 		{exp: "name", val: "Andadaa_98", result: true},
-		{exp: "name", val: "Andadaa_:.98", result: true},
+		{exp: "name", val: "Andadaa_:.98", result: false},
 		{exp: "name", val: "_Andadaa_98", result: false},
 		{exp: "name", val: "Andadaa_ 98", result: false},
 		{exp: "name", val: "Andadaa%_98", result: false},

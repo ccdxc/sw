@@ -16,8 +16,7 @@ export interface IMonitoringMirrorStopConditions {
 
 export class MonitoringMirrorStopConditions extends BaseModel implements IMonitoringMirrorStopConditions {
     'max-packets': number = null;
-    /** should be a valid time duration of at most 2h0m0s
-     */
+    /** should be a valid time duration of at most 2h0m0s */
     'expiry-duration': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'max-packets': {
@@ -26,7 +25,7 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
         },
         'expiry-duration': {
             default: '2h',
-            description:  'should be a valid time duration of at most 2h0m0s ',
+            description:  'should be a valid time duration of at most 2h0m0s',
             hint:  '2h',
             required: true,
             type: 'string'

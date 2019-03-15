@@ -576,13 +576,15 @@ func (m *PolicyMatchEntry) References(tenant string, path string, resp map[strin
 func (m *PolicyMatchEntry) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Rule != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Rule"
-		if errs := m.Rule.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Rule"
+			if errs := m.Rule.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	return ret
@@ -636,23 +638,27 @@ func (m *SearchQuery) References(tenant string, path string, resp map[string]api
 func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Fields != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Fields"
-		if errs := m.Fields.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Fields"
+			if errs := m.Fields.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if m.Labels != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Labels"
-		if errs := m.Labels.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Labels"
+			if errs := m.Labels.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	for k, v := range m.Texts {
@@ -688,13 +694,15 @@ func (m *SearchRequest) References(tenant string, path string, resp map[string]a
 func (m *SearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Query != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Query"
-		if errs := m.Query.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Query"
+			if errs := m.Query.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 	if vs, ok := validatorMapSearch["SearchRequest"][ver]; ok {

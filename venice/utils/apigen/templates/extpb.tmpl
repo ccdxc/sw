@@ -167,13 +167,7 @@ func (m *{{$msgname}}) References(tenant string, path string, resp map[string]ap
 
 func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error {{if isSpecStatusMessage $msg}}
-	{
-	dlmtr := "."	
-	if path == "" {
-		dlmtr = ""
-	}
-	ret = m.ObjectMeta.Validate(ver, path + dlmtr + "ObjectMeta", ignoreStatus)
-	}{{if isTenanted $msg}}{{else}}
+	{{if isTenanted $msg}}{{else}}
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for {{$msgname}}"))
 	}{{end}}{{end}}{{with (index $validators.Map $msgname)}}{{/*<1>*/}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{/*<2>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<3>*/}}{{if $fldv.Repeated}}{{/*<4>*/}}
@@ -201,6 +195,7 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 		}{{end}}{{/*<8>*/}}
 	}{{else}}{{/*<7>*/}}
 	{{if $fldv.Pointer}}{{/*<9>*/}}if m.{{$fldk}} != nil { {{end}}{{/*<9>*/}}
+	{
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -208,9 +203,11 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 		npath := path + dlmtr + "{{$fldk}}"
 		if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
-		}{{if $fldv.Pointer}}{{/*<10>*/}}
-	}{{end}}{{/*<10>*/}}{{end}}{{/*<6>*/}}{{else}}{{/*<5>*/}}
+		}
+	}{{if $fldv.Pointer}}{{/*<10>*/}}
+	}{{end}}{{/*<10>*/}}{{end}}{{/*<6>*/}}{{else}}{{if strEq $fldk "ObjectMeta"}}{{else}}{{/*<5>*/}}
 	{{if $fldv.Pointer}}{{/*<11>*/}}if  m.{{$fldk}} != nil { {{end}}{{/*<11>*/}}
+	{
 			dlmtr := "."
 			if path == "" {
 				dlmtr = ""
@@ -218,8 +215,9 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 			npath := path + dlmtr + "{{$fldk}}"
 			if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
-		}{{if $fldv.Pointer}}{{/*<12>*/}}
-	}{{end}}{{/*<12>*/}}{{end}}{{/*<5>*/}}{{end}}{{/*<4>*/}}{{else}}{{/*<3>*/}}{{$_:= (saveBool true 0)}}{{end}}{{/*<3>*/}}{{end}}{{/*<2>*/}}{{if getBool 0}}{{/*<13>*/}}
+		}
+	}{{if $fldv.Pointer}}{{/*<12>*/}}
+	}{{end}}{{/*<12>*/}}{{end}}{{end}}{{/*<5>*/}}{{end}}{{/*<4>*/}}{{else}}{{/*<3>*/}}{{$_:= (saveBool true 0)}}{{end}}{{/*<3>*/}}{{end}}{{/*<2>*/}}{{if getBool 0}}{{/*<13>*/}}
 	if vs, ok := validatorMap{{getFileName $file.Name}}["{{$msgname}}"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {

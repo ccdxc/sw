@@ -14,12 +14,11 @@ export interface ISearchTextRequirement {
 
 
 export class SearchTextRequirement extends BaseModel implements ISearchTextRequirement {
-    /** length of string should be between 0 and 256
-     */
+    /** length of string should be between 0 and 256 */
     'text': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'text': {
-            description:  'length of string should be between 0 and 256 ',
+            description:  'length of string should be between 0 and 256',
             required: false,
             type: 'Array<string>'
         },
