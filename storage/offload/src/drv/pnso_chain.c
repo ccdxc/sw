@@ -929,7 +929,6 @@ chn_execute_chain(struct service_chain *chain)
 		goto out;
 
 	/* ring 'first' service door bell */
-	chain->sc_submit_ts = osal_get_clock_nsec();
 	chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
 	err = ce_first->ce_svc_info.si_ops.ring_db(&ce_first->ce_svc_info);
 	PAS_START_HW_PERF();

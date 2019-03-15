@@ -749,7 +749,6 @@ execute_batch(struct batch_info *batch_info)
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	batch_info->bi_submit_ts = osal_get_clock_nsec();
 	num_entries = batch_info->bi_num_entries;
 	for (idx = 0; idx < num_entries; idx += MAX_PAGE_ENTRIES) {
 		/* get first chain's first service within the mini-batch */

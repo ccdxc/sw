@@ -91,11 +91,13 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 			      struct buffer_addr_len *ret_addr_len);
 
 uint64_t
-svc_poll_expiry_start(const struct service_info *svc_info);
+svc_poll_expiry_start(const struct service_info *svc_info,
+		      uint64_t cur_ts);
 
 bool
 svc_poll_expiry_check(const struct service_info *svc_info,
 		      uint64_t start_ts,
+		      uint64_t cur_ts,
 		      uint64_t per_svc_timeout);
 
 pnso_error_t

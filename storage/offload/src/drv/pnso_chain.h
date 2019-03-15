@@ -293,7 +293,7 @@ struct service_chain {
 	uint16_t sc_flags;		/* chain flags (CFLAGS) */
 	uint16_t sc_num_services;	/* number of services in the chain */
 	uint32_t sc_req_id;		/* unique request id */
-	uint64_t sc_submit_ts;		/* submission timestamp */
+	uint64_t sc_poll_ts;		/* first poll timestamp */
 
 	struct chain_entry *sc_entry;	/* list of services */
 	struct chain_entry *sc_last_entry;	/* last service in chain */

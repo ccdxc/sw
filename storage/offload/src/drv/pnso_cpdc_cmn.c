@@ -43,7 +43,7 @@ cpdc_poll(const struct service_info *svc_info,
 {
 	pnso_error_t err;
 
-	uint64_t start_ts;
+	uint64_t start_ts, cur_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -51,13 +51,14 @@ cpdc_poll(const struct service_info *svc_info,
 		status_desc =
 			(struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 
-	start_ts = svc_poll_expiry_start(svc_info);
+	cur_ts = osal_get_clock_nsec();
+	start_ts = svc_poll_expiry_start(svc_info, cur_ts);
 	while (1) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 		if (!err)
 			break;
 
-		if (svc_poll_expiry_check(svc_info, start_ts,
+		if (svc_poll_expiry_check(svc_info, start_ts, cur_ts,
 					  CPDC_POLL_LOOP_TIMEOUT)) {
 			err = ETIMEDOUT;
 			OSAL_LOG_ERROR("poll-time limit reached! service: %s status_desc: 0x" PRIx64 " err: %d",
@@ -72,6 +73,7 @@ cpdc_poll(const struct service_info *svc_info,
 		}
 
 		osal_yield();
+		cur_ts = osal_get_clock_nsec();
 	}
 
 	OSAL_LOG_DEBUG("exit! err: %d", err);

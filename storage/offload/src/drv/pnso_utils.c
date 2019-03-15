@@ -541,31 +541,47 @@ putil_put_interm_buf_list(struct service_info *svc_info)
 	}
 }
 
-#define POLL_LOOP_BASE_TIMEOUT (2000 * OSAL_NSEC_PER_MSEC)
+#define POLL_LOOP_BASE_TIMEOUT (200 * OSAL_NSEC_PER_MSEC)
 
 uint64_t
-svc_poll_expiry_start(const struct service_info *svc_info)
+svc_poll_expiry_start(const struct service_info *svc_info, uint64_t cur_ts)
 {
-	const struct service_chain *chain = svc_info->si_centry->ce_chain_head;
+	struct service_chain *chain = svc_info->si_centry->ce_chain_head;
 
-	return chain->sc_batch_info ? chain->sc_batch_info->bi_submit_ts :
-		chain->sc_submit_ts;
+	if (chain->sc_batch_info) {
+		if (!chain->sc_batch_info->bi_poll_ts)
+			chain->sc_batch_info->bi_poll_ts = cur_ts;
+		return chain->sc_batch_info->bi_poll_ts;
+	} else {
+		if (!chain->sc_poll_ts)
+			chain->sc_poll_ts = cur_ts;
+		return chain->sc_poll_ts;
+	}
 }
 
 bool
 svc_poll_expiry_check(const struct service_info *svc_info,
 		      uint64_t start_ts,
+		      uint64_t cur_ts,
 		      uint64_t per_svc_timeout)
 {
 	const struct batch_info *batch_info =
 		svc_info->si_centry->ce_chain_head->sc_batch_info;
 	uint64_t timeout = per_svc_timeout;
+	uint64_t delta;
 
 	if (batch_info)
 		timeout *= max(batch_info->bi_num_entries, (uint32_t)1);
 	timeout += POLL_LOOP_BASE_TIMEOUT;
 
-	return (osal_get_clock_nsec() - start_ts) >= timeout;
+	delta = cur_ts - start_ts;
+
+	if (delta >= timeout) {
+		OSAL_LOG_WARN("Delta " PRIu64 " larger than allowed timeout " PRIu64,
+			      delta, timeout);
+		return true;
+	}
+	return false;
 }
 
 pnso_error_t
