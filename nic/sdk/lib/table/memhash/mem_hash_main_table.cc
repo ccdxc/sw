@@ -290,6 +290,7 @@ update_return:
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_main_table::get_(mem_hash_api_context *ctx) {
+__label__ done;
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *match_ctx = NULL;
 
@@ -297,12 +298,19 @@ mem_hash_main_table::get_(mem_hash_api_context *ctx) {
 
     ret = find_(ctx, &match_ctx);
     if (ret != SDK_RET_OK) {
-        goto update_return;
+        goto done;
+    }
+
+    // Set the Handle
+    if (match_ctx->is_main()) {
+        MEM_HASH_HANDLE_SET_INDEX(match_ctx, match_ctx->table_index);
+    } else {
+        MEM_HASH_HANDLE_SET_HINT(match_ctx, match_ctx->table_index);
     }
 
     memcpy(ctx->in_appdata, ctx->sw_appdata, ctx->sw_appdata_len); 
 
-update_return:
+done:
     if (match_ctx && match_ctx != ctx) {
         mem_hash_api_context::destroy(match_ctx);
     }

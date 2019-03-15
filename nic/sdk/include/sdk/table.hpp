@@ -3,7 +3,6 @@
 //
 // SDK types header file
 //------------------------------------------------------------------------------
-
 #ifndef __SDK_TABLE_HPP__
 #define __SDK_TABLE_HPP__
 
@@ -18,14 +17,27 @@
 namespace sdk {
 namespace table {
 
+typedef enum health_s {
+    HEALTH_GREEN,
+    HEALTH_YELLOW,
+    HEALTH_RED
+} health_t;
+
+#define SDK_TABLE_HANDLE_INVALID 0
+
+#define SDK_TABLE_MAX_SW_KEY_LEN 128
+#define SDK_TABLE_MAX_SW_DATA_LEN 128
+#define SDK_TABLE_MAX_HW_KEY_LEN 64
+#define SDK_TABLE_MAX_HW_DATA_LEN 64
+
 #define SIZE_BITS_TO_BYTES(_sizebits) \
         (((_sizebits) >> 3) + ((_sizebits) & 0x7) ? 1 : 0)
 
 // Forward declaration
 typedef struct sdk_table_api_params_ sdk_table_api_params_t;
 
-typedef char* (*key2str_t)(void *key);
-typedef char* (*appdata2str_t)(void *data);
+typedef char* (*bytes2str_t)(void *bytes);
+
 typedef uint64_t sdk_table_handle_t;
 typedef char* (*handle2str)(sdk_table_handle_t handle);
 typedef void (*iterate_t)(sdk_table_api_params_t *params);
@@ -70,9 +82,11 @@ typedef struct sdk_table_factory_params_ {
     // recircs allowed.
     uint32_t max_recircs;
     // Convert key to string
-    key2str_t key2str;
+    bytes2str_t key2str;
+    // Convert mask to string
+    bytes2str_t mask2str;
     // Convert data to string
-    appdata2str_t appdata2str;
+    bytes2str_t appdata2str;
     // Enable entry tracing
     bool entry_trace_en;
     // Health state
@@ -85,7 +99,7 @@ typedef struct sdk_table_api_params_ {
     // [Input] Key of the entry
     void *key;
     // [Input] Key mask of the entry
-    void *key_mask;
+    void *mask;
     // [Input] Data of the entry
     void *appdata;
     // [Input] ActionID of the entry

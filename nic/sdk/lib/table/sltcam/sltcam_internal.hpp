@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 // stateless tcam table management library
 //------------------------------------------------------------------------------
@@ -8,7 +8,7 @@
 
 namespace sdk {
 namespace table {
-namespace sltcam {
+namespace sltcam_internal {
 
 typedef union handle_ {
     struct {
@@ -19,7 +19,7 @@ typedef union handle_ {
     uint64_t value;
 } __attribute__((__packed__)) handle_t;
 
-} // namespace sltcam
+} // namespace sltcam_internal
 } // namespace table
 } // namespace sdk
 

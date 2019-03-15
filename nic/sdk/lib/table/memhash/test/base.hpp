@@ -42,6 +42,9 @@ protected:
     virtual ~MemHashGtestBase() {}
     
     virtual void SetUp() {
+        SDK_TRACE_DEBUG("============== SETUP : %s.%s ===============",
+                        ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
+                        ::testing::UnitTest::GetInstance()->current_test_info()->name());
         sdk_table_factory_params_t params = { 0 };
         
         params.table_id = MEM_HASH_P4TBL_ID_H5;
@@ -65,16 +68,16 @@ protected:
         htable_count = 0;
         memset(&api_stats, 0, sizeof(api_stats));
         memset(&table_stats, 0, sizeof(table_stats));
-
-        printf("============== SetUp ===============\n");
         PrintStats();
     }
     virtual void TearDown() {
         mem_hash::destroy(table);
         h5_reset_cache();
-        printf("============== TearDown ===============\n");
         ValidateStats();
         mem_hash_mock_cleanup();
+        SDK_TRACE_DEBUG("============== TEARDOWN : %s.%s ===============",
+                        ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
+                        ::testing::UnitTest::GetInstance()->current_test_info()->name());
     }
 
 private:
@@ -273,9 +276,11 @@ protected:
 
             if (memcmp(&entry.appdata, &cache_entry->appdata, 
                        sizeof(entry.appdata))) {
-                printf("ERROR: Entry:%d Appdata mismatch.\n", i);
+                SDK_TRACE_DEBUG("ERROR: Entry:%d Appdata mismatch.", i);
                 return sdk::SDK_RET_ENTRY_NOT_FOUND;
             }
+
+            SDK_ASSERT(params.handle == cache_entry->handle);
         }
 
         return SDK_RET_OK;
@@ -287,14 +292,14 @@ protected:
         htable_count = mem_hash_mock_get_valid_count(MEM_HASH_P4TBL_ID_H5_OHASH);
 
         table->stats_get(&api_stats, &table_stats);
-        printf("HW Table Stats: Entries:%d Collisions:%d\n",
+        SDK_TRACE_DEBUG("HW Table Stats: Entries:%d Collisions:%d",
                (mtable_count + htable_count), htable_count);
-        printf("SW Table Stats: Entries=%d Collisions:%d\n",
+        SDK_TRACE_DEBUG("SW Table Stats: Entries=%d Collisions:%d",
                 table_stats.entries, table_stats.collisions);
         
-        printf("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d\n",
+        SDK_TRACE_DEBUG("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
                 num_insert, num_update, num_get, num_remove, num_reserve, num_release);
-        printf("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d\n",
+        SDK_TRACE_DEBUG("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
                 api_stats.insert, api_stats.update, api_stats.get, api_stats.remove, api_stats.reserve, api_stats.release);
         return;    
     }
@@ -329,7 +334,7 @@ protected:
     
     static void
     IterateCallback(sdk_table_api_params_t *params) {
-        printf("Entry[%#016lx] Key=[%s] Data=[%s]\n", params->handle,
+        SDK_TRACE_DEBUG("Entry[%#016lx] Key=[%s] Data=[%s]", params->handle,
                h5_key2str(params->key), h5_appdata2str(params->appdata));
         return;
     }

@@ -40,8 +40,8 @@ typedef struct mem_hash_properties_ {
     uint32_t max_recircs;
     uint32_t hash_poly;
     //table_health_monitor_func_t health_monitor_func;
-    key2str_t key2str;
-    appdata2str_t appdata2str;
+    bytes2str_t key2str;
+    bytes2str_t appdata2str;
 } mem_hash_properties_t;
 
 class mem_hash {

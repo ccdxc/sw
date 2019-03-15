@@ -28,29 +28,29 @@ public:
     uint64_t total();
 };
 
-#define ENUM_ENTRY_LIST(ENUM_ENTRY) \
-        ENUM_ENTRY(TABLE_LIB_MEMHASH_INSERT) \
-        ENUM_ENTRY(P4PD_HWKEY_HWMASK_BUILD) \
-        ENUM_ENTRY(P4PD_ENTRY_READ) \
-        ENUM_ENTRY(ASICPD_HBM_TABLE_ENTRY_READ) \
-        ENUM_ENTRY(ASIC_MEM_READ) \
-        ENUM_ENTRY(PAL_MEM_RD) \
-        ENUM_ENTRY(PAL_REG_READ) \
-        ENUM_ENTRY(P4PD_ENTRY_INSTALL) \
-        ENUM_ENTRY(ASICPD_HBM_TABLE_ENTRY_WRITE) \
-        ENUM_ENTRY(CAPRI_HBM_TABLE_ENTRY_WRITE) \
-        ENUM_ENTRY(CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE) \
-        ENUM_ENTRY(ASIC_MEM_WRITE) \
-        ENUM_ENTRY(PAL_MEM_WR) \
-        ENUM_ENTRY(PAL_REG_WRITE) \
-        ENUM_ENTRY(COMPUTE_CRC) \
-        ENUM_ENTRY(TIME_PROFILE_ID_MAX)
+#define TIME_PROFILE_FUNCTION_ENUMS(__handler) \
+        __handler(TABLE_LIB_MEMHASH_INSERT) \
+        __handler(P4PD_HWKEY_HWMASK_BUILD) \
+        __handler(P4PD_ENTRY_READ) \
+        __handler(ASICPD_HBM_TABLE_ENTRY_READ) \
+        __handler(ASIC_MEM_READ) \
+        __handler(PAL_MEM_RD) \
+        __handler(PAL_REG_READ) \
+        __handler(P4PD_ENTRY_INSTALL) \
+        __handler(ASICPD_HBM_TABLE_ENTRY_WRITE) \
+        __handler(CAPRI_HBM_TABLE_ENTRY_WRITE) \
+        __handler(CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE) \
+        __handler(ASIC_MEM_WRITE) \
+        __handler(PAL_MEM_WR) \
+        __handler(PAL_REG_WRITE) \
+        __handler(COMPUTE_CRC) \
+        __handler(TIME_PROFILE_ID_MAX)
 
-#define GENERATE_ENUM(ENUM) ENUM,
-#define GENERATE_STRING(STRING) #STRING,
+#define HANDLER_GENERATE_ENUM(ENUM) ENUM,
+#define HANDLER_GENERATE_STRING(STRING) #STRING,
 
 typedef enum time_profile_id_s {
-    ENUM_ENTRY_LIST(GENERATE_ENUM)
+    TIME_PROFILE_FUNCTION_ENUMS(HANDLER_GENERATE_ENUM)
 } time_profile_id_t;
 
 extern time_profile_info time_profile_db[];

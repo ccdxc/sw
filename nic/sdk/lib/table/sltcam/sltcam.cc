@@ -1,57 +1,70 @@
 //------------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-
-#include <cstring>
 #include "lib/p4/p4_api.hpp"
+#include "include/sdk/table.hpp"
+#include "include/sdk/base.hpp"
 
 #include "sltcam.hpp"
-#include "sltcam_internal.hpp"
-//#include "tcam_api_context.hpp"
-
-using sdk::table::sltcam::handle_t;
-
-#define SLTCAM_HANDLE_TO_INDEX(_handle) \
-        (((tcam_handle_t)(_handle)).index)
-#define TCAM_INDEX_TO_HANDLE(
-
-inline tcam_handle_t
-tcam_index_to_handle(uint32_t index) {
-    tcam_handle_t handle = { 0 };
-    handle.valid = true;
-    handle.index = index;
-    return handle;
-}
-    
-inline uint32_t
-tcam_handle_to_index(uint64_t handle) {
-    tcam_handle_t tcam_handle = { 0 };
-    tcam_handle.value = handle;
-    SDK_ASSERT(tcam_handle.valid);
-    return tcam_handle.index;
-}
+#include "sltcam_utils.hpp"
+#include "sltcam_txn.hpp"
 
 namespace sdk {
 namespace table {
+
+#define SLTCAM_API_BEGIN(_name) {\
+        SLTCAM_TRACE_DEBUG("%s sltcam begin: %s %s",\
+                            "--", _name, "--");\
+}
+
+#define SLTCAM_API_END(_name, _status) {\
+        SLTCAM_TRACE_DEBUG("%s sltcam end: %s (r:%d) %s",\
+                            "--", _name, _status, "--");\
+}
+
+#define SLTCAM_API_BEGIN_() {\
+        SLTCAM_API_BEGIN(props_.name);\
+        SDK_SPINLOCK_LOCK(&slock_);\
+}
+
+#define SLTCAM_API_END_(_status) {\
+        SLTCAM_API_END(props_.name, (_status));\
+        SDK_SPINLOCK_UNLOCK(&slock_);\
+}
+
+static sdk_table_handle_t index2handle(uint32_t tcam_index) {
+    sdk::table::sltcam_internal::handle_t hdl = {0};
+    hdl.index = tcam_index;
+    hdl.valid = true;
+    return hdl.value;
+}
+
+uint32_t handle2index(sdk_table_handle_t handle) {
+    sdk::table::sltcam_internal::handle_t hdl = {0};
+    hdl.value = handle;
+    SDK_ASSERT(hdl.valid);
+    return hdl.index;
+}
+
 //---------------------------------------------------------------------------
 // factory method to instantiate the class
 //---------------------------------------------------------------------------
-tcam *
-tcam::factory(sdk_table_factory_params_t *params) {
+sltcam *
+sltcam::factory(sdk::table::sdk_table_factory_params_t *params) {
     void *mem  = NULL;
-    tcam *table = NULL;
+    sltcam *table = NULL;
+    sdk_ret_t ret = sdk::SDK_RET_OK;
 
-    mem = SDK_CALLOC(SDK_MEM_ALLOC_ID_TCAM, sizeof(tcam));
+    mem = SDK_CALLOC(SDK_MEM_ALLOC_ID_TCAM, sizeof(sltcam));
     if (!mem) {
         return NULL;
     }
 
-    table = (tcam *) new (mem) tcam();
-    
+    table = (sltcam *) new (mem) sltcam();
     ret = table->init_(params);
-    if (ret != SDK_RET_OK) {
-        SDK_TRACE_DEBUG("Failed to create TCAM table, ret=%d", ret);
-        destroy(tcam);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_DEBUG("init_, r:%d", ret);
+        destroy(table);
         return NULL;
     }
 
@@ -59,813 +72,459 @@ tcam::factory(sdk_table_factory_params_t *params) {
 }
 
 sdk_ret_t
-tcam::init_(sdk_table_factory_params_t *params) {
-    p4pd_error_t p4pdret;
-    p4pd_table_properties_t tinfo;
+sltcam::init_(sdk::table::sdk_table_factory_params_t *params) {
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    ret = props_.init(params);
+    if (ret != sdk::SDK_RET_OK) {
+        return ret;
+    }
 
-    p4pdret = p4pd_table_properties_get(params->table_id, &tinfo);
-    SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);
+    SDK_ASSERT(props_.table_size);
+    indexer_ = indexer::factory(props_.table_size, false, false);
+    if (indexer_ == NULL) {
+        SLTCAM_TRACE_ERR("Failed to create indexer_");
+        return sdk::SDK_RET_OOM;
+    }
+  
+    ret = txn_.init(props_.table_size);
+    if (ret != sdk::SDK_RET_OK) {
+        return ret;
+    }
 
-    props_->name = tinfo.tablename;
-    props_->table_id = params->table_id;
-    props_->table_size = tinfo.tabledepth;
-    
-    props_->swkey_len = tinfo.key_struct_size;
-    props_->swdata_len = tinfo.actiondata_struct_size;
+    ret = db_.init(props_.table_size);
+    if (ret != sdk::SDK_RET_OK) {
+        return ret;
+    }
 
-    p4pd_hwentry_query(id_, &props_->hwkey_len, &props_->hwkeymask_len,
-                       &props_->hwdata_len);
-
-    props_->hwkey_len = SIZE_BITS_TO_BYTES(props_->hwkey_len);
-    props_->hwdata_len = SIZE_BITS_TO_BYTES(props_->hwdata_len);
-    props_->hwkeymask_len = SIZE_TO_BYTPES(props_->hwkeymask_len);
-
-    props_->entry_trace_en = params->entry_trace_en;
-
-    props_->health_monitor_func = prams->health_monitor_func;
-
-    indexer_ = indexer::factory(props_->table_size, false, false);
-
-    SDK_TRACE_DEBUG("Creating TCAM table=%s table_id=%d size=%d "
-                    "swkey_len=%d swdata_len=%d "
-                    "hwkey_len=%d hwdata_len=%d hwkeymask_len=%d "
-                    "entry_trace_en=%d",
-                    props_->name, props_->table_id, props_->table_size,
-                    props_->swkey_len, props_->swdata_len,
-                    props_->hwkey_len, props_->hwdata_len,
-                    props_->hwkeymask_len, props_->entry_trace_en);
-
-    return SDK_RET_OK;
+    return sdk::SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------
 // factory method to free & delete the object
 //---------------------------------------------------------------------------
 void
-tcam::destroy(tcam *table)
+sltcam::destroy(sltcam *table)
 {
-    if (table)
+    if (table) {
         indexer::destroy(table->indexer_);
-        table->~tcam();
+        table->~sltcam();
         SDK_FREE(SDK_MEM_ALLOC_ID_TCAM, table);
     }
 }
 
-void
-tcam::trigger_health_monitor()
-{
-    if (health_monitor_func_) {
-        health_monitor_func_(id_, name_, health_state_, capacity_,
-                             num_entries_in_use(),
-                             &health_state_);
-    }
+//----------------------------------------------------------------------------
+// Write entry to HW
+//----------------------------------------------------------------------------
+sdk_ret_t
+sltcam::write_(apicontext *ctx) {
+    p4pd_error_t p4pdret;
+
+    SLTCAM_TRACE_DEBUG("hw index:%d", ctx->tcam_index);
+    ctx->print_sw();
+    p4pdret = p4pd_entry_install(ctx->props->table_id, ctx->tcam_index,
+                                 ctx->swkey, ctx->swkeymask, ctx->swdata);
+    return p4pdret == P4PD_SUCCESS ? sdk::SDK_RET_OK : sdk::SDK_RET_ERR;
 }
 
 //----------------------------------------------------------------------------
-// program HW table with the given tcam entry
+// Read entry from HW
 //----------------------------------------------------------------------------
 sdk_ret_t
-tcam::write_(sdk_table_api_params_t *params, bool del) {
-    p4pd_error_t pd_err = P4PD_SUCCESS;
-    void *hwkey = NULL;
-    void *hwkeymask = NULL;
-    void *hwdata = NULL;
-
-	hwkey = SDK_CALLOC(SDK_MEM_ALLOC_ID_HW_KEY,
-                       props_->hwkey_len_);
-    if (whwkey == NULL) {
-        return SDK_RET_OOM;
-    }
-	hwkeymask = SDK_CALLOC(SDK_MEM_ALLOC_ID_HW_KEY,
-                           props_->hwkeymask_len);
-    if (hwkeymask == NULL) {
-        SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, hwkey);
-        return SDK_RET_OOM;
-    }
-    hwdata = SDK_CALLOC(SDK_MEM_ALLOC_ID_HW_DATA,
-                        props_->swdata_len);
-    if (hwdata == NULL) {
-        SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, hwkey);
-        SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, hwkeymask);
-        return SDK_RET_OOM;
-    }
-
-    if (del) {
-        memset(hwkey, 0xFF, props_->hwkey_len);
-        memset(hwkeymask, 0xFf, props_->hwkeymask_len);
-        memset(hwdata, 0, props_->swdata_len);
-    } else {
-        memcpy(hwdata, params->appdata, props_->swdata_len);
-    }
-
-    pd_err = p4pd_hwkey_hwmask_build(props_->table_id,
-                                     params->key, params->key_mask,
-                                     (uint8_t *)hwkey, (uint8_t *)hwkeymask);
-    SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
-
-    // write to the actual table
-    pd_err = p4pd_entry_write(props_->table_id,
-                              tcam_handle_to_index(params->handle),
-                              (uint8_t *)hwkey, (uint8_t *)hwkeymask,
-                              params->appdata);
-    SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), write_return);
-
-    if (entry_trace_en_) {
-        entry_trace_(te);
-    }
-
-write_return:
-    SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, hwkey);
-    SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, hwkeymask);
-    SDK_FREE(SDK_MEM_ALLOC_ID_HW_DATA, hwdata);
-    return (pd_err != P4PD_SUCCESS) ? SDK_RET_HW_PROGRAM_ERR : SDK_RET_OK;
+sltcam::read_(apicontext *ctx) {
+    p4pd_error_t p4pdret;
+    SLTCAM_TRACE_DEBUG("hw index:%d", ctx->tcam_index);
+    p4pdret =  p4pd_entry_read(ctx->props->table_id, ctx->tcam_index,
+                               ctx->swkey, ctx->swkeymask, ctx->swdata);
+    ctx->print_sw();
+    return p4pdret == P4PD_SUCCESS ? sdk::SDK_RET_OK : sdk::SDK_RET_ERR;
 }
 
 //----------------------------------------------------------------------------
-// allocate an index
+// Allocate a TCAM index
 //----------------------------------------------------------------------------
 sdk_ret_t
-tcam::alloc_(sdk_table_api_params_t *params) {
-    sdk_ret_t rs = SDK_RET_OK;
-    uint32_t index = 0;
-
-    indexer::status irs = indexer_->alloc(&index);
+sltcam::alloc_(apicontext *ctx) {
+    SDK_ASSERT(ctx->tcam_index_valid == false);
+    indexer::status irs = indexer_->alloc(&ctx->tcam_index);
     if (irs != indexer::SUCCESS) {
-        return SDK_RET_NO_RESOURCE;
+        return sdk::SDK_RET_NO_RESOURCE;
     }
-    params->handle = tcam_index_to_handle(index);
-    return rs;
+    ctx->tcam_index_valid = true;
+    SLTCAM_TRACE_DEBUG("hw index:%d", ctx->tcam_index);
+    return sdk::SDK_RET_OK;
 }
 
 //----------------------------------------------------------------------------
 // free given index
 //----------------------------------------------------------------------------
 sdk_ret_t
-tcam::dealloc_(sdk_table_api_params_t *params) {
-    sdk_ret_t rs = SDK_RET_OK;
-    uint32_t index = 0;
-
-    index = tcam_handle_to_index(params->handle);
-    indexer::status irs = indexer_->free(index);
+sltcam::dealloc_(apicontext *ctx) {
+    SDK_ASSERT(ctx->tcam_index_valid);
+    indexer::status irs = indexer_->free(ctx->tcam_index);
     if (irs != indexer::SUCCESS) {
-        return SDK_RET_ERR;
+        return sdk::SDK_RET_ERR;
+    }
+    ctx->tcam_index_valid = false;
+    return sdk::SDK_RET_OK;
+}
+
+static apicontext*
+create_apicontext(sdk::table::sdk_table_api_op_t op,
+                  sdk::table::sdk_table_api_params_t *params,
+                  sdk::table::sltcam_internal::properties *props) {
+    static apicontext ctx;
+    ctx.init();
+    ctx.params = params;
+    ctx.props = props;
+    ctx.op = op;
+
+    if (ctx.handle_valid()) {
+        ctx.tcam_index = handle2index(params->handle);
+        ctx.tcam_index_valid = true;
     }
 
-    return rs;
+    ctx.print_params();
+    return &ctx;
+}
+
+sdk_ret_t
+sltcam::find_(apicontext *ctx) {
+    return db_.find(ctx);
 }
 
 //---------------------------------------------------------------------------
-// insert API
+// Insert tcam entry by key or handle
 //---------------------------------------------------------------------------
 sdk_ret_t
-tcam::insert(sdk_table_api_params_t *params) {
-    sdk_ret_t ret = SDK_RET_OK;
+sltcam::insert(sdk::table::sdk_table_api_params_t *params) {
+__label__ done;
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    SLTCAM_API_BEGIN_();
 
-    TCAM_API_BEGIN_();
+    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_INSERT, params, &props_);
+    SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
-    if (!params->handle) {
-        ret = find(params);
-        if (ret == SDK_RET_OK) {
-            SDK_TRACE_ERR("entry already exists");
-            ret = SDK_RET_ENTRY_EXISTS
-            goto insert_return;
-        } else if (ret != SDK_RET_ENTRY_NOT_FOUND) {
-            SDK_TRACE_ERR("failed to insert entry, ret=%d", ret);
-            goto insert_return;
-        }
+    // Validate this ctx (& api params) with the transaction
+    ret = txn_.validate(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "txn validate, r:%d", ret);
+    }
 
-        ret = alloc_(params);
-        if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("failed to allocate entry, ret=%d", ret);
-            goto insert_return;
+    // Check if an entry with same key exists already.
+    ret = find_(ctx);
+    if (ret == sdk::SDK_RET_OK) {
+        ret = sdk::SDK_RET_ENTRY_EXISTS;
+        // Return the handle of the existing entry
+        goto handle_set;
+    } else if (ret != sdk::SDK_RET_ENTRY_NOT_FOUND) {
+        SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
+    }
+
+    // Allocate a tcam entry if not already reserved.
+    if (ctx->handle_valid() == false) {
+        ret = alloc_(ctx);
+        if (ret != sdk::SDK_RET_OK) {
+            SLTCAM_TRACE_ERR_GOTO(done, "alloc, r:%d", ret);
         }
     }
 
-    ret = write_(params);
-    if (ret != SDK_RET_OK) {
-        dealloc_(params);
-        SDK_TRACE_ERR("failed to write to HW, ret=%d", ret);
-        goto insert_return;
+    // Copy the params to sw fields
+    ctx->copyin();
+
+    // Write to HW
+    ret = write_(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        dealloc_(ctx);
+        SLTCAM_TRACE_ERR_GOTO(done, "write, r:%d", ret);
     }
 
-insert_return:
-    TCAM_API_END_();
+    // Insert to sw db
+    ret = db_.insert(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "db insert, r:%d", ret);
+    }
+
+    // Release this handle
+    txn_.release(ctx);
+   
+handle_set:
+    // Save the handle
+    params->handle = index2handle(ctx->tcam_index);
+
+done:
+    //db_.sanitize(ctx);
+    SLTCAM_API_END_(ret);
     stats_.insert(ret);
     return ret;
 }
 
 //---------------------------------------------------------------------------
-// update tcam entry at given index with updated data
-// TODO: program hw first and then update s/w copy or else if hw programming
-//       fails sw copy has new data ??
+// Update tcam entry given key or handle
 //---------------------------------------------------------------------------
 sdk_ret_t
-tcam::update(uint32_t tcam_idx, void *data)
-{
-    sdk_ret_t ret = SDK_RET_OK;
+sltcam::update(sdk::table::sdk_table_api_params_t *params) {
+__label__ done;
+    SLTCAM_API_BEGIN_();
 
-    TCAM_API_BEGIN_();
+    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_UPDATE, params, &props_);
+    SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
-    if (!params->handle) {
-        ret = find(params);
-        if (ret == SDK_RET_OK) {
-            SDK_TRACE_ERR("entry already exists");
-            ret = SDK_RET_ENTRY_EXISTS
-            goto update_return;
-        } else if (ret != SDK_RET_ENTRY_NOT_FOUND) {
-            SDK_TRACE_ERR("failed to insert entry, ret=%d", ret);
-            goto update_return;
+    // Validate this ctx (& api params) with the transaction
+    auto ret = txn_.validate(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "txn validate, r:%d", ret);
+    }
+
+    // Find the tcam_index, if handle is not provided.
+    if (ctx->handle_valid() == false) {
+        ret = find_(ctx);
+        if (ret != sdk::SDK_RET_OK) {
+            SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
         }
     }
 
-    SDK_ASSERT(params->handle);
-    ret = write_(params);
-    if (ret != SDK_RET_OK) {
-        dealloc_(params);
-        SDK_TRACE_ERR("failed to write to HW, ret=%d", ret);
-        goto insert_return;
+    // Copy the params to sw fields
+    ctx->copyin();
+    
+    // Write to HW
+    ret = write_(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "write, r:%d", ret);
     }
 
-update_return:
-    TCAM_API_END_();
+done:
+    //db_.sanitize(ctx);
+    SLTCAM_API_END_(ret);
     stats_.update(ret);
     return ret;
 }
 
 //---------------------------------------------------------------------------
-// remove entry from tcam at given index
+// Remove tcam entry given key or handle
 //---------------------------------------------------------------------------
 sdk_ret_t
-tcam::remove(uint32_t tcam_idx)
-{
-    sdk_ret_t ret = SDK_RET_OK;
+sltcam::remove(sdk::table::sdk_table_api_params_t *params) {
+__label__ done;
+    SLTCAM_API_BEGIN_();
 
-    TCAM_API_BEGIN_();
+    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_REMOVE, params, &props_);
+    SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
-    if (!params->handle) {
-        ret = find(params);
-        if (ret == SDK_RET_OK) {
-            SDK_TRACE_ERR("entry already exists");
-            ret = SDK_RET_ENTRY_EXISTS
-            goto remove_return;
-        } else if (ret != SDK_RET_ENTRY_NOT_FOUND) {
-            SDK_TRACE_ERR("failed to insert entry, ret=%d", ret);
-            goto remove_return;
-        }
+    // Validate this ctx (& api params) with the transaction
+    auto ret = txn_.validate(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "txn validate, r:%d", ret);
     }
 
-    SDK_ASSERT(params->handle);
-    ret = write_(params, true);
-    if (ret != SDK_RET_OK) {
-        dealloc_(params);
-        SDK_TRACE_ERR("failed to write to HW, ret=%d", ret);
-        goto remove_return;
+    // Find the tcam_index, if handle is not provided.
+    ret = find_(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
     }
 
-    ret = dealloc_(params);
-    if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("failed to dealloc entry, ret=%d", ret);
-        goto remove_return;
+    // Remove the entry from the DB
+    ret = db_.remove(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "db remove, r:%d", ret);
     }
 
-remove_return:
-    TCAM_API_END_();
+    // Remove from HW
+    ret = write_(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        // At this point, not much can be done, print err and proceed
+        SLTCAM_TRACE_ERR("write, r:%d", ret);
+    }
+
+    // Release this handle
+    ret = txn_.release(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        // At this point, not much can be done, print err and proceed
+        SLTCAM_TRACE_ERR("txn release, r:%d", ret);
+    }
+
+    // Free the tcam entry
+    ret = dealloc_(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        // At this point, not much can be done, print err and proceed
+        SLTCAM_TRACE_ERR("dealloc, r:%d", ret);
+    }
+
+done:
+    //db_.sanitize(ctx);
+    SLTCAM_API_END_(ret);
     stats_.remove(ret);
     return ret;
 }
 
+//---------------------------------------------------------------------------
+// Get TCAM entry by key or handle
+//---------------------------------------------------------------------------
+sdk_ret_t
+sltcam::get(sdk::table::sdk_table_api_params_t *params) {
+__label__ done;
+    SLTCAM_API_BEGIN_();
 
-    sdk_ret_t rs = SDK_RET_OK;
-    // tcam_entry_map::iterator itr;
-	tcam_entry_t *te = NULL;
+    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_GET, params, &props_);
+    SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
-    // check if idx is OOB
-    if (tcam_idx >= capacity_) {
-        rs = SDK_RET_OOB;
-        goto end;
+    auto ret = find_(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
     }
 
-#if 0
-    // check if entry exists
-    itr = tcam_entry_map_.find(tcam_idx);
-    if (itr == tcam_entry_map_.end()) {
-        rs = SDK_RET_ENTRY_NOT_FOUND;
-        goto end;
-    }
-#endif
-    // check if entry exists
-	te = (tcam_entry_t *)entry_ht_->lookup(&tcam_idx);
-	if (te == NULL) {
-        rs = SDK_RET_ENTRY_NOT_FOUND;
-        goto end;
-	}
-
-    if (allow_dup_insert_) {
-        // check refcnt and delete only if refcnt is zero
-        SDK_TRACE_DEBUG("TCAM: Table: %s Entry delete refcount %d",
-                        name_, te->ref_cnt);
-		te->ref_cnt--;
-        // itr->second->decr_refcnt();
-        if (te->ref_cnt != 0) {
-            return SDK_RET_OK;
-        }
+    ret = read_(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "read, r:%d", ret);
     }
 
-    // de-program hw
-    rs = deprogram_table_(te);
+    ctx->copyout();
 
-    if (rs == SDK_RET_OK) {
-        // free & remove from sw data structure
-        // tcam_entry::destroy(itr->second);
-        // tcam_entry_map_.erase(itr);
-		te = (tcam_entry_t *)entry_ht_->remove(&tcam_idx);
-        tcam_entry_delete(te);
-
-        // free index
-        rs = free_index_(tcam_idx);
-        if (rs != SDK_RET_OK) {
-            goto end;
-        }
-    }
-
-end:
-
-    stats_update_(REMOVE, rs);
-    trigger_health_monitor();
-    return rs;
+done:
+    SLTCAM_API_END_(ret);
+    stats_.get(ret);
+    return ret;
 }
 
 //---------------------------------------------------------------------------
-// retrieve from the s/w copy
+// Iterate over all tcam entries
 //---------------------------------------------------------------------------
 sdk_ret_t
-tcam::retrieve(uint32_t tcam_idx, void *key, void *key_mask, void *data)
-{
-    sdk_ret_t rs = SDK_RET_OK;
-    // tcam_entry_map::iterator itr;
-    tcam_entry_t *te = NULL;
+sltcam::iterate(sdk::table::sdk_table_api_params_t *params) {
+    sdk_table_api_params_t iterparams = { 0 };
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    SLTCAM_API_BEGIN_();
+    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_GET, params, &props_);
+    SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
-    // check if idx is OOB
-    if (tcam_idx >= capacity_) {
-        rs = SDK_RET_OOB;
-        goto end;
+    for(auto it = db_.begin(); it != db_.end(); it++) {
+        ctx->tcam_index = db_.element(it);
+        ctx->tcam_index_valid = true;
+
+        ret = read_(ctx);
+        if (ret != sdk::SDK_RET_OK) {
+            SLTCAM_TRACE_ERR_GOTO(done, "read, r:%d", ret);
+        }
+
+        iterparams.key = ctx->swkey;
+        iterparams.mask = ctx->swkeymask;
+        iterparams.appdata = ctx->swdata;
+        iterparams.cbdata = params->cbdata;
+        params->itercb(&iterparams);
     }
 
-#if 0
-    // check if entry exists
-    itr = tcam_entry_map_.find(tcam_idx);
-    if (itr == tcam_entry_map_.end()) {
-        rs = SDK_RET_ENTRY_NOT_FOUND;
-        goto end;
-    }
-#endif
-    // check if entry exists
-	te = (tcam_entry_t *)entry_ht_->lookup(&tcam_idx);
-	if (te == NULL) {
-        rs = SDK_RET_ENTRY_NOT_FOUND;
-        goto end;
-	}
+done:
+    SLTCAM_API_END_(ret);
+    return ret;
+}
 
-
-    // te = itr->second;
-    if (key) {
-        memcpy(key, te->key, te->key_len);
-    }
-    if (key_mask) {
-        memcpy(key_mask, te->key_mask, te->key_len);
-    }
-    if (data) {
-        memcpy(data, te->data, te->data_len);
-    }
-
-end:
-
-    stats_update_(RETRIEVE, rs);
-    return rs;
+//----------------------------------------------------------------------------
+// Get TCAM statistics
+//----------------------------------------------------------------------------
+sdk_ret_t
+sltcam::stats_get(sdk::table::sdk_table_api_stats_t *api_stats,
+                  sdk::table::sdk_table_stats_t *table_stats) {
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    SLTCAM_API_BEGIN_();
+    ret = stats_.get(api_stats, table_stats);
+    SLTCAM_API_END_(ret);
+    return ret;
 }
 
 //---------------------------------------------------------------------------
-// retrieve from hardware table
+// Reserve an entry
 //---------------------------------------------------------------------------
 sdk_ret_t
-tcam::retrieve_from_hw(uint32_t tcam_idx, void *key,
-                       void *key_mask, void *data)
-{
-    sdk_ret_t rs = SDK_RET_OK;
-    p4pd_error_t pd_err = P4PD_SUCCESS;
+sltcam::reserve(sdk::table::sdk_table_api_params_t *params) {
+__label__ done;
+    SLTCAM_API_BEGIN_();
 
-    // check if idx is OOB
-    if (tcam_idx >= capacity_) {
-        rs = SDK_RET_OOB;
-        goto end;
+    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_RELEASE,
+                                 params, &props_);
+    SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
+
+    // Allocate the entry
+    auto ret = alloc_(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "alloc, r:%d", ret);
     }
 
-    pd_err = p4pd_entry_read(id_, tcam_idx,
-                             key, key_mask, data);
-    SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
-    if (pd_err != P4PD_SUCCESS) {
-        rs = SDK_RET_HW_PROGRAM_ERR;
+    // Reserve the entry in the transaction
+    ret = txn_.reserve(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "txn reserve, r:%d", ret);
     }
 
-end:
+    // Save the handle
+    params->handle = index2handle(ctx->tcam_index);
 
-    stats_update_(RETRIEVE_FROM_HW, rs);
-    return rs;
-}
-
-bool tcam_iter_walk_cb(void *entry, void *ctxt)
-{
-    tcam_entry_t *te = (tcam_entry_t *)entry;
-    tcam_iter_cb_t *te_cb = (tcam_iter_cb_t *)ctxt;
-
-    te_cb->func(te->key, te->key_mask,
-                te->data, te->index, te_cb->iter_cb_data);
-    return false;
-
-}
-//---------------------------------------------------------------------------
-// tcam iterate
-//---------------------------------------------------------------------------
-sdk_ret_t
-tcam::iterate(tcam_iterate_func_t cb, const void *cb_data)
-{
-    sdk_ret_t rs = SDK_RET_OK;
-    tcam_iter_cb_t te_cb  = {0};
-
-    te_cb.func = cb;
-    te_cb.iter_cb_data = cb_data;
-
-    this->entry_ht_->walk(tcam_iter_walk_cb, &te_cb);
-
-#if 0
-    sdk_ret_t rs = SDK_RET_OK;
-    tcam_entry_map::iterator itr;
-    tcam_entry *te = NULL;
-
-    for (itr = tcam_entry_map_.begin(); itr != tcam_entry_map_.end(); ++itr) {
-        te = itr->second;
-        cb(te->get_key(), te->get_key_mask(),
-           te->get_data(), itr->first, cb_data);
-    }
-#endif
-
-    return rs;
-}
-
-
-bool tcam_entry_walk_cb(void *entry, void *ctxt)
-{
-    tcam_entry_t *te = (tcam_entry_t *)entry;
-    tcam_entry_cb_t *te_cb = (tcam_entry_cb_t *)ctxt;
-
-    if ((te_cb->te->key_len == te->key_len) &&
-        (!std::memcmp(te_cb->te->key, te->key, te->key_len)) &&
-        (!std::memcmp(te_cb->te->key_mask, te->key_mask, te->key_len))) {
-        te_cb->is_present = true;
-        te_cb->te_match = (tcam_entry_t *)entry;
-        return true;
-    }
-    return false;
-
+done:
+    //db_.sanitize(ctx);
+    SLTCAM_API_END_(ret);
+    stats_.reserve(ret);
+    return ret;
 }
 
 //---------------------------------------------------------------------------
-// return true if tcam entry is present already
+// Release an entry
 //---------------------------------------------------------------------------
-bool
-tcam::entry_exists_(void *key, void *key_mask, uint32_t key_len,
-                    tcam_entry_t **te)
-{
-    tcam_entry_t    tmp_te = {0};
-    tcam_entry_cb_t te_cb  = {0};
-
-    tmp_te.key      = key;
-    tmp_te.key_mask = key_mask;
-    tmp_te.key_len  = key_len;
-
-    te_cb.te = &tmp_te;
-    te_cb.is_present = false;
-    this->entry_ht_->walk(tcam_entry_walk_cb, &te_cb);
-    if (te_cb.is_present) {
-        *te = te_cb.te_match;
-        return true;
-    }
-    *te = NULL;
-    return false;
-#if 0
-    tcam_entry_map::iterator itr;
-    tcam_entry *tmp_te = NULL;
-
-    for (itr = tcam_entry_map_.begin(); itr != tcam_entry_map_.end(); ++itr) {
-        tmp_te = itr->second;
-        if ((key_len == tmp_te->get_key_len()) &&
-            (!std::memcmp(key, tmp_te->get_key(), key_len)) &&
-            (!std::memcmp(key_mask, tmp_te->get_key_mask(), key_len))) {
-            *te = tmp_te;
-            return true;
-        }
-    }
-    *te = NULL;
-    return false;
-#endif
-}
-
-//----------------------------------------------------------------------------
-// invalidate gievn TCAM entry in the TCAM table
-// TODO:
-// 1. new/delete ??
-// 2. std::memset() ? regular c memset() wouldn't bring std::
-//----------------------------------------------------------------------------
 sdk_ret_t
-tcam::deprogram_table_(tcam_entry_t *te)
-{
-    p4pd_error_t pd_err = P4PD_SUCCESS;
-    void *hwkey         = NULL;
-    void *hwkeymask     = NULL;
+sltcam::release(sdk::table::sdk_table_api_params_t *params) {
+    SLTCAM_API_BEGIN_();
 
-    if (!te) {
-        return SDK_RET_INVALID_ARG;
+    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_RELEASE,
+                                 params, &props_);
+    SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
+ 
+    // Release this entry from the transaction
+    auto ret = txn_.release(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR_GOTO(done, "txn release, r:%d", ret);
+    }
+   
+    // Free the entry
+    ret = dealloc_(ctx);
+    if (ret != sdk::SDK_RET_OK) {
+        SLTCAM_TRACE_ERR("dealloc, r:%d", ret);
     }
 
-    // build hw keys/keymasks
-    // hwkey     = ::operator new(hwkey_len_);
-    // hwkeymask = ::operator new(hwkeymask_len_);
-	hwkey = SDK_CALLOC(SDK_MEM_ALLOC_ID_HW_KEY, hwkey_len_);
-	hwkeymask = SDK_CALLOC(SDK_MEM_ALLOC_ID_HW_KEY, hwkeymask_len_);
-
-    memset(hwkey, 0xFF, hwkey_len_);
-    memset(hwkeymask, 0xFf, hwkeymask_len_);
-    memset(te->data, 0, swdata_len_);
-
-    // write to the P4 table
-    pd_err = p4pd_entry_write(id_, te->index, (uint8_t *)hwkey,
-                              (uint8_t *)hwkeymask, te->data);
-    SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
-
-    SDK_TRACE_DEBUG("%s: Index: %d de-programmed\n", name_, te->index);
-
-end:
-
-    if (hwkey) {
-        // ::operator delete(hwkey);
-		SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, hwkey);
-    }
-    if (hwkeymask) {
-        // ::operator delete(hwkeymask);
-		SDK_FREE(SDK_MEM_ALLOC_ID_HW_KEY, hwkeymask);
-    }
-
-    return (pd_err != P4PD_SUCCESS) ? SDK_RET_HW_PROGRAM_ERR : SDK_RET_OK;
+done:
+    SLTCAM_API_END_(ret);
+    stats_.release(ret);
+    return ret;
 }
 
-//----------------------------------------------------------------------------
-// return stats pointer
-// TODO: this is a public API ?
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// Start the transaction
+//---------------------------------------------------------------------------
 sdk_ret_t
-tcam::fetch_stats(const uint64_t **stats)
-{
-    *stats = stats_;
-    return SDK_RET_OK;
+sltcam::txn_start() {
+    SLTCAM_API_BEGIN_();
+    auto ret = txn_.start();
+    SLTCAM_API_END_(ret);
+    return ret;
 }
 
-//----------------------------------------------------------------------------
-// allocate an index with id
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// End the transaction
+//---------------------------------------------------------------------------
 sdk_ret_t
-tcam::alloc_index_withid_(uint32_t idx)
-{
-    sdk_ret_t   rs = SDK_RET_OK;
-
-    indexer::status irs = indexer_->alloc_withid(idx);
-    if (irs != indexer::SUCCESS) {
-        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_ENTRY_EXISTS :
-			SDK_RET_OOB;
-    }
-
-    return rs;
+sltcam::txn_end() {
+    SLTCAM_API_BEGIN_();
+    auto ret = txn_.end();
+    SLTCAM_API_END_(ret);
+    return ret;
 }
 
-//----------------------------------------------------------------------------
-// increment stats
-//----------------------------------------------------------------------------
-void
-tcam::stats_incr_(stats stat)
-{
-    SDK_ASSERT_RETURN_VOID((stat < STATS_MAX));
-    stats_[stat]++;
-}
-
-//----------------------------------------------------------------------------
-// decrement stats
-//----------------------------------------------------------------------------
-void
-tcam::stats_decr_(stats stat)
-{
-    SDK_ASSERT_RETURN_VOID((stat < STATS_MAX));
-    stats_[stat]--;
-}
-
-//----------------------------------------------------------------------------
-// update stats
-//----------------------------------------------------------------------------
-void
-tcam::stats_update_(tcam::api ap, sdk_ret_t rs)
-{
-    switch (ap) {
-    case INSERT:
-        if (rs == SDK_RET_OK) {
-            stats_incr_(STATS_INS_SUCCESS);
-        } else if (rs == SDK_RET_HW_PROGRAM_ERR) {
-            stats_incr_(STATS_INS_FAIL_HW);
-        } else if (rs == SDK_RET_NO_RESOURCE) {
-            stats_incr_(STATS_INS_FAIL_NO_RES);
-        } else {
-            SDK_ASSERT(0);
-        }
-        break;
-
-    case INSERT_WITHID:
-        if (rs == SDK_RET_OK) {
-            stats_incr_(STATS_INS_WITHID_SUCCESS);
-        } else if (rs == SDK_RET_HW_PROGRAM_ERR) {
-            stats_incr_(STATS_INS_WITHID_FAIL_HW);
-        } else if (rs == SDK_RET_ENTRY_EXISTS) {
-            stats_incr_(STATS_INS_WITHID_FAIL_DUP_INS);
-        } else if (rs == SDK_RET_OOB) {
-            stats_incr_(STATS_INS_WITHID_FAIL_OOB);
-        } else {
-            SDK_ASSERT(0);
-        }
-        break;
-
-    case UPDATE:
-        if (rs == SDK_RET_OK) {
-            stats_incr_(STATS_UPD_SUCCESS);
-        } else if (rs == SDK_RET_ENTRY_NOT_FOUND) {
-            stats_incr_(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
-        } else if (rs == SDK_RET_HW_PROGRAM_ERR) {
-            stats_incr_(STATS_UPD_FAIL_HW);
-        } else if (rs == SDK_RET_OOB) {
-            stats_incr_(STATS_UPD_FAIL_OOB);
-        } else {
-            SDK_ASSERT(0);
-        }
-        break;
-
-    case REMOVE:
-        if (rs == SDK_RET_OK) {
-            stats_incr_(STATS_REM_SUCCESS);
-        } else if (rs == SDK_RET_ENTRY_NOT_FOUND) {
-            stats_incr_(STATS_REM_FAIL_ENTRY_NOT_FOUND);
-        } else if (rs == SDK_RET_HW_PROGRAM_ERR) {
-            stats_incr_(STATS_REM_FAIL_HW);
-        } else if (rs == SDK_RET_OOB) {
-            stats_incr_(STATS_REM_FAIL_OOB);
-        } else {
-            SDK_ASSERT(0);
-        }
-        break;
-
-    case RETRIEVE:
-        if (rs == SDK_RET_OK) {
-            stats_incr_(STATS_RETR_SUCCESS);
-        } else if (rs == SDK_RET_OOB) {
-            stats_incr_(STATS_RETR_FAIL_OOB);
-        } else if (rs == SDK_RET_ENTRY_NOT_FOUND) {
-            stats_incr_(STATS_RETR_FAIL_ENTRY_NOT_FOUND);
-        } else {
-            SDK_ASSERT(0);
-        }
-        break;
-
-    case RETRIEVE_FROM_HW:
-        if (rs == SDK_RET_OK) {
-            stats_incr_(STATS_RETR_FROM_HW_SUCCESS);
-        } else if (rs == SDK_RET_OOB) {
-            stats_incr_(STATS_RETR_FROM_HW_FAIL_OOB);
-        } else if (rs == SDK_RET_HW_PROGRAM_ERR) {
-            stats_incr_(STATS_RETR_FROM_HW_FAIL);
-        } else {
-            SDK_ASSERT(0);
-        }
-        break;
-
-    default:
-        SDK_ASSERT(0);
-    }
-}
-
-//----------------------------------------------------------------------------
-// number of entries in use
-//----------------------------------------------------------------------------
-uint32_t
-tcam::num_entries_in_use(void) const
-{
-    return indexer_->num_indices_allocated();
-}
-
-//----------------------------------------------------------------------------
-// number of insert operations attempted
-//----------------------------------------------------------------------------
-uint32_t
-tcam::num_inserts(void) const
-{
-    return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FAIL_DUP_INS] +
-        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW] +
-        stats_[STATS_INS_WITHID_SUCCESS] + stats_[STATS_INS_WITHID_FAIL_DUP_INS] +
-        stats_[STATS_INS_WITHID_FAIL_HW] + stats_[STATS_INS_WITHID_FAIL_OOB];
-}
-
-//----------------------------------------------------------------------------
-// number of failed insert operations
-//----------------------------------------------------------------------------
-uint32_t
-tcam::num_insert_errors(void) const
-{
-    return stats_[STATS_INS_FAIL_DUP_INS] +
-        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW] +
-        stats_[STATS_INS_WITHID_FAIL_DUP_INS] +
-        stats_[STATS_INS_WITHID_FAIL_HW] + stats_[STATS_INS_WITHID_FAIL_OOB];
-}
-
-// ----------------------------------------------------------------------------
-// number of update operations attempted
-// ----------------------------------------------------------------------------
-uint32_t
-tcam::num_updates(void) const
-{
-    return stats_[STATS_UPD_SUCCESS] + stats_[STATS_UPD_FAIL_OOB] +
-        stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_UPD_FAIL_HW];
-}
-
-// ----------------------------------------------------------------------------
-// number of failed update operations
-// ----------------------------------------------------------------------------
-uint32_t
-tcam::num_update_errors(void) const
-{
-    return stats_[STATS_UPD_FAIL_OOB] +
-        stats_[STATS_UPD_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_UPD_FAIL_HW];
-}
-
-//----------------------------------------------------------------------------
-// number of delete operations attempted
-//----------------------------------------------------------------------------
-uint32_t
-tcam::num_deletes(void) const
-{
-    return stats_[STATS_REM_SUCCESS] + stats_[STATS_REM_FAIL_OOB] +
-        stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
-}
-
-//----------------------------------------------------------------------------
-// number of failed delete operations
-//----------------------------------------------------------------------------
-uint32_t
-tcam::num_delete_errors(void) const
-{
-    return stats_[STATS_REM_FAIL_OOB] +
-        stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
-}
-
-//----------------------------------------------------------------------------
-// dump a tcam entry
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// Sanitize internal data structures
+//---------------------------------------------------------------------------
 sdk_ret_t
-tcam::entry_trace_(tcam_entry_t *te)
-{
-    char            buff[4096] = {0};
-    p4pd_error_t    p4_err;
-
-    if (!te) {
-        return SDK_RET_OK;
-    }
-    p4_err = p4pd_table_ds_decoded_string_get(id_, te->index,
-                                              te->key, te->key_mask, te->data,
-                                              buff, sizeof(buff));
-    SDK_ASSERT(p4_err == P4PD_SUCCESS);
-
-    SDK_TRACE_DEBUG("%s: Index: %d \n %s\n", name_, te->index, buff);
-
-    return SDK_RET_OK;
+sltcam::sanitize() {
+    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_UPDATE, NULL, &props_);
+    SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
+    db_.sanitize(ctx);
+    return sdk::SDK_RET_OK;
 }
 
-// ----------------------------------------------------------------------------
-// Returns string of the entry
-// ----------------------------------------------------------------------------
-sdk_ret_t
-tcam::entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
-                    char *buff, uint32_t buff_size)
-{
-    p4pd_error_t    p4_err;
-
-    p4_err = p4pd_global_table_ds_decoded_string_get(id_, index,
-                                                     key, key_mask, data,
-                                                     buff, buff_size);
-    SDK_ASSERT(p4_err == P4PD_SUCCESS);
-    return SDK_RET_OK;
-}
-
-}    // namespace table
-}    // namespace sdk
+} // namespace table
+} // namespace sdk

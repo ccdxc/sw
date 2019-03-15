@@ -73,6 +73,16 @@ do {                                                       \
     }                                                      \
 } while (FALSE)
 
+#define SDK_ASSERT_TRACE_GOTO(cond, label, args...)        \
+do {                                                       \
+    if (unlikely(!(cond))) {                               \
+        SDK_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
+        SDK_TRACE_ERR(args);                               \
+        __ASSERT__(FALSE);                                 \
+        goto label;                                         \
+    }                                                      \
+} while (FALSE)
+
 #define SDK_ASSERT(cond)        __ASSERT__(cond)
 
 #define SDK_ABORT(cond)                                    \

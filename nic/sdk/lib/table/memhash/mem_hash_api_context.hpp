@@ -111,8 +111,8 @@ public:
     uint32_t sw_key_len;
     uint32_t sw_data_len;
     uint32_t sw_appdata_len;
-    key2str_t key2str;
-    appdata2str_t appdata2str;
+    bytes2str_t key2str;
+    bytes2str_t appdata2str;
     iterate_t itercb;
     void *cbdata; // Callback data for iteration
 

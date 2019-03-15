@@ -16,7 +16,7 @@ namespace time_profile {
 time_profile_info time_profile_db[TIME_PROFILE_ID_MAX];
 
 static const char *time_profile_str_list[] = {
-    ENUM_ENTRY_LIST(GENERATE_STRING)
+    TIME_PROFILE_FUNCTION_ENUMS(HANDLER_GENERATE_STRING)
 };
 
 static uint64_t
