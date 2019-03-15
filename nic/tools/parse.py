@@ -5,6 +5,9 @@ import sys
 import argparse
 import re
 import json
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
 
 # Globals
 if len(sys.argv) > 1:
@@ -27,6 +30,7 @@ inscount_log = nic_dir + "/inscount.log"
 inscount_sort_log = nic_dir + "/inscount_sort.log"
 sym_log = nic_dir + "/gen/capri_loader.conf"
 sym_log2 = nic_dir + "/capri_loader.conf"
+sym_log3 = nic_dir + "/conf/gen/mpu_prog_info.json"
 dol_log = nic_dir + "/dol.log"
 print "- Model Log file: " + model_log
 print "- Model Log Output file: " + model1_log
@@ -34,22 +38,32 @@ print "- SYM Log file: " + sym_log
 print "- DOL Log file: " + dol_log
 symbols = { 'address': 'name' }
 
+def parse_loader_conf(loader_conf):
+    with open(loader_conf, 'r') as f:
+        data = json.load(f)
+        for p in data['programs']:
+            pgm_or_label = p['name']
+            start_pc = p['base_addr']
+            start_pc_hex = p['base_addr_hex']
+            #print str(pgm_or_label), str(start_pc_hex)
+            yield str(pgm_or_label), str(start_pc_hex)
+            for s in p['symbols']:
+                pgm_or_label = s['name']
+                s_pc = int(start_pc) + int(s['addr'])
+                #print str(pgm_or_label) + '.LAB', hex(s_pc)
+                yield str(pgm_or_label) + '.LAB', hex(s_pc)
+
 # build_symbols
 def build_symbols():
     print "* Building symbols....."
-    if os.path.isfile(sym_log):
-        sym_file  = open(sym_log, "r")
-    elif os.path.isfile(sym_log2):
-        sym_file  = open(sym_log2, "r")
+    if os.path.isfile(sym_log3):
+       for pgm_or_label, start_pc in parse_loader_conf(sym_log3):
+             symbols[start_pc] = pgm_or_label[0:-4]
+       #pp.pprint(symbols)
+       return
     else:
         print "Cannot find symbol file"
         sys.exit()
-    for line in sym_file:
-        fields = line.strip().split(",")
-        if len(fields) < 2:
-            continue
-        symbols['0x'+fields[1].upper()] =  fields[0][0:-4]
-    return
 
 # parse_logs and create a new file with symbols resolved
 def parse_logs():
@@ -76,11 +90,12 @@ def parse_logs():
     for linenum, line in enumerate(modelfile, tc_start_linenum - 1):
         if re.match("(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)", line, re.I):
             fields = re.split(r'(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)', line)
-            key = '0x'+fields[2].upper()
+            key = '0x'+fields[2].lower()
             if not key in symbols:
-                print linenum, '0x'+fields[2]
-                model1file.write(line)
-                continue
+               print "key not found" + key
+               print linenum, '0x'+fields[2]
+               model1file.write(line)
+               continue
             program = symbols[key]
             programline = linenum
             print linenum, '0x'+fields[2], program
@@ -89,8 +104,8 @@ def parse_logs():
 #this part added to translate the branch pointers in code
             
 	    fields1 = re.split(r'\[(.*)\]: ([0-9a-fA-F]+): ([0-9a-fA-F]+)\s+b\w+\s+.+, 0x([0-9a-fA-F]+)', line)
-            key1 = '0x'+fields1[2].upper()
-            key2 = '0x'+fields1[4].upper()
+            key1 = '0x'+fields1[2].lower()
+            key2 = '0x'+fields1[4].lower()
          #   print "branch found ", line , "key1 ", key1, " key2 ", key2
             if key1 in symbols:
                 line = line.replace(fields1[2], symbols[key1])
@@ -101,14 +116,14 @@ def parse_logs():
         elif re.match("^\[(.*)\]: ([0-9a-fA-F]+):(.*)", line, re.I):
 #this part added to mark what jumps were taken
             fields1 = re.split(r'\[(.*)\]: ([0-9a-fA-F]+):(.*)', line)
-            key = '0x'+fields1[2].upper()
+            key = '0x'+fields1[2].lower()
             if key in symbols:
                 line = line.replace(fields1[2], symbols[key])
         #    print linenum, 'Jump to '+fields[2], program
             inscountfile.write("%03d %s %d\n" % (int(fields1[1])+1, program, programline))
         elif re.match(".* PC_ADDR=0x(.*) INST=0x", line, re.I):
             fields = re.split(r'.* PC_ADDR=0x(.*) INST=0x', line)
-            key = '0x'+fields[1].upper()
+            key = '0x'+fields[1].lower()
             if not key in symbols:
                 model1file.write(line)
                 continue
@@ -124,7 +139,7 @@ def parse_logs():
             print '\n' + line.strip()
         elif re.match("(.*)[sp]g(.*)mpu(.*)load(.*)pkt_id ([0-9]*) entry pc byte addr=0x([0-9a-fA-F]+)(.*)", line, re.I):
             fields = re.split(r'(.*)[sp]g(.*)mpu(.*)load(.*)pkt_id ([0-9]*) entry pc byte addr=0x([0-9a-fA-F]+)(.*)', line)
-            key = '0x10'+fields[6].upper()
+            key = '0x10'+fields[6].lower()
             if not key in symbols:
                 print 'RTL ', linenum, 'pkt_id ', fields[5], ' 0x'+fields[6]
                 model1file.write(line)
