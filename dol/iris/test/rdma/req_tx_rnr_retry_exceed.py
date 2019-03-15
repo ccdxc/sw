@@ -16,6 +16,9 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
 
+    tc.pvtdata.err_retry_count = rs.lqp.sq.qstate.data.err_retry_count
+    tc.pvtdata.rnr_retry_count = rs.lqp.sq.qstate.data.rnr_retry_count
+
     rs.lqp.sq.qstate.data.err_retry_count = 0
     rs.lqp.sq.qstate.data.rnr_retry_count = 0
     rs.lqp.sq.qstate.data.err_retry_ctr = 0
@@ -230,6 +233,11 @@ def TestCaseStepVerify(tc, step):
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
     if (GlobalOptions.dryrun): return
+    rs = tc.config.rdmasession
+    rs.lqp.sq.qstate.Read()
 
     ResetErrQState(tc)
+    rs.lqp.sq.qstate.data.err_retry_count = tc.pvtdata.err_retry_count
+    rs.lqp.sq.qstate.data.rnr_retry_count = tc.pvtdata.rnr_retry_count
+    rs.lqp.sq.qstate.WriteWithDelay()
     return

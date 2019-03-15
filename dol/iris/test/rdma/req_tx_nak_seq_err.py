@@ -114,11 +114,15 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify err_retry_cntr is still set to inifinte retries
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'err_retry_ctr', 7):
-            return False
+        if (tc.pvtdata.sq_pre_qstate.err_retry_ctr == 7):
+            if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'err_retry_ctr', tc.pvtdata.sq_post_qstate, 'err_retry_ctr'):
+                return False
+        else:
+            if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'err_retry_ctr', -1):
+                return False
 
-        # verify rnr_retry_cntr is still set to infinite retries
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rnr_retry_ctr', 7):
+        # verify rnr_retry_cntr is not modified
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'rnr_retry_ctr', tc.pvtdata.sq_post_qstate, 'rnr_retry_ctr'):
             return False
 
         # verify rnr_timeout is not set
