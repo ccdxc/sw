@@ -16,8 +16,8 @@ setup:
     topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
     config  :
         
-        - step : testcases.frequency.clock_settings
-        - step : utils.reboot_all
+        #- step : testcases.frequency.clock_settings
+        #- step : utils.reboot_all
         - step : utils.naples_workloads
         - step : config.config_link_flap
         - step : config.netagent.hw_push_config
@@ -71,4 +71,4 @@ testbundles:
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
-    - step      : testcases.frequency.clock_settings_td
+    #- step      : testcases.frequency.clock_settings_td

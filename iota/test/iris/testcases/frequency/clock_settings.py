@@ -37,7 +37,7 @@ def __reboot_nodes():
 def __set_frequency_on_naples():
     result = api.types.status.SUCCESS
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-
+    
     for naples_host in api.GetNaplesHostnames():
         api.CopyToNaples(naples_host, [__get_local_file_fullpath()], "") 
         api.Trigger_AddNaplesCommand(req, naples_host, "mv /%s %s" % (__get_local_file_name(), __get_naples_file_path()))

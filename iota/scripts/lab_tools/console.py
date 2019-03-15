@@ -28,6 +28,7 @@ class Console(object):
         return 
     
     def __spawn(self, command):
+        print (command)
         hdl = pexpect.spawn(command)
         hdl.timeout = TIMEOUT
         hdl.logfile = sys.stdout
@@ -85,19 +86,16 @@ class Console(object):
         return "[%s][%s]" % (str(datetime.now()), str(self))
     
     def __clear_line(self):
-        try:
-            print("%sClearing Console Server Line" % self.__log_pfx)
-            hdl = self.__spawn("telnet %s -l %s" % (self.console_ip, self.console_svr_username))
-            hdl.expect("[Pp]assword:")
-            self.__sendline_expect(self.console_svr_password, "#", hdl = hdl)
+        print("%sClearing Console Server Line" % self.__log_pfx)
+        hdl = self.__spawn("telnet %s -l %s" % (self.console_ip, self.console_svr_username))
+        hdl.expect_exact("Password:")
+        self.__sendline_expect(self.console_svr_password, "#", hdl = hdl)
 
-            for i in range(2):
-                time.sleep(5)
-                self.__sendline_expect("clear line %d" % (self.console_port - 2000), "[confirm]", hdl = hdl)
-                self.__sendline_expect("", " [OK]", hdl = hdl)
-            hdl.close()
-        except:
-            raise Exception("Clear line failed ")
+        for i in range(2):
+            time.sleep(5)
+            self.__sendline_expect("clear line %d" % (self.console_port - 2000), "[confirm]", hdl = hdl)
+            self.__sendline_expect("", " [OK]", hdl = hdl)
+        hdl.close()
 
     def EnableDhcpOnOob(self):
         return self.__enable_dhcp_on_oob()

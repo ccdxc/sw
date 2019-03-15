@@ -67,19 +67,20 @@ def __get_tb_naples_map(tb_json_map):
     return ret_dict
 
 def __run_freq_cmd(task):
+    print (task[1])
     op = os.popen(task[1]).read()
     return ("[%s] %s" % (task[0], op.split('\n')[-2]))
 
-def __test_check_frequency(tbs_naples_map):
+def __run_cmd(tbs_naples_map, command):
     run_parallel = True
-    def __build_and_run_commands(tbs_naples_map):
+    def __build_and_run_commands(tbs_naples_map, command):
         tasks = []
         for tb in tbs_naples_map:
             for naples in tbs_naples_map[tb]:
                 host    = naples[0]
                 console = naples[1]
                 console_port = naples[2]
-                tasks.append((host, "python naples_script.py --console-ip %s --console-port %d\n" % (console, int(console_port))))
+                tasks.append((host, "python naples_script.py --console-ip %s --console-port %d --command \"%s\"\n" % (console, int(console_port),command )))
     
         results = []
         if run_parallel:
@@ -96,13 +97,13 @@ def __test_check_frequency(tbs_naples_map):
             print (result)
         print ("\n------------------------------------\n")
 
-    results = __build_and_run_commands(tbs_naples_map)
+    results = __build_and_run_commands(tbs_naples_map, command)
     __print_results( results)
     return results
 
 import argparse
 parser = argparse.ArgumentParser(description='Sanity Testbeds check script')
-parser.add_argument('--check-frequency', dest='check_frequency', required = False, default=True, help='print frequency file')
+parser.add_argument('--command', dest='command', required = True, default=True, help='print frequency file')
 GlobalOptions = parser.parse_args()
 
 def Main():
@@ -112,8 +113,8 @@ def Main():
     tbs_json_map = __get_tb_json_map(tbs)
     tbs_naples_map = __get_tb_naples_map(tbs_json_map)
     # Now here construct command to run where frequency.json is enabled
-    if GlobalOptions.check_frequency:
-        __test_check_frequency(tbs_naples_map)
+    __run_cmd(tbs_naples_map,GlobalOptions.command)
+
 
 
 if __name__ == '__main__':
