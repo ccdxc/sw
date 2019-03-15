@@ -215,35 +215,6 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
-	globals.Aggregator: {
-		TypeMeta: api.TypeMeta{
-			Kind: "Module",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: globals.Aggregator,
-		},
-		Spec: protos.ModuleSpec{
-			Type:      protos.ModuleSpec_Deployment,
-			NumCopies: 1,
-			Submodules: []protos.ModuleSpec_Submodule{
-				{
-					Name: globals.Aggregator,
-					Services: []protos.ModuleSpec_Submodule_Service{
-						{
-							Name: globals.Aggregator,
-							Port: runtime.MustUint32(globals.AggregatorAPIPort),
-						},
-					},
-					Args: []string{
-						"-resolver-urls", "$RESOLVER_URLS",
-					},
-				},
-			},
-			Volumes: []protos.ModuleSpec_Volume{
-				logVolume,
-			},
-		},
-	},
 	globals.ElasticSearch: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",

@@ -14,12 +14,12 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:167b6f65a6656de568092189ae791253939f076df60231fdd64588ac703892a1"
+  digest = "1:5d72bbcc9c8667b11c3dc3cbe681c5a6f71e5096744c0bf7726ab5c6425d5dc4"
   name = "github.com/BurntSushi/toml"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
-  version = "v0.3.0"
+  revision = "3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005"
+  version = "v0.3.1"
 
 [[projects]]
   branch = "master"
@@ -761,14 +761,6 @@
   version = "v1.7.0"
 
 [[projects]]
-  digest = "1:56516c494aa5e79e720c3654f50128c90ddecbf32378565135f56c2177f3f6c7"
-  name = "github.com/go-test/deep"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "9898238679c264cfb10411539f14a0553dc8b295"
-  version = "v1.0.0"
-
-[[projects]]
   digest = "1:ca3369c0fc8d471d8698f85a37a4f8c98a847402681a31431fb87a84fa2e5373"
   name = "github.com/godbus/dbus"
   packages = ["."]
@@ -916,19 +908,6 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "316fb6d3f031ae8f4d457c6c5186b9e3ded70435"
-
-[[projects]]
-  digest = "1:78f95c5169d82abb5cbea7855efa7a55d237db39bbe35ea97d6f8bb7c2770f24"
-  name = "github.com/google/go-cmp"
-  packages = [
-    "cmp",
-    "cmp/internal/diff",
-    "cmp/internal/function",
-    "cmp/internal/value",
-  ]
-  pruneopts = "NUT"
-  revision = "8099a9787ce5dc5984ed879a3bda47dc730a8e97"
-  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -1085,7 +1064,7 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:b77121741f6b864cd8353c84b74ffcfd763f207330820a4400179596736b435e"
+  digest = "1:4a2efaa1db9950eb7077d43840bf9f33f82d56da9340ae6753e4850bc03137da"
   name = "github.com/influxdata/influxdb"
   packages = [
     ".",
@@ -1099,7 +1078,6 @@
     "pkg/bits",
     "pkg/bloom",
     "pkg/bytesutil",
-    "pkg/deep",
     "pkg/escape",
     "pkg/estimator",
     "pkg/estimator/hll",
@@ -1172,8 +1150,7 @@
   revision = "1f58ded512de5feabbe30b60c7d33a7a896c5f16"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d5441def4bec8da960eb4ce84364c372de8168bca7d958a8d849dc08c9fe0d1a"
+  digest = "1:5c2cc99d8922a3fa6fe30ef2a89148fedf3ea6c589419fcf7a6213792570fe3b"
   name = "github.com/influxdata/yarpc"
   packages = [
     ".",
@@ -1182,7 +1159,8 @@
     "yarpcproto",
   ]
   pruneopts = "NUT"
-  revision = "fdd7e84bf38b2005289b3a0bd0d66dde5a423096"
+  revision = "b13d74d757bf9ea3e5574a491eb6646bdc4e2a04"
+  version = "v0.0.1"
 
 [[projects]]
   branch = "master"
@@ -1935,12 +1913,12 @@
   revision = "1731857f09b1f38450e2c12409748407822dc6be"
 
 [[projects]]
-  digest = "1:eaa6698f44de8f2977e93c9b946e60a8af75f565058658aad2df8032b55c84e5"
+  digest = "1:c97e8a5e5c435c3287f581cdb4441ba34577ec6ead8422bfedafa6269af7abf6"
   name = "github.com/tinylib/msgp"
   packages = ["msgp"]
   pruneopts = "NUT"
-  revision = "b2b6a672cf1e5b90748f79b8b81fc8c5cf0571a1"
-  version = "1.0.2"
+  revision = "af6442a0fcf6e2a1b824f70dd0c734f01e817751"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:dcda05abfeb8e19cdd5e69cb4a86ecea44769386926c7d1cc199e2c142feb1a6"
@@ -2584,7 +2562,6 @@
     "github.com/appc/cni/pkg/types",
     "github.com/appc/cni/pkg/version",
     "github.com/asaskevich/govalidator",
-    "github.com/bmizerany/pat",
     "github.com/boltdb/bolt",
     "github.com/c9s/goprocinfo/linux",
     "github.com/cayleygraph/cayley",
@@ -2593,7 +2570,6 @@
     "github.com/cayleygraph/cayley/quad",
     "github.com/cayleygraph/cayley/schema",
     "github.com/cenkalti/backoff",
-    "github.com/cespare/xxhash",
     "github.com/codahale/hdrhistogram",
     "github.com/containernetworking/cni/pkg/skel",
     "github.com/containernetworking/cni/pkg/types",
@@ -2606,7 +2582,6 @@
     "github.com/cpuguy83/go-md2man",
     "github.com/davecgh/go-spew/spew",
     "github.com/deckarep/golang-set",
-    "github.com/dgrijalva/jwt-go",
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/api/types/container",
     "github.com/docker/docker/api/types/mount",
@@ -2624,7 +2599,6 @@
     "github.com/go-openapi/loads",
     "github.com/go-openapi/spec",
     "github.com/go-stack/stack",
-    "github.com/go-test/deep",
     "github.com/gogo/protobuf/gogoproto",
     "github.com/gogo/protobuf/proto",
     "github.com/gogo/protobuf/protoc-gen-gofast",
@@ -2647,7 +2621,6 @@
     "github.com/golang/protobuf/protoc-gen-go/generator",
     "github.com/golang/protobuf/protoc-gen-go/grpc",
     "github.com/golang/protobuf/protoc-gen-go/plugin",
-    "github.com/google/go-cmp/cmp",
     "github.com/google/gopacket",
     "github.com/google/gopacket/pcap",
     "github.com/google/uuid",
@@ -2660,13 +2633,6 @@
     "github.com/influxdata/influxdb/cmd/influxd/run",
     "github.com/influxdata/influxdb/coordinator",
     "github.com/influxdata/influxdb/models",
-    "github.com/influxdata/influxdb/pkg/bytesutil",
-    "github.com/influxdata/influxdb/pkg/deep",
-    "github.com/influxdata/influxdb/pkg/estimator",
-    "github.com/influxdata/influxdb/pkg/limiter",
-    "github.com/influxdata/influxdb/pkg/metrics",
-    "github.com/influxdata/influxdb/pkg/tracing",
-    "github.com/influxdata/influxdb/pkg/tracing/fields",
     "github.com/influxdata/influxdb/query",
     "github.com/influxdata/influxdb/services/httpd",
     "github.com/influxdata/influxdb/services/meta",
@@ -2674,8 +2640,6 @@
     "github.com/influxdata/influxdb/tsdb",
     "github.com/influxdata/influxdb/tsdb/engine",
     "github.com/influxdata/influxdb/tsdb/index",
-    "github.com/influxdata/influxdb/tsdb/index/inmem",
-    "github.com/influxdata/influxdb/uuid",
     "github.com/influxdata/influxql",
     "github.com/jeromer/syslogparser",
     "github.com/jeromer/syslogparser/rfc3164",
@@ -2732,7 +2696,6 @@
     "github.com/vmware/govmomi/vim25/soap",
     "github.com/vmware/govmomi/vim25/types",
     "github.com/willf/bitset",
-    "go.uber.org/zap",
     "golang.org/x/crypto/bcrypt",
     "golang.org/x/crypto/ssh",
     "golang.org/x/crypto/ssh/terminal",

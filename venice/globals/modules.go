@@ -29,7 +29,6 @@ const (
 	Vos                   = "pen-vos"
 	VosMinio              = "pen-vos-minio"
 	VosHTTP               = "pen-vos-http"
-	Aggregator            = "pen-aggregator"
 	Citadel               = "pen-citadel"
 	Collector             = "pen-collector"
 	Tmagent               = "pen-tmagent"
