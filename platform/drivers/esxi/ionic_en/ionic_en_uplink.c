@@ -417,8 +417,9 @@ ionic_en_uplink_link_state_update(struct ionic_en_uplink_handle *uplink_handle) 
 
         if (vmk_Memcmp(&shared_data->link, &link_info, sizeof(vmk_LinkStatus))) {
                 is_update_needed = VMK_TRUE;
-                ionic_info("Link state: %s speed: %u MBPS,"
+                ionic_info("%s: Link state: %s speed: %u MBPS,"
                            " Shared Link state: %s speed: %u MBPS",
+                           vmk_NameToString(&uplink_handle->uplink_name),
                            link_info.state == VMK_LINK_STATE_UP ?
                            "UP" : "DOWN",
                            link_info.speed,
@@ -432,10 +433,11 @@ ionic_en_uplink_link_state_update(struct ionic_en_uplink_handle *uplink_handle) 
 
         if (is_update_needed) {
                 vmk_UplinkUpdateLinkState(uplink_handle->uplink_dev, &link_info);
-                ionic_info("Changed Shared Link state: %s speed: %u MBPS",
-                            shared_data->link.state == VMK_LINK_STATE_UP ?
-                            "UP" : "DOWN",
-                            shared_data->link.speed);
+                ionic_info("%s: Changed Shared Link state: %s speed: %u MBPS",
+                           vmk_NameToString(&uplink_handle->uplink_name),
+                           shared_data->link.state == VMK_LINK_STATE_UP ?
+                           "UP" : "DOWN",
+                           shared_data->link.speed);
         }
 
 }
@@ -1034,6 +1036,10 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                           vmk_StatusToString(status));
                 return status;
         }
+
+        vmk_Memcpy(&uplink_handle->uplink_name,
+                   &uplink_name,
+                   sizeof(vmk_Name));
 
         vmk_Memset(&world_props, 0, sizeof(vmk_WorldProps));
         world_props.data          = priv_data;
@@ -1795,9 +1801,9 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
 
         uplink_handle->admin_link_status.state = VMK_LINK_STATE_UP;
 
-        uplink_handle->cur_hw_link_status.state  = VMK_LINK_STATE_UP;
-        uplink_handle->cur_hw_link_status.duplex = VMK_LINK_DUPLEX_FULL;
-        uplink_handle->cur_hw_link_status.speed  = VMK_LINK_SPEED_100000_MBPS;
+        uplink_handle->cur_hw_link_status.state  = VMK_LINK_STATE_DOWN;
+        uplink_handle->cur_hw_link_status.duplex = VMK_LINK_DUPLEX_AUTO;
+        uplink_handle->cur_hw_link_status.speed  = VMK_LINK_SPEED_AUTO;
 
         uplink_shared_data->supportedModesArraySz = IONIC_EN_NUM_SUPPORTED_MODES;
         uplink_shared_data->supportedModes        = ionic_en_uplink_modes;

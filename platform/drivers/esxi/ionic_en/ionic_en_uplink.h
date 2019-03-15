@@ -65,6 +65,7 @@
 
 struct ionic_en_uplink_handle {
         vmk_Uplink                      uplink_dev;
+        vmk_Name                        uplink_name;
         vmk_UplinkState                 prev_state;
         vmk_UplinkRegData               uplink_reg_data;
 

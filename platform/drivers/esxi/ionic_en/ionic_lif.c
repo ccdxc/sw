@@ -609,9 +609,11 @@ static bool ionic_notifyq_cb(struct cq *cq,
 
         switch (comp->event.ecode) {
         case EVENT_OPCODE_LINK_CHANGE:
-                ionic_info("Notifyq EVENT_OPCODE_LINK_CHANGE eid=%ld",
+                ionic_info("%s: Notifyq EVENT_OPCODE_LINK_CHANGE eid=%ld",
+                           vmk_NameToString(&uplink_handle->uplink_name),
                            comp->event.eid);
-                ionic_info("  link_status=%d link_errors=0x%02x phy_type=%d link_speed=%d autoneg=%d",
+                ionic_info("%s: Link_status=%d link_errors=0x%02x phy_type=%d link_speed=%d autoneg=%d",
+                           vmk_NameToString(&uplink_handle->uplink_name),
                            comp->link_change.link_status,
                            comp->link_change.link_error_bits,
                            comp->link_change.phy_type,
@@ -622,25 +624,30 @@ static bool ionic_notifyq_cb(struct cq *cq,
 //                vmk_WorldForceWakeup(priv_data->dev_recover_world);
                 break;
         case EVENT_OPCODE_RESET:
-                ionic_info("Notifyq EVENT_OPCODE_RESET eid=%ld",
+                ionic_info("%s: Notifyq EVENT_OPCODE_RESET eid=%ld",
+                           vmk_NameToString(&uplink_handle->uplink_name),
                            comp->event.eid);
-                ionic_info("  reset_code=%d state=%d",
+                ionic_info("%s: reset_code=%d state=%d",
+                           vmk_NameToString(&uplink_handle->uplink_name),
                            comp->reset.reset_code,
                            comp->reset.state);
                 break;
         case EVENT_OPCODE_HEARTBEAT:
-                ionic_info("Notifyq EVENT_OPCODE_HEARTBEAT eid=%ld\n",
+                ionic_info("%s: Notifyq EVENT_OPCODE_HEARTBEAT eid=%ld\n",
+                           vmk_NameToString(&uplink_handle->uplink_name),
                            comp->event.eid);
                 break;
         case EVENT_OPCODE_LOG:
-                ionic_info("Notifyq EVENT_OPCODE_LOG eid=%ld\n",
+                ionic_info("%s: Notifyq EVENT_OPCODE_LOG eid=%ld\n",
+                           vmk_NameToString(&uplink_handle->uplink_name),
                            comp->event.eid);
                 ionic_hex_dump("notifyq log",
                                comp->log.data,
                                sizeof(comp->log.data));
                 break;
         default:
-                ionic_warn("Notifyq bad event ecode=%d eid=%ld\n",
+                ionic_warn("%s: Notifyq bad event ecode=%d eid=%ld\n",
+                           vmk_NameToString(&uplink_handle->uplink_name),
                            comp->event.ecode, comp->event.eid);
                 break;
         }
@@ -704,8 +711,8 @@ ionic_lif_addr_add(struct lif *lif, const u8 *addr)
                 return status;
         }
 
-	ionic_info("rx_filter add ADDR %p (id %d)\n", addr,
-	           ctx.comp.rx_filter_add.filter_id);
+	ionic_info("lif: %p: rx_filter add ADDR %p (id %d)\n",
+                   lif, addr, ctx.comp.rx_filter_add.filter_id);
 
 	return ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
 }
@@ -753,15 +760,15 @@ ionic_lif_addr_del(struct lif *lif, const u8 *addr)
         vmk_SpinlockUnlock(lif->rx_filters.lock);
 
 	status = ionic_adminq_post_wait(lif, &ctx);
-	if (status != VMK_OK) {
+        ionic_completion_destroy(&ctx.work);
+
+        if (status != VMK_OK) {
                 ionic_err("ionic_adminq_post_wait() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
-        ionic_completion_destroy(&ctx.work);
-
-	ionic_info("rx_filter del ADDR %p (id %d)\n", addr,
-	           ctx.cmd.rx_filter_del.filter_id);
+	ionic_info("lif: %p: rx_filter del ADDR %p (id %d)\n",
+                   lif, addr, ctx.cmd.rx_filter_del.filter_id);
 
 	return status;
 }
@@ -2508,6 +2515,13 @@ ionic_lif_init(struct lif *lif)
                                   vmk_StatusToString(status));
                         goto notifyq_err;
                 }
+                lif->uplink_handle->cur_hw_link_status.state =
+                        lif->notifyblock->link_status;
+                lif->uplink_handle->cur_hw_link_status.duplex =
+                        lif->notifyblock->link_status > 0 ?
+                        VMK_LINK_DUPLEX_FULL : VMK_LINK_DUPLEX_AUTO;
+                lif->uplink_handle->cur_hw_link_status.speed =
+                        lif->notifyblock->link_speed;
         }
 
 	status  = ionic_get_features(lif);

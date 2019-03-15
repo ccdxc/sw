@@ -35,7 +35,9 @@ struct rx_filter {
 };
 
 #define RX_FILTER_HLISTS        (1 << 10)
+#define RX_FILTER_MAC_MASK      0xffffffffffff
 #define RX_FILTER_HLISTS_MASK   (RX_FILTER_HLISTS - 1)
+
 struct rx_filters {
         spinlock_t lock;
 //        struct hlist_head by_hash[RX_FILTER_HLISTS];    /* by skb hash */

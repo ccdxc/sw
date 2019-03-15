@@ -135,12 +135,6 @@ ionic_rx_filters_init(struct lif *lif)
         }
        
         return status;
-/*
-        for (i = 0; i < RX_FILTER_HLISTS; i++) {
-                INIT_HLIST_HEAD(&lif->rx_filters.by_hash[i]);
-                INIT_HLIST_HEAD(&lif->rx_filters.by_id[i]);
-        }
-*/
 
 by_id_err:
         vmk_HashRelease(lif->rx_filters.by_hash);         
@@ -209,13 +203,6 @@ void ionic_rx_filters_deinit(struct lif *lif)
         ionic_rx_filters_hash_tables_destroy(&lif->rx_filters);
 
         ionic_spinlock_destroy(lif->rx_filters.lock);
-/*
-        for (i = 0; i < RX_FILTER_HLISTS; i++) {
-                head = &lif->rx_filters.by_id[i];
-                hlist_for_each_entry_safe(f, tmp, head, by_id)
-                        ionic_rx_filter_free(lif, f);
-        }
-*/
 }
 
 
@@ -256,7 +243,7 @@ ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
                         key = f->cmd.vlan.vlan & RX_FILTER_HLISTS_MASK;
                         break;
                 case RX_FILTER_MATCH_MAC:
-                        key = *(u32 *)f->cmd.mac.addr & RX_FILTER_HLISTS_MASK;
+                        key = *(u32 *)f->cmd.mac.addr & RX_FILTER_MAC_MASK;
                         break;
                 case RX_FILTER_MATCH_MAC_VLAN:
                         key = f->cmd.mac_vlan.vlan & RX_FILTER_HLISTS_MASK;
@@ -276,12 +263,8 @@ ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
                           vmk_StatusToString(status));
                 goto by_hash_insert_err;
         }
-//        head = &lif->rx_filters.by_hash[key];
-//        hlist_add_head(&f->by_hash, head);
 
         key = f->filter_id & RX_FILTER_HLISTS_MASK;
-//        head = &lif->rx_filters.by_id[key];
-//        hlist_add_head(&f->by_id, head);
  
         status = vmk_HashKeyInsert(lif->rx_filters.by_id,
                                    (vmk_HashKey) (vmk_uint64) key,
@@ -320,21 +303,12 @@ struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid)
         } else {
                 return NULL;
         }
-/*
-        hlist_for_each_entry(f, head, by_hash) {
-                if (f->cmd.match != RX_FILTER_MATCH_VLAN)
-                        continue;
-                if (f->cmd.vlan.vlan == vid)
-                        return f;
-        }
-*/
-//        return NULL;
 }
 
 struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
 {
         VMK_ReturnStatus status;
-        unsigned int key = *(u32 *)addr & RX_FILTER_HLISTS_MASK;
+        unsigned int key = *(u32 *)addr & RX_FILTER_MAC_MASK;
 //        struct hlist_head *head = &lif->rx_filters.by_hash[key];
         struct rx_filter *f = NULL;
 
@@ -346,15 +320,5 @@ struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
         } else {
                 return NULL;
         }
-/*
-        hlist_for_each_entry(f, head, by_hash) {
-                if (f->cmd.match != RX_FILTER_MATCH_MAC)
-                        continue;
-                if (memcmp(addr, f->cmd.mac.addr, ETH_ALEN) == 0)
-                        return f;
-        }
-
-        return NULL;
-*/
 }
 

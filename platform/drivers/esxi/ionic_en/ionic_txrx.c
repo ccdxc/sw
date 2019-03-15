@@ -265,17 +265,6 @@ ionic_rx_fill(struct queue *q)
         IONIC_EN_SHARED_AREA_END_READ(uplink_handle);
 
         rx_ring = &uplink_handle->rx_rings[qcq->ring_idx];
-//        ionic_err("rxxxxxxx, rx_ring_idx: %d", qcq->ring_idx);
-#if 0
-        status = vmk_PktListAlloc(&rx_ring->pkt_list);
-        if (status != VMK_OK) {
-                ionic_err("vmk_PktListAlloc() failed, status: %s",
-                          vmk_StatusToString(status));
-                VMK_ASSERT(0);
-        }
-
-        vmk_PktListInit(rx_ring->pkt_list);
-#endif
 
         num_q_avail = ionic_q_space_avail(q);
 
@@ -283,14 +272,9 @@ ionic_rx_fill(struct queue *q)
 
                 pkt = ionic_rx_pkt_alloc(q, len, &dma_addr);
                 if (VMK_UNLIKELY(!pkt)) {
-                        ionic_warn("Queue index: %d, num_q_avail: %d",
-                                   q->index, num_q_avail);
                         break;
                 }
-#if 0
-                vmk_PktListAppendPkt(rx_ring->pkt_list,
-                                     pkt);
-#endif
+
                 desc = q->head->desc;
                 desc->addr = dma_addr;
                 desc->len = len;
