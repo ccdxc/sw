@@ -260,14 +260,14 @@ func l2segShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")
 	fmt.Printf("Id:            L2seg's ID                            Handle:      L2seg Handle\n")
 	fmt.Printf("vrfId:         L2segs's VRF ID                       WireEncap:   Wire encap type/value\n")
-	fmt.Printf("TunnelEncap:   Tunnel encap type/value               MFP:         Multicast fwd. policy\n")
-	fmt.Printf("BFP:           Broadcast fwd. policy                 BMP:         Bcast, Mcast, Prom Repl indices\n")
+	fmt.Printf("TunnelEncap:   Tunnel encap type/value               MDFP:        Multi-dest fwd. policy\n")
+	fmt.Printf("BMP:           Bcast, Mcast, Prom Repl indices\n")
 	fmt.Printf("#EPs:          Num. of EPs in L2seg                  IFs:         Member Interfaces\n")
 	fmt.Printf("PinUplnkId:    Pinned Uplink Interface ID\n")
 	hdrLine := strings.Repeat("-", 135)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-15s%-15s%-10s%-10s%-15s%-10s%-20s%-10s\n",
-		"Id", "Handle", "vrfId", "WireEncap", "TunnelEncap", "MFP", "BFP", "B-M-P", "#EPs", "IFs", "PinUplnkId")
+	fmt.Printf("%-10s%-10s%-10s%-15s%-15s%-10s%-15s%-10s%-20s%-10s\n",
+		"Id", "Handle", "vrfId", "WireEncap", "TunnelEncap", "MDFP", "B-M-P", "#EPs", "IFs", "PinUplnkId")
 	fmt.Println(hdrLine)
 }
 
@@ -314,12 +314,11 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	if resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId() != 0 {
 		ifIDStr = fmt.Sprintf("uplink-%d", resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId())
 	}
-	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-10s%-15s%-10d%-20s%-10s\n",
+	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-15s%-10d%-20s%-10s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		resp.GetStatus().GetKeyOrHandle().GetL2SegmentHandle(),
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
 		weStr, teStr,
-		mcastFwdPolToStr(resp.GetSpec().GetMcastFwdPolicy()),
 		bcastFwdPolToStr(resp.GetSpec().GetBcastFwdPolicy()),
 		replIndices,
 		resp.GetStats().GetNumEndpoints(),

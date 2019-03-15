@@ -751,17 +751,17 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     return (CAPRI_OK);
 }
 
-int    
-capri_p4plus_table_rw_init (void)    
-{    
-    // !!!!!!    
-    // Before making this call, it is expected that    
-    // in HAL init sequence, p4pd_init() is already called..    
-    // !!!!!!    
-    capri_p4plus_shadow_init();    
-    sdk::platform::capri::csr_init();    
+int
+capri_p4plus_table_rw_init (void)
+{
+    // !!!!!!
+    // Before making this call, it is expected that
+    // in HAL init sequence, p4pd_init() is already called..
+    // !!!!!!
+    capri_p4plus_shadow_init();
+    sdk::platform::capri::csr_init();
 
-     return (CAPRI_OK);    
+     return (CAPRI_OK);
 }
 
 uint8_t
@@ -1456,7 +1456,6 @@ capri_hbm_table_entry_write (uint32_t tableid,
     assert((entry_size >> 3) <= tbl_info.entry_width);
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
-    
     sdk::asic::asic_mem_write(get_mem_addr(tbl_info.tablename) + entry_start_addr,
                               hwentry, (entry_size >> 3));
     time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE);
@@ -1496,7 +1495,6 @@ capri_hbm_table_entry_read (uint32_t tableid,
 {
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
-    
     sdk::asic::asic_mem_read(get_mem_addr(tbl_info.tablename) + entry_start_addr,
                              hwentry, tbl_info.entry_width);
     *entry_size = tbl_info.entry_width;

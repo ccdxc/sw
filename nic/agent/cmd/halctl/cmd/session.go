@@ -396,7 +396,7 @@ func sessionShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("TCP State: State for TCP flows\tAge: Age in mins and secs\n")
 	fmt.Printf("Time To Age: Inactivity time remaining for flow to age in seconds (IDF- No aging indefinite time)\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-8s%-6s%-8s%-8s%-10s%-24s%-24s%-6s%-10s%-16s%-10s%-10s\n",
+	fmt.Printf("%-8s%-6s%-8s%-8s%-10s%-24s%-24s%-6s%-10s%-16s%-10s%-15s\n",
 		"Handle", "Role", "KeyType", "L2SegID", "VrfID",
 		"SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "P|E", "Flow State", "TCP State",
 		"Age", "Time To Age")
@@ -588,14 +588,14 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus,
 	timeToAgeStr += strconv.Itoa(int(timeToAge%60)) + "s"
 
 	if timeToAge == 0xFFFFFFFF {
-		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-10s%-16s%-6s%-15s\n",
+		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-10s%-16s%-10s%-15s\n",
 			status.GetSessionHandle(),
 			flowStr, keyType, id,
 			vrfStr,
 			src, dst, ipproto, flowAction,
 			tcpState, ageStr, "IDF")
 	} else {
-		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-10s%-16s%-6s%-15s\n",
+		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-10s%-16s%-10s%-15s\n",
 			status.GetSessionHandle(),
 			flowStr, keyType, id,
 			vrfStr,
