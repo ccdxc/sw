@@ -46,29 +46,29 @@ device_util::create() {
 }
 
 sdk::sdk_ret_t
-device_util::validate(pds_device_info_t *info) {
-    if (this->device_ip_str.compare(
-            ipv4addr2str(info->spec.device_ip_addr)) != 0) {
-        return SDK_RET_ERR;
-    }
+device_util::read(pds_device_info_t *info,  bool compare_spec) {
+    sdk_ret_t rv;
 
-    if (this->mac_addr_str.compare(macaddr2str(info->spec.device_mac_addr)) !=
-        0) {
-        return SDK_RET_ERR;
-    }
-
-    if (this->gateway_ip_str.compare(
-            ipv4addr2str(info->spec.gateway_ip_addr)) != 0) {
-        return SDK_RET_ERR;
-    }
-
-    return sdk::SDK_RET_OK;
-}
-
-sdk::sdk_ret_t
-device_util::read(pds_device_info_t *info) {
     memset(info, 0, sizeof(pds_device_info_t));
-    return (pds_device_read(info));
+    rv = pds_device_read(info);
+    if (rv != SDK_RET_OK) {
+        return rv;
+    }
+
+    if (compare_spec) {
+        if (this->device_ip_str.compare(ipv4addr2str(info->spec.device_ip_addr)) != 0) {
+            return SDK_RET_ERR;
+        }
+
+        if (this->mac_addr_str.compare(macaddr2str(info->spec.device_mac_addr)) !=0) {
+            return SDK_RET_ERR;
+        }
+
+        if (this->gateway_ip_str.compare(ipv4addr2str(info->spec.gateway_ip_addr)) != 0) {
+            return SDK_RET_ERR;
+        }
+    }
+    return sdk::SDK_RET_OK;
 }
 
 sdk::sdk_ret_t

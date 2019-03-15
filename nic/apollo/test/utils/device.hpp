@@ -42,7 +42,7 @@ public:
     /// \brief Read device
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_device_info_t *info);
+    sdk_ret_t read(pds_device_info_t *info, bool compare_spec);
 
     /// \brief Update device
     ///
@@ -54,12 +54,6 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t del(void);
 
-    /// \brief Validate device
-    ///
-    /// validates the test parameters of this object against info
-    ///
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t validate(pds_device_info_t *info);
 };
 
 }    // namespace api_test

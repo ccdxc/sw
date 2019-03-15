@@ -53,21 +53,126 @@ protected:
 /// \defgroup Device
 /// @{
 
-/// \brief Read Device without Create
-///
-/// Without creating a device, read device
-TEST_F(device_test, device_read_before_create) {
+/// \brief Create and delete a device in the same batch
+/// The operation should be de-duped by framework and effectively
+/// a NO-OP from hardware perspective
+TEST_F(device_test, DISABLED_device_workflow_1) {
+    pds_batch_params_t batch_params = {0};
+    pds_device_info_t info;
+    device_util device_obj(k_device_ip_str, k_mac_addr_str,
+                                   k_gateway_ip_str);
+
+    // Trigger
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // Verify with read
+    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Create, delete and create a device in the same batch
+/// The operation should be program and unprogram device in hardware
+/// and return successful afetr create
+TEST_F(device_test, DISABLED_device_workflow_2) {
+    pds_batch_params_t batch_params = {0};
+    pds_device_info_t info;
+    device_util device_obj(k_device_ip_str, k_mac_addr_str,
+                                   k_gateway_ip_str);
+
+    // Trigger
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // Verify with read
+    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_OK);
+
+    // Teardown
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+}
+
+/// \brief Create and delete device in two batches
+/// The hardware should create device correctly
+/// and return entry not found after delete
+TEST_F(device_test, DISABLED_device_workflow_4) {
+    pds_batch_params_t batch_params = {0};
+    pds_device_info_t info;
+    device_util device_obj(k_device_ip_str, k_mac_addr_str,
+                                   k_gateway_ip_str);
+
+    // Trigger: create a device in first batch
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // Verify with read
+    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_OK);
+
+    // Trigger: delete a device in next batch
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // Verify with read
+    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Create device in two batches
+/// The hardware should program device correctly in case of
+/// first create and return error in second create operation
+TEST_F(device_test, DISABLED_device_workflow_neg_1) {
+    pds_batch_params_t batch_params = {0};
+    pds_device_info_t info;
+    device_util device_obj(k_device_ip_str, k_mac_addr_str,
+                                   k_gateway_ip_str);
+
+    // Trigger: create a device in first batch
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    // Verify with read
+    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_OK);
+
+    // Trigger: create a device gaain in next batch
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_abort() == sdk:: SDK_RET_OK);
+
+    // Teardown
+    batch_params.epoch = ++api_test::g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+}
+
+/// \brief Read a device without creating it
+/// The hardware should return entry not found
+TEST_F(device_test, device_workflow_neg_3a) {
     device_util device_obj;
     pds_device_info_t info;
 
     // Trigger
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(device_obj.read(&info, false) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief Delete Device without Create
-///
-/// Without creating a device, attempt to delete device
-TEST_F(device_test, device_delete_before_create) {
+/// \brief Delete a device without creating it
+/// The hardware should return entry not found
+TEST_F(device_test, device_workflow_neg_3b) {
     pds_batch_params_t batch_params = {0};
 
     // Trigger
@@ -78,116 +183,6 @@ TEST_F(device_test, device_delete_before_create) {
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }
 
-/// \brief Create Device
-///
-/// Create device for the first time and verify with read
-TEST_F(device_test, device_create) {
-    pds_batch_params_t batch_params = {0};
-    pds_device_info_t info;
-    device_util device_obj(k_device_ip_str, k_mac_addr_str,
-                                   k_gateway_ip_str);
-
-    // Trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // Verify with read
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_OK);
-    //TODO fix read_hw
-    //ASSERT_TRUE(device_obj.validate(&info) == sdk::SDK_RET_OK);
-
-    // Tear down
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-}
-
-/// \brief Create Device after Create
-///
-/// Create device immediately followed by another create with exact same
-/// values but different batch
-TEST_F(device_test, device_create_after_create) {}
-
-/// \brief Create Device after Create
-///
-/// Create device immediately followed by another create with different
-/// values and different batch
-TEST_F(device_test, device_create_after_create_1) {}
-
-/// \brief Delete Device
-///
-/// Delete device and validate with read
-TEST_F(device_test, device_delete) {
-    pds_batch_params_t batch_params = {0};
-    pds_device_info_t info;
-    device_util    device_obj(k_device_ip_str, k_mac_addr_str,
-                                   k_gateway_ip_str);
-
-    // Setup
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
-    ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // Trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
-    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // Verify that the read operation fails
-    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
-}
-
-/// \brief Delete Device after Delete
-///
-/// Delete the device followed by delete in different batch
-TEST_F(device_test, device_delete_after_delete) {}
-
-/// \brief Create-Delete-Create Device in batches
-///
-/// Create, Delete & Create Device with all same values in different batch
-TEST_F(device_test, device_create_delete_create) {}
-
-/// \brief Create-Delete-Create Device in batches
-///
-/// Create, Delete & Create Device with all different values & batches
-TEST_F(device_test, device_create_delete_create_1) {}
-
-/// \brief Read Device multiple times
-///
-/// Read the device in a loop
-TEST_F(device_test, device_read_loops) {}
-
-/// \brief Create Device after Create in single batch
-///
-/// Create device immediately followed by another create with exact same
-/// values and in same batch
-TEST_F(device_test, device_create_after_create_same_batch) {}
-
-/// \brief Create Device after Create in single batch
-///
-/// Create device immediately followed by another create with different
-/// values but same batch
-TEST_F(device_test, device_create_after_create_same_batch_1) {}
-
-/// \brief Delete Device after Delete in single batch
-///
-/// Delete the device followed by delete in same batch
-TEST_F(device_test, device_delete_after_delete_same_batch) {}
-
-/// \brief Create-Delete-Create Device in single batch
-///
-/// Create, Delete and Create Device with all same values in same batch
-TEST_F(device_test, device_create_delete_create_same_batch) {}
-
-/// \brief Create-Delete-Create Device in single batch
-///
-/// Create, Delete & Create Device with all different values in same batch
-TEST_F(device_test, device_create_delete_create_same_batch_1) {}
 
 /// @}
 
