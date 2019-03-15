@@ -38,6 +38,8 @@ message VnicSpec {
   bool                SourceGuardEnable = 7;
   // fabric encap information to be used for traffic originated from this vnic
   types.Encap Encap                     = 8 [(gogoproto.nullable) = false];
+  // mirror policy id, if any
+  uint32              MirrorPolicyId    = 9;
 }
 
 // operational status of Vnic, if any

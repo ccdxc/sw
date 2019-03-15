@@ -94,40 +94,11 @@ message PortRange {
   uint32 PortHigh = 2 [(gogoproto.moretags) = "meta:range:0-65535"];
 }
 
-// encap types in the network
-enum EncapType {
-  ENCAP_TYPE_NONE     = 0;
-  ENCAP_TYPE_DOT1Q    = 1;
-  ENCAP_TYPE_QINQ     = 2;
-  ENCAP_TYPE_MPLSoUDP = 3;
-  ENCAP_TYPE_VXLAN    = 4;
-}
-
-// based on the encap type in the fabric, one can carry per vnic information
-// for example, in case of MPLSoUDP, MPLS tag (along with source tunnel IP)
-// can uniquely identify the vnic from where the packet is originating and
-// another MPLS tag (along with the destination tunnel IP) can identify the
-// destination VNIC
-message EncapVal {
-  oneof Val {
-    // MPLS tag corresponding to the VNIC or mapping
-    uint32 VlanId  = 1;    // VLAN tag
-    uint32 MPLSTag = 2;    // MPLS tag/slot
-    uint32 Vnid    = 3;    // VxLAN vnid
-  }
-}
-
-// fabric encap
-message Encap {
-  EncapType type  = 1;    // encap type
-  EncapVal  value = 2;    // encap value
-}
-
 // type of the private cloud network
 enum RuleDir {
-  RULE_DIR_NONE      = 0;
-  RULE_DIR_INGRESS   = 1;
-  RULE_DIR_EGRESS    = 2;
+  RULE_DIR_NONE    = 0;
+  RULE_DIR_INGRESS = 1;
+  RULE_DIR_EGRESS  = 2;
 }
 
 // L3 rule match criteria
@@ -170,5 +141,34 @@ message RuleMatch {
   RuleL3Match L3Match = 1;
   // Layer 4 match criteria
   RuleL4Match L4Match = 2;
+}
+
+// encap types in the network
+enum EncapType {
+  ENCAP_TYPE_NONE     = 0;
+  ENCAP_TYPE_DOT1Q    = 1;
+  ENCAP_TYPE_QINQ     = 2;
+  ENCAP_TYPE_MPLSoUDP = 3;
+  ENCAP_TYPE_VXLAN    = 4;
+}
+
+// based on the encap type in the fabric, one can carry per vnic information
+// for example, in case of MPLSoUDP, MPLS tag (along with source tunnel IP)
+// can uniquely identify the vnic from where the packet is originating and
+// another MPLS tag (along with the destination tunnel IP) can identify the
+// destination VNIC
+message EncapVal {
+  oneof Val {
+    // MPLS tag corresponding to the VNIC or mapping
+    uint32 VlanId  = 1;    // VLAN tag
+    uint32 MPLSTag = 2;    // MPLS tag/slot
+    uint32 Vnid    = 3;    // VxLAN vnid
+  }
+}
+
+// fabric encap
+message Encap {
+  EncapType type  = 1;    // encap type
+  EncapVal  value = 2;    // encap value
 }
 
