@@ -43,6 +43,8 @@ req_tx_sqpt_process:
               CAPRI_KEY_RANGE(IN_P, poll_in_progress, color) 
     phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), K_READ_REQ_ADJUST, \
               CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), K_REMAINING_PAYLOAD_BYTES
+    phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, spec_enable), CAPRI_KEY_FIELD(IN_P, spec_enable)
+
     //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, pd, CAPRI_KEY_FIELD(IN_P, pd))
     
     phvwr CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), r1

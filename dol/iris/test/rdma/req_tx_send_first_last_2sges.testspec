@@ -132,7 +132,8 @@ descriptors:
             wrid    : 6
             num_sges: 2
 
-            send    :
+            send:
+                len: 1088
                
             sges:
                 - va  : ref://testcase/buffers/id=BUF1/address

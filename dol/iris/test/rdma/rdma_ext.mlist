@@ -251,6 +251,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_REQ_RX_READ_FML_5SGES
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_fml_5sges
+        spec    : req_rx_read_fml_5sges.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY_4SGES
         enable  : True
         package : test.rdma

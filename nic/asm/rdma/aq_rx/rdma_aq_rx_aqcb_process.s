@@ -23,6 +23,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_CQP_RQ_MAP_COUNT k.{rdma_aq_feedback_cqp_rq_map_count_sbit0_ebit7...rdma_aq_feedback_cqp_rq_map_count_sbit24_ebit31}
 #define K_CQP_RQ_DMA_ADDR k.{rdma_aq_feedback_cqp_rq_dma_addr_sbit0_ebit15...rdma_aq_feedback_cqp_rq_dma_addr_sbit56_ebit63}
 #define K_CQP_RQ_CMB k.{rdma_aq_feedback_cqp_rq_cmb}
+#define K_CQP_RQ_SPEC k.{rdma_aq_feedback_cqp_rq_spec}
 #define K_CQP_RQ_CQ_ID k.{rdma_aq_feedback_cqp_rq_cq_id_sbit0_ebit7...rdma_aq_feedback_cqp_rq_cq_id_sbit16_ebit23}
 #define K_CQP_RQ_PRIVILEGED k.{rdma_aq_feedback_cqp_qp_privileged}
 #define K_CQP_LOG_PMTU k.{rdma_aq_feedback_cqp_log_pmtu}
@@ -179,6 +180,7 @@ create_qp:
     phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_map_count), K_CQP_RQ_MAP_COUNT
     phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_dma_addr), K_CQP_RQ_DMA_ADDR
     phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_cmb), K_CQP_RQ_CMB
+    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_spec), K_CQP_RQ_SPEC
 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_wqe_process, r0) 
 

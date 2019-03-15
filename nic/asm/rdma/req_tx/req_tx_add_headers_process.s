@@ -31,6 +31,9 @@ struct sqcb2_t d;
 #define K_WQE_ADDR    CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
 #define K_TO_S5_DATA k.{to_stage_5_to_stage_data_sbit0_ebit63...to_stage_5_to_stage_data_sbit112_ebit127}
 #define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_TO_S_P, read_req_adjust_sbit0_ebit7, read_req_adjust_sbit8_ebit23)
+#define K_SPEC_MSG_PSN CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit2, current_sge_offset_sbit27_ebit31)
+#define K_SPEC_ENABLE  CAPRI_KEY_FIELD(IN_TO_S_P, spec_enable)
+
 
 #define ADD_HDR_T t3_s2s_add_hdr_info
 #define SQCB_WRITE_BACK_T t2_s2s_sqcb_write_back_info
@@ -39,6 +42,12 @@ struct sqcb2_t d;
 #define RDMA_PKT_LAST        1
 #define RDMA_PKT_FIRST       2
 #define RDMA_PKT_ONLY        3
+
+// Below are UDP option header sample values used. Same values are used in DOL cases too for verification.
+#define ROCE_OPT_TS_VALUE   0x3344
+#define ROCE_OPT_TS_ECHO    0x5566
+#define ROCE_OPT_MSS        0x1719
+
 %%
     .param    req_tx_write_back_process
     .param    req_tx_add_headers_2_process
@@ -56,8 +65,15 @@ req_tx_add_headers_process:
     // Similarly, drop if dcqcn rate enforcement doesn't allow this packet
     seq            c1, K_SPEC_CINDEX, d.sq_cindex
     bcf            [!c1], spec_fail
+    nop
 
-    phvwr          p.common.to_stage_6_to_stage_data, K_TO_S5_DATA
+    // Msg-speculation check. Drop if this is not the right msg-spec packet, only when spec-enable is set.
+    bbeq           K_SPEC_ENABLE, 0, skip_msg_psn_check
+    seq            c1, K_SPEC_MSG_PSN, d.sq_msg_psn // BD-slot
+    bcf            [!c1], spec_fail
+
+skip_msg_psn_check:
+    phvwr          p.common.to_stage_6_to_stage_data, K_TO_S5_DATA // BD-slot
     SQCB0_ADDR_GET(r1)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r1)
 
@@ -248,7 +264,10 @@ add_headers:
         
         // dma_cmd[3]
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
-        DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
+        DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe.read_rsp_or_atomic, rrqwqe.read.pad, r3)
+        DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE_BASE_SGES)
+        add           r3, r3, 32 // copy rrqwqe_base_sge after 32 bytes from start
+        DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe_base_sges, rrqwqe_base_sges, r3)
         
         phvwr          CAPRI_PHV_FIELD(phv_global_common, _read_req),  1
         b              rrq_full_chk
@@ -369,7 +388,7 @@ add_headers:
         
         // dma_cmd[3] 
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
-        DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
+        DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe.read_rsp_or_atomic, rrqwqe.atomic, r3)
         
         phvwr          CAPRI_PHV_FIELD(phv_global_common, _atomic_cswap),  1
         b              rrq_full_chk
@@ -392,7 +411,7 @@ add_headers:
         
         // dma_cmd[3] - rrqwqe
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
-        DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
+        DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe.read_rsp_or_atomic, rrqwqe.atomic, r3)
         
         phvwr          CAPRI_PHV_FIELD(phv_global_common, _atomic_fna),  1
         b              rrq_full_chk
@@ -415,6 +434,11 @@ op_type_end:
     // sqcb2 maintains copy of sq_cindex to enable speculation check. Increment
     //the copy on completion of wqe and write it into sqcb2
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
+
+    // sqcb2 maintains copy of sq_msg_psn to enable msg speculation check. Increment the copy 
+    // for first/mid packets and Reset on completion of wqe.
+    tblwr.c1        d.sq_msg_psn, 0
+    tblmincri.!c1   d.sq_msg_psn, 24, 1
 
     // phv_p->bth.pkey = 0xffff
     phvwr          BTH_PKEY, DEFAULT_PKEY
@@ -536,12 +560,14 @@ load_hdr_template:
 #ifdef GFT
     phvwrpair          p.p4plus_to_p4.flow_index[15:0], d.timestamp, P4PLUS_TO_P4_FLOW_INDEX_VALID, 1
 #else
-    //not enough bits on d[] vector to have 64 bit TS value
     #phvwr          p.{roce_options.TS_value[15:0]...roce_options.TS_echo[30:16]}, d.{timestamp...timestamp_echo}
-    phvwrpair      p.roce_options.TS_value[15:0], d.timestamp, \
-                   p.roce_options.TS_echo[30:16], d.timestamp_echo
+    addi           r3, r0, ROCE_OPT_TS_VALUE
+    addi           r4, r0, ROCE_OPT_TS_ECHO
+    addi           r5, r0, ROCE_OPT_MSS
+    phvwrpair      p.roce_options.TS_value[15:0], r3, \
+                   p.roce_options.TS_echo[30:16], r4
 #endif
-    phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
+    phvwrpair      p.roce_options.MSS_value, r5, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
 
     CAPRI_RESET_TABLE_3_ARG()
     phvwrpair CAPRI_PHV_FIELD(ADD_HDR_T, hdr_template_inline), CAPRI_KEY_FIELD(IN_P, hdr_template_inline), CAPRI_PHV_FIELD(ADD_HDR_T, service), d.service

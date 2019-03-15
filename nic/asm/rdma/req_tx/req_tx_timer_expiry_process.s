@@ -122,6 +122,7 @@ process_expiry:
 restart_timer:
     CAPRI_START_FAST_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 100)
     //phvwr.e   p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_2_VALID(0)
     nop.e
     nop
 

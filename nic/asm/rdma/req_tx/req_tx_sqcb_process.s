@@ -60,7 +60,7 @@ req_tx_sqcb_process:
 process_req_tx:
     seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0
     bcf            [!c1], process_recirc
-    nop            // Branch Delay Slot
+    seq            c4, d.spec_enable, 1 // BD-slot
 
 #   // moving to _ext program
 #   // copy intrinsic to global
@@ -86,7 +86,7 @@ process_req_tx:
     .brcase        SQ_RING_ID
 
         bbeq           d.busy, 1, exit
-        nop // Branch Delay Slot
+        nop //BD-slot
   
         bbeq           d.poll_in_progress, 1, exit
         //nop // Branch Delay Slot
@@ -98,8 +98,11 @@ process_req_tx:
 
         bbeq           d.dcqcn_rl_failure, 0, process_send
         phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_enable), d.congestion_mgmt_enable  // Branch Delay Slot
-        // Reset spec-cindex to cindex and resend packet on dcqcn-rl-failure.
+        // Reset spec-cindex to cindex, spec_msg_psn to msg_psn and resend packet on dcqcn-rl-failure.
         tblwr          SPEC_SQ_C_INDEX, SQ_C_INDEX
+        add            r1, d.msg_psn, r0
+        mincr          r1, 24, -1
+        tblwr.c4       d.spec_msg_psn, r1
         tblwr          d.dcqcn_rl_failure, 0
 
 process_send:
@@ -129,13 +132,17 @@ poll_for_work:
         // header_template_addr is needed to load hdr_template_process in fast-path.
         // For UD QPs, header_template_addr is shared with the q_key
         phvwrpair      CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr, \
-                       CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable // BD-slot
+                       CAPRI_PHV_FIELD(TO_S2_SQWQE_P, spec_cindex), SPEC_SQ_C_INDEX // BD-slot
 
+        phvwr          CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0
 
+        // reset spec_msg_psn for this msg.
+        tblwr.c4       d.spec_msg_psn, 0
+
         // Use speculative cindex to checkout wqe and start processing if SQCB
-        // is not in in_progress state. Before state update at the end of pipeline,
+        // is not in4in_progress state. Before state update at the end of pipeline,
         // check if speculative cindex is matching current cindex. If so,
         // update state, otherwise discard and redo in the next scheduler slot
         add            r1, r0, SPEC_SQ_C_INDEX
@@ -155,6 +162,8 @@ poll_for_work:
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, poll_in_progress), d.poll_in_progress
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), r4, \
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, color), d.color
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, spec_enable), d.spec_enable
+
         // read_req_adjust is valid only for the first retransmit read request, if
         // retransmission has to be from middle of a multi-pkt read. Subsequent reads
         // are complete reads and so set the adjust to zero
@@ -168,8 +177,11 @@ poll_for_work:
         phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), r2, \
                   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
 
+        phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
+
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
                   CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), SPEC_SQ_C_INDEX
+        phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
                   
         
         // populate t0 PC and table address
@@ -211,7 +223,8 @@ pt_process:
                   CAPRI_PHV_FIELD(SQCB_TO_PT_P, pd), d.pd
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_PT_P, poll_in_progress), d.poll_in_progress, \
                   CAPRI_PHV_FIELD(SQCB_TO_PT_P, color), d.color
-        phvwr     CAPRI_PHV_FIELD(SQCB_TO_PT_P, log_pmtu), d.log_pmtu
+        phvwrpair CAPRI_PHV_FIELD(SQCB_TO_PT_P, log_pmtu), d.log_pmtu, \
+                  CAPRI_PHV_FIELD(SQCB_TO_PT_P, spec_enable), d.spec_enable
         // read_req_adjust is valid only for the first retransmit read request, if
         // retransmission has to be from middle of a multi-pkt read. Subsequent reads
         // are complete reads and so set the adjust to zero
@@ -223,12 +236,14 @@ pt_process:
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
 
         phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
-        phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
+        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX, \
+                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
 
         phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd        
 
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
                   CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), SPEC_SQ_C_INDEX
+        phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
 
         seq.e          c1, d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
@@ -236,6 +251,25 @@ pt_process:
 in_progress:
         // do not speculate for in_progress processing
         add            r1, r0, SQ_C_INDEX // Branch Delay Slot
+
+        phvwr CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), d.curr_wqe_ptr
+        
+        phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
+                  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r1
+        
+        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr, \
+                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), r1
+        
+        phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), r1
+        
+        mincr          r1, d.log_num_wqes, 1
+
+        bcf            [c4], in_progress_spec // c4 has d.spec_enable
+        tblwr          SPEC_SQ_C_INDEX, r1 // BD-slot
+
+        /******Slow path*****/
+
         // Assert busy for multi-packet message as each packet has to continue
         // from where the previous packet has left off 
         tblwr          d.busy, 1
@@ -252,7 +286,7 @@ in_progress:
         CAPRI_RESET_TABLE_2_ARG()
         phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, in_progress), d.in_progress, \
                   CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_id), d.current_sge_id
-        // num_valid_sges = sqcb0_p->num_sges = sqcb0_p->current_sge_id
+        // num_valid_sges = sqcb0_p->num_sges - sqcb0_p->current_sge_id
         sub            r3, d.num_sges, d.current_sge_id 
         phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r3, \
                   CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_offset), d.current_sge_offset
@@ -261,26 +295,41 @@ in_progress:
         phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, remaining_payload_bytes), r4, \
                   CAPRI_PHV_FIELD(WQE_TO_SGE_P, dma_cmd_start_index), REQ_TX_DMA_CMD_PYLD_BASE
         
-        CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r2)
+        CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r2)
         
-        phvwr CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), d.curr_wqe_ptr
-        //          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, wqe_addr), d.curr_wqe_ptr
+in_progress_spec:
 
-        phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
-                  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r1
+        /******Fast path*****/
+
+        // Increment msg-psn and pass it to wqe stage.
+        tblmincri      d.spec_msg_psn, 24, 1
+        // remaining_payload_bytes = (1 << sqcb0_p->log_pmtu), to start with
+        sll            r4, 1, d.log_pmtu
         
-        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), r1
+        // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
+        CAPRI_RESET_TABLE_0_ARG()
 
-        phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
-                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), r1
+        phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_msg_psn), d.spec_msg_psn, \
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_enable), d.spec_enable
 
-        mincr.e        r1, d.log_num_wqes, 1
-        tblwr          SPEC_SQ_C_INDEX, r1
-        
-end1:
-        nop.e
-        nop
+        // Below info is needed in wqe-stage for fast-path speculation.
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, spec_enable), d.spec_enable
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), d.spec_msg_psn
+       
+        phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, log_pmtu), d.log_pmtu, \
+                  CAPRI_PHV_FIELD(SQCB_TO_WQE_P, poll_in_progress), d.poll_in_progress
+        phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), r4, \
+                  CAPRI_PHV_FIELD(SQCB_TO_WQE_P, color), d.color
+
+        phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, num_valid_sges), d.num_sges, \
+                  CAPRI_PHV_FIELD(SQCB_TO_WQE_P, dma_cmd_start_index), REQ_TX_DMA_CMD_PYLD_BASE
+
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, in_progress), d.in_progress
+
+        phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_enable), d.spec_enable
+
+        CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, d.curr_wqe_ptr)
+
 
     #.brcase        FC_RING_ID
     #    bbeq             d.cb1_busy, 1, exit
@@ -334,7 +383,11 @@ end1:
         sne            c1, SQ_C_INDEX, SPEC_SQ_C_INDEX //BD-slot
         sne            c3, d.in_progress, 1 
         bcf            [c1 & c3], exit
-
+        sne            c5, d.spec_msg_psn, d.msg_psn // BD-slot
+        // If spec-enable is set and spec-msg-psn/msg-psn differ then there are outstanding
+        // phvs in pipeline. Wait until they are drained to begin bktrack.
+        bcf            [!c3 & c4 & c5], exit
+        
 skip_cindex_check:
         sslt           c4, r0, d.in_progress, d.bktrack_in_progress  // Branch Delay Slot
         tblwr          d.fence, 0
@@ -355,11 +408,12 @@ sq_bktrack1:
                   CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, in_progress), d.in_progress
         phvwr     CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, sq_p_index), SQ_P_INDEX //not eligible for phvwrpair
         phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, bktrack_in_progress), d.bktrack_in_progress, \
-                  CAPRI_PHV_RANGE(SQCB0_TO_SQCB2_P, current_sge_offset, num_sges), d.{current_sge_offset, current_sge_id, num_sges}
+                  CAPRI_PHV_RANGE(SQCB0_TO_SQCB2_P, current_sge_id, current_sge_offset), d.{current_sge_id, num_sges, current_sge_offset}
         phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, update_credits), 0, \
                   CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, bktrack), 1
         phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, pt_base_addr), d.pt_base_addr, \
                   CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, sq_in_hbm), d.sq_in_hbm
+        phvwr     CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, spec_enable), d.spec_enable
         
         tblwr          d.bktrack_in_progress, 1
 
@@ -446,10 +500,7 @@ process_recirc:
     // reset sched_eval_done 
     tblwr          d.ring_empty_sched_eval_done, 0
 
-    seq            c1, CAPRI_APP_DATA_RECIRC_SPEC_CINDEX, SQ_C_INDEX
-    bcf            [!c1], exit
-
-    // Revert spec_cindex to next sq_cindex upon recirc of the current one
+    // Revert spec_cindex to next sq_cindex recirc of the current one
     add            r1, r0, SQ_C_INDEX // Branch Delay Slot
     mincr          r1, d.log_num_wqes, 1
     tblwr          SPEC_SQ_C_INDEX, r1
@@ -463,6 +514,9 @@ process_recirc:
     nop            // Branch Delay Slot
 
 process_sge_recirc:
+    tblwr.c4       d.spec_msg_psn, d.msg_psn
+
+skip_msg_spec_reset:
     phvwr          CAPRI_PHV_FIELD(TO_S1_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r0)
 
@@ -541,8 +595,7 @@ unlock_and_exit:
     nop
 
 exit:
-    phvwr   p.common.p4_intr_global_drop, 1
-    nop.e
+    phvwr.e   p.common.p4_intr_global_drop, 1
     nop
 
 check_state:

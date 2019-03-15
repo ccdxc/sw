@@ -130,6 +130,7 @@ descriptors:
 
             send    :
                 imm_data: ref://testcase/pvtdata/imm_data
+                len: 1088
                
             sges:
                 - va  : ref://testcase/buffers/id=BUF/address

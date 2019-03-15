@@ -33,9 +33,7 @@ tx_stage0_load_rdma_params:
 sq:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pt_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.pt_base_addr_page_id)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_pt_entries)
-
-    add r1, r0, offsetof(struct phv_, to_stage_2_to_stage_data) //BD Slot
-    CAPRI_SET_FIELD(r1, REQ_TX_TO_S2_T, ah_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.ah_base_addr_page_id)
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, ah_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.ah_base_addr_page_id)
     b done
     nop // BD slot
 

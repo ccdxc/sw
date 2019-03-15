@@ -27,12 +27,10 @@ struct key_entry_aligned_t d;
 
 .align
 req_rx_rrqlkey_process:
-
-     bbne        CAPRI_KEY_FIELD(IN_P, bubble_one_stage), 1, proceed_rrqlkey_process
-     phvwr       CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, bubble_one_stage), 0 //BD Slot
-     nop //BD Slot
-     nop.e
-     nop
+     mfspr          r1, spr_mpuid
+     seq            c1, r1[4:2], STAGE_3
+     bcf            [!c1], bubble_to_next_stage
+     seq            c3, K_SGE_INDEX, 0 // Branch Delay Slot
      
 proceed_rrqlkey_process:
 
@@ -98,8 +96,7 @@ pt_unaligned_access:
      add          r3, r3, r2, CAPRI_LOG_SIZEOF_U64
 
 set_arg:
-     add          r2, K_SGE_INDEX, r0
-     CAPRI_GET_TABLE_I_ARG(req_rx_phv_t, r2, r7)
+     CAPRI_GET_TABLE_0_OR_1_ARG(req_rx_phv_t, r7, c3)
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, pt_offset, r5)
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, pt_bytes, K_SGE_BYTES)
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, is_atomic, CAPRI_KEY_FIELD(IN_P, is_atomic))
@@ -108,8 +105,18 @@ set_arg:
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, dma_cmd_eop, CAPRI_KEY_FIELD(IN_P, dma_cmd_eop))
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, sge_index, K_SGE_INDEX)
 
-     CAPRI_GET_TABLE_I_K(req_rx_phv_t, r2, r7)
+     CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(req_rx_phv_t, r7, c3)
      CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqptseg_process, r3)
+
+exit:
+     nop.e
+     nop
+
+bubble_to_next_stage:
+     seq           c1, r1[4:2], STAGE_2
+     bcf           [!c1], exit
+     CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(req_rx_phv_t, r7, c3) // Branch Delay Slot
+     CAPRI_NEXT_TABLE_I_READ_SET_SIZE(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS)
 
      nop.e
      nop

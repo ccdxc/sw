@@ -31,13 +31,13 @@ struct req_tx_s2_t0_k k;
 
 
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
-#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit0, remaining_payload_bytes_sbit9_ebit15)
+#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 #define K_PRIVILEGED_QKEY K_HEADER_TEMPLATE_ADDR
-#define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit0, current_sge_offset_sbit25_ebit31)
+#define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31)
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
-#define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit7, ah_base_addr_page_id_sbit16_ebit21)
 #define K_FAST_REG_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, fast_reg_rsvd_lkey_enable)
+#define K_MSG_PSN CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31)
 
 %%
     .param    req_tx_sqsge_process
@@ -47,6 +47,8 @@ struct req_tx_s2_t0_k k;
     .param    req_tx_load_ah_size_process
     .param    req_tx_load_hdr_template_process 
     .param    req_tx_frpmr_sqlkey_process
+    .param    req_tx_sqwqe_base_sge_process
+    .param    req_tx_sqwqe_base_sge_opt_process
 
 .align
 req_tx_sqwqe_process:
@@ -168,10 +170,10 @@ send_or_write:
     add            r6, d.ud_send.ah_handle, r0
     muli           r2, r6, AT_ENTRY_SIZE_BYTES
     blt            r4, r5, ud_error_pmtu
-    add            r2, r2, K_AH_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT
+    add            r2, r2, K_GLOBAL_AH_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT
     // AH_SIZE is the last byte in AH_ENTRY
     add            r6, r2, HDR_TEMPLATE_T_SIZE_BYTES
-    srl            r2, r2, HDR_TEMP_ADDR_SHIFT
+    tblwr.l        d.ud_send.ah_handle, r2[34:HDR_TEMP_ADDR_SHIFT]
 
     CAPRI_RESET_TABLE_3_ARG()
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_ah_size_process, r6)
@@ -183,36 +185,37 @@ set_sge_arg:
     // cache wqe_addr in to_stage if in case there is sge recirc
     phvwr          CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), r3
     bcf            [c3], zero_length
-    add            r3, r3, TXWQE_SGE_OFFSET // Branch Delay Slot
 
-    // populate stage-2-stage data req_tx_wqe_to_sge_info_t for next stage
-    CAPRI_RESET_TABLE_0_ARG()
-    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, in_progress), CAPRI_KEY_FIELD(IN_P, in_progress), CAPRI_PHV_FIELD(WQE_TO_SGE_P, first), 1
-    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), d.base.num_sges, CAPRI_PHV_FIELD(WQE_TO_SGE_P, remaining_payload_bytes), K_REMAINING_PAYLOAD_BYTES
-    phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, op_type), d.base.op_type, CAPRI_PHV_FIELD(WQE_TO_SGE_P, dma_cmd_start_index), REQ_TX_DMA_CMD_PYLD_BASE
-    //imm_data and inv_key are union members
-    phvwrpair CAPRI_PHV_RANGE(WQE_TO_SGE_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color), CAPRI_PHV_FIELD(WQE_TO_SGE_P, imm_data_or_inv_key), d.{base.imm_data}
-    // if UD copy ah_handle
-    phvwr.c1 CAPRI_PHV_FIELD(WQE_TO_SGE_P, ah_handle), r2
-
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r3)
-
-    nop.e
+    // jump to base-sge-opt-process if spec-enable is set.
+    seq            c6, CAPRI_KEY_FIELD(IN_P, spec_enable), 1 //BD-slot
+    j.c6           req_tx_sqwqe_base_sge_opt_process
     nop
+
+    // jump to base-sge-process if spec-enable is not-set.
+    j              req_tx_sqwqe_base_sge_process
+    nop            // Branch Delay Slot
 
 read:
     // prepare atomic header
     #phvwr           RETH_VA_RKEY_LEN, d.{read.va...read.length}
-    add            r4, d.read.va, K_READ_REQ_ADJUST
-    sub            r5, d.read.length, K_READ_REQ_ADJUST
+    // wqe_p->read.va += (num_pkts << log_pmtu)
+    // wqe_p->read.len -= (num_pkts << log_pmtu)
+    add            r2, K_LOG_PMTU, r0
+    sllv           r3, K_READ_REQ_ADJUST, r2
+
+    add            r4, d.read.va, r3
+    sub            r5, d.read.length, r3
+
     phvwrpair      RETH_VA, r4, RETH_RKEY, d.read.r_key
     phvwr          RETH_LEN, r5
 
     // prepare RRQWQE descriptor
     phvwrpair      RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ, RRQWQE_NUM_SGES, d.base.num_sges
+    phvwr          RRQWQE_WQE_FORMAT, d.base.wqe_format
     mfspr          r3, spr_tbladdr
     add            r2, r3, TXWQE_SGE_OFFSET
     phvwrpair      RRQWQE_READ_LEN, d.read.length, RRQWQE_READ_WQE_SGE_LIST_ADDR, r2
+    phvwr          RRQWQE_READ_BASE_SGES, d.base_sges
 
     CAPRI_RESET_TABLE_2_ARG()
     //set first = 1, last_pkt = 1
@@ -220,8 +223,7 @@ read:
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_RD_P, op_rd_read_len), r5
     // leave rest of variables to FALSE
 
-    srl            r3, K_READ_REQ_ADJUST, K_LOG_PMTU
-    phvwr CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, read_req_adjust), r3
+    phvwr CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, read_req_adjust), K_READ_REQ_ADJUST
 
     add            r2, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
@@ -237,6 +239,7 @@ atomic:
 
     // prepare RRQWQE descriptor
     phvwrpair      RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_ATOMIC, RRQWQE_NUM_SGES, 1
+    phvwr          RRQWQE_WQE_FORMAT, d.base.wqe_format
     phvwr          p.{rrqwqe.atomic.sge.va, rrqwqe.atomic.sge.len, rrqwqe.atomic.sge.l_key}, d.{atomic.sge.va, atomic.sge.len, atomic.sge.l_key}
  
     CAPRI_RESET_TABLE_2_ARG()
@@ -495,3 +498,4 @@ table_error:
 
     b              trigger_dcqcn
     phvwr          p.common.p4_intr_global_drop, 1
+

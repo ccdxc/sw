@@ -23,6 +23,7 @@ struct resp_rx_s1_t1_k k;
 #define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
 #define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_P, priv_oper_enable)
+#define K_RKEY CAPRI_KEY_FIELD(IN_P, r_key)
 
 %%
     .param  resp_rx_rqrkey_process
@@ -48,7 +49,7 @@ resp_rx_write_dummy_process:
     // store the original dma_len separately
     tblwr.!c1    d.dma_len, r3
 
-    cmov    R_KEY, c1, d.r_key, CAPRI_KEY_FIELD(IN_P, r_key)
+    cmov    R_KEY, c1, d.r_key, K_RKEY
 
     IS_ANY_FLAG_SET(c7, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
     bcf     [c7], last_or_only

@@ -89,7 +89,7 @@ struct phv_global_common_t {
     cb_addr: 25;
     pt_base_addr_page_id: 22;
     log_num_pt_entries: 5;
-    pad: 22;
+    ah_base_addr_page_id: 22;
     union roce_opcode_flags_t flags;
     //prefetch_pool_base_addr_page_id: 20;
     //log_num_prefetch_pool_entries: 5;
@@ -99,6 +99,7 @@ struct phv_global_common_t {
 #define K_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
 #define K_GLOBAL_FLAGS k.{common_global_global_data_sbit112_ebit119...common_global_global_data_sbit120_ebit127}
+#define K_GLOBAL_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(phv_global_common, ah_base_addr_page_id_sbit0_ebit5, ah_base_addr_page_id_sbit6_ebit21)
 
 #define K_GLOBAL_FLAG(_f) CAPRI_KEY_FIELD(phv_global_common, _f)
 

@@ -112,6 +112,10 @@ static bool ionic_dbgfs_enable = true; /* XXX false for release */
 module_param_named(ionic_rdma_dbgfs_enable, ionic_dbgfs_enable, bool, 0444);
 MODULE_PARM_DESC(ionic_rdma_dbgfs_enable, "Expose resource info in debugfs.");
 
+static int ionic_spec = 8;
+module_param_named(ionic_rdma_spec, ionic_spec, int, 0644);
+MODULE_PARM_DESC(ionic_rdma_spec, "Max SGEs for speculation.");
+
 static u16 ionic_aq_depth = 0x3f;
 module_param_named(ionic_rdma_aq_depth, ionic_aq_depth, ushort, 0444);
 MODULE_PARM_DESC(ionic_rdma_aq_depth, "Min depth for admin queues.");
@@ -230,6 +234,14 @@ static int ionic_validate_qdesc_zero(struct ionic_qdesc *q)
 		return -EINVAL;
 
 	return 0;
+}
+
+static int ionic_validate_spec(int spec)
+{
+	if (spec < 0 || spec > 16)
+		return 0;
+
+	return spec;
 }
 
 static int ionic_verbs_status_to_rc(u32 status)
@@ -1466,6 +1478,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	resp.cq_qtype = dev->cq_qtype;
 	resp.admin_qtype = dev->aq_qtype;
 	resp.max_stride = dev->max_stride;
+	resp.max_spec = ionic_validate_spec(ionic_spec);
 
 	rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 	if (rc)
@@ -3292,6 +3305,7 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 {
 	const u16 dbid = ionic_obj_dbid(dev, pd->ibpd.uobject);
 	const u32 flags = to_ionic_qp_flags(0, 0, qp->sq_is_cmb, qp->rq_is_cmb,
+					    qp->sq_spec, qp->rq_spec,
 					    pd_local_privileged(&pd->ibpd),
 					    pd_remote_privileged(&pd->ibpd));
 	struct ionic_admin_wr wr = {
@@ -3359,6 +3373,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 	const u32 flags = to_ionic_qp_flags(attr->qp_access_flags,
 					    attr->en_sqd_async_notify,
 					    qp->sq_is_cmb, qp->rq_is_cmb,
+					    qp->sq_spec, qp->rq_spec,
 					    pd_local_privileged(qp->ibqp.pd),
 					    pd_remote_privileged(qp->ibqp.pd));
 	const u8 state = to_ionic_qp_modify_state(attr->qp_state,
@@ -3633,7 +3648,7 @@ static void ionic_qp_sq_destroy_cmb(struct ionic_ibdev *dev,
 static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			    struct ionic_qp *qp, struct ionic_qdesc *sq,
 			    struct ionic_tbl_buf *buf, int max_wr, int max_sge,
-			    int max_data)
+			    int max_data, int sq_spec)
 {
 	int rc = 0;
 	u32 wqe_size;
@@ -3653,17 +3668,24 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	}
 
 	rc = -EINVAL;
+
 	if (max_wr < 1 || max_wr > 0xffff)
 		goto err_sq;
-	if (max_sge < 1 || max_sge > ionic_v1_send_wqe_max_sge(dev->max_stride))
+
+	if (max_sge < 1 ||
+	    max_sge > ionic_v1_send_wqe_max_sge(dev->max_stride, 0))
 		goto err_sq;
-	if (max_data < 0 || max_data > ionic_v1_send_wqe_max_data(dev->max_stride))
+
+	if (max_data < 0 ||
+	    max_data > ionic_v1_send_wqe_max_data(dev->max_stride))
 		goto err_sq;
 
 	if (ctx) {
 		rc = ionic_validate_qdesc(sq);
 		if (rc)
 			goto err_sq;
+
+		qp->sq_spec = sq_spec;
 
 		qp->sq.ptr = NULL;
 		qp->sq.size = sq->size;
@@ -3683,7 +3705,10 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	} else {
 		qp->sq_umem = NULL;
 
-		wqe_size = ionic_v1_send_wqe_min_size(max_sge, max_data);
+		qp->sq_spec = ionic_v1_use_spec_sge(max_sge, sq_spec);
+
+		wqe_size = ionic_v1_send_wqe_min_size(max_sge, max_data,
+						      qp->sq_spec);
 		rc = ionic_queue_init(&qp->sq, dev->hwdev,
 				      max_wr, wqe_size);
 		if (rc)
@@ -3831,7 +3856,8 @@ static void ionic_qp_rq_destroy_cmb(struct ionic_ibdev *dev,
 
 static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			    struct ionic_qp *qp, struct ionic_qdesc *rq,
-			    struct ionic_tbl_buf *buf, int max_wr, int max_sge)
+			    struct ionic_tbl_buf *buf, int max_wr, int max_sge,
+			    int rq_spec)
 {
 	u32 wqe_size;
 	int rc = 0, i;
@@ -3848,15 +3874,20 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	}
 
 	rc = -EINVAL;
+
 	if (max_wr < 1 || max_wr > 0xffff)
 		goto err_rq;
-	if (max_sge < 1 || max_sge > ionic_v1_recv_wqe_max_sge(dev->max_stride))
+
+	if (max_sge < 1 ||
+	    max_sge > ionic_v1_recv_wqe_max_sge(dev->max_stride, 0))
 		goto err_rq;
 
 	if (ctx) {
 		rc = ionic_validate_qdesc(rq);
 		if (rc)
 			goto err_rq;
+
+		qp->rq_spec = rq_spec;
 
 		qp->rq.ptr = NULL;
 		qp->rq.size = rq->size;
@@ -3877,7 +3908,9 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 		qp->rq_res.tbl_order = IONIC_RES_INVALID;
 		qp->rq_res.tbl_pos = 0;
 
-		wqe_size = ionic_v1_recv_wqe_min_size(max_sge);
+		qp->rq_spec = ionic_v1_use_spec_sge(max_sge, rq_spec);
+
+		wqe_size = ionic_v1_recv_wqe_min_size(max_sge, qp->rq_spec);
 		rc = ionic_queue_init(&qp->rq, dev->hwdev,
 				      max_wr, wqe_size);
 		if (rc)
@@ -3962,6 +3995,8 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	int rc;
 
 	if (!ctx) {
+		req.sq_spec = ionic_validate_spec(ionic_spec);
+		req.rq_spec = ionic_validate_spec(ionic_spec);
 		rc = ionic_validate_udata(udata, 0, 0);
 	} else {
 		rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
@@ -4023,12 +4058,13 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	rc = ionic_qp_sq_init(dev, ctx, qp, &req.sq, &sq_buf,
 			      attr->cap.max_send_wr, attr->cap.max_send_sge,
-			      attr->cap.max_inline_data);
+			      attr->cap.max_inline_data, req.sq_spec);
 	if (rc)
 		goto err_sq;
 
 	rc = ionic_qp_rq_init(dev, ctx, qp, &req.rq, &rq_buf,
-			      attr->cap.max_recv_wr, attr->cap.max_recv_sge);
+			      attr->cap.max_recv_wr, attr->cap.max_recv_sge,
+			      req.rq_spec);
 	if (rc)
 		goto err_rq;
 
@@ -4085,16 +4121,28 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	tbl_insert(&dev->qp_tbl, qp, qp->qpid);
 	mutex_unlock(&dev->tbl_lock);
 
-	if (attr->send_cq) {
+	if (qp->has_sq) {
 		cq = to_ionic_cq(attr->send_cq);
 		spin_lock_irqsave(&cq->lock, irqflags);
 		spin_unlock_irqrestore(&cq->lock, irqflags);
+
+		attr->cap.max_send_wr = qp->sq.mask;
+		attr->cap.max_send_sge =
+			ionic_v1_send_wqe_max_sge(qp->sq.stride_log2,
+						  qp->sq_spec);
+		attr->cap.max_inline_data =
+			ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
 	}
 
-	if (attr->recv_cq) {
+	if (qp->has_rq) {
 		cq = to_ionic_cq(attr->recv_cq);
 		spin_lock_irqsave(&cq->lock, irqflags);
 		spin_unlock_irqrestore(&cq->lock, irqflags);
+
+		attr->cap.max_recv_wr = qp->rq.mask;
+		attr->cap.max_recv_sge =
+			ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2,
+						  qp->rq_spec);
 	}
 
 	ionic_dbgfs_add_qp(dev, qp);
@@ -4279,12 +4327,19 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 	dma_addr_t query_rqdma;
 	int flags, rc;
 
-	attr->cap.max_send_sge =
-		ionic_v1_send_wqe_max_sge(qp->sq.stride_log2);
-	attr->cap.max_recv_sge =
-		ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2);
-	attr->cap.max_inline_data =
-		ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
+	if (qp->has_sq) {
+		attr->cap.max_send_sge =
+			ionic_v1_send_wqe_max_sge(qp->sq.stride_log2,
+						  qp->sq_spec);
+		attr->cap.max_inline_data =
+			ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
+	}
+
+	if (qp->has_rq) {
+		attr->cap.max_recv_sge =
+			ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2,
+						  qp->rq_spec);
+	}
 
 	query_sqbuf = contig_kmalloc(sizeof(*query_sqbuf), GFP_KERNEL);
 	if (!query_sqbuf) {
@@ -4398,8 +4453,11 @@ static int ionic_query_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	if (rc)
 		goto err_cmd;
 
-	attr->cap.max_send_wr = qp->sq.mask;
-	attr->cap.max_recv_wr = qp->rq.mask;
+	if (qp->has_sq)
+		attr->cap.max_send_wr = qp->sq.mask;
+
+	if (qp->has_rq)
+		attr->cap.max_recv_wr = qp->rq.mask;
 
 	init_attr->event_handler = ibqp->event_handler;
 	init_attr->qp_context = ibqp->qp_context;
@@ -4496,15 +4554,35 @@ static s64 ionic_prep_inline(void *data, u32 max_data,
 	return len;
 }
 
-static s64 ionic_prep_sgl(struct ionic_sge *sgl, u32 max_sge,
-			  struct ib_sge *ib_sgl, int num_sge)
+static s64 ionic_v1_prep_pld(struct ionic_v1_wqe *wqe,
+			     union ionic_v1_pld *pld,
+			     int spec, u32 max_sge,
+			     const struct ib_sge *ib_sgl,
+			     int num_sge)
 {
 	static const s64 bit_31 = 1l << 31;
+	struct ionic_sge *sgl;
+	__be32 *spec32 = NULL;
+	__be16 *spec16 = NULL;
 	s64 len = 0, sg_len;
-	int sg_i;
+	int sg_i = 0;
 
 	if (unlikely(num_sge < 0 || (u32)num_sge > max_sge))
 		return -EINVAL;
+
+	if (spec && num_sge > IONIC_V1_SPEC_FIRST_SGE) {
+		sg_i = IONIC_V1_SPEC_FIRST_SGE;
+
+		if (num_sge > 8) {
+			wqe->base.flags |= cpu_to_be16(IONIC_V1_FLAG_SPEC16);
+			spec16 = pld->spec16;
+		} else {
+			wqe->base.flags |= cpu_to_be16(IONIC_V1_FLAG_SPEC32);
+			spec32 = pld->spec32;
+		}
+	}
+
+	sgl = &pld->sgl[sg_i];
 
 	for (sg_i = 0; sg_i < num_sge; ++sg_i) {
 		sg_len = ib_sgl[sg_i].length;
@@ -4520,6 +4598,14 @@ static s64 ionic_prep_sgl(struct ionic_sge *sgl, u32 max_sge,
 		sgl[sg_i].va = cpu_to_be64(ib_sgl[sg_i].addr);
 		sgl[sg_i].len = cpu_to_be32(sg_len);
 		sgl[sg_i].lkey = cpu_to_be32(ib_sgl[sg_i].lkey);
+
+		if (spec32) {
+			spec32[sg_i] = sgl[sg_i].len;
+		} else if (spec16) {
+			if (unlikely(sg_len > U16_MAX))
+				return -EINVAL;
+			spec16[sg_i] = cpu_to_be16(sg_len);
+		}
 
 		len += sg_len;
 	}
@@ -4581,13 +4667,15 @@ static int ionic_v1_prep_common(struct ionic_qp *qp,
 		wqe->base.num_sge_key = 0;
 		wqe->base.flags |= cpu_to_be16(IONIC_V1_FLAG_INL);
 		mval = ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
-		signed_len = ionic_prep_inline(wqe->common.data, mval,
+		signed_len = ionic_prep_inline(wqe->common.pld.data, mval,
 					       wr->sg_list, wr->num_sge);
 	} else {
 		wqe->base.num_sge_key = wr->num_sge;
-		mval = ionic_v1_send_wqe_max_sge(qp->sq.stride_log2);
-		signed_len = ionic_prep_sgl(wqe->common.sgl, mval,
-					    wr->sg_list, wr->num_sge);
+		mval = ionic_v1_send_wqe_max_sge(qp->sq.stride_log2,
+						 qp->sq_spec);
+		signed_len = ionic_v1_prep_pld(wqe, &wqe->common.pld,
+					       qp->sq_spec, mval,
+					       wr->sg_list, wr->num_sge);
 	}
 
 	if (unlikely(signed_len < 0))
@@ -4977,9 +5065,10 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 
 	memset(wqe, 0, 1u << qp->rq.stride_log2);
 
-	mval = ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2);
-	signed_len = ionic_prep_sgl(wqe->recv.sgl, mval,
-				    wr->sg_list, wr->num_sge);
+	mval = ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2, qp->rq_spec);
+	signed_len = ionic_v1_prep_pld(wqe, &wqe->recv.pld,
+				       qp->rq_spec, mval,
+				       wr->sg_list, wr->num_sge);
 	if (signed_len < 0)
 		return signed_len;
 
@@ -5215,6 +5304,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	int rc;
 
 	if (!ctx) {
+		req.rq_spec = ionic_validate_spec(ionic_spec);
 		rc = ionic_validate_udata(udata, 0, 0);
 	} else {
 		rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
@@ -5245,7 +5335,8 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	spin_lock_init(&qp->rq_lock);
 
 	rc = ionic_qp_rq_init(dev, ctx, qp, &req.rq, &rq_buf,
-			      attr->attr.max_wr, attr->attr.max_sge);
+			      attr->attr.max_wr, attr->attr.max_sge,
+			      req.rq_spec);
 	if (rc)
 		goto err_rq;
 
@@ -5277,6 +5368,11 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	}
 
 	ionic_dbgfs_add_qp(dev, qp);
+
+	attr->attr.max_wr = qp->rq.mask;
+	attr->attr.max_sge =
+		ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2,
+					  qp->rq_spec);
 
 	return &qp->ibsrq;
 
@@ -6282,8 +6378,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		IB_DEVICE_MEM_WINDOW_TYPE_2B |
 		0;
 	dev->dev_attr.max_sge =
-		min(ionic_v1_send_wqe_max_sge(dev->max_stride),
-		    ionic_v1_recv_wqe_max_sge(dev->max_stride));
+		min(ionic_v1_send_wqe_max_sge(dev->max_stride, 0),
+		    ionic_v1_recv_wqe_max_sge(dev->max_stride, 0));
 	dev->dev_attr.max_sge_rd = 0;
 	dev->dev_attr.max_cq = dev->inuse_cqid.inuse_size;
 	dev->dev_attr.max_cqe = IONIC_MAX_CQ_DEPTH;
@@ -6302,7 +6398,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_ah = dev->inuse_ahid.inuse_size;
 	dev->dev_attr.max_srq = dev->size_srqid;
 	dev->dev_attr.max_srq_wr = IONIC_MAX_DEPTH;
-	dev->dev_attr.max_srq_sge = ionic_v1_recv_wqe_max_sge(dev->max_stride);
+	dev->dev_attr.max_srq_sge =
+		ionic_v1_recv_wqe_max_sge(dev->max_stride, 0);
 	dev->dev_attr.max_fast_reg_page_list_len =
 		(dev->inuse_restbl.inuse_size / 2) <<
 		(dev->cl_stride - dev->pte_stride);

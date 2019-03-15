@@ -173,8 +173,8 @@ descriptors:
             wrid    : 6
             num_sges: 1
 
-            send    :
-               
+            send:
+                len: 2112               
             sges:
                 - va  : ref://testcase/buffers/id=BUF/address
                   len : ref://testcase/buffers/id=BUF/size

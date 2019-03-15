@@ -19,6 +19,7 @@ struct req_tx_s3_t0_k k;
 #define TO_S3_SQSGE_P to_s3_sqsge_info
 #define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
 #define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
+#define TO_S6_SQCB_WB_ADD_HDR_P to_s6_sqcb_wb_add_hdr_info
 #define TO_S7_STATS_INFO_P to_s7_stats_info
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit1, current_sge_id_sbit2_ebit7)
@@ -30,11 +31,16 @@ struct req_tx_s3_t0_k k;
 #define K_PACKET_LEN CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 #define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
+#define K_SPEC_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, spec_enable)
+#define K_SPEC_MSG_PSN CAPRI_KEY_RANGE(IN_TO_S_P, spec_msg_psn_sbit0_ebit7, spec_msg_psn_sbit16_ebit23)
+
+
 
 %%
     .param    req_tx_sqlkey_process
     .param    req_tx_sqlkey_rsvd_lkey_process
-    .param    req_tx_dcqcn_enforce_process
+    .param    req_tx_dcqcn_enforce_process  
+    .param    req_tx_recirc_fetch_cindex_process
 
 .align
 req_tx_sqsge_process:
@@ -177,14 +183,17 @@ sge_loop:
 
     // if (index == num_valid_sges) last = TRUE else last = FALSE;
     cmov           r3, c1, 1, 0
-
+    
+    seq            c5, K_SPEC_ENABLE, 1      
     CAPRI_RESET_TABLE_2_ARG()
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, in_progress), r4, \
               CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, op_type, first), CAPRI_KEY_RANGE(IN_P, op_type, first)
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, last_pkt), r3, \
               CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, num_sges), r6
-    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), r2, \
-              CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_id), r1
+    phvwrpair.!c5  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), r2, \
+                  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_id), r1
+    
+    phvwr.c5  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), K_SPEC_MSG_PSN
     phvwr     CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data_or_inv_key, op_send_wr_ah_handle), \
               CAPRI_KEY_RANGE(IN_P, imm_data_or_inv_key_sbit0_ebit7, ah_handle_sbit24_ebit31)
     // rest of the fields are initialized to default
@@ -216,8 +225,9 @@ sge_recirc:
     beqi           r4, REQ_TX_DMA_CMD_PYLD_BASE_END, err_no_dma_cmds
     CAPRI_RESET_TABLE_2_ARG() // Branch Delay Slot
     
-    phvwr CAPRI_PHV_RANGE(WQE_TO_SGE_P, in_progress, ah_handle), \
-          CAPRI_KEY_RANGE(IN_P, in_progress, ah_handle_sbit24_ebit31)
+    phvwr     CAPRI_PHV_RANGE(WQE_TO_SGE_P, in_progress, ah_handle), \
+              CAPRI_KEY_RANGE(IN_P, in_progress, ah_handle_sbit24_ebit31)
+    phvwr     CAPRI_PHV_FIELD(WQE_TO_SGE_P, spec_enable), K_SPEC_ENABLE
     phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_id), r1, \
               CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_offset), r2
     phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, remaining_payload_bytes), r3, \
@@ -226,9 +236,12 @@ sge_recirc:
     phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
     // Pass packet_len to stage 3 to accumulate packet_len across sge recirc
     phvwr          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
-    phvwrpair.e    p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING, \
+    phvwrpair      p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING, \
                    p.common.rdma_recirc_recirc_spec_cindex, K_SPEC_CINDEX
     phvwr          p.common.p4_intr_recirc, 1
+
+    phvwr          CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, spec_cindex), K_SPEC_CINDEX
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_recirc_fetch_cindex_process, r0)
 
 end:
     nop.e

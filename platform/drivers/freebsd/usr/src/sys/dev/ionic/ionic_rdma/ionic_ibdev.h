@@ -314,6 +314,7 @@ struct ionic_qp {
 	struct ionic_sq_meta	*sq_meta;
 	u16			*sq_msn_idx;
 
+	int			sq_spec;
 	u16			sq_old_prod;
 	u16			sq_msn_prod;
 	u16			sq_msn_cons;
@@ -327,6 +328,7 @@ struct ionic_qp {
 	struct ionic_rq_meta	*rq_meta;
 	struct ionic_rq_meta	*rq_meta_head;
 
+	int			rq_spec;
 	u16			rq_old_prod;
 	u16			rq_cmb_prod;
 

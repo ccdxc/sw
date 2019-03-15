@@ -65,6 +65,7 @@ struct ionic_ctx {
 
 	bool			fallback;
 	bool			lockfree;
+	int			spec;
 	uint32_t		pg_shift;
 
 	int			version;
@@ -144,6 +145,7 @@ struct ionic_qp {
 	struct ionic_sq_meta	*sq_meta;
 	uint16_t		*sq_msn_idx;
 
+	int			sq_spec;
 	uint16_t		sq_old_prod;
 	uint16_t		sq_msn_prod;
 	uint16_t		sq_msn_cons;
@@ -157,6 +159,7 @@ struct ionic_qp {
 	struct ionic_rq_meta	*rq_meta;
 	struct ionic_rq_meta	*rq_meta_head;
 
+	int			rq_spec;
 	uint16_t		rq_old_prod;
 	uint16_t		rq_cmb_prod;
 };
@@ -168,7 +171,7 @@ struct ionic_ah {
 
 struct ionic_dev {
 	struct verbs_device	vdev;
-	uint8_t			abi_version;
+	int			abi_ver;
 };
 
 static inline struct ionic_dev *to_ionic_dev(struct ibv_device *ibdev)

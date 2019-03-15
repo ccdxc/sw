@@ -36,7 +36,7 @@
 #include <infiniband/kern-abi.h>
 #include "ionic_fw.h"
 
-#define IONIC_ABI_VERSION	1
+#define IONIC_ABI_VERSION	2
 
 struct uionic_ctx {
 	struct ibv_get_context ibv_cmd;
@@ -61,7 +61,8 @@ struct uionic_ctx_resp {
 	__u8 admin_qtype;
 
 	__u8 max_stride;
-	__u8 rsvd[3];
+	__u8 max_spec;
+	__u8 rsvd[2];
 };
 
 struct ionic_qdesc {
@@ -91,6 +92,9 @@ struct uionic_qp {
 	struct ibv_create_qp_ex ibv_cmd;
 	struct ionic_qdesc sq;
 	struct ionic_qdesc rq;
+	__u8 sq_spec;
+	__u8 rq_spec;
+	__u8 rsvd[6];
 };
 
 struct uionic_qp_resp {
@@ -104,11 +108,15 @@ struct uionic_qp_resp {
 struct uionic_srq {
 	struct ibv_create_xsrq ibv_cmd;
 	struct ionic_qdesc rq;
+	__u8 rq_spec;
+	__u8 rsvd[7];
 };
 
 struct uionic_srq_resp {
 	struct ibv_create_srq_resp ibv_resp;
 	__u32 qpid;
+	__u32 rsvd;
+	__u64 rq_cmb_offset;
 };
 
 #endif

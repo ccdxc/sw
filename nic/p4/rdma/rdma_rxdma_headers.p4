@@ -339,9 +339,10 @@ header_type rdma_aq_completion_feedback_header_create_qp_t {
         rq_dma_addr         :  64;
         rq_id               :  24;
         rq_cmb              :   1;
+        rq_spec             :   1;
         qp_privileged       :   1;
         log_pmtu            :   5;
-        rsvd                :  17;
+        rsvd                :  16;
         aq_comp_common_bits :  56;
         rq_cq_id            :  24;
         rq_depth_log2       :   8;

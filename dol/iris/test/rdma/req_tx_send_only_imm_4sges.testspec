@@ -115,6 +115,7 @@ descriptors:
             num_sges: 4
 
             send    :
+                len: 1004
                 imm_data: ref://testcase/pvtdata/imm_data
                
             sges:

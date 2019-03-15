@@ -28,8 +28,11 @@ struct key_entry_aligned_t d;
 
 .align
 req_tx_sqlkey_process:
+     mfspr        r1, spr_mpuid
+     seq          c1, r1[4:2], STAGE_4
+     bcf          [!c1], bubble_to_next_stage
+     seq          c3, K_SGE_INDEX, 0 // Branch Delay Slot
 
-    
      //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
      bbeq         CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, rsvd_lkey_error
 
@@ -97,8 +100,7 @@ pt_aligned_access:
      add          r3, r3, r2, (CAPRI_LOG_SIZEOF_U64 + LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE)
 
 set_arg:
-     seq          c1, K_SGE_INDEX, 0
-     CAPRI_GET_TABLE_0_OR_1_ARG(req_tx_phv_t, r7, c1)
+     CAPRI_GET_TABLE_0_OR_1_ARG(req_tx_phv_t, r7, c3)
      CAPRI_SET_FIELD(r7, INFO_OUT_T, pt_offset, r5)
      CAPRI_SET_FIELD(r7, INFO_OUT_T, log_page_size, d.log_page_size)
      CAPRI_SET_FIELD(r7, INFO_OUT_T, host_addr, d.host_addr)
@@ -107,11 +109,22 @@ set_arg:
      //CAPRI_SET_FIELD(r7, INFO_OUT_T, sge_index, K_SGE_INDEX)
      CAPRI_SET_FIELD_RANGE(r7, INFO_OUT_T, pt_bytes, sge_index, CAPRI_KEY_RANGE(IN_P, sge_bytes_sbit0_ebit7, sge_index))
 
-     CAPRI_GET_TABLE_0_OR_1_K(req_tx_phv_t, r7, c1)
+     CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(req_tx_phv_t, r7, c3)
      CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqptseg_process, r3)
 
+exit:
      nop.e
      nop
+
+bubble_to_next_stage:
+    seq           c1, r1[4:2], STAGE_3
+    bcf           [!c1], exit
+
+    CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(req_tx_phv_t, r7, c3) // Branch Delay Slot
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS)
+
+    nop.e
+    nop
 
 rsvd_lkey_error: 
     phvwrpair    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \

@@ -132,7 +132,8 @@ header_type aq_rx_aqcb_to_wqe_info_t {
         rq_map_count                     :  32;
         rq_dma_addr                      :  64;
         rq_cmb                           :   1;
-        pad                              :   7;
+        rq_spec                          :   1;
+        pad                              :   6;
     }
 }
 
@@ -371,6 +372,7 @@ action rdma_stage0_aq_feedback_action2 () {
     modify_field(rdma_aq_feedback_cqp_scr.pd, rdma_aq_feedback_cqp.pd);
     modify_field(rdma_aq_feedback_cqp_scr.rq_dma_addr, rdma_aq_feedback_cqp.rq_dma_addr);
     modify_field(rdma_aq_feedback_cqp_scr.rq_cmb, rdma_aq_feedback_cqp.rq_cmb);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_spec, rdma_aq_feedback_cqp.rq_spec);
     modify_field(rdma_aq_feedback_cqp_scr.qp_privileged, rdma_aq_feedback_cqp.qp_privileged);
     modify_field(rdma_aq_feedback_cqp_scr.log_pmtu, rdma_aq_feedback_cqp.log_pmtu);
     modify_field(rdma_aq_feedback_cqp_scr.pid, rdma_aq_feedback_cqp.pid);
@@ -544,6 +546,7 @@ action rdma_aq_rx_aqwqe_process () {
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_map_count, t3_s2s_aqcb_to_wqe_info.rq_map_count);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_dma_addr, t3_s2s_aqcb_to_wqe_info.rq_dma_addr);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_cmb, t3_s2s_aqcb_to_wqe_info.rq_cmb);
+    modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_spec, t3_s2s_aqcb_to_wqe_info.rq_spec);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.pad, t3_s2s_aqcb_to_wqe_info.pad);
 
 }

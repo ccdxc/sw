@@ -60,7 +60,8 @@ req_tx_bktrack_sqpt_process:
 
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), K_TX_PSN, CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), K_SSN
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_c_index), K_SQ_C_INDEX, CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1), K_SQ_P_INDEX
-    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, in_progress), CAPRI_KEY_FIELD(IN_P, in_progress), CAPRI_PHV_RANGE(SQ_BKTRACK_P, current_sge_offset, num_sges), CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit6, num_sges_sbit7_ebit7)
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, in_progress), CAPRI_KEY_FIELD(IN_P, in_progress), CAPRI_PHV_RANGE(SQ_BKTRACK_P, current_sge_id, current_sge_offset), CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit6, current_sge_offset_sbit31_ebit31)
+    phvwr     CAPRI_PHV_FIELD(SQ_BKTRACK_P, spec_enable), CAPRI_KEY_FIELD(IN_P, spec_enable)
     //phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, bktrack_in_progress), CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
 
     // populate t0 PC and table address

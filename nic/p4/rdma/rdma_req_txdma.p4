@@ -121,7 +121,7 @@
     modify_field(phv_global_common_scr.cb_addr, phv_global_common.cb_addr);\
     modify_field(phv_global_common_scr.pt_base_addr_page_id, phv_global_common.pt_base_addr_page_id);\
     modify_field(phv_global_common_scr.log_num_pt_entries, phv_global_common.log_num_pt_entries);\
-    modify_field(phv_global_common_scr.pad, phv_global_common.pad);\
+    modify_field(phv_global_common_scr.ah_base_addr_page_id, phv_global_common.ah_base_addr_page_id);\
     modify_field(phv_global_common_scr._ud, phv_global_common._ud);\
     modify_field(phv_global_common_scr._inline, phv_global_common._inline);\
     modify_field(phv_global_common_scr._rsvd2, phv_global_common._rsvd2);\
@@ -150,7 +150,7 @@ header_type phv_global_common_t {
         cb_addr                          :   25;
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
-        pad                              :   22;
+        ah_base_addr_page_id             :   22;
         _ud                              :    1;
         _inline                          :    1;
         _rsvd2                           :    1;
@@ -300,7 +300,8 @@ header_type req_tx_wqe_to_sge_info_t {
         remaining_payload_bytes          : 16;
         poll_in_progress                 : 1;
         color                            : 1;
-        rsvd                             : 18;
+        spec_enable                      : 1;
+        rsvd                             : 17;
         dma_cmd_start_index              : 6;
         imm_data_or_inv_key              : 32;
         ah_handle                        : 32;
@@ -311,15 +312,16 @@ header_type req_tx_sq_bktrack_info_t {
     fields {
         sq_c_index                          : 16;
         in_progress                         : 1;
-        current_sge_offset                  : 32;
         current_sge_id                      : 8;
         num_sges                            : 8;
+        current_sge_offset                  : 32;
         tx_psn                              : 24;
         ssn                                 : 24;
         op_type                             : 4;
         sq_p_index_or_imm_data1_or_inv_key1 : 16;
         imm_data2_or_inv_key2               : 16;
-        pad                                 : 11;
+        spec_enable                         : 1;
+        pad                                 : 10;
     }
 }
 
@@ -336,15 +338,16 @@ header_type req_tx_sqcb0_to_sqcb2_info_t {
         sq_p_index                       :   16;
         in_progress                      :    1;
         bktrack_in_progress              :    1;
-        current_sge_offset               :   32;
         current_sge_id                   :    8;
         num_sges                         :    8;
+        current_sge_offset               :   32;
         update_credits                   :    1;
         bktrack                          :    1;
         pt_base_addr                     :   32;
         op_type                          :    4;
         sq_in_hbm                        :    1;
-        pad                              :   39;
+        spec_enable                      :    1;
+        pad                              :   38;
     }
 }
 
@@ -455,6 +458,7 @@ header_type req_tx_s0_t {
 header_type req_tx_sqcb_to_wqe_info_t {
     fields {
         in_progress                      :    1;
+        spec_enable                      :    1;
         log_pmtu                         :    5;
         li_fence_cleared                 :    1;
         current_sge_id                   :    8;
@@ -467,7 +471,8 @@ header_type req_tx_sqcb_to_wqe_info_t {
         color                            :    1;
         fence_done                       :    1;
         frpmr_lkey_state_upd             :    1;
-        pad                              :   45;
+        dma_cmd_start_index              :    6;
+        pad                              :   38;
     }
 }
 
@@ -481,7 +486,7 @@ header_type req_tx_to_stage_sqwqe_info_t {
     fields {
         wqe_addr                         : 64;
         header_template_addr             : 32;
-        ah_base_addr_page_id             : 22;
+        spec_cindex                      : 16;
         fast_reg_rsvd_lkey_enable        : 1;
     }
 }
@@ -497,6 +502,8 @@ header_type req_tx_to_stage_sqsge_info_t {
         congestion_mgmt_enable           : 1;
         priv_oper_enable                 : 1;
         spec_cindex                      : 16;
+        spec_msg_psn                     : 24;
+        spec_enable                      : 1;
     }
 }
 
@@ -529,7 +536,7 @@ header_type req_tx_to_stage_sqcb_wb_add_hdr_info_t {
         wqe_addr                         : 64;
         spec_cindex                      : 16;
         ah_size                          : 8;
-        rsvd                             : 1;
+        spec_enable                      : 1;
         fence                            : 1;
         packet_len                       : 14;
         read_req_adjust                  : 24;
@@ -575,7 +582,8 @@ header_type req_tx_sqcb_to_pt_info_t {
         poll_in_progress                 :    1;
         color                            :    1;
         read_req_adjust                  :   32;
-        pad                              :   46;
+        spec_enable                      :    1;
+        pad                              :   45;
     }
 }
 
@@ -960,8 +968,8 @@ action req_tx_bktrack_sqcb2_process () {
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.pt_base_addr, t0_s2s_sqcb0_to_sqcb2_info.pt_base_addr);
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.op_type, t0_s2s_sqcb0_to_sqcb2_info.op_type);
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.sq_in_hbm, t0_s2s_sqcb0_to_sqcb2_info.sq_in_hbm);
+    modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.spec_enable, t0_s2s_sqcb0_to_sqcb2_info.spec_enable);
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.pad, t0_s2s_sqcb0_to_sqcb2_info.pad);
-
 }
 action req_tx_timer_expiry_process () {
     // from ki global
@@ -1015,6 +1023,7 @@ action req_tx_bktrack_sqpt_process () {
     modify_field(t0_s2s_sq_bktrack_info_scr.ssn, t0_s2s_sq_bktrack_info.ssn);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 }
 
@@ -1042,6 +1051,7 @@ action req_tx_bktrack_sqsge_process_s3 () {
     modify_field(t0_s2s_sq_bktrack_info_scr.op_type, t0_s2s_sq_bktrack_info.op_type);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 
 }
@@ -1070,6 +1080,7 @@ action req_tx_bktrack_sqsge_process_s4 () {
     modify_field(t0_s2s_sq_bktrack_info_scr.op_type, t0_s2s_sq_bktrack_info.op_type);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 
 }
@@ -1098,6 +1109,7 @@ action req_tx_bktrack_sqsge_process_s5 () {
     modify_field(t0_s2s_sq_bktrack_info_scr.op_type, t0_s2s_sq_bktrack_info.op_type);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 
 }
@@ -1126,6 +1138,7 @@ action req_tx_bktrack_sqsge_process_s6 () {
     modify_field(t0_s2s_sq_bktrack_info_scr.op_type, t0_s2s_sq_bktrack_info.op_type);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 
 }
@@ -1153,6 +1166,7 @@ action req_tx_bktrack_sqwqe_process_s2 () {
     modify_field(t0_s2s_sq_bktrack_info_scr.op_type, t0_s2s_sq_bktrack_info.op_type);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 
 }
@@ -1181,6 +1195,7 @@ action req_tx_bktrack_sqwqe_process_s3 () {
     modify_field(t0_s2s_sq_bktrack_info_scr.op_type, t0_s2s_sq_bktrack_info.op_type);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 }
 
@@ -1208,6 +1223,7 @@ action req_tx_bktrack_sqwqe_process_s4 () {
     modify_field(t0_s2s_sq_bktrack_info_scr.op_type, t0_s2s_sq_bktrack_info.op_type);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 }
 
@@ -1236,6 +1252,7 @@ action req_tx_bktrack_sqwqe_process_s5 () {
     modify_field(t0_s2s_sq_bktrack_info_scr.op_type, t0_s2s_sq_bktrack_info.op_type);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 }
 
@@ -1264,6 +1281,7 @@ action req_tx_bktrack_sqwqe_process_s6 () {
     modify_field(t0_s2s_sq_bktrack_info_scr.op_type, t0_s2s_sq_bktrack_info.op_type);
     modify_field(t0_s2s_sq_bktrack_info_scr.sq_p_index_or_imm_data1_or_inv_key1, t0_s2s_sq_bktrack_info.sq_p_index_or_imm_data1_or_inv_key1);
     modify_field(t0_s2s_sq_bktrack_info_scr.imm_data2_or_inv_key2, t0_s2s_sq_bktrack_info.imm_data2_or_inv_key2);
+    modify_field(t0_s2s_sq_bktrack_info_scr.spec_enable, t0_s2s_sq_bktrack_info.spec_enable);
     modify_field(t0_s2s_sq_bktrack_info_scr.pad, t0_s2s_sq_bktrack_info.pad);
 }
 
@@ -1520,6 +1538,7 @@ action req_tx_sqpt_process () {
     modify_field(t0_s2s_sqcb_to_pt_info_scr.poll_in_progress, t0_s2s_sqcb_to_pt_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_to_pt_info_scr.color, t0_s2s_sqcb_to_pt_info.color);
     modify_field(t0_s2s_sqcb_to_pt_info_scr.read_req_adjust, t0_s2s_sqcb_to_pt_info.read_req_adjust);
+    modify_field(t0_s2s_sqcb_to_pt_info_scr.spec_enable, t0_s2s_sqcb_to_pt_info.spec_enable);
     modify_field(t0_s2s_sqcb_to_pt_info_scr.pad, t0_s2s_sqcb_to_pt_info.pad);
 
 }
@@ -1615,6 +1634,9 @@ action req_tx_sqsge_process () {
     modify_field(to_s3_sqsge_info_scr.congestion_mgmt_enable, to_s3_sqsge_info.congestion_mgmt_enable);
     modify_field(to_s3_sqsge_info_scr.priv_oper_enable, to_s3_sqsge_info.priv_oper_enable);
     modify_field(to_s3_sqsge_info_scr.spec_cindex, to_s3_sqsge_info.spec_cindex);
+    modify_field(to_s3_sqsge_info_scr.spec_msg_psn, to_s3_sqsge_info.spec_msg_psn);
+    modify_field(to_s3_sqsge_info_scr.spec_enable, to_s3_sqsge_info.spec_enable);
+
 
     // stage to stage
     modify_field(t0_s2s_wqe_to_sge_info_scr.in_progress, t0_s2s_wqe_to_sge_info.in_progress);
@@ -1630,6 +1652,7 @@ action req_tx_sqsge_process () {
     modify_field(t0_s2s_wqe_to_sge_info_scr.dma_cmd_start_index, t0_s2s_wqe_to_sge_info.dma_cmd_start_index);
     modify_field(t0_s2s_wqe_to_sge_info_scr.imm_data_or_inv_key, t0_s2s_wqe_to_sge_info.imm_data_or_inv_key);
     modify_field(t0_s2s_wqe_to_sge_info_scr.ah_handle, t0_s2s_wqe_to_sge_info.ah_handle);
+    modify_field(t0_s2s_wqe_to_sge_info_scr.spec_enable, t0_s2s_wqe_to_sge_info.spec_enable);
 
 }
 
@@ -1673,8 +1696,10 @@ action req_tx_add_headers_process_rd () {
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.wqe_addr, to_s5_sqcb_wb_add_hdr_info.wqe_addr);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.spec_cindex, to_s5_sqcb_wb_add_hdr_info.spec_cindex);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.ah_size, to_s5_sqcb_wb_add_hdr_info.ah_size);
+    modify_field(to_s5_sqcb_wb_add_hdr_info_scr.spec_enable, to_s5_sqcb_wb_add_hdr_info.spec_enable);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.fence, to_s5_sqcb_wb_add_hdr_info.fence);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.read_req_adjust, to_s5_sqcb_wb_add_hdr_info.read_req_adjust);
+
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info_rd.hdr_template_inline);
@@ -1711,6 +1736,8 @@ action req_tx_add_headers_process_send_wr () {
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.wqe_addr, to_s5_sqcb_wb_add_hdr_info.wqe_addr);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.spec_cindex, to_s5_sqcb_wb_add_hdr_info.spec_cindex);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.fence, to_s5_sqcb_wb_add_hdr_info.fence);
+    modify_field(to_s5_sqcb_wb_add_hdr_info_scr.spec_enable, to_s5_sqcb_wb_add_hdr_info.spec_enable);
+
 
 
     // stage to stage
@@ -1771,6 +1798,8 @@ action req_tx_sqcb2_write_back_process () {
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.wqe_addr, to_s5_sqcb_wb_add_hdr_info.wqe_addr);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.spec_cindex, to_s5_sqcb_wb_add_hdr_info.spec_cindex);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.fence, to_s5_sqcb_wb_add_hdr_info.fence);
+    modify_field(to_s5_sqcb_wb_add_hdr_info_scr.spec_enable, to_s5_sqcb_wb_add_hdr_info.spec_enable);
+
 
 
     // stage to stage
@@ -1899,11 +1928,12 @@ action req_tx_sqwqe_process () {
     // to stage
     modify_field(to_s2_sqwqe_info_scr.header_template_addr,
                  to_s2_sqwqe_info.header_template_addr);
-    modify_field(to_s2_sqwqe_info_scr.ah_base_addr_page_id, to_s2_sqwqe_info.ah_base_addr_page_id);
+    modify_field(to_s2_sqwqe_info_scr.spec_cindex, to_s2_sqwqe_info.spec_cindex);
     modify_field(to_s2_sqwqe_info_scr.fast_reg_rsvd_lkey_enable, to_s2_sqwqe_info.fast_reg_rsvd_lkey_enable);
 
     // stage to stage
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.in_progress, t0_s2s_sqcb_to_wqe_info.in_progress);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.spec_enable, t0_s2s_sqcb_to_wqe_info.spec_enable);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.log_pmtu, t0_s2s_sqcb_to_wqe_info.log_pmtu);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.li_fence_cleared, t0_s2s_sqcb_to_wqe_info.li_fence_cleared);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.current_sge_id, t0_s2s_sqcb_to_wqe_info.current_sge_id);
@@ -1916,8 +1946,8 @@ action req_tx_sqwqe_process () {
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.color, t0_s2s_sqcb_to_wqe_info.color);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.fence_done, t0_s2s_sqcb_to_wqe_info.fence_done);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.frpmr_lkey_state_upd, t0_s2s_sqcb_to_wqe_info.frpmr_lkey_state_upd);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.dma_cmd_start_index, t0_s2s_sqcb_to_wqe_info.dma_cmd_start_index);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.pad, t0_s2s_sqcb_to_wqe_info.pad);
-
 }
 
 action req_tx_write_back_process () {
@@ -2094,7 +2124,7 @@ action req_tx_sqsge_iterate_process_s1 () {
     modify_field(t2_s2s_wqe_to_sge_info_scr.dma_cmd_start_index, t2_s2s_wqe_to_sge_info.dma_cmd_start_index);
     modify_field(t2_s2s_wqe_to_sge_info_scr.imm_data_or_inv_key, t2_s2s_wqe_to_sge_info.imm_data_or_inv_key);
     modify_field(t2_s2s_wqe_to_sge_info_scr.ah_handle, t2_s2s_wqe_to_sge_info.ah_handle);
-
+    modify_field(t2_s2s_wqe_to_sge_info_scr.spec_enable, t2_s2s_wqe_to_sge_info.spec_enable);
 }
 
 action req_tx_sqsge_iterate_process_s2 () {
@@ -2118,7 +2148,7 @@ action req_tx_sqsge_iterate_process_s2 () {
     modify_field(t2_s2s_wqe_to_sge_info_scr.dma_cmd_start_index, t2_s2s_wqe_to_sge_info.dma_cmd_start_index);
     modify_field(t2_s2s_wqe_to_sge_info_scr.imm_data_or_inv_key, t2_s2s_wqe_to_sge_info.imm_data_or_inv_key);
     modify_field(t2_s2s_wqe_to_sge_info_scr.ah_handle, t2_s2s_wqe_to_sge_info.ah_handle);
-
+    modify_field(t2_s2s_wqe_to_sge_info_scr.spec_enable, t2_s2s_wqe_to_sge_info.spec_enable);
 }
 
 action req_tx_sqcb2_fence_process () {

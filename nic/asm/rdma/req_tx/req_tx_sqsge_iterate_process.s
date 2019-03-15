@@ -32,8 +32,13 @@ trigger_stg3_sqsge_process:
      CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, in_progress, ah_handle, \
                             CAPRI_KEY_RANGE(IN_P, in_progress, ah_handle_sbit8_ebit31))
 
+    seq            c1, CAPRI_KEY_FIELD(IN_P, spec_enable), 1
     // sge_offset = TXWQE_SGE_OFFSET + sqcb0_p->current_sge_id * sizeof(sge_t);
     add            r1, TXWQE_SGE_OFFSET, K_CURRENT_SGE_ID, LOG_SIZEOF_SGE_T
+    // If spec_enable is set, this program is loaded only in case of SGE recirc packets.
+    // So wqe format can either be 8X4 or 16X2. So add 32 bytes to offset for length encoding.
+    add.c1         r1, r1, 1, LOG_SIZEOF_WQE_8x4_T_BITS
+
     // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
     add            r1, r1, K_WQE_ADDR
     CAPRI_SET_TABLE_2_VALID(0)

@@ -20,6 +20,7 @@ class RdmaRingObject(ring.RingObject):
         self.initialized = False
         self.nic_resident = False
         self.hw_ring_id = 0
+        self.qp_spec_en = False
 
     def Init(self, queue, spec):
         super().Init(queue, spec)
@@ -40,6 +41,8 @@ class RdmaRingObject(ring.RingObject):
                        " size %d desc_size %d hw_ring_id: %d" %\
                        (self.host, self.nic_resident, self.address, self.size, self.desc_size, self.hw_ring_id))
 
+    def SetRingQpSpecEn(self, spec_en):
+        self.qp_spec_en = spec_en
 
     def Configure(self):
         pass
@@ -62,7 +65,7 @@ class RdmaRingObject(ring.RingObject):
             descriptor.mem_handle = resmgr.MemHandle(descriptor.address,
                                                      resmgr.HostMemoryAllocator.v2p(descriptor.address))
 
-        descriptor.Write()
+        descriptor.Write(self.qp_spec_en)
         logger.info('incrementing pindex..')
         self.queue.qstate.incr_pindex(0, self.size)
 

@@ -84,11 +84,12 @@ trigger_bktrack:
               CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1), K_SQ_P_INDEX
     //current_sge_offset, current_sge_id, num_sges
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, in_progress), CAPRI_KEY_FIELD(IN_P, in_progress), \
-              CAPRI_PHV_RANGE(SQ_BKTRACK_P, current_sge_offset, num_sges), \
-              CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit5, num_sges_sbit6_ebit7)
+              CAPRI_PHV_RANGE(SQ_BKTRACK_P, current_sge_id, current_sge_offset), \
+              CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit5, current_sge_offset_sbit30_ebit31)
     //phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, bktrack_in_progress), CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
-    phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), d.ssn
-    phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, op_type), d.curr_op_type
+    phvwr     CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), d.ssn
+    phvwr     CAPRI_PHV_FIELD(SQ_BKTRACK_P, op_type), d.curr_op_type
+    phvwr     CAPRI_PHV_FIELD(SQ_BKTRACK_P, spec_enable), CAPRI_KEY_FIELD(IN_P, spec_enable)
 
     seq            c2, CAPRI_KEY_FIELD(IN_P, sq_in_hbm), 1 
     seq            c1, K_WQE_ADDR, r0

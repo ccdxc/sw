@@ -155,7 +155,8 @@ skip_pt:
     
 check_write_back:
     bbeq        CAPRI_KEY_FIELD(IN_P, invoke_writeback), 0, exit
-    RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
+write_back:
+    RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot in straight path
 
     phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, current_sge_offset), \
                 K_CURR_SGE_OFFSET
@@ -210,7 +211,7 @@ error_completion:
 
     //clear both lkey0 and lkey1 table valid bits
     CAPRI_SET_TABLE_0_VALID(0)
-    b       check_write_back
+    b       write_back
     CAPRI_SET_TABLE_1_VALID(0)  //BD Slot
 
 bubble_to_next_stage:

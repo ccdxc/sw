@@ -99,13 +99,22 @@ struct sqcb0_t {
     spec_sq_cindex                : 16; // RW S0
 
     curr_wqe_ptr                  : 64; // WO S5, RO S0
+    
     union {
-        current_sge_offset        : 32; // WO S5, RO S0
-        read_req_adjust           : 32; // RO S0
+        struct {
+            current_sge_id        : 8;  // WO S5, RO S0
+            num_sges              : 8;  // WO S5, RO S0
+            current_sge_offset    : 32; // WO S5, RO S0
+        };
+        struct {
+            spec_msg_psn          : 24; // RW S0 
+            union {
+                msg_psn           : 24; // RW S5
+                read_req_adjust   : 24; // RO S0, WO S5
+            };
+        };
     };
-    current_sge_id                : 8;  // WO S5, RO S0
-    num_sges                      : 8;  // WO S5, RO S0
-
+        
     sq_drained                    : 1; // RW S5, RW S0
     rsvd_state_flags              : 7;
 
@@ -122,8 +131,9 @@ struct sqcb0_t {
             busy                  : 1;
         };
     };
-
-    rsvd2                         : 8;
+    
+    spec_enable                   : 1;
+    rsvd2                         : 7;
 
 };
 
@@ -147,7 +157,8 @@ struct sqcb1_t {
     ssn                            : 24; // R0 S0 (WO S5 TXDMA)
     rsvd2                          : 16; // rsvd for TXDMA memwr
     log_sqwqe_size                 :  5;
-    rsvd3                          :  3;
+    pkt_spec_enable                :  1; // RO S0
+    rsvd3                          :  2;
 
     header_template_addr           : 32; // RO SO // DCQCN ???
     header_template_size           : 8;  // RO SO
@@ -228,9 +239,11 @@ struct sqcb2_t {
     exp_rsp_psn                    : 24; // RW S5
     //Temporary use for DOL - ROCE UDP options
     timestamp                      : 16;
+
     disable_credits                : 1; // TODO move it up
-    timestamp_echo                 : 15;
-    mss                            : 16;
+    rsvd3                          : 7;
+
+    sq_msg_psn                     : 24; // RW S5
 };
 
 struct sqcb3_t {

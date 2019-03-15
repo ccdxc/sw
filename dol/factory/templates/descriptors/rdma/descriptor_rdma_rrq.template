@@ -9,6 +9,7 @@ meta:
 op_type         : None # read_resp or atomic_resp
 num_sges        : None
 psn             : None
+e_psn           : None
 msn             : None
 
 read:

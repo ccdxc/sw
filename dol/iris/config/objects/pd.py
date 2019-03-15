@@ -140,8 +140,9 @@ class PdObject(base.ConfigObjectBase):
         return mw
 
     def GetNewKey(self):
+        logger.info("last_key_id: %d" %(self.last_key_id))
         new_key = self.obj_helper_key.keys[self.last_key_id]
-        self.last_key_id += 1
+        self.last_key_id = (self.last_key_id + 1) % len(self.obj_helper_key.keys)
         return new_key
 
     def GetQP(self, qid):

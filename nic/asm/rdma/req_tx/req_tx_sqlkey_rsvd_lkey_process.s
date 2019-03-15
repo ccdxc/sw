@@ -22,15 +22,28 @@ struct key_entry_aligned_t d;
 .align
 req_tx_sqlkey_rsvd_lkey_process:
 
-     // get DMA cmd entry based on dma_cmd_index
-     DMA_CMD_I_BASE_GET(r3, r6, REQ_TX_DMA_CMD_START_FLIT_ID, K_SGE_DMA_CMD_START_INDEX)
+    mfspr        r1, spr_mpuid
+    seq          c1, r1[4:2], STAGE_4
+    bcf          [!c1], bubble_to_next_stage
+    seq          c2, K_SGE_INDEX, 0 // Branch Delay Slot
 
-     // setup mem2pkt cmd to transfer data from host memory to pkt payload
-     // it is assumed to be host_addr all the time
-     DMA_MEM2PKT_SETUP(r3, c0, K_SGE_BYTES, K_SGE_VA)
+    // get DMA cmd entry based on dma_cmd_index
+    DMA_CMD_I_BASE_GET(r3, r6, REQ_TX_DMA_CMD_START_FLIT_ID, K_SGE_DMA_CMD_START_INDEX)
 
-     add        r1, K_SGE_INDEX, r0
-     CAPRI_SET_TABLE_I_VALID(r1, 0)
+    // setup mem2pkt cmd to transfer data from host memory to pkt payload
+    // it is assumed to be host_addr all the time
+    DMA_MEM2PKT_SETUP(r3, c0, K_SGE_BYTES, K_SGE_VA)
 
-     nop.e
-     nop
+    CAPRI_SET_TABLE_0_VALID_CE(c2, 1)
+    CAPRI_SET_TABLE_1_VALID_C(!c2, 1)
+
+bubble_to_next_stage:
+    seq           c1, r1[4:2], STAGE_3
+    bcf           [!c1], exit
+
+    CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(req_tx_phv_t, r7, c2) // Branch Delay Slot
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS)
+
+exit:
+    nop.e
+    nop

@@ -14,6 +14,7 @@ struct aq_rx_s1_t3_k k;
 
 #define K_RQ_MAP_COUNT CAPRI_KEY_FIELD(IN_P, rq_map_count)
 #define K_RQ_CMB CAPRI_KEY_FIELD(IN_P, rq_cmb)
+#define K_RQ_SPEC CAPRI_KEY_FIELD(IN_P, rq_spec)
 
 %%
 
@@ -54,7 +55,8 @@ qp_skip_dma_pt:
     memwr.!c1.dx    r3, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr
 
 qp_no_skip_dma_pt: 
-    
+
+    phvwr       p.rqcb1.spec_en, K_RQ_SPEC
     // setup DMA for SQCB
     DMA_CMD_STATIC_BASE_GET(r6, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_CREATE_QP_CB)        
     RQCB_ADDR_GET(r1, k.t3_s2s_aqcb_to_wqe_info_rq_id, K_RQCB_BASE_ADDR_HI)

@@ -226,6 +226,7 @@ descriptors:
             num_sges: 1
 
             send    :
+                len: 2112
 
             sges:
                 - va  : ref://testcase/buffers/id=SEND_BUF/address

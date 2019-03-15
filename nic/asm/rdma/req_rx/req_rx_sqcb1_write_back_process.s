@@ -180,7 +180,7 @@ recirc_for_turn:
 
     // fire an mpu only program to set table 0 valid bit to 1 prior to recirc
     phvwr          p.common.p4_intr_recirc, 1
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
 
 inc_token_and_drop_phv:
     tbladd.e      d.nxt_to_go_token_id, 1

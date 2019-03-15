@@ -12,7 +12,7 @@ struct req_rx_s1_t0_k k;
 #define K_RRQ_CINDEX                  CAPRI_KEY_FIELD(IN_P, rrq_cindex)
 #define K_RRQWQE_SGE_LIST_ADDR        CAPRI_KEY_RANGE(IN_TO_S_P, rrqwqe_sge_list_addr_sbit0_ebit23, rrqwqe_sge_list_addr_sbit56_ebit63)
 #define K_CUR_SGE_ID                  CAPRI_KEY_FIELD(IN_TO_S_P, cur_sge_id)
-#define K_CUR_SGE_OFFSET              CAPRI_KEY_RANGE(IN_TO_S_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit8_ebit31)
+#define K_CUR_SGE_OFFSET              CAPRI_KEY_RANGE(IN_TO_S_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit16_ebit31)
 #define K_NUM_SGES                    CAPRI_KEY_FIELD(IN_TO_S_P, num_sges)
 #define K_REMAINING_PAYLOAD_BYTES     CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
 
@@ -21,7 +21,10 @@ struct req_rx_s1_t0_k k;
 
 .align
 req_rx_sqcb1_recirc_sge_process:
+    seq            c1, CAPRI_KEY_FIELD(IN_TO_S_P, sge_opt), 1
     add            r1, K_RRQWQE_SGE_LIST_ADDR, K_CUR_SGE_ID, LOG_SIZEOF_SGE_T
+    // If SGE length encoding is there, go past to the start of SGES[]
+    add.c1            r1, r1, 1, LOG_SIZEOF_WQE_8x4_T_BITS
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqsge_process, r1)
 
     CAPRI_RESET_TABLE_0_ARG()

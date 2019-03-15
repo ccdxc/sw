@@ -16,7 +16,8 @@
 #define REQ_TX_DMA_CMD_RDMA_HEADERS 4
 #define REQ_TX_DMA_CMD_SET_FRPMR_IN_PROGRESS 4
 #define REQ_TX_DMA_CMD_RRQWQE 5
-#define REQ_TX_DMA_CMD_RRQ_PINDEX 6
+#define REQ_TX_DMA_CMD_RRQWQE_BASE_SGES 6
+#define REQ_TX_DMA_CMD_RRQ_PINDEX 7
 #define REQ_TX_DMA_CMD_PYLD_BASE 5
 #define REQ_TX_DMA_CMD_PYLD_BASE_END 16
 #define REQ_TX_DMA_CMD_RDMA_PAD_ICRC 17
@@ -49,11 +50,13 @@
 #define DETH_SRC_QP             p.deth.src_qp
 
 #define RRQWQE_READ_RSP_OR_ATOMIC         p.rrqwqe.read_rsp_or_atomic
+#define RRQWQE_WQE_FORMAT                 p.rrqwqe.wqe_format
 #define RRQWQE_NUM_SGES                   p.rrqwqe.num_sges
 #define RRQWQE_PSN                        p.rrqwqe.psn
 #define RRQWQE_MSN                        p.rrqwqe.msn
 #define RRQWQE_READ_LEN                   p.rrqwqe.read.len
 #define RRQWQE_READ_WQE_SGE_LIST_ADDR     p.rrqwqe.read.wqe_sge_list_addr
+#define RRQWQE_READ_BASE_SGES             p.rrqwqe_base_sges
 #define RRQWQE_ATOMIC_SGE_VA              p.rrqwqe.atomic.sge.va
 #define RRQWQE_ATOMIC_SGE_LEN             p.rrqwqe.atomic.sge.len
 #define RRQWQE_ATOMIC_SGE_LKEY            p.rrqwqe.atomic.sge.l_key
@@ -122,11 +125,13 @@ struct req_tx_phv_t {
  
     /* flit 7 */
     union {
-        struct rrqwqe_t rrqwqe;    // dma_cmd0
-        inline_data: 256;          // dma_cmd1
+        struct rrqwqe_t rrqwqe;
+        struct {
+            inline_data: 256;          // dma_cmd0 // dma_cmd1
+            dma_cmd2 : 128;
+            dma_cmd3 : 128;
+        };
     };
-    dma_cmd2 : 128;
-    dma_cmd3 : 128;
 
     /* flit 6 */
     rsvd: 8;                                       // 1B
@@ -173,7 +178,13 @@ struct req_tx_phv_t {
             pad3: 512;
             pad2: 512;
             pad1: 512;
-            pad0: 512;
+            union {
+                pad0: 512;
+                struct {
+                    pad: 256;
+                    rrqwqe_base_sges :256;
+                };
+            };
         };
         // common tx
         struct phv_ common;

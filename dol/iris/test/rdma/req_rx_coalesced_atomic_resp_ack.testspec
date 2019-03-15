@@ -238,6 +238,7 @@ descriptors:
             num_sges: 1
 
             send    :
+                len: 64
                
             sges:
                 - va  : ref://testcase/buffers/id=BUF1/address
@@ -253,6 +254,7 @@ descriptors:
             num_sges: 1
 
             send    :
+                len: 64
                
             sges:
                 - va  : ref://testcase/buffers/id=BUF2/address

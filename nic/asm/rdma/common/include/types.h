@@ -560,6 +560,24 @@ struct sge_t {
     l_key: 32;
 };
 
+#define WQE_8x4_T struct len_encoding_8x4_t
+#define SIZEOF_WQE_8x4_T 4 //Bytes
+#define SIZEOF_WQE_8x4_T_BITS (SIGEOF_WQE_8x4_T * BITS_PER_BYTE)
+#define LOG_SIZEOF_WQE_8x4_T   2   // 2^2 = 4 Bytes
+#define LOG_SIZEOF_WQE_8x4_T_BITS   (LOG_SIZEOF_WQE_8x4_T + LOG_BITS_PER_BYTE)
+struct len_encoding_8x4_t {
+    len: 32;
+};
+
+#define WQE_16x2_T struct len_encoding_16x2_t
+#define SIZEOF_WQE_16x2_T 2 //Bytes
+#define SIZEOF_WQE_16x2_T_BITS (SIGEOF_WQE_16x2_T * BITS_PER_BYTE)
+#define LOG_SIZEOF_WQE_16x2_T   1   // 2^1 = 2 Bytes
+#define LOG_SIZEOF_WQE_16x2_T_BITS   (LOG_SIZEOF_WQE_16x2_T + LOG_BITS_PER_BYTE)
+struct len_encoding_16x2_t {
+    len: 16;
+};
+
 // wqe op types
 #define OP_TYPE_SEND                0
 #define OP_TYPE_SEND_INV            1
@@ -616,6 +634,10 @@ union mr_flags_t {
 };
 
 
+#define SQWQE_FORMAT_DEFAULT  0
+#define SQWQE_FORMAT_8x4      1
+#define SQWQE_FORMAT_16x2     2
+
 //16B
 struct sqwqe_base_t {
     wrid               : 64;
@@ -628,7 +650,8 @@ struct sqwqe_base_t {
     };
 
     //flags - u16
-    rsvd_flags         : 11;
+    wqe_format         : 4;
+    rsvd_flags         : 7;
     color              : 1;
     signalled_compl    : 1;
     inline_data_vld    : 1;
@@ -744,6 +767,9 @@ struct sqwqe_t {
             union {
                 pad : 256;
                 inline_data: 256;
+                sge8x4 : 256;
+                sge16x2 : 256;
+                base_sges : 256;
             };
         };
     };
@@ -751,27 +777,35 @@ struct sqwqe_t {
 
 #define MAX_RD_ATOMIC 16
 #define LOG_MAX_RD_ATOMIC 4
-#define LOG_RRQ_WQE_SIZE 5
+#define LOG_RRQ_WQE_SIZE 6
 #define LOG_RRQ_QP_SIZE (LOG_MAX_RD_ATOMIC + LOG_RRQ_WQE_SIZE)
 struct rrqwqe_read_t {
     len                : 32;
     wqe_sge_list_addr  : 64;
     pad                : 72;
+    union {
+        base_sges      : 256;
+        sge8x4         : 256;
+        sge16x2        : 256;
+    };
 };
 
 struct rrqwqe_atomic_t {
     struct sge_t sge;
     op_type            : 8;
-    pad                : 32;
+    pad                : 288;
 
 };
 
 #define RRQ_OP_TYPE_READ 0
 #define RRQ_OP_TYPE_ATOMIC 1
+#define RRQWQE_SGE_OFFSET  32
+#define RRQWQE_SGE_OFFSET_BITS 256 // 32 * 8
 
 struct rrqwqe_t {
     read_rsp_or_atomic : 1;
-    rsvd               : 7;
+    wqe_format         : 4;
+    rsvd               : 3;
     num_sges           : 8;
     psn                : 24;
     e_psn              : 24;
@@ -802,11 +836,22 @@ struct rrqwqe_d_t {
 #define LOG_RQWQE_SGE_OFFSET 5 // 2^5 = 32
 #define LOG_RQWQE_SGE_OFFSET_BITS 8 // 2^8 = 256
 
+#define RQWQE_OPT_SGE_OFFSET  64
+#define LOG_RQWQE_OPT_SGE_OFFSET 6
+
+#define RQWQE_OPT_SGE_OFFSET_BITS 256 // 32 * 8
+#define RQWQE_OPT_LAST_SGE_OFFSET_BITS 128
+
+#define RQWQE_FORMAT_DEFAULT  0
+#define RQWQE_FORMAT_8x4      1
+#define RQWQE_FORMAT_16x2     2
+
 struct rqwqe_base_t {
     wrid: 64;
     rsvd0: 8;
     num_sges: 8;
-    rsvd: 176;
+    wqe_format: 4;
+    rsvd: 172;
     rsvd2:256;
 };
 
@@ -1239,9 +1284,10 @@ struct rdma_aq_feedback_create_qp_ext_t {
     rq_dma_addr  : 64;
     rq_id        : 24;
     rq_cmb       :  1;
+    rq_spec      :  1;
     qp_privileged:  1;
     log_pmtu     :  5;
-    rsvd         : 17;
+    rsvd         : 16;
 };
 
 struct rdma_aq_feedback_modify_qp_ext_t {
@@ -1514,6 +1560,8 @@ struct resp_rx_send_fml_t {
 #define AQ_QPF_ZERO_BASED       0x00000020
 #define AQ_QPF_ON_DEMAND        0x00000040
 
+#define AQ_QPF_SQ_SPEC          0x00000100
+#define AQ_QPF_RQ_SPEC          0x00000200
 #define AQ_QPF_SQD_NOTIFY       0x00001000
 #define AQ_QPF_SQ_CMB           0x00002000
 #define AQ_QPF_RQ_CMB           0x00004000
@@ -1569,7 +1617,10 @@ struct aqwqe_t {
                     rq_cmb:1;
                     sq_cmb:1;
                     sqd_notify:1;
-                    pad2:7;
+                    pad2:2;
+                    rq_spec:1;
+                    sq_spec:1;
+                    pad3:3;
                     access_mw_bind:1;
                     access_remote_atomic:1;
                     access_remote_read:1;

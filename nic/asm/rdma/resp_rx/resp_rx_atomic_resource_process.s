@@ -31,6 +31,7 @@ struct resp_rx_s1_t1_k k;
 #define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
 #define K_RSQ_PINDEX CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_P, priv_oper_enable)
+#define K_RKEY CAPRI_KEY_FIELD(IN_P, r_key)
 
 %%
     .param  rdma_atomic_resource_addr
@@ -154,7 +155,7 @@ loop_exit:
     phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, va), K_ATOMIC_RKEY_INFO_VA, \
                 CAPRI_PHV_FIELD(RKEY_INFO_P, len), K_LEN
 
-    add     R_KEY, r0, CAPRI_KEY_FIELD(IN_P, r_key)
+    add     R_KEY, r0, K_RKEY
 
     seq     c5, R_KEY, RDMA_RESERVED_LKEY_ID
     // c5: rsvd key

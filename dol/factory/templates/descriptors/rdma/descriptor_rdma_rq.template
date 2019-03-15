@@ -8,6 +8,11 @@ meta:
 
 wrid            : random/1/65535
 num_sges        : 2
+wqe_format      : 0
+
+sge_len:
+    - sge:
+        len     : None
 
 sges:
     - sge:

@@ -115,6 +115,7 @@ descriptors:
             num_sges: 4
 
             send    :
+                len: 1020
                
             sges:
                 - va  : ref://testcase/buffers/id=BUF1/address

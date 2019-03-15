@@ -468,6 +468,7 @@ descriptors:
             fence   : 1
 
             send    :
+                len: 2112
 
             sges:
                 - va  : ref://testcase/buffers/id=SEND_BUF/address

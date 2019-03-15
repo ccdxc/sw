@@ -19,6 +19,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define TO_S3_P to_s3_rrqlkey_info
 #define TO_S2_P to_s2_rrqsge_info
 #define TO_S1_P to_s1_rrqwqe_info
+#define TO_S1_RECIRC_P to_s1_recirc_info
 
 #define TOKEN_ID r6
 #define WORK_NOT_DONE_RECIRC_CNT_MAX    8
@@ -95,7 +96,7 @@ process_req_rx:
 
 process_recirc_work_not_done:
     crestore    [c3, c2], r1, (REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_ONLY) 
-    seq         c7, d.log_sqwqe_size, WQE_SIZE_2_SGES
+    seq         c7, d.pkt_spec_enable, 1
     setcf       c4, [!c3 | c2 | c7]
 
     // skip_token_id_check if not read response or read response and
@@ -184,13 +185,14 @@ read:
     nop            // Branch Delay Slot
 
     bcf            [c4], rrq_empty
-    phvwr          CAPRI_PHV_FIELD(TO_S2_P, priv_oper_enable), d.sqcb1_priv_oper_enable //BD Slot
+    phvwrpair      CAPRI_PHV_FIELD(TO_S2_P, log_pmtu), d.log_pmtu, \
+                   CAPRI_PHV_FIELD(TO_S2_P, priv_oper_enable), d.sqcb1_priv_oper_enable //BD Slot
 
     bcf            [!c7], check_psn
-    nop            // Branch Delay Slot
+    phvwrpair      CAPRI_PHV_FIELD(TO_S1_P, priv_oper_enable), d.sqcb1_priv_oper_enable, \
+                   CAPRI_PHV_FIELD(TO_S1_P, log_pmtu), d.log_pmtu  //BD Slot
 
     phvwr          CAPRI_PHV_FIELD(TO_S1_P, sge_opt), 1
-    phvwr          CAPRI_PHV_FIELD(TO_S2_P, log_pmtu), d.log_pmtu
     phvwr          CAPRI_PHV_FIELD(TO_S4_P, sge_opt), 1
 
 check_psn:
@@ -298,7 +300,7 @@ set_rrqwqe_pc:
     // If rrq is empty(c4 is true), do not load rrqwqe entry but invoke mpu only
     // req_rx_rrqwqe_process. If rrq is non-empty, load rrqwqe and lock
     // the table to update msg_psn in the rrqwqe
-    CAPRI_NEXT_TABLE0_C_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r0, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, r5, req_rx_rrqwqe_process, c4)
+    CAPRI_NEXT_TABLE0_C_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r0, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r5, req_rx_rrqwqe_process, c4)
 
 recirc_work_done:
     // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back.
@@ -438,7 +440,8 @@ drop_packet:
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_drop_phv_process, r0) //Exit Slot
 
 recirc_for_turn:
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
+    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
     phvwr          p.common.p4_intr_recirc, 1
     phvwr.e        p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
     tbladd         d.work_not_done_recirc_cnt, 1 // Exit Slot
@@ -459,7 +462,7 @@ check_state:
 
 process_recirc_sge_work_pending:
     CAPRI_RESET_TABLE_0_ARG()
-
+    phvwr          CAPRI_PHV_FIELD(TO_S1_RECIRC_P, sge_opt), d.pkt_spec_enable
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_recirc_sge_process, r0)
 
 table_error:

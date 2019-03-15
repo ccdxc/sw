@@ -39,13 +39,17 @@ req_tx_write_back_process:
     nop           // Branch Delay Slot
 
 write_back:
+    seq           c4, d.spec_enable, 0
     tblwr         d.busy, CAPRI_KEY_FIELD(IN_P, busy)
     tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
+    bcf           [!c4], skip_in_progress_update
+    tblwr         d.fence, 0  //BD-slot
     tblwr         d.num_sges, K_NUM_SGES
     tblwr         d.current_sge_id, K_CURRENT_SGE_ID
     tblwr         d.current_sge_offset, K_CURRENT_SGE_OFFSET
+
+skip_in_progress_update:
     tblwr         d.curr_wqe_ptr, K_WQE_ADDR
-    tblwr         d.fence, 0
     bbeq          CAPRI_KEY_FIELD(IN_P, poll_in_progress), 0, skip_poll_success
     seq           c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1 // Branch Delay Slot
     tblwr         d.poll_in_progress, 0
@@ -60,7 +64,10 @@ write_back:
 #endif
 
 skip_poll_success:
+    // Increment msg_psn if spec_enable is set.
+    tblmincri.!c4 d.msg_psn, 24, 1
     tblwr.c1      d.curr_wqe_ptr, 0
+    tblwr.c1      d.read_req_adjust, 0 // This will also clear msg_psn for last-pkt.
 
     // Update drain cindex every time first/only pkt is transmitted.
     // If state changes to SQD through admin Q, stage0 sends a sq_drain
@@ -77,7 +84,6 @@ skip_poll_success:
     seq           c2, SQ_C_INDEX, r0
     tblmincri.c2  d.color, 1, 1
 
-    tblwr.c1      d.read_req_adjust, 0
     // Ordering rules:
     // We decided NOT to ring doorbell to update the c_index and there by re-evaluate scheduler.
     // The decision is taken because of the ordering complexity between cb0/cb1 busy bit release

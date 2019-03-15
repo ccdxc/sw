@@ -255,11 +255,11 @@ process_send:
 
     seq         c7, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     // c7: fresh packet
-    seq         c4, d.log_wqe_size, WQE_SIZE_2_SGES 
+    seq         c4, d.spec_en, 1
     // c4: send_sge_opt
 
     // if recirc pkt (token_id check already done) or
-    // tiny wqe, skip token_id_check
+    // spec_en, skip token_id_check
     bcf         [!c7 | c4], skip_token_id_check
     seq         c7, TOKEN_ID, d.nxt_to_go_token_id // BD Slot
     bcf         [!c7], recirc_wait_for_turn
@@ -384,7 +384,14 @@ process_send_only:
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     bcf        [c7], process_rnr
 
+    tblwr      d.send_info.spec_psn, 0 // BD Slot
+    seq        c4, d.spec_en, 1
+
+    CAPRI_SET_FIELD2_C(TO_S_RQPT_P, send_sge_opt, 1, c4)
+    CAPRI_SET_FIELD2_C(TO_S_WB1_P, send_sge_opt, 1, c4)
+
 send_sge_opt:
+
     // populate PD in lkey's to_stage
     CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd) // BD Slot in straight path
     phvwrpair   CAPRI_PHV_FIELD(TO_S_WQE_P, spec_psn), d.send_info.spec_psn, \

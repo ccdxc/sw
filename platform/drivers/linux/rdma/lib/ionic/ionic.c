@@ -73,14 +73,19 @@ static void ionic_debug_file_init(void)
 	pthread_once(&once, ionic_debug_file_open);
 }
 
-static int ionic_env_val(const char *name)
+static int ionic_env_val_def(const char *name, int def)
 {
 	const char *env = getenv(name);
 
 	if (!env)
-		return 0;
+		return def;
 
 	return atoi(env);
+}
+
+static int ionic_env_val(const char *name)
+{
+	return ionic_env_val_def(name, 0);
 }
 
 static int ionic_env_fallback(void)
@@ -117,9 +122,15 @@ static int ionic_env_lockfree(void)
 	return ionic_env_val("IONIC_LOCKFREE");
 }
 
+static int ionic_env_spec(int kspec)
+{
+	return ionic_env_val_def("IONIC_SPEC", kspec);
+}
+
 static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 						 int cmd_fd)
 {
+	struct ionic_dev *dev = to_ionic_dev(ibdev);
 	struct ionic_ctx *ctx;
 	struct uionic_ctx req = {};
 	struct uionic_ctx_resp resp = {};
@@ -198,6 +209,14 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 
 	ctx->lockfree = ionic_env_lockfree();
 
+	if (dev->abi_ver <= 1) {
+		ctx->spec = 0;
+	} else {
+		ctx->spec = ionic_env_spec(resp.max_spec);
+		if (ctx->spec < 0 || ctx->spec > 16)
+			ctx->spec = 0;
+	}
+
 	if (ionic_env_debug())
 		ctx->dbg_file = IONIC_DEBUG_FILE;
 
@@ -260,6 +279,8 @@ static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sysfs_dev
 	if (!dev)
 		return NULL;
 
+	dev->abi_ver = sysfs_dev->abi_ver;
+
 	return &dev->vdev;
 }
 
@@ -288,7 +309,7 @@ static const struct verbs_match_ent cna_table[] = {
 
 static const struct verbs_device_ops ionic_dev_ops = {
 	.name			= "ionic",
-	.match_min_abi_version	= IONIC_ABI_VERSION,
+	.match_min_abi_version	= 1,
 	.match_max_abi_version	= IONIC_ABI_VERSION,
 	.match_table		= cna_table,
 	.alloc_device		= ionic_alloc_device,

@@ -117,6 +117,7 @@ descriptors:
             num_sges: 4
 
             send    :
+                len: 1020
                 inv_key : ref://testcase/pvtdata/inv_r_key
                
             sges:

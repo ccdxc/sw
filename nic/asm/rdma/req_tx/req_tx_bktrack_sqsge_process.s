@@ -130,7 +130,7 @@ sge_bktrack:
 
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), r3, CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), K_SSN
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_c_index), K_SQ_C_INDEX, CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1), K_SQ_P_INDEX
-    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, current_sge_offset), r2, CAPRI_PHV_FIELD(SQ_BKTRACK_P, current_sge_id), r4
+    phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, current_sge_id), r4, CAPRI_PHV_FIELD(SQ_BKTRACK_P, current_sge_offset), r2
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, in_progress), 1, CAPRI_PHV_FIELD(SQ_BKTRACK_P, num_sges), K_NUM_SGES
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, op_type), CAPRI_KEY_FIELD(IN_P, op_type), CAPRI_PHV_RANGE(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1, imm_data2_or_inv_key2), K_IMM_DATA
 

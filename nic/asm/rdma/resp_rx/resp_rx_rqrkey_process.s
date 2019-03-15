@@ -34,6 +34,7 @@ struct key_entry_aligned_t d;
 #define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
 #define K_ACC_CTRL CAPRI_KEY_RANGE(IN_P, acc_ctrl_sbit0_ebit4, acc_ctrl_sbit5_ebit7)
 #define K_PD CAPRI_KEY_RANGE(IN_TO_S_P, pd_sbit0_ebit7, pd_sbit24_ebit31)
+#define K_LEN CAPRI_KEY_FIELD(IN_P, len)
 
 %%
     .param  resp_rx_ptseg_mpu_only_process
@@ -62,7 +63,7 @@ resp_rx_rqrkey_process:
     add         r1, d.base_va, d.len
     //add         r2, k.args.va, k.args.len
     //slt         c2, r1, r2
-    sslt        c2, r1, ABS_VA, CAPRI_KEY_FIELD(IN_P, len)
+    sslt        c2, r1, ABS_VA, K_LEN
     bcf         [c1 | c2], rkey_va_err
     
     // check if state is valid (same for MR and MW)
@@ -139,7 +140,7 @@ skip_mr_cookie_check:
     //add         r7, r7, k.args.len
     // pt_seg_size <= ((transfer_offset % pt_seg_size) + transfer_bytes)
     //sle         c1, r6, r7
-    ssle        c1, r6, r7, CAPRI_KEY_FIELD(IN_P, len)
+    ssle        c1, r6, r7, K_LEN
     bcf         [!c1], aligned_pt
 
 unaligned_pt:

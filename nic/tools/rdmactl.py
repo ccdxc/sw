@@ -287,9 +287,8 @@ class RdmaSQCB0state(Packet):
         ShortField("spec_sq_cindex", 0),
 
         XLongField("curr_wqe_ptr", 0),
-        IntField("current_sge_offset", 0),
-        ByteField("current_sge_id", 0),
-        ByteField("num_sges", 0),
+        X3BytesField("spec_msg_psn", 0),
+        X3BytesField("msg_psn", 0),
 
         BitField("sqcb0_sq_drained", 0, 1),
         BitField("rsvd_state_flags", 0, 7),
@@ -328,7 +327,8 @@ class RdmaSQCB1state(Packet):
         X3BytesField("sqcb1_ssn", 0),
         ShortField("sqcb1_rsvd2", 0),
         BitField("log_sqwqe_size", 0, 5),
-        BitField("sqcb1_rsvd3", 0, 3),
+        BitField("pkt_spec_enable", 0, 1),
+        BitField("sqcb1_rsvd3", 0, 2),
 
         XIntField("sqcb1_header_template_addr", 0),
         ByteField("sqcb1_header_template_size", 0),
@@ -637,7 +637,8 @@ class RdmaRQCB1state(Packet):
         X3BytesField("e_psn", 0),
         BitField("next_op_type", 0, 2),
         BitField("next_pkt_type", 0, 1),
-        BitField("rqcb1_rsvd3", 0, 5),
+        BitField("spec_en", 0, 1),
+        BitField("rqcb1_rsvd3", 0, 4),
         #BitField("ac_remote_wr", 0, 1),
         #BitField("ac_remote_rd", 0, 1),
         #BitField("ac_remote_atomic", 0, 1),

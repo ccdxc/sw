@@ -145,6 +145,14 @@ static inline int ionic_to_ibv_status(int sts)
 
 /* fw abi v1 */
 
+/* data payload part of v1 wqe */
+union ionic_v1_pld {
+	struct ionic_sge	sgl[2];
+	__be32			spec32[8];
+	__be16			spec16[16];
+	__u8			data[32];
+};
+
 /* completion queue v1 cqe */
 struct ionic_v1_cqe {
 	union {
@@ -250,8 +258,8 @@ struct ionic_v1_base_hdr {
 
 /* v1 receive wqe body */
 struct ionic_v1_recv_bdy {
-	__u8				rsvd[16]; /* XXX want sge here */
-	struct ionic_sge		sgl[2];
+	__u8				rsvd[16];
+	union ionic_v1_pld		pld;
 };
 
 /* v1 send/rdma wqe body (common, has sgl) */
@@ -269,10 +277,7 @@ struct ionic_v1_common_bdy {
 		} rdma;
 	};
 	__be32				length;
-	union {
-		__u8			data[32];
-		struct ionic_sge	sgl[2];
-	};
+	union ionic_v1_pld		pld;
 };
 
 /* v1 atomic wqe body */
@@ -327,15 +332,24 @@ enum ionic_v1_op {
 	IONIC_V1_FLAG_SOL		= (1u << 1),
 	IONIC_V1_FLAG_INL		= (1u << 2),
 	IONIC_V1_FLAG_SIG		= (1u << 3),
+
+	/* flags last four bits for sgl spec format */
+	IONIC_V1_FLAG_SPEC32		= (1u << 12),
+	IONIC_V1_FLAG_SPEC16		= (2u << 12),
+	IONIC_V1_SPEC_FIRST_SGE		= 2,
 };
 
-static inline size_t ionic_v1_send_wqe_min_size(int min_sge, int min_data)
+static inline size_t ionic_v1_send_wqe_min_size(int min_sge, int min_data,
+						int spec)
 {
 	size_t sz_wqe, sz_sgl, sz_data;
 
+	if (spec > IONIC_V1_SPEC_FIRST_SGE)
+		min_sge += IONIC_V1_SPEC_FIRST_SGE;
+
 	sz_wqe = sizeof(struct ionic_v1_wqe);
-	sz_sgl = offsetof(struct ionic_v1_wqe, common.sgl[min_sge]);
-	sz_data = offsetof(struct ionic_v1_wqe, common.data[min_data]);
+	sz_sgl = offsetof(struct ionic_v1_wqe, common.pld.sgl[min_sge]);
+	sz_data = offsetof(struct ionic_v1_wqe, common.pld.data[min_data]);
 
 	if (sz_sgl > sz_wqe)
 		sz_wqe = sz_sgl;
@@ -346,12 +360,21 @@ static inline size_t ionic_v1_send_wqe_min_size(int min_sge, int min_data)
 	return sz_wqe;
 }
 
-static inline int ionic_v1_send_wqe_max_sge(uint8_t stride_log2)
+static inline int ionic_v1_send_wqe_max_sge(uint8_t stride_log2, int spec)
 {
 	struct ionic_v1_wqe *wqe = (void *)0;
 	struct ionic_sge *sge = (void *)(1ull << stride_log2);
+	int num_sge = 0;
 
-	return sge - wqe->common.sgl;
+	if (spec > IONIC_V1_SPEC_FIRST_SGE)
+		num_sge = IONIC_V1_SPEC_FIRST_SGE;
+
+	num_sge = sge - &wqe->common.pld.sgl[num_sge];
+
+	if (spec && num_sge > spec)
+		num_sge = spec;
+
+	return num_sge;
 }
 
 static inline int ionic_v1_send_wqe_max_data(uint8_t stride_log2)
@@ -359,15 +382,18 @@ static inline int ionic_v1_send_wqe_max_data(uint8_t stride_log2)
 	struct ionic_v1_wqe *wqe = (void *)0;
 	__u8 *data = (void *)(1ull << stride_log2);
 
-	return data - wqe->common.data;
+	return data - wqe->common.pld.data;
 }
 
-static inline size_t ionic_v1_recv_wqe_min_size(int min_sge)
+static inline size_t ionic_v1_recv_wqe_min_size(int min_sge, int spec)
 {
 	size_t sz_wqe, sz_sgl;
 
+	if (spec > IONIC_V1_SPEC_FIRST_SGE)
+		min_sge += IONIC_V1_SPEC_FIRST_SGE;
+
 	sz_wqe = sizeof(struct ionic_v1_wqe);
-	sz_sgl = offsetof(struct ionic_v1_wqe, recv.sgl[min_sge]);
+	sz_sgl = offsetof(struct ionic_v1_wqe, recv.pld.sgl[min_sge]);
 
 	if (sz_sgl > sz_wqe)
 		sz_wqe = sz_sgl;
@@ -375,12 +401,32 @@ static inline size_t ionic_v1_recv_wqe_min_size(int min_sge)
 	return sz_wqe;
 }
 
-static inline int ionic_v1_recv_wqe_max_sge(uint8_t stride_log2)
+static inline int ionic_v1_recv_wqe_max_sge(uint8_t stride_log2, int spec)
 {
 	struct ionic_v1_wqe *wqe = (void *)0;
 	struct ionic_sge *sge = (void *)(1ull << stride_log2);
+	int num_sge = 0;
 
-	return sge - wqe->recv.sgl;
+	if (spec > IONIC_V1_SPEC_FIRST_SGE)
+		num_sge = IONIC_V1_SPEC_FIRST_SGE;
+
+	num_sge = sge - &wqe->recv.pld.sgl[num_sge];
+
+	if (spec && num_sge > spec)
+		num_sge = spec;
+
+	return num_sge;
+}
+
+static inline int ionic_v1_use_spec_sge(int min_sge, int spec)
+{
+	if (!spec || min_sge > spec)
+		return 0;
+
+	if (min_sge <= IONIC_V1_SPEC_FIRST_SGE)
+		return IONIC_V1_SPEC_FIRST_SGE;
+
+	return spec;
 }
 
 #endif

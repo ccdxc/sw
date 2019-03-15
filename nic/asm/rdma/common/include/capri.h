@@ -204,6 +204,10 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_TABLE_GET_FIELD(_dst_r, _base_r, _struct_name, _field_name) \
     tblrdp  _dst_r, _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name);
 
+//get field conditionally
+#define CAPRI_TABLE_GET_FIELD_C(_dst_r, _base_r, _struct_name, _field_name, _c_flag) \
+    tblrdp._c_flag  _dst_r, _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name);
+
 #define CAPRI_TABLE_SET_FIELD(_src_r, _base_r, _struct_name, _field_name) \
     tblwrp  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src_r;
 

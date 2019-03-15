@@ -258,7 +258,7 @@ class RdmaSessionObjectHelper:
                        if GlobalOptions.perf:
                            if self.v4_non_vxlan_count > 8: continue
                        else:
-                           if self.v4_non_vxlan_count > 2: continue
+                           if self.v4_non_vxlan_count > 3: continue
                     elif ipv6 and not vxlan:    # v6 non-vxlan
                        self.v6_non_vxlan_count +=1
                        if GlobalOptions.perf:

@@ -149,6 +149,9 @@ def ResetErrQState(tc):
     rs.lqp.sq.qstate.data.sqcb5_max_recirc_cnt_err = 0
     rs.lqp.rq.qstate.data.work_not_done_recirc_cnt = 0
     rs.lqp.sq.qstate.data.rnr_timeout = 0
+    rs.lqp.sq.qstate.data.sq_msg_psn = 0
+    rs.lqp.sq.qstate.data.current_sge_id = 0
+    rs.lqp.sq.qstate.data.current_sge_offset = 0
     rs.lqp.sq.qstate.data.tx_qp_err_disabled = 0
     rs.lqp.sq.qstate.data.qp_err_dis_flush_rq = 0
     rs.lqp.sq.qstate.data.qp_err_dis_ud_pmtu = 0

@@ -213,6 +213,8 @@ header_type req_rx_to_stage_rrqwqe_info_t {
         aeth_syndrome                    :    8;
         remaining_payload_bytes          :   14;
         sge_opt                          :    1;
+        priv_oper_enable                 :    1;
+        log_pmtu                         :    5;
     }
 }
 
@@ -297,6 +299,7 @@ header_type req_rx_to_stage_recirc_info_t {
         num_sges                         : 8;
         remaining_payload_bytes          : 14;
         dma_cmd_eop                      : 1;
+        sge_opt                          : 1;
     }
 }
 
@@ -1427,6 +1430,8 @@ action req_rx_rrqwqe_process () {
     modify_field(to_s1_rrqwqe_info_scr.aeth_syndrome, to_s1_rrqwqe_info.aeth_syndrome);
     modify_field(to_s1_rrqwqe_info_scr.remaining_payload_bytes, to_s1_rrqwqe_info.remaining_payload_bytes);
     modify_field(to_s1_rrqwqe_info_scr.sge_opt, to_s1_rrqwqe_info.sge_opt);
+    modify_field(to_s1_rrqwqe_info_scr.priv_oper_enable, to_s1_rrqwqe_info.priv_oper_enable);
+    modify_field(to_s1_rrqwqe_info_scr.log_pmtu, to_s1_rrqwqe_info.log_pmtu);
 
     // stage to stage
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_offset, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_offset);
@@ -1453,6 +1458,7 @@ action req_rx_sqcb1_recirc_process () {
     modify_field(to_s1_recirc_info_scr.remaining_payload_bytes, to_s1_recirc_info.remaining_payload_bytes);
     modify_field(to_s1_recirc_info_scr.num_sges, to_s1_recirc_info.num_sges);
     modify_field(to_s1_recirc_info_scr.dma_cmd_eop, to_s1_recirc_info.dma_cmd_eop);
+    modify_field(to_s1_recirc_info_scr.sge_opt, to_s1_recirc_info.sge_opt);
 
     modify_field(t0_s2s_sqcb1_to_sge_recirc_info_scr.rrq_in_progress, t0_s2s_sqcb1_to_sge_recirc_info.rrq_in_progress);
 }

@@ -10,15 +10,24 @@ struct resp_rx_s2_t0_k k;
 struct rqwqe_base_t d;
 
 #define INFO_LKEY_T struct resp_rx_key_info_t
+#define INFO_SGE_T  t0_s2s_sge_info
 #define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
 #define IN_TO_S_P     to_s2_wqe_info
 #define TO_S_WB1_P to_s5_wb1_info
+#define TO_S_RECIRC_P to_s1_recirc_info
 
-#define NUM_SGES        r3
+#define LEN_SUM         r3
 #define SGE_P           r4
 #define REM_PYLD_BYTES  r5
 #define CURR_SGE_OFFSET r1
 #define TRANSFER_BYTES  r2
+
+// below macros are used only in 8x4 and 16x2 case
+#define SGE_OFFSET      r1[31:0]
+#define SGE_ID          r1[63:32]
+#define WQE_OFFSET      r6
+#define ADDR_TO_LOAD    r6
+#define SGE_OFFSET_SHIFT 32
 
 #define F_FIRST_PASS  c7
 
@@ -36,25 +45,23 @@ struct rqwqe_base_t d;
 #define K_SPEC_PSN CAPRI_KEY_RANGE(IN_TO_S_P, spec_psn_sbit0_ebit2, spec_psn_sbit19_ebit23)
 #define K_INV_R_KEY CAPRI_KEY_RANGE(IN_TO_S_P, inv_r_key_sbit0_ebit2, inv_r_key_sbit27_ebit31)
 #define K_EXT_HDR_DATA CAPRI_KEY_RANGE(IN_TO_S_P, ext_hdr_data_sbit0_ebit63, ext_hdr_data_sbit64_ebit68)
+#define K_CURR_WQE_PTR CAPRI_KEY_RANGE(IN_P,curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63)
 
 %%
     .param  resp_rx_rqlkey_process
     .param  resp_rx_inv_rkey_validate_process
     .param  resp_rx_rqlkey_rsvd_lkey_process
     .param  resp_rx_rqcb1_write_back_mpu_only_process
+    .param  resp_rx_rqsge_process
+    .param  resp_rx_recirc_mpu_only_process
 
 .align
 resp_rx_rqwqe_opt_process:
 
     bcf         [c2 | c3 | c7], table_error
-    add         NUM_SGES, d.num_sges, r0 // BD Slot
-    beqi        NUM_SGES, 0, nak
-    // num_valid_sges == 2 ?
-    seq         c1, NUM_SGES, 2   //BD Slot
-    // c1: num_sges == 2
 
     // curr_sge_offset = spec_psn << log_pmtu
-    add         TRANSFER_BYTES, r0, K_SPEC_PSN
+    add         TRANSFER_BYTES, r0, K_SPEC_PSN // BD Slot
     sll         TRANSFER_BYTES, TRANSFER_BYTES, CAPRI_KEY_FIELD(IN_P, log_pmtu)
     // TRANSFER_BYTES now has the number of bytes transferred so far
 
@@ -62,6 +69,180 @@ resp_rx_rqwqe_opt_process:
     // later copy this TMP to cqe.length if it is last or only pkt
     add         REM_PYLD_BYTES, r0, K_REM_PYLD_BYTES
     add         TMP, TRANSFER_BYTES, REM_PYLD_BYTES
+
+    seq         c5, REM_PYLD_BYTES, 0
+    bcf         [c5], send_only_zero_len
+    phvwr       p.cqe.recv.wrid, d.wrid //BD Slot
+
+    seq         c1, d.num_sges, 0
+
+    bcf         [c1], nak
+    seq         c1, d.wqe_format, RQWQE_FORMAT_DEFAULT // BD Slot
+    // c1: num_sges <= 2
+    bcf         [c1], decode_2x4
+
+    seq         c1, d.wqe_format, RQWQE_FORMAT_8x4   //BD Slot
+    // c1: 2 < num_sges <= 8
+
+    // below steps are common to 8x4 and 16x2 WQE formats
+    add         LEN_SUM, r0, r0
+    // first_pass = TRUE
+    setcf       F_FIRST_PASS, [c0]
+
+    CAPRI_RESET_TABLE_0_ARG()
+    // wqe_to_sge_info_p->rem_pyld_bytes = rem_pyld_bytes
+    CAPRI_SET_FIELD2(INFO_SGE_T, remaining_payload_bytes, K_REM_PYLD_BYTES)
+
+    phvwr       p.cqe.recv.wrid, d.wrid
+
+    add         SGE_P, r0, RQWQE_SGE_OFFSET_BITS
+
+decode_wqe_opt:
+
+    // 8x4 WQE format
+    /*
+     *    lower 32-byte encoding
+     *    0          32          63
+     *    -------------------------
+     *    |     len   |    len    |
+     *    -------------------------
+     *    |     len   |    len    |
+     *    -------------------------
+     *    |     len   |    len    |
+     *    -------------------------
+     *    |     len   |    len    |
+     *    -------------------------
+     */
+
+    // 16x2 WQE format
+    /*
+     *    lower 32-byte encoding
+     *    0    16    32    48    63
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     */
+
+    // move SGE_P to point to the next len
+    sub.c1      SGE_P, SGE_P, 1, LOG_SIZEOF_WQE_8x4_T_BITS
+    sub.!c1     SGE_P, SGE_P, 1, LOG_SIZEOF_WQE_16x2_T_BITS
+
+    // curr_sge_offset = transfer_bytes - len_sum
+    sub         r6, TRANSFER_BYTES, LEN_SUM
+    add         r1, r6, SGE_ID, SGE_OFFSET_SHIFT
+
+    // get the length of SGE
+    CAPRI_TABLE_GET_FIELD_C(r6, SGE_P, WQE_8x4_T, len, c1)
+    CAPRI_TABLE_GET_FIELD_C(r6, SGE_P, WQE_16x2_T, len, !c1)
+    // r6: SGE len
+
+    // update the sum of lengths
+    add         LEN_SUM, LEN_SUM, r6
+    // check if this packet falls in this SGE
+    slt         c3, TRANSFER_BYTES, LEN_SUM
+
+    // incr sge_id
+    add.!c3     r6, SGE_ID, 1
+    bcf         [!c3], decode_wqe_opt
+    add.!c3     r1, SGE_OFFSET, r6, SGE_OFFSET_SHIFT // BD Slot
+
+    // if c3 is true, we found the SGE id.
+    // calculate the address to load. load sge_process
+    // pass sge_id and sge_offset
+
+    // sge_remaining_bytes = sge_p->len - current_sge_offset;
+    sub         r6, r6, SGE_OFFSET
+    // len = min(sge_remaining_bytes, remaining_payload_bytes);
+    slt         c2, r6, REM_PYLD_BYTES
+    cmov        r6, c2, r6, REM_PYLD_BYTES
+    // r6: length of transfer
+
+    // transfer_bytes += len
+    add         TRANSFER_BYTES, TRANSFER_BYTES, r6
+
+    // rem_pyld_bytes -= len
+    sub         REM_PYLD_BYTES, REM_PYLD_BYTES, r6
+
+    // are remaining_payload_bytes 0 ?
+    seq         c5, REM_PYLD_BYTES, 0
+
+    // wqe_offset = 64 + (sge_id << log_sizeof_sge)
+    add         WQE_OFFSET, RQWQE_OPT_SGE_OFFSET, SGE_ID, LOG_SIZEOF_SGE_T
+
+    bcf         [!F_FIRST_PASS], skip_sge_load
+    // addr_to_load = wqe_ptr + wqe_offset
+    add         ADDR_TO_LOAD, K_CURR_WQE_PTR, WQE_OFFSET
+
+    sub         r7, d.num_sges, 1
+    seq         c2, SGE_ID, r7
+    // c2: last sge
+
+    // move addr_to_load back by sizeof 2 SGE's
+    sub.!c2     ADDR_TO_LOAD, ADDR_TO_LOAD, 2, LOG_SIZEOF_SGE_T
+    // move addr_to_load back by sizeof 3 SGE's
+    sub.c2      ADDR_TO_LOAD, ADDR_TO_LOAD, 3, LOG_SIZEOF_SGE_T
+
+    CAPRI_SET_FIELD2_C(INFO_SGE_T, is_last_sge, 1, c2)
+
+    // wqe_to_sge_info_p->sge_offset = sge_offset
+    CAPRI_SET_FIELD2(INFO_SGE_T, sge_offset, SGE_OFFSET)
+
+    CAPRI_SET_FIELD2(INFO_SGE_T, priv_oper_enable, K_PRIV_OPER_ENABLE)
+
+    CAPRI_SET_FIELD2(INFO_SGE_T, dma_cmd_index, CAPRI_KEY_FIELD(IN_P, dma_cmd_index))
+
+    // load rqsge_process
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqsge_process, ADDR_TO_LOAD)
+
+skip_sge_load:
+    // incr sge_id
+    add         r6, SGE_ID, 1
+    add         r1, SGE_OFFSET, r6, SGE_OFFSET_SHIFT
+
+    // is sge_id < num_sges
+    slt         c6, SGE_ID, d.num_sges
+
+    // loop one more time ONLY if:
+    // remaining_payload_bytes > 0 (!c5) AND
+    // did only one pass (F_FIRST_PASS) AND
+    // SGE_ID is less than d.num_sges (c6)
+    setcf       c4, [!c5 & F_FIRST_PASS & c6]
+    bcf         [c4], decode_wqe_opt
+    // make F_FIRST_PASS = FALSE only when we are going for second pass
+    setcf.c4    F_FIRST_PASS, [!c0] // BD Slot
+
+    // num_sges = 1 if one pass, else num_sges = 2
+    cmov        r6, F_FIRST_PASS, 1, 2
+    CAPRI_SET_FIELD2(INFO_SGE_T, num_sges, r6)
+
+    // set F_FIRST_PASS back to true, because in loop_exit
+    // table1_valid is set to true if F_FIRST_PASS is false
+    setcf       F_FIRST_PASS, [c0]
+    b           loop_exit
+    add         TMP, TRANSFER_BYTES, REM_PYLD_BYTES // BD Slot
+
+decode_2x4:
+    // decode 2x4 WQE format
+
+    /*
+     *    lower 32-byte encoding
+     *    0          32          63
+     *    -------------------------
+     *    |          va           |
+     *    -------------------------
+     *    |     len   |    lkey   |
+     *    -------------------------
+     *    |          va           |
+     *    -------------------------
+     *    |     len   |    lkey   |
+     *    -------------------------
+     */
 
     // init curr_sge_offset = transfer_bytes
     // if SGE 1, curr_sge_offset will remain same
@@ -72,6 +253,8 @@ resp_rx_rqwqe_opt_process:
     add         SGE_P, r0, (RQWQE_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
     // check if transfer_bytes < len of SGE 1
     CAPRI_TABLE_GET_FIELD(r6, SGE_P, SGE_T, len)
+    seq         c1, d.num_sges, 2
+    // c1: num_sges = 2
     slt         c3, TRANSFER_BYTES, r6
     // c3: SGE1
     bcf         [c3], sge_common
@@ -187,21 +370,24 @@ write_done:
 
 loop_exit:
 
-    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
-    // if remaining payload bytes are not zero, generate NAK
-    bcf         [!c5], nak
-    IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY) //BD Slot
-
-    // for send last/only, copy total message length to cqe
-    phvwr.c1    p.cqe.length, TMP
-
     CAPRI_SET_TABLE_0_VALID(1)
-    // skip_inv_rkey if NOT send with invalidate
-    bbeq        K_GLOBAL_FLAG(_inv_rkey), 0, skip_inv_rkey
-    CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1) // BD Slot
+    CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
 
+send_only_zero_len_join:
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
+
+    // if remaining payload bytes are not zero, recirc
+    bcf         [!c5], recirc
+    // for send last/only, copy total message length to cqe
+    phvwr.c1    p.cqe.length, TMP //BD Slot
+
+    seq         c2, K_GLOBAL_FLAG(_inv_rkey), 1 // BD Slot
+    // skip_inv_rkey if remaining_payload_bytes > 0
+    // or if NOT send with invalidate
+    bcf         [!c5 | !c2], skip_inv_rkey
     // pass the rkey to write back, since wb calls inv_rkey. Note that this s2s across multiple(two, 3 to 5) stages
-    phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, inv_r_key), K_INV_R_KEY
+    phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, inv_r_key), K_INV_R_KEY //BD Slot
 
     // if invalidate rkey is present, invoke it by loading appopriate
     // key entry, else load the same program as MPU only.
@@ -218,6 +404,50 @@ skip_inv_rkey:
 
     phvwr.e     CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
     CAPRI_SET_FIELD2_C(TO_S_WB1_P, incr_c_index, 1, c1) // Exit Slot
+
+recirc:
+
+    // if there are no sges left. generate NAK
+    bcf     [!c6], len_err_nak
+    add     r2, CAPRI_KEY_FIELD(IN_P, dma_cmd_index), (MAX_PYLD_DMA_CMDS_PER_SGE * 2)   //BD Slot
+
+    // if we reached the max number of pyld DMA commands and still
+    // pkt transfer is not complete, generate NAK
+    seq     c1, r2, RESP_RX_DMA_CMD_PYLD_BASE_END
+    bcf     [c1], qp_oper_err_nak
+
+    // store recirc info so that stage 1 program upon recirculation
+    // can access this info
+    add     r6, K_CURR_WQE_PTR, 2, LOG_SIZEOF_SGE_T //BD Slot
+    CAPRI_SET_FIELD2(TO_S_RECIRC_P, curr_wqe_ptr, r6)
+    CAPRI_SET_FIELD2(TO_S_RECIRC_P, current_sge_id, SGE_ID)
+    CAPRI_SET_FIELD2(TO_S_RECIRC_P, current_sge_offset, SGE_OFFSET)
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_RECIRC_P, remaining_payload_bytes), REM_PYLD_BYTES, \
+                CAPRI_PHV_FIELD(TO_S_RECIRC_P, num_sges), d.num_sges
+
+    // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
+
+    // set recirc
+    phvwr.e p.common.p4_intr_recirc, 1
+    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_SGE_WORK_PENDING //Exit Slot
+
+qp_oper_err_nak:
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_LOCAL_QP_OPER_ERR_OFFSET))
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_max_sge_err), 1
+    b           nak
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1 // BD Slot
+
+len_err_nak:
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_LOCAL_LEN_ERR_OFFSET))
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_insuff_sge_err), 1
+
+    // fall thru
 
 nak:
     // since num_sges is <=2, we would have consumed all of them in this pass
@@ -250,6 +480,12 @@ nak:
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 
+send_only_zero_len:
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+    b           send_only_zero_len_join
+    CAPRI_SET_TABLE_0_VALID(0) // BD Slot
+
 table_error:
     // set err_dis_qp and completion flags
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
@@ -273,7 +509,7 @@ table_error:
     CAPRI_SET_TABLE_0_VALID(0)
 
     //Generate DMA command to skip to payload end if non-zero payload
-    seq         c1, REM_PYLD_BYTES, 0
+    seq         c1, K_REM_PYLD_BYTES, 0
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
     DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c1)
 

@@ -1061,6 +1061,70 @@ modules:
         spec    : resp_rx_send_first_mid_last_inv_4sges_rsvd_rkey.testspec
         ignore  : False
 
+    - module:
+        name    : RDMA_RX_SEND_FML_3SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_3sges
+        spec    : resp_rx_send_fml_3sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_4SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_4sges
+        spec    : resp_rx_send_fml_4sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_5SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_5sges
+        spec    : resp_rx_send_fml_5sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_6SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_6sges
+        spec    : resp_rx_send_fml_6sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FMML_8SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fmml_8sges
+        spec    : resp_rx_send_fmml_8sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FMML_9SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fmml_9sges
+        spec    : resp_rx_send_fmml_9sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FMML_16SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fmml_16sges
+        spec    : resp_rx_send_fmml_16sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_RECIRC
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_recirc
+        spec    : resp_rx_send_fml_recirc.testspec
+        ignore  : False
+
     # SGE NAK testcases
     - module:
         name    : RDMA_RX_SEND_ONLY_5SGES

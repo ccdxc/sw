@@ -31,6 +31,8 @@ from factory.objects.rdma.descriptor import RdmaRsqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaRsqDescriptorRead
 from factory.objects.rdma.descriptor import RdmaRsqDescriptorAtomic
 from factory.objects.rdma.descriptor import RdmaSge
+from factory.objects.rdma.descriptor import RdmaSgeLen8x4
+from factory.objects.rdma.descriptor import RdmaSgeLen16x2
 
 from infra.common.glopts import GlobalOptions
 
@@ -53,7 +55,6 @@ class QpObject(base.ConfigObjectBase):
         self.atomic_enabled = spec.atomic_enabled
         self.sq_in_nic = spec.sq_in_nic
         self.rq_in_nic = spec.rq_in_nic
-        self.flags = (spec.sq_in_nic << 13) | (spec.rq_in_nic << 14)
         self.modify_qp_oper = 0
         self.qstate = 0
         self.q_key = 0
@@ -64,10 +65,28 @@ class QpObject(base.ConfigObjectBase):
         self.rrq_tbl_pos = -1
         self.HdrTemplate = None
 
-        # we can use this tiny attribute to filter testcases
+        # we can use the following attributes to filter testcases
         self.tiny = False
+        self.max_sge_8 = False
+        self.max_sge_16 = False
+        self.spec_en = True
+
         if sges <= 2:
             self.tiny = True
+        elif sges > 2 and sges <=4:
+            self.tiny = False
+        elif sges > 4 and sges <=8:
+            self.max_sge_8 = True
+        elif sges > 8 and sges <=16:
+            self.max_sge_8 = True
+            self.max_sge_16 = True
+        elif sges > 16:
+            self.spec_en = False
+            self.max_sge_8 = True
+            self.max_sge_16 = True
+
+        # Pass the same spec_en value to both SQ and RQ
+        self.flags = (self.spec_en << 8) | (self.spec_en << 9) | (spec.sq_in_nic << 13) | (spec.rq_in_nic << 14)
 
         self.num_sq_sges = sges
         self.num_sq_wqes = self.__roundup_to_pow_2(spec.num_sq_wqes)
@@ -146,9 +165,20 @@ class QpObject(base.ConfigObjectBase):
                 (self.num_sq_sges * len(RdmaSge()))) 
 
     def __get_rqwqe_size(self):
-        return self.__roundup_to_pow_2(
-                len(RdmaRqDescriptorBase()) + 
-                (self.num_rq_sges * len(RdmaSge()))) 
+        if self.num_rq_sges > 2 and self.num_rq_sges <= 8:
+            return self.__roundup_to_pow_2(
+                    len(RdmaRqDescriptorBase()) +
+                    (self.num_rq_sges * len(RdmaSge())) +
+                    (8 * len(RdmaSgeLen8x4())))
+        elif self.num_rq_sges > 8 and self.num_rq_sges <= 16:
+            return self.__roundup_to_pow_2(
+                    len(RdmaRqDescriptorBase()) +
+                    (self.num_rq_sges * len(RdmaSge())) +
+                    (16 * len(RdmaSgeLen16x2())))
+        else:
+            return self.__roundup_to_pow_2(
+                    len(RdmaRqDescriptorBase()) +
+                    (self.num_rq_sges * len(RdmaSge())))
 
     def __get_rrqwqe_size(self):
         return self.__roundup_to_pow_2(
@@ -166,6 +196,7 @@ class QpObject(base.ConfigObjectBase):
         logger.info('RQ num_sges: %d num_wqes: %d wqe_size: %d' %(self.num_rq_sges, self.num_rq_wqes, self.rqwqe_size)) 
         logger.info('RRQ num_wqes: %d wqe_size: %d' %(self.num_rrq_wqes, self.rrqwqe_size)) 
         logger.info('RSQ num_wqes: %d wqe_size: %d' %(self.num_rsq_wqes, self.rsqwqe_size)) 
+        logger.info('SGE max 8: %d SGE max 16: %d spec_en: %d' %(self.max_sge_8, self.max_sge_16, self.spec_en)) 
         if not self.remote:
             logger.info('SQ_CQ: %s RQ_CQ: %s' %(self.sq_cq.GID(), self.rq_cq.GID()))
             logger.info('CQ ID: %d EQ ID: %d' %(self.cq_id, self.eq_id))
@@ -405,6 +436,7 @@ class QpObject(base.ConfigObjectBase):
                               self.nic_sq_base_addr,
                               self.num_sq_wqes,
                               self.sqwqe_size)
+            self.sq.SetRingQpSpecEn('SQ', self.spec_en)
         else:
             logger.info("sq_base_addr: 0x%x " % (self.sq_slab.address))
             self.sq.SetRingParams('SQ', 0, True, False,
@@ -412,6 +444,7 @@ class QpObject(base.ConfigObjectBase):
                               self.sq_slab.address,
                               self.num_sq_wqes,
                               self.sqwqe_size)
+            self.sq.SetRingQpSpecEn('SQ', self.spec_en)
         if self.rq_in_nic:
             logger.info("rq_base_addr: 0x%x " % (self.nic_rq_base_addr))
             self.rq.SetRingParams('RQ', 0, True, True,
@@ -419,6 +452,7 @@ class QpObject(base.ConfigObjectBase):
                               self.nic_rq_base_addr,
                               self.num_rq_wqes,
                               self.rqwqe_size)
+            self.rq.SetRingQpSpecEn('RQ', self.spec_en)
         else:
             logger.info("rq_base_addr: 0x%x " % (self.rq_slab.address))
             self.rq.SetRingParams('RQ', 0, True, False,
@@ -426,6 +460,7 @@ class QpObject(base.ConfigObjectBase):
                               self.rq_slab.address,
                               self.num_rq_wqes,
                               self.rqwqe_size)
+            self.rq.SetRingQpSpecEn('RQ', self.spec_en)
         logger.info("rsq_tbl_pos: %d rrq_tbl_pos: %d " %\
                          (self.rsq_tbl_pos, self.rrq_tbl_pos))
 

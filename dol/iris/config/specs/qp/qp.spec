@@ -3,7 +3,7 @@ meta:
     id: QP_RDMA
 useAdmin: True
 rc:
-    count           : 4
+    count           : 5
     svc_name        : "RC"
     service         : 0
     hostmem_pg_size : 4096

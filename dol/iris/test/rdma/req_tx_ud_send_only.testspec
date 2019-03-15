@@ -84,6 +84,7 @@ descriptors:
             num_sges: 1
 
             ud_send:
+                len       : ref://testcase/buffers/id=BUF/size
                 q_key:  ref://testcase/pvtdata/q_key
                 dst_qp: ref://testcase/pvtdata/dst_qp
                 ah_handle: ref://testcase/pvtdata/ah_handle

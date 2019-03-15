@@ -12,7 +12,12 @@ complete_notify : False
 fence           : False
 solicited_event : False
 num_sges        : 2
+wqe_format      : 0
 color           : 0
+
+sge_len:
+    - sge:
+        len     : None
 
 send:
     imm_data    : None

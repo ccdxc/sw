@@ -302,7 +302,7 @@ skip_ud:
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
     bcf         [!c2 | c3], non_first_or_recirc_pkt
     // pass the rkey to write back, since wb calls inv_rkey. Note that this s2s across multiple(two, 3 to 5) stages
-    phvwr.!c3   CAPRI_PHV_FIELD(INFO_WBCB1_P, inv_r_key), K_INV_R_KEY //BD Slot
+    phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, inv_r_key), K_INV_R_KEY //BD Slot
 
     // only first packet need to set num_sges and wqe_ptr values into
     // rqcb1. middle/last packets will simply use these fields from cb
@@ -441,7 +441,7 @@ table_error:
     CAPRI_SET_TABLE_0_VALID(0)
 
     //Generate DMA command to skip to payload end if non-zero payload
-    seq         c1, REM_PYLD_BYTES, 0
+    seq         c1, K_REM_PYLD_BYTES, 0
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
     DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c1)
 

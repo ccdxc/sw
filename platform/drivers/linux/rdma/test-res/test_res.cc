@@ -2,8 +2,6 @@
 #include <gtest/gtest.h>
 #include "wrap_res.h"
 
-#define BIT(n) (1u << (n))
-
 class Buddy : public ::testing::Test {
 protected:
 	Buddy() {
@@ -198,8 +196,7 @@ TEST_F(Buddy, Randomized) {
 		if (inject_failure && !(rng() & 0x3f))
 			ADD_FAILURE() << "injecting test failure";
 
-		// XXX should be just if this one test case failed
-		if (::testing::UnitTest::GetInstance()->Failed())
+		if (HasFailure())
 			goto show_hist;
 	}
 

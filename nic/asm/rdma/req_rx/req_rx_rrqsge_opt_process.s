@@ -109,7 +109,7 @@ sge_loop:
 
     setcf          c4, [!c2 & c3 & c7]
     // set dma_cmd_eop in last dma cmd for the pkt
-    CAPRI_SET_FIELD_C(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, CAPRI_KEY_FIELD(IN_P, dma_cmd_eop), !c4)
+    CAPRI_SET_FIELD_C(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, CAPRI_KEY_FIELD(IN_P, dma_cmd_eop), c2)
 
     add            r4, r0, K_DMA_CMD_START_INDEX
     add.!c7        r4, r4, MAX_PYLD_DMA_CMDS_PER_SGE

@@ -24,6 +24,7 @@ struct resp_rx_s1_t1_k k;
 #define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
 #define K_RSQ_PINDEX CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_P, priv_oper_enable)
+#define K_RKEY CAPRI_KEY_FIELD(IN_P, r_key)
 
 %%
     .param  resp_rx_rqrkey_process
@@ -41,7 +42,7 @@ resp_rx_read_mpu_only_process:
     phvwrpair   CAPRI_PHV_FIELD(OUT_P, va), K_VA, \
                 CAPRI_PHV_FIELD(OUT_P, len), K_LEN
 
-    add     R_KEY, r0, CAPRI_KEY_FIELD(IN_P, r_key)
+    add     R_KEY, r0, K_RKEY
 
     seq     c5, R_KEY, RDMA_RESERVED_LKEY_ID
     // c5: rsvd key

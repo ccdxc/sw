@@ -73,14 +73,19 @@ static void ionic_debug_file_init(void)
 	pthread_once(&once, ionic_debug_file_open);
 }
 
-static int ionic_env_val(const char *name)
+static int ionic_env_val_def(const char *name, int def)
 {
 	const char *env = getenv(name);
 
 	if (!env)
-		return 0;
+		return def;
 
 	return atoi(env);
+}
+
+static int ionic_env_val(const char *name)
+{
+	return ionic_env_val_def(name, 0);
 }
 
 static int ionic_env_fallback(void)
@@ -115,6 +120,11 @@ static int ionic_env_lats(void)
 static int ionic_env_lockfree(void)
 {
 	return ionic_env_val("IONIC_LOCKFREE");
+}
+
+static int ionic_env_spec(int kspec)
+{
+	return ionic_env_val_def("IONIC_SPEC", kspec);
 }
 
 static int ionic_init_context(struct verbs_device *vdev,
@@ -194,6 +204,14 @@ static int ionic_init_context(struct verbs_device *vdev,
 	}
 
 	ctx->lockfree = ionic_env_lockfree();
+
+	if (dev->abi_ver <= 1) {
+		ctx->spec = 0;
+	} else {
+		ctx->spec = ionic_env_spec(resp.max_spec);
+		if (ctx->spec < 0 || ctx->spec > 16)
+			ctx->spec = 0;
+	}
 
 	if (ionic_env_debug())
 		ctx->dbg_file = IONIC_DEBUG_FILE;
@@ -285,7 +303,7 @@ static struct verbs_device *ionic_alloc_device(const char *sysfs_path,
 	return NULL;
 
 found:
-	if (abi_version != IONIC_ABI_VERSION)
+	if (abi_version < 1 || abi_version > IONIC_ABI_VERSION)
 		return NULL;
 
 	dev = calloc(1, sizeof(*dev));
@@ -296,6 +314,8 @@ found:
 	dev->vdev.sz = sizeof(*dev);
 	dev->vdev.size_of_context =
 		sizeof(struct ionic_ctx) - sizeof(struct ibv_context);
+
+	dev->abi_ver = abi_version;
 
 	return &dev->vdev;
 }

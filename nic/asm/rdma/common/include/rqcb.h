@@ -154,7 +154,8 @@ struct rqcb1_t {
     e_psn: 24;        //rw by S0
     next_op_type: 2;  //rw by S0
     next_pkt_type: 1; //rw by S0
-    rsvd3: 5;
+    spec_en: 1; //rw by S0
+    rsvd3: 4;
 
     msn:24;                 //rw by S0 ?
     header_template_size: 8;    //Ronly

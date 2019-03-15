@@ -29,6 +29,8 @@ struct aq_tx_s1_t0_k k;
 #define TO_SQCB0_INFO_P      to_s6_info    
 #define TO_S7_STATS_P       to_s7_fb_stats_info
 
+#define WQE_SIZE_2_SGES 6 
+
 %%
 
     .param      tx_dummy
@@ -349,6 +351,7 @@ create_qp:
     phvwr       p.{sqcb0.intrinsic.total_rings, sqcb0.intrinsic.host_rings}, (MAX_SQ_DOORBELL_RINGS<<4|MAX_SQ_HOST_RINGS)
     phvwr       p.sqcb0.log_num_wqes, d.qp.sq_depth_log2[4:0]
 
+    crestore    [c5, c4], d.{qp.rq_spec...qp.sq_spec}, 0x3
     // c3: RC QP?
     seq         c3, d.type_state, RDMA_SERV_TYPE_RC
 
@@ -365,6 +368,7 @@ create_qp:
     phvwr       p.sqcb0.priv_oper_enable, d.qp.privileged
     phvwr.!c3   p.sqcb0.log_pmtu, 12
     phvwri      p.sqcb0.sqd_cindex, 0xFFFF
+    phvwr.c4    p.sqcb0.spec_enable, 1
 
     // SQCB1:
 
@@ -386,6 +390,7 @@ create_qp:
     phvwr       p.sqcb1.log_sqwqe_size, d.qp.sq_stride_log2[4:0]
     //TODO: This should be enabled through modify_qp
     phvwr       p.sqcb1.sqd_async_notify_enable, 1
+    phvwr.c4    p.sqcb1.pkt_spec_enable, 1
     //SQCB2:
 
     phvwr       p.sqcb2.log_sq_size, d.qp.sq_depth_log2[4: 0]
@@ -494,6 +499,7 @@ qp_no_skip_dma_pt:
     phvwr.!c2   p.p4_to_p4plus.create_qp_ext.rq_dma_addr, d.{qp.rq_dma_addr}.dx
     phvwr.c2    p.p4_to_p4plus.create_qp_ext.rq_dma_addr, r7
     phvwr.c2    p.p4_to_p4plus.create_qp_ext.rq_cmb, 1
+    phvwr.c5    p.p4_to_p4plus.create_qp_ext.rq_spec, 1
     phvwr       p.p4_to_p4plus.create_qp_ext.qp_privileged, d.qp.privileged
     // Set log_pmtu for UD
     phvwr.!c3    p.p4_to_p4plus.create_qp_ext.log_pmtu, 12

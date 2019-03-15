@@ -3,7 +3,7 @@
 #include "defines.h"
 
 struct req_rx_phv_t p;
-struct rrqwqe_d_t d;
+struct rrqwqe_t d;
 struct req_rx_s1_t0_k k;
 
 #define RRQWQE_TO_SGE_P t0_s2s_rrqwqe_to_sge_info
@@ -39,6 +39,8 @@ struct req_rx_s1_t0_k k;
     .param    req_rx_rrqlkey_process
     .param    req_rx_sqcb1_write_back_process
     .param    req_rx_cqcb_process
+    .param    req_rx_rrqwqe_base_sge_process
+    .param    req_rx_rrqwqe_base_sge_opt_process
 
 .align
 req_rx_rrqwqe_process:
@@ -217,30 +219,7 @@ read_or_atomic:
     bcf            [c2], zero_length_read 
 
 read:
-    add            r3, d.read.wqe_sge_list_addr, K_CUR_SGE_ID, LOG_SIZEOF_SGE_T // Branch Delay Slot
-    seq            c5, CAPRI_KEY_FIELD(IN_TO_S_P, sge_opt), 1
-    CAPRI_NEXT_TABLE0_READ_PC_C(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, \
-                                req_rx_rrqsge_opt_process, \
-                                req_rx_rrqsge_process, r3, c5)
-
-    CAPRI_RESET_TABLE_0_ARG()
-    //phvwr CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, is_atomic), 0
-    phvwrpair CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, remaining_payload_bytes), K_REMAINING_PAYLOAD_BYTES, \
-              CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, cur_sge_id), K_CUR_SGE_ID
-    phvwr     CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, cur_sge_offset), K_CUR_SGE_OFFSET
-    sub            r3, d.num_sges, K_CUR_SGE_ID
-    phvwrpair CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, num_valid_sges), r3, \
-              CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, dma_cmd_start_index), K_DMA_CMD_START_INDEX
-
-    // Pass the relative pkt_psn for this read msg so that rrqsge_process can use to offset into
-    // sge
-    phvwr     CAPRI_PHV_FIELD(TO_S2_P, msg_psn), r1
-
-    // if read_resp contains already ack'ed msn, do not post CQ
-    // ideally this should happen only with read_resp_first. For read_resp_last
-    // or read_resp_only, msn should always be the un-acked msn
-    IS_ANY_FLAG_SET(c4, r5, (REQ_RX_FLAG_ONLY|REQ_RX_FLAG_LAST))
-    phvwr.!c4  CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, dma_cmd_eop), 1
+    IS_ANY_FLAG_SET(c5, r5, (REQ_RX_FLAG_ONLY|REQ_RX_FLAG_LAST)) // Branch Delay Slot
 
     // Just in case if there are more than 2 sges to be processed for this
     // phv, recirc path requires sge_list_addr, so populate it here as only
@@ -249,8 +228,32 @@ read:
 
     CAPRI_RESET_TABLE_2_ARG()
     phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), d.e_psn
-    phvwr.e   CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), d.msn
-    phvwr.c4  CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
+    phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), d.msn
+
+    seq            c2, CAPRI_KEY_FIELD(IN_TO_S_P, sge_opt), 1
+    j.c2           req_rx_rrqwqe_base_sge_opt_process
+    phvwr.c5  CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1 // Branch Delay Slot
+
+    IS_ANY_FLAG_SET(c2, r5, (REQ_RX_FLAG_ONLY|REQ_RX_FLAG_FIRST))
+    j.c2           req_rx_rrqwqe_base_sge_process
+
+    add            r3, d.read.wqe_sge_list_addr, K_CUR_SGE_ID, LOG_SIZEOF_SGE_T // Branch Delay Slot
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, \
+                                req_rx_rrqsge_process, r3)
+
+    CAPRI_RESET_TABLE_0_ARG()
+    //phvwr CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, is_atomic), 0
+    phvwrpair CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, remaining_payload_bytes), K_REMAINING_PAYLOAD_BYTES, \
+              CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, cur_sge_id), K_CUR_SGE_ID
+    phvwr     CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, cur_sge_offset), K_CUR_SGE_OFFSET
+    sub            r3, d.num_sges, K_CUR_SGE_ID
+    phvwrpair.e CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, num_valid_sges), r3, \
+                CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, dma_cmd_start_index), K_DMA_CMD_START_INDEX
+
+    // if read_resp contains already ack'ed msn, do not post CQ
+    // ideally this should happen only with read_resp_first. For read_resp_last
+    // or read_resp_only, msn should always be the un-acked msn
+    phvwr.!c5  CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, dma_cmd_eop), 1
 
 zero_length_read:
 
@@ -285,7 +288,7 @@ atomic:
     phvwrpair CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, is_atomic), 1, \
               CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, bubble_one_stage), 1
 
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqlkey_process, r3)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_rrqlkey_process, r3)
 
     // Hardcode table id 2 for write_back process
     // to keep it consistent with read process where

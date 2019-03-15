@@ -15,6 +15,7 @@ struct sqcb0_t d;
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit2, current_sge_offset_sbit27_ebit31)
 #define K_SQ_C_INDEX CAPRI_KEY_RANGE(IN_P, sq_c_index_sbit0_ebit2, sq_c_index_sbit11_ebit15)
 #define K_WQE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, wqe_addr_sbit0_ebit15, wqe_addr_sbit32_ebit63)
+#define K_OP_TYPE         CAPRI_KEY_FIELD(IN_P, op_type)
 
 %%
 
@@ -32,11 +33,27 @@ req_tx_bktrack_write_back_process:
      bbeq          CAPRI_KEY_FIELD(IN_P, drop_phv), 1, exit
      tblwr         d.busy, 0 // Branch Delay Slot
 
+     seq           c4, d.spec_enable, 1
+     bcf           [c4], skip_in_progress_update
+     tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress) //BD-Slot
      tblwr         d.num_sges, K_NUM_SGES
-     tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
-     tblwr         d.bktrack_in_progress, CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
      tblwr         d.current_sge_id, K_CURRENT_SGE_ID
      tblwr         d.current_sge_offset, K_CURRENT_SGE_OFFSET
+
+skip_in_progress_update:
+     tblwr         d.bktrack_in_progress, CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
+    
+     // Update read_req_adjust/msg_psn and spec_msg_psn.
+     tblwr         d.read_req_adjust, K_CURRENT_SGE_OFFSET
+     bbeq          CAPRI_KEY_FIELD(IN_P, in_progress), 0, skip_spec_psn_update
+     tblwr.c4      d.spec_msg_psn, K_CURRENT_SGE_OFFSET //BD-slot. Reset spec_msg_psn
+
+     // Decrement spec_msg_psn by 1. It will be incremented after bktrack during in-progress processing.
+     add           r1, K_CURRENT_SGE_OFFSET, r0
+     mincr         r1, 24, -1
+     tblwr.c4      d.spec_msg_psn, r1
+
+skip_spec_psn_update:
      tblwr         d.curr_wqe_ptr, K_WQE_ADDR
 
      seq           c2, CAPRI_KEY_FIELD(IN_P, bktrack_in_progress), 1

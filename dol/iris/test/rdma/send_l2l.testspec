@@ -70,6 +70,7 @@ descriptors:
             num_sges: 1
 
             send    :
+                len: ref://testcase/pvtdata/payloadsize
                
             sges:
                 - va  : ref://testcase/buffers/id=BUF/address

@@ -32,6 +32,8 @@ req_tx_bktrack_sqcb2_write_back_process:
      tblwr         d.imm_data, K_IMM_DATA
      tblwr         d.inv_key, K_INV_KEY
      tblwr         d.curr_op_type, K_OP_TYPE
+     seq           c5, K_OP_TYPE, OP_TYPE_READ
+     tblwr.!c5     d.sq_msg_psn, K_MSG_PSN
 
      // Revert LSN based on last received ACK's MSN and credits
      //DECODE_ACK_SYNDROME_CREDITS(r1, d.credits, c1)

@@ -130,6 +130,7 @@ descriptors:
 
             send    :
                 inv_key : ref://testcase/pvtdata/inv_r_key
+                len: 1088
                
             sges:
                 - va  : ref://testcase/buffers/id=BUF/address

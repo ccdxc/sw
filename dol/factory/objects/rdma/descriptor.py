@@ -21,7 +21,8 @@ class RdmaSqDescriptorBase(Packet):
         BitField("op_type", 0, 4),
         ByteField("num_sges_or_new_user_key", 0),
 
-        BitField("base_rsvd_flags", 0, 11),
+        BitField("wqe_format", 0, 4),
+        BitField("base_rsvd_flags", 0, 7),
         BitField("color", 0, 1),
         BitField("signalled_compl", 0, 1),
         BitField("inline_data_vld", 0, 1),
@@ -90,10 +91,11 @@ class RdmaSqDescriptorFrpmr(Packet):
 class RdmaRrqDescriptorBase(Packet):
     fields_desc = [
         BitField("read_resp_or_atomic", 0, 1),
-        BitField("num_sges", 0, 7),
+        BitField("rsvd", 0, 7),
+        ByteField("num_sges", 0),
         X3BytesField("psn", 0),
+        X3BytesField("e_psn", 0),
         X3BytesField("msn", 0),
-        ByteField("rsvd", 0),
     ]
 
 class RdmaRrqDescriptorRead(Packet):
@@ -109,8 +111,7 @@ class RdmaRrqDescriptorRead(Packet):
         IntField("rsvd6", 0),
         IntField("rsvd7", 0),
         IntField("rsvd8", 0),
-        IntField("rsvd9", 0),
-        IntField("rsvd10", 0),
+        BitField("base_sges", 0, 256),
     ]
 
 class RdmaRrqDescriptorAtomic(Packet):
@@ -128,10 +129,6 @@ class RdmaRrqDescriptorAtomic(Packet):
         IntField("rsvd6", 0),
         IntField("rsvd7", 0),
         IntField("rsvd8", 0),
-        IntField("rsvd9", 0),
-        IntField("rsvd10", 0),
-        IntField("rsvd11", 0),
-        IntField("rsvd12", 0),
     ]
 
 class RdmaRqDescriptorBase(Packet):
@@ -139,10 +136,12 @@ class RdmaRqDescriptorBase(Packet):
         LongField("wrid", 0),
         ByteField("rsvd0", 0),
         ByteField("num_sges", 0),
-        ShortField("rsvd1", 0),
-        IntField("rsvd2", 0),
-        LongField("rsvd3", 0),
+        BitField("wqe_format", 0, 4),
+        BitField("rsvd1", 0, 4),
+        ByteField("rsvd2", 0),
+        IntField("rsvd3", 0),
         LongField("rsvd4", 0),
+        LongField("rsvd5", 0),
     ]
 
 class RdmaRsqDescriptorBase(Packet):
@@ -173,6 +172,16 @@ class RdmaSge(Packet):
         LongField("va", 0),
         IntField("len", 0),
         IntField("l_key", 0),
+    ]
+
+class RdmaSgeLen8x4(Packet):
+    fields_desc = [
+        IntField("len", 0),
+    ]
+
+class RdmaSgeLen16x2(Packet):
+    fields_desc = [
+        ShortField("len", 0),
     ]
 
 class RdmaCqDescriptorRecv(Packet):
@@ -334,20 +343,29 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         if hasattr(self.spec.fields, 'wrid'):
             self.wrid = self.spec.fields.wrid
 
-    def Write(self):
+    def Write(self, spec_en):
         """
         Creates a Descriptor at "self.address"
         :return:
         """
+        logger.info("spec_en {0}".format(spec_en))
+
+        self.wqe_format = 0
+        if spec_en == True:
+            if hasattr(self.spec.fields, 'num_sges') and \
+               self.spec.fields.num_sges > 2:
+                self.wqe_format = 1
+
         inline_data_vld = self.spec.fields.inline_data_vld if hasattr(self.spec.fields, 'inline_data_vld') else 0
         num_sges = self.spec.fields.num_sges if hasattr(self.spec.fields, 'num_sges') else 0
         color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
         fence = self.spec.fields.fence if hasattr(self.spec.fields, 'fence') else 0
-        logger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d color: %d fence: %d" % 
-                       (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges, color, fence))
+        logger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d wqe_format: %d  color: %d fence: %d" %
+                       (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges, self.wqe_format, color, fence))
 
         base = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.wrid, 
                                     imm_data_or_key = 0, num_sges_or_new_user_key = 0, #to be filled in later
+                                    wqe_format=self.wqe_format,
                                     inline_data_vld = inline_data_vld, color=color, fence=fence)
         desc = base
 
@@ -380,9 +398,10 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            q_key = self.spec.fields.ud_send.q_key if hasattr(self.spec.fields.ud_send, 'q_key') else 0
            ah_handle = self.spec.fields.ud_send.ah_handle if hasattr(self.spec.fields.ud_send, 'ah_handle') else 0
            imm_data = self.spec.fields.ud_send.imm_data if hasattr(self.spec.fields.ud_send, 'imm_data') else 0
+           data_len = self.spec.fields.ud_send.len if hasattr(self.spec.fields.ud_send, 'len') else 0
            logger.info("UD Descriptor fields: dst_qp: %d q_key: 0x%x ah_handle: 0x%x imm_data: 0x%x" % \
                        (dst_qp, q_key, ah_handle, imm_data))
-           send = RdmaSqDescriptorSend(q_key=q_key, dst_qp=dst_qp, ah_handle=ah_handle, len=0)
+           send = RdmaSqDescriptorSend(q_key=q_key, dst_qp=dst_qp, ah_handle=ah_handle, len=data_len)
            desc = desc/send
 
         if hasattr(self.spec.fields, 'write'):
@@ -486,6 +505,32 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            logger.info("Inline Data: %s " % bytes(inline_data[0:inline_data_len]))
            desc = desc/bytes(inline_data)
         elif (num_sges and (num_sges > 0)):
+            if self.spec.fields.num_sges:
+                # write length encoding for non-default WQE format
+                if self.wqe_format > 0:
+
+                    if self.spec.fields.num_sges <= 8:
+
+                        for i in range(8):
+                            if (i >= self.spec.fields.num_sges):
+                                length = 0
+                            else:
+                                sge = self.spec.fields.sges[i]
+                                length = sge.len
+                            sge_len_entry = RdmaSgeLen8x4(len=length)
+                            desc = desc/sge_len_entry
+
+                    elif self.spec.fields.num_sges <= 16:
+
+                        for i in range(16):
+                            if (i >= self.spec.fields.num_sges):
+                                length = 0
+                            else:
+                                sge = self.spec.fields.sges[i]
+                                length = sge.len
+                            sge_len_entry = RdmaSgeLen16x2(len=length)
+                            desc = desc/sge_len_entry
+
             for sge in self.spec.fields.sges:
                 sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
                 logger.info("Read Sge[] = va: 0x%x len: %d l_key: %d" % 
@@ -520,6 +565,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
 
         logger.ShowScapyObject(desc)
         self.wrid = desc.wrid
+        self.wqe_format = desc.wqe_format
         self.op_type = desc.op_type
         if (self.op_type < 8):
             self.num_sges = desc.num_sges_or_new_user_key
@@ -528,7 +574,6 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         self.fence   = desc.fence
         logger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d op_type: %d fence: %d" % 
                        (self.address, self.wrid, self.num_sges, self.op_type, self.fence))
-        self.sges = []
         if self.mem_handle:
             mem_handle.va += 32
             #for atomic descriptor, skip 16 bytes to access SGE
@@ -538,6 +583,41 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
             hbm_addr += 32
             if self.op_type in [6, 7]:
                 hbm_addr += 16
+
+        if self.wqe_format > 0:
+
+            self.sge_len = []
+            if self.spec.fields.num_sges <= 8:
+
+                for i in range(8):
+                    if self.mem_handle:
+                        self.sge_len.append(RdmaSgeLen8x4(resmgr.HostMemoryAllocator.read(mem_handle, 4)))
+                    else:
+                        self.sge_len.append(RdmaSgeLen8x4(model_wrap.read_mem(hbm_addr, 4)))
+
+                    if self.mem_handle:
+                        mem_handle.va += 4
+                    else:
+                        hbm_addr += 4
+
+            elif self.spec.fields.num_sges <= 16:
+
+                for i in range(16):
+                    if self.mem_handle:
+                        self.sge_len.append(RdmaSgeLen16x2(resmgr.HostMemoryAllocator.read(mem_handle, 2)))
+                    else:
+                        self.sge_len.append(RdmaSgeLen16x2(model_wrap.read_mem(hbm_addr, 2)))
+
+                    if self.mem_handle:
+                        mem_handle.va += 2
+                    else:
+                        hbm_addr += 2
+
+            for sge in self.sge_len:
+                logger.info('%s' % type(sge))
+                logger.info('len: 0x%x' % sge.len)
+
+        self.sges = []
 
         for i in range(self.num_sges):
             
@@ -610,22 +690,59 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         if hasattr(self.spec.fields, 'wrid'):
             self.wrid = self.spec.fields.wrid
 
-    def Write(self):
+    def Write(self, spec_en):
         """
         Creates a Descriptor at "self.address"
         :return:
         """
+        logger.info("spec_en {0}".format(spec_en))
+
+        self.wqe_format = 0
+        if spec_en == True:
+            if self.spec.fields.num_sges and \
+               self.spec.fields.num_sges > 2:
+
+                if self.spec.fields.num_sges <= 8:
+                    self.wqe_format = 1
+                elif self.spec.fields.num_sges <= 16:
+                    self.wqe_format = 2
+
         if self.mem_handle:
-            logger.info("Writing RQ Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d" % 
-                       (self.mem_handle.va, self.mem_handle.pa, self.wrid, self.spec.fields.num_sges))
+            logger.info("Writing RQ Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d wqe_format: %d" % 
+                       (self.mem_handle.va, self.mem_handle.pa, self.wrid, self.spec.fields.num_sges, self.wqe_format))
         else:
-            logger.info("Writing RQ Descriptor @(address:0x%x) = wrid: 0x%x num_sges: %d" % 
-                       (self.address, self.wrid, self.spec.fields.num_sges))
+            logger.info("Writing RQ Descriptor @(address:0x%x) = wrid: 0x%x num_sges: %d wqe_format: %d" % 
+                       (self.address, self.wrid, self.spec.fields.num_sges, self.wqe_format))
 
         desc = RdmaRqDescriptorBase(wrid=self.wrid,
-                                    num_sges=self.spec.fields.num_sges)
+                                    num_sges=self.spec.fields.num_sges, 
+                                    wqe_format=self.wqe_format)
 
         if self.spec.fields.num_sges:
+            # write length encoding for non-default WQE format
+
+            if self.wqe_format == 1:
+
+                for i in range(8):
+                    if (i >= self.spec.fields.num_sges):
+                        length = 0
+                    else:
+                        sge = self.spec.fields.sges[i]
+                        length = sge.len
+                    sge_len_entry = RdmaSgeLen8x4(len=length)
+                    desc = desc/sge_len_entry
+
+            elif self.wqe_format == 2:
+
+                for i in range(16):
+                    if (i >= self.spec.fields.num_sges):
+                        length = 0
+                    else:
+                        sge = self.spec.fields.sges[i]
+                        length = sge.len
+                    sge_len_entry = RdmaSgeLen16x2(len=length)
+                    desc = desc/sge_len_entry
+
             for sge in self.spec.fields.sges:
                 logger.info("sge: va: 0x%x len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))
                 sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
@@ -660,15 +777,48 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
 
         logger.ShowScapyObject(desc)
         self.wrid = desc.wrid
+        self.wqe_format = desc.wqe_format
         self.num_sges = desc.num_sges
-        logger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d" % 
-                       (self.address, self.wrid, self.num_sges))
+        logger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d wqe_format: %d" % 
+                       (self.address, self.wrid, self.num_sges, self.wqe_format))
 
-        self.sges = []
         if self.mem_handle:
             mem_handle.va += 32
         else:
             hbm_addr += 32
+
+        self.sge_len = []
+        if self.wqe_format == 1:
+
+            for i in range(8):
+                if self.mem_handle:
+                    self.sge_len.append(RdmaSgeLen8x4(resmgr.HostMemoryAllocator.read(mem_handle, 4)))
+                else:
+                    self.sge_len.append(RdmaSgeLen8x4(model_wrap.read_mem(hbm_addr, 4)))
+
+                if self.mem_handle:
+                    mem_handle.va += 4
+                else:
+                    hbm_addr += 4
+
+        elif self.wqe_format == 2:
+
+            for i in range(16):
+                if self.mem_handle:
+                    self.sge_len.append(RdmaSgeLen16x2(resmgr.HostMemoryAllocator.read(mem_handle, 2)))
+                else:
+                    self.sge_len.append(RdmaSgeLen16x2(model_wrap.read_mem(hbm_addr, 2)))
+
+                if self.mem_handle:
+                    mem_handle.va += 2
+                else:
+                    hbm_addr += 2
+
+        for sge in self.sge_len:
+            logger.info('%s' % type(sge))
+            logger.info('len: 0x%x' % sge.len)
+
+        self.sges = []
 
         for i in range(self.num_sges):
             
