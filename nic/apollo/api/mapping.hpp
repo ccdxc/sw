@@ -52,6 +52,15 @@ public:
     static mapping_entry *build(pds_mapping_key_t *key);
 
     /**
+     * @brief    free a stateless entry's temporary s/w only resources like
+     *           memory etc., for a stateless entry calling destroy() will
+     *           remove resources from h/w, which can't be done during ADD/UPD
+     *           etc. operations esp. when object is constructed on the fly
+     *  @param[in] mapping     mapping to be freed
+     */
+    static void soft_delete(mapping_entry *mapping);
+
+    /**
      * @brief     initialize mapping entry with the given config
      * @param[in] api_ctxt API context carrying the configuration
      * @return    SDK_RET_OK on success, failure status code on error

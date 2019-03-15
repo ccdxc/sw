@@ -63,6 +63,14 @@ public:
     /// \param[in] args Args (not interpreted by this class)
     static impl_base *build(impl_obj_id_t obj_id, void *args);
 
+    /// \brief    free a stateless entry's temporary s/w only resources like
+    ///           memory etc., for a stateless entry calling destroy() will
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
+    /// \param[in] obj_id    object identifier
+    /// \param[in] impl      api object being freed
+    static void soft_delete(impl_obj_id_t obj_id, impl_base *impl);
+
     /// \brief Allocate/reserve h/w resources for this object
     ///
     /// \param[in] orig_obj Old version of the unmodified object

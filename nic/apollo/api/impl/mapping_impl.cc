@@ -32,40 +32,18 @@ namespace impl {
 /// \ingroup PDS_MAPPING
 /// @{
 
-mapping_impl *
-mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
-    mapping_impl    *impl;
-    device_entry    *device;
-
-    // TODO: move to slab later
-    impl = (mapping_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MAPPING_IMPL,
-                                      sizeof(mapping_impl));
-    new (impl) mapping_impl();
-    device = device_db()->find();
-    if (device->ip_addr() == pds_mapping->tep.ip_addr) {
-        impl->is_local_ = true;
-    }
-    return impl;
-}
-
-void
-mapping_impl::destroy(mapping_impl *impl) {
-    impl->~mapping_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_MAPPING_IMPL, impl);
-}
-
-mapping_impl *
-mapping_impl::build(pds_mapping_key_t *key) {
-    return NULL;
-}
-
 // TODO: IP address type (i.e., v4 or v6 bit) is not part of the key
-#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(key, vnic_hw_id, ip)            \
+#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(key, vnic_hw_id, ip, rev)       \
 {                                                                            \
     (key)->vnic_metadata_local_vnic_tag = vnic_hw_id;                        \
     if ((ip)->af == IP_AF_IPV6) {                                            \
-        sdk::lib::memrev((key)->control_metadata_mapping_lkp_addr,           \
-                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
+        if (rev) {                                                           \
+            sdk::lib::memrev((key)->control_metadata_mapping_lkp_addr,       \
+                             (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);       \
+        } else {                                                             \
+            memcpy((key)->control_metadata_mapping_lkp_addr,                 \
+                   (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);                 \
+        }                                                                    \
     } else {                                                                 \
         memcpy((key)->control_metadata_mapping_lkp_addr,                     \
                (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);                     \
@@ -82,12 +60,17 @@ mapping_impl::build(pds_mapping_key_t *key) {
 }
 
 // TODO: IP address type (i.e., v4 or v6 bit) is not part of the key
-#define PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(key, vcn_hw_id, ip)       \
+#define PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(key, vcn_hw_id, ip, rev)  \
 {                                                                            \
     (key)->txdma_to_p4e_header_vcn_id = vcn_hw_id;                           \
     if ((ip)->af == IP_AF_IPV6) {                                            \
-        sdk::lib::memrev((key)->p4e_apollo_i2e_dst,                          \
-                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
+        if (rev) {                                                           \
+            sdk::lib::memrev((key)->p4e_apollo_i2e_dst,                      \
+                             (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);       \
+        } else {                                                             \
+            memcpy((key)->p4e_apollo_i2e_dst, (ip)->addr.v6_addr.addr8,      \
+                   IP6_ADDR8_LEN);                                           \
+        }                                                                    \
     } else {                                                                 \
         memcpy((key)->p4e_apollo_i2e_dst,                                    \
                (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);                     \
@@ -105,6 +88,18 @@ mapping_impl::build(pds_mapping_key_t *key) {
     }                                                                        \
 }
 
+#define PDS_IMPL_FILL_NAT_DATA(data, ip)                                     \
+{                                                                            \
+    (data)->action_id = NAT_NAT_ID;                                          \
+    if ((ip)->af == IP_AF_IPV6) {                                            \
+        sdk::lib::memrev((data)->nat_action.nat_ip,                          \
+                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
+    } else {                                                                 \
+        memcpy((data)->nat_action.nat_ip, (ip)->addr.v6_addr.addr8,          \
+               IP6_ADDR8_LEN);                                               \
+    }                                                                        \
+}
+
 #define PDS_IMPL_FILL_TABLE_API_PARAMS(api_params, key_, data, action, hdl)  \
 {                                                                            \
     memset((api_params), 0, sizeof(*(api_params)));                          \
@@ -112,6 +107,211 @@ mapping_impl::build(pds_mapping_key_t *key) {
     (api_params)->appdata = (data);                                          \
     (api_params)->action_id = (action);                                      \
     (api_params)->handle = (hdl);                                            \
+}
+
+#define nat_action                action_u.nat_nat
+#define nh_tx_action              action_u.nexthop_tx_nexthop_info
+#define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
+#define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
+#define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
+#define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
+#define nh_tx_action              action_u.nexthop_tx_nexthop_info
+
+mapping_impl *
+mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
+    mapping_impl    *impl;
+    device_entry    *device;
+
+    // TODO: move to slab later
+    impl = (mapping_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MAPPING_IMPL,
+                                      sizeof(mapping_impl));
+    new (impl) mapping_impl();
+    device = device_db()->find();
+    if (device->ip_addr() == pds_mapping->tep.ip_addr) {
+        impl->is_local_ = true;
+    }
+    return impl;
+}
+
+void
+mapping_impl::soft_delete(mapping_impl *impl) {
+    impl->~mapping_impl();
+    SDK_FREE(SDK_MEM_ALLOC_PDS_MAPPING_IMPL, impl);
+}
+
+void
+mapping_impl::destroy(mapping_impl *impl) {
+    mapping_impl::soft_delete(impl);
+}
+
+mapping_impl *
+mapping_impl::build(pds_mapping_key_t *key) {
+    sdk_ret_t                             ret;
+    device_entry                          *device;
+    vcn_entry                             *vcn;
+    mapping_impl                          *impl;
+    uint16_t                              vnic_hw_id;
+    bool                                  local_mapping = false;
+    sdk_table_api_params_t                api_params;
+    remote_vnic_mapping_tx_swkey_t        remote_vnic_mapping_tx_key;
+    remote_vnic_mapping_tx_appdata_t      remote_vnic_mapping_tx_data;
+    remote_vnic_mapping_rx_swkey_t        remote_vnic_mapping_rx_key;
+    remote_vnic_mapping_rx_appdata_t      remote_vnic_mapping_rx_data;
+    local_ip_mapping_swkey_t              local_ip_mapping_key;
+    local_ip_mapping_appdata_t            local_ip_mapping_data;
+    local_vnic_by_slot_rx_swkey_t         local_vnic_by_slot_rx_key;
+    local_vnic_by_slot_rx_actiondata_t    local_vnic_by_slot_rx_data;
+    nexthop_tx_actiondata_t               nh_tx_data;
+    tep_tx_actiondata_t                   tep_tx_data;
+    nat_actiondata_t                      nat_data;
+    sdk_table_handle_t                    remote_vnic_tx_hdl;
+
+    device = device_db()->find();
+    vcn = vcn_db()->find(&key->vcn);
+    if (unlikely(vcn == NULL)) {
+        return NULL;
+    }
+
+    // TODO: move to slab later
+    impl = (mapping_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MAPPING_IMPL,
+                                      sizeof(mapping_impl));
+    if (unlikely(impl == NULL)) {
+        return NULL;
+    }
+    new (impl) mapping_impl();
+
+    PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
+                                               vcn->hw_id(), &key->ip_addr,
+                                               true);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &remote_vnic_mapping_tx_key,
+                                   &remote_vnic_mapping_tx_data,
+                                   REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID,
+                                   SDK_TABLE_HANDLE_INVALID);
+    ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->get(&api_params);
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto error;
+    }
+    remote_vnic_tx_hdl = api_params.handle;
+
+    ret = tep_impl_db()->nh_tx_tbl()->retrieve(
+              remote_vnic_mapping_tx_data.nexthop_index, &nh_tx_data);
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto error;
+    }
+    ret = tep_impl_db()->tep_tx_tbl()->retrieve(
+              nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index,
+              &tep_tx_data);
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto error;
+    }
+
+    if (tep_tx_data.action_id == TEP_TX_MPLS_UDP_TEP_TX_ID) {
+        if (tep_tx_data.tep_tx_mpls_udp_action.dipo == device->ip_addr()) {
+            local_mapping = true;
+        }
+    } else if (tep_tx_data.action_id == TEP_TX_VXLAN_TEP_TX_ID) {
+        if (tep_tx_data.tep_tx_vxlan_action.dipo == device->ip_addr()) {
+            local_mapping = true;
+        }
+    }
+
+    if (local_mapping == false) {
+        if (tep_tx_data.action_id == TEP_TX_MPLS_UDP_TEP_TX_ID) {
+            remote_vnic_mapping_rx_key.vnic_metadata_src_slot_id =
+                remote_vnic_mapping_tx_data.dst_slot_id;
+            remote_vnic_mapping_rx_key.ipv4_1_srcAddr =
+                tep_tx_data.tep_tx_mpls_udp_action.dipo;
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params,
+                &remote_vnic_mapping_rx_key, &remote_vnic_mapping_rx_data,
+                REMOTE_VNIC_MAPPING_RX_REMOTE_VNIC_MAPPING_RX_INFO_ID,
+                SDK_TABLE_HANDLE_INVALID);
+            ret = mapping_impl_db()->remote_vnic_mapping_rx_tbl()->get(&api_params);
+            if (ret != SDK_RET_OK) {
+                goto error;
+            }
+            impl->remote_vnic_rx_hdl_ = api_params.handle;
+        }
+        impl->remote_vnic_tx_hdl_ = remote_vnic_tx_hdl;
+        return impl;
+    }
+
+    // for local mappings, we have to look at more tables
+    impl->is_local_ = true;
+    impl->overlay_ip_remote_vnic_tx_hdl_ = remote_vnic_tx_hdl;
+    if (tep_tx_data.action_id == TEP_TX_MPLS_UDP_TEP_TX_ID) {
+        local_vnic_by_slot_rx_key.mpls_dst_label =
+            remote_vnic_mapping_tx_data.dst_slot_id;
+        local_vnic_by_slot_rx_key.vxlan_1_vni = 0;
+    } else if (tep_tx_data.action_id == TEP_TX_VXLAN_TEP_TX_ID) {
+        local_vnic_by_slot_rx_key.mpls_dst_label = 0;
+        local_vnic_by_slot_rx_key.vxlan_1_vni =
+            remote_vnic_mapping_tx_data.dst_slot_id;
+    }
+    //ret =
+    //vnic_impl_db()->local_vnic_by_slot_rx_tbl()->retrieve(&local_vnic_by_slot_rx_key,
+    //                                                      &local_vnic_by_slot_rx_data);
+    //if (ret != SDK_RET_OK) {
+        //goto error;
+    //}
+    vnic_hw_id =
+        local_vnic_by_slot_rx_data.action_u.local_vnic_by_slot_rx_local_vnic_info_rx.vcn_id;
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key, vnic_hw_id,
+                                         &key->ip_addr, true);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
+                                   &local_ip_mapping_data,
+                                   LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID,
+                                   SDK_TABLE_HANDLE_INVALID);
+    ret = mapping_impl_db()->local_ip_mapping_tbl()->get(&api_params);
+    if (ret != SDK_RET_OK) {
+        goto error;
+    }
+    impl->overlay_ip_hdl_ = api_params.handle;
+    if (local_ip_mapping_data.xlate_index != NAT_TX_TBL_RSVD_ENTRY_IDX) {
+        // we have public IP for this mapping
+        impl->overlay_ip_to_public_ip_nat_hdl_ =
+            local_ip_mapping_data.xlate_index;
+        ret = mapping_impl_db()->nat_tbl()->retrieve(local_ip_mapping_data.xlate_index,
+                                                     &nat_data);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
+        local_ip_mapping_key.vnic_metadata_local_vnic_tag = vnic_hw_id;
+        memcpy(local_ip_mapping_key.control_metadata_mapping_lkp_addr,
+               nat_data.nat_action.nat_ip, IP6_ADDR8_LEN);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
+                                       &local_ip_mapping_data,
+                                       LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID,
+                                       SDK_TABLE_HANDLE_INVALID);
+        ret = mapping_impl_db()->local_ip_mapping_tbl()->get(&api_params);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
+        impl->public_ip_hdl_ = api_params.handle;
+        impl->public_ip_to_overlay_ip_nat_hdl_ =
+            local_ip_mapping_data.xlate_index;
+
+        remote_vnic_mapping_tx_key.txdma_to_p4e_header_vcn_id = vcn->hw_id();
+        memcpy(remote_vnic_mapping_tx_key.p4e_apollo_i2e_dst,
+               nat_data.nat_action.nat_ip, IP6_ADDR8_LEN);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &remote_vnic_mapping_tx_key,
+                                       &remote_vnic_mapping_tx_data,
+                                       REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID,
+                                       SDK_TABLE_HANDLE_INVALID);
+        ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->get(&api_params);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto error;
+        }
+        impl->public_ip_remote_vnic_tx_hdl_ = api_params.handle;
+    }
+    return impl;
+
+error:
+
+    if (impl) {
+        impl->~mapping_impl();
+        SDK_FREE(SDK_MEM_ALLOC_PDS_MAPPING_IMPL, impl);
+    }
+    return NULL;
 }
 
 sdk_ret_t
@@ -130,7 +330,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     // reserve an entry in LOCAL_IP_MAPPING table for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vnic_impl_obj->hw_id(),
-                                         &spec->key.ip_addr);
+                                         &spec->key.ip_addr, true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_ip_mapping_key,
                                    NULL, 0, SDK_TABLE_HANDLE_INVALID);
     ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&tparams);
@@ -145,7 +345,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     // reserve an entry in REMOTE_VNIC_MAPPING_TX for overlay IP
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vcn->hw_id(),
-                                               &spec->key.ip_addr);
+                                               &spec->key.ip_addr, true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &remote_vnic_mapping_tx_key,
                                    NULL, 0, SDK_TABLE_HANDLE_INVALID);
     ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->reserve(&tparams);
@@ -169,7 +369,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     // reserve an entry in LOCAL_IP_MAPPING table for public IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vnic_impl_obj->hw_id(),
-                                         &spec->public_ip);
+                                         &spec->public_ip, true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_ip_mapping_key,
                                    NULL, 0, SDK_TABLE_HANDLE_INVALID);
     ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&tparams);
@@ -183,7 +383,8 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
 
     // reserve an entry in REMOTE_VNIC_MAPPING_TX for public IP
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
-                                               vcn->hw_id(), &spec->public_ip);
+                                               vcn->hw_id(), &spec->public_ip,
+                                               true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &remote_vnic_mapping_tx_key,
                                    NULL, 0, SDK_TABLE_HANDLE_INVALID);
     ret =
@@ -238,7 +439,7 @@ mapping_impl::reserve_remote_ip_mapping_resources_(api_base *api_obj,
     // reserve an entry in REMOTE_VNIC_MAPPING_TX table
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vcn->hw_id(),
-                                               &spec->key.ip_addr);
+                                               &spec->key.ip_addr, true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &remote_vnic_mapping_tx_key,
                                    NULL, 0, SDK_TABLE_HANDLE_INVALID);
     ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->reserve(&tparams);
@@ -302,7 +503,48 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 mapping_impl::nuke_resources(api_base *api_obj) {
-    return sdk::SDK_RET_INVALID_OP;
+    sdk_table_api_params_t    api_params = { 0 };
+
+    if (is_local_) {
+        if (overlay_ip_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+            api_params.handle = overlay_ip_hdl_;
+            mapping_impl_db()->local_ip_mapping_tbl()->remove(&api_params);
+        }
+        if (overlay_ip_remote_vnic_tx_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+            api_params.handle = overlay_ip_remote_vnic_tx_hdl_;
+            mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
+        }
+        if (public_ip_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+            api_params.handle = public_ip_hdl_;
+            mapping_impl_db()->local_ip_mapping_tbl()->remove(&api_params);
+        }
+        if (public_ip_remote_vnic_tx_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+            api_params.handle = public_ip_remote_vnic_tx_hdl_;
+            mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
+        }
+
+        // TODO: change the api calls here once DM APIs are standardized
+        if (overlay_ip_to_public_ip_nat_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+            //api_params.handle = overlay_ip_to_public_ip_nat_hdl_;
+            //mapping_impl_db()->nat_tbl()->release(&api_params);
+            mapping_impl_db()->nat_tbl()->remove((uint32_t)overlay_ip_to_public_ip_nat_hdl_);
+        }
+        if (public_ip_to_overlay_ip_nat_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+            //api_params.handle = public_ip_to_overlay_ip_nat_hdl_;
+            //mapping_impl_db()->nat_tbl()->release(&api_params);
+            mapping_impl_db()->nat_tbl()->remove((uint32_t)public_ip_to_overlay_ip_nat_hdl_);
+        }
+    } else {
+        if (remote_vnic_tx_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+            api_params.handle = remote_vnic_tx_hdl_;
+            mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
+        }
+        if (remote_vnic_rx_hdl_ != SDK_TABLE_HANDLE_INVALID) {
+            api_params.handle = remote_vnic_rx_hdl_;
+            mapping_impl_db()->remote_vnic_mapping_rx_tbl()->remove(&api_params);
+        }
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -376,7 +618,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
         (tep_impl *)tep_db()->find(&spec->tep)->impl();
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vcn->hw_id(),
-                                               &spec->key.ip_addr);
+                                               &spec->key.ip_addr, true);
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_APPDATA(&remote_vnic_mapping_tx_data,
                                                  tep_impl_obj->nh_id(),
                                                  &spec->fabric_encap);
@@ -402,7 +644,8 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
     }
 
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
-                                               vcn->hw_id(), &spec->public_ip);
+                                               vcn->hw_id(), &spec->public_ip,
+                                               true);
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_APPDATA(&remote_vnic_mapping_tx_data,
                                                  tep_impl_obj->nh_id(),
                                                  &spec->fabric_encap);
@@ -424,7 +667,6 @@ error:
     return ret;
 }
 
-#define nat_action    action_u.nat_nat
 sdk_ret_t
 mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
     sdk_ret_t           ret;
@@ -433,10 +675,7 @@ mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
     // allocate NAT table entries
     if (spec->public_ip_valid) {
         // add private to public IP xlation NAT entry
-        nat_data.action_id = NAT_NAT_ID;
-        memcpy(nat_data.nat_action.nat_ip,
-               spec->public_ip.addr.v6_addr.addr8,
-               IP6_ADDR8_LEN);
+        PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->public_ip);
         ret =
             mapping_impl_db()->nat_tbl()->insert_atid(&nat_data,
                                                       overlay_ip_to_public_ip_nat_hdl_);
@@ -445,9 +684,7 @@ mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
         }
 
         // add public to private IP xlation NAT entry
-        memcpy(nat_data.nat_action.nat_ip,
-               spec->key.ip_addr.addr.v6_addr.addr8,
-               IP6_ADDR8_LEN);
+        PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->key.ip_addr);
         ret =
             mapping_impl_db()->nat_tbl()->insert_atid(&nat_data,
                                                       public_ip_to_overlay_ip_nat_hdl_);
@@ -465,9 +702,9 @@ error:
 sdk_ret_t
 mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
                                             pds_mapping_spec_t *spec) {
-    sdk_ret_t                          ret;
-    vnic_impl                          *vnic_impl_obj;
-    local_ip_mapping_swkey_t           local_ip_mapping_key = { 0 };
+    sdk_ret_t                           ret;
+    vnic_impl                           *vnic_impl_obj;
+    local_ip_mapping_swkey_t            local_ip_mapping_key = { 0 };
     local_ip_mapping_appdata_t          local_ip_mapping_data = { 0 };
     remote_vnic_mapping_tx_swkey_t      remote_vnic_mapping_tx_key = { 0 };
     remote_vnic_mapping_tx_appdata_t    remote_vnic_mapping_tx_data = { 0 };
@@ -478,7 +715,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
         (vnic_impl *)vnic_db()->vnic_find(&spec->vnic)->impl();
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vnic_impl_obj->hw_id(),
-                                         &spec->key.ip_addr);
+                                         &spec->key.ip_addr, true);
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data, vcn->hw_id(),
                                            overlay_ip_to_public_ip_nat_hdl_,
                                            IP_TYPE_OVERLAY);
@@ -495,7 +732,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
     if (spec->public_ip_valid) {
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                              vnic_impl_obj->hw_id(),
-                                             &spec->public_ip);
+                                             &spec->public_ip, true);
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data,
                                                vcn->hw_id(),
                                                public_ip_to_overlay_ip_nat_hdl_,
@@ -510,8 +747,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
             goto error;
         }
     }
-
-    // TODO: add entry to REMOTE_VNIC_MAPPING_TX table for overlay IP
+    // add entry to REMOTE_VNIC_MAPPING_TX table for overlay & public IPs
     add_remote_vnic_mapping_tx_entries_(vcn, spec);
 
     return SDK_RET_OK;
@@ -620,9 +856,6 @@ mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return sdk::SDK_RET_INVALID_OP;
 }
 
-#define nh_tx_action              action_u.nexthop_tx_nexthop_info
-#define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
-#define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
 void
 mapping_impl::fill_mapping_spec_(
     remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx_data,
@@ -656,7 +889,7 @@ mapping_impl::read_local_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec) {
         vnic_impl_obj->hw_id();
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vnic_impl_obj->hw_id(),
-                                         &spec->key.ip_addr);
+                                         &spec->key.ip_addr, true);
 
     // prepare the api parameters to read the LOCAL_IP_MAPPING table
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_ip_mapping_key,
@@ -682,16 +915,16 @@ mapping_impl::read_remote_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     remote_vnic_mapping_tx_swkey_t      remote_vnic_mapping_tx_key;
     remote_vnic_mapping_tx_appdata_t    remote_vnic_mapping_tx_data;
-    nexthop_tx_actiondata_t             nh_tx_data = { 0 };
-    tep_tx_actiondata_t                 tep_tx_data = { 0 };
-    remote_vnic_mapping_rx_swkey_t      remote_vnic_mapping_rx_key = { 0 };
-    remote_vnic_mapping_rx_appdata_t    remote_vnic_mapping_rx_data = { 0 };
-    sdk_table_api_params_t              tparams = { 0 };
+    nexthop_tx_actiondata_t             nh_tx_data;
+    tep_tx_actiondata_t                 tep_tx_data;
+    remote_vnic_mapping_rx_swkey_t      remote_vnic_mapping_rx_key;
+    remote_vnic_mapping_rx_appdata_t    remote_vnic_mapping_rx_data;
+    sdk_table_api_params_t              tparams;
     uint32_t                            nh_index, tep_index;
 
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
-                                               vcn->hw_id(),
-                                               &spec->key.ip_addr);
+                                               vcn->hw_id(), &spec->key.ip_addr,
+                                               true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &remote_vnic_mapping_tx_key,
                                    &remote_vnic_mapping_tx_data,
                                    REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID,

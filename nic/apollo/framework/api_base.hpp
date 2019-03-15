@@ -41,6 +41,14 @@ public:
     //  updates or deletes on stateless objects
     static api_base *build(api_ctxt_t *api_ctxt);
 
+    /// \brief    free a stateless entry's temporary s/w only resources like
+    ///           memory etc., for a stateless entry calling destroy() will
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
+    /// \param[in] obj_id     object identifier
+    /// \param[in] api_obj    api object being freed
+    static void soft_delete(obj_id_t obj_id, api_base *api_obj);
+
     /// \brief Initiaize the api object with given config
     /// \param[in] api_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error

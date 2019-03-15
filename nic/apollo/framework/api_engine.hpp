@@ -54,6 +54,7 @@ typedef enum api_batch_stage_e {
 typedef struct obj_ctxt_s obj_ctxt_t;
 struct obj_ctxt_s {
     api_op_t      api_op;         ///< De-duped/compressed API opcode
+    obj_id_t      obj_id;         ///< Object identifier
     api_params_t  *api_params;    ///< API specific parameters
     api_base      *cloned_obj;    ///< Cloned object, for UPD processing
     void          *cb_ctxt;       ///< Object handlers can save & free state
@@ -65,16 +66,18 @@ struct obj_ctxt_s {
 
     obj_ctxt_s() {
         api_op = API_OP_INVALID;
+        obj_id = OBJ_ID_NONE;
         api_params = NULL;
         cloned_obj = NULL;
         cb_ctxt = NULL;
     }
 
     bool operator==(const obj_ctxt_s& rhs) const {
-        if (this->api_op == rhs.api_op &&
-            this->api_params == rhs.api_params &&
-            this->cloned_obj == rhs.cloned_obj &&
-            this->cb_ctxt == rhs.cb_ctxt) {
+        if ((this->api_op == rhs.api_op) &&
+            (this->obj_id == rhs.obj_id) &&
+            (this->api_params == rhs.api_params) &&
+            (this->cloned_obj == rhs.cloned_obj) &&
+            (this->cb_ctxt == rhs.cb_ctxt)) {
             return true;
         }
         return false;

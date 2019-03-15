@@ -58,6 +58,15 @@ public:
     static mapping_impl *build(pds_mapping_key_t *key);
 
     /**
+     * @brief    free a stateless entry's temporary s/w only resources like
+     *           memory etc., for a stateless entry calling destroy() will
+     *           remove resources from h/w, which can't be done during ADD/UPD
+     *           etc. operations esp. when object is constructed on the fly
+     *  @param[in] impl        mapping to be freed
+     */
+    static void soft_delete(mapping_impl *impl);
+
+    /**
      * @brief    allocate/reserve h/w resources for this object
      * @param[in] orig_obj    old version of the unmodified object
      * @param[in] obj_ctxt    transient state associated with this API

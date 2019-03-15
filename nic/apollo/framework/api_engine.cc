@@ -56,6 +56,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
                           api_obj, api_ctxt->api_op, api_ctxt->obj_id);
         // add it to dirty object list
         obj_ctxt.api_op = API_OP_CREATE;
+        obj_ctxt.obj_id = api_ctxt->obj_id;
         obj_ctxt.api_params = api_ctxt->api_params;
         add_to_dirty_list_(api_obj, obj_ctxt);
         // initialize the object with the given config
@@ -107,7 +108,14 @@ api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
     obj_ctxt_t    obj_ctxt;
     api_base      *api_obj;
 
-    api_obj = api_base::find_obj(api_ctxt);
+    if (api_base::stateless(api_ctxt->obj_id)) {
+        // TODO: we have to look at framework's internal DB for these stateless
+        //       objects, otherwise if same object is being operated on
+        //       in same batch, we can't de-dup operations
+        api_obj = api_base::build(api_ctxt);
+    } else {
+        api_obj = api_base::find_obj(api_ctxt);
+    }
     if (api_obj) {
         if (api_obj->in_dirty_list()) {
             // note that we could have cloned_obj as non-NULL in this case
@@ -120,6 +128,7 @@ api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
         } else {
             // add the object to dirty list
             obj_ctxt.api_op = API_OP_DELETE;
+            obj_ctxt.obj_id = api_ctxt->obj_id;
             add_to_dirty_list_(api_obj, obj_ctxt);
         }
     } else {
@@ -155,6 +164,7 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
             }
         } else {
             obj_ctxt.api_op = API_OP_UPDATE;
+            obj_ctxt.obj_id = api_ctxt->obj_id;
             obj_ctxt.cloned_obj = api_obj->clone(api_ctxt);
             obj_ctxt.api_params = api_ctxt->api_params;
             add_to_dirty_list_(api_obj, obj_ctxt);
@@ -380,8 +390,9 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         obj_ctxt->hw_dirty = 0;
         if (api_obj->stateless()) {
             // destroy this object as it is not needed anymore
-            PDS_TRACE_VERBOSE("delay deleting %p", api_obj);
-            api_obj->delay_delete();
+            PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
+                              api_obj->key2str().c_str());
+            api_base::soft_delete(obj_ctxt->obj_id, api_obj);
         }
         break;
 
@@ -419,9 +430,13 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // cloned_obj when update_db() was called on cloned_obj above
         if (api_obj->stateless()) {
             // destroy cloned object as it is not needed anymore
-            obj_ctxt->cloned_obj->delay_delete();
+            if (obj_ctxt->cloned_obj->stateless()) {
+                api_base::soft_delete(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
+                PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
+                                  api_obj->key2str().c_str());
+            }
         }
-        api_obj->delay_delete();
+        api_base::soft_delete(obj_ctxt->obj_id, api_obj);
         break;
 
     default:

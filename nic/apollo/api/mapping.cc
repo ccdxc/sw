@@ -72,6 +72,15 @@ mapping_entry::build(pds_mapping_key_t *key) {
     return mapping;
 }
 
+void
+mapping_entry::soft_delete(mapping_entry *mapping) {
+    if (mapping->impl_) {
+        impl_base::soft_delete(impl::IMPL_OBJ_ID_MAPPING, mapping->impl_);
+    }
+    mapping->~mapping_entry();
+    mapping_db()->mapping_free(mapping);
+}
+
 sdk_ret_t
 mapping_entry::init_config(api_ctxt_t *api_ctxt) {
     return SDK_RET_OK;

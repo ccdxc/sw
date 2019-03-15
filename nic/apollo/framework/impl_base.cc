@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/impl.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/include/api/pds_device.hpp"
@@ -93,6 +94,19 @@ impl_base::build(impl_obj_id_t obj_id, void *args) {
         break;
     }
     return NULL;
+}
+
+void
+impl_base::soft_delete(impl_obj_id_t obj_id, impl_base *impl) {
+    switch(obj_id) {
+    case IMPL_OBJ_ID_MAPPING:
+        mapping_impl::soft_delete((mapping_impl *)impl);
+        break;
+
+    default:
+        PDS_TRACE_ERR("Non-statless obj %u can't be soft deleted\n", obj_id);
+        break;
+    }
 }
 
 void

@@ -66,6 +66,8 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
                                   tinfo.actiondata_struct_size,
                                   false, true, NULL);
     SDK_ASSERT(nat_tbl_ != NULL);
+    // reserve 0th entry for no xlation
+    nat_tbl_->reserve_index(NAT_TX_TBL_RSVD_ENTRY_IDX);
 }
 
 /**

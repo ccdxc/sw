@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
@@ -62,6 +63,19 @@ api_base::build(api_ctxt_t *api_ctxt) {
         break;
     }
     return NULL;
+}
+
+void
+api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
+    switch(obj_id) {
+    case OBJ_ID_MAPPING:
+        mapping_entry::soft_delete((mapping_entry *)api_obj);
+        break;
+
+    default:
+        PDS_TRACE_ERR("Non-statless obj %u can't be soft deleted\n", obj_id);
+        break;
+    }
 }
 
 api_base *
@@ -120,9 +134,11 @@ api_base::stateless(obj_id_t obj_id) {
     switch (obj_id) {
     case OBJ_ID_MAPPING:
         return true;
+
     default:
-        return false;
+        break;
     }
+    return false;
 }
 
 }    // namespace api
