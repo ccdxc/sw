@@ -497,26 +497,6 @@ func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.SmartNIC, err error) {
 	return sn, err
 }
 
-// GetSmartNICInMacRange returns a smartnic object in mac address range
-func (tb *TestBed) GetSmartNICInMacRange(macAddr string) (sn *cluster.SmartNIC, err error) {
-	const maxMacDiff = 24
-	snicList, err := tb.ListSmartNIC()
-	if err != nil {
-		return nil, err
-	}
-
-	// walk all smartnics and see if the mac addr range matches
-	for _, snic := range snicList {
-		snicMacNum := macAddrToUint64(snic.Status.PrimaryMAC)
-		reqMacNum := macAddrToUint64(macAddr)
-		if (snicMacNum == reqMacNum) || ((reqMacNum - snicMacNum) < maxMacDiff) {
-			return snic, nil
-		}
-	}
-
-	return nil, fmt.Errorf("Could not find smartnic with mac addr %s", macAddr)
-}
-
 // ListSmartNIC gets a list of smartnics
 func (tb *TestBed) ListSmartNIC() (snl []*cluster.SmartNIC, err error) {
 	ctx, err := tb.VeniceLoggedInCtx()
@@ -538,6 +518,43 @@ func (tb *TestBed) ListSmartNIC() (snl []*cluster.SmartNIC, err error) {
 	}
 
 	return snl, err
+}
+
+// GetSmartNICInMacRange returns a smartnic object in mac address range
+func (tb *TestBed) GetSmartNICInMacRange(macAddr string) (sn *cluster.SmartNIC, err error) {
+	const maxMacDiff = 24
+	snicList, err := tb.ListSmartNIC()
+	if err != nil {
+		return nil, err
+	}
+
+	// walk all smartnics and see if the mac addr range matches
+	for _, snic := range snicList {
+		snicMacNum := macAddrToUint64(snic.Status.PrimaryMAC)
+		reqMacNum := macAddrToUint64(macAddr)
+		if (snicMacNum == reqMacNum) || ((reqMacNum - snicMacNum) < maxMacDiff) {
+			return snic, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Could not find smartnic with mac addr %s", macAddr)
+}
+
+// GetSmartNICByName returns a smartnic object by its name
+func (tb *TestBed) GetSmartNICByName(snicName string) (sn *cluster.SmartNIC, err error) {
+	snicList, err := tb.ListSmartNIC()
+	if err != nil {
+		return nil, err
+	}
+
+	// walk all smartnics and see if the mac addr range matches
+	for _, snic := range snicList {
+		if snic.Spec.Hostname == snicName {
+			return snic, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Could not find smartnic with name %s", snicName)
 }
 
 // GetEndpoint returns the endpoint

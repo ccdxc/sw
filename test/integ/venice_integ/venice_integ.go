@@ -107,6 +107,7 @@ const (
 	// default valules
 	numIntegTestAgents = 1
 	agentDatapathKind  = "mock"
+	maxConnRetry       = 5
 
 	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
@@ -889,11 +890,15 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 
 	// create api server client
 	l = log.GetNewLogger(log.GetDefaultConfig("VeniceIntegTest"))
-	apicl, err := apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, l, rpckit.WithBalancer(balancer.New(rc)))
+	for i := 0; i < maxConnRetry; i++ {
+		it.apisrvClient, err = apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, l, rpckit.WithBalancer(balancer.New(rc)))
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		c.Fatalf("cannot create grpc client")
 	}
-	it.apisrvClient = apicl
 	time.Sleep(time.Millisecond * 100)
 
 	// Create test cluster object

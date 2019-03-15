@@ -209,12 +209,14 @@ func NewTestBed(topoName string, paramsFile string) (*TestBed, error) {
 		log.Warnf("Error while setting up testbed. Retrying...")
 	}
 	if err != nil {
+		tb.Cleanup()
 		return nil, err
 	}
 
 	// check iota cluster health
 	err = tb.CheckIotaClusterHealth()
 	if err != nil {
+		tb.Cleanup()
 		return nil, err
 	}
 
@@ -962,6 +964,14 @@ func (tb *TestBed) CollectLogs() error {
 		}
 	}
 
+	// create logs directory if it doesnt exists
+	cmdStr := fmt.Sprintf("mkdir -p %s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
+	cmd := exec.Command("bash", "-c", cmdStr)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Errorf("creating log directory failed with: %s\n", err)
+	}
+
 	// copy the files out
 	for _, node := range tb.Nodes {
 		switch node.Personality {
@@ -977,9 +987,9 @@ func (tb *TestBed) CollectLogs() error {
 	}
 
 	// create a tar.gz from all log files
-	cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar *.log *.tar.gz && popd", os.Getenv("GOPATH"))
-	cmd := exec.Command("bash", "-c", cmdStr)
-	out, err := cmd.CombinedOutput()
+	cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar ../*.log *.tar.gz && popd", os.Getenv("GOPATH"))
+	cmd = exec.Command("bash", "-c", cmdStr)
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("tar command out:\n%s\n", string(out))
 		log.Errorf("Collecting log files failed with: %s\n", err)

@@ -186,9 +186,12 @@ func (hc *HostCollection) NewWorkload(namePrefix string, snc *NetworkCollection)
 
 // createNaples creates a naples instance
 func (sm *SysModel) createNaples(node *TestNode) error {
-	snic, err := sm.tb.GetSmartNICInMacRange(node.NodeUUID)
+	snic, err := sm.tb.GetSmartNICByName(node.NodeName)
+	if sm.tb.mockMode {
+		snic, err = sm.tb.GetSmartNICInMacRange(node.NodeUUID)
+	}
 	if err != nil {
-		err := fmt.Errorf("Failed to get smartnc object for macAddr %v. Err: %+v", node.NodeUUID, err)
+		err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
 		log.Errorf("%v", err)
 		return err
 	}

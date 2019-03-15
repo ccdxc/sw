@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/strconv"
 )
 
 // ActionCtx is the internal state of the actions
@@ -93,14 +92,15 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 			return err
 		}
 
-		// check smartnic status in Venice
-		macStr, err := strconv.ParseMacAddr(np.iotaNode.NodeUuid)
-		if err != nil {
-			macStr = np.iotaNode.NodeUuid
+		// skip further checks in mock mode
+		if act.model.tb.mockMode {
+			continue
 		}
-		snic, err := act.model.tb.GetSmartNICInMacRange(macStr)
+
+		// check smartnic status in Venice
+		snic, err := act.model.tb.GetSmartNICByName(np.iotaNode.Name)
 		if err != nil {
-			err := fmt.Errorf("Failed to get smartnc object for macAddr %v. Err: %+v", macStr, err)
+			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", np.iotaNode.Name, err)
 			log.Errorf("%v", err)
 			return err
 		}

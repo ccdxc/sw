@@ -62,6 +62,9 @@ var _ = BeforeSuite(func() {
 	err = model.SetupDefaultConfig()
 	Expect(err).ShouldNot(HaveOccurred())
 
+	// collect logs at the end of setup, in case setup fails
+	defer tb.CollectLogs()
+
 	// verify cluster is in good health
 	Eventually(func() error {
 		return model.Action().VerifyClusterStatus()
