@@ -1,0 +1,117 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for Layer 4 Load Balancer
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import public "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service L4LbSvc {
+  rpc L4LbPolicyCreate (L4LbPolicyRequest) returns (L4LbPolicyResponse) {}
+  rpc L4LbPolicyGet (L4LbPolicyGetRequest) returns (L4LbPolicyGetResponse) {}
+  rpc L4LbPolicyDelete (L4LbPolicyDeleteRequest) returns (L4LbPolicyDeleteResponse) {}
+}
+
+// protocol types (i.e., traffic types) that can be load balanced based
+enum L4LBProtocol {
+  L4LB_PROTO_NONE = 0;
+  L4LB_PROTO_TCP  = 6;
+  L4LB_PROTO_UDP  = 17;
+}
+
+// IP protocol type supported for LB probes
+enum L4LBProbeProtocol {
+  L4LB_PROBE_PROTO_NONE = 0;
+  L4LB_PROBE_PROTO_ICMP = 1;
+  L4LB_PROBE_PROTO_TCP  = 6;
+  L4LB_PROBE_PROTO_UDP  = 17;
+}
+
+// Backend identifies backend by its IP and/or its port
+message Backend {
+  // IP address of the backend behind the service Virtual IP
+  types.IPAddress BackendIP   = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // Port to rewrite with before sending the packet to the backend
+  uint32          BackendPort = 2;
+}
+
+// HealthCheck captures the L4 LB health check configuration for the backends
+message BackendHealthCheck {
+  fixed32           ProbePort         = 1; // L4 port number to send probes to
+  L4LBProbeProtocol ProbeProtocol     = 2; // protocol = TCP|UDP|ICMP
+  fixed32           ProbeInterval     = 3; // inter probe gap in seconds
+  fixed32           ProbesPerInterval = 4; // no. of probes per interval
+}
+
+message L4LbPolicySpec {
+  // unique identifier of L4Lb policy
+  uint32             Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // unique key/identifier of PCN in which service is running
+  uint32             PCNId        = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // service Virtual IP (VIP)
+  types.IPAddress    ServiceIP    = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // IP protocol - TCP or UDP
+  L4LBProtocol       IPProtocol   = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  // service port
+  uint32             ServicePort  = 5;
+  // set ProxyARP to true to enable proxy ARP for VIP
+  bool               ProxyARP     = 6;
+  // backend servers behind the VIP
+  repeated Backend   Backends     = 7 [(gogoproto.moretags) = "meta:mandatory"];
+  // health check policy to determine if a backend is dead or alive, if any
+  BackendHealthCheck HealthChecks = 8;
+}
+
+// operational status of L4Lb policy, if any
+message L4LbPolicyStatus {
+}
+
+// stats of L4Lb policy, if any
+message L4LbPolicyStats {
+}
+
+// L4Lb policy object
+message L4LbPolicy {
+  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  L4LbPolicySpec   Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  L4LbPolicyStatus Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  L4LbPolicyStats  Stats    = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// L4Lb policy create and update request
+message L4LbPolicyRequest {
+  repeated L4LbPolicySpec Request = 1;
+}
+
+// L4Lb policy create and update response
+message L4LbPolicyResponse {
+  types.ApiStatus           ApiStatus = 1;
+  repeated L4LbPolicyStatus Response  = 2;
+}
+
+// L4Lb policy get request
+message L4LbPolicyGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// L4Lb policy get response
+message L4LbPolicyGetResponse {
+  types.ApiStatus     ApiStatus = 1;
+  repeated L4LbPolicy Response  = 2;
+}
+
+// L4Lb policy delete request
+message L4LbPolicyDeleteRequest {
+  repeated uint32 Id = 1;
+}
+
+// L4Lb policy delete response
+message L4LbPolicyDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
+}
