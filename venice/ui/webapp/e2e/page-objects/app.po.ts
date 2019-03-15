@@ -1,7 +1,7 @@
 import { browser, by, element, protractor, WebElement, ElementFinder } from 'protractor';
 import { LoginPage } from './login.po';
 import { By } from 'selenium-webdriver';
-import { FieldSelectorCriteria , TechsupportRequestValue} from '.';
+import { FieldSelectorCriteria, TechsupportRequestValue } from '.';
 import { E2EuiTools } from './E2EuiTools';
 
 export class AppPage {
@@ -39,7 +39,7 @@ export class AppPage {
 
   async verifyLoginUsername(username: string) {
     await this._openLoginNamePanel();
-    const loginLabel =  await element(by.css('.app-shell-toolbar-user-menu-name')).getText();
+    const loginLabel = await element(by.css('.app-shell-toolbar-user-menu-name')).getText();
     const loginName = loginLabel.split(':')[1].trim();  // LoginLabel is like "User:test"
     expect(loginName === loginName).toBeTruthy();
     await E2EuiTools.clickElement('.app-shell-toolbar-user-menu-name');
@@ -70,8 +70,28 @@ export class AppPage {
    * This is a common API to verify table has content. Every table cell is not empty
    */
   async verifyTableHasContents(onCell: (rowIdx: number, columnIdx: number, rowValues: any[]) => any = null,
-                               onComplete: () => any = null
+    onComplete: () => any = null
   ) {
+    const tableData = await this.getTableContent();
+    const limit = tableData.length;
+    const list = [];
+    for (let rowIndex = 0; rowIndex < limit; rowIndex++) {
+
+      const recValues = tableData[rowIndex];
+      for (let colIndex = 0; colIndex < recValues.length; colIndex++) {
+        if (onCell != null) {
+          onCell(rowIndex, colIndex, recValues);
+        }
+      }
+    }
+    if (onComplete) {
+      await browser.sleep(2000);
+      onComplete();
+    }
+    return list; // all data in table. It is a maxtrix.
+  }
+
+  async getTableContent( hasLimit: boolean = false ) {
     const EC = protractor.ExpectedConditions;
     await browser.wait(element(by.css('.ui-table-scrollable-body-table tbody tr td')).isPresent(), 5000);
     // Let rendering finish
@@ -80,33 +100,26 @@ export class AppPage {
     let limit = rows.length;
     // Limiting to first 10 events due to the maount of time it takes
     // to check each row
-    if (limit > 10) {
-      limit = 10;
+    if (hasLimit && limit > 100) {
+      limit = 100;
     }
+    const list = [];
     for (let rowIndex = 0; rowIndex < limit; rowIndex++) {
       // We re select the element to avoid our reference being stale
-      const colVals = await element.all(by.css('.ui-table-scrollable-body-table tbody tr:nth-of-type(' + rowIndex + ') td'));
+      // nth-of-type is 1 based.
+      const colVals = await element.all(by.css('.ui-table-scrollable-body-table tbody tr:nth-of-type(' + (rowIndex + 1) + ') td'));
       const recValues = [];
+      list.push(recValues);
       // collect all columns value
       for (let colIndex = 0; colIndex < colVals.length; colIndex++) {
         const colVal: ElementFinder = colVals[colIndex];
         const colText = await colVal.getText();
         recValues.push(colText);
       }
-      for (let colIndex = 0; colIndex < recValues.length; colIndex++) {
-        if (onCell != null) {
-          onCell(rowIndex, colIndex, recValues);
-        } else {
-          const colText = recValues[colIndex];
-          // to debug -- console.log('row: ' + rowIndex  + ' column: ' + colIndex + ' value:' + colText);
-          expect(colText).not.toBe('');
-        }
-      }
     }
-    if (onComplete) {
-      onComplete();
-    }
+    return list; // all data in table. It is a maxtrix.
   }
+
 
   async getTableRowLength() {
     const EC = protractor.ExpectedConditions;
@@ -132,7 +145,7 @@ export class AppPage {
     await valueInputs[rowIndex].sendKeys(value);
   }
 
-  async _setFieldSelectorOperator(operator: string , index: number , myopCSS: string= null) {
+  async _setFieldSelectorOperator(operator: string, index: number, myopCSS: string = null) {
     const opCSS = (myopCSS) ? myopCSS : '.ng-trigger.ng-trigger-overlayAnimation.ui-dropdown-panel.ui-widget .ui-dropdown-items-wrapper .ui-dropdown-item > span';
     await this._openFieldSelectorOperatorDropDownPanel(index);
     const opsElements = await element.all(by.css(opCSS));

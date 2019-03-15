@@ -68,43 +68,17 @@ describe('venice-ui techsupport', () => {
 
   it('should add tech-support-request record', async () => {
     await techsupportPage.createNewTechsupport(techsupportRequestValue);
-    let recordCreated = false;
-    await browser.sleep(2000); // wait for web-socket to refresh data.
-    // loop through all records to find a new tech-support record whose name matches expected value
-    await appPage.verifyTableHasContents(
-      // add onCell and onComplete functions as parameters.
-      (rowIdx: number, columnIdx: number, rowValues: any[]) => {
-        if (columnIdx === 0) {
-          const celValue = rowValues[columnIdx];
-          if (celValue === techsupportRequestValue.name) {
-            recordCreated = true;
-          }
-        }
-      },
-      () => {
-        expect(recordCreated).toBeTruthy(techsupportRequestValue.name + ' created');
-      }
-    );
-    await browser.sleep(5000);
+    await browser.sleep(2000);
+    await E2EuiTools.verifyRecordAddRemoveInTable(techsupportRequestValue.name, true);
+    await browser.sleep(2000);
   });
 
   it('should delete tech-support-request record', async () => {
-    await browser.sleep(5000); // wait for data load up.
+    await browser.sleep(2000); // wait for data load up.
     await techsupportPage.deleteTechsupport(techsupportRequestValue);
-    await browser.sleep(5000);
-    let recordDeleted = true;
-    // loop through all records to find a new tech-support record whose name matches expected value
-    await appPage.verifyTableHasContents((rowIdx: number, columnIdx: number, rowValues: any[]) => {
-      if (columnIdx === 0) {
-        const celValue = rowValues[columnIdx];
-        if (celValue === techsupportRequestValue.name) {
-          recordDeleted = false;
-        }
-      }
-    },
-      () => {
-        expect(recordDeleted).toBeTruthy(techsupportRequestValue.name + ' deleted');
-      });
+    await browser.sleep(2000);
+      await E2EuiTools.verifyRecordAddRemoveInTable(techsupportRequestValue.name, false);
+      await browser.sleep(2000);
   });
 
   it('should have tech-support-request records in the table', async () => {

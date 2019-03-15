@@ -3,12 +3,13 @@ import { LoginPage } from './page-objects/login.po';
 import { Auditevents } from './page-objects/auditevents.po';
 import { AppPage } from './page-objects/app.po';
 import { FieldSelectorCriteria } from './page-objects';
-import { TestBed, TestComponentRenderer } from '@angular/core/testing';
 
 describe('venice-ui auditevents', () => {
   let auditeventsPage: Auditevents;
   let appPage: AppPage;
   let loginPage: LoginPage;
+
+  let username = 'test';
 
   beforeEach(async (done) => {
     appPage = new AppPage();
@@ -38,6 +39,7 @@ describe('venice-ui auditevents', () => {
    * Test to verify there are audit events
    */
   it('should have events in the table', async () => {
+    const randomIndex = Math.floor(Math.random() * (10 - 1)); // randomly pick a row between 0-10
     await appPage.verifyTableHasContents((rowIdx: number, columnIdx: number, rowValues: any[]) => {
       const actionText = rowValues[2]; // action column index is 2
       if (columnIdx === 8 && actionText === 'login') {
@@ -46,6 +48,9 @@ describe('venice-ui auditevents', () => {
       } else {
         const celValue = rowValues[columnIdx];
         expect(celValue).not.toBe('');
+      }
+      if (randomIndex === rowIdx ) {
+        username = rowValues[0]; // the username
       }
     });
   });
@@ -73,21 +78,32 @@ describe('venice-ui auditevents', () => {
     // click search button
     const searchButton = await element(by.css('.global-button-primary.auditevents-searchbutton.auditevents-searchbutton-save'));
     await searchButton.click();
+    await browser.sleep(5000);
 
     let isAllactionLogin: boolean = true;
     let isAlluserTest: boolean = true;
-    await appPage.verifyTableHasContents((rowIdx: number, columnIdx: number, rowValues: any[]) => {
-      const actionText = rowValues[2]; // action column index is 2
-      const userText = rowValues[0]; // user column index is 0
-      if (actionText === 'login') {
-        isAllactionLogin = false;
+    const tableData = await appPage.getTableContent();
+    for (let i = 0; i < tableData.length; i++) {
+      const rowValues = tableData[i];
+      for (let j = 0; j < rowValues.length; j++) {
+        const columnIdx = j;
+        if (columnIdx === 0) { // user column
+          const userText = rowValues[0];
+          if (userText !== username) {
+            isAllactionLogin = false;
+          }
+        }
+        if (columnIdx === 2) { // action column
+          const actionText = rowValues[columnIdx];
+          if (actionText === 'login') {
+            isAlluserTest = false;
+            break;
+          }
+        }
       }
-      if (userText !== 'test') {
-        isAlluserTest = false;
-      }
-    });
-    expect(isAllactionLogin).toBeTruthy();
-    expect(isAlluserTest).toBeTruthy();
+    }
+    expect(isAllactionLogin).toBeTruthy('action should not be "login"');
+    expect(isAlluserTest).toBeTruthy('login user should be ' + username );
   });
 
 });

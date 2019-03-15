@@ -74,13 +74,13 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
       this.oldButtons = currToolbar.buttons;
       currToolbar.buttons = [
         {
-          cssClass: 'global-button-primary eventalertpolicies-button',
+          cssClass: 'global-button-primary eventalertpolicies-button eventalertpolicies-button-eventalertpolicy-SAVE',
           text: 'CREATE ALERT POLICY',
           callback: () => { this.savePolicy(); },
           computeClass: () => this.computeButtonClass()
         },
         {
-          cssClass: 'global-button-neutral eventalertpolicies-button',
+          cssClass: 'global-button-neutral eventalertpolicies-button eventalertpolicies-button-eventalertpolicy-CANCEL',
           text: 'CANCEL',
           callback: () => { this.cancelPolicy(); }
         },

@@ -58,11 +58,10 @@ export class FlowExport {
 
 
     async deletelowExportPolicy(monitoringFlowExportPolicy: IMonitoringFlowExportPolicy) {
-        const tsTableRowActionDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowDeleteBtnCSS(monitoringFlowExportPolicy.meta.name);
+        const tsTableRowActionDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringFlowExportPolicy.meta.name);
         await E2EuiTools.clickElement(tsTableRowActionDeleteButtonCSS);
 
         await browser.sleep(5000); // wait for alert pop-up
         await E2EuiTools.clickConfirmAlertFirstButton();
     }
-
 }

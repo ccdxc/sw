@@ -98,22 +98,9 @@ describe('venice-ui flowexport', () => {
 
   it('should add flow export record', async () => {
     await flowExportPage.createFlowExportPolicy(monitoringFlowExportPolicy);
-    let recordCreated = false;
-    await browser.sleep(5000); // wait for web-socket to refresh data.
-    // loop through all records to find a new tech-support record whose name matches expected value
-    await appPage.verifyTableHasContents(
-      (rowIdx: number, columnIdx: number, rowValues: any[]) => {
-        if (columnIdx === 0) {
-          const celValue = rowValues[columnIdx];
-          if (celValue === monitoringFlowExportPolicy.meta.name) {
-            recordCreated = true;
-          }
-        }
-      },
-      () => {
-        expect(recordCreated).toBeTruthy(monitoringFlowExportPolicy.meta.name + ' created');
-      }
-    );
+    await browser.sleep(5000);
+    await E2EuiTools.verifyRecordAddRemoveInTable(monitoringFlowExportPolicy.meta.name, true);
+    await browser.sleep(5000);
 
   });
 
@@ -121,22 +108,8 @@ describe('venice-ui flowexport', () => {
     await browser.sleep(5000); // wait for data load up.
     await flowExportPage.deletelowExportPolicy(monitoringFlowExportPolicy);
     await browser.sleep(5000);
-    let recordDeleted = true;
-    // loop through all records to find a new tech-support record whose name matches expected value
-    await appPage.verifyTableHasContents(
-      // add onCell and onComplete functions as parameters.
-      (rowIdx: number, columnIdx: number, rowValues: any[]) => {
-        if (columnIdx === 0) {
-          const celValue = rowValues[columnIdx];
-          if (celValue === monitoringFlowExportPolicy.meta.name) {
-            recordDeleted = false;
-          }
-        }
-      },
-      () => {
-        expect(recordDeleted).toBeTruthy(monitoringFlowExportPolicy.meta.name + ' deleted');
-      }
-    );
+    await E2EuiTools.verifyRecordAddRemoveInTable(monitoringFlowExportPolicy.meta.name, false);
+    await browser.sleep(5000);
   });
 
 });

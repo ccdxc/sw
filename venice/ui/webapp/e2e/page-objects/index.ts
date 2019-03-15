@@ -13,3 +13,4 @@ export interface TechsupportRequestValue {
     nodeSelectorValues?: FieldSelectorCriteria[];
     collectionSelectorValues?: FieldSelectorCriteria[];
 }
+

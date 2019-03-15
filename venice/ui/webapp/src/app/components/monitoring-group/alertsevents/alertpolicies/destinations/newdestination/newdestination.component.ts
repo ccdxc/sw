@@ -75,13 +75,13 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
       this.oldButtons = currToolbar.buttons;
       currToolbar.buttons = [
         {
-          cssClass: 'global-button-primary eventalertpolicies-button',
+          cssClass: 'global-button-primary eventalertpolicies-button eventalertpolicies-button-destination-SAVE',
           text: 'CREATE DESTINATION',
           callback: () => { this.saveDestination(); },
           computeClass: () => this.computeButtonClass()
         },
         {
-          cssClass: 'global-button-neutral eventalertpolicies-button',
+          cssClass: 'global-button-neutral eventalertpolicies-button eventalertpolicies-button-destination-CANCEL',
           text: 'CANCEL',
           callback: () => { this.cancelDestination(); }
         },

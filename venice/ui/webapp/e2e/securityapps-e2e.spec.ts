@@ -17,6 +17,8 @@ describe('venice-ui security-apps', () => {
         browser.waitForAngularEnabled(false);
         const until = protractor.ExpectedConditions;
         await browser.wait(until.presenceOf(element(by.css('.app-shell-container'))), 10000, 'Element taking too long to appear in the DOM');
+        await securityappsPage.navigateTo();
+        await securityappsPage.verifyPage();
         done();
     });
 
@@ -29,18 +31,14 @@ describe('venice-ui security-apps', () => {
         }
     });
 
-    it('should have events in the table', async () => {
-        await securityappsPage.navigateTo();
-        await securityappsPage.verifyPage();
-
-        appPage.getTableRowLength().then(rowLen => {
-            if (rowLen > 0) {
-                appPage.verifyTableHasContents();
-            } else {
-                expect(rowLen).toBe(0);
-            }
-        });
-
+    it('should have security-app records in the table', async () => {
+        const rowLen = await appPage.getTableRowLength();
+        if (rowLen > 0) {
+            const tableData = await appPage.getTableContent();
+            expect(tableData.length > 0).toBeTruthy('cluster table should have records');
+        } else {
+            expect(rowLen).toBe(0, 'cluster table  has no record');
+        }
     });
 
 });

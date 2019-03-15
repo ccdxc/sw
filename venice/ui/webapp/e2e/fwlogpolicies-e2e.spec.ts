@@ -87,47 +87,17 @@ describe('venice-ui fwlogs-policies', () => {
 
   it('should add firewall-log-policy record', async () => {
     await fwlogsPoliciesPage.createNewFwlogPolicy(monitoringFwlogPolicy);
-    let recordCreated = false;
     await browser.sleep(2000); // wait for web-socket to refresh data.
-    // loop through all records to find a new tech-support record whose name matches expected value
-    await appPage.verifyTableHasContents(
-      (rowIdx: number, columnIdx: number, rowValues: any[]) => {
-        if (columnIdx === 0) {
-          const celValue = rowValues[columnIdx];
-          if (celValue === monitoringFwlogPolicy.meta.name) {
-            recordCreated = true;
-          }
-        }
-      },
-      () => {
-        expect(recordCreated).toBeTruthy();
-      }
-    );
-
-    await browser.sleep(5000);
+    await E2EuiTools.verifyRecordAddRemoveInTable(monitoringFwlogPolicy.meta.name, true);
+    await browser.sleep(2000);
   });
 
   it('should delete firewall-log-policy record', async () => {
     await browser.sleep(5000); // wait for data load up.
     await fwlogsPoliciesPage.deleteFwlogPolicy(monitoringFwlogPolicy);
-    let recordDeleted = true;
     await browser.sleep(2000); // wait for web-socket to refresh data.
-    // loop through all records to find a new tech-support record whose name matches expected value
-    await appPage.verifyTableHasContents(
-      // add onCell and onComplete functions as parameters.
-      (rowIdx: number, columnIdx: number, rowValues: any[]) => {
-        if (columnIdx === 0) {
-          const celValue = rowValues[columnIdx];
-          if (celValue === monitoringFwlogPolicy.meta.name) {
-            recordDeleted = false;
-          }
-        }
-      },
-      () => {
-        expect(recordDeleted).toBeTruthy();
-      }
-    );
-
+    await E2EuiTools.verifyRecordAddRemoveInTable(monitoringFwlogPolicy.meta.name, false);
+    await browser.sleep(2000);
   });
 
 

@@ -32,7 +32,7 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-rowData>
-        <tr [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData">
+        <tr [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData" class="tableviewedit-tr tableviewedit-tr_{{rowData?.meta?.name}}">
           <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class" 
           [style.width]="last && actionTemplate != null ? col.width - actionWidth + '%' : col.width + '%'">
             <ng-container *ngTemplateOutlet="bodyTemplate; context: {col: col, $implicit: rowData}"></ng-container>

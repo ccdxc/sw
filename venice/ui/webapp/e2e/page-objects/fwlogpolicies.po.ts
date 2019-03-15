@@ -37,16 +37,15 @@ export class FwlogPolicies {
         // set  transport
         await E2EuiTools.setInputBoxValue('app-newfwlogpolicy .syslog-input.ui-inputtext[formcontrolname="transport"]', monitoringFwlogPolicy.spec.targets[0].transport);
         await browser.sleep(2000);
-        // click save button
-        await E2EuiTools.clickElement('.toolbar-button.global-button-primary.fwlogpolicies-button.fwlogpolicies-button-SAVE');
+         // click save button
+         await E2EuiTools.clickElement('.toolbar-button.global-button-primary.fwlogpolicies-button.fwlogpolicies-button-SAVE');
     }
 
     async deleteFwlogPolicy(monitoringFwlogPolicy: IMonitoringFwlogPolicy) {
-        const tsTableRowActionDeletBuuttonCSS = E2EuiTools.getTableEditViewTableRowDeleteBtnCSS(monitoringFwlogPolicy.meta.name);
-        await E2EuiTools.clickElement(tsTableRowActionDeletBuuttonCSS);
+        const tsTableRowActionDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringFwlogPolicy.meta.name);
+        await E2EuiTools.clickElement(tsTableRowActionDeleteButtonCSS);
         await browser.sleep(5000); // wait for alert pop-up
         await E2EuiTools.clickConfirmAlertFirstButton();
-
     }
 
 

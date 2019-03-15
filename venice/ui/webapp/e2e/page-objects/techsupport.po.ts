@@ -61,7 +61,7 @@ export class TechSupport {
 
 
     async deleteTechsupport(techsupportRequestValue: TechsupportRequestValue) {
-        const tsTableRowActionBlockDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowDeleteBtnCSS(techsupportRequestValue.name);
+        const tsTableRowActionBlockDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(techsupportRequestValue.name);
         await E2EuiTools.clickElement(tsTableRowActionBlockDeleteButtonCSS);
         await browser.sleep(2000); // wait for alert pop-up
         await E2EuiTools.clickConfirmAlertFirstButton();

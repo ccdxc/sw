@@ -1,15 +1,22 @@
 import { browser, by, element, protractor, WebElement, ElementFinder } from 'protractor';
 import { throws } from 'assert';
+import { AppPage } from './app.po';
 
 export class E2EuiTools {
     public static TABLEEDITVIEW_ACTION_TD_CELL_CSS = '.tableviewedit-actiontd';
     public static TABLEEDITVIEW_ACTION_TD_ITEM_CSS = '.tableviewedit-action-icon-';
     public static TABLEEDITVIEW_ACTION_TD_CSS = E2EuiTools.TABLEEDITVIEW_ACTION_TD_CELL_CSS + E2EuiTools.TABLEEDITVIEW_ACTION_TD_ITEM_CSS;
 
+    public static TABLEEDITVIEW_ROW_TR = '.tableviewedit-tr.tableviewedit-tr_';
 
-    public static  getTableEditViewTableRowDeleteBtnCSS( recordMetaName: string) {
+    public static getTableEditViewTableRowActionTDCSS(recordMetaName: string) {
         // CSS should look like '.tableviewedit-actiontd.tableviewedit-action-icon-techsupport-aa95 .global-table-action-icon'
         return E2EuiTools.TABLEEDITVIEW_ACTION_TD_CSS + recordMetaName;
+    }
+
+    public static  getTableEditViewTableRowTRCSS( recordMetaName: string) {
+        // CSS should look like 'tableviewedit-tr tableviewedit-tr_techsupport-d821'
+        return E2EuiTools.TABLEEDITVIEW_ROW_TR + recordMetaName;
     }
 
     public static s4() {
@@ -80,7 +87,7 @@ export class E2EuiTools {
         await elementButton.click();
     }
 
-    public static async setInputBoxValue(cssPath: string, value: string) {
+    public static async setInputBoxValue(cssPath: string, value: string|number|null) {
         const elementInput = await element(by.css(cssPath));
         await elementInput.clear();
         await elementInput.sendKeys(value);
@@ -109,5 +116,36 @@ export class E2EuiTools {
     public static async clickConfirmAlertFirstButton() {
         const buttonCSS = 'p-confirmdialog .ui-dialog-footer.ui-widget-content  > button:nth-child(1)';
         await this.clickElement(buttonCSS);
+    }
+
+    public static async verifyRecordAddRemoveInTable(recordName: string, isToVerifyCreate: boolean) {
+        const trElemenentCSS = this.getTableEditViewTableRowTRCSS(recordName);
+        const trRowElement = await element(by.css(trElemenentCSS));
+        const msg = (isToVerifyCreate) ? 'Created' : 'Deleted';
+        if (isToVerifyCreate) {
+              expect(await trRowElement.isPresent()).toBeTruthy(recordName + ' ' + msg);
+        } else {
+              expect( trRowElement.isPresent()).toBeFalsy(recordName + ' ' + msg);
+        }
+    }
+
+    public static async verifyUIpageTable(uipageName: string, type: string ) {
+        await browser.sleep(2000);
+        const appPage = new AppPage();
+        const rowLen = await appPage.getTableRowLength();
+        if (rowLen > 0) {
+            const tableData = await appPage.getTableContent();
+            expect(tableData.length > 0).toBeTruthy(uipageName + ' page table should have ' + type + ' records');
+        } else {
+            expect(rowLen).toBe(0, uipageName + ' page table  has no ' + type + ' record');
+        }
+    }
+
+    public static async verifyStatistics(stats: ElementFinder[], statCategories: string[],  type: string ) {
+        expect(stats && stats.length > 0).toBeTruthy(type + ' should contains UI element to show statistcis');
+        for (let i = 0; i < stats.length; i++) {
+            const text = await stats[i].getText();
+            expect(text !== null).toBeTruthy( type + ' ' + statCategories[i] + ' has data');
+        }
     }
 }
