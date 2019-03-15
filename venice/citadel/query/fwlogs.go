@@ -20,10 +20,10 @@ import (
 // nic/agent/tmagent/state/state.go
 // Mapping from FwlogQuery fields to tag names in tsdb
 var queryFieldToTsdbField = map[string]string{
-	"SourceIPs":   "src",
-	"DestIPs":     "dest",
-	"SourcePorts": "src-port",
-	"DestPorts":   "dest-port",
+	"SourceIPs":   "source",
+	"DestIPs":     "destination",
+	"SourcePorts": "source-port",
+	"DestPorts":   "destination-port",
 	"Protocols":   "protocol",
 	"Actions":     "action",
 	"Directions":  "direction",
@@ -32,28 +32,22 @@ var queryFieldToTsdbField = map[string]string{
 
 // Maps query enum values to values in tsdb
 var actionEnumMapping = map[string]string{
-	"ACTION_ALLOW":  "SECURITY_RULE_ACTION_ALLOW",
-	"ACTION_DENY":   "SECURITY_RULE_ACTION_DENY",
-	"ACTION_REJECT": "SECURITY_RULE_ACTION_REJECT",
+	"ACTION_ALLOW":  "allow",
+	"ACTION_DENY":   "deny",
+	"ACTION_REJECT": "reject",
 }
 
 // Maps tsdb enum value to fwlog values
 var actionTsdbEnumMapping = map[string]string{
-	"SECURITY_RULE_ACTION_ALLOW":  "ALLOW",
-	"SECURITY_RULE_ACTION_DENY":   "DENY",
-	"SECURITY_RULE_ACTION_REJECT": "REJECT",
+	"allow":  "ALLOW",
+	"deny":   "DENY",
+	"reject": "REJECT",
 }
 
 // Maps query enum values to values in tsdb
 var directionEnumMapping = map[string]string{
-	"DIRECTION_FROM_HOST":   "FLOW_DIRECTION_FROM_HOST",
-	"DIRECTION_FROM_UPLINK": "FLOW_DIRECTION_FROM_UPLINK",
-}
-
-// Maps tsdb enum value to fwlog values
-var directionTsdbEnumMapping = map[string]string{
-	"FLOW_DIRECTION_FROM_HOST":   "FROM_HOST",
-	"FLOW_DIRECTION_FROM_UPLINK": "FROM_UPLINK",
+	"DIRECTION_FROM_HOST":   "from_host",
+	"DIRECTION_FROM_UPLINK": "from_uplink",
 }
 
 // Measurement name in tsdb
@@ -245,18 +239,8 @@ func (q *Server) executeFwlogsQuery(c context.Context, tenant string, qs string)
 							continue
 						}
 						f.SetUint(val)
-					} else if qFieldName == "Action" {
-						if val, ok := actionTsdbEnumMapping[valStr]; ok {
-							f.SetString(val)
-							continue
-						}
-						f.SetString(valStr)
-					} else if qFieldName == "Direction" {
-						if val, ok := directionTsdbEnumMapping[valStr]; ok {
-							f.SetString(val)
-							continue
-						}
-						f.SetString(valStr)
+					} else if qFieldName == "Action" || qFieldName == "Direction" {
+						f.SetString(strings.ToUpper(valStr))
 					} else {
 						f.SetString(valStr)
 					}

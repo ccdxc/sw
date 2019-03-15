@@ -523,20 +523,20 @@
           "type": "string",
           "title": "Tenant"
         },
-        "src": {
+        "source": {
           "type": "string",
           "title": "Source IP,"
         },
-        "dest": {
+        "destination": {
           "type": "string",
           "title": "Destination IP"
         },
-        "src-port": {
+        "source-port": {
           "type": "integer",
           "format": "int64",
           "title": "Source Port"
         },
-        "dest-port": {
+        "destination-port": {
           "type": "integer",
           "format": "int64",
           "title": "Destination Port"

@@ -162,11 +162,14 @@ func (mr *MockCtrlerIntfMockRecorder) DeleteFwlogPolicy(ctx, p interface{}) *gom
 }
 
 // Debug mocks base method
-func (m *MockCtrlerIntf) Debug(w http.ResponseWriter, r *http.Request) {
-	m.ctrl.Call(m, "Debug", w, r)
+func (m *MockCtrlerIntf) Debug(r *http.Request) (interface{}, error) {
+	ret := m.ctrl.Call(m, "Debug", r)
+	ret0, _ := ret[0].(interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Debug indicates an expected call of Debug
-func (mr *MockCtrlerIntfMockRecorder) Debug(w, r interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockCtrlerIntf)(nil).Debug), w, r)
+func (mr *MockCtrlerIntfMockRecorder) Debug(r interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockCtrlerIntf)(nil).Debug), r)
 }

@@ -3,7 +3,6 @@ package tsdb
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"sync/atomic"
 	"time"
 
@@ -309,13 +308,13 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 }
 
 // Debug returns tsdb client info
-func Debug(r *http.Request) (interface{}, error) {
+func Debug() interface{} {
 	if global == nil {
-		return map[string]uint64{}, nil
+		return map[string]uint64{}
 	}
 
 	return map[string]uint64{
 		"numPointsReported": atomic.LoadUint64(&global.numPoints),
 		"numSendErrors":     atomic.LoadUint64(&global.sendErrors),
-		"numIgnoredPoints":  atomic.LoadUint64(&global.ignoredPoints)}, nil
+		"numIgnoredPoints":  atomic.LoadUint64(&global.ignoredPoints)}
 }

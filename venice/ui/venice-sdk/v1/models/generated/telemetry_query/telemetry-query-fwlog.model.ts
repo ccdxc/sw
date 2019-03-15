@@ -12,10 +12,10 @@ import { Telemetry_queryFwlog_direction,  Telemetry_queryFwlog_direction_uihint 
 
 export interface ITelemetry_queryFwlog {
     'tenant'?: string;
-    'src'?: string;
-    'dest'?: string;
-    'src-port'?: number;
-    'dest-port'?: number;
+    'source'?: string;
+    'destination'?: string;
+    'source-port'?: number;
+    'destination-port'?: number;
     'protocol'?: string;
     'action': Telemetry_queryFwlog_action;
     'direction': Telemetry_queryFwlog_direction;
@@ -27,10 +27,10 @@ export interface ITelemetry_queryFwlog {
 
 export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryFwlog {
     'tenant': string = null;
-    'src': string = null;
-    'dest': string = null;
-    'src-port': number = null;
-    'dest-port': number = null;
+    'source': string = null;
+    'destination': string = null;
+    'source-port': number = null;
+    'destination-port': number = null;
     'protocol': string = null;
     'action': Telemetry_queryFwlog_action = null;
     'direction': Telemetry_queryFwlog_direction = null;
@@ -42,19 +42,19 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
             required: false,
             type: 'string'
         },
-        'src': {
+        'source': {
             required: false,
             type: 'string'
         },
-        'dest': {
+        'destination': {
             required: false,
             type: 'string'
         },
-        'src-port': {
+        'source-port': {
             required: false,
             type: 'number'
         },
-        'dest-port': {
+        'destination-port': {
             required: false,
             type: 'number'
         },
@@ -125,33 +125,33 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
         } else {
             this['tenant'] = null
         }
-        if (values && values['src'] != null) {
-            this['src'] = values['src'];
-        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('src')) {
-            this['src'] = Telemetry_queryFwlog.propInfo['src'].default;
+        if (values && values['source'] != null) {
+            this['source'] = values['source'];
+        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('source')) {
+            this['source'] = Telemetry_queryFwlog.propInfo['source'].default;
         } else {
-            this['src'] = null
+            this['source'] = null
         }
-        if (values && values['dest'] != null) {
-            this['dest'] = values['dest'];
-        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('dest')) {
-            this['dest'] = Telemetry_queryFwlog.propInfo['dest'].default;
+        if (values && values['destination'] != null) {
+            this['destination'] = values['destination'];
+        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('destination')) {
+            this['destination'] = Telemetry_queryFwlog.propInfo['destination'].default;
         } else {
-            this['dest'] = null
+            this['destination'] = null
         }
-        if (values && values['src-port'] != null) {
-            this['src-port'] = values['src-port'];
-        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('src-port')) {
-            this['src-port'] = Telemetry_queryFwlog.propInfo['src-port'].default;
+        if (values && values['source-port'] != null) {
+            this['source-port'] = values['source-port'];
+        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('source-port')) {
+            this['source-port'] = Telemetry_queryFwlog.propInfo['source-port'].default;
         } else {
-            this['src-port'] = null
+            this['source-port'] = null
         }
-        if (values && values['dest-port'] != null) {
-            this['dest-port'] = values['dest-port'];
-        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('dest-port')) {
-            this['dest-port'] = Telemetry_queryFwlog.propInfo['dest-port'].default;
+        if (values && values['destination-port'] != null) {
+            this['destination-port'] = values['destination-port'];
+        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('destination-port')) {
+            this['destination-port'] = Telemetry_queryFwlog.propInfo['destination-port'].default;
         } else {
-            this['dest-port'] = null
+            this['destination-port'] = null
         }
         if (values && values['protocol'] != null) {
             this['protocol'] = values['protocol'];
@@ -203,10 +203,10 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'tenant': CustomFormControl(new FormControl(this['tenant']), Telemetry_queryFwlog.propInfo['tenant']),
-                'src': CustomFormControl(new FormControl(this['src']), Telemetry_queryFwlog.propInfo['src']),
-                'dest': CustomFormControl(new FormControl(this['dest']), Telemetry_queryFwlog.propInfo['dest']),
-                'src-port': CustomFormControl(new FormControl(this['src-port']), Telemetry_queryFwlog.propInfo['src-port']),
-                'dest-port': CustomFormControl(new FormControl(this['dest-port']), Telemetry_queryFwlog.propInfo['dest-port']),
+                'source': CustomFormControl(new FormControl(this['source']), Telemetry_queryFwlog.propInfo['source']),
+                'destination': CustomFormControl(new FormControl(this['destination']), Telemetry_queryFwlog.propInfo['destination']),
+                'source-port': CustomFormControl(new FormControl(this['source-port']), Telemetry_queryFwlog.propInfo['source-port']),
+                'destination-port': CustomFormControl(new FormControl(this['destination-port']), Telemetry_queryFwlog.propInfo['destination-port']),
                 'protocol': CustomFormControl(new FormControl(this['protocol']), Telemetry_queryFwlog.propInfo['protocol']),
                 'action': CustomFormControl(new FormControl(this['action'], [required, enumValidator(Telemetry_queryFwlog_action), ]), Telemetry_queryFwlog.propInfo['action']),
                 'direction': CustomFormControl(new FormControl(this['direction'], [required, enumValidator(Telemetry_queryFwlog_direction), ]), Telemetry_queryFwlog.propInfo['direction']),
@@ -225,10 +225,10 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['tenant'].setValue(this['tenant']);
-            this._formGroup.controls['src'].setValue(this['src']);
-            this._formGroup.controls['dest'].setValue(this['dest']);
-            this._formGroup.controls['src-port'].setValue(this['src-port']);
-            this._formGroup.controls['dest-port'].setValue(this['dest-port']);
+            this._formGroup.controls['source'].setValue(this['source']);
+            this._formGroup.controls['destination'].setValue(this['destination']);
+            this._formGroup.controls['source-port'].setValue(this['source-port']);
+            this._formGroup.controls['destination-port'].setValue(this['destination-port']);
             this._formGroup.controls['protocol'].setValue(this['protocol']);
             this._formGroup.controls['action'].setValue(this['action']);
             this._formGroup.controls['direction'].setValue(this['direction']);

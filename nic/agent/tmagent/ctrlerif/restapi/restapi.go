@@ -121,7 +121,7 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
-	router.Methods("GET").Subrouter().HandleFunc("/debug/tsdb", httputils.MakeHTTPHandler(tsdb.Debug))
+	router.Methods("GET").Subrouter().HandleFunc("/debug/state", httputils.MakeHTTPHandler(tpAgent.Debug))
 
 	// listener
 	listener, err := net.Listen("tcp", listenURL)

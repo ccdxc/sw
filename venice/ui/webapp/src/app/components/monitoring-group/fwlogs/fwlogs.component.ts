@@ -39,11 +39,11 @@ export class FwlogsComponent extends BaseComponent implements OnInit , OnDestroy
   };
 
   cols = [
-    { field: 'src', header: 'Source', class: 'fwlogs-column-ip', sortable: true },
-    { field: 'dest', header: 'Destination', class: 'fwlogs-column-ip', sortable: true },
+    { field: 'source', header: 'Source', class: 'fwlogs-column-ip', sortable: true },
+    { field: 'destination', header: 'Destination', class: 'fwlogs-column-ip', sortable: true },
     { field: 'protocol', header: 'Protocol', class: 'fwlogs-column-port', sortable: true },
-    { field: 'src-port', header: 'Src Port', class: 'fwlogs-column-port', sortable: true },
-    { field: 'dest-port', header: 'Dest Port', class: 'fwlogs-column-port', sortable: true },
+    { field: 'source-port', header: 'Src Port', class: 'fwlogs-column-port', sortable: true },
+    { field: 'destination-port', header: 'Dest Port', class: 'fwlogs-column-port', sortable: true },
     { field: 'action', header: 'Action', class: 'fwlogs-column', sortable: true },
     { field: 'direction', header: 'Direction', class: 'fwlogs-column', sortable: true },
     { field: 'timestamp', header: 'Time', class: 'fwlogs-column', sortable: true },

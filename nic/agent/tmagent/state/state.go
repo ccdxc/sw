@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/ipc"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
@@ -36,6 +38,8 @@ type PolicyState struct {
 	fwTable         tsdb.Obj
 	hostName        string
 	appName         string
+	shm             *ipc.SharedMem
+	ipc             []*ipc.IPC
 	wg              sync.WaitGroup
 }
 
@@ -594,5 +598,16 @@ func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.Flo
 }
 
 // Debug is the debug entry point from REST
-func (s *PolicyState) Debug(w http.ResponseWriter, r *http.Request) {
+func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
+
+	ipcInfo := map[string]string{}
+	for i, ipc := range s.ipc {
+		ipcInfo[fmt.Sprintf("ipc-%d", i)] = ipc.String()
+	}
+	return map[string]interface{}{
+		"tsdb": tsdb.Debug(),
+		"shm":  s.shm.String(),
+		"ipc":  ipcInfo,
+	}, nil
+
 }

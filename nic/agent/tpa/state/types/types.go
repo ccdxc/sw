@@ -27,7 +27,7 @@ type CtrlerIntf interface {
 	ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error)
 	UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
 	DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
-	Debug(w http.ResponseWriter, r *http.Request)
+	Debug(r *http.Request) (interface{}, error)
 }
 
 // CollectorKey is the key to collector hash table

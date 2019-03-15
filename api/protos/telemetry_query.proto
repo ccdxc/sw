@@ -105,13 +105,13 @@ message Fwlog {
     // Tenant
     string Tenant = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
     // Source IP, 
-    string Src = 2 [(gogoproto.jsontag) = "src,omitempty"];
+    string Src = 2 [(gogoproto.jsontag) = "source,omitempty"];
     // Destination IP
-    string Dest = 3 [(gogoproto.jsontag) = "dest,omitempty"];
+    string Dest = 3 [(gogoproto.jsontag) = "destination,omitempty"];
     // Source Port
-    uint32 SrcPort = 4 [(gogoproto.jsontag) = "src-port,omitempty"];
+    uint32 SrcPort = 4 [(gogoproto.jsontag) = "source-port,omitempty"];
     // Destination Port
-    uint32 DestPort = 5 [(gogoproto.jsontag) = "dest-port,omitempty"];
+    uint32 DestPort = 5 [(gogoproto.jsontag) = "destination-port,omitempty"];
     // Protocol, 
     string Protocol = 6 [(gogoproto.jsontag) = "protocol,omitempty"];
     // Action 

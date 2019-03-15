@@ -193,7 +193,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10"},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10')`,
 			pass: true,
 		},
 		{
@@ -201,7 +201,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12')`,
 			pass: true,
 		},
 		{
@@ -210,7 +210,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				DestIPs:   []string{"11.1.1.10", "11.1.1.11", "11.1.1.12"},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12') AND ("dest" = '11.1.1.10' OR "dest" = '11.1.1.11' OR "dest" = '11.1.1.12')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("destination" = '11.1.1.10' OR "destination" = '11.1.1.11' OR "destination" = '11.1.1.12')`,
 			pass: true,
 		},
 		{
@@ -220,7 +220,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				SourcePorts: []uint32{8000, 9000},
 				DestPorts:   []uint32{6000, 7000},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12') AND ("src-port" = '8000' OR "src-port" = '9000') AND ("dest-port" = '6000' OR "dest-port" = '7000')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("source-port" = '8000' OR "source-port" = '9000') AND ("destination-port" = '6000' OR "destination-port" = '7000')`,
 			pass: true,
 		},
 		{
@@ -229,7 +229,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Actions:   []string{"ALL"},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12')`,
 			pass: true,
 		},
 		{
@@ -238,7 +238,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Actions:   []string{"ACTION_DENY", "ALL"},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12')`,
 			pass: true,
 		},
 		{
@@ -247,7 +247,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Actions:   []string{"ACTION_DENY", "ACTION_REJECT"},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12') AND ("action" = 'SECURITY_RULE_ACTION_DENY' OR "action" = 'SECURITY_RULE_ACTION_REJECT')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("action" = 'deny' OR "action" = 'reject')`,
 			pass: true,
 		},
 		{
@@ -256,7 +256,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				SourceIPs:  []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Directions: []string{"DIRECTION_ALL", "DIRECTION_FROM_HOST"},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12')`,
 			pass: true,
 		},
 		{
@@ -265,7 +265,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				SourceIPs:  []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Directions: []string{"DIRECTION_FROM_UPLINK", "DIRECTION_FROM_HOST"},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12') AND ("direction" = 'FLOW_DIRECTION_FROM_UPLINK' OR "direction" = 'FLOW_DIRECTION_FROM_HOST')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("direction" = 'from_uplink' OR "direction" = 'from_host')`,
 			pass: true,
 		},
 		{
@@ -275,7 +275,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				StartTime: startTime,
 				EndTime:   endTime,
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z'`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z'`,
 			pass: true,
 		},
 		{
@@ -289,7 +289,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 					Offset: 200,
 				},
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' LIMIT 100 OFFSET 200`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' LIMIT 100 OFFSET 200`,
 			pass: true,
 		},
 	}
@@ -336,16 +336,16 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 						Series: models.Rows{
 							&models.Row{
 								// Column doesn't have all of the fwlog fields
-								Columns: []string{"time", "src", "dest", "action", "direction"},
+								Columns: []string{"time", "source", "destination", "action", "direction"},
 								Values: [][]interface{}{
 									[]interface{}{
-										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "SECURITY_RULE_ACTION_ALLOW", "FLOW_DIRECTION_FROM_HOST",
+										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "allow", "from_host",
 									},
 									[]interface{}{
-										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "SECURITY_RULE_ACTION_DENY", "FLOW_DIRECTION_FROM_UPLINK",
+										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "deny", "from_uplink",
 									},
 									[]interface{}{
-										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "SECURITY_RULE_ACTION_REJECT", "FLOW_DIRECTION_FROM_UPLINK",
+										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "reject", "from_uplink",
 									},
 								},
 							},
@@ -357,7 +357,7 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 						Series: models.Rows{
 							&models.Row{
 								// Column has extra unknown fields
-								Columns: []string{"time", "src", "dest", "randomField", "action", "direction"},
+								Columns: []string{"time", "source", "destination", "randomField", "action", "direction"},
 								Values: [][]interface{}{
 									[]interface{}{
 										"2018-11-09T23:16:17Z", "10.1.1.3", "10.1.1.4", "random", "UNKNOWN", "UNKNOWN",
@@ -371,7 +371,7 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 						StatementID: 1,
 						Series: models.Rows{
 							&models.Row{
-								Columns: []string{"time", "src", "dest"},
+								Columns: []string{"time", "source", "destination"},
 								Values: [][]interface{}{
 									[]interface{}{
 										"2018-11-09T23:16:17Z", "10.1.1.3", "10.1.1.4",
@@ -443,7 +443,7 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 		resp, err := srv.executeFwlogsQuery(ctx, "tenant", "query_string")
 		if i.pass {
 			AssertOk(t, err, fmt.Sprintf("execute query failed for test case %d %+v", index, err))
-			Assert(t, reflect.DeepEqual(resp, i.exp), fmt.Sprintf("resp didn't match exp, got:{%s} expected: {%s}", resp, i.exp))
+			Assert(t, reflect.DeepEqual(resp, i.exp), fmt.Sprintf("[%d] resp didn't match exp, got:{%s} expected: {%s}", index, resp, i.exp))
 		} else {
 			Assert(t, err != nil, fmt.Sprintf("build query didn't fail %+v", index))
 		}
@@ -524,7 +524,7 @@ func TestFwlogs(t *testing.T) {
 					},
 				},
 			},
-			brokerQuery: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.1') AND ("dest" = '10.1.1.2') AND ("src-port" = '8000') AND ("dest-port" = '9000') AND ("protocol" = 'TCP') AND ("action" = 'SECURITY_RULE_ACTION_DENY') AND ("direction" = 'FLOW_DIRECTION_FROM_HOST') AND ("rule-id" = '1234') AND time > '2018-11-09T23:15:17Z' AND time < '2018-11-09T23:20:17Z'`,
+			brokerQuery: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.1') AND ("destination" = '10.1.1.2') AND ("source-port" = '8000') AND ("destination-port" = '9000') AND ("protocol" = 'TCP') AND ("action" = 'deny') AND ("direction" = 'from_host') AND ("rule-id" = '1234') AND time > '2018-11-09T23:15:17Z' AND time < '2018-11-09T23:20:17Z'`,
 			errMsg:      "",
 			clusterCheckResponse: &ClusterCheckResponse{
 				err: nil,
@@ -536,7 +536,7 @@ func TestFwlogs(t *testing.T) {
 						StatementID: 0,
 						Series: models.Rows{
 							&models.Row{
-								Columns: []string{"time", "src", "dest", "src-port", "dest-port", "protocol", "action", "direction", "rule-id"},
+								Columns: []string{"time", "source", "destination", "source-port", "destination-port", "protocol", "action", "direction", "rule-id"},
 								Values: [][]interface{}{
 									[]interface{}{
 										"2018-11-09T23:20:17Z", "10.1.1.1", "10.1.1.2", 8000, 9000, "TCP", "DENY", "FROM_HOST", "1234",

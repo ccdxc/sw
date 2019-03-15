@@ -6,14 +6,15 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
-	"syscall"
 	"time"
 
 	"github.com/pensando/sw/nic/agent/ipc"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 
 	"golang.org/x/net/context"
-	check "gopkg.in/check.v1"
+	"gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -24,7 +25,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	state "github.com/pensando/sw/nic/agent/netagent/protos"
+	"github.com/pensando/sw/nic/agent/netagent/protos"
 	tmstate "github.com/pensando/sw/nic/agent/tmagent/state"
 
 	"github.com/pensando/sw/nic/agent/nmd"
@@ -48,7 +49,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
 	"github.com/pensando/sw/venice/citadel/data"
-	httpserver "github.com/pensando/sw/venice/citadel/http"
+	"github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/cmd/cache"
@@ -57,7 +58,7 @@ import (
 	cmdauth "github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/ctrler/rollout"
@@ -708,7 +709,7 @@ func (it *veniceIntegSuite) startAgent() {
 			}
 
 			// Init the TSDB
-			if err := tpState.TsdbInit(fmt.Sprintf("dummy-uuid-%d", i), rc); err != nil {
+			if err := tpState.TsdbInit(fmt.Sprintf("tmagent-%d", i), rc); err != nil {
 				log.Fatalf("failed to init tsdb, err: %v", err)
 			}
 
@@ -717,7 +718,7 @@ func (it *veniceIntegSuite) startAgent() {
 				log.Fatalf("failed to init tmagent controller client, err: %v", err)
 			}
 
-			tmpFd, err := ioutil.TempFile("/tmp", "palazzo-shm")
+			tmpFd, err := ioutil.TempFile("/tmp", "palazzo-fwlogshm")
 			if err != nil {
 				log.Fatalf("failed to create temp file, err: %v", err)
 			}
@@ -725,18 +726,11 @@ func (it *veniceIntegSuite) startAgent() {
 			shmPath := tmpFd.Name()
 			it.tmpFiles = append(it.tmpFiles, shmPath)
 
-			mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
-			instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
-			log.Infof("memsize=%d instances=%d", mSize, instCount)
-
-			fd, err := syscall.Open(shmPath, syscall.O_RDWR|syscall.O_CREAT, 0666)
-			if err != nil || fd < 0 {
-				log.Fatalf("failed to create %s,%s", shmPath, err)
-			}
-
 			if err := tpState.FwlogInit(shmPath); err != nil {
 				log.Fatal(err)
 			}
+
+			it.fwlogGen(shmPath)
 
 			res, err := tmrestapi.NewRestServer(it.ctx, fmt.Sprintf("localhost:%d", it.config.TmAgentRestPort+i), tpState)
 			if err != nil {
@@ -747,6 +741,62 @@ func (it *veniceIntegSuite) startAgent() {
 			it.tmAgent = append(it.tmAgent, res)
 		}
 	}
+}
+
+func (it *veniceIntegSuite) fwlogGen(fwlogShm string) error {
+	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
+	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
+	protKey := func() int32 {
+		for k := range halproto.IPProtocol_name {
+			if k != 0 {
+				return k
+			}
+		}
+		return 1 // TCP
+	}
+
+	fwActionKey := func() int32 {
+		for k := range halproto.SecurityAction_name {
+			if k != 0 {
+				return k
+			}
+		}
+		return 1 // ALLOW
+	}
+
+	shm, err := ipc.NewSharedMem(mSize, instCount, fwlogShm)
+	if err != nil {
+		return fmt.Errorf("failed to init fwlog, %s", err)
+	}
+
+	ipcList := make([]*ipc.IPC, instCount)
+	for ix := 0; ix < instCount; ix++ {
+		ipcList[ix] = shm.IPCInstance()
+	}
+
+	go func() {
+		for it.ctx.Err() == nil {
+			for _, fd := range ipcList {
+				ev := &halproto.FWEvent{
+					Sipv4:     uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
+					Dipv4:     uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
+					Dport:     uint32(rand.Int31n(5000)),
+					Sport:     uint32(rand.Int31n(5000)),
+					IpProt:    halproto.IPProtocol(protKey()),
+					Fwaction:  halproto.SecurityAction(fwActionKey()),
+					Direction: uint32(rand.Int31n(2) + 1),
+					RuleId:    uint64(rand.Int63n(5000)),
+				}
+				if err := fd.Write(ev); err != nil {
+					log.Errorf("failed to write fwlog, %s", err)
+				}
+
+				time.Sleep(time.Second)
+			}
+		}
+	}()
+
+	return nil
 }
 
 // pollTimeout returns the poll timeout value based on number of agents

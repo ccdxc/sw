@@ -878,7 +878,8 @@ func TestProcessFWEvent(t *testing.T) {
 					// content:{\"action\":\"SECURITY_RULE_ACTION_ALLOW\",\"dPort\":\"10000\",\"dest\":\"192.168.20.1\",\"direction\":\"0\",\"ipProt\":\"20000\",\"rule-id\":\"0\",\"src\":\"192.168.10.1\"}\n]"
 					l, err := parseRfc3164(c)
 					AssertOk(t, err, "failed to get %s syslog", k)
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["content"]), e.fwEvent.Fwaction.String()), "failed to match, expected %s, got %+v", e.fwEvent.Fwaction, l)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", l["content"]),
+						strings.ToLower(strings.TrimPrefix(e.fwEvent.Fwaction.String(), "SECURITY_RULE_ACTION_"))), "failed to match, expected %s, got %+v", e.fwEvent.Fwaction, l)
 					Assert(t, strings.Contains(fmt.Sprintf("%s", l["content"]), fmt.Sprintf("%d", e.fwEvent.Dport)), "failed to match, expected %s, got %+v", e.fwEvent.Dport, l)
 					Assert(t, strings.Contains(fmt.Sprintf("%s", l["content"]), destIPStr), "failed to match, expected %s, got %+v", e.fwEvent.Dipv4, l)
 					Assert(t, strings.Contains(fmt.Sprintf("%s", l["content"]), srcIPStr), "failed to match, expected %s, got %+v", e.fwEvent.Sipv4, l)
@@ -891,7 +892,7 @@ func TestProcessFWEvent(t *testing.T) {
 					// rfc5424 map[priority:14 severity:6 msg_id:0 message:\n structured_data:[firewall@Pensando rule-id=\"0\" src=\"192.168.10.1\"
 					// dest=\"192.168.20.1\" dPort=\"10000\" ipProt=\"20000\" action=\"SECURITY_RULE_ACTION_ALLOW\" direction=\"0\"] facility:1
 					// version:1 timestamp:2018-11-13 19:29:50 -0800 PST hostname:Ranjiths-MBP.pensando.io app_name:- proc_id:28973]"
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["structured_data"]), e.fwEvent.Fwaction.String()), "failed to match, expected %s, got %+v", e.fwEvent.Fwaction, l)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", l["structured_data"]), strings.ToLower(strings.TrimPrefix(e.fwEvent.Fwaction.String(), "SECURITY_RULE_ACTION_"))), "failed to match, expected %s, got %+v", e.fwEvent.Fwaction, l)
 					Assert(t, strings.Contains(fmt.Sprintf("%s", l["structured_data"]), fmt.Sprintf("%d", e.fwEvent.Dport)), "failed to match, expected %s, got %+v", e.fwEvent.Dport, l)
 					Assert(t, strings.Contains(fmt.Sprintf("%s", l["structured_data"]), destIPStr), "failed to match, expected %s, got %+v", e.fwEvent.Dipv4, l)
 					Assert(t, strings.Contains(fmt.Sprintf("%s", l["structured_data"]), srcIPStr), "failed to match, expected %s, got %+v", e.fwEvent.Sipv4, l)

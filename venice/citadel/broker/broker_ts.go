@@ -281,6 +281,12 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 		resp, err := dnclient.PointsWrite(ctx, &req)
 		if err != nil || resp.Status != "" {
 			br.logger.Errorf("Error making PointsWrite rpc call. Err: %v, Node: %v", err, replMap[sid].NodeUUID)
+			// trigger db creation
+			if err != nil && strings.Contains(err.Error(), "database not found") {
+				if dbErr := br.CreateDatabase(ctx, database); dbErr != nil {
+					br.logger.Error("failed to create database %v", dbErr)
+				}
+			}
 			return err
 		}
 	}

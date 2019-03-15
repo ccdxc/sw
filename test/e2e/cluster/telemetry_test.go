@@ -20,14 +20,14 @@ import (
 )
 
 var actionEnumMapping = map[string]string{
-	"ALLOW":  "SECURITY_RULE_ACTION_ALLOW",
-	"DENY":   "SECURITY_RULE_ACTION_DENY",
-	"REJECT": "SECURITY_RULE_ACTION_REJECT",
+	"ALLOW":  "allow",
+	"DENY":   "deny",
+	"REJECT": "reject",
 }
 
 var directionEnumMapping = map[string]string{
-	"FROM_HOST":   "FLOW_DIRECTION_FROM_HOST",
-	"FROM_UPLINK": "FLOW_DIRECTION_FROM_UPLINK",
+	"FROM_HOST":   "from_host",
+	"FROM_UPLINK": "from_uplink",
 }
 
 func testQueryingMetrics(kind string) {
@@ -137,23 +137,23 @@ func testQueryingFwlogs() {
 		Namespace: globals.DefaultNamespace,
 		Queries: []*telemetry_query.FwlogsQuerySpec{
 			// Get all logs that were just created
-			&telemetry_query.FwlogsQuerySpec{
+			{
 				StartTime: startTime,
 			},
 			// Get if src = 10.1.1.1 or 10.1.1.2
-			&telemetry_query.FwlogsQuerySpec{
+			{
 				SourceIPs: []string{"10.1.1.1", "10.1.1.2"},
 				StartTime: startTime,
 			},
 			// Get if src = 10.1.1.1 or 10.1.1.0 AND source-port is 8000 AND action ALL
-			&telemetry_query.FwlogsQuerySpec{
+			{
 				SourceIPs:   []string{"10.1.1.1", "10.1.1.0"},
 				SourcePorts: []uint32{8000},
 				Actions:     []string{"ACTION_ALLOW"},
 				StartTime:   startTime,
 			},
 			// no logs match
-			&telemetry_query.FwlogsQuerySpec{
+			{
 				SourceIPs:   []string{"10.1.1.1", "10.1.1.0"},
 				SourcePorts: []uint32{8000},
 				Actions:     []string{"ACTION_DENY"},
@@ -169,15 +169,23 @@ func testQueryingFwlogs() {
 	Expect(resp.Tenant).To(Equal(globals.DefaultTenant))
 	Expect(len(resp.Results)).To(Equal(4))
 
+	log.Infof("++++++[0] %+v", resp.Results[0].Logs)
+
 	Expect(resp.Results[0].StatementID).To(Equal(int32(0)))
 	Expect(len(resp.Results[0].Logs)).To(Equal(20))
 	Expect(logs).Should(Equal(resp.Results[0].Logs))
 
+	log.Infof("++++++[1] %+v", resp.Results[1].Logs)
+
 	Expect(resp.Results[1].StatementID).To(Equal(int32(1)))
 	Expect(len(resp.Results[1].Logs)).To(Equal(12))
 
+	log.Infof("++++++[2] %+v", resp.Results[2].Logs)
+
 	Expect(resp.Results[2].StatementID).To(Equal(int32(2)))
 	Expect(len(resp.Results[2].Logs)).To(Equal(2))
+
+	log.Infof("++++++[3] %+v", resp.Results[3].Logs)
 
 	Expect(resp.Results[3].StatementID).To(Equal(int32(3)))
 	Expect(len(resp.Results[3].Logs)).To(Equal(0))
@@ -222,7 +230,7 @@ func writeFwlogs(logs []*telemetry_query.Fwlog) error {
 			return err
 		}
 
-		tags := map[string]string{"src": ipSrc, "dest": ipDest, "src-port": sPort, "dest-port": dPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID}
+		tags := map[string]string{"source": ipSrc, "destination": ipDest, "source-port": sPort, "destination-port": dPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID}
 		fields := map[string]interface{}{"flowAction": 1}
 
 		pt, err := client.NewPoint("Fwlogs", tags, fields, timestamp)

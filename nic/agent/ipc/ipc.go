@@ -94,7 +94,7 @@ func (sm *SharedMem) IPCInstance() *IPC {
 	ipcSize := sm.mmapSize / sm.maxPart
 	base := sm.mmapAddr[sm.partCount*ipcSize : (sm.partCount+1)*ipcSize]
 	numBufs := (ipcSize - int(C.IPC_OVH_SIZE)) / int(C.IPC_BUF_SIZE)
-	log.Infof("IPC[%d] allocated shared memory %v:%v", sm.partCount, sm.partCount*ipcSize, (sm.partCount+1)*ipcSize)
+	log.Infof("IPC[%d] allocated shared memory %v:%v num_buffers: %d ovh_len: %d hdr_len: %d buff_len: %d", sm.partCount, sm.partCount*ipcSize, (sm.partCount+1)*ipcSize, numBufs, int(C.IPC_OVH_SIZE), int(C.IPC_HDR_SIZE), int(C.IPC_BUF_SIZE))
 	sm.partCount++
 	return &IPC{
 		base:       base,
@@ -106,7 +106,7 @@ func (sm *SharedMem) IPCInstance() *IPC {
 
 // String prints SharedMem details
 func (sm *SharedMem) String() string {
-	return fmt.Sprintf("size: %v, parts: %v", sm.mmapSize, sm.maxPart)
+	return fmt.Sprintf("size: %v, channels: %v", sm.mmapSize, sm.maxPart)
 }
 
 // Receive processes messages received on the IPC channel
@@ -160,6 +160,23 @@ func (ipc *IPC) processIPC(h func(*ipcproto.FWEvent, time.Time)) {
 	binary.LittleEndian.PutUint32(ipc.base[ipc.readIndex:], ro)
 }
 
+// Write is the function to send fwlog event to shm, used in tests
+func (ipc *IPC) Write(event *ipcproto.FWEvent) error {
+	ro := binary.LittleEndian.Uint32(ipc.base[ipc.readIndex:])
+	wo := binary.LittleEndian.Uint32(ipc.base[ipc.writeIndex:])
+	if (wo+1)%ipc.numBufs == ro {
+		return fmt.Errorf("fwlog shm is full")
+	}
+
+	if err := ipc.writeMsg(wo, event); err != nil {
+		return fmt.Errorf("failed to write to offset %v, %v", wo, err)
+	}
+
+	wo = (wo + 1) % ipc.numBufs
+	binary.LittleEndian.PutUint32(ipc.base[ipc.writeIndex:], wo)
+	return nil
+}
+
 func (ipc *IPC) processMsg(offset uint32, ts time.Time, h func(*ipcproto.FWEvent, time.Time)) {
 	ev, err := ipc.readMsg(offset)
 	if err != nil {
@@ -185,10 +202,27 @@ func (ipc *IPC) readMsg(offset uint32) (*ipcproto.FWEvent, error) {
 	return ev, nil
 }
 
-// String prints IPC details`
+func (ipc *IPC) writeMsg(offset uint32, event *ipcproto.FWEvent) error {
+	data, err := proto.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("failed to marshal data")
+	}
+
+	index := GetSharedConstant("IPC_OVH_SIZE") + offset*GetSharedConstant("IPC_BUF_SIZE")
+	binary.LittleEndian.PutUint32(ipc.base[index:], uint32(len(data)))
+	index += GetSharedConstant("IPC_HDR_SIZE")
+
+	copy(ipc.base[index:], data[0:])
+	return nil
+}
+
+// String prints IPC details
 func (ipc *IPC) String() string {
-	return fmt.Sprintf("readIndex: %v writeINdex: %v numbuffer: %v txCountIndex: %v errCountIndex: %v rxErrors: %v rxCount: %v",
-		ipc.readIndex, ipc.writeIndex, ipc.numBufs, ipc.txCountIndex, ipc.errCountIndex, ipc.rxErrors, ipc.rxCount)
+	ro := binary.LittleEndian.Uint32(ipc.base[ipc.readIndex:])
+	wo := binary.LittleEndian.Uint32(ipc.base[ipc.writeIndex:])
+
+	return fmt.Sprintf("readindex: %v (@%v) writeindex: %v (@%v) numbuffer: %v txCountIndex: %v errCountIndex: %v rxErrors: %v rxCount: %v",
+		ro, ipc.readIndex, wo, ipc.writeIndex, ipc.numBufs, ipc.txCountIndex, ipc.errCountIndex, ipc.rxErrors, ipc.rxCount)
 }
 
 // GetSharedConstant gets a shared constant from cgo

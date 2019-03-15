@@ -3,8 +3,6 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http/httptest"
 	"os"
 	"reflect"
 	"testing"
@@ -1195,14 +1193,11 @@ func TestTpaDebug(t *testing.T) {
 	err = s.CreateFlowExportPolicy(context.Background(), pol1)
 	tu.AssertOk(t, err, "failed to create policy")
 
-	resp := httptest.NewRecorder()
-	s.Debug(resp, nil)
-	b, err := ioutil.ReadAll(resp.Body)
+	data, err := s.Debug(nil)
 	tu.AssertOk(t, err, "failed to read debug")
 
-	dbgInfo := &debugInfo{}
-	err = json.Unmarshal(b, dbgInfo)
-	tu.AssertOk(t, err, "failed to unmarshal debug")
+	dbgInfo, ok := data.(*debugInfo)
+	tu.Assert(t, ok == true, "invalid debug info")
 
 	pdebug := dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol1.Tenant, pol1.Namespace, pol1.Name)]
 	tu.Assert(t, pdebug.FlowExportPolicy != nil, "failed to find policy")
@@ -2209,14 +2204,11 @@ func TestMatchRule(t *testing.T) {
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", pol))
 
-	resp := httptest.NewRecorder()
-	s.Debug(resp, nil)
-	b, err := ioutil.ReadAll(resp.Body)
+	data, err := s.Debug(nil)
 	tu.AssertOk(t, err, "failed to read debug")
 
-	dbgInfo := &debugInfo{}
-	err = json.Unmarshal(b, dbgInfo)
-	tu.AssertOk(t, err, "failed to unmarshal debug")
+	dbgInfo, ok := data.(*debugInfo)
+	tu.Assert(t, ok == true, fmt.Sprintf("invalid debug info, %T", data))
 
 	pdebug := dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol.Tenant, pol.Namespace, pol.Name)]
 	tu.Assert(t, pdebug.FlowExportPolicy != nil, "failed to find policy")
@@ -2246,19 +2238,15 @@ func TestMatchRule(t *testing.T) {
 	err = s.DeleteFlowExportPolicy(context.Background(), pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to delete export policy %+v", pol))
 
-	resp = httptest.NewRecorder()
-	s.Debug(resp, nil)
-	b, err = ioutil.ReadAll(resp.Body)
+	data, err = s.Debug(nil)
 	tu.AssertOk(t, err, "failed to read debug")
 
-	dbgInfo = &debugInfo{}
-	err = json.Unmarshal(b, dbgInfo)
-	tu.AssertOk(t, err, "failed to unmarshal debug")
+	dbgInfo, ok = data.(*debugInfo)
+	tu.Assert(t, ok == true, "invalid debug info")
 
-	pdebug, ok := dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol.Tenant, pol.Namespace, pol.Name)]
+	pdebug, ok = dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol.Tenant, pol.Namespace, pol.Name)]
 	tu.Assert(t, ok == false, "didn't remove policy", pdebug)
 	tu.Assert(t, len(pdebug.Collectors) == 0, "mismatch in collectors", pdebug.Collectors)
 	tu.Assert(t, len(dbgInfo.CollectorTable) == 0, "invalid collectors", dbgInfo.CollectorTable)
 	tu.Assert(t, len(dbgInfo.FlowRuleTable) == 0, "invalid num of flows", dbgInfo.FlowRuleTable)
-
 }

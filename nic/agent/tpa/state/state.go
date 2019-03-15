@@ -2,7 +2,6 @@ package state
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -1002,8 +1001,8 @@ type debugInfo struct {
 }
 
 // Debug is the tpa debug entry point from REST
-func (s *PolicyState) Debug(w http.ResponseWriter, r *http.Request) {
-	dbgInfo := debugInfo{
+func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
+	dbgInfo := &debugInfo{
 		Policy:         map[string]debugPolicy{},
 		CollectorTable: []debugCollector{},
 		FlowRuleTable:  []debugFlowRules{},
@@ -1107,7 +1106,7 @@ func (s *PolicyState) Debug(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	json.NewEncoder(w).Encode(dbgInfo)
+	return dbgInfo, nil
 }
 
 // GetFlowExportPolicy is the GET entry point

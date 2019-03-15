@@ -1,11 +1,13 @@
-// +build linux
-
 package ipc
 
 import (
 	"encoding/binary"
+	"fmt"
+	"io/ioutil"
+	"math"
 	"os"
-	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -84,15 +86,26 @@ func wrFWLog(buf []byte, sport uint16) (int, error) {
 }
 
 func TestBasicIPC(t *testing.T) {
-	defer os.Remove(filepath.Join(shmPath, "/fwlog_ipc_shm"))
+	f, err := ioutil.TempFile("/tmp", "ipc")
+	defer os.Remove(f.Name())
+
 	ipcMemSize := int(GetSharedConstant("IPC_MEM_SIZE"))
 	ipcInstances := int(GetSharedConstant("IPC_INSTANCES"))
-	shm, err := NewSharedMem(ipcMemSize, ipcInstances, "/fwlog_ipc_shm")
+	shm, err := NewSharedMem(ipcMemSize, ipcInstances, f.Name())
 	Assert(t, err == nil, "Failed to open shared mem", err)
 	ipc1 := shm.IPCInstance()
 	ipc2 := shm.IPCInstance()
-	clientShm, err := NewSharedMem(ipcMemSize, ipcInstances, "/fwlog_ipc_shm")
+	clientShm, err := NewSharedMem(ipcMemSize, ipcInstances, f.Name())
 	Assert(t, err == nil, "Failed to open shared mem", err)
+	shmInfo := clientShm.String()
+	Assert(t, strings.Contains(shmInfo, fmt.Sprintf("size: %d", ipcMemSize)), "invalid size", shmInfo)
+	Assert(t, strings.Contains(shmInfo, fmt.Sprintf("channels: %d", ipcInstances)), "invalid channels", shmInfo)
+
+	ipc1Info := ipc1.String()
+	Assert(t, strings.Contains(ipc1Info, "readindex: 0"), "invalid readindex", ipc1Info)
+	Assert(t, strings.Contains(ipc1Info, "writeindex: 0"), "invalid writeindex", ipc1Info)
+	Assert(t, strings.Contains(ipc1Info, "numbuffer: 255"), "invalid num_buffer", ipc1Info)
+
 	client1 := newIPCClient(clientShm, 0)
 	client2 := newIPCClient(clientShm, 1)
 
@@ -129,4 +142,60 @@ func TestBasicIPC(t *testing.T) {
 	Assert(t, err != nil, "Expected err", err)
 	shm, err = NewSharedMem(16, ipcInstances, "/dev/fwlog_ipc_shm")
 	Assert(t, err != nil, "Expected err", err)
+}
+
+func TestFwEventSize(t *testing.T) {
+
+	ev := &FWEvent{}
+	v := reflect.ValueOf(ev).Elem()
+	// fill all 1s
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		switch f.Kind() {
+		case reflect.Uint32:
+			f.SetUint(math.MaxUint32)
+		case reflect.Int32:
+			f.SetInt(math.MaxInt32)
+		case reflect.Uint64:
+			f.SetUint(math.MaxUint64)
+		default:
+			Assert(t, true, "unhandled kind: ", f.Kind())
+		}
+	}
+
+	l, err := proto.Marshal(ev)
+	AssertOk(t, err, "failed to marshal fwevent")
+
+	ipcBufSize := GetSharedConstant("IPC_BUF_SIZE")
+	ipcHdrSize := GetSharedConstant("IPC_HDR_SIZE")
+	Assert(t, len(l) < int(ipcBufSize-ipcHdrSize), "too big fwevent got %d, expected < %d", len(l), int(ipcBufSize-ipcHdrSize))
+}
+
+func TestWriteMsg(t *testing.T) {
+	f, err := ioutil.TempFile("/tmp", "fwlogshm")
+	defer os.Remove(f.Name())
+
+	ipcMemSize := int(GetSharedConstant("IPC_MEM_SIZE"))
+	ipcInstances := int(GetSharedConstant("IPC_INSTANCES"))
+	shm, err := NewSharedMem(ipcMemSize, ipcInstances, f.Name())
+	Assert(t, err == nil, "Failed to open shared mem", err)
+	ipc1 := shm.IPCInstance()
+
+	numBuff := (ipcMemSize/ipcInstances - int(GetSharedConstant("IPC_OVH_SIZE"))) / int(GetSharedConstant("IPC_BUF_SIZE"))
+	for i := 0; i < numBuff-1; i++ {
+		ev := &FWEvent{
+			Sipv4: uint32(0xFFFF + i),
+		}
+
+		err = ipc1.Write(ev)
+		AssertOk(t, err, "Failed to write %d event to shm", i+1)
+	}
+
+	// should be full
+	ev := &FWEvent{
+		Sipv4: 0x6666,
+	}
+	err = ipc1.Write(ev)
+	Assert(t, err != nil, "didn't fill shm, numbuff: %d", numBuff)
+
 }

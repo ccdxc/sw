@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	tpa "github.com/pensando/sw/nic/agent/tpa/state/types"
 	troubleshooting "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
@@ -116,7 +117,7 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, t
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
 	if tpAgent != nil { // telemetry IPFIX policy debug
-		router.Methods("GET").Subrouter().Handle("/debug/tpa", http.HandlerFunc(tpAgent.Debug))
+		router.Methods("GET").Subrouter().Handle("/debug/tpa", httputils.MakeHTTPHandler(tpAgent.Debug))
 	}
 
 	if tsagent != nil {

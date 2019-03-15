@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -50,12 +51,13 @@ func (s *PolicyState) FwlogInit(path string) error {
 	if err != nil {
 		return err
 	}
-
+	s.shm = shm
 	log.Infof("allocated shared memory: %v", shm)
 
 	for ix := 0; ix < instCount; ix++ {
 		ipc := shm.IPCInstance()
 		log.Infof("IPC[%d] %s", ix, ipc)
+		s.ipc = append(s.ipc, ipc)
 		s.wg.Add(1)
 		go func(ix int) {
 			defer s.wg.Done()
@@ -74,9 +76,9 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
 	dPort := fmt.Sprintf("%v", ev.GetDport())
 	sPort := fmt.Sprintf("%v", ev.GetSport())
-	ipProt := fmt.Sprintf("%v", ev.GetIpProt())
-	action := fmt.Sprintf("%v", ev.GetFwaction().String())
-	dir := fmt.Sprintf("%v", halproto.FlowDirection_name[int32(ev.GetDirection())])
+	ipProt := fmt.Sprintf("%v", strings.TrimPrefix(ev.GetIpProt().String(), "IPPROTO_"))
+	action := fmt.Sprintf("%v", strings.ToLower(strings.TrimPrefix(ev.GetFwaction().String(), "SECURITY_RULE_ACTION_")))
+	dir := fmt.Sprintf("%v", strings.ToLower(strings.TrimPrefix(halproto.FlowDirection_name[int32(ev.GetDirection())], "FLOW_DIRECTION_")))
 	ruleID := fmt.Sprintf("%v", ev.GetRuleId())
 	unixnano := ev.GetTimestamp()
 	if unixnano != 0 {
@@ -85,11 +87,11 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 	}
 
 	point := &tsdb.Point{
-		Tags:   map[string]string{"src": ipSrc, "dest": ipDest, "src-port": sPort, "dest-port": dPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID},
-		Fields: map[string]interface{}{"flowAction": int64(ev.GetFlowaction())},
+		Tags:   map[string]string{"source": ipSrc, "destination": ipDest, "source-port": sPort, "destination-port": dPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID},
+		Fields: map[string]interface{}{"flow_action": int64(ev.GetFlowaction())},
 	}
 
-	log.Infof("Fwlog: %+v", point)
+	log.Debugf("Fwlog: %+v", point)
 
 	s.fwTable.Points([]*tsdb.Point{point}, ts)
 

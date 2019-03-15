@@ -20,13 +20,13 @@ var typesMapTelemetry_query = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Tenant": api.Field{Name: "Tenant", CLITag: api.CLIInfo{ID: "tenant", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Src": api.Field{Name: "Src", CLITag: api.CLIInfo{ID: "src", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "src", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Src": api.Field{Name: "Src", CLITag: api.CLIInfo{ID: "source", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Dest": api.Field{Name: "Dest", CLITag: api.CLIInfo{ID: "dest", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dest", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Dest": api.Field{Name: "Dest", CLITag: api.CLIInfo{ID: "destination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"SrcPort": api.Field{Name: "SrcPort", CLITag: api.CLIInfo{ID: "src-port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "src-port", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"SrcPort": api.Field{Name: "SrcPort", CLITag: api.CLIInfo{ID: "source-port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source-port", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"DestPort": api.Field{Name: "DestPort", CLITag: api.CLIInfo{ID: "dest-port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dest-port", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"DestPort": api.Field{Name: "DestPort", CLITag: api.CLIInfo{ID: "destination-port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination-port", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"Protocol": api.Field{Name: "Protocol", CLITag: api.CLIInfo{ID: "protocol", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocol", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
