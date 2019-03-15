@@ -35,7 +35,7 @@ venice-iso:
 	echo commit: ${GIT_COMMIT} > PEN-VERSION
 	echo version: ${GIT_VERSION} >> PEN-VERSION
 	echo build-date: ${BUILD_DATE} >> PEN-VERSION
-	docker run -it --rm --privileged  -v ${CURDIR}/isolinux.cfg:/pen/isolinux.cfg \
+	docker run --rm --privileged  -v ${CURDIR}/isolinux.cfg:/pen/isolinux.cfg \
 		-v ${CURDIR}/create-iso.sh:/pen/create-iso.sh \
 		-v ${CURDIR}/add-venice-iso.sh:/pen/add-venice-iso.sh \
 		-v ${CURDIR}/PEN-VERSION:/pen/PEN-VERSION \
