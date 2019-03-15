@@ -12,7 +12,7 @@ var rootCmd = &cobra.Command{
 	Short: "citadel cli",
 	Long:  `citadel cli`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("ctctl version 1.0 \n")
+		fmt.Printf("%v", cmd.Help())
 	},
 }
 

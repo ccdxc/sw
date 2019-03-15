@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sort"
 	"text/tabwriter"
 
 	"github.com/influxdata/influxdb/query"
@@ -38,17 +39,21 @@ func showMeasurements() {
 		return
 	}
 
+	tbls := []string{}
+
 	for _, res := range resp.Results {
 		// series
 		for _, s := range res.Series {
 			for _, vl := range s.Values {
 				for _, v := range vl {
-					fmt.Fprintf(w, "%v\t", v)
+					tbls = append(tbls, v.(string))
 				}
-				fmt.Fprintln(w)
 			}
-			fmt.Fprintln(w)
 		}
+	}
+	sort.Strings(tbls)
+	for i, m := range tbls {
+		fmt.Fprintf(w, "%-3d %v\n", i+1, m)
 	}
 	w.Flush()
 }

@@ -32,9 +32,10 @@ func clusterCmdHandler(cmd *cobra.Command, args []string) {
 	// Format in tab-separated columns with a tab stop of 8.
 	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
 
-	for t, cl := range resp {
+	ctype := "tstore"
+	if cl, ok := resp[ctype]; ok {
 		// nodemap
-		fmt.Fprintf(w, "%s-node\tstatus\tURL\tshards\tprimary-replicas\n", t)
+		fmt.Fprintf(w, "%s-node\tstatus\tURL\tshards\tprimary-replicas\n", ctype)
 		for node, st := range cl.NodeMap {
 			fmt.Fprintf(w, "%v\t%v\t%v\t%v\t%v\n", node, st.NodeStatus, st.NodeURL, st.NumShards, st.NumPrimaryReplicas)
 		}
