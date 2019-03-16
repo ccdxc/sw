@@ -70,6 +70,7 @@ func ConfigInterface(n3k *ConnectCtx, port string, commands []string, timeout ti
 		return "", errors.Wrapf(err, "while spawn goexpect")
 	}
 
+	defer exp.Close()
 	_, _, err = exp.Expect(promptRegex, timeout)
 	if err != nil {
 		return buf.String(), err
@@ -117,6 +118,7 @@ func Configure(n3k *ConnectCtx, port string, commands []string, timeout time.Dur
 		return "", errors.Wrapf(err, "while spawn goexpect")
 	}
 
+	defer exp.Close()
 	_, _, err = exp.Expect(promptRegex, timeout)
 	if err != nil {
 		return buf.String(), err
@@ -200,6 +202,8 @@ func CheckInterfaceConigured(n3k *ConnectCtx, port, mode, status, speed string, 
 	if err != nil {
 		return "", errors.Wrapf(err, "while spawn goexpect")
 	}
+
+	defer exp.Close()
 
 	_, _, err = exp.Expect(promptRegex, timeout)
 	if err != nil {

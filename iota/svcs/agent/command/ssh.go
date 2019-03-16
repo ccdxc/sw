@@ -56,12 +56,12 @@ func RunSSHCommand(SSHHandle *ssh.Client, cmd string, TimedOut uint32, sudo bool
 
 	cmdInfo := &CommandInfo{Ctx: &CommandCtx{}}
 	sshSession, sshOut, sshErr, err := createSSHSession(SSHHandle)
-	defer sshSession.Close()
 	if err != nil {
 		logger.Println("SSH session creation failed!")
 		cmdInfo.Ctx.ExitCode = 127
 		return cmdInfo, errors.New("Ssh creation failed")
 	}
+	defer sshSession.Close()
 
 	shout := io.MultiWriter(&stdoutBuf)
 	ssherr := io.MultiWriter(&stderrBuf)

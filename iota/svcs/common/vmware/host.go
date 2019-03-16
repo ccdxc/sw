@@ -696,6 +696,7 @@ func (h *Host) DeployVMOnDataStore(ds *Datastore, name string, ncpus uint, memor
 		return nil, err
 	}
 
+	time.Sleep(5 * time.Second)
 	return h.boot(name, ncpus, memory, finder)
 }
 

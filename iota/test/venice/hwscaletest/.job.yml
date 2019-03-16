@@ -1,0 +1,45 @@
+---
+version: 2.0
+image:
+  bind_dir: "/go/src/github.com/pensando/sw"
+  work_dir: "/go/src/github.com/pensando/sw"
+rebase: true
+queue: builder
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+e2e-targets:
+  # baremetal + vm test case
+ e2e-venice-scalenaples:
+   # commands: ["make", "-C", "iota/test/venice/hwscaletest"]
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:venice-dev@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-115
+       count: 1
+       resources:
+         cpus: 12
+         memory: 16
+         pvt-networks:
+         - control-1
+         - control-2
+     - image: build-10
+       count: 7
+       resources:
+         # server-type could be server-a or server-d
+         server-type: server-d
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+logfiles:
+  - /go/src/github.com/pensando/sw/iota/logs/venice-iota.tgz

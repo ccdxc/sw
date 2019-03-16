@@ -379,7 +379,10 @@ class NaplesManagement(EntityManagement):
                 if midx == 1:
                     raise Exception("Failed to connect to Console %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port))
             except:
-                self.__clearline()
+                try:
+                    self.__clearline()
+                except:
+                    print("Expect Failed to clear line %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port))
                 continue
             break
         else:
