@@ -3,12 +3,12 @@
     "objects" : [
         {
             "kind" : "device",
-            "ip-addr" : "1.0.0.1",
+            "gw-ip-addr": "1.0.0.1",
+            "ip-addr" : "1.0.0.2",
             "mac-addr" : "0x000201000001",
-            "gw-ip-addr": "1.0.0.2",
             "dual-stack": "true",
             "_comment_" : "encap is either vxlan or mplsoudp",
-            "encap": "mplsoudp"
+            "encap": "vxlan"
         },
         {
             "kind" : "tep",
