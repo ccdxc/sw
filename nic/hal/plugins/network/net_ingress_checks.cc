@@ -114,8 +114,16 @@ ingress_checks_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    if (hal::is_forwarding_mode_host_pinned()) {
-        ret = update_src_if(ctx);
+    /*
+     * In the IPsec/L3 tunnel cases, the SRC-LIF of the post-decapsulated packets will be CPU-LIF,
+     * which we dont want to do the SRC-LIF checks for.
+     * TODO: This is a temp fix and Ramesh will be looking into the proper fix to override the
+     * expected SRC-LIF from the corresponding tunnel plugins.
+     */
+    if (!ctx.l3_tunnel_flow()) {
+        if (hal::is_forwarding_mode_host_pinned()) {
+            ret = update_src_if(ctx);
+        }
     }
 
     if (ret != HAL_RET_OK) {

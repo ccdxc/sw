@@ -1,6 +1,6 @@
 {
   "type" : "netagent",
-  "rest-endpoint"    : "/api/ipsec/policies/",
+  "rest-endpoint"    : "api/ipsec/policies/",
   "object-key" : "meta.tenant/meta.namespace/meta.name",
     "objects" : [
   {
@@ -19,15 +19,20 @@
           "source": {
             "addresses": [
               "192.168.100.103"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.101"
             ],
             "app-configs": [
               {
                 "protocol": "tcp",
-                "port": "20000-21000"
+                "port": "20001-21000"
               },
               {
                 "protocol": "udp",
-                "port": "20000-21000"
+                "port": "20001-21000"
               }
             ]
           },
@@ -38,6 +43,11 @@
           "source": {
             "addresses": [
               "192.168.100.103"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.101"
             ],
             "app-configs": [
               {
@@ -57,6 +67,11 @@
           "source": {
             "addresses": [
               "192.168.100.103"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.101"
             ],
             "app-configs": [
               {
@@ -76,6 +91,11 @@
           "source": {
             "addresses": [
               "192.168.100.103"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.101"
             ],
             "app-configs": [
               {
@@ -90,32 +110,16 @@
           },
           "sa-name": "ipsec-encrypt-sa4",
           "sa-type": "ENCRYPT"
-        }
-      ]
-    },
-    "status": {}
-  },
-  {
-    "kind": "IPSecPolicy",
-    "meta": {
-      "name": "ipsec-decrypt-rules",
-      "tenant": "default",
-      "namespace": "default",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "attach-tenant": true,
-      "rules": [
+        },
         {
           "source": {
             "addresses": [
-              "192.168.100.102"
+              "192.168.100.101"
             ]
           },
           "destination": {
             "addresses": [
-              "192.168.100.104"
+              "192.168.100.103"
             ]
           },
           "sa-name": "ipsec-decrypt-sa1",
@@ -125,12 +129,12 @@
         {
           "source": {
             "addresses": [
-              "192.168.100.102"
+              "192.168.100.101"
             ]
           },
           "destination": {
             "addresses": [
-              "192.168.100.104"
+              "192.168.100.103"
             ]
           },
           "sa-name": "ipsec-decrypt-sa2",
@@ -140,12 +144,12 @@
         {
           "source": {
             "addresses": [
-              "192.168.100.102"
+              "192.168.100.101"
             ]
           },
           "destination": {
             "addresses": [
-              "192.168.100.104"
+              "192.168.100.103"
             ]
           },
           "sa-name": "ipsec-decrypt-sa3",
@@ -155,12 +159,12 @@
         {
           "source": {
             "addresses": [
-              "192.168.100.102"
+              "192.168.100.101"
             ]
           },
           "destination": {
             "addresses": [
-              "192.168.100.104"
+              "192.168.100.103"
             ]
           },
           "sa-name": "ipsec-decrypt-sa4",

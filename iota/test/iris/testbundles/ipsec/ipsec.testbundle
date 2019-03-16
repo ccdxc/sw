@@ -9,5 +9,5 @@ testcases:
         testcase: testcases.ipsec.iperf
         iterators:
             type  : nested
-            port  : [ 20000, 20001 ]
-            pktsize : [128, 256, 512, 1024, 2048, 4096, 8192]
+            port  : [20001, 20002]
+            pktsize : [96, 128, 256, 512, 1024, 2048, 4096, 8192]

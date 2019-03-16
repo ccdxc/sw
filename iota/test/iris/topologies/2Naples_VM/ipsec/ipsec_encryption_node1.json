@@ -19,10 +19,10 @@
       "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-      "local-gateway-ip": "192.168.100.102",
-      "remote-gateway-ip": "192.168.100.104",
+      "local-gateway-ip": "192.168.100.101",
+      "remote-gateway-ip": "192.168.100.103",
       "spi": 1,
-      "tep-namespace": "default"
+      "tep-vrf": "default"
     },
     "status": {}
   },
@@ -42,10 +42,10 @@
       "authentication-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-      "local-gateway-ip": "192.168.100.102",
-      "remote-gateway-ip": "192.168.100.104",
+      "local-gateway-ip": "192.168.100.101",
+      "remote-gateway-ip": "192.168.100.103",
       "spi": 2,
-      "tep-namespace": "default"
+      "tep-vrf": "default"
     },
     "status": {}
   },
@@ -65,10 +65,10 @@
       "authentication-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-      "local-gateway-ip": "192.168.100.102",
-      "remote-gateway-ip": "192.168.100.104",
+      "local-gateway-ip": "192.168.100.101",
+      "remote-gateway-ip": "192.168.100.103",
       "spi": 3,
-      "tep-namespace": "default"
+      "tep-vrf": "default"
     },
     "status": {}
   },
@@ -88,10 +88,10 @@
       "authentication-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
-      "local-gateway-ip": "192.168.100.102",
-      "remote-gateway-ip": "192.168.100.104",
+      "local-gateway-ip": "192.168.100.101",
+      "remote-gateway-ip": "192.168.100.103",
       "spi": 4,
-      "tep-namespace": "default"
+      "tep-vrf": "default"
     },
     "status": {}
   }

@@ -1,6 +1,6 @@
 {
   "type" : "netagent",
-  "rest-endpoint"    : "/api/ipsec/decryption/",
+  "rest-endpoint"    : "api/ipsec/decryption/",
   "object-key" : "meta.tenant/meta.namespace/meta.name",
     "objects" : [
   {
@@ -20,7 +20,7 @@
       "decryption-algorithm": "AES_GCM_256",
       "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
       "spi": 1,
-      "tep-namespace": "default"
+      "tep-vrf": "default"
     },
     "status": {}
   },
@@ -41,7 +41,7 @@
       "decryption-algorithm": "AES_GCM_256",
       "decryption-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
       "spi": 2,
-      "tep-namespace": "default"
+      "tep-vrf": "default"
     },
     "status": {}
   },
@@ -62,7 +62,7 @@
       "decryption-algorithm": "AES_GCM_256",
       "decryption-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
       "spi": 3,
-      "tep-namespace": "default"
+      "tep-vrf": "default"
     },
     "status": {}
   },
@@ -83,7 +83,7 @@
       "decryption-algorithm": "AES_GCM_256",
       "decryption-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
       "spi": 4,
-      "tep-namespace": "default"
+      "tep-vrf": "default"
     },
     "status": {}
   }
