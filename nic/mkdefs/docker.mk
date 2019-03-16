@@ -27,8 +27,11 @@ docker/build-shell-image: docker/install_box
 docker/coverage: docker/build-runtime-image
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su  -l $(CUR_USER)  -c 'tools/coverage_script.sh'
 
-t docker/jenkins-coverage: docker/build-runtime-image
+docker/jenkins-coverage: docker/build-runtime-image
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'HARDWARE_TESTBED=${HARDWARE_TESTBED_COPIED}  EXTRA_ARGS="${EXTRA_ARGS}" tools/coverage_script_full.sh'
+
+docker/firmware: docker/build-runtime-image
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'cd /usr/src/github.com/pensando/sw/nic && make JOB_ID=1 jobd/firmware'
 
 docker/coverage-shell: docker/build-runtime-image
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su -l $(CUR_USER)

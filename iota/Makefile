@@ -55,3 +55,22 @@ images:
 	echo "Please do a docker push manually."
 
 all: iota
+
+
+REGISTRY = registry.test.pensando.io:5000
+NIC_CONTAINER_VERSION:=1.33
+CUR_DIR:=$(shell pwd)
+SW_DIR:=$(shell dirname ${CUR_DIR})
+CUR_USER:=$(shell whoami)
+CUR_TIME:=$(shell date +%Y-%m-%d_%H.%M.%S)
+CONTAINER_NAME:=${CUR_USER}_${CUR_TIME}
+docker/install_box:
+	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
+
+docker/build-runtime-image: docker/install_box
+	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
+	cd .. && BOX_INCLUDE_ENV="NO_COPY USER USER_UID USER_GID GROUP_NAME" NO_COPY=1 USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
+
+docker/run: docker/build-runtime-image
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/iota pensando/nic su -l $(CUR_USER) -c 'cd ../iota && make && ./iota.py --testbed ${HARDWARE_TESTBED_COPIED} --testsuite ${TESTSUITE}  2>&1 | tee run.log'
+
