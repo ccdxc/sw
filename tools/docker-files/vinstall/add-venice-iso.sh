@@ -33,6 +33,7 @@ umount /t
 
 cp /pen/PEN-VERSION /iso/LiveOS/PEN-VERSION || :
 cp /venice-bin/venice.tgz /iso/LiveOS/venice.tgz || :
+cp /nic/naples_fw.tar /iso/LiveOS/naples_fw.tar || :
 cp /pen/venice-cleaninstall.sh /iso/LiveOS/venice-cleaninstall.sh || :
 
 #finally create the iso back with our custom isolinux and grub

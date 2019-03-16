@@ -16,6 +16,7 @@ all:
 		-v ${CURDIR}/grub-efi.cfg:/pen/grub-efi.cfg \
 		-v ${CURDIR}/venice-cleaninstall.sh:/pen/venice-cleaninstall.sh \
 		-v ${TOPDIR}/bin:/venice-bin \
+		-v ${TOPDIR}/nic:/nic \
 		registry.test.pensando.io:5000/pens-vinstall:v0.1 /pen/create-iso.sh
 
 bash:
@@ -29,6 +30,7 @@ bash:
 		-v ${CURDIR}/grub-efi.cfg:/pen/grub-efi.cfg \
 		-v ${CURDIR}/venice-cleaninstall.sh:/pen/venice-cleaninstall.sh \
 		-v ${TOPDIR}/bin:/venice-bin \
+		-v ${TOPDIR}/nic:/nic \
 		registry.test.pensando.io:5000/pens-vinstall:v0.1 bash 
 
 venice-iso:
@@ -43,4 +45,5 @@ venice-iso:
 		-v ${CURDIR}/grub-efi.cfg:/pen/grub-efi.cfg \
 		-v ${CURDIR}/venice-cleaninstall.sh:/pen/venice-cleaninstall.sh \
 		-v ${TOPDIR}/bin:/venice-bin \
+		-v ${TOPDIR}/nic:/nic \
 		registry.test.pensando.io:5000/pens-vinstall:v0.1  /pen/add-venice-iso.sh

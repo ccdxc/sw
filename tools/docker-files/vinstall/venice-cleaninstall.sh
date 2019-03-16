@@ -116,6 +116,7 @@ copyFile $SRCMNT/LiveOS/squashfs.img $TGTDIR/squashfs.img
 copyFile $SRCMNT/isolinux/initrd0.img $TGTDIR/initrd0.img
 copyFile $SRCMNT/isolinux/vmlinuz0 $TGTDIR/vmlinuz0
 copyFile $SRCMNT/LiveOS/venice.tgz $TGTDIR/venice.tgz
+copyFile $SRCMNT/LiveOS/naples_fw.tar $TGTDIR/naples_fw.tar
 
 
 cat >${TGTMNT1}/boot/grub2/grub.cfg <<EOF
@@ -131,8 +132,8 @@ insmod ext2
 insmod btrfs
 insmod regexp
 
-menuentry pen${VERSION} {
-	linux16 /OS-${VERSION}/vmlinuz0 rw rd.fstab=0 root=live:${TGTLABEL2} rd.live.dir=/OS-${VERSION} rd.live.squashimg=squashfs.img console=ttyS0 console=tty0 rd.live.image rd.luks=0 rd.md=0 rd.dm=0  enforcing=0 LANG=en_US.utf8 rd.writable.fsimg=1 pen.venice=OS-${VERSION}/venice.tgz
+menuentry ${VERSION} {
+	linux16 /OS-${VERSION}/vmlinuz0 rw rd.fstab=0 root=live:${TGTLABEL2} rd.live.dir=/OS-${VERSION} rd.live.squashimg=squashfs.img console=ttyS0 console=tty0 rd.live.image rd.luks=0 rd.md=0 rd.dm=0  enforcing=0 LANG=en_US.utf8 rd.writable.fsimg=1 pen.venice=OS-${VERSION}/venice.tgz pen.naples=OS-${VERSION}/naples_fw.tar
 	initrd16 /OS-${VERSION}/initrd0.img
 }
 
