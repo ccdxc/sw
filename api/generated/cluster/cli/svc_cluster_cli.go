@@ -23,6 +23,7 @@ func restGetCluster(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Cluster); ok {
@@ -51,6 +52,7 @@ func restDeleteCluster(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Cluster); ok {
@@ -74,6 +76,7 @@ func restPutCluster(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Cluster); ok {
@@ -93,6 +96,7 @@ func restGetNode(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Node); ok {
@@ -121,6 +125,7 @@ func restDeleteNode(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Node); ok {
@@ -140,6 +145,7 @@ func restPostNode(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Node); ok {
@@ -159,6 +165,7 @@ func restPutNode(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Node); ok {
@@ -178,6 +185,7 @@ func restGetHost(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Host); ok {
@@ -206,6 +214,7 @@ func restDeleteHost(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Host); ok {
@@ -225,6 +234,7 @@ func restPostHost(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Host); ok {
@@ -244,6 +254,7 @@ func restPutHost(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Host); ok {
@@ -263,6 +274,7 @@ func restGetSmartNIC(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.SmartNIC); ok {
@@ -291,6 +303,7 @@ func restDeleteSmartNIC(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.SmartNIC); ok {
@@ -314,6 +327,7 @@ func restPutSmartNIC(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.SmartNIC); ok {
@@ -333,6 +347,7 @@ func restGetTenant(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Tenant); ok {
@@ -361,6 +376,7 @@ func restDeleteTenant(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Tenant); ok {
@@ -380,6 +396,7 @@ func restPostTenant(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Tenant); ok {
@@ -399,6 +416,7 @@ func restPutTenant(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*cluster.Tenant); ok {

@@ -39,6 +39,7 @@ func restGetObject(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*objstore.Object); ok {
@@ -67,6 +68,7 @@ func restDeleteObject(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*objstore.Object); ok {

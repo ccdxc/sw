@@ -23,6 +23,7 @@ func restGetEventPolicy(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.EventPolicy); ok {
@@ -51,6 +52,7 @@ func restDeleteEventPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.EventPolicy); ok {
@@ -70,6 +72,7 @@ func restPostEventPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.EventPolicy); ok {
@@ -89,6 +92,7 @@ func restPutEventPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.EventPolicy); ok {
@@ -108,6 +112,7 @@ func restGetStatsPolicy(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.StatsPolicy); ok {
@@ -144,6 +149,7 @@ func restPutStatsPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.StatsPolicy); ok {
@@ -163,6 +169,7 @@ func restGetFwlogPolicy(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.FwlogPolicy); ok {
@@ -191,6 +198,7 @@ func restDeleteFwlogPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.FwlogPolicy); ok {
@@ -210,6 +218,7 @@ func restPostFwlogPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.FwlogPolicy); ok {
@@ -229,6 +238,7 @@ func restPutFwlogPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.FwlogPolicy); ok {
@@ -248,6 +258,7 @@ func restGetFlowExportPolicy(hostname, tenant, token string, obj interface{}) er
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.FlowExportPolicy); ok {
@@ -276,6 +287,7 @@ func restDeleteFlowExportPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.FlowExportPolicy); ok {
@@ -295,6 +307,7 @@ func restPostFlowExportPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.FlowExportPolicy); ok {
@@ -314,6 +327,7 @@ func restPutFlowExportPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.FlowExportPolicy); ok {
@@ -333,6 +347,7 @@ func restGetAlert(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.Alert); ok {
@@ -369,6 +384,7 @@ func restPutAlert(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.Alert); ok {
@@ -388,6 +404,7 @@ func restGetAlertPolicy(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.AlertPolicy); ok {
@@ -416,6 +433,7 @@ func restDeleteAlertPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.AlertPolicy); ok {
@@ -435,6 +453,7 @@ func restPostAlertPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.AlertPolicy); ok {
@@ -454,6 +473,7 @@ func restPutAlertPolicy(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.AlertPolicy); ok {
@@ -473,6 +493,7 @@ func restGetAlertDestination(hostname, tenant, token string, obj interface{}) er
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.AlertDestination); ok {
@@ -501,6 +522,7 @@ func restDeleteAlertDestination(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.AlertDestination); ok {
@@ -520,6 +542,7 @@ func restPostAlertDestination(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.AlertDestination); ok {
@@ -539,6 +562,7 @@ func restPutAlertDestination(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.AlertDestination); ok {
@@ -558,6 +582,7 @@ func restGetMirrorSession(hostname, tenant, token string, obj interface{}) error
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.MirrorSession); ok {
@@ -586,6 +611,7 @@ func restDeleteMirrorSession(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.MirrorSession); ok {
@@ -605,6 +631,7 @@ func restPostMirrorSession(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.MirrorSession); ok {
@@ -624,6 +651,7 @@ func restPutMirrorSession(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.MirrorSession); ok {
@@ -643,6 +671,7 @@ func restGetTroubleshootingSession(hostname, tenant, token string, obj interface
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.TroubleshootingSession); ok {
@@ -671,6 +700,7 @@ func restDeleteTroubleshootingSession(hostname, token string, obj interface{}) e
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.TroubleshootingSession); ok {
@@ -690,6 +720,7 @@ func restPostTroubleshootingSession(hostname, token string, obj interface{}) err
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.TroubleshootingSession); ok {
@@ -709,6 +740,7 @@ func restPutTroubleshootingSession(hostname, token string, obj interface{}) erro
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.TroubleshootingSession); ok {
@@ -728,6 +760,7 @@ func restGetTechSupportRequest(hostname, tenant, token string, obj interface{}) 
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.TechSupportRequest); ok {
@@ -756,6 +789,7 @@ func restDeleteTechSupportRequest(hostname, token string, obj interface{}) error
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.TechSupportRequest); ok {
@@ -775,6 +809,7 @@ func restPostTechSupportRequest(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*monitoring.TechSupportRequest); ok {

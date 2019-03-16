@@ -23,6 +23,7 @@ func restGetEndpoint(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*workload.Endpoint); ok {
@@ -55,6 +56,7 @@ func restPostEndpoint(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*workload.Endpoint); ok {
@@ -74,6 +76,7 @@ func restPutEndpoint(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*workload.Endpoint); ok {
@@ -93,6 +96,7 @@ func restGetWorkload(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*workload.Workload); ok {
@@ -121,6 +125,7 @@ func restDeleteWorkload(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*workload.Workload); ok {
@@ -140,6 +145,7 @@ func restPostWorkload(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*workload.Workload); ok {
@@ -159,6 +165,7 @@ func restPutWorkload(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*workload.Workload); ok {

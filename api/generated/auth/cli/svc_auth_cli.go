@@ -23,6 +23,7 @@ func restGetUser(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.User); ok {
@@ -51,6 +52,7 @@ func restDeleteUser(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.User); ok {
@@ -70,6 +72,7 @@ func restPostUser(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.User); ok {
@@ -89,6 +92,7 @@ func restPutUser(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.User); ok {
@@ -108,6 +112,7 @@ func restGetAuthenticationPolicy(hostname, tenant, token string, obj interface{}
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.AuthenticationPolicy); ok {
@@ -140,6 +145,7 @@ func restPostAuthenticationPolicy(hostname, token string, obj interface{}) error
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.AuthenticationPolicy); ok {
@@ -159,6 +165,7 @@ func restPutAuthenticationPolicy(hostname, token string, obj interface{}) error 
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.AuthenticationPolicy); ok {
@@ -178,6 +185,7 @@ func restGetRole(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.Role); ok {
@@ -206,6 +214,7 @@ func restDeleteRole(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.Role); ok {
@@ -225,6 +234,7 @@ func restPostRole(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.Role); ok {
@@ -244,6 +254,7 @@ func restPutRole(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.Role); ok {
@@ -263,6 +274,7 @@ func restGetRoleBinding(hostname, tenant, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.RoleBinding); ok {
@@ -291,6 +303,7 @@ func restDeleteRoleBinding(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.RoleBinding); ok {
@@ -310,6 +323,7 @@ func restPostRoleBinding(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.RoleBinding); ok {
@@ -329,6 +343,7 @@ func restPutRoleBinding(hostname, token string, obj interface{}) error {
 	if err != nil {
 		return fmt.Errorf("cannot create REST client")
 	}
+	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*auth.RoleBinding); ok {

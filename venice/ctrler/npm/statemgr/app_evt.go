@@ -64,58 +64,61 @@ func convertApp(aps *AppState) *netproto.App {
 		ObjectMeta: aps.App.ObjectMeta,
 		Spec: netproto.AppSpec{
 			ProtoPorts:     protoPort,
-			ALGType:        aps.App.Spec.ALG.Type,
 			AppIdleTimeout: aps.App.Spec.Timeout,
 			ALG:            &netproto.ALG{},
 		},
 	}
 
-	switch aps.App.Spec.ALG.Type {
-	case "ICMP":
-		if aps.App.Spec.ALG.Icmp != nil {
-			app.Spec.ProtoPorts = []string{"icmp"}
-			ictype, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Type)
-			icode, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Code)
+	if aps.App.Spec.ALG != nil {
+		app.Spec.ALGType = aps.App.Spec.ALG.Type
 
-			app.Spec.ALG.ICMP = &netproto.ICMP{
-				Type: uint32(ictype),
-				Code: uint32(icode),
+		switch aps.App.Spec.ALG.Type {
+		case "ICMP":
+			if aps.App.Spec.ALG.Icmp != nil {
+				app.Spec.ProtoPorts = []string{"icmp"}
+				ictype, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Type)
+				icode, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Code)
+
+				app.Spec.ALG.ICMP = &netproto.ICMP{
+					Type: uint32(ictype),
+					Code: uint32(icode),
+				}
 			}
-		}
-	case "DNS":
-		if aps.App.Spec.ALG.Dns != nil {
-			app.Spec.ALG.DNS = &netproto.DNS{
-				DropMultiQuestionPackets: aps.App.Spec.ALG.Dns.DropMultiQuestionPackets,
-				DropLargeDomainPackets:   aps.App.Spec.ALG.Dns.DropLargeDomainNamePackets,
-				DropLongLabelPackets:     aps.App.Spec.ALG.Dns.DropLongLabelPackets,
-				MaxMessageLength:         aps.App.Spec.ALG.Dns.MaxMessageLength,
-				QueryResponseTimeout:     aps.App.Spec.ALG.Dns.QueryResponseTimeout,
+		case "DNS":
+			if aps.App.Spec.ALG.Dns != nil {
+				app.Spec.ALG.DNS = &netproto.DNS{
+					DropMultiQuestionPackets: aps.App.Spec.ALG.Dns.DropMultiQuestionPackets,
+					DropLargeDomainPackets:   aps.App.Spec.ALG.Dns.DropLargeDomainNamePackets,
+					DropLongLabelPackets:     aps.App.Spec.ALG.Dns.DropLongLabelPackets,
+					MaxMessageLength:         aps.App.Spec.ALG.Dns.MaxMessageLength,
+					QueryResponseTimeout:     aps.App.Spec.ALG.Dns.QueryResponseTimeout,
+				}
 			}
-		}
-	case "FTP":
-		if aps.App.Spec.ALG.Ftp != nil {
-			app.Spec.ALG.FTP = &netproto.FTP{
-				AllowMismatchIPAddresses: aps.App.Spec.ALG.Ftp.AllowMismatchIPAddress,
+		case "FTP":
+			if aps.App.Spec.ALG.Ftp != nil {
+				app.Spec.ALG.FTP = &netproto.FTP{
+					AllowMismatchIPAddresses: aps.App.Spec.ALG.Ftp.AllowMismatchIPAddress,
+				}
 			}
+		case "SunRPC":
+			for _, sunrpc := range aps.App.Spec.ALG.Sunrpc {
+				app.Spec.ALG.SUNRPC = append(app.Spec.ALG.SUNRPC,
+					&netproto.RPC{
+						ProgramID:        sunrpc.ProgramID,
+						ProgramIDTimeout: sunrpc.Timeout,
+					})
+			}
+		case "MSRPC":
+			for _, msrpc := range aps.App.Spec.ALG.Msrpc {
+				app.Spec.ALG.MSRPC = append(app.Spec.ALG.MSRPC,
+					&netproto.RPC{
+						ProgramID:        msrpc.ProgramUUID,
+						ProgramIDTimeout: msrpc.Timeout,
+					})
+			}
+		case "TFTP":
+		case "RTSP":
 		}
-	case "SunRPC":
-		for _, sunrpc := range aps.App.Spec.ALG.Sunrpc {
-			app.Spec.ALG.SUNRPC = append(app.Spec.ALG.SUNRPC,
-				&netproto.RPC{
-					ProgramID:        sunrpc.ProgramID,
-					ProgramIDTimeout: sunrpc.Timeout,
-				})
-		}
-	case "MSRPC":
-		for _, msrpc := range aps.App.Spec.ALG.Msrpc {
-			app.Spec.ALG.MSRPC = append(app.Spec.ALG.MSRPC,
-				&netproto.RPC{
-					ProgramID:        msrpc.ProgramUUID,
-					ProgramIDTimeout: msrpc.Timeout,
-				})
-		}
-	case "TFTP":
-	case "RTSP":
 	}
 
 	return &app

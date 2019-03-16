@@ -59,6 +59,7 @@ func restGet{{$objName}}(hostname, tenant, token string, obj interface{}) error 
         if err != nil {
                 return fmt.Errorf("cannot create REST client")
         }
+	defer restcl.Close()
         loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	{{if isRestMethod $svc "AutoGet" .}}
@@ -97,6 +98,7 @@ func restDelete{{$objName}}(hostname, token string, obj interface{}) error {
         if err != nil {
                 return fmt.Errorf("cannot create REST client")
         }
+	defer restcl.Close()
         loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*{{$pkg}}.{{$objName}}); ok {
@@ -116,6 +118,7 @@ func restPost{{$objName}}(hostname, token string, obj interface{}) error {
         if err != nil {
                 return fmt.Errorf("cannot create REST client")
         }
+	defer restcl.Close()
         loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*{{$pkg}}.{{$objName}}); ok {
@@ -135,6 +138,7 @@ func restPut{{$objName}}(hostname, token string, obj interface{}) error {
         if err != nil {
                 return fmt.Errorf("cannot create REST client")
         }
+	defer restcl.Close()
         loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
 	if v, ok := obj.(*{{$pkg}}.{{$objName}}); ok {

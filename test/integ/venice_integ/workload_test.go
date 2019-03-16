@@ -62,7 +62,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	// list all workloads
 	wrlist, err := it.restClient.WorkloadV1().Workload().List(ctx, &api.ListWatchOptions{})
 	AssertOk(c, err, "Error listing workloads")
-	Assert(c, (len(wrlist) == len(it.agents)), "Invalid number of workloads")
+	Assert(c, (len(wrlist) == len(it.agents)), fmt.Sprintf("Invalid number of workloads: expected %d found %d", len(wrlist), len(it.agents)))
 
 	for i := range it.agents {
 		gwr, gerr := it.apisrvClient.WorkloadV1().Workload().Get(ctx, &wrloads[i].ObjectMeta)

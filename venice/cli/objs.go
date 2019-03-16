@@ -103,11 +103,11 @@ func createObjFromBytes(ctx *cliContext, inp string) error {
 	switch ctx.cmd {
 	case "update", "edit":
 		if err = ctx.restPutFunc(ctx.server, ctx.token, obj); err != nil {
-			fmt.Printf("put error %s", err)
+			fmt.Printf("put error %s\n", err)
 		}
 	default:
 		if err := ctx.restPostFunc(ctx.server, ctx.token, obj); err != nil {
-			fmt.Printf("post error %s", err)
+			fmt.Printf("post error %s\n", err)
 		}
 	}
 

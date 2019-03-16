@@ -16,6 +16,10 @@ bin/server/iota_server: ${SRCS}
 	mkdir -p $(IOTA_SERVER_BIN_DIR)
 	go build -ldflags="-s -w" -o $(IOTA_SERVER_BIN_DIR)/iota_server github.com/pensando/sw/iota/svcs/cmd/iota-server
 
+bin/tools/fuz: ${SRCS}
+	mkdir -p $(IOTA_BIN_DIR)
+	go build -o $(IOTA_BIN_DIR)/fuz github.com/pensando/sw/iota/tools/fuz
+
 bin/esx-setup: ${SRCS}
 	go build -ldflags="-s -w" -o $(IOTA_BIN_DIR)/iota_esx_setup github.com/pensando/sw/iota/scripts/esx
 
@@ -34,7 +38,7 @@ bin/agent/iota_agent.freebsd: ${SRCS}
 	GOOS=freebsd go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_FREEBSD_DIR)/iota_agent github.com/pensando/sw/iota/svcs/cmd/iota-agent
 	GOOS=freebsd go build -ldflags="-s -w" -o $(IOTA_AGENT_TEST_BIN_FREEBSD_DIR)/iota-agent-test github.com/pensando/sw/iota/svcs/agent/test
 
-iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup
+iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz
 
 .PHONY: test
 test:

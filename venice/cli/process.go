@@ -82,11 +82,11 @@ func createCmdInternal(c *cli.Context, cmd string) {
 
 	if cmd == "update" {
 		if err = ctx.restPutFunc(ctx.server, ctx.token, obj); err != nil {
-			fmt.Printf("%s", err)
+			fmt.Printf("%s\n", err)
 		}
 	} else {
 		if err = ctx.restPostFunc(ctx.server, ctx.token, obj); err != nil {
-			fmt.Printf("%s", err)
+			fmt.Printf("%s\n", err)
 		}
 	}
 }
@@ -217,7 +217,6 @@ func deleteCmdInternal(c *cli.Context, cmd string) {
 		nc := *c
 		readCmd(&nc)
 		ctx.names = getFilteredNames(ctx)
-		fmt.Printf("get filtered names re = %+v names = %s\n", ctx.re, ctx.names)
 	}
 
 	for _, name := range ctx.names {
@@ -232,7 +231,7 @@ func deleteCmdInternal(c *cli.Context, cmd string) {
 
 // clearCmd deletes all objects or objects of a specific type
 func clearCmd(c *cli.Context) {
-	for _, objKind := range []string{"app", "sgpolicy"} {
+	for _, objKind := range []string{"app", "sgpolicy", "workload", "host", "network"} {
 		c.Command.Name = objKind
 		deleteCmdInternal(c, "clear")
 	}
