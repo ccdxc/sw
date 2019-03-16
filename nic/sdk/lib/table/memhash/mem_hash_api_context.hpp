@@ -148,6 +148,9 @@ public:
     char str[256];
     char str2[64];
 
+    // Properties of this table
+    mem_hash_properties_t *props;
+
     // Parent API Context: used for context nesting.
     // 1st level HintTable: pctx = MainTable context.
     // 2nd level HintTable: pctx = 1st level HintTable context.

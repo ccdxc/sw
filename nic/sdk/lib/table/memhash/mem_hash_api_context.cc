@@ -100,6 +100,7 @@ mem_hash_api_context::factory(mem_hash_api_context *pctx) {
     ctx->appdata2str = pctx->appdata2str;
     ctx->itercb = pctx->itercb;
     ctx->cbdata = pctx->cbdata;
+    ctx->props = pctx->props;
 
     // Use the handle from the parent context.
     ctx->handle = pctx->handle;
@@ -161,6 +162,7 @@ mem_hash_api_context::factory(uint32_t op,
     ctx->appdata2str = props->appdata2str;
     ctx->itercb = params->itercb;
     ctx->cbdata = params->cbdata;
+    ctx->props = props;
 
     // Use the handle from the params.
     ctx->handle = reinterpret_cast<mem_hash_handle_t*>(&params->handle);

@@ -97,6 +97,7 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
     //props_->health_monitor_func = params->health_monitor_func;
     props_->key2str = params->key2str;
     props_->appdata2str = params->appdata2str;
+    props_->entry_trace_en = params->entry_trace_en;
 
     p4pdret = p4pd_table_properties_get(props_->main_table_id, &tinfo);
     SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);

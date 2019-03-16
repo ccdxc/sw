@@ -118,9 +118,21 @@ sltcam::destroy(sltcam *table)
 sdk_ret_t
 sltcam::write_(apicontext *ctx) {
     p4pd_error_t p4pdret;
+    static char buff[4096] = {0};
 
-    SLTCAM_TRACE_DEBUG("hw index:%d", ctx->tcam_index);
-    ctx->print_sw();
+    if (ctx->props->entry_trace_en) {
+        p4pd_global_table_ds_decoded_string_get(ctx->props->table_id,
+                                                ctx->tcam_index,
+                                                ctx->swkey, ctx->swkeymask,
+                                                ctx->swdata, buff, sizeof(buff));
+        SLTCAM_TRACE_DEBUG("Table: %s, EntryIndex:%u\n%s",
+                           ctx->props->name, ctx->tcam_index, buff);
+    } else {
+        SLTCAM_TRACE_DEBUG("Table: %s, EntryIndex:%u",
+                           ctx->props->name, ctx->tcam_index);
+        ctx->print_sw();
+    }
+
     p4pdret = p4pd_entry_install(ctx->props->table_id, ctx->tcam_index,
                                  ctx->swkey, ctx->swkeymask, ctx->swdata);
     return p4pdret == P4PD_SUCCESS ? sdk::SDK_RET_OK : sdk::SDK_RET_ERR;

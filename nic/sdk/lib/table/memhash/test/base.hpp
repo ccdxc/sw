@@ -52,6 +52,7 @@ protected:
         params.max_recircs = MAX_RECIRCS;
         params.key2str = h5_key2str;
         params.appdata2str = h5_appdata2str;
+        params.entry_trace_en = true;
 
         table = mem_hash::factory(&params);
         assert(table);

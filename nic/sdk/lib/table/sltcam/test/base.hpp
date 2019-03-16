@@ -108,6 +108,7 @@ protected:
         params.key2str = sltcam_key2str;
         params.mask2str = sltcam_key2str;
         params.appdata2str = sltcam_data2str;
+        params.entry_trace_en = true;
         table = sltcam::factory(&params);
         assert(table);
         

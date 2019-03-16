@@ -80,6 +80,7 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
 sdk_ret_t
 mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
     p4pd_error_t p4pdret = 0;
+    static char buff[4096];
 
     if (ctx->write_pending == false) {
         return SDK_RET_OK;
@@ -104,7 +105,15 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
 
     MEMHASH_TRACE_PRINT("%s: HW Write: TableID:%d TableIndex:%d", ctx->idstr(),
                         ctx->table_id, ctx->table_index);
-    PRINT_SW_ALL(ctx);
+    if (ctx->props->entry_trace_en) {
+        p4pd_global_table_ds_decoded_string_get(ctx->table_id, ctx->table_index,
+                                                ctx->sw_key, NULL,
+                                                ctx->sw_data, buff, sizeof(buff));
+        MEMHASH_TRACE_DEBUG("TableID:%d, EntryIndex:%u\n%s",
+                            ctx->table_id, ctx->table_index, buff);
+    } else {
+        PRINT_SW_ALL(ctx);
+    }
 
     p4pdret = mem_hash_p4pd_entry_install(ctx->table_id, ctx->table_index,
                                           ctx->sw_key, NULL, ctx->sw_data);

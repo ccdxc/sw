@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 
@@ -98,3 +99,30 @@ p4pd_global_table_properties_get (uint32_t table_id, p4pd_table_properties_t *pr
 {
     return p4pd_table_properties_get(table_id, props);
 }
+
+p4pd_error_t
+p4pd_global_table_ds_decoded_string_get (uint32_t   tableid,
+                                         uint32_t   index,
+                                         void*      sw_key,
+                                         /* Valid only in case of TCAM;
+                                          * Otherwise can be NULL) */
+                                         void*      sw_key_mask,
+                                         void*      action_data,
+                                         char*      buffer,
+                                         uint16_t   buf_len) 
+{
+    sltcam_table_key_t *key = (sltcam_table_key_t*)sw_key;
+    sltcam_table_mask_t *mask = (sltcam_table_mask_t*)sw_key_mask;
+    sltcam_table_actiondata_t *acdata = (sltcam_table_actiondata_t*)action_data;
+    memset(buffer, 0, buf_len);
+
+    snprintf(buffer, buf_len, 
+             "KEY = V:%#x,K:%#x\n"
+             "MSK = V:%#x,K:%#x\n"
+             "DAT = D:%#x\n",
+             key->entry_inactive, key->k, mask->entry_inactive_mask, mask->m,
+             acdata->action_u.info.d);
+
+    return 0;
+}
+

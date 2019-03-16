@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 
@@ -913,7 +914,69 @@ p4pd_actiondata_hwfield_get(uint32_t   tableid,
     return (P4PD_SUCCESS);
 }
 
+static char*
+rawstr(void *data, uint32_t len) {
+    static char pool[4][512];
+    static uint32_t pi = 0;
+    uint32_t i = 0;
+    uint32_t slen = 0;
+    char *str;
 
+    pi = (pi+1)%4;
+    str = pool[pi];
 
+    for (i = 0; i < len; i++) {
+        slen += sprintf(str+slen, "%02x", ((uint8_t*)data)[i]);
+    }
+    return str;
+}
 
+p4pd_error_t
+p4pd_global_table_ds_decoded_string_get (uint32_t   tableid,
+                                         uint32_t   index,
+                                         void*      sw_key,
+                                         /* Valid only in case of TCAM;
+                                          * Otherwise can be NULL) */
+                                         void*      sw_key_mask,
+                                         void*      action_data,
+                                         char*      buffer,
+                                         uint16_t   buf_len) 
+{
+    memset(buffer, 0, buf_len);
+    
+    switch (tableid) {
+    case MEM_HASH_P4TBL_ID_H10:
+    case MEM_HASH_P4TBL_ID_H10_OHASH:
+    {
+        assert(0);
+        break;
+    }
+    case MEM_HASH_P4TBL_ID_H5:
+    case MEM_HASH_P4TBL_ID_H5_OHASH:
+    {
+        mem_hash_h5_key_t *key = (mem_hash_h5_key_t *)(sw_key);
+        mem_hash_h5_actiondata_t *data = (mem_hash_h5_actiondata_t *)(action_data);
+        mem_hash_h5_info_t *info = &(data->action_u.info);
 
+        snprintf(buffer, buf_len, 
+                 "KEY = type:%#x,sport:%#x,proto:%#x,src:%s,\n"
+                 "      tag:%#x,dport:%#x,dst:%s\n"
+                 "DAT = action_id:%d,entry_valid:%#x,d1:%#x,d2:%#x,\n"
+                 "      hash1:%#x,hint1:%#x,hash2:%#x,hint2:%#x,\n"
+                 "      hash3:%#x,hint3:%#x,hash4:%#x,hint4:%#x,\n"
+                 "      hash5:%#x,hint5:%#x,more_hashs:%#x,more_hints:%#x",
+                 key->type, key->sport, key->proto,
+                 rawstr(key->src, 16), key->tag, 
+                 key->dport, rawstr(key->dst, 16),
+                 data->action_id, info->entry_valid, info->d1, info->d2,
+                 info->hash1, info->hint1, info->hash2, info->hint2,
+                 info->hash3, info->hint3, info->hash4, info->hint4,
+                 info->hash5, info->hint5, info->more_hashs, info->more_hints);
+        break;
+    }
+    default:
+        assert(0);
+    }
+
+    return 0;
+}
