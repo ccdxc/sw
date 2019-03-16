@@ -1,0 +1,23 @@
+meta:
+    name    : asic_tools
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : Check_Captrace
+        testcase: testcases.asic_tools.captrace
+        stress  : True
+        ignore  : True
+        iterators :
+            type    : simple
+            case    : [ base, traffic ]
+
+    -   name    : Check_Capmon
+        testcase: testcases.asic_tools.capmon
+        stress  : True
+        ignore  : True
+
+    -   name    : Check_Capview
+        testcase: testcases.asic_tools.capview
+        stress  : True
+        ignore  : True

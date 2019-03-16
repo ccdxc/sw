@@ -45,7 +45,6 @@ testbundles:
         - filters/filters.testbundle
         - subifs/subifs.testbundle
         - rx_mode/rx_mode.testbundle
-        - networking/connectivity.testbundle
         - vlanoffload/vlanoffload.testbundle
         - multicast/multicast.testbundle
         - linktest/linktest.testbundle
@@ -62,6 +61,7 @@ testbundles:
         - penctl/mode_change.testbundle
         - naples_upgrade/naples_upgrade_classic.testbundle
         - post_diag/post_diag.testbundle
+        - asic_tools/asic_tools.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
