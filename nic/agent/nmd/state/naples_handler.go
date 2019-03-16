@@ -228,6 +228,12 @@ func (n *NMD) StartManagedMode() error {
 				nicObj.Status.SystemInfo = UpdateNaplesInfo()
 			}
 
+			log.Infof("Syncing time with venice : %+v", n.config.Status.Controllers)
+			err = syncTimeOnce(n.config.Status.Controllers)
+			if err != nil {
+				log.Errorf("Sync time once with venice returned %v", err)
+			}
+
 			// Send NIC register request to CMD
 			log.Infof("Registering NIC with CMD : %+v", nicObj)
 			msg, err := n.RegisterSmartNICReq(nicObj)
@@ -345,6 +351,11 @@ func (n *NMD) StartManagedMode() error {
 						n.certsProxy.Start()
 					}
 
+					_ = stopNtpClient()
+					err = startNtpClient(n.config.Status.Controllers)
+					if err != nil {
+						log.Infof("start NTP client returned %v", err)
+					}
 					// Start goroutine to send periodic NIC updates
 					n.Add(1)
 					go func() {

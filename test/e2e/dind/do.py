@@ -171,6 +171,7 @@ class NaplesNode(Node):
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/tmagent" """.format(self.name))
         else:
             runCommand("""docker run --dns-search my.dummy -td {} -P -l pens -l pens-naples --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name, self.name))
+            runCommand("""docker exec {}  bash -c "echo exit 0 > /sbin/start-stop-daemon; chmod 700 /sbin/start-stop-daemon" """.format(self.name))
             runCommand("""docker exec {}  bash -c "echo '{}' > /tmp/fru.json" """.format(self.name, makeNaplesFRU(self.containerIndex).replace('"', '\\"')))
         runCommand("""docker exec {}  mkdir -p /var/log/pensando """.format(self.name))
         runCommand("""docker exec {}  mkdir -p /var/log/pensando/elastic """.format(self.name))
