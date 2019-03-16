@@ -260,6 +260,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                            g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
                     CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
                                                     pds_mapping.key.ip_addr.addr.v4_addr);
+                    // no need of v6 to v6 NAT
+                    pds_v6_mapping.public_ip_valid = false;
                     if (natpfx) {
                         pds_v6_mapping.public_ip.addr.v6_addr = v6_natpfx->addr.addr.v6_addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.public_ip.addr.v6_addr,

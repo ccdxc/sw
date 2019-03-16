@@ -142,13 +142,13 @@ public:
     }
 
     /// \brief Mark the object as dirty
-    void set_in_dirty_list(void) { in_dirty_list_ = 1; }
+    void set_in_dirty_list(void) { in_dirty_list_ = true; }
 
     /// \brief Returns true if the object is in dirty list
-    uint8_t in_dirty_list(void) const { return in_dirty_list_; }
+    bool in_dirty_list(void) const { return in_dirty_list_; }
 
     /// \brief Clear the dirty bit on this object
-    void clear_in_dirty_list(void) { in_dirty_list_ = 0; }
+    void clear_in_dirty_list(void) { in_dirty_list_ = false; }
 
     /// \brief Return true if this is 'stateless' object
     bool stateless(void) { return stateless_; }
@@ -163,8 +163,8 @@ public:
     virtual string tostr(void) const { return "api_base"; }
 
 protected:
-    uint8_t in_dirty_list_:1;    ///< True if object is in the dirty list
-    uint8_t stateless_:1;        ///< True this object doesn't go into any dbs
+    bool in_dirty_list_;    ///< True if object is in the dirty list
+    bool stateless_;        ///< True this object doesn't go into any dbs
 } __PACK__;
 
 }    // namespace api

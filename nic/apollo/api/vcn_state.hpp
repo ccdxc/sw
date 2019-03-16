@@ -68,7 +68,7 @@ private:
     slab *vcn_slab_;       ///< slab for allocating vcn entry
 };
 
-/// \@}    // end of PDS_VCN_ENTRY
+/// \@}
 
 }    // namespace api
 

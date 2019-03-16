@@ -122,13 +122,16 @@ mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
     mapping_impl    *impl;
     device_entry    *device;
 
-    // TODO: move to slab later
-    impl = (mapping_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MAPPING_IMPL,
-                                      sizeof(mapping_impl));
+    impl = mapping_impl_db()->alloc();
+    if (unlikely(impl == NULL)) {
+        return NULL;
+    }
     new (impl) mapping_impl();
     device = device_db()->find();
     if (device->ip_addr() == pds_mapping->tep.ip_addr) {
         impl->is_local_ = true;
+    } else {
+        impl->is_local_ = false;
     }
     return impl;
 }
@@ -136,7 +139,7 @@ mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
 void
 mapping_impl::soft_delete(mapping_impl *impl) {
     impl->~mapping_impl();
-    SDK_FREE(SDK_MEM_ALLOC_PDS_MAPPING_IMPL, impl);
+    mapping_impl_db()->free(impl);
 }
 
 void
@@ -172,9 +175,7 @@ mapping_impl::build(pds_mapping_key_t *key) {
         return NULL;
     }
 
-    // TODO: move to slab later
-    impl = (mapping_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MAPPING_IMPL,
-                                      sizeof(mapping_impl));
+    impl = mapping_impl_db()->alloc();
     if (unlikely(impl == NULL)) {
         return NULL;
     }
@@ -418,6 +419,10 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                       "err %u", api_obj->key2str().c_str(), ret);
         goto error;
     }
+    PDS_TRACE_DEBUG("Reserved overlay_ip_to_public_ip_nat_hdl %u, "
+                    "public_ip_to_overlay_ip_nat_hdl_ %u",
+                    overlay_ip_to_public_ip_nat_hdl_,
+                    public_ip_to_overlay_ip_nat_hdl_);
 
     return SDK_RET_OK;
 
@@ -490,8 +495,8 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     vcn = vcn_db()->find(&spec->key.vcn);
 
     PDS_TRACE_DEBUG("Reserving resources for mapping (vcn %u, ip %s), "
-                    "subnet %u, tep %s, vnic %u",
-                    spec->key.vcn.id, ipaddr2str(&spec->key.ip_addr),
+                    "local %u, subnet %u, tep %s, vnic %u",
+                    spec->key.vcn.id, ipaddr2str(&spec->key.ip_addr), is_local_,
                     spec->subnet.id, ipv4addr2str(spec->tep.ip_addr),
                     spec->vnic.id);
 
