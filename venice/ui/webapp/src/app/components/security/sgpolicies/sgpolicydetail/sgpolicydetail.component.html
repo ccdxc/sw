@@ -67,16 +67,25 @@
         <ng-template pTemplate="caption">
           <app-tableheader title="Policy Rules" [total]="ruleCount" [icon]="policyIcon">
             <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center" >
-              Search for a flow: 
-              <mat-form-field fxFlex="nogrow" floatLabel="never">
-                <input matInput (keyup)="keyUpInput($event)" [formControl]="sourceIpFormControl" placeholder="Source IP" maxlength="15" autocomplete="off">
-              </mat-form-field>
-              <mat-form-field fxFlex="nogrow" floatLabel="never">
-                <input matInput (keyup)="keyUpInput($event)"  [formControl]="destIpFormControl" placeholder="Destination IP" maxlength="15" autocomplete="off">
-              </mat-form-field>
-              <mat-form-field fxFlex="nogrow" floatLabel="never">
-                <input matInput (keyup)="keyUpInput($event)"  [formControl]="portFormControl" placeholder="Protocol / Port" maxlength="15" autocomplete="off">
-              </mat-form-field>
+              Search for a rule: 
+              <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
+                <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
+                    [formControl]="sourceIpFormControl" type="text" pInputText
+                    (keyup)="keyUpInput($event)" app-errorTooltip
+                  placeholder="Source IP" maxlength="15" autocomplete="off">
+              </div>
+              <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
+                <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
+                    [formControl]="destIpFormControl" type="text" pInputText
+                    (keyup)="keyUpInput($event)" app-errorTooltip
+                  placeholder="Destination IP" maxlength="15" autocomplete="off">
+              </div>
+              <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
+                <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
+                    [formControl]="portFormControl" type="text" pInputText
+                    (keyup)="keyUpInput($event)" app-errorTooltip
+                  placeholder="Protocol / Port" maxlength="15" autocomplete="off">
+              </div>
               <mat-icon fxFlex="none" class="sgpolicy-search-button"
                         (click)="invokePolicySearch()" (keydown)="($event.which ==13)? invokePolicySearch() : return " tabindex="0"
                         *ngIf="showSearchButton()" >
@@ -99,33 +108,38 @@
         </ng-template>
         <!-- Table Header -->
         <ng-template pTemplate="header" let-columns>
-          <tr>
-            <!-- Holds the order number of the rule -->
-            <th style="width: 2.25em">
-            </th>
-            <th> Source IPs</th>
-            <th> Destination IPs</th>
-            <th> Action</th>
-            <th >Protocol / Ports</th>
-          </tr>
+            <tr>
+              <th *ngFor="let col of cols; let last = last" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" 
+              [style.width]="col.width + '%'"
+              [colSpan]="last && actionTemplate != null ? 2 : 1"
+              >
+                <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+              </th>
+            </tr>
         </ng-template>
         <!-- Table Body -->
         <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
-          <tr [class]="rowData.order===selectedRuleIndex ? 'sgpolicy-match' : ''">
-            <td class="sgpolicy-rule-number" style="width: 2.25em">
+          <tr [class]="rowData.order===selectedRuleIndex ? 'sgpolicy-row sgpolicy-match' : 'sgpolicy-row'">
+              <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
+          [style.width]="col.width + '%'">
+          
+          <ng-container [ngSwitch]="col.field">
+          <ng-container *ngSwitchCase="'ruleNum'">
               {{ rowData.order + 1}}
-            </td>
-            <td> 
+          </ng-container>
+          <ng-container *ngSwitchCase="'sourceIPs'">
               {{  rowData.rule['from-ip-addresses'].join(', ') }}
-            </td>
-            <td> 
+          </ng-container>
+          <ng-container *ngSwitchCase="'destIPs'">
               {{  rowData.rule['to-ip-addresses'].join(', ') }}
-            </td>
-            <td> {{rowData.rule.action}}</td>
-            <td> 
+          </ng-container>
+          <ng-container *ngSwitchCase="'action'">
+            {{rowData.rule.action}}
+          </ng-container>
+          <ng-container *ngSwitchCase="'protocolPort'">
               {{ formatApp(rowData.rule) }}
-            </td>
-          </tr>
+          </ng-container>
+          </ng-container>
         </ng-template>
       </p-table>
     </app-lazyrender>

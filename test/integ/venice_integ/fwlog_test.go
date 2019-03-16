@@ -35,8 +35,8 @@ func (it *veniceIntegSuite) TestFwlog(c *C) {
 
 	actionList := [][]string{
 		{},
-		{"ACTION_ALLOW"},
-		{"ACTION_DENY"},
+		{"allow"},
+		{"deny"},
 	}
 
 	for _, qact := range actionList {

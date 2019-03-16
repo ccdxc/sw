@@ -19,17 +19,6 @@ import (
 	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
-var actionEnumMapping = map[string]string{
-	"ALLOW":  "allow",
-	"DENY":   "deny",
-	"REJECT": "reject",
-}
-
-var directionEnumMapping = map[string]string{
-	"FROM_HOST":   "from_host",
-	"FROM_UPLINK": "from_uplink",
-}
-
 func testQueryingMetrics(kind string) {
 	// Create telemetry client
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
@@ -103,10 +92,10 @@ func testQueryingFwlogs() {
 			Dest:      fmt.Sprintf("11.1.1.%d", i),
 			SrcPort:   uint32(8000 + i),
 			DestPort:  uint32(9000 + i),
-			Action:    "ALLOW",
-			Direction: "FROM_HOST",
+			Action:    "allow",
+			Direction: "from_host",
 			RuleID:    "1234",
-			Timestamp: timestamp,
+			Time:      timestamp,
 		}
 		logs = append(logs, log)
 		stamp = stamp.Add(fivemin)
@@ -120,10 +109,10 @@ func testQueryingFwlogs() {
 			Dest:      "11.1.1.1",
 			SrcPort:   uint32(8000 + i),
 			DestPort:  uint32(9000 + i),
-			Action:    "ALLOW",
-			Direction: "FROM_HOST",
+			Action:    "allow",
+			Direction: "from_host",
 			RuleID:    "1234",
-			Timestamp: timestamp,
+			Time:      timestamp,
 		}
 		logs = append(logs, log)
 		stamp = stamp.Add(fivemin)
@@ -140,6 +129,11 @@ func testQueryingFwlogs() {
 			{
 				StartTime: startTime,
 			},
+			// Get all logs that were just created but in reverse order
+			&telemetry_query.FwlogsQuerySpec{
+				StartTime: startTime,
+				SortOrder: telemetry_query.SortOrder_Ascending.String(),
+			},
 			// Get if src = 10.1.1.1 or 10.1.1.2
 			{
 				SourceIPs: []string{"10.1.1.1", "10.1.1.2"},
@@ -149,14 +143,14 @@ func testQueryingFwlogs() {
 			{
 				SourceIPs:   []string{"10.1.1.1", "10.1.1.0"},
 				SourcePorts: []uint32{8000},
-				Actions:     []string{"ACTION_ALLOW"},
+				Actions:     []string{"allow"},
 				StartTime:   startTime,
 			},
 			// no logs match
 			{
 				SourceIPs:   []string{"10.1.1.1", "10.1.1.0"},
 				SourcePorts: []uint32{8000},
-				Actions:     []string{"ACTION_DENY"},
+				Actions:     []string{"deny"},
 				StartTime:   startTime,
 			},
 		},
@@ -167,28 +161,34 @@ func testQueryingFwlogs() {
 
 	// verify results
 	Expect(resp.Tenant).To(Equal(globals.DefaultTenant))
-	Expect(len(resp.Results)).To(Equal(4))
+	Expect(len(resp.Results)).To(Equal(5))
 
 	log.Infof("++++++[0] %+v", resp.Results[0].Logs)
 
 	Expect(resp.Results[0].StatementID).To(Equal(int32(0)))
 	Expect(len(resp.Results[0].Logs)).To(Equal(20))
-	Expect(logs).Should(Equal(resp.Results[0].Logs))
+	resLog := resp.Results[0].Logs
+	reverse(resLog)
+	Expect(logs).Should(Equal(resLog))
 
 	log.Infof("++++++[1] %+v", resp.Results[1].Logs)
 
 	Expect(resp.Results[1].StatementID).To(Equal(int32(1)))
-	Expect(len(resp.Results[1].Logs)).To(Equal(12))
+	Expect(len(resp.Results[1].Logs)).To(Equal(20))
+	Expect(logs).Should(Equal(resp.Results[1].Logs))
 
 	log.Infof("++++++[2] %+v", resp.Results[2].Logs)
 
 	Expect(resp.Results[2].StatementID).To(Equal(int32(2)))
-	Expect(len(resp.Results[2].Logs)).To(Equal(2))
+	Expect(len(resp.Results[2].Logs)).To(Equal(12))
 
 	log.Infof("++++++[3] %+v", resp.Results[3].Logs)
-
 	Expect(resp.Results[3].StatementID).To(Equal(int32(3)))
-	Expect(len(resp.Results[3].Logs)).To(Equal(0))
+	Expect(len(resp.Results[3].Logs)).To(Equal(2))
+
+	log.Infof("++++++[4] %+v", resp.Results[4].Logs)
+	Expect(resp.Results[4].StatementID).To(Equal(int32(4)))
+	Expect(len(resp.Results[4].Logs)).To(Equal(0))
 }
 
 var _ = Describe("telemetry test", func() {
@@ -222,10 +222,10 @@ func writeFwlogs(logs []*telemetry_query.Fwlog) error {
 		sPort := fmt.Sprintf("%v", log.SrcPort)
 		dPort := fmt.Sprintf("%v", log.DestPort)
 		ipProt := log.Protocol
-		action := actionEnumMapping[log.Action]
-		dir := directionEnumMapping[log.Direction]
+		action := log.Action
+		dir := log.Direction
 		ruleID := log.RuleID
-		timestamp, err := log.Timestamp.Time()
+		timestamp, err := log.Time.Time()
 		if err != nil {
 			return err
 		}
@@ -257,4 +257,11 @@ func writePoints(url string, bp client.BatchPoints) {
 	}
 	res := ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl -XPOST "%s/write?db=%s" --data-binary '%s'`, url, bp.Database(), strings.Join(pointsStr, "\n")))
 	log.Infof("writing points returned %s", res)
+}
+
+func reverse(logs []*telemetry_query.Fwlog) {
+	for i := len(logs)/2 - 1; i >= 0; i-- {
+		opp := len(logs) - 1 - i
+		logs[i], logs[opp] = logs[opp], logs[i]
+	}
 }

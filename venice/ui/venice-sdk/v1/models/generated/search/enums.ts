@@ -89,6 +89,11 @@ export enum SearchSearchQuery_kinds {
     'AuditEvent' = "AuditEvent",
 }
 
+export enum SearchSearchRequest_sort_order {
+    'Ascending' = "Ascending",
+    'Descending' = "Descending",
+}
+
 export enum SearchSearchRequest_mode {
     'Full' = "Full",
     'Preview' = "Preview",
@@ -164,6 +169,7 @@ export class AllEnums {
     SearchPolicySearchResponse_status = SearchPolicySearchResponse_status;
     SearchSearchQuery_categories = SearchSearchQuery_categories;
     SearchSearchQuery_kinds = SearchSearchQuery_kinds;
+    SearchSearchRequest_sort_order = SearchSearchRequest_sort_order;
     SearchSearchRequest_mode = SearchSearchRequest_mode;
     SecuritySGRule_action = SecuritySGRule_action;
 

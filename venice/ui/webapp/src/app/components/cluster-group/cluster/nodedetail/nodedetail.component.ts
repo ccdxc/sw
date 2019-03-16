@@ -10,7 +10,7 @@ import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
-import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
+import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order } from '@sdk/v1/models/generated/telemetry_query';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { MetricsPollingOptions, MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
@@ -262,6 +262,8 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
       'kind': this.telemetryKind,
       name: null,
       function: Telemetry_queryMetricsQuerySpec_function.MEAN,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
+
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields

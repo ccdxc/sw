@@ -1,14 +1,61 @@
 <app-pagebody class="fwlogs" header="Firewall Logs" [icon]="bodyIcon">
-    <div style="height:100%">
+    <!-- <div style="height:100%">
       <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+    </div> -->
+  <app-tableviewedit fxLayout="column" class="fwlogs-widget"
+    [showRowExpand]="showRowExpand"
+    [data]="dataObjects"
+    [cols]="cols"
+    [dataKey]="null"
+    [sortField]="startingSortField"
+    [sortOrder]="startingSortOrder"
+    compareSelectionBy="equals"
+
+    [runDoCheck]="false"
+    [expandedRowData]="expandedRowData"
+    [captionTemplate]="captionTemplate"
+    [bodyTemplate]="bodyTemplate"
+    [isToFetchDataOnSort]="true"
+    (lazyLoadEvent)="onTableSort($event)"
+    (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
+    >
+  </app-tableviewedit> 
+</app-pagebody>
+
+<!-- TABLE HEADER -->
+<ng-template #captionTemplate let-count="count">
+  <div fxFlex="auto" fxLayout="column">
+    <div xFlex="auto" fxLayout="column" class="fwlogs-search">
+      <ng-container *ngTemplateOutlet="search"></ng-container>
     </div>
-  
-  </app-pagebody>
+    <div fxFlex="auto" fxLayout="row">
+      <app-tableheader fxFlex="auto" title="Firewall Logs" [max]="maxRecords" [total]="dataObjects.length" [icon]="headerIcon">
+      </app-tableheader>
+      <div fxFlex></div>
+      <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="end center" class="fwlogs fwlogs-lastupdate">
+        <div fxFlex="30px">
+          Last Updated: {{ lastUpdateTime | PrettyDate }}
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'time'">
+      {{rowData.time | PrettyDate:'ns' }}
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>
   
   <ng-template #DataTable>
-    <app-lazyrender [data]="fwlogs" [rows]="28" [virtualRowHeight]="36">
+    <app-lazyrender [data]="fwlogs" [rows]="28" [virtualRowHeight]="36" (lazyLoadEvent)="onTableSort($event)" [isToFetchDataOnSort]="true">
       <p-table #fwlogsTable class="global-primeng-table-lazyload" [columns]="cols" compareSelectionBy="equals" [responsive]="true" 
-        sortField="timestamp" [sortOrder]='-1' [loading]="loading" [resizableColumns]="true" exportFilename="Venice-fwlogs"  >
+        sortField="startingSortField" [sortOrder]='startingSortOrder' [loading]="loading" [resizableColumns]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
           <div fxFlex="auto" fxLayout="column">
@@ -16,7 +63,7 @@
               <ng-container *ngTemplateOutlet="search"></ng-container>
 
             </div>
-            <app-tableheader fxFlex="auto" title="Firewall Logs" [total]="fwlogs.length" [icon]="headerIcon">
+            <app-tableheader fxFlex="auto" title="Firewall Logs" [max]="maxRecords" [total]="fwlogs.length" [icon]="headerIcon">
   
           </app-tableheader>
           </div>
@@ -33,9 +80,8 @@
         <ng-template pTemplate="body" let-rowData>
           <tr >
             <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-             
               <ng-container *ngSwitchCase="'timestamp'">
-                {{rowData.timestamp | PrettyDate }}
+                {{rowData.timestamp | PrettyDate:'ns' }}
               </ng-container>
               <ng-container *ngSwitchDefault>
                 {{displayColumn(rowData, col)}}

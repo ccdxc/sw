@@ -10,6 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 import { Telemetry_queryMetricsQuerySpec_function,  } from './enums';
 import { Telemetry_queryPaginationSpec, ITelemetry_queryPaginationSpec } from './telemetry-query-pagination-spec.model';
+import { Telemetry_queryMetricsQuerySpec_sort_order,  } from './enums';
 
 export interface ITelemetry_queryMetricsQuerySpec {
     'kind'?: string;
@@ -23,6 +24,7 @@ export interface ITelemetry_queryMetricsQuerySpec {
     'group-by-time'?: string;
     'group-by-field'?: string;
     'pagination'?: ITelemetry_queryPaginationSpec;
+    'sort-order': Telemetry_queryMetricsQuerySpec_sort_order;
 }
 
 
@@ -43,6 +45,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
     /** must start and end with alpha numeric and can have alphanumeric, -, _, . */
     'group-by-field': string = null;
     'pagination': Telemetry_queryPaginationSpec = null;
+    'sort-order': Telemetry_queryMetricsQuerySpec_sort_order = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             required: false,
@@ -94,6 +97,12 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
         'pagination': {
             required: false,
             type: 'object'
+        },
+        'sort-order': {
+            enum: Telemetry_queryMetricsQuerySpec_sort_order,
+            default: 'Ascending',
+            required: true,
+            type: 'string'
         },
     }
 
@@ -203,6 +212,13 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
         } else {
             this['pagination'].setValues(null, fillDefaults);
         }
+        if (values && values['sort-order'] != null) {
+            this['sort-order'] = values['sort-order'];
+        } else if (fillDefaults && Telemetry_queryMetricsQuerySpec.hasDefaultValue('sort-order')) {
+            this['sort-order'] = <Telemetry_queryMetricsQuerySpec_sort_order>  Telemetry_queryMetricsQuerySpec.propInfo['sort-order'].default;
+        } else {
+            this['sort-order'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -221,6 +237,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
                 'group-by-time': CustomFormControl(new FormControl(this['group-by-time']), Telemetry_queryMetricsQuerySpec.propInfo['group-by-time']),
                 'group-by-field': CustomFormControl(new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .'), ]), Telemetry_queryMetricsQuerySpec.propInfo['group-by-field']),
                 'pagination': CustomFormGroup(this['pagination'].$formGroup, Telemetry_queryMetricsQuerySpec.propInfo['pagination'].required),
+                'sort-order': CustomFormControl(new FormControl(this['sort-order'], [required, enumValidator(Telemetry_queryMetricsQuerySpec_sort_order), ]), Telemetry_queryMetricsQuerySpec.propInfo['sort-order']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('selector') as FormGroup).controls).forEach(field => {
@@ -253,6 +270,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
             this._formGroup.controls['group-by-time'].setValue(this['group-by-time']);
             this._formGroup.controls['group-by-field'].setValue(this['group-by-field']);
             this['pagination'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['sort-order'].setValue(this['sort-order']);
         }
     }
 }

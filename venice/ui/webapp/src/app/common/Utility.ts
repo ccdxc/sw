@@ -1,23 +1,21 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { AbstractControl, FormArray, FormGroup } from '@angular/forms';
+import { SearchExpression } from '@app/components/search/index.ts';
+import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
+import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
+import { FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
+import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
+import * as $ from 'jquery';
 import * as _ from 'lodash';
 import * as moment from 'moment';
+import * as pluralize from 'pluralize';
+import { SelectItem } from 'primeng/primeng';
+import { Table } from 'primeng/table';
+import { RepeaterComponent } from 'web-app-framework';
 import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
-import { environment } from '@env/environment';
-import { SelectItem } from 'primeng/primeng';
-import * as $ from 'jquery';
-import * as pluralize from 'pluralize';
-import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
-import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
-import { HttpErrorResponse } from '@angular/common/http';
-import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
-import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
-import { Table } from 'primeng/table';
-import { FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
-import { RepeaterComponent } from 'web-app-framework';
-import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
-import { SearchExpression } from '@app/components/search/index.ts';
-import { Telemetry_queryFwlogsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 
 
 
@@ -669,7 +667,7 @@ export class Utility {
     } else {
       propInfo = instance.getPropInfo(keys[keys.length - 1]);
     }
-    if (propInfo == null ) {
+    if (propInfo == null) {
       console.error('propInfo was null, supplied property path is likely invalid. Input keys: ' + keys);
     }
     return propInfo;
@@ -982,6 +980,74 @@ export class Utility {
       } else {
         content = 'data:text/csv;charset=utf-8,' + content;
         window.open(encodeURI(content));
+      }
+      document.body.removeChild(link);
+    }
+  }
+
+  public static exportTable(columns: TableCol[], data, filename, customExportFunc: ({ data: any, field: string }) => string = null, csvSeparator = ',') {
+    let csv = '\ufeff';
+
+    // headers
+    for (let i = 0; i < columns.length; i++) {
+      const column = columns[i];
+      if (column.exportable !== false && column.field) {
+        csv += '"' + (column.header || column.field) + '"';
+
+        if (i < (columns.length - 1)) {
+          csv += csvSeparator;
+        }
+      }
+    }
+
+    // body
+    data.forEach((record, ii) => {
+      csv += '\n';
+      for (let i = 0; i < columns.length; i++) {
+        const column = columns[i];
+        if (column.exportable !== false && column.field) {
+          let cellData = _.get(record, column.field);
+
+          if (cellData != null) {
+            if (customExportFunc) {
+              cellData = customExportFunc({
+                data: cellData,
+                field: column.field
+              });
+            } else {
+              cellData = String(cellData).replace(/"/g, '""');
+            }
+          } else {
+            cellData = '';
+          }
+
+
+          csv += '"' + cellData + '"';
+
+          if (i < (columns.length - 1)) {
+            csv += csvSeparator;
+          }
+        }
+      }
+    });
+
+    const blob = new Blob([csv], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
+    if (window.navigator.msSaveOrOpenBlob) {
+      navigator.msSaveOrOpenBlob(blob, filename + '.csv');
+    } else {
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      if (link.download !== undefined) {
+        link.setAttribute('href', URL.createObjectURL(blob));
+        link.setAttribute('download', filename + '.csv');
+        link.click();
+      } else {
+        csv = 'data:text/csv;charset=utf-8,' + csv;
+        window.open(encodeURI(csv));
       }
       document.body.removeChild(link);
     }

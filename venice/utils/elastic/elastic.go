@@ -719,7 +719,13 @@ func (e *Client) Search(ctx context.Context, index, iType string, query es.Query
 
 			// Add sort option if valid
 			if !utils.IsEmpty(sortByField) {
-				request = request.Sort(sortByField, sortAsc)
+				sortInfo := es.SortInfo{
+					Field:        sortByField,
+					Ascending:    sortAsc,
+					Missing:      "_last",
+					UnmappedType: "keyword",
+				}
+				request = request.SortWithInfo(sortInfo)
 			}
 
 			// Execute the search request with desired size
@@ -744,6 +750,8 @@ func (e *Client) Search(ctx context.Context, index, iType string, query es.Query
 		if rErr != nil {
 			return nil, rErr
 		}
+
+		// UNPACK AS es.error
 
 		searchResult := rResp.(*es.SearchResult)
 		return searchResult, rErr

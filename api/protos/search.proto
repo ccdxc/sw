@@ -343,6 +343,11 @@ message SearchRequest {
         Preview = 1;
     }
 
+    enum SortOrderEnum {
+        Ascending = 0;
+        Descending = 1;
+    }
+
     // Simple query string
     // This can be specified as URI parameter.
     // For advanced query cases, Users should use specify SearchQuery
@@ -371,8 +376,14 @@ message SearchRequest {
     string SortBy               = 4 [(gogoproto.jsontag) = "sort-by,omitempty",
                                      (venice.check) = "EmptyOrStrLen(0,256)"];
 
+    // SortOrder is an optional parameter and contains whether to sort ascending
+    // or descending
+    // This can be specified as URI parameter.
+    string SortOrder            = 5 [(gogoproto.jsontag) = "sort-order,omitempty",
+                                     (venice.check) = "StrEnum(SearchRequest.SortOrderEnum)"];
+
     // Query Mode 
-    string Mode                 = 5 [(venice.check) = "StrEnum(SearchRequest.RequestMode)",
+    string Mode                 = 6 [(venice.check) = "StrEnum(SearchRequest.RequestMode)",
                                     (venice.default) = "Full",
                                     (gogoproto.jsontag) = "mode,omitempty"];
 
@@ -382,12 +393,12 @@ message SearchRequest {
     // combinations of text, phrase strings and search modifiers
     // for specific categories, kinds, fields and labels.
     // This cannot be specified as URI parameter.
-    SearchQuery Query           = 6 [(gogoproto.nullable) = true,
+    SearchQuery Query           = 7 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "query,omitempty"];
 
     // OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant
     // of the logged in user
-    repeated string Tenants     = 7 [(gogoproto.jsontag) = "tenants,omitempty"];
+    repeated string Tenants     = 8 [(gogoproto.jsontag) = "tenants,omitempty"];
 }
 
 // SearchResponse is the output provided by the search API

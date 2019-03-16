@@ -173,7 +173,6 @@
       .ui-table-tbody > tr {
         background-color: white;
         color: #767676;
-        height: 36px;
         vertical-align: middle;
 
         // Making the action icons only appear on hover
@@ -222,6 +221,30 @@
           border-color: #6ba0e5 !important;
         }
       }
+
+      .ui-table-tbody > tr {
+        display: flex;
+        width: 100%;
+        &:hover {
+          display: table;
+        }
+
+        > td {
+          // height: 100%;
+          padding: 4px 7px;
+          height: inherit;
+        }
+      }
+      .ui-table-tbody > tr:not(.global-rowexpand) {
+        > td  {
+          text-overflow: ellipsis;
+          vertical-align: top;
+        }
+        &:hover > td {
+          white-space: normal;
+          word-break: break-all;
+        }
+      }
       
       .ui-chkbox-box.ui-state-default {
           border: 2px solid #676763;
@@ -238,29 +261,29 @@
   .global-primeng-table-lazyload {
     @extend %primeng-table;
     height:100%;
-    .ui-table {
-      .ui-table-tbody > tr {
-        display: flex;
-        width: 100%;
-        &:hover {
-          display: table;
-        }
+    // .ui-table {
+    //   .ui-table-tbody > tr {
+    //     display: flex;
+    //     width: 100%;
+    //     &:hover {
+    //       display: table;
+    //     }
 
-        > td {
-          height: 100%;
-        }
-      }
-      .ui-table-tbody > tr:not(.global-rowexpand) {
-        > td  {
-          display: inline-block;
-          text-overflow: ellipsis
-        }
-        &:hover > td {
-          white-space: normal;
-          word-break: break-all;
-        }
-      }
-    }
+    //     > td {
+    //       height: 100%;
+    //     }
+    //   }
+    //   .ui-table-tbody > tr:not(.global-rowexpand) {
+    //     > td  {
+    //       display: inline-block;
+    //       text-overflow: ellipsis
+    //     }
+    //     &:hover > td {
+    //       white-space: normal;
+    //       word-break: break-all;
+    //     }
+    //   }
+    // }
   }
 
   .global-rowexpand {
@@ -304,6 +327,11 @@
     background: white;
     outline: #6ba0e5 solid 1px;
     color: #676767;
+  }
+
+  .ui-paginator .ui-paginator-page.ui-state-active {
+    background: #86a8d7;
+    border-color: #86a8d7;
   }
 }
 

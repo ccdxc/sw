@@ -4,13 +4,18 @@
   </div>
   <div fxFlex class="tableviewedit-tablecontainer">
     <ng-container #table *ngTemplateOutlet="TableTemplate"></ng-container>
-    <div *ngIf="creatingMode || showEditingForm" class="tableviewedit-overlay"></div>
+    <div *ngIf="creatingMode || (showRowExpand && disableTableWhenRowExpanded)" class="tableviewedit-overlay"></div>
   </div>
 </div>
 
 <ng-template #TableTemplate>
-  <app-lazyrender [data]="data" [rows]="28" [runDoCheck]="runDoCheck" [virtualRowHeight]="virtualRowHeight" (dataUpdate)='dataUpdated()'>
+  <app-lazyrender [data]="data" [rows]="28" [runDoCheck]="runDoCheck" [virtualRowHeight]="virtualRowHeight"
+  [isToFetchDataOnSort]="isToFetchDataOnSort" 
+  (dataUpdate)='dataUpdated()'
+  (lazyLoadEvent)="lazyLoadEvent.emit($event)">
     <p-table [columns]="cols" [sortField]="sortField" [dataKey]="dataKey"
+    [sortOrder]="sortOrder"
+    [compareSelectionBy]="compareSelectionBy"
       #primengTable
       class="global-primeng-table-lazyload"  [responsive]="true" 
       [loading]="tableLoading" [resizableColumns]="true" rowExpandMode="single"
@@ -32,8 +37,10 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-rowData>
-        <tr [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData" class="tableviewedit-tr tableviewedit-tr_{{rowData?.meta?.name}}">
-          <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class" 
+        <tr [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData" class="tableviewedit-tr tableviewedit-tr_{{rowData?.meta?.name}}" [style.min-height]="virtualRowHeight + 'px'"
+        (click)="rowClick.emit({event: $event, rowData: rowData})"
+        >
+          <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
           [style.width]="last && actionTemplate != null ? col.width - actionWidth + '%' : col.width + '%'">
             <ng-container *ngTemplateOutlet="bodyTemplate; context: {col: col, $implicit: rowData}"></ng-container>
           </td>
@@ -49,7 +56,7 @@
       <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
         <tr class="global-rowexpand tableviewedit-rowexpand-tr">
           <td [attr.colspan]="actionTemplate != null ? columns.length + 1 : columns.length">
-            <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete.emit($event)" *ngIf="showEditingForm" class="tableviewedit-rowexpand">
+            <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete.emit($event)" *ngIf="showRowExpand" class="tableviewedit-rowexpand">
               <ng-container *ngTemplateOutlet="expandTemplate; context: {$implicit: rowData, columns: columns}"></ng-container>
             </div>
           </td>

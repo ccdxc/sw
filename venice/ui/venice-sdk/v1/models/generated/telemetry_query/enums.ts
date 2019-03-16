@@ -26,33 +26,41 @@ export enum LabelsRequirement_operator {
 }
 
 export enum Telemetry_queryFwlog_action {
-    'ALLOW' = "ALLOW",
-    'DENY' = "DENY",
-    'REJECT' = "REJECT",
+    'allow' = "allow",
+    'deny' = "deny",
+    'reject' = "reject",
 }
 
 export enum Telemetry_queryFwlog_direction {
-    'FROM_HOST' = "FROM_HOST",
-    'FROM_UPLINK' = "FROM_UPLINK",
+    'from_host' = "from_host",
+    'from_uplink' = "from_uplink",
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_actions {
-    'ALL' = "ALL",
-    'ACTION_ALLOW' = "ACTION_ALLOW",
-    'ACTION_DENY' = "ACTION_DENY",
-    'ACTION_REJECT' = "ACTION_REJECT",
+    'allow' = "allow",
+    'deny' = "deny",
+    'reject' = "reject",
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_directions {
-    'DIRECTION_ALL' = "DIRECTION_ALL",
-    'DIRECTION_FROM_HOST' = "DIRECTION_FROM_HOST",
-    'DIRECTION_FROM_UPLINK' = "DIRECTION_FROM_UPLINK",
+    'from_host' = "from_host",
+    'from_uplink' = "from_uplink",
+}
+
+export enum Telemetry_queryFwlogsQuerySpec_sort_order {
+    'Ascending' = "Ascending",
+    'Descending' = "Descending",
 }
 
 export enum Telemetry_queryMetricsQuerySpec_function {
     'NONE' = "NONE",
     'MEAN' = "MEAN",
     'MAX' = "MAX",
+}
+
+export enum Telemetry_queryMetricsQuerySpec_sort_order {
+    'Ascending' = "Ascending",
+    'Descending' = "Descending",
 }
 
 
@@ -74,27 +82,25 @@ export enum LabelsRequirement_operator_uihint {
 }
 
 export enum Telemetry_queryFwlog_action_uihint {
-    'ALLOW' = "Allow",
-    'DENY' = "Deny",
-    'REJECT' = "Reject",
+    'allow' = "Allow",
+    'deny' = "Deny",
+    'reject' = "Reject",
 }
 
 export enum Telemetry_queryFwlog_direction_uihint {
-    'FROM_HOST' = "From Host",
-    'FROM_UPLINK' = "From Uplink",
+    'from_host' = "From Host",
+    'from_uplink' = "From Uplink",
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_actions_uihint {
-    'ACTION_ALLOW' = "Allow",
-    'ACTION_DENY' = "Deny",
-    'ACTION_REJECT' = "Reject",
-    'ALL' = "All",
+    'allow' = "Allow",
+    'deny' = "Deny",
+    'reject' = "Reject",
 }
 
 export enum Telemetry_queryFwlogsQuerySpec_directions_uihint {
-    'DIRECTION_ALL' = "All",
-    'DIRECTION_FROM_HOST' = "From Host",
-    'DIRECTION_FROM_UPLINK' = "From Uplink",
+    'from_host' = "From Host",
+    'from_uplink' = "From Uplink",
 }
 
 
@@ -134,7 +140,9 @@ export class AllEnums {
     Telemetry_queryFwlog_direction = Telemetry_queryFwlog_direction;
     Telemetry_queryFwlogsQuerySpec_actions = Telemetry_queryFwlogsQuerySpec_actions;
     Telemetry_queryFwlogsQuerySpec_directions = Telemetry_queryFwlogsQuerySpec_directions;
+    Telemetry_queryFwlogsQuerySpec_sort_order = Telemetry_queryFwlogsQuerySpec_sort_order;
     Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function;
+    Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;

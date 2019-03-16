@@ -16,6 +16,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
 import { ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
+import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -69,7 +70,13 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
 
   subscriptions = [];
 
-  cols: any[];
+  cols: TableCol[] = [
+    { field: 'ruleNum', header: '', class: 'sgpolicy-rule-number', width: 4 },
+    { field: 'sourceIPs', header: 'Source IPs', class: 'sgpolicy-source-ip', width: 24 },
+    { field: 'destIPs', header: 'Destination IPs', class: 'sgpolicy-dest-ip', width: 24 },
+    { field: 'action', header: 'Action', class: 'sgpolicy-action', width: 24 },
+    { field: 'protocolPort', header: 'Protocol/Ports', class: 'sgpolicy-port', width: 24 },
+  ];
 
   // Used for the table - when true there is a loading icon displayed
   loading: boolean = false;
@@ -162,12 +169,6 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       });
     });
 
-    this.cols = [
-      { field: 'sourceIPs', header: 'Source IPs' },
-      { field: 'destIPs', header: 'Destination IPs' },
-      { field: 'action', header: 'Action' },
-      { field: 'protocolPort', header: 'Protocol/Ports' },
-    ];
   }
 
   initializeData() {

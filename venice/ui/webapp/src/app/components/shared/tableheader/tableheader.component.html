@@ -9,7 +9,12 @@
       {{title}}
     </div>
     <div *ngIf="(count != null && count === total) || (count == null && total != null)" fxFlex="nogrow" class="tableheader-title" >
-      {{title}} ({{total | number}})
+      <ng-container *ngIf="max != null && total >= max">
+        {{title}} (Past {{max | number}})
+      </ng-container>
+      <ng-container *ngIf="max == null || total < max">
+        {{title}} ({{total | number}})
+      </ng-container>
     </div>
     <div *ngIf="count != null && count !== total" fxFlex="nogrow" class="tableheader-title" >
       {{title}} ({{count | number}} / {{ total | number }})

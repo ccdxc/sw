@@ -388,6 +388,7 @@ func (m *SearchRequest) Defaults(ver string) bool {
 	default:
 		m.MaxResults = 50
 		m.Mode = "Full"
+		m.SortOrder = "Ascending"
 	}
 	return ret
 }
@@ -891,6 +892,15 @@ func init() {
 
 		if !validators.EmptyOrStrLen(m.SortBy, args) {
 			return fmt.Errorf("%v failed validation", path+"."+"SortBy")
+		}
+		return nil
+	})
+
+	validatorMapSearch["SearchRequest"]["all"] = append(validatorMapSearch["SearchRequest"]["all"], func(path string, i interface{}) error {
+		m := i.(*SearchRequest)
+
+		if _, ok := SearchRequest_SortOrderEnum_value[m.SortOrder]; !ok {
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"SortOrder")
 		}
 		return nil
 	})

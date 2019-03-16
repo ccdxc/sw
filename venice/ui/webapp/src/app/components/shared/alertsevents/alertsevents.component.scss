@@ -42,7 +42,6 @@
 
 .alertsevents-icon {
   position: absolute;
-  top: 8px;
   font-size: 18px;
 }
 
@@ -64,6 +63,10 @@ app-shared-alertsevents {
   mat-tab-group {
     height: 100%;
   }
+}
+
+.alertsevents-tablerow {
+  min-height: 36px;
 }
 
 /*====== alert table =====*/

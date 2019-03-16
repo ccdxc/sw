@@ -1,6 +1,6 @@
 <app-tableviewedit fxLayout="column" class="flowexportpolicy-widget"
                    [creatingMode]="creatingMode" 
-                   [showEditingForm]="showEditingForm"
+                   [showRowExpand]="showRowExpand"
                    [data]="dataObjects"
                    [cols]="cols"
                    [expandedRowData]="expandedRowData"
@@ -41,11 +41,11 @@
 
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
 
-    <mat-icon matTooltip="Edit policy" class="global-table-action-icon flowexportpolicy-table-action-icon-edit" (click)="onUpdateRecord($event, rowData)">edit</mat-icon>
+    <mat-icon matTooltip="Edit policy" class="global-table-action-icon flowexportpolicy-table-action-icon-edit" (click)="expandRowRequest($event, rowData)">edit</mat-icon>
     <mat-icon matTooltip="Delete policy" class="global-table-action-icon flowexportpolicy-table-action-icon-delete" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newflowexportpolicy [policyData]="rowData" [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-newflowexportpolicy>
+  <app-newflowexportpolicy [policyData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"></app-newflowexportpolicy>
 </ng-template>

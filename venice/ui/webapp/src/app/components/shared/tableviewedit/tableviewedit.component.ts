@@ -1,13 +1,14 @@
-import { Component, OnInit, ViewChild, IterableDiffer, Input, Output, EventEmitter, SimpleChanges, IterableDiffers, ChangeDetectorRef, OnChanges, OnDestroy, TemplateRef, ViewEncapsulation, ContentChild, DoCheck, AfterViewInit } from '@angular/core';
-import { TabcontentComponent, TabcontentInterface } from 'web-app-framework';
-import { Table } from 'primeng/table';
-import { Utility } from '@app/common/Utility';
-import { Subscription, Observable } from 'rxjs';
-import { IApiStatus } from '@sdk/v1/models/generated/search';
-import { ControllerService } from '@app/services/controller.service';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, IterableDiffer, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
-import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
+import { Utility } from '@app/common/Utility';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { ControllerService } from '@app/services/controller.service';
+import { IApiStatus } from '@sdk/v1/models/generated/search';
+import { Table } from 'primeng/table';
+import { Observable, Subscription } from 'rxjs';
+import { TabcontentInterface } from 'web-app-framework';
+import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
+import { LazyLoadEvent } from 'primeng/primeng';
 
 export interface TableCol {
   field: string;
@@ -15,7 +16,14 @@ export interface TableCol {
   sortable?: boolean;
   class?: string;
   width: number;
+  exportable?: boolean;
 }
+
+export interface RowClickEvent {
+  event: any;
+  rowData: any;
+}
+
 
 /**
  * Table view edit component provides an easy way for other pages
@@ -59,17 +67,20 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
 
   @Input() creatingMode: boolean = false;
-  @Input() showEditingForm: boolean = false;
+  @Input() showRowExpand: boolean = false;
+  @Input() disableTableWhenRowExpanded: boolean = true;
 
   // Lazyrender variables
   @Input() data: any[];
   @Input() runDoCheck: boolean = true;
   @Input() virtualRowHeight: number = 36;
+  @Input() isToFetchDataOnSort: boolean = false;
+  @Output() lazyLoadEvent: EventEmitter<LazyLoadEvent> = new EventEmitter<LazyLoadEvent>();
 
   // primeng variables
   @Input() cols: TableCol[] = [];
   @Input() expandedRowData: any;
-  @Input() dataKey: string = 'meta.name';
+  @Input() dataKey: string = 'meta.uuid';
   @Input() sortField: string = 'meta.mod-time';
   @Input() sortOrder: number = -1;
   @Input() tableLoading: boolean = false;
@@ -78,6 +89,8 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   @Input() bodyTemplate: TemplateRef<any>;
   @Input() actionTemplate: TemplateRef<any>;
   @Input() expandTemplate: TemplateRef<any>;
+  @Input() compareSelectionBy: string = 'deepEquals';
+  @Output() rowClick: EventEmitter<RowClickEvent> = new EventEmitter();
 
   @Output() rowExpandAnimationComplete: EventEmitter<any> = new EventEmitter();
 
@@ -125,7 +138,7 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
 
 }
 
-export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, OnDestroy, OnChanges, TabcontentInterface {
+export abstract class TableviewAbstract<I, T extends I> implements OnInit, OnDestroy, OnChanges, TabcontentInterface {
   @Output() tableRowExpandClick: EventEmitter<any> = new EventEmitter();
 
   @ViewChild(TablevieweditHTMLComponent) tableContainer: TablevieweditHTMLComponent;
@@ -139,21 +152,18 @@ export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, O
   expandedRowData: any;
   arrayDiffers: IterableDiffer<T>;
 
-  creatingMode: boolean = false;
-  showEditingForm: boolean = false;
+  showRowExpand: boolean = false;
 
   // Whether the toolbar buttons should be enabled
   shouldEnableButtons: boolean = true;
 
-
   abstract dataObjects: ReadonlyArray<T> = [];
   // Whether or not this component is a tab
   abstract isTabComponent: boolean;
+  abstract disableTableWhenRowExpanded: boolean;
+
   abstract getClassName(): string;
   abstract setDefaultToolbar(): void;
-  abstract deleteRecord(object: T): Observable<{ body: I | IApiStatus | Error, statusCode: number }>;
-  abstract generateDeleteConfirmMsg(object: T): string;
-  abstract generateDeleteSucessMsg(object: T): string;
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef) {
@@ -178,7 +188,7 @@ export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, O
   // Hook to add logic to the initialization for classes extending this component
   postNgInit() { }
 
-  isInEditMode() {
+  isRowExpanded() {
     return this.expandedRowData != null;
   }
 
@@ -189,36 +199,27 @@ export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, O
     }
   }
 
-  createNewObject() {
-    // If a row is expanded, we shouldnt be able to open a create new policy form
-    if (!this.isInEditMode()) {
-      this.creatingMode = true;
-      this.editMode.emit(true);
-    }
-  }
 
-  creationFormClose() {
-    this.creatingMode = false;
-    this.editMode.emit(false);
-  }
-
-  onUpdateRecord(event, rowData) {
-    // If in creation mode, don't allow row expansion
-    if (this.creatingMode) {
-      return;
-    }
-    if (!this.isInEditMode()) {
+  expandRowRequest(event, rowData) {
+    if (!this.isRowExpanded()) {
       // Entering edit mode
       // Freezing table so new data doesn't update the table
-      this.tableContainer.lazyRenderWrapper.freezeTable();
+      if (this.disableTableWhenRowExpanded) {
+        this.tableContainer.lazyRenderWrapper.freezeTable();
+      }
       this.tableContainer.table.toggleRow(rowData, event);
       this.expandedRowData = rowData;
-      this.editMode.emit(true);
-      this.showEditingForm = true;
-      this.shouldEnableButtons = false;
-    } else {
-      // exiting edit form
-      this.showEditingForm = false;
+      if (this.disableTableWhenRowExpanded) {
+        this.editMode.emit(true);
+        this.shouldEnableButtons = false;
+      }
+      this.showRowExpand = true;
+    }
+  }
+
+  closeRowExpand() {
+    if (this.isRowExpanded()) {
+      this.showRowExpand = false;
       this.editMode.emit(false);
       this.shouldEnableButtons = true;
       // We don't untoggle the row here, it will happen when rowExpandAnimationComplete
@@ -229,8 +230,8 @@ export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, O
   /**
    * Called when a row expand animation finishes
    * The animation happens when the row expands, and when it collapses
-   * If it is expanding, then we are in ediitng mode (set in onUpdateRecord).
-   * If it is collapsing, then editingMode should be false, (set in onUpdateRecord).
+   * If it is expanding, then we are in ediitng mode (set in expandRowRequest).
+   * If it is collapsing, then editingMode should be false, (set in closeRowExpand).
    * When it is collapsing, we toggle the row on the turbo table
    *
    * This is because we must wait for the animation to complete before toggling
@@ -238,7 +239,7 @@ export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, O
    * @param  $event Angular animation end event
    */
   rowExpandAnimationComplete($event) {
-    if (!this.showEditingForm) {
+    if (!this.showRowExpand) {
       // we are exiting the row expand
       this.tableContainer.table.toggleRow(this.expandedRowData, event);
       this.expandedRowData = null;
@@ -249,9 +250,60 @@ export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, O
     }
   }
 
+
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe();
+    });
+    this.controllerService.publish(Eventtypes.COMPONENT_DESTROY, {
+      'component': this.getClassName(), 'state':
+        Eventtypes.COMPONENT_DESTROY
+    });
+  }
+
+}
+
+export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbstract<I, T> {
+  creatingMode: boolean = false;
+
+  abstract deleteRecord(object: T): Observable<{ body: I | IApiStatus | Error, statusCode: number }>;
+  abstract generateDeleteConfirmMsg(object: T): string;
+  abstract generateDeleteSucessMsg(object: T): string;
+
+  createNewObject() {
+    // If a row is expanded, we shouldnt be able to open a create new policy form
+    if (!this.isRowExpanded()) {
+      this.creatingMode = true;
+      this.editMode.emit(true);
+    }
+  }
+
+  creationFormClose() {
+    this.creatingMode = false;
+    this.editMode.emit(false);
+  }
+
+  expandRowRequest(event, rowData) {
+    // If in creation mode, don't allow row expansion
+    if (this.creatingMode) {
+      return;
+    }
+    super.expandRowRequest(event, rowData);
+  }
+
+  closeRowExpand() {
+    // If in creation mode, don't allow row expansion
+    if (this.creatingMode) {
+      return;
+    }
+    super.closeRowExpand();
+  }
+
+
   onDeleteRecord(event, object: T) {
     // Should not be able to delete any record while we are editing
-    if (this.isInEditMode()) {
+    if (this.isRowExpanded()) {
       return;
     }
     this.controllerService.invokeConfirm({
@@ -277,15 +329,4 @@ export abstract class TablevieweditAbstract<I, T extends I> implements OnInit, O
       }
     });
   }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach(sub => {
-      sub.unsubscribe();
-    });
-    this.controllerService.publish(Eventtypes.COMPONENT_DESTROY, {
-      'component': this.getClassName(), 'state':
-        Eventtypes.COMPONENT_DESTROY
-    });
-  }
-
 }

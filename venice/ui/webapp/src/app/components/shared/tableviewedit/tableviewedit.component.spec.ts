@@ -33,7 +33,7 @@ class DummyObj implements IDummyObj {
   template: `
   <app-tableviewedit fxLayout="column" class="eventpolicy-widget"
                     [creatingMode]="creatingMode"
-                    [showEditingForm]="showEditingForm"
+                    [showRowExpand]="showRowExpand"
                     [data]="dataObjects"
                     [cols]="cols"
                     [runDoCheck]=false
@@ -81,6 +81,8 @@ class DummyComponent extends TablevieweditAbstract<IDummyObj, DummyObj> {
   ];
 
   isTabComponent = false;
+
+  disableTableWhenRowExpanded = true;
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef) {
@@ -251,7 +253,7 @@ describe('TablevieweditComponent', () => {
 
     // Force into edit mode
     // Should see overlay and row expand
-    component.onUpdateRecord(null, initialData[0]);
+    component.expandRowRequest(null, initialData[0]);
     fixture.detectChanges();
     tick();
     expect(getCreateTemplate()).toBeNull();
@@ -263,12 +265,12 @@ describe('TablevieweditComponent', () => {
     // Change the dataObjects content, view should be the same
     const newItems = [
       {
-        name: 'obj7',
-        'mod-time': 4
-      },
-      {
         name: 'obj8',
         'mod-time': 3
+      },
+      {
+        name: 'obj7',
+        'mod-time': 4
       },
     ];
     component.dataObjects = newItems;
@@ -280,7 +282,7 @@ describe('TablevieweditComponent', () => {
     expect(rows.length).toBe(7, 'Data did not match number of entries in the table');
 
     // exit edit mode should see new objects
-    component.onUpdateRecord(null, initialData[0]);
+    component.closeRowExpand();
     fixture.detectChanges();
     tick();
     expect(getHeaderTemplate().nativeElement.textContent).toBe('Header 2');

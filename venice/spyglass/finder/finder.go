@@ -354,8 +354,20 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	topAgg := es.NewTopHitsAggregation().From(int(in.From)).Size(int(in.MaxResults))
 
 	// Add sort option if it is valid
+	sortAscending := false
+	if in.SortOrder == search.SearchRequest_Ascending.String() {
+		sortAscending = true
+	}
 	if len(in.SortBy) != 0 {
-		topAgg = topAgg.Sort(in.SortBy, true)
+		sortInfo := es.SortInfo{
+			Field:     in.SortBy,
+			Ascending: sortAscending,
+			Missing:   "_last",
+			// UnmappedType prevents search failing when an index
+			// doesn't have a mapping for the field.
+			UnmappedType: "keyword",
+		}
+		topAgg = topAgg.SortWithInfo(sortInfo)
 	}
 
 	// Kind-Aggregation #3
@@ -377,6 +389,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	aggTenant = aggTenant.SubAggregation(elastic.CategoryAggKey, aggCategory)
 
 	// Execute Search with required index, query etc
+
 	result, err := fdr.elasticClient.Search(ctx,
 		fmt.Sprintf("%s.*", elastic.ExternalIndexPrefix),
 		"", //  Skip the index/doc type for search
@@ -385,7 +398,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 		in.From,
 		in.MaxResults,
 		in.SortBy,
-		true) // ascending order sort
+		sortAscending)
 	if err != nil {
 		fdr.logger.Errorf("Search failed for query: %v, result: %+v err: %v", query, result, err)
 		var eType, eReason string

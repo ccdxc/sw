@@ -49,8 +49,8 @@ func (m *Fwlog) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Action = "ALLOW"
-		m.Direction = "FROM_HOST"
+		m.Action = "allow"
+		m.Direction = "from_host"
 	}
 	return ret
 }
@@ -165,11 +165,12 @@ func (m *FwlogsQuerySpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Actions {
-			m.Actions[k] = "ALL"
+			m.Actions[k] = "allow"
 		}
 		for k := range m.Directions {
-			m.Directions[k] = "DIRECTION_ALL"
+			m.Directions[k] = "from_host"
 		}
+		m.SortOrder = "Descending"
 	}
 	return ret
 }
@@ -270,6 +271,7 @@ func (m *MetricsQuerySpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.Function = "NONE"
+		m.SortOrder = "Ascending"
 	}
 	return ret
 }
@@ -583,7 +585,7 @@ func init() {
 		m := i.(*FwlogsQuerySpec)
 
 		for k, v := range m.Actions {
-			if _, ok := FwlogActionFilters_value[v]; !ok {
+			if _, ok := FwlogActions_value[v]; !ok {
 				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Actions", k)
 			}
 		}
@@ -619,9 +621,18 @@ func init() {
 		m := i.(*FwlogsQuerySpec)
 
 		for k, v := range m.Directions {
-			if _, ok := FwlogDirectionsFilters_value[v]; !ok {
+			if _, ok := FwlogDirections_value[v]; !ok {
 				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Directions", k)
 			}
+		}
+		return nil
+	})
+
+	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwlogsQuerySpec)
+
+		if _, ok := SortOrder_value[m.SortOrder]; !ok {
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"SortOrder")
 		}
 		return nil
 	})
@@ -704,6 +715,15 @@ func init() {
 
 		if !validators.EmptyOrRegExp(m.Name, args) {
 			return fmt.Errorf("%v failed validation", path+"."+"Name")
+		}
+		return nil
+	})
+
+	validatorMapTelemetry_query["MetricsQuerySpec"]["all"] = append(validatorMapTelemetry_query["MetricsQuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*MetricsQuerySpec)
+
+		if _, ok := SortOrder_value[m.SortOrder]; !ok {
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"SortOrder")
 		}
 		return nil
 	})

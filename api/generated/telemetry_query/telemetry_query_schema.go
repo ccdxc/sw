@@ -38,7 +38,9 @@ var typesMapTelemetry_query = map[string]*api.Struct{
 
 			"PolicyName": api.Field{Name: "PolicyName", CLITag: api.CLIInfo{ID: "policy-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "policy-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Timestamp": api.Field{Name: "Timestamp", CLITag: api.CLIInfo{ID: "timestamp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "timestamp", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+			"ReporterID": api.Field{Name: "ReporterID", CLITag: api.CLIInfo{ID: "reporter-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reporter-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Time": api.Field{Name: "Time", CLITag: api.CLIInfo{ID: "time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 	"telemetry_query.FwlogsQueryList": &api.Struct{
@@ -90,11 +92,15 @@ var typesMapTelemetry_query = map[string]*api.Struct{
 
 			"PolicyNames": api.Field{Name: "PolicyNames", CLITag: api.CLIInfo{ID: "policy-names", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "policy-names", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
+			"ReporterIDs": api.Field{Name: "ReporterIDs", CLITag: api.CLIInfo{ID: "reporter-ids", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reporter-ids", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"StartTime": api.Field{Name: "StartTime", CLITag: api.CLIInfo{ID: "start-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"EndTime": api.Field{Name: "EndTime", CLITag: api.CLIInfo{ID: "end-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"Pagination": api.Field{Name: "Pagination", CLITag: api.CLIInfo{ID: "pagination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pagination", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "telemetry_query.PaginationSpec"},
+
+			"SortOrder": api.Field{Name: "SortOrder", CLITag: api.CLIInfo{ID: "sort-order", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sort-order", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"telemetry_query.MetricsQueryList": &api.Struct{
@@ -147,6 +153,8 @@ var typesMapTelemetry_query = map[string]*api.Struct{
 			"GroupbyField": api.Field{Name: "GroupbyField", CLITag: api.CLIInfo{ID: "group-by-field", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "group-by-field", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Pagination": api.Field{Name: "Pagination", CLITag: api.CLIInfo{ID: "pagination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pagination", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "telemetry_query.PaginationSpec"},
+
+			"SortOrder": api.Field{Name: "SortOrder", CLITag: api.CLIInfo{ID: "sort-order", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sort-order", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 

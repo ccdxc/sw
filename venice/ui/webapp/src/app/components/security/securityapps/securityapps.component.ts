@@ -88,7 +88,7 @@ export class SecurityappsComponent extends BaseComponent implements OnInit, OnDe
    * Fetch security apps records
    */
   getSecurityApps() {
-    this.securityappsEventUtility = new HttpEventUtility<SecurityApp>(SecurityApp, false, null, true); //https://pensando.atlassian.net/browse/VS-93 we want to trim the object
+    this.securityappsEventUtility = new HttpEventUtility<SecurityApp>(SecurityApp, false, null, true); // https://pensando.atlassian.net/browse/VS-93 we want to trim the object
     this.securityApps = this.securityappsEventUtility.array as ReadonlyArray<SecurityApp>;
     const subscription = this.securityService.WatchApp().subscribe(
       response => {
@@ -128,7 +128,7 @@ export class SecurityappsComponent extends BaseComponent implements OnInit, OnDe
   }
 
   displaySpecAlgType(rowData, col) {
-   return this.displayColumn(rowData, col, false);
+    return this.displayColumn(rowData, col, false);
   }
 
 }

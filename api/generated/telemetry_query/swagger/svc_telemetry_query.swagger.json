@@ -548,28 +548,28 @@
         "action": {
           "type": "string",
           "enum": [
-            "ALLOW",
-            "DENY",
-            "REJECT"
+            "allow",
+            "deny",
+            "reject"
           ],
-          "default": "ALLOW",
+          "default": "allow",
           "x-ui-hints": {
-            "ALLOW": "Allow",
-            "DENY": "Deny",
-            "REJECT": "Reject"
+            "allow": "Allow",
+            "deny": "Deny",
+            "reject": "Reject"
           },
           "title": "Action"
         },
         "direction": {
           "type": "string",
           "enum": [
-            "FROM_HOST",
-            "FROM_UPLINK"
+            "from_host",
+            "from_uplink"
           ],
-          "default": "FROM_HOST",
+          "default": "from_host",
           "x-ui-hints": {
-            "FROM_HOST": "From Host",
-            "FROM_UPLINK": "From Uplink"
+            "from_host": "From Host",
+            "from_uplink": "From Uplink"
           },
           "title": "Flow Direction"
         },
@@ -581,7 +581,11 @@
           "type": "string",
           "title": "policy name"
         },
-        "timestamp": {
+        "reporter-id": {
+          "type": "string",
+          "title": "Rule ID"
+        },
+        "time": {
           "type": "string",
           "format": "date-time",
           "title": "Time the log was created"
@@ -653,7 +657,8 @@
         "source-ports",
         "dest-ports",
         "actions",
-        "directions"
+        "directions",
+        "sort-order"
       ],
       "properties": {
         "source-ips": {
@@ -707,17 +712,15 @@
             "type": "string"
           },
           "enum": [
-            "ALL",
-            "ACTION_ALLOW",
-            "ACTION_DENY",
-            "ACTION_REJECT"
+            "allow",
+            "deny",
+            "reject"
           ],
-          "default": "ALL",
+          "default": "allow",
           "x-ui-hints": {
-            "ACTION_ALLOW": "Allow",
-            "ACTION_DENY": "Deny",
-            "ACTION_REJECT": "Reject",
-            "ALL": "All"
+            "allow": "Allow",
+            "deny": "Deny",
+            "reject": "Reject"
           },
           "title": "OR of actions to be matched"
         },
@@ -727,15 +730,13 @@
             "type": "string"
           },
           "enum": [
-            "DIRECTION_ALL",
-            "DIRECTION_FROM_HOST",
-            "DIRECTION_FROM_UPLINK"
+            "from_host",
+            "from_uplink"
           ],
-          "default": "DIRECTION_ALL",
+          "default": "from_host",
           "x-ui-hints": {
-            "DIRECTION_ALL": "All",
-            "DIRECTION_FROM_HOST": "From Host",
-            "DIRECTION_FROM_UPLINK": "From Uplink"
+            "from_host": "From Host",
+            "from_uplink": "From Uplink"
           },
           "title": "OR of directions to be matched"
         },
@@ -753,6 +754,13 @@
           },
           "title": "OR of policy names to be matched"
         },
+        "reporter-ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OR of reporter names to be matched"
+        },
         "start-time": {
           "type": "string",
           "format": "date-time",
@@ -766,6 +774,15 @@
         "pagination": {
           "$ref": "#/definitions/telemetry_queryPaginationSpec",
           "title": "PaginationSpec specifies the number of series to include"
+        },
+        "sort-order": {
+          "type": "string",
+          "enum": [
+            "Ascending",
+            "Descending"
+          ],
+          "default": "Descending",
+          "title": "SortOrder specifies time ordering of results"
         }
       },
       "title": "FwlogsQuerySpec allows selecting logs by all attributes\nAll fields are ANDed together"
@@ -830,7 +847,8 @@
     "telemetry_queryMetricsQuerySpec": {
       "type": "object",
       "required": [
-        "function"
+        "function",
+        "sort-order"
       ],
       "properties": {
         "kind": {
@@ -891,6 +909,15 @@
         "pagination": {
           "$ref": "#/definitions/telemetry_queryPaginationSpec",
           "title": "PaginationSpec specifies the number of series to include"
+        },
+        "sort-order": {
+          "type": "string",
+          "enum": [
+            "Ascending",
+            "Descending"
+          ],
+          "default": "Ascending",
+          "title": "SortOrder specifies time ordering of results"
         }
       },
       "title": "MetricsQuerySpec requires a structured body consisting of:\n    -  Object Selector (selects one more more objects of same Kind)\n    -  Time Range (for the time series)\n    -  A set of Metric Specs\n    -  A pagination spec"
@@ -917,7 +944,7 @@
           "title": "Count specifies the number of points to include"
         }
       },
-      "description": "PaginationSpec specifies how many metrics instances to include\nin the result."
+      "title": "PaginationSpec specifies how many results to include"
     },
     "telemetry_queryResultSeries": {
       "type": "object",

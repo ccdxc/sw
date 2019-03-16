@@ -66,7 +66,7 @@ export class RepeaterComponent implements OnInit, OnChanges {
   @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
 
   idCount = 0; // Counter so that newly created repeaters never have conflicting ids
-  repeaterList: RepeaterItem[];
+  repeaterList: RepeaterItem[] = [];
   keyOptions: SelectItem[]; // Holds all key options
 
   keyToOperator: { [key: string]: SelectItem[] };

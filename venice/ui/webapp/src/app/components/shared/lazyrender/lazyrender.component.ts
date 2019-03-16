@@ -33,6 +33,7 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   @ContentChild(Table) primengTable: Table;
 
   // The entire data set, will only render a subsection of it at a time
+  // Unless loadDataFunc is supplied
   @Input() data: any[] = [];
 
   // Primeng needs the height of each row to be fixed and known beforehand
@@ -46,6 +47,26 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   // Whether or not to check the array objects on each
   // ngDoCheck cycle
   @Input() runDoCheck: boolean = false;
+
+  // Whether on sorting event if the request should be done
+  // on the client side, or notify the parent to perform
+  // an api request
+  // NOTE: Table freezing and preventing new data from being
+  // automatically updated to the table is NOT supported with this
+  // This is meant for situations whether the user has to manually refresh
+  // for new data.
+  @Input() isToFetchDataOnSort: boolean = false;
+
+  // Determines whether to emit a request for parent component to fetch data,
+  // instead of assuming data holds the entire data set
+  @Input() isToFetchData: boolean = false;
+
+  // Total records to show when isToFetchData is set to true
+  @Input() totalRecords: number = 0;
+
+  // Emits the lazy load event when isToFetchData is true. parent component should then
+  // get the requested data and update the data input.
+  @Output() lazyLoadEvent: EventEmitter<LazyLoadEvent> = new EventEmitter<LazyLoadEvent>();
 
   // Emits when the displayed data set switches to the updated data
   @Output() dataUpdate: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -85,16 +106,26 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   }
 
   ngOnInit() {
-    this.dataChunkUtility.updateData(this.data, true);
-    this.dataLazy = this.dataChunkUtility.requestChunk(0, this.rows * 2);
+    if (!this.isToFetchData) {
+      this.dataChunkUtility.updateData(this.data, true);
+      this.dataLazy = this.dataChunkUtility.requestChunk(0, this.rows * 2);
+    }
     this.setTableValues();
   }
 
   freezeTable() {
+    if (this.isToFetchData) {
+      console.error('Freezing table is not supported with fetching data enabled');
+      return;
+    }
     this.isFrozen = true;
   }
 
   unfreezeTable() {
+    if (this.isToFetchData) {
+      console.error('Freezing table is not supported with fetching data enabled');
+      return;
+    }
     this.isFrozen = false;
     if (this.viewInitComplete && this.getTableScroll() === 0) {
       this.resetTableView();
@@ -124,11 +155,16 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   }
 
   onData(data) {
+    if (this.isToFetchData) {
+      this.setTableValues();
+      // Primeng's data should already be binded to the data input reference
+      return;
+    }
     this.dataChunkUtility.updateData(data, false);
     // Auto update array if blank OR if we are at the top of the table (scroll is 0)
     // We skip this if view hasn't been initialized yet
     if (this.viewInitComplete) {
-      if (!this.isFrozen && this.getTableScroll() === 0) {
+      if (this.isToFetchDataOnSort || (!this.isFrozen && this.getTableScroll() === 0)) {
         this.resetTableView();
       } else {
         this.hasUpdate = true;
@@ -140,14 +176,25 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   // so that primeng adjusts the scrollbar
   setTableValues() {
     if (this.primengTable != null) {
-      this.primengTable.value = this.dataLazy as any[];
-      this.primengTable.totalRecords = this.dataChunkUtility.length;
-      this.loadedData.emit(this.dataLazy);
+      if (this.isToFetchData) {
+        this.primengTable.value = this.data;
+        this.primengTable.totalRecords = this.totalRecords;
+      } else {
+        this.primengTable.value = this.dataLazy as any[];
+        this.primengTable.totalRecords = this.dataChunkUtility.length;
+        this.loadedData.emit(this.dataLazy);
+      }
     }
   }
 
   ngAfterViewInit() {
     this.viewInitComplete = true;
+    // Take initial sort settings
+    if (this.primengTable != null) {
+      this.dataChunkUtility.lastRequestedSort.field = this.primengTable.sortField;
+      this.dataChunkUtility.lastRequestedSort.order = this.primengTable.sortOrder;
+    }
+
     // Need to put into next cycle to prevent primeNG overriding
     // putting longer delay so that the rest of the application
     // finishes rendering. Currently causing calculations to be ~1 pixel off
@@ -203,7 +250,11 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
     if (this.primengTable != null) {
       // Setting attributes needed for virtual scroll
       this.primengTable.onLazyLoad.subscribe(event => {
-        this.tableScrollLoad(event);
+        if (this.isToFetchData) {
+          this.lazyLoadEvent.emit(event);
+        } else {
+          this.tableScrollLoad(event);
+        }
       });
       this.primengTable.rows = this.rows;
       this.primengTable.virtualRowHeight = this.virtualRowHeight;
@@ -228,6 +279,21 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
    * @param event The event request passed in by Primeng
    */
   tableScrollLoad(event: LazyLoadEvent) {
+    if (this.isToFetchData) {
+      console.error('This should not have been called');
+      return;
+    }
+    if (this.isToFetchDataOnSort) {
+      // Check if sort criteria is not the same
+      if (event.sortField !== this.dataChunkUtility.lastRequestedSort.field
+        || event.sortOrder !== this.dataChunkUtility.lastRequestedSort.order) {
+        this.dataChunkUtility.lastRequestedSort.field = event.sortField;
+        this.dataChunkUtility.lastRequestedSort.order = event.sortOrder;
+        this.lazyLoadEvent.emit(event);
+        return;
+      }
+    }
+
     this.dataChunkUtility.sort(event.sortField, event.sortOrder);
     this.dataLazy = this.dataChunkUtility.requestChunk(event.first, event.first + event.rows);
     this.setTableValues();
@@ -249,6 +315,11 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
    * Switches to use new data and scrolls the table to the top
    */
   resetTableView() {
+    if (this.isToFetchData) {
+      this.setTableValues();
+      this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scroll(0, 0);
+      return;
+    }
     this.dataChunkUtility.switchToNewData();
     this.hasUpdate = false;
     // If we are scrolled a lot, the scroll to the top will trigger the table
@@ -262,6 +333,9 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
 
   // Returns the data that is currently being displayed in the table
   getCurrentDataLength(): number {
+    if (this.isToFetchData) {
+      return this.data.length;
+    }
     return this.dataChunkUtility.currentDataArray.length;
   }
 }

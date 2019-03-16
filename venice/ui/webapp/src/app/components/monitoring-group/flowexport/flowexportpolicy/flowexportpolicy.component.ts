@@ -33,6 +33,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
   ];
 
   isTabComponent = false;
+  disableTableWhenRowExpanded = true;
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,

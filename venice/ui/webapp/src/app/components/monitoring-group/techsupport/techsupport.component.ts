@@ -47,6 +47,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   ];
 
   isTabComponent = false;
+  disableTableWhenRowExpanded = true;
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,

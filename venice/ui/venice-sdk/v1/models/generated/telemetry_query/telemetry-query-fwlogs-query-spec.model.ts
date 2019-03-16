@@ -10,6 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { Telemetry_queryFwlogsQuerySpec_actions,  Telemetry_queryFwlogsQuerySpec_actions_uihint  } from './enums';
 import { Telemetry_queryFwlogsQuerySpec_directions,  Telemetry_queryFwlogsQuerySpec_directions_uihint  } from './enums';
 import { Telemetry_queryPaginationSpec, ITelemetry_queryPaginationSpec } from './telemetry-query-pagination-spec.model';
+import { Telemetry_queryFwlogsQuerySpec_sort_order,  } from './enums';
 
 export interface ITelemetry_queryFwlogsQuerySpec {
     'source-ips': Array<string>;
@@ -21,9 +22,11 @@ export interface ITelemetry_queryFwlogsQuerySpec {
     'directions': Array<Telemetry_queryFwlogsQuerySpec_directions>;
     'rule-ids'?: Array<string>;
     'policy-names'?: Array<string>;
+    'reporter-ids'?: Array<string>;
     'start-time'?: Date;
     'end-time'?: Date;
     'pagination'?: ITelemetry_queryPaginationSpec;
+    'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order;
 }
 
 
@@ -41,9 +44,11 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
     'directions': Array<Telemetry_queryFwlogsQuerySpec_directions> = null;
     'rule-ids': Array<string> = null;
     'policy-names': Array<string> = null;
+    'reporter-ids': Array<string> = null;
     'start-time': Date = null;
     'end-time': Date = null;
     'pagination': Telemetry_queryPaginationSpec = null;
+    'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'source-ips': {
             description:  'should be a valid v4 or v6 IP address',
@@ -73,13 +78,13 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
         },
         'actions': {
             enum: Telemetry_queryFwlogsQuerySpec_actions_uihint,
-            default: 'ALL',
+            default: 'allow',
             required: true,
             type: 'Array<string>'
         },
         'directions': {
             enum: Telemetry_queryFwlogsQuerySpec_directions_uihint,
-            default: 'DIRECTION_ALL',
+            default: 'from_host',
             required: true,
             type: 'Array<string>'
         },
@@ -88,6 +93,10 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
             type: 'Array<string>'
         },
         'policy-names': {
+            required: false,
+            type: 'Array<string>'
+        },
+        'reporter-ids': {
             required: false,
             type: 'Array<string>'
         },
@@ -102,6 +111,12 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
         'pagination': {
             required: false,
             type: 'object'
+        },
+        'sort-order': {
+            enum: Telemetry_queryFwlogsQuerySpec_sort_order,
+            default: 'Descending',
+            required: true,
+            type: 'string'
         },
     }
 
@@ -136,6 +151,7 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
         this['directions'] = new Array<Telemetry_queryFwlogsQuerySpec_directions>();
         this['rule-ids'] = new Array<string>();
         this['policy-names'] = new Array<string>();
+        this['reporter-ids'] = new Array<string>();
         this['pagination'] = new Telemetry_queryPaginationSpec();
         this.setValues(values, setDefaults);
     }
@@ -208,6 +224,13 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
         } else {
             this['policy-names'] = [];
         }
+        if (values && values['reporter-ids'] != null) {
+            this['reporter-ids'] = values['reporter-ids'];
+        } else if (fillDefaults && Telemetry_queryFwlogsQuerySpec.hasDefaultValue('reporter-ids')) {
+            this['reporter-ids'] = [ Telemetry_queryFwlogsQuerySpec.propInfo['reporter-ids'].default];
+        } else {
+            this['reporter-ids'] = [];
+        }
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
         } else if (fillDefaults && Telemetry_queryFwlogsQuerySpec.hasDefaultValue('start-time')) {
@@ -227,6 +250,13 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
         } else {
             this['pagination'].setValues(null, fillDefaults);
         }
+        if (values && values['sort-order'] != null) {
+            this['sort-order'] = values['sort-order'];
+        } else if (fillDefaults && Telemetry_queryFwlogsQuerySpec.hasDefaultValue('sort-order')) {
+            this['sort-order'] = <Telemetry_queryFwlogsQuerySpec_sort_order>  Telemetry_queryFwlogsQuerySpec.propInfo['sort-order'].default;
+        } else {
+            this['sort-order'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -243,9 +273,11 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
                 'directions': CustomFormControl(new FormControl(this['directions']), Telemetry_queryFwlogsQuerySpec.propInfo['directions']),
                 'rule-ids': CustomFormControl(new FormControl(this['rule-ids']), Telemetry_queryFwlogsQuerySpec.propInfo['rule-ids']),
                 'policy-names': CustomFormControl(new FormControl(this['policy-names']), Telemetry_queryFwlogsQuerySpec.propInfo['policy-names']),
+                'reporter-ids': CustomFormControl(new FormControl(this['reporter-ids']), Telemetry_queryFwlogsQuerySpec.propInfo['reporter-ids']),
                 'start-time': CustomFormControl(new FormControl(this['start-time']), Telemetry_queryFwlogsQuerySpec.propInfo['start-time']),
                 'end-time': CustomFormControl(new FormControl(this['end-time']), Telemetry_queryFwlogsQuerySpec.propInfo['end-time']),
                 'pagination': CustomFormGroup(this['pagination'].$formGroup, Telemetry_queryFwlogsQuerySpec.propInfo['pagination'].required),
+                'sort-order': CustomFormControl(new FormControl(this['sort-order'], [required, enumValidator(Telemetry_queryFwlogsQuerySpec_sort_order), ]), Telemetry_queryFwlogsQuerySpec.propInfo['sort-order']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('pagination') as FormGroup).controls).forEach(field => {
@@ -271,9 +303,11 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
             this._formGroup.controls['directions'].setValue(this['directions']);
             this._formGroup.controls['rule-ids'].setValue(this['rule-ids']);
             this._formGroup.controls['policy-names'].setValue(this['policy-names']);
+            this._formGroup.controls['reporter-ids'].setValue(this['reporter-ids']);
             this._formGroup.controls['start-time'].setValue(this['start-time']);
             this._formGroup.controls['end-time'].setValue(this['end-time']);
             this['pagination'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['sort-order'].setValue(this['sort-order']);
         }
     }
 }

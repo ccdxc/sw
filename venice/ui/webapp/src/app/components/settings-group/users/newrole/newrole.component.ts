@@ -77,7 +77,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       this.newAuthRole = this.getRoleFromSelectedRole();
     } else {
       this.newAuthRole = new AuthRole();
-      this.newAuthRole.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolenameValid(this.veniceRoles)]);
+      this.newAuthRole.$formGroup.get(['meta', 'name']).setValidators([
+        this.newAuthRole.$formGroup.get(['meta', 'name']).validator,
+        this.isRolenameValid(this.veniceRoles)]);
 
       const permissions = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
       if (permissions.length === 0) {
@@ -140,8 +142,8 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     const newAuthRole = new AuthRole(newRole);
     // populate permission kind options
     const permissionControls = newAuthRole.$formGroup.get(['spec', 'permissions'])['controls'];
-    for (let j = 0; j < permissionControls.length ; j++) {
-      permissionControls[j][NewroleComponent.KINDOPTIONS] =  this.getKindOptions(permissionControls[j]);
+    for (let j = 0; j < permissionControls.length; j++) {
+      permissionControls[j][NewroleComponent.KINDOPTIONS] = this.getKindOptions(permissionControls[j]);
     }
     return newAuthRole;
   }

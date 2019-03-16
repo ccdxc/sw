@@ -1,5 +1,8 @@
 @import 'src/global-mixins';
 
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
 .sgpolicy-widget {
   @include primary-font;
   overflow: hidden;
@@ -187,4 +190,19 @@
 .sgpolicy-overlay-button {
   font-size: 16px;
   padding: 6px 20px;
+}
+
+.sgpolicydetail-inputip {
+  width: 150px;
+  height: 30px;
+  @include primary-font();
+}
+
+.sgpolicydetail-value {
+  margin: $vertical-gutter $horizontal-gutter;
+  @include primary-font();
+}
+
+.sgpolicy-row {
+  min-height: 36px;
 }

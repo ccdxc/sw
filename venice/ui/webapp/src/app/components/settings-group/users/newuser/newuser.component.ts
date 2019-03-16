@@ -47,7 +47,10 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
     this.newAuthUser = new AuthUser();
     // set validation rules.  Angular does not have api to get existing validators. Thus, we reset all validators
     // meta.nam is required and must be unique
-    this.newAuthUser.$formGroup.get(['meta', 'name']).setValidators([required, this.isUsernameValid(this.authUsers)]);
+    this.newAuthUser.$formGroup.get(['meta', 'name']).setValidators([
+      this.newAuthUser.$formGroup.get(['meta', 'name']).validator,
+      this.isUsernameValid(this.authUsers)
+    ]);
     // spec.password is required.
     this.newAuthUser.$formGroup.get(['spec', 'password']).setValidators([required]);
   }

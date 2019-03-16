@@ -1,7 +1,7 @@
 <app-pagebody [icon]="bodyIcon" header="Event Policies">
   <app-tableviewedit fxLayout="column" class="eventpolicy-widget"
                     [creatingMode]="creatingMode" 
-                    [showEditingForm]="showEditingForm"
+                    [showRowExpand]="showRowExpand"
                     [data]="dataObjects"
                     [cols]="cols"
                     [expandedRowData]="expandedRowData"
@@ -40,11 +40,11 @@
   
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Edit policy" class="global-table-action-icon" (click)="onUpdateRecord($event, rowData)">edit</mat-icon>
+    <mat-icon matTooltip="Edit policy" class="global-table-action-icon" (click)="expandRowRequest($event, rowData)">edit</mat-icon>
     <mat-icon matTooltip="Delete policy" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>
   
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-neweventpolicy [policyData]="rowData" [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-neweventpolicy>
+  <app-neweventpolicy [policyData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"></app-neweventpolicy>
 </ng-template>

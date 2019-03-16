@@ -19,6 +19,7 @@ import { TableCol, TablevieweditAbstract } from '@app/components/shared/tablevie
 export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitoringAlertDestination, MonitoringAlertDestination> {
   @Input() dataObjects: MonitoringAlertDestination[] = [];
   isTabComponent = true;
+  disableTableWhenRowExpanded = true;
 
   headerIcon: Icon = {
     margin: {

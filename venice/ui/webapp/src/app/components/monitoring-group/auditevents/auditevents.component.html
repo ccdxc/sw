@@ -1,8 +1,8 @@
 <app-pagebody class="auditevents" header="Audit Events" [icon]="bodyicon">
   <!-- Since we are manually calculating table dimensions, whenever this panel changes
         state we need to recalculate the table -->
-  <mat-expansion-panel #auditeventSearchPanel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true" (closed)="lazyRenderWrapper?.resizeTable(501)"
-    (opened)="lazyRenderWrapper?.resizeTable(501)">
+  <mat-expansion-panel #auditeventSearchPanel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true" (closed)="tableWrapper?.lazyRenderWrapper?.resizeTable(501)"
+    (opened)="tableWrapper.lazyRenderWrapper?.resizeTable(501)">
     <mat-expansion-panel-header class="auditevents-expansionpanel-header">
       <mat-panel-title class="auditevents-summary-panel-header">
         Filter Audit Event
@@ -20,63 +20,67 @@
       <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
           <div fxFlex="nogrow">
               <button (click)="onCancelAuditSearch($event)" tabindex="0" (keydown)="($event.which ==13)? onCancelAuditSearch($event) : ''"
-                  class="global-button-neutral auditevents-searchbutton auditevents-searchbutton-clear">Cancel</button>
+                  class="global-button-neutral auditevents-searchbutton auditevents-searchbutton-clear">CANCEL</button>
           </div>
           <div fxFlex="nogrow">
-              <button (click)="onAuditSearch($event)" tabindex="0" (keydown)="($event.which ==13)? onAuditSearch($event) : ''"
+              <button (click)="getAuditevents()" tabindex="0" (keydown)="($event.which ==13)? getAuditevents() : ''"
                   class="global-button-primary auditevents-searchbutton auditevents-searchbutton-save"
-                  >Search</button>
+                  >SEARCH</button>
           </div>
       </div>
     </div>
   </mat-expansion-panel>
 
-  <div fxFlex class="auditevents-table-container">
-    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
-  </div>
+  <app-tableviewedit fxLayout="column" class="auditevents-widget"
+    [showRowExpand]="showRowExpand"
+    [data]="dataObjects"
+    [cols]="cols"
+    [sortField]="startingSortField"
+    [sortOrder]="startingSortOrder"
+    [tableLoading]="loading"
+    [disableTableWhenRowExpanded]="disableTableWhenRowExpanded"
+
+    [runDoCheck]="false"
+    [expandedRowData]="expandedRowData"
+    [captionTemplate]="captionTemplate"
+    [bodyTemplate]="bodyTemplate"
+    [expandTemplate]="expandTemplate"
+    [isToFetchDataOnSort]="true"
+    (lazyLoadEvent)="onTableSort($event)"
+    (rowClick)="onAuditeventsTableRowClick($event)"
+    (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
+    >
+  </app-tableviewedit> 
 
 </app-pagebody>
 
-<ng-template #DataTable>
-  <app-lazyrender [data]="auditEvents" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
-    <p-table #auditeventsTable class="global-primeng-table-lazyload" [columns]="cols" dataKey="meta.uuid" [responsive]="true" 
-      sortField="meta.mod-time" [sortOrder]='-1' [resizableColumns]="true" rowExpandMode="single" exportFilename="Venice-auditevents" >
-      <!-- Table Caption -->
-      <ng-template pTemplate="caption">
-        <app-tableheader title="Audit Events" [total]="auditEvents.length"  width="250px">
-        </app-tableheader>
-      </ng-template>
-      <!-- Table Header -->
-      <ng-template pTemplate="header" let-columns>
-        <tr>
-          <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
-          </th>
-        </tr>
-      </ng-template>
-      <!-- Table Body -->
-      <ng-template pTemplate="body" let-rowData let-expanded="expanded" >
-        <tr >
-          <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class" (click)="onAuditeventsTableRowClick($event, rowData)" title="Click to expand or collapse row">
-           
-            <ng-container *ngSwitchCase="'meta.mod-time'">
-              {{rowData.meta['mod-time'] | PrettyDate }}
-            </ng-container>
-            <ng-container *ngSwitchDefault>
-              {{displayColumn(rowData, col)}}
-            </ng-container>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="rowexpansion" let-rowData let-columns="cols">
-        <tr *ngIf="selectedAuditEvent" class="global-rowexpand  auditevents-rowexpand-tr">
-          <td [attr.colspan]="cols.length ">
-            <div class="auditevents-detail-div auditevents-rowexpand">
-              <pre>{{displayAuditEvent()}}</pre>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </app-lazyrender>
+<!-- TABLE HEADER -->
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="totalRecords"  width="250px">
+  </app-tableheader>
+  <div fxFlex></div>
+  <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="end center" class="auditevents auditevents-lastupdate">
+    <div fxFlex="30px">
+      Last Updated: {{ lastUpdateTime | PrettyDate }}
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      <div>
+        {{rowData.meta['mod-time'] | PrettyDate }}
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-columns="columns">
+  <div class="auditevents-detail-div auditevents-rowexpand">
+    <pre>{{displayAuditEvent(rowData)}}</pre>
+  </div>
 </ng-template>

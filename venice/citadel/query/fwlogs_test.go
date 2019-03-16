@@ -53,6 +53,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 				Queries: []*telemetry_query.FwlogsQuerySpec{
 					&telemetry_query.FwlogsQuerySpec{
 						SourceIPs: []string{"10"},
+						SortOrder: telemetry_query.SortOrder_Descending.String(),
 					},
 				},
 			},
@@ -66,6 +67,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 				Queries: []*telemetry_query.FwlogsQuerySpec{
 					&telemetry_query.FwlogsQuerySpec{
 						SourceIPs: []string{"10"},
+						SortOrder: telemetry_query.SortOrder_Descending.String(),
 					},
 				},
 			},
@@ -79,6 +81,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 				Queries: []*telemetry_query.FwlogsQuerySpec{
 					&telemetry_query.FwlogsQuerySpec{
 						SourceIPs: []string{"10.1.1.1"},
+						SortOrder: telemetry_query.SortOrder_Descending.String(),
 					},
 				},
 			},
@@ -92,6 +95,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 					&telemetry_query.FwlogsQuerySpec{
 						SourceIPs:  []string{"10.1.1.1"},
 						Pagination: &telemetry_query.PaginationSpec{},
+						SortOrder:  telemetry_query.SortOrder_Descending.String(),
 					},
 				},
 			},
@@ -108,6 +112,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 						Pagination: &telemetry_query.PaginationSpec{
 							Count: -15,
 						},
+						SortOrder: telemetry_query.SortOrder_Descending.String(),
 					},
 				},
 			},
@@ -125,6 +130,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 							Count:  100,
 							Offset: -15,
 						},
+						SortOrder: telemetry_query.SortOrder_Descending.String(),
 					},
 				},
 			},
@@ -142,6 +148,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 							Count:  100,
 							Offset: 100,
 						},
+						SortOrder: telemetry_query.SortOrder_Descending.String(),
 					},
 				},
 			},
@@ -185,23 +192,25 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 		{
 			desc: "Empty query",
 			qs:   &telemetry_query.FwlogsQuerySpec{},
-			resp: `SELECT * FROM Fwlogs`,
+			resp: `SELECT * FROM Fwlogs ORDER BY time ASC`,
 			pass: true,
 		},
 		{
-			desc: "Query with src ip",
+			desc: "Query with source ip",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10"},
+				SortOrder: telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10') ORDER BY time DESC`,
 			pass: true,
 		},
 		{
-			desc: "Query with multiple src ips",
+			desc: "Query with multiple source ips",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
+				SortOrder: telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') ORDER BY time DESC`,
 			pass: true,
 		},
 		{
@@ -209,8 +218,9 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				DestIPs:   []string{"11.1.1.10", "11.1.1.11", "11.1.1.12"},
+				SortOrder: telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("destination" = '11.1.1.10' OR "destination" = '11.1.1.11' OR "destination" = '11.1.1.12')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("destination" = '11.1.1.10' OR "destination" = '11.1.1.11' OR "destination" = '11.1.1.12') ORDER BY time DESC`,
 			pass: true,
 		},
 		{
@@ -219,53 +229,29 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				SourceIPs:   []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				SourcePorts: []uint32{8000, 9000},
 				DestPorts:   []uint32{6000, 7000},
+				SortOrder:   telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("source-port" = '8000' OR "source-port" = '9000') AND ("destination-port" = '6000' OR "destination-port" = '7000')`,
-			pass: true,
-		},
-		{
-			desc: "Query with default action",
-			qs: &telemetry_query.FwlogsQuerySpec{
-				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
-				Actions:   []string{"ALL"},
-			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12')`,
-			pass: true,
-		},
-		{
-			desc: "Query with redundant actions",
-			qs: &telemetry_query.FwlogsQuerySpec{
-				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
-				Actions:   []string{"ACTION_DENY", "ALL"},
-			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("source-port" = '8000' OR "source-port" = '9000') AND ("destination-port" = '6000' OR "destination-port" = '7000') ORDER BY time DESC`,
 			pass: true,
 		},
 		{
 			desc: "Query with multiple actions",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
-				Actions:   []string{"ACTION_DENY", "ACTION_REJECT"},
+				Actions:   []string{"deny", "reject"},
+				SortOrder: telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("action" = 'deny' OR "action" = 'reject')`,
-			pass: true,
-		},
-		{
-			desc: "Query with redundant direction",
-			qs: &telemetry_query.FwlogsQuerySpec{
-				SourceIPs:  []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
-				Directions: []string{"DIRECTION_ALL", "DIRECTION_FROM_HOST"},
-			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("action" = 'deny' OR "action" = 'reject') ORDER BY time DESC`,
 			pass: true,
 		},
 		{
 			desc: "Query with multiple directions",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs:  []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
-				Directions: []string{"DIRECTION_FROM_UPLINK", "DIRECTION_FROM_HOST"},
+				Directions: []string{"from_uplink", "from_host"},
+				SortOrder:  telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("direction" = 'from_uplink' OR "direction" = 'from_host')`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND ("direction" = 'from_uplink' OR "direction" = 'from_host') ORDER BY time DESC`,
 			pass: true,
 		},
 		{
@@ -274,8 +260,9 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				StartTime: startTime,
 				EndTime:   endTime,
+				SortOrder: telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z'`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' ORDER BY time DESC`,
 			pass: true,
 		},
 		{
@@ -288,8 +275,24 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 					Count:  100,
 					Offset: 200,
 				},
+				SortOrder: telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' LIMIT 100 OFFSET 200`,
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' ORDER BY time DESC LIMIT 100 OFFSET 200`,
+			pass: true,
+		},
+		{
+			desc: "Query with sorting",
+			qs: &telemetry_query.FwlogsQuerySpec{
+				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
+				StartTime: startTime,
+				EndTime:   endTime,
+				SortOrder: telemetry_query.SortOrder_Ascending.String(),
+				Pagination: &telemetry_query.PaginationSpec{
+					Count:  100,
+					Offset: 200,
+				},
+			},
+			resp: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.10' OR "source" = '10.1.1.11' OR "source" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' ORDER BY time ASC LIMIT 100 OFFSET 200`,
 			pass: true,
 		},
 	}
@@ -336,16 +339,16 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 						Series: models.Rows{
 							&models.Row{
 								// Column doesn't have all of the fwlog fields
-								Columns: []string{"time", "source", "destination", "action", "direction"},
+								Columns: []string{"time", "source", "destination", "action", "direction", "reporterID"},
 								Values: [][]interface{}{
 									[]interface{}{
-										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "allow", "from_host",
+										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "allow", "from_host", "naples1",
 									},
 									[]interface{}{
-										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "deny", "from_uplink",
+										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "deny", "from_uplink", "naples2",
 									},
 									[]interface{}{
-										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "reject", "from_uplink",
+										"2018-11-09T23:16:17Z", "10.1.1.1", "10.1.1.2", "reject", "from_uplink", "naples3",
 									},
 								},
 							},
@@ -388,25 +391,28 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 					StatementID: 0,
 					Logs: []*telemetry_query.Fwlog{
 						&telemetry_query.Fwlog{
-							Src:       "10.1.1.1",
-							Dest:      "10.1.1.2",
-							Action:    "ALLOW",
-							Direction: "FROM_HOST",
-							Timestamp: timestamp,
+							Src:        "10.1.1.1",
+							Dest:       "10.1.1.2",
+							Action:     "allow",
+							Direction:  "from_host",
+							ReporterID: "naples1",
+							Time:       timestamp,
 						},
 						&telemetry_query.Fwlog{
-							Src:       "10.1.1.1",
-							Dest:      "10.1.1.2",
-							Action:    "DENY",
-							Direction: "FROM_UPLINK",
-							Timestamp: timestamp,
+							Src:        "10.1.1.1",
+							Dest:       "10.1.1.2",
+							Action:     "deny",
+							Direction:  "from_uplink",
+							ReporterID: "naples2",
+							Time:       timestamp,
 						},
 						&telemetry_query.Fwlog{
-							Src:       "10.1.1.1",
-							Dest:      "10.1.1.2",
-							Action:    "REJECT",
-							Direction: "FROM_UPLINK",
-							Timestamp: timestamp,
+							Src:        "10.1.1.1",
+							Dest:       "10.1.1.2",
+							Action:     "reject",
+							Direction:  "from_uplink",
+							ReporterID: "naples3",
+							Time:       timestamp,
 						},
 					},
 				},
@@ -418,7 +424,7 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 							Dest:      "10.1.1.4",
 							Action:    "UNKNOWN",
 							Direction: "UNKNOWN",
-							Timestamp: timestamp,
+							Time:      timestamp,
 						},
 					},
 				},
@@ -426,9 +432,9 @@ func TestExecuteFwlogsQuery(t *testing.T) {
 					StatementID: 1,
 					Logs: []*telemetry_query.Fwlog{
 						&telemetry_query.Fwlog{
-							Src:       "10.1.1.3",
-							Dest:      "10.1.1.4",
-							Timestamp: timestamp,
+							Src:  "10.1.1.3",
+							Dest: "10.1.1.4",
+							Time: timestamp,
 						},
 					},
 				},
@@ -478,7 +484,9 @@ func TestFwlogs(t *testing.T) {
 		{
 			queryList: &telemetry_query.FwlogsQueryList{
 				Queries: []*telemetry_query.FwlogsQuerySpec{
-					&telemetry_query.FwlogsQuerySpec{},
+					&telemetry_query.FwlogsQuerySpec{
+						SortOrder: telemetry_query.SortOrder_Descending.String(),
+					},
 				},
 			},
 			brokerQuery:          "",
@@ -491,7 +499,9 @@ func TestFwlogs(t *testing.T) {
 			queryList: &telemetry_query.FwlogsQueryList{
 				Tenant: "test",
 				Queries: []*telemetry_query.FwlogsQuerySpec{
-					&telemetry_query.FwlogsQuerySpec{},
+					&telemetry_query.FwlogsQuerySpec{
+						SortOrder: telemetry_query.SortOrder_Descending.String(),
+					},
 				},
 			},
 			brokerQuery: "",
@@ -513,18 +523,20 @@ func TestFwlogs(t *testing.T) {
 						SourcePorts: []uint32{8000},
 						DestPorts:   []uint32{9000},
 						Protocols:   []string{"TCP"},
-						Actions:     []string{"ACTION_DENY"},
-						Directions:  []string{"DIRECTION_FROM_HOST"},
+						Actions:     []string{"deny"},
+						Directions:  []string{"from_host"},
 						RuleIDs:     []string{"1234"},
+						ReporterIDs: []string{"naples1", "naples2"},
 						// Policy name will be ignored since
 						// there is no matching tsdb tag
 						PolicyNames: []string{"policy1"},
 						StartTime:   startTime,
 						EndTime:     endTime,
+						SortOrder:   telemetry_query.SortOrder_Descending.String(),
 					},
 				},
 			},
-			brokerQuery: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.1') AND ("destination" = '10.1.1.2') AND ("source-port" = '8000') AND ("destination-port" = '9000') AND ("protocol" = 'TCP') AND ("action" = 'deny') AND ("direction" = 'from_host') AND ("rule-id" = '1234') AND time > '2018-11-09T23:15:17Z' AND time < '2018-11-09T23:20:17Z'`,
+			brokerQuery: `SELECT * FROM Fwlogs WHERE ("source" = '10.1.1.1') AND ("destination" = '10.1.1.2') AND ("source-port" = '8000') AND ("destination-port" = '9000') AND ("protocol" = 'TCP') AND ("action" = 'deny') AND ("direction" = 'from_host') AND ("rule-id" = '1234') AND ("reporterID" = 'naples1' OR "reporterID" = 'naples2') AND time > '2018-11-09T23:15:17Z' AND time < '2018-11-09T23:20:17Z' ORDER BY time DESC`,
 			errMsg:      "",
 			clusterCheckResponse: &ClusterCheckResponse{
 				err: nil,
@@ -536,10 +548,10 @@ func TestFwlogs(t *testing.T) {
 						StatementID: 0,
 						Series: models.Rows{
 							&models.Row{
-								Columns: []string{"time", "source", "destination", "source-port", "destination-port", "protocol", "action", "direction", "rule-id"},
+								Columns: []string{"time", "source", "destination", "source-port", "destination-port", "protocol", "action", "direction", "rule-id", "reporterID"},
 								Values: [][]interface{}{
 									[]interface{}{
-										"2018-11-09T23:20:17Z", "10.1.1.1", "10.1.1.2", 8000, 9000, "TCP", "DENY", "FROM_HOST", "1234",
+										"2018-11-09T23:20:17Z", "10.1.1.1", "10.1.1.2", 8000, 9000, "TCP", "deny", "from_host", "1234", "naples1",
 									},
 								},
 							},
@@ -555,15 +567,16 @@ func TestFwlogs(t *testing.T) {
 						StatementID: 0,
 						Logs: []*telemetry_query.Fwlog{
 							&telemetry_query.Fwlog{
-								Src:       "10.1.1.1",
-								Dest:      "10.1.1.2",
-								SrcPort:   8000,
-								DestPort:  9000,
-								Protocol:  "TCP",
-								Action:    "DENY",
-								Direction: "FROM_HOST",
-								RuleID:    "1234",
-								Timestamp: endTime,
+								Src:        "10.1.1.1",
+								Dest:       "10.1.1.2",
+								SrcPort:    8000,
+								DestPort:   9000,
+								Protocol:   "TCP",
+								Action:     "deny",
+								Direction:  "from_host",
+								RuleID:     "1234",
+								ReporterID: "naples1",
+								Time:       endTime,
 							},
 						},
 					},

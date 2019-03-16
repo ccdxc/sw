@@ -1879,9 +1879,105 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			nil,
 		},
+		// Test cases for sort by and sort order
+		{
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"smartnic"},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+				SortBy:     "meta.creation-time",
+				SortOrder:  search.SearchRequest_Descending.String(),
+			},
+			"",
+			"",
+			objectCount,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.04": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.00": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			search.SearchRequest{
+				QueryString: "infra",
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"infra"},
+						},
+					},
+					Categories: []string{"Cluster"},
+				},
+				From:       from,
+				MaxResults: 8192,
+				SortBy:     "meta.mod-time",
+			},
+			search.SearchRequest_Full.String(),
+			"",
+			objectCount + int64(len(Tenants)),
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"Tenant": {
+							"audi":  nil,
+							"tesla": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			search.SearchRequest{
+				QueryString: "infra",
+				Query: &search.SearchQuery{
+					Texts: []*search.TextRequirement{
+						&search.TextRequirement{
+							Text: []string{"infra"},
+						},
+					},
+					Categories: []string{"Cluster"},
+				},
+				From:       from,
+				MaxResults: 8192,
+				SortBy:     "meta.fake-field",
+			},
+			search.SearchRequest_Full.String(),
+			"",
+			objectCount + int64(len(Tenants)),
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"Tenant": {
+							"audi":  nil,
+							"tesla": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
 		// Test case for time based query using range operators [gt, gte, lt, lte]
 		{
-			// Query all SmartNIC objects created in the last 3mins using using RFC3339Nano format
+			// Query all SmartNIC objects created in the last 10mins using using RFC3339Nano format
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Kinds: []string{"SmartNIC"},
@@ -2244,6 +2340,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					if (err != nil && tc.err == nil) ||
 						(err == nil && tc.err != nil) ||
 						(err != nil && tc.err != nil && err.Error() != tc.err.Error()) {
+						log.Infof("expected %+v, actual %+v", tc.err, err)
 						t.Logf("@@@ Search response didn't match expected error, expected:%+v actual:%+v",
 							tc.err, err)
 						return false, nil

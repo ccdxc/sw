@@ -195,6 +195,8 @@ var typesMapSearch = map[string]*api.Struct{
 
 			"SortBy": api.Field{Name: "SortBy", CLITag: api.CLIInfo{ID: "sort-by", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sort-by", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
+			"SortOrder": api.Field{Name: "SortOrder", CLITag: api.CLIInfo{ID: "sort-order", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sort-order", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"Mode": api.Field{Name: "Mode", CLITag: api.CLIInfo{ID: "mode", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mode", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Query": api.Field{Name: "Query", CLITag: api.CLIInfo{ID: "query", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "query", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "search.SearchQuery"},

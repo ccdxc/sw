@@ -102,7 +102,7 @@ describe('SgpolicydetailComponent', () => {
           expect(field.nativeElement.textContent).toContain(rowIndex + 1);
           return;
         }
-        const colData = columns[fieldIndex - 1];
+        const colData = columns[fieldIndex];
         switch (colData.field) {
           case 'sourceIPs':
             expect(field.nativeElement.textContent)
@@ -172,18 +172,18 @@ describe('SgpolicydetailComponent', () => {
   }
 
   function getSourceIpInput() {
-    const inputs = fixture.debugElement.queryAll(By.css('mat-form-field'));
-    return inputs[0].query(By.css('input'));
+    const inputs = fixture.debugElement.queryAll(By.css('.sgpolicydetail-inputip'));
+    return inputs[0];
   }
 
   function getDestIpInput() {
-    const inputs = fixture.debugElement.queryAll(By.css('mat-form-field'));
-    return inputs[1].query(By.css('input'));
+    const inputs = fixture.debugElement.queryAll(By.css('.sgpolicydetail-inputip'));
+    return inputs[1];
   }
 
   function getPortInput() {
-    const inputs = fixture.debugElement.queryAll(By.css('mat-form-field'));
-    return inputs[2].query(By.css('input'));
+    const inputs = fixture.debugElement.queryAll(By.css('.sgpolicydetail-inputip'));
+    return inputs[2];
   }
 
   function getOverlay() {
@@ -246,11 +246,6 @@ describe('SgpolicydetailComponent', () => {
     fixture = TestBed.createComponent(SgpolicydetailComponent);
     component = fixture.componentInstance;
     testingUtility = new TestingUtility(fixture);
-    component.cols = [
-      { field: 'meta', header: 'Meta' },
-      { field: 'spec', header: 'Spec' },
-      { field: 'status', header: 'Status' }
-    ];
     const securityService = TestBed.get(SecurityService);
     const rules1 = [
       {

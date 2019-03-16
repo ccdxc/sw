@@ -160,6 +160,13 @@
             "type": "string"
           },
           {
+            "name": "sort-order",
+            "description": "SortOrder is an optional parameter and contains whether to sort ascending\nor descending\nThis can be specified as URI parameter.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "mode",
             "description": "Query Mode.",
             "in": "query",
@@ -884,6 +891,7 @@
       "required": [
         "from",
         "max-results",
+        "sort-order",
         "mode"
       ],
       "properties": {
@@ -912,6 +920,15 @@
           "type": "string",
           "maxLength": 256,
           "description": "SortyBy is an optional parameter and contains the field name \nto be sorted by, For eg: \"meta.name\"\nThis can be specified as URI parameter."
+        },
+        "sort-order": {
+          "type": "string",
+          "enum": [
+            "Ascending",
+            "Descending"
+          ],
+          "default": "Ascending",
+          "description": "SortOrder is an optional parameter and contains whether to sort ascending\nor descending\nThis can be specified as URI parameter."
         },
         "mode": {
           "type": "string",

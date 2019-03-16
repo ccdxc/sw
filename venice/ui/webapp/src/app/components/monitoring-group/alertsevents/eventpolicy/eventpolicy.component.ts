@@ -47,6 +47,7 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
   ];
 
   isTabComponent = false;
+  disableTableWhenRowExpanded = true;
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,

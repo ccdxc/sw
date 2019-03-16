@@ -44,9 +44,6 @@ export class NeweventpolicyComponent extends BaseComponent implements OnInit, Af
     if (this.isInline) {
       // disable name field
       this.newPolicy.$formGroup.get(['meta', 'name']).disable();
-    } else {
-      // Name field can't be blank
-      this.newPolicy.$formGroup.get(['meta', 'name']).setValidators(required);
     }
   }
 

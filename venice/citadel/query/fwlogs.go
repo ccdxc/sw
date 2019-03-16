@@ -28,26 +28,7 @@ var queryFieldToTsdbField = map[string]string{
 	"Actions":     "action",
 	"Directions":  "direction",
 	"RuleIDs":     "rule-id",
-}
-
-// Maps query enum values to values in tsdb
-var actionEnumMapping = map[string]string{
-	"ACTION_ALLOW":  "allow",
-	"ACTION_DENY":   "deny",
-	"ACTION_REJECT": "reject",
-}
-
-// Maps tsdb enum value to fwlog values
-var actionTsdbEnumMapping = map[string]string{
-	"allow":  "ALLOW",
-	"deny":   "DENY",
-	"reject": "REJECT",
-}
-
-// Maps query enum values to values in tsdb
-var directionEnumMapping = map[string]string{
-	"DIRECTION_FROM_HOST":   "from_host",
-	"DIRECTION_FROM_UPLINK": "from_uplink",
+	"ReporterIDs": "reporterID",
 }
 
 // Measurement name in tsdb
@@ -96,25 +77,13 @@ func buildCitadelFwlogsQuery(qs *telemetry_query.FwlogsQuerySpec) (string, error
 	// Convert enum values from venice enum to naples enum
 	if len(qs.Actions) > 0 {
 		for i, action := range qs.Actions {
-			actionVal, ok := actionEnumMapping[action]
-			if !ok {
-				// Action is ALL, or unrecognized
-				qs.Actions = []string{}
-				break
-			}
-			qs.Actions[i] = actionVal
+			qs.Actions[i] = action
 		}
 	}
 
 	if len(qs.Directions) > 0 {
 		for i, dir := range qs.Directions {
-			dirVal, ok := directionEnumMapping[dir]
-			if !ok {
-				// Direction is ALL, or unrecognized
-				qs.Directions = []string{}
-				break
-			}
-			qs.Directions[i] = dirVal
+			qs.Directions[i] = dir
 		}
 	}
 
@@ -163,6 +132,12 @@ func buildCitadelFwlogsQuery(qs *telemetry_query.FwlogsQuerySpec) (string, error
 	if len(selectors) > 0 {
 		q += fmt.Sprintf(" WHERE %s", strings.Join(selectors, " AND "))
 	}
+
+	order := "ASC"
+	if qs.SortOrder == telemetry_query.SortOrder_Descending.String() {
+		order = "DESC"
+	}
+	q += fmt.Sprintf(" ORDER BY time %s", order)
 
 	if qs.Pagination != nil {
 		q += fmt.Sprintf(" LIMIT %d", qs.Pagination.Count)
@@ -218,9 +193,14 @@ func (q *Server) executeFwlogsQuery(c context.Context, tenant string, qs string)
 					// Split guarantees returning an array
 					// of at least length 1 if tag isn't empty
 					tag = strings.Split(tag, ",")[0]
+					// Special check for the field reporter-id since it comes back as reporterID
+					if tag == "reporter-id" {
+						tag = "reporterID"
+					}
 					index, ok := colMapping[tag]
-					if !ok {
+					if !ok || index == 0 {
 						// Returned data doesn't have a column for this field
+						// Or this is the time column, time will be set later
 						continue
 					}
 					f := qValues.Field(i)
@@ -240,7 +220,7 @@ func (q *Server) executeFwlogsQuery(c context.Context, tenant string, qs string)
 						}
 						f.SetUint(val)
 					} else if qFieldName == "Action" || qFieldName == "Direction" {
-						f.SetString(strings.ToUpper(valStr))
+						f.SetString(valStr)
 					} else {
 						f.SetString(valStr)
 					}
@@ -248,7 +228,7 @@ func (q *Server) executeFwlogsQuery(c context.Context, tenant string, qs string)
 				// Setting time, time is always the first column from influx
 				timestamp := &api.Timestamp{}
 				timestamp.Parse(qrow[0].(string))
-				fwlog.Timestamp = timestamp
+				fwlog.Time = timestamp
 				result.Logs = append(result.Logs, fwlog)
 			}
 		}

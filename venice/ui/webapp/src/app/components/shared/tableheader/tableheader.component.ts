@@ -11,6 +11,7 @@ export class TableheaderComponent implements OnInit {
   @Input() icon: Icon;
   @Input() count: number;
   @Input() total: number;
+  @Input() max: number;
   @Input() width: string;
 
   _iconStyles: any;

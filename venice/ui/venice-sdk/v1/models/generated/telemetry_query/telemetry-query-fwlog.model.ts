@@ -21,7 +21,8 @@ export interface ITelemetry_queryFwlog {
     'direction': Telemetry_queryFwlog_direction;
     'rule-id'?: string;
     'policy-name'?: string;
-    'timestamp'?: Date;
+    'reporter-id'?: string;
+    'time'?: Date;
 }
 
 
@@ -36,7 +37,8 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
     'direction': Telemetry_queryFwlog_direction = null;
     'rule-id': string = null;
     'policy-name': string = null;
-    'timestamp': Date = null;
+    'reporter-id': string = null;
+    'time': Date = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tenant': {
             required: false,
@@ -64,13 +66,13 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
         },
         'action': {
             enum: Telemetry_queryFwlog_action_uihint,
-            default: 'ALLOW',
+            default: 'allow',
             required: true,
             type: 'string'
         },
         'direction': {
             enum: Telemetry_queryFwlog_direction_uihint,
-            default: 'FROM_HOST',
+            default: 'from_host',
             required: true,
             type: 'string'
         },
@@ -82,7 +84,11 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
             required: false,
             type: 'string'
         },
-        'timestamp': {
+        'reporter-id': {
+            required: false,
+            type: 'string'
+        },
+        'time': {
             required: false,
             type: 'Date'
         },
@@ -188,12 +194,19 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
         } else {
             this['policy-name'] = null
         }
-        if (values && values['timestamp'] != null) {
-            this['timestamp'] = values['timestamp'];
-        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('timestamp')) {
-            this['timestamp'] = Telemetry_queryFwlog.propInfo['timestamp'].default;
+        if (values && values['reporter-id'] != null) {
+            this['reporter-id'] = values['reporter-id'];
+        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('reporter-id')) {
+            this['reporter-id'] = Telemetry_queryFwlog.propInfo['reporter-id'].default;
         } else {
-            this['timestamp'] = null
+            this['reporter-id'] = null
+        }
+        if (values && values['time'] != null) {
+            this['time'] = values['time'];
+        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('time')) {
+            this['time'] = Telemetry_queryFwlog.propInfo['time'].default;
+        } else {
+            this['time'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -212,7 +225,8 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
                 'direction': CustomFormControl(new FormControl(this['direction'], [required, enumValidator(Telemetry_queryFwlog_direction), ]), Telemetry_queryFwlog.propInfo['direction']),
                 'rule-id': CustomFormControl(new FormControl(this['rule-id']), Telemetry_queryFwlog.propInfo['rule-id']),
                 'policy-name': CustomFormControl(new FormControl(this['policy-name']), Telemetry_queryFwlog.propInfo['policy-name']),
-                'timestamp': CustomFormControl(new FormControl(this['timestamp']), Telemetry_queryFwlog.propInfo['timestamp']),
+                'reporter-id': CustomFormControl(new FormControl(this['reporter-id']), Telemetry_queryFwlog.propInfo['reporter-id']),
+                'time': CustomFormControl(new FormControl(this['time']), Telemetry_queryFwlog.propInfo['time']),
             });
         }
         return this._formGroup;
@@ -234,7 +248,8 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
             this._formGroup.controls['direction'].setValue(this['direction']);
             this._formGroup.controls['rule-id'].setValue(this['rule-id']);
             this._formGroup.controls['policy-name'].setValue(this['policy-name']);
-            this._formGroup.controls['timestamp'].setValue(this['timestamp']);
+            this._formGroup.controls['reporter-id'].setValue(this['reporter-id']);
+            this._formGroup.controls['time'].setValue(this['time']);
         }
     }
 }

@@ -5,6 +5,13 @@
   @include primary-font();
 }
 
+.auditevents-lastupdate {
+  margin-right: 5px;
+}
+
+.auditevents-widget {
+  height: 100%;
+}
 
 .auditevents-detail-div {
   padding:10px;
@@ -13,11 +20,7 @@
   overflow: auto;
 }
 
-.auditevents-column-common {
-    width: 9%;
-}
 .auditevents-column-common.auditevents-column-who {
-    width: 10%;
     color: #007bff;
 }
 .auditevents-rowexpand-tr {

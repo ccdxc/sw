@@ -19,10 +19,11 @@ import { Observable } from 'rxjs';
   encapsulation: ViewEncapsulation.None
 })
 export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwlogPolicy, MonitoringFwlogPolicy> implements OnInit {
-    @ViewChild('policiesTable') policytable: Table;
+  @ViewChild('policiesTable') policytable: Table;
   subscriptions = [];
 
   isTabComponent = false;
+  disableTableWhenRowExpanded = true;
 
   dataObjects: ReadonlyArray<MonitoringFwlogPolicy> = [];
 
@@ -45,9 +46,9 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   };
 
   cols: any[] = [
-    { field: 'meta.name', header: 'Targets', class: 'fwlogpolicies-column-name', sortable: false , width: 30 },
-    { field: 'spec.filter', header: 'Exports', class: 'fwlogpolicies-column-filter', sortable: false , width: 35 },
-    { field: 'spec.targets', header: 'Targets', class: 'fwlogpolicies-column-targets', sortable: false, isLast: false, width: 35  },
+    { field: 'meta.name', header: 'Targets', class: 'fwlogpolicies-column-name', sortable: false, width: 30 },
+    { field: 'spec.filter', header: 'Exports', class: 'fwlogpolicies-column-filter', sortable: false, width: 35 },
+    { field: 'spec.targets', header: 'Targets', class: 'fwlogpolicies-column-targets', sortable: false, isLast: false, width: 35 },
   ];
 
   constructor(protected controllerService: ControllerService,

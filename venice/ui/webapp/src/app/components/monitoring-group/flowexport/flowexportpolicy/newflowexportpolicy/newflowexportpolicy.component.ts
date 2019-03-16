@@ -50,9 +50,6 @@ export class NewflowexportpolicyComponent extends BaseComponent implements OnIni
     if (this.isInline) {
       // disable name field
       this.newPolicy.$formGroup.get(['meta', 'name']).disable();
-    } else {
-      // Name field can't be blank
-      this.newPolicy.$formGroup.get(['meta', 'name']).setValidators(required);
     }
     // Field is labeled as exports for this object instead of target
     this.syslogConfig = {

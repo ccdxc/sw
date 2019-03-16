@@ -77,7 +77,10 @@ export class NewrolebindingComponent extends UsersComponent implements OnInit, O
       this.newAuthRolebinding = this.getRoleFromSelectedRoleBinding();
     } else {
       this.newAuthRolebinding = new AuthRoleBinding();
-      this.newAuthRolebinding.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolebindingnameValid(this.veniceRolebindings)]);
+      this.newAuthRolebinding.$formGroup.get(['meta', 'name']).setValidators([
+        this.newAuthRolebinding.$formGroup.get(['meta', 'name']).validator,
+        this.isRolebindingnameValid(this.veniceRolebindings)
+      ]);
 
       const users = this.newAuthRolebinding.$formGroup.get(['spec', 'users']) as FormArray;
       this.onUsersAvailable();

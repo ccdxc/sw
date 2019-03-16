@@ -265,6 +265,12 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 		q += fmt.Sprintf(" GROUP BY %s", strings.Join(groupby, ","))
 	}
 
+	order := "ASC"
+	if qs.SortOrder == telemetry_query.SortOrder_Descending.String() {
+		order = "DESC"
+	}
+	q += fmt.Sprintf(" ORDER BY time %s", order)
+
 	if qs.Pagination != nil {
 		q += fmt.Sprintf(" LIMIT %d", qs.Pagination.Count)
 		// Count must be used with offset

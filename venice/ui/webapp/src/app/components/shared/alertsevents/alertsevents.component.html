@@ -62,7 +62,7 @@
       </ng-template>
       <!-- Table Body -->
       <ng-template pTemplate="body" let-rowData>
-        <tr>
+        <tr class="alertsevents-tablerow">
           <td *ngFor="let col of eventCols" [ngSwitch]="col.field" [class]="col.class">
             <div *ngSwitchCase="'meta.mod-time'">
               {{rowData.meta['mod-time'] | PrettyDate }}
@@ -147,7 +147,7 @@
         </ng-template>
         <!-- Table Body -->
         <ng-template pTemplate="body" let-rowData>
-          <tr>
+          <tr class="alertsevents-tablerow">
             <td *ngFor="let col of alertCols" [ngSwitch]="col.field" [class]="col.class">
               <div *ngSwitchCase="'meta.mod-time'" class="alertseventsrecord-date-row">
                 {{rowData.meta['mod-time'] | PrettyDate }}

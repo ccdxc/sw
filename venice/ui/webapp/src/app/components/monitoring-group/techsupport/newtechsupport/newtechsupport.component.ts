@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, ViewChild, OnDestroy } from '@angular/core';
-import { FormArray, AbstractControl, ValidatorFn , ValidationErrors } from '@angular/forms';
+import { FormArray, AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
@@ -41,12 +41,14 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
 
   ngOnInit() {
     this.newTechsupport = new MonitoringTechSupportRequest();
-    this.newTechsupport.$formGroup.get(['meta', 'name']).setValidators([required, this.isTechSupportRequestNameValid(this.existingTechSupportRequest)]);
+    this.newTechsupport.$formGroup.get(['meta', 'name']).setValidators([
+      this.newTechsupport.$formGroup.get(['meta', 'name']).validator,
+      this.isTechSupportRequestNameValid(this.existingTechSupportRequest)]);
 
     this.cslabelData = [
       {
         key: { label: 'text', value: 'text' },
-        operators: Utility.convertEnumToSelectItem(FieldsRequirement_operator ) ,
+        operators: Utility.convertEnumToSelectItem(FieldsRequirement_operator),
         fieldType: ValueType.inputField,
         valueType: ValueType.inputField
       }
@@ -55,7 +57,7 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
     this.nmlabelData = [
       {
         key: { label: 'text', value: 'text' },
-        operators:  Utility.convertEnumToSelectItem(FieldsRequirement_operator ) ,
+        operators: Utility.convertEnumToSelectItem(FieldsRequirement_operator),
         fieldType: ValueType.inputField,
         valueType: ValueType.inputField
       }
@@ -125,22 +127,22 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
     const techsupport: IMonitoringTechSupportRequest = this.buildTechSupportRequest();
     this._monitoringService.AddTechSupportRequest(techsupport).subscribe(
       (response) => {
-        this._controllerService.invokeSuccessToaster('Success', 'Tech Support ' + techsupport.meta.name );
+        this._controllerService.invokeSuccessToaster('Success', 'Tech Support ' + techsupport.meta.name);
         this.setPreviousToolbar(); // Once successfully save tech-support, re-store previous toolbar buttons.
         this.formClose.emit();
       },
-      this._controllerService.restErrorHandler('Fail to add tech support:' + techsupport.meta.name )
+      this._controllerService.restErrorHandler('Fail to add tech support:' + techsupport.meta.name)
     );
   }
 
-  buildTechSupportRequest(): IMonitoringTechSupportRequest  {
+  buildTechSupportRequest(): IMonitoringTechSupportRequest {
     const techsupport: IMonitoringTechSupportRequest = this.newTechsupport.getFormGroupValues();
 
     techsupport.spec['collection-selector'].requirements = Utility.convertRepeaterValuesToSearchExpression(this.cslabelRepeater);
     // this.csLabelOutput;
     techsupport.spec['node-selector'].labels.requirements = Utility.convertRepeaterValuesToSearchExpression(this.nmlabelRepeater);
     if (!Array.isArray(techsupport.spec['node-selector'].names)) {
-      const nsNames: string =  techsupport.spec['node-selector'].names;
+      const nsNames: string = techsupport.spec['node-selector'].names;
       techsupport.spec['node-selector'].names = nsNames.split(',');
     }
     return techsupport;

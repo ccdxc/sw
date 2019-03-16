@@ -41,6 +41,7 @@ export class EventalertpolicyComponent extends TablevieweditAbstract<IMonitoring
   ];
 
   isTabComponent = true;
+  disableTableWhenRowExpanded = true;
 
   @Input() destinations: MonitoringAlertDestination[] = [];
 

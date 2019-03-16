@@ -12,7 +12,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsqueryService, MetricsPollingOptions, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
-import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
+import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order } from '@sdk/v1/models/generated/telemetry_query';
 import { ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
@@ -255,6 +255,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       'kind': this.telemetryKind,
       name: null,
       function: Telemetry_queryMetricsQuerySpec_function.MEAN,
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.Ascending,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields

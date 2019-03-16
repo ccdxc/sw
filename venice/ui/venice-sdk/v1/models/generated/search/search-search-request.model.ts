@@ -7,6 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { SearchSearchRequest_sort_order,  } from './enums';
 import { SearchSearchRequest_mode,  } from './enums';
 import { SearchSearchQuery, ISearchSearchQuery } from './search-search-query.model';
 
@@ -15,6 +16,7 @@ export interface ISearchSearchRequest {
     'from': number;
     'max-results': number;
     'sort-by'?: string;
+    'sort-order': SearchSearchRequest_sort_order;
     'mode': SearchSearchRequest_mode;
     'query'?: ISearchSearchQuery;
     'tenants'?: Array<string>;
@@ -32,6 +34,10 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     to be sorted by, For eg: "meta.name"
     This can be specified as URI parameter. */
     'sort-by': string = null;
+    /** SortOrder is an optional parameter and contains whether to sort ascending
+    or descending
+    This can be specified as URI parameter. */
+    'sort-order': SearchSearchRequest_sort_order = null;
     'mode': SearchSearchRequest_mode = null;
     /** Search query contains the search requirements
     This is intended for advanced query use cases involving
@@ -61,6 +67,13 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         'sort-by': {
             description:  'SortyBy is an optional parameter and contains the field name  to be sorted by, For eg: &quot;meta.name&quot; This can be specified as URI parameter.',
             required: false,
+            type: 'string'
+        },
+        'sort-order': {
+            enum: SearchSearchRequest_sort_order,
+            default: 'Ascending',
+            description:  'SortOrder is an optional parameter and contains whether to sort ascending or descending This can be specified as URI parameter.',
+            required: true,
             type: 'string'
         },
         'mode': {
@@ -140,6 +153,13 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         } else {
             this['sort-by'] = null
         }
+        if (values && values['sort-order'] != null) {
+            this['sort-order'] = values['sort-order'];
+        } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('sort-order')) {
+            this['sort-order'] = <SearchSearchRequest_sort_order>  SearchSearchRequest.propInfo['sort-order'].default;
+        } else {
+            this['sort-order'] = null
+        }
         if (values && values['mode'] != null) {
             this['mode'] = values['mode'];
         } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('mode')) {
@@ -170,6 +190,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
                 'from': CustomFormControl(new FormControl(this['from'], [required, maxValueValidator(1023), ]), SearchSearchRequest.propInfo['from']),
                 'max-results': CustomFormControl(new FormControl(this['max-results'], [required, maxValueValidator(8192), ]), SearchSearchRequest.propInfo['max-results']),
                 'sort-by': CustomFormControl(new FormControl(this['sort-by'], [maxLengthValidator(256), ]), SearchSearchRequest.propInfo['sort-by']),
+                'sort-order': CustomFormControl(new FormControl(this['sort-order'], [required, enumValidator(SearchSearchRequest_sort_order), ]), SearchSearchRequest.propInfo['sort-order']),
                 'mode': CustomFormControl(new FormControl(this['mode'], [required, enumValidator(SearchSearchRequest_mode), ]), SearchSearchRequest.propInfo['mode']),
                 'query': CustomFormGroup(this['query'].$formGroup, SearchSearchRequest.propInfo['query'].required),
                 'tenants': CustomFormControl(new FormControl(this['tenants']), SearchSearchRequest.propInfo['tenants']),
@@ -193,6 +214,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
             this._formGroup.controls['from'].setValue(this['from']);
             this._formGroup.controls['max-results'].setValue(this['max-results']);
             this._formGroup.controls['sort-by'].setValue(this['sort-by']);
+            this._formGroup.controls['sort-order'].setValue(this['sort-order']);
             this._formGroup.controls['mode'].setValue(this['mode']);
             this['query'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['tenants'].setValue(this['tenants']);

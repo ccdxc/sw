@@ -19,8 +19,12 @@ enum TsdbFunctionType {
     MAX  = 2; // returns maximum of the fields
 }
 
-// PaginationSpec specifies how many metrics instances to include
-// in the result.
+enum SortOrder {
+    Ascending = 0;
+    Descending = 1;
+}
+
+// PaginationSpec specifies how many results to include
 message PaginationSpec {
     // Offset specifies the starting point when using Count
     int32 Offset = 1 [(gogoproto.jsontag) = "offset,omitempty", (venice.check)="IntMin(0)", (venice.default)="0"];
@@ -53,6 +57,9 @@ message MetricsQuerySpec {
     string GroupbyField       = 9 [(gogoproto.jsontag) = "group-by-field,omitempty", (venice.check)="EmptyOrRegExp(name)"];
     // PaginationSpec specifies the number of series to include
     PaginationSpec Pagination = 10 [(gogoproto.jsontag) = "pagination,omitempty"];
+    // SortOrder specifies time ordering of results
+    string SortOrder          = 11 [(gogoproto.jsontag) = "sort-order,omitempty",
+                                     (venice.check) = "StrEnum(SortOrder)"];
 }
 
 // MetricsQueryList contains a list of queries to execute
@@ -65,41 +72,24 @@ message MetricsQueryList {
     repeated MetricsQuerySpec Queries = 3 [(gogoproto.jsontag) = "queries,omitempty"];
 }
 
+
+// Enums for the response
 enum FwlogActions {
     // ui-hint: Allow
-    ALLOW = 0;
+    allow = 0;
     // ui-hint: Deny
-    DENY = 1;
+    deny = 1;
     // ui-hint: Reject
-    REJECT = 2;
-}
-
-enum FwlogActionFilters {
-    // ui-hint: All
-    ALL = 0;
-    // ui-hint: Allow
-    ACTION_ALLOW = 1;
-    // ui-hint: Deny
-    ACTION_DENY= 2;
-    // ui-hint: Reject
-    ACTION_REJECT = 3;
+    reject = 2;
 }
 
 enum FwlogDirections {
     // ui-hint: From Host
-    FROM_HOST = 0;
+    from_host = 0;
     // ui-hint: From Uplink
-    FROM_UPLINK = 1;
+    from_uplink = 1;
 }
 
-enum FwlogDirectionsFilters {
-    // ui-hint: All
-    DIRECTION_ALL = 0;
-    // ui-hint: From Host
-    DIRECTION_FROM_HOST = 1;
-    // ui-hint: From Uplink
-    DIRECTION_FROM_UPLINK = 2;
-}
 
 message Fwlog {
     // Tenant
@@ -122,8 +112,10 @@ message Fwlog {
     string RuleID = 9 [(gogoproto.jsontag) = "rule-id,omitempty"];
     //policy name
     string PolicyName = 10 [(gogoproto.jsontag) = "policy-name,omitempty"];
+    // Rule ID
+    string ReporterID = 11 [(gogoproto.jsontag) = "reporter-id,omitempty"];
     // Time the log was created
-    api.Timestamp Timestamp = 11 [(gogoproto.jsontag) = "timestamp,omitempty"];
+    api.Timestamp Time = 12 [(gogoproto.jsontag) = "time,omitempty"];
 }
 
 // FwlogsQuerySpec allows selecting logs by all attributes
@@ -140,19 +132,25 @@ message FwlogsQuerySpec {
     // OR of protocols to be matched
     repeated string Protocols = 5 [(gogoproto.jsontag) = "protocols,omitempty"];
     // OR of actions to be matched
-    repeated string Actions = 6 [(gogoproto.jsontag) = "actions,omitempty", (venice.check)="StrEnum(FwlogActionFilters)"];
+    repeated string Actions = 6 [(gogoproto.jsontag) = "actions,omitempty", (venice.check)="StrEnum(FwlogActions)"];
     // OR of directions to be matched
-    repeated string Directions = 7 [(gogoproto.jsontag) = "directions,omitempty", (venice.check)="StrEnum(FwlogDirectionsFilters)"];
+    repeated string Directions = 7 [(gogoproto.jsontag) = "directions,omitempty", (venice.check)="StrEnum(FwlogDirections)"];
     // OR of ruleID to be matched
     repeated string RuleIDs = 8 [(gogoproto.jsontag) = "rule-ids,omitempty"];
     // OR of policy names to be matched
     repeated string PolicyNames = 9 [(gogoproto.jsontag) = "policy-names,omitempty"];
+    // OR of reporter names to be matched
+    repeated string ReporterIDs = 10 [(gogoproto.jsontag) = "reporter-ids,omitempty"];
     // StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z
-    api.Timestamp StartTime   = 10 [(gogoproto.jsontag) = "start-time,omitempty"];
+    api.Timestamp StartTime   = 11 [(gogoproto.jsontag) = "start-time,omitempty"];
     // EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z
-    api.Timestamp EndTime     = 11 [(gogoproto.jsontag) = "end-time,omitempty"];
+    api.Timestamp EndTime     = 12 [(gogoproto.jsontag) = "end-time,omitempty"];
     // PaginationSpec specifies the number of series to include
-    PaginationSpec Pagination = 12 [(gogoproto.jsontag) = "pagination,omitempty"];
+    PaginationSpec Pagination = 13 [(gogoproto.jsontag) = "pagination,omitempty"];
+    // SortOrder specifies time ordering of results
+    string SortOrder          = 14 [(gogoproto.jsontag) = "sort-order,omitempty",
+                                     (venice.check) = "StrEnum(SortOrder)",
+                                     (venice.default) = "Descending"];
 }
 
 // FwlogsQueryList contains a list of queries to execute
