@@ -561,12 +561,10 @@ ionic_notifyq_link_change_event(struct ionic_en_uplink_handle *uplink_handle,
                                 union notifyq_comp *comp)
 {
         vmk_SpinlockLockIgnoreDeathPending(uplink_handle->link_status_lock);
-        uplink_handle->cur_hw_link_status.state = comp->link_change.link_status > 0?
+        uplink_handle->cur_hw_link_status.state = comp->link_change.link_status == PORT_OPER_STATUS_UP ?
                                                   VMK_LINK_STATE_UP : VMK_LINK_STATE_DOWN;
-        uplink_handle->cur_hw_link_status.duplex = comp->link_change.link_status > 0?
-                                                   VMK_LINK_DUPLEX_FULL : VMK_LINK_DUPLEX_HALF;
-        uplink_handle->cur_hw_link_status.speed = comp->link_change.link_status > 0?
-                                                  comp->link_change.link_speed : 0;                                                          
+        uplink_handle->cur_hw_link_status.duplex = VMK_LINK_DUPLEX_FULL;
+        uplink_handle->cur_hw_link_status.speed = comp->link_change.link_speed;
         vmk_SpinlockUnlock(uplink_handle->link_status_lock); 
 
         vmk_WorldForceWakeup(uplink_handle->link_check_world);
@@ -2516,10 +2514,10 @@ ionic_lif_init(struct lif *lif)
                         goto notifyq_err;
                 }
                 lif->uplink_handle->cur_hw_link_status.state =
-                        lif->notifyblock->link_status;
+                        lif->notifyblock->link_status == PORT_OPER_STATUS_UP ?
+                        VMK_LINK_STATE_UP : VMK_LINK_STATE_DOWN;
                 lif->uplink_handle->cur_hw_link_status.duplex =
-                        lif->notifyblock->link_status > 0 ?
-                        VMK_LINK_DUPLEX_FULL : VMK_LINK_DUPLEX_AUTO;
+                        VMK_LINK_DUPLEX_FULL;
                 lif->uplink_handle->cur_hw_link_status.speed =
                         lif->notifyblock->link_speed;
         }
