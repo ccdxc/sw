@@ -134,11 +134,11 @@ void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
 #ifdef HAVE_PCI_IOMAP_RANGE
 	return pci_iomap_range(ionic->pdev,
 			       ionic->bars[IONIC_PCI_BAR_DBELL].res_index,
-			       page_num << PAGE_SHIFT, PAGE_SIZE);
+			       (u64)page_num << PAGE_SHIFT, PAGE_SIZE);
 #else
 	int bar = ionic->bars[IONIC_PCI_BAR_DBELL].res_index;
-	u64 start = pci_resource_start(ionic->pdev, bar);
-	u64 offset = start + (page_num << PAGE_SHIFT);
+	phys_addr_t start = pci_resource_start(ionic->pdev, bar);
+	phys_addr_t offset = start + ((phys_addr_t)page_num << PAGE_SHIFT);
 
 	return ioremap(offset, PAGE_SIZE);
 #endif /* HAVE_PCI_IOMAP_RANGE */
@@ -152,7 +152,7 @@ void ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
 phys_addr_t ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
 {
 	return ionic->bars[IONIC_PCI_BAR_DBELL].bus_addr +
-		(page_num << PAGE_SHIFT);
+		((phys_addr_t)page_num << PAGE_SHIFT);
 }
 
 static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)

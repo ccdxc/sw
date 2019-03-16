@@ -430,7 +430,7 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 	if (!desc_blob)
 		return -ENOMEM;
 	desc_blob->data = q->base;
-	desc_blob->size = q->num_descs * q->desc_size;
+	desc_blob->size = (unsigned long)q->num_descs * q->desc_size;
 	debugfs_create_blob("desc_blob", 0400, q_dentry, desc_blob);
 
 	if (qcq->flags & QCQ_F_SG) {
@@ -438,7 +438,7 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 		if (!desc_blob)
 			return -ENOMEM;
 		desc_blob->data = q->sg_base;
-		desc_blob->size = q->num_descs * q->sg_desc_size;
+		desc_blob->size = (unsigned long)q->num_descs * q->sg_desc_size;
 		debugfs_create_blob("sg_desc_blob", 0400, q_dentry,
 				    desc_blob);
 	}
@@ -507,7 +507,7 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 	if (!desc_blob)
 		return -ENOMEM;
 	desc_blob->data = cq->base;
-	desc_blob->size = cq->num_descs * cq->desc_size;
+	desc_blob->size = (unsigned long)cq->num_descs * cq->desc_size;
 	debugfs_create_blob("desc_blob", 0400, cq_dentry, desc_blob);
 
 	if (qcq->flags & QCQ_F_INTR) {

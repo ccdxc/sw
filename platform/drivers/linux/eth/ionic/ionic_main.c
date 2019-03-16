@@ -172,7 +172,7 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	}
 
 	remaining = wait_for_completion_timeout(&ctx->work,
-						HZ * devcmd_timeout);
+						HZ * (ulong)devcmd_timeout);
 	return ionic_adminq_check_err(lif, ctx, (remaining == 0));
 }
 

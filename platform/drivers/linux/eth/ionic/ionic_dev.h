@@ -61,7 +61,7 @@ struct dev_cmd_db {
 
 struct ionic_dev_bar {
 	void __iomem *vaddr;
-	dma_addr_t bus_addr;
+	phys_addr_t bus_addr;
 	unsigned long len;
 	int res_index;
 };

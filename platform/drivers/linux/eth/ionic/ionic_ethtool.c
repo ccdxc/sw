@@ -760,11 +760,9 @@ static int ionic_set_tunable(struct net_device *dev,
 	const struct ethtool_tunable *tuna, const void *data)
 {
 	struct lif *lif = netdev_priv(dev);
-	u32 val;
 
 	switch (tuna->id) {
 	case ETHTOOL_RX_COPYBREAK:
-		val = *(u32 *)data;
 		lif->rx_copybreak = *(u32 *)data;
 		break;
 	default:
