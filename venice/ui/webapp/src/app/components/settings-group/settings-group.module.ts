@@ -25,7 +25,6 @@ import { settingsReducer } from '@app/components/settings-group/settings.reducer
 import { SettingsEffects } from '@app/components/settings-group/settings.effects';
 
 
-
 @NgModule({
   imports: [
     CommonModule,

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 /**-----
  Venice UI -  imports
  ------------------*/
@@ -13,7 +14,6 @@ import { LdapComponent } from './ldap/ldap.component';
 import { LocalComponent } from './local/local.component';
 import { AuthpolicybaseComponent } from './authpolicybase/authpolicybase.component';
 import { RadiusComponent } from './radius/radius.component';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 
 

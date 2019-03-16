@@ -1,0 +1,14 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.systemupgrade {
+  @include primary-font();
+  
+}
+
+.systemupgrade-fileupload-info-div {
+  margin-left: 10px;
+  font-size: 20px;
+}

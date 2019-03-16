@@ -19,6 +19,15 @@ const routes: Routes = [
     ]
   },
   {
+    path: 'upgrade',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/settings-group/systemupgrade/systemupgrade.module#SystemupgradeModule'
+      }
+    ]
+  },
+  {
     path: 'users',
     children: [
       {

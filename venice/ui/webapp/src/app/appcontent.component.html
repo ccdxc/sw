@@ -253,6 +253,10 @@
             <mat-icon>person</mat-icon>
                 User Management
             </button>
+            <button mat-icon-button (click)="settingsNavigate(['/settings', 'upgrade'])" class="hidden-sm-down">
+                <mat-icon>cloud_upload</mat-icon>
+                Upload system upgrade file
+            </button>
         </div>
 
         <div fxFlex></div>
