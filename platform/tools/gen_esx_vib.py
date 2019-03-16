@@ -59,9 +59,10 @@ pkg_name = os.path.basename(GlobalOptions.drivers_pkg)
 dst_pkg_base_name = "_".join([pkg_name, socket.gethostname(), getpass.getuser()])
 stdout, _, exit_status  = bld_vm_run("find  /opt/vmware/  -type d  -name   nativeddk-6.7*")
 print ("Native DDK dir out ", stdout)
-if len(stdout) != 1:
+if len(stdout) == 0:
     print ("Invalid output when discovering native ddk", stdout)
     sys.exit(1)
+#Pick the first one.
 dst_dir = stdout[0].strip("\n") + "/src/" + dst_pkg_base_name + "_dir"
 
 bld_vm_run("rm -rf " + dst_dir + " && mkdir -p " + dst_dir + " && sync ")
@@ -70,16 +71,19 @@ bld_vm_copyin(GlobalOptions.drivers_pkg, dest_dir = dst_dir)
 _, stderr, exit_status  = bld_vm_run("cd " + dst_dir + " && tar -xvf " + pkg_name)
 if exit_status != 0:
     print ("Failed to extract drivers", stderr)
+    bld_vm_run("rm -rf " + dst_dir)
     sys.exit(1)
 
 _, stderr, exit_status  = bld_vm_run("cd " + dst_dir + "/drivers-esx-eth && ./build.sh" )
 if exit_status != 0:
     print ("Driver build failed ", ''.join(stderr))
+    bld_vm_run("rm -rf " + dst_dir)
     sys.exit(1)
 
 _, stderr, exit_status  = bld_vm_run("cd " + dst_dir + " && tar -cJf " + pkg_name + " drivers-esx-eth")
 if exit_status != 0:
     print ("Failed to create tar file ", stderr)
+    bld_vm_run("rm -rf " + dst_dir)
     sys.exit(1)
 
 dst_file = dst_dir + "/" + pkg_name
