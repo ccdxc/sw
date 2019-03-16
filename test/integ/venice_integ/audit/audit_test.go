@@ -59,7 +59,7 @@ func TestAuditManager(t *testing.T) {
 						Resource:    &api.ObjectRef{Kind: "Network", Tenant: "default", Namespace: "default", Name: "network1"},
 						ClientIPs:   []string{"192.168.75.133"},
 						Action:      auth.Permission_Create.String(),
-						Outcome:     auditapi.Outcome_Unknown.String(),
+						Outcome:     auditapi.Outcome_Success.String(),
 						GatewayNode: "node1",
 						GatewayIP:   "192.168.75.136",
 						Data:        make(map[string]string),
@@ -84,7 +84,7 @@ func TestAuditManager(t *testing.T) {
 						Resource:    &api.ObjectRef{Kind: "Role", Tenant: "default", Namespace: "default", Name: "networkadmin"},
 						ClientIPs:   []string{"192.168.75.133"},
 						Action:      auth.Permission_Create.String(),
-						Outcome:     auditapi.Outcome_Unknown.String(),
+						Outcome:     auditapi.Outcome_Failure.String(),
 						GatewayNode: "node2",
 						GatewayIP:   "192.168.75.139",
 						Data:        make(map[string]string),
@@ -95,7 +95,7 @@ func TestAuditManager(t *testing.T) {
 					ObjectMeta: api.ObjectMeta{Name: "auditevent3", UUID: uuid.NewV4().String(), Tenant: "default"},
 					EventAttributes: auditapi.EventAttributes{
 						Level:       auditapi.Level_RequestResponse.String(),
-						Stage:       auditapi.Stage_RequestCompleted.String(),
+						Stage:       auditapi.Stage_RequestProcessing.String(),
 						User:        &api.ObjectRef{Kind: "User", Namespace: "default", Tenant: "default", Name: "admin"},
 						Resource:    &api.ObjectRef{Kind: "Role", Tenant: "default", Namespace: "default", Name: "networkadmin"},
 						ClientIPs:   []string{"192.168.75.133"},
@@ -170,7 +170,7 @@ func TestElasticServerDown(t *testing.T) {
 			Resource:    &api.ObjectRef{Kind: "Network", Tenant: "default", Namespace: "default", Name: "network1"},
 			ClientIPs:   []string{"192.168.75.133"},
 			Action:      auth.Permission_Create.String(),
-			Outcome:     auditapi.Outcome_Unknown.String(),
+			Outcome:     auditapi.Outcome_Success.String(),
 			GatewayNode: "node1",
 			GatewayIP:   "192.168.75.136",
 			Data:        make(map[string]string),
@@ -328,7 +328,7 @@ func TestAuditLogs(t *testing.T) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(cluster.KindTenant)),
 			es.NewTermQuery("action.keyword", auth.Permission_Create.String()),
 			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Failure.String()),
-			es.NewTermQuery("stage.keyword", auditapi.Stage_RequestCompleted.String()))
+			es.NewTermQuery("stage.keyword", auditapi.Stage_RequestProcessing.String()))
 		resp, err := ti.esClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)
 		if err != nil {
@@ -475,7 +475,7 @@ func benchmarkProcessEvents(nRules int, b *testing.B) {
 			Resource:    &api.ObjectRef{Kind: sgPolicy.Kind, Tenant: sgPolicy.Tenant, Namespace: sgPolicy.Namespace, Name: sgPolicy.Name},
 			ClientIPs:   []string{"192.168.75.133"},
 			Action:      auth.Permission_Create.String(),
-			Outcome:     auditapi.Outcome_Unknown.String(),
+			Outcome:     auditapi.Outcome_Success.String(),
 			GatewayNode: "node1",
 			GatewayIP:   "192.168.75.136",
 			Data:        make(map[string]string),

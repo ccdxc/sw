@@ -345,7 +345,7 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 		},
 		EventAttributes: auditapi.EventAttributes{
 			Level:       auditapi.Level_Response.String(),
-			Stage:       auditapi.Stage_RequestCompleted.String(),
+			Stage:       auditapi.Stage_RequestProcessing.String(),
 			User:        &api.ObjectRef{Kind: string(auth.KindUser), Namespace: user.Namespace, Tenant: user.Tenant, Name: user.Name, URI: user.SelfLink},
 			Resource:    &api.ObjectRef{Kind: string(auth.KindUser), Namespace: user.Namespace, Tenant: user.Tenant, Name: user.Name, URI: user.SelfLink},
 			ClientIPs:   clientIPs,

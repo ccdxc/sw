@@ -514,6 +514,15 @@ func TestHandleRequest(t *testing.T) {
 	if len(tc) != 1 || mock.postCallCnt != len(tc) {
 		t.Errorf("expecting 1 pre call hooks got %d/%d", len(tc), mock.postCallCnt)
 	}
+	// test events in case of auditing failure
+	// create mock events recorder
+	recorder.Override(mockevtsrecorder.NewRecorder("apigw_test", a.logger))
+	defer recorder.Override(mockevtsrecorder.NewRecorder("apigw_test", logger))
+	a.auditor = auditmgr.WithMockErrorSimulator(ctx, a.logger)
+	out, err = a.HandleRequest(ctx, &input, prof, call)
+	if !strings.Contains(buf.String(), "Failure in recording audit event") {
+		t.Errorf("expecting event for auditing failure")
+	}
 }
 
 func TestIsSkipped(t *testing.T) {
@@ -1020,8 +1029,8 @@ func TestAudit(t *testing.T) {
 				authz.NewResource(sgPolicy.Tenant, string(apiclient.GroupSecurity), sgPolicy.Kind, sgPolicy.Namespace, sgPolicy.Name),
 				auth.Permission_Create.String())},
 			level:    audit.Level_Request,
-			stage:    audit.Stage_RequestProcessing,
-			outcome:  audit.Outcome_Unknown,
+			stage:    audit.Stage_RequestAuthorization,
+			outcome:  audit.Outcome_Success,
 			apierr:   nil,
 			eventStr: "request-object=\"" + sgPolicyStr + "\"",
 			err:      nil,
@@ -1046,7 +1055,7 @@ func TestAudit(t *testing.T) {
 				authz.NewResource(sgPolicy.Tenant, string(apiclient.GroupSecurity), sgPolicy.Kind, sgPolicy.Namespace, sgPolicy.Name),
 				auth.Permission_Create.String())},
 			level:    audit.Level_Response,
-			stage:    audit.Stage_RequestCompleted,
+			stage:    audit.Stage_RequestProcessing,
 			outcome:  audit.Outcome_Success,
 			apierr:   nil,
 			eventStr: "response-object=\"" + sgPolicyStr + "\"",
@@ -1071,8 +1080,8 @@ func TestAudit(t *testing.T) {
 				authz.NewResource(sgPolicy.Tenant, string(apiclient.GroupSecurity), sgPolicy.Kind, sgPolicy.Namespace, sgPolicy.Name),
 				auth.Permission_Create.String())},
 			level:    audit.Level_Response,
-			stage:    audit.Stage_RequestCompleted,
-			outcome:  audit.Outcome_Success,
+			stage:    audit.Stage_RequestProcessing,
+			outcome:  audit.Outcome_Failure,
 			apierr:   apierrors.ToGrpcError(errors.New("duplicate policy"), []string{"Operation failed to complete"}, int32(codes.Aborted), "", nil),
 			eventStr: "duplicate policy",
 			err:      nil,
@@ -1098,7 +1107,7 @@ func TestAudit(t *testing.T) {
 				auth.Permission_Read.String())},
 			level:    audit.Level_Request,
 			stage:    audit.Stage_RequestProcessing,
-			outcome:  audit.Outcome_Unknown,
+			outcome:  audit.Outcome_Success,
 			apierr:   nil,
 			eventStr: "",
 			err:      nil,

@@ -6,12 +6,46 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/search"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
+
+// AuditEntry is a test struct to un-marshal event entry returned by Search REST API
+type AuditEntry struct {
+	Object audit.Event `json:"object"`
+}
+
+// AuditEntryList is list of search result entries
+type AuditEntryList struct {
+	//
+	Entries []*AuditEntry `json:"entries,omitempty"`
+}
+
+// AuditTenantAggregation contains map of search result entries
+// grouped by three levels: first by Tenant, second by Category
+// and finally by Kind.
+type AuditTenantAggregation struct {
+	//
+	Tenants map[string]*AuditCategoryAggregation `json:"tenants,omitempty"`
+}
+
+// AuditCategoryAggregation contains map of search result entries
+// grouped by two levels: first by Category and then by Kind.
+type AuditCategoryAggregation struct {
+	//
+	Categories map[string]*AuditKindAggregation `json:"categories,omitempty"`
+}
+
+// AuditKindAggregation contains map of search result
+// entries grouped by Kind.
+type AuditKindAggregation struct {
+	//
+	Kinds map[string]*AuditEntryList `json:"kinds,omitempty"`
+}
 
 // EventEntry is a test struct to un-marshal event entry returned by Search REST API
 type EventEntry struct {
@@ -56,6 +90,23 @@ type SearchResponse struct {
 	TimeTakenMsecs int64 `json:"time-taken-msecs,omitempty"`
 	// Error status for failures
 	Error *search.Error `json:"error,omitempty"`
+	// PreviewEntries is a three level grouping of search summary (#hits),
+	// grouped by tenant, category and kind in that order. This attribute
+	// is populated and valid only in Preview request-mode
+	PreviewEntries *search.TenantPreview `json:"preview-entries,omitempty"`
+}
+
+// AuditSearchResponse is a test struct to un-marshal audit event search response
+type AuditSearchResponse struct {
+	// SearchResponse contains meta information about search results
+	SearchResponse
+	// EventEntryList is list of all search results with no grouping.
+	// This attribute is populated and valid only in Full request-mode
+	Entries []*AuditEntry `json:"entries,omitempty"`
+	// AggregatedEntries is a three level grouping of full search results,
+	// Grouped by tenant, category and kind in that order. This attribute
+	// is populated and valid only in Full request-mode
+	AggregatedEntries *AuditTenantAggregation `json:"aggregated-entries,omitempty"`
 }
 
 // EventSearchResponse is a test struct to un-marshal event search response
@@ -65,10 +116,6 @@ type EventSearchResponse struct {
 	// EventEntryList is list of all search results with no grouping.
 	// This attribute is populated and valid only in Full request-mode
 	Entries []*EventEntry `json:"entries,omitempty"`
-	// PreviewEntries is a three level grouping of search summary (#hits),
-	// grouped by tenant, category and kind in that order. This attribute
-	// is populated and valid only in Preview request-mode
-	PreviewEntries *search.TenantPreview `json:"preview-entries,omitempty"`
 	// AggregatedEntries is a three level grouping of full search results,
 	// Grouped by tenant, category and kind in that order. This attribute
 	// is populated and valid only in Full request-mode

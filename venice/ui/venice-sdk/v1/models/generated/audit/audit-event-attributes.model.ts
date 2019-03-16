@@ -82,7 +82,7 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
         },
         'outcome': {
             enum: AuditEventAttributes_outcome,
-            default: 'Unknown',
+            default: 'Success',
             required: true,
             type: 'string'
         },

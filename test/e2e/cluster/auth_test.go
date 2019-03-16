@@ -56,6 +56,7 @@ var _ = Describe("auth tests", func() {
 			}, 10, 1).Should(BeNil())
 		})
 		It("check audit logs", func() {
+			// search for successful login audit event
 			query := &search.SearchRequest{
 				Query: &search.SearchQuery{
 					Kinds: []string{auth.Permission_AuditEvent.String()},
@@ -93,7 +94,7 @@ var _ = Describe("auth tests", func() {
 				MaxResults: 50,
 			}
 			Eventually(func() error {
-				resp := search.SearchResponse{}
+				resp := testutils.AuditSearchResponse{}
 				err := ts.tu.Search(ts.loggedInCtx, query, &resp)
 				if err != nil {
 					return err
@@ -101,45 +102,72 @@ var _ = Describe("auth tests", func() {
 				if resp.ActualHits == 0 {
 					return fmt.Errorf("no audit logs for [%s|%s] successful login", globals.DefaultTenant, ts.tu.User)
 				}
-				return err
+				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries
+				for _, event := range events {
+					if (event.Object.Action == svc.LoginAction) &&
+						(event.Object.Outcome == audit.Outcome_Success.String()) &&
+						(event.Object.User.Name == ts.tu.User) &&
+						(event.Object.User.Tenant == globals.DefaultTenant) {
+						return nil
+					}
+				}
+				return fmt.Errorf("no audit logs for [%s|%s] successful login", globals.DefaultTenant, ts.tu.User)
 			}, 30, 1).Should(BeNil())
-			query = &search.SearchRequest{
-				Query: &search.SearchQuery{
-					Kinds: []string{auth.Permission_AuditEvent.String()},
-					Fields: &fields.Selector{
-						Requirements: []*fields.Requirement{
-							{
-								Key:      "action",
-								Operator: "equals",
-								Values:   []string{auth.Permission_Update.String()},
-							},
-							{
-								Key:      "outcome",
-								Operator: "equals",
-								Values:   []string{audit.Outcome_Success.String()},
-							},
-							{
-								Key:      "resource.kind",
-								Operator: "equals",
-								Values:   []string{string(auth.KindAuthenticationPolicy)},
+			// search for auth policy update audit event
+			stages := []string{audit.Stage_RequestAuthorization.String(), audit.Stage_RequestProcessing.String()}
+			for _, stage := range stages {
+				query := &search.SearchRequest{
+					Query: &search.SearchQuery{
+						Kinds: []string{auth.Permission_AuditEvent.String()},
+						Fields: &fields.Selector{
+							Requirements: []*fields.Requirement{
+								{
+									Key:      "action",
+									Operator: "equals",
+									Values:   []string{auth.Permission_Update.String()},
+								},
+								{
+									Key:      "outcome",
+									Operator: "equals",
+									Values:   []string{audit.Outcome_Success.String()},
+								},
+								{
+									Key:      "resource.kind",
+									Operator: "equals",
+									Values:   []string{string(auth.KindAuthenticationPolicy)},
+								},
+								{
+									Key:      "stage",
+									Operator: "equals",
+									Values:   []string{stage},
+								},
 							},
 						},
 					},
-				},
-				From:       0,
-				MaxResults: 50,
+					From:       0,
+					MaxResults: 50,
+				}
+				Eventually(func() error {
+					resp := testutils.AuditSearchResponse{}
+					err := ts.tu.Search(ts.loggedInCtx, query, &resp)
+					if err != nil {
+						return err
+					}
+					if resp.ActualHits == 0 {
+						return fmt.Errorf("no audit logs for authentication policy update at stage %s", stage)
+					}
+					events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_AuditEvent.String()].Entries
+					for _, event := range events {
+						if (event.Object.Action == auth.Permission_Update.String()) &&
+							(event.Object.Resource.Kind == string(auth.KindAuthenticationPolicy)) &&
+							(event.Object.Outcome == audit.Outcome_Success.String()) &&
+							(event.Object.Stage == stage) {
+							return nil
+						}
+					}
+					return fmt.Errorf("no audit logs for authentication policy update at stage %s", stage)
+				}, 30, 1).Should(BeNil())
 			}
-			Eventually(func() error {
-				resp := search.SearchResponse{}
-				err := ts.tu.Search(ts.loggedInCtx, query, &resp)
-				if err != nil {
-					return err
-				}
-				if resp.ActualHits == 0 {
-					return fmt.Errorf("no audit logs for authentication policy update")
-				}
-				return err
-			}, 30, 1).Should(BeNil())
 			// query by category
 			query = &search.SearchRequest{
 				Query: &search.SearchQuery{
@@ -161,55 +189,6 @@ var _ = Describe("auth tests", func() {
 					return fmt.Errorf("no audit events found for monitoring category search")
 				}
 				return err
-			}, 30, 1).Should(BeNil())
-		})
-		It("check login failure event", func() {
-			_, err := login.NewLoggedInContext(context.TODO(), ts.tu.APIGwAddr, &auth.PasswordCredential{Username: ts.tu.User, Password: "incorrect", Tenant: globals.DefaultTenant})
-			Expect(err).Should(HaveOccurred())
-			query := &search.SearchRequest{
-				Query: &search.SearchQuery{
-					Categories: []string{search.Category_Monitoring.String()},
-					Kinds:      []string{auth.Permission_Event.String()},
-					Fields: &fields.Selector{
-						Requirements: []*fields.Requirement{
-							{
-								Key:      "type",
-								Operator: "equals",
-								Values:   []string{auth.LoginFailed},
-							},
-							{
-								Key:      "meta.creation-time",
-								Operator: "gte",
-								Values:   []string{time.Now().Add(-3 * time.Second).Format(time.RFC3339Nano)},
-							},
-							{
-								Key:      "meta.creation-time",
-								Operator: "lte",
-								Values:   []string{time.Now().Format(time.RFC3339Nano)},
-							},
-						},
-					},
-				},
-				From:       0,
-				MaxResults: 50,
-			}
-			Eventually(func() error {
-				resp := testutils.EventSearchResponse{}
-				err := ts.tu.Search(ts.loggedInCtx, query, &resp)
-				if err != nil {
-					return err
-				}
-				if resp.ActualHits == 0 {
-					return fmt.Errorf("no events found for failed login attempt")
-				}
-				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_Event.String()].Entries
-
-				for _, evt := range events {
-					if strings.Contains(evt.Object.Message, fmt.Sprintf("%s|%s", globals.DefaultTenant, ts.tu.User)) {
-						return nil
-					}
-				}
-				return fmt.Errorf("no events found for failed login attempt in default tenant")
 			}, 30, 1).Should(BeNil())
 		})
 		It("successful radius auth", func() {
@@ -295,6 +274,57 @@ var _ = Describe("auth tests", func() {
 				return err
 			}, 10, 1).Should(BeNil())
 			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+		})
+	})
+	Context("auth events", func() {
+		It("check login failure event", func() {
+			_, err := login.NewLoggedInContext(context.TODO(), ts.tu.APIGwAddr, &auth.PasswordCredential{Username: ts.tu.User, Password: "incorrect", Tenant: globals.DefaultTenant})
+			Expect(err).Should(HaveOccurred())
+			query := &search.SearchRequest{
+				Query: &search.SearchQuery{
+					Categories: []string{search.Category_Monitoring.String()},
+					Kinds:      []string{auth.Permission_Event.String()},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "type",
+								Operator: "equals",
+								Values:   []string{auth.LoginFailed},
+							},
+							{
+								Key:      "meta.creation-time",
+								Operator: "gte",
+								Values:   []string{time.Now().Add(-3 * time.Second).Format(time.RFC3339Nano)},
+							},
+							{
+								Key:      "meta.creation-time",
+								Operator: "lte",
+								Values:   []string{time.Now().Format(time.RFC3339Nano)},
+							},
+						},
+					},
+				},
+				From:       0,
+				MaxResults: 50,
+			}
+			Eventually(func() error {
+				resp := testutils.EventSearchResponse{}
+				err := ts.tu.Search(ts.loggedInCtx, query, &resp)
+				if err != nil {
+					return err
+				}
+				if resp.ActualHits == 0 {
+					return fmt.Errorf("no events found for failed login attempt")
+				}
+				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[search.Category_Monitoring.String()].Kinds[auth.Permission_Event.String()].Entries
+
+				for _, evt := range events {
+					if strings.Contains(evt.Object.Message, fmt.Sprintf("%s|%s", globals.DefaultTenant, ts.tu.User)) {
+						return nil
+					}
+				}
+				return fmt.Errorf("no events found for failed login attempt in default tenant")
+			}, 30, 1).Should(BeNil())
 		})
 	})
 })

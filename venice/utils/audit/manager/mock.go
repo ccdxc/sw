@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gogo/protobuf/types"
@@ -12,12 +13,15 @@ import (
 )
 
 type logger struct {
-	ctx    context.Context
-	logger log.Logger
+	ctx           context.Context
+	logger        log.Logger
+	simulateError bool
 }
 
 func (s *logger) ProcessEvents(events ...*auditapi.Event) error {
-
+	if s.simulateError {
+		return errors.New("auditing failure")
+	}
 	for _, event := range events {
 		s.logger.Audit(s.ctx, "msg", "audit log",
 			"user", event.User.Name,
@@ -49,4 +53,9 @@ func (s *logger) Shutdown() {}
 // NewLogAuditor uses passed in logger to log audit events. It is used by tests.
 func NewLogAuditor(ctx context.Context, l log.Logger) audit.Auditor {
 	return &logger{ctx: ctx, logger: l}
+}
+
+// WithMockErrorSimulator simulates error upon logging events. It is used by tests.
+func WithMockErrorSimulator(ctx context.Context, l log.Logger) audit.Auditor {
+	return &logger{ctx: ctx, logger: l, simulateError: true}
 }

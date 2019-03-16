@@ -73,7 +73,7 @@ func (m *EventAttributes) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.Level = "Basic"
-		m.Outcome = "Unknown"
+		m.Outcome = "Success"
 		m.Stage = "RequestAuthorization"
 	}
 	return ret

@@ -98,7 +98,7 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
         },
         'outcome': {
             enum: AuditEvent_outcome,
-            default: 'Unknown',
+            default: 'Success',
             required: false,
             type: 'string'
         },

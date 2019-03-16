@@ -21,7 +21,6 @@ export enum ApiListWatchOptions_sort_order {
 export enum AuditEvent_stage {
     'RequestAuthorization' = "RequestAuthorization",
     'RequestProcessing' = "RequestProcessing",
-    'RequestCompleted' = "RequestCompleted",
 }
 
 export enum AuditEvent_level {
@@ -32,7 +31,6 @@ export enum AuditEvent_level {
 }
 
 export enum AuditEvent_outcome {
-    'Unknown' = "Unknown",
     'Success' = "Success",
     'Failure' = "Failure",
 }
@@ -40,7 +38,6 @@ export enum AuditEvent_outcome {
 export enum AuditEventAttributes_stage {
     'RequestAuthorization' = "RequestAuthorization",
     'RequestProcessing' = "RequestProcessing",
-    'RequestCompleted' = "RequestCompleted",
 }
 
 export enum AuditEventAttributes_level {
@@ -51,7 +48,6 @@ export enum AuditEventAttributes_level {
 }
 
 export enum AuditEventAttributes_outcome {
-    'Unknown' = "Unknown",
     'Success' = "Success",
     'Failure' = "Failure",
 }

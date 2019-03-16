@@ -341,8 +341,7 @@
           "type": "string",
           "enum": [
             "RequestAuthorization",
-            "RequestProcessing",
-            "RequestCompleted"
+            "RequestProcessing"
           ],
           "default": "RequestAuthorization"
         },
@@ -374,11 +373,10 @@
         "outcome": {
           "type": "string",
           "enum": [
-            "Unknown",
             "Success",
             "Failure"
           ],
-          "default": "Unknown"
+          "default": "Success"
         },
         "request-uri": {
           "type": "string",
@@ -421,8 +419,7 @@
           "type": "string",
           "enum": [
             "RequestAuthorization",
-            "RequestProcessing",
-            "RequestCompleted"
+            "RequestProcessing"
           ],
           "default": "RequestAuthorization",
           "title": "Request handling stage at which audit log was generated"
@@ -460,11 +457,10 @@
         "outcome": {
           "type": "string",
           "enum": [
-            "Unknown",
             "Success",
             "Failure"
           ],
-          "default": "Unknown",
+          "default": "Success",
           "title": "Outcome represents the outcome of action on resource"
         },
         "request-uri": {

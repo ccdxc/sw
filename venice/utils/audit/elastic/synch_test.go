@@ -74,7 +74,7 @@ func TestProcessEvents(t *testing.T) {
 						Resource:    &api.ObjectRef{Kind: "Network", Tenant: "default", Namespace: "default", Name: "network1"},
 						ClientIPs:   []string{"192.168.75.133"},
 						Action:      auth.Permission_Create.String(),
-						Outcome:     audit.Outcome_Unknown.String(),
+						Outcome:     audit.Outcome_Failure.String(),
 						GatewayNode: "node1",
 						GatewayIP:   "192.168.75.136",
 						Data:        make(map[string]string),
@@ -91,7 +91,7 @@ func TestProcessEvents(t *testing.T) {
 					ObjectMeta: api.ObjectMeta{Name: "auditevent2", UUID: uuid.NewV4().String(), Tenant: "default"},
 					EventAttributes: audit.EventAttributes{
 						Level:       audit.Level_RequestResponse.String(),
-						Stage:       audit.Stage_RequestCompleted.String(),
+						Stage:       audit.Stage_RequestProcessing.String(),
 						User:        &api.ObjectRef{Kind: "User", Namespace: "default", Tenant: "default", Name: "admin"},
 						Resource:    &api.ObjectRef{Kind: "Role", Tenant: "default", Namespace: "default", Name: "networkadmin"},
 						ClientIPs:   []string{"192.168.75.133"},
@@ -107,7 +107,7 @@ func TestProcessEvents(t *testing.T) {
 					ObjectMeta: api.ObjectMeta{Name: "auditevent3", UUID: uuid.NewV4().String(), Tenant: "default"},
 					EventAttributes: audit.EventAttributes{
 						Level:       audit.Level_RequestResponse.String(),
-						Stage:       audit.Stage_RequestCompleted.String(),
+						Stage:       audit.Stage_RequestProcessing.String(),
 						User:        &api.ObjectRef{Kind: "User", Namespace: "default", Tenant: "default", Name: "admin"},
 						Resource:    &api.ObjectRef{Kind: "Role", Tenant: "default", Namespace: "default", Name: "networkadmin"},
 						ClientIPs:   []string{"192.168.75.133"},

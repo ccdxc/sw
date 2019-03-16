@@ -43,21 +43,17 @@ enum Level {
 // Stage defines the stages in request handling for which audit logs may be generated
 enum Stage {
     // Log if authorization fails
-    RequestAuthorization  = 0;
+    RequestAuthorization = 0;
     // Log when request processing starts after authorization check has succeeded
-    RequestProcessing     = 1;
-    // Log when request has been processed
-    RequestCompleted      = 2;
+    RequestProcessing    = 1;
 }
 
 // Outcome of an operation (action on resource)
 enum Outcome {
-    // Unknown if result of the operation is not known at the time of audit log creation
-    Unknown = 0;
     // Success if operation completed successfully
-    Success = 1;
+    Success = 0;
     // Failure if operation failed
-    Failure = 2;
+    Failure = 1;
 }
 
 message Event {
