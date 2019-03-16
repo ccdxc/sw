@@ -81,7 +81,6 @@ sdk_ret_t
 device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     device_entry    *device;
-    mac_addr_t       tmp;
 
     switch (api_op) {
     case API_OP_CREATE:
@@ -90,13 +89,12 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
         PDS_TRACE_DEBUG("Activating device IP %s, MAC %s as table constants",
                         ipv4addr2str(device->ip_addr()),
                         macaddr2str(device->mac_addr()));
-        sdk::lib::memrev(tmp, device->mac_addr(), ETH_ADDR_LEN);
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                                      device->ip_addr());
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
                                                      device->ip_addr());
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
-                                                     MAC_TO_UINT64(tmp));
+                                                     MAC_TO_UINT64(device->mac_addr()));
         break;
 
     case API_OP_DELETE:
