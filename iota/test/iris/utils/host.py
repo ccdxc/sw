@@ -247,7 +247,9 @@ def DisableAllmulti(node, interface):
 def AddStaticARP(node, interface, hostname, macaddr):
     result = api.types.status.SUCCESS
     if api.GetNodeOs(node) == "linux":
-        cmd = "ip neigh add " + hostname +" lladdr " + macaddr + " dev " + interface
+        # In RHEL 7.3, 'ip neigh add' cannot add an entry which is already present in FAILED state.
+        # So use 'ip neigh replace' instead of 'ip neigh add'
+        cmd = "ip neigh replace " + hostname +" lladdr " + macaddr + " dev " + interface
     elif api.GetNodeOs(node) == "freebsd":
         cmd = "arp -s " + hostname + " " + macaddr
     else:
