@@ -36,30 +36,43 @@ def Trigger(tc):
     tc.cmd_cookies.append("Before rpc")
 
     api.Trigger_AddCommand(req, client1.node_name, client1.workload_name,
-                           "sh -c 'mkdir -p sunrpcmntdir && mount %s:/home/sunrpcmntdir sunrpcmntdir' "%(server.ip_address))
+                           "sudo sh -c 'mkdir -p /home/sunrpcdir && mount %s:/home/sunrpcmntdir /home/sunrpcdir' "%(server.ip_address), timeout=180)
     tc.cmd_cookies.append("Create mount point")
     
     api.Trigger_AddCommand(req, client1.node_name, client1.workload_name,
-                           "sh -c 'echo \'hello world\' | tee -a sunrpcmntdir/sunrpc_file.txt' ")
+                           "sudo chmod 777 /home/sunrpcdir")
+    tc.cmd_cookies.append("add permission")
+
+    api.Trigger_AddCommand(req, client1.node_name, client1.workload_name,
+                           "mv sunrpcdir/sunrpc_file.txt /home/sunrpcdir/", timeout=180)
     tc.cmd_cookies.append("Create file")
 
+    api.Trigger_AddCommand(req, client1.node_name, client1.workload_name,
+                           "ls -al /home/sunrpcdir")
+    tc.cmd_cookies.append("verify file")
+
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "sh -c 'cat /home/sunrpcmntdir/sunrpc_file.txt | grep \'hello world\' ' ")
+                           "ls -al /home/sunrpcmntdir/")
+    tc.cmd_cookies.append("After rpc")
+
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
+                           "sh -c 'cat /home/sunrpcmntdir/sunrpc_file.txt'")
     tc.cmd_cookies.append("After rpc")
 
     # Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show session --alg sunrpc")
-    #tc.cmd_cookies.append("show session")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show security flow-gate | grep SUNRPC")
-    #tc.cmd_cookies.append("show security flow-gate")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show session --alg sun_rpc")
+    tc.cmd_cookies.append("show session")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show nwsec flow-gate | grep SUN_RPC")
+    tc.cmd_cookies.append("show security flow-gate")
 
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
 
-    dport = 0
+    #Get it from flow gate
+    dport = 2049
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
@@ -68,21 +81,21 @@ def Trigger(tc):
     tc.cmd_cookies.append("ping unknown host")
 
     # Get the timeout from the config
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show session --src %s"%(10.10.10.10))
-    #tc.cmd_cookies.append("show session different source")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show session --srcip %s | grep SYN"%("10.10.10.10"))
+    tc.cmd_cookies.append("show session different source")
 
-    api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-                           "sleep 100")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "sleep 100", timeout=120)
     tc.cmd_cookies.append("sleep")
 
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show security flow-gate | grep SUNRPC")
-    #tc.cmd_cookies.append("After flow-gate ageout")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show nwsec flow-gate | grep SUN_RPC")
+    tc.cmd_cookies.append("After flow-gate ageout")
 
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
-    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    tc.resp2 = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
 
     CleanupNFSServer(server, client1)
 
@@ -98,26 +111,33 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            if tc.cmd_cookies[cookie_idx].find("Before") != -1 or \
-               tc.cmd_cookies[cookie_idx].find("ping unknown host") != -1:
+            if tc.cmd_cookies[cookie_idx].find("Before") != -1:
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
         if tc.cmd_cookies[cookie_idx].find("show session") != -1 and \
            cmd.stdout == '':
            result = api.types.status.FAILURE
-        if tc.cmd_cookies[cookie_idx].find("show session different source") != -1 and \
-           cmd.stdout != '':
-           result = api.types.status.FAILURE
-        #if tc.cmd_cookies[cookie_idx].find("show security flow-gate") != -1 and \
-        #   cmd.stdout == '':
-        #   result = api.types.status.FAILURE
+        cookie_idx += 1
+    for cmd in tc.resp2.commands:
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
+            if tc.cmd_cookies[cookie_idx].find("Before") != -1 or \
+               tc.cmd_cookies[cookie_idx].find("ping unknown host") != -1 or \
+               tc.cmd_cookies[cookie_idx].find("After flow-gate ageout") != -1 or\
+               tc.cmd_cookies[cookie_idx].find("show session different source") != -1:
+                result = api.types.status.SUCCESS
+            else:
+                result = api.types.status.FAILURE
         if tc.cmd_cookies[cookie_idx].find("After flow-gate ageout") != -1 and \
-           cmd.stdout != '':
-           result = api.types.status.FAILURE
+            cmd.stdout != '':
+            result = api.types.status.FAILURE
         if tc.cmd_cookies[cookie_idx].find("ping unknown host") != -1 and \
            cmd.exit_code == 0:
            result = api.types.status.FAILURE
+        if tc.cmd_cookies[cookie_idx].find("show session different source") != -1 and \
+           cmd.stdout != '':
+           result = api.types.status.FAILUR
         cookie_idx += 1
 
     return result

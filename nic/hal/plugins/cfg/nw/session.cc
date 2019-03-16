@@ -62,7 +62,6 @@ namespace hal {
 thread_local void *t_session_timer;
 session_stats_t  *g_session_stats;
 
-
 #define SESSION_SW_DEFAULT_TIMEOUT                 (3600)
 #define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT       (15 * TIME_MSECS_PER_SEC)
@@ -1745,6 +1744,8 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // Check initiator flow. Check for session state as we dont want to age half-closed
     // connections if half-closed timeout is disabled.
 #if SESSION_AGE_DEBUG
+    HAL_TRACE_DEBUG("retval {} session handle: {}, session iflow state: {}, session rflow state: {}",
+                    retval, session->hal_handle, session_state.iflow_state.state, session_state.rflow_state.state);
     HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
                     session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
 #endif
@@ -2079,7 +2080,7 @@ session_age_cb (void *entry, void *ctxt)
 static void
 session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    uint32_t              bucket = *((uint32_t *)(&ctxt));
+    uint64_t              bucket = (uint64_t)(ctxt);
     timespec_t            ctime;
     hal_ret_t             ret = HAL_RET_OK;
     uint8_t               fte_id = 0;
@@ -2087,7 +2088,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     session_age_cb_args_t args;
 #if SESSION_AGE_DEBUG
-    HAL_TRACE_DEBUG("session age walk cb");
+    HAL_TRACE_DEBUG("session age walk cb bucket {} context {:p}", bucket, ctxt);
 #endif
 
     // We dont have any sessions yet - bail
@@ -2129,7 +2130,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &args.ctime_ns);
 #if SESSION_AGE_DEBUG
-    HAL_TRACE_DEBUG("Entering timer id {}, bucket: {}", timer_id,  bucket);
+    HAL_TRACE_DEBUG("Entering timer id {}, bucket: {} bucket_no: {}", timer_id,  bucket, bucket_no);
 #endif
     while (num_sessions < HAL_SESSIONS_TO_SCAN_PER_INTVL &&
            bucket_no < g_hal_state->session_hal_handle_ht()->num_buckets()) {
@@ -2139,7 +2140,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
         bucket = (bucket + 1)%g_hal_state->session_hal_handle_ht()->num_buckets();
     }
 #if SESSION_AGE_DEBUG
-    HAL_TRACE_DEBUG("Num sessions: {} bucket {} buckets {}", num_sessions, bucket, bucket_no); 
+    HAL_TRACE_DEBUG("Num sessions: {} bucket {} buckets {} max buckets {}", num_sessions, bucket, bucket_no, g_hal_state->session_hal_handle_ht()->num_buckets()); 
 #endif
 
     //Check if there are pending requests that need to be queued to FTE threads
@@ -2184,8 +2185,10 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, args.tctx_list);
     HAL_FREE(HAL_MEM_ALLOC_SESS_HANDLE_LIST, args.session_list);
 
+    ctxt = (reinterpret_cast<void *>(bucket));
+
     // store the bucket id to resume on next invocation
-    sdk::lib::timer_update(timer, reinterpret_cast<void *>(bucket));
+    sdk::lib::timer_update_ctxt(timer, ctxt);
 }
 
 //------------------------------------------------------------------------------

@@ -58,6 +58,7 @@ struct expected_flow_s {
     exp_flow_key_t            key;
     expected_flow_handler_t   handler;
     void                     *timer;
+    void                     *timer_ctxt;
     ref_t                     ref_count;
     bool                      deleting;
     sdk::lib::ht_ctxt_t       expected_flow_ht_ctxt;
@@ -69,13 +70,17 @@ expected_flow_t *lookup_expected_flow(const exp_flow_key_t &key);
 expected_flow_t *lookup_expected_flow(const hal::flow_key_t &key,
                                       bool exact_match = false);
 void start_expected_flow_timer(expected_flow_t *entry, uint32_t timer_id,
-                               uint32_t time_intvl, sdk::lib::twheel_cb_t cb,
+                               uint64_t time_intvl, sdk::lib::twheel_cb_t cb,
                                void *timer_ctxt);
 void* delete_expected_flow_timer(expected_flow_t *entry);
 void dec_ref_count(expected_flow_t *entry);
 
 hal_ret_t walk_expected_flow(nwsec::SecurityFlowGateGetRequest&      req,
                              nwsec::SecurityFlowGateGetResponseMsg   *res);
+
+void* update_expected_flow_timer(expected_flow_t *entry, 
+                                 uint64_t time_intvl, void *timer_ctxt);
+void* update_expected_flow_timer_ctxt(expected_flow_t *entry, void *timer_ctxt);
 
 } // namespace alg_utils
 } // namespace plugins

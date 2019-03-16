@@ -33,10 +33,14 @@ protected:
         server_eph = add_endpoint(l2segh, intfh2, 0x0A000002 , 0xAABB0A000002, 0);
         s_e2e_eph = add_endpoint(l2segh, intfh1, 0x40000001 , 0xEEBB0D000001, 0, true);
         c_e2e_eph = add_endpoint(l2segh, intfh2, 0x40000002 , 0xEEBB0D000002, 0, true);
-        hal::rpc_programid_t programids[] = { { "10000", 120 },
-                                              { "10024", 100 },
-                                              { "10023", 300 } };
-        hal::rpc_programid_t uuids[] = { {"e1af83085d1f11c991a408002b14a0fa", 90}, };
+        hal::rpc_programid_t programids[] = { { 100000, 120 },
+                                              { 100024, 100 },
+                                              { 100023, 300 },
+                                              { 111, 100 } };
+        hal::rpc_uuid_t uuids[] = { { {0xef, 0xaf, 0x83, 0x08, 0x5d, 0x1f, 0x11, 0xc9, 0x91,
+                                       0xa4, 0x08, 0x00, 0x2b, 0x14, 0xa0, 0xfa}, 90}, 
+                                    { {0x12, 0x34, 0x57, 0x78, 0x12, 0x34, 0xab, 0xcd, 0xef,
+                                       0x00, 0x01, 0x23, 0x45, 0x67, 0x89, 0xac}, 100},};
 
         // firewall rules
         std::vector<v4_rule_t> rules = {
@@ -47,7 +51,7 @@ protected:
                                dport_low: SUNRPC_PORT, dport_high: SUNRPC_PORT,
                                alg: nwsec::APP_SVC_SUN_RPC,
                                has_alg_opts: true,
-                               alg_opt: { opt: { sunrpc_opts: { programid_sz: 3, program_ids: programids }, }, },
+                               alg_opt: { opt: { sunrpc_opts: { programid_sz: 4, program_ids: programids }, }, },
                                } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
                         from: {},
@@ -65,7 +69,7 @@ protected:
                                dport_low: MSRPC_PORT, dport_high: MSRPC_PORT,
                                alg: nwsec::APP_SVC_MSFT_RPC,
                                has_alg_opts: true,
-                               alg_opt: { opt: { msrpc_opts: { uuid_sz: 1, uuids: uuids }, }, },
+                               alg_opt: { opt: { msrpc_opts: { uuid_sz: 2, uuids: uuids }, }, },
                                } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},

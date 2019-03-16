@@ -174,6 +174,18 @@ hal_handle_t fte_base_test::add_endpoint(hal_handle_t l2segh, hal_handle_t intfh
     return resp.endpoint_status().key_or_handle().endpoint_handle();
 }
 
+static inline void uuid_to_string(uint8_t *uuid, char *str)  {
+    uint8_t offset = 0;
+    char    c = '-';
+
+    for (uint8_t idx=0; idx<16; idx++) {
+        sprintf(&str[offset], "%02x", uuid[idx]);
+        offset += 2;
+        if (idx == 3 || idx == 5 || idx == 7 || idx == 9)
+            sprintf(&str[offset++], "%c", c);
+    }
+}
+
 hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_base_test::v4_rule_t> &rules)
 {
     hal_ret_t ret;
@@ -231,15 +243,22 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
                 } else if (rule.app.alg == nwsec::APP_SVC_SUN_RPC) {
                     for (uint8_t idx=0; idx<rule.app.alg_opt.opt.sunrpc_opts.programid_sz; idx++) {
                         nwsec::AppData_RPCData *rpc_data = app_data->mutable_sun_rpc_option_info()->add_data();
-      
-                        rpc_data->set_program_id(rule.app.alg_opt.opt.sunrpc_opts.program_ids[idx].program_id);
+                        std::string str;
+
+                        str = std::to_string(rule.app.alg_opt.opt.sunrpc_opts.program_ids[idx].program_id);
+                        printf("Program id :%d str: %s\n", rule.app.alg_opt.opt.sunrpc_opts.program_ids[idx].program_id,
+                                         str.c_str());
+                        rpc_data->set_program_id(str);
                         rpc_data->set_idle_timeout(rule.app.alg_opt.opt.sunrpc_opts.program_ids[idx].timeout); 
                     }
                 } else if (rule.app.alg == nwsec::APP_SVC_MSFT_RPC) {
                     for (uint8_t idx=0; idx<rule.app.alg_opt.opt.msrpc_opts.uuid_sz; idx++) {
                         nwsec::AppData_RPCData *rpc_data = app_data->mutable_msrpc_option_info()->add_data();
+                        char str[50];
 
-                        rpc_data->set_program_id(rule.app.alg_opt.opt.msrpc_opts.uuids[idx].program_id);
+                        uuid_to_string(rule.app.alg_opt.opt.msrpc_opts.uuids[idx].uuid, str);
+                        printf("UUID: %s\n", str);
+                        rpc_data->set_program_id(str);
                         rpc_data->set_idle_timeout(rule.app.alg_opt.opt.msrpc_opts.uuids[idx].timeout);
                     }
                 } else if (rule.app.alg == nwsec::APP_SVC_DNS) {

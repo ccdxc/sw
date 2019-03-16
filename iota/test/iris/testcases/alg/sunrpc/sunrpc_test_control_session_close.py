@@ -24,7 +24,7 @@ def Trigger(tc):
                    (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
     api.Logger.info("Starting SUNRPC test from %s" % (tc.cmd_descr))
 
-    api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
                            "/nic/bin/halctl clear session")
     tc.cmd_cookies.append("clear session")
 
@@ -35,19 +35,22 @@ def Trigger(tc):
     tc.cmd_cookies.append("RPC Dump")
 
     # Add Naples command validation
-    api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-                           "sleep 60")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "sleep 60", timeout=120)
     tc.cmd_cookies.append("sleep")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show session --alg sunrpc")
-    #tc.cmd_cookies.append("show session")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show security flow-gate | grep SUNRPC")
-    #tc.cmd_cookies.append("show security flow-gate")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show session --alg sun_rpc --yaml")
+    tc.cmd_cookies.append("show session")
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show nwsec flow-gate")
+    tc.cmd_cookies.append("show security flow-gate")
   
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    CleanupNFSServer(server, client)
+
     return api.types.status.SUCCESS
 
 def Verify(tc):

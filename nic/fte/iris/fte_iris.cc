@@ -159,7 +159,7 @@ ctx_t::extract_flow_key()
 hal_ret_t
 ctx_t::lookup_flow_objs()
 {
-    ether_header_t *ethhdr;
+    ether_header_t *ethhdr = NULL;
 
     if (svrf_ == NULL && dvrf_ == NULL) {
         HAL_TRACE_DEBUG("Looking up vrf for id: {}", key_.svrf_id);

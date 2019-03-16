@@ -124,48 +124,81 @@ testcases:
             type: local_only
             count: 10
 
-    -   name    : ADD_SG_POLICY
-        testcase: testcases.alg.add_config
- 
     -   name    : SUNRPC_BASIC
         testcase: testcases.alg.sunrpc.sunrpc_basic
+        ignore  : True
         args    :
            type: local_only
  
     -   name    : SUNRPC_DIFFERENT_SIP
         testcase: testcases.alg.sunrpc.sunrpc_different_sip
+        ignore  : True
+        args    :
+            type: local_only
+ 
+    -   name    : SUNRPC_DIFFERENT_DIR
+        testcase: testcases.alg.sunrpc.sunrpc_different_dir
+        ignore  : True
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_DIFFERENT_DIR
+        testcase: testcases.alg.sunrpc.sunrpc_different_dir
+        ignore  : True
         args    :
             type: local_only
 
     -   name    : SUNRPC_DIFFERENT_APP
         testcase: testcases.alg.sunrpc.sunrpc_test_different_app
+        ignore  : True
         args    :
             type: local_only
 
     -   name    : SUNRPC_UNKNOWN_SIP
         testcase: testcases.alg.sunrpc.sunrpc_unknown_sip
+        ignore  : True
         args    :
             type: local_only
 
     -   name    : SUNRPC_TEST_CONTROL_SESSION_CLOSE
         testcase: testcases.alg.sunrpc.sunrpc_test_control_session_close
+        ignore  : True
         args    :
             type: local_only
 
     -   name    : SUNRPC_TEST_FLOWGATE_TIMEOUT
         testcase: testcases.alg.sunrpc.sunrpc_test_flowgate_timeout
+        ignore  : True
         args    :
             type: local_only
 
     -   name    : SUNRPC_TEST_CLEAR_CONTROL_SESSION
         testcase: testcases.alg.sunrpc.sunrpc_test_control_session_clear
+        ignore  : True
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_MEM_LEAK
+        testcase: testcases.alg.sunrpc.sunrpc_mem_leak
+        ignore  : True
+        args    :
+            type: local_only
+            count: 10
+
+    -   name    : SUNRPC_UDP
+        testcase: testcases.alg.sunrpc.sunrpc_udp
+        ignore  : True
         args    :
             type: local_only
 
     -   name    : MSRPC_BASIC
         testcase: testcases.alg.msrpc.msrpc_basic
+        ignore  : True
         args    :
             type: local_only
+
+    -   name    : ADD_SG_POLICY
+        testcase: testcases.alg.add_config
 
     -   name    : MSRPC_MULTIPLE_BIND
         testcase: testcases.alg.msrpc.msrpc_multiple_bind

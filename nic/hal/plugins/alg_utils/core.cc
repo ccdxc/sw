@@ -298,14 +298,24 @@ alg_state::~alg_state() {
 void alg_state::exp_flow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt) {
     exp_flow_timer_cb_t  *timer_ctxt = (exp_flow_timer_cb_t *)ctxt;
     l4_alg_status_t      *exp_flow = NULL;
-    alg_state_t          *alg_state = timer_ctxt->alg_state;
+    alg_state_t          *alg_state = NULL;
+    app_session_t        *app_sess = NULL;
 
-    exp_flow = (l4_alg_status_t *)lookup_expected_flow(timer_ctxt->exp_flow_key);
-    if (!exp_flow) {
-        HAL_TRACE_ERR("Bailing cleanup expected flow not found!");
+    if (!timer_ctxt)  {
+        HAL_TRACE_ERR("Null context -- bailing");
         return;
     }
- 
+
+    alg_state = timer_ctxt->alg_state;
+    exp_flow = (l4_alg_status_t *)lookup_expected_flow(timer_ctxt->exp_flow_key);
+    if (!exp_flow) {
+        HAL_TRACE_ERR("Bailing cleanup expected flow with key: {} not found!", timer_ctxt->exp_flow_key);
+        goto end;
+    }
+
+    app_sess = exp_flow->app_session;
+    SDK_ASSERT(app_sess != NULL);
+
     // Grace timer expiry. Is it ok to cleanup now ?
     // Should we have retries ?
     if (exp_flow->entry.deleting == true) {
@@ -325,9 +335,22 @@ void alg_state::exp_flow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
 
 cleanup:
     HAL_TRACE_DEBUG("Cleaning up expected flow with key: {}", exp_flow->entry.key);
+    SDK_SPINLOCK_LOCK(&app_sess->slock);
     alg_state->cleanup_exp_flow(exp_flow);
+    // If this is the last hanging expected flow
+    // along with the control session. Lets go ahead
+    // and cleanup 
+    if (sdk::lib::dllist_empty(&app_sess->exp_flow_lhead) && 
+        sdk::lib::dllist_count(&app_sess->l4_sess_lhead) == 1) {
+            SDK_SPINLOCK_UNLOCK(&app_sess->slock);
+            alg_state->cleanup_app_session(app_sess);
+            goto end;
+    }
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
-    HAL_FREE(hal::HAL_MEM_ALLOC_ALG, timer_ctxt);
+end:
+   HAL_TRACE_DEBUG("Freeing timer context: {:p}", (void *)timer_ctxt);
+   HAL_FREE(hal::HAL_MEM_ALLOC_ALG, timer_ctxt);
 }
 
 hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
@@ -336,6 +359,7 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
                       bool find_existing) {
     exp_flow_timer_cb_t   *timer_ctxt = NULL;
     l4_alg_status_t       *exp_flow = NULL;
+    uint64_t               timeout = (time_intvl * TIME_MSECS_PER_SEC);
 
     /*
      * In some cases, we need to look for existing
@@ -347,9 +371,8 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
         if (exp_flow && !exp_flow->entry.deleting) {
             if (enable_timer) {
                 if (entry->timer) {
-                    // TBD Dont delete
-                    timer_ctxt = (exp_flow_timer_cb_t *)\
-                                             delete_expected_flow_timer(entry);
+                    // If the timer is already there. Update it with new time
+                    update_expected_flow_timer(entry, timeout, (void *)entry->timer_ctxt); 
                 } else {
                     HAL_TRACE_DEBUG("Starting timer for expected flow with key: {} exp_flow {:p}", 
                                      key, (void *)exp_flow);
@@ -357,13 +380,13 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
                                        sizeof(exp_flow_timer_cb_t));
                     timer_ctxt->exp_flow_key = exp_flow->entry.key;
                     timer_ctxt->alg_state = this;
+                    exp_flow->entry.timer_ctxt = (void *)timer_ctxt;
+                    start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_TIMER_ID,
+                                 timeout, exp_flow_timeout_cb, exp_flow->entry.timer_ctxt);
                 }
-                start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_TIMER_ID,
-                                  (time_intvl * TIME_MSECS_PER_SEC), exp_flow_timeout_cb,
-                                  (void *)timer_ctxt);
             }
             *expected_flow = exp_flow;
-            return HAL_RET_OK;
+            return HAL_RET_ENTRY_EXISTS;
         }
         // Flow through to create a new entry if old one is getting deleted
     }
@@ -381,6 +404,7 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
     dllist_add(&app_sess->exp_flow_lhead, &exp_flow->exp_flow_lentry);
     SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
+    exp_flow->entry.timer_ctxt = NULL;
     if (enable_timer == true) {
         HAL_TRACE_DEBUG("Starting timer for expected flow with key: {} exp_flow {:p}", 
                          key, (void *)exp_flow);
@@ -388,11 +412,11 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
                                        sizeof(exp_flow_timer_cb_t));
         timer_ctxt->exp_flow_key = exp_flow->entry.key;
         timer_ctxt->alg_state = this;
+        exp_flow->entry.timer_ctxt = (void *)timer_ctxt;
         start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_TIMER_ID,
-                                  (time_intvl * TIME_MSECS_PER_SEC), exp_flow_timeout_cb,
-                                  (void *)timer_ctxt);
+                                 timeout, exp_flow_timeout_cb,
+                                  exp_flow->entry.timer_ctxt);
     }
-
     *expected_flow = exp_flow;
 
     return HAL_RET_OK;

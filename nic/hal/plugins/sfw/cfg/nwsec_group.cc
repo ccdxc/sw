@@ -632,12 +632,14 @@ nwsec_rule_init (nwsec_rule_t *rule)
             rule->fw_rule_action.alg == nwsec::APP_SVC_MSFT_RPC) {
             union hal::alg_options::opt_ *opt = &rule->fw_rule_action.app_options.opt;
            
-            if (opt->sunrpc_opts.program_ids) {
+            if (opt->sunrpc_opts.program_ids != NULL) {
                 HAL_FREE(HAL_MEM_ALLOC_SFW, opt->sunrpc_opts.program_ids);
+                opt->sunrpc_opts.program_ids = NULL;
             }
 
-            if (opt->msrpc_opts.uuids) {
+            if (opt->msrpc_opts.uuids != NULL) {
                 HAL_FREE(HAL_MEM_ALLOC_SFW, opt->msrpc_opts.uuids);
+                opt->msrpc_opts.uuids = NULL;
             }
         }
         g_hal_state->nwsec_rule_slab()->free(rule);
@@ -983,6 +985,47 @@ nwsec_policy_compute_hash_func (void *key, uint32_t ht_size)
                                      sizeof(policy_key_t)) % ht_size;
 }
 
+//
+//API to convert MSRPC UUID String to uint8_t array
+//
+static inline void __str_to_uuid(char *uuid_str, uint8_t *uuid_arr) {
+    // Define the UUID Struct 
+    // to read it right
+    typedef struct  uuid_ { 
+         uint32_t time_lo;
+         uint16_t time_mid;
+         uint16_t time_hi_vers;
+         uint8_t  clock_seq_hi;
+         uint8_t  clock_seq_lo;
+         uint8_t  node[6];
+    } uuid_t;
+    uuid_t   *uuid = (uuid_t *)uuid_arr;
+    char     *tok  = NULL;
+    uint32_t  val = 0;
+
+    tok = strtok(uuid_str, "-");
+    if (tok == NULL) return;
+    uuid->time_lo = strtoul(tok, NULL, 16);
+    tok = strtok(NULL, "-");
+    if (tok == NULL) return;
+    uuid->time_mid = strtoul(tok, NULL, 16);
+    tok = strtok(NULL, "-");
+    if (tok == NULL) return;
+    uuid->time_hi_vers = strtoul(tok, NULL, 16);
+    tok = strtok(NULL, "-");
+    if (tok == NULL) return;
+    val = strtoul(tok, NULL, 16);
+    uuid->clock_seq_hi = (val & 0xFF00)>>8;
+    uuid->clock_seq_lo = (val & 0xFF);
+    tok = strtok(NULL, "-");
+    if (tok == NULL) return;
+    uint64_t node = strtoul(tok, NULL, 16);
+    for (int idx=5; idx>=0; idx--) {
+         uuid->node[idx] = node&0xFF;
+         node = node >> 8;
+    }
+}
+
 //nwsec_rule related
 hal_ret_t
 extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
@@ -1018,16 +1061,15 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                 opt->dns_opts.query_response_timeout = app.dns_option_info().query_response_timeout();
             } else if (app.AppOptions_case() == AppData::kMsrpcOptionInfo) {
                 if (app.msrpc_option_info().data_size()) {
-                    opt->msrpc_opts.uuids = (rpc_programid_t *)HAL_CALLOC(HAL_MEM_ALLOC_SFW,
-                                        (sizeof(rpc_programid_t)*app.msrpc_option_info().data_size()));
+                    opt->msrpc_opts.uuids = (rpc_uuid_t *)HAL_CALLOC(HAL_MEM_ALLOC_SFW,
+                                        (sizeof(rpc_uuid_t)*app.msrpc_option_info().data_size()));
                     SDK_ASSERT(opt->msrpc_opts.uuids != NULL);
                     opt->msrpc_opts.uuid_sz = app.msrpc_option_info().data_size();
                     for (int idx=0; idx<app.msrpc_option_info().data_size(); idx++) {
-                        uint32_t uuid_sz = (app.msrpc_option_info().data(idx).program_id().size() > MAX_UUID_SZ)?\
-                                       MAX_UUID_SZ:app.msrpc_option_info().data(idx).program_id().size();
-                        memcpy(opt->msrpc_opts.uuids[idx].program_id, 
-                              (void *)app.msrpc_option_info().data(idx).program_id().c_str(), uuid_sz);
+                        __str_to_uuid((char *)app.msrpc_option_info().data(idx).program_id().c_str(), 
+                                      opt->msrpc_opts.uuids[idx].uuid);
                         opt->msrpc_opts.uuids[idx].timeout = app.msrpc_option_info().data(idx).idle_timeout();
+                        HAL_TRACE_DEBUG("timeout: {}",  opt->msrpc_opts.uuids[idx].timeout);
                     }
                 }
             } else if (app.AppOptions_case() == AppData::kSunRpcOptionInfo) {
@@ -1037,11 +1079,11 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                     SDK_ASSERT(opt->sunrpc_opts.program_ids != NULL);
                     opt->sunrpc_opts.programid_sz = app.sun_rpc_option_info().data_size();
                     for (int idx=0; idx<app.sun_rpc_option_info().data_size(); idx++) {
-                         uint32_t uuid_sz = (app.sun_rpc_option_info().data(idx).program_id().size() > MAX_UUID_SZ)?\
-                                       MAX_UUID_SZ:app.sun_rpc_option_info().data(idx).program_id().size();
-                         memcpy(opt->sunrpc_opts.program_ids[idx].program_id, 
-                               (void *)app.sun_rpc_option_info().data(idx).program_id().c_str(), uuid_sz);
+                         opt->sunrpc_opts.program_ids[idx].program_id = strtoul(\
+                                       app.sun_rpc_option_info().data(idx).program_id().c_str(), NULL, 10);
                          opt->sunrpc_opts.program_ids[idx].timeout = app.sun_rpc_option_info().data(idx).idle_timeout();
+                         HAL_TRACE_DEBUG("Program id: {} timeout: {}", opt->sunrpc_opts.program_ids[idx].program_id, 
+                                                                        opt->sunrpc_opts.program_ids[idx].timeout);
                     }
                 }
             } else if (app.AppOptions_case() == AppData::kSipOptions) {
@@ -1729,14 +1771,16 @@ security_policy_rule_spec_build (nwsec_rule_t                          *rule,
         for (uint8_t idx = 0; idx < rule->fw_rule_action.app_options.opt.sunrpc_opts.programid_sz; idx++) {
             nwsec::AppData_RPCData* data = spec->mutable_action()->mutable_app_data()->mutable_sun_rpc_option_info()->add_data();
  
-            data->set_program_id(rule->fw_rule_action.app_options.opt.sunrpc_opts.program_ids[idx].program_id);
+            data->set_program_id(std::to_string(rule->fw_rule_action.app_options.opt.sunrpc_opts.program_ids[idx].program_id));
             data->set_idle_timeout(rule->fw_rule_action.app_options.opt.sunrpc_opts.program_ids[idx].timeout);
         }
     } else if (rule->fw_rule_action.alg == nwsec::APP_SVC_MSFT_RPC) {
         for (uint8_t idx = 0; idx < rule->fw_rule_action.app_options.opt.msrpc_opts.uuid_sz; idx++) {
             nwsec::AppData_RPCData* data = spec->mutable_action()->mutable_app_data()->mutable_msrpc_option_info()->add_data();
+            uint8_t *uuid = rule->fw_rule_action.app_options.opt.msrpc_opts.uuids[idx].uuid;
+            std::string str(uuid, uuid+MAX_UUID_SZ); 
 
-            data->set_program_id(rule->fw_rule_action.app_options.opt.msrpc_opts.uuids[idx].program_id);
+            data->set_program_id(str);
             data->set_idle_timeout(rule->fw_rule_action.app_options.opt.msrpc_opts.uuids[idx].timeout);
         }
     }

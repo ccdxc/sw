@@ -55,9 +55,14 @@ uint64_t get_timeout_remaining(void *timer);
 void *timer_delete(void *timer);
 
 //------------------------------------------------------------------------------
+// API invoked by other threads to update the scheduled timer context
+//------------------------------------------------------------------------------
+void *timer_update_ctxt(void *timer, void *ctxt);
+
+//------------------------------------------------------------------------------
 // API invoked by other threads to update the scheduled timer
 //------------------------------------------------------------------------------
-void *timer_update(void *timer, void *ctxt);
+void *timer_update (void *timer, uint64_t timeout, bool periodic, void *ctxt);
 
 }    // namespace lib
 }    // namespace sdk

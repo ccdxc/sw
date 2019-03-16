@@ -80,7 +80,7 @@ dec_ref_count(expected_flow_t *entry)
 //------------------------------------------------------------------------------
 void
 start_expected_flow_timer(expected_flow_t *entry, uint32_t timer_id,
-                          uint32_t time_intvl, sdk::lib::twheel_cb_t cb,
+                          uint64_t time_intvl, sdk::lib::twheel_cb_t cb,
                           void *timer_ctxt)
 {
     entry->timer = sdk::lib::timer_schedule(timer_id, time_intvl,
@@ -98,6 +98,24 @@ void*
 delete_expected_flow_timer(expected_flow_t *entry)
 {
     return (sdk::lib::timer_delete(entry->timer));
+}
+
+//------------------------------------------------------------------------------
+// update expected flow timer - Some ALGs such as SUNRPC, MSRPC need it
+//------------------------------------------------------------------------------
+void*
+update_expected_flow_timer(expected_flow_t *entry, uint64_t time_intvl, void *timer_ctxt)
+{
+    return (sdk::lib::timer_update(entry->timer, time_intvl, false, timer_ctxt));
+}
+
+//------------------------------------------------------------------------------
+// update expected flow timer context - Some ALGs such as SUNRPC, MSRPC need it
+//------------------------------------------------------------------------------
+void*
+update_expected_flow_timer_ctxt(expected_flow_t *entry, void *timer_ctxt)
+{
+    return (sdk::lib::timer_update_ctxt(entry->timer, timer_ctxt));
 }
 
 //------------------------------------------------------------------------------

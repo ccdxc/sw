@@ -120,9 +120,10 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
              */
             g_rpc_state->cleanup_app_session(l4_sess->app_session);
             return fte::PIPELINE_CONTINUE;
-        } else if ((ctx.session()->iflow->state == session::FLOW_TCP_STATE_FIN_RCVD) ||
+        } else if ((ctx.key().proto==IP_PROTO_UDP) || 
+                   (ctx.session()->iflow->state >= session::FLOW_TCP_STATE_FIN_RCVD) ||
                    (ctx.session()->rflow &&
-                    (ctx.session()->rflow->state == session::FLOW_TCP_STATE_FIN_RCVD))) {
+                    (ctx.session()->rflow->state >= session::FLOW_TCP_STATE_FIN_RCVD))) {
             /*
              * We received FIN/RST on the control session
              * We let the HAL cleanup happen while we keep the
@@ -163,19 +164,62 @@ uint8_t *alloc_rpc_pkt(void) {
     return ((uint8_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, MAX_ALG_RPC_PKT_SZ));
 }
 
-void copy_sfw_info(sfw_info_t *sfw_info, rpc_info_t *rpc_info) {
-    uint32_t pgmid_list_sz = 0;
+#if 0
+static inline void __str_to_uuid(char *uuid_str, uuid_t *uuid) {
+    char *tok = NULL;
+    uint16_t val = 0;
 
+    tok = strtok(uuid_str, "-");
+    uuid->time_lo = (tok != NULL)?strtoul(tok, NULL, 16):0;
+    if (tok == NULL) return;
+    tok = strtok(NULL, "-");
+    uuid->time_mid = (tok != NULL)?strtoul(tok, NULL, 16):0;
+    if (tok == NULL) return;
+    tok = strtok(NULL, "-");
+    uuid->time_hi_vers = (tok != NULL)?strtoul(tok, NULL, 16):0;
+    if (tok == NULL) return;
+    tok = strtok(NULL, "-");
+    val = (tok != NULL)?strtoul(tok, NULL, 16):0;
+    uuid->clock_seq_hi = (val & 0xFF00)>>8;
+    uuid->clock_seq_lo = (val & 0xFF);
+    tok = strtok(NULL, "-");
+    if (tok == NULL) return;
+    uint64_t node = strtoul(tok, NULL, 16);
+    for (uint8_t idx=5; idx>=0; idx--) {
+         uuid->node[idx] = node&0xFF;
+         node = node >> 8;
+    }
+}
+#endif
+
+void copy_sfw_info(sfw_info_t *sfw_info, l4_alg_status_t *l4_sess) {
+    uint32_t pgmid_list_sz = 0;
+    rpc_info_t *rpc_info = (rpc_info_t *)l4_sess->info;
+
+    l4_sess->idle_timeout = sfw_info->idle_timeout;
     if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC) {
+        rpc_programid_t *rpc = NULL;
         rpc_info->pgmid_sz = sfw_info->alg_opts.opt.sunrpc_opts.programid_sz;
-        pgmid_list_sz = (sizeof(hal::rpc_programid_t)*sfw_info->alg_opts.opt.sunrpc_opts.programid_sz);
+        pgmid_list_sz = (sizeof(hal::rpc_programid_t)*\
+                          sfw_info->alg_opts.opt.sunrpc_opts.programid_sz);
         rpc_info->pgm_ids = (hal::rpc_programid_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, pgmid_list_sz);
-        memcpy(rpc_info->pgm_ids, sfw_info->alg_opts.opt.sunrpc_opts.program_ids, pgmid_list_sz);
+        rpc = (hal::rpc_programid_t *)rpc_info->pgm_ids; 
+        for (uint8_t idx=0; idx<sfw_info->alg_opts.opt.sunrpc_opts.programid_sz; idx++) {
+             rpc[idx].program_id = sfw_info->alg_opts.opt.sunrpc_opts.program_ids[idx].program_id;
+             rpc[idx].timeout = sfw_info->alg_opts.opt.sunrpc_opts.program_ids[idx].timeout;
+        }
     } else if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC) {
+        rpc_uuid_t *rpc = NULL;
+
         rpc_info->pgmid_sz = sfw_info->alg_opts.opt.msrpc_opts.uuid_sz;
-        pgmid_list_sz = (sizeof(hal::rpc_programid_t)*sfw_info->alg_opts.opt.msrpc_opts.uuid_sz);
-        rpc_info->pgm_ids = (hal::rpc_programid_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, pgmid_list_sz);
-        memcpy(rpc_info->pgm_ids, sfw_info->alg_opts.opt.msrpc_opts.uuids, pgmid_list_sz);
+        pgmid_list_sz = (sizeof(hal::rpc_uuid_t)*\
+                                 sfw_info->alg_opts.opt.msrpc_opts.uuid_sz);
+        rpc_info->pgm_ids = (rpc_uuid_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, pgmid_list_sz);
+        rpc = (hal::rpc_uuid_t *)rpc_info->pgm_ids;
+        for (uint8_t idx=0; idx<sfw_info->alg_opts.opt.msrpc_opts.uuid_sz; idx++) {
+             memcpy(rpc[idx].uuid, sfw_info->alg_opts.opt.msrpc_opts.uuids[idx].uuid, UUID_SZ); 
+             rpc[idx].timeout = sfw_info->alg_opts.opt.msrpc_opts.uuids[idx].timeout;
+        }
     }
 }
 
@@ -189,7 +233,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
 
     entry = (l4_alg_status_t *)wentry;
     rpc_info = (rpc_info_t *)entry->info;
-    if (entry->isCtrl != TRUE) {
+    if (entry->isCtrl != true && sfw_info != NULL) {
         sfw_info->skip_sfw = rpc_info->skip_sfw;
         sfw_info->idle_timeout = entry->idle_timeout;
         HAL_TRACE_DEBUG("Expected flow handler - skip sfw {}", sfw_info->skip_sfw);
@@ -228,27 +272,24 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
     key.flow_type = (rpc_info->addr_family == IP_PROTO_IPV6)?FLOW_TYPE_V6:FLOW_TYPE_V4;
     if (!timeout) {
         ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
-                                                  key, &exp_flow);
+                                                  key, &exp_flow, false, 0, true);
     } else {
         ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
                                                   key, &exp_flow, true, timeout, true);
     }
-    SDK_ASSERT(ret == HAL_RET_OK);
-    exp_flow->entry.handler = expected_flow_handler;
-    exp_flow->alg = l4_sess->alg;
-    exp_flow->idle_timeout = l4_sess->idle_timeout;
-    exp_flow->info = g_rpc_state->alg_info_slab()->alloc();
-    SDK_ASSERT(exp_flow->info != NULL);
-    exp_flow_info = (rpc_info_t *)exp_flow->info;
-    exp_flow_info->skip_sfw = TRUE;
-    if (exp_flow->alg == nwsec::APP_SVC_MSFT_RPC) {
-        memcpy(&exp_flow_info->uuid, &rpc_info->uuid, sizeof(rpc_info->uuid));
-    } else {
-        exp_flow_info->prog_num = rpc_info->prog_num;
+    SDK_ASSERT((ret == HAL_RET_OK || ret == HAL_RET_ENTRY_EXISTS));
+    if (ret == HAL_RET_OK) {
+        exp_flow->entry.handler = expected_flow_handler;
+        exp_flow->alg = l4_sess->alg;
+        exp_flow->idle_timeout = l4_sess->idle_timeout;
+        exp_flow->info = g_rpc_state->alg_info_slab()->alloc();
+        SDK_ASSERT(exp_flow->info != NULL);
+        exp_flow_info = (rpc_info_t *)exp_flow->info;
+        exp_flow_info->skip_sfw = true;
+        exp_flow_info->vers = rpc_info->vers;
+        exp_flow_info->callback = cb;
+        incr_num_exp_flows(rpc_info);
     }
-    exp_flow_info->vers = rpc_info->vers;
-    exp_flow_info->callback = cb;
-    incr_num_exp_flows(rpc_info);
     
     // Need to add the entry with a timer
     HAL_TRACE_DEBUG("Inserting RPC entry with key: {}", key);

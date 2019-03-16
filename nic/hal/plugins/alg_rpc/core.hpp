@@ -29,6 +29,7 @@ const std::string FTE_FEATURE_ALG_RPC("pensando.io/alg_rpc:alg_rpc");
 #define MAX_ALG_RPC_PKT_SZ  3000
 #define WORD_BYTES     4
 #define SHORT_BYTES    2
+#define UUID_SZ        16
 
 /*
  * Function prototypes
@@ -67,7 +68,7 @@ typedef struct rpc_info_ {
     uint32_t           vers;
     uint8_t            pkt_type;
     uint8_t            pgmid_sz;
-    rpc_programid_t   *pgm_ids;
+    void              *pgm_ids;
     union {
         struct { /* SUNRPC Info */
             uint32_t   xid;
@@ -78,7 +79,7 @@ typedef struct rpc_info_ {
             uint8_t    data_rep;
             uint32_t   call_id;
             uint8_t    act_id[16];
-            uint8_t    uuid[16];
+            uint8_t    uuid[UUID_SZ];
             uint8_t    msrpc_64bit;
             uint8_t    msrpc_ctxt_id[256];
             uint8_t    num_msrpc_ctxt;
@@ -97,7 +98,7 @@ void incr_parse_error(rpc_info_t *info);
 void incr_data_sess(rpc_info_t *info);
 void incr_max_pkt_sz(rpc_info_t  *info);
 void incr_num_exp_flows(rpc_info_t *info);
-void copy_sfw_info(sfw_info_t *sfw_info, rpc_info_t *rpc_info);
+void copy_sfw_info(sfw_info_t *sfw_info, l4_alg_status_t *l4_sess);
 
 }  // namespace alg_rpc
 }  // namespace plugins

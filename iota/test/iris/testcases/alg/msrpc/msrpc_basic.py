@@ -14,7 +14,7 @@ MSRPC_PORT = 135
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def Setup(tc):
-    #update_sgpolicy('msrpc')
+    update_sgpolicy('msrpc')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -136,9 +136,9 @@ def Trigger(tc):
     tc.cmd_cookies.append("msrpc start-client")
 
     # Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name,
-    #                       "/nic/bin/halctl show security flow-gate | grep MSRPC")
-    #tc.cmd_cookies.append("show security flow-gate")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show nwsec flow-gate")
+    tc.cmd_cookies.append("show security flow-gate")
 
     api.Trigger_AddNaplesCommand(req, naples.node_name,
                            "/nic/bin/halctl show session")

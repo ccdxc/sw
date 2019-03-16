@@ -178,7 +178,7 @@ TEST_F(rpc_test, msrpc_session)
 
 TEST_F(rpc_test, msrpc_exp_flow_timeout) {
     app_session_t   *app_sess = NULL;
-    l4_alg_status_t *exp_flow = NULL;
+    l4_alg_status_t *exp_flow1 = NULL, *exp_flow2 = NULL, *l4_sess = NULL;
     hal::flow_key_t  app_sess_key, exp_flow_key;
 
     app_sess_key.proto = (types::IPProtocol)IP_PROTO_TCP;
@@ -189,21 +189,22 @@ TEST_F(rpc_test, msrpc_exp_flow_timeout) {
 
     g_rpc_state->alloc_and_init_app_sess(app_sess_key, &app_sess);
 
+    g_rpc_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
+    l4_sess->isCtrl = true;
+    ASSERT_EQ(dllist_count(&app_sess->l4_sess_lhead), 1);
+
     exp_flow_key = app_sess_key;
     exp_flow_key.dport = 22345;
     g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
-                                         &exp_flow, true, 2);
-    sleep(30);
-    ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
-
+                                         &exp_flow1, true, 2);
     exp_flow_key.dport = 22346;
     g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
-                                         &exp_flow, true, 5);
-    exp_flow->entry.ref_count.count++;
+                                         &exp_flow2, true, 5);
+    exp_flow2->entry.ref_count.count++;
     sleep(15);
-    ASSERT_EQ(exp_flow->entry.deleting, true);
-    exp_flow->entry.ref_count.count--;
-    sleep(30);
+    ASSERT_EQ(exp_flow2->entry.deleting, true);
+    exp_flow2->entry.ref_count.count--;
+    sleep(15);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 }
 

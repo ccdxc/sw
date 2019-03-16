@@ -16,7 +16,7 @@
 #include "nic/hal/src/utils/rule_match.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 
-#define MAX_UUID_SZ 128
+#define MAX_UUID_SZ 16
 
 using sdk::lib::ht_ctxt_t;
 using acl::acl_ctx_t;
@@ -51,9 +51,14 @@ namespace hal {
 //
 
 typedef struct rpc_programid_ {
-    char     program_id[MAX_UUID_SZ];
+    uint32_t program_id;
     uint32_t timeout;
 } rpc_programid_t;
+
+typedef struct rpc_uuid_ {
+    uint8_t  uuid[MAX_UUID_SZ];
+    uint32_t timeout;
+} rpc_uuid_t;
 
 typedef struct nwsec_policy_appid_s {
     sdk_spinlock_t      slock;              // Lock to protect this structure
@@ -326,7 +331,7 @@ typedef struct alg_options {
 
         struct msrpc_options {
             uint8_t           uuid_sz;
-            rpc_programid_t  *uuids;
+            rpc_uuid_t       *uuids;
         } msrpc_opts;
 
         struct sunrpc_options {

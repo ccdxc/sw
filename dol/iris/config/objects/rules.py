@@ -34,12 +34,18 @@ class SvcObject(base.ConfigObjectBase):
                 app_data.ftp_option_info.allow_mismatch_ip_address=1
             elif (alg_name == "APP_SVC_MSFT_RPC"):
                 rpc_data = app_data.msrpc_option_info.data.add()
-                rpc_data.program_id = "e1af83085d1f11c991a408002b14a0fa"
+                rpc_data.program_id = "e1af8308-5d1f-11c9-91a4-08002b14a0fa"
+                rpc_data.idle_timeout = 3600000
+                rpc_data = app_data.msrpc_option_info.data.add()
+                rpc_data.program_id = "12345778-1234-abcd-ef00-0123456789ac"
                 rpc_data.idle_timeout = 3600000
                 app_data.idle_timeout = 3600000
             elif (alg_name == "APP_SVC_SUN_RPC"):
                 rpc_data = app_data.sun_rpc_option_info.data.add()
-                rpc_data.program_id = "10000"
+                rpc_data.program_id = "100000"
+                rpc_data.idle_timeout = 3600000
+                rpc_data = app_data.sun_rpc_option_info.data.add()
+                rpc_data.program_id = "100024"
                 rpc_data.idle_timeout = 3600000
                 app_data.idle_timeout = 3600000
         return

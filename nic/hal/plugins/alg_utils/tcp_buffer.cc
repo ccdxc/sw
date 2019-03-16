@@ -78,11 +78,12 @@ hal_ret_t
 tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len)
 {
     uint32_t end = seq + payload_len;
+    bool     data_handler_invoked = false;
 
     // If the end of the payload ends before our current sequence number,
     // its old duplicate data
     if (compare_seq_numbers(end, cur_seq_) <= 0) {
-        //HAL_TRACE_DEBUG("Payload ends before current seq: {} payload_len: {}", seq, payload_len);
+        HAL_TRACE_DEBUG("Payload ends before current seq: {} payload_len: {}", seq, payload_len);
         return HAL_RET_OK;
     }
 
@@ -99,7 +100,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
     // stored segments, call the handler without doing a copy
     if ((seq == cur_seq_) &&
         (num_segments_ <= 0 || compare_seq_numbers(end, segments_[0].start) < 0)) {
-        //HAL_TRACE_DEBUG("Calling data handler");
+        HAL_TRACE_DEBUG("Calling data handler1");
         size_t processed = data_handler_(handler_ctx_, payload, payload_len);
         SDK_ASSERT_RETURN(processed <= payload_len, HAL_RET_INVALID_ARG);
         cur_seq_ += processed;
@@ -110,17 +111,20 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
         seq += processed;
         payload += processed;
         payload_len -= processed;
-        HAL_TRACE_DEBUG("Processed bytes: {}", processed);
+        data_handler_invoked = true;
+        HAL_TRACE_DEBUG("Processed bytes: {} seq: {} end: {}", processed, seq, end);
     }
 
     // Allocate/expand the buffer
     if ((end - cur_seq_) > buff_size_) {
         if (buff_size_ == 0) {
+            // Set the buff size to minimum required, we increase as we go
+            buff_size_ = ((end-cur_seq_) > MIN_BUFF_SIZE)?((end-cur_seq_)+1):MIN_BUFF_SIZE;
             // first segment to store, allocate buffer
-            buff_ = (uint8_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF, MIN_BUFF_SIZE);
-            buff_size_ = MIN_BUFF_SIZE;
+            buff_ = (uint8_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF, buff_size_);
             segments_ = (segment_t *) HAL_MALLOC(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF,
                                                  sizeof(segment_t) * MAX_SEGMENTS);
+            HAL_TRACE_DEBUG("Allocate segment of size: {}", buff_size_);
         } else if (2*buff_size_ < MAX_BUFF_SIZE) {
             // expand the size of buffer
             uint8_t *new_buff = (uint8_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF,
@@ -153,7 +157,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
     }
 
     if (cur >= num_segments_) {
-        //HAL_TRACE_DEBUG("Adding new segment at the end");
+        HAL_TRACE_DEBUG("Adding new segment at the end");
         // add new segment at the end
         if (cur < MAX_SEGMENTS) {
             segments_[cur].start = seq;
@@ -164,7 +168,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
             return HAL_RET_OOB;
         }
     }  else if (compare_seq_numbers(end, segments_[cur].start) < 0) {
-        //HAL_TRACE_DEBUG("Move the segments and insert current segment");
+        HAL_TRACE_DEBUG("Move the segments and insert current segment");
         // new segment ends before the cur segment.
         // insert the new segment before the cur segment by moving
         // the rest of the segments
@@ -172,7 +176,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
         segments_[cur].start = seq;
         segments_[cur].end = end;
     } else {
-        //HAL_TRACE_DEBUG("Overlapping segment found, merging segments");
+        HAL_TRACE_DEBUG("Overlapping segment found, merging segments");
         // cur segment overlaps the new segment
         // adjust the cur segment and merge all the
         // overlapping segments
@@ -199,9 +203,10 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
     /* copy payload and call the handler */
     memcpy(buff_ + (seq - cur_seq_), payload, payload_len);
 
-    if ((segments_[0].start == cur_seq_) &&
+    // Invoke handler if we havent already
+    if (data_handler_invoked == false && (segments_[0].start == cur_seq_) &&
         (segments_[0].end - segments_[0].start) > reassembled_payload) {
-        //HAL_TRACE_DEBUG("Data handler invoked");
+        HAL_TRACE_DEBUG("Data handler invoked");
         size_t processed = data_handler_(handler_ctx_, buff_, segments_[0].end - segments_[0].start);
 
         SDK_ASSERT_RETURN(processed <= (segments_[0].end - segments_[0].start), HAL_RET_INVALID_ARG);

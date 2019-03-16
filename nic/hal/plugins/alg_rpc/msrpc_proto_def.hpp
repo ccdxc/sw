@@ -42,7 +42,7 @@ typedef struct uuid_s {
     uint8_t  clock_seq_hi;
     uint8_t  clock_seq_lo;
     uint8_t  node[6];
-} uuid_t;
+} __PACK__ uuid_t;
 
 typedef struct msprc_handle_s {
     uint32_t  attr;

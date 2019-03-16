@@ -16,6 +16,7 @@ namespace alg_rpc {
 
 thread_local msrpc_epm_req_hdr_t epm_req;
 thread_local msrpc_epm_rsp_hdr_t epm_rsp;
+thread_local char uuid_str[128];
 
 using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
@@ -158,6 +159,21 @@ std::ostream& operator<<(std::ostream& os, const msrpc_bind_ack_hdr_t& val) {
     }
 
     return os << "}";
+}
+
+static inline void
+__uuid_to_str(uuid_t *u, char *str) {
+    uint8_t offset=0;
+
+    sprintf(str, "%01x-%01x-%01x-%01x%01x-", u->time_lo, u->time_mid, 
+            u->time_hi_vers, u->clock_seq_hi, u->clock_seq_lo);
+    HAL_TRACE_DEBUG("UUID: {}", str);
+    offset = strlen(str);
+    for (int i=0; i<6; i++) {
+         sprintf(&str[offset], "%01x", u->node[i]);
+         HAL_TRACE_DEBUG("string {} offset {}", str[offset], u->node[i]);
+         offset += 2;
+    }
 }
 
 static inline void 
@@ -440,7 +456,7 @@ __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
                     uuid_offset = tmp_offset; 
                 }
                 if (pdu_type == PDU_RESP &&
-                    !memcmp(&pkt[tmp_offset], &rpc_info->uuid, UUID_BYTES)) {
+                    !memcmp(&pkt[tmp_offset], rpc_info->uuid, UUID_SZ)) {
                     set_dport = true;
                 }
                 break;
@@ -476,13 +492,13 @@ __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
             case EPM_PROTO_CN:
             case EPM_PROTO_DG:
                 if (pdu_type == PDU_REQ) {
-                    memcpy(&rpc_info->uuid, &pkt[uuid_offset], UUID_BYTES);
+                    uuid_t *uuid = (uuid_t*)rpc_info->uuid;
+                    memcpy(rpc_info->uuid, &pkt[uuid_offset], UUID_SZ);
+                    HAL_TRACE_DEBUG("RPC info UUID: {} floor proto: {} UUID Bytes: {}", *uuid, flr.protocol, UUID_BYTES);
                 }
                 rpc_info->vers = flr.version;
                 rpc_info->prot = (flr.protocol == EPM_PROTO_CN)?\
                                     IP_PROTO_TCP:IP_PROTO_UDP;
-                HAL_TRACE_DEBUG("RPC info UUID: {} floor proto: {}", rpc_info->uuid, flr.protocol);
-
             default:
                 // Move past anything we havent parsed apart from protocol
                 // for the lhs.
@@ -718,10 +734,13 @@ size_t process_msrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
 }
 
 static inline int get_is_uuid_allowed(rpc_info_t *rpc_info) {
+    rpc_uuid_t *rpc = (rpc_uuid_t *)rpc_info->pgm_ids;
+    uuid_t     *uuid = (uuid_t *)rpc_info->uuid;
+
     for (uint8_t idx=0; idx<rpc_info->pgmid_sz; idx++) {
-        HAL_TRACE_DEBUG("RPC Program num: {} program_id: {}", rpc_info->uuid, rpc_info->pgm_ids[idx].program_id);
-        if (memcmp(rpc_info->uuid, rpc_info->pgm_ids[idx].program_id, sizeof(rpc_info->uuid))) {
-            return rpc_info->pgm_ids[idx].timeout;
+        HAL_TRACE_DEBUG("RPC allowed uuid: {}  received uuid: {}", rpc[idx].uuid, *uuid);
+        if (!memcmp(rpc_info->uuid, (uint8_t *)&rpc[idx].uuid, UUID_BYTES)) {
+            return rpc[idx].timeout;
         }
     }
     return -1;
@@ -733,6 +752,8 @@ static inline int get_is_uuid_allowed(rpc_info_t *rpc_info) {
 static void reset_rpc_info(rpc_info_t *rpc_info) {
     if (rpc_info->pkt_len && rpc_info->pkt != NULL) {
         HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
+        rpc_info->pkt_len = 0;
+        rpc_info->pkt = NULL;
     }
     //memset(rpc_info, 0, sizeof(rpc_info_t));
     rpc_info->pkt_type = PDU_NONE;
@@ -1017,7 +1038,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             l4_sess->info = rpc_info;
             l4_sess->idle_timeout = sfw_info->idle_timeout;                
             reset_rpc_info(rpc_info);
-            copy_sfw_info(sfw_info, rpc_info);
+            copy_sfw_info(sfw_info, l4_sess);
             //Register feature session state
             ctx.register_feature_session_state(&l4_sess->fte_feature_state);
 

@@ -35,27 +35,31 @@ def Trigger(tc):
     tc.cmd_cookies.append("RPC Dump")
 
     # Add Naples command validation
-    api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-                           "sleep 60")
+    api.Trigger_AddNaplesCommand(req, naples.node_name, 
+                           "sleep 50", timeout=100)
     tc.cmd_cookies.append("sleep")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "/nic/bin/halctl show session --alg sunrpc")
-    #tc.cmd_cookies.append("show session")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "/nic/bin/halctl show security flow-gate | grep SUNRPC")
-    #tc.cmd_cookies.append("show security flow-gate")
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show session --alg sun_rpc")
+    tc.cmd_cookies.append("show session")
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show nwsec flow-gate | grep SUN_RPC")
+    tc.cmd_cookies.append("show security flow-gate")
 
     #Wait for more time for flow gate timeout
-    api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-                           "sleep 300")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "sleep 300", timeout=400)
     tc.cmd_cookies.append("sleep")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "/nic/bin/halctl show security flow-gate | grep SUNRPC")
-    #tc.cmd_cookies.append("show flow-gate timeout")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show nwsec flow-gate | grep SUN_RPC")
+    tc.cmd_cookies.append("show flow-gate timeout")
 
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+   
+    CleanupNFSServer(server, client) 
     return api.types.status.SUCCESS
 
 def Verify(tc):
@@ -68,17 +72,17 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            if tc.cmd_cookies[cookie_idx].find("Before") != -1:
+            if tc.cmd_cookies[cookie_idx].find("Before") != -1 or \
+               tc.cmd_cookies[cookie_idx].find("show flow-gate timeout") != -1:
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
         if (tc.cmd_cookies[cookie_idx].find("show session") != -1 and \
             cmd.stdout != ''):
             result = api.types.status.FAILURE
-        #Uncomment when ALG is pushed
-        #if (tc.cmd_cookies[cookie_idx].find("show security flow-gate") != -1 and \
-        #    cmd.stdout == ''):
-        #    result = api.types.status.FAILURE
+        if (tc.cmd_cookies[cookie_idx].find("show security flow-gate") != -1 and \
+            cmd.stdout == ''):
+            result = api.types.status.FAILURE
         #Check if flow-gate timed out
         if (tc.cmd_cookies[cookie_idx].find("show flow-gate timeout") != -1 and \
             cmd.stdout != ''):

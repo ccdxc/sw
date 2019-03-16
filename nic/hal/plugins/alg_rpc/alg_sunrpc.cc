@@ -360,6 +360,8 @@ static void reset_rpc_info(rpc_info_t *rpc_info) {
 
     if (rpc_info->pkt_len && rpc_info->pkt != NULL) {
         HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
+        rpc_info->pkt = NULL;
+        rpc_info->pkt_len = 0;
     }
     //memset(rpc_info, 0, sizeof(rpc_info_t));
     rpc_info->pkt_type = PMAPPROC_NULL;
@@ -367,10 +369,12 @@ static void reset_rpc_info(rpc_info_t *rpc_info) {
 }
 
 static inline int get_is_programid_allowed(rpc_info_t *rpc_info) {
+    rpc_programid_t *rpc = (rpc_programid_t *)rpc_info->pgm_ids;
+
     for (uint8_t idx=0; idx<rpc_info->pgmid_sz; idx++) {
-        HAL_TRACE_DEBUG("RPC Program num: {} program_id: {}", rpc_info->prog_num, rpc_info->pgm_ids[idx].program_id);
-        if (memcmp(&rpc_info->prog_num, rpc_info->pgm_ids[idx].program_id, sizeof(rpc_info->prog_num))) {
-            return rpc_info->pgm_ids[idx].timeout;
+        HAL_TRACE_DEBUG("RPC Program num: {} program_id: {}", rpc_info->prog_num, rpc[idx].program_id);
+        if (rpc_info->prog_num == rpc[idx].program_id) {
+            return rpc[idx].timeout;
         }
     }
     return -1;
@@ -419,6 +423,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
             if (rpc_info->pkt == NULL && !rpc_info->pkt_len) {
                 rpc_info->pkt = alloc_rpc_pkt();
                 rpc_info->payload_offset = rpc_msg_offset + WORD_BYTES;
+                rpc_info->pkt_len = 0;
             }
             if ((rpc_info->pkt) && (rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ) {
                 memcpy(&rpc_info->pkt[rpc_info->pkt_len], &pkt[pgm_offset], (pkt_len-pgm_offset));
@@ -471,7 +476,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                                                    &rpcb_list.rpcb_map, rpc_info);
                             if (!offset) {
                                 reset_rpc_info(rpc_info);
-                                return pkt_len;
+                                return 0;
                             }
 
                             rpc_info->xid = rpc_msg.rm_xid;
@@ -490,16 +495,16 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                                             (pkt_len-pgm_offset), &pmap_list, rpc_info);
                             if (!offset) {
                                 reset_rpc_info(rpc_info);
-                                return pkt_len;
+                                return 0;
                             }
                             rpc_info->xid = rpc_msg.rm_xid;
                             rpc_info->rpcvers = 2;
                             rpc_info->prog_num = pmap_list.pml_map.pm_prog;
                             rpc_info->prot  = pmap_list.pml_map.pm_prot;
                             rpc_info->dport = pmap_list.pml_map.pm_port;
-                            rpc_info->vers  = pmap_list.pml_map.pm_vers;
-                            HAL_TRACE_DEBUG("Prog num: {} proto: {}",
-                                                   rpc_info->prog_num, rpc_info->prot);
+                            rpc_info->vers  = rpc_msg.rm_call.cb_vers;
+                            HAL_TRACE_DEBUG("Prog num: {} proto: {} vers: {}",
+                                                   rpc_info->prog_num, rpc_info->prot, rpc_info->vers);
                             rpc_info->ip    = ctx->key().dip;
                         }
                         break;
@@ -514,7 +519,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                                    (pkt_len-pgm_offset), &rmtcallargs, rpc_info);
                         if (!offset) {
                             reset_rpc_info(rpc_info);
-                            return pkt_len;
+                            return 0;
                         }
                         rpc_info->prog_num = rmtcallargs.prog;
                         rpc_info->vers     = rmtcallargs.vers;
@@ -539,7 +544,8 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                                       (pkt_len-pgm_offset), &uaddr[0], rpc_info);
                         if (!offset) {
                             reset_rpc_info(rpc_info);
-                            return pkt_len;
+                            rpc_info->pkt_type = PMAPPROC_GETPORT;
+                            return 0;
                         }
                         decodeuaddr(rpcb_list.rpcb_map.r_addr, &rpc_info->ip, &rpc_info->dport,
                                        addr_family);
@@ -586,6 +592,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                                                     &rpcb_list.rpcb_map, rpc_info);
                         if (!offset) {
                             reset_rpc_info(rpc_info);
+                            rpc_info->pkt_type = PMAPPROC_DUMP;
                             return 0;
                         }
                         rpc_info->prog_num = rpcb_list.rpcb_map.r_prog;
@@ -603,6 +610,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                                          (pkt_len-pgm_offset), &pmap_list, rpc_info);
                         if (!offset) {
                             reset_rpc_info(rpc_info);
+                            rpc_info->pkt_type = PMAPPROC_DUMP;
                             return 0;
                         }
                         rpc_info->xid = rpc_msg.rm_xid;
@@ -629,6 +637,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                     HAL_TRACE_ERR("Packet len is too small to parse callit response");
                     incr_parse_error(rpc_info);
                     reset_rpc_info(rpc_info);
+                    rpc_info->pkt_type = PMAPPROC_CALLIT;
                     return 0;
                 }
                 rpc_info->dport = __pack_uint32(&pkt[pgm_offset], &offset);
@@ -673,10 +682,10 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             l4_sess->alg = nwsec::APP_SVC_SUN_RPC;
             rpc_info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
             SDK_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
-            l4_sess->isCtrl = TRUE;
+            l4_sess->isCtrl = true;
             l4_sess->info = rpc_info;
             reset_rpc_info(rpc_info);
-            copy_sfw_info(sfw_info, rpc_info);
+            copy_sfw_info(sfw_info, l4_sess);
 
             // Register completion handler and feature session state
             ctx.register_completion_handler(sunrpc_completion_hdlr);
@@ -720,14 +729,13 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
         }
     } else if (l4_sess && l4_sess->info && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
         rpc_info = (rpc_info_t *)l4_sess->info;
-        if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
-            // Set up TCP buffer for RFLOW
-            l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
+        if (l4_sess->isCtrl == true && ctx.key().proto == IP_PROTO_TCP) {
+            if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
+                // Set up TCP buffer for RFLOW
+                l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
                                                htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
                                                NULL, parse_sunrpc_control_flow);
-        }
-
-        if (l4_sess->isCtrl == true && ctx.key().proto == IP_PROTO_TCP) {
+            } 
             /*
              * This will only be executed for control channel packets that
              * would lead to opening up pinholes for FTP data sessions.
