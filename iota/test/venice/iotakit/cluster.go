@@ -136,14 +136,11 @@ func (tb *TestBed) SetupVeniceNodes() error {
 			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/k8s/"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("sudo cp -r /var/lib/pensando/pki/kubernetes/apiserver-client /pensando/iota/k8s/"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("sudo chmod -R 777 /pensando/iota/k8s/"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("if ! [ -f /tmp/kubernetes-server-linux-amd64.tar.gz ]; then curl -fL --retry 3 --keepalive-time 2  -o /tmp/kubernetes-server-linux-amd64.tar.gz  https://storage.googleapis.com/kubernetes-release/release/v1.7.14/kubernetes-server-linux-amd64.tar.gz; fi"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("tar xvf /tmp/kubernetes-server-linux-amd64.tar.gz  kubernetes/server/bin/kubectl"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("chmod 755 kubernetes/server/bin/kubectl"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("sudo cp kubernetes/server/bin/kubectl /usr/local/bin/kubectl"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf(`echo '/pensando/iota/kubernetes/server/bin/kubectl config set-cluster e2e --server=https://%s:6443 --certificate-authority=/pensando/iota/k8s/apiserver-client/ca-bundle.pem; 
-				/pensando/iota/kubernetes/server/bin/kubectl config set-context e2e --cluster=e2e --user=admin;
-				/pensando/iota/kubernetes/server/bin/kubectl config use-context e2e;
-				/pensando/iota/kubernetes/server/bin/kubectl config set-credentials admin --client-certificate=/pensando/iota/k8s/apiserver-client/cert.pem --client-key=/pensando/iota/k8s/apiserver-client/key.pem;
+			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/bin; docker run -v /pensando/iota/bin:/import registry.test.pensando.io:5000/pens-debug:v0.1"), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf(`echo '/pensando/iota/bin/kubectl config set-cluster e2e --server=https://%s:6443 --certificate-authority=/pensando/iota/k8s/apiserver-client/ca-bundle.pem; 
+				/pensando/iota/bin/kubectl config set-context e2e --cluster=e2e --user=admin;
+				/pensando/iota/bin/kubectl config use-context e2e;
+				/pensando/iota/bin/kubectl config set-credentials admin --client-certificate=/pensando/iota/k8s/apiserver-client/cert.pem --client-key=/pensando/iota/k8s/apiserver-client/key.pem;
 				' > /pensando/iota/setup_kubectl.sh
 				`, node.NodeName), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("chmod +x /pensando/iota/setup_kubectl.sh"), entity, node.NodeName)
@@ -221,7 +218,7 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) error {
 		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE && node.NodeName == leaderNode {
 			trig = tb.NewTrigger()
 			entity := node.NodeName + "_venice"
-			trig.AddCommand(fmt.Sprintf("/pensando/iota/kubernetes/server/bin/kubectl get pods -owide --no-headers"), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("/pensando/iota/bin/kubectl get pods -owide --no-headers"), entity, node.NodeName)
 
 			// trigger commands
 			triggerResp, err = trig.Run()

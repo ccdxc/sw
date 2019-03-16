@@ -209,6 +209,9 @@ helper-containers:
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.7 .
 	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.2 .
 
+debug-container:
+	scripts/create-debug-container.sh
+
 ui-container-helper:
 	cat venice/ui/venice-sdk/npm-shrinkwrap.json | jq 'del(.dependencies."@pensando/swagger-ts-generator")' > tools/docker-files/ui-container/venice-sdk/npm-shrinkwrap.json
 	cat venice/ui/venice-sdk/package.json | jq 'del(.dependencies."@pensando/swagger-ts-generator")' > tools/docker-files/ui-container/venice-sdk/package.json
