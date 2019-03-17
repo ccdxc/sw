@@ -90,6 +90,9 @@ dump_pkt(rpkt)
 ###############################################################################
 # end golden/main.cc
 ###############################################################################
+###############################################################################
+# begin scale/main.cc
+###############################################################################
 
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
 spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
@@ -98,8 +101,8 @@ spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
         UDP(sport=1000, dport=10000, chksum=0) / payload
 
 rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
-        IP(src='1.0.0.1', dst='1.0.0.5', id=0, ttl=64, chksum=0) / \
-        UDP(sport=0x8A9F, dport=0x19EB, chksum=0) / \
+        IP(src='1.0.0.2', dst='1.0.0.5', id=0, ttl=64, chksum=0x7873) / \
+        UDP(sport=0x0BE7, dport=0x19EB, chksum=0) / \
         MPLS(label=1, s=0) / \
         MPLS(label=0, s=1) / \
         IP( src='2.0.0.1', dst='192.0.2.1') / \
@@ -109,14 +112,14 @@ dump_pkt(spkt)
 dump_pkt(rpkt)
 
 spkt =  Ether(src='00:02:0b:0a:0d:0e', dst='00:02:01:00:00:01') / \
-        IP(src='1.0.0.3', dst='1.0.0.1', id=0, ttl=64, chksum=0) / \
+        IP(src='1.0.0.3', dst='1.0.0.2', id=0, ttl=64, chksum=0) / \
         UDP(sport=0x92BA, dport=6635, chksum=0) / \
         MPLS(label=1025, s=0) / \
         MPLS(label=1, s=1) / \
         IP(src='2.0.0.2', dst='2.0.0.1') / \
         UDP(sport=10000, dport=1000, chksum=0) / payload
 
-rpkt =  Ether(src='00:00:00:10:04:02', dst='00:00:00:10:04:01') / \
+rpkt =  Ether(src='00:00:00:40:09:01', dst='00:00:00:40:08:01') / \
         Dot1Q(vlan=1) / \
         IP(src='2.0.0.2', dst='2.0.0.1') / \
         UDP(sport=10000, dport=1000, chksum=0) / payload
@@ -130,8 +133,8 @@ spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
         UDP(sport=1000, dport=10000, chksum=0) / payload
 
 rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
-        IP(src='1.0.0.1', dst='1.0.0.3', id=0, ttl=64, chksum=0) / \
-        UDP(sport=0xE04E, dport=0x19EB, chksum=0) / \
+        IP(src='1.0.0.2', dst='1.0.0.3', id=0, ttl=64, chksum=0x7875) / \
+        UDP(sport=0x2C3B, dport=0x19EB, chksum=0) / \
         MPLS(label=1, s=0) / \
         MPLS(label=1025, s=1) / \
         IP( src='2.0.0.1', dst='2.0.32.1') / \
@@ -146,8 +149,8 @@ spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
         UDP(sport=1000, dport=10000, chksum=0) / payload
 
 rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
-        IP(src='1.0.0.1', dst='1.0.0.5', id=0, ttl=64, chksum=0) / \
-        UDP(sport=0xFE83, dport=0x19EB, chksum=0) / \
+        IP(src='1.0.0.2', dst='1.0.0.5', id=0, ttl=64, chksum=0x785F) / \
+        UDP(sport=0x6E00, dport=0x19EB, chksum=0) / \
         MPLS(label=1, s=0) / \
         MPLS(label=0, s=1) / \
         IPv6( src='2019::0200:0001', dst='2021::c000:0201') / \

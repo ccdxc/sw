@@ -8,7 +8,7 @@
             "mac-addr" : "0x000201000001",
             "dual-stack": "true",
             "_comment_" : "encap is either vxlan or mplsoudp",
-            "encap": "vxlan"
+            "encap": "mplsoudp"
         },
         {
             "kind" : "tep",
