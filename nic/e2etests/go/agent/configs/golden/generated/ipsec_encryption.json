@@ -89,7 +89,7 @@
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
       "local-gateway-ip": "10.7.6.4",
-      "remote-gateway-ip": "10.7.6.2",
+      "remote-gateway-ip": "10.7.6.3",
       "spi": 4,
       "tep-vrf": "scale-vrf-2"
     },

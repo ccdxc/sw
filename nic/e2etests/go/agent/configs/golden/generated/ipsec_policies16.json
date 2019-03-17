@@ -1,0 +1,599 @@
+[
+  {
+    "kind": "IPSecPolicy",
+    "meta": {
+      "name": "ipsec-encrypt-rules",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-0",
+      "attach-tenant": true,
+      "rules": [
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "40001-41000"
+              },
+              {
+                "protocol": "udp",
+                "port": "40001-41000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa1",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "41001-42000"
+              },
+              {
+                "protocol": "udp",
+                "port": "41001-42000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa2",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "42001-43000"
+              },
+              {
+                "protocol": "udp",
+                "port": "42001-43000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa3",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "43001-44000"
+              },
+              {
+                "protocol": "udp",
+                "port": "43001-44000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa4",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "43001-44000"
+              },
+              {
+                "protocol": "udp",
+                "port": "43001-44000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa4",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "44001-45000"
+              },
+              {
+                "protocol": "udp",
+                "port": "44001-45000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa5",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "45001-46000"
+              },
+              {
+                "protocol": "udp",
+                "port": "45001-46000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa6",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "46001-47000"
+              },
+              {
+                "protocol": "udp",
+                "port": "46001-47000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa7",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "47001-48000"
+              },
+              {
+                "protocol": "udp",
+                "port": "47001-48000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa8",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "48001-49000"
+              },
+              {
+                "protocol": "udp",
+                "port": "48001-49000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa9",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "49001-50000"
+              },
+              {
+                "protocol": "udp",
+                "port": "49001-50000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa10",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "50001-51000"
+              },
+              {
+                "protocol": "udp",
+                "port": "50001-51000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa11",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "51001-52000"
+              },
+              {
+                "protocol": "udp",
+                "port": "51001-52000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa12",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "52001-53000"
+              },
+              {
+                "protocol": "udp",
+                "port": "52001-53000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa13",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "53001-54000"
+              },
+              {
+                "protocol": "udp",
+                "port": "53001-54000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa14",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "54001-55000"
+              },
+              {
+                "protocol": "udp",
+                "port": "54001-55000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa15",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.5.0.0 - 10.5.255.255"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "55001-56000"
+              },
+              {
+                "protocol": "udp",
+                "port": "55001-56000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-sa16",
+          "sa-type": "ENCRYPT"
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "IPSecPolicy",
+    "meta": {
+      "name": "ipsec-decrypt-rules",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "rules": [
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa1",
+          "sa-type": "DECRYPT",
+          "spi": 1
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa2",
+          "sa-type": "DECRYPT",
+          "spi": 2
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa3",
+          "sa-type": "DECRYPT",
+          "spi": 3
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa4",
+          "sa-type": "DECRYPT",
+          "spi": 4
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa5",
+          "sa-type": "DECRYPT",
+          "spi": 5
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa6",
+          "sa-type": "DECRYPT",
+          "spi": 6
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa7",
+          "sa-type": "DECRYPT",
+          "spi": 7
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa8",
+          "sa-type": "DECRYPT",
+          "spi": 8
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa9",
+          "sa-type": "DECRYPT",
+          "spi": 9
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa10",
+          "sa-type": "DECRYPT",
+          "spi": 10
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa11",
+          "sa-type": "DECRYPT",
+          "spi": 11
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa12",
+          "sa-type": "DECRYPT",
+          "spi": 12
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa13",
+          "sa-type": "DECRYPT",
+          "spi": 13
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa14",
+          "sa-type": "DECRYPT",
+          "spi": 14
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa15",
+          "sa-type": "DECRYPT",
+          "spi": 15
+        },
+        {
+          "source": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "10.7.6.2 - 10.7.6.5"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-sa16",
+          "sa-type": "DECRYPT",
+          "spi": 16
+        }
+      ]
+    },
+    "status": {}
+  }
+]
