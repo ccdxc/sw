@@ -12,7 +12,7 @@
 #define __TEST_UTILS_MAPPING_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/include/api/pds_mapping.hpp"
+#include "nic/apollo/api/include/pds_mapping.hpp"
 
 namespace api_test {
 

@@ -6,7 +6,7 @@
 #include <iostream>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/agent/trace.hpp"
-#include "nic/apollo/include/api/pds_init.hpp"
+#include "nic/apollo/api/include/pds_init.hpp"
 
 namespace core {
 

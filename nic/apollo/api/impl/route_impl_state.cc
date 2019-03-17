@@ -6,7 +6,7 @@
  * @brief   This file contains route table datapath database handling
  */
 
-#include "nic/apollo/include/api/pds_route.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/impl/route_impl_state.hpp"
 
 namespace api {

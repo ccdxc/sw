@@ -13,8 +13,8 @@
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
-#include "nic/apollo/include/api/pds.hpp"
-#include "nic/apollo/include/api/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
 
 /// \defgroup PDS_ROUTE Route API
 /// @{
@@ -92,14 +92,12 @@ typedef struct pds_route_table_info_s {
 /// \brief create route table
 ///
 /// \param[in] spec route table configuration
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_route_table_create(pds_route_table_spec_t *spec);
 
 /// \brief delete route table
 ///
 /// \param[in] key key
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_route_table_delete(pds_route_table_key_t *key);
 

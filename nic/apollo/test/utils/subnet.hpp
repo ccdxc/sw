@@ -12,8 +12,8 @@
 #define __TEST_UTILS_SUBNET_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/include/api/pds_vcn.hpp"
-#include "nic/apollo/include/api/pds_subnet.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_subnet.hpp"
 
 namespace api_test {
 

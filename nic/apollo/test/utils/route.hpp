@@ -12,7 +12,7 @@
 #define __TEST_UTILS_ROUTE_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/include/api/pds_route.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
 
 namespace api_test {
 

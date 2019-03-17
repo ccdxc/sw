@@ -14,7 +14,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/l4.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
-#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 /// \defgroup PDS_POLICY Policy API
 /// @{
@@ -129,14 +129,12 @@ struct pds_policy_spec_s {
 /// \brief Create policy
 ///
 /// \param[in] policy Policy information
-//
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_create(pds_policy_spec_t *policy);
 
 /// \brief Delete policy
 ///
 /// \param[in] key Key
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_delete(_In_ pds_policy_key_t *key);
 

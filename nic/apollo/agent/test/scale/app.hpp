@@ -5,14 +5,14 @@
 #ifndef __TEST_APP_HPP__
 #define __TEST_APP_HPP__
 
-#include "nic/apollo/include/api/pds_tep.hpp"
-#include "nic/apollo/include/api/pds_vcn.hpp"
-#include "nic/apollo/include/api/pds_subnet.hpp"
-#include "nic/apollo/include/api/pds_vnic.hpp"
-#include "nic/apollo/include/api/pds_mapping.hpp"
-#include "nic/apollo/include/api/pds_policy.hpp"
-#include "nic/apollo/include/api/pds_device.hpp"
-#include "nic/apollo/include/api/pds_route.hpp"
+#include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_subnet.hpp"
+#include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
 
 sdk_ret_t create_route_table_grpc(pds_route_table_spec_t *rt);
 sdk_ret_t create_mapping_grpc(pds_mapping_spec_t *mapping);

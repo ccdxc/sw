@@ -8,7 +8,7 @@
 
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
-#include "nic/apollo/include/api/pds_route.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
 
 /**
  * @defgroup PDS_ROUTE_TABLE_API - first level of route table API handling

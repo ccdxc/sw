@@ -12,7 +12,7 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/pds_route.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
 
 namespace api {
 

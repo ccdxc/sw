@@ -13,7 +13,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
-#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 /// \defgroup PDS_INIT Initialization and teardown API
 /// @{
@@ -44,7 +44,6 @@ typedef struct pds_init_params_s {
 /// \brief Initialize routine
 ///
 /// \param[in] params Init time parameters
-///
 /// \eturn #SDK_RET_OK on success, failure status code on error
 sdk::sdk_ret_t pds_init(pds_init_params_t *params);
 

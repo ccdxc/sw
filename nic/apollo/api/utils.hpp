@@ -9,7 +9,7 @@
 #if !defined (__UTILS_HPP__)
 #define __UTILS_HPP__
 
-#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 namespace api {
 

@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
-#include "nic/apollo/include/api/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/pcn.hpp"
 

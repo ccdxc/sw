@@ -14,7 +14,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
-#include "nic/apollo/include/api/pds_init.hpp"
+#include "nic/apollo/api/include/pds_init.hpp"
 
 namespace api {
 namespace impl {

@@ -6,7 +6,7 @@
  * @brief   This file contains security policy datapath database handling
  */
 
-#include "nic/apollo/include/api/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/impl/security_policy_impl_state.hpp"
 
 namespace api {

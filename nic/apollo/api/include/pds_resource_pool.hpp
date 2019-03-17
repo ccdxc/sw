@@ -11,7 +11,7 @@
 #ifndef __INCLUDE_API_PDS_RESOURCE_POOL_HPP__
 #define __INCLUDE_API_PDS_RESOURCE_POOL_HPP__
 
-#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 /// \defgroup PDS_RESOURCE_POOL Resource pool API
 /// @{
@@ -60,14 +60,12 @@ typedef struct pds_rsrc_pool_s {
 /// \brief Create resource pool
 ///
 /// \param[in] rsrc_pool Resource pool information
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 pds_status_t pds_rsrc_pool_create(pds_rsrc_pool_t *rsrc_pool);
 
 /// \brief Delete resource pool
 ///
 /// \param[in] key Key
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 pds_status_t pds_rsrc_pool_delete(pds_rsrc_pool_key_t *key);
 

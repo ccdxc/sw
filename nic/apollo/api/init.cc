@@ -10,7 +10,7 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/include/api/pds_init.hpp"
+#include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"

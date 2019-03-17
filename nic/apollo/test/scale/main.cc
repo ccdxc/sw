@@ -11,8 +11,8 @@
 #include <gtest/gtest.h>
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/include/api/pds_batch.hpp"
-#include "nic/apollo/include/api/pds_device.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 

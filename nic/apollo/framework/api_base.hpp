@@ -14,7 +14,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
 #include "nic/apollo/framework/api.hpp"
-#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 using std::string;
 

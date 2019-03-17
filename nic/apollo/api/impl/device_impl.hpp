@@ -11,7 +11,7 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/pds_device.hpp"
+#include "nic/apollo/api/include/pds_device.hpp"
 
 namespace api {
 namespace impl {

@@ -13,14 +13,14 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api.hpp"
-#include "nic/apollo/include//api/pds_vcn.hpp"
-#include "nic/apollo/include/api/pds_mapping.hpp"
-#include "nic/apollo/include/api/pds_policy.hpp"
-#include "nic/apollo/include/api/pds_route.hpp"
-#include "nic/apollo/include/api/pds_subnet.hpp"
-#include "nic/apollo/include/api/pds_device.hpp"
-#include "nic/apollo/include/api/pds_tep.hpp"
-#include "nic/apollo/include/api/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/api/include/pds_subnet.hpp"
+#include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/api/include/pds_vnic.hpp"
 
 namespace api {
 

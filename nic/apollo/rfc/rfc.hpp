@@ -13,7 +13,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/l4.hpp"
-#include "nic/apollo/include/api/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
 
 namespace rfc {
 

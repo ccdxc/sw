@@ -10,8 +10,8 @@
 
 #include <stdarg.h>
 #include "base.hpp"
-#include "nic/apollo/include/api/pds.hpp"
-#include "nic/apollo/include/api/pds_init.hpp"
+#include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_init.hpp"
 
 /// Callback invoked for debug traces
 ///

@@ -13,10 +13,10 @@
 
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/include/api/pds.hpp"
-#include "nic/apollo/include/api/pds_vcn.hpp"
-#include "nic/apollo/include/api/pds_policy.hpp"
-#include "nic/apollo/include/api/pds_route.hpp"
+#include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_route.hpp"
 
 /// \defgroup PDS_SUBNET Subnet API
 /// @{
@@ -65,7 +65,6 @@ typedef struct pds_subnet_info_s {
 /// \brief Create subnet
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -81,7 +80,6 @@ sdk_ret_t pds_subnet_create(pds_subnet_spec_t *spec);
 ///
 /// \param[in] key Key
 /// \param[out] info Information
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -91,7 +89,6 @@ sdk_ret_t pds_subnet_read(pds_subnet_key_t *key, pds_subnet_info_t *info);
 /// \brief Update subnet
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -101,7 +98,6 @@ sdk_ret_t pds_subnet_update(pds_subnet_spec_t *spec);
 /// \brief Delete subnet
 ///
 /// \param[in] key Key
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark

@@ -13,7 +13,7 @@
 
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 /// \defgroup PDS_TEP Tunnel End Point API
 /// @{
@@ -63,7 +63,6 @@ typedef struct pds_tep_info_s {
 /// \brief Create TEP
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -76,7 +75,6 @@ sdk_ret_t pds_tep_create(pds_tep_spec_t *spec);
 ///
 /// \param[in] key Key
 /// \param[out] info Information
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -86,7 +84,6 @@ sdk_ret_t pds_tep_read(pds_tep_key_t *key, pds_tep_info_t *info);
 /// \brief Update TEP
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -96,7 +93,6 @@ sdk_ret_t pds_tep_update(pds_tep_spec_t *spec);
 /// \brief Delete TEP
 ///
 /// \param[in] key Key
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark

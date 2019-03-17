@@ -12,11 +12,11 @@
 #define __INCLUDE_API_PDS_MAPPING_HPP__
 
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/include/api/pds.hpp"
-#include "nic/apollo/include/api/pds_tep.hpp"
-#include "nic/apollo/include/api/pds_vcn.hpp"
-#include "nic/apollo/include/api/pds_subnet.hpp"
-#include "nic/apollo/include/api/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_subnet.hpp"
+#include "nic/apollo/api/include/pds_vnic.hpp"
 
 /// \defgroup PDS_MAPPING Mapping API
 /// @{
@@ -63,7 +63,6 @@ typedef struct pds_mapping_info_s {
 /// \brief Create IP mapping
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_mapping_create(pds_mapping_spec_t *spec);
 
@@ -71,21 +70,18 @@ sdk_ret_t pds_mapping_create(pds_mapping_spec_t *spec);
 ///
 /// \param[in] key Key
 /// \param[out] info Information
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_mapping_read(pds_mapping_key_t *key, pds_mapping_info_t *info);
 
 /// \brief Update IP mapping
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_mapping_update(pds_mapping_spec_t *spec);
 
 /// \brief Delete IP mapping
 ///
 /// \param[in] key Key
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_mapping_delete(pds_mapping_key_t *key);
 

@@ -10,7 +10,7 @@
 
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
-#include "nic/apollo/include/api/pds_mapping.hpp"
+#include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/mapping_impl.hpp"
 #include "nic/apollo/p4/include/defines.h"

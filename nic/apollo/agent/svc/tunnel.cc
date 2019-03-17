@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
-#include "nic/apollo/include/api/pds_tep.hpp"
+#include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
 
 // Build TEP API spec from protobuf spec

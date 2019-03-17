@@ -6,7 +6,7 @@
  * @brief   This file deals with PDS batch related APIs
  */
 
-#include "nic/apollo/include/api/pds_batch.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 
 /**

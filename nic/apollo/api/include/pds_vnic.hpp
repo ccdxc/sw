@@ -12,9 +12,9 @@
 #define __INCLUDE_API_PDS_VNIC_HPP__
 
 #include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/apollo/include/api/pds.hpp"
-#include "nic/apollo/include/api/pds_vcn.hpp"
-#include "nic/apollo/include/api/pds_subnet.hpp"
+#include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_subnet.hpp"
 
 /// \defgroup PDS_VNIC VNIC API
 /// @{
@@ -60,7 +60,6 @@ typedef struct pds_vnic_info_s {
 /// \brief Create VNIC
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_create(pds_vnic_spec_t *spec);
 
@@ -68,21 +67,18 @@ sdk_ret_t pds_vnic_create(pds_vnic_spec_t *spec);
 ///
 /// \param[in] key Key
 /// \param[out] info Information
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_read(pds_vnic_key_t *key, pds_vnic_info_t *info);
 
 /// \brief Update VNIC specification
 ///
 /// \param[in] spec Specififcation
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_update(pds_vnic_spec_t *spec);
 
 /// \brief Delete VNIC
 ///
 /// \param[in] key Key
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_delete(pds_vnic_key_t *key);
 

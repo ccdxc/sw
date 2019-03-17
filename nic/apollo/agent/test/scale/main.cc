@@ -24,7 +24,7 @@
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/test/utils/base.hpp"
-#include "nic/apollo/include/api/pds_device.hpp"
+#include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/agent/test/scale/app.hpp"
 
 using std::string;

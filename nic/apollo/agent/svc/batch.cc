@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
-#include "nic/apollo/include/api/pds_batch.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/agent/svc/batch.hpp"
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 extern flow_test *g_flow_test_obj;

@@ -12,7 +12,7 @@
 #define __INCLUDE_API_PDS_VCN_HPP__
 
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 /// \defgroup PDS_VCN VCN API
 /// @{
@@ -59,7 +59,6 @@ typedef struct pds_vcn_info_s {
 /// \brief Create VCN
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -74,7 +73,6 @@ sdk_ret_t pds_vcn_create(pds_vcn_spec_t *spec);
 ///
 /// \param[in] key Key
 /// \param[out] info Information
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -84,7 +82,6 @@ sdk_ret_t pds_vcn_read(pds_vcn_key_t *key, pds_vcn_info_t *info);
 /// \brief Update VCN
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -94,7 +91,6 @@ sdk_ret_t pds_vcn_update(pds_vcn_spec_t *spec);
 /// \brief Delete VCN
 ///
 /// \param[in] key Key
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark

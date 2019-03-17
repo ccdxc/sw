@@ -14,7 +14,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/p4/include/defines.h"
-#include "nic/apollo/include/api/pds.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 /// \defgroup PDS_DEVICE Device API
 /// @{
@@ -57,7 +57,6 @@ typedef struct pds_device_info_s {
 /// \brief Create device
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
@@ -69,15 +68,12 @@ sdk_ret_t pds_device_create(pds_device_spec_t *spec);
 /// \brief Read device
 ///
 /// \param[out] info Information
-///
 /// \return #SDK_RET_OK on success, failure status code on error
-///
 sdk_ret_t pds_device_read(pds_device_info_t *info);
 
 /// \brief Update device
 ///
 /// \param[in] spec Specification
-///
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark

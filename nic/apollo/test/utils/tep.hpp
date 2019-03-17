@@ -12,7 +12,7 @@
 #define __TEST_UTILS_TEP_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/include/api/pds_tep.hpp"
+#include "nic/apollo/api/include/pds_tep.hpp"
 
 namespace api_test {
 

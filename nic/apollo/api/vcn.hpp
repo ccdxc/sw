@@ -13,7 +13,7 @@
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/include/api/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
 
 namespace api {
 

@@ -8,7 +8,7 @@
 
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
-#include "nic/apollo/include/api/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
 
 /**
  * @defgroup PDS_POLICY_API - first level of security policy API handling

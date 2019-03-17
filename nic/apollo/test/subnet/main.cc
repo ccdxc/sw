@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/include/api/pds_batch.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/vcn.hpp"

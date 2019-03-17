@@ -12,7 +12,7 @@
 #define __TEST_UTILS_VCN_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/include/api/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vcn.hpp"
 
 namespace api_test {
 
