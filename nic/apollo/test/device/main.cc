@@ -56,7 +56,7 @@ protected:
 /// \brief Create and delete a device in the same batch
 /// The operation should be de-duped by framework and effectively
 /// a NO-OP from hardware perspective
-TEST_F(device_test, DISABLED_device_workflow_1) {
+TEST_F(device_test, device_workflow_1) {
     pds_batch_params_t batch_params = {0};
     pds_device_info_t info;
     device_util device_obj(k_device_ip_str, k_mac_addr_str,

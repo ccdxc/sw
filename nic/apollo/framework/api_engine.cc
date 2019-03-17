@@ -19,7 +19,7 @@ namespace api {
 /// @{
 
 static pds_epoch_t    g_current_epoch_ = PDS_EPOCH_INVALID;
-api_engine     g_api_engine;
+api_engine            g_api_engine;
 
 pds_epoch_t
 get_current_epoch (void)
@@ -340,7 +340,8 @@ api_engine::program_config_stage_(void) {
     batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
-        ret = reserve_resources_(it->first, &it->second);
+        ret = reserve_resources_(it->first,
+                                 &batch_ctxt_.dirty_obj_map[it->first]);
         if (ret != SDK_RET_OK) {
             goto error;
         }
@@ -352,7 +353,8 @@ api_engine::program_config_stage_(void) {
     batch_ctxt_.stage = API_BATCH_STAGE_PROGRAM_CONFIG;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
-        ret = program_config_(it->first, &it->second);
+        ret = program_config_(it->first,
+                              &batch_ctxt_.dirty_obj_map[it->first]);
         if (ret != SDK_RET_OK) {
             goto error;
         }
@@ -455,7 +457,8 @@ api_engine::activate_config_stage_(void) {
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
              it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
-        ret = activate_config_(it->first, &it->second);
+        ret = activate_config_(it->first,
+                               &batch_ctxt_.dirty_obj_map[it->first]);
         SDK_ASSERT(ret == SDK_RET_OK);
         del_from_dirty_list_(it, it->first);
     }
@@ -602,9 +605,6 @@ api_engine::batch_commit(void) {
     }
 
     // clear all batch related info
-    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
-    batch_ctxt_.stage = API_BATCH_STAGE_NONE;
-
     // walk all API contexts and free the api params allocated
     PDS_TRACE_INFO("Clearing API contexts ...");
     for (auto it = batch_ctxt_.api_ctxts.begin();
@@ -629,6 +629,9 @@ api_engine::batch_commit(void) {
     PDS_TRACE_INFO("Advancing from epoch %u to epoch %u",
                    g_current_epoch_, batch_ctxt_.epoch);
     g_current_epoch_ = batch_ctxt_.epoch;
+    batch_ctxt_.epoch = PDS_EPOCH_INVALID;
+    batch_ctxt_.stage = API_BATCH_STAGE_NONE;
+
     return SDK_RET_OK;
 }
 
@@ -645,7 +648,8 @@ api_engine::batch_abort(void) {
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
          it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
-        ret = rollback_config_(it->first, &it->second);
+        ret = rollback_config_(it->first,
+                               &batch_ctxt_.dirty_obj_map[it->first]);
         SDK_ASSERT(ret == SDK_RET_OK);
         del_from_dirty_list_(it, it->first);
     }
