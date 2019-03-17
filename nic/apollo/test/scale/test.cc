@@ -152,6 +152,8 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
         v6route_table.key.id = ntables + i;
         for (uint32_t j = 0; j < num_routes; j++) {
             v6route_table.routes[j].prefix = *v6_route_pfx;
+            v6route_table.routes[j].prefix.addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2] =
+                    htonl(0xF1D0D1D0);
             v6route_table.routes[j].prefix.addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
                     htonl((0xC << 28) | (v6rtnum++ << 8));
             v6route_table.routes[j].prefix.len = 120;

@@ -145,15 +145,15 @@ dump_pkt(rpkt)
 
 spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
         Dot1Q(vlan=1) / \
-        IPv6( src='2019::0200:0001', dst='2021::c000:0201') / \
+        IPv6( src='2019::0200:0001', dst='2021::f1d0:d1d0:c000:0201') / \
         UDP(sport=1000, dport=10000, chksum=0) / payload
 
 rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
         IP(src='1.0.0.2', dst='1.0.0.5', id=0, ttl=64, chksum=0x785F) / \
-        UDP(sport=0x6E00, dport=0x19EB, chksum=0) / \
+        UDP(sport=0x9DDE, dport=0x19EB, chksum=0) / \
         MPLS(label=1, s=0) / \
         MPLS(label=0, s=1) / \
-        IPv6( src='2019::0200:0001', dst='2021::c000:0201') / \
+        IPv6( src='2019::0200:0001', dst='2021::f1d0:d1d0:c000:0201') / \
         UDP(sport=1000, dport=10000, chksum=0) / payload
 
 dump_pkt(spkt)
