@@ -1520,7 +1520,7 @@ typedef struct tcptkle_timer_ctx_ {
 #define BUILD_TCP_SEND_FIN       0x04
  
 static uint32_t
-build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
+build_tcp_packet (hal::flow_t *flow, session_t *session,
                   flow_state_t state,
                   pd::cpu_to_p4plus_header_t *cpu_header,
                   pd::p4plus_to_p4_header_t *p4plus_header,
@@ -1560,8 +1560,13 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
 
     ret = ep_get_from_flow_key(&key, &sep, &dep);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Couldnt get SEP/DEP from session :{}", key);
-        return 0;
+        if (session->sep_handle != HAL_HANDLE_INVALID) 
+            sep = find_ep_by_handle(session->sep_handle);
+
+        if (sep == NULL) {
+            HAL_TRACE_ERR("Couldnt get SEP/DEP from session :{}", key);
+            return 0;
+        }
     }
     sl2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
     if (sl2seg == NULL) {
@@ -1573,7 +1578,7 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
         cpu_header->src_lif = HAL_LIF_CPU;
         if (flow->pgm_attrs.use_vrf) {
             pd::pd_vrf_get_fromcpu_vlanid_args_t args;
-            args.vrf = hal::vrf_lookup_by_handle(vrf_handle);
+            args.vrf = hal::vrf_lookup_by_handle(session->vrf_handle);
             args.vid = &cpu_header->hw_vlan_id;
 
             pd_func_args.pd_vrf_get_fromcpu_vlanid = &args;
@@ -1749,9 +1754,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
                     session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
 #endif
-    if ((tcp_session && (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
-        TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout) ||
-        (TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout)) {
+    if (TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout) {
         // session hasn't aged yet, move on
         retval = SESSION_AGED_IFLOW;
     }
@@ -1759,9 +1762,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     if (session->rflow) {
         //check responder flow. Check for session state as we dont want to age half-closed
         //connections if half-closed timeout is disabled.
-        if ((tcp_session && (session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
-            TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) ||
-            (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout)) {
+        if (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) {
             // responder flow seems to be active still
             if (retval == SESSION_AGED_IFLOW)
                 retval = SESSION_AGED_BOTH;
@@ -1817,14 +1818,18 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
      * incremented the packet count and we should rely on that.
      */
     if ((ctx->aged_flow == SESSION_AGED_IFLOW && 
+        (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
          session_state.iflow_state.packets < (ctx->session_state.iflow_state.packets + 1)) || 
         (ctx->aged_flow == SESSION_AGED_BOTH &&
+        (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
          session_state.iflow_state.packets <= (ctx->session_state.iflow_state.packets + 1))) {
         ret = SESSION_AGED_IFLOW;
     }
     if ((ctx->aged_flow == SESSION_AGED_RFLOW &&
-         session_state.iflow_state.packets < (ctx->session_state.iflow_state.packets + 1)) ||
+        (session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
+         session_state.rflow_state.packets < (ctx->session_state.rflow_state.packets + 1)) ||
         (ctx->aged_flow == SESSION_AGED_BOTH &&
+        (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
          session_state.rflow_state.packets <= (ctx->session_state.rflow_state.packets + 1))) {
         if (ret == SESSION_AGED_IFLOW)
             ret = SESSION_AGED_BOTH;
@@ -1882,17 +1887,23 @@ build_and_send_tcp_pkt (void *data)
          */
         if ((ctxt->aged_flow == SESSION_AGED_IFLOW ||
              ctxt->aged_flow == SESSION_AGED_BOTH) && (session->rflow)) {
-            sz = build_tcp_packet(session->rflow, session->vrf_handle,
+            sz = build_tcp_packet(session->rflow, session,
                              ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
                              pkt, flags);
+            // There was some issue with packet construction
+            // bail out
+            if (!sz) goto cleanup;
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_tickles_sent, 1);
         }
         if ((ctxt->aged_flow == SESSION_AGED_RFLOW ||
              ctxt->aged_flow == SESSION_AGED_BOTH)) {
-            sz = build_tcp_packet(session->iflow, session->vrf_handle,
+            sz = build_tcp_packet(session->iflow, session,
                              ctxt->session_state.iflow_state, &cpu_header, &p4plus_header, 
                              pkt, flags);
+            // There was some issue with packet construction
+            // bail out
+            if (!sz) goto cleanup; 
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
         }
@@ -1917,18 +1928,20 @@ build_and_send_tcp_pkt (void *data)
     if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
         ctxt->aged_flow == SESSION_AGED_BOTH) {
         flags |= BUILD_TCP_SEND_RST;
-        sz = build_tcp_packet(session->iflow, session->vrf_handle,
+        sz = build_tcp_packet(session->iflow, session,
                               ctxt->session_state.iflow_state, &cpu_header, &p4plus_header,
                               pkt, flags);
+        if (!sz) goto cleanup;
         fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
         SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
     }
     if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
         ctxt->aged_flow == SESSION_AGED_BOTH) {
         flags |= BUILD_TCP_SEND_RST;
-        sz = build_tcp_packet(session->rflow, session->vrf_handle,
+        sz = build_tcp_packet(session->rflow, session,
                               ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
                               pkt, flags);
+        if (!sz) goto cleanup;
         fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
   
         SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
@@ -2031,7 +2044,8 @@ session_age_cb (void *entry, void *ctxt)
          *  seconds. We send 3 tickles (keepalives) before we send out TCP RST
          *  and proceed to delete the session
          */
-        if (session->iflow->config.key.proto == IPPROTO_TCP) {
+        if ((session->iflow->config.key.proto == IPPROTO_TCP) && 
+            (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED)) {
             tklectx = (tcptkle_timer_ctx_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,
                                                      sizeof(tcptkle_timer_ctx_t));
             SDK_ASSERT_RETURN((tklectx != NULL), false);
@@ -2843,18 +2857,20 @@ session_send_tcp_fin (void *data) {
 
     if (local_dst && 
         session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
-        sz = build_tcp_packet(session->iflow, session->vrf_handle,
+        sz = build_tcp_packet(session->iflow, session,
                               session_state.iflow_state, &cpu_header, &p4plus_header,
                               pkt, flags);
-        fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+        if (sz) 
+            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
     }
 
     if (local_src && 
         session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
-        sz = build_tcp_packet(session->rflow, session->vrf_handle,
+        sz = build_tcp_packet(session->rflow, session,
                               session_state.rflow_state, &cpu_header, &p4plus_header,
                               pkt, flags);
-        fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+        if (sz)
+            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
     }
 
     HAL_FREE(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN, tcpfin);

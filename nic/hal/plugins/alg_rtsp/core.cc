@@ -28,6 +28,38 @@ static inline bool session_state_is_reset(session_t *session) {
             (session->rflow && session->rflow->state == session::FLOW_TCP_STATE_RESET)));
 }
 
+static inline uint32_t get_num_data_sessions(alg_utils::app_session_t *app_sess) {
+    dllist_ctxt_t   *lentry=NULL, *next=NULL;
+    uint32_t num_data_sess = 0;
+
+    if (!dllist_empty(&app_sess->l4_sess_lhead))
+        num_data_sess += dllist_count(&app_sess->l4_sess_lhead);
+    dllist_for_each_safe(lentry, next, &app_sess->app_sess_lentry)
+    {
+        alg_utils::app_session_t *rtsp_sess = dllist_entry(lentry,
+                          alg_utils::app_session_t, app_sess_lentry);
+        num_data_sess += dllist_count(&rtsp_sess->l4_sess_lhead);
+    }
+
+    return num_data_sess;
+}
+
+static inline uint32_t get_num_exp_flows(alg_utils::app_session_t *app_sess) {
+    dllist_ctxt_t   *lentry = NULL, *next = NULL;
+    uint32_t num_exp_flow = 0;
+
+    if (!dllist_empty(&app_sess->exp_flow_lhead))
+        num_exp_flow += dllist_count(&app_sess->exp_flow_lhead);
+    dllist_for_each_safe(lentry, next, &app_sess->app_sess_lentry)
+    {
+        alg_utils::app_session_t *rtsp_sess = dllist_entry(lentry,
+                          alg_utils::app_session_t, app_sess_lentry);
+        num_exp_flow += dllist_count(&rtsp_sess->exp_flow_lhead);
+    }
+
+    return num_exp_flow;
+}
+
 /*
  * APP Session get handler
  */
@@ -54,7 +86,13 @@ fte::pipeline_action_t alg_rtsp_session_get_cb(fte::ctx_t &ctx) {
         sess_resp->mutable_status()->mutable_rtsp_info()->\
                                 set_iscontrol(true);
         sess_resp->mutable_status()->mutable_rtsp_info()->\
-                                set_parse_errors((ctrl_sess)?ctrl_sess->parse_errors:0);
+                  set_parse_errors((ctrl_sess)?ctrl_sess->parse_errors:0);
+        sess_resp->mutable_status()->mutable_rtsp_info()->\
+                 set_num_data_sess(get_num_data_sessions(l4_sess->app_session));
+        sess_resp->mutable_status()->mutable_rtsp_info()->\
+                 set_num_exp_flows(get_num_exp_flows(l4_sess->app_session));
+        sess_resp->mutable_status()->mutable_rtsp_info()->\
+                 set_num_rtsp_sessions(dllist_count(&l4_sess->app_session->app_sess_lentry));
     } else {
         sess_resp->mutable_status()->mutable_rtsp_info()->\
                                set_iscontrol(false);
@@ -83,14 +121,17 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
     if (l4_sess == NULL || l4_sess->alg != nwsec::APP_SVC_RTSP)
         return fte::PIPELINE_CONTINUE;
 
+    HAL_TRACE_DEBUG("Cleaning up RTSP session for session: {}", ctx.session()->hal_handle);
+
     app_sess = l4_sess->app_session;
     if (l4_sess->isCtrl == true) {
         if (ctx.force_delete() || session_state_is_reset(ctx.session()) ||
-            lib::dllist_empty(&app_sess->app_sess_lentry)) {
+            (get_num_data_sessions(l4_sess->app_session) == 1)) {
             /*
              * Clean up app session if (a) its a force delete or
              * (b) if there are no rtsp session hanging off this app session
              */
+            HAL_TRACE_DEBUG("Cleanup app session");
             g_rtsp_state->cleanup_app_session(l4_sess->app_session);
             return fte::PIPELINE_CONTINUE;
         } else if ((ctx.session()->iflow->state >= session::FLOW_TCP_STATE_FIN_RCVD) ||
@@ -119,22 +160,16 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
              return fte::PIPELINE_END;
         }
     }
+
+    HAL_TRACE_DEBUG("Cleaning up L4 session");
     /*
      * Cleanup the data session that is getting timed out
      */
     g_rtsp_state->cleanup_l4_sess(l4_sess);
-    if (ctx.force_delete() && lib::dllist_empty(&app_sess->exp_flow_lhead) &&
-        lib::dllist_empty(&app_sess->l4_sess_lhead)) {
-        /*
-         * If this was the last session hanging and there are no
-         * expected flows or L4 sessions go ahead and clean up the
-         * app session
-         */
-        g_rtsp_state->cleanup_app_session(l4_sess->app_session);
-    } else if (dllist_empty(&app_sess->exp_flow_lhead) &&
-               dllist_count(&app_sess->l4_sess_lhead) == 1) {
+    if (app_sess->ctrl_app_sess != NULL && 
+        (get_num_data_sessions(l4_sess->app_session->ctrl_app_sess) == 1)) {
         alg_utils::l4_alg_status_t   *ctrl_l4_sess = (alg_utils::l4_alg_status_t *)dllist_entry(\
-                     app_sess->l4_sess_lhead.next, alg_utils::l4_alg_status_t, l4_sess_lentry);
+                     app_sess->ctrl_app_sess->l4_sess_lhead.next, alg_utils::l4_alg_status_t, l4_sess_lentry);
         /*
          * There are cases when the FIN is received back to back and control
          * session ends up processing it first. In those cases, we reject control

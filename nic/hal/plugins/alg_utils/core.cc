@@ -460,6 +460,8 @@ hal_ret_t alg_state::insert_app_sess (app_session_t *app_session,
 
     SDK_SPINLOCK_INIT(&app_session->slock, PTHREAD_PROCESS_PRIVATE);
 
+    dllist_reset(&app_session->exp_flow_lhead);
+    dllist_reset(&app_session->l4_sess_lhead);
     dllist_reset(&app_session->app_sess_lentry);
 
     if (ctrl_app_sess) {
@@ -467,6 +469,7 @@ hal_ret_t alg_state::insert_app_sess (app_session_t *app_session,
             // Link this app session to the control app session
             dllist_add(&ctrl_app_sess->app_sess_lentry, &app_session->app_sess_lentry);
         SDK_SPINLOCK_UNLOCK(&ctrl_app_sess->slock);
+        app_session->ctrl_app_sess = ctrl_app_sess;
     }
 
     return rc;

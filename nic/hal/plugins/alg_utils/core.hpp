@@ -178,6 +178,7 @@ typedef struct app_session_s {
     dllist_ctxt_t        exp_flow_lhead;            // List of expected flows that this app session has created
     dllist_ctxt_t        app_sess_lentry;            // List of App sessions that this App session has created
     ht_ctxt_t            app_sess_ht_ctxt;          // App session hash table context
+    app_session_s       *ctrl_app_sess;             // Pointer back to control app session 
 } app_session_t;
 
 //-----------------------------------------------------------------------------

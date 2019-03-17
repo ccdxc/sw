@@ -59,7 +59,7 @@ fte::pipeline_action_t alg_ftp_session_get_cb(fte::ctx_t &ctx) {
 
     sess_resp->mutable_status()->set_alg(nwsec::APP_SVC_FTP);
 
-    if (l4_sess->isCtrl == TRUE) {
+    if (l4_sess->isCtrl == true) {
         ftp_info_t *info = ((ftp_info_t *)l4_sess->info);
         if (info) {
             sess_resp->mutable_status()->mutable_ftp_info()->\
@@ -67,6 +67,10 @@ fte::pipeline_action_t alg_ftp_session_get_cb(fte::ctx_t &ctx) {
         }
         sess_resp->mutable_status()->mutable_ftp_info()->\
                                 set_iscontrol(true);
+        sess_resp->mutable_status()->mutable_ftp_info()->\
+                      set_num_data_sess(dllist_count(&l4_sess->app_session->l4_sess_lhead)-1);
+        sess_resp->mutable_status()->mutable_ftp_info()->\
+                      set_num_exp_flows(dllist_count(&l4_sess->app_session->exp_flow_lhead));
     } else {
         sess_resp->mutable_status()->mutable_ftp_info()->\
                                set_iscontrol(false);
@@ -98,9 +102,8 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
     app_sess = l4_sess->app_session;
     if (l4_sess->isCtrl == true) {
         if (ctx.force_delete() == true || session_state_is_reset(ctx.session()) ||
-            (dllist_empty(&app_sess->exp_flow_lhead) &&
-             dllist_count(&app_sess->l4_sess_lhead) == 1 &&
-            ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
+            (dllist_count(&app_sess->l4_sess_lhead) == 1 &&
+             ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
                                  l4_alg_status_t, l4_sess_lentry)) == l4_sess)) {
             /*
              * Clean up app session if (a) its a force delete or
@@ -141,16 +144,7 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
      * Cleanup the data session that is getting timed out
      */
     g_ftp_state->cleanup_l4_sess(l4_sess);
-    if (ctx.force_delete() && dllist_empty(&app_sess->exp_flow_lhead) &&
-        dllist_count(&app_sess->l4_sess_lhead)) {
-        /*
-         * If this was the last session hanging and there is no
-         * HAL session for control session. This is the right time
-         * to clean it
-         */
-        g_ftp_state->cleanup_app_session(l4_sess->app_session);
-    } else if (dllist_empty(&app_sess->exp_flow_lhead) && 
-               dllist_count(&app_sess->l4_sess_lhead) == 1) {
+    if (dllist_count(&app_sess->l4_sess_lhead) == 1) {
         l4_alg_status_t   *ctrl_l4_sess = (l4_alg_status_t *)dllist_entry(\
                   app_sess->l4_sess_lhead.next, l4_alg_status_t, l4_sess_lentry);
         /*

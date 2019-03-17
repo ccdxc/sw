@@ -92,10 +92,6 @@ def Trigger(tc):
     SetupFTPClient(client.node_name, client.workload_name, server)
 
     for cnt in range(tc.args.count):
-        api.Trigger_AddNaplesCommand(req, naples.node_name,
-                               "/nic/bin/halctl clear session --alg ftp")
-        tc.cmd_cookies.append("clear session alg")
-
         api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                               "cd ftpdir && chmod +x ftp.sh && ./ftp.sh")
         tc.cmd_cookies.append("Run FTP")
@@ -107,8 +103,12 @@ def Trigger(tc):
 
 
     api.Trigger_AddNaplesCommand(req, naples.node_name,
-                               "/nic/bin/halctl clear session --alg ftp")
-    tc.cmd_cookies.append("clear session alg")
+                               "sleep 250", timeout=300)
+    tc.cmd_cookies.append("sleep")
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                               "/nic/bin/halctl show session --alg ftp")
+    tc.cmd_cookies.append("show session")
  
     api.Trigger_AddNaplesCommand(req, naples.node_name,
                          "/nic/bin/halctl show system memory slab --yaml")

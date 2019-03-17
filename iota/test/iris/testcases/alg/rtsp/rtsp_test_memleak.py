@@ -68,11 +68,15 @@ def Trigger(tc):
         api.Trigger_AddNaplesCommand(req, naples.node_name,
                             "/nic/bin/halctl show nwsec flow-gate | grep RTSP")
         tc.cmd_cookies.append("show flow-gate") 
- 
-        api.Trigger_AddNaplesCommand(req, naples.node_name,
-                             "/nic/bin/halctl clear session")
-        tc.cmd_cookies.append("clear session")
 
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                               "sleep 250", timeout=300)
+    tc.cmd_cookies.append("sleep")
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg rtsp")
+    tc.cmd_cookies.append("show session RTSP established")
+ 
     api.Trigger_AddNaplesCommand(req, naples.node_name,
                          "/nic/bin/halctl show system memory slab --yaml")
     tc.cmd_cookies.append("show memory slab")

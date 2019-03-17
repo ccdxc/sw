@@ -191,7 +191,7 @@ done:
  */
 static void
 start_tcp_cxnsetup_timer (fte::ctx_t& ctx, bool status) {
-    if (status && ctx.session()) {
+    if (status && ctx.session() && !ctx.drop()) {
         hal::schedule_tcp_cxnsetup_timer(ctx.session());
     }
 }
