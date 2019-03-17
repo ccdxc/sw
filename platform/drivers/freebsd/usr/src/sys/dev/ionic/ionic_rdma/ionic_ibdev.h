@@ -45,7 +45,6 @@
 #include "ionic_fw.h"
 #include "ionic_ibdebug.h"
 #include "ionic_queue.h"
-#include "ionic_kcompat.h"
 #include "res.h"
 #include "table.h"
 
@@ -334,7 +333,6 @@ struct ionic_qp {
 	u16			rq_cmb_prod;
 
 	/* infrequently accessed, keep at end */
-	int			sgid_index;
 	bool			sq_is_cmb;
 	int			sq_cmb_order;
 	u32			sq_cmb_pgid;
@@ -363,7 +361,6 @@ struct ionic_qp {
 struct ionic_ah {
 	struct ib_ah		ibah;
 	u32			ahid;
-	int			sgid_index;
 };
 
 struct ionic_mr {

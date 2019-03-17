@@ -12,6 +12,7 @@
     autoconf \
     cmake \
     gcc \
+    libnl-devel \
     libnl3-devel \
     libudev-devel \
     make \

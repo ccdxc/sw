@@ -660,10 +660,6 @@ struct ionic_v1_admin_wqe {
 			__u8		rsvd[40];
 		} ah;
 		struct {
-			__le64		dma_addr;
-			__u8		rsvd[48];
-		} query_ah;
-		struct {
 			__le64		va;
 			__le64		length;
 			__le32		pd_id;
@@ -729,11 +725,10 @@ struct ionic_v1_admin_wqe {
 			__le64		dma_addr;
 		} mod_qp;
 		struct {
-			__u8		rsvd[32];
+			__u8		rsvd[40];
 			__le64		sq_dma_addr;
 			__le64		rq_dma_addr;
-			__le64		hdr_dma_addr;
-		} query_qp;
+		} query;
 	};
 };
 
@@ -798,7 +793,6 @@ enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_STATS_HDRS,
 	IONIC_V1_ADMIN_STATS_VALS,
 	IONIC_V1_ADMIN_DESTROY_CQ,
-	IONIC_V1_ADMIN_QUERY_AH,
 	IONIC_V1_ADMIN_DESTROY_AH,
 
 	/* TODO: move ops up as they are assigned and implemented */

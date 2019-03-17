@@ -103,39 +103,6 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 #define rdma_ah_attr ib_ah_attr
 #define rdma_ah_read_grh(attr) (&(attr)->grh)
 
-static inline void rdma_ah_set_sl(struct rdma_ah_attr *attr, u8 sl)
-{
-	attr->sl = sl;
-}
-
-static inline void rdma_ah_set_port_num(struct rdma_ah_attr *attr, u8 port_num)
-{
-	attr->port_num = port_num;
-}
-
-static inline void rdma_ah_set_grh(struct rdma_ah_attr *attr,
-				   union ib_gid *dgid, u32 flow_label,
-				   u8 sgid_index, u8 hop_limit,
-				   u8 traffic_class)
-{
-	struct ib_global_route *grh = rdma_ah_read_grh(attr);
-
-	attr->ah_flags = IB_AH_GRH;
-	if (dgid)
-		grh->dgid = *dgid;
-	grh->flow_label = flow_label;
-	grh->sgid_index = sgid_index;
-	grh->hop_limit = hop_limit;
-	grh->traffic_class = traffic_class;
-}
-
-static inline void rdma_ah_set_dgid_raw(struct rdma_ah_attr *attr, void *dgid)
-{
-	struct ib_global_route *grh = rdma_ah_read_grh(attr);
-
-	memcpy(grh->dgid.raw, dgid, sizeof(grh->dgid));
-}
-
 #else /* 4.12.0 and later */
 #define HAVE_RDMA_AH_ATTR_TYPE_ROCE
 #define HAVE_UMEM_PAGE_SHIFT
@@ -443,15 +410,5 @@ static inline void ib_set_device_ops(struct ib_device *dev,
 #ifdef OFA_KERNEL
 #define ib_umem_get(c,s,l,a,f) ib_umem_get(c,s,l,a,f,0)
 #endif
-
-/**
- * roce_ud_header_unpack - Unpack UD header struct from RoCE wire format
- * @header:UD header struct
- * @buf:Buffer to pack into
- *
- * roce_ud_header_pack() unpacks the UD header structure @header from RoCE wire
- * format in the buffer @buf.
- */
-int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
 
 #endif

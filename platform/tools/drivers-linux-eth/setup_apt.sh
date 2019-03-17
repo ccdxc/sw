@@ -12,6 +12,7 @@
     autoconf \
     cmake \
     gcc \
+    libnl-devel \
     libnl3-devel \
     libudev-devel \
     make \
@@ -23,6 +24,8 @@
     sshpass \
     sysfsutils \
     net-tools \
+    tcpdump \
+    psmisc \
     hping3
 
  else
@@ -39,5 +42,6 @@
     ninja-build \
     pkg-config \
     valgrind \
+    psmisc \
     hping3
 fi

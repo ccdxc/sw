@@ -17,7 +17,7 @@ DIR=$(readlink -f "$DIR")
 # build ionic.ko and ionic_rdma.ko
 #
 
-make -j12 -C drivers || exit
+make -j -C drivers || exit
 
 #
 # build krping
@@ -33,12 +33,12 @@ RHEL_MINOR=$(awk '/RHEL_MINOR/ { print $3 };' /lib/modules/$(uname -r)/build/inc
 if (($RHEL_MINOR < 6)) ; then
 patch -f -p1 < "$DIR/patches/0001-krping-rhel-7.3.patch"
 fi
-make -j12 -C krping || exit
+make -j -C krping || exit
 ;;
 
 # Vanilla / Ubuntu / Oracle
 4.14.*|4.15.*)
-make -j12 -C krping || exit
+make -j -C krping || exit
 ;;
 
 # Kernel versions known incompatible with this krping: 4.9, 4.19, 4.20
@@ -70,7 +70,7 @@ CFLAGS="-std=gnu99 -I$DIR/rdma-core/build/include" \
 LDFLAGS="-L$DIR/rdma-core/build/lib -Wl,-R$DIR/rdma-core/build/lib" \
 ./configure || exit
 
-make -j12 || exit
+make -j || exit
 
 cd -
 
@@ -86,6 +86,6 @@ CFLAGS="-I$DIR/rdma-core/build/include" \
 LDFLAGS="-L$DIR/rdma-core/build/lib -Wl,-R$DIR/rdma-core/build/lib" \
 ./configure || exit
 
-make -j12 || exit
+make -j || exit
 
 cd -

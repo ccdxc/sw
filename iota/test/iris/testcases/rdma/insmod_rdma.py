@@ -54,7 +54,7 @@ def Trigger(tc):
                                        rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./build.sh",
                                    rundir = 'rdma-drivers',
-                                   timeout = 60)
+                                   timeout = 180)
             api.Trigger_AddHostCommand(req, n, "modprobe ib_uverbs")
             api.Trigger_AddHostCommand(req, n, "modprobe ib_cm")
             api.Trigger_AddHostCommand(req, n, "modprobe rdma_cm")
@@ -72,7 +72,7 @@ def Trigger(tc):
                                    rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cd drivers-freebsd && ./build.sh",
                                    rundir = 'rdma-drivers',
-                                   timeout = 60)
+                                   timeout = 180)
             api.Trigger_AddHostCommand(req, n, "cd drivers-freebsd && kldload sys/modules/ionic_rdma/ionic_rdma.ko",
                                        rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "kldload krping",
