@@ -18,7 +18,8 @@ def __get_testbeds(filename):
     tbs = []
     with open(filename, "r") as fp:
         for line in fp:
-            x = re.match("(tb\d{1,2})", line)
+            print (line)
+            x = re.search("(tb\d{1,2})", line)
             if x != None:
                 tbs.append(x.group(0))
             pass
@@ -66,7 +67,7 @@ def __get_tb_naples_map(tb_json_map):
     __print (ret_dict)
     return ret_dict
 
-def __run_freq_cmd(task):
+def __os_run(task):
     print (task[1])
     op = os.popen(task[1]).read()
     return ("[%s] %s" % (task[0], op.split('\n')[-2]))
@@ -85,10 +86,10 @@ def __run_cmd(tbs_naples_map, command):
         results = []
         if run_parallel:
             pool = ThreadPool(len(tasks))
-            results = pool.map(__run_freq_cmd, tasks)
+            results = pool.map(__os_run, tasks)
         else:
             for task in tasks:
-                results.append(__run_freq_cmd(task))
+                results.append(__os_run(task))
         return results
     
     def __print_results(results):
@@ -103,19 +104,22 @@ def __run_cmd(tbs_naples_map, command):
 
 import argparse
 parser = argparse.ArgumentParser(description='Sanity Testbeds check script')
+parser.add_argument('--filename', dest='filename', required = False, default=True, help='print frequency file')
+parser.add_argument('--testbed', dest='testbed', required = False, default=False, help='print frequency file')
 parser.add_argument('--command', dest='command', required = True, default=True, help='print frequency file')
 GlobalOptions = parser.parse_args()
 
 def Main():
     #read local file to get list of tbs
-    tbs = __get_testbeds("./nodes.sanity")
-    # get tesbed json files 
+    if not GlobalOptions.testbed:
+        tbs = __get_testbeds(GlobalOptions.filename)
+    else:
+        tbs = [GlobalOptions.testbed]
+    # get tesbed json files
     tbs_json_map = __get_tb_json_map(tbs)
     tbs_naples_map = __get_tb_naples_map(tbs_json_map)
     # Now here construct command to run where frequency.json is enabled
     __run_cmd(tbs_naples_map,GlobalOptions.command)
-
-
 
 if __name__ == '__main__':
     try: 

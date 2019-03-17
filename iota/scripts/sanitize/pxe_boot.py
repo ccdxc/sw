@@ -23,6 +23,7 @@ parser = argparse.ArgumentParser(description='Sanitize Host in test bed file')
 # Mandatory parameters
 parser.add_argument('--testbed', dest='file_name', required = True, default=None, help='Testbed JSON filename')
 parser.add_argument('--os', dest='os', required = True, default=None, help='which OS to boot to')
+parser.add_argument('--bootfromjson', dest='boot_from_json', required = True, default=True, help='which OS to boot to')
 
 GlobalOptions = parser.parse_args()
 
@@ -73,8 +74,11 @@ def __print_msg(msg):
     print (msg)
 
 def __pxe_boot(host_spec):
-    osname = GlobalOptions.os
-    
+    if GlobalOptions.boot_from_json:
+        osname = host_spec.NodeOs
+    else:
+        osname = GlobalOptions.os
+       
     server = Server(helpers.NODE_TYPE_PXE, PxeServerHelper.GetServerIp())
     host   = Server(helpers.NODE_TYPE_HOST, host_spec.NodeMgmtIP, host_spec.NodeCimcIP)
     macs = CimcHelper.GetOobMacFromCimc(host)
