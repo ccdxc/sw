@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(description='Sanitize Host in test bed file')
 # Mandatory parameters
 parser.add_argument('--testbed', dest='file_name', required = True, default=None, help='Testbed JSON filename')
 parser.add_argument('--os', dest='os', required = True, default=None, help='which OS to boot to')
-parser.add_argument('--bootfromjson', dest='boot_from_json', required = True, default=True, help='which OS to boot to')
+parser.add_argument('--bootfromjson', dest='boot_from_json', required = False, default=False, help='which OS to boot to')
 
 GlobalOptions = parser.parse_args()
 

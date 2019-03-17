@@ -16,8 +16,8 @@ setup:
     topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
     config  :
         
-        - step : testcases.frequency.clock_settings
-        - step : utils.reboot_all
+        #- step : testcases.frequency.clock_settings
+        #- step : utils.reboot_all
         - step : utils.naples_workloads
         - step : config.config_link_flap
         - step : config.netagent.hw_push_config
@@ -40,7 +40,7 @@ testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         - networking/connectivity.testbundle
-        - classic/rdma.testbundle
+        #- classic/rdma.testbundle
         - linktest/linktest.testbundle
         - filters/filters.testbundle
         - subifs/subifs.testbundle
@@ -57,7 +57,7 @@ testbundles:
         - linktest/linktest.testbundle
         - classic/driver-features-sanity.testbundle
         - linktest/linktest.testbundle
-        - storage/storage.testbundle
+        #- storage/storage.testbundle
         - penctl/penctl_classic.testbundle
         - penctl/mode_change.testbundle
         - naples_upgrade/naples_upgrade_classic.testbundle
@@ -65,10 +65,10 @@ testbundles:
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
-        - classic/rdma_reg.testbundle
+        #- classic/rdma_reg.testbundle
         - classic/driver-features.testbundle
-        - storage/regression.testbundle
+        #- storage/regression.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
-    - step      : testcases.frequency.clock_settings_td
+    #- step      : testcases.frequency.clock_settings_td
