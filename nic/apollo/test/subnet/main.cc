@@ -53,7 +53,6 @@ protected:
 /// @{
 
 /// \brief Create a subnet
-///
 /// Detailed description
 TEST_F(subnet, subnet_create) {
     pds_batch_params_t batch_params = {0};
@@ -68,7 +67,6 @@ TEST_F(subnet, subnet_create) {
 }
 
 /// \brief Delete a Subnet
-///
 /// Detailed description
 TEST_F(subnet, subnet_delete) {
     pds_batch_params_t batch_params = {0};
@@ -82,7 +80,6 @@ TEST_F(subnet, subnet_delete) {
 }
 
 /// \brief Create and delete a subnet in the same batch
-///
 /// Create and delete a subnet in the same batch. It should be a NO-OP
 TEST_F(subnet, create_delete_in_same_batch) {
     pds_batch_params_t batch_params = {0};
@@ -101,7 +98,6 @@ TEST_F(subnet, create_delete_in_same_batch) {
 }
 
 /// \brief Create an existing subnet
-///
 /// Try to create a subnet which exists already. It should fail
 TEST_F(subnet, subnet_create_existing) {
     // Validation test case; we can assume agent takes care of it.
@@ -109,7 +105,6 @@ TEST_F(subnet, subnet_create_existing) {
 }
 
 /// \brief Read a subnet
-///
 /// Read a subnet
 TEST_F(subnet, subnet_read) {
     g_key.id = 1;
@@ -118,7 +113,6 @@ TEST_F(subnet, subnet_read) {
 }
 
 /// \brief Delete a non-existing subnet
-///
 /// Delete a non-existing subnet
 TEST_F(subnet, subnet_delete_non_existing) {
     // Validation test case; we can assume agent takes care of it.
@@ -126,7 +120,6 @@ TEST_F(subnet, subnet_delete_non_existing) {
 }
 
 /// \brief Read a non-existing subnet
-///
 /// Read a non-existing subnet
 TEST_F(subnet, subnet_read_non_existing) {
     // Validation test case; we can assume agent takes care of it.
@@ -134,10 +127,8 @@ TEST_F(subnet, subnet_read_non_existing) {
 }
 
 /// \brief Create multiple subnets in a single VCN in a single batch
-///
 /// Create and Read multiple subnets in a single VCN in a single batch
 TEST_F(subnet, multiple_subnets_single_VCN_single_batch_workflow) {
-    // Create
     pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
@@ -178,7 +169,6 @@ TEST_F(subnet, multiple_subnets_single_VCN_single_batch_workflow) {
 }
 
 /// \brief Create multiple subnets
-///
 /// Create, Read and Delete multiple subnets in multiple VCNS in a single batch
 TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
     pds_batch_params_t batch_params = {0};
@@ -298,10 +288,8 @@ TEST_F(subnet, multiple_subnets_multiple_VCNs_single_batch_workflow) {
 }
 
 /// \brief Create multiple subnets
-///
 /// Create multiple subnets in a single VCN in multiple batches
 TEST_F(subnet, multiple_subnets_single_VCN_multiple_batches_workflow) {
-    // Create
     pds_batch_params_t batch_params = {0};
 
     batch_params.epoch = g_batch_epoch++;
@@ -355,7 +343,6 @@ TEST_F(subnet, multiple_subnets_single_VCN_multiple_batches_workflow) {
 }
 
 /// \brief Create multiple subnets
-///
 /// Create multiple subnets in multiple VCNs in multiple batches
 TEST_F(subnet, multiple_subnets_multiple_vcns_multiple_batches_workflow) {
     pds_batch_params_t batch_params = {0};
@@ -408,36 +395,28 @@ TEST_F(subnet, multiple_subnets_multiple_vcns_multiple_batches_workflow) {
 }
 
 /// \brief Create 1k subnets in single vcn in single batch
-///
 /// Create, Read and Delete 1k subnets in single vcn in single batch
 TEST_F(subnet, subnet_create_max_subnets_in_single_vcn_in_single_batch) {}
 
 /// \brief Create 1k subnets in multiple vcns in single batch
-///
 /// Create 1k subnets in multiple vcns in single batch
 TEST_F(subnet, subnet_create_max_subnets_in_multiple_vcns_in_single_batch) {}
 
 /// \brief Create 1k subnets in single vcn in multiple batches
-///
 /// Create 1k subnets in single vcn in multiple batches
 TEST_F(subnet, subnet_create_max_subnets_in_single_vcn_in_multiple_batches) {}
 
 /// \brief Create 1k subnets multiple vcns in multiple batches
-///
 /// Create 1k subnets in multiple vcns in multiple batches
 TEST_F(subnet, subnet_create_max_subnets_in_multiple_vcns_in_multiple_batches) {
 }
 
 /// \brief Create an overlapping subnet
-///
 /// Create an invalid/overlapping subnet
-/// Validation test case
 TEST_F(subnet, subnet_create_invalid_subnet) {}
 
 /// \brief Delete an overlapping subnet
-///
 /// Delete an invalid/overlapping subnet
-/// Validation test case
 TEST_F(subnet, subnet_delete_invalid_subnet) {}
 
 /// @}

@@ -49,7 +49,6 @@ protected:
 /// @{
 
 /// \brief Read a non-existing TEP
-///
 /// Read a non-existing TEP. First read after table init
 TEST_F(tep_test, tep_invalid_read) {
     pds_tep_info_t info;
@@ -59,7 +58,6 @@ TEST_F(tep_test, tep_invalid_read) {
 }
 
 /// \brief Delete a non-existing TEP
-///
 /// Delete a TEP before first ever create
 TEST_F(tep_test, tep_invalid_delete) {
     pds_batch_params_t batch_params = {0};
@@ -74,7 +72,6 @@ TEST_F(tep_test, tep_invalid_delete) {
 }
 
 /// \brief Delete a non-existing TEP multiple times
-///
 /// Delete same non-existing TEP multiple times in separate batches
 TEST_F(tep_test, tep_invalid_delete_1) {
     pds_batch_params_t batch_params = {0};
@@ -100,7 +97,6 @@ TEST_F(tep_test, tep_invalid_delete_1) {
 }
 
 /// \brief Delete a non-existing TEP multiple times
-///
 /// Delete same non-existing TEP multiple times in a single batch
 TEST_F(tep_test, tep_invalid_delete_2) {
     pds_batch_params_t batch_params = {0};
@@ -118,7 +114,6 @@ TEST_F(tep_test, tep_invalid_delete_2) {
 }
 
 /// \brief Delete different non-existing TEPs
-///
 /// Delete non-existing but unique TEPs in separate batches
 TEST_F(tep_test, tep_invalid_delete_3) {
     pds_batch_params_t batch_params = {0};
@@ -146,7 +141,6 @@ TEST_F(tep_test, tep_invalid_delete_3) {
 }
 
 /// \brief Delete different non-existing TEPs
-///
 /// Delete non-existing but unique TEPs in a single batch
 TEST_F(tep_test, tep_invalid_delete_4) {
     pds_batch_params_t batch_params = {0};
@@ -168,7 +162,6 @@ TEST_F(tep_test, tep_invalid_delete_4) {
 }
 
 /// \brief Create a new TEP
-///
 /// Create a new TEP and delete it
 TEST_F(tep_test, DISABLED_tep_create) {
     pds_batch_params_t batch_params = {0};
@@ -188,7 +181,6 @@ TEST_F(tep_test, DISABLED_tep_create) {
 }
 
 /// \brief Read an existing TEP
-///
 /// Create a TEP and then read & validate
 TEST_F(tep_test, DISABLED_tep_read) {
     pds_batch_params_t batch_params = {0};
@@ -212,7 +204,6 @@ TEST_F(tep_test, DISABLED_tep_read) {
 }
 
 /// \brief Delete an existing TEP
-///
 /// Create a TEP, delete it and then read & validate
 TEST_F(tep_test, DISABLED_tep_delete) {
     pds_batch_params_t batch_params = {0};
@@ -236,7 +227,6 @@ TEST_F(tep_test, DISABLED_tep_delete) {
 }
 
 /// \brief Double create in same batch
-///
 /// Create same TEP twice in single batch
 TEST_F(tep_test, DISABLED_tep_double_create) {
     pds_batch_params_t batch_params = {0};
@@ -259,7 +249,6 @@ TEST_F(tep_test, DISABLED_tep_double_create) {
 }
 
 /// \brief Double create in separate batch
-///
 /// Create same TEP twice in separate batch
 TEST_F(tep_test, DISABLED_tep_double_create_1) {
     pds_batch_params_t batch_params = {0};
@@ -285,7 +274,6 @@ TEST_F(tep_test, DISABLED_tep_double_create_1) {
 }
 
 /// \brief Double delete in same batch
-///
 /// Delete same TEP twice in single batch
 TEST_F(tep_test, DISABLED_tep_double_delete) {
     pds_batch_params_t batch_params = {0};
@@ -308,7 +296,6 @@ TEST_F(tep_test, DISABLED_tep_double_delete) {
 }
 
 /// \brief Double delete in separate batch
-///
 /// Delete same TEP twice in separate batch
 TEST_F(tep_test, DISABLED_tep_double_delete_2) {
     pds_batch_params_t batch_params = {0};
@@ -336,7 +323,6 @@ TEST_F(tep_test, DISABLED_tep_double_delete_2) {
 }
 
 /// \brief create delete in same batch
-///
 /// Create & Delete same TEP in single batch
 TEST_F(tep_test, DISABLED_tep_create_delete) {
     pds_batch_params_t batch_params = {0};
@@ -355,7 +341,6 @@ TEST_F(tep_test, DISABLED_tep_create_delete) {
 }
 
 /// \brief delete create in same batch
-///
 /// Delete & Create same TEP in single batch
 TEST_F(tep_test, DISABLED_tep_delete_create) {
     pds_batch_params_t batch_params = {0};
@@ -374,7 +359,6 @@ TEST_F(tep_test, DISABLED_tep_delete_create) {
 }
 
 /// \brief delete create delete in same batch
-///
 /// Delete, Create & Delete same TEP in single batch
 TEST_F(tep_test, DISABLED_tep_delete_create_delete) {
     pds_batch_params_t batch_params = {0};
@@ -394,7 +378,6 @@ TEST_F(tep_test, DISABLED_tep_delete_create_delete) {
 }
 
 /// \brief delete create delete in same batch
-///
 /// Delete, Create & Delete multiple unique valid TEPs in single batch
 TEST_F(tep_test, DISABLED_tep_delete_create_delete_1) {
     pds_batch_params_t batch_params = {0};
@@ -426,7 +409,6 @@ TEST_F(tep_test, DISABLED_tep_delete_create_delete_1) {
 }
 
 /// \brief Create only 1 TEP in a single batch
-///
 /// Create 1 TEP when table has PDS_MAX_TEP-1 entries
 TEST_F(tep_test, DISABLED_tep_max_create) {
     pds_batch_params_t batch_params = {0};
@@ -439,7 +421,7 @@ TEST_F(tep_test, DISABLED_tep_max_create) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Trigger
@@ -454,15 +436,15 @@ TEST_F(tep_test, DISABLED_tep_max_create) {
     num_teps = PDS_MAX_TEP;
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(tep_obj.read(&info, FALSE) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create 1 TEP after table full
-///
 /// Attempt to create only one TEP when table is already full
 TEST_F(tep_test, DISABLED_tep_beyondmax_create) {
     pds_batch_params_t batch_params = {0};
@@ -475,7 +457,7 @@ TEST_F(tep_test, DISABLED_tep_beyondmax_create) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Trigger
@@ -493,15 +475,15 @@ TEST_F(tep_test, DISABLED_tep_beyondmax_create) {
     num_teps = PDS_MAX_TEP;
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(tep_obj.read(&info, FALSE) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create multiple TEPs in a single batch
-///
 /// Create multiple unique TEPs in a single batch
 TEST_F(tep_test, DISABLED_tep_multi_create) {
     pds_batch_params_t batch_params = {0};
@@ -513,7 +495,7 @@ TEST_F(tep_test, DISABLED_tep_multi_create) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Verify with read
@@ -522,13 +504,13 @@ TEST_F(tep_test, DISABLED_tep_multi_create) {
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Delete multiple TEPs in a single batch
-///
 /// Delete multiple unique TEPs in a single batch
 TEST_F(tep_test, DISABLED_tep_multi_delete) {
     pds_batch_params_t batch_params = {0};
@@ -540,14 +522,15 @@ TEST_F(tep_test, DISABLED_tep_multi_delete) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Verify with read
@@ -555,7 +538,6 @@ TEST_F(tep_test, DISABLED_tep_multi_delete) {
 }
 
 /// \brief Create max no of TEPs in a single batch
-///
 /// Create max supported no of unique TEPs in a single batch
 TEST_F(tep_test, DISABLED_tep_multi_max_create) {
     pds_batch_params_t batch_params = {0};
@@ -570,7 +552,7 @@ TEST_F(tep_test, DISABLED_tep_multi_max_create) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify first tep exists
@@ -583,13 +565,13 @@ TEST_F(tep_test, DISABLED_tep_multi_max_create) {
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Create (PDS_MAX_TEP/2) no of TEPs in a single batch
-///
 /// Attempt to create (PDS_MAX_TEP/2) no of TEPs in a single batch
 //  when the table is already half full
 TEST_F(tep_test, DISABLED_tep_multi_max_create_1) {
@@ -605,7 +587,7 @@ TEST_F(tep_test, DISABLED_tep_multi_max_create_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str_1,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Trigger
@@ -613,7 +595,7 @@ TEST_F(tep_test, DISABLED_tep_multi_max_create_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str_2,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(tep_obj.read(&info) == sdk::SDK_RET_OK);
@@ -621,25 +603,27 @@ TEST_F(tep_test, DISABLED_tep_multi_max_create_1) {
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str_1,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str_1,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str_2,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str_2,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Delete max no of TEPs in a single batch
 ///
-/// Delete max supported no of TEPs in a single batch
 TEST_F(tep_test, DISABLED_tep_multi_max_delete) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP;
-    std::string tep_first_ip_str = "10.60.1.1/8", tep_last_ip_str = "10.60.5.0/8";
+    std::string tep_first_ip_str = "10.60.1.1/8";
+    std::string tep_last_ip_str = "10.60.5.0/8";
     tep_util tep_obj1(tep_first_ip_str);
     tep_util tep_obj2(tep_last_ip_str);
 
@@ -647,14 +631,15 @@ TEST_F(tep_test, DISABLED_tep_multi_max_delete) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Trigger
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify first tep does not exist
@@ -664,13 +649,13 @@ TEST_F(tep_test, DISABLED_tep_multi_max_delete) {
 }
 
 /// \brief Delete max no of TEPs - 1 in a single batch
-///
 /// Delete max supported no of TEPs but one in a single batch
 TEST_F(tep_test, DISABLED_tep_multi_max_delete_1) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP;
-    std::string tep_first_ip_str = "10.70.1.1/8", tep_last_ip_str = "10.70.5.0/8";
+    std::string tep_first_ip_str = "10.70.1.1/8";
+    std::string tep_last_ip_str = "10.70.5.0/8";
     tep_util tep_obj1(tep_first_ip_str);
     tep_util tep_obj2(tep_last_ip_str);
 
@@ -678,15 +663,16 @@ TEST_F(tep_test, DISABLED_tep_multi_max_delete_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Trigger
     num_teps = PDS_MAX_TEP - 1;
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify first tep does not exist
@@ -696,23 +682,25 @@ TEST_F(tep_test, DISABLED_tep_multi_max_delete_1) {
 }
 
 /// \brief Create 1 + PDS_MAX_TEP no of TEPs in a single batch
-///
 /// Attempt to create more than supported no of TEPs in a single batch
 TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP + 1;
-    std::string tep_first_ip_str = "10.80.1.1/8", tep_last_ip_str = "10.80.5.1/8";
+    std::string tep_first_ip_str = "10.80.1.1/8";
+    std::string tep_last_ip_str = "10.80.5.1/8";
     tep_util tep_obj_1(tep_first_ip_str);
     tep_util tep_obj_2(tep_last_ip_str);
 
     // Even though this batch commit failed and got aborted,
-    // resources do NOT seem to be released which is causing further create to fail
+    // resources do NOT seem to be released which is causing
+    // further create to fail
+
     // Trigger
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
 
     // abort the batch as it failed as expected
@@ -723,7 +711,6 @@ TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create) {
 }
 
 /// \brief Create 1 + (PDS_MAX_TEP/2) no of TEPs in a single batch
-///
 /// Attempt to create 1+(PDS_MAX_TEP/2) no of TEPs in a single batch
 //  when the table is already half full
 TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create_1) {
@@ -739,7 +726,7 @@ TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str_1,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Trigger
@@ -748,7 +735,7 @@ TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str_2,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
 
     // abort the batch as it failed as expected
@@ -760,14 +747,13 @@ TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create_1) {
     num_teps = PDS_MAX_TEP / 2;
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str_1,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str_1,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
 }
 
 /// \brief Read a non existing TEP
-///
 /// Read a non existing TEP with ONLY one entry in HW
 TEST_F(tep_test, DISABLED_tep_read_nonexisting_when_single) {
     pds_batch_params_t batch_params = {0};
@@ -791,7 +777,6 @@ TEST_F(tep_test, DISABLED_tep_read_nonexisting_when_single) {
 }
 
 /// \brief Read a non existing TEP
-///
 /// Read a non existing TEP with multiple entries in HW
 TEST_F(tep_test, DISABLED_tep_read_nonexisting_when_multiple) {
     pds_batch_params_t batch_params = {0};
@@ -862,7 +847,6 @@ TEST_F(tep_test, DISABLED_tep_read_nonexisting_when_multiple) {
 }
 
 /// \brief Read an existing TEP
-///
 /// Read an existing TEP with ONLY that entry in HW
 TEST_F(tep_test, DISABLED_tep_read_existing_when_single) {
     pds_batch_params_t batch_params = {0};
@@ -887,7 +871,6 @@ TEST_F(tep_test, DISABLED_tep_read_existing_when_single) {
 }
 
 /// \brief Read an existing TEP
-///
 /// Read an existing TEP with multiple entries in HW
 TEST_F(tep_test, DISABLED_tep_read_existing_when_multiple) {
     pds_batch_params_t batch_params = {0};
@@ -901,7 +884,7 @@ TEST_F(tep_test, DISABLED_tep_read_existing_when_multiple) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Verify with read
@@ -912,13 +895,13 @@ TEST_F(tep_test, DISABLED_tep_read_existing_when_multiple) {
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Read last deleted TEP when table is empty
-///
 /// Read the last deleted TEP when nothing is programmed
 TEST_F(tep_test, DISABLED_tep_read_last_deleted_when_empty) {
     pds_batch_params_t batch_params = {0};
@@ -930,14 +913,15 @@ TEST_F(tep_test, DISABLED_tep_read_last_deleted_when_empty) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Verify with read
@@ -945,7 +929,6 @@ TEST_F(tep_test, DISABLED_tep_read_last_deleted_when_empty) {
 }
 
 /// \brief Read last created TEP when table is empty
-///
 /// Read the last created TEP when nothing is programmed
 TEST_F(tep_test, DISABLED_tep_read_last_created_when_empty) {
     pds_batch_params_t batch_params = {0};
@@ -957,14 +940,15 @@ TEST_F(tep_test, DISABLED_tep_read_last_created_when_empty) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Verify with read
@@ -972,18 +956,17 @@ TEST_F(tep_test, DISABLED_tep_read_last_created_when_empty) {
 }
 
 /// \brief Read last updated TEP when table is empty
-///
 /// Read the last updated TEP when nothing is programmed
 TEST_F(tep_test, DISABLED_tep_read_last_updated_when_empty) {}
 
 /// \brief Read an existing TEP when table is full
-///
 /// Read an existing TEP (first/last HW entry) when table is full
 TEST_F(tep_test, DISABLED_tep_read_existing_when_full) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP;
-    std::string tep_first_ip_str = "10.110.1.1/8", tep_last_ip_str = "10.110.5.0/8";
+    std::string tep_first_ip_str = "10.110.1.1/8";
+    std::string tep_last_ip_str = "10.110.5.0/8";
     std::string invalid_tep_ip_str = "10.1.1.1/8";
     tep_util tep_obj_1(tep_first_ip_str);
     tep_util tep_obj_2(tep_last_ip_str);
@@ -993,7 +976,7 @@ TEST_F(tep_test, DISABLED_tep_read_existing_when_full) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify first tep exists
@@ -1006,34 +989,31 @@ TEST_F(tep_test, DISABLED_tep_read_existing_when_full) {
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(
+        num_teps, tep_first_ip_str,
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Read all TEPs
-///
 /// Read all currently programmed TEPs with single entry in HW
 TEST_F(tep_test, DISABLED_tep_read_all_when_single) {}
 
 /// \brief Read all TEPs
-///
 /// Read all currently programmed TEPs with multiple entries in HW
 TEST_F(tep_test, DISABLED_tep_read_all_when_multiple) {}
 
 /// \brief Read all TEPs on empty table
-///
 /// Read all currently programmed TEPs when nothing is programmed
 TEST_F(tep_test, DISABLED_tep_read_all_when_empty) {}
 
 /// \brief Read all TEPs after table full
-///
 /// Read all currently programmed TEPs when table is full
 TEST_F(tep_test, DISABLED_tep_read_all_when_full) {}
 
-/// \brief TEP workflow 1
-///
-/// [ Create SetMax, Delete SetMax ] - Read
+/// \brief Create and delete max TEPs in the same batch
+/// The operation should be de-duped by framework and effectively
+/// a NO-OP from hardware perspective
 TEST_F(tep_test, DISABLED_tep_workflow_1) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
@@ -1042,12 +1022,14 @@ TEST_F(tep_test, DISABLED_tep_workflow_1) {
     tep_util tep_obj_1(tep_first_ip_str);
     tep_util tep_obj_2("50.50.4.255/8");
 
+    // [ Create SetMax, Delete SetMax ] - Read
+
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify none of the TEPs are programmed
@@ -1055,9 +1037,9 @@ TEST_F(tep_test, DISABLED_tep_workflow_1) {
     ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief TEP workflow 2
-///
-/// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+/// \brief Create, delete and create max TEPs in the same batch
+/// The operation should be program and unprogram device in hardware
+/// and return successful after create
 TEST_F(tep_test, DISABLED_tep_workflow_2) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
@@ -1066,14 +1048,16 @@ TEST_F(tep_test, DISABLED_tep_workflow_2) {
     tep_util tep_obj_1(tep_first_ip_str);
     tep_util tep_obj_2("50.50.4.255/8");
 
+    // [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify first tep exists
@@ -1085,13 +1069,13 @@ TEST_F(tep_test, DISABLED_tep_workflow_2) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
-/// \brief TEP workflow 3
-///
-/// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
+/// \brief Create, delete some and create another set of TEPs in the same batch
+/// The operation should be program and unprogram device in hardware
+/// and return successful after create
 TEST_F(tep_test, DISABLED_tep_workflow_3) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
@@ -1102,20 +1086,22 @@ TEST_F(tep_test, DISABLED_tep_workflow_3) {
     tep_util tep_obj_2(set2_first_ip_str);
     tep_util tep_obj_3(set3_first_ip_str);
 
+    // [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
+
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // create set1 of 10 TEPs
     ASSERT_TRUE(tep_util::many_create(10, set1_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     // create set2 of 20 TEPs
     ASSERT_TRUE(tep_util::many_create(20, set2_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     // dreate set1 of 10 TEPs
     ASSERT_TRUE(tep_util::many_delete(10, set1_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     // create set3 of 30 TEPs
     ASSERT_TRUE(tep_util::many_create(30, set3_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify TEPs from set1 are NOT programmed
@@ -1130,16 +1116,16 @@ TEST_F(tep_test, DISABLED_tep_workflow_3) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // delete set2 of 20 TEPs
     ASSERT_TRUE(tep_util::many_delete(20, set2_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     // delete set3 of 30 TEPs
     ASSERT_TRUE(tep_util::many_delete(30, set3_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
-/// \brief TEP workflow 4
-///
-/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+/// \brief Create and delete max TEPs in different batches
+/// The hardware should create device correctly and return entry not found
+/// after delete
 TEST_F(tep_test, DISABLED_tep_workflow_4) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
@@ -1148,10 +1134,12 @@ TEST_F(tep_test, DISABLED_tep_workflow_4) {
     tep_util tep_obj_1(tep_first_ip_str);
     tep_util tep_obj_2("50.50.4.255/8");
 
+    // [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify first tep exists
@@ -1162,7 +1150,7 @@ TEST_F(tep_test, DISABLED_tep_workflow_4) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify none of the TEPs are programmed
@@ -1170,9 +1158,9 @@ TEST_F(tep_test, DISABLED_tep_workflow_4) {
     ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief TEP workflow 5
-///
-/// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+/// \brief Create and delete different sets of TEPs in different batches
+/// The hardware should create TEPs correctly and return entry not found
+/// after delete for deleted ones
 TEST_F(tep_test, DISABLED_tep_workflow_5) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
@@ -1183,14 +1171,16 @@ TEST_F(tep_test, DISABLED_tep_workflow_5) {
     tep_util tep_obj_2(set2_first_ip_str);
     tep_util tep_obj_3(set3_first_ip_str);
 
+    // [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // create set1 of 10 TEPs
     ASSERT_TRUE(tep_util::many_create(10, set1_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     // create set2 of 20 TEPs
     ASSERT_TRUE(tep_util::many_create(20, set2_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify TEPs from set1 are programmed
@@ -1202,10 +1192,10 @@ TEST_F(tep_test, DISABLED_tep_workflow_5) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // create set1 of 10 TEPs
     ASSERT_TRUE(tep_util::many_delete(10, set1_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     // create set3 of 30 TEPs
     ASSERT_TRUE(tep_util::many_create(30, set3_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify TEPs from set1 are NOT programmed
@@ -1220,16 +1210,16 @@ TEST_F(tep_test, DISABLED_tep_workflow_5) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // delete set2 of 20 TEPs
     ASSERT_TRUE(tep_util::many_delete(20, set2_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     // delete set3 of 30 TEPs
     ASSERT_TRUE(tep_util::many_delete(30, set3_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
-/// \brief TEP workflow neg 1
-///
-/// [ Create SetMax ] - [ Create SetMax ] - Read
+/// \brief Create and recreate max TEPs in two batches
+/// The hardware should program device correctly in case of
+/// first create and return error in second create operation
 TEST_F(tep_test, DISABLED_tep_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
@@ -1238,17 +1228,19 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_1) {
     tep_util tep_obj_1(tep_first_ip_str);
     tep_util tep_obj_2("50.50.4.255/8");
 
+    // [ Create SetMax ] - [ Create SetMax ] - Read
+
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // following duplicate creation will result in crash
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify first tep exists
@@ -1260,13 +1252,12 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
+
 #if 0
-/// \brief TEP workflow neg 2
-///
-/// [ Create SetMax+1] - Read
+/// \brief Create more than max TEPs
 TEST_F(tep_test, tep_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
@@ -1275,10 +1266,12 @@ TEST_F(tep_test, tep_workflow_neg_2) {
     tep_util tep_obj_1(tep_first_ip_str);
     tep_util tep_obj_2("50.50.5.0/8");
 
+    // [ Create SetMax+1] - Read
+
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
@@ -1287,15 +1280,17 @@ TEST_F(tep_test, tep_workflow_neg_2) {
     ASSERT_TRUE(tep_obj_2.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 #endif
-/// \brief TEP workflow neg 3
-///
-/// Read NonEx, [ Delete NonExMax ]
+
+/// \brief Read and delete a non existing TEPs
+/// The hardware should return entry not found
 TEST_F(tep_test, tep_workflow_neg_3) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP;
     std::string tep_invalid_ip_str = "150.150.1.1/8";
     tep_util tep_obj("192.168.9.1/8");
+
+    // Read NonEx, [ Delete NonExMax ]
 
     // read non existing TEP entry
     ASSERT_TRUE(tep_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -1304,7 +1299,7 @@ TEST_F(tep_test, tep_workflow_neg_3) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_delete(num_teps, tep_invalid_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }

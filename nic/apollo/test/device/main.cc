@@ -100,7 +100,7 @@ TEST_F(device_test, DISABLED_device_workflow_2) {
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
-/// \brief Create and delete device in two batches
+/// \brief Create and delete device in different batches
 /// The hardware should create device correctly
 /// and return entry not found after delete
 TEST_F(device_test, DISABLED_device_workflow_4) {
@@ -128,7 +128,7 @@ TEST_F(device_test, DISABLED_device_workflow_4) {
     ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief Create device in two batches
+/// \brief Create and recreate device in two batches
 /// The hardware should program device correctly in case of
 /// first create and return error in second create operation
 TEST_F(device_test, DISABLED_device_workflow_neg_1) {
@@ -182,7 +182,6 @@ TEST_F(device_test, device_workflow_neg_3b) {
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }
-
 
 /// @}
 

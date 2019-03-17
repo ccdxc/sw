@@ -7,6 +7,7 @@
 /// This file contains the mapping test cases
 ///
 //----------------------------------------------------------------------------
+
 #include <stdio.h>
 #include <getopt.h>
 #include <gtest/gtest.h>
@@ -68,10 +69,6 @@ protected:
 };
 
 //----------------------------------------------------------------------------
-// Mapping test cases utility routines
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
 // Mapping test cases implementation
 //----------------------------------------------------------------------------
 
@@ -79,16 +76,12 @@ protected:
 /// @{
 
 /// \brief Mapping create test
-///
 /// Create a local and remote IPV4 & V6 mapping and test the below scenarios
 /// with bidirectional traffic.
-///
 /// Packets having valid(configured) src and dst ipaddress from host to host,
 /// host to switch and vice-versa
-///
 /// Packets having invalid(non-configured) src and dst ipaddresses from host to
 /// host, host to switch and vice-versa
-///
 /// Get the stats and make sure the drop counts/with-reason is matching
 TEST_F(mapping_test, mapping_create) {
     pds_batch_params_t batch_params = {0};
@@ -219,16 +212,13 @@ policy_config:
 }
 
 /// \brief Mapping many create
-///
 /// Test the HASH overflow table is woking fine by creating max number of
 /// mappings.
-//
 /// Test the above with traffic and compare the result. Chose the
 /// IPs which will go to the overflow table.
 TEST_F(mapping_test, mapping_many_create) {}
 
 /// \brief Mapping get
-///
 /// Configure the mapping and make-sure the parameters are configured properly
 /// by getting the configured values back
 // TODO : Enable this after fixing the read issue
@@ -251,12 +241,9 @@ TEST_F(mapping_test, DISABLED_mapping_get) {
 }
 
 // \brief Mapping Delete
-//
 // Delete a single ipv4/v6 local/remote mapping and verify the change with
 // traffic.
-//
 // Get the stats and makesure the drop count/reason are as expected
-//
 // Deletion while the traffic is going on . This has to be done in the Naples.
 // There should not be any traffic hit.
 // TODO : Enable this after fixing the delete issue
@@ -277,22 +264,17 @@ TEST_F(mapping_test, DISABLED_mapping_delete)
 }
 
 // \brief Mapping memory utilization
-//
 // Test max number of create followed by delete N number of times.
-//
 // Measure the memory utilization in each iteration and make sure it is not
 // growing
-//
 // Run traffic intermittendely and make sure the data path is OK even
 // after many creation and deletion.
 TEST_F(mapping_test, mapping_memutil) {}
 
 
 /// \brief Mapping Public
-///
 /// Configure public IP for each private and test the NAT scenarios,
 /// Geneate traffic for fwd/reverse NAT faliures.
-///
 /// Check the stats and makesure the reason/drop count are expected.
 TEST_F(mapping_test, mapping_nat) {}
 
@@ -300,7 +282,10 @@ TEST_F(mapping_test, mapping_nat) {}
 
 }    // namespace api_test
 
-// print help message showing usage of HAL
+//----------------------------------------------------------------------------
+// Entry point
+//----------------------------------------------------------------------------
+
 static inline void
 print_usage (char **argv)
 {

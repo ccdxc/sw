@@ -48,7 +48,6 @@ protected:
 /// @{
 
 /// \brief Create a VCN
-///
 /// Create vcn 1 with 10.0.0.0/8
 TEST_F(vcn, vcn_create) {
     pds_batch_params_t batch_params = {0};
@@ -62,7 +61,6 @@ TEST_F(vcn, vcn_create) {
 }
 
 /// \brief Update a VCN
-///
 /// Update an existing vcn
 TEST_F(vcn, vcn_update) {
     pds_batch_params_t batch_params = {0};
@@ -73,12 +71,10 @@ TEST_F(vcn, vcn_update) {
 }
 
 /// \brief Create a VCN
-///
 /// Recreate an existing vcn
 TEST_F(vcn, vcn_recreate) {}
 
 /// \brief Read a VCN
-///
 /// Read an existing vcn
 TEST_F(vcn, vcn_read_existing_vcn) {
     pds_vcn_info_t info = {0};
@@ -90,7 +86,6 @@ TEST_F(vcn, vcn_read_existing_vcn) {
 }
 
 /// \brief Delete a VCN
-///
 /// Delete existing vcn
 TEST_F(vcn, vcn_delete_existing_vcn) {
     pds_batch_params_t batch_params = {0};
@@ -103,7 +98,6 @@ TEST_F(vcn, vcn_delete_existing_vcn) {
 }
 
 /// \brief Read a VCN
-///
 /// Read a non-existing vcn
 TEST_F(vcn, vcn_read_non_existing_vcn) {
     pds_vcn_info_t info = {0};
@@ -119,22 +113,18 @@ TEST_F(vcn, vcn_read_non_existing_vcn) {
 }
 
 /// \brief Create and delete VCN in the same batch
-///
 /// Create and delete VCN in the same batch
 TEST_F(vcn, vcn_create_delete_in_same_batch) {}
 
 /// \brief Delete a non-existing VCN
-///
 /// Delete non-existing vcn
 TEST_F(vcn, vcn_delete_non_existing_vcn) {}
 
 /// \brief Create a VCN
-///
 /// Create a vcn again after delete
 TEST_F(vcn, vcn_create_after_delete) {}
 
 /// \brief Create multiple VCNs in the same batch
-///
 /// Create multiple vcns in the same batch
 TEST_F(vcn, vcn_create_multiple_vcns_single_batch) {
     pds_batch_params_t batch_params = {0};
@@ -159,7 +149,6 @@ TEST_F(vcn, vcn_create_multiple_vcns_single_batch) {
 }
 
 /// \brief Read multiple VCNs created in the same batch
-///
 /// Read multiple vcns created in the same batch
 TEST_F(vcn, vcn_read_multiple_vcns_single_batch) {
     pds_vcn_info_t info = {0};
@@ -179,7 +168,6 @@ TEST_F(vcn, vcn_read_multiple_vcns_single_batch) {
 }
 
 /// \brief Delete multiple VCNs in the same batch
-///
 /// Delete multiple vcns in the same batch
 TEST_F(vcn, vcn_delete_multiple_vcns_single_batch) {
     pds_batch_params_t batch_params = {0};
@@ -203,7 +191,6 @@ TEST_F(vcn, vcn_delete_multiple_vcns_single_batch) {
 }
 
 /// \brief Create multiple VCNs in multiple batches
-///
 /// Create multiple vcns in multiple batches
 TEST_F(vcn, vcn_create_multiple_vcns_multiple_batches) {
     pds_batch_params_t batch_params = {0};
@@ -242,7 +229,6 @@ TEST_F(vcn, vcn_create_multiple_vcns_multiple_batches) {
 }
 
 /// \brief Delete multiple VCNs in multiple batches
-///
 /// Delete multiple vcns in multiple batches
 TEST_F(vcn, vcn_delete_multiple_vcns_multiple_batches) {
     pds_batch_params_t batch_params = {0};
@@ -281,12 +267,10 @@ TEST_F(vcn, vcn_delete_multiple_vcns_multiple_batches) {
 }
 
 /// \brief Read multiple VCNs created in the multiple batches
-///
 /// Read multiple vcns in multiple batches
 TEST_F(vcn, vcn_read_multiple_vcns_multiple_batches) {}
 
 /// \brief Combination of create/delete/read VCNs in the same batch
-///
 /// Combination of create/delete VCNs in the same batch
 TEST_F(vcn, vcn_combine_create_delete_single_batch) {
     pds_batch_params_t batch_params = {0};
@@ -313,7 +297,6 @@ TEST_F(vcn, vcn_combine_create_delete_single_batch) {
 }
 
 /// \brief Combination of create/delete/read VCNs in multiple batches
-///
 /// Combination of create/delete VCNs in multiple batches
 TEST_F(vcn, vcn_combine_create_delete_multiple_batches) {
     pds_batch_params_t batch_params = {0};
@@ -353,17 +336,14 @@ TEST_F(vcn, vcn_combine_create_delete_multiple_batches) {
 }
 
 /// \brief Create max number of VCNs
-///
 /// Create 1k VCNs
 TEST_F(vcn, vcn_create_max) {}
 
 /// \brief Create more than max
-///
 /// Create more than 1k VCNs
 TEST_F(vcn, vcn_create_more_than_max) {}
 
 /// \brief Create vcn with invalid data
-///
 /// Try to create a vcn with invalid data
 TEST_F(vcn, vcn_create_invalid_vcn) {
     // There is a core seen for this test case in pre_process_create_

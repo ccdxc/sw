@@ -39,10 +39,6 @@ protected:
 };
 
 //----------------------------------------------------------------------------
-// Route table test cases utility routines
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
 // Route table test cases implementation
 //----------------------------------------------------------------------------
 
@@ -65,7 +61,7 @@ TEST_F(route_test, v4_route_table_create) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // create max teps
     ASSERT_TRUE(tep_util::many_create(PDS_MAX_TEP-1, first_nh_ip_str,
-                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(rt_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
@@ -85,7 +81,12 @@ TEST_F(route_test, v4_route_table_create) {
 }
 
 /// @}
+
 }    // namespace api_test
+
+//----------------------------------------------------------------------------
+// Entry point
+//----------------------------------------------------------------------------
 
 static inline void
 route_test_usage_print (char **argv)
@@ -124,9 +125,6 @@ route_test_options_parse (int argc, char **argv)
     return;
 }
 
-//----------------------------------------------------------------------------
-//// Entry point
-////----------------------------------------------------------------------------
 int
 main (int argc, char **argv)
 {

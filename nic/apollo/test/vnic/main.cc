@@ -41,10 +41,6 @@ protected:
 };
 
 //----------------------------------------------------------------------------
-// VNIC test cases utility routines
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
 // VNIC test cases implementation
 //----------------------------------------------------------------------------
 
@@ -52,15 +48,10 @@ protected:
 /// @{
 
 /// \brief Create a VNIC
-///
 /// Create a VNIC and test the following
-///
 /// Configure both ipv4 and ipv6 addresses and run the packet test
-///
 /// Configure min to max of vlan ids and verify with packet
-///
 /// Configure varying range of mpls slots and verify with packet
-///
 /// Get the vnic stats and compare the valid, drops/reason matches with the
 /// expectation.
 TEST_F(vnic_test, vnic_create) {
@@ -151,17 +142,13 @@ TEST_F(vnic_test, vnic_create) {
 }
 
 /// \brief Create many VNICs
-///
 /// Create max number of VNICs and test the following
-///
 /// Configure varying range of vlan tags & mpls slots and verify with packet
-///
 /// Get the vnic stats and compare the valid, drops/reason matches with the
 /// expectation.
 TEST_F(vnic_test, vnic_many_create) {}
 
 /// \brief Get VNIC
-///
 /// Configure the vnic and make-sure the parameters are configured properly
 /// by getting the configured values back
 // TODO : Enable this after fixing the read issue
@@ -176,16 +163,13 @@ TEST_F(vnic_test, DISABLED_vnic_get) {
 }
 
 /// \brief VNIC source and destination check
-///
 /// Configure skip_src_dst_check to true/false and make sure the config by
 /// sending both valid and invalid IP addresses.
-///
 /// Get the stats and makesure the drop count/reason are as expected
 TEST_F(vnic_test, vnic_src_dst_check) {}
 
 
 /// \brief Delete VNIC
-///
 /// Configure the vnic and make-sure the parameters are configured properly
 /// by getting the configured values back
 // TODO : Enable this after fixing the delete issue
@@ -205,7 +189,10 @@ TEST_F(vnic_test, DISABLED_vnic_delete) {
 /// @}
 }    // namespace api_test
 
-// print help message showing usage of HAL
+//----------------------------------------------------------------------------
+// Entry point
+//----------------------------------------------------------------------------
+
 static inline void
 print_usage (char **argv)
 {
