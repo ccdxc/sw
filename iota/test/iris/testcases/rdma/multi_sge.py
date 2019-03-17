@@ -4,13 +4,14 @@ import iota.harness.api as api
 def Setup(tc):
  
     tc.desc = '''
-    Test  :   multi_sge
-    Opcode:   Send
-    Num QP:   1, 2
-    Transport: RC
-    MTU: Various sizes
-    RDMA CM: Yes, No
-    modes :   workload1 as server, workload2 as client
+    Test        :   multi_sge
+    Opcode      :   Send, Read, Write
+    Num QP      :   1, 2, ..., 1000
+    Transport   :   RC
+    MTU         :   4096
+    RDMA CM     :   No
+    modes       :   workload1 as server, workload2 as client
+                    workload2 as server, workload1 as client
     '''
 
     tc.iota_path = api.GetTestsuiteAttr("driver_path")
@@ -44,25 +45,33 @@ def Trigger(tc):
     #==============================================================
     # init cmd options
     #==============================================================
-    iter_opt      = ' -D 20 '
+    iter_opt      = ' -n 10 '
     misc_opt      = ' -F --report_gbits '
     cm_opt        = ''
     transport_opt = ''
-    size_opt      = ' -s 10000 '
+    size_opt      = ' -a '
     mtu_opt       = ' -m 4096 '
     qp_opt        = ' -q 1 '
     numsges_opt   = ''
+    bidir_opt     = ''
     tc.client_bkg = False
     s_port        = 12340
     e_port        = s_port + 1
+    server_idx    = 0
+    client_idx    = 1
 
     #==============================================================
     # update non-default cmd options
     #==============================================================
-    if hasattr(tc.iterators, 'rdma_cm') and tc.iterators.rdma_cm == 'yes':
+    if hasattr(tc.iterators, 'duration'):
+        iter_opt = ' -D {dur} '.format(dur = tc.iterators.duration)
+
+    if hasattr(tc.iterators, 'rdma_cm') and \
+       tc.iterators.rdma_cm == 'yes':
         cm_opt = ' -R '
 
-    if hasattr(tc.iterators, 'transport') and tc.iterators.transport == 'UD':
+    if hasattr(tc.iterators, 'transport') and \
+       tc.iterators.transport == 'UD':
         transport_opt = ' -c UD '
 
     if hasattr(tc.iterators, 'size'):
@@ -75,17 +84,27 @@ def Trigger(tc):
         numsges_opt  =  ' -W {numsges} '.format(numsges = tc.iterators.numsges)
 
     if hasattr(tc.iterators, 'num_qp'):
-        num_qp = ' -q {numqp} '.format(numqp = str(tc.iterators.num_qp))
+        qp_opt = ' -q {numqp} '.format(numqp = str(tc.iterators.num_qp))
 
-    if hasattr(tc.iterators, 'threads') and tc.iterators.threads > 1:
+    if hasattr(tc.iterators, 'threads') and \
+       tc.iterators.threads > 1:
         tc.client_bkg = True
         e_port = s_port + tc.iterators.threads
+
+    if hasattr(tc.iterators, 'server') and \
+       tc.iterators.server == 'no':
+        server_idx = 1
+        client_idx = 0
+
+    if hasattr(tc.iterators, 'bidir') and \
+       tc.iterators.bidir == 'yes':
+        bidir_opt = ' -b '
 
     #==============================================================
     # run the cmds
     #==============================================================
-    w1 = tc.w[0]
-    w2 = tc.w[1]
+    w1            = tc.w[server_idx]
+    w2            = tc.w[client_idx]
 
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                     (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
@@ -98,13 +117,13 @@ def Trigger(tc):
     for p in range(s_port, e_port):
 
         port_opt  = ' -p {port} '.format(port = p)
-        dev_opt   = ' -d {dev} '.format(dev = tc.devices[0])
-        gid_opt   = ' -x {gid} '.format(gid = tc.gid[0])
+        dev_opt   = ' -d {dev} '.format(dev = tc.devices[server_idx])
+        gid_opt   = ' -x {gid} '.format(gid = tc.gid[server_idx])
 
         cmd       = tc.iterators.command
         cmd       += dev_opt + iter_opt + gid_opt 
         cmd       += size_opt + mtu_opt + qp_opt
-        cmd       += cm_opt + transport_opt + misc_opt + port_opt
+        cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt
         # add numsges_opt only for Naples
         if w1.IsNaples():
             cmd   += numsges_opt
@@ -112,16 +131,16 @@ def Trigger(tc):
         api.Trigger_AddCommand(req, 
                                w1.node_name, 
                                w1.workload_name,
-                               tc.ib_prefix[0] + cmd,
+                               tc.ib_prefix[server_idx] + cmd,
                                background=True, timeout=120)
 
-        # On Naples-Mellanox setups, with Mellanox as server, it takes a few seconds before the server
-        # starts listening. So sleep for a few seconds before trying to start the client
-        cmd = 'sleep 2'
-        api.Trigger_AddCommand(req,
-                               w1.node_name,
-                               w1.workload_name,
-                               cmd)
+    # On Naples-Mellanox setups, with Mellanox as server, it takes a few seconds before the server
+    # starts listening. So sleep for a few seconds before trying to start the client
+    cmd = 'sleep 2'
+    api.Trigger_AddCommand(req,
+                           w1.node_name,
+                           w1.workload_name,
+                           cmd)
 
     #==============================================================
     # cmd for client
@@ -129,13 +148,13 @@ def Trigger(tc):
     for p in range(s_port, e_port):
 
         port_opt  = ' -p {port} '.format(port = p)
-        dev_opt   = ' -d {dev} '.format(dev = tc.devices[1])
-        gid_opt   = ' -x {gid} '.format(gid = tc.gid[1])
+        dev_opt   = ' -d {dev} '.format(dev = tc.devices[client_idx])
+        gid_opt   = ' -x {gid} '.format(gid = tc.gid[client_idx])
 
         cmd       = tc.iterators.command
         cmd       += dev_opt + iter_opt + gid_opt 
         cmd       += size_opt + mtu_opt + qp_opt
-        cmd       += cm_opt + transport_opt + misc_opt + port_opt
+        cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt
         # add numsges_opt only for Naples
         if w2.IsNaples():
             cmd   += numsges_opt
@@ -145,18 +164,18 @@ def Trigger(tc):
         api.Trigger_AddCommand(req, 
                                w2.node_name, 
                                w2.workload_name,
-                               tc.ib_prefix[1] + cmd, 
+                               tc.ib_prefix[client_idx] + cmd,
                                background=tc.client_bkg, timeout=125) #5 secs more than def test timeout=120
 
-        if tc.client_bkg:
-            # since the client is running in the background, sleep for 130 secs
-            # to allow the test to complete before verifying the result
-            #override default timeout to 135 slightly above the test duration 130 secs
-            cmd = 'sleep 130'
-            api.Trigger_AddCommand(req,
-                                   w1.node_name,
-                                   w1.workload_name,
-                                   cmd, timeout = 135)
+    if tc.client_bkg:
+        # since the client is running in the background, sleep for 30 secs
+        # to allow the test to complete before verifying the result
+        # override default timeout to 35, slightly above the sleep duration 30 secs
+        cmd = 'sleep 30'
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd, timeout = 35)
 
     #==============================================================
     # trigger the request
@@ -180,7 +199,19 @@ def Verify(tc):
             result = api.types.status.FAILURE
 
         if tc.client_bkg and api.Trigger_IsBackgroundCommand(cmd) and len(cmd.stderr) != 0:
-            result = api.types.status.FAILURE
+            # check if stderr has anything other than the following msg:
+            # Requested SQ size might be too big. Try reducing TX depth and/or inline size.
+            # Current TX depth is 5 and  inline size is 0 .
+            lines = cmd.stderr.split('\n')
+            for line in lines:
+                if "Requested SQ size might be too big" in line or \
+                   "Current TX depth is" in line or \
+                   len(line) == 0:
+                    continue
+                else:
+                    api.Logger.info("ERROR seen in stderr: {err}".format(err = line))
+                    result = api.types.status.FAILURE
+                    break
 
     return result
 
