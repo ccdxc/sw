@@ -1,6 +1,6 @@
 meta:
     name    : mode_change
-    os      : [ linux, freebsd ]
+    os      : [ linux ]
     nics    : [ pensando, mellanox, intel ]
     targetcount : 9 
 
