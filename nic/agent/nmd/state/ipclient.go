@@ -349,10 +349,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 		c.nmdState.config.Status.SmartNicName = macStr
 	}
 
-	if controllers == nil {
-		return errors.New("controllers is nil")
-	}
-
 	// TODO : Reenable these lines
 	// Disable any updates to Naples Admission once Naples has been admitted into a Venice Cluster.
 	// if c.nmdState.config.Status.Phase == cluster.SmartNICStatus_ADMITTED {

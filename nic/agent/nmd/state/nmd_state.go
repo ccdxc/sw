@@ -520,6 +520,7 @@ func (n *NMD) StartRestServer() error {
 
 	t2 := router.Methods("GET").Subrouter()
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
+	t2.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileGetHandler))
 	t2.HandleFunc(NaplesInfoURL, httputils.MakeHTTPHandler(n.NaplesInfoGetHandler))
 	t2.HandleFunc(CmdEXECUrl, NaplesCmdExecHandler)
 	t2.HandleFunc("/api/{*}", unknownAction)
