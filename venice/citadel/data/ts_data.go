@@ -179,6 +179,7 @@ func (dn *DNode) replicatePoints(ctx context.Context, req *tproto.PointsWriteReq
 	// make a copy of the replicas, in case if it changes while we are walking it
 	replicas := ref.DeepCopy(shard.replicas).([]*tproto.ReplicaInfo)
 
+	secRepl := []uint64{}
 	// walk all replicas
 	// FIXME: look into how to do quorum write
 	for _, se := range replicas {
@@ -222,9 +223,11 @@ func (dn *DNode) replicatePoints(ctx context.Context, req *tproto.PointsWriteReq
 				dn.addSyncBuffer(&shard.syncBuffer, se.NodeUUID, &newReq)
 				continue
 			}
+			secRepl = append(secRepl, se.ReplicaID)
 		}
 	}
 
+	log.Infof("shard:%d replica:%d replicated points to %v", req.ShardID, req.ReplicaID, secRepl)
 	return nil
 }
 

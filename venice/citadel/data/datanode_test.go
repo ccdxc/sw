@@ -1592,6 +1592,11 @@ func TestAggQuery(t *testing.T) {
 		for _, shard := range cl.ShardMap.Shards {
 			// walk all replicas in the shard
 			for _, repl := range shard.Replicas {
+
+				if repl.State != meta.ReplicaStateReady {
+					continue
+				}
+
 				log.Infof("==== query shard:%d replica: %d node %v ===", repl.ShardID, repl.ReplicaID, repl.NodeUUID)
 				dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
 				if rerr != nil {
