@@ -497,6 +497,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_rto_backoff(rtcpcb.rto_backoff);
     rsp->mutable_spec()->set_cpu_id(rtcpcb.cpu_id);
     rsp->mutable_spec()->set_rcv_wnd(rtcpcb.rcv_wnd);
+    rsp->mutable_spec()->set_zero_window_sent(rtcpcb.zero_window_sent);
     rsp->mutable_spec()->set_snd_wscale(rtcpcb.snd_wscale);
     rsp->mutable_spec()->set_rcv_wscale(rtcpcb.rcv_wscale);
     rsp->mutable_spec()->set_delay_ack(rtcpcb.delay_ack);

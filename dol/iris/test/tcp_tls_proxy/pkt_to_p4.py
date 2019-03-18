@@ -50,6 +50,11 @@ def TestCaseSetup(tc):
         if tc.pvtdata.serq_full:
             tcb.serq_pi = 5
             tcb.serq_ci = 6
+        else:
+            if tc.pvtdata.serq_pi:
+                tcb.serq_pi = tc.pvtdata.serq_pi
+            if tc.pvtdata.serq_ci:
+                tcb.serq_ci = tc.pvtdata.serq_ci
         tcb.SetObjValPd()
     else:
         tc.pvtdata.flow1_bytes_rxed = 0
@@ -264,15 +269,19 @@ def TestCaseVerify(tc):
                 (tcpcb_cur.rcv_nxt, tc.pvtdata.flow1_rcv_nxt + rcv_next_delta))
         return False
 
+    verify_pi_ci = True
+    if ooo or tc.pvtdata.serq_pi or tc.pvtdata.serq_ci:
+       verify_pi_ci = False
+
     # Verify SESQ pi got updated
-    if not ooo and other_tcpcb_cur.sesq_pi != other_tcpcb.sesq_pi + num_rx_pkts:
+    if verify_pi_ci and other_tcpcb_cur.sesq_pi != other_tcpcb.sesq_pi + num_rx_pkts:
         logger.error("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (other_tcpcb.sesq_pi, other_tcpcb.sesq_ci,
                  other_tcpcb_cur.sesq_pi, other_tcpcb_cur.sesq_ci))
         return False
 
     # Verify SESQ ci got updated
-    if not ooo and other_tcpcb_cur.sesq_ci != other_tcpcb.sesq_ci + num_rx_pkts:
+    if verify_pi_ci and other_tcpcb_cur.sesq_ci != other_tcpcb.sesq_ci + num_rx_pkts:
         logger.error("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (other_tcpcb.sesq_pi, other_tcpcb.sesq_ci,
                  other_tcpcb_cur.sesq_pi, other_tcpcb_cur.sesq_ci))

@@ -158,6 +158,7 @@ typedef struct tcpcb_s {
     ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
     uint16_t              other_qid;
+    uint16_t              zero_window_sent;
 } __PACK__ tcpcb_t;
 
 // max. number of TCP CBs supported  (TODO: we can take this from cfg file)

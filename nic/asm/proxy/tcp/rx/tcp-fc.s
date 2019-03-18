@@ -130,6 +130,9 @@ window_calc_done:
     sle         c3, r4, r3
     add.c3      r4, r0, r3
 
+    /* Make sure the receive window calculated is greater than MSS */
+    slt         c3, r4, d.rcv_mss
+    add.c3      r4, r0, r0
     tblwr       d.rcv_wnd, r4
 
 flow_fc_process_done:

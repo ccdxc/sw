@@ -1163,3 +1163,37 @@ modules:
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=False
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC_ZERO_WINDOW
+        spec    : tcp_fc_zero_window.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+            serq_pi        : 0
+            serq_ci        : 2
+            rcv_mss        : 536
+            rcv_wnd        : 500
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC_WINDOW_GREATER_THAN_MSS
+        spec    : tcp_fc_window_greater_than_mss.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+            serq_pi        : 0
+            serq_ci        : 2
+            rcv_mss        : 536
+            rcv_wnd        : 590
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False

@@ -100,6 +100,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         smss                            : 16                    ;\
         pkts_sent                       : 8                     ;\
         quick_acks_decr                 : 4                     ;\
+        zero_window_sent                : 16                    ;\
 
 #define RETX_SHARED_PARAMS \
 retx_snd_una,\
@@ -120,7 +121,7 @@ smss, is_cwnd_limited, limited_transmit, rto_backoff, no_window
 
 #define TSO_PARAMS                                                        \
 ip_id, source_lif, source_port, dest_port, header_len,\
-bytes_sent, smss, pkts_sent
+bytes_sent, smss, pkts_sent, zero_window_sent
 
 
 #define GENERATE_RETX_SHARED_D \
@@ -162,6 +163,7 @@ bytes_sent, smss, pkts_sent
     modify_field(tso_d.bytes_sent, bytes_sent);\
     modify_field(tso_d.smss, smss);\
     modify_field(tso_d.pkts_sent, pkts_sent);\
+    modify_field(tso_d.zero_window_sent, zero_window_sent);\
 
 header_type rx2tx_extra_t {
     fields {

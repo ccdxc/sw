@@ -765,6 +765,7 @@ p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
 
+    tcpcb_pd->tcpcb->zero_window_sent = ntohs(tso_d.zero_window_sent);
     tcpcb_pd->tcpcb->bytes_sent = ntohs(tso_d.bytes_sent) +
                                     stats.bytes_sent;
     tcpcb_pd->tcpcb->pkts_sent = tso_d.pkts_sent + stats.pkts_sent;

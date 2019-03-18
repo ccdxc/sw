@@ -371,6 +371,7 @@ func showTCPCb(resp *halproto.TcpCbGetResponse, yamlOut bool) {
 		fmt.Printf("%-30s : %-6t\n", "pending_ack_send", spec.PendingAckSend)
 		fmt.Printf("%-30s : %-6d\n", "other_qid", spec.OtherQid)
 		fmt.Printf("%-30s : %-6d\n", "rto_backoff", spec.RtoBackoff)
+		fmt.Printf("%-30s : %-6d\n", "zero_window_sent", spec.ZeroWindowSent)
 		fmt.Printf("%s\n\n", strings.Repeat("-", 80))
 	}
 }

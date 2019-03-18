@@ -95,6 +95,8 @@ dma_cmd_tcp_header:
                         p.tcp_header_ack_no, k.t0_s2s_rcv_nxt
     phvwrpair       p.tx2rx_rcv_wup, k.t0_s2s_rcv_nxt, \
                         p.tx2rx_rcv_wnd_adv, k.to_s5_rcv_wnd
+    seq             c2, k.to_s5_rcv_wnd, r0
+    tbladd.c2       d.zero_window_sent, 1
 
     //phvwr           p.tcp_header_data_ofs, 8		// 32 bytes
     phvwrpair       p.tcp_header_data_ofs, 5, \

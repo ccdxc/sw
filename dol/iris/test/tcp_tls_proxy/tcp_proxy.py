@@ -79,6 +79,8 @@ def SetupProxyArgs(tc):
     pkt_alloc = 0
     pkt_free = 0
     serq_full = False
+    serq_pi = 0
+    serq_ci = 0
     snd_cwnd = 0
     initial_window = 0
     rcv_mss = 0
@@ -158,6 +160,12 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'snd_cwnd'):
         snd_cwnd = tc.module.args.snd_cwnd
         logger.info("- snd_cwnd %s" % tc.module.args.snd_cwnd)
+    if hasattr(tc.module.args, 'serq_ci'):
+        serq_ci = tc.module.args.serq_ci
+        logger.info("- serq_ci %s" % tc.module.args.serq_ci)
+    if hasattr(tc.module.args, 'serq_pi'):
+        serq_pi = tc.module.args.serq_pi
+        logger.info("- serq_pi %s" % tc.module.args.serq_pi)
     if hasattr(tc.module.args, 'initial_window'):
         initial_window = tc.module.args.initial_window
         logger.info("- initial_window %s" % tc.module.args.initial_window)
@@ -266,6 +274,8 @@ def SetupProxyArgs(tc):
     tc.pvtdata.pkt_alloc = pkt_alloc
     tc.pvtdata.pkt_free = pkt_free
     tc.pvtdata.serq_full = serq_full
+    tc.pvtdata.serq_pi = serq_pi
+    tc.pvtdata.serq_ci= serq_ci
     tc.pvtdata.snd_cwnd = snd_cwnd
     tc.pvtdata.initial_window = initial_window
     tc.pvtdata.rcv_wnd = rcv_wnd
