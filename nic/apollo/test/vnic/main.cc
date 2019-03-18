@@ -152,6 +152,8 @@ TEST_F(vnic_test, vnic_many_create) {}
 /// Configure the vnic and make-sure the parameters are configured properly
 /// by getting the configured values back
 // TODO : Enable this after fixing the read issue
+//        Failure is because reading of EGRESS_LOCAL_VNIC_INFO_RX table
+//        entry returns all 0s
 TEST_F(vnic_test, DISABLED_vnic_get) {
     pds_vnic_info_t vnic_info;
     pds_vcn_id_t vcn_id = 1;
@@ -173,6 +175,8 @@ TEST_F(vnic_test, vnic_src_dst_check) {}
 /// Configure the vnic and make-sure the parameters are configured properly
 /// by getting the configured values back
 // TODO : Enable this after fixing the delete issue
+//        Failure is because reading of EGRESS_LOCAL_VNIC_INFO_RX table
+//        entry returns all 0s
 TEST_F(vnic_test, DISABLED_vnic_delete) {
 
     pds_batch_params_t batch_params = {0};

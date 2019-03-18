@@ -70,6 +70,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
         spec->egr_v4_policy.id, spec->egr_v6_policy.id);
 
     key_.id = spec->key.id;
+    vcn_ = spec->vcn;
     v4_route_table_.id = spec->v4_route_table.id;
     v6_route_table_.id = spec->v6_route_table.id;
     ing_v4_policy_.id = spec->ing_v4_policy.id;

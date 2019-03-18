@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
+#include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/policy.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
@@ -148,36 +149,51 @@ private:
      * @param[in] v6_policy      egress IPv6 security policy
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t activate_vnic_by_vlan_tx_table_(api_op_t api_op,
-                                              api_base *api_obj,
-                                              pds_epoch_t epoch,
-                                              vcn_entry *vcn,
-                                              subnet_entry *subnet,
-                                              pds_vnic_spec_t *spec,
-                                              route_table *v4_route_table,
-                                              route_table *v6_route_table,
-                                              policy *v4_policy,
-                                              policy *v6_policy);
+    sdk_ret_t activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
+                                                     vcn_entry *vcn,
+                                                     pds_vnic_spec_t *spec,
+                                                     vnic_entry *vnic,
+                                                     route_table *v4_route_table,
+                                                     route_table *v6_route_table,
+                                                     policy *v4_policy,
+                                                     policy *v6_policy);
     /**
      * @brief    program LOCAL_VNIC_BY_SLOT_RX table and activate the epoch in
      *           the Rx direction
-     * @param[in] api_op         api operation
-     * @param[in] api_obj        vnic entry object
      * @param[in] epoch          epoch being activated
      * @param[in] vcn            vcn entry
-     * @param[in] subnet         subnet entry
      * @param[in] spec           vnic configuration
+     * @param[in] vnic           vnic obj being programmed
      * @param[in] v4_policy      ingress IPv4 security policy
      * @param[in] v6_policy      ingress IPv6 security policy
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t activate_vnic_by_slot_rx_table_(api_op_t api_op,
-                                              api_base *api_obj,
-                                              pds_epoch_t epoch, vcn_entry *vcn,
-                                              subnet_entry *subnet,
-                                              pds_vnic_spec_t *spec,
-                                              policy *v4_policy,
-                                              policy *v6_policy);
+    sdk_ret_t activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
+                                                     vcn_entry *vcn,
+                                                     pds_vnic_spec_t *spec,
+                                                     vnic_entry *vnic,
+                                                     policy *v4_policy,
+                                                     policy *v6_policy);
+    /**
+     * @brief    program vnic related tables during vnic create by enabling
+     *           stage0 tables corresponding to the new epoch
+     * @param[in] epoch          epoch being activated
+     * @param[in] vnic           vnic obj being programmed
+     * @param[in] spec           vnic configuration
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
+                                    pds_vnic_spec_t *spec);
+
+    /**
+     * @brief    program vnic related tables during vnic delete by disabling
+     *           stage0 tables corresponding to the new epoch
+     * @param[in] epoch          epoch being activated
+     * @param[in] vnic           vnic obj being programmed
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic);
+
     /**
      * @brief Fill the vnic stats
      * @param[in] tx_stats Transmit statistics table data

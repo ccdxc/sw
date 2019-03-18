@@ -65,6 +65,8 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;
 
     memcpy(&this->key_, &spec->key, sizeof(pds_vnic_key_t));
+    this->subnet_ =  spec->subnet;
+    this->fabric_encap_ = spec->fabric_encap;
     return SDK_RET_OK;
 }
 
