@@ -250,6 +250,11 @@ action recirc_packet(recirc_reason) {
      * gets a new value. But at this point, it is safe to use
      */
     modify_field(capri_intrinsic.tm_iq, qos_metadata.qos_class_id);
+
+    /*
+     * reset individual options (tcp and ip) validity bits - the blob headers
+     * are still valid. this is implemented in ASM code
+     */
 }
 
 action flow_hit_from_vm_bounce(src_lif) {
