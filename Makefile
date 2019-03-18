@@ -9,7 +9,7 @@ CACHEMOUNT :=
 endif
 
 # Lists excluded patterns to "go list"
-EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|gometrics|vchub|buildroot"
+EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|gometrics|vchub|buildroot"
 
 # Lists targets to be prebuilt before generation
 TO_PREGEN := venice/utils/apigen/annotations

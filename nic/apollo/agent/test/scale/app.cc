@@ -23,7 +23,7 @@
 
 using std::string;
 
-std::string  svc_endpoint_  = "localhost:50054";
+std::string  svc_endpoint_  = "localhost:9999";
 
 std::unique_ptr<pds::RouteSvc::Stub>     g_route_table_stub_;
 std::unique_ptr<pds::MappingSvc::Stub>   g_mapping_stub_;

@@ -30,8 +30,6 @@
 using std::string;
 namespace pt = boost::property_tree;
 
-std::string  hal_svc_endpoint_     = "localhost:50054";
-
 static inline uint64_t
 min(uint64_t a, uint64_t b) {
 

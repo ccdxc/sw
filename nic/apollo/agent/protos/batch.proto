@@ -7,7 +7,6 @@
 syntax = "proto3";
 package pds;
 
-import public "gogo.proto";
 import "meta/meta.proto";
 import "types.proto";
 

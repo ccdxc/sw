@@ -14,6 +14,7 @@
 #include "nic/apollo/agent/svc/route.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
+#include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/test/flow_test/flow_test.hpp"
@@ -25,7 +26,7 @@ using grpc::ServerContext;
 using grpc::Status;
 flow_test *g_flow_test_obj;
 std::string g_grpc_server_addr;
-#define GRPC_API_PORT    50054
+#define GRPC_API_PORT    9999
 
 static void
 svc_reg (void)
@@ -39,7 +40,7 @@ svc_reg (void)
     RouteSvcImpl      route_svc;
     VnicSvcImpl       vnic_svc;
     MappingSvcImpl    mapping_svc;
-
+    PortSvcImpl       port_svc;
 
     // do gRPC initialization
     grpc_init();
@@ -60,6 +61,7 @@ svc_reg (void)
     server_builder->RegisterService(&route_svc);
     server_builder->RegisterService(&vnic_svc);
     server_builder->RegisterService(&mapping_svc);
+    server_builder->RegisterService(&port_svc);
 
     PDS_TRACE_INFO("gRPC server listening on ... {}",
                    g_grpc_server_addr.c_str());

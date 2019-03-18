@@ -7,9 +7,9 @@
 syntax = "proto3";
 package pds;
 
-import public "gogo.proto";
-import public "meta/meta.proto";
-import public "types.proto";
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
 
 service TunnelSvc {
   rpc TunnelCreate (TunnelRequest) returns (TunnelResponse) {}

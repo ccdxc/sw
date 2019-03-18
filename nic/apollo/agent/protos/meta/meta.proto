@@ -6,8 +6,9 @@
 
 syntax = "proto3";
 package meta;
+option go_package="meta/pds";
 
-import "gogo.proto";
+import public "gogo.proto";
 import "google/protobuf/timestamp.proto";
 
 // TypeMeta contains the metadata about kind and version for all API objects
