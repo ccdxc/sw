@@ -580,15 +580,11 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name, p
             //first 7 characters are the part identifiers
             part_id = part_num.substr(0, 7);
 
-            if(!part_id.compare("68-0005")) {
-                catalog_file_name = "/catalog_hw_68-0005.json";
-            }
-            else if(!part_id.compare("68-0003")) {
-                catalog_file_name = "/catalog_hw_68-0003.json";
+            if (!part_id.empty()) {
+                catalog_file_name = "/catalog_hw_" + part_id + ".json";
             }
             else {
-                SDK_TRACE_ERR("part-id %s is not supported",
-                        part_id.c_str());
+                SDK_TRACE_ERR("part-id from FRU is empty. Please program the correct FRU");
                 return NULL;
             }
         }

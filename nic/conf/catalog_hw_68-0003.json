@@ -6,7 +6,7 @@
     "form_factor": "FHHL",
     "num_pcie_lanes": "16",
     "emmc_size": "8",
-    "memory_size": "0",
+    "memory_size": "4",
     "num_asics" : "1",
     "asics" :
     [
