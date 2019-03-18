@@ -46,6 +46,7 @@ struct rx_stats {
         u64 alloc_err;
         u64 pkts;
         u64 bytes;
+        u64 csum_err;
 };
 
 #define QCQ_F_INITED            BIT(0)
@@ -221,6 +222,8 @@ ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir);
 VMK_ReturnStatus
 ionic_rss_hash_key_set(struct lif *lif, const u8 *key);
 
+VMK_ReturnStatus
+ionic_lif_set_uplink_info(struct lif *lif);
 
 #endif /* _IONIC_LIF_H_ */
 

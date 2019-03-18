@@ -561,13 +561,76 @@ ionic_notifyq_link_change_event(struct ionic_en_uplink_handle *uplink_handle,
                                 union notifyq_comp *comp)
 {
         vmk_SpinlockLockIgnoreDeathPending(uplink_handle->link_status_lock);
-        uplink_handle->cur_hw_link_status.state = comp->link_change.link_status == PORT_OPER_STATUS_UP ?
-                                                  VMK_LINK_STATE_UP : VMK_LINK_STATE_DOWN;
+        uplink_handle->cur_hw_link_status.state =
+                comp->link_change.link_status == PORT_OPER_STATUS_UP ?
+                VMK_LINK_STATE_UP : VMK_LINK_STATE_DOWN;
         uplink_handle->cur_hw_link_status.duplex = VMK_LINK_DUPLEX_FULL;
         uplink_handle->cur_hw_link_status.speed = comp->link_change.link_speed;
         vmk_SpinlockUnlock(uplink_handle->link_status_lock); 
 
         vmk_WorldForceWakeup(uplink_handle->link_check_world);
+}
+
+
+VMK_ReturnStatus
+ionic_lif_set_uplink_info(struct lif *lif)
+{
+        VMK_ReturnStatus status;
+        const char *uplink_name_str;
+
+        struct ionic_admin_ctx ctx = {
+//                .work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+                .cmd.netdev_info = {
+                        .opcode = CMD_OPCODE_SET_NETDEV_INFO,
+                },
+        };
+
+        uplink_name_str = vmk_NameToString(&lif->uplink_handle->uplink_name);
+        status = vmk_StringLCopy(ctx.cmd.netdev_info.nd_name,
+                                 uplink_name_str,
+                                 sizeof(ctx.cmd.netdev_info.nd_name),
+                                 NULL);
+        if (status != VMK_OK) {
+                ionic_err("vmk_StringLCopy() failed, status: %s",
+                          vmk_StatusToString(status));
+                return status;
+        }
+
+        status = vmk_StringLCopy(ctx.cmd.netdev_info.dev_name,
+                                 VMK_PCI_BUS_NAME,
+                                 sizeof(ctx.cmd.netdev_info.dev_name),
+                                 NULL);
+        if (status != VMK_OK) {
+                ionic_err("vmk_StringLCopy() failed, status: %s",
+                          vmk_StatusToString(status));
+                return status;
+        }
+
+	status = ionic_completion_create(ionic_driver.module_id,
+					 ionic_driver.heap_id,
+					 ionic_driver.lock_domain,
+					 "ionic_admin_ctx.work",
+					 &ctx.work);
+	if (status != VMK_OK) {
+		ionic_err("ionic_completion_create() failed, status: %s",
+			  vmk_StatusToString(status));
+		return status;
+	}
+
+	ionic_completion_init(&ctx.work);
+
+        ionic_info("Setting uplink device name: %s %s",
+                   ctx.cmd.netdev_info.nd_name,
+                   ctx.cmd.netdev_info.dev_name);
+
+        status = ionic_adminq_post_wait(lif, &ctx);
+        ionic_completion_destroy(&ctx.work);
+        if (status != VMK_OK) {
+                ionic_err("ionic_adminq_post_wait() failed, status: %s",
+                          vmk_StatusToString(status));
+        }
+
+        return status;
 }
 
 

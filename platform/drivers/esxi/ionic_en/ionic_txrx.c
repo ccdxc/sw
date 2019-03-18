@@ -131,21 +131,20 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 }
         }
 
-        if (uplink_handle->hw_features & ETH_HW_RX_CSUM && comp->csum_calc) {
-                vmk_PktSetCsumVfd(pkt);
-                //skb->ip_summed = CHECKSUM_COMPLETE;
-                //skb->csum = comp->csum;
-#ifdef HAPS
-       //         if (skb->csum != (u16)~csum)
-         //               printk(KERN_ERR "Rx CSUM incorrect.  Want 0x%04x got 0x%04x, protocol 0x%04x\n", (u16)~csum, skb->csum, htons(skb->protocol));
-#endif
+        if ((uplink_handle->hw_features & ETH_HW_RX_CSUM) &&
+            comp->csum_calc) {
+                if (comp->csum_tcp_bad ||
+                    comp->csum_udp_bad ||
+                    comp->csum_ip_bad) {
+                       stats->csum_err++;
+                } else {
+                        vmk_PktSetCsumVfd(pkt);
+                }
         }
 
         if (uplink_handle->hw_features & ETH_HW_VLAN_RX_STRIP) {
                 if (comp->V) {
                         vmk_PktVlanIDSet(pkt, comp->vlan_tci);
-//                        __vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q),
-//                                               comp->vlan_tci);
                 }
         }
 

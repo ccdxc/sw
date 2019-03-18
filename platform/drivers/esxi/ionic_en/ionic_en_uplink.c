@@ -905,6 +905,8 @@ static void
 ionic_en_uplink_lif_stats_get(struct lif *lif,                  // IN
                               vmk_UplinkStats *uplink_stats)    // IN/OUT
 {
+        vmk_uint32 i;
+        struct rx_stats *rx_stats;
         struct ionic_lif_stats *ls = lif->lif_stats;
 
         uplink_stats->rxPkts = ls->rx_ucast_packets +
@@ -926,6 +928,10 @@ ionic_en_uplink_lif_stats_get(struct lif *lif,                  // IN
                                      ls->rx_desc_data_error;
         uplink_stats->rxErrors = uplink_stats->rxOverflowErrors +
                                  uplink_stats->rxMissErrors;
+        for (i = 0; i < lif->nrxqcqs; i++) {
+                rx_stats = &lif->rxqcqs[i]->stats.rx;
+                uplink_stats->rxErrors += rx_stats->csum_err;
+        }
 
         uplink_stats->txPkts = ls->tx_ucast_packets +
                                ls->tx_mcast_packets +
@@ -1017,6 +1023,7 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                           vmk_Uplink uplink)                      // IN
 {
         VMK_ReturnStatus status;
+        struct lif *lif;
         vmk_WorldProps world_props;
         vmk_Name uplink_name;
         struct ionic_en_priv_data *priv_data =
@@ -1028,6 +1035,18 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
         uplink_handle->uplink_dev = uplink;
         uplink_name = vmk_UplinkNameGet(uplink);
 
+        vmk_Memcpy(&uplink_handle->uplink_name,
+                   &uplink_name,
+                   sizeof(vmk_Name));
+
+        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                             struct lif, list);
+        status = ionic_lif_set_uplink_info(lif);
+        if (status != VMK_OK) {
+                ionic_err("ionic_lif_set_uplink_info() failed, status: %s",
+                          vmk_StatusToString(status));
+        }
+
         status = ionic_device_list_add(uplink_name,
                                        priv_data,
                                        &ionic_driver.uplink_dev_list);
@@ -1036,10 +1055,6 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                           vmk_StatusToString(status));
                 return status;
         }
-
-        vmk_Memcpy(&uplink_handle->uplink_name,
-                   &uplink_name,
-                   sizeof(vmk_Name));
 
         vmk_Memset(&world_props, 0, sizeof(vmk_WorldProps));
         world_props.data          = priv_data;
