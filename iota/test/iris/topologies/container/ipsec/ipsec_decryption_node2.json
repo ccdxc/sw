@@ -6,7 +6,7 @@
   {
     "kind": "IPSecSADecrypt",
     "meta": {
-      "name": "ipsec-decrypt-sa1",
+      "name": "ipsec-decrypt-tep2-sa1",
       "tenant": "default",
       "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -27,7 +27,7 @@
   {
     "kind": "IPSecSADecrypt",
     "meta": {
-      "name": "ipsec-decrypt-sa2",
+      "name": "ipsec-decrypt-tep2-sa2",
       "tenant": "default",
       "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -48,7 +48,7 @@
   {
     "kind": "IPSecSADecrypt",
     "meta": {
-      "name": "ipsec-decrypt-sa3",
+      "name": "ipsec-decrypt-tep2-sa3",
       "tenant": "default",
       "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -69,7 +69,7 @@
   {
     "kind": "IPSecSADecrypt",
     "meta": {
-      "name": "ipsec-decrypt-sa4",
+      "name": "ipsec-decrypt-tep2-sa4",
       "tenant": "default",
       "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",

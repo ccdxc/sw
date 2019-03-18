@@ -16,12 +16,15 @@ def Trigger(tc):
     push_node_0 = [nodes[0]]
     push_node_1 = [nodes[1]]
 
+    encrypt_objects = netagent_cfg_api.QueryConfigs(kind='IPSecSAEncrypt')
+    decrypt_objects = netagent_cfg_api.QueryConfigs(kind='IPSecSADecrypt')
+    policy_objects = netagent_cfg_api.QueryConfigs(kind='IPSecPolicy')
+
     # Configure IPsec on Node 1
 
     if api.IsNaplesNode(nodes[0]):
 
-      stored_objects = netagent_cfg_api.QueryConfigs(kind='IPSecSAEncrypt')
-      if len(stored_objects) == 0:
+      if len(encrypt_objects) == 0:
 
         newObjects = netagent_cfg_api.AddOneConfig(api.GetTopologyDirectory() + "/ipsec/ipsec_encryption_node1.json")
         if len(newObjects) == 0:
@@ -38,8 +41,7 @@ def Trigger(tc):
             api.Logger.error("Unable to fetch newly pushed objects")
             return api.types.status.FAILURE
 
-      stored_objects = netagent_cfg_api.QueryConfigs(kind='IPSecSADecrypt')
-      if len(stored_objects) == 0:
+      if len(decrypt_objects) == 0:
 
         newObjects = netagent_cfg_api.AddOneConfig(api.GetTopologyDirectory() + "/ipsec/ipsec_decryption_node1.json")
         if len(newObjects) == 0:
@@ -56,8 +58,7 @@ def Trigger(tc):
             api.Logger.error("Unable to fetch newly pushed objects")
             return api.types.status.FAILURE
 
-      stored_objects = netagent_cfg_api.QueryConfigs(kind='IPSecPolicy')
-      if len(stored_objects) == 0:
+      if len(policy_objects) == 0:
 
         newObjects = netagent_cfg_api.AddOneConfig(api.GetTopologyDirectory() + "/ipsec/ipsec_policies_node1.json")
         if len(newObjects) == 0:
@@ -131,8 +132,7 @@ def Trigger(tc):
 
     if api.IsNaplesNode(nodes[1]):
 
-      stored_objects = netagent_cfg_api.QueryConfigs(kind='IPSecSAEncrypt')
-      if len(stored_objects) == 0:
+      if len(encrypt_objects) == 0:
 
         newObjects = netagent_cfg_api.AddOneConfig(api.GetTopologyDirectory() + "/ipsec/ipsec_encryption_node2.json")
         if len(newObjects) == 0:
@@ -147,10 +147,9 @@ def Trigger(tc):
         get_config_objects = netagent_cfg_api.GetConfigObjects(newObjects)
         if len(get_config_objects) == 0:
             api.Logger.error("Unable to fetch newly pushed objects")
-            return api.types.status.FAILURE
+            #return api.types.status.FAILURE
 
-      stored_objects = netagent_cfg_api.QueryConfigs(kind='IPSecSADecrypt')
-      if len(stored_objects) == 0:
+      if len(decrypt_objects) == 0:
 
         newObjects = netagent_cfg_api.AddOneConfig(api.GetTopologyDirectory() + "/ipsec/ipsec_decryption_node2.json")
         if len(newObjects) == 0:
@@ -165,10 +164,9 @@ def Trigger(tc):
         get_config_objects = netagent_cfg_api.GetConfigObjects(newObjects)
         if len(get_config_objects) == 0:
             api.Logger.error("Unable to fetch newly pushed objects")
-            return api.types.status.FAILURE
+            #return api.types.status.FAILURE
 
-      stored_objects = netagent_cfg_api.QueryConfigs(kind='IPSecPolicy')
-      if len(stored_objects) == 0:
+      if len(policy_objects) == 0:
 
         newObjects = netagent_cfg_api.AddOneConfig(api.GetTopologyDirectory() + "/ipsec/ipsec_policies_node2.json")
         if len(newObjects) == 0:
@@ -183,7 +181,7 @@ def Trigger(tc):
         get_config_objects = netagent_cfg_api.GetConfigObjects(newObjects)
         if len(get_config_objects) == 0:
             api.Logger.error("Unable to fetch newly pushed objects")
-            return api.types.status.FAILURE
+            #return api.types.status.FAILURE
 
     else:
         workloads = api.GetWorkloads(nodes[1])
@@ -238,11 +236,13 @@ def Trigger(tc):
     w1 = workloads[0]
     workloads = api.GetWorkloads(nodes[1])
     w2 = workloads[0]
+    bypass_test = 0
 
     if w1.IsNaples() and w2.IsNaples():
-        api.Logger.info("Both workloads are Naples, %s is iperf client, %s is iperf server" % (w1.node_name, w2.node_name))
+        api.Logger.info("Both workloads are Naples, %s is iperf client, %s is iperf server, bypassing test" % (w1.node_name, w2.node_name))
         iperf_client_wl = w1
         iperf_server_wl = w2
+        bypass_test = 1
     elif w1.IsNaples():
         api.Logger.info("%s is Naples and iperf client, %s is iperf server" % (w1.node_name, w2.node_name))
         iperf_client_wl = w1
@@ -277,25 +277,26 @@ def Trigger(tc):
    
     api.Logger.info("Starting Iperf test over IPSec from %s" % (tc.cmd_descr))
 
-    cmd_cookie = "Set rcv socket buffer size on %s" %(w1.workload_name)
-    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
+    if bypass_test == 0:
+      cmd_cookie = "Set rcv socket buffer size on %s" %(w1.workload_name)
+      api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
                            "sysctl -w net.ipv4.tcp_rmem='4096 2147483647 2147483647'")
-    tc.cmd_cookies.append(cmd_cookie)
+      tc.cmd_cookies.append(cmd_cookie)
 
-    cmd_cookie = "Set rcv socket buffer size on %s" %(w2.workload_name)
-    api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
+      cmd_cookie = "Set rcv socket buffer size on %s" %(w2.workload_name)
+      api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            "sysctl -w net.ipv4.tcp_rmem='4096 2147483647 2147483647'")
-    tc.cmd_cookies.append(cmd_cookie)
+      tc.cmd_cookies.append(cmd_cookie)
 
-    cmd_cookie = "Running iperf server on %s" % (iperf_server_wl.workload_name)
-    api.Trigger_AddCommand(req, iperf_server_wl.node_name, iperf_server_wl.workload_name,
+      cmd_cookie = "Running iperf server on %s" % (iperf_server_wl.workload_name)
+      api.Trigger_AddCommand(req, iperf_server_wl.node_name, iperf_server_wl.workload_name,
                            "iperf3 -s -p %s" % (tc.iterators.port), background = True)
-    tc.cmd_cookies.append(cmd_cookie)
+      tc.cmd_cookies.append(cmd_cookie)
     
-    cmd_cookie = "Running iperf client on %s" % (iperf_client_wl.workload_name)
-    api.Trigger_AddCommand(req, iperf_client_wl.node_name, iperf_client_wl.workload_name,
-                           "iperf3 -c %s -p %s -M %s" % (iperf_server_wl.ip_address, tc.iterators.port, tc.iterators.pktsize))
-    tc.cmd_cookies.append(cmd_cookie)
+      cmd_cookie = "Running iperf client on %s" % (iperf_client_wl.workload_name)
+      api.Trigger_AddCommand(req, iperf_client_wl.node_name, iperf_client_wl.workload_name,
+                             "iperf3 -c %s -p %s -M %s" % (iperf_server_wl.ip_address, tc.iterators.port, tc.iterators.pktsize))
+      tc.cmd_cookies.append(cmd_cookie)
     
     if w1.IsNaples():
         cmd_cookie = "IPSec state on %s AFTER running iperf traffic" % (w1.node_name)

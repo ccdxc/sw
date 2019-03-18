@@ -41,7 +41,7 @@ testbundles:
         - mnic/mnic_hostpin.testbundle
         - mnic/mnic_hostpin_naples_only.testbundle
         - cruds/cruds.testbundle
-        #- ipsec/ipsec.testbundle
+        - ipsec/ipsec.testbundle
 
 
     regression:

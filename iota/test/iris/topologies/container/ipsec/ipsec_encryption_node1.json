@@ -6,7 +6,7 @@
   {
     "kind": "IPSecSAEncrypt",
     "meta": {
-      "name": "ipsec-encrypt-sa1",
+      "name": "ipsec-encrypt-tep1-sa1",
       "tenant": "default",
       "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -29,7 +29,7 @@
   {
     "kind": "IPSecSAEncrypt",
     "meta": {
-      "name": "ipsec-encrypt-sa2",
+      "name": "ipsec-encrypt-tep1-sa2",
       "tenant": "default",
       "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -52,7 +52,7 @@
   {
     "kind": "IPSecSAEncrypt",
     "meta": {
-      "name": "ipsec-encrypt-sa3",
+      "name": "ipsec-encrypt-tep1-sa3",
       "tenant": "default",
       "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -75,7 +75,7 @@
   {
     "kind": "IPSecSAEncrypt",
     "meta": {
-      "name": "ipsec-encrypt-sa4",
+      "name": "ipsec-encrypt-tep1-sa4",
       "tenant": "default",
       "namespace": "default",
       "creation-time": "1970-01-01T00:00:00Z",
