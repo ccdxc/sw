@@ -273,33 +273,14 @@ hash_ring_db(struct service_info *svc_info)
 static pnso_error_t
 hash_poll(struct service_info *svc_info)
 {
-	pnso_error_t err = EINVAL;
-	struct cpdc_status_desc *st_desc;
-	uint32_t obj_size;
+	pnso_error_t err;
 
-	err = cpdc_poll(svc_info, NULL);
-	if (err != PNSO_OK)
-		return err;
+	OSAL_LOG_DEBUG("enter ...");
 
-	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
-	if (!st_desc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
-		OSAL_ASSERT(!err);
-		return err;
-	}
-	obj_size = cpdc_get_status_desc_size();
-
-	if (!svc_info->tags_updated)
-		cpdc_update_tags(svc_info);
-
-	if (svc_info->si_num_tags > 1) {
-		st_desc = cpdc_get_next_status_desc(st_desc,
-				obj_size *
-				(svc_info->si_num_tags - 1));
-		return cpdc_poll(svc_info, st_desc);
-	}
-
+	err = (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) ?
+		cpdc_poll_all(svc_info) : cpdc_poll(svc_info, NULL);
+	
+	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 

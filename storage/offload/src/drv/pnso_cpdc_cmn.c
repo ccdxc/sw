@@ -1171,3 +1171,49 @@ cpdc_update_tags(struct service_info *svc_info)
 
 	svc_info->tags_updated = true;
 }
+
+pnso_error_t
+cpdc_poll_all(struct service_info *svc_info)
+{
+	pnso_error_t err = PNSO_OK;
+	struct cpdc_status_desc *st_desc;
+	uint32_t obj_size, i;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	err = cpdc_poll(svc_info, NULL);
+	if (err) {
+		OSAL_LOG_ERROR("poll failed! err: %d", err);
+		goto out;
+	}
+
+	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
+	if (!st_desc) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("invalid base status desc! err: %d", err);
+		goto out;
+	}
+
+	if (!svc_info->tags_updated)
+		cpdc_update_tags(svc_info);
+
+	obj_size = cpdc_get_status_desc_size();
+	for (i = 0; i < svc_info->si_num_tags; i++) {
+		err = cpdc_poll(svc_info, st_desc);
+		if (err) {
+			OSAL_LOG_DEBUG("valid bit not set! num_tags: %d tag: %d st_desc: 0x" PRIx64 " err: %d",
+					svc_info->si_num_tags, i,
+					(uint64_t) st_desc, err);
+			goto out;
+		}
+
+		st_desc = cpdc_get_next_status_desc(st_desc, obj_size);
+	}
+
+	OSAL_LOG_DEBUG("exit! all desc(s) poll success! num_tags: %d",
+			svc_info->si_num_tags);
+	return err;
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
+}
