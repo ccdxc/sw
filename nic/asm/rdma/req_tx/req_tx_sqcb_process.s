@@ -363,10 +363,15 @@ in_progress_spec:
         tblwr.c1       SPEC_SQ_C_INDEX, SQ_C_INDEX
         tblwr.c1       d.frpmr_in_progress, 0
 
-        seq            c1, d.dcqcn_rl_failure, 1
-        tblwr.c1       SPEC_SQ_C_INDEX, SQ_C_INDEX
-        tblwr.c1       d.dcqcn_rl_failure, 0
+        bbeq           d.dcqcn_rl_failure, 0, skip_rl_failure_reset
+        add            r1, r0 , d.msg_psn // BD-Slot
+        tblwr          SPEC_SQ_C_INDEX, SQ_C_INDEX
+        bbeq           d.in_progress, 0, skip_rl_failure_reset
+        tblwr          d.dcqcn_rl_failure, 0  //BD-Slot
+        mincr          r1, 24, -1
+        tblwr.c4       d.spec_msg_psn, r1
 
+skip_rl_failure_reset:
         /*
          * start backtrack process only if there is no outstanding
          * phvs being speculated. If sqcb0's c_index is same as spec_cindex
@@ -383,10 +388,10 @@ in_progress_spec:
         sne            c1, SQ_C_INDEX, SPEC_SQ_C_INDEX //BD-slot
         sne            c3, d.in_progress, 1 
         bcf            [c1 & c3], exit
-        sne            c5, d.spec_msg_psn, d.msg_psn // BD-slot
-        // If spec-enable is set and spec-msg-psn/msg-psn differ then there are outstanding
+        slt            c5, d.spec_msg_psn, d.msg_psn // BD-slot
+        // If spec-enable is set and spec-msg-psn >= msg-psn then there are outstanding
         // phvs in pipeline. Wait until they are drained to begin bktrack.
-        bcf            [!c3 & c4 & c5], exit
+        bcf            [!c3 & c4 & !c5], exit
         
 skip_cindex_check:
         sslt           c4, r0, d.in_progress, d.bktrack_in_progress  // Branch Delay Slot

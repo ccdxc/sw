@@ -27,118 +27,118 @@ testcases:
     #=======================================
     # Multi Sge: 8x4 WQE format
     #=======================================
-    -   name    : Rc_Fml_2Sge_Server
+    -   name    : Rc_Fml_2Sge
         testcase: testcases.rdma.multi_sge
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes']
+            server   : [ 'yes', 'no']
             mtu      : [4096]
             size     : [8192, 16384, 32768, 65536, 8000, 16000, 32000, 64000]
             duration : [20]
             numsges  : [2]
             command  : ['ib_send_bw']
 
-    -   name    : Rc_Fml_3Sge_Server
+    -   name    : Rc_Fml_3Sge
         testcase: testcases.rdma.multi_sge
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes']
+            server   : [ 'yes', 'no']
             mtu      : [4096]
             size     : [12288, 24576, 12000, 24000]
             duration : [20]
             numsges  : [3]
             command  : ['ib_send_bw']
 
-    -   name    : Rc_Fml_4Sge_Server
+    -   name    : Rc_Fml_4Sge
         testcase: testcases.rdma.multi_sge
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes']
+            server   : [ 'yes', 'no']
             mtu      : [4096]
             size     : [8192, 16384, 32768, 65536, 16000, 32000, 64000]
             duration : [20]
             numsges  : [4]
             command  : ['ib_send_bw']
 
-    -   name    : Rc_Fml_5Sge_Server
+    -   name    : Rc_Fml_5Sge
         testcase: testcases.rdma.multi_sge
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes']
+            server   : [ 'yes', 'no']
             mtu      : [4096]
             size     : [20480, 20000, 10000]
             duration : [20]
             numsges  : [5]
             command  : ['ib_send_bw']
 
-    -   name    : Rc_Fml_6Sge_Server
+    -   name    : Rc_Fml_6Sge
         testcase: testcases.rdma.multi_sge
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes']
+            server   : [ 'yes', 'no']
             mtu      : [4096]
             size     : [12288, 24576, 24000]
             duration : [20]
             numsges  : [6]
             command  : ['ib_send_bw']
 
-    -   name    : Rc_Fml_7Sge_Server
+    -   name    : Rc_Fml_7Sge
         testcase: testcases.rdma.multi_sge
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes']
+            server   : [ 'yes', 'no']
             mtu      : [4096]
             size     : [28672, 28000, 7700]
             duration : [20]
             numsges  : [7]
             command  : ['ib_send_bw']
 
-    -   name    : Rc_Fml_8Sge_Server
+    -   name    : Rc_Fml_8Sge
         testcase: testcases.rdma.multi_sge
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 125]
             threads  : [1, 8]
-            server   : [ 'yes']
+            server   : [ 'yes', 'no']
             mtu      : [4096]
             size     : [16384, 32768, 65536, 32000, 64000]
             duration : [20]
             numsges  : [8]
             command  : ['ib_send_bw']
 
-    -   name    : Rc_Only_2Sge_4Sge_Server
+    -   name    : Rc_Only_2Sge_4Sge
         testcase: testcases.rdma.multi_sge
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes']
+            server   : [ 'yes', 'no']
             mtu      : [4096]
             size     : [4096, 4000]
             duration : [20]
             numsges  : [2, 4]
             command  : ['ib_send_bw']
 
-    -   name    : Rc_Only_3Sge_Server
+    -   name    : Rc_Only_3Sge
         testcase: testcases.rdma.multi_sge
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            server   : [ 'yes']
+            server   : [ 'yes', 'no']
             mtu      : [4096]
             size     : [4095, 3072, 3000]
             duration : [20]
