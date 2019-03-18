@@ -61,7 +61,7 @@ struct pds_route_table_spec_s {
     // destructor
     ~pds_route_table_spec_s() {
         if (routes) {
-            SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE, routes);
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, routes);
         }
     }
 
@@ -75,9 +75,9 @@ struct pds_route_table_spec_s {
         af = route_table.af;
         num_routes = route_table.num_routes;
         if (routes) {
-            SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE, routes);
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, routes);
         }
-        routes = (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ROUTE_TABLE,
+        routes = (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                                            num_routes * sizeof(pds_route_t));
         memcpy(routes, route_table.routes, num_routes * sizeof(pds_route_t));
         return *this;

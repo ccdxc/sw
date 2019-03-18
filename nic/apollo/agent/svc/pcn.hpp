@@ -20,6 +20,9 @@ class PCNSvcImpl final : public PCNSvc::Service {
 public:
     Status PCNCreate(ServerContext *context, const pds::PCNRequest *req,
                      pds::PCNResponse *rsp) override;
+    Status PCNDelete(ServerContext *context,
+                     const pds::PCNDeleteRequest *proto_req,
+                     pds::PCNDeleteResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_PCN_HPP__

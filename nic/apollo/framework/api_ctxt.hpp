@@ -64,7 +64,7 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
     if (obj_id == api::OBJ_ID_ROUTE_TABLE &&
         (api_op == api::API_OP_CREATE || (api_op == api::API_OP_UPDATE))) {
         if (api_params->route_table_spec.routes) {
-            SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE,
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                      api_params->route_table_spec.routes);
         }
     }

@@ -48,7 +48,7 @@ create_route_table_grpc (pds_route_table_spec_t *rt)
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    
+
     return SDK_RET_OK;
 }
 
@@ -66,7 +66,7 @@ create_mapping_grpc (pds_mapping_spec_t *mapping)
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    
+
     return SDK_RET_OK;
 }
 
@@ -84,7 +84,7 @@ create_vnic_grpc (pds_vnic_spec_t *vnic)
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    
+
     return SDK_RET_OK;
 }
 
@@ -102,7 +102,7 @@ create_subnet_grpc (pds_subnet_spec_t *subnet)
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
- 
+
     return SDK_RET_OK;
 }
 
@@ -120,25 +120,25 @@ create_vcn_grpc (pds_vcn_spec_t *vcn)
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    
+
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-create_tunnel_grpc (pds_tep_spec_t *tep)
+create_tunnel_grpc (uint32_t id, pds_tep_spec_t *tep)
 {
     TunnelRequest   request;
     ClientContext   context;
     TunnelResponse  response;
     Status          ret_status;
 
-    populate_tunnel_request(&request, tep);
+    populate_tunnel_request(&request, id, tep);
     ret_status = g_tunnel_stub_->TunnelCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    
+
     return SDK_RET_OK;
 }
 

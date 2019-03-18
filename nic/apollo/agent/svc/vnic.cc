@@ -3,6 +3,8 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/core/vnic.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
 
@@ -24,14 +26,50 @@ pds_agent_vnic_api_spec_fill (const pds::VnicSpec &proto_spec,
 Status
 VnicSvcImpl::VnicCreate(ServerContext *context, const pds::VnicRequest *proto_req,
                         pds::VnicResponse *proto_rsp) {
-    if (proto_req) {
-        for (int i = 0; i < proto_req->request_size(); i ++) {
-            pds_vnic_spec_t api_spec = {0};
+    sdk_ret_t ret;
+    pds_vnic_key_t key;
+    pds_vnic_spec_t *api_spec;
 
-            pds_agent_vnic_api_spec_fill(proto_req->request(i), &api_spec);
-            if (pds_vnic_create(&api_spec) == sdk::SDK_RET_OK)
-                return Status::OK;
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_vnic_spec_t *)
+                    core::agent_state::state()->vnic_slab()->alloc();
+        if (api_spec == NULL) {
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            break;
+        }
+        auto request = proto_req->request(i);
+        memset(&key, 0, sizeof(pds_vnic_key_t));
+        key.id = request.vnicid();
+        pds_agent_vnic_api_spec_fill(request, api_spec);
+        ret = core::vnic_create(&key, api_spec);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != sdk::SDK_RET_OK) {
+            break;
         }
     }
-    return Status::CANCELLED;
+    return Status::OK;
+}
+
+Status
+VnicSvcImpl::VnicDelete(ServerContext *context,
+                        const pds::VnicDeleteRequest *proto_req,
+                        pds::VnicDeleteResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_vnic_key_t key;
+
+    if (proto_req == NULL) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->vnicid_size(); i++) {
+        memset(&key, 0, sizeof(pds_vnic_key_t));
+        key.id = proto_req->vnicid(i);
+        ret = core::vnic_delete(&key);
+        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
+    return Status::OK;
 }

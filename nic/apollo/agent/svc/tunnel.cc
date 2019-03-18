@@ -3,7 +3,10 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_tep.hpp"
+#include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/core/tunnel.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
+#include "nic/apollo/agent/svc/util.hpp"
 
 // Build TEP API spec from protobuf spec
 static inline void
@@ -37,16 +40,44 @@ Status
 TunnelSvcImpl::TunnelCreate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
-    if (proto_req) {
-        for (int i = 0; i < proto_req->request_size(); i ++) {
-            pds_tep_spec_t api_spec = {0};
+    sdk_ret_t ret;
+    pds_tep_spec_t *api_spec;
 
-            pds_agent_tep_api_spec_fill(proto_req->request(i), &api_spec);
-            if (pds_tep_create(&api_spec) != SDK_RET_OK) {
-                return Status::CANCELLED;
-            }
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_tep_spec_t *)
+                    core::agent_state::state()->tep_slab()->alloc();
+        if (api_spec == NULL) {
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            break;
+        }
+        auto request = proto_req->request(i);
+        pds_agent_tep_api_spec_fill(request, api_spec);
+        ret = core::tep_create(request.id(), api_spec);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != sdk::SDK_RET_OK) {
+            break;
         }
     }
+    return Status::OK;
+}
 
+Status
+TunnelSvcImpl::TunnelDelete(ServerContext *context,
+                            const pds::TunnelDeleteRequest *proto_req,
+                            pds::TunnelDeleteResponse *proto_rsp) {
+    sdk_ret_t ret;
+
+    if (proto_req == NULL) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        ret = core::tep_delete(proto_req->id(i));
+        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
     return Status::OK;
 }

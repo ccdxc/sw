@@ -121,11 +121,14 @@ elif args.target == 'debug' or args.target == 'debug-arm':
     files.append('nic/tools/package/pack_debug.txt')
 else:
     print ("Packaging for haps")
-    files.append('nic/tools/package/pack_platform.txt')
+
     if args.pipeline == 'apollo':
         files.append('nic/tools/package/pack_apollo.txt')
     else:
         files.append('nic/tools/package/pack_haps.txt')
+        # skip platform for apollo
+        files.append('nic/tools/package/pack_platform.txt')
+
     files.append('nic/tools/package/pack_debug.txt')
 
 if args.no_strip == True:

@@ -3,6 +3,8 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_subnet.hpp"
+#include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/core/subnet.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/subnet.hpp"
 
@@ -28,14 +30,50 @@ Status
 SubnetSvcImpl::SubnetCreate(ServerContext *context,
                             const pds::SubnetRequest *proto_req,
                             pds::SubnetResponse *proto_rsp) {
-    if (proto_req) {
-        for (int i = 0; i < proto_req->request_size(); i ++) {
-            pds_subnet_spec_t api_spec = {0};
-            pds_agent_subnet_api_spec_fill(proto_req->request(i), &api_spec);
-            if (pds_subnet_create(&api_spec) == sdk::SDK_RET_OK)
-                return Status::OK;
+    sdk_ret_t ret;
+    pds_subnet_key_t key;
+    pds_subnet_spec_t *api_spec;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_subnet_spec_t *)
+                    core::agent_state::state()->subnet_slab()->alloc();
+        if (api_spec == NULL) {
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            break;
+        }
+        auto request = proto_req->request(i);
+        memset(&key, 0, sizeof(pds_subnet_key_t));
+        key.id = request.id();
+        pds_agent_subnet_api_spec_fill(request, api_spec);
+        ret = core::subnet_create(&key, api_spec);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != sdk::SDK_RET_OK) {
+            break;
         }
     }
+    return Status::OK;
+}
 
-    return Status::CANCELLED;
+Status
+SubnetSvcImpl::SubnetDelete(ServerContext *context,
+                            const pds::SubnetDeleteRequest *proto_req,
+                            pds::SubnetDeleteResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_subnet_key_t key;
+
+    if (proto_req == NULL) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        memset(&key, 0, sizeof(pds_subnet_key_t));
+        key.id = proto_req->id(i);
+        ret = core::subnet_delete(&key);
+        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
+    return Status::OK;
 }

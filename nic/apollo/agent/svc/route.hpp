@@ -21,6 +21,9 @@ public:
     Status RouteTableCreate(ServerContext *context,
                             const pds::RouteTableRequest *req,
                             pds::RouteTableResponse *rsp) override;
+    Status RouteTableDelete(ServerContext *context,
+                            const pds::RouteTableDeleteRequest *proto_req,
+                            pds::RouteTableDeleteResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_ROUTE_HPP__

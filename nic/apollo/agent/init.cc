@@ -7,6 +7,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/agent/core/state.hpp"
 
 namespace core {
 
@@ -192,6 +193,12 @@ agent_init (std::string cfg_file)
 
     // initialize PDS library
     ret = init_pds(cfg_file);
+
+    // init agent state
+    ret = core::agent_state::init();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
     // install signal handlers
     pds_sig_init(pds_sig_handler);

@@ -5,6 +5,7 @@
 #ifndef __AGENT_SVC_UTIL_HPP__
 #define __AGENT_SVC_UTIL_HPP__
 
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "gen/proto/types.pb.h"
 
@@ -38,11 +39,11 @@ pds_agent_util_ip_pfx_fill (const types::IPPrefix& in_ippfx, ip_prefix_t *ip_pfx
              (ip_pfx->len > 32)) ||
         ((in_ippfx.addr().af() == types::IP_AF_INET6) &&
              (ip_pfx->len > 128))) {
-        return SDK_RET_INVALID_ARG;
+        return sdk::SDK_RET_INVALID_ARG;
     } else {
         pds_agent_util_ipaddr_fill(in_ippfx.addr(), &ip_pfx->addr);
     }
-    return SDK_RET_OK;
+    return sdk::SDK_RET_OK;
 }
 
 static inline pds_encap_t
@@ -78,6 +79,33 @@ proto_encap_to_pds_encap (types::Encap encap)
         break;
     }
     return pds_encap;
+}
+
+static inline types::ApiStatus
+sdk_ret_to_api_status (sdk_ret_t ret)
+{
+    switch (ret) {
+    case sdk::SDK_RET_OK:
+        return types::ApiStatus::API_STATUS_OK;
+
+    case sdk::SDK_RET_OOM:
+        return types::ApiStatus::API_STATUS_OUT_OF_MEM;
+
+    case sdk::SDK_RET_INVALID_ARG:
+        return types::ApiStatus::API_STATUS_INVALID_ARG;
+
+    case sdk::SDK_RET_ENTRY_NOT_FOUND:
+        return types::ApiStatus::API_STATUS_NOT_FOUND;
+
+    case sdk::SDK_RET_ENTRY_EXISTS:
+        return types::ApiStatus::API_STATUS_EXISTS_ALREADY;
+
+    case sdk::SDK_RET_NO_RESOURCE:
+        return types::ApiStatus::API_STATUS_OUT_OF_RESOURCE;
+
+    default:
+        return types::ApiStatus::API_STATUS_ERR;
+    }
 }
 
 #endif    // __AGENT_SVC_UTIL_HPP__

@@ -3,6 +3,8 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/core/route.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/route.hpp"
 
@@ -24,7 +26,7 @@ pds_agent_route_table_api_spec_fill (const pds::RouteTableSpec &proto_spec,
         break;
     }
     api_spec->num_routes = proto_spec.routes_size();
-    api_spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ROUTE_TABLE,
+    api_spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                                                  sizeof(pds_route_t) *
                                                  api_spec->num_routes);
     for (int i = 0; i < proto_spec.routes_size(); i++) {
@@ -37,31 +39,54 @@ pds_agent_route_table_api_spec_fill (const pds::RouteTableSpec &proto_spec,
     }
 }
 
-static inline void
-pds_agent_route_table_api_spec_free (pds_route_table_spec_t *api_spec)
-{
-    if (api_spec->routes) {
-        SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE, api_spec->routes);
-        api_spec->routes = NULL;
-    }
-}
-
 Status
 RouteSvcImpl::RouteTableCreate(ServerContext *context,
                                const pds::RouteTableRequest *proto_req,
                                pds::RouteTableResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_route_table_key_t key;
+    pds_route_table_spec_t *api_spec;
 
-    if (proto_req) {
-        for (int i = 0; i < proto_req->request_size(); i ++) {
-            pds_route_table_spec_t api_spec;
-
-            pds_agent_route_table_api_spec_fill(proto_req->request(i), &api_spec);
-            ret = pds_route_table_create(&api_spec);
-            pds_agent_route_table_api_spec_free(&api_spec);
-            if (ret == sdk::SDK_RET_OK)
-                return Status::OK;
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_route_table_spec_t *)
+                    core::agent_state::state()->route_table_slab()->alloc();
+        if (api_spec == NULL) {
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            break;
+        }
+        auto request = proto_req->request(i);
+        memset(&key, 0, sizeof(pds_route_table_key_t));
+        key.id = request.id();
+        pds_agent_route_table_api_spec_fill(request, api_spec);
+        ret = core::route_table_create(&key, api_spec);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != sdk::SDK_RET_OK) {
+            break;
         }
     }
-    return Status::CANCELLED;
+    return Status::OK;
+}
+
+Status
+RouteSvcImpl::RouteTableDelete(ServerContext *context,
+                               const pds::RouteTableDeleteRequest *proto_req,
+                               pds::RouteTableDeleteResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_route_table_key_t key;
+
+    if (proto_req == NULL) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        memset(&key, 0, sizeof(pds_route_table_key_t));
+        key.id = proto_req->id(i);
+        ret = core::route_table_delete(&key);
+        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
+    return Status::OK;
 }

@@ -428,7 +428,7 @@ create_subnets (uint32_t vcn_id, uint32_t num_vcns,
     sdk_ret_t rv;
     pds_subnet_spec_t pds_subnet;
     static uint32_t route_table_id = 1;
-    static uint32_t        id = 1;
+    static uint32_t id = 1;
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&pds_subnet, 0, sizeof(pds_subnet));
@@ -515,7 +515,7 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
             pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
         }
 #ifdef TEST_GRPC_APP
-        rv = create_tunnel_grpc(&pds_tep);
+        rv = create_tunnel_grpc(i, &pds_tep);
         if (rv != SDK_RET_OK) {
             return rv;
         }
@@ -636,7 +636,7 @@ create_objects (void)
     pt::ptree json_pt;
     string pfxstr;
     sdk_ret_t ret;
-    
+
 #ifndef TEST_GRPC_APP
     g_flow_test_obj = new flow_test();
 #endif

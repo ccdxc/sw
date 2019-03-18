@@ -20,6 +20,9 @@ class SubnetSvcImpl final : public SubnetSvc::Service {
 public:
     Status SubnetCreate(ServerContext *context, const pds::SubnetRequest *req,
                         pds::SubnetResponse *rsp) override;
+    Status SubnetDelete(ServerContext *context,
+                        const pds::SubnetDeleteRequest *proto_req,
+                        pds::SubnetDeleteResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_SUBNET_HPP__

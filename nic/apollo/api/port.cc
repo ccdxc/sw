@@ -136,7 +136,7 @@ populate_port_info (uint32_t fp_port, uint32_t port_num, port_args_t *port_args)
         g_pds_state.catalogue()->asic_port_to_mac_id(asic, asic_port);
     port_args->mac_ch =
         g_pds_state.catalogue()->asic_port_to_mac_ch(asic, asic_port);
-    port_args->auto_neg_enable = false;
+    port_args->auto_neg_enable = true;
     port_args->debounce_time = 0;
     port_args->mtu = 0;    /**< default will be set to max mtu */
     port_args->pause = port_pause_type_t::PORT_PAUSE_TYPE_LINK;

@@ -224,11 +224,12 @@ populate_pcn_request (PCNRequest *req, pds_vcn_spec_t *vcn)
 }
 
 static void
-populate_tunnel_request (TunnelRequest *req, pds_tep_spec_t *tep)
+populate_tunnel_request (TunnelRequest *req, uint32_t tep_id, pds_tep_spec_t *tep)
 {
     TunnelSpec *spec = req->add_request();
     types::IPAddress ip_addr_spec;
-    
+
+    spec->set_id(tep_id);
     //TODO: Only filling up remote-ip for now
     ipv4_addr_to_spec(spec->mutable_remoteip(), &tep->key.ip_addr);
     switch (tep->encap_type) {

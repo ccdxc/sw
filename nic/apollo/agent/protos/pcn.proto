@@ -80,5 +80,5 @@ message PCNDeleteRequest {
 
 // PCN delete response
 message PCNDeleteResponse {
-  repeated types.ApiStatus Api_Status = 1; // API status code  
+  repeated types.ApiStatus ApiStatus = 1; // API status code
 }

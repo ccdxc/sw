@@ -112,7 +112,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // allocate memory for the library to build route table
     rtable =
         (route_table_t *)
-            SDK_MALLOC(PDS_MEM_ALLOC_ROUTE_TABLE,
+            SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                        sizeof(route_table_t) +
                            (spec->num_routes * sizeof(route_t)));
     if (rtable == NULL) {
@@ -141,7 +141,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build LPM route table, err : %u", ret);
     }
-    SDK_FREE(PDS_MEM_ALLOC_ROUTE_TABLE, rtable);
+    SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, rtable);
     return ret;
 }
 
