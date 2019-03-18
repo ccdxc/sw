@@ -198,8 +198,7 @@ metadata nvme_sesspostdgst_tx_to_stage_tso_info_t to_s5_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_nvme_wqe_info t0_s2s_nvme_wqe_to_sessprodcb_info t0_s2s_writeback_to_tso_info 
-// t0_s2s_sessprodcb_to_writeback_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_nvme_wqe_info t0_s2s_nvme_wqe_to_sessprodcb_info t0_s2s_writeback_to_tso_info t0_s2s_sessprodcb_to_writeback_info
 
 metadata nvme_sesspostdgst_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info;
 @pragma scratch_metadata
@@ -217,6 +216,7 @@ metadata nvme_sesspostdgst_tx_writeback_to_tso_t t0_s2s_writeback_to_tso_info;
 @pragma scratch_metadata
 metadata nvme_sesspostdgst_tx_writeback_to_tso_t t0_s2s_writeback_to_tso_info_scr;
 
+@pragma dont_trim
 metadata nvme_sesspostdgst_tx_sessprodcb_to_writeback_t t0_s2s_sessprodcb_to_writeback_info;
 @pragma scratch_metadata
 metadata nvme_sesspostdgst_tx_sessprodcb_to_writeback_t t0_s2s_sessprodcb_to_writeback_info_scr;
