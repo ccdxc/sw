@@ -422,15 +422,24 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
                          fte_flow_log_info_t *log) {
     t_fwlg.Clear();
 
+    // Dont log for non-ipv4 flows
+    if (key.flow_type != hal::FLOW_TYPE_V4) return;
+
     t_fwlg.set_source_vrf(key.svrf_id);
     t_fwlg.set_dest_vrf(key.dvrf_id);
-    if (key.flow_type == hal::FLOW_TYPE_V4) {
-        t_fwlg.set_sipv4(key.sip.v4_addr);
-        t_fwlg.set_dipv4(key.dip.v4_addr);
-    }
-    t_fwlg.set_sport(key.sport);
-    t_fwlg.set_dport(key.dport);
+    t_fwlg.set_sipv4(key.sip.v4_addr);
+    t_fwlg.set_dipv4(key.dip.v4_addr);
+    
     t_fwlg.set_ipprot(key.proto);
+    if (key.proto == IP_PROTO_TCP || key.proto == IP_PROTO_UDP) {
+        t_fwlg.set_sport(key.sport);
+        t_fwlg.set_dport(key.dport);
+    } else if (key.proto == IP_PROTO_ICMP) {
+        t_fwlg.set_icmptype(key.icmp_type);
+        t_fwlg.set_icmpcode(key.icmp_code);
+        t_fwlg.set_icmpid(key.icmp_id);
+    }
+
     t_fwlg.set_direction((key.dir == hal::FLOW_DIR_FROM_UPLINK) ?
                          types::FLOW_DIRECTION_FROM_UPLINK :\
                          types::FLOW_DIRECTION_FROM_HOST);

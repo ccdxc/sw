@@ -43,4 +43,7 @@ message FWEvent {
     uint64                session_id         = 24; // Session that got spawned for the flow
     uint64                parent_session_id  = 25; // Parent session that opened pin hole (ALG)
     uint64                rule_id            = 26; // Rule id that was hit
+    uint32                icmptype           = 27; // flow key: icmp type
+    uint32                icmpcode           = 28; // flow key: icmp code
+    uint32                icmpid             = 29; // flow key: icmp id
 }

@@ -329,10 +329,10 @@ sfw_exec(ctx_t& ctx)
     }
 
     // only ipv4 is handled in data path. 
-    if (!ctx.protobuf_request()  && (ctx.key().flow_type == hal::FLOW_TYPE_V6 || ctx.key().flow_type == hal::FLOW_TYPE_L2)) {
+    if (!ctx.protobuf_request()  && 
+         (ctx.key().flow_type == hal::FLOW_TYPE_V6 || ctx.key().flow_type == hal::FLOW_TYPE_L2)) {
         HAL_TRACE_DEBUG("flow type is non-ipv4:{}", ctx.key().flow_type);
         sfw_info->sfw_done = true;
-        flowupd.action = session::FLOW_ACTION_ALLOW;
         goto install_flow;
     
     }
@@ -359,6 +359,7 @@ sfw_exec(ctx_t& ctx)
             }
             ctx.set_feature_name(FTE_FEATURE_SFW.c_str());
             sfw_info->sfw_done = true;
+            flowupd.action = session::FLOW_ACTION_DROP;
         }
     }
 
@@ -404,6 +405,7 @@ sfw_exec(ctx_t& ctx)
         } else {
             flowupd.action = session::FLOW_ACTION_ALLOW;
         }
+        *ctx.flow_log() = *ctx.flow_log(hal::FLOW_ROLE_INITIATOR);
     }
 
 install_flow:

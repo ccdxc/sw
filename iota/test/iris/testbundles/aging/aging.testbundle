@@ -64,6 +64,7 @@ testcases:
 
     -   name    : TCPTickleTimeout
         testcase: testcases.aging.tcp_timeout_tickle
+        ignore  : True
         iterators:
             type    : simple
             timeout : [45s, 0m50s, 1m5s]
