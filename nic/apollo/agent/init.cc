@@ -13,6 +13,7 @@ namespace core {
 
 // number of trace files to keep
 #define TRACE_NUM_FILES                        10
+#define TRACE_FILE_SIZE                        (100 << 20)
 typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 
 //------------------------------------------------------------------------------
@@ -174,7 +175,7 @@ logger_init (void)
 
     // initialize the logger
     core::trace_init("agent", 0x1, true, logfile.c_str(),
-                     TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES,
+                     TRACE_FILE_SIZE, TRACE_NUM_FILES,
                      utils::trace_debug);
 
     return SDK_RET_OK;
