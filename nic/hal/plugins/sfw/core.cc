@@ -176,8 +176,25 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
         nwsec_rule = (hal::nwsec_rule_t *) RULE_MATCH_USER_DATA(user_ref, nwsec_rule_t, ref_count);
 
         rule_ctr_t *rule_ctr = get_rule_ctr((acl_rule_t *)rule);
-        //Enhance to count other hits
-        rule_ctr->other_hits++;
+        rule_ctr->total_hits++; 
+        switch (acl_key.proto) {
+        case types::IPPROTO_ICMP:
+        case types::IPPROTO_ICMPV6:
+            rule_ctr->icmp_hits++; 
+            break;
+        case types::IPPROTO_ESP:
+            rule_ctr->esp_hits++;
+            break;
+        case types::IPPROTO_TCP:
+            rule_ctr->tcp_hits++;
+            break;
+        case types::IPPROTO_UDP:
+            rule_ctr->udp_hits++;
+            break;
+        default:
+            HAL_TRACE_DEBUG("Stats: Any proto:{}", ctx.key().proto);
+            rule_ctr->other_hits++;
+        }
         
         if (!dllist_empty(&nwsec_rule->appid_list_head)) {
             net_sfw_match_app_redir(ctx, nwsec_rule, match_rslt);

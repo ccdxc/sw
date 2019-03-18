@@ -104,7 +104,9 @@ typedef struct rule_ctr_s {
     uint64_t    tcp_hits;
     uint64_t    udp_hits;
     uint64_t    icmp_hits;
+    uint64_t    esp_hits;
     uint64_t    other_hits;
+    uint64_t    total_hits;
     ht_ctxt_t   ht_ctxt;
     rule_cfg_t  *rule_cfg;
     rule_data_t *rule_data;

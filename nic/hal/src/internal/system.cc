@@ -531,6 +531,8 @@ system_get (SystemResponse *rsp)
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
         goto end;
     }
+    //unlock the cfg_db as fte dont need it, if needed fte has to take the lock again
+    hal::hal_cfg_db_close();
 
     if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
         (hal::g_hal_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {

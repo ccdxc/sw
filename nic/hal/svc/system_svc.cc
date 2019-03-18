@@ -30,7 +30,7 @@ SystemServiceImpl::SystemGet(ServerContext *context,
                              SystemResponse *rsp)
 {
     HAL_TRACE_DEBUG("Rcvd System Get Request");
-
+    //Revisit to see if we need this lock for system get
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     hal::system_get(rsp);
     hal::hal_cfg_db_close();

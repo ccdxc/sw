@@ -1830,7 +1830,7 @@ security_policy_spec_build (nwsec_policy_t               *policy,
 
         rule_ctr_t *ctr = rule_ctr_get(fn_ctx->rcfg, rulelist->rule_id);
         if (ctr) {
-            rule_stats->set_num_hits(ctr->other_hits);
+            rule_stats->set_num_hits(ctr->total_hits);
             rule_stats->set_num_tcp_hits(ctr->tcp_hits);
             rule_stats->set_num_udp_hits(ctr->udp_hits);
             rule_stats->set_num_icmp_hits(ctr->icmp_hits);

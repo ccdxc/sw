@@ -293,8 +293,12 @@ func nwsecPolicyShowOneResp(resp *halproto.SecurityPolicyGetResponse) {
 		switch rule.Match.AppMatch.App.(type) {
 		case *halproto.RuleMatch_AppMatch_PortInfo:
 			fmt.Printf("   Source Ports: ")
-			for _, portrange := range rule.Match.AppMatch.GetPortInfo().SrcPortRange {
-				fmt.Printf(" %d-%d,", portrange.GetPortLow(), portrange.GetPortHigh())
+			if len(rule.Match.AppMatch.GetPortInfo().SrcPortRange) > 0 {
+				for _, portrange := range rule.Match.AppMatch.GetPortInfo().SrcPortRange {
+					fmt.Printf(" %d-%d,", portrange.GetPortLow(), portrange.GetPortHigh())
+				}
+			} else {
+				fmt.Printf("ANY")
 			}
 			fmt.Printf("\n   Destination Ports: ")
 			for _, portrange := range rule.Match.AppMatch.GetPortInfo().DstPortRange {
