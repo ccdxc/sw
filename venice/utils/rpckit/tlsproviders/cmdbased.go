@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -170,88 +171,107 @@ func (p *CMDBasedProvider) openCmdConnection() (*grpc.ClientConn, error) {
 }
 
 func (p *CMDBasedProvider) fetchCaCertificates() error {
-	conn, err := p.openCmdConnection()
-	if err != nil {
-		log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v, err: %+v", p.cmdEndpointURL, p.balancer, err)
-		return err
-	}
-	defer conn.Close()
-	cmdClient := certapi.NewCertificatesClient(conn)
-
-	// Fetch CA trust chain
-	tcs, err := cmdClient.GetCaTrustChain(context.Background(), &certapi.Empty{})
-	if err != nil {
-		return errors.Wrap(err, "Error fetching CA trust chain")
-	}
-	for _, c := range tcs.GetCertificates() {
-		c, err := x509.ParseCertificate(c.GetCertificate())
+	// Execute the entire operation under a timeout
+	request := func() (interface{}, error) {
+		conn, err := p.openCmdConnection()
 		if err != nil {
-			return errors.Wrapf(err, "Error parsing intermediate certificate: %+v", c)
+			log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v, err: %+v", p.cmdEndpointURL, p.balancer, err)
+			return nil, err
 		}
-		p.caTrustChain = append(p.caTrustChain, c)
-	}
+		defer conn.Close()
+		cmdClient := certapi.NewCertificatesClient(conn)
 
-	// Fetch additional trust roots
-	rootsResp, err := cmdClient.GetTrustRoots(context.Background(), &certapi.Empty{})
-	if err != nil {
-		return errors.Wrap(err, "Error fetching trust roots")
-	}
-
-	for _, r := range rootsResp.GetCertificates() {
-		c, err := x509.ParseCertificate(r.GetCertificate())
+		// Fetch CA trust chain
+		tcs, err := cmdClient.GetCaTrustChain(context.Background(), &certapi.Empty{})
 		if err != nil {
-			return errors.Wrap(err, "Received malformed trust roots")
+			return nil, errors.Wrap(err, "Error fetching CA trust chain")
 		}
-		p.trustRoots.AddCert(c)
+		for _, c := range tcs.GetCertificates() {
+			c, err := x509.ParseCertificate(c.GetCertificate())
+			if err != nil {
+				return nil, errors.Wrapf(err, "Error parsing intermediate certificate: %+v", c)
+			}
+			p.caTrustChain = append(p.caTrustChain, c)
+		}
+
+		// Fetch additional trust roots
+		rootsResp, err := cmdClient.GetTrustRoots(context.Background(), &certapi.Empty{})
+		if err != nil {
+			return nil, errors.Wrap(err, "Error fetching trust roots")
+		}
+
+		for _, r := range rootsResp.GetCertificates() {
+			c, err := x509.ParseCertificate(r.GetCertificate())
+			if err != nil {
+				return nil, errors.Wrap(err, "Received malformed trust roots")
+			}
+			p.trustRoots.AddCert(c)
+		}
+
+		return nil, nil
 	}
 
-	return nil
+	ctx, cancel := context.WithTimeout(context.Background(), 3*defaultConnTimeout)
+	defer cancel()
+	_, err := utils.ExecuteWithContext(ctx, request)
+	return err
 }
 
 func (p *CMDBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certificate, error) {
-	conn, err := p.openCmdConnection()
-	if err != nil {
-		log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v", p.cmdEndpointURL, p.balancer)
-		return nil, err
-	}
-	defer conn.Close()
-	cmdClient := certapi.NewCertificatesClient(conn)
-
-	privateKey, err := p.keyMgr.GetObject(subjAltName, keymgr.ObjectTypeKeyPair)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error reading key pair from keymgr")
-	}
-	if privateKey == nil {
-		privateKey, err = p.keyMgr.CreateKeyPair(subjAltName, keymgr.ECDSA256)
+	// Execute the entire operation under a timeout
+	request := func() (interface{}, error) {
+		conn, err := p.openCmdConnection()
 		if err != nil {
-			return nil, errors.Wrap(err, "Error generating private key")
+			log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v", p.cmdEndpointURL, p.balancer)
+			return nil, err
 		}
-	}
-	csr, err := certs.CreateCSR(privateKey, nil, []string{subjAltName}, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error generating CSR")
+		defer conn.Close()
+		cmdClient := certapi.NewCertificatesClient(conn)
+
+		privateKey, err := p.keyMgr.GetObject(subjAltName, keymgr.ObjectTypeKeyPair)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error reading key pair from keymgr")
+		}
+		if privateKey == nil {
+			privateKey, err = p.keyMgr.CreateKeyPair(subjAltName, keymgr.ECDSA256)
+			if err != nil {
+				return nil, errors.Wrap(err, "Error generating private key")
+			}
+		}
+		csr, err := certs.CreateCSR(privateKey, nil, []string{subjAltName}, nil)
+		if err != nil {
+			return nil, errors.Wrap(err, "Error generating CSR")
+		}
+
+		// Get the CSR signed
+		csrResp, err := cmdClient.SignCertificateRequest(context.Background(), &certapi.CertificateSignReq{Csr: csr.Raw})
+		if err != nil {
+			return nil, errors.Wrap(err, "Error issuing sign request")
+		}
+
+		// Parse certificate and create bundle
+		cert, err := x509.ParseCertificate(csrResp.GetCertificate().GetCertificate())
+		if err != nil {
+			return nil, errors.Wrapf(err, "Error parsing certificate: %+v", csrResp.GetCertificate())
+		}
+		bundle := [][]byte{cert.Raw}
+		for _, c := range p.caTrustChain {
+			bundle = append(bundle, c.Raw)
+		}
+
+		return &tls.Certificate{
+			PrivateKey:  privateKey,
+			Certificate: bundle,
+		}, nil
 	}
 
-	// Get the CSR signed
-	csrResp, err := cmdClient.SignCertificateRequest(context.Background(), &certapi.CertificateSignReq{Csr: csr.Raw})
-	if err != nil {
-		return nil, errors.Wrap(err, "Error issuing sign request")
+	ctx, cancel := context.WithTimeout(context.Background(), 3*defaultConnTimeout)
+	defer cancel()
+	resp, err := utils.ExecuteWithContext(ctx, request)
+	if resp != nil {
+		return resp.(*tls.Certificate), nil
 	}
-
-	// Parse certificate and create bundle
-	cert, err := x509.ParseCertificate(csrResp.GetCertificate().GetCertificate())
-	if err != nil {
-		return nil, errors.Wrapf(err, "Error parsing certificate: %+v", csrResp.GetCertificate())
-	}
-	bundle := [][]byte{cert.Raw}
-	for _, c := range p.caTrustChain {
-		bundle = append(bundle, c.Raw)
-	}
-
-	return &tls.Certificate{
-		PrivateKey:  privateKey,
-		Certificate: bundle,
-	}, nil
+	return nil, fmt.Errorf("Error getting TLS certificate: %v", err)
 }
 
 // NewCMDBasedProvider instantiates a new CMD-based TLS provider

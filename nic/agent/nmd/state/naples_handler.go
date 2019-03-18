@@ -106,11 +106,13 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 func (n *NMD) StartManagedMode() error {
 	log.Info("Starting Managed Mode")
 
+	n.modeChange.Lock()
 	if n.cmd == nil {
 		// create the CMD client
 		cmdClient, err := cmdif.NewCmdClient(n, n.cmdRegURL, n.resolverClient)
 		if err != nil {
 			log.Errorf("Error creating CMD client. Err: %v", err)
+			n.modeChange.Unlock()
 			return err
 		}
 		log.Infof("CMD client {%+v} is running", cmdClient)
@@ -121,6 +123,7 @@ func (n *NMD) StartManagedMode() error {
 		roClient, err := rolloutif.NewRoClient(n, n.resolverClient)
 		if err != nil {
 			log.Errorf("Error creating Rollout Controller client. Err: %v", err)
+			n.modeChange.Unlock()
 			return err
 		}
 		log.Infof("Rollout client {%+v} is running", roClient)
@@ -129,12 +132,16 @@ func (n *NMD) StartManagedMode() error {
 
 	err := n.initTLSProvider()
 	if err != nil {
+		n.modeChange.Unlock()
 		return fmt.Errorf("Error initializing TLS provider: %v", err)
 	}
 
 	// Set Registration in progress flag
 	log.Infof("NIC in managed mode, mac: %v", n.config.Status.Fru.MacStr)
 	n.setRegStatus(true)
+
+	// The mode change is completed when we start the registration loop.
+	n.modeChange.Unlock()
 
 	for {
 		select {
@@ -256,22 +263,19 @@ func (n *NMD) StartManagedMode() error {
 						log.Errorf("Error processing cluster credentials: %v", err)
 					}
 
-					// start watching objects
-					go n.cmd.WatchSmartNICUpdates()
-					go n.rollout.WatchSmartNICRolloutUpdates()
-
 					// Start certificates proxy
 					if n.certsListenURL != "" {
 						certsProxy, err := certsproxy.NewCertsProxy(n.certsListenURL, n.remoteCertsURL,
 							rpckit.WithTLSProvider(n.tlsProvider), rpckit.WithRemoteServerName(globals.Cmd))
 						if err != nil {
 							log.Errorf("Error starting certificates proxy at %s: %v", n.certsListenURL, err)
-							// still try to proceed
+							// cannot proceed without certs proxy, retry after nicRegInterval
+							continue
 						} else {
 							log.Infof("Started certificates proxy at %s, forwarding to: %s", n.certsListenURL, n.remoteCertsURL)
+							n.certsProxy = certsProxy
+							n.certsProxy.Start()
 						}
-						n.certsProxy = certsProxy
-						n.certsProxy.Start()
 					}
 
 					_ = stopNtpClient()
@@ -279,6 +283,11 @@ func (n *NMD) StartManagedMode() error {
 					if err != nil {
 						log.Infof("start NTP client returned %v", err)
 					}
+
+					// start watching objects
+					go n.cmd.WatchSmartNICUpdates()
+					go n.rollout.WatchSmartNICRolloutUpdates()
+
 					// Start goroutine to send periodic NIC updates
 					n.Add(1)
 					go func() {
@@ -291,9 +300,10 @@ func (n *NMD) StartManagedMode() error {
 				case cmd.SmartNICStatus_UNKNOWN.String():
 					// Not an expected response
 					log.Errorf("Unknown response, nic: %+v phase: %v", nicObj, resp)
-				}
-			}
-		}
+
+				} // end of switch statement
+			} // end of if err != nil statement
+		} // end of select statement
 	}
 }
 
@@ -348,11 +358,16 @@ func (n *NMD) SendNICUpdates() error {
 // StopManagedMode stop the ongoing tasks meant for managed mode
 func (n *NMD) StopManagedMode() error {
 	log.Info("Stopping Managed Mode.")
+	n.modeChange.Lock()
+	defer n.modeChange.Unlock()
+
 	// stop accepting certificate requests
+	n.Lock()
 	if n.certsProxy != nil {
 		n.certsProxy.Stop()
 		n.certsProxy = nil
 	}
+	n.Unlock()
 
 	// stop ongoing NIC registration, if any
 	if n.GetRegStatus() {
@@ -368,12 +383,13 @@ func (n *NMD) StopManagedMode() error {
 	// to complete
 	n.Wait()
 
+	// cmd, rollout and tlsProvider are protected by modeChange lock
+
 	if n.cmd != nil {
 		n.cmd.Stop()
 		n.cmd = nil
 	}
 
-	n.Lock()
 	if n.rollout != nil {
 		n.rollout.Stop()
 		n.rollout = nil
@@ -384,7 +400,6 @@ func (n *NMD) StopManagedMode() error {
 		n.tlsProvider.Close()
 		n.tlsProvider = nil
 	}
-	n.Unlock()
 
 	return nil
 }

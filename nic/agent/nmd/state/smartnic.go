@@ -53,17 +53,24 @@ func (n *NMD) CreateSmartNIC(nic *cmd.SmartNIC) error {
 
 	log.Infof("SmartNIC create, mac: %s", nic.ObjectMeta.Name)
 
-	// add the nic to database
-	n.SetSmartNIC(nic)
-	err := n.store.Write(nic)
-
-	return err
+	// When we re-connect to CMD we may get "create" notifications for the NIC.
+	// In that case  we need to treat the notification as an update, because
+	// (instead of just overriding what we have) because otherwise we may miss
+	// a transition.
+	if n.nic == nil {
+		// add the nic to database
+		n.SetSmartNIC(nic)
+		err := n.store.Write(nic)
+		return err
+	}
+	return n.UpdateSmartNIC(nic)
 }
 
 // UpdateSmartNIC updates the local smartNIC object
+// Only meant to be called when receiving events from SmartNIC watcher
 func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 
-	log.Infof("SmartNIC update, mac: %s", nic.ObjectMeta.Name)
+	log.Infof("SmartNIC update, mac: %s, new phase: %s", nic.ObjectMeta.Name, nic.Status.AdmissionPhase)
 
 	// get current state from db
 	oldNic, err := n.GetSmartNIC()
@@ -78,8 +85,11 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 		log.Errorf("Error updating NMD state %+v: %v", nic, err)
 	}
 
-	if nic.Status.AdmissionPhase == cmd.SmartNICStatus_PENDING.String() &&
-		oldNic != nil && oldNic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() {
+	// We need to check the old phase because we may receive multiple notifications
+	// from CMD with phase = pending before we actually shut down the updates channel
+	// and we don't want to do a stop/start for each of them.
+	if oldNic != nil && oldNic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() &&
+		nic.Status.AdmissionPhase == cmd.SmartNICStatus_PENDING.String() {
 		log.Infof("SmartNIC %s has been de-admitted from cluster", nic.ObjectMeta.Name)
 		// NIC has been de-admitted by user. Stop and restart managed mode.
 		// This will stop health updates and start registration attempts.

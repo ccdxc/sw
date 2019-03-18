@@ -612,7 +612,11 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 	// if we have a response we send it back to the client, otherwise
 	// it means we timed out and can just terminate the request
 	if resp != nil {
-		stream.Send(resp.(*grpc.RegisterNICResponse))
+		regNICResp := resp.(*grpc.RegisterNICResponse)
+		stream.Send(regNICResp)
+		if regNICResp.AdmissionResponse.Phase == cluster.SmartNICStatus_ADMITTED.String() {
+			log.Infof("SmartNIC %s is admitted to the cluster", name)
+		}
 	}
 
 	if err != nil {
@@ -691,6 +695,7 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 	}
 
 	// loop forever on watch channel
+	log.Infof("WatchNICs entering watch loop for SmartNIC: %s", sel.GetName())
 	for {
 		select {
 		// read from channel
@@ -727,6 +732,7 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 				EventType: etype,
 				Nic:       *nic.SmartNIC,
 			}
+			log.Infof("Sending watch event for SmartNIC: %+v", watchEvt)
 			err = stream.Send(&watchEvt)
 			nic.Unlock()
 			if err != nil {

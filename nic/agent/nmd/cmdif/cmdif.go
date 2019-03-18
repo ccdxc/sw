@@ -100,7 +100,7 @@ func (client *CmdClient) initUpdatesRPC() error {
 	client.updatesRPCClient, err = rpckit.NewRPCClient("nmd-nic-upd", globals.CmdNICUpdatesSvc,
 		rpckit.WithBalancer(balancer.New(client.resolverClient)))
 	if err != nil {
-		log.Errorf("Error connecting to grpc serice for NIC updates: %v", err)
+		log.Errorf("Error connecting to grpc service for NIC updates: %v", err)
 	}
 	return err
 }
@@ -165,10 +165,20 @@ func (client *CmdClient) runSmartNICWatcher() {
 			}
 		}
 
-		id := client.nmd.GetPrimaryMAC()
+		nic, err := client.nmd.GetSmartNIC()
+		if err != nil {
+			log.Errorf("Error getting NMD smartNIC: %v", err)
+			if client.watchCtx.Err() == context.Canceled {
+				log.Info("Context Cancelled, exiting smartNIC watcher")
+				return
+			}
+			// retry in a sec
+			time.Sleep(time.Second)
+			continue
+		}
+		id := nic.GetName()
 
 		// Start the watch on SmartNIC object
-		log.Infof("Starting watch for SmartNIC %s", id)
 		smartNICRPCClient := grpc.NewSmartNICUpdatesClient(client.getUpdatesRPCClient().ClientConn)
 		stream, err := smartNICRPCClient.WatchNICs(client.watchCtx, &api.ObjectMeta{Name: id})
 		if err != nil {

@@ -37,8 +37,9 @@ const (
 
 // NMD is the Naples management daemon instance object
 type NMD struct {
-	sync.Mutex     // Lock for NMD object
-	sync.WaitGroup // Wait group
+	sync.Mutex                // Lock for NMD object
+	sync.WaitGroup            // Wait group
+	modeChange     sync.Mutex // Lock to serialize mode change requests
 
 	store          emstore.Emstore       // Embedded DB
 	nodeUUID       string                // Node's UUID

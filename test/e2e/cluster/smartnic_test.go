@@ -27,9 +27,10 @@ var _ = Describe("SmartNIC tests", func() {
 
 		It("SmartNIC should be created and admitted", func() {
 			Expect(err).ShouldNot(HaveOccurred())
+			ctx := context.Background()
 			// Validate smartNIC object creation
 			Eventually(func() bool {
-				snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
+				snics, err = snIf.List(ctx, &api.ListWatchOptions{})
 				if len(snics) != ts.tu.NumNaplesHosts {
 					By(fmt.Sprintf("Expected %v, Found %v, nics: %+v", ts.tu.NumNaplesHosts, len(snics), snics))
 					return false
@@ -56,6 +57,7 @@ var _ = Describe("SmartNIC tests", func() {
 			}, 90, 1).Should(BeTrue(), "SmartNIC nic-admission check failed")
 
 			// Validate MAC Addresses. Each NIC should have a valid, unique Pensando MAC address
+
 			nicMACMap := make(map[string]string)
 			for _, snic := range snics {
 				mac := snic.Status.PrimaryMAC
@@ -63,6 +65,33 @@ var _ = Describe("SmartNIC tests", func() {
 				_, ok := nicMACMap[mac]
 				Expect(ok).Should(BeFalse(), fmt.Sprintf("SmartNIC %s had duplicate MAC Address: %s, NIC with same MAC: %s", snic.Name, mac, nicMACMap[mac]))
 				nicMACMap[mac] = snic.Name
+			}
+
+			// de-admit and re-admit multiple times
+			for i := 0; i < 10; i++ {
+				for _, admit := range []bool{false, true} {
+					snics, err = snIf.List(ctx, &api.ListWatchOptions{})
+					Expect(err).ShouldNot(HaveOccurred())
+					Expect(len(snics)).To(Equal(ts.tu.NumNaplesHosts))
+					for _, snic := range snics {
+						snic.Spec.Admit = admit
+						_, err = snIf.Update(ctx, snic)
+						Expect(err).ShouldNot(HaveOccurred())
+					}
+					Eventually(func() bool {
+						snics, err = snIf.List(ctx, &api.ListWatchOptions{})
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(len(snics)).To(Equal(ts.tu.NumNaplesHosts))
+						for _, snic := range snics {
+							if admit != (snic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String()) {
+								By(fmt.Sprintf("ts:%s SmartNIC %s admission phase is not as expected. Have: %v, want: %v",
+									time.Now().String(), snic.Name, admit, snic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String()))
+								return false
+							}
+						}
+						return true
+					}, 60, 3).Should(BeTrue(), fmt.Sprintf("SmartNIC de-admission and re-admission check failed: %+v", snics))
+				}
 			}
 		})
 	})
