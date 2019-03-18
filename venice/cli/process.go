@@ -43,6 +43,10 @@ func createCmdInternal(c *cli.Context, cmd string) {
 		return
 	}
 
+	if ctx.subcmd == "from-file" {
+		return
+	}
+
 	if c.Bool("file") {
 		filename := ""
 		if len(c.Args()) > 1 {
@@ -159,11 +163,11 @@ func readCmd(c *cli.Context) {
 		return
 	}
 
-	numItems := getListNumItems(objIf)
+	numItems := getNumItems(objIf)
 	if ctx.quiet {
 		names := []string{}
 		for idx := 0; idx < numItems; idx++ {
-			obj := getObjFromList(objIf, idx)
+			obj := getObjOrList(objIf, idx)
 			objm, _ := runtime.GetObjectMeta(obj)
 			names = append(names, objm.Name)
 		}
@@ -177,7 +181,7 @@ func readCmd(c *cli.Context) {
 
 	objmKvs, specKvs, objmValidKvs, specValidKvs := getAllKvs(ctx, numItems, objIf)
 	for idx := 0; idx < numItems; idx++ {
-		obj := getObjFromList(objIf, idx)
+		obj := getObjOrList(objIf, idx)
 		objm, _ := runtime.GetObjectMeta(obj)
 
 		if skipObj(ctx, objm) {
@@ -210,6 +214,9 @@ func deleteCmdInternal(c *cli.Context, cmd string) {
 	ctx := &cliContext{cli: c, tenant: defaultTenant}
 
 	if err := processGlobalFlags(ctx, cmd); err != nil {
+		return
+	}
+	if ctx.subcmd == "from-file" {
 		return
 	}
 
@@ -322,9 +329,9 @@ func labelCmd(c *cli.Context) {
 		return
 	}
 
-	numItems := getListNumItems(objList)
+	numItems := getNumItems(objList)
 	for idx := 0; idx < numItems; idx++ {
-		obj := getObjFromList(objList, idx)
+		obj := getObjOrList(objList, idx)
 		objm, _ := runtime.GetObjectMeta(obj)
 
 		if skipObj(ctx, objm) {
@@ -352,23 +359,6 @@ func exampleCmd(c *cli.Context) {
 	}
 
 	fmt.Printf("%s\n", walkStruct(ctx.structInfo, 0))
-}
-
-// uploadCmd uploads the content (json/yml) ifrom a directory, file, or a URL into Venice
-func uploadCmd(c *cli.Context) {
-	ctx := &cliContext{cli: c, tenant: defaultTenant}
-	if err := processGlobalFlags(ctx, "upload"); err != nil {
-		return
-	}
-	if len(ctx.names) == 0 {
-		fmt.Printf("must provide a filename to upload from")
-		return
-	}
-
-	for _, filename := range ctx.names {
-		fmt.Printf("upload from file %s\n", filename)
-		processFiles(ctx, filename)
-	}
 }
 
 // definitionCmd shows object definition
@@ -488,9 +478,9 @@ func snapshotCmd(c *cli.Context) {
 			log.Fatalf("error creating subdir '%s'", subdir)
 		}
 
-		numItems := getListNumItems(objList)
+		numItems := getNumItems(objList)
 		for idx := 0; idx < numItems; idx++ {
-			obj := getObjFromList(objList, idx)
+			obj := getObjOrList(objList, idx)
 			objm, _ := runtime.GetObjectMeta(obj)
 
 			if err := removeObjOper(ctx, obj); err != nil {

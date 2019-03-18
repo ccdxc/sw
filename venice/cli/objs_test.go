@@ -149,15 +149,15 @@ func TestGetKvsSmartNIC(t *testing.T) {
 func TestGetNumItems(t *testing.T) {
 	wObjList := &workload.WorkloadList{TypeMeta: api.TypeMeta{Kind: "workload"}, Items: []*workload.Workload{{}, {}, {}}}
 
-	if numItems := getListNumItems(wObjList); numItems != 3 {
+	if numItems := getNumItems(wObjList); numItems != 3 {
 		t.Fatalf("found invalid #items from a list %d", numItems)
 	}
 
-	if numItems := getListNumItems(&workload.Workload{}); numItems > 0 {
-		t.Fatalf("get number items returned non zero value %d", numItems)
+	if numItems := getNumItems(&workload.Workload{}); numItems != 1 {
+		t.Fatalf("get number items returned invalid value %d", numItems)
 	}
 
-	if numItems := getListNumItems([]workload.Workload{}); numItems > 0 {
+	if numItems := getNumItems([]workload.Workload{}); numItems > 0 {
 		t.Fatalf("get number items returned non zero value %d", numItems)
 	}
 }

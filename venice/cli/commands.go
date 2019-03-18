@@ -75,6 +75,11 @@ var (
 			Flags:        metricsFlags,
 		},
 	}
+	fromFileCommand = cli.Command{
+		Name:      "from-file",
+		Usage:     "from-file <file-name>",
+		ArgsUsage: "[file-name]",
+	}
 )
 
 // Commands is the top level command hierarchy
@@ -160,12 +165,6 @@ var Commands = []cli.Command{
 		Name:         "definition",
 		Usage:        "Show definition of a specific object type",
 		BashComplete: bashDefinitionCompleter,
-	},
-	{
-		Name:      "upload",
-		Usage:     "upload objects from a file, directory, or a URL",
-		ArgsUsage: "file-name",
-		Action:    uploadCmd,
 	},
 	{
 		Name:   "clear",
@@ -288,6 +287,12 @@ func generateCommands() error {
 	for _, oneCmd := range explicitReadCommands {
 		readCommands = append(readCommands, oneCmd)
 	}
+	fromFileCommand.Action = createCmd
+	createCommands = append(createCommands, fromFileCommand)
+	fromFileCommand.Action = updateCmd
+	updateCommands = append(updateCommands, fromFileCommand)
+	fromFileCommand.Action = deleteCmd
+	deleteCommands = append(deleteCommands, fromFileCommand)
 
 	appendSubCommands("create", createCommands)
 	appendSubCommands("update", updateCommands)
@@ -417,7 +422,37 @@ func processGlobalFlags(ctx *cliContext, cmd string) error {
 	ctx.subcmd = c.Command.Name
 	ctx.token = getLoginToken()
 
-	if err := populateGenCtx(ctx); cmd != "upload" && cmd != "login" && cmd != "snapshot" && err != nil {
+	args := c.Args()
+	if len(args) > 0 {
+		for _, arg := range args {
+			for _, str := range strings.Split(arg, ",") {
+				ctx.names = append(ctx.names, str)
+			}
+		}
+	}
+
+	ctx.server = getLoginServer()
+	if ctx.server == "" {
+		ctx.server = c.GlobalString("server")
+		if !strings.HasPrefix(ctx.server, "http") {
+			ctx.server = "https://" + ctx.server
+		}
+	}
+
+	// this sub-command allows user to performs create/delete/update operations from the file/directory/url content(s)
+	if ctx.subcmd == "from-file" {
+		filenames := ctx.names
+		if len(filenames) == 0 {
+			return fmt.Errorf("must provide a filename to upload from")
+		}
+		for _, filename := range filenames {
+			processFiles(ctx, filename)
+		}
+
+		return nil
+	}
+
+	if err := populateGenCtx(ctx); cmd != "login" && cmd != "snapshot" && err != nil {
 		return fmt.Errorf("error populating generated cliContext: %s", err)
 	}
 
@@ -429,20 +464,6 @@ func processGlobalFlags(ctx *cliContext, cmd string) error {
 	ctx.dumpStruct = c.Bool("json") || c.Bool("yml")
 	ctx.dumpYml = c.Bool("yml")
 	ctx.quiet = c.Bool("quiet")
-	ctx.server = getLoginServer()
-	if ctx.server == "" {
-		ctx.server = c.GlobalString("server")
-	}
-
-	args := c.Args()
-	if len(args) > 0 {
-		for _, arg := range args {
-			for _, str := range strings.Split(arg, ",") {
-				ctx.names = append(ctx.names, str)
-			}
-		}
-	}
-
 	reStr := c.String("re")
 	if cmd == "clear" {
 		reStr = ".*"

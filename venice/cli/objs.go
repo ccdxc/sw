@@ -85,8 +85,8 @@ func removeObjOper(ctx *cliContext, obj interface{}) error {
 	return ctx.removeObjOperFunc(obj)
 }
 
-// createObjFromBytes creates an object from json/yml bytes of data
-func createObjFromBytes(ctx *cliContext, inp string) error {
+// processObjFromBytes creates an object from json/yml bytes of data
+func processObjFromBytes(ctx *cliContext, inp string) error {
 	obj := getNewObj(ctx)
 
 	if err := json.Unmarshal([]byte(inp), obj); err != nil {
@@ -103,12 +103,19 @@ func createObjFromBytes(ctx *cliContext, inp string) error {
 	switch ctx.cmd {
 	case "update", "edit":
 		if err = ctx.restPutFunc(ctx.server, ctx.token, obj); err != nil {
-			fmt.Printf("put error %s\n", err)
+			fmt.Printf("Object %s, Put Error %s\n", objm.Name, err)
+		}
+	case "create":
+		if err := ctx.restPostFunc(ctx.server, ctx.token, obj); err != nil {
+			fmt.Printf("Object %s, Post Error %s\n", objm.Name, err)
+		}
+	case "delete":
+		ctx.names[0] = objm.Name
+		if err := restDelete(ctx); err != nil {
+			fmt.Printf("Object %s, Delete Error %s\n", objm.Name, err)
 		}
 	default:
-		if err := ctx.restPostFunc(ctx.server, ctx.token, obj); err != nil {
-			fmt.Printf("post error %s\n", err)
-		}
+		panic(fmt.Sprintf("invalid command to process from file: %s", ctx.cmd))
 	}
 
 	return nil
@@ -194,7 +201,7 @@ func getAllKvs(ctx *cliContext, numItems int, objList interface{}) ([]map[string
 	for idx := 0; idx < numItems; idx++ {
 		objmKvs = append(objmKvs, make(map[string]cliField))
 		specKvs = append(specKvs, make(map[string]cliField))
-		obj := getObjFromList(objList, idx)
+		obj := getObjOrList(objList, idx)
 		getObjMetaKvs(obj, objmKvs[idx])
 
 		// get spec and status fields in specKvs
@@ -219,7 +226,7 @@ func getAllKvs(ctx *cliContext, numItems int, objList interface{}) ([]map[string
 func getObjMetaKvs(obj interface{}, kvs map[string]cliField) {
 	objm, err := runtime.GetObjectMeta(obj)
 	if err != nil {
-		panic("object doesn't contain meta!")
+		panic(fmt.Sprintf("object doesn't contain meta! %+v", obj))
 	}
 
 	kvs["name"] = cliField{values: []string{objm.Name}}
@@ -286,8 +293,8 @@ func getFilteredNames(ctx *cliContext) []string {
 		return names
 	}
 
-	for idx := 0; idx < getListNumItems(objList); idx++ {
-		obj := getObjFromList(objList, idx)
+	for idx := 0; idx < getNumItems(objList); idx++ {
+		obj := getObjOrList(objList, idx)
 		objm, err := runtime.GetObjectMeta(obj)
 		if err != nil {
 			fmt.Printf("Unable to fetch object meta from the object: %+v", objList)
@@ -377,25 +384,31 @@ func getLineData(ctx *cliContext, specIdx *int, objmKvs, specKvs map[string]cliF
 	return []byte(objLine + "\n"), more
 }
 
-// getListNumItems returns total number of elements in the list
-func getListNumItems(objList interface{}) int {
+// getNumItems returns total number of elements in a slice, or a struct
+func getNumItems(objList interface{}) int {
 	return getFuzFromList(objList, 0, func(elem reflect.Value, idx int) interface{} {
-		return elem.Len()
+		if elem.Kind() == reflect.Slice {
+			return elem.Len()
+		}
+		return 1
 	}).(int)
 }
 
-// getObjFromList returns an object at specified index within an array of objList
-func getObjFromList(objList interface{}, idx int) interface{} {
-	return getFuzFromList(objList, idx, func(elem reflect.Value, idx int) interface{} {
-		return elem.Index(idx).Interface()
+// getObjOrList returns an object at specified index within an array of objList
+func getObjOrList(objOrList interface{}, idx int) interface{} {
+	return getFuzFromList(objOrList, idx, func(elem reflect.Value, idx int) interface{} {
+		if elem.Kind() == reflect.Slice {
+			return elem.Index(idx).Interface()
+		}
+		return elem.Interface()
 	})
 }
 
 // getFuzFromList is a generic function to do something for 'idx' in an object list
 // fuzFunc is called for the specified idx on the list
 // the function uses reflect to parse through the generic structure of List objects
-func getFuzFromList(objList interface{}, idx int, fuzFunc func(elem reflect.Value, idx int) interface{}) interface{} {
-	objValue := reflect.ValueOf(objList)
+func getFuzFromList(objOrList interface{}, idx int, fuzFunc func(elem reflect.Value, idx int) interface{}) interface{} {
+	objValue := reflect.ValueOf(objOrList)
 	if objValue.Kind() == reflect.Ptr {
 		objValue = reflect.Indirect(objValue)
 	}
@@ -415,7 +428,7 @@ func getFuzFromList(objList interface{}, idx int, fuzFunc func(elem reflect.Valu
 		return fuzFunc(elem, idx)
 	}
 
-	return 0
+	return fuzFunc(reflect.ValueOf(objOrList), 0)
 }
 
 func getObjField(obj interface{}, field string) interface{} {
@@ -425,7 +438,7 @@ func getObjField(obj interface{}, field string) interface{} {
 	}
 
 	if objValue.Kind() != reflect.Struct {
-		return nil
+		return obj
 	}
 
 	for i := 0; i < objValue.NumField(); i++ {

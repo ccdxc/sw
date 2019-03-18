@@ -34,7 +34,7 @@ func processFiles(ctx *cliContext, fileArg string) {
 			}
 
 			if err != nil {
-				fmt.Printf("%s, Aborting", err)
+				fmt.Printf("%s\n", err)
 				return
 			}
 		}
@@ -63,10 +63,6 @@ func processDir(ctx *cliContext, filename, kind string) error {
 			}
 		}
 	} else {
-		if !strings.HasSuffix(filename, "yaml") && !strings.HasSuffix(filename, "yml") && !strings.HasSuffix(filename, "json") {
-			return nil
-		}
-
 		if err := processFile(ctx, filename, kind); err != nil {
 			return err
 		}
@@ -141,8 +137,8 @@ func processRec(ctx *cliContext, inp, kind string) error {
 		return fmt.Errorf("error populating generated cliContext: %s", err)
 	}
 
-	if err := createObjFromBytes(ctx, inp); err != nil {
-		return fmt.Errorf("Error creating from raw bytes: %s\nrec: %s", err, inp)
+	if err := processObjFromBytes(ctx, inp); err != nil {
+		return fmt.Errorf("Error processing '%s' from raw bytes: %s\nrec: %s", ctx.cmd, err, inp)
 	}
 
 	return nil
