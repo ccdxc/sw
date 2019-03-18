@@ -40,13 +40,22 @@ func (na *Nagent) CreateSecurityProfile(profile *netproto.SecurityProfile) error
 	}
 
 	// Find the attachment vrfs
-	for _, v := range profile.Spec.AttachVrfs {
-		vrf, err := na.ValidateVrf(profile.Tenant, profile.Namespace, v)
+	if len(profile.Spec.AttachVrfs) != 0 {
+		for _, v := range profile.Spec.AttachVrfs {
+			vrf, err := na.ValidateVrf(profile.Tenant, profile.Namespace, v)
+			if err != nil {
+				log.Errorf("Failed to find the attachment vrf: %v. Err: %v", v, err)
+				return err
+			}
+			attachmentVrfs = append(attachmentVrfs, vrf)
+		}
+	} else {
+		defaultVrf, err := na.ValidateVrf(profile.Tenant, profile.Namespace, "default")
 		if err != nil {
-			log.Errorf("Failed to find the attachment vrf: %v. Err: %v", v, err)
+			log.Errorf("Failed to find the default vrf. Err: %v", err)
 			return err
 		}
-		attachmentVrfs = append(attachmentVrfs, vrf)
+		attachmentVrfs = append(attachmentVrfs, defaultVrf)
 	}
 
 	profile.Status.SecurityProfileID, err = na.Store.GetNextID(types.SecurityProfileID)
