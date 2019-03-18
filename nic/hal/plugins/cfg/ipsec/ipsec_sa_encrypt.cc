@@ -505,8 +505,10 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     rsp->mutable_spec()->set_decrypt_txdma1_barco_ring_full_errors(stats_cb.decrypt_txdma1_barco_ring_full_errors);
 
 
-    rsp->mutable_spec()->set_rnmdpr_sem_pindex(stats_cb.rnmdpr_pi_counters);
-    rsp->mutable_spec()->set_rnmdpr_sem_cindex(stats_cb.rnmdpr_ci_counters);
+    rsp->mutable_spec()->set_enc_rnmdpr_sem_pindex(stats_cb.enc_rnmdpr_pi_counters);
+    rsp->mutable_spec()->set_enc_rnmdpr_sem_cindex(stats_cb.enc_rnmdpr_ci_counters);
+    rsp->mutable_spec()->set_dec_rnmdpr_sem_pindex(stats_cb.dec_rnmdpr_pi_counters);
+    rsp->mutable_spec()->set_dec_rnmdpr_sem_cindex(stats_cb.dec_rnmdpr_ci_counters);
     rsp->mutable_spec()->set_gcm0_barco_full_errors(stats_cb.gcm0_full_counters);
     rsp->mutable_spec()->set_gcm1_barco_full_errors(stats_cb.gcm1_full_counters);
     return ret;

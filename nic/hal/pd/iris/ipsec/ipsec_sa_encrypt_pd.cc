@@ -654,16 +654,32 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
-    HAL_TRACE_DEBUG("RNMDPR PI {}", counter); 
-    stats.rnmdpr_pi_counters = counter;
+    HAL_TRACE_DEBUG("Enc RNMDPR PI {}", counter); 
+    stats.enc_rnmdpr_pi_counters = counter;
 
     hwid = CAPRI_SEM_IPSEC_RNMDR_ALLOC_CI_RAW_ADDR;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
-    HAL_TRACE_DEBUG("RNMDPR CI {}", counter);
-    stats.rnmdpr_ci_counters = counter;
+    HAL_TRACE_DEBUG("Enc RNMDPR CI {}", counter);
+    stats.enc_rnmdpr_ci_counters = counter;
+
+    hwid = CAPRI_SEM_IPSEC_BIG_RNMDR_ALLOC_CI_RAW_ADDR - 4;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    HAL_TRACE_DEBUG("Dec RNMDPR PI {}", counter); 
+    stats.dec_rnmdpr_pi_counters = counter;
+
+    hwid = CAPRI_SEM_IPSEC_BIG_RNMDR_ALLOC_CI_RAW_ADDR;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    HAL_TRACE_DEBUG("Dec RNMDPR CI {}", counter);
+    stats.dec_rnmdpr_ci_counters = counter;
 
     hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM0_PI_HBM_TABLE_OFFSET + 4;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){

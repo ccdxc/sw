@@ -116,6 +116,13 @@ header_type doorbell_data_pad_t {
     }
 }
 
+header_type pad_bytes_t {
+    fields {
+        pad_bytes_0_7 : 64;
+        pad_bytes_8_15 : 64;
+    }
+}
+
 //Unionize the below with p4_2_p4plus_app_header_t
 @pragma pa_header_union ingress app_header
 metadata p4_to_p4plus_ipsec_header_t p42p4plus_hdr;
@@ -141,6 +148,7 @@ metadata ipsec_table1_s2s scratch_t1_s2s;
 metadata ipsec_table2_s2s scratch_t2_s2s;
 @pragma scratch_metadata
 metadata ipsec_table3_s2s scratch_t3_s2s;
+
 
 //Global
 @pragma pa_header_union ingress common_global
@@ -184,6 +192,8 @@ metadata barco_descriptor_t barco_desc_in;
 @pragma dont_trim
 metadata barco_descriptor_t barco_desc_out;
 
+@pragma dont_trim
+metadata pad_bytes_t pad_bytes;
 
 @pragma dont_trim
 metadata doorbell_data_t db_data;
@@ -205,10 +215,9 @@ metadata dma_cmd_phv2mem_t dma_cmd_fill_esp_hdr;
 metadata dma_cmd_phv2mem_t dma_cmd_in_desc_aol; 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_out_desc_aol; 
+
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t dma_cmd_pad_byte_src;
-@pragma dont_trim
-metadata dma_cmd_mem2mem_t dma_cmd_pad_byte_dst;
+metadata dma_cmd_phv2mem_t dma_cmd_pad_mem;
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_iv_salt; 
@@ -357,7 +366,6 @@ action update_input_desc_aol2 (addr0, offset0, length0,
     // Original pkt to input descriptor pkt2mem 
     DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0+4+ipsec_to_stage3.iv_size, ipsec_to_stage3.packet_len, 0, 0)
     // Pad bytes from HBM - mem2mem 
-    DMA_COMMAND_MEM2MEM_FILL(dma_cmd_pad_byte_src, dma_cmd_pad_byte_dst, ipsec_to_stage3.pad_addr, 0, addr0+length0, 0, ipsec_to_stage3.pad_size, 0, 0, 0)
     // DMA_COMMAND SALT
     modify_field(ipsec_to_stage3_scratch.iv_salt, ipsec_to_stage3.iv_salt); 
     modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size); 
@@ -389,7 +397,6 @@ action update_input_desc_aol (addr0, offset0, length0,
     // Original pkt to input descriptor pkt2mem 
     DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0+4+ipsec_to_stage3.iv_size, ipsec_to_stage3.packet_len, 0, 0)
     // Pad bytes from HBM - mem2mem 
-    DMA_COMMAND_MEM2MEM_FILL(dma_cmd_pad_byte_src, dma_cmd_pad_byte_dst, ipsec_to_stage3.pad_addr, 0, addr0+length0, 0, ipsec_to_stage3.pad_size, 0, 0, 0)
     // DMA_COMMAND SALT
     modify_field(ipsec_to_stage3_scratch.iv_salt, ipsec_to_stage3.iv_salt); 
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv_salt, addr0, IPSEC_IN_DESC_IV_SALT_START, IPSEC_IN_DESC_IV_SALT_END, 0, 0, 0, 0) 

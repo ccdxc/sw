@@ -227,10 +227,12 @@ message IPSecGlobalStatisticsGetSpec {
     uint64         decrypt_rxdma_cb_ring_full_errors        = 58;
     uint64         decrypt_txdma1_barco_ring_full_errors    = 59;
     
-    uint32         rnmdpr_sem_pindex                 = 60;
-    uint32         rnmdpr_sem_cindex                 = 61;
-    uint32         gcm0_barco_full_errors            = 62;
-    uint32         gcm1_barco_full_errors            = 63;
+    uint32         enc_rnmdpr_sem_pindex             = 60;
+    uint32         enc_rnmdpr_sem_cindex             = 61;
+    uint32         dec_rnmdpr_sem_pindex             = 62;
+    uint32         dec_rnmdpr_sem_cindex             = 63;
+    uint32         gcm0_barco_full_errors            = 64;
+    uint32         gcm1_barco_full_errors            = 65;
 }
 
   

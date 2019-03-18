@@ -29,7 +29,6 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     and r1, r1, IPSEC_BARCO_RING_INDEX_MASK 
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, r1)
     phvwr p.barco_req_doorbell_data, r3.dx
-    phvwri p.barco_req_header_size, ESP_FIXED_HDR_SIZE_LI
     add r2, r0, k.ipsec_to_stage4_barco_req_addr
     blti r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_req
     nop

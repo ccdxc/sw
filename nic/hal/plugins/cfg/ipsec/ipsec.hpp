@@ -282,8 +282,10 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         decrypt_txdma1_barco_ring_full_errors;
     uint64_t         decrypt_pad[37];
 
-    uint32_t         rnmdpr_pi_counters;
-    uint32_t         rnmdpr_ci_counters;
+    uint32_t         enc_rnmdpr_pi_counters;
+    uint32_t         enc_rnmdpr_ci_counters;
+    uint32_t         dec_rnmdpr_pi_counters;
+    uint32_t         dec_rnmdpr_ci_counters;
     uint32_t         gcm0_full_counters;
     uint32_t         gcm1_full_counters;
 } __PACK__ ipsec_global_stats_cb_t;

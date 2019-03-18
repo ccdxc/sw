@@ -60,8 +60,9 @@ esp_ipv4_tunnel_h2n_rxdma_disbale_dma_cmds:
     phvwri p.dma_cmd_iv_salt_dma_cmd_type, 0
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_type, 0
     phvwri p.dma_cmd_fill_esp_hdr_dma_cmd_type, 0
-    phvwri p.dma_cmd_pad_byte_src_dma_cmd_type, 0
-    phvwri p.dma_cmd_pad_byte_dst_dma_cmd_type, 0
+    //phvwri p.dma_cmd_pad_byte_src_dma_cmd_type, 0
+    //phvwri p.dma_cmd_pad_byte_dst_dma_cmd_type, 0
+    phvwri p.dma_cmd_pad_mem_dma_cmd_type, 0
     phvwri p.dma_cmd_in_desc_aol_dma_cmd_type, 0
     phvwri p.dma_cmd_iv_dma_cmd_type, 0
     phvwri.e p.tail_2_bytes_dma_cmd_type, 0
