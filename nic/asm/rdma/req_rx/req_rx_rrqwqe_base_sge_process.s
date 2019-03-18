@@ -176,7 +176,7 @@ recirc:
 
     phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, cur_sge_offset), r2, \
               CAPRI_PHV_FIELD(TO_S1_RECIRC_P, cur_sge_id), r1
-    phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, num_sges), d.num_sges, \
+    phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, num_valid_sges), d.num_sges, \
               CAPRI_PHV_FIELD(TO_S1_RECIRC_P, remaining_payload_bytes), r3
     cmov      r4, c5, 0, 1
     phvwr     CAPRI_PHV_FIELD(TO_S1_RECIRC_P, dma_cmd_eop), r4
@@ -190,7 +190,7 @@ insufficient_sges:
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqsge_insuff_sges), 1 //BD Slot
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
-    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1
     phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     b              set_arg
     CAPRI_SET_TABLE_0_VALID(0) // Branch Delay Slot
@@ -199,7 +199,7 @@ err_no_dma_cmds:
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqsge_insuff_dma_cmds), 1
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
-    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
     // Error disable QP
     phvwr         CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     b              set_arg

@@ -296,7 +296,7 @@ header_type req_rx_to_stage_recirc_info_t {
         rrqwqe_sge_list_addr             : 64;
         cur_sge_offset                   : 32;
         cur_sge_id                       : 8;
-        num_sges                         : 8;
+        num_valid_sges                   : 8;
         remaining_payload_bytes          : 14;
         dma_cmd_eop                      : 1;
         sge_opt                          : 1;
@@ -1456,7 +1456,7 @@ action req_rx_sqcb1_recirc_process () {
     modify_field(to_s1_recirc_info_scr.cur_sge_offset, to_s1_recirc_info.cur_sge_offset);
     modify_field(to_s1_recirc_info_scr.cur_sge_id, to_s1_recirc_info.cur_sge_id);
     modify_field(to_s1_recirc_info_scr.remaining_payload_bytes, to_s1_recirc_info.remaining_payload_bytes);
-    modify_field(to_s1_recirc_info_scr.num_sges, to_s1_recirc_info.num_sges);
+    modify_field(to_s1_recirc_info_scr.num_valid_sges, to_s1_recirc_info.num_valid_sges);
     modify_field(to_s1_recirc_info_scr.dma_cmd_eop, to_s1_recirc_info.dma_cmd_eop);
     modify_field(to_s1_recirc_info_scr.sge_opt, to_s1_recirc_info.sge_opt);
 

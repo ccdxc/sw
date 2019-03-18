@@ -46,17 +46,14 @@ req_rx_rrqwqe_base_sge_opt_process:
     setcf          c7, [c0] // Branch Delay Slot
 
     // sge_len_p[0]
-    sub            r6, RRQWQE_SGE_OFFSET_BITS, 1, LOG_SIZEOF_WQE_8x4_T_BITS
     seq            c1, d.wqe_format, SQWQE_FORMAT_8x4
-    bcf            [c1], decode_sge8x4
+    add            r6, RRQWQE_SGE_OFFSET_BITS, r0
     // cur_sge_id = 0
     add            r7, r0, r0 // Branch Delay Slot
 
-decode_sge16x2:
+decode_sge_len_encoding:
 
-
-decode_sge8x4:
-
+    // 8x4 WQE format
     /*
      *    lower 32-byte encoding
      *    0          32          63
@@ -70,25 +67,42 @@ decode_sge8x4:
      *    |     len   |    len    |
      *    -------------------------
      */
-next_sge_len:
-    CAPRI_TABLE_GET_FIELD(r4, r6, WQE_8x4_T, len)
+
+    // 16x2 WQE format
+    /*
+     *    lower 32-byte encoding
+     *    0    16    32    48    63
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     */
+
+    sub.c1         r6, r6, 1, LOG_SIZEOF_WQE_8x4_T_BITS
+    sub.!c1        r6, r6, 1, LOG_SIZEOF_WQE_16x2_T_BITS
+    CAPRI_TABLE_GET_FIELD_C(r4, r6, WQE_8x4_T, len, c1)
+    CAPRI_TABLE_GET_FIELD_C(r4, r6, WQE_16x2_T, len, !c1)
     // if total bytes transferred is within first sge's length, then
     // current_sge_offset is equal to total bytes transferred
     blt            r2, r4, trigger_rrqsge_process
-    nop            // Branch Delay Slot
+    setcf          c2, [c0] // Branch Delay Slot
 
-    // if not, go to next sge length
-    // current_sge_offset = current_sge_offset - sge_len
-    sub            r2, r2, r4
     // cur_sge_id += 1
     add            r7, r7, 1
-    slt            c1, r7, d.num_sges
-    bcf            [c1], next_sge_len
-    sub            r6, r6, 1, LOG_SIZEOF_WQE_8x4_T_BITS // Branch Delay Slot
+    slt            c2, r7, d.num_sges
+    bcf            [c2], decode_sge_len_encoding
+    // if not, go to next sge length
+    // current_sge_offset = current_sge_offset - sge_len
+    sub            r2, r2, r4 // Branch Delay Slot
 
 trigger_rrqsge_process:
-    bcf            [!c1], insufficient_sges
-    add            r3, d.read.wqe_sge_list_addr, 1, LOG_SIZEOF_WQE_8x4_T_BITS // Branch Delay Slot
+    bcf            [!c2], insufficient_sges
+    add            r3, d.read.wqe_sge_list_addr, TXWQE_SGE_LEN_ENC_SIZE // Branch Delay Slot
     //rrqsge_p = cur_sge_id << log_sizeof_sge_t
     add            r3, r3, r7, LOG_SIZEOF_SGE_T
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, \
@@ -231,7 +245,7 @@ insufficient_sges:
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqsge_insuff_sges), 1 //BD Slot
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
-    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1
     phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     b              set_arg
     CAPRI_SET_TABLE_0_VALID(0) // Branch Delay Slot

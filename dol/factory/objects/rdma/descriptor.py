@@ -354,7 +354,10 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         if spec_en == True:
             if hasattr(self.spec.fields, 'num_sges') and \
                self.spec.fields.num_sges > 2:
-                self.wqe_format = 1
+                if self.spec.fields.num_sges <= 8:
+                    self.wqe_format = 1
+                elif self.spec.fields.num_sges <= 16:
+                    self.wqe_format = 2
 
         inline_data_vld = self.spec.fields.inline_data_vld if hasattr(self.spec.fields, 'inline_data_vld') else 0
         num_sges = self.spec.fields.num_sges if hasattr(self.spec.fields, 'num_sges') else 0
@@ -507,29 +510,24 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         elif (num_sges and (num_sges > 0)):
             if self.spec.fields.num_sges:
                 # write length encoding for non-default WQE format
-                if self.wqe_format > 0:
-
-                    if self.spec.fields.num_sges <= 8:
-
-                        for i in range(8):
-                            if (i >= self.spec.fields.num_sges):
-                                length = 0
-                            else:
-                                sge = self.spec.fields.sges[i]
-                                length = sge.len
-                            sge_len_entry = RdmaSgeLen8x4(len=length)
-                            desc = desc/sge_len_entry
-
-                    elif self.spec.fields.num_sges <= 16:
-
-                        for i in range(16):
-                            if (i >= self.spec.fields.num_sges):
-                                length = 0
-                            else:
-                                sge = self.spec.fields.sges[i]
-                                length = sge.len
-                            sge_len_entry = RdmaSgeLen16x2(len=length)
-                            desc = desc/sge_len_entry
+                if self.wqe_format == 1:
+                    for i in range(8):
+                        if (i >= self.spec.fields.num_sges):
+                            length = 0
+                        else:
+                            sge = self.spec.fields.sges[i]
+                            length = sge.len
+                        sge_len_entry = RdmaSgeLen8x4(len=length)
+                        desc = desc/sge_len_entry
+                elif self.wqe_format == 2:
+                    for i in range(16):
+                        if (i >= self.spec.fields.num_sges):
+                            length = 0
+                        else:
+                            sge = self.spec.fields.sges[i]
+                            length = sge.len
+                        sge_len_entry = RdmaSgeLen16x2(len=length)
+                        desc = desc/sge_len_entry
 
             for sge in self.spec.fields.sges:
                 sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
@@ -572,8 +570,8 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         else:
             self.num_sges = 0
         self.fence   = desc.fence
-        logger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d op_type: %d fence: %d" % 
-                       (self.address, self.wrid, self.num_sges, self.op_type, self.fence))
+        logger.info("Read Desciptor @0x%x = wrid: 0x%x wqe_format: %d num_sges: %d op_type: %d fence: %d" %
+                       (self.address, self.wrid, self.wqe_format, self.num_sges, self.op_type, self.fence))
         if self.mem_handle:
             mem_handle.va += 32
             #for atomic descriptor, skip 16 bytes to access SGE
@@ -584,38 +582,33 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
             if self.op_type in [6, 7]:
                 hbm_addr += 16
 
-        if self.wqe_format > 0:
+        self.sge_len = []
+        if self.wqe_format == 1:
+            for i in range(8):
+                if self.mem_handle:
+                    self.sge_len.append(RdmaSgeLen8x4(resmgr.HostMemoryAllocator.read(mem_handle, 4)))
+                else:
+                    self.sge_len.append(RdmaSgeLen8x4(model_wrap.read_mem(hbm_addr, 4)))
 
-            self.sge_len = []
-            if self.spec.fields.num_sges <= 8:
+                if self.mem_handle:
+                    mem_handle.va += 4
+                else:
+                    hbm_addr += 4
+        elif self.wqe_format == 2:
+            for i in range(16):
+                if self.mem_handle:
+                    self.sge_len.append(RdmaSgeLen16x2(resmgr.HostMemoryAllocator.read(mem_handle, 2)))
+                else:
+                    self.sge_len.append(RdmaSgeLen16x2(model_wrap.read_mem(hbm_addr, 2)))
 
-                for i in range(8):
-                    if self.mem_handle:
-                        self.sge_len.append(RdmaSgeLen8x4(resmgr.HostMemoryAllocator.read(mem_handle, 4)))
-                    else:
-                        self.sge_len.append(RdmaSgeLen8x4(model_wrap.read_mem(hbm_addr, 4)))
+                if self.mem_handle:
+                    mem_handle.va += 2
+                else:
+                    hbm_addr += 2
 
-                    if self.mem_handle:
-                        mem_handle.va += 4
-                    else:
-                        hbm_addr += 4
-
-            elif self.spec.fields.num_sges <= 16:
-
-                for i in range(16):
-                    if self.mem_handle:
-                        self.sge_len.append(RdmaSgeLen16x2(resmgr.HostMemoryAllocator.read(mem_handle, 2)))
-                    else:
-                        self.sge_len.append(RdmaSgeLen16x2(model_wrap.read_mem(hbm_addr, 2)))
-
-                    if self.mem_handle:
-                        mem_handle.va += 2
-                    else:
-                        hbm_addr += 2
-
-            for sge in self.sge_len:
-                logger.info('%s' % type(sge))
-                logger.info('len: 0x%x' % sge.len)
+        for sge in self.sge_len:
+            logger.info('%s' % type(sge))
+            logger.info('len: 0x%x' % sge.len)
 
         self.sges = []
 

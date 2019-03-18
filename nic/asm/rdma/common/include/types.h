@@ -606,6 +606,7 @@ struct len_encoding_16x2_t {
 
 #define TXWQE_SGE_OFFSET  32 //
 #define TXWQE_SGE_OFFSET_BITS   256 // 32 * 8
+#define TXWQE_SGE_LEN_ENC_SIZE 32
 
 #define FRPMR_DMA_ADDR_OFFSET ((sizeof(struct sqwqe_base_t) / 8) + FIELD_OFFSET(sqwqe_frpmr_t, dma_src_address))
 

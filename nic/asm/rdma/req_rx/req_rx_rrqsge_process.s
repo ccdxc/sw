@@ -169,14 +169,17 @@ set_arg:
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
 recirc:
+    sle     c3, K_NUM_VALID_SGES, 2
+    bcf     [c3], insufficient_sges
+
     // increment dma_cmd_start_index by num of DMA cmds consumed for 2 SGES per pass
-    add            r4, K_DMA_CMD_START_INDEX, (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
+    add            r4, K_DMA_CMD_START_INDEX, (MAX_PYLD_DMA_CMDS_PER_SGE * 2) // Branch Delay Slot
     // Error if there are no dma cmd space to compose
     beqi           r4, REQ_RX_RDMA_PAYLOAD_DMA_CMDS_END, err_no_dma_cmds
 
     phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, cur_sge_offset), r2, \
               CAPRI_PHV_FIELD(TO_S1_RECIRC_P, cur_sge_id), r1
-    phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, num_sges), K_NUM_VALID_SGES, \
+    phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, num_valid_sges), K_NUM_VALID_SGES, \
               CAPRI_PHV_FIELD(TO_S1_RECIRC_P, remaining_payload_bytes), r3
     phvwr     CAPRI_PHV_FIELD(TO_S1_RECIRC_P, dma_cmd_eop), CAPRI_KEY_FIELD(IN_P, dma_cmd_eop)
 
@@ -185,11 +188,20 @@ recirc:
     phvwr.e p.common.p4_intr_recirc, 1
     phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_SGE_WORK_PENDING
 
+insufficient_sges:
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqsge_insuff_sges), 1 //BD Slot
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    b              set_arg
+    CAPRI_SET_TABLE_0_VALID(0) // Branch Delay Slot
+
 err_no_dma_cmds:
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqsge_insuff_dma_cmds), 1
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
-    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1 
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
     // Error disable QP
     phvwr         CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     b              set_arg
