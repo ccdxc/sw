@@ -199,7 +199,7 @@ def run_model(args):
         model_cmd.append("+plog=info")
         if args.gft or args.gft_gtest:
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/gft/gen/p4gen/gft/dbg_out/model_debug.json")
-        elif args.apollo_gtest or args.apollo_scale_test:
+        elif args.apollo_gtest or args.apollo_scale_test or args.apollo_scale_vxlan_test:
             os.system("%s/tools/merge_model_debug.py --p4 apollo --rxdma apollo_rxdma --txdma apollo_txdma" % nic_dir)
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/gen/p4gen//apollo/dbg_out/combined_model_debug.json")
         elif args.hello_gtest:
@@ -219,7 +219,7 @@ def run_model(args):
     global bin_dir
     if args.gft or args.gft_gtest:
         bin_dir = nic_dir + '/build/x86_64/gft/bin/'
-    elif args.apollo_gtest or args.apollo_scale_test:
+    elif args.apollo_gtest or args.apollo_scale_test or args.apollo_scale_vxlan_test:
         bin_dir = nic_dir + '/build/x86_64/apollo/bin/'
     elif args.l2switch_gtest:
         bin_dir = nic_dir + '/build/x86_64/l2switch/bin/'
@@ -529,7 +529,19 @@ def run_apollo_scale_test(args):
     os.chdir(nic_dir)
     cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
            '-c', "hal.json",
-           '-i', "apollo/test/scale_test/scale_cfg_sim.json",
+           '-i', "apollo/test/scale/scale_cfg_sim.json",
+           "--gtest_output=", "xml:build/x86_64/apollo/gtest_results/apollo_scale_test.xml"]
+    p = Popen(cmd)
+    return check_for_completion(p, None, model_process, hal_process, args)
+
+# Run Apollo VXLAN Scale tests
+def run_apollo_vxlan_scale_test(args):
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
+    os.environ["APOLLO_TEST_TEP_ENCAP"] = "vxlan"
+    os.chdir(nic_dir)
+    cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
+           '-c', "hal.json",
+           '-i', "apollo/test/scale/scale_cfg_sim.json",
            "--gtest_output=", "xml:build/x86_64/apollo/gtest_results/apollo_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -1078,6 +1090,8 @@ def main():
                         default=False, help="Run Apollo2 gtests")
     parser.add_argument("--apollo_scale_test", dest='apollo_scale_test', action="store_true",
                         default=False, help="Run Apollo scale tests")
+    parser.add_argument("--apollo_scale_vxlan_test", dest='apollo_scale_vxlan_test', action="store_true",
+                        default=False, help="Run Apollo scale vxlan tests")
     parser.add_argument("--l2switch_gtest", dest='l2switch_gtest', action="store_true",
                         default=False, help="Run L2Switch gtests")
     parser.add_argument("--elektra_gtest", dest='elektra_gtest', action="store_true",
@@ -1198,6 +1212,7 @@ def main():
             if args.gft_gtest is False and \
                 args.apollo_gtest is False and \
                 args.apollo_scale_test is False and \
+                args.apollo_scale_vxlan_test is False and \
                 args.l2switch_gtest is False and \
                 args.elektra_gtest is False and \
                 args.hello_gtest is False:
@@ -1228,7 +1243,7 @@ def main():
         status = run_gft_test(args)
         if status != 0:
             print "- GFT test failed, status=", status
-    elif args.apollo_gtest or args.apollo_scale_test:
+    elif args.apollo_gtest:
         status = run_apollo_test(args)
         if status != 0:
             print "- Apollo2 test failed, status=", status
@@ -1236,6 +1251,10 @@ def main():
         status = run_apollo_scale_test(args)
         if status != 0:
             print "- Apollo scale test failed, status=", status
+    elif args.apollo_scale_vxlan_test:
+        status = run_apollo_vxlan_scale_test(args)
+        if status != 0:
+            print "- Apollo scale VXLAN test failed, status=", status
     elif args.l2switch_gtest:
         status = run_l2switch_test(args)
         if status != 0:

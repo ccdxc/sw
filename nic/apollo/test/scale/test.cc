@@ -636,7 +636,8 @@ create_objects (void)
     pt::ptree json_pt;
     string pfxstr;
     sdk_ret_t ret;
-
+    char *tep_encap_env;
+    
 #ifndef TEST_GRPC_APP
     g_flow_test_obj = new flow_test();
 #endif
@@ -666,6 +667,17 @@ create_objects (void)
                     g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VXLAN;
                 } else {
                     g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VNIC;
+                }
+                // If env var is set, it overrides the json value
+                if (getenv("APOLLO_TEST_TEP_ENCAP")) {
+                    tep_encap_env = getenv("APOLLO_TEST_TEP_ENCAP");
+                    if (!strcmp(tep_encap_env, "vxlan")) {
+                        g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VXLAN;
+                    } else {
+                        g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VNIC;
+                    }
+                    printf("TEP encap env var: %s, encap: %d\n", 
+                            tep_encap_env, g_test_params.tep_encap);
                 }
             } else if (kind == "tep") {
                 g_test_params.num_teps = std::stol(obj.second.get<std::string>("count"));

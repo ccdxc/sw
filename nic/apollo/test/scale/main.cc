@@ -231,6 +231,8 @@ send_packet (void)
     uint32_t tcscale = 1;
     int tcid = 0;
     int tcid_filter = 0;
+    char *tep_encap_env;
+    bool vxlan_encap = false;
 
     if (getenv("TCSCALE")) {
         tcscale = atoi(getenv("TCSCALE"));
@@ -240,8 +242,19 @@ send_packet (void)
         tcid_filter = atoi(getenv("TCID"));
         printf("TCID given: %d\n", tcid_filter);
     }
+    
+    if (getenv("APOLLO_TEST_TEP_ENCAP")) {
+        tep_encap_env = getenv("APOLLO_TEST_TEP_ENCAP");
+        printf("TEP encap env var: %s\n", tep_encap_env);
+        if (!strcmp(tep_encap_env, "vxlan")) {
+            vxlan_encap = true;
+        } else {
+            vxlan_encap = false;
+        }
+    }
 
     tcid++;
+    if (!vxlan_encap) {
     if (tcid_filter == 0 || tcid == tcid_filter) {
         ipkt.resize(sizeof(g_snd_pkt1));
         memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
@@ -259,8 +272,10 @@ send_packet (void)
             testcase_end(tcid, i + 1);
         }
     }
+    }
 
     tcid++;
+    if (!vxlan_encap) {
     if (tcid_filter == 0 || tcid == tcid_filter) {
         ipkt.resize(sizeof(g_snd_pkt2));
         memcpy(ipkt.data(), g_snd_pkt2, sizeof(g_snd_pkt2));
@@ -278,8 +293,10 @@ send_packet (void)
             testcase_end(tcid, i+1);
         }
     }
+    }
 
     tcid++;
+    if (!vxlan_encap) {
     if (tcid_filter == 0 || tcid == tcid_filter) {
         ipkt.resize(sizeof(g_snd_pkt3));
         memcpy(ipkt.data(), g_snd_pkt3, sizeof(g_snd_pkt3));
@@ -297,9 +314,11 @@ send_packet (void)
             testcase_end(tcid, i + 1);
         }
     }
+    }
 
     // Start V6
     tcid++;
+    if (!vxlan_encap) {
     if (tcid_filter == 0 || tcid == tcid_filter) {
         ipkt.resize(sizeof(g_snd_pkt4));
         memcpy(ipkt.data(), g_snd_pkt4, sizeof(g_snd_pkt4));
@@ -317,10 +336,11 @@ send_packet (void)
             testcase_end(tcid, i + 1);
         }
     }
+    }
 
-#if 0
     // VxLAN
     tcid++;
+    if (vxlan_encap) {
     if (tcid_filter == 0 || tcid == tcid_filter) {
         ipkt.resize(sizeof(g_snd_pkt5));
         memcpy(ipkt.data(), g_snd_pkt5, sizeof(g_snd_pkt5));
@@ -338,7 +358,7 @@ send_packet (void)
             testcase_end(tcid, i + 1);
         }
     }
-#endif
+    }
 
     exit_simulation();
 }
