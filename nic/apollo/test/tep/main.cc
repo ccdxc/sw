@@ -291,7 +291,7 @@ TEST_F(tep_test, tep_double_delete) {
 
 /// \brief Double delete in separate batch
 /// Delete same TEP twice in separate batch
-TEST_F(tep_test, DISABLED_tep_double_delete_2) {
+TEST_F(tep_test, tep_double_delete_2) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.7/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -311,14 +311,14 @@ TEST_F(tep_test, DISABLED_tep_double_delete_2) {
     // Trigger 2
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // TODO: Check what happens on double delete when infra supports delete
-    ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }
 
 /// \brief create delete in same batch
 /// Create & Delete same TEP in single batch
-TEST_F(tep_test, DISABLED_tep_create_delete) {
+TEST_F(tep_test, tep_create_delete) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.8/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -336,7 +336,7 @@ TEST_F(tep_test, DISABLED_tep_create_delete) {
 
 /// \brief delete create in same batch
 /// Delete & Create same TEP in single batch
-TEST_F(tep_test, DISABLED_tep_delete_create) {
+TEST_F(tep_test, tep_delete_create) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.9/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -346,7 +346,8 @@ TEST_F(tep_test, DISABLED_tep_delete_create) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // Validate
     ASSERT_TRUE(tep_obj.read(&info, FALSE) == sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -354,7 +355,7 @@ TEST_F(tep_test, DISABLED_tep_delete_create) {
 
 /// \brief delete create delete in same batch
 /// Delete, Create & Delete same TEP in single batch
-TEST_F(tep_test, DISABLED_tep_delete_create_delete) {
+TEST_F(tep_test, tep_delete_create_delete) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.10/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -365,7 +366,8 @@ TEST_F(tep_test, DISABLED_tep_delete_create_delete) {
     ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // Validate
     ASSERT_TRUE(tep_obj.read(&info, FALSE) == sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -394,7 +396,8 @@ TEST_F(tep_test, DISABLED_tep_delete_create_delete_1) {
     ASSERT_TRUE(tep_obj3.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj3.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj3.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // Validate
     ASSERT_TRUE(tep_obj1.read(&info, FALSE) == sdk::SDK_RET_ENTRY_NOT_FOUND);
@@ -440,10 +443,14 @@ TEST_F(tep_test, DISABLED_tep_max_create) {
 
 /// \brief Create 1 TEP after table full
 /// Attempt to create only one TEP when table is already full
+// TODO: we have delayed delete enabled in the code, we can't
+//       expect TEPs created in previous cases to be deleted
+//       instantaneously ... will figure out a way to disable
+//       this delay delete logic
 TEST_F(tep_test, DISABLED_tep_beyondmax_create) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
-    uint32_t num_teps = PDS_MAX_TEP;
+    uint32_t num_teps = PDS_MAX_TEP - 1;
     std::string tep_first_ip_str = "10.20.1.1/8";
     tep_util tep_obj("10.20.5.1/8");
 
@@ -459,20 +466,19 @@ TEST_F(tep_test, DISABLED_tep_beyondmax_create) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
-
     // abort the batch as it failed as expected
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(tep_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     // Teardown
-    num_teps = PDS_MAX_TEP;
+    num_teps = PDS_MAX_TEP - 1;
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_delete(
         num_teps, tep_first_ip_str,
         PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     ASSERT_TRUE(tep_obj.read(&info, FALSE) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -506,7 +512,7 @@ TEST_F(tep_test, DISABLED_tep_multi_create) {
 
 /// \brief Delete multiple TEPs in a single batch
 /// Delete multiple unique TEPs in a single batch
-TEST_F(tep_test, DISABLED_tep_multi_delete) {
+TEST_F(tep_test, tep_multi_delete) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = 10;
@@ -897,7 +903,7 @@ TEST_F(tep_test, DISABLED_tep_read_existing_when_multiple) {
 
 /// \brief Read last deleted TEP when table is empty
 /// Read the last deleted TEP when nothing is programmed
-TEST_F(tep_test, DISABLED_tep_read_last_deleted_when_empty) {
+TEST_F(tep_test, tep_read_last_deleted_when_empty) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = 3;
@@ -924,7 +930,7 @@ TEST_F(tep_test, DISABLED_tep_read_last_deleted_when_empty) {
 
 /// \brief Read last created TEP when table is empty
 /// Read the last created TEP when nothing is programmed
-TEST_F(tep_test, DISABLED_tep_read_last_created_when_empty) {
+TEST_F(tep_test, tep_read_last_created_when_empty) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = 4;
