@@ -529,6 +529,12 @@ void cap_mx_load_from_cfg_glbl1(int chip_id, int inst_id, int *ch_enable_vec) {
    // 16'b1_010000_01000_1000 = 16'b1010_0000_1000_1000
    cap_mx_apb_write(chip_id, inst_id, 0x201, 0xA088);
 
+   // Threshold used by APP_FIFO before reading from TX_FIFO
+   cap_mx_apb_write(chip_id, inst_id, 0x20f, 0x4);
+   cap_mx_apb_write(chip_id, inst_id, 0x210, 0x4);
+   cap_mx_apb_write(chip_id, inst_id, 0x211, 0x4);
+   cap_mx_apb_write(chip_id, inst_id, 0x212, 0x4);
+
    // global mode
    cap_mx_apb_write(chip_id, inst_id, 0x1, mx[inst_id].glbl_mode);
 
