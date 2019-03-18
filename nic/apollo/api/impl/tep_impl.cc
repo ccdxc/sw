@@ -69,6 +69,19 @@ tep_impl::release_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+tep_impl::nuke_resources(api_base *api_obj) {
+    if (hw_id_ != 0xFFFF) {
+        tep_impl_db()->tep_tx_tbl()->remove(hw_id_);
+        hw_id_ = 0xFFFF;
+    }
+    if (nh_id_ != 0xFFFF) {
+        tep_impl_db()->nh_tx_tbl()->remove(nh_id_);
+        nh_id_ = 0xFFFF;
+    }
+    return SDK_RET_OK;
+}
+
 #define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
 #define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
 #define nh_tx_action              action_u.nexthop_tx_nexthop_info
@@ -142,14 +155,14 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    //TODO: need to unprogram HW
+    //TODO: need to update these entries or entries that are pointing to these entries with new epoch and valid bit set to FALSE
     //if (hw_id_ != 0xFFFF) {
     //      tep_impl_db()->tep_tx_tbl()->remove(hw_id_);
     //}
     //if (nh_id_ != 0xFFFF) {
     //    tep_impl_db()->nh_tx_tbl()->remove(nh_id_);
     //}
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t

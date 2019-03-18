@@ -62,6 +62,14 @@ public:
     virtual sdk_ret_t release_resources(api_base *api_obj) override;
 
     /**
+     * @brief     free h/w resources used by this object, if any
+     *            (this API is invoked during object deletes)
+     * @param[in] api_obj    api object holding the resources
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t nuke_resources(api_base *api_obj) override;
+
+    /**
      * @brief read spec, statistics and status from hw tables
      * @param[out] info pointer to tep info
      * @return   SDK_RET_OK on success, failure status code on error

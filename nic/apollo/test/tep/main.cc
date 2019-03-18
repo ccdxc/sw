@@ -163,7 +163,7 @@ TEST_F(tep_test, tep_invalid_delete_4) {
 
 /// \brief Create a new TEP
 /// Create a new TEP and delete it
-TEST_F(tep_test, DISABLED_tep_create) {
+TEST_F(tep_test, tep_create) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.1/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -205,7 +205,7 @@ TEST_F(tep_test, DISABLED_tep_read) {
 
 /// \brief Delete an existing TEP
 /// Create a TEP, delete it and then read & validate
-TEST_F(tep_test, DISABLED_tep_delete) {
+TEST_F(tep_test, tep_delete) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.3/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -228,7 +228,7 @@ TEST_F(tep_test, DISABLED_tep_delete) {
 
 /// \brief Double create in same batch
 /// Create same TEP twice in single batch
-TEST_F(tep_test, DISABLED_tep_double_create) {
+TEST_F(tep_test, tep_double_create) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.4/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -236,21 +236,15 @@ TEST_F(tep_test, DISABLED_tep_double_create) {
     // Trigger
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    // TODO: Double create will result in infra core
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    // Teardown
-    batch_params.epoch = ++api_test::g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_INVALID_OP);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }
 
 /// \brief Double create in separate batch
 /// Create same TEP twice in separate batch
-TEST_F(tep_test, DISABLED_tep_double_create_1) {
+TEST_F(tep_test, tep_double_create_1) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.5/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -264,7 +258,8 @@ TEST_F(tep_test, DISABLED_tep_double_create_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_INVALID_OP);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // Teardown
     batch_params.epoch = ++api_test::g_batch_epoch;
@@ -275,7 +270,7 @@ TEST_F(tep_test, DISABLED_tep_double_create_1) {
 
 /// \brief Double delete in same batch
 /// Delete same TEP twice in single batch
-TEST_F(tep_test, DISABLED_tep_double_delete) {
+TEST_F(tep_test, tep_double_delete) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.6/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -290,7 +285,6 @@ TEST_F(tep_test, DISABLED_tep_double_delete) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
-    // TODO: Check what happens on double delete when infra supports delete
     ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }

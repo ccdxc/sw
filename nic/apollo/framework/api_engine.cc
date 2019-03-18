@@ -61,18 +61,39 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         add_to_dirty_list_(api_obj, obj_ctxt);
         // initialize the object with the given config
         ret = api_obj->init_config(api_ctxt);
-        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Config initialization failed for obj id %u, "
+                          "api op %u, err %u", api_ctxt->obj_id,
+                          api_ctxt->api_op, ret);
+            return ret;
+        }
         api_obj->add_to_db();
     } else {
         // this could be XXX-DEL-ADD/ADD-XXX-DEL-XXX-ADD kind of scenario in
         // same batch, as we don't expect to see ADD-XXX-ADD (unless we want
         // to support idempotency)
-        SDK_ASSERT(api_obj->in_dirty_list() == true);
+        if (api_obj->in_dirty_list() == false) {
+            // attemping a CREATED on already created object
+            PDS_TRACE_ERR("Creating an obj already created, obj %s",
+                          api_obj->key2str());
+            return SDK_RET_INVALID_OP;
+        }
         obj_ctxt_t& octxt = batch_ctxt_.dirty_obj_map.find(api_obj)->second;
-        SDK_ASSERT((octxt.api_op == API_OP_NONE) ||
-                   (octxt.api_op == API_OP_DELETE));
+        if ((octxt.api_op != API_OP_NONE) &&
+            (octxt.api_op != API_OP_DELETE)) {
+            // only API_OP_NONE and API_OP_DELETE are expected in current state
+            // in the dirty obj map
+            PDS_TRACE_ERR("Unexpected outstanding api op %u for obj id %u in "
+                          "dirty list to process api op %u", octxt.api_op,
+                          api_ctxt->obj_id, api_ctxt->api_op);
+            return SDK_RET_INVALID_OP;
+        }
         octxt.api_op = api_op_(octxt.api_op, API_OP_CREATE);
-        SDK_ASSERT(octxt.api_op != API_OP_INVALID);
+        if (octxt.api_op == API_OP_INVALID) {
+            PDS_TRACE_ERR("Invalid resultant api op on obj id %u with "
+                          "API_OP_CREATE", api_ctxt->obj_id);
+            return SDK_RET_INVALID_OP;
+        }
 
         // update the config, by cloning the object, if needed
         if (octxt.cloned_obj == NULL) {
