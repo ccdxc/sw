@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -256,4 +257,37 @@ func CreateFruJSON(MacAddress string) error {
 
 	data := []byte(fru)
 	return ioutil.WriteFile("/tmp/fru.json", data, 0644)
+}
+
+func getNicToolsDir() string {
+	return "/usr/src/github.com/pensando/sw/nic/tools/"
+}
+
+// SetUpFwupdateScript moves the fwupdate script to appropriate directory, and adds it to the PATH variable
+func SetUpFwupdateScript(version string, path string) error {
+	logrus.Infof("SetUpFwupdate called for version %v and path %v", version, path)
+
+	fwupdateCmd := fmt.Sprintf("cp %s/fakefwupdate /%s/fwupdate", getNicToolsDir(), path)
+	_, err := exec.Command("bash", "-c", fwupdateCmd).Output()
+	if err != nil {
+		logrus.Errorf("Copy of fwupdate failed. Err : %v", err)
+		return nil
+	}
+
+	echoCmd := fmt.Sprintf("echo \"%s\" > /tmp/VERSION", version)
+	_, err = exec.Command("bash", "-c", echoCmd).Output()
+	return err
+}
+
+// DeleteFwupdateScript moves the fwupdate script to appropriate directory, and adds it to the PATH variable
+func DeleteFwupdateScript(path string) error {
+	fwupdateCmd := fmt.Sprintf("rm -rf /%s/fwupdate", path)
+	_, err := exec.Command("bash", "-c", fwupdateCmd).Output()
+	if err != nil {
+		return nil
+	}
+
+	rmVersionCmd := fmt.Sprintf("rm -rf /tmp/VERSION")
+	_, err = exec.Command("bash", "-c", rmVersionCmd).Output()
+	return err
 }

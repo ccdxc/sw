@@ -20,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
-	"github.com/pensando/sw/venice/utils/strconv"
 )
 
 const (
@@ -153,87 +152,11 @@ func (n *NMD) StartManagedMode() error {
 		case <-time.After(n.nicRegInterval):
 
 			// For the NIC in Naples Config, start the registration
-			var name, macStr string
 			mac := n.config.Status.Fru.MacStr
-			if macStr, err = strconv.ParseMacAddr(mac); err != nil {
-				macStr = n.config.Status.Fru.MacStr
-			}
 
-			if len(mac) == 0 {
-				name = n.config.Spec.Hostname
-			} else if len(n.config.Spec.Hostname) == 0 {
-				name = fmt.Sprintf("%s", macStr)
-			} else {
-				hostName, err := strconv.ParseMacAddr(n.config.Spec.Hostname)
-				if err != nil {
-					hostName = n.config.Spec.Hostname
-				}
-				name = fmt.Sprintf("%s-%s", hostName, macStr)
-			}
+			n.UpdateNaplesInfoFromConfig()
 
 			nicObj, _ := n.GetSmartNIC()
-			ver, _ := getRunningSoftwareVersion()
-			log.Infof("VERSION IS : %v", ver)
-
-			if nicObj != nil {
-
-				// Update smartNIC object
-				nicObj.TypeMeta.Kind = "SmartNIC"
-				nicObj.ObjectMeta.Name = name
-				nicObj.Spec.IPConfig = n.config.Spec.IPConfig
-				nicObj.Spec.Hostname = n.config.Spec.Hostname
-				nicObj.Spec.MgmtMode = n.config.Spec.Mode
-				nicObj.Spec.NetworkMode = n.config.Spec.NetworkMode
-				nicObj.Spec.MgmtVlan = n.config.Spec.MgmtVlan
-				nicObj.Spec.Controllers = n.config.Spec.Controllers
-				nicObj.Status.AdmissionPhase = cmd.SmartNICStatus_REGISTERING.String()
-				nicObj.Status.SerialNum = n.config.Status.Fru.SerialNum
-				nicObj.Status.PrimaryMAC = n.config.Status.Fru.MacStr
-				nicObj.Status.IPConfig = n.config.Status.IPConfig
-				nicObj.Status.Interfaces = listInterfaces()
-				nicObj.Status.SmartNICVersion = ver
-				nicObj.Status.SmartNICSku = n.config.Status.Fru.PartNum
-			} else {
-
-				// Construct new smartNIC object
-				nicObj = &cmd.SmartNIC{
-					TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
-					ObjectMeta: api.ObjectMeta{
-						Name: name,
-					},
-					Spec: cmd.SmartNICSpec{
-						Hostname:    n.config.Spec.Hostname,
-						IPConfig:    n.config.Spec.IPConfig,
-						MgmtMode:    n.config.Spec.Mode,
-						NetworkMode: n.config.Spec.NetworkMode,
-						MgmtVlan:    n.config.Spec.MgmtVlan,
-						Controllers: n.config.Spec.Controllers,
-					},
-					// TODO: get these from platform
-					Status: cmd.SmartNICStatus{
-						AdmissionPhase:  cmd.SmartNICStatus_REGISTERING.String(),
-						SerialNum:       n.config.Status.Fru.SerialNum,
-						PrimaryMAC:      n.config.Status.Fru.MacStr,
-						IPConfig:        n.config.Status.IPConfig,
-						SystemInfo:      nil,
-						Interfaces:      listInterfaces(),
-						SmartNICVersion: ver,
-						SmartNICSku:     n.config.Status.Fru.PartNum,
-					},
-				}
-			}
-
-			// SystemInfo has static information of Naples which does not change during the lifetime of Naples.
-			if nicObj.Status.SystemInfo == nil {
-				nicObj.Status.SystemInfo = UpdateNaplesInfo()
-			}
-
-			log.Infof("Syncing time with venice : %+v", n.config.Status.Controllers)
-			err = syncTimeOnce(n.config.Status.Controllers)
-			if err != nil {
-				log.Errorf("Sync time once with venice returned %v", err)
-			}
-
 			// Send NIC register request to CMD
 			log.Infof("Registering NIC with CMD : %+v", nicObj)
 			msg, err := n.RegisterSmartNICReq(nicObj)

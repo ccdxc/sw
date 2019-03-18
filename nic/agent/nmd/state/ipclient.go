@@ -344,8 +344,19 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 	log.Infof("Found Controllers: %v", controllers)
 
 	var macStr string
-	if _, err := conv.ParseMacAddr(c.nmdState.config.Status.Fru.MacStr); err != nil {
-		macStr = strings.Replace(c.nmdState.config.Status.Fru.MacStr, ":", ".", -1)
+	var err error
+	if macStr, err = conv.ParseMacAddr(c.nmdState.config.Status.Fru.MacStr); err != nil {
+		log.Errorf("Failed to parse mac address. Err : %v", err)
+		return err
+	}
+
+	if len(c.nmdState.config.Spec.Hostname) != 0 {
+		hostName, err := conv.ParseMacAddr(c.nmdState.config.Spec.Hostname)
+		if err != nil {
+			hostName = c.nmdState.config.Spec.Hostname
+		}
+		c.nmdState.config.Status.SmartNicName = fmt.Sprintf("%s-%s", hostName, macStr)
+	} else {
 		c.nmdState.config.Status.SmartNicName = macStr
 	}
 
@@ -511,7 +522,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 	}
 
 	// Persist bolt db.
-	err := c.nmdState.store.Write(&c.nmdState.config)
+	err = c.nmdState.store.Write(&c.nmdState.config)
 	if err != nil {
 		log.Errorf("Error persisting the naples config in Bolt DB, err: %+v", err)
 		return err
@@ -543,11 +554,12 @@ func (c *IPClient) watchLeaseEvents() {
 				}
 
 				controllers, _ := readAndParseLease(c.leaseFile)
-				err = c.updateNaplesStatus(controllers)
-				if err != nil {
+				if controllers == nil {
 					// Vendor specified attributes is nil
 					c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
 					log.Errorf("Failed to update naples status : %v", err)
+				} else {
+					c.updateNaplesStatus(controllers)
 				}
 
 			}

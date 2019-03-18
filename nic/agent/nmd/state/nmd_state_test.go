@@ -349,7 +349,6 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 
 // stopNMD stops NMD server and optionally deleted emDB file
 func stopNMD(t *testing.T, nm *NMD, cleanupDB bool) {
-
 	if nm != nil {
 		nm.Stop()
 	}
@@ -1368,6 +1367,8 @@ func TestNaplesPkgVerify(t *testing.T) {
 	// create nmd
 	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
+
+	os.Remove("/tmp/fwupdate")
 
 	f1 := func() (bool, interface{}) {
 		path, err := ioutil.TempDir("/tmp", "update")

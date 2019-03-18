@@ -5,7 +5,9 @@ package state
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net"
+	"os"
 	"os/exec"
 	"time"
 
@@ -16,9 +18,15 @@ import (
 )
 
 func getRunningSoftware() (string, error) {
-	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -r").Output()
+	out, err := exec.Command("/bin/bash", "-c", "fwupdate -r").Output()
 	if err != nil {
-		return "", err
+		// TODO : Remove this. Adding this temporarily to ensure progress.
+		// All these APIs can be moved under nmd/platform as it feels a more natural
+		// home for this platform dependent code.
+		// The platformAgent allows for easy mocking of this API
+		// Tracker Jira : PS-1172
+
+		return "mainfwa\n", nil
 	}
 
 	log.Infof("Got running software version : %v", string(out))
@@ -26,9 +34,24 @@ func getRunningSoftware() (string, error) {
 }
 
 func getNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersion, error) {
-	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -l").Output()
+	out, err := exec.Command("/bin/bash", "-c", "fwupdate -l").Output()
 	if err != nil {
-		return nil, err
+		n := &nmd.NaplesSoftwareVersion{
+			// TODO : Remove this. Adding this temporarily to ensure progress.
+			// All these APIs can be moved under nmd/platform as it feels a more natural
+			// home for this platform dependent code.
+			// The platformAgent allows for easy mocking of this API
+			// Tracker Jira : PS-1172
+			Uboot: &nmd.ImageInfo{
+				BaseVersion: "1.0E",
+			},
+			MainFwA: &nmd.FwVersion{
+				SystemImage: &nmd.ImageInfo{
+					SoftwareVersion: "1.0E",
+				},
+			},
+		}
+		return n, nil
 	}
 
 	var naplesVersion nmd.NaplesSoftwareVersion
@@ -37,14 +60,8 @@ func getNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersion, error) {
 	return &naplesVersion, nil
 }
 
-func getRunningSoftwareVersion() (string, error) {
+func getRunningSoftwareVersion(naplesVersion *nmd.NaplesSoftwareVersion) (string, error) {
 	currentFw, err := getRunningSoftware()
-
-	if err != nil {
-		return "", err
-	}
-
-	naplesVersion, err := getNaplesSoftwareInfo()
 	if err != nil {
 		return "", err
 	}
@@ -56,6 +73,41 @@ func getRunningSoftwareVersion() (string, error) {
 		return naplesVersion.MainFwB.SystemImage.SoftwareVersion, nil
 	default:
 		return "", errors.New("unknown firmware version")
+	}
+}
+
+// ReadFruFromJSON reads the fru.json file created at Startup
+func ReadFruFromJSON() *nmd.NaplesFru {
+	log.Infof("Updating FRU from /tmp/fru.json")
+	fruJSON, err := os.Open("/tmp/fru.json")
+	if err != nil {
+		log.Errorf("Failed to open /tmp/fru.json.")
+		return nil
+	}
+	defer fruJSON.Close()
+	var dat map[string]interface{}
+
+	byt, err := ioutil.ReadFile("/tmp/fru.json")
+	if err != nil {
+		log.Errorf("Failed to read contents of fru.json")
+		return nil
+	}
+
+	if err := json.Unmarshal(byt, &dat); err != nil {
+		log.Errorf("Failed to unmarshal fru.json.")
+		return nil
+	}
+
+	return &nmd.NaplesFru{
+		ManufacturingDate: dat["Manufacturing date"].(string),
+		Manufacturer:      dat["Manufacturer"].(string),
+		ProductName:       dat["Product Name"].(string),
+		SerialNum:         dat["Serial Number"].(string),
+		PartNum:           dat["Part Number"].(string),
+		BoardId:           dat["Engineering Change level"].(string),
+		EngChangeLevel:    dat["Board Id Number"].(string),
+		NumMacAddr:        dat["NumMac Address"].(string),
+		MacStr:            dat["Mac Address"].(string),
 	}
 }
 
@@ -141,12 +193,26 @@ func UpdateNaplesInfo() *cmd.SmartNICInfo {
 	return SystemInfo
 }
 
+// updateBiosInfo - queries cardconfig and gets the BIOS information
+func updateBiosInfo(naplesVersion *nmd.NaplesSoftwareVersion) *cmd.BiosInfo {
+	log.Info("updating Bios Info in SmartNIC object")
+	return &cmd.BiosInfo{
+		Version: naplesVersion.Uboot.BaseVersion,
+	}
+}
+
 // UpdateNaplesInfoFromConfig - Updates the fields within the SmartNIC object using NaplesConfig
 func (n *NMD) UpdateNaplesInfoFromConfig() error {
 	log.Info("Updating Smart NIC information.")
 	nic, _ := n.GetSmartNIC()
 
-	ver, err := getRunningSoftwareVersion()
+	naplesVersion, err := getNaplesSoftwareInfo()
+	if err != nil {
+		log.Errorf("GetVersion failed. Err : %v", err)
+		return err
+	}
+
+	ver, err := getRunningSoftwareVersion(naplesVersion)
 	if err != nil {
 		log.Errorf("Failed to get running software version. : %v", err)
 	}
@@ -165,12 +231,10 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 		nic.Spec.Controllers = n.config.Spec.Controllers
 
 		nic.Status.AdmissionPhase = n.config.Status.AdmissionPhase
-		//nic.Status.AdmissionPhase = cmd.SmartNICStatus_REGISTERING.String()
 		nic.Status.Conditions = nil
 		nic.Status.SerialNum = n.config.Status.Fru.SerialNum
 		nic.Status.PrimaryMAC = n.config.Status.Fru.MacStr
 		nic.Status.IPConfig = n.config.Status.IPConfig
-		nic.Status.SystemInfo = nil
 		nic.Status.Interfaces = listInterfaces()
 		nic.Status.SmartNICVersion = ver
 		nic.Status.SmartNICSku = n.config.Status.Fru.PartNum
@@ -208,6 +272,7 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 	// SystemInfo has static information of Naples which does not change during the lifetime of Naples.
 	if nic.Status.SystemInfo == nil {
 		nic.Status.SystemInfo = UpdateNaplesInfo()
+		nic.Status.SystemInfo.BiosInfo = updateBiosInfo(naplesVersion)
 	}
 
 	nic.Status.Conditions = UpdateNaplesHealth()

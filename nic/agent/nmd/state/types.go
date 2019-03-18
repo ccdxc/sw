@@ -322,38 +322,3 @@ func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile de
 
 	return
 }
-
-// ReadFruFromJSON reads the fru.json file created at Startup
-func ReadFruFromJSON() *nmd.NaplesFru {
-	log.Infof("Updating FRU from /tmp/fru.json")
-	fruJSON, err := os.Open("/tmp/fru.json")
-	if err != nil {
-		log.Errorf("Failed to open /tmp/fru.json.")
-		return nil
-	}
-	defer fruJSON.Close()
-	var dat map[string]interface{}
-
-	byt, err := ioutil.ReadFile("/tmp/fru.json")
-	if err != nil {
-		log.Errorf("Failed to read contents of fru.json")
-		return nil
-	}
-
-	if err := json.Unmarshal(byt, &dat); err != nil {
-		log.Errorf("Failed to unmarshal fru.json.")
-		return nil
-	}
-
-	return &nmd.NaplesFru{
-		ManufacturingDate: dat["Manufacturing date"].(string),
-		Manufacturer:      dat["Manufacturer"].(string),
-		ProductName:       dat["Product Name"].(string),
-		SerialNum:         dat["Serial Number"].(string),
-		PartNum:           dat["Part Number"].(string),
-		BoardId:           dat["Engineering Change level"].(string),
-		EngChangeLevel:    dat["Board Id Number"].(string),
-		NumMacAddr:        dat["NumMac Address"].(string),
-		MacStr:            dat["Mac Address"].(string),
-	}
-}

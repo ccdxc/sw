@@ -126,6 +126,13 @@ var (
 		EvtTypes:      evtType,
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true}, logger)
+
+	// fwUpdate variables
+	fwDir = "/tmp"
+
+	fwVer = "1.0E"
+
+	originalPath string
 )
 
 // SuiteConfig determines the test suite configuration
@@ -348,7 +355,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 			// Fetch smartnic object
 			nic, err := nm.GetSmartNIC()
 			if nic == nil || err != nil {
-				log.Errorf("NIC not found in nicDB, mac:%s", hostID)
+				log.Errorf("NIC not found in nicDB, mac:%s NIC : %s ERR : %s", hostID, nic, err)
 				return false, nil
 			}
 
@@ -859,9 +866,15 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	it.ctx, it.cancel = context.WithCancel(context.Background())
 	// logger
 	it.logger = logger
+	originalPath = os.Getenv("PATH")
+	os.Setenv("PATH", originalPath+":/"+fwDir)
+	err := tutils.SetUpFwupdateScript(fwVer, fwDir)
+	if err != nil {
+		c.Fatalf("Failed to setup fwupdate script : %v", err)
+	}
 
 	// tls provider
-	err := testutils.SetupIntegTLSProvider()
+	err = testutils.SetupIntegTLSProvider()
 	if err != nil {
 		c.Fatalf("Error setting up TLS provider: %v", err)
 	}
@@ -1002,6 +1015,7 @@ func (it *veniceIntegSuite) SetUpTest(c *check.C) {
 
 func (it *veniceIntegSuite) TearDownTest(c *check.C) {
 	log.Infof("============================= %s completed ==========================", c.TestName())
+
 	// Remove persisted agent db files
 	for _, i := range it.tmpFiles {
 		os.Remove(i)
@@ -1010,6 +1024,10 @@ func (it *veniceIntegSuite) TearDownTest(c *check.C) {
 
 func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	log.Infof("============================= Tearing down Setup ==========================")
+
+	tutils.DeleteFwupdateScript(fwDir)
+	os.Setenv("PATH", originalPath)
+
 	// stop delphi hub
 	it.hub.Stop()
 	// stop the agents

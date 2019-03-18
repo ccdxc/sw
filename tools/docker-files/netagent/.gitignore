@@ -3,5 +3,3 @@
 # Except this file
 !.gitignore
 !Dockerfile
-!fwupdate
-!fru.json
