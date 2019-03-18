@@ -15,6 +15,9 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
+// default drop/blackhole nexthop (dataplane drops pkts when this nh is hit)
+#define PDS_DROP_NEXTHOP_HW_ID        0
+
 namespace api {
 namespace impl {
 

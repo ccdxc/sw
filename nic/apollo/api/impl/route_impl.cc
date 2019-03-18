@@ -119,8 +119,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_OOM;
     }
     rtable->af = spec->af;
-    // TODO: HACK Alert! Remove this when default NH is available
-    rtable->default_nhid = 255;
+    rtable->default_nhid = PDS_DROP_NEXTHOP_HW_ID;
     rtable->max_routes = PDS_MAX_ROUTE_PER_TABLE;
     rtable->num_routes = spec->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {

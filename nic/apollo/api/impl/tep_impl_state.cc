@@ -14,9 +14,6 @@
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 
-// default drop/blackhole nexthop
-#define PDS_DROP_NEXTHOP_HW_ID         0
-
 namespace api {
 namespace impl {
 
