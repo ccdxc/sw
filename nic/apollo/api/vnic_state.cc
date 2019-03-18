@@ -11,15 +11,10 @@
 
 namespace api {
 
-/**
- * @defgroup PDS_VNIC_STATE - vnic database functionality
- * @ingroup PDS_VNIC
- * @{
- */
+/// \defgroup PDS_VNIC_STATE - vnic database functionality
+/// \ingroup PDS_VNIC
+/// \@{
 
-/**
- * @brief    constructor
- */
 vnic_state::vnic_state() {
     // TODO: need to tune multi-threading related params later
     vnic_ht_ = ht::factory(PDS_MAX_VNIC >> 2,
@@ -33,42 +28,37 @@ vnic_state::vnic_state() {
     SDK_ASSERT(vnic_slab_ != NULL);
 }
 
-/**
- * @brief    destructor
- */
 vnic_state::~vnic_state() {
     ht::destroy(vnic_ht_);
     slab::destroy(vnic_slab_);
 }
 
-/**
- * @brief     allocate vnic instance
- * @return    pointer to the allocated vnic , NULL if no memory
- */
 vnic_entry *
-vnic_state::vnic_alloc(void) {
+vnic_state::alloc(void) {
     return ((vnic_entry *)vnic_slab_->alloc());
 }
 
-/**
- * @brief      free vnic instance back to slab
- * @param[in]  vnic   pointer to the allocated vnic
- */
+sdk_ret_t
+vnic_state::insert(vnic_entry *vnic) {
+    return vnic_ht_->insert_with_key(&vnic->key_, vnic,
+                                     &vnic->ht_ctxt_);
+}
+
+vnic_entry *
+vnic_state::remove(vnic_entry *vnic) {
+    return (vnic_entry *)(vnic_ht_->remove(&vnic->key_));
+}
+
 void
-vnic_state::vnic_free(vnic_entry *vnic) {
+vnic_state::free(vnic_entry *vnic) {
     vnic_slab_->free(vnic);
 }
 
-/**
- * @brief        lookup vnic in database with given key
- * @param[in]    vnic_key vnic key
- * @return       pointer to the vnic instance found or NULL
- */
 vnic_entry *
 vnic_state::vnic_find(pds_vnic_key_t *vnic_key) const {
     return (vnic_entry *)(vnic_ht_->lookup(vnic_key));
 }
 
-/** @} */    // end of PDS_VNIC_STATE
+/// \@}
 
 }    // namespace api

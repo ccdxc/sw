@@ -33,7 +33,7 @@ vnic_entry::factory(pds_vnic_spec_t *spec) {
     vnic_entry *vnic;
 
     /**< create vnic entry with defaults, if any */
-    vnic = vnic_db()->vnic_alloc();
+    vnic = vnic_db()->alloc();
     if (vnic) {
         new (vnic) vnic_entry();
         vnic->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_VNIC, spec);
@@ -57,7 +57,7 @@ vnic_entry::destroy(vnic_entry *vnic) {
         impl_base::destroy(impl::IMPL_OBJ_ID_VNIC, vnic->impl_);
     }
     vnic->~vnic_entry();
-    vnic_db()->vnic_free(vnic);
+    vnic_db()->free(vnic);
 }
 
 sdk_ret_t
@@ -122,14 +122,16 @@ vnic_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vnic_entry::add_to_db(void) {
-    return vnic_db()->vnic_ht()->insert_with_key(&key_, this,
-                                                 &ht_ctxt_);
+    PDS_TRACE_VERBOSE("Adding vnic %u to db", key_.id);
+    return vnic_db()->insert(this);
 }
 
 sdk_ret_t
 vnic_entry::del_from_db(void) {
-    vnic_db()->vnic_ht()->remove(&key_);
-    return SDK_RET_OK;
+    if (vnic_db()->remove(this)) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

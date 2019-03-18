@@ -18,6 +18,9 @@
 
 namespace api {
 
+// forward declaration
+class vnic_state;
+
 /// \defgroup PDS_VNIC_ENTRY - vnic functionality
 /// \ingroup PDS_VNIC
 /// @{
@@ -164,6 +167,8 @@ private:
     pds_encap_t       fabric_encap_;     ///< fabric encap information
     ht_ctxt_t         ht_ctxt_;          ///< hash table context
     impl_base         *impl_;            ///< impl object instance
+
+    friend class vnic_state;    ///< vnic_state is friend of vnic_entry
 } __PACK__;
 
 /// @}     // end of PDS_VNIC_ENTRY

@@ -40,13 +40,31 @@ public:
      * @brief    allocate memory required for a vnic
      * @return pointer to the allocated vnic, NULL if no memory
      */
-    vnic_entry *vnic_alloc(void);
+    vnic_entry *alloc(void);
+
+    /// \brief    insert given vnic instance into the vnic db
+    /// \param[in] vnic     vnic to be added to the db
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(vnic_entry *vnic);
+
+    /// \brief     remove the given instance of vnic object from db
+    /// \param[in] vnic    vnic entry to be deleted from the db
+    /// \return    pointer to the removed vnic instance or NULL,
+    ///            if not found
+    vnic_entry *remove(vnic_entry *vnic);
+
+    /// \brief    remove current object from the databse(s) and swap it with the
+    ///           new instance of the obj (with same key)
+    /// \param[in] curr_vnic     current instance of the vnic
+    /// \param[in] new_vnic      new instance of the vnic
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update(vnic_entry *curr_vnic, vnic_entry *new_vnic);
 
     /**
      * @brief      free vnic instance back to slab
      * @param[in]  vnic   pointer to the allocated vnic
      */
-    void vnic_free(vnic_entry *vnic);
+    void free(vnic_entry *vnic);
 
     /**
      * @brief     lookup a vnic in database given the key
