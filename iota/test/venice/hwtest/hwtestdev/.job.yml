@@ -24,7 +24,7 @@ e2e-targets:
          pvt-networks:
          - control-1
          - control-2
-     - image: build-4
+     - image: build-10
        count: 2
        resources:
          # server-type could be server-a or server-d

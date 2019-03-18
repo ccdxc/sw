@@ -209,14 +209,16 @@ func NewTestBed(topoName string, paramsFile string) (*TestBed, error) {
 		log.Warnf("Error while setting up testbed. Retrying...")
 	}
 	if err != nil {
-		tb.Cleanup()
+		log.Infof("Seetting up testbed failed. collecting logs")
+		tb.CollectLogs()
 		return nil, err
 	}
 
 	// check iota cluster health
 	err = tb.CheckIotaClusterHealth()
 	if err != nil {
-		tb.Cleanup()
+		log.Infof("Checking cluster health. collecting logs")
+		tb.CollectLogs()
 		return nil, err
 	}
 
@@ -882,11 +884,14 @@ func (tb *TestBed) AfterTestCommon() error {
 	if testInfo.Failed && os.Getenv("STOP_ON_ERROR") != "" {
 		fmt.Printf("\n------------------ Test Failed exiting--------------------\n")
 		os.Exit(1)
+	} else if testInfo.Failed {
+		tb.AddTaskResult("", fmt.Errorf("test failed"))
+	} else {
+		tb.AddTaskResult("", nil)
 	}
 
 	// remember the result
 	tb.testResult[strings.Join(testInfo.ComponentTexts, "\t")] = testInfo.Failed
-	tb.AddTaskResult("", nil)
 	return nil
 }
 
@@ -966,7 +971,7 @@ func (tb *TestBed) CollectLogs() error {
 
 	resp, err := trig.Run()
 	if err != nil {
-		return fmt.Errorf("Error collecting logs. Err: %v", err)
+		log.Errorf("Error collecting logs. Err: %v", err)
 	}
 	// check the response
 	for _, cmdResp := range resp {
@@ -974,6 +979,7 @@ func (tb *TestBed) CollectLogs() error {
 			log.Errorf("collecting logs failed. %+v", cmdResp)
 		}
 	}
+	log.Infof("Collected Venice/Naples logs")
 
 	// create logs directory if it doesnt exists
 	cmdStr := fmt.Sprintf("mkdir -p %s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
@@ -997,15 +1003,24 @@ func (tb *TestBed) CollectLogs() error {
 
 	}
 
+	log.Infof("Copied Venice/Naples logs to iota server")
 	// create a tar.gz from all log files
-	cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar ../*.log *.tar.gz && popd", os.Getenv("GOPATH"))
+	cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar* ../*.log && popd", os.Getenv("GOPATH"))
 	cmd = exec.Command("bash", "-c", cmdStr)
 	out, err = cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("tar command out:\n%s\n", string(out))
-		log.Errorf("Collecting log files failed with: %s\n", err)
+		log.Errorf("Collecting log files failed with: %s. trying to collect server logs\n", err)
+		cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
+		cmd = exec.Command("bash", "-c", cmdStr)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("tar command out:\n%s\n", string(out))
+			log.Errorf("Collecting server log files failed with: %s.\n", err)
+		}
 	}
 
+	log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
 	return nil
 }
 
@@ -1014,4 +1029,39 @@ func (tb *TestBed) Cleanup() error {
 	// collect all log files
 	tb.CollectLogs()
 	return nil
+}
+
+// InitSuite initializes test suite
+func InitSuite(topoName, paramsFile string) (*TestBed, *SysModel, error) {
+	// create testbed
+	tb, err := NewTestBed(topoName, paramsFile)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// make cluster & setup auth
+	err = tb.SetupConfig()
+	if err != nil {
+		tb.CollectLogs()
+		return nil, nil, err
+	}
+
+	// create sysmodel
+	model, err := NewSysModel(tb)
+	if err != nil {
+		tb.CollectLogs()
+		return nil, nil, err
+	}
+
+	// FIXME: this is bit of hack, we need to fully cleanup venice config
+	model.NewSGPolicy("test-policy").Delete()
+
+	// setup default config for the sysmodel
+	err = model.SetupDefaultConfig()
+	if err != nil {
+		tb.CollectLogs()
+		return nil, nil, err
+	}
+
+	return tb, model, nil
 }

@@ -71,6 +71,16 @@ func (sm *SysModel) SGPolicy(name string) *SGPolicyCollection {
 	}
 }
 
+// SGPolicies returns all SGPolicies in the model
+func (sm *SysModel) SGPolicies() *SGPolicyCollection {
+	spc := SGPolicyCollection{}
+	for _, pol := range sm.sgpolicies {
+		spc.policies = append(spc.policies, pol)
+	}
+
+	return &spc
+}
+
 // AddRule adds a rule to the policy
 func (spc *SGPolicyCollection) AddRule(fromIP, toIP, port, action string) *SGPolicyCollection {
 	if spc.err != nil {

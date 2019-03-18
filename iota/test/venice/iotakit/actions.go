@@ -159,3 +159,36 @@ func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error {
 
 	return nil
 }
+
+// VerifySystemHealth checks all aspects of system, like cluster, workload, policies etc
+func (act *ActionCtx) VerifySystemHealth() error {
+	// verify cluster is in good health
+	err := act.VerifyClusterStatus()
+	if err != nil {
+		act.model.tb.CollectLogs()
+		return err
+	}
+
+	// verify policy status is goot
+	err = act.VerifyPolicyStatus(act.model.SGPolicies())
+	if err != nil {
+		act.model.tb.CollectLogs()
+		return err
+	}
+
+	// verify workload status is good
+	err = act.VerifyWorkloadStatus(act.model.Workloads())
+	if err != nil {
+		act.model.tb.CollectLogs()
+		return err
+	}
+
+	// verify ping is successful across all workloads
+	err = act.PingPairs(act.model.WorkloadPairs().WithinNetwork())
+	if err != nil {
+		act.model.tb.CollectLogs()
+		return err
+	}
+
+	return nil
+}
