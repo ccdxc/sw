@@ -20,6 +20,15 @@ import (
 	"github.com/ghodss/yaml"
 )
 
+var penHTTPClient = &http.Client{}
+
+func init() {
+	tr := &http.Transport{
+		MaxIdleConnsPerHost: 5,
+	}
+	penHTTPClient = &http.Client{Transport: tr}
+}
+
 func isJSONString(s string) bool {
 	var js interface{}
 	return json.Unmarshal([]byte(s), &js) == nil
@@ -100,7 +109,7 @@ func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
 	printHTTPReq(req)
-	res, err := http.DefaultClient.Do(req)
+	res, err := penHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +154,7 @@ func restPost(v interface{}, url string) error {
 	}
 	postReq.Header.Set("Content-Type", "application/json")
 	printHTTPReq(postReq)
-	postResp, err := http.DefaultClient.Do(postReq)
+	postResp, err := penHTTPClient.Do(postReq)
 	if err != nil {
 		return err
 	}
@@ -178,7 +187,7 @@ func restGet(url string) ([]byte, error) {
 	getReq.Header.Set("Content-Type", "application/json")
 
 	printHTTPReq(getReq)
-	getResp, err := http.DefaultClient.Do(getReq)
+	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
 		fmt.Println("Unable to get response from Naples.")
 		if verbose {
@@ -243,7 +252,7 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 	getReq.Header.Set("Content-Type", "application/json")
 
 	printHTTPReq(getReq)
-	getResp, err := http.DefaultClient.Do(getReq)
+	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
 		fmt.Println("Unable to get response from Naples.")
 		if verbose {
@@ -306,7 +315,7 @@ func restGetResp(url string) (*http.Response, error) {
 	getReq.Header.Set("Content-Type", "application/json")
 
 	printHTTPReq(getReq)
-	getResp, err := http.DefaultClient.Do(getReq)
+	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
 		fmt.Println("Unable to get response from Naples.")
 		if verbose {
@@ -347,7 +356,7 @@ func restDelete(url string) ([]byte, error) {
 	getReq.Header.Set("Content-Type", "application/json")
 
 	printHTTPReq(getReq)
-	getResp, err := http.DefaultClient.Do(getReq)
+	getResp, err := penHTTPClient.Do(getReq)
 	if err != nil {
 		return nil, err
 	}
