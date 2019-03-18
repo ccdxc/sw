@@ -1,0 +1,26 @@
+meta:
+    name    : mtu
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    targetcount : 10
+
+testcases:
+    -   name    : MTU_Def_Min_Max
+        testcase: testcases.mtu.mtu
+        stress  : True
+        disable : False
+        ignore  : True
+        iterators :
+            type    : simple
+            mtu     : [ 1500, 9194, 68 ]
+
+    -   name    : MTU_Random
+        testcase: testcases.mtu.mtu
+        stress  : True
+        disable : False
+        ignore  : True
+        iterators :
+            type    : nested
+            mtu     : [ -1 ]
+            iter    : [ 1, 2 ]
+

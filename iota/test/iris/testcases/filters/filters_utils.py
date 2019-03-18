@@ -399,5 +399,11 @@ def verifyEndpoints(host_view, hal_view):
         # If there is a difference in view, then return failure
         result = False
         api.Logger.error("Failure - verifyEndpoints failed ", len(diff), diff)
+        # endpoints missing in HAL
+        diff_1 = host_view - hal_view
+        api.Logger.error("Endpoints present in host but NOT in hal ", len(diff_1), diff_1)
+        # stale endpoints in HAL
+        diff_2 = hal_view - host_view
+        api.Logger.error("Endpoints present in hal but NOT in host ", len(diff_2), diff_2)
 
     return result

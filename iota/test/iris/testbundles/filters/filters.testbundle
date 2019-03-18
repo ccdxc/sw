@@ -7,6 +7,7 @@ meta:
 testcases:
     -   name    : Unicast_MAC_Filter
         testcase: testcases.filters.unicast_mac_filter
+        stress  : True
         disable : False
         ignore  : False
         iterators :
@@ -18,30 +19,13 @@ testcases:
 
     -   name    : Broadcast_MAC_Filter
         testcase: testcases.filters.broadcast_mac_filter
-        disable : False
-        ignore  : True
-
-    -   name    : Multicast_MAC_Filter
-        testcase: testcases.filters.multicast_mac_filter
+        stress  : True
         disable : False
         ignore  : False
 
-    -   name    : MTU_Def_Min_Max
-        testcase: testcases.filters.mtu_filter
+    -   name    : Multicast_MAC_Filter
+        testcase: testcases.filters.multicast_mac_filter
         stress  : True
         disable : False
-        ignore  : True
-        iterators :
-            type    : simple
-            mtu     : [ 1500, 9194, 68 ]
-
-    -   name    : MTU_Random
-        testcase: testcases.filters.mtu_filter
-        stress  : True
-        disable : False
-        ignore  : True
-        iterators :
-            type    : nested
-            mtu     : [ -1 ]
-            #iter    : [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+        ignore  : False
 

@@ -43,10 +43,10 @@ testbundles:
         - classic/rdma.testbundle
         - linktest/linktest.testbundle
         - filters/filters.testbundle
+        - mtu/mtu.testbundle
         - subifs/subifs.testbundle
         - rx_mode/rx_mode.testbundle
         - vlanoffload/vlanoffload.testbundle
-        - multicast/multicast.testbundle
         - linktest/linktest.testbundle
         - mnic/mnic_classic.testbundle
         - linktest/linktest.testbundle

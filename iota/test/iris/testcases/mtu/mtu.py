@@ -127,11 +127,6 @@ def verifyMTUPings(tc):
         msg_too_long_exit_code = 2
     else:
         msg_too_long_exit_code = 1
-       # Hack until PS-1084 is fixed
-        PS_1084 = True
-        if PS_1084 is True:
-            api.Logger.info("MTU filter : Verify skipped for verifyMTUPings - MTU + 1 because of PS-1084")
-            return final_result
 
     # Verify ping with (MTU + 1) is NOT successful
     result = traffic_utils.verifyPing(tc.cmd_cookies_3, tc.resp_3, exit_code=msg_too_long_exit_code)
