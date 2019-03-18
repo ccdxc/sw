@@ -7,11 +7,11 @@ storage_libs 0.0.1
 asic_libs 2aee5d8743f9e7889b6f0948d432b92d8f93bd24
 ncc_tools 2aee5d8743f9e7889b6f0948d432b92d8f93bd24
 pbc_config 2aee5d8743f9e7889b6f0948d432b92d8f93bd24
-upgrade 1.0.9
+upgrade 1.0.12
 iota 1.0.2
 host_tools 1.0.19
 delphi_lib 1.0.4
 pensando_firmware 1.0.11
-buildroot fd9d897d416021ec4ab3c4c4d256512bbf989f15
+buildroot 6e26517e96e5a65586d99c58130f39bcb8f16ba8
 platform_drivers 1.0.0
 venice_base_iso  0.0.2

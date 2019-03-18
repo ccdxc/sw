@@ -70,8 +70,27 @@ build-squashfs: build-rootfs
 build-image: build-squashfs
 	$(HOSTPATH) ${NICDIR}/buildroot/board/pensando/capri/post-image.sh
 
-.PHONY: firmware
-firmware: build-image
+.PHONY: upg_meta_create
+upg_meta_create:
+	${NICDIR}/upgrade_manager/meta/upgrade_metadata_create.sh
+
+.PHONY: build-upg-image
+build-upg-image: upg_meta_create build-squashfs
+	$(HOSTPATH) ${NICDIR}/buildroot/board/pensando/capri/post-upg-image.sh
+	${NICDIR}/upgrade_manager/meta/upgrade_metadata_restore.sh
+
+.PHONY: firmware-normal
+firmware-normal: build-image
 	cp ${NICDIR}/buildroot/output/images/naples_fw.tar \
 		${NICDIR}/naples_fw_${SW_VERSION}.tar
 	ln -frs ${NICDIR}/naples_fw_${SW_VERSION}.tar ${NICDIR}/naples_fw.tar
+
+.PHONY: firmware-upgrade
+firmware-upgrade: build-upg-image
+	cp ${NICDIR}/buildroot/output/images/naples_upg_fw.tar \
+		${NICDIR}/naples_upg_fw_${SW_VERSION}.tar
+	ln -frs ${NICDIR}/naples_upg_fw_${SW_VERSION}.tar ${NICDIR}/naples_upg_fw.tar
+
+.PHONY: firmware
+firmware:
+	${NICDIR}/mkdefs/build_firmware.sh
