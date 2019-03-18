@@ -325,7 +325,7 @@ func checkSwitchConfig(dataSwitch dataswitch.Switch, ports []string, speed datas
 }
 
 // SetUpTestbedSwitch allocates vlans based on the switch port ID
-func SetUpTestbedSwitch(ds *iota.DataSwitch, switchPortID uint32) (vlans []uint32, err error) {
+func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32) (vlans []uint32, err error) {
 
 	getSpeed := func(speed iota.DataSwitch_Speed) dataswitch.PortSpeed {
 		switch speed {
@@ -342,28 +342,31 @@ func SetUpTestbedSwitch(ds *iota.DataSwitch, switchPortID uint32) (vlans []uint3
 	if switchPortID == 0 {
 		return nil, nil
 	}
-	n3k := dataswitch.NewSwitch(dataswitch.N3KSwitchType, ds.GetIp(), ds.GetUsername(), ds.GetPassword())
-	if n3k == nil {
-		log.Errorf("TOPO SVC | InitTestBed | Switch not found %s", dataswitch.N3KSwitchType)
-		return nil, errors.New("Switch not found")
-	}
-
-	clearSwitchPortConfig(n3k, ds.GetPorts())
-
 	for i := switchPortID; i < switchPortID+constants.VlansPerTestBed; i++ {
 		vlans = append(vlans, i)
 	}
 
-	speed := getSpeed(ds.GetSpeed())
-	vlanRange := strconv.Itoa(int(switchPortID)) + "-" + strconv.Itoa(int(switchPortID+constants.VlansPerTestBed-1))
-	if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(switchPortID), vlanRange, speed); err != nil {
-		return nil, errors.Wrap(err, "Configuring switch failed")
+	for _, ds := range dsSwitches {
+		n3k := dataswitch.NewSwitch(dataswitch.N3KSwitchType, ds.GetIp(), ds.GetUsername(), ds.GetPassword())
+		if n3k == nil {
+			log.Errorf("TOPO SVC | InitTestBed | Switch not found %s", dataswitch.N3KSwitchType)
+			return nil, errors.New("Switch not found")
+		}
 
-	}
+		clearSwitchPortConfig(n3k, ds.GetPorts())
 
-	if err := checkSwitchConfig(n3k, ds.GetPorts(), speed); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | SwitchPort config check failed  %s", err.Error())
-		return nil, err
+		speed := getSpeed(ds.GetSpeed())
+		vlanRange := strconv.Itoa(int(switchPortID)) + "-" + strconv.Itoa(int(switchPortID+constants.VlansPerTestBed-1))
+		if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(switchPortID), vlanRange, speed); err != nil {
+			return nil, errors.Wrap(err, "Configuring switch failed")
+
+		}
+
+		if err := checkSwitchConfig(n3k, ds.GetPorts(), speed); err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | SwitchPort config check failed  %s", err.Error())
+			return nil, err
+		}
+
 	}
 
 	return vlans, nil

@@ -528,15 +528,16 @@ func (tb *TestBed) setupTestBed() error {
 
 	// Allocate VLANs
 	testBedMsg := &iota.TestBedMsg{
-		NaplesImage: tb.Topo.NaplesImage,
-		VeniceImage: tb.Topo.VeniceImage,
-		Username:    tb.Params.Provision.Username,
-		Password:    tb.Params.Provision.Password,
-		ApiResponse: &iota.IotaAPIResponse{},
-		Nodes:       []*iota.TestBedNode{},
-		DataSwitch:  &iota.DataSwitch{},
+		NaplesImage:  tb.Topo.NaplesImage,
+		VeniceImage:  tb.Topo.VeniceImage,
+		Username:     tb.Params.Provision.Username,
+		Password:     tb.Params.Provision.Password,
+		ApiResponse:  &iota.IotaAPIResponse{},
+		Nodes:        []*iota.TestBedNode{},
+		DataSwitches: []*iota.DataSwitch{},
 	}
 
+	dsmap := make(map[string]*iota.DataSwitch)
 	for _, node := range tb.Nodes {
 		tbn := iota.TestBedNode{
 			Type:                node.Type,
@@ -569,12 +570,22 @@ func (tb *TestBed) setupTestBed() error {
 
 		// add switch port
 		for _, dn := range node.instParams.DataNetworks {
-			testBedMsg.DataSwitch.Ip = dn.SwitchIP
-			testBedMsg.DataSwitch.Username = dn.SwitchUsername
-			testBedMsg.DataSwitch.Password = dn.SwitchPassword
-			testBedMsg.DataSwitch.Speed = iota.DataSwitch_Speed_auto
-			testBedMsg.DataSwitch.Ports = append(testBedMsg.DataSwitch.Ports, dn.Name)
+			// create switch if it doesnt exist
+			ds, ok := dsmap[dn.SwitchIP]
+			if !ok {
+				ds = &iota.DataSwitch{}
+				ds.Ip = dn.SwitchIP
+				ds.Username = dn.SwitchUsername
+				ds.Password = dn.SwitchPassword
+				ds.Speed = iota.DataSwitch_Speed_auto
+				dsmap[dn.SwitchIP] = ds
+			}
+
+			ds.Ports = append(ds.Ports, dn.Name)
 		}
+	}
+	for _, ds := range dsmap {
+		testBedMsg.DataSwitches = append(testBedMsg.DataSwitches, ds)
 	}
 
 	if !tb.skipSetup {

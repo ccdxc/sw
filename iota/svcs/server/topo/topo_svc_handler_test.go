@@ -38,7 +38,7 @@ func startTopoService() {
 	}
 	topoServerURL = testListener.ListenURL.String()
 
-	topoSvc, err := common.CreateNewGRPCServer("Topology Server", topoServerURL)
+	topoSvc, err := common.CreateNewGRPCServer("Topology Server", topoServerURL, 0)
 	if err != nil {
 		fmt.Printf("Could not start IOTA Service. Err: %v\n", err)
 		os.Exit(1)

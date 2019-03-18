@@ -469,7 +469,7 @@ message TestBedMsg {
     uint32 testbed_id                   = 9;
 
     // DataSwitch
-    DataSwitch data_switch              = 10;
+    repeated DataSwitch data_switches   = 10;
 }
 
 enum TestBedNodeType {
