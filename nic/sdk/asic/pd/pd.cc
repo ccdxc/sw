@@ -15,8 +15,17 @@ namespace sdk {
 namespace asic {
 namespace pd {
 
+static bool g_mock_mode_;
 static uint64_t capri_table_asm_base[P4TBL_ID_MAX];
 static uint64_t capri_table_asm_err_offset[P4TBL_ID_MAX];
+
+__attribute__((constructor)) void asic_pd_init_(void) {
+    if (getenv("CAPRI_MOCK_MODE")) {
+        g_mock_mode_ = true;
+    } else {
+        g_mock_mode_ = false;
+    }
+}
 
 uint8_t
 asicpd_get_action_pc (uint32_t tableid, uint8_t actionid)
@@ -324,12 +333,16 @@ asicpd_table_hw_entry_read (uint32_t tableid,
         oflow_parent_tbl_depth = ofl_tbl_parent_ctx.tabledepth;
     }
     asicpd_copy_capri_table_info(&cap_tbl_info, &tbl_ctx.sram_layout, &tbl_ctx);
-    ret = capri_table_hw_entry_read(tableid, index,
-                                    hwentry, hwentry_bit_len,
-                                    cap_tbl_info, tbl_ctx.gress,
-                                    tbl_ctx.is_oflow_table,
-                                    (tbl_ctx.gress == P4_GRESS_INGRESS),
-                                    oflow_parent_tbl_depth);
+    if (g_mock_mode_) {
+        ret = asicpd_table_entry_read(tableid, index, hwentry, hwentry_bit_len);
+    } else {
+        ret = capri_table_hw_entry_read(tableid, index,
+                                        hwentry, hwentry_bit_len,
+                                        cap_tbl_info, tbl_ctx.gress,
+                                        tbl_ctx.is_oflow_table,
+                                        (tbl_ctx.gress == P4_GRESS_INGRESS),
+                                        oflow_parent_tbl_depth);
+    }
     return ret;
 }
 
