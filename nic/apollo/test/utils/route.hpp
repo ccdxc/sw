@@ -47,6 +47,9 @@ public:
     route_table_util();
 
     /// \brief parameterized constructor
+    route_table_util(pds_route_table_id_t id);
+
+    /// \brief parameterized constructor
     route_table_util(pds_route_table_id_t id, std::string first_route_pfx_str,
                      std::string first_nh_ip_str, uint8_t af=IP_AF_IPV4,
                      uint32_t num_routes=1);
@@ -58,6 +61,23 @@ public:
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
     sdk_ret_t create(void);
+
+    /// \brief Create multiple route tables
+    /// Create "num_route_tables" route tables of "af" address family
+    /// starting with id "first_route_table_id"
+    ///
+    /// \param[in] num_route_tables number of route tables to be created
+    /// \param[in] first_route_table_id starting route table id
+    /// \param[in] first_route_pfx_str route prefix
+    /// \param[in] first_nh_ip_str next hop ip address to be used for routes
+    /// \param[in] af address family of route table
+    /// \param[in] num_routes number of routes to be created in each route table
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t many_create(uint32_t num_route_tables,
+                                 uint32_t first_route_table_id,
+                                 std::string first_route_pfx_str,
+                                 std::string first_nh_ip_str, uint8_t af,
+                                 uint32_t num_routes);
 
     /// \brief Read route table
     ///
@@ -75,6 +95,16 @@ public:
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
     sdk_ret_t del(void);
+
+    /// \brief Delete multiple route tables
+    /// Delete "num_route_tables" route tables
+    /// starting with id "first_route_table_id"
+    ///
+    /// \param[in] num_route_tables number of route tables to be deleted
+    /// \param[in] first_route_table_id starting route table id
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t many_delete(uint32_t num_route_tables,
+                                 uint32_t first_route_table_id);
 };
 
 }    // namespace api_test
