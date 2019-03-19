@@ -29,8 +29,8 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
 
   cols: any[] = [
-    { field: 'meta.name', header: 'Name', class: 'naples-column-date', sortable: true },
-    { field: 'spec.hostname', header: 'Host name', class: 'naples-column-host-name', sortable: true },
+    { field: 'spec.hostname', header: 'Name', class: 'naples-column-date', sortable: true },
+    { field: 'status.primary-mac', header: 'MAC Address', class: 'naples-column-host-name', sortable: true },
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false },
     { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true },
@@ -176,9 +176,9 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   }
 
   avgQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
+      timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
     };
     return { query: query, pollingOptions: pollOptions };
   }
@@ -260,7 +260,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       if (maxNaples == null || maxNaples.max === -1) {
         heroCard.thirdStat.value = null;
       } else {
-        const thirdStatName = this.getNaplesNameByMAC(maxNaples.name);
+        const thirdStatName = this.getNaplesNameByKey(maxNaples.name);
         let thirdStat: string = thirdStatName;
         if (thirdStat.length > 0) {
           if (thirdStat.length > 10) {
@@ -278,11 +278,11 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     }
   }
 
-  getNaplesNameByMAC(mac: string) {
+  getNaplesNameByKey(mac: string) {
     for (let index = 0; index < this.naples.length; index++) {
       const naple = this.naples[index];
-      if (naple.status['primary-mac'] === mac) {
-        return naple.meta.name;
+      if (naple.meta.name === mac) {
+        return naple.spec.hostname;
       }
     }
     return '';

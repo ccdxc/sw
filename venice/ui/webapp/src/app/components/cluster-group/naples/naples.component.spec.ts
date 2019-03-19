@@ -46,6 +46,7 @@ describe('NaplesComponent', () => {
       'ip-config': {
         'ip-address': '0.0.0.0/0'
       },
+      'primary-mac': '00ae.cd00.1142',
       'admission-phase': 'ADMITTED',
     }
   };
@@ -66,6 +67,7 @@ describe('NaplesComponent', () => {
       'ip-config': {
         'ip-address': '0.0.0.10'
       },
+      'primary-mac': '00ae.cd00.1143',
       'admission-phase': 'ADMITTED',
     }
   };

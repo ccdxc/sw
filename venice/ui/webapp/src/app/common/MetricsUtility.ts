@@ -4,6 +4,7 @@ import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResul
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
+import { IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 
 /**
  * serverData is in the following form:
@@ -522,6 +523,10 @@ export class MetricsUtility {
       themeColor: themeColor,
       icon: icon
     };
+  }
+
+  public static generateNaplesReporterId(naples: IClusterSmartNIC) {
+    return naples.meta.name;
   }
 
 

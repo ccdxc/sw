@@ -220,7 +220,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   timeSeriesQuery(): MetricsPollingQuery {
     let name = this.selectedId;
     if (this.selectedObj != null) {
-      name = this.selectedObj.status['primary-mac'];
+      name = MetricsUtility.generateNaplesReporterId(this.selectedObj);
     }
     const query: Telemetry_queryMetricsQuerySpec =
       MetricsUtility.timeSeriesQuery(this.telemetryKind, MetricsUtility.createNameSelector(name));
@@ -233,7 +233,11 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   avgQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
+    let name = this.selectedId;
+    if (this.selectedObj != null) {
+      name = MetricsUtility.generateNaplesReporterId(this.selectedObj);
+    }
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind, MetricsUtility.createNameSelector(name));
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
     };
@@ -242,7 +246,11 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   avgDayQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
+    let name = this.selectedId;
+    if (this.selectedObj != null) {
+      name = MetricsUtility.generateNaplesReporterId(this.selectedObj);
+    }
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind, MetricsUtility.createNameSelector(name));
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };

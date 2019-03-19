@@ -240,7 +240,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
   }
 
   avgQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
     };
@@ -249,7 +249,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
   }
 
   avgDayQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };
