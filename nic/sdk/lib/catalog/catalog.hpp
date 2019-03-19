@@ -23,6 +23,11 @@ using boost::property_tree::ptree;
 #define MAX_PORT_SPEEDS    8
 #define MAX_BO_MODES       4
 
+typedef enum card_id_e {
+    CARD_ID_NAPLES100,
+    CARD_ID_NAPLES25
+} card_id_t;
+
 typedef enum mac_mode_e {
     MAC_MODE_1x100g,
     MAC_MODE_1x40g,
@@ -100,7 +105,7 @@ typedef struct aacs_info_s {
 
 typedef struct catalog_s {
     std::string              catalog_file;                      // catalog file name with absolute path
-    uint32_t                 card_index;                        // card index for the board
+    card_id_t                card_id;                           // card id for the board
     uint32_t                 max_mpu_per_stage;                 // max MPU per pipeline stage
     uint32_t                 mpu_trace_size;                    // MPU trace size
     uint64_t                 cores_mask;                        // mask of all control/data cores
@@ -200,6 +205,8 @@ public:
         return catalog_db_.aacs_info.server_port;
     }
 
+    card_id_t card_id(void) { return catalog_db_.card_id; }
+
     serdes_info_t* serdes_info_get(uint32_t sbus_addr,
                                    uint32_t port_speed,
                                    uint32_t cable_type);
@@ -277,6 +284,7 @@ private:
     sdk_ret_t parse_serdes(ptree &prop_tree);
     uint32_t  serdes_index_get(uint32_t sbus_addr);
     uint8_t   cable_type_get(std::string cable_type_str);
+    card_id_t catalog_card_id_to_sdk_card_id(uint32_t card_id);
 };
 
 }    // namespace lib

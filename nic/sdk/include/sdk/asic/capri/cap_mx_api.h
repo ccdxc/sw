@@ -23,6 +23,7 @@ struct mac_profile_t {
    int speed[MAX_CHANNEL];
    int enable[MAX_CHANNEL];
    int serdes_lp;
+   int tdm[MAX_CHANNEL];
 };
 
 extern mac_profile_t mx[MAX_MAC];

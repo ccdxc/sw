@@ -463,26 +463,62 @@ mac_cfg_hw (mac_info_t *mac_info)
     case port_speed_t::PORT_SPEED_10G:
         mx[inst_id].mac_mode = MAC_MODE_4x10g;
         mx_api_speed = 10;
+        if (g_linkmgr_cfg.catalog->card_id() ==
+                        sdk::lib::card_id_t::CARD_ID_NAPLES25) {
+            mx[inst_id].tdm[0] = 0;
+            mx[inst_id].tdm[1] = 0;
+            mx[inst_id].tdm[2] = 0;
+            mx[inst_id].tdm[3] = 0;
+        } else {
+            mx[inst_id].tdm[0] = 0;
+            mx[inst_id].tdm[1] = 1;
+            mx[inst_id].tdm[2] = 2;
+            mx[inst_id].tdm[3] = 3;
+        }
         break;
 
     case port_speed_t::PORT_SPEED_25G:
         mx[inst_id].mac_mode = MAC_MODE_4x25g;
         mx_api_speed = 25;
+        if (g_linkmgr_cfg.catalog->card_id() ==
+                            sdk::lib::card_id_t::CARD_ID_NAPLES25) {
+            mx[inst_id].tdm[0] = 0;
+            mx[inst_id].tdm[1] = 0;
+            mx[inst_id].tdm[2] = 0;
+            mx[inst_id].tdm[3] = 0;
+        } else {
+            mx[inst_id].tdm[0] = 0;
+            mx[inst_id].tdm[1] = 1;
+            mx[inst_id].tdm[2] = 2;
+            mx[inst_id].tdm[3] = 3;
+        }
         break;
 
     case port_speed_t::PORT_SPEED_40G:
         mx[inst_id].mac_mode = MAC_MODE_1x40g;
         mx_api_speed = 40;
+        mx[inst_id].tdm[0] = 0;
+        mx[inst_id].tdm[1] = 0;
+        mx[inst_id].tdm[2] = 0;
+        mx[inst_id].tdm[3] = 0;
         break;
 
     case port_speed_t::PORT_SPEED_50G:
         mx[inst_id].mac_mode = MAC_MODE_2x50g;
         mx_api_speed = 50;
+        mx[inst_id].tdm[0] = 0;
+        mx[inst_id].tdm[1] = 1;
+        mx[inst_id].tdm[2] = 0;
+        mx[inst_id].tdm[3] = 1;
         break;
 
     case port_speed_t::PORT_SPEED_100G:
         mx[inst_id].mac_mode = MAC_MODE_1x100g;
         mx_api_speed = 100;
+        mx[inst_id].tdm[0] = 0;
+        mx[inst_id].tdm[1] = 0;
+        mx[inst_id].tdm[2] = 0;
+        mx[inst_id].tdm[3] = 0;
         break;
 
     default:

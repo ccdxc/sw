@@ -483,10 +483,25 @@ catalog::populate_serdes(char *dir_name, ptree &prop_tree)
     return parse_serdes_file(serdes_file);
 }
 
+card_id_t
+catalog::catalog_card_id_to_sdk_card_id(uint32_t card_id)
+{
+    switch (card_id) {
+    case 680005:
+        return CARD_ID_NAPLES25;
+
+    case 680003:
+    case 680004:
+    default:
+        return CARD_ID_NAPLES100;
+    }
+}
+
 sdk_ret_t
 catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
 {
-    catalog_db_.card_index = prop_tree.get<uint32_t>("card_index", 0);
+    catalog_db_.card_id = catalog_card_id_to_sdk_card_id(
+                                            prop_tree.get<uint32_t>("card_id", 0));
     catalog_db_.max_mpu_per_stage = prop_tree.get<uint32_t>("max_mpu_per_stage", 0);
     catalog_db_.mpu_trace_size = prop_tree.get<uint32_t>("mpu_trace_size", 0);
 
@@ -588,7 +603,8 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name, p
                 return NULL;
             }
         }
-        else if (platform == platform_type_t::PLATFORM_TYPE_SIM) {
+        else if (platform == platform_type_t::PLATFORM_TYPE_SIM ||
+                 platform == platform_type_t::PLATFORM_TYPE_MOCK) {
             catalog_file_name = "/catalog.json";
         }
     }

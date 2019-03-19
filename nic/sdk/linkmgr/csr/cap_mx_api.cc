@@ -530,13 +530,18 @@ void cap_mx_load_from_cfg_glbl1(int chip_id, int inst_id, int *ch_enable_vec) {
    cap_mx_apb_write(chip_id, inst_id, 0x201, 0xA088);
 
    // Threshold used by APP_FIFO before reading from TX_FIFO
-   cap_mx_apb_write(chip_id, inst_id, 0x20f, 0x4);
-   cap_mx_apb_write(chip_id, inst_id, 0x210, 0x4);
-   cap_mx_apb_write(chip_id, inst_id, 0x211, 0x4);
-   cap_mx_apb_write(chip_id, inst_id, 0x212, 0x4);
+   cap_mx_apb_write(chip_id, inst_id, 0x20f, 0x1);
+   cap_mx_apb_write(chip_id, inst_id, 0x210, 0x1);
+   cap_mx_apb_write(chip_id, inst_id, 0x211, 0x1);
+   cap_mx_apb_write(chip_id, inst_id, 0x212, 0x1);
 
    // global mode
    cap_mx_apb_write(chip_id, inst_id, 0x1, mx[inst_id].glbl_mode);
+
+   uint32_t slot0 = mx[inst_id].tdm[0];
+   uint32_t slot1 = mx[inst_id].tdm[1];
+   uint32_t slot2 = mx[inst_id].tdm[2];
+   uint32_t slot3 = mx[inst_id].tdm[3];
 
    // channel mode
    if (mx[inst_id].mac_mode == MAC_MODE_4x25g || mx[inst_id].mac_mode == MAC_MODE_4x10g || mx[inst_id].mac_mode == MAC_MODE_4x1g) {
@@ -562,7 +567,7 @@ void cap_mx_load_from_cfg_glbl1(int chip_id, int inst_id, int *ch_enable_vec) {
    if (mx[inst_id].mac_mode == MAC_MODE_1x100g) {
       cap_mx_set_appfifoportmap(chip_id, inst_id, 0x1, 0, 0, 0, 0);
       cap_mx_set_chmapping(chip_id, inst_id, 0, 0, 0, 0);
-      cap_mx_set_cfg_mac_tdm(chip_id, inst_id, 0, 0, 0, 0);
+      cap_mx_set_cfg_mac_tdm(chip_id, inst_id, slot0, slot1, slot2, slot3);
       cap_mx_set_pcs_lane_remap(chip_id, inst_id, 7, 6, 5, 4);
       *ch_enable_vec = mx[inst_id].port_enable[0];
    } else if (mx[inst_id].mac_mode == MAC_MODE_2x25g_1x50g) {
@@ -576,13 +581,13 @@ void cap_mx_load_from_cfg_glbl1(int chip_id, int inst_id, int *ch_enable_vec) {
    } else if (mx[inst_id].mac_mode == MAC_MODE_1x40g || mx[inst_id].mac_mode == MAC_MODE_1x50g) {
       cap_mx_set_appfifoportmap(chip_id, inst_id, 0x1, 0, 0, 0, 0);
       cap_mx_set_chmapping(chip_id, inst_id, 0, 0, 0, 0);
-      cap_mx_set_cfg_mac_tdm(chip_id, inst_id, 0, 0, 0, 0);
+      cap_mx_set_cfg_mac_tdm(chip_id, inst_id, slot0, slot1, slot2, slot3);
       cap_mx_set_pcs_lane_remap(chip_id, inst_id, 7, 6, 5, 4);
       *ch_enable_vec = mx[inst_id].port_enable[0];
    } else if (mx[inst_id].mac_mode == MAC_MODE_2x40g || mx[inst_id].mac_mode == MAC_MODE_2x50g) {
       cap_mx_set_appfifoportmap(chip_id, inst_id, 0x5, 4, 1, 4, 0);
       cap_mx_set_chmapping(chip_id, inst_id, 2, 0, 2, 0);
-      cap_mx_set_cfg_mac_tdm(chip_id, inst_id, 0, 1, 0, 1);
+      cap_mx_set_cfg_mac_tdm(chip_id, inst_id, slot0, slot1, slot2, slot3);
       cap_mx_set_pcs_lane_remap(chip_id, inst_id, 7, 6, 5, 4);
       cap_mx_apb_write(chip_id, inst_id, 0x1903, 0x0f9a); // SerDes remapping: 'b111_110_011_010
       cap_mx_apb_write(chip_id, inst_id, 0x1983, 0x0f9a);
@@ -596,7 +601,7 @@ void cap_mx_load_from_cfg_glbl1(int chip_id, int inst_id, int *ch_enable_vec) {
    } else if (mx[inst_id].mac_mode == MAC_MODE_4x25g || mx[inst_id].mac_mode == MAC_MODE_4x10g || mx[inst_id].mac_mode == MAC_MODE_4x1g) {
       cap_mx_set_appfifoportmap(chip_id, inst_id, 0xf, 3, 2, 1, 0);
       cap_mx_set_chmapping(chip_id, inst_id, 3, 2, 1, 0);
-      cap_mx_set_cfg_mac_tdm(chip_id, inst_id, 0, 1, 2, 3);
+      cap_mx_set_cfg_mac_tdm(chip_id, inst_id, slot0, slot1, slot2, slot3);
       cap_mx_set_pcs_lane_remap(chip_id, inst_id, 7, 6, 5, 4);
       *ch_enable_vec = (mx[inst_id].port_enable[3] << 3) | (mx[inst_id].port_enable[2]<<2) | (mx[inst_id].port_enable[1]<<1) | mx[inst_id].port_enable[0];
    } else {
