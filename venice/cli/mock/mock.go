@@ -183,8 +183,8 @@ func Start() *Info {
 		Password: testPassword,
 		Tenant:   globals.DefaultTenant,
 	}
-	// create admin role binding
-	testutils.MustCreateRoleBinding(tinfo.apicl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, []string{testUser}, nil)
+	// update admin role binding
+	testutils.MustUpdateRoleBinding(tinfo.apicl, globals.AdminRoleBinding, globals.DefaultTenant, globals.AdminRole, []string{testUser}, nil)
 	// create authentication policy with local auth enabled
 	testutils.MustCreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false})
 	// set auth bootstrap flag to true

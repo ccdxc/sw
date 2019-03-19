@@ -94,8 +94,8 @@ func SetupAuth(apiServerAddr string, enableLocalAuth bool, ldapConf *auth.Ldap, 
 	if enableLocalAuth && creds != nil {
 		authntestutils.MustCreateTestUser(apiClient, creds.GetUsername(), creds.GetPassword(), creds.GetTenant())
 	}
-	// create admin role binding
-	authntestutils.MustCreateRoleBinding(apiClient, "AdminRoleBinding", creds.GetTenant(), globals.AdminRole, []string{creds.GetUsername()}, nil)
+	// update admin role binding
+	authntestutils.MustUpdateRoleBinding(apiClient, globals.AdminRoleBinding, creds.GetTenant(), globals.AdminRole, []string{creds.GetUsername()}, nil)
 	// create authentication policy
 	authntestutils.MustCreateAuthenticationPolicy(apiClient, &auth.Local{Enabled: enableLocalAuth}, ldapConf, radiusConf)
 	// set auth bootstrap flag to true
@@ -116,8 +116,6 @@ func CleanupAuth(apiServerAddr string, enableLocalAuth, enableLdapAuth bool, cre
 	if enableLocalAuth && creds != nil {
 		authntestutils.MustDeleteUser(apiClient, creds.GetUsername(), creds.GetTenant())
 	}
-	// delete admin role binding
-	authntestutils.MustDeleteRoleBinding(apiClient, "AdminRoleBinding", creds.GetTenant())
 	// delete authentication policy
 	authntestutils.MustDeleteAuthenticationPolicy(apiClient)
 	// delete cluster

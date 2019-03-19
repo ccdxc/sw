@@ -397,8 +397,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	defer MustDeleteTenant(ti.apicl, testTenant)
 	MustCreateTestUser(ti.apicl, testutils.TestLocalUser, testutils.TestLocalPassword, testTenant)
 	defer MustDeleteUser(ti.apicl, testutils.TestLocalUser, testTenant)
-	MustCreateRoleBinding(ti.apicl, "AdminRoleBinding", testTenant, globals.AdminRole, []string{testutils.TestLocalUser}, nil)
-	defer MustDeleteRoleBinding(ti.apicl, "AdminRoleBinding", testTenant)
+	MustUpdateRoleBinding(ti.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testutils.TestLocalUser}, nil)
 	testtenantAuthzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testTenant})
 	AssertOk(t, err, fmt.Sprintf("failed to get authZ header for user (%s|%s)", testTenant, testutils.TestLocalUser))
 

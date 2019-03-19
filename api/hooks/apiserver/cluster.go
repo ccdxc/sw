@@ -147,14 +147,14 @@ func (cl *clusterHooks) validateTenantConfig(tenantConfig cluster.Tenant) error 
 func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
 	if !ok {
-		cl.logger.Errorf("API server hook to create default roles called for invalid object type [%#v]", i)
+		cl.logger.ErrorLog("method", "createDefaultRoles", "msg", fmt.Sprintf("API server hook to create default roles called for invalid object type [%#v]", i))
 		return i, false, errors.New("invalid input type")
 	}
 	if oper != apiintf.CreateOper {
-		cl.logger.Errorf("API server hook to create default roles called for invalid API Operation [%s]", oper)
+		cl.logger.ErrorLog("method", "createDefaultRoles", "msg", fmt.Sprintf("API server hook to create default roles called for invalid API Operation [%s]", oper))
 		return i, false, errors.New("invalid input type")
 	}
-	cl.logger.Debugf("API server hook called to create default roles for tenant [%v]", r.Name)
+	cl.logger.DebugLog("method", "createDefaultRoles", "msg", fmt.Sprintf("API server hook called to create default roles for tenant [%v]", r.Name))
 
 	if err := cl.validateTenantConfig(r); err != nil {
 		return i, false, err
@@ -180,6 +180,13 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 	if err := txn.Create(adminRole.MakeKey("auth"), adminRole); err != nil {
 		return r, false, err
 	}
+	// create tenant admin role binding
+	adminRoleBinding := login.NewRoleBinding(globals.AdminRoleBinding, r.GetName(), globals.AdminRole, "", "")
+	adminRoleBinding.APIVersion = apiSrv.GetVersion()
+	adminRoleBinding.SelfLink = adminRoleBinding.MakeURI("configs", adminRole.APIVersion, "auth")
+	if err := txn.Create(adminRoleBinding.MakeKey("auth"), adminRoleBinding); err != nil {
+		return r, false, err
+	}
 	return r, true, nil
 }
 
@@ -187,14 +194,14 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
 	if !ok {
-		cl.logger.Errorf("API server hook to delete default roles called for invalid object type [%#v]", i)
+		cl.logger.ErrorLog("method", "deleteDefaultRoles", "msg", fmt.Sprintf("API server hook to delete default roles called for invalid object type [%#v]", i))
 		return i, false, errors.New("invalid input type")
 	}
 	if oper != apiintf.DeleteOper {
-		cl.logger.Errorf("API server hook to delete default roles called for invalid API Operation [%s]", oper)
+		cl.logger.ErrorLog("method", "deleteDefaultRoles", "msg", fmt.Sprintf("API server hook to delete default roles called for invalid API Operation [%s]", oper))
 		return i, false, errors.New("invalid input type")
 	}
-	cl.logger.Debugf("API server hook called to delete default roles for tenant [%v]", r.Name)
+	cl.logger.DebugLog("method", "deleteDefaultRoles", "msg", fmt.Sprintf("API server hook called to delete default roles for tenant [%v]", r.Name))
 
 	allowedTenant := r.GetName()
 
@@ -207,7 +214,13 @@ func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Inter
 		"",
 		auth.Permission_AllActions.String())).MakeKey("auth")
 	if err := txn.Delete(adminRoleKey); err != nil {
-		cl.logger.Errorf("Error adding delete admin role to transaction, Err: %v", err)
+		cl.logger.ErrorLog("method", "deleteDefaultRoles", "msg", "error adding delete admin role to transaction", "error", err)
+		return r, false, err
+	}
+	// get admin role binding key
+	adminRoleBindingKey := login.NewRoleBinding(globals.AdminRoleBinding, r.GetName(), globals.AdminRole, "", "").MakeKey("auth")
+	if err := txn.Delete(adminRoleBindingKey); err != nil {
+		cl.logger.ErrorLog("method", "deleteDefaultRoles", "msg", "error adding delete admin role binding to transaction", "error", err)
 		return r, false, err
 	}
 	return r, true, nil

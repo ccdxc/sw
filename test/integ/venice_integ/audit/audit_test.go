@@ -294,8 +294,7 @@ func TestAuditLogs(t *testing.T) {
 	// test audit log for authorization failure
 	MustCreateTestUser(ti.apicl, testUser, testPassword, testTenant)
 	defer MustDeleteUser(ti.apicl, testUser, testTenant)
-	MustCreateRoleBinding(ti.apicl, "AdminRoleBinding", testTenant, globals.AdminRole, []string{testUser}, nil)
-	defer MustDeleteRoleBinding(ti.apicl, "AdminRoleBinding", testTenant)
+	MustUpdateRoleBinding(ti.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testUser}, nil)
 	unauthzCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,

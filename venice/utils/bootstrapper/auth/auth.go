@@ -1,12 +1,19 @@
 package auth
 
 import (
+	"fmt"
+
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+)
+
+var (
+	// ErrNoAdminRoleBindings is returned when there is no AdminRoleBinding with a user or group assigned
+	ErrNoAdminRoleBindings = fmt.Errorf("no admin role binding with assigned user or group in %s tenant", globals.DefaultTenant)
 )
 
 type feature struct {
@@ -19,29 +26,25 @@ type feature struct {
 	permGetter rbac.PermissionGetter
 }
 
-func (f *feature) IsBootstrapped(tenant string) bool {
+func (f *feature) IsBootstrapped(tenant string) (bool, error) {
 	// auth feature gets in bootstrap mode only for default tenant
 	if tenant != globals.DefaultTenant {
-		return true
+		return true, nil
 	}
 	// check if authentication policy exists
 	if _, err := f.authGetter.GetAuthenticationPolicy(); err != nil {
-		f.logger.Infof("AuthenticationPolicy not found, auth is not bootstrapped, Err: %v", err)
-		return false
+		f.logger.InfoLog("method", "IsBootstrapped", "msg", "AuthenticationPolicy not found, auth is not bootstrapped", "error", err)
+		return false, err
 	}
 	// check if admin role binding exists for "default" tenant
 	rbs := f.permGetter.GetRoleBindings(tenant)
-	if len(rbs) == 0 {
-		f.logger.Infof("no role bindings found in default tenant, auth is not bootstrapped")
-		return false
-	}
 	for _, rb := range rbs {
-		if rb.Spec.Role == globals.AdminRole {
-			return true
+		if (rb.Spec.Role == globals.AdminRole) && (len(rb.Spec.Users) > 0 || len(rb.Spec.UserGroups) > 0) {
+			return true, nil
 		}
 	}
-	f.logger.Infof("no role bindings with [%s] role found in default tenant, auth is not bootstrapped", globals.AdminRole)
-	return false
+	f.logger.InfoLog("method", "IsBootstrapped", "msg", fmt.Sprintf("no role bindings [%#v] with [%s] role found in default tenant, auth is not bootstrapped", rbs, globals.AdminRole))
+	return false, ErrNoAdminRoleBindings
 }
 
 func (f *feature) IsFlagSet(tenant string) (bool, error) {

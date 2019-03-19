@@ -401,6 +401,57 @@ func MustCreateRoleBindingWithCtx(ctx context.Context, apicl apiclient.Services,
 	return roleBinding
 }
 
+// UpdateRoleBinding updates a role binding
+func UpdateRoleBinding(ctx context.Context, apicl apiclient.Services, name, tenant, roleName string, users, groups []string) (*auth.RoleBinding, error) {
+	var err error
+	var roleBinding *auth.RoleBinding
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		roleBinding, err = apicl.AuthV1().RoleBinding().Get(ctx, &api.ObjectMeta{Name: name, Tenant: tenant})
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "100ms", "20s") {
+		log.Errorf("Error getting role binding, Err: %v", err)
+		return nil, err
+	}
+	if roleName != "" {
+		roleBinding.Spec.Role = roleName
+	}
+	roleBinding.Spec.Users = append(roleBinding.Spec.Users, users...)
+	roleBinding.Spec.UserGroups = append(roleBinding.Spec.Users, groups...)
+	var updatedRoleBinding *auth.RoleBinding
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		updatedRoleBinding, err = apicl.AuthV1().RoleBinding().Update(ctx, roleBinding)
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "100ms", "20s") {
+		log.Errorf("Error updating role binding, Err: %v", err)
+		return nil, err
+	}
+	return updatedRoleBinding, err
+}
+
+// MustUpdateRoleBinding updates a role binding and panics if fails
+func MustUpdateRoleBinding(apicl apiclient.Services, name, tenant, roleName string, users, groups []string) *auth.RoleBinding {
+	roleBinding, err := UpdateRoleBinding(context.TODO(), apicl, name, tenant, roleName, users, groups)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in UpdateRoleBinding", err))
+	}
+	return roleBinding
+}
+
+// MustUpdateRoleBindingWithCtx updates a role binding and panics if fails
+func MustUpdateRoleBindingWithCtx(ctx context.Context, apicl apiclient.Services, name, tenant, roleName string, users, groups []string) *auth.RoleBinding {
+	roleBinding, err := UpdateRoleBinding(ctx, apicl, name, tenant, roleName, users, groups)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in UpdateRoleBindingWithCtx", err))
+	}
+	return roleBinding
+}
+
 // DeleteRoleBinding deletes a role binding
 func DeleteRoleBinding(apicl apiclient.Services, name, tenant string) error {
 	// delete role binding object in api server

@@ -299,80 +299,6 @@ func TestAddRolesHookRegistration(t *testing.T) {
 	Assert(t, err != nil, "expected error in addRoles hook registration")
 }
 
-func TestAdminRoleCheck(t *testing.T) {
-	testSuperAdminRole := login.NewClusterRole(globals.AdminRole, login.NewPermission(
-		authz.ResourceTenantAll,
-		authz.ResourceGroupAll,
-		authz.ResourceKindAll,
-		authz.ResourceNamespaceAll,
-		"",
-		auth.Permission_AllActions.String()))
-	tests := []struct {
-		name     string
-		in       interface{}
-		out      interface{}
-		skipCall bool
-		err      error
-	}{
-		{
-			name:     "super admin role",
-			in:       testSuperAdminRole,
-			out:      testSuperAdminRole,
-			skipCall: true,
-			err:      errors.New("admin role create, update or delete is not allowed"),
-		},
-		{
-			name:     "network admin role",
-			in:       testNetworkAdminRole,
-			out:      testNetworkAdminRole,
-			skipCall: false,
-			err:      nil,
-		},
-		{
-			name:     "incorrect object type",
-			in:       struct{ name string }{"testing"},
-			out:      struct{ name string }{"testing"},
-			skipCall: true,
-			err:      errors.New("invalid input type"),
-		},
-	}
-	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
-	l := log.GetNewLogger(logConfig)
-	r := &authHooks{}
-	r.logger = l
-	for _, test := range tests {
-		_, out, skipCall, err := r.adminRoleCheck(context.TODO(), test.in)
-		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed", test.name))
-		Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))
-		Assert(t, reflect.DeepEqual(out, test.out), fmt.Sprintf("[%s] test failed", test.name))
-	}
-}
-
-func TestAdminRoleCheckHookRegistration(t *testing.T) {
-	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
-	l := log.GetNewLogger(logConfig)
-	svc := mocks.NewFakeAPIGwService(l, false)
-	r := &authHooks{}
-	r.logger = l
-	err := r.registerAdminRoleCheckHook(svc)
-	AssertOk(t, err, "adminRoleCheck hook registration failed")
-
-	ids := []serviceID{
-		{"Role", apiintf.CreateOper},
-		{"Role", apiintf.UpdateOper},
-		{"Role", apiintf.DeleteOper},
-	}
-	for _, id := range ids {
-		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
-		AssertOk(t, err, "error getting service profile for [%s] [%s]", id.kind, id.action)
-		Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre-call hooks [%d] for [%s] [%s] profile", len(prof.PreCallHooks()), id.kind, id.action))
-	}
-	// test error
-	svc = mocks.NewFakeAPIGwService(l, true)
-	err = r.registerAdminRoleCheckHook(svc)
-	Assert(t, err != nil, "expected error in adminRoleCheck hook registration")
-}
-
 func TestUserCreateCheck(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -965,4 +891,117 @@ func TestAuthUserContextHookRegistration(t *testing.T) {
 	svc = mocks.NewFakeAPIGwService(l, true)
 	err = r.registerUserContextHook(svc)
 	Assert(t, err != nil, "expected error in userContext hook registration")
+}
+
+func TestUserDeleteCheck(t *testing.T) {
+	const (
+		globaladmin = "globaladmin"
+		tenantadmin = "tenantadmin"
+		testtenant  = "testtenant"
+	)
+	// global admin user
+	globalAdmin := &auth.User{}
+	globalAdmin.Defaults("all")
+	globalAdmin.Name = globaladmin
+	// tenant admin user
+	tenantAdmin := &auth.User{}
+	tenantAdmin.Defaults("all")
+	tenantAdmin.Name = tenantadmin
+	tenantAdmin.Tenant = testtenant
+
+	permGetter := rbac.NewMockPermissionGetter([]*auth.Role{login.NewRole(globals.AdminRole, testtenant, login.NewPermission(testtenant,
+		authz.ResourceGroupAll,
+		authz.ResourceKindAll,
+		authz.ResourceNamespaceAll,
+		"",
+		auth.Permission_AllActions.String()))},
+		[]*auth.RoleBinding{login.NewRoleBinding("AdminRoleBinding", testtenant, globals.AdminRole, tenantadmin, "")},
+		[]*auth.Role{login.NewClusterRole(globals.AdminRole, login.NewPermission(
+			authz.ResourceTenantAll,
+			authz.ResourceGroupAll,
+			authz.ResourceKindAll,
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String()))},
+		[]*auth.RoleBinding{login.NewClusterRoleBinding("AdminRoleBinding", globals.AdminRole, globalAdmin.Name, "")})
+
+	tests := []struct {
+		name         string
+		in           interface{}
+		loggedInUser *auth.User
+		out          interface{}
+		err          error
+	}{
+		{
+			name:         "user self delete",
+			in:           tenantAdmin,
+			loggedInUser: tenantAdmin,
+			out:          tenantAdmin,
+			err:          errors.New("self-deletion of user is not allowed"),
+		},
+		{
+			name:         "global admin delete",
+			in:           globalAdmin,
+			loggedInUser: tenantAdmin,
+			out:          globalAdmin,
+			err:          errors.New("only global admin can delete another global admin"),
+		},
+		{
+			name:         "tenant admin delete",
+			in:           tenantAdmin,
+			loggedInUser: globalAdmin,
+			out:          tenantAdmin,
+			err:          nil,
+		},
+		{
+			name:         "invalid object",
+			in:           &struct{ name string }{name: "invalid object type"},
+			loggedInUser: globalAdmin,
+			out:          &struct{ name string }{name: "invalid object type"},
+			err:          errors.New("invalid input type"),
+		},
+		{
+			name:         "no user in context",
+			in:           tenantAdmin,
+			loggedInUser: nil,
+			out:          tenantAdmin,
+			err:          apigwpkg.ErrNoUserInContext,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	r.permissionGetter = permGetter
+	for _, test := range tests {
+		ctx := context.TODO()
+		if test.loggedInUser != nil {
+			ctx = apigwpkg.NewContextWithUser(ctx, test.loggedInUser)
+		}
+		_, out, err := r.userDeleteCheck(ctx, test.in)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v], ", test.name, test.err, err))
+		Assert(t, reflect.DeepEqual(test.out, out),
+			fmt.Sprintf("[%s] test failed, expected object [%v], got [%v]", test.name, test.out, out))
+	}
+}
+
+func TestUserDeleteCheckHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerUserDeleteCheckHook(svc)
+	AssertOk(t, err, "userDeleteCheck hook registration failed")
+
+	opers := []apiintf.APIOperType{apiintf.DeleteOper}
+	for _, oper := range opers {
+		prof, err := svc.GetCrudServiceProfile("User", oper)
+		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
+		Assert(t, len(prof.PreAuthZHooks()) == 1, fmt.Sprintf("unexpected number of pre authz hooks [%d] for User operation [%v]", len(prof.PreAuthZHooks()), oper))
+	}
+	// test err
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerUserDeleteCheckHook(svc)
+	Assert(t, err != nil, "expected error in userDeleteCheck hook registration")
 }

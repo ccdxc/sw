@@ -13,11 +13,11 @@ const (
 
 type mockFeature struct{}
 
-func (f *mockFeature) IsBootstrapped(tenant string) bool {
+func (f *mockFeature) IsBootstrapped(tenant string) (bool, error) {
 	if tenant == globals.DefaultTenant {
-		return true
+		return true, nil
 	}
-	return false
+	return false, nil
 }
 
 func (f *mockFeature) IsFlagSet(tenant string) (bool, error) {

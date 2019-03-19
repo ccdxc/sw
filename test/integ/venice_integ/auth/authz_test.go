@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -59,8 +60,7 @@ func TestAuthorization(t *testing.T) {
 	defer MustDeleteTenant(tinfo.apicl, testTenant2)
 	MustCreateTestUser(tinfo.apicl, testUser, testPassword, testTenant2)
 	defer MustDeleteUser(tinfo.apicl, testUser, testTenant2)
-	MustCreateRoleBinding(tinfo.apicl, "AdminRoleBinding", testTenant2, globals.AdminRole, []string{testUser}, nil)
-	defer MustDeleteRoleBinding(tinfo.apicl, "AdminRoleBinding", testTenant2)
+	MustUpdateRoleBinding(tinfo.apicl, globals.AdminRoleBinding, testTenant2, globals.AdminRole, []string{testUser}, nil)
 
 	ctx, err = NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: testUser, Password: testPassword, Tenant: testTenant2})
 	AssertOk(t, err, "error creating logged in context for testtenant2 admin user")
@@ -133,6 +133,64 @@ func TestAdminRole(t *testing.T) {
 		_, err := tinfo.restcl.AuthV1().Role().Get(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRole, Tenant: testTenant})
 		return err != nil, err
 	}, "admin role should be deleted when a tenant is deleted")
+}
+
+func TestAdminRoleBinding(t *testing.T) {
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
+
+	superAdminCtx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, adminCred)
+	AssertOk(t, err, "error creating logged in context")
+	// Deleting admin role binding should fail
+	_, err = tinfo.restcl.AuthV1().RoleBinding().Delete(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRoleBinding, Tenant: globals.DefaultTenant})
+	Assert(t, err != nil, "expected error while deleting admin role binding")
+	// test admin role binding creation and deletion
+	currTime := time.Now()
+	MustCreateTenant(tinfo.apicl, testTenant)
+	var adminRoleBinding *auth.RoleBinding
+	AssertEventually(t, func() (bool, interface{}) {
+		adminRoleBinding, err = tinfo.restcl.AuthV1().RoleBinding().Get(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRoleBinding, Tenant: testTenant})
+		return err == nil, err
+	}, "admin role binding should be created when a tenant is created")
+	creationTime, err := adminRoleBinding.CreationTime.Time()
+	AssertOk(t, err, "error getting role binding creation time")
+	Assert(t, creationTime.After(currTime), "admin role binding creation time is not set")
+	Assert(t, adminRoleBinding.UUID != "", "admin role binding UUID is not set")
+	// updating AdminRoleBinding to refer to a non-admin role should fail
+	MustCreateRole(tinfo.apicl, "NetworkAdminRole", testTenant, login.NewPermission(
+		testTenant,
+		string(apiclient.GroupNetwork),
+		string(network.KindNetwork),
+		authz.ResourceNamespaceAll,
+		"",
+		auth.Permission_AllActions.String()),
+		login.NewPermission(
+			testTenant,
+			string(apiclient.GroupAuth),
+			authz.ResourceKindAll,
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String()))
+	adminRoleBinding.Spec.Role = "NetworkAdminRole"
+	_, err = tinfo.restcl.AuthV1().RoleBinding().Update(superAdminCtx, adminRoleBinding)
+	// cleanup objs in tenant before deleting
+	MustDeleteRole(tinfo.apicl, "NetworkAdminRole", testTenant)
+	Assert(t, err != nil, "expected error while updating AdminRoleBinding to have non-admin role")
+	Assert(t, strings.Contains(err.Error(), "AdminRoleBinding can bind to only AdminRole"), fmt.Sprintf("unexpected error: %v", err))
+	// deleting tenant should delete AdminRoleBinding
+	MustDeleteTenant(tinfo.apicl, testTenant)
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().RoleBinding().Get(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRoleBinding, Tenant: testTenant})
+		return err != nil, err
+	}, "admin role binding should be deleted when a tenant is deleted")
 }
 
 func TestPrivilegeEscalation(t *testing.T) {
@@ -241,11 +299,10 @@ func TestBootstrapFlag(t *testing.T) {
 		clusterObj, err := tinfo.restcl.ClusterV1().Cluster().AuthBootstrapComplete(context.TODO(), &cluster.ClusterAuthBootstrapRequest{})
 		tinfo.l.Infof("set bootstrap flag error: %v", err)
 		return err != nil, clusterObj
-	}, "bootstrap flag shouldn't be set till role binding is created", "100ms", "1s")
+	}, "bootstrap flag shouldn't be set till admin role binding is updated with an user", "100ms", "1s")
 	MustCreateTestUser(tinfo.restcl, testUser, testPassword, globals.DefaultTenant)
 	defer MustDeleteUser(tinfo.apicl, testUser, globals.DefaultTenant)
-	MustCreateRoleBinding(tinfo.restcl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, []string{testUser}, nil)
-	defer MustDeleteRoleBinding(tinfo.apicl, "AdminRoleBinding", globals.DefaultTenant)
+	MustUpdateRoleBinding(tinfo.restcl, globals.AdminRoleBinding, globals.DefaultTenant, globals.AdminRole, []string{testUser}, nil)
 	// set bootstrap flag
 	AssertEventually(t, func() (bool, interface{}) {
 		var err error
@@ -408,6 +465,33 @@ func TestUserSelfOperations(t *testing.T) {
 	}, "unable to reset password")
 	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: "testUser2", Password: user.Spec.Password, Tenant: testTenant})
 	AssertOk(t, err, "unable to get logged in context with new reset password")
+}
+
+func TestUserDelete(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+
+	// user should not be able to delete itself
+	adminCtx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get admin logged in context")
+	_, err = tinfo.restcl.AuthV1().User().Delete(adminCtx, &api.ObjectMeta{Name: userCred.Username, Tenant: userCred.Tenant})
+	Assert(t, err != nil, "user should not be able to delete himself")
+	Assert(t, strings.Contains(err.Error(), "self-deletion of user is not allowed"), fmt.Sprintf("unexpected error: %v", err))
+	// should be able to delete another admin user
+	MustCreateTestUser(tinfo.apicl, "admin", testPassword, testTenant)
+	MustUpdateRoleBinding(tinfo.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{"admin"}, nil)
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().User().Delete(adminCtx, &api.ObjectMeta{Name: "admin", Tenant: testTenant})
+		return err == nil, err
+	}, "unable to delete another admin user")
 }
 
 func TestCommitBuffer(t *testing.T) {

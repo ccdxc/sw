@@ -2,12 +2,12 @@ package impl
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
@@ -47,6 +47,12 @@ var (
 	errEmptyPassword = errors.New("password is empty")
 	// errCreatingPasswordHash is returned when there is error generating password hash
 	errCreatingPasswordHash = errors.New("error creating password hash")
+	// errAdminRoleUpdateNotAllowed is returned when AdminRole for a tenant is being updated
+	errAdminRoleUpdateNotAllowed = fmt.Errorf("%s create, update or delete is not allowed", globals.AdminRole)
+	// errAdminRoleBindingDeleteNotAllowed is returned when AdminRoleBinding for a tenant is being deleted
+	errAdminRoleBindingDeleteNotAllowed = fmt.Errorf("%s delete is not allowed", globals.AdminRoleBinding)
+	// errAdminRoleBindingRoleUpdateNotAllowed is returned when AdminRoleBinding role is updated to something other than AdminRole
+	errAdminRoleBindingRoleUpdateNotAllowed = fmt.Errorf("%s can bind to only %s", globals.AdminRoleBinding, globals.AdminRole)
 )
 
 type authHooks struct {
@@ -128,7 +134,7 @@ func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, tx
 	if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
 		userObj, ok := oldObj.(*auth.User)
 		if !ok {
-			return oldObj, errors.New("invalid input type")
+			return oldObj, errInvalidInputType
 		}
 		// error if external user
 		if userObj.Spec.GetType() == auth.UserSpec_External.String() {
@@ -202,7 +208,7 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 	if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
 		userObj, ok := oldObj.(*auth.User)
 		if !ok {
-			return oldObj, errors.New("invalid input type")
+			return oldObj, errInvalidInputType
 		}
 		// error if external user
 		if userObj.Spec.GetType() == auth.UserSpec_External.String() {
@@ -408,6 +414,39 @@ func (s *authHooks) validatePassword(i interface{}, ver string, ignStatus bool) 
 	return nil
 }
 
+// adminRoleCheck is a pre-commit hook to prevent create/update/delete of admin role
+func (s *authHooks) adminRoleCheck(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, in interface{}) (interface{}, bool, error) {
+	s.logger.DebugLog("msg", "AuthHook called to prevent admin role create, update, delete")
+	obj, ok := in.(auth.Role)
+	if !ok {
+		return in, false, errInvalidInputType
+	}
+	if obj.Name == globals.AdminRole {
+		return in, false, errAdminRoleUpdateNotAllowed
+	}
+	return in, true, nil
+}
+
+// adminRoleBindingCheck is a pre-commit hook to prevent deletion of admin role binding and update of referred AdminRole
+func (s *authHooks) adminRoleBindingCheck(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, in interface{}) (interface{}, bool, error) {
+	s.logger.DebugLog("msg", "AuthHook called to prevent admin role binding delete")
+	obj, ok := in.(auth.RoleBinding)
+	if !ok {
+		return in, false, errInvalidInputType
+	}
+	if obj.Name == globals.AdminRoleBinding {
+		switch oper {
+		case apiintf.UpdateOper:
+			if obj.Spec.Role != globals.AdminRole {
+				return in, false, errAdminRoleBindingRoleUpdateNotAllowed
+			}
+		case apiintf.DeleteOper:
+			return in, false, errAdminRoleBindingDeleteNotAllowed
+		}
+	}
+	return in, true, nil
+}
+
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	r := authHooks{}
 	r.logger = logger.WithContext("Service", "AuthHooks")
@@ -416,10 +455,12 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("User", apiintf.UpdateOper).WithPreCommitHook(r.hashPassword)
 	svc.GetCrudService("AuthenticationPolicy", apiintf.CreateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("AuthenticationPolicy", apiintf.UpdateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
-	svc.GetCrudService("Role", apiintf.CreateOper).GetRequestType().WithValidate(r.validateRolePerms)
-	svc.GetCrudService("Role", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateRolePerms)
+	svc.GetCrudService("Role", apiintf.CreateOper).WithPreCommitHook(r.adminRoleCheck).GetRequestType().WithValidate(r.validateRolePerms)
+	svc.GetCrudService("Role", apiintf.UpdateOper).WithPreCommitHook(r.adminRoleCheck).GetRequestType().WithValidate(r.validateRolePerms)
+	svc.GetCrudService("Role", apiintf.DeleteOper).WithPreCommitHook(r.adminRoleCheck)
 	svc.GetCrudService("RoleBinding", apiintf.CreateOper).WithPreCommitHook(r.privilegeEscalationCheck)
-	svc.GetCrudService("RoleBinding", apiintf.UpdateOper).WithPreCommitHook(r.privilegeEscalationCheck)
+	svc.GetCrudService("RoleBinding", apiintf.UpdateOper).WithPreCommitHook(r.adminRoleBindingCheck).WithPreCommitHook(r.privilegeEscalationCheck)
+	svc.GetCrudService("RoleBinding", apiintf.DeleteOper).WithPreCommitHook(r.adminRoleBindingCheck)
 	// hook to change password
 	svc.GetMethod("PasswordChange").WithPreCommitHook(r.changePassword).GetRequestType().WithValidate(r.validatePassword)
 	svc.GetMethod("PasswordChange").WithResponseWriter(r.returnUser)

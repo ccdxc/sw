@@ -13,7 +13,6 @@ import (
 	"github.com/satori/go.uuid"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
-	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/globals"
@@ -137,23 +136,28 @@ func NewRole(name, tenant string, permissions ...auth.Permission) *auth.Role {
 	role.UUID = uuid.NewV4().String()
 	ts, _ := types.TimestampProto(time.Now())
 	role.CreationTime.Timestamp = *ts
+	role.ModTime.Timestamp = *ts
+	role.GenerationID = "1"
 	return role
 }
 
 // NewRoleBinding is a helper to create new role binding
 func NewRoleBinding(name, tenant, roleName, users, groups string) *auth.RoleBinding {
-	return &auth.RoleBinding{
-		TypeMeta: api.TypeMeta{Kind: string(auth.KindRoleBinding)},
-		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: tenant,
-		},
-		Spec: auth.RoleBindingSpec{
-			Users:      stringToSlice(users),
-			UserGroups: stringToSlice(groups),
-			Role:       roleName,
-		},
+	roleBinding := &auth.RoleBinding{}
+	roleBinding.Defaults("all")
+	if tenant != "" {
+		roleBinding.Tenant = tenant
 	}
+	roleBinding.Name = name
+	roleBinding.Spec.Role = roleName
+	roleBinding.Spec.Users = stringToSlice(users)
+	roleBinding.Spec.UserGroups = stringToSlice(groups)
+	roleBinding.UUID = uuid.NewV4().String()
+	ts, _ := types.TimestampProto(time.Now())
+	roleBinding.CreationTime.Timestamp = *ts
+	roleBinding.ModTime.Timestamp = *ts
+	roleBinding.GenerationID = "1"
+	return roleBinding
 }
 
 // NewClusterRole is a helper to create a role in default tenant
@@ -163,18 +167,7 @@ func NewClusterRole(name string, permissions ...auth.Permission) *auth.Role {
 
 // NewClusterRoleBinding is a helper to create a role binding in default tenant
 func NewClusterRoleBinding(name, roleName, users, groups string) *auth.RoleBinding {
-	return &auth.RoleBinding{
-		TypeMeta: api.TypeMeta{Kind: string(auth.KindRoleBinding)},
-		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: globals.DefaultTenant,
-		},
-		Spec: auth.RoleBindingSpec{
-			Users:      stringToSlice(users),
-			UserGroups: stringToSlice(groups),
-			Role:       roleName,
-		},
-	}
+	return NewRoleBinding(name, globals.DefaultTenant, roleName, users, groups)
 }
 
 // GetOperationsFromPermissions constructs authz.Operation from auth.Permission

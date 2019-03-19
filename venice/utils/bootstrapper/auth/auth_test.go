@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/pensando/sw/api/generated/auth"
@@ -21,6 +23,7 @@ func TestIsBootstrapped(t *testing.T) {
 		authGetter manager.AuthGetter
 		permGetter rbac.PermissionGetter
 		ok         bool
+		err        error
 	}{
 		{
 			name:       "non global tenant",
@@ -28,6 +31,7 @@ func TestIsBootstrapped(t *testing.T) {
 			authGetter: manager.NewMockAuthGetter(nil, false),
 			permGetter: rbac.NewMockPermissionGetter(nil, nil, nil, nil),
 			ok:         true,
+			err:        nil,
 		},
 		{
 			name:       "no role bindings",
@@ -35,6 +39,7 @@ func TestIsBootstrapped(t *testing.T) {
 			authGetter: manager.NewMockAuthGetter(nil, false),
 			permGetter: rbac.NewMockPermissionGetter(nil, nil, []*auth.Role{login.NewClusterRole(globals.AdminRole)}, nil),
 			ok:         false,
+			err:        ErrNoAdminRoleBindings,
 		},
 		{
 			name:       "no admin role binding",
@@ -42,7 +47,8 @@ func TestIsBootstrapped(t *testing.T) {
 			authGetter: manager.NewMockAuthGetter(nil, false),
 			permGetter: rbac.NewMockPermissionGetter(nil, nil, []*auth.Role{login.NewClusterRole(globals.AdminRole)},
 				[]*auth.RoleBinding{login.NewClusterRoleBinding("AdminRoleBinding", "testRole", "testUser", "")}),
-			ok: false,
+			ok:  false,
+			err: ErrNoAdminRoleBindings,
 		},
 		{
 			name:       "already bootstrapped",
@@ -50,7 +56,8 @@ func TestIsBootstrapped(t *testing.T) {
 			authGetter: manager.NewMockAuthGetter(nil, false),
 			permGetter: rbac.NewMockPermissionGetter(nil, nil, []*auth.Role{login.NewClusterRole(globals.AdminRole)},
 				[]*auth.RoleBinding{login.NewClusterRoleBinding("AdminRoleBinding", globals.AdminRole, "testUser", "")}),
-			ok: true,
+			ok:  true,
+			err: nil,
 		},
 		{
 			name:       "error in fetching auth policy",
@@ -58,7 +65,17 @@ func TestIsBootstrapped(t *testing.T) {
 			authGetter: manager.NewMockAuthGetter(nil, true),
 			permGetter: rbac.NewMockPermissionGetter(nil, nil, []*auth.Role{login.NewClusterRole(globals.AdminRole)},
 				[]*auth.RoleBinding{login.NewClusterRoleBinding("AdminRoleBinding", globals.AdminRole, "testUser", "")}),
-			ok: false,
+			ok:  false,
+			err: errors.New("authentication policy not found"),
+		},
+		{
+			name:       "no user or group assigned to admin role binding",
+			tenant:     globals.DefaultTenant,
+			authGetter: manager.NewMockAuthGetter(nil, false),
+			permGetter: rbac.NewMockPermissionGetter(nil, nil, []*auth.Role{login.NewClusterRole(globals.AdminRole)},
+				[]*auth.RoleBinding{login.NewClusterRoleBinding("AdminRoleBinding", globals.AdminRole, "", "")}),
+			ok:  false,
+			err: ErrNoAdminRoleBindings,
 		},
 	}
 	logConfig := log.GetDefaultConfig("TestAuthFeature")
@@ -70,7 +87,8 @@ func TestIsBootstrapped(t *testing.T) {
 			authGetter: test.authGetter,
 			permGetter: test.permGetter,
 		}
-		ok := f.IsBootstrapped(test.tenant)
+		ok, err := f.IsBootstrapped(test.tenant)
 		Assert(t, ok == test.ok, fmt.Sprintf("[%s] test failed", test.name))
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 	}
 }

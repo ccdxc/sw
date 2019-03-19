@@ -5,13 +5,13 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"net"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
@@ -947,7 +947,6 @@ func TestResetPassword(t *testing.T) {
 func TestPrivilegeEscalationCheck(t *testing.T) {
 	tests := []struct {
 		name         string
-		ctx          context.Context
 		in           interface{}
 		role         *auth.Role
 		user         *auth.User
@@ -957,7 +956,6 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 	}{
 		{
 			name: "incorrect object type",
-			ctx:  context.TODO(),
 			in:   struct{ name string }{"testing"},
 			role: login.NewRole("TestRole", globals.DefaultTenant,
 				login.NewPermission(globals.DefaultTenant,
@@ -1254,5 +1252,158 @@ func TestValidatePassword(t *testing.T) {
 		SortErrors(errs)
 		SortErrors(test.errors)
 		Assert(t, reflect.DeepEqual(errs, test.errors), fmt.Sprintf("%s test failed, expected errors [%v], got [%v]", test.name, test.errors, errs))
+	}
+}
+
+func TestAdminRoleCheck(t *testing.T) {
+	testSuperAdminRole := login.NewClusterRole(globals.AdminRole, login.NewPermission(
+		authz.ResourceTenantAll,
+		authz.ResourceGroupAll,
+		authz.ResourceKindAll,
+		authz.ResourceNamespaceAll,
+		"",
+		auth.Permission_AllActions.String()))
+	testNetworkAdminRole := login.NewRole("NetworkAdmin", "testTenant", login.NewPermission(
+		"testTenant",
+		string(apiclient.GroupNetwork),
+		string(network.KindNetwork),
+		authz.ResourceNamespaceAll,
+		"network1,network2",
+		fmt.Sprintf("%s,%s,%s", auth.Permission_Create.String(), auth.Permission_Update.String(), auth.Permission_Delete.String())),
+		login.NewPermission(
+			"testTenant",
+			string(apiclient.GroupNetwork),
+			string(network.KindLbPolicy),
+			authz.ResourceNamespaceAll,
+			"",
+			fmt.Sprintf("%s,%s,%s", auth.Permission_Create.String(), auth.Permission_Update.String(), auth.Permission_Delete.String())))
+
+	tests := []struct {
+		name   string
+		in     interface{}
+		out    interface{}
+		result bool
+		err    error
+	}{
+		{
+			name:   "super admin role",
+			in:     *testSuperAdminRole,
+			out:    *testSuperAdminRole,
+			result: false,
+			err:    errAdminRoleUpdateNotAllowed,
+		},
+		{
+			name:   "network admin role",
+			in:     *testNetworkAdminRole,
+			out:    *testNetworkAdminRole,
+			result: true,
+			err:    nil,
+		},
+		{
+			name:   "incorrect object type",
+			in:     struct{ name string }{"testing"},
+			out:    struct{ name string }{"testing"},
+			result: false,
+			err:    errInvalidInputType,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore: %v", err)
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		out, result, err := r.adminRoleCheck(ctx, kvs, txn, "", apiintf.CreateOper, false, test.in)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
+		Assert(t, result == test.result, fmt.Sprintf("[%s] test failed, expected result [%v], got [%v]", test.name, test.result, result))
+		Assert(t, reflect.DeepEqual(out, test.out), fmt.Sprintf("[%s] test failed, expected obj [%v], got [%v]", test.name, test.out, out))
+	}
+}
+
+func TestAdminRoleBindingCheck(t *testing.T) {
+	adminRoleBinding := login.NewClusterRoleBinding(globals.AdminRoleBinding, globals.AdminRole, "", "")
+	networkAdminRoleBinding := login.NewRoleBinding("NetworkAdminRb", "testtenant", "NetworkAdmin", "", "")
+	incorrectAdminRoleBinding := login.NewClusterRoleBinding(globals.AdminRoleBinding, "nonAdminRole", "", "")
+	tests := []struct {
+		name   string
+		in     interface{}
+		oper   apiintf.APIOperType
+		out    interface{}
+		result bool
+		err    error
+	}{
+		{
+			name:   "super admin role",
+			in:     *adminRoleBinding,
+			oper:   apiintf.DeleteOper,
+			out:    *adminRoleBinding,
+			result: false,
+			err:    errAdminRoleBindingDeleteNotAllowed,
+		},
+		{
+			name:   "network admin role",
+			in:     *networkAdminRoleBinding,
+			oper:   apiintf.DeleteOper,
+			out:    *networkAdminRoleBinding,
+			result: true,
+			err:    nil,
+		},
+		{
+			name:   "incorrect object type",
+			in:     struct{ name string }{"testing"},
+			oper:   apiintf.DeleteOper,
+			out:    struct{ name string }{"testing"},
+			result: false,
+			err:    errInvalidInputType,
+		},
+		{
+			name:   "updating with AdminRole name",
+			in:     *adminRoleBinding,
+			oper:   apiintf.UpdateOper,
+			out:    *adminRoleBinding,
+			result: true,
+			err:    nil,
+		},
+		{
+			name:   "updating with not AdminRole name",
+			in:     *incorrectAdminRoleBinding,
+			oper:   apiintf.UpdateOper,
+			out:    *incorrectAdminRoleBinding,
+			result: false,
+			err:    errAdminRoleBindingRoleUpdateNotAllowed,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore: %v", err)
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		out, result, err := r.adminRoleBindingCheck(ctx, kvs, txn, "", test.oper, false, test.in)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
+		Assert(t, result == test.result, fmt.Sprintf("[%s] test failed, expected result [%v], got [%v]", test.name, test.result, result))
+		Assert(t, reflect.DeepEqual(out, test.out), fmt.Sprintf("[%s] test failed, expected obj [%v], got [%v]", test.name, test.out, out))
 	}
 }

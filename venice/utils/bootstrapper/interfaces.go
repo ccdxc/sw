@@ -16,7 +16,7 @@ const (
 // Feature is a component/feature that needs to be checked if it has been bootstrapped
 type Feature interface {
 	// IsBootstrapped checks if the feature has been bootstrapped i.e. required API server objects have been created
-	IsBootstrapped(tenant string) bool
+	IsBootstrapped(tenant string) (bool, error)
 	// IsFlagSet checks if a feature bootstrap flag has been set in Cluster for a tenant
 	IsFlagSet(tenant string) (bool, error)
 	// ID returns feature id

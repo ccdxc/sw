@@ -27,6 +27,8 @@ const (
 
 	// AdminRole is admin role name that has all privileges for a tenant
 	AdminRole = "AdminRole"
+	// AdminRoleBinding is admin role binding name
+	AdminRoleBinding = "AdminRoleBinding"
 
 	// Config directories
 	ConfigDir                            = "/etc/pensando"

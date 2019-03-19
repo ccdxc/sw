@@ -465,7 +465,7 @@ func TestSpyglass(t *testing.T) {
 
 	// Validate the index operations counter
 	expectedCount := uint64(3*objectCount+int64(len(Tenants))) + sgPolicyCount
-	expectedCount += 8 // for cluster, default tenant, auth policy, test user, tesla admin role, audi admin role, default admin role, default admin role binding
+	expectedCount += 10 // for cluster, default tenant, auth policy, test user, tesla admin role, tesla admin role binding, audi admin role, audi admin role binding, default admin role, default admin role binding
 	AssertEventually(t,
 		func() (bool, interface{}) {
 			if tInfo.idr.GetWriteCount() < expectedCount {
@@ -3151,13 +3151,13 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 	// create audi admin
 	MustCreateTestUser(tInfo.apiClient, testutils.TestLocalUser, testutils.TestLocalPassword, "audi")
 	defer MustDeleteUser(tInfo.apiClient, testutils.TestLocalUser, "audi")
-	MustCreateRoleBinding(tInfo.apiClient, "AdminRoleBinding", "audi", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
-	defer MustDeleteRoleBinding(tInfo.apiClient, "AdminRoleBinding", "audi")
+	MustUpdateRoleBinding(tInfo.apiClient, globals.AdminRoleBinding, "audi", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
 	// create tesla admin
 	MustCreateTestUser(tInfo.apiClient, testutils.TestLocalUser, testutils.TestLocalPassword, "tesla")
 	defer MustDeleteUser(tInfo.apiClient, testutils.TestLocalUser, "tesla")
-	MustCreateRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
-	defer MustDeleteRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla")
+	//MustCreateRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
+	MustUpdateRoleBinding(tInfo.apiClient, globals.AdminRoleBinding, "tesla", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
+	//defer MustDeleteRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla")
 	// create user with no role in tesla tenant
 	MustCreateTestUser(tInfo.apiClient, "noRoleUser", testutils.TestLocalPassword, "tesla")
 	defer MustDeleteUser(tInfo.apiClient, "noRoleUser", "tesla")

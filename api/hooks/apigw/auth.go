@@ -86,6 +86,27 @@ func (a *authHooks) addOwner(ctx context.Context, in interface{}) (context.Conte
 	return nctx, in, nil
 }
 
+// userDeleteCheck pre-authz hook prevents self deletion of user
+func (a *authHooks) userDeleteCheck(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	a.logger.DebugLog("msg", "APIGw userDeleteCheck hook called")
+	obj, ok := in.(*auth.User)
+	if !ok {
+		return ctx, in, errors.New("invalid input type")
+	}
+	loggedInUser, ok := apigwpkg.UserFromContext(ctx)
+	if !ok {
+		return ctx, in, apigwpkg.ErrNoUserInContext
+	}
+	if obj.Tenant == loggedInUser.Tenant && obj.Name == loggedInUser.Name {
+		return ctx, in, errors.New("self-deletion of user is not allowed")
+	}
+	// don't let non-global admin user delete global admin user
+	if isGlobalAdmin(obj, a.permissionGetter) && !isGlobalAdmin(loggedInUser, a.permissionGetter) {
+		return ctx, in, errors.New("only global admin can delete another global admin")
+	}
+	return ctx, in, nil
+}
+
 // addRoles is a post-call hook to populate roles in user status
 func (a *authHooks) addRoles(ctx context.Context, out interface{}) (context.Context, interface{}, error) {
 	a.logger.DebugLog("msg", "APIGw addRoles hook called")
@@ -128,19 +149,6 @@ func (a *authHooks) privilegeEscalationCheck(ctx context.Context, in interface{}
 	}
 	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
 	return nctx, in, nil
-}
-
-// adminRoleCheck pre-call hook prevents create/update/delete of admin role
-func (a *authHooks) adminRoleCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
-	a.logger.DebugLog("msg", "APIGw adminRoleCheck hook called")
-	obj, ok := in.(*auth.Role)
-	if !ok {
-		return ctx, in, true, errors.New("invalid input type")
-	}
-	if obj.Name == globals.AdminRole {
-		return ctx, in, true, errors.New("admin role create, update or delete is not allowed")
-	}
-	return ctx, in, false, nil
 }
 
 // userCreateCheck pre-call hook prevents creation of local user if local auth is disabled
@@ -288,18 +296,16 @@ func (a *authHooks) registerPrivilegeEscalationHook(svc apigw.APIGatewayService)
 	return nil
 }
 
-func (a *authHooks) registerAdminRoleCheckHook(svc apigw.APIGatewayService) error {
+func (a *authHooks) registerUserDeleteCheckHook(svc apigw.APIGatewayService) error {
 	ids := []serviceID{
-		{"Role", apiintf.CreateOper},
-		{"Role", apiintf.UpdateOper},
-		{"Role", apiintf.DeleteOper},
+		{"User", apiintf.DeleteOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
 		if err != nil {
 			return err
 		}
-		prof.AddPreCallHook(a.adminRoleCheck)
+		prof.AddPreAuthZHook(a.userDeleteCheck)
 	}
 	return nil
 }
@@ -401,11 +407,6 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 		return err
 	}
 
-	// register hook for preventing super admin role deletion
-	if err := r.registerAdminRoleCheckHook(svc); err != nil {
-		return err
-	}
-
 	// register hook for preventing user creation if local auth is disabled
 	if err := r.registerUserCreateCheckHook(svc); err != nil {
 		return err
@@ -427,7 +428,12 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 
 	// register pre-call hook to set user and permissions in outgoing grpc context for role binding create/update
-	return r.registerUserContextHook(svc)
+	if err := r.registerUserContextHook(svc); err != nil {
+		return err
+	}
+
+	// register pre-authz hook to prevent self-deletion of user
+	return r.registerUserDeleteCheckHook(svc)
 }
 
 func init() {

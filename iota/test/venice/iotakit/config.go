@@ -214,12 +214,12 @@ func (tb *TestBed) SetupAuth(userID, password string) error {
 		}
 	}
 
-	// create admin role binding
-	_, err = testutils.CreateRoleBinding(context.TODO(), apicl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, []string{userID}, nil)
+	// update admin role binding
+	_, err = testutils.UpdateRoleBinding(context.TODO(), apicl, globals.AdminRoleBinding, globals.DefaultTenant, globals.AdminRole, []string{userID}, nil)
 	if err != nil {
-		// 409 is returned when role binding already exists. 401 when auth is already bootstrapped. we are ok with that
-		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {
-			return fmt.Errorf("CreateRoleBinding failed with err: %v", err)
+		// 401 when auth is already bootstrapped. we are ok with that
+		if !strings.HasPrefix(err.Error(), "Status:(401)") {
+			return fmt.Errorf("UpdateRoleBinding failed with err: %v", err)
 		}
 	}
 

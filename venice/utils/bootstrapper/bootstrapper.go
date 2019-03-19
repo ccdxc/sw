@@ -42,7 +42,7 @@ func (b *bootstrapper) IsBootstrapped(tenant string, id FeatureID) (bool, error)
 		b.logger.Errorf("Feature with id [%v] not found", id)
 		return ok, ErrFeatureNotFound
 	}
-	return feature.IsBootstrapped(tenant), nil
+	return feature.IsBootstrapped(tenant)
 }
 
 func (b *bootstrapper) IsFlagSet(tenant string, id FeatureID) (bool, error) {
