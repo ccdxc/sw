@@ -1,10 +1,12 @@
 #! /usr/bin/python3
 import time
+import filecmp
+import os
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as netagent_cfg_api
 
 def Setup(tc):
-    api.Logger.info("IPSec iperf SETUP")
+    api.Logger.info("IPSec nc SETUP")
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -81,7 +83,7 @@ def Trigger(tc):
 
       req1 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-      cmd_info = "IPSec policy on %s BEFORE running iperf traffic" % (w1.node_name)
+      cmd_info = "IPSec policy on %s BEFORE running nc traffic" % (w1.node_name)
       tc.cmd_cookies1.append(cmd_info)
 
       api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name, "sudo ip xfrm policy show; sudo ip xfrm state show")
@@ -189,7 +191,7 @@ def Trigger(tc):
 
         req2 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-        cmd_info2 = "IPSec policy on %s BEFORE running iperf traffic" % (w2.node_name)
+        cmd_info2 = "IPSec policy on %s BEFORE running nc traffic" % (w2.node_name)
         tc.cmd_cookies2.append(cmd_info2)
         api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name, "sudo ip xfrm policy show; sudo ip xfrm state show")
 
@@ -239,105 +241,128 @@ def Trigger(tc):
     bypass_test = 0
 
     if w1.IsNaples() and w2.IsNaples():
-        api.Logger.info("Both workloads are Naples, %s is iperf client, %s is iperf server, bypassing test" % (w1.node_name, w2.node_name))
-        iperf_client_wl = w1
-        iperf_server_wl = w2
+        api.Logger.info("Both workloads are Naples, %s is nc client, %s is nc server, bypassing test" % (w1.node_name, w2.node_name))
+        nc_client_wl = w1
+        nc_server_wl = w2
         bypass_test = 1
     elif w1.IsNaples():
-        api.Logger.info("%s is Naples and iperf client, %s is iperf server" % (w1.node_name, w2.node_name))
-        iperf_client_wl = w1
-        iperf_server_wl = w2
+        api.Logger.info("%s is Naples and nc client, %s is nc server" % (w1.node_name, w2.node_name))
+        nc_client_wl = w1
+        nc_server_wl = w2
     elif w2.IsNaples():
-        api.Logger.info("%s is Naples and iperf client, %s is iperf server" % (w2.node_name, w1.node_name))
-        iperf_client_wl = w2
-        iperf_server_wl = w1
+        api.Logger.info("%s is Naples and nc client, %s is nc server" % (w2.node_name, w1.node_name))
+        nc_client_wl = w2
+        nc_server_wl = w1
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     if w2.IsNaples():
-        cmd_cookie = "IPSec state on %s BEFORE running iperf traffic" % (w2.node_name)
+        cmd_cookie = "IPSec state on %s BEFORE running nc traffic" % (w2.node_name)
         api.Trigger_AddNaplesCommand(req, w2.node_name, "/nic/bin/halctl show ipsec-global-stats")
         tc.cmd_cookies.append(cmd_cookie)
     else:
-        cmd_cookie = "IPSec state on %s BEFORE running iperf traffic" % (w2.node_name)
+        cmd_cookie = "IPSec state on %s BEFORE running nc traffic" % (w2.node_name)
         api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, "sudo ip xfrm policy show")
         tc.cmd_cookies.append(cmd_cookie)        
 
     if w1.IsNaples():
-        cmd_cookie = "IPSec state on %s BEFORE running iperf traffic" % (w1.node_name)
+        cmd_cookie = "IPSec state on %s BEFORE running nc traffic" % (w1.node_name)
         api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show ipsec-global-stats")
         tc.cmd_cookies.append(cmd_cookie)
     else:
-        cmd_cookie = "IPSec state on %s BEFORE running iperf traffic" % (w1.node_name)
+        cmd_cookie = "IPSec state on %s BEFORE running nc traffic" % (w1.node_name)
         api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, "sudo ip xfrm policy show")
         tc.cmd_cookies.append(cmd_cookie)        
 
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s) on %s port %s" %\
-                   (iperf_server_wl.workload_name, iperf_server_wl.ip_address, iperf_client_wl.workload_name, iperf_client_wl.ip_address, tc.iterators.protocol, tc.iterators.port)
+                   (nc_server_wl.workload_name, nc_server_wl.ip_address, nc_client_wl.workload_name, nc_client_wl.ip_address, tc.iterators.protocol, tc.iterators.port)
    
-    api.Logger.info("Starting Iperf test over IPSec from %s" % (tc.cmd_descr))
+    api.Logger.info("Starting NC test over IPSec from %s" % (tc.cmd_descr))
 
     if bypass_test == 0:
-      cmd_cookie = "Set rcv socket buffer size on %s" %(w1.workload_name)
-      api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                           "sysctl -w net.ipv4.tcp_rmem='4096 2147483647 2147483647'")
-      tc.cmd_cookies.append(cmd_cookie)
+        cmd_cookie = "Creating test file on %s" % (nc_client_wl.workload_name)
+        api.Trigger_AddCommand(req, nc_client_wl.node_name, nc_client_wl.workload_name,
+                               "base64 /dev/urandom | head -1000 > ipsec_client.dat")
+        tc.cmd_cookies.append(cmd_cookie)
 
-      cmd_cookie = "Set rcv socket buffer size on %s" %(w2.workload_name)
-      api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
-                           "sysctl -w net.ipv4.tcp_rmem='4096 2147483647 2147483647'")
-      tc.cmd_cookies.append(cmd_cookie)
-
-      cmd_cookie = "Setting MTU to smaller value on %s" % (iperf_client_wl.workload_name)
-      api.Trigger_AddCommand(req, iperf_client_wl.node_name, iperf_client_wl.workload_name,
-                             "ifconfig %s mtu 1048" % iperf_client_wl.interface)
-      tc.cmd_cookies.append(cmd_cookie)
-
-      cmd_cookie = "Running iperf server on %s" % (iperf_server_wl.workload_name)
-      api.Trigger_AddCommand(req, iperf_server_wl.node_name, iperf_server_wl.workload_name,
-                           "iperf3 -s -p %s" % (tc.iterators.port), background = True)
-      tc.cmd_cookies.append(cmd_cookie)
+        cmd_cookie = "Setting MTU to smaller value on %s" % (nc_client_wl.workload_name)
+        api.Trigger_AddCommand(req, nc_client_wl.node_name, nc_client_wl.workload_name,
+                               "ifconfig %s mtu 1048" % nc_client_wl.interface)
+        tc.cmd_cookies.append(cmd_cookie)
     
-      cmd_cookie = "Running iperf client on %s" % (iperf_client_wl.workload_name)
-      if tc.iterators.protocol == "tcp":
-          api.Trigger_AddCommand(req, iperf_client_wl.node_name, iperf_client_wl.workload_name,
-                                 "iperf3 -c %s -p %s -M %s" % (iperf_server_wl.ip_address, tc.iterators.port, tc.iterators.pktsize))
-      else:
-          api.Trigger_AddCommand(req, iperf_client_wl.node_name, iperf_client_wl.workload_name,
-                                 "iperf3 --udp -c %s -p %s -M %s" % (iperf_server_wl.ip_address, tc.iterators.port, tc.iterators.pktsize))
-      tc.cmd_cookies.append(cmd_cookie)
-    
-    if w1.IsNaples():
-        cmd_cookie = "IPSec state on %s AFTER running iperf traffic" % (w1.node_name)
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show ipsec-global-stats")
+        cmd_cookie = "Running nc server on %s" % (nc_server_wl.workload_name)
+        if tc.iterators.protocol == "tcp":
+            api.Trigger_AddCommand(req, nc_server_wl.node_name, nc_server_wl.workload_name,
+                                   "nc -l %s > ipsec_server.dat" % (tc.iterators.port), background = True)
+        else:
+            api.Trigger_AddCommand(req, nc_server_wl.node_name, nc_server_wl.workload_name,
+                                   "nc --udp -l %s > ipsec_server.dat" % (tc.iterators.port), background = True)
+        tc.cmd_cookies.append(cmd_cookie)
+
+        cmd_cookie = "Running nc client on %s" % (nc_client_wl.workload_name)
+        if tc.iterators.protocol == "tcp":
+            api.Trigger_AddCommand(req, nc_client_wl.node_name, nc_client_wl.workload_name,
+                                   "nc %s %s < ipsec_client.dat" % (nc_server_wl.ip_address, tc.iterators.port))
+        else:
+            api.Trigger_AddCommand(req, nc_client_wl.node_name, nc_client_wl.workload_name,
+                                   "nc --udp %s %s < ipsec_client.dat" % (nc_server_wl.ip_address, tc.iterators.port))
         tc.cmd_cookies.append(cmd_cookie)
     else:
-        cmd_cookie = "IPSec state on %s AFTER running iperf traffic" % (w1.node_name)
-        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, "sudo ip xfrm policy show")
+        cmd_cookie = "Creating dummy file on %s" % (nc_client_wl.workload_name)
+        api.Trigger_AddCommand(req, nc_client_wl.node_name, nc_client_wl.workload_name,
+                               "rm -f ipsec_client.dat ; touch ipsec_client.dat")
+        tc.cmd_cookies.append(cmd_cookie)
+
+        cmd_cookie = "Creating dummy file on %s" % (nc_server_wl.workload_name)
+        api.Trigger_AddCommand(req, nc_server_wl.node_name, nc_server_wl.workload_name,
+                               "rm -f ipsec_server.dat ; touch ipsec_server.dat")
+        tc.cmd_cookies.append(cmd_cookie)
+
+    if nc_client_wl.IsNaples():
+        cmd_cookie = "IPSec state on %s AFTER running nc test" % (nc_client_wl.node_name)
+        api.Trigger_AddNaplesCommand(req, nc_client_wl.node_name, "/nic/bin/halctl show ipsec-global-stats")
+        tc.cmd_cookies.append(cmd_cookie)
+    else:
+        cmd_cookie = "IPSec state on %s AFTER running nc test" % (nc_client_wl.node_name)
+        api.Trigger_AddCommand(req, nc_client_wl.node_name, nc_client_wl.workload_name, "sudo ip xfrm policy show")
         tc.cmd_cookies.append(cmd_cookie) 
 
-    if w2.IsNaples():
-        cmd_cookie = "IPSec state on %s AFTER running iperf traffic" % (w2.node_name)
-        api.Trigger_AddNaplesCommand(req, w2.node_name, "/nic/bin/halctl show ipsec-global-stats")
+    if nc_server_wl.IsNaples():
+        cmd_cookie = "IPSec state on %s AFTER running nc test" % (nc_server_wl.node_name)
+        api.Trigger_AddNaplesCommand(req, nc_server_wl.node_name, "/nic/bin/halctl show ipsec-global-stats")
         tc.cmd_cookies.append(cmd_cookie)
     else:
-        cmd_cookie = "IPSec state on %s AFTER running iperf traffic" % (w2.node_name)
-        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, "sudo ip xfrm policy show")
+        cmd_cookie = "IPSec state on %s AFTER running nc test" % (nc_server_wl.node_name)
+        api.Trigger_AddCommand(req, nc_server_wl.node_name, nc_server_wl.workload_name, "sudo ip xfrm policy show")
         tc.cmd_cookies.append(cmd_cookie) 
 
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
 
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    resp = api.CopyFromWorkload(nc_client_wl.node_name, nc_client_wl.workload_name, ['ipsec_client.dat'], tc.GetLogsDir())
+    if resp is None:
+        api.Logger.error("Could not find ipsec_client.dat")
+        return api.types.status.FAILURE
+    resp = api.CopyFromWorkload(nc_server_wl.node_name, nc_server_wl.workload_name, ['ipsec_server.dat'], tc.GetLogsDir())
+    if resp is None:
+        api.Logger.error("Could not find ipsec_server.dat")
+        return api.types.status.FAILURE
     return api.types.status.SUCCESS
     
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
+    file1 = tc.GetLogsDir() + '/ipsec_client.dat'
+    file2 = tc.GetLogsDir() + '/ipsec_server.dat'
+    if not filecmp.cmp(file1, file2, shallow=False):
+        api.Logger.error("Client and server files do not match")
+        return api.types.status.FAILURE
+
     result = api.types.status.SUCCESS
     cookie_idx = 0
-    api.Logger.info("Iperf Results for %s" % (tc.cmd_descr))
+    api.Logger.info("NC Results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
         api.Logger.info("%s" % (tc.cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)

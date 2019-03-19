@@ -9,5 +9,14 @@ testcases:
         testcase: testcases.ipsec.iperf
         iterators:
             type  : nested
+            protocol : [tcp, udp]
             port  : [20001, 20002]
             pktsize : [96, 128, 256, 512, 1024, 2048, 4096, 8192]
+
+    -   name    : nc_over_ipsec
+        testcase: testcases.ipsec.nc_client
+        iterators:
+            type  : nested
+            protocol : [tcp]
+            port  : [20001, 20002]
+ 
