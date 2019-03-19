@@ -49,14 +49,16 @@ vnic_impl::destroy(vnic_impl *impl) {
 sdk_ret_t
 vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t          ret;
+    uint32_t           idx;
     pds_vnic_spec_t    *spec = &obj_ctxt->api_params->vnic_spec;
 
     // allocate hw id for this vnic
-    if (vnic_impl_db()->vnic_idxr()->alloc((uint32_t *)&hw_id_) !=
+    if (vnic_impl_db()->vnic_idxr()->alloc(&idx) !=
             sdk::lib::indexer::SUCCESS) {
         PDS_TRACE_ERR("Failed to allocate hw id for vnic %u", spec->key.id);
         return sdk::SDK_RET_NO_RESOURCE;
     }
+    hw_id_ = idx;
 
     // reserve an entry in LOCAL_VNIC_BY_VLAN_TX table
     ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->reserve_index(spec->wire_vlan);

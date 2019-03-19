@@ -21,7 +21,8 @@ sdk_logger::trace_cb_t    g_trace_cb;
 
 namespace api {
 
-static bool g_delay_delete = true;
+// TODO: provide an API to enable/disable this ?
+static bool g_delay_delete = false;
 
 /**
  * @brief callback invoked by the timerwheel to release an object to its slab

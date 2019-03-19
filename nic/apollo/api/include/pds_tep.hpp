@@ -18,7 +18,7 @@
 /// \defgroup PDS_TEP Tunnel End Point API
 /// @{
 
-#define PDS_MAX_TEP 1024
+#define PDS_MAX_TEP 1023
 
 /// \brief Encapsulation type
 typedef enum pds_tep_encap_type_e {

@@ -21,6 +21,12 @@ namespace impl {
 /// \ingroup PDS_TEP
 /// @{
 
+#define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
+#define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
+#define nh_tx_action              action_u.nexthop_tx_nexthop_info
+// TODO: fix this when fte plugin is available
+#define PDS_REMOTE_TEP_MAC        0x0E0D0A0B0200
+
 tep_impl *
 tep_impl::factory(pds_tep_spec_t *pds_tep) {
     tep_impl *impl;
@@ -41,18 +47,24 @@ tep_impl::destroy(tep_impl *impl) {
 sdk_ret_t
 tep_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
+    uint32_t idx;
 
     // reserve an entry in TEP_TX table
-    ret = tep_impl_db()->tep_tx_tbl()->reserve((uint32_t *)&hw_id_);
+    ret = tep_impl_db()->tep_tx_tbl()->reserve(&idx);
     if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in TEP_TX table, err %u", ret);
         return ret;
     }
+    hw_id_ = idx & 0xFFFF;
 
     // reserve an entry in NH_TX table
-    ret = tep_impl_db()->nh_tx_tbl()->reserve((uint32_t *)&nh_id_);
+    ret = tep_impl_db()->nh_tx_tbl()->reserve(&idx);
     if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in NH_TX table, err %u", ret);
+
         return ret;
     }
+    nh_id_ = idx & 0xFFFF;
     return SDK_RET_OK;
 }
 
@@ -82,11 +94,6 @@ tep_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
-#define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
-#define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
-#define nh_tx_action              action_u.nexthop_tx_nexthop_info
-// TODO: fix this when fte plugin is available
-#define PDS_REMOTE_TEP_MAC        0x0E0D0A0B0200
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                  ret;
@@ -149,13 +156,23 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nexthop id %u",
                     ipv4addr2str(tep_spec->key.ip_addr),
                     PDS_REMOTE_TEP_MAC, hw_id_, nh_id_);
+#if 0
+    {
+        char buff[2048];
+        tep_impl_db()->nh_tx_tbl()->retrieve(nh_id_, &nh_tx_data);
+        tep_impl_db()->nh_tx_tbl()->entry_to_str(&nh_tx_data, nh_id_,
+                                                 buff, sizeof(buff));
+        PDS_TRACE_DEBUG("NH entry %s", buff);
+    }
+#endif
 
     return ret;
 }
 
 sdk_ret_t
 tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    //TODO: need to update these entries or entries that are pointing to these entries with new epoch and valid bit set to FALSE
+    //TODO: need to update these entries or entries that are pointing to these
+    // entries with new epoch and valid bit set to FALSE
     //if (hw_id_ != 0xFFFF) {
     //      tep_impl_db()->tep_tx_tbl()->remove(hw_id_);
     //}
@@ -201,15 +218,20 @@ void
 tep_impl::fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
                      tep_tx_actiondata_t *tep_tx_data, pds_tep_spec_t *spec)
 {
-    switch (nh_tx_data->action_u.nexthop_tx_nexthop_info.encap_type) {
-    case GW_ENCAP:
-        spec->encap_type = PDS_TEP_ENCAP_TYPE_GW_ENCAP;
-        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
-        break;
-    case VNIC_ENCAP:
-        spec->encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
-        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_mpls_udp_tep_tx.dipo;
-        break;
+    if (tep_tx_data->action_id == TEP_TX_MPLS_UDP_TEP_TX_ID) {
+        switch (nh_tx_data->nh_tx_action.encap_type) {
+        case GW_ENCAP:
+            spec->encap_type = PDS_TEP_ENCAP_TYPE_GW_ENCAP;
+            spec->key.ip_addr = tep_tx_data->tep_tx_mpls_udp_action.dipo;
+            break;
+        case VNIC_ENCAP:
+            spec->encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
+            spec->key.ip_addr = tep_tx_data->tep_tx_mpls_udp_action.dipo;
+            break;
+        }
+    } else if (tep_tx_data->action_id == TEP_TX_VXLAN_TEP_TX_ID) {
+        spec->encap_type = PDS_TEP_ENCAP_TYPE_VXLAN;
+        spec->key.ip_addr = tep_tx_data->tep_tx_vxlan_action.dipo;
     }
 }
 
@@ -222,7 +244,6 @@ tep_impl::read_hw(pds_tep_info_t *info) {
                                              &nh_tx_data) != SDK_RET_OK) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
-
     if (tep_impl_db()->tep_tx_tbl()->retrieve(hw_id_,
                                               &tep_tx_data) != SDK_RET_OK) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;

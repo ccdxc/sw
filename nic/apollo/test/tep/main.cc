@@ -182,7 +182,7 @@ TEST_F(tep_test, tep_create) {
 
 /// \brief Read an existing TEP
 /// Create a TEP and then read & validate
-TEST_F(tep_test, DISABLED_tep_read) {
+TEST_F(tep_test, tep_read) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj("10.1.1.2/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -192,7 +192,6 @@ TEST_F(tep_test, DISABLED_tep_read) {
     ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // TODO: read for directmap tables do NOT work.
     // turning off validation (sending 'FALSE') until then.
     ASSERT_TRUE(tep_obj.read(&info, FALSE) == sdk::SDK_RET_OK);
 
@@ -375,7 +374,7 @@ TEST_F(tep_test, tep_delete_create_delete) {
 
 /// \brief delete create delete in same batch
 /// Delete, Create & Delete multiple unique valid TEPs in single batch
-TEST_F(tep_test, DISABLED_tep_delete_create_delete_1) {
+TEST_F(tep_test, tep_delete_create_delete_1) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     tep_util tep_obj1("10.1.1.11/8", PDS_TEP_ENCAP_TYPE_VNIC);
@@ -450,7 +449,7 @@ TEST_F(tep_test, DISABLED_tep_max_create) {
 TEST_F(tep_test, DISABLED_tep_beyondmax_create) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
-    uint32_t num_teps = PDS_MAX_TEP - 1;
+    uint32_t num_teps = PDS_MAX_TEP;
     std::string tep_first_ip_str = "10.20.1.1/8";
     tep_util tep_obj("10.20.5.1/8");
 
@@ -472,7 +471,7 @@ TEST_F(tep_test, DISABLED_tep_beyondmax_create) {
     ASSERT_TRUE(tep_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     // Teardown
-    num_teps = PDS_MAX_TEP - 1;
+    num_teps = PDS_MAX_TEP;
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_delete(
@@ -617,8 +616,7 @@ TEST_F(tep_test, DISABLED_tep_multi_max_create_1) {
 }
 
 /// \brief Delete max no of TEPs in a single batch
-///
-TEST_F(tep_test, DISABLED_tep_multi_max_delete) {
+TEST_F(tep_test, tep_multi_max_delete) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP;
@@ -683,7 +681,7 @@ TEST_F(tep_test, DISABLED_tep_multi_max_delete_1) {
 
 /// \brief Create 1 + PDS_MAX_TEP no of TEPs in a single batch
 /// Attempt to create more than supported no of TEPs in a single batch
-TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create) {
+TEST_F(tep_test, tep_multi_beyondmax_create) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP + 1;
@@ -713,7 +711,7 @@ TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create) {
 /// \brief Create 1 + (PDS_MAX_TEP/2) no of TEPs in a single batch
 /// Attempt to create 1+(PDS_MAX_TEP/2) no of TEPs in a single batch
 //  when the table is already half full
-TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create_1) {
+TEST_F(tep_test, tep_multi_beyondmax_create_1) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP / 2;
@@ -730,8 +728,8 @@ TEST_F(tep_test, DISABLED_tep_multi_beyondmax_create_1) {
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Trigger
-    // create 1 + (PDS_MAX_TEP/2) no of TEPs in a single batch
-    num_teps = 1 + (PDS_MAX_TEP / 2);
+    // create 1 more than the max no of TEPs in a single batch
+    num_teps = 2 + (PDS_MAX_TEP / 2);
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str_2,
@@ -1241,7 +1239,9 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_1) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(num_teps, tep_first_ip_str,
         PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_INVALID_OP);
+    // abort the batch as it failed as expected
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // verify first tep exists
     ASSERT_TRUE(tep_obj_1.read(&info) == sdk::SDK_RET_OK);
