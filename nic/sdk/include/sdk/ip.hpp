@@ -335,7 +335,7 @@ static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
     return os << ipv6addr2str(ip);
 }
 
-#define IPADDR_EQ(ipaddr1, ipaddr2) !memcmp(ipaddr1, ipaddr2, sizeof(ip_addr_t))
+#define IPADDR_EQ(ipaddr1, ipaddr2) ip_addr_is_equal(ipaddr1, ipaddr2)
 
 #define IPADDR_LT(ipaddr1, ipaddr2) ip_addr_is_lessthan(ipaddr1, ipaddr2)
 
@@ -461,7 +461,7 @@ ip_prefix_ip_high (ip_prefix_t *pfx, ip_addr_t *ipaddr)
         ipv6_addr_t    v6_mask;
         ipv6_prefix_len_to_mask(&v6_mask, pfx->len);
         for (uint8_t i = 0; i < IP6_ADDR32_LEN; i++) {
-            ipaddr->addr.v6_addr.addr32[i] |= v6_mask.addr32[i];
+            ipaddr->addr.v6_addr.addr32[i] |= ~v6_mask.addr32[i];
         }
     }
 }
@@ -478,9 +478,9 @@ ip_prefix_ip_next (ip_prefix_t *pfx, ip_addr_t *ipaddr)
             ipaddr->addr.v4_addr += 1;
         }
     } else if (ipaddr->af == IP_AF_IPV6) {
-        if (likely((ipaddr->addr.v6_addr.addr64[0] != ((uint64_t)-1)) &&
-                   (ipaddr->addr.v6_addr.addr64[0] != ((uint64_t)-1)))) {
-            for (uint8_t i = 0; i < IP6_ADDR8_LEN; i++) {
+        if (likely(!((ipaddr->addr.v6_addr.addr64[0] == ((uint64_t)-1)) &&
+                     (ipaddr->addr.v6_addr.addr64[1] == ((uint64_t)-1))))) {
+            for (uint8_t i = IP6_ADDR8_LEN - 1; i >= 0 ; i--) {
                 // keep adding one until there is no rollover
                 if ((++(ipaddr->addr.v6_addr.addr8[i]))) {
                     break;
@@ -518,33 +518,33 @@ ip_addr_is_lessthan (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
     if (ip_addr1->af == IP_AF_IPV4) {
         return ((ip_addr1)->addr.v4_addr < (ip_addr2)->addr.v4_addr);
     } else {
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[0]) <
-            htonl((ip_addr2)->addr.v6_addr.addr32[0])) {
-            return true;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[0]) >
-            htonl((ip_addr2)->addr.v6_addr.addr32[0])) {
-            return false;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[1]) <
-            htonl((ip_addr2)->addr.v6_addr.addr32[1])) {
-            return true;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[1]) >
-            htonl((ip_addr2)->addr.v6_addr.addr32[1])) {
-            return false;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[2]) <
-            htonl((ip_addr2)->addr.v6_addr.addr32[2])) {
-            return true;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[2]) >
-            htonl((ip_addr2)->addr.v6_addr.addr32[2])) {
-            return false;
-        } else {
-            return (htonl((ip_addr1)->addr.v6_addr.addr32[3]) <
-                    htonl((ip_addr2)->addr.v6_addr.addr32[3]));
+        for (uint8_t i = 0; i < IP6_ADDR32_LEN; i++) {
+            if (htonl((ip_addr1)->addr.v6_addr.addr32[i]) <
+                htonl((ip_addr2)->addr.v6_addr.addr32[i])) {
+                return true;
+            } else
+            if (htonl((ip_addr1)->addr.v6_addr.addr32[i]) >
+                htonl((ip_addr2)->addr.v6_addr.addr32[i])) {
+                return false;
+            }
         }
+        return false;
+    }
+}
+
+static inline bool
+ip_addr_is_equal (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
+{
+    if (ip_addr1->af == IP_AF_IPV4) {
+        return ((ip_addr1)->addr.v4_addr == (ip_addr2)->addr.v4_addr);
+    } else {
+        for (uint8_t i = 0; i < IP6_ADDR32_LEN; i++) {
+            if (htonl((ip_addr1)->addr.v6_addr.addr32[i]) !=
+                htonl((ip_addr2)->addr.v6_addr.addr32[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
@@ -554,33 +554,17 @@ ip_addr_is_greaterthan (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
     if (ip_addr1->af == IP_AF_IPV4) {
         return ((ip_addr1)->addr.v4_addr > (ip_addr2)->addr.v4_addr);
     } else {
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[0]) >
-            htonl((ip_addr2)->addr.v6_addr.addr32[0])) {
-            return true;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[0]) <
-            htonl((ip_addr2)->addr.v6_addr.addr32[0])) {
-            return false;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[1]) >
-            htonl((ip_addr2)->addr.v6_addr.addr32[1])) {
-            return true;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[1]) <
-            htonl((ip_addr2)->addr.v6_addr.addr32[1])) {
-            return false;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[2]) >
-            htonl((ip_addr2)->addr.v6_addr.addr32[2])) {
-            return true;
-        } else
-        if (htonl((ip_addr1)->addr.v6_addr.addr32[2]) <
-            htonl((ip_addr2)->addr.v6_addr.addr32[2])) {
-            return false;
-        } else {
-            return (htonl((ip_addr1)->addr.v6_addr.addr32[3]) >
-                    htonl((ip_addr2)->addr.v6_addr.addr32[3]));
+        for (uint8_t i = 0; i < IP6_ADDR32_LEN; i++) {
+            if (htonl((ip_addr1)->addr.v6_addr.addr32[i]) >
+                htonl((ip_addr2)->addr.v6_addr.addr32[i])) {
+                return true;
+            } else
+            if (htonl((ip_addr1)->addr.v6_addr.addr32[i]) <
+                htonl((ip_addr2)->addr.v6_addr.addr32[i])) {
+                return false;
+            }
         }
+        return false;
     }
 }
 

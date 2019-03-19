@@ -191,7 +191,7 @@ static inline sdk_ret_t
 lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
 {
     stack<itable_stack_elem_t>    s;
-    itable_stack_elem_t           elem, end;
+    itable_stack_elem_t           elem = {}, end = {};
     uint32_t                      num_intervals = 0;
 
     /**< create a stack elem with the highest prefix & invalid nh */
