@@ -325,6 +325,12 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 		return err
 	}
 
+	err = na.Solver.Remove(ns, existingSGPolicy)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", existingSGPolicy.Namespace, err)
+		return err
+	}
+
 	// delete from db
 	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
