@@ -98,8 +98,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 
 		s.tmagent.resolverClient = resolver.New(&resolver.Config{Name: globals.Tmagent, Servers: controllers})
 
-		// todo: move to the uniqe name published by NMD when it is ready
-		s.tmagent.nodeUUID = obj.Hostname + obj.Fru.MacStr
+		s.tmagent.nodeUUID = obj.SmartNicName
 		log.Infof("tmagent uuid: %s", s.tmagent.nodeUUID)
 
 		// Init the TSDB
