@@ -91,7 +91,7 @@ type Controller interface {
 }
 
 // NewController creates a new instance of controler
-func NewController(name string, apisrvURL string, resolver resolver.Interface) (Controller, error) {
+func NewController(name string, apisrvURL string, resolver resolver.Interface, logger log.Logger) (Controller, error) {
 	keyTags := map[string]string{"node": "venice", "module": name, "kind": "CtkitStats"}
 	tsdbObj, err := tsdb.NewObj("CtkitStats", keyTags, nil, nil)
 	if err != nil {
@@ -103,7 +103,7 @@ func NewController(name string, apisrvURL string, resolver resolver.Interface) (
 	ctrl := ctrlerCtx{
 		name:        name,
 		apisrvURL:   apisrvURL,
-		logger:      log.GetNewLogger(log.GetDefaultConfig(name + "Watcher")),
+		logger:      logger.WithContext("submodule", name+"-Watcher"),
 		resolver:    resolver,
 		balancer:    balancer.New(resolver),
 		stoped:      false,

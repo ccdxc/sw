@@ -90,14 +90,14 @@ func (sm *Statemgr) Stop() error {
 }
 
 // NewStatemgr creates a new state manager object
-func NewStatemgr(apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer) (*Statemgr, error) {
+func NewStatemgr(apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer, logger log.Logger) (*Statemgr, error) {
 	// create new statemgr instance
 	statemgr := &Statemgr{
 		mbus: mserver,
 	}
 
 	// create controller instance
-	ctrler, err := ctkit.NewController(globals.Npm, apisrvURL, rslvr)
+	ctrler, err := ctkit.NewController(globals.Npm, apisrvURL, rslvr, logger)
 	if err != nil {
 		log.Fatalf("Error creating controller. Err: %v", err)
 	}

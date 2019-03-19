@@ -194,7 +194,7 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 	}
 
 	// restart the NPM
-	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, "", it.resolverClient)
+	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, "", it.resolverClient, it.logger.WithContext("submodule", "pen-npm"))
 	c.Assert(err, IsNil)
 	time.Sleep(time.Millisecond * 100)
 

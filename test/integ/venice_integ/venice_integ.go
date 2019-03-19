@@ -905,7 +905,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	c.Assert(err, check.IsNil)
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, globals.APIServer, "", rc)
+	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, globals.APIServer, "", rc, logger.WithContext("submodule", "pen-npm"))
 	c.Assert(err, check.IsNil)
 	it.ctrler = ctrler
 

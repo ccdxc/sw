@@ -25,7 +25,7 @@ func newStatemgr() (*Statemgr, error) {
 	}
 
 	// create network state manager
-	stateMgr, err := NewStatemgr(globals.APIServer, nil, msrv)
+	stateMgr, err := NewStatemgr(globals.APIServer, nil, msrv, log.GetNewLogger(log.GetDefaultConfig("npm-test")))
 	if err != nil {
 		log.Errorf("Could not create network manager. Err: %v", err)
 		return nil, err

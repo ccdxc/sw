@@ -334,8 +334,13 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 		if err == nil {
 			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
 				sgpRPCClient := netproto.NewSGPolicyApiClient(client.sgpGrpcClient.ClientConn)
-				log.Infof("SGPolicy: Sending update back {%+v}", &evt.SGPolicy)
-				sgpRPCClient.UpdateSGPolicy(context.Background(), &evt.SGPolicy)
+				rsgp := netproto.SGPolicy{
+					TypeMeta:   evt.SGPolicy.TypeMeta,
+					ObjectMeta: evt.SGPolicy.ObjectMeta,
+					Status:     evt.SGPolicy.Status,
+				}
+				log.Infof("SGPolicy: Sending update back {%+v}", &rsgp)
+				sgpRPCClient.UpdateSGPolicy(context.Background(), &rsgp)
 			}
 			return
 		}

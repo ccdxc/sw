@@ -66,7 +66,7 @@ func main() {
 
 	r := resolver.New(&resolver.Config{Name: "npm", Servers: strings.Split(*resolverURLs, ",")})
 	// create the controller
-	ctrler, err := npm.NewNetctrler(*listenURL, *restURL, globals.APIServer, globals.VCHub, r)
+	ctrler, err := npm.NewNetctrler(*listenURL, *restURL, globals.APIServer, globals.VCHub, r, logger)
 	if err != nil || ctrler == nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}

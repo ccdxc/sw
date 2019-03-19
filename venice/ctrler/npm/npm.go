@@ -51,7 +51,7 @@ type Netctrler struct {
 }
 
 // NewNetctrler returns a controller instance
-func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface) (*Netctrler, error) {
+func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface, logger log.Logger) (*Netctrler, error) {
 
 	debugStats := debugStats.New(restURL).Build()
 
@@ -73,7 +73,7 @@ func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolve
 	}
 
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr(apisrvURL, resolver, msrv)
+	stateMgr, err := statemgr.NewStatemgr(apisrvURL, resolver, msrv, logger)
 	if err != nil {
 		log.Errorf("Could not create network manager. Err: %v", err)
 		return nil, err
