@@ -338,7 +338,7 @@ func (n *NMD) SendNICUpdates() error {
 					{
 						Type:               cmd.SmartNICCondition_HEALTHY.String(),
 						Status:             cmd.ConditionStatus_TRUE.String(),
-						LastTransitionTime: time.Now().Format(time.RFC3339),
+						LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
 					},
 				},
 			}

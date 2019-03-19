@@ -456,7 +456,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			cmd.SmartNICCondition{
 				Type:               cmd.SmartNICCondition_HEALTHY.String(),
 				Status:             cmd.ConditionStatus_TRUE.String(),
-				LastTransitionTime: time.Now().Format(time.RFC3339),
+				LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
 			},
 			"esx-1",
 		},
@@ -478,7 +478,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			cmd.SmartNICCondition{
 				Type:               cmd.SmartNICCondition_HEALTHY.String(),
 				Status:             cmd.ConditionStatus_FALSE.String(),
-				LastTransitionTime: time.Now().Format(time.RFC3339),
+				LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
 			},
 			"esx-3",
 		},
@@ -491,7 +491,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			cmd.SmartNICCondition{
 				Type:               cmd.SmartNICCondition_HEALTHY.String(),
 				Status:             cmd.ConditionStatus_TRUE.String(),
-				LastTransitionTime: time.Now().Format(time.RFC3339),
+				LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
 			},
 			"esx-4",
 		},

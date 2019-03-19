@@ -79,8 +79,10 @@ type apiGw struct {
 	authzMgr        authz.Authorizer
 	bootstrapper    bootstrapper.Bootstrapper
 	rslver          resolver.Interface
-	auditor         audit.Auditor
-	keypair         cert.KeyPair
+	sharedResolver  bool // whether resolver is passed in config and hence possibly shared with other components.
+	// expected to be true only in integ tests
+	auditor audit.Auditor
+	keypair cert.KeyPair
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -358,6 +360,8 @@ func (a *apiGw) Run(config apigw.Config) {
 		if len(config.Resolvers) > 0 {
 			a.rslver = resolver.New(&resolver.Config{Name: globals.APIGw, Servers: config.Resolvers})
 		}
+	} else {
+		a.sharedResolver = true
 	}
 	a.logger.Infof("Resolving via %v", config.Resolvers)
 
@@ -508,7 +512,7 @@ func (a *apiGw) Stop() {
 	a.authzMgr.Stop()
 	a.auditor.Shutdown()
 	a.keypair.Stop()
-	if a.rslver != nil {
+	if !a.sharedResolver && a.rslver != nil {
 		a.rslver.Stop()
 	}
 	reinitAPIGw()

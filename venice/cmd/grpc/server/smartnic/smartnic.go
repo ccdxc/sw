@@ -696,6 +696,7 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 
 	// loop forever on watch channel
 	log.Infof("WatchNICs entering watch loop for SmartNIC: %s", sel.GetName())
+	var sentEvent grpc.SmartNICEvent
 	for {
 		select {
 		// read from channel
@@ -732,12 +733,16 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 				EventType: etype,
 				Nic:       *nic.SmartNIC,
 			}
-			log.Infof("Sending watch event for SmartNIC: %+v", watchEvt)
-			err = stream.Send(&watchEvt)
 			nic.Unlock()
-			if err != nil {
-				log.Errorf("Error sending stream. Err: %v closing watch", err)
-				return err
+			send := !runtime.FilterUpdate(sentEvent, watchEvt, []string{"LastTransitionTime"}, nil)
+			if send {
+				log.Infof("Sending watch event for SmartNIC: %+v", watchEvt)
+				err = stream.Send(&watchEvt)
+				if err != nil {
+					log.Errorf("Error sending stream. Err: %v closing watch", err)
+					return err
+				}
+				sentEvent = watchEvt
 			}
 		case <-ctx.Done():
 			return ctx.Err()
@@ -801,7 +806,7 @@ func (s *RPCServer) MonitorHealth() {
 							log.Infof("Updating NIC health to unknown, nic: %s DeadIntvl:%d", nic.Name, s.DeadIntvl)
 							lastUpdateTime := nic.Status.Conditions[i].LastTransitionTime
 							nic.Status.Conditions[i].Status = cluster.ConditionStatus_UNKNOWN.String()
-							nic.Status.Conditions[i].LastTransitionTime = time.Now().Format(time.RFC3339)
+							nic.Status.Conditions[i].LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
 							nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)
 							// push the update back to ApiServer
 							_, err := cl.SmartNIC().Update(context.Background(), nic)
@@ -892,7 +897,7 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 						{
 							Type:               cluster.SmartNICCondition_UNREACHABLE.String(),
 							Status:             cluster.ConditionStatus_TRUE.String(),
-							LastTransitionTime: time.Now().Format(time.RFC3339),
+							LastTransitionTime: time.Now().UTC().Format(time.RFC3339),
 							Reason:             fmt.Sprintf("Failed to post naples config after several attempts, response: %+v", resp),
 							Message:            fmt.Sprintf("Naples REST endpoint: %s:%s is not reachable", nic.Spec.IPConfig.IPAddress, s.RestPort),
 						},

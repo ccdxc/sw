@@ -35,13 +35,15 @@ func (r *ResolverClient) Register(o resolver.Observer) {
 func (r *ResolverClient) Deregister(o resolver.Observer) {
 	r.Lock()
 	defer r.Unlock()
-	var i int
+	i := -1
 	for i = range r.observers {
 		if r.observers[i] == o {
 			break
 		}
 	}
-	r.observers = append(r.observers[:i], r.observers[i+1:]...)
+	if i >= 0 {
+		r.observers = append(r.observers[:i], r.observers[i+1:]...)
+	}
 }
 
 // notify all observers, return first encountered err of the observers.
@@ -59,6 +61,9 @@ func (r *ResolverClient) notify(e protos.ServiceInstanceEvent) error {
 
 // Stop is a mock implementation of stopping the resolver client.
 func (r *ResolverClient) Stop() {
+	r.Lock()
+	defer r.Unlock()
+	r.observers = nil
 }
 
 // Lookup resolves a service to its instances.

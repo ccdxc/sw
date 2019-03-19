@@ -164,7 +164,7 @@ func (w *Watcher) watchEventPolicy(ctx context.Context) error {
 			evt, err := eventPolicyStream.Recv()
 			if err != nil {
 				w.logger.Errorf("received error from event policy channel: %v", err)
-				break
+				return err
 			}
 
 			w.logger.Debugf("got event policy watch event {%v}: %v", evt.EventType, evt.Policy)

@@ -242,20 +242,23 @@ func (tInfo *testInfo) teardown() {
 	// stop apiGW
 	tInfo.apiGw.Stop()
 
-	// stop apiServer
-	tInfo.apiServer.Stop()
-
-	// stop certificate server
-	testutils.CleanupIntegTLSProvider()
-
 	// stop evtsmgr
-	tInfo.evtsMgr.RPCServer.Stop()
+	tInfo.evtsMgr.Stop()
+	tInfo.esClient = nil
 
 	// stop evtproxy services
 	tInfo.evtProxyServices.Stop()
 
 	// delete the tmp events directory
 	os.RemoveAll(tInfo.evtsStoreConfig.Dir)
+
+	// stop apiServer
+	tInfo.apiServer.Stop()
+
+	// stop certificate server
+	testutils.CleanupIntegTLSProvider()
+
+	tInfo.mockResolver = nil
 }
 
 func (tInfo *testInfo) verifyElasticDocumentCount(t *testing.T, expectedIndexes uint64) {
@@ -275,12 +278,26 @@ func (tInfo *testInfo) verifyElasticDocumentCount(t *testing.T, expectedIndexes 
 					expectedIndexes, elasticCount)
 			}
 			return true, nil
-		}, "Failed to match index operations counter", "20ms", "2m")
+		}, "Failed to match index operations counter", "1s", "2m")
 }
 
 // updateResolver helper function to update mock resolver with the given service and URL
 func (tInfo *testInfo) updateResolver(serviceName, url string) {
 	tInfo.mockResolver.AddServiceInstance(&types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: serviceName,
+		},
+		Service: serviceName,
+		URL:     url,
+	})
+}
+
+// removeResolverEntry helper function to remove entry from mock resolver
+func (tInfo *testInfo) removeResolverEntry(serviceName, url string) {
+	tInfo.mockResolver.DeleteServiceInstance(&types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstance",
 		},
@@ -333,15 +350,16 @@ func getPolicySearchURL() string {
 // Test for deleted objects while spyglass is down
 func TestSpyglassErrorHandling(t *testing.T) {
 	var err error
-	log.Info("Starting Spyglass Error Handeling Test")
 
 	tInfo.mockResolver = mockresolver.New()
-	tInfo.l = logger
+	tInfo.l = logger.WithContext("t_name", t.Name())
+
+	tInfo.l.Info("Starting Spyglass Error Handeling Test")
 
 	AssertOk(t, tInfo.setup(t), "failed to setup test")
 	defer tInfo.teardown()
 
-	log.Info("Setup complete")
+	tInfo.l.Info("Setup complete")
 
 	ctx := context.Background()
 
@@ -363,13 +381,14 @@ func TestSpyglassErrorHandling(t *testing.T) {
 
 	// Stop API server
 	t.Logf("Restarting API server...")
-	log.Info("Stopping API Server")
+	tInfo.l.Info("Stopping API Server")
 	tInfo.apiServer.Stop()
+	tInfo.removeResolverEntry(globals.APIServer, tInfo.apiServerAddr)
 
 	time.Sleep(5 * time.Second)
 
 	// restart API server
-	log.Info("Restating API Server")
+	tInfo.l.Info("Restating API Server")
 	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", t.Name(), tInfo.l)
 	AssertOk(t, err, "Failed to start api server")
 	tInfo.updateResolver(globals.APIServer, tInfo.apiServerAddr)
@@ -382,7 +401,7 @@ func TestSpyglassErrorHandling(t *testing.T) {
 		}
 		tInfo.apiClient = apiCl
 		return true, nil
-	}, "failed to create gRPC client", "20ms", "2m")
+	}, "failed to create gRPC client", "1s", "2m")
 
 	DefaultTenantPolicyGenerator(ctx, tInfo.apiClient, objectCount, objectCount)
 	expectedIndexes += uint64(objectCount)
@@ -398,11 +417,11 @@ func TestSpyglassErrorHandling(t *testing.T) {
 					expectedIndexes, tInfo.idr.GetWriteCount()-currentWriteCount)
 			}
 			return true, nil
-		}, "Failed to match count of indexed objects", "20ms", "2m")
+		}, "Failed to match count of indexed objects", "1s", "2m")
 
 	tInfo.verifyElasticDocumentCount(t, expectedIndexes)
 
-	log.Info("Deleting objects")
+	tInfo.l.Info("Deleting objects")
 
 	// Verify deleting objects
 	DeleteDefaultTenantPolicyGenerator(ctx, tInfo.apiClient, objectCount, 0)
@@ -412,15 +431,16 @@ func TestSpyglassErrorHandling(t *testing.T) {
 
 	// Killing elastic and writing new objects to apiserver
 	// When elastic comes back up, indexer should write the new objects
-	log.Info("Stopping elastic ...")
+	tInfo.l.Info("Stopping elastic ...")
 	err = testutils.StopElasticsearch(tInfo.elasticServerName, tInfo.elasticDir)
 	AssertOk(t, err, "Failed to stop elastic search")
 
 	// Not run as a go routine because we want it to finish creating before we bring up elastic
 	DefaultTenantPolicyGenerator(ctx, tInfo.apiClient, objectCount, 2*objectCount)
 
-	log.Info("Starting elastic")
+	tInfo.l.Info("Starting elastic")
 	tInfo.elasticURL, tInfo.elasticDir, err = testutils.StartElasticsearch(tInfo.elasticServerName, tInfo.elasticDir, tInfo.signer, tInfo.trustRoots)
+	AssertOk(t, err, "Failed to start elastic search")
 	tInfo.updateResolver(globals.ElasticSearch, tInfo.elasticURL) // add mock elastic service to mock resolver
 
 	// Should only write new objects into elastic
@@ -429,7 +449,7 @@ func TestSpyglassErrorHandling(t *testing.T) {
 	// Should be the same as the number of entries in elastic
 	tInfo.verifyElasticDocumentCount(t, expectedIndexes)
 
-	log.Info("Test Complete")
+	tInfo.l.Info("Test Complete")
 	t.Logf("Done with Tests ....")
 }
 
@@ -445,15 +465,14 @@ func TestSpyglassErrorHandling(t *testing.T) {
 func TestSpyglass(t *testing.T) {
 	var err error
 
-	log.Info("Starting Spyglass test")
-
 	tInfo.mockResolver = mockresolver.New()
-	tInfo.l = logger
+	tInfo.l = logger.WithContext("t_name", t.Name())
+	tInfo.l.Info("Starting Spyglass test")
 
 	AssertOk(t, tInfo.setup(t), "failed to setup test")
 	defer tInfo.teardown()
 
-	log.Info("Setup complete")
+	tInfo.l.Info("Setup complete")
 
 	ctx := context.Background()
 
@@ -480,7 +499,7 @@ func TestSpyglass(t *testing.T) {
 
 	// Validate the search REST endpoint
 	t.Logf("Validating Search REST endpoint ...")
-	log.Info("Validating Search endpoint")
+	tInfo.l.Info("Validating Search endpoint")
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
@@ -506,7 +525,7 @@ func TestSpyglass(t *testing.T) {
 
 	// Stop Indexer
 	t.Logf("Stopping indexer ...")
-	log.Info("Stopping indexer")
+	tInfo.l.Info("Stopping indexer")
 	tInfo.idr.Stop()
 
 	// create the indexer again
@@ -522,7 +541,7 @@ func TestSpyglass(t *testing.T) {
 		}, "Failed to create indexer", "20ms", "1m")
 
 	// start the indexer
-	log.Info("Starting indexer")
+	tInfo.l.Info("Starting indexer")
 	indexerCreate := make(chan error)
 	go func() {
 		tInfo.idr.Start() // start the indexer
@@ -557,7 +576,7 @@ func TestSpyglass(t *testing.T) {
 	performPolicySearchTests(t, PostWithBody)
 	testAuthzInSearch(t, GetWithURI)
 	tInfo.idr.Stop()
-	log.Info("Test complete")
+	tInfo.l.Info("Test complete")
 	t.Logf("Done with Tests ....")
 }
 
@@ -565,7 +584,7 @@ func TestSpyglass(t *testing.T) {
 func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 
 	t.Logf("@@@ performSearchTests, method: %d", searchMethod)
-	log.Infof("@@@ performSearchTests, method: %d", searchMethod)
+	tInfo.l.Infof("@@@ performSearchTests, method: %d", searchMethod)
 
 	// Http error for InvalidArgument test cases
 	httpInvalidArgErrCode := grpcruntime.HTTPStatusFromCode(grpccodes.InvalidArgument)
@@ -1446,7 +1465,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					Kinds: []string{"Network"},
 					Labels: &labels.Selector{
 						Requirements: []*labels.Requirement{
-							&labels.Requirement{
+							{
 								Key:      "meta.labels.Application",
 								Operator: "equals",
 								Values:   []string{"MS-Exchange"},
@@ -1488,7 +1507,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"SmartNIC"},
 						},
 					},
@@ -1521,7 +1540,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"smartnic"},
 						},
 					},
@@ -1553,7 +1572,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"smart*"},
 						},
 					},
@@ -1585,7 +1604,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"infra"},
 						},
 					},
@@ -1621,7 +1640,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"us-west"},
 						},
 					},
@@ -1688,7 +1707,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"human resources"},
 						},
 					},
@@ -1719,7 +1738,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					Kinds: []string{"SmartNIC"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
-							&fields.Requirement{
+							{
 								Key:      "meta.name",
 								Operator: "equals",
 								Values:   []string{"44.44.44.00.00.01"},
@@ -1752,7 +1771,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					Kinds: []string{"SmartNIC"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
-							&fields.Requirement{
+							{
 								Key:      "meta.name",
 								Operator: "notEquals",
 								Values:   []string{"44.44.44.00.00.01"},
@@ -1788,7 +1807,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					Kinds: []string{"SmartNIC"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
-							&fields.Requirement{
+							{
 								Key:      "meta.name",
 								Operator: "in",
 								Values:   []string{"44.44.44.00.00.00", "44.44.44.00.00.01"},
@@ -1822,7 +1841,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					Kinds: []string{"SmartNIC"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
-							&fields.Requirement{
+							{
 								Key:      "meta.name",
 								Operator: "notIn",
 								Values:   []string{"44.44.44.00.00.00", "44.44.44.00.00.01"},
@@ -1855,7 +1874,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"12.0.1.254"},
 						},
 					},
@@ -1884,7 +1903,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"smartnic"},
 						},
 					},
@@ -1918,7 +1937,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "infra",
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"infra"},
 						},
 					},
@@ -1949,7 +1968,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "infra",
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"infra"},
 						},
 					},
@@ -1983,12 +2002,12 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					Kinds: []string{"SmartNIC"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
-							&fields.Requirement{
+							{
 								Key:      "meta.creation-time",
 								Operator: "gte",
 								Values:   []string{time.Now().Add(-10 * time.Minute).Format(time.RFC3339Nano)},
 							},
-							&fields.Requirement{
+							{
 								Key:      "meta.creation-time",
 								Operator: "lte",
 								Values:   []string{time.Now().Format(time.RFC3339Nano)},
@@ -2025,12 +2044,12 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					Kinds: []string{"Tenant"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
-							&fields.Requirement{
+							{
 								Key:      "meta.mod-time",
 								Operator: "gte",
 								Values:   []string{time.Now().Add(-10 * time.Minute).Format(time.RFC3339Nano)},
 							},
-							&fields.Requirement{
+							{
 								Key:      "meta.mod-time",
 								Operator: "lte",
 								Values:   []string{time.Now().Format(time.RFC3339Nano)},
@@ -2065,12 +2084,12 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					Kinds: []string{"Tenant"},
 					Fields: &fields.Selector{
 						Requirements: []*fields.Requirement{
-							&fields.Requirement{
+							{
 								Key:      "meta.creation-time",
 								Operator: "gte",
 								Values:   []string{time.Now().Add(-24 * time.Hour).Format("2006-01-02")},
 							},
-							&fields.Requirement{
+							{
 								Key:      "meta.creation-time",
 								Operator: "lte",
 								Values:   []string{time.Now().Add(24 * time.Hour).Format("2006-01-02")},
@@ -2119,7 +2138,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"OzzyOzbuorne"},
 						},
 					},
@@ -2139,7 +2158,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{CreateAlphabetString(512)},
 						},
 					},
@@ -2229,7 +2248,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"us-west"},
 						},
 					},
@@ -2274,7 +2293,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
-						&search.TextRequirement{
+						{
 							Text: []string{"OzzyOzbuorne"},
 						},
 					},
@@ -2340,12 +2359,12 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					if (err != nil && tc.err == nil) ||
 						(err == nil && tc.err != nil) ||
 						(err != nil && tc.err != nil && err.Error() != tc.err.Error()) {
-						log.Infof("expected %+v, actual %+v", tc.err, err)
+						tInfo.l.Infof("expected %+v, actual %+v", tc.err, err)
 						t.Logf("@@@ Search response didn't match expected error, expected:%+v actual:%+v",
 							tc.err, err)
 						return false, nil
 					}
-					log.Infof("Query: %s, result : %+v", searchURL, resp)
+					tInfo.l.Infof("Query: %s, result : %+v", searchURL, resp)
 					return checkSearchQueryResponse(t, &tc.query, &resp, tc.expectedHits, tc.previewResults, tc.aggResults), nil
 				}, fmt.Sprintf("Query failed for: %s", tc.query.QueryString), "100ms", "1m")
 		})
@@ -2356,7 +2375,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 
 	t.Logf("@@@ performPolicySearchTests, method: %d", searchMethod)
-	log.Infof("@@@ performPolicySearchTests, method: %d", searchMethod)
+	tInfo.l.Infof("@@@ performPolicySearchTests, method: %d", searchMethod)
 
 	// Testcases for various queries on config objects
 	queryTestcases := []struct {
@@ -2405,7 +2424,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-1": &search.PolicyMatchEntry{
+					"sgp-1": {
 						Rule: &security.SGRule{
 							Apps: []string{
 								"tcp/80",
@@ -2439,7 +2458,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-1": &search.PolicyMatchEntry{
+					"sgp-1": {
 						Rule: &security.SGRule{
 							Apps: []string{"tcp/443"},
 							FromIPAddresses: []string{
@@ -2467,7 +2486,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-1": &search.PolicyMatchEntry{
+					"sgp-1": {
 						Rule: &security.SGRule{
 							Apps: []string{"icmp/1000"},
 							FromIPAddresses: []string{
@@ -2495,7 +2514,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-1": &search.PolicyMatchEntry{
+					"sgp-1": {
 						Rule: &security.SGRule{
 							Apps: []string{"tcp/22"},
 							FromIPAddresses: []string{
@@ -2523,7 +2542,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-1": &search.PolicyMatchEntry{
+					"sgp-1": {
 						Rule: &security.SGRule{
 							Apps: []string{
 								"tcp/80",
@@ -2595,7 +2614,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-1": &search.PolicyMatchEntry{
+					"sgp-1": {
 						Rule: &security.SGRule{
 							Apps: []string{"udp/53"},
 							FromSecurityGroups: []string{
@@ -2624,7 +2643,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-1": &search.PolicyMatchEntry{
+					"sgp-1": {
 						Rule: &security.SGRule{
 							Apps: []string{"udp/53"},
 							FromIPAddresses: []string{
@@ -2655,7 +2674,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-2": &search.PolicyMatchEntry{
+					"sgp-2": {
 						Rule: &security.SGRule{
 							Apps: []string{
 								"tcp/1024",
@@ -2685,7 +2704,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-2": &search.PolicyMatchEntry{
+					"sgp-2": {
 						Rule: &security.SGRule{
 							Apps: []string{"tcp/80"},
 							FromIPAddresses: []string{
@@ -2713,7 +2732,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-2": &search.PolicyMatchEntry{
+					"sgp-2": {
 						Rule: &security.SGRule{
 							Apps: []string{"tcp/80"},
 							FromIPAddresses: []string{
@@ -2820,7 +2839,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-scale": &search.PolicyMatchEntry{
+					"sgp-scale": {
 						Rule: &security.SGRule{
 							Apps: []string{"tcp/1"},
 							FromIPAddresses: []string{
@@ -2849,7 +2868,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-scale": &search.PolicyMatchEntry{
+					"sgp-scale": {
 						Rule: &security.SGRule{
 							Apps: []string{"tcp/35001"},
 							FromIPAddresses: []string{
@@ -2878,7 +2897,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
 				Results: map[string]*search.PolicyMatchEntry{
-					"sgp-scale": &search.PolicyMatchEntry{
+					"sgp-scale": {
 						Rule: &security.SGRule{
 							Apps: []string{"udp/4464"},
 							FromIPAddresses: []string{
@@ -3447,7 +3466,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 							tc.err, err)
 						return false, nil
 					}
-					log.Infof("Query: %s, result : %+v", searchURL, resp)
+					tInfo.l.Infof("Query: %s, result : %+v", searchURL, resp)
 					return checkSearchQueryResponse(t, tc.query, &resp, tc.expectedHits, tc.previewResults, tc.aggResults), nil
 				}, fmt.Sprintf("Query failed for: %s", tc.query.QueryString), "100ms", "1m")
 		})
@@ -3457,6 +3476,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 func TestMain(m *testing.M) {
 
 	rand.Seed(time.Now().UnixNano())
+	tInfo.l = logger
 
 	// Run tests
 	rcode := m.Run()

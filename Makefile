@@ -261,8 +261,10 @@ fixtures:
 		echo cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 		cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 	fi
-	echo "++ generating documentation"; \
-	tools/scripts/gendocs.sh "${REGISTRY_URL}/${UI_BUILD_CONTAINER}"
+	@if [ -z ${BYPASS_DOCS} ]; then \
+		echo "++ generating documentation"; \
+		tools/scripts/gendocs.sh "${REGISTRY_URL}/${UI_BUILD_CONTAINER}" ;\
+	fi
 
 shell:
 		docker run -it --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash
