@@ -503,12 +503,6 @@ header_type s1_s2s_phv_t {
     }
 }
 
-header_type s3_t1_s2s_phv_t {
-    fields {
-        rnmdr_pidx              : 16;
-    }
-}
-
 header_type s6_s2s_phv_t {
     fields {
         payload_len             : 16;
@@ -633,8 +627,6 @@ metadata to_stage_7_phv_t to_s7_scratch;
 @pragma scratch_metadata
 metadata s1_s2s_phv_t s1_s2s_scratch;
 @pragma scratch_metadata
-metadata s3_t1_s2s_phv_t s3_t1_s2s_scratch;
-@pragma scratch_metadata
 metadata s6_s2s_phv_t s6_s2s_scratch;
 @pragma scratch_metadata
 metadata s6_t1_s2s_phv_t s6_t1_s2s_scratch;
@@ -651,7 +643,6 @@ metadata s1_s2s_phv_t s1_s2s;
 metadata s6_s2s_phv_t s6_s2s;
 
 @pragma pa_header_union ingress common_t1_s2s s6_t1_s2s
-metadata s3_t1_s2s_phv_t s3_t1_s2s;
 metadata s6_t1_s2s_phv_t s6_t1_s2s;
 
 @pragma pa_header_union ingress common_t2_s2s t2_s2s s3_t2_s2s
@@ -1005,7 +996,6 @@ action rdesc_alloc(desc, pad) {
     GENERATE_GLOBAL_K
 
     // from stage to stage
-    modify_field(s3_t1_s2s_scratch.rnmdr_pidx, s3_t1_s2s.rnmdr_pidx);
 
     // d for stage 3 table 1
     modify_field(rdesc_alloc_d.desc, desc);

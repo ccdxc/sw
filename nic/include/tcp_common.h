@@ -123,6 +123,10 @@
 #define TCP_CC_ALGO_NONE                    0
 #define TCP_CC_ALGO_NEW_RENO                1
 
+// Feedback packet rx2tx
+#define TCP_TX2RX_FEEDBACK_OOO_PKT          1
+#define TCP_TX2RX_FEEDBACK_WIN_UPD          2
+
 
 // Global stats
 #define TCP_PROXY_STATS_RNMDR_FULL              (0 << 3)

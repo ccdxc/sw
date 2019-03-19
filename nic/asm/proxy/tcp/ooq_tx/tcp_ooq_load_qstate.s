@@ -41,7 +41,8 @@ tcp_ooq_load_qstate_process_next_pkt_descr:
     nop
 
     // we are done with current queue, ring doorbell if pi == ci
-    tblmincri.f     d.{ci_0}.hx, 1, CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT
+    tblwr           d.ooq_work_in_progress, 0
+    tblmincri.f     d.{ci_0}.hx, CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT, 1
 
     // launch table to free queue
     phvwr           p.to_s1_qbase_addr, d.curr_ooo_qbase
@@ -65,12 +66,13 @@ tcp_ooq_skip_doorbell:
 
 tcp_ooq_load_qstate_process_new_request:
     // New request
-    add             r1, d.ooo_rx2tx_qbase, d.ci_0, NIC_OOQ_RX2TX_ENTRY_SIZE_SHIFT
+    add             r1, d.ooo_rx2tx_qbase, d.{ci_0}.hx, NIC_OOQ_RX2TX_ENTRY_SIZE_SHIFT
     //launch table with this address
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tcp_ooq_txdma_load_rx2tx_slot, r1, TABLE_SIZE_64_BITS)
-    tblwr           d.ooq_work_in_progress, 1
+    tblwr           d.curr_ooo_qbase, 0
+    tblwr.f         d.ooq_work_in_progress, 1
 
-    nop.e
+    wrfence.e
     nop
 
 tcp_ooq_load_qstate_do_nothing:

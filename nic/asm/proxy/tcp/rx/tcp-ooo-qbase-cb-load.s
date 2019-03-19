@@ -77,8 +77,10 @@ tcp_ooo_qbase_cb_load_in_order:
      * r2 uses ooq_rx2tx_queue_entry_t format
      */
     add             r1, r0, offsetof(struct phv_, ooq_rx2tx_queue_entry1_entry)
+
     sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len0, 0
     add.c1          r3, k.s3_t2_s2s_ooo_rx2tx_ready_trim0, d.ooo_qbase_addr0, 30
+    tblwr.c1        d.ooo_qbase_addr0, 0
     or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len0, 14
     phvwrp.c1       r1, 0, 64, r3
     add.c1          r1, r1, 64
@@ -86,6 +88,7 @@ tcp_ooo_qbase_cb_load_in_order:
 
     sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len1, 0
     add.c1          r3, k.s3_t2_s2s_ooo_rx2tx_ready_trim1, d.ooo_qbase_addr1, 30
+    tblwr.c1        d.ooo_qbase_addr1, 0
     or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len1, 14
     phvwrp.c1       r1, 0, 64, r3
     add.c1          r1, r1, 64
@@ -93,6 +96,7 @@ tcp_ooo_qbase_cb_load_in_order:
 
     sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len2, 0
     add.c1          r3, k.s3_t2_s2s_ooo_rx2tx_ready_trim2, d.ooo_qbase_addr2, 30
+    tblwr.c1        d.ooo_qbase_addr2, 0
     or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len2, 14
     phvwrp.c1       r1, 0, 64, r3
     add.c1          r1, r1, 64
@@ -100,6 +104,7 @@ tcp_ooo_qbase_cb_load_in_order:
 
     sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len3, 0
     add.c1          r3, k.s3_t2_s2s_ooo_rx2tx_ready_trim3, d.ooo_qbase_addr3, 30
+    tblwr.c1        d.ooo_qbase_addr3, 0
     or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len3, 14
     phvwrp.c1       r1, 0, 64, r3
     add.c1          r1, r1, 64

@@ -929,8 +929,8 @@ p4pd_get_tcp_ooo_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
 
-    tcpcb_pd->tcpcb->ooq_rx2tx_pi = ntohs(data.u.load_stage0_d.pi_0);
-    tcpcb_pd->tcpcb->ooq_rx2tx_ci = ntohs(data.u.load_stage0_d.ci_0);
+    tcpcb_pd->tcpcb->ooq_rx2tx_pi = data.u.load_stage0_d.pi_0;
+    tcpcb_pd->tcpcb->ooq_rx2tx_ci = data.u.load_stage0_d.ci_0;
     tcpcb_pd->tcpcb->ooo_rx2tx_qbase = htonll(data.u.load_stage0_d.ooo_rx2tx_qbase);
 
     return ret;
@@ -1534,6 +1534,7 @@ pd_tcpcb_create (pd_func_args_t *pd_func_args)
     tcpcb_pd->hw_id = pd_tcpcb_get_base_hw_index(tcpcb_pd, TCP_TX_QTYPE);
     tcpcb_pd->tcpcb->cb_base = tcpcb_pd->hw_id;
     tcpcb_pd->hw_id_qtype1 = pd_tcpcb_get_base_hw_index(tcpcb_pd, TCP_OOO_RX2TX_QTYPE);
+    tcpcb_pd->tcpcb->cb_base_qtype1 = tcpcb_pd->hw_id_qtype1;
 
     HAL_TRACE_DEBUG("Creating TCP CB at addr: 0x{:x} qid: {}",
             tcpcb_pd->hw_id, tcpcb_pd->tcpcb->cb_id);
@@ -1633,6 +1634,7 @@ pd_tcpcb_get (pd_func_args_t *pd_func_args)
     tcpcb_pd.hw_id = pd_tcpcb_get_base_hw_index(&tcpcb_pd, TCP_TX_QTYPE);
     tcpcb_pd.tcpcb->cb_base = tcpcb_pd.hw_id;
     tcpcb_pd.hw_id_qtype1 = pd_tcpcb_get_base_hw_index(&tcpcb_pd, TCP_OOO_RX2TX_QTYPE);
+    tcpcb_pd.tcpcb->cb_base_qtype1 = tcpcb_pd.hw_id_qtype1;
     HAL_TRACE_DEBUG("Received hw-id {:#x}", tcpcb_pd.hw_id);
 
     // get hw tcpcb entry

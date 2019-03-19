@@ -424,6 +424,7 @@ message TcpCbSpec {
   uint32                rcv_wup                    = 54;
   fixed64               cb_base                    = 55;
   uint32                zero_window_sent           = 56;
+  fixed64               cb_base_qtype1             = 57;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

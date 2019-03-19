@@ -49,13 +49,18 @@ dma_tcp_hdr:
     add         r1, k.to_s6_descr, NIC_DESC_ENTRY_OOO_TCP_HDR_OFFSET
     phvwr       p.tcp_app_header_from_ooq_txdma, 1
 
-    // HACK, 8 bytes following tcp_app_header is ooq_header which contains the
+    // HACK, 1+8 bytes following tcp_app_header is ooq_header which contains the
     // descriptor address. Until we can unionize this header correctly in p4,
     // hardcoding the PHV location for now. This is prone to error, but
     // hopefully if something breaks, we have DOL test cases to catch it.
     // (refer to iris/gen/p4gen/tcp_proxy_rxdma/asm_out/INGRESS_p.h)
-    add         r2, r0, 1024 - 48
+    // HACK descriptor spans 1 byte in flit 0 and 7 bytes in flit 1
+    add         r2, r0, 1024 - (7*8)
     phvwrp      r2, 0, 34, k.to_s6_descr
+
+    // HACK: penultimate byte in flit 0 is feedback type
+    // (immediately following p4 to p4plus header)
+    phvwrp      r0, 8, 8, TCP_TX2RX_FEEDBACK_OOO_PKT
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(tcp_flags_dma_dma_cmd, r1,
                     tcp_app_header_p4plus_app_id,

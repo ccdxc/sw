@@ -61,8 +61,7 @@
 #define tx_table_s1_t0_action2 process_next_descr_addr
 #define tx_table_s1_t1_action free_ooq
 
-#define tx_table_s2_t0_action1 read_descr
-#define tx_table_s2_t0_action2 set_current_ooq
+#define tx_table_s2_t0_action set_current_ooq
 
 #include "../common-p4+/common_txdma.p4"
 #include "tcp_proxy_common.p4"
@@ -288,15 +287,6 @@ action free_ooq(ooq_free_pi)
     GENERATE_GLOBAL_K
     modify_field(to_s1_scratch.qbase_addr, to_s1.qbase_addr);
     modify_field(ooq_free_pi_d.ooq_free_pi, ooq_free_pi);
-}
-
-// Stage-2 Table-0
-action read_descr(A0, O0, L0)
-{
-    GENERATE_GLOBAL_K
-    modify_field(read_descr_d.A0, A0);
-    modify_field(read_descr_d.O0, O0);
-    modify_field(read_descr_d.L0, L0);
 }
 
 action set_current_ooq(action_id, STAGE0_PARAMS)

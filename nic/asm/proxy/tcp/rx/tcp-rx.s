@@ -91,11 +91,12 @@ tcp_store_ts_recent:
      */
     seq             c1, k.s1_s2s_payload_len, 0
     b.c1            flow_rx_process_done
-    tblor.!c1.l     d.u.tcp_rx_d.flag, FLAG_DATA
 
+    tblwr.!c1.l     d.u.tcp_rx_d.alloc_descr, 1
+
+tcp_rx_fast_path_queue_serq:
+    tblor.l         d.u.tcp_rx_d.flag, FLAG_DATA
     phvwri          p.common_phv_write_serq, 1
-    tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
-
     phvwr           p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
     tblmincri       d.u.tcp_rx_d.serq_pidx, d.u.tcp_rx_d.consumer_ring_shift, 1
     phvwr           p.to_s5_serq_pidx, d.u.tcp_rx_d.serq_pidx
@@ -239,15 +240,17 @@ tcp_rx_slow_path:
 
 tcp_rx_ooo_check:
      // Consider OOO only if payload_len != 0 && seq > rcv_nxt
-    slt             c1, d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_seq
+    scwlt           c1, d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_seq
     bcf             [!c1 | !c2], tcp_rx_ooo_check_done
     // check if its within advertised window and ooo processing
     // is configured
-    add             r1, d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_payload_len
-    add             r2, k.to_s1_rcv_wup, k.to_s1_rcv_wnd_adv
-    sle             c1, r1, r2
+    add             r1, k.s1_s2s_seq, k.s1_s2s_payload_len
+    sll             r3, k.to_s1_rcv_wnd_adv, d.u.tcp_rx_d.rcv_wscale
+    add             r2, k.to_s1_rcv_wup, r3
+    scwle           c1, r1[31:0], r2[31:0]
     seq             c2, d.u.tcp_rx_d.cfg_flags[TCP_CFG_FLAG_OOO_QUEUE_BIT], 1
     bcf             [c1 & c2], tcp_rx_ooo_rcv
+    nop
 
 tcp_rx_ooo_check_done:
     tbladd.c3       d.u.tcp_rx_d.rx_drop_cnt, 1
@@ -328,6 +331,12 @@ tcp_rx_slow_path_post_fin_handling:
     bcf             [c1], flow_rx_process_done
     nop
 tcp_rx_slow_path_handle_data:
+    // if this is a tx2rx ooq packet, don't allocate descriptors
+    // TODO : Do we send acks in this case?
+    seq             c2, k.common_phv_ooq_tx2rx_pkt, 1
+    tblwr.c2.l      d.u.tcp_rx_d.alloc_descr, 0
+    b.c2            tcp_rx_fast_path_queue_serq
+
     /*
      * Handle in-order data receipt (For example - data received during
      * FIN_WAIT, data received with ECE flag, data received with OOO packets in
@@ -338,8 +347,7 @@ tcp_rx_slow_path_handle_data:
     // Skip the OOO launch and check if the queue is empty or if this is already
     // an OOO pkt that has been queued from Tx.
     seq             c1, d.u.tcp_rx_d.ooq_not_empty, 0
-    seq             c2, k.common_phv_ooq_tx2rx_pkt, 1
-    bcf             [c1 | c2], tcp_rx_skip_ooo_launch
+    b.c1            tcp_rx_skip_ooo_launch
     nop
 
 tcp_rx_slow_path_launch_ooo:
@@ -349,9 +357,6 @@ tcp_rx_slow_path_launch_ooo:
                         k.common_phv_qstate_addr, TCP_TCB_OOO_BOOK_KEEPING_OFFSET0,
                         TABLE_SIZE_512_BITS)
 tcp_rx_skip_ooo_launch:
-    // if this is a tx2rx ooq packet, don't allocate descriptors
-    // TODO : Do we send acks in this case?
-    tblwr.c2.l      d.u.tcp_rx_d.alloc_descr, 0
     b               tcp_rx_fast_path
     nop
 

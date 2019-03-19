@@ -24,7 +24,7 @@ tcp_ooq_free_queue:
      */
     addui           r3, r0, hiword(TCP_OOQ_TABLE_BASE)
     addi            r3, r3, loword(TCP_OOQ_TABLE_BASE)
-    add             r3, r3, r1, CAPRI_TCP_ALLOC_OOQ_RING_SHIFT
+    add             r3, r3, r1, TCP_OOQ_TABLE_ENTRY_SIZE_SHFT
     phvwr           p.ooq_slot_descr_addr, k.to_s1_qbase_addr
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ooq_ring_entry_dma_cmd, r3, ooq_slot_descr_addr, ooq_slot_descr_addr)
 

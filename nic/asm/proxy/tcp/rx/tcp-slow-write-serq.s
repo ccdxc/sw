@@ -38,6 +38,7 @@ tcp_slow_rx_write_serq_stage_start:
 
 dma_slow_cmd_data:
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
+    bbeq        k.common_phv_ooq_tx2rx_pkt, 1, pkts_rcvd_stats_update_start
 
     /*
      * If payload len is 0, skip DMA of page

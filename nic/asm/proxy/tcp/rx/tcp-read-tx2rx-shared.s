@@ -78,13 +78,17 @@ table_read_RX:
     b.!c1           tcp_rx_stage0_end
 tcp_rx_ooq_tx2rx_pkt:
     phvwr.c1        p.common_phv_ooq_tx2rx_pkt, 1
-    // HACK, 8 bytes following tcp_app_header is ooq_header which contains the
+    // HACK, 1+8 bytes following tcp_app_header is ooq_header which contains the
     // descriptor address. This falls in app_data1 region of common rxdma phv.
     // Until we can unionize this header correctly in p4, hardcoding the PHV
     // location for now. This is prone to error, but hopefully if something
     // breaks, we have DOL test cases to catch it.  (refer to
     // iris/gen/p4gen/tcp_proxy_rxdma/asm_out/INGRESS_p.h)
-    add             r1, r0, k.app_header_app_data1[87:40]
+    seq             c1, k._tcp_app_header_end_pad_88[15:8], TCP_TX2RX_FEEDBACK_OOO_PKT
+    b.!c1           tcp_rx_stage0_end
+
+    // OOO pkt feedback
+    add.c1          r1, r0, k.app_header_app_data1[87:32]
     phvwr           p.to_s6_descr, r1
     add             r1, r1, CAPRI_NMDPR_PAGE_OFFSET
     phvwr           p.to_s6_page, r1

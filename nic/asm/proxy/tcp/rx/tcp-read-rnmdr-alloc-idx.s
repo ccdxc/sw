@@ -30,7 +30,6 @@ tcp_rx_read_rnmdr_start:
 
     add             r4, r0, d.{rnmdr_pidx}.wx
     andi            r4, r4, ((1 << CAPRI_RNMDPR_BIG_RING_SHIFT) - 1)
-    phvwr           p.s3_t1_s2s_rnmdr_pidx, r4
 
 table_read_RNMDR_DESC:
     addui           r3, r0, hiword(RNMDPR_BIG_TABLE_BASE)
