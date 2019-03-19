@@ -31,9 +31,9 @@ tep_util::tep_util(std::string ip_str, pds_tep_encap_type_t type) {
 tep_util::~tep_util() {}
 
 static inline sdk::sdk_ret_t
-tep_util_object_stepper(sdk_ret_t expected_result, utils_op_t op,
-                        uint32_t num_tep, std::string pfxstr,
-                        pds_tep_encap_type_t type) {
+tep_util_object_stepper(std::string pfxstr, pds_tep_encap_type_t type,
+                        uint32_t num_tep, utils_op_t op,
+                        sdk_ret_t expected_result = sdk::SDK_RET_OK) {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
     ip_prefix_t ip_pfx;
 
@@ -79,8 +79,7 @@ tep_util::create() {
 sdk::sdk_ret_t
 tep_util::many_create(uint32_t num_tep, std::string pfxstr,
                       pds_tep_encap_type_t type) {
-    return (tep_util_object_stepper(sdk::SDK_RET_OK, OP_MANY_CREATE,
-                                    num_tep, pfxstr, type));
+    return (tep_util_object_stepper(pfxstr, type, num_tep, OP_MANY_CREATE));
 }
 
 static inline void
@@ -156,8 +155,8 @@ tep_util::read(pds_tep_info_t *info, bool compare_spec) {
 sdk::sdk_ret_t
 tep_util::many_read(sdk_ret_t ret_code, uint32_t num_tep, std::string pfxstr,
                     pds_tep_encap_type_t type) {
-    return (tep_util_object_stepper(ret_code, OP_MANY_READ,
-                                    num_tep, pfxstr, type));
+    return (tep_util_object_stepper(pfxstr, type, num_tep, OP_MANY_READ,
+                                    ret_code));
 }
 
 sdk::sdk_ret_t
@@ -174,8 +173,7 @@ tep_util::del() {
 sdk::sdk_ret_t
 tep_util::many_delete(uint32_t num_tep, std::string pfxstr,
                       pds_tep_encap_type_t type) {
-    return (tep_util_object_stepper(sdk::SDK_RET_OK, OP_MANY_DELETE,
-                                    num_tep, pfxstr, type));
+    return (tep_util_object_stepper(pfxstr, type, num_tep, OP_MANY_DELETE));
 }
 
 }    // namespace api_test
