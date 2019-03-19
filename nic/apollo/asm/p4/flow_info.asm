@@ -1,23 +1,26 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "apollo.h"
+#include "INGRESS_flow_info_k.h"
 #include "platform/capri/capri_common.hpp"
 
-struct flow_info_k  k;
+struct flow_info_k_ k;
 struct flow_info_d  d;
 struct phv_         p;
 
 %%
 
 flow_info:
+    crestore        [c7-c1], r0, 0xFF
     seq             c1, k.control_metadata_flow_index, r0
+    seq.c1          c2, k.p4_to_rxdma_header_sacl_base_addr, r0
+    setcf           c3, [!c1 | c2]
     nop.c1.e
-    phvwr.!c1       p.p4_to_rxdma_header_sacl_bypass, 1
+    phvwr.c3        p.p4_to_rxdma_header_sacl_bypass, 1
     add             r5, r0, d.flow_info_d.flow_stats_addr
     seq             c1, k.control_metadata_flow_role, TCP_FLOW_RESPONDER
     add.c1          r5, r5, 32
-    add             r7, r0, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                               capri_p4_intrinsic_packet_len_sbit6_ebit13}
+    add             r7, r0, k.capri_p4_intrinsic_packet_len
     addi            r1, r0, 0x1000001
     or              r7, r7, r1, 32
     bbeq            d.flow_info_d.drop, TRUE, flow_info_drop

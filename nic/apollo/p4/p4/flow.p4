@@ -103,6 +103,9 @@ table flow_ohash {
 
 action flow_info(drop, iflow_tcp_state, rflow_tcp_state, flow_stats_addr) {
     if (control_metadata.flow_index == 0) {
+        if (p4_to_rxdma_header.sacl_base_addr == 0) {
+            modify_field(p4_to_rxdma_header.sacl_bypass, TRUE);
+        }
         // return
     }
 
