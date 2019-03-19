@@ -64,9 +64,9 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
     cfg.xcvr_event_cb = api::xcvr_event_cb;
     cfg.port_log_fn = NULL;
 
-    /**< initialize the linkmgr */
+    // initialize the linkmgr
     sdk::linkmgr::linkmgr_init(&cfg);
-    /**< start the linkmgr control thread */
+    // start the linkmgr control thread
     sdk::linkmgr::linkmgr_start();
 
     return SDK_RET_OK;
@@ -99,10 +99,11 @@ pds_init (pds_init_params_t *params)
     asic_cfg_t    asic_cfg;
     std::string   mpart_json;
 
-    /**< initializer the logger */
+    // initializer the logger
     sdk::lib::logger::init(params->trace_cb);
     register_trace_cb(params->trace_cb);
 
+    // parse global configuration
     api::g_pds_state.set_cfg_path(std::string(std::getenv("HAL_CONFIG_PATH")));
     if (api::g_pds_state.cfg_path().empty()) {
         api::g_pds_state.set_cfg_path(std::string("./"));
@@ -112,30 +113,48 @@ pds_init (pds_init_params_t *params)
     ret = core::parse_global_config(params->pipeline, params->cfg_file,
                                     &api::g_pds_state);
     SDK_ASSERT(ret == SDK_RET_OK);
-    mpart_json =
-        api::g_pds_state.cfg_path() + "/" + params->pipeline + "/hbm_mem.json";
-    api::g_pds_state.set_mpartition(
-        sdk::platform::utils::mpartition::factory(mpart_json.c_str()));
+
+    // instantiate the catalog
     api::g_pds_state.set_catalog(catalog::factory(
         api::g_pds_state.cfg_path(), "", api::g_pds_state.platform_type()));
+
+    // parse pipeline specific configuration
     ret = core::parse_pipeline_config(params->pipeline, &api::g_pds_state);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    /**< setup all asic specific config params */
+    // parse hbm memory region configuration file
+    if (api::g_pds_state.pipeline_profile().empty()) {
+        mpart_json =
+            api::g_pds_state.cfg_path() + "/" + params->pipeline +
+            "/hbm_mem.json";
+    } else {
+        mpart_json =
+            api::g_pds_state.cfg_path() + "/" + params->pipeline + "/hbm_mem_" +
+            api::g_pds_state.pipeline_profile() + ".json";
+    }
+    if (access(mpart_json.c_str(), R_OK) < 0) {
+        PDS_TRACE_ERR("memory config file %s doesn't exist or not accessible\n",
+                      mpart_json.c_str());
+        return ret;
+    }
+    api::g_pds_state.set_mpartition(
+        sdk::platform::utils::mpartition::factory(mpart_json.c_str()));
+
+    // setup all asic specific config params
     api::asic_global_config_init(params, &asic_cfg);
     SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
-    /**< spin all necessary threads in the system */
+    // spin all necessary threads in the system
     core::thread_spawn(&api::g_pds_state);
 
-    /**< trigger linkmgr initialization */
+    // trigger linkmgr initialization
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     SDK_ASSERT(api::create_ports() == SDK_RET_OK);
 
-    /**< initialize all the signal handlers */
+    // initialize all the signal handlers
     core::sig_init(SIGUSR1, api::sig_handler);
 
-    /**< schedule all global timers */
+    // schedule all global timers
     core::schedule_timers();
 
     return SDK_RET_OK;

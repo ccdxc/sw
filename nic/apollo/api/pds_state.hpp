@@ -49,6 +49,8 @@ public:
     //LIFManager *lm(void) const { return lm_; }
     void set_platform_type(platform_type_t type) { platform_type_ = type; }
     platform_type_t platform_type(void) const { return platform_type_; }
+    void set_pipeline_profile(string profile) { pipeline_profile_ = profile; }
+    string pipeline_profile(void) const { return pipeline_profile_; }
     void set_control_cores_mask(uint64_t control_cores_mask) {
         control_cores_mask_ = control_cores_mask;
     }
@@ -78,9 +80,10 @@ private:
     string               cfg_path_;
     catalog              *catalog_;
     mpartition           *mpartition_;
+    platform_type_t      platform_type_;
+    string               pipeline_profile_;
     //program_info       *pginfo_;
     //LIFManager         *lm_;
-    platform_type_t      platform_type_;
     uint64_t             control_cores_mask_;
     uint16_t             num_control_cores_;
     uint64_t             data_cores_mask_;

@@ -41,7 +41,7 @@ parse_cores_config (ptree &pt, pds_state *state)
     state->set_num_data_cores(
         sdk::lib::count_bits_set(state->data_cores_mask()));
 
-    // pdate thread library so it knows which threads to pin to
+    // update thread library so it knows which threads to pin to
     // which cores
     sdk::lib::thread::control_cores_mask_set(state->control_cores_mask());
     sdk::lib::thread::data_cores_mask_set(state->data_cores_mask());
@@ -68,6 +68,9 @@ parse_pipeline_config (string pipeline, pds_state *state)
     std::ifstream json_cfg(cfg_file.c_str());
     read_json(json_cfg, pt);
     parse_cores_config(pt, state);
+    if (pt.find("profile") != pt.not_found()) {
+        state->set_pipeline_profile(pt.get<string>("profile"));
+    }
     return SDK_RET_OK;
 }
 
