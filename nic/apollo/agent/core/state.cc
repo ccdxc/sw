@@ -31,6 +31,9 @@ namespace core {
     return true;                                                                \
 }
 
+#define DB_BEGIN(obj) (obj##_map()->begin())
+#define DB_END(obj) (obj##_map()->end())
+
 class agent_state *g_state;
 
 //------------------------------------------------------------------------------
@@ -212,6 +215,18 @@ agent_state::add_to_pcn_db(pds_vcn_key_t *key, pds_vcn_spec_t *spec) {
 pds_vcn_spec_t *
 agent_state::find_in_pcn_db(pds_vcn_key_t *key) {
     FIND_IN_DB(pcn, key);
+}
+
+sdk_ret_t
+agent_state::pcn_db_walk(pcn_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(pcn);
+    auto it_end = DB_END(pcn);
+
+    for (auto it = it_begin; it != it_end; it ++) {
+        cb(it->second, ctxt);
+    }
+
+    return SDK_RET_OK;
 }
 
 bool

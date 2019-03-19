@@ -29,7 +29,7 @@ pds_port_mac_stats_fill (sdk::linkmgr::port_args_t *port_info, void *ctxt) {
 Status
 PortSvcImpl::PortGet(ServerContext *context, const pds::PortGetRequest *proto_req,
                       pds::PortGetResponse *proto_rsp) {
-    PDS_TRACE_DEBUG("Received Port Get");
+    PDS_TRACE_VERBOSE("Received Port Get");
     if (proto_req) {
         for (int i = 0; i < proto_req->portid_size(); i ++) {
             if (api::port_get(proto_req->portid(i), pds_port_mac_stats_fill, proto_rsp) != SDK_RET_OK) {

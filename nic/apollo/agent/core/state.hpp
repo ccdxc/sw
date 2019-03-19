@@ -18,6 +18,8 @@ using std::unordered_map;
 using std::make_pair;
 using sdk::lib::slab;
 
+typedef sdk::sdk_ret_t (*pcn_walk_cb_t)(pds_vcn_spec_t *spec, void *ctxt);
+ 
 namespace core {
 
 typedef slab *slab_ptr_t;
@@ -37,6 +39,8 @@ typedef unordered_map<uint32_t, pds_subnet_spec_t *> subnet_db_t;
 typedef unordered_map<uint32_t, pds_tep_spec_t *> tep_db_t;
 typedef unordered_map<uint32_t, pds_vnic_spec_t *> vnic_db_t;
 typedef unordered_map<uint32_t, pds_route_table_spec_t *> route_table_db_t;
+
+typedef pcn_db_t::const_iterator pcn_it_t;
 
 class cfg_db {
 public:
@@ -99,6 +103,7 @@ public:
     pds_vcn_spec_t *find_in_pcn_db(pds_vcn_key_t *key);
     sdk_ret_t add_to_pcn_db(pds_vcn_key_t *key,
                             pds_vcn_spec_t *spec);
+    sdk_ret_t pcn_db_walk(pcn_walk_cb_t cb, void *ctxt);
     bool del_from_pcn_db(pds_vcn_key_t *key);
     slab_ptr_t pcn_slab(void) const { return cfg_db_->pcn_slab(); }
 

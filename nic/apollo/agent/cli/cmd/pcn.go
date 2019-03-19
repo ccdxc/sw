@@ -64,7 +64,7 @@ func pcnShowCmdHandler(cmd *cobra.Command, args []string) {
 	} else {
 		// Get all PCNs
 		req = &pds.PCNGetRequest{
-			Id: []uint32{ID},
+			Id: []uint32{},
 		}
 	}
 

@@ -23,6 +23,9 @@ public:
     Status PCNDelete(ServerContext *context,
                      const pds::PCNDeleteRequest *proto_req,
                      pds::PCNDeleteResponse *proto_rsp) override;
+    Status PCNGet(ServerContext *context,
+                  const pds::PCNGetRequest *proto_req,
+                  pds::PCNGetResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_PCN_HPP__
