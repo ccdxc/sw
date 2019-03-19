@@ -1,0 +1,218 @@
+{
+    "_comment_" : "this profile can support 128 IPv4 route tables, each with",
+    "_comment_" : "a max of 256K IPv4 routes, 128 IPv6 route tables each with ",
+    "_comment_" : "a max of 64K IPv6 routes per route table",
+    "regions": [
+         {
+            "_comment" : "cache coherent",
+            "name": "cpu-dr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-pr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-descriptor",
+            "size": "2048K",
+            "cc": "true"
+
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-page",
+            "size": "32768K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "arq-rx",
+            "size": "256K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "ascq",
+            "size": "256K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "asq",
+            "size": "256K",
+            "cc"     : "true"
+        },
+        {
+            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
+            "name" : "unused cache coherent",
+            "size" : "29696K",
+            "cc"      : "true"
+        },
+        {
+            "_comment" : "This reserved region is hardcoded to HBM base + 64MB(above cc regions)",
+            "_comment1" : "Used by memtun, pciemgr, and mputrace. Size is 64MB",
+            "_comment2" : "Refer sdk/platform/utils/mpart_rsvd.hpp",
+             "name": "reserved_common",
+             "size": "64M"
+        },
+        {
+            "name": "lif2qstate_map",
+            "size": "4K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "p4_program",
+            "size": "1024K"
+        },
+        {
+            "name": "rxdma_program",
+            "size": "1024K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "txdma_program",
+            "size": "1024K",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "rxdma_to_txdma_buf",
+            "size": "163840K",
+            "_comment": "160MB (16K buffers of size 10K)"
+        },
+        {
+            "name": "local_ip_mapping",
+            "size": "16384K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_rx",
+            "size": "131072K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_rx_ohash",
+            "size": "16384K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "local_ip_mapping_ohash",
+            "size": "2048K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_tx",
+            "size": "131072K",
+            "cache": "p4eg",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_tx_ohash",
+            "size": "16384K",
+            "cache": "p4eg",
+            "reset": true
+        },
+        {
+            "name": "nat",
+            "size": "131072K",
+            "cache": "p4eg"
+        },
+        {
+            "name": "lpm_v4",
+            "_comment": "supports 256k IPv4 routes per table, 128 route tables",
+            "size": "576M",
+            "element_size": "17472B",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "lpm_v6",
+            "_comment": "supports 64k IPv6 routes per table, 128 route tables",
+            "size": "296M",
+            "element_size": "37440B",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "sacl_v4",
+            "size": "264M",
+            "element_size": "264K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "sacl_v6",
+            "size": "330M",
+            "element_size": "330K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "flow",
+            "size": "1048576K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "flow_ohash",
+            "size": "262144K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "flow_info",
+            "size": "524288K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "flow_stats",
+            "size": "524288K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "udp_flow_overflow0",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_overflow1",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_overflow2",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_overflow3",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_qid_update_virtual",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_qid_update",
+            "size": "64K"
+        },
+        {
+            "name": "qos-hbm-fifo",
+            "size": "262144K"
+        },
+        {
+            "name": "tx-scheduler",
+            "size": "2048K"
+        },
+        {
+            "_comment": "hash depth = 1024",
+            "_comment1": "data space = 1024 * 16 * 64 = 1024K",
+            "_comment1": "key space = 1024 * 64 = 64K",
+            "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
+            "name": "timers",
+            "size": "1088K"
+        },
+        {
+            "name": "devcmd",
+            "size": "32768K"
+        }
+    ]
+}
