@@ -67,6 +67,7 @@ public:
     static DeviceManager *GetInstance() { return instance; }
 
     Device *GetDevice(std::string name);
+    void DeleteDevice(std::string name);
 
     void HalEventHandler(bool is_up);
     void LinkEventHandler(port_status_t *evd);

@@ -37,6 +37,8 @@ namespace nicmgr {
 
 namespace nicmgr_if {
 
+#define DEVMGR_ACCEL_DEV_NAME   "accel"
+
 static DeviceManager *devmgr;
 static AccelDev     *accel_dev;
 static dp_mem_t     *accel_devcmdpa_buf;
@@ -84,7 +86,7 @@ nicmgr_if_init(void)
                                sdk::platform::FWD_MODE_CLASSIC, PLATFORM_SIM);
     devmgr->LoadConfig(FLAGS_nicmgr_config_file);
     devmgr->HalEventHandler(true);
-    accel_dev = (AccelDev *)devmgr->GetDevice("accel");
+    accel_dev = (AccelDev *)devmgr->GetDevice(DEVMGR_ACCEL_DEV_NAME);
     if (!accel_dev) {
         printf("Failed to locate Accel device\n");
         return -1;
@@ -109,6 +111,15 @@ nicmgr_if_init(void)
 void
 nicmgr_if_fini(void)
 {
+    /*
+     * DeviceManager itself doesn't have a destructor but we can
+     * still exercise the Accel device destructor.
+     */
+    if (accel_dev) {
+        devmgr->DeleteDevice(accel_dev->GetName());
+        accel_dev = nullptr;
+    }
+
     if (utils::logger::logger()) {
         utils::logger::logger()->flush();
     }

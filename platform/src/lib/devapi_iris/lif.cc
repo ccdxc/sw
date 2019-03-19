@@ -68,6 +68,10 @@ devapi_lif::factory(lif_info_t *info)
         devapi_lif::set_intmgmt_lif(lif);
     }
 
+    NIC_LOG_DEBUG("Adding lif to db for id: {}", lif->get_id());
+    // Store in DB for disruptive upgrade
+    lif_db_[lif->get_id()] = lif;
+
     if (lif->get_uplink() == NULL) {
         // HW: Admin devapi_lif.
         // DOL: HAL_LIF_ID_NICMGR_MIN lifs created in DevMgr constructor
@@ -82,10 +86,6 @@ devapi_lif::factory(lif_info_t *info)
     if (lif->get_uplink()) {
         lif->get_uplink()->inc_num_lifs();
     }
-
-    NIC_LOG_DEBUG("Adding lif to db for id: {}", lif->get_id());
-    // Store in DB for disruptive upgrade
-    lif_db_[lif->get_id()] = lif;
 
     if (lif->is_intmgmt()) {
         // For Internal Mgmt mnic, create vrf and native l2seg.
@@ -233,7 +233,9 @@ devapi_lif::destroy(devapi_lif *lif)
     // if (lif->is_classicfwd())
     if (true) {
         // Delete enic
-        devapi_enic::destroy(lif->get_enic());
+        if (lif->get_enic()) {
+            devapi_enic::destroy(lif->get_enic());
+        }
 
         if (lif->is_intmgmt()) {
             if (lif->is_intmgmtmnic()) {
@@ -246,7 +248,7 @@ devapi_lif::destroy(devapi_lif *lif)
             }
         } else {
 
-            if (lif->get_uplink()->get_num_lifs() == 0) {
+            if (lif->get_uplink() && (lif->get_uplink()->get_num_lifs() == 0)) {
                 NIC_LOG_DEBUG("Last lif id: {}, hw_id: {} on uplink {}",
                               lif->get_id(),
                               lif->get_id(),

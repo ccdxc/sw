@@ -79,6 +79,7 @@ AccelDev::AccelDev(devapi *dapi,
     spec((accel_devspec_t *)dev_spec),
     pd(pd_client),
     dev_api(dapi),
+    pdev(nullptr),
     delphi_mounted(false)
 {
     accel_lif_res_t     lif_res;
@@ -192,10 +193,35 @@ AccelDev::AccelDev(devapi *dapi,
     lif_res.intr_base = intr_base;
     lif_res.cmb_mem_addr = cmb_mem_addr;
     lif_res.cmb_mem_size = cmb_mem_size;
-    lif_map[lif_base] = new AccelLif(*this, lif_res);
+    auto lif = new AccelLif(*this, lif_res);
+    if (!lif) {
+        NIC_LOG_ERR("{}: failed to create AccelLif {}",
+                    DevNameGet(), lif_res.lif_id);
+        throw;
+    }
+    lif_map[lif_base] = lif;
 
-    _DelphiInit();
+    _MetricsInit();
     evutil_timer_start(&devcmd_timer, &AccelDev::_DevcmdPoll, this, 0.0, 0.01);
+}
+
+AccelDev::~AccelDev()
+{
+    /*
+     * Most HBM related allocs don't have corresponding free API so
+     * we'll leave them alone. Same with intr_alloc().
+     */
+    evutil_timer_stop(&devcmd_timer);
+    _MetricsFini();
+
+    auto iter = lif_map.begin();
+    while (iter != lif_map.end()) {
+        delete iter->second;
+        iter = lif_map.erase(iter);
+    }
+
+    _DestroyHostDevice();
+    pd->lm_->free_id(lif_base, spec->lif_count);
 }
 
 void
@@ -211,7 +237,7 @@ void
 AccelDev::DelphiMountEventHandler(bool mounted)
 {
     delphi_mounted = mounted;
-    _DelphiInit();
+    _MetricsInit();
 }
 
 void
@@ -269,7 +295,7 @@ AccelDev::ParseConfig(boost::property_tree::ptree::value_type node)
 }
 
 bool
-AccelDev::_CreateHostDevice()
+AccelDev::_CreateHostDevice(void)
 {
     pciehdevice_resources_t pci_resources = {0};
 
@@ -306,20 +332,38 @@ AccelDev::_CreateHostDevice()
 }
 
 void
-AccelDev::_DelphiInit(void)
+AccelDev::_DestroyHostDevice(void)
+{
+    if (pdev) {
+        pciehdev_delete(pdev);
+        pdev = nullptr;
+    }
+}
+
+void
+AccelDev::_MetricsInit(void)
 {
     if (g_nicmgr_svc && delphi_mounted && !delphi_pf) {
         NIC_LOG_INFO("{}: Registering AccelPfInfo", DevNameGet());
         delphi_pf = make_shared<delphi::objects::AccelPfInfo>();
-        delphi::objects::AccelPfInfoPtr shared_pf(delphi_pf);
-        shared_pf->set_key(std::to_string(lif_base));
-        shared_pf->set_hwlifid(lif_base);
-        shared_pf->set_numseqqueues(spec->seq_queue_count);
-        shared_pf->set_cryptokeyidxbase(crypto_key_idx_base);
-        shared_pf->set_numcryptokeysmax(num_crypto_keys_max);
-        shared_pf->set_intrbase(intr_base);
-        shared_pf->set_intrcount(spec->intr_count);
-        g_nicmgr_svc->sdk()->SetObject(shared_pf);
+        delphi_pf->set_key(std::to_string(lif_base));
+        delphi_pf->set_hwlifid(lif_base);
+        delphi_pf->set_numseqqueues(spec->seq_queue_count);
+        delphi_pf->set_cryptokeyidxbase(crypto_key_idx_base);
+        delphi_pf->set_numcryptokeysmax(num_crypto_keys_max);
+        delphi_pf->set_intrbase(intr_base);
+        delphi_pf->set_intrcount(spec->intr_count);
+        g_nicmgr_svc->sdk()->SetObject(delphi_pf);
+    }
+}
+
+void
+AccelDev::_MetricsFini(void)
+{
+    if (g_nicmgr_svc && delphi_pf) {
+        NIC_LOG_INFO("{}: Deregistering AccelPfInfo", DevNameGet());
+        g_nicmgr_svc->sdk()->DeleteObject(delphi_pf);
+        delphi_pf.reset();
     }
 }
 
@@ -481,17 +525,18 @@ AccelDev::_DevcmdReset(void *req,
                        void *resp_data)
 {
 
-    lif_reset_cmd_t     cmd = {0};
     accel_status_code_t status = ACCEL_RC_SUCCESS;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_RESET", DevNameGet());
     IntrClear();
 
-    cmd.opcode = CMD_OPCODE_LIF_RESET;
     for (auto iter = lif_map.cbegin(); iter != lif_map.cend(); iter++) {
         AccelLif *lif = iter->second;
-        cmd.index = lif->LifIdGet();
-        status = lif->CmdHandler((void *)&cmd, req_data, resp, resp_data);
+
+        /*
+         * Reset at the device level will reset and delete the LIF.
+         */
+        status = lif->reset(true);
         if (status != ACCEL_RC_SUCCESS) {
             break;
         }

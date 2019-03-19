@@ -83,7 +83,6 @@ time_expiry_check(const accel_timestamp_t& ts)
            ((timestamp() - ts.timestamp) > ts.expiry);
 }
 
-static const std::string accel_rgroup_name("AccelLif_rgroup");
 static std::vector<std::pair<const std::string,uint32_t>> accel_ring_vec = {
     {"cp",      ACCEL_RING_CP},
     {"cp_hot",  ACCEL_RING_CP_HOT},
@@ -126,6 +125,11 @@ static accel_lif_state_event_t  lif_initial_ev_table[] = {
         ACCEL_LIF_ST_WAIT_HAL,
     },
     {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -140,6 +144,11 @@ static accel_lif_state_event_t  lif_wait_hal_ev_table[] = {
         ACCEL_LIF_EV_HAL_UP,
         &AccelLif::accel_lif_hal_up_action,
         ACCEL_LIF_ST_PRE_INIT,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
     },
     {
         ACCEL_LIF_EV_NULL
@@ -163,6 +172,16 @@ static accel_lif_state_event_t  lif_pre_init_ev_table[] = {
         ACCEL_LIF_ST_SAME,
     },
     {
+        ACCEL_LIF_EV_RESET_DESTROY,
+        &AccelLif::accel_lif_ring_info_get_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -179,6 +198,16 @@ static accel_lif_state_event_t  lif_post_init_ev_table[] = {
         ACCEL_LIF_ST_SEQ_QUEUE_RESET,
     },
     {
+        ACCEL_LIF_EV_RESET_DESTROY,
+        &AccelLif::accel_lif_reset_action,
+        ACCEL_LIF_ST_SEQ_QUEUE_RESET,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_destroy_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -192,6 +221,16 @@ static accel_lif_state_event_t  lif_seq_reset_ev_table[] = {
     {
         ACCEL_LIF_EV_RESET,
         &AccelLif::accel_lif_seq_quiesce_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_RESET_DESTROY,
+        &AccelLif::accel_lif_seq_quiesce_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_destroy_action,
         ACCEL_LIF_ST_SAME,
     },
     {
@@ -226,6 +265,16 @@ static accel_lif_state_event_t  lif_rgroup_quiesce_ev_table[] = {
         ACCEL_LIF_ST_SAME,
     },
     {
+        ACCEL_LIF_EV_RESET_DESTROY,
+        &AccelLif::accel_lif_rgroup_quiesce_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_destroy_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_RGROUP_RESET,
         &AccelLif::accel_lif_rgroup_reset_action,
         ACCEL_LIF_ST_RGROUP_RESET,
@@ -247,9 +296,24 @@ static accel_lif_state_event_t  lif_rgroup_reset_ev_table[] = {
         ACCEL_LIF_ST_SAME,
     },
     {
-        ACCEL_LIF_EV_DONE_RGROUP_RESET,
+        ACCEL_LIF_EV_RESET_DESTROY,
+        &AccelLif::accel_lif_rgroup_reset_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_destroy_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_SEQ_QUEUE_PRE_INIT,
         &AccelLif::accel_lif_null_action,
         ACCEL_LIF_ST_SEQ_QUEUE_PRE_INIT,
+    },
+    {
+        ACCEL_LIF_EV_PRE_INIT,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_PRE_INIT,
     },
     {
         ACCEL_LIF_EV_NULL
@@ -266,6 +330,16 @@ static accel_lif_state_event_t  lif_seq_pre_init_ev_table[] = {
         ACCEL_LIF_EV_RESET,
         &AccelLif::accel_lif_null_action,
         ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_RESET_DESTROY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_destroy_action,
+        ACCEL_LIF_ST_POST_INIT,
     },
     {
         ACCEL_LIF_EV_INIT,
@@ -309,6 +383,16 @@ static accel_lif_state_event_t  lif_post_init_post_reset_ev_table[] = {
         ACCEL_LIF_ST_SEQ_QUEUE_PRE_INIT,
     },
     {
+        ACCEL_LIF_EV_RESET_DESTROY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SEQ_QUEUE_PRE_INIT,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_destroy_action,
+        ACCEL_LIF_ST_POST_INIT,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -323,6 +407,16 @@ static accel_lif_state_event_t  lif_seq_init_ev_table[] = {
         ACCEL_LIF_EV_RESET,
         &AccelLif::accel_lif_reset_action,
         ACCEL_LIF_ST_SEQ_QUEUE_RESET,
+    },
+    {
+        ACCEL_LIF_EV_RESET_DESTROY,
+        &AccelLif::accel_lif_reset_action,
+        ACCEL_LIF_ST_SEQ_QUEUE_RESET,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_destroy_action,
+        ACCEL_LIF_ST_POST_INIT,
     },
     {
         ACCEL_LIF_EV_SEQ_QUEUE_INIT,
@@ -379,6 +473,16 @@ static accel_lif_state_event_t  lif_idle_ev_table[] = {
         ACCEL_LIF_EV_RESET,
         &AccelLif::accel_lif_reset_action,
         ACCEL_LIF_ST_SEQ_QUEUE_RESET,
+    },
+    {
+        ACCEL_LIF_EV_RESET_DESTROY,
+        &AccelLif::accel_lif_reset_action,
+        ACCEL_LIF_ST_SEQ_QUEUE_RESET,
+    },
+    {
+        ACCEL_LIF_EV_DESTROY,
+        &AccelLif::accel_lif_destroy_action,
+        ACCEL_LIF_ST_POST_INIT,
     },
     {
         ACCEL_LIF_EV_SEQ_QUEUE_ENABLE,
@@ -491,14 +595,13 @@ accel_ring_id2name_get(uint32_t ring_handle)
 #define ACCEL_RGROUP_GET_RET_CHECK(_ret_val, _num_rings, _name)                 \
     do {                                                                        \
         if (_ret_val != SDK_RET_OK) {                                           \
-            NIC_LOG_ERR("{}: failed to getv" _name " for ring group {}",        \
-                        LifNameGet(), accel_rgroup_name);                       \
+            NIC_LOG_ERR("{}: failed to get " _name " for ring group",           \
+                        LifNameGet());                                          \
             return _ret_val;                                                    \
         }                                                                       \
         if (_num_rings < accel_ring_vec.size()) {                               \
-            NIC_LOG_ERR("{}: {} too few num_rings {} expected at least {}",     \
-                        LifNameGet(), accel_rgroup_name,                        \
-                        _num_rings, accel_ring_vec.size());                     \
+            NIC_LOG_ERR("{}: too few num_rings {} expected at least {}",        \
+                        LifNameGet(), _num_rings, accel_ring_vec.size());       \
             return HAL_RET_ERR;                                                 \
         }                                                                       \
     } while (false)
@@ -517,8 +620,8 @@ AccelLif::AccelLif(AccelDev& accel_dev,
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
     hal_lif_info_.lif_id = lif_res.lif_id;
-    std::string lif_name = spec->name + std::string("/lif") +
-                           std::to_string(hal_lif_info_.lif_id);
+    lif_name = spec->name + std::string("/lif") +
+               std::to_string(hal_lif_info_.lif_id);
     strncpy0(hal_lif_info_.name, lif_name.c_str(), sizeof(hal_lif_info_.name));
     intr_base = lif_res.intr_base;
 
@@ -548,8 +651,22 @@ AccelLif::AccelLif(AccelDev& accel_dev,
     NIC_LOG_DEBUG("{}: cmb_rmetrics_addr: {:#x} cmb_rmetrics_size: {}",
                   LifNameGet(), cmb_rmetrics_addr, cmb_rmetrics_size);
 
+    memset(&fsm_ctx, 0, sizeof(fsm_ctx));
     fsm_ctx.state = ACCEL_LIF_ST_INITIAL;
     accel_lif_state_machine(ACCEL_LIF_EV_CREATE);
+}
+
+AccelLif::~AccelLif()
+{
+    /*
+     * Host driver would have already performed graceful reset-destroy, in
+     * which case, the following FSM event would result in very quick work,
+     * i.e., no delay.
+     */
+    fsm_ctx.devcmd.status = ACCEL_RC_EAGAIN;
+    while (fsm_ctx.devcmd.status == ACCEL_RC_EAGAIN) {
+        accel_lif_state_machine(ACCEL_LIF_EV_DESTROY);
+    }
 }
 
 void
@@ -564,51 +681,6 @@ AccelLif::HalEventHandler(bool status)
     if (status) {
         accel_lif_state_machine(ACCEL_LIF_EV_HAL_UP);
     }
-}
-
-int
-AccelLif::_DelphiInit(void)
-{
-    accel_metrics::AccelSeqQueueKey     seq_qkey;
-    uint64_t                            qmetrics_addr;
-    int64_t                             qstate_addr;
-    uint32_t                            qid;
-    storage_seq_qstate_t                qstate = {0};
-
-    if (g_nicmgr_svc) {
-        seq_qkey.set_lifid(std::to_string(LifIdGet()));
-        for (qid = 0; qid < seq_created_count; qid++) {
-            seq_qkey.set_qid(std::to_string(qid));
-
-            qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
-                                                       STORAGE_SEQ_QTYPE_SQ, qid);
-            if (qstate_addr < 0) {
-                NIC_LOG_ERR("{}: Failed to get qstate address for SEQ qid {}",
-                            LifNameGet(), qid);
-                return -1;
-            }
-
-            qmetrics_addr = qstate_addr +
-                            offsetof(storage_seq_qstate_t, metrics);
-            auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
-                            NewAccelSeqQueueMetrics(seq_qkey, qmetrics_addr);
-            delphi_qmetrics_vec.push_back(std::move(qmetrics));
-
-            /*
-             * Some of the fields below will be updated when driver
-             * issues _DevcmdSeqQueueInit().
-             */
-            qstate.qgroup = STORAGE_SEQ_QGROUP_CPDC;
-            qinfo_metrics_update(qid, qstate_addr, qstate);
-
-            auto qinfo = delphi::objects::AccelSeqQueueInfoMetrics::
-                         NewAccelSeqQueueInfoMetrics(seq_qkey,
-                                                     qinfo_metrics_addr_get(qid));
-            delphi_qinfo_vec.push_back(std::move(qinfo));
-        }
-    }
-
-    return 0;
 }
 
 void
@@ -659,6 +731,15 @@ AccelLif::CmdHandler(void *req,
     return fsm_ctx.devcmd.status;
 }
 
+accel_status_code_t
+AccelLif::reset(bool destroy)
+{
+    fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
+    accel_lif_state_machine(destroy ? ACCEL_LIF_EV_RESET_DESTROY :
+                                      ACCEL_LIF_EV_RESET);
+    return fsm_ctx.devcmd.status;
+}
+
 /*
  * Find or create an accelerator ring group ring
  */
@@ -676,11 +757,13 @@ AccelLif::accel_rgroup_find_create(uint32_t ring_handle,
     }
 
     accel_rgroup_ring_t& rgroup_ring = rgroup_map[key];
-    delphi_key.set_rid(accel_ring_id2name_get(ring_handle));
-    delphi_key.set_subrid(std::to_string(sub_ring));
-    rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
-                       NewAccelHwRingMetrics(delphi_key,
-                          rmetrics_addr_get(ring_handle, sub_ring));
+    if (g_nicmgr_svc) {
+        delphi_key.set_rid(accel_ring_id2name_get(ring_handle));
+        delphi_key.set_subrid(std::to_string(sub_ring));
+        rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
+                           NewAccelHwRingMetrics(delphi_key,
+                              rmetrics_addr_get(ring_handle, sub_ring));
+    }
     return rgroup_ring;
 }
 
@@ -691,6 +774,7 @@ accel_lif_event_t
 AccelLif::accel_lif_null_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_LOG();
+    fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
     return ACCEL_LIF_EV_NULL;
 }
 
@@ -751,13 +835,21 @@ AccelLif::accel_lif_create_action(accel_lif_event_t event)
                   spec->tx_limit_gbps, spec->tx_burst_gb);
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
 
-    adminq = new AdminQ(LifNameGet(),
+    adminq = new AdminQ(LifNameGet().c_str(),
                         pd, LifIdGet(),
                         ACCEL_ADMINQ_REQ_QTYPE, ACCEL_ADMINQ_REQ_QID,
                         ACCEL_ADMINQ_REQ_RING_SIZE, ACCEL_ADMINQ_RESP_QTYPE,
                         ACCEL_ADMINQ_RESP_QID, ACCEL_ADMINQ_RESP_RING_SIZE,
                         AdminCmdHandler, this);
     return ACCEL_LIF_EV_NULL;
+}
+
+accel_lif_event_t 
+AccelLif::accel_lif_destroy_action(accel_lif_event_t event)
+{
+    ACCEL_LIF_FSM_LOG();
+    fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
+    return ACCEL_LIF_EV_RESET_DESTROY;
 }
 
 accel_lif_event_t
@@ -774,20 +866,34 @@ AccelLif::accel_lif_hal_up_action(accel_lif_event_t event)
         ctl_cosB = 0;
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
     }
-
-    // acquire rings info as initialized by HAL
-    accel_ring_info_get_all();
     return ACCEL_LIF_EV_NULL;
 }
 
+
+accel_lif_event_t
+AccelLif::accel_lif_ring_info_get_action(accel_lif_event_t event)
+{
+    ACCEL_LIF_FSM_LOG();
+
+    // acquire rings info as initialized by HAL
+    if (rgroup_map.empty()) {
+        if (accel_ring_info_get_all() != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: failed to acquire ring group info",
+                        LifNameGet());
+            fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
+        }
+    }
+    return ACCEL_LIF_EV_NULL;
+}
 
 accel_lif_event_t
 AccelLif::accel_lif_init_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_LOG();
 
+    fsm_ctx.reset_destroy = false;
     if (dev_api->lif_create(&hal_lif_info_) != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: Failed to HAL create LIF {}", LifNameGet());
+        NIC_LOG_ERR("{}: Failed to create LIF", LifNameGet());
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
     }
 
@@ -797,9 +903,8 @@ AccelLif::accel_lif_init_action(accel_lif_event_t event)
     NIC_LOG_INFO("{}: created", LifNameGet());
 
     // establish sequencer queues metrics with Delphi
-    if (_DelphiInit()) {
-        NIC_LOG_ERR("{}: Failed to establish qmetrics",
-                    LifNameGet());
+    if (qmetrics_init()) {
+        NIC_LOG_ERR("{}: Failed to establish qmetrics", LifNameGet());
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
     }
 
@@ -821,7 +926,8 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
     uint8_t                 abort = 1;
 
     ACCEL_LIF_FSM_LOG();
-
+    fsm_ctx.reset_destroy = (event == ACCEL_LIF_EV_RESET_DESTROY) ||
+                            (event == ACCEL_LIF_EV_DESTROY);
     // Disable all sequencer queues
     for (qid = 0; qid < seq_created_count; qid++) {
         qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
@@ -908,7 +1014,6 @@ AccelLif::accel_lif_seq_quiesce_action(accel_lif_event_t event)
 
     NIC_LOG_DEBUG("{}: last qid quiesced: {} seq_qid_init_high: {}",
                  LifNameGet(), fsm_ctx.quiesce_qid, seq_qid_init_high);
-
     /*
      * Reset requires rings to be disabled which helps with convergence
      * to the quiesce state. For those rings that do not support disablement
@@ -1012,8 +1117,23 @@ AccelLif::accel_lif_rgroup_reset_action(accel_lif_event_t event)
 
     accel_dev.IntrClear();
 
+    /*
+     * It's now safe to destroy the LIF if applicable.
+     */
     fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
-    return ACCEL_LIF_EV_DONE_RGROUP_RESET;
+    if (fsm_ctx.reset_destroy) {
+        if (dev_api->lif_destroy(LifIdGet()) == SDK_RET_OK) {
+            qmetrics_fini();
+            accel_ring_info_del_all();
+            NIC_LOG_DEBUG("{}: destroyed", LifNameGet());
+            return ACCEL_LIF_EV_PRE_INIT;
+        }
+
+        NIC_LOG_ERR("{}: failed to destroy LIF", LifNameGet());
+        fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
+    }
+
+    return ACCEL_LIF_EV_SEQ_QUEUE_PRE_INIT;
 }
 
 accel_lif_event_t 
@@ -1536,6 +1656,33 @@ AccelLif::accel_ring_info_get_all(void)
 }
 
 /*
+ * Delete accel_ring_tbl
+ */
+void
+AccelLif::accel_ring_info_del_all(void)
+{
+    uint32_t    ring_handle;
+    uint32_t    sub_ring;
+
+    auto iter = rgroup_map.begin();
+    while (iter != rgroup_map.end()) {
+         accel_rgroup_ring_t& rgroup_ring = iter->second;
+         if (rgroup_ring.delphi_metrics) {
+             accel_rgroup_ring_key_extract(iter->first, ring_handle, sub_ring);
+             NIC_LOG_DEBUG("{}: deleting delphi_metrics ring {} "
+                           "sub_ring {}", LifNameGet(),
+                           accel_ring_id2name_get(ring_handle), sub_ring);
+             rgroup_ring.delphi_metrics->Delete();
+             rgroup_ring.delphi_metrics.reset();
+         }
+
+         iter = rgroup_map.erase(iter);
+    }
+    accel_rgroup_rings_del();
+    accel_rgroup_del();
+}
+
+/*
  * Create accelerator ring group
  */
 int
@@ -1543,13 +1690,23 @@ AccelLif::accel_rgroup_add(void)
 {
     int     ret_val;
 
-    ret_val = dev_api->accel_rgroup_add(accel_rgroup_name, cmb_rmetrics_addr,
+    ret_val = dev_api->accel_rgroup_add(LifNameGet(), cmb_rmetrics_addr,
                                         cmb_rmetrics_size);
     if (ret_val != SDK_RET_OK) {
-        NIC_LOG_ERR("{}:: failed to add ring group {}",
-                    LifNameGet(), accel_rgroup_name);
+        NIC_LOG_ERR("{}: failed to add ring group", LifNameGet());
     }
     return ret_val;
+}
+
+/*
+ * Delete accelerator ring group
+ */
+void
+AccelLif::accel_rgroup_del(void)
+{
+    if (dev_api->accel_rgroup_del(LifNameGet()) != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: failed to delete ring group", LifNameGet());
+    }
 }
 
 /*
@@ -1560,13 +1717,23 @@ AccelLif::accel_rgroup_rings_add(void)
 {
     int     ret_val;
 
-    ret_val = dev_api->accel_rgroup_ring_add(accel_rgroup_name,
-                                             accel_ring_vec);
+    ret_val = dev_api->accel_rgroup_ring_add(LifNameGet(), accel_ring_vec);
     if (ret_val != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: failed to add ring vector",
-                    LifNameGet(), accel_rgroup_name);
+        NIC_LOG_ERR("{}: failed to add ring vector", LifNameGet());
     }
     return ret_val;
+}
+
+/*
+ * Delete relevant rings from accelerator ring group
+ */
+void
+AccelLif::accel_rgroup_rings_del(void)
+{
+    if (dev_api->accel_rgroup_ring_del(LifNameGet(),
+                                       accel_ring_vec) != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: failed to delete ring vector", LifNameGet());
+    }
 }
 
 /*
@@ -1577,11 +1744,11 @@ AccelLif::accel_rgroup_reset_set(bool reset_sense)
 {
     int     ret_val;
 
-    ret_val = dev_api->accel_rgroup_reset_set(accel_rgroup_name, ACCEL_SUB_RING_ALL,
-                                              reset_sense);
+    ret_val = dev_api->accel_rgroup_reset_set(LifNameGet(),
+                                    ACCEL_SUB_RING_ALL, reset_sense);
     if (ret_val != SDK_RET_OK) {
-        NIC_LOG_ERR("{}:: failed to reset ring group {} sense {}",
-                    LifNameGet(), accel_rgroup_name, reset_sense);
+        NIC_LOG_ERR("{}: failed to reset ring group sense {}",
+                    LifNameGet(), reset_sense);
     }
     return ret_val;
 }
@@ -1594,11 +1761,11 @@ AccelLif::accel_rgroup_enable_set(bool enable_sense)
 {
     int     ret_val;
 
-    ret_val = dev_api->accel_rgroup_enable_set(accel_rgroup_name, ACCEL_SUB_RING_ALL,
-                                               enable_sense);
+    ret_val = dev_api->accel_rgroup_enable_set(LifNameGet(),
+                                    ACCEL_SUB_RING_ALL, enable_sense);
     if (ret_val != SDK_RET_OK) {
-        NIC_LOG_ERR("{}:: failed to enable ring group {} sense {}",
-                    LifNameGet(), accel_rgroup_name, enable_sense);
+        NIC_LOG_ERR("{}: failed to enable ring group sense {}",
+                    LifNameGet(), enable_sense);
     }
     return ret_val;
 }
@@ -1612,11 +1779,10 @@ AccelLif::accel_rgroup_pndx_set(uint32_t val,
 {
     int     ret_val;
 
-    ret_val = dev_api->accel_rgroup_pndx_set(accel_rgroup_name, ACCEL_SUB_RING_ALL,
-                                             val, conditional);
+    ret_val = dev_api->accel_rgroup_pndx_set(LifNameGet(),
+                                    ACCEL_SUB_RING_ALL, val, conditional);
     if (ret_val != SDK_RET_OK) {
-        NIC_LOG_ERR("{}:: failed to set pndx for ring group {} val {}",
-                    LifNameGet(), accel_rgroup_name, val);
+        NIC_LOG_ERR("{}: failed to set pndx val {}", LifNameGet(), val);
     }
     return ret_val;
 }
@@ -1645,9 +1811,8 @@ AccelLif::accel_rgroup_rinfo_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
-    ret_val = dev_api->accel_rgroup_info_get(accel_rgroup_name, ACCEL_SUB_RING_ALL,
-                                             accel_rgroup_rinfo_rsp_cb, this,
-                                             &num_rings);
+    ret_val = dev_api->accel_rgroup_info_get(LifNameGet(), ACCEL_SUB_RING_ALL,
+                             accel_rgroup_rinfo_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "rinfo");
     return ret_val;
 }
@@ -1676,9 +1841,8 @@ AccelLif::accel_rgroup_rindices_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
-    ret_val = dev_api->accel_rgroup_indices_get(accel_rgroup_name, ACCEL_SUB_RING_ALL,
-                                                accel_rgroup_rindices_rsp_cb, this,
-                                                &num_rings);
+    ret_val = dev_api->accel_rgroup_indices_get(LifNameGet(), ACCEL_SUB_RING_ALL,
+                             accel_rgroup_rindices_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "indices");
     return ret_val;
 }
@@ -1707,9 +1871,8 @@ AccelLif::accel_rgroup_rmetrics_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
-    ret_val = dev_api->accel_rgroup_metrics_get(accel_rgroup_name, ACCEL_SUB_RING_ALL,
-                                                accel_rgroup_rmetrics_rsp_cb, this,
-                                                &num_rings);
+    ret_val = dev_api->accel_rgroup_metrics_get(LifNameGet(), ACCEL_SUB_RING_ALL,
+                             accel_rgroup_rmetrics_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "metrics");
     return ret_val;
 }
@@ -1741,7 +1904,7 @@ AccelLif::accel_ring_num_pendings_get(const accel_rgroup_ring_t& rgroup_ring)
     }
 
     if (num_pendings == 0) {
-        NIC_LOG_DEBUG("ring {} pndx {} cndx {}",
+        NIC_LOG_DEBUG("{} ring {} pndx {} cndx {}", LifNameGet(),
                      accel_ring_id2name_get(rgroup_ring.info.ring_handle),
                      pndx, cndx);
     }
@@ -1772,6 +1935,84 @@ AccelLif::accel_ring_max_pendings_get(uint32_t& max_pendings)
     }
 
     return ret_val;
+}
+
+int
+AccelLif::qmetrics_init(void)
+{
+    accel_metrics::AccelSeqQueueKey     seq_qkey;
+    uint64_t                            qmetrics_addr;
+    int64_t                             qstate_addr;
+    uint32_t                            qid;
+    storage_seq_qstate_t                qstate = {0};
+
+    if (g_nicmgr_svc) {
+        seq_qkey.set_lifid(std::to_string(LifIdGet()));
+        for (qid = 0; qid < seq_created_count; qid++) {
+            seq_qkey.set_qid(std::to_string(qid));
+            qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
+                                                       STORAGE_SEQ_QTYPE_SQ, qid);
+            if (qstate_addr < 0) {
+                NIC_LOG_ERR("{}: Failed to get qstate address for SEQ qid {}",
+                            LifNameGet(), qid);
+                return -1;
+            }
+
+            qmetrics_addr = qstate_addr +
+                            offsetof(storage_seq_qstate_t, metrics);
+            auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
+                            NewAccelSeqQueueMetrics(seq_qkey, qmetrics_addr);
+            delphi_qmetrics_vec.push_back(std::move(qmetrics));
+
+            /*
+             * Some of the fields below will be updated when driver
+             * issues _DevcmdSeqQueueInit().
+             */
+            qstate.qgroup = STORAGE_SEQ_QGROUP_CPDC;
+            qinfo_metrics_update(qid, qstate_addr, qstate);
+
+            auto qinfo = delphi::objects::AccelSeqQueueInfoMetrics::
+                         NewAccelSeqQueueInfoMetrics(seq_qkey,
+                                                     qinfo_metrics_addr_get(qid));
+            delphi_qinfo_vec.push_back(std::move(qinfo));
+        }
+
+        NIC_LOG_DEBUG("{}: created qmetrics_vec size {} qinfo_vec size {}",
+                      LifNameGet(), delphi_qmetrics_vec.size(),
+                      delphi_qinfo_vec.size());
+    }
+
+    return SDK_RET_OK;
+}
+
+void
+AccelLif::qmetrics_fini(void)
+{
+    uint32_t    qid;
+
+    if (delphi_qmetrics_vec.size() == delphi_qinfo_vec.size()) {
+        NIC_LOG_DEBUG("{}: destroying qmetrics_vec size {} qinfo_vec size {}",
+                      LifNameGet(), delphi_qmetrics_vec.size(),
+                      delphi_qinfo_vec.size());
+        for (qid = 0; qid < delphi_qmetrics_vec.size(); qid++) {
+            auto qmetrics = delphi_qmetrics_vec.at(qid);
+            qmetrics->Delete();
+            qmetrics.reset();
+
+            auto qinfo = delphi_qinfo_vec.at(qid);
+            qinfo->Delete();
+            qinfo.reset();
+        }
+
+        delphi_qmetrics_vec.clear();
+        delphi_qinfo_vec.clear();
+
+    } else {
+        NIC_LOG_ERR("{}: unexpected qmetrics_vec size {} != qinfo_vec size {}",
+                    LifNameGet(), delphi_qmetrics_vec.size(),
+                    delphi_qinfo_vec.size());
+        throw;
+    }
 }
 
 /*

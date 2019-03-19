@@ -80,6 +80,15 @@ accel_rgroup_ring_key_make(uint32_t ring_handle,
     return ((accel_rgroup_ring_key_t)(ring_handle) << 32) | sub_ring;
 }
 
+static inline void
+accel_rgroup_ring_key_extract(accel_rgroup_ring_key_t key,
+                              uint32_t& ring_handle,
+                              uint32_t& sub_ring)
+{
+    ring_handle = key >> 32;
+    sub_ring = key & 0xffffffff;
+}
+
 /**
  * Sequencer queue info metrics layout for Delphi
  */
@@ -134,13 +143,16 @@ typedef enum {
     ACCEL_LIF_EV_NULL,
     ACCEL_LIF_EV_ANY,
     ACCEL_LIF_EV_CREATE,
+    ACCEL_LIF_EV_DESTROY,
     ACCEL_LIF_EV_HAL_UP,
     ACCEL_LIF_EV_INIT,
     ACCEL_LIF_EV_RESET,
+    ACCEL_LIF_EV_RESET_DESTROY,
     ACCEL_LIF_EV_WAIT_SEQ_QUEUE_QUIESCE,
     ACCEL_LIF_EV_WAIT_RGROUP_QUIESCE,
     ACCEL_LIF_EV_RGROUP_RESET,
-    ACCEL_LIF_EV_DONE_RGROUP_RESET,
+    ACCEL_LIF_EV_SEQ_QUEUE_PRE_INIT,
+    ACCEL_LIF_EV_PRE_INIT,
     ACCEL_LIF_EV_ADMINQ_INIT,
     ACCEL_LIF_EV_SEQ_QUEUE_INIT,
     ACCEL_LIF_EV_SEQ_QUEUE_BATCH_INIT,
@@ -158,13 +170,16 @@ typedef enum {
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_NULL),                     \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_ANY),                      \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_CREATE),                   \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_DESTROY),                  \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_HAL_UP),                   \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_INIT),                     \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_RESET),                    \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_RESET_DESTROY),            \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_WAIT_SEQ_QUEUE_QUIESCE),   \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_WAIT_RGROUP_QUIESCE),      \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_RGROUP_RESET),             \
-    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_DONE_RGROUP_RESET),        \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SEQ_QUEUE_PRE_INIT),       \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_PRE_INIT),                 \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_ADMINQ_INIT),              \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SEQ_QUEUE_INIT),           \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SEQ_QUEUE_BATCH_INIT),     \
@@ -209,6 +224,7 @@ typedef struct {
     accel_lif_devcmd_ctx_t  devcmd;
     accel_timestamp_t       ts;
     uint32_t                quiesce_qid;
+    bool                    reset_destroy;
 } accel_lif_fsm_ctx_t;
 
 /**
@@ -228,17 +244,17 @@ class AccelLif {
 public:
     AccelLif(AccelDev& accel_dev,
              accel_lif_res_t& lif_res);
-
-    std::string GetName() { return spec->name; }
+    ~AccelLif();
 
     accel_status_code_t
     CmdHandler(void *req, void *req_data, void *resp, void *resp_data);
 
+    accel_status_code_t reset(bool destroy);
     void SetHalClient(devapi *dapi);
     void HalEventHandler(bool status);
 
     uint64_t LifIdGet(void) { return hal_lif_info_.lif_id; }
-    const char *LifNameGet(void) { return hal_lif_info_.name; }
+    const std::string& LifNameGet(void) { return lif_name; }
     uint32_t SeqCreatedCountGet(void) { return seq_created_count; }
     const accel_ring_t *AccelRingTableGet(void) { return accel_ring_tbl; }
 
@@ -258,7 +274,9 @@ public:
     accel_lif_event_t accel_lif_eagain_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_reject_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_create_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_destroy_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_hal_up_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_ring_info_get_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_init_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_reset_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_seq_quiesce_action(accel_lif_event_t event);
@@ -272,6 +290,7 @@ public:
     accel_lif_event_t accel_lif_crypto_key_update_action(accel_lif_event_t event);
 
 private:
+    std::string                 lif_name;
     AccelDev&                   accel_dev;
     const accel_devspec_t       *spec;
     struct queue_info           qinfo[NUM_QUEUE_TYPES];
@@ -306,8 +325,6 @@ private:
     /* AdminQ Commands */
     AdminQ                      *adminq;
 
-    int _DelphiInit(void);
-
     accel_status_code_t 
     _DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd);
 
@@ -316,8 +333,11 @@ private:
                                  bool enable);
 
     int accel_ring_info_get_all(void);
+    void accel_ring_info_del_all(void);
     int accel_rgroup_add(void);
+    void accel_rgroup_del(void);
     int accel_rgroup_rings_add(void);
+    void accel_rgroup_rings_del(void);
     int accel_rgroup_reset_set(bool reset_sense);
     int accel_rgroup_enable_set(bool enable_sense);
     int accel_rgroup_pndx_set(uint32_t val,
@@ -327,6 +347,8 @@ private:
     int accel_rgroup_rmetrics_get(void);
     uint32_t accel_ring_num_pendings_get(const accel_rgroup_ring_t& rgroup_ring);
     int accel_ring_max_pendings_get(uint32_t& max_pendings);
+    int qmetrics_init(void);
+    void qmetrics_fini(void);
     uint64_t rmetrics_addr_get(uint32_t ring_handle,
                                uint32_t sub_ring);
     uint64_t qinfo_metrics_addr_get(uint32_t qid);

@@ -45,6 +45,7 @@ typedef struct dev_cmd_db_s {
  */
 class Device {
     public:
+        virtual ~Device() {}
         enum DeviceType GetType() { return type; }
         void SetType(enum DeviceType type) { this->type = type;}
         static OpromType oprom_type_str_to_type(std::string const& s)

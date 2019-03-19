@@ -213,9 +213,25 @@ static accel_ring_ops_map_t     supported_ring_ops_map = {
 static accel_rgroup_map_t       rgroup_map;
 static void                     *rgroup_timer;
 
+/*
+ * Lock to guard rgroup addition/deletion interference with background timer.
+ */
+static sdk_spinlock_t           rgroup_lock;
+static bool                     lock_inited;
+
+#define ACCEL_RGROUP_LOCK()                                                 \
+    SDK_SPINLOCK_LOCK(&rgroup_lock)
+
+#define ACCEL_RGROUP_UNLOCK()                                               \
+    SDK_SPINLOCK_UNLOCK(&rgroup_lock)
+
 hal_ret_t
 accel_rgroup_init(int tid)
 {
+    if (!lock_inited) {
+        SDK_ASSERT(!SDK_SPINLOCK_INIT(&rgroup_lock, PTHREAD_PROCESS_PRIVATE));
+        lock_inited = true;
+    }
     if (!rgroup_timer && (tid == hal::HAL_THREAD_ID_PERIODIC)) {
 
         while (!sdk::lib::periodic_thread_is_running()) {
@@ -240,6 +256,11 @@ accel_rgroup_fini(int tid)
      if (rgroup_timer && (tid == hal::HAL_THREAD_ID_PERIODIC)) {
          sdk::lib::timer_delete(rgroup_timer);
          rgroup_timer = nullptr;
+     }
+
+     if (lock_inited) {
+         SDK_SPINLOCK_DESTROY(&rgroup_lock);
+         lock_inited = false;
      }
      return HAL_RET_OK;
 }
@@ -278,16 +299,20 @@ accel_rgroup_add(const char *rgroup_name,
                  uint32_t metrics_mem_size)
 {
     accel_rgroup_t  *rgroup;
+    hal_ret_t       ret_val;
 
+    ACCEL_RGROUP_LOCK();
     if (accel_rgroup_find(rgroup_name)) {
-        return HAL_RET_ENTRY_EXISTS;
+        ret_val = HAL_RET_ENTRY_EXISTS;
+        goto done;
     }
 
     if (metrics_mem_size) {
         if (metrics_mem_size < ACCEL_METRICS_MEM_OFFSET(ACCEL_RING_ID_MAX, 0)) {
             HAL_TRACE_ERR("rgroup {} metrics_mem_size {} too small",
                           rgroup_name, metrics_mem_size);
-            return HAL_RET_INVALID_ARG;
+            ret_val = HAL_RET_INVALID_ARG;
+            goto done;
         }
     }
 
@@ -295,11 +320,15 @@ accel_rgroup_add(const char *rgroup_name,
                                                metrics_mem_size);
     if (!rgroup) {
         HAL_TRACE_ERR("Failed to allocate rgroup {}", rgroup_name);
-        return HAL_RET_OOM;
+        ret_val = HAL_RET_OOM;
+        goto done;
     }
-
     rgroup_map.insert(std::make_pair(std::string(rgroup_name), rgroup));
-    return HAL_RET_OK;
+    ret_val = HAL_RET_OK;
+
+done:
+    ACCEL_RGROUP_UNLOCK();
+    return ret_val;
 }
 
 /*
@@ -310,11 +339,13 @@ accel_rgroup_del(const char *rgroup_name)
 {
     accel_rgroup_t  *rgroup;
 
+    ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
     if (rgroup) {
         rgroup_map.erase(std::string(rgroup_name));
         delete rgroup;
     }
+    ACCEL_RGROUP_UNLOCK();
     return HAL_RET_OK;
 }
 
@@ -329,10 +360,12 @@ accel_rgroup_ring_add(const char *rgroup_name,
     accel_rgroup_t  *rgroup;
     hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
 
+    ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
     if (rgroup) {
         ret_val = rgroup->ring_add(std::string(ring_name), ring_handle);
     }
+    ACCEL_RGROUP_UNLOCK();
 
     return ret_val;
 }
@@ -346,10 +379,12 @@ accel_rgroup_ring_del(const char *rgroup_name,
 {
     accel_rgroup_t  *rgroup;
 
+    ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
     if (rgroup) {
         rgroup->ring_del(std::string(ring_name));
     }
+    ACCEL_RGROUP_UNLOCK();
     return HAL_RET_OK;
 }
 
@@ -367,12 +402,13 @@ accel_rgroup_reset_set(const char *rgroup_name,
     accel_rgroup_t  *rgroup;
     hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
 
+    ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
     if (rgroup) {
         ret_val = rgroup->reset_set(sub_ring, last_ring_handle,
                                     last_sub_ring, reset_sense);
     }
-
+    ACCEL_RGROUP_UNLOCK();
     return ret_val;
 }
 
@@ -390,12 +426,13 @@ accel_rgroup_enable_set(const char *rgroup_name,
     accel_rgroup_t  *rgroup;
     hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
 
+    ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
     if (rgroup) {
         ret_val = rgroup->enable_set(sub_ring, last_ring_handle,
                                      last_sub_ring, enable_sense);
     }
-
+    ACCEL_RGROUP_UNLOCK();
     return ret_val;
 }
 
@@ -414,12 +451,13 @@ accel_rgroup_pndx_set(const char *rgroup_name,
     accel_rgroup_t  *rgroup;
     hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
 
+    ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
     if (rgroup) {
         ret_val = rgroup->pndx_set(sub_ring, last_ring_handle,
                                    last_sub_ring, val, conditional);
     }
-
+    ACCEL_RGROUP_UNLOCK();
     return ret_val;
 }
 
@@ -435,11 +473,12 @@ accel_rgroup_info_get(const char *rgroup_name,
     accel_rgroup_t  *rgroup;
     hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
 
+    ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
     if (rgroup) {
         ret_val = rgroup->info_get(sub_ring, cb_func, user_ctx);
     }
-
+    ACCEL_RGROUP_UNLOCK();
     return ret_val;
 }
 
@@ -455,11 +494,12 @@ accel_rgroup_indices_get(const char *rgroup_name,
     accel_rgroup_t  *rgroup;
     hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
 
+    ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
     if (rgroup) {
         ret_val = rgroup->indices_get(sub_ring, cb_func, user_ctx);
     }
-
+    ACCEL_RGROUP_UNLOCK();
     return ret_val;
 }
 
@@ -475,11 +515,12 @@ accel_rgroup_metrics_get(const char *rgroup_name,
     accel_rgroup_t  *rgroup;
     hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
 
+    ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
     if (rgroup) {
         ret_val = rgroup->metrics_get(sub_ring, cb_func, user_ctx);
     }
-
+    ACCEL_RGROUP_UNLOCK();
     return ret_val;
 }
 
@@ -1577,6 +1618,7 @@ accel_rgroup_timer(void *timer,
     accel_rgroup_iter_c      iter;
     accel_ring_metrics_t     metrics[ACCEL_RING_ID_MAX][ACCEL_SUB_RING_MAX];
 
+    ACCEL_RGROUP_LOCK();
     iter = rgroup_map.begin();
     while (iter != rgroup_map.end()) {
         rgroup = iter->second;
@@ -1591,9 +1633,10 @@ accel_rgroup_timer(void *timer,
         }
         iter++;
     }
+    ACCEL_RGROUP_UNLOCK();
 }
 
 
-} // namespace pd
+}/// aameppac  pd
 
-} // namespace hal
+} // nmmesaacehhal

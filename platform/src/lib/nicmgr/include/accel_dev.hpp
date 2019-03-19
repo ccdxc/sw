@@ -67,8 +67,7 @@ public:
     AccelDev(devapi *dev_api,
              void *dev_spec,
              PdClient *pd_client);
-
-    std::string GetName() { return spec->name; }
+    ~AccelDev();
 
     void DevcmdHandler();
     void HalEventHandler(bool status);
@@ -80,6 +79,7 @@ public:
 
     void IntrClear(void);
 
+    std::string GetName() { return spec->name; }
     const std::string& DevNameGet(void) { return spec->name; }
     const accel_devspec_t *DevSpecGet(void) { return spec; }
     PdClient *PdClientGet(void) { return pd; }
@@ -119,7 +119,8 @@ private:
     uint32_t                    num_crypto_keys_max;
     bool                        delphi_mounted;
 
-    bool _CreateHostDevice();
+    bool _CreateHostDevice(void);
+    void _DestroyHostDevice(void);
 
     /* Device Commands */
     static void _DevcmdPoll(void *obj);
@@ -142,7 +143,8 @@ private:
     // Tasks
     evutil_timer                devcmd_timer;
 
-    void _DelphiInit(void);
+    void _MetricsInit(void);
+    void _MetricsFini(void);
 
     AccelLif *_LifFind(uint64_t lif_id);
 };

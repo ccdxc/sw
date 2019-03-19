@@ -312,6 +312,16 @@ DeviceManager::GetDevice(std::string name)
 }
 
 void
+DeviceManager::DeleteDevice(std::string name)
+{
+    auto iter = devices.find(name);
+    if (iter != devices.end()) {
+        delete iter->second;
+        devices.erase(iter);
+    }
+}
+
+void
 DeviceManager::SetHalClient(devapi *dev_api)
 {
     for (auto it = devices.begin(); it != devices.end(); it++) {
