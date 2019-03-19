@@ -11,77 +11,14 @@ import iota.test.iris.testcases.naples_upgrade.common as common
 
 def __installNaplesFwLatestImage(node):
 
-    fullpath = '/' + common.UPGRADE_NAPLES_PKG
-
+    fullpath = api.GetTopDir() + '/' + common.UPGRADE_NAPLES_PKG
+    api.Logger.info("fullpath for upg image: " + fullpath)
     resp = api.CopyToHost(node, [fullpath], "")
     if resp is None:
         return api.types.status.FAILURE
     if resp.api_response.api_status != types_pb2.API_STATUS_OK:
         api.Logger.error("Failed to copy Drivers to Node: %s" % node)
         return api.types.status.FAILURE
-
-    return api.types.status.SUCCESS
-
-def __modifyNaplesFwImage(node):
-
-    def untar(node):
-        req = api.Trigger_CreateExecuteCommandsRequest()
-        api.Trigger_AddHostCommand(req, node, "tar xvf naples_fw.tar")
-        resp = api.Trigger(req)
-        for cmd in resp.commands:
-            api.PrintCommandResults(cmd)
-            if cmd.exit_code != 0:
-                return api.types.status.FAILURE
-        return api.types.status.SUCCESS
-
-
-    def removePkgFile(node):
-        req = api.Trigger_CreateExecuteCommandsRequest()
-        api.Trigger_AddHostCommand(req, node, "rm -rf naples_fw.tar")
-        resp = api.Trigger(req)
-        for cmd in resp.commands:
-            api.PrintCommandResults(cmd)
-            if cmd.exit_code != 0:
-                return api.types.status.FAILURE
-        return api.types.status.SUCCESS
-
-    def modifyManifest(node):
-        req = api.Trigger_CreateExecuteCommandsRequest()
-        api.Trigger_AddHostCommand(req, node, "cat MANIFEST | jq '.build_user = \"iota-upgrade-user\"' > MANIFEST.temp 2>&1")
-        api.Trigger_AddHostCommand(req, node, "mv MANIFEST.temp MANIFEST")
-        resp = api.Trigger(req)
-        for cmd in resp.commands:
-            api.PrintCommandResults(cmd)
-            if cmd.exit_code != 0:
-                return api.types.status.FAILURE
-            print(cmd.stdout)
-        return api.types.status.SUCCESS
-
-    def tar(node):
-        req = api.Trigger_CreateExecuteCommandsRequest()
-        api.Trigger_AddHostCommand(req, node, "tar cvf naples_fw.tar kernel.img MANIFEST system.img u-boot.img")
-        resp = api.Trigger(req)
-        for cmd in resp.commands:
-            api.PrintCommandResults(cmd)
-            if cmd.exit_code != 0:
-                return api.types.status.FAILURE
-        return api.types.status.SUCCESS
-
-    def removeImgFiles(node):
-        req = api.Trigger_CreateExecuteCommandsRequest()
-        api.Trigger_AddHostCommand(req, node, "rm -rf kernel.img MANIFEST system.img u-boot.img")
-        resp = api.Trigger(req)
-        for cmd in resp.commands:
-            api.PrintCommandResults(cmd)
-            if cmd.exit_code != 0:
-                return api.types.status.FAILURE
-        return api.types.status.SUCCESS
-
-    steps = [untar, removePkgFile, modifyManifest, tar, removeImgFiles]
-    for step in steps:
-        ret = step(node)
-        if ret != api.types.status.SUCCESS:
-            return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 
@@ -109,9 +46,6 @@ def Main(step):
         ret = __installNaplesFwLatestImage(naplesHost)
         if ret != api.types.status.SUCCESS:
             return ret
-        #ret = __modifyNaplesFwImage(naplesHost)
-        #if ret != api.types.status.SUCCESS:
-        #    return ret
         ret = __copyNaplesFwImage(naplesHost)
         if ret != api.types.status.SUCCESS:
             return ret

@@ -82,6 +82,7 @@ void DelphiServer::unpersistObject(string kind, string key) {
     string tmp;
     int rc;
 
+    LogInfo("Un-persisting {}/{}", kind, key);
     tmp = kind + ":" + key;
     db_key.mv_size = tmp.size();
     db_key.mv_data = (void *)tmp.c_str();

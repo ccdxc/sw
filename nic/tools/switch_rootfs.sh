@@ -67,6 +67,9 @@ else
     exit 1
 fi
 
+rm -rf /data/pre-upgrade-logs.tar.gz
+tar -cvf /data/pre-upgrade-logs.tar.gz /var/log/
+
 echo "Switching filesystem from $cur_image to $new_image"
 
 update_fwupgrade_state "MOUNTING NEW IMAGE PARTITION"

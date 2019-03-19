@@ -8,4 +8,5 @@ import iota.test.iris.utils.naples_host as naples_host_util
 
 UPGRADE_ROOT_DIR = 'upgrade_bin'
 
-UPGRADE_NAPLES_PKG = "../../../../../nic/naples_fw.tar"
+UPGRADE_NAPLES_PKG = "nic/naples_fw.tar"
+UPGRADE_NAPLES_PKG_COMPAT_CHECK = "nic/naples_upg_fw.tar"

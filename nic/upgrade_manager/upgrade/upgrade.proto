@@ -102,6 +102,7 @@ message UpgReq {
 message UpgResp {
     option (delphi.update_event) = true;
     option (delphi.singleton)    = true;
+    option (delphi.persist)      = true;
     delphi.ObjectMeta          Meta            = 1;
     UpgRespType                UpgRespVal      = 2 [(delphi.event) = true];
     repeated string            UpgRespFailStr  = 3;
@@ -110,6 +111,7 @@ message UpgResp {
 message UpgStateReq {
     option (delphi.update_event) = true;
     option (delphi.singleton)    = true;
+    option (delphi.persist)      = true;
     delphi.ObjectMeta      Meta              = 1;
     UpgReqStateType        UpgReqState       = 2 [(delphi.event) = true];
     UpgType                UpgReqType        = 3 [(delphi.event) = true];
@@ -118,6 +120,7 @@ message UpgStateReq {
 
 message UpgAppResp {
     option (delphi.update_event) = true;
+    option (delphi.persist)      = true;
     delphi.ObjectMeta      Meta              = 1;
     string                 Key               = 2;
     UpgStateRespType       UpgAppRespVal     = 3 [(delphi.event) = true];
@@ -126,6 +129,7 @@ message UpgAppResp {
 
 message UpgApp {
     option (delphi.update_event) = true;
+    option (delphi.persist)      = true;
     delphi.ObjectMeta      Meta              = 1;
     string                 Key               = 2;
 }
