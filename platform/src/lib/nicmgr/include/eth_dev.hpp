@@ -23,7 +23,7 @@
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 
 // #include "platform/src/lib/hal_api/include/hal_types.hpp"
-#include "platform/src/lib/mnet/include/mnet.h"
+#include "nic/sdk/platform/mnet/include/mnet.h"
 
 #include "device.hpp"
 #include "pd_client.hpp"
