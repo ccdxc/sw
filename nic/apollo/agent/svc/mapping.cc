@@ -20,10 +20,12 @@ pds_agent_mapping_api_spec_fill (const pds::MappingSpec &proto_spec,
 
     key = proto_spec.id();
     api_spec->key.vcn.id = key.pcnid();
-    pds_agent_util_ipaddr_fill(key.ipaddr(), &api_spec->key.ip_addr);
+    ipaddr_proto_spec_to_api_spec_fill(key.ipaddr(), &api_spec->key.ip_addr);
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->vnic.id = proto_spec.vnicid();
-    pds_agent_util_ipaddr_fill(proto_spec.publicip(), &api_spec->public_ip);
+    if (api_spec->public_ip_valid == true) {
+        ipaddr_proto_spec_to_api_spec_fill(proto_spec.publicip(), &api_spec->public_ip);
+    }
     MAC_UINT64_TO_ADDR(api_spec->overlay_mac, proto_spec.macaddr());
     api_spec->tep.ip_addr = proto_spec.tunnelid();
     api_spec->subnet.id = proto_spec.subnetid();

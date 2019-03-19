@@ -13,7 +13,7 @@
 // convert IP address spec in proto to ip_addr
 //----------------------------------------------------------------------------
 static inline void
-pds_agent_util_ipaddr_fill (const types::IPAddress &in_ipaddr, ip_addr_t *out_ipaddr)
+ipaddr_proto_spec_to_api_spec_fill (const types::IPAddress &in_ipaddr, ip_addr_t *out_ipaddr)
 {
     memset(out_ipaddr, 0, sizeof(ip_addr_t));
     if (in_ipaddr.af() == types::IP_AF_INET) {
@@ -32,7 +32,7 @@ pds_agent_util_ipaddr_fill (const types::IPAddress &in_ipaddr, ip_addr_t *out_ip
 }
 
 static inline sdk_ret_t
-pds_agent_util_ip_pfx_fill (const types::IPPrefix& in_ippfx, ip_prefix_t *ip_pfx)
+ippfx_proto_spec_to_api_spec_fill (const types::IPPrefix& in_ippfx, ip_prefix_t *ip_pfx)
 {
     ip_pfx->len = in_ippfx.len();
     if (((in_ippfx.addr().af() == types::IP_AF_INET) &&
@@ -41,8 +41,37 @@ pds_agent_util_ip_pfx_fill (const types::IPPrefix& in_ippfx, ip_prefix_t *ip_pfx
              (ip_pfx->len > 128))) {
         return sdk::SDK_RET_INVALID_ARG;
     } else {
-        pds_agent_util_ipaddr_fill(in_ippfx.addr(), &ip_pfx->addr);
+        ipaddr_proto_spec_to_api_spec_fill(in_ippfx.addr(), &ip_pfx->addr);
     }
+    return sdk::SDK_RET_OK;
+}
+
+//----------------------------------------------------------------------------
+// convert ip_addr_t to IP address proto spec
+//----------------------------------------------------------------------------
+static inline void
+ipaddr_api_spec_to_proto_spec_fill (const ip_addr_t *in_ipaddr,
+                                    types::IPAddress *out_ipaddr)
+{
+    if (in_ipaddr->af == IP_AF_IPV4) {
+        out_ipaddr->set_af(types::IP_AF_INET);
+        out_ipaddr->set_v4addr(in_ipaddr->addr.v4_addr);
+    } else if (in_ipaddr->af == IP_AF_IPV6) {
+        out_ipaddr->set_af(types::IP_AF_INET6);
+        out_ipaddr->set_v6addr(
+                    std::string((const char *)&in_ipaddr->addr.v6_addr.addr8,
+                                IP6_ADDR8_LEN));
+    }
+    return;
+}
+
+static inline sdk_ret_t
+ippfx_api_spec_to_proto_spec_fill (const ip_prefix_t *in_ippfx,
+                                   types::IPPrefix *out_ippfx)
+{
+    out_ippfx->set_len(in_ippfx->len);
+    ipaddr_api_spec_to_proto_spec_fill(
+                        &in_ippfx->addr, out_ippfx->mutable_addr());
     return sdk::SDK_RET_OK;
 }
 

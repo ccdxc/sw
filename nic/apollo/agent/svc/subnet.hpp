@@ -23,6 +23,9 @@ public:
     Status SubnetDelete(ServerContext *context,
                         const pds::SubnetDeleteRequest *proto_req,
                         pds::SubnetDeleteResponse *proto_rsp) override;
+    Status SubnetGet(ServerContext *context,
+                     const pds::SubnetGetRequest *proto_req,
+                     pds::SubnetGetResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_SUBNET_HPP__

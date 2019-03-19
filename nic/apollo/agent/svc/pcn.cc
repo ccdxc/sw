@@ -22,7 +22,7 @@ pds_agent_pcn_api_spec_fill (const pds::PCNSpec &proto_spec,
     } else if (type == pds::PCN_TYPE_SUBSTRATE) {
         api_spec->type = PDS_VCN_TYPE_SUBSTRATE;
     }
-    pds_agent_util_ip_pfx_fill(proto_spec.prefix(), &api_spec->pfx);
+    ippfx_proto_spec_to_api_spec_fill(proto_spec.prefix(), &api_spec->pfx);
 }
 
 Status

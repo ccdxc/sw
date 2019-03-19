@@ -37,4 +37,19 @@ subnet_delete (pds_subnet_key_t *key)
     return sdk::SDK_RET_OK;
 }
 
+sdk_ret_t
+subnet_get (pds_subnet_key_t *key, pds_subnet_info_t *info)
+{
+    sdk_ret_t ret;
+    pds_subnet_spec_t *spec;
+
+    spec = agent_state::state()->find_in_subnet_db(key);
+    if (spec == NULL) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+    memcpy(&info->spec, spec, sizeof(pds_subnet_spec_t));
+    ret = pds_subnet_read(key, info);
+    return ret;
+}
+
 }    // namespace core

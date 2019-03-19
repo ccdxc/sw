@@ -11,6 +11,7 @@ namespace core {
 
 sdk_ret_t subnet_create(pds_subnet_key_t *key, pds_subnet_spec_t *spec);
 sdk_ret_t subnet_delete(pds_subnet_key_t *key);
+sdk_ret_t subnet_get(pds_subnet_key_t *key, pds_subnet_info_t *info);
 
 }    // namespace core
 
