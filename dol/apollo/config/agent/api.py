@@ -10,6 +10,10 @@ import device_pb2_grpc as device_pb2_grpc
 import pcn_pb2_grpc as pcn_pb2_grpc
 import subnet_pb2_grpc as subnet_pb2_grpc
 import tunnel_pb2_grpc as tunnel_pb2_grpc
+import vnic_pb2_grpc as vnic_pb2_grpc
+import mapping_pb2_grpc as mapping_pb2_grpc
+import route_pb2_grpc as route_pb2_grpc
+import policy_pb2_grpc as policy_pb2_grpc
 
 import infra.common.defs as defs
 
@@ -36,7 +40,11 @@ class ObjectTypes(enum.IntEnum):
     PCN = 3
     SUBNET = 4
     TUNNEL = 5
-    MAX = 6
+    VNIC = 6
+    MAPPING = 7
+    ROUTE = 8
+    POLICY = 9
+    MAX = 10
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -117,6 +125,14 @@ class ApolloAgentClient:
                                                       self.__channel, 'Subnet')
         self.__stubs[ObjectTypes.TUNNEL] = ClientStub(tunnel_pb2_grpc.TunnelSvcStub,
                                                       self.__channel, 'Tunnel')
+        self.__stubs[ObjectTypes.VNIC] = ClientStub(vnic_pb2_grpc.VnicSvcStub,
+                                                      self.__channel, 'Vnic')
+        self.__stubs[ObjectTypes.MAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
+                                                      self.__channel, 'Mapping')
+        self.__stubs[ObjectTypes.ROUTE] = ClientStub(route_pb2_grpc.RouteSvcStub,
+                                                      self.__channel, 'RouteTable')
+        self.__stubs[ObjectTypes.POLICY] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
+                                                      self.__channel, 'SecurityPolicy')
         return
 
     def Create(self, objtype, objs):

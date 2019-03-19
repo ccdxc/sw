@@ -63,7 +63,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
         "vr_mac %s, v4 route table %u, v6 route table %u, "
         "ingress v4 policy %u, ingress v6 policy %u, "
         "egress v4 policy %u, egress v6 policy %u",
-        spec->vcn.id, key_.id, ippfx2str(&spec->pfx),
+        spec->vcn.id, spec->key.id, ippfx2str(&spec->pfx),
         ipaddr2str(&spec->vr_ip), macaddr2str(spec->vr_mac),
         spec->v4_route_table.id, spec->v6_route_table.id,
         spec->ing_v4_policy.id, spec->ing_v6_policy.id,

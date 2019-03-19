@@ -16,19 +16,35 @@ uplink:
         status  : UP
 
 device:
-    ipaddress   : None
-    gateway     : 172.31.255.255
+    ipaddress   : None # Taken from resmgr
+    gateway     : None # Taken from resmgr
     macaddress  : macaddr/0002.0100.0001
     dual_stack  : True
     tunnel      : 
-        - count : 256
+        - count : 1
           encap : mplsudp_tags1
+        - count : 1
+          encap : mplsudp_tags2
 
 pcn:
-    - count : 32
+    - v4count : 1
+      v6count : 1
       type  : tenant
       subnet:
         - count     : 2
           prefixlen : 24
+          vnic:
+            - count   : 1             # VNICs per subnet
+              encap   : mplsoudp
+              ipcount : 1             # Local IP mapping per vnic
+          rmap:                       # Remote IP mappings per subnet
+            - count : 1
+              encap : mplsudp_tags2
         - count     : 2
           prefixlen : 28
+          rmap:
+            - count : 1
+              encap : mplsudp_tags2
+      route:
+         - v4count : 1
+           v6count : 1

@@ -29,9 +29,20 @@ def AddPacketEncapVxlan(pkt, encap):
 
 def AddPacketEncapMpls(pkt, encap):
     #pdb.set_trace()
-    pkt.hdrsorder = pkt.hdrsorder[1:]
+    pkt.hdrsorder = pkt.hdrsorder[1:] # Remove both ethernet and vlan if present
+    if pkt.hdrsorder[0] == 'qtag':
+        pkt.hdrsorder = pkt.hdrsorder[1:]
     pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'mpls'] + pkt.hdrsorder
     return
+
+def AddPacketEncapMpls2(pkt, encap):
+    #pdb.set_trace()
+    pkt.hdrsorder = pkt.hdrsorder[1:] # Remove both ethernet and vlan if present
+    if pkt.hdrsorder[0] == 'qtag':
+        pkt.hdrsorder = pkt.hdrsorder[1:]
+    pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'outermpls', 'mpls'] + pkt.hdrsorder
+    return
+
 
 def AddPacketEncapErspan(pkt, encap):
     pkt.hdrsorder = ['erspaneth', 'erspanqtag', 'erspanipv4', 'erspangre', 'erspan'] + pkt.hdrsorder

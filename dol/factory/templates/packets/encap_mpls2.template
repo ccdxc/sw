@@ -1,0 +1,33 @@
+meta:
+    id: ENCAP_MPLS2
+    callback: callback://common/pktencaps/AddPacketEncapMpls2
+
+headers:
+    - header:
+        id      : outereth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x800
+
+    - header:
+        id      : outeripv4
+        template: ref://store/headers/id=IPV4
+        fields:
+            proto: ipproto/17
+
+    - header:
+        id      : outerudp
+        template: ref://store/headers/id=UDP
+        fields:
+            dport: 6635
+
+    - header:
+        id      : outermpls
+        template: ref://store/headers/id=MPLS
+        fields:
+
+    - header:
+        id      : mpls
+        template: ref://store/headers/id=MPLS
+        fields:
+

@@ -16,6 +16,7 @@ import apollo.config.agent.api as agentapi
 import apollo.config.objects.batch as batch
 import apollo.config.objects.device as device
 import apollo.config.objects.pcn as pcn
+import apollo.config.objects.policy as policy
 
 from infra.common.logging import logger as logger
 from infra.asic.model import ModelConnector
@@ -31,6 +32,9 @@ def __generate(topospec):
 
     # Generate PCN configuration
     pcn.client.GenerateObjects(topospec)
+
+    # Generate Policy configuration . TODO
+    # policy.client.GenerateObjects(topospec)
     return
 
 def __create():
@@ -42,6 +46,9 @@ def __create():
 
     # Create PCN Objects
     pcn.client.CreateObjects()
+
+    # Create Policy Objects . TODO
+    # policy.client.CreateObjects()
 
     # Commit the Batch
     batch.client.Commit()

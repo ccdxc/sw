@@ -12,6 +12,6 @@ $NICDIR/apollo/test/tools/start-apollo-model.sh &
 $DOLDIR/main.py $* 2>&1 | tee dol.log
 status=${PIPESTATUS[0]}
 
-killall agent
-killall cap_model
+pkill agent
+pkill cap_model
 exit $status

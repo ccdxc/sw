@@ -21,6 +21,8 @@ selectors:
     maxflows: 0
     session: None
     maxsessions: 0
+    mapping: None
+    maxmappings: 0
     rdmasession: None
     maxrdmasessions: 0
     rdma:

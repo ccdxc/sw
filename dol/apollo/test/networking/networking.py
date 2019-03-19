@@ -1,11 +1,15 @@
 #! /usr/bin/python3
 # Test Module
 import pdb
+import apollo.test.callbacks.networking.modcbs as modcbs
 
 def Setup(infra, module):
+    modcbs.Setup(infra, module)
     return True
 
 def TestCaseSetup(tc):
+    tc.AddIgnorePacketField('UDP', 'sport')
+    tc.AddIgnorePacketField('UDP', 'chksum')
     return True
 
 def TestCaseTeardown(tc):

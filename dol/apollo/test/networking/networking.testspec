@@ -1,32 +1,56 @@
 # Test Spec
 selectors:
-    root: ref://store/templates/id=SUBNET
-    maxlimit: 4
-    filters:
-        pcn : filter://type=TENANT
+    root: ref://store/templates/id=MAPPING
+    maxmappings: 4
+    mapping: filter://any
 
 packets:
     - packet:
         id          : IN_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        template    : callback://networking/packets/GetPacketTemplateByMapping/proto=TCP
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
-                src     : 00:01:01:01:01:01
-                dst     : 00:02:02:02:02:02
+                src     : ref://testcase/config/smac
+                dst     : ref://testcase/config/dmac
             qtag:
-                vlan    : ref://testcase/config/pcn/VlanId
+                vlan    : ref://testcase/config/vlanid
             ipv4:
                 src     : ref://testcase/config/sip
                 dst     : ref://testcase/config/dip
                 ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/sip
+                dst     : ref://testcase/config/dip
+                hlim    : 64
             tcp:
                 sport   : 100
-                dport   : 100
+                dport   : 200
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : EXP_PKT # Expected packet
+        clone       : ref://testcase/packets/id=IN_PKT
+        encaps      : callback://networking/packets/GetPacketEncapByMapping
+        headers     :
+            outereth:
+                src     : ref://testcase/config/tunsmac
+                dst     : ref://testcase/config/tundmac
+            outeripv4:
+                src     : ref://testcase/config/tunsip
+                dst     : ref://testcase/config/tundip
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            outermpls:
+                label   : ref://testcase/config/mplssslot
+                ttl     : 0
+            mpls:
+                label   : ref://testcase/config/mplsdslot
+                ttl     : 0
 
 trigger:
     packets:
@@ -37,7 +61,7 @@ trigger:
 expect:
     packets:
         - packet:
-#            object  : ref://testcase/packets/id=IN_PKT
-#            TODO: Packet is dropped till we push all config objects
-            object  : None
+            object  : ref://testcase/packets/id=EXP_PKT
             port    : ref://testcase/config/switchport
+#            TODO: Packet is dropped till we push all config objects
+#            object  : None

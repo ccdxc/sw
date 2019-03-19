@@ -1,10 +1,9 @@
-# Subnet Object Template
+# PCN Object Template
 meta:
-    id      : SUBNET
+    id      : MAPPING
     package : config.objects
-    module  : subnet
+    module  : mappinghelper
     feature_set:
         - apollo
 
 Id: None
-PCNId: None
