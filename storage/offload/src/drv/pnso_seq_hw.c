@@ -860,8 +860,11 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 
 			SGL_PDMA_PPRINT(chain_params->ccp_aol_dst_vec_addr);
 		}
-	} else
+	} else  {
 		chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
+		chain_params->ccp_cmd.ccpc_sgl_pdma_en =
+			chain_params->ccp_cmd.padding_en;
+	}
 
 	err = cpdc_setup_status_chain_dma(svc_info, chain_params);
 	if (err)
@@ -1080,18 +1083,19 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	chain_params->ccp_cmd.ccpc_sgl_update_en = 1;
 	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
 		chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
+
 		if (chn_service_type_is_cp(svc_prev) &&
 		    !chain_params->ccp_cmd.padding_en)
 			chain_params->ccp_cmd.desc_dlen_update_en = 1;
+
+		/*
+		 * hash/chksum executes multiple requests, one per block; hence,
+		 * indicate to P4+ to push a vector of descriptors
+		 *
+		 */
+		chain_params->ccp_cmd.ccpc_desc_vec_push_en = 1;
 	} else
 		chain_params->ccp_cmd.desc_dlen_update_en = 1;
-
-	/*
-	 * hash/chksum executes multiple requests, one per block; hence,
-	 * indicate to P4+ to push a vector of descriptors
-	 *
-	 */
-	chain_params->ccp_cmd.ccpc_desc_vec_push_en = 1;
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");

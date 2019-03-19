@@ -54,11 +54,7 @@ void cpdc_pprint_desc(const struct cpdc_desc *desc);
 
 void cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc);
 
-pnso_error_t cpdc_update_service_info_sgl(struct service_info *svc_info);
-
 pnso_error_t cpdc_update_service_info_sgls(struct service_info *svc_info);
-
-pnso_error_t cpdc_update_service_info_bof_sgl(struct service_info *svc_info);
 
 struct cpdc_status_desc *cpdc_get_status_desc(struct per_core_resource *pcr,
 		bool per_block);

@@ -540,34 +540,6 @@ cpdc_put_sgl(struct per_core_resource *pcr, bool per_block,
 	mpool_put_object(mpool, sgl);
 }
 
-pnso_error_t
-cpdc_update_service_info_sgl(struct service_info *svc_info)
-{
-	pnso_error_t err;
-
-	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_src_blist,
-			svc_info->si_block_size, MPOOL_TYPE_CPDC_SGL,
-			&svc_info->si_src_sgl);
-	if (err)
-		OSAL_LOG_ERROR("cannot obtain src sgl from pool! err: %d", err);
-
-	return err;
-}
-
-pnso_error_t
-cpdc_update_service_info_bof_sgl(struct service_info *svc_info)
-{
-	pnso_error_t err;
-
-	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_bof_blist,
-			svc_info->si_block_size, MPOOL_TYPE_CPDC_SGL,
-			&svc_info->si_bof_sgl);
-	if (err)
-		OSAL_LOG_ERROR("cannot obtain bof sgl from pool! err: %d", err);
-
-	return err;
-}
-
 uint32_t
 cpdc_fill_per_block_desc(struct service_info *svc_info,
 		uint32_t algo_type, uint32_t block_size,
@@ -634,18 +606,28 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 {
 	pnso_error_t err;
 	struct cpdc_desc *desc, *bof_desc;
+	struct cpdc_sgl *sgl, *bof_sgl;
 	uint32_t num_tags;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	desc = svc_info->si_desc;
+	bof_desc = svc_info->si_bof_desc;
 	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
+		sgl = cpdc_get_sgl(svc_info->si_pcr, true);
+		if (!sgl) {
+			err = ENOMEM;
+			OSAL_LOG_ERROR("cannot obtain sgl from pool! err: %d",
+					err);
+			goto out;
+		}
+		svc_info->si_pb_sgl = sgl;
+
 		num_tags = cpdc_fill_per_block_desc(svc_info, algo_type,
 				svc_info->si_block_size,
 				svc_info->si_src_blist.len,
 				&svc_info->si_src_blist, svc_info->si_pb_sgl,
-				svc_info->si_desc,
-				fill_desc_fn);
+				desc, fill_desc_fn);
 		if (num_tags == 0) {
 			err = EINVAL;
 			OSAL_LOG_ERROR("failed to setup per-block desc! svc_type: %d err: %d",
@@ -655,21 +637,25 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 		svc_info->si_num_bytes += svc_info->si_src_blist.len;
 
 		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
+			bof_sgl = cpdc_get_sgl(svc_info->si_pcr, true);
+			if (!bof_sgl) {
+				err = ENOMEM;
+				OSAL_LOG_ERROR("cannot obtain pb/bof sgl from pool! err: %d",
+						err);
+				goto out;
+			}
+			svc_info->si_pb_bof_sgl = bof_sgl;
+
 			bof_desc =
 				(struct cpdc_desc *) ((char *) desc +
 				((sizeof(struct cpdc_desc) * num_tags)));
-			OSAL_LOG_DEBUG("svc_type: %d num_tags: %d desc: 0x" PRIx64 " bof_desc: 0x" PRIx64,
-					svc_info->si_type, num_tags,
-					(uint64_t) desc, (uint64_t) bof_desc);
 
 			num_tags = cpdc_fill_per_block_desc(svc_info,
-					algo_type,
-					svc_info->si_block_size,
+					algo_type, svc_info->si_block_size,
 					svc_info->si_bof_blist.len,
 					&svc_info->si_bof_blist,
 					svc_info->si_pb_bof_sgl,
-					bof_desc,
-					fill_desc_fn);
+					bof_desc, fill_desc_fn);
 			if (num_tags == 0) {
 				err = EINVAL;
 				OSAL_LOG_ERROR("failed to setup bypass onfail per-block desc! svc_type: %d num_tags: %d desc: 0x" PRIx64 " bof_desc: 0x" PRIx64 " err: %d",
@@ -679,8 +665,31 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 				goto out;
 			}
 		}
+
+		OSAL_LOG_DEBUG("svc_type: %d num_tags: %d desc: 0x" PRIx64 " bof_desc: 0x" PRIx64,
+				svc_info->si_type, num_tags,
+				(uint64_t) desc, (uint64_t) bof_desc);
 	} else {
-		err = cpdc_update_service_info_sgl(svc_info);
+		/*
+		 * P4+ chainer always expects a vector of SGLs (post CP/DC) for
+		 * ease of modification and this is true regardless of whether
+		 * the next service is operating per-block or full block.
+		 *
+		 * When a service is first in chain, there are no constraints
+		 * and it can use any types of SGL.
+		 *
+		 */
+		err = chn_service_is_starter(svc_info) ?
+			pc_res_sgl_packed_get(svc_info->si_pcr,
+					&svc_info->si_src_blist,
+					svc_info->si_block_size,
+					MPOOL_TYPE_CPDC_SGL,
+					&svc_info->si_src_sgl) :
+			pc_res_sgl_vec_packed_get(svc_info->si_pcr,
+					&svc_info->si_src_blist,
+					svc_info->si_block_size,
+					MPOOL_TYPE_CPDC_SGL_VECTOR,
+					&svc_info->si_src_sgl);
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain src sgl from pool! svc_type: %d err: %d",
 					svc_info->si_type, err);
@@ -694,11 +703,16 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
 			bof_desc = (struct cpdc_desc *) ((char *) desc +
 					sizeof(struct cpdc_desc));
+
 			OSAL_LOG_DEBUG("svc_type: %d desc: 0x" PRIx64 " bof_desc: 0x" PRIx64,
 					svc_info->si_type,
 					(uint64_t) desc, (uint64_t) bof_desc);
 
-			err = cpdc_update_service_info_bof_sgl(svc_info);
+			err = pc_res_sgl_packed_get(svc_info->si_pcr,
+					&svc_info->si_bof_blist,
+					svc_info->si_block_size,
+					MPOOL_TYPE_CPDC_SGL,
+					&svc_info->si_bof_sgl);
 			if (err) {
 				OSAL_LOG_ERROR("cannot obtain src bof sgl from pool! svc_type: %d err: %d",
 						svc_info->si_type, err);

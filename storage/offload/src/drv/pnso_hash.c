@@ -66,7 +66,6 @@ hash_setup(struct service_info *svc_info,
 	pnso_error_t err;
 	struct pnso_hash_desc *pnso_hash_desc;
 	struct cpdc_desc *hash_desc;
-	struct cpdc_sgl *sgl, *bof_sgl;
 	bool per_block;
 	uint32_t num_tags;
 
@@ -89,28 +88,6 @@ hash_setup(struct service_info *svc_info,
 		goto out;
 	}
 	svc_info->si_desc = hash_desc;
-
-	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
-		sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
-		if (!sgl) {
-			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain hash sgl from pool! err: %d",
-					err);
-			goto out;
-		}
-		svc_info->si_pb_sgl = sgl;
-
-		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
-			bof_sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
-			if (!bof_sgl) {
-				err = ENOMEM;
-				OSAL_LOG_ERROR("cannot obtain pb/bof hash sgl from pool! err: %d",
-						err);
-				goto out;
-			}
-			svc_info->si_pb_bof_sgl = bof_sgl;
-		}
-	}
 
 	err = cpdc_setup_status_desc(svc_info, per_block);
 	if (err) {
