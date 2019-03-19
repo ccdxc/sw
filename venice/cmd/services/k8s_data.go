@@ -65,6 +65,13 @@ var objstoreVolume = protos.ModuleSpec_Volume{
 	MountPath: "/disk1",
 }
 
+// citadelDbVolume is a reusable volume definition for citadel.
+var citadelDbVolume = protos.ModuleSpec_Volume{
+	Name:      "citadeldb",
+	HostPath:  globals.CitadelDbDir,
+	MountPath: globals.CitadelDbDir,
+}
+
 // k8sModules contain definitions of controller objects that need to deployed
 // through k8s.
 var k8sModules = map[string]protos.Module{
@@ -502,6 +509,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				etcdClientCredsVolume,
+				citadelDbVolume,
 				logVolume,
 				eventsVolume,
 			},

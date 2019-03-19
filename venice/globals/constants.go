@@ -165,6 +165,7 @@ const (
 	CitadelRPCPort      = "7000"
 	CitadelHTTPPort     = "7086"
 	CitadelQueryRPCPort = "7087"
+	CitadelDbDir        = "/var/lib/pensando/citadel"
 
 	// KV Store keys
 	RootPrefix       = "/venice"        // Root for all venice objects
