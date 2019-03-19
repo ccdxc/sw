@@ -16,6 +16,10 @@ while getopts ":c:p:h" opt; do
       ;;
     p )
       platform=$OPTARG
+      if [ $platform != "iris" ] || [ $platform != "apollo" ]; then
+        echo -e "-p <platform can be iris or apollo> \n Usage: p4ctl -p <iris|apollo> -c \"debug ...\""
+        exit
+      fi
       #echo $platform
       ;;
     h )
@@ -23,16 +27,21 @@ while getopts ":c:p:h" opt; do
       exit
       ;;
     \? )
-      echo "Invalid option: $OPTARG" 1>&2
+      echo "Usage: p4ctl -p <iris|apollo> -c \"debug ...\""
       exit
       ;;
     : )
-      echo "Invalid option: $OPTARG requires an argument" 1>&2
+      echo "Usage: p4ctl -p <iris|apollo> -c \"debug ...\""
       exit
       ;;
   esac
 done
 shift $((OPTIND -1))
+if [ -z "$platform" ]; then
+   echo -e " -p <platform is mandatory> \n Usage:  p4ctl -p <iris|apollo> -c \"debug ...\""
+   exit
+fi
+
 localedef -i en_US -f UTF-8 en_US.UTF-8
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
