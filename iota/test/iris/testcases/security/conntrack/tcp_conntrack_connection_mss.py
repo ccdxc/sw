@@ -12,12 +12,22 @@ def Setup(tc):
 
 def Trigger(tc):
     api.Logger.info("Trigger.")
-    pairs = api.GetLocalWorkloadPairs()
+    if tc.iterators.kind == "remote":
+        pairs = api.GetRemoteWorkloadPairs()
+        if not pairs:
+            api.Logger.info("no remtote eps")
+            return api.types.status.SUCCESS
+    else:
+        pairs = api.GetLocalWorkloadPairs()
+
     resp_flow = getattr(tc.args, "resp_flow", 0)
     tc.cmd_cookies = {}
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    server,client  = pairs[0]
+    if pairs[0][0].IsNaples():
+        client,server = pairs[0]
+    else:
+        server,client = pairs[0]
     
     dir_path = os.path.dirname(os.path.realpath(__file__))
     fullpath = dir_path + '/' + "scapy_3way.py"
@@ -58,6 +68,10 @@ def Trigger(tc):
 
     cmd_cookie = "/nic/bin/halctl clear session"
     add_command(req, tc, 'clear', client, cmd_cookie, naples=True)
+   
+    if server.IsNaples(): 
+        cmd_cookie = "/nic/bin/halctl clear session"
+        add_command(req, tc, 'clear', server, cmd_cookie, naples=True)
 
     sec_resp = api.Trigger(req)
 
@@ -70,6 +84,8 @@ def Trigger(tc):
     return api.types.status.SUCCESS   
  
 def Verify(tc):
+    if tc.resp == None:
+        return api.types.status.SUCCESS
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if tc.cmd_cookies['tcpdump'] == cmd.command:     

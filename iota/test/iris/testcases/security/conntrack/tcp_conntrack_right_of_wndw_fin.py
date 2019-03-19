@@ -10,13 +10,22 @@ def Setup(tc):
 
 def Trigger(tc):
     api.Logger.info("Trigger.")
-    pairs = api.GetLocalWorkloadPairs()
+    if tc.iterators.kind == "remote":
+        pairs = api.GetRemoteWorkloadPairs()
+        if not pairs:
+            api.Logger.info("no remtote eps")
+            return api.types.status.SUCCESS
+    else:
+        pairs = api.GetLocalWorkloadPairs()
     resp_flow = getattr(tc.args, "resp_flow", 0)
     tc.cmd_cookies = {}
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     #for w1,w2 in pairs:
-    server,client  = pairs[0]
+    if pairs[0][0].IsNaples():
+        client,server = pairs[0]
+    else:
+        server,client = pairs[0]
     
     cmd_cookie = start_nc_server(server, "1237")
     add_command(req, tc, 'server', server, cmd_cookie, True) 
@@ -50,6 +59,11 @@ def Trigger(tc):
     cmd_cookie = "/nic/bin/halctl clear session"
     add_command(req, tc, 'clear', client, cmd_cookie, naples=True)
     
+    if server.IsNaples():
+        cmd_cookie = "/nic/bin/halctl clear session"
+        add_command(req, tc, 'clear', server, cmd_cookie, naples=True)
+
+    
     trig_resp = api.Trigger(req)
     term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp1)
@@ -57,6 +71,8 @@ def Trigger(tc):
         
 def Verify(tc):
     api.Logger.info("Verify.")
+    if tc.resp == None:
+        return api.types.status.SUCCESS
     for cmd in tc.resp.commands:
         #api.PrintCommandResults(cmd)
         if tc.cmd_cookies['show after'] == cmd.command:     

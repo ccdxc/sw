@@ -56,6 +56,8 @@ PACKAGES = %w[
   sudo
 ]
 
+run "yum install -y http://repo.iotti.biz/CentOS/7/x86_64/netperf-2.7.0-1.el7.lux.x86_64.rpm"
+
 run "yum install -y #{PACKAGES.join(" ")}"
 run "yum install -y https://mirror.umd.edu/fedora/epel/7/x86_64/Packages/h/hping3-0.0.20051105-24.el7.x86_64.rpm"
 run "yum install -y bind bind-utils"
@@ -66,6 +68,7 @@ run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
 
 run "mkdir -p /iota/tools/raw"
 run "git clone https://github.com/secdev/scapy && cd scapy && python3 setup.py install"
+
 
 
 #copy "raw.tar.gz", "/iota/tools/raw/"
