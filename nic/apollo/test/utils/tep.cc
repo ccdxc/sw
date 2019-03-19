@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/test/utils/tep.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {
 
@@ -29,6 +30,40 @@ tep_util::tep_util(std::string ip_str, pds_tep_encap_type_t type) {
 
 tep_util::~tep_util() {}
 
+static inline sdk::sdk_ret_t
+tep_util_object_stepper(sdk_ret_t expected_result, utils_op_t op,
+                        uint32_t num_tep, std::string pfxstr,
+                        pds_tep_encap_type_t type) {
+    sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
+    ip_prefix_t ip_pfx;
+
+    SDK_ASSERT(str2ipv4pfx((char *)pfxstr.c_str(), &ip_pfx) == 0);
+    for (uint32_t idx = 1; idx <= num_tep; ++idx) {
+        tep_util tep_obj(ippfx2str(&ip_pfx), type);
+        switch (op) {
+        case OP_MANY_CREATE:
+            rv = tep_obj.create();
+            break;
+        case OP_MANY_READ:
+            pds_tep_info_t info;
+            rv = tep_obj.read(&info);
+            break;
+        case OP_MANY_DELETE:
+            rv = tep_obj.del();
+            break;
+        default:
+            return sdk::SDK_RET_INVALID_OP;
+        }
+        if (rv != expected_result) {
+            return rv;
+        }
+        // Increment IPv4 address by 1 for next TEP
+        ip_pfx.addr.addr.v4_addr += 1;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
 sdk::sdk_ret_t
 tep_util::create() {
     pds_tep_spec_t spec;
@@ -44,20 +79,8 @@ tep_util::create() {
 sdk::sdk_ret_t
 tep_util::many_create(uint32_t num_tep, std::string pfxstr,
                       pds_tep_encap_type_t type) {
-    sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    ip_prefix_t ip_pfx;
-    //SDK_ASSERT(num_tep <= PDS_MAX_TEP);
-
-    SDK_ASSERT(str2ipv4pfx((char *)pfxstr.c_str(), &ip_pfx) == 0);
-    for (uint32_t idx = 1; idx <= num_tep; ++idx) {
-        tep_util tep_obj(ippfx2str(&ip_pfx), type);
-        if ((rv = tep_obj.create()) != sdk::SDK_RET_OK)
-            return rv;
-        // Increment IPv4 address by 1 for next TEP
-        ip_pfx.addr.addr.v4_addr += 1;
-    }
-
-    return rv;
+    return (tep_util_object_stepper(sdk::SDK_RET_OK, OP_MANY_CREATE,
+                                    num_tep, pfxstr, type));
 }
 
 static inline void
@@ -131,6 +154,13 @@ tep_util::read(pds_tep_info_t *info, bool compare_spec) {
 }
 
 sdk::sdk_ret_t
+tep_util::many_read(sdk_ret_t ret_code, uint32_t num_tep, std::string pfxstr,
+                    pds_tep_encap_type_t type) {
+    return (tep_util_object_stepper(ret_code, OP_MANY_READ,
+                                    num_tep, pfxstr, type));
+}
+
+sdk::sdk_ret_t
 tep_util::del() {
     pds_tep_key_t pds_tep_key;
     ip_prefix_t ip_pfx;
@@ -144,20 +174,8 @@ tep_util::del() {
 sdk::sdk_ret_t
 tep_util::many_delete(uint32_t num_tep, std::string pfxstr,
                       pds_tep_encap_type_t type) {
-    sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    ip_prefix_t ip_pfx;
-    SDK_ASSERT(num_tep <= PDS_MAX_TEP);
-
-    SDK_ASSERT(str2ipv4pfx((char *)pfxstr.c_str(), &ip_pfx) == 0);
-    for (uint32_t idx = 1; idx <= num_tep; ++idx) {
-        tep_util tep_obj(ippfx2str(&ip_pfx), type);
-        if ((rv = tep_obj.del()) != sdk::SDK_RET_OK)
-            return rv;
-        // Increment IPv4 address by 1 for next TEP
-        ip_pfx.addr.addr.v4_addr += 1;
-    }
-
-    return rv;
+    return (tep_util_object_stepper(sdk::SDK_RET_OK, OP_MANY_DELETE,
+                                    num_tep, pfxstr, type));
 }
 
 }    // namespace api_test

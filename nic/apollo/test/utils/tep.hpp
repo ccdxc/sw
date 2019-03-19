@@ -58,7 +58,6 @@ public:
     sdk_ret_t del(void);
 
     /// \brief Create multiple TEPs
-    ///
     /// Create "num_tep" TEPs of type "tep_type" with IPs in range
     /// ip_str...ip_str+num_tep
     ///
@@ -68,6 +67,19 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_create(uint32_t num_tep, std::string ip_str,
                                  pds_tep_encap_type_t type = PDS_TEP_ENCAP_TYPE_VNIC);
+
+    /// \brief Read & validate multiple TEPs
+    /// Read "num_tep" TEPs of type "tep_type" with IPs in range
+    /// ip_str...ip_str+num_tep and validate
+    ///
+    /// \param[in] expected_result expected result on read & validate
+    /// \param[in] num_tep number of TEPs to be created
+    /// \param[in] ip_str starting IP address
+    /// \param[in] type TEP encap type
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t many_read(sdk_ret_t expected_result, uint32_t num_tep,
+                               std::string ip_str,
+                               pds_tep_encap_type_t type = PDS_TEP_ENCAP_TYPE_VNIC);
 
     /// \brief Get all TEPs configured on the NAPLES
     ///
@@ -90,7 +102,6 @@ public:
     static sdk_ret_t del(std::string ip_str);
 
     /// \brief Delete multiple TEPs
-    ///
     /// Delete "num_tep" TEPs of type "tep_type" with IPs in range
     /// ip_str...ip_str+num_tep
     ///
