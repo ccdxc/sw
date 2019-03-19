@@ -2,6 +2,7 @@ nic/conf/init_bins                                                /nic/conf/init
 nic/conf/$PIPELINE/apollo.json                                    /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/hal_hw.json                                    /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/hbm_mem.json                                   /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/hbm_mem_p1.json                                /nic/conf/$PIPELINE/
 nic/conf/catalog_hw_68-0003.json                                  /nic/conf/
 nic/conf/catalog_hw_68-0005.json                                  /nic/conf/
 nic/conf/serdes_68-0003.json                                      /nic/conf/
