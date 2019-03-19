@@ -56,6 +56,7 @@ header_type rewrite_metadata_t {
         tep_index           : 10;
         dst_slot_id         : 24;
         mytep_ip            : 32;
+        src_slot_id         : 20;
     }
 }
 
@@ -82,6 +83,7 @@ header_type scratch_metadata_t {
     fields {
         flag                : 1;
         use_epoch1          : 1;
+        epoch_valid         : 1;
         epoch               : 32;
         local_ip_hash       : 15;
         local_ip_hint       : 14;

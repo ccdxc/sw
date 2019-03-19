@@ -68,7 +68,7 @@ action gre_tep_tx(dipo, dmac) {
 
     modify_field(mpls_dst_0.label, rewrite_metadata.dst_slot_id);
     if (rewrite_metadata.encap_type == VNIC_ENCAP) {
-        modify_field(mpls_src_0.label, p4e_apollo_i2e.src_slot_id);
+        modify_field(mpls_src_0.label, rewrite_metadata.src_slot_id);
         modify_field(mpls_src_0.bos, 1);
         add_to_field(scratch_metadata.ip_totallen, 4);
     } else {
@@ -121,7 +121,7 @@ action mpls_udp_tep_tx(dipo, dmac) {
 
     modify_field(mpls_dst_0.label, rewrite_metadata.dst_slot_id);
     if (rewrite_metadata.encap_type == VNIC_ENCAP) {
-        modify_field(mpls_src_0.label, p4e_apollo_i2e.src_slot_id);
+        modify_field(mpls_src_0.label, rewrite_metadata.src_slot_id);
         modify_field(mpls_src_0.bos, 1);
     } else {
         modify_field(mpls_dst_0.bos, 1);

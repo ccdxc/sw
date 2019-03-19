@@ -68,10 +68,10 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         return ret;
     }
 
-    // reserve an entry in EGRESS_LOCAL_VNIC_INFO_RX table
-    ret = vnic_impl_db()->egress_local_vnic_info_rx_tbl()->reserve_index(hw_id_);
+    // reserve an entry in EGRESS_LOCAL_VNIC_INFO table
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->reserve_index(hw_id_);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in EGRESS_LOCAL_VNIC_INFO_RX "
+        PDS_TRACE_ERR("Failed to reserve entry in EGRESS_LOCAL_VNIC_INFO "
                       "table for vnic %u, err %u", spec->key.id, ret);
         return ret;
     }
@@ -81,21 +81,21 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
-#define egress_local_vnic_info_rx_action    action_u.egress_local_vnic_info_rx_egress_local_vnic_info_rx
+#define egress_local_vnic_info_action    action_u.egress_local_vnic_info_egress_local_vnic_info
 sdk_ret_t
 vnic_impl::release_resources(api_base *api_obj) {
-    egress_local_vnic_info_rx_actiondata_t    egress_vnic_data = { 0 };
+    egress_local_vnic_info_actiondata_t       egress_vnic_data = { 0 };
 
     if (hw_id_ != 0xFFFF) {
         // TODO: uncomment the below once sdk_hash moves to standard API model
         //if (vnic_by_slot_hash_idx_ != SDK_TABLE_HANDLE_INVALID) {
             //vnic_impl_db()->local_vnic_by_slot_rx_tbl()->release(vnic_by_slot_hash_idx_);
         //}
-        vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(hw_id_,
+        vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(hw_id_,
                                                                   &egress_vnic_data);
         vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->release(
-            egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id);
-        vnic_impl_db()->egress_local_vnic_info_rx_tbl()->release(hw_id_);
+            egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id);
+        vnic_impl_db()->egress_local_vnic_info_tbl()->release(hw_id_);
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
 
     }
@@ -104,7 +104,7 @@ vnic_impl::release_resources(api_base *api_obj) {
 
 sdk_ret_t
 vnic_impl::nuke_resources(api_base *api_obj) {
-    egress_local_vnic_info_rx_actiondata_t    egress_vnic_data = { 0 };
+    egress_local_vnic_info_actiondata_t       egress_vnic_data = { 0 };
 
     if (hw_id_ != 0xFFFF) {
         // TODO: uncomment the below once sdk_hash moves to standard API model
@@ -112,11 +112,11 @@ vnic_impl::nuke_resources(api_base *api_obj) {
         if (vnic_by_slot_hash_idx_ != 0xFFFF) {
             vnic_impl_db()->local_vnic_by_slot_rx_tbl()->remove(vnic_by_slot_hash_idx_);
         }
-        vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(hw_id_,
+        vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(hw_id_,
                                                                   &egress_vnic_data);
         vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->remove(
-            egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id);
-        vnic_impl_db()->egress_local_vnic_info_rx_tbl()->remove(hw_id_);
+            egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id);
+        vnic_impl_db()->egress_local_vnic_info_tbl()->remove(hw_id_);
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
     return SDK_RET_OK;
@@ -129,7 +129,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t                           *spec;
     p4pd_error_t                              p4pd_ret;
     subnet_entry                              *subnet;
-    egress_local_vnic_info_rx_actiondata_t    egress_vnic_data = { 0 };
+    egress_local_vnic_info_actiondata_t       egress_vnic_data = { 0 };
     vnic_rx_stats_actiondata_t                vnic_rx_stats_data = { 0 };
     vnic_tx_stats_actiondata_t                vnic_tx_stats_data = { 0 };
 
@@ -150,32 +150,39 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
-    // initialize egress_local_vnic_info_rx table entry
+    // initialize egress_local_vnic_info_table entry
     egress_vnic_data.action_id =
-        EGRESS_LOCAL_VNIC_INFO_RX_EGRESS_LOCAL_VNIC_INFO_RX_ID;
-    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_rx_action.vr_mac,
+        EGRESS_LOCAL_VNIC_INFO_EGRESS_LOCAL_VNIC_INFO_ID;
+    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.vr_mac,
                      subnet->vr_mac(), ETH_ADDR_LEN);
-    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_rx_action.overlay_mac,
+    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.overlay_mac,
                      spec->mac_addr, ETH_ADDR_LEN);
-    egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id =
+    egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id =
         spec->wire_vlan;
-    egress_vnic_data.egress_local_vnic_info_rx_action.subnet_id =
+    egress_vnic_data.egress_local_vnic_info_action.subnet_id =
         subnet->hw_id();
-    ret = vnic_impl_db()->egress_local_vnic_info_rx_tbl()->insert_atid(&egress_vnic_data,
+    if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        egress_vnic_data.egress_local_vnic_info_action.src_slot_id =
+            spec->fabric_encap.val.mpls_tag;
+    } else if (spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        egress_vnic_data.egress_local_vnic_info_action.src_slot_id =
+            spec->fabric_encap.val.vnid;
+    }
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->insert_atid(&egress_vnic_data,
                                                                        hw_id_);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
     // TODO: remove once retrieve() issue is fixed
-    ret = vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(hw_id_, &egress_vnic_data);
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(hw_id_, &egress_vnic_data);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("READING BACK FAILED AT %u", hw_id_);
     } else {
         PDS_TRACE_ERR("READING BACK SUCCESS AT %u", hw_id_);
         PDS_TRACE_DEBUG("vlan id %u, subnet %u",
-                        egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
-                        egress_vnic_data.egress_local_vnic_info_rx_action.subnet_id);
+                        egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
+                        egress_vnic_data.egress_local_vnic_info_action.subnet_id);
     }
 
     // initialize rx stats tables for this vnic
@@ -195,7 +202,7 @@ vnic_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // TODO:
     // 1. leave P4TBL_ID_VNIC_TX_STATS table entry as-is
     // 2. leave VNIC_RX_STATS_VNIC_RX_STATS_ID table entry as-is
-    // 3. EGRESS_LOCAL_VNIC_INFO_RX_TBL in index table and doesn't
+    // 3. EGRESS_LOCAL_VNIC_INFO_TBL in index table and doesn't
     //    need to be invalidated, the table pointing to this will
     //    have latest epoch set with valid bit set to FALSE in
     //    activate_hw() stage
@@ -208,8 +215,8 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return sdk::SDK_RET_INVALID_OP;
 }
 
-#define vnic_tx_stats_action action_u.vnic_tx_stats_vnic_tx_stats
-#define vnic_rx_stats_action action_u.vnic_rx_stats_vnic_rx_stats
+#define vnic_tx_stats_action          action_u.vnic_tx_stats_vnic_tx_stats
+#define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
 #define local_vnic_by_vlan_tx_info    action_u.local_vnic_by_vlan_tx_local_vnic_info_tx
 #define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 #define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
@@ -235,23 +242,24 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
         LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.local_vnic_tag = hw_id_;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.vcn_id = vcn->hw_id();
-    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check =
+    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check1 =
         spec->src_dst_check ? false : true;
-    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group_1 =
+    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check2 = false;
+    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group1 =
         spec->rsc_pool_id;
-    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group_2 = 0;
+    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group2 = 0;
 
     // program the LPM tree base address
     addr =
         ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
     PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
-    MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v4addr_1,
+    MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v4addr1,
                             addr, 5);
     if (v6_route_table) {
         addr =
             ((impl::route_table_impl *)(v6_route_table->impl()))->lpm_root_addr();
         PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v6addr_1,
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v6addr1,
                                 addr, 5);
     }
 
@@ -259,26 +267,21 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
     if (v4_policy) {
         addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("Egress IPv4 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr_1,
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr1,
                                 addr, 5);
     }
     if (v6_policy) {
         addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("Egress IPv6 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v6addr_1,
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v6addr1,
                                 addr, 5);
     }
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;
+    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1_valid = true;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2 = PDS_EPOCH_INVALID;
-    sdk::lib::memrev(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.overlay_mac,
+    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2_valid = false;
+    sdk::lib::memrev(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.overlay_mac1,
                      spec->mac_addr, ETH_ADDR_LEN);
-    if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        vnic_by_vlan_data.local_vnic_by_vlan_tx_info.src_slot_id =
-            spec->fabric_encap.val.mpls_tag;
-    } else if (spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        vnic_by_vlan_data.local_vnic_by_vlan_tx_info.src_slot_id =
-            spec->fabric_encap.val.vnid;
-    }
     ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->insert_atid(&vnic_by_vlan_data,
                                                                    spec->wire_vlan);
     if (ret != SDK_RET_OK) {
@@ -310,33 +313,36 @@ vnic_impl::activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
         LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.local_vnic_tag = hw_id_;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.vcn_id = vcn->hw_id();
-    vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check =
+    vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check1 =
         spec->src_dst_check ? false : true;
-    vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group_1 =
+    vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check2 = false;
+    vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group1 =
         spec->rsc_pool_id;
-    vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group_2 = 0;
+    vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group2 = 0;
 
     // program security policy block's base address
     if (v4_policy) {
         addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr_1,
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr1,
                                 addr, 5);
     } else {
         // TODO: hack - pls don't commit
         addr = security_policy_impl_db()->security_policy_region_addr();
         PDS_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr_1,
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr1,
                                 addr, 5);
     }
     if (v6_policy) {
         addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("Ingress IPv6 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v6addr_1,
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v6addr1,
                                 addr, 5);
     }
     vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1 = epoch;
+    vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1_valid = true;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2 = PDS_EPOCH_INVALID;
+    vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2_valid = false;
     ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->insert(&vnic_by_slot_key,
                                                               &vnic_by_slot_data,
                                                               (uint32_t *)&vnic_by_slot_hash_idx_);
@@ -407,15 +413,15 @@ sdk_ret_t
 vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     sdk_ret_t                                 ret;
     local_vnic_by_vlan_tx_actiondata_t        vnic_by_vlan_data;
-    egress_local_vnic_info_rx_actiondata_t    egress_vnic_data;
+    egress_local_vnic_info_actiondata_t       egress_vnic_data;
     local_vnic_by_slot_rx_swkey_t             vnic_by_slot_key = { 0 };
     local_vnic_by_slot_rx_actiondata_t        vnic_by_slot_data;
 
-    // read EGRESS_LOCAL_VNIC_INFO_RX table entry first
-    ret = vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(
+    // read EGRESS_LOCAL_VNIC_INFO table entry first
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(
               hw_id_, &egress_vnic_data);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to read EGRESS_LOCAL_VNIC_INFO_RX entry "
+        PDS_TRACE_ERR("Failed to read EGRESS_LOCAL_VNIC_INFO entry "
                       "at %u, err %u", hw_id_, ret);
         return ret;
     }
@@ -423,12 +429,12 @@ vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     // then read LOCAL_VNIC_BY_VLAN_TX table entry for this vnic using the
     // wire vlan
     ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->retrieve(
-              egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+              egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
               &vnic_by_vlan_data);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read LOCAL_VNIC_BY_VLAN_TX entry "
                       "at %u, err %u",
-                      egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+                      egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
                       ret);
         return ret;
     }
@@ -444,13 +450,13 @@ vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
         //vnic_by_vlan_data.local_vnic_by_vlan_tx_info.valid2 = FALSE;
     }
     ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->update(
-              egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+              egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
               &vnic_by_vlan_data);
 
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed at deactivate LOCAL_VNIC_BY_VLAN_TX entry "
                       "at %u, err %u",
-                      egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+                      egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
                       ret);
         // fall thru and attempt further cleanup !!
     }
@@ -467,7 +473,7 @@ vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to find entry in LOCAL_VNIC_BY_SLOT_RX table for "
                       "vnic %u, hw id %u, key = (mpls tag %u, vni %u), err %u",
-                      egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+                      egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
                       hw_id_, vnic_by_slot_key.mpls_dst_label,
                       vnic_by_slot_key.vxlan_1_vni, ret);
         return ret;
@@ -486,7 +492,7 @@ vnic_impl::activate_vnic_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to deactivate LOCAL_VNIC_BY_SLOT_RX table for "
                       "vnic %u, hw id %u, key = (mpls tag %u, vni %u), err %u",
-                      egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+                      egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
                       hw_id_, vnic_by_slot_key.mpls_dst_label,
                       vnic_by_slot_key.vxlan_1_vni, ret);
     }
@@ -532,27 +538,27 @@ vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
 
 void
 vnic_impl::fill_vnic_spec_(
-                egress_local_vnic_info_rx_actiondata_t *egress_vnic_data,
+                egress_local_vnic_info_actiondata_t    *egress_vnic_data,
                 local_vnic_by_vlan_tx_actiondata_t     *vnic_by_vlan_data,
                 local_vnic_by_slot_rx_swkey_t          *vnic_by_slot_key,
                 local_vnic_by_slot_rx_actiondata_t     *vnic_by_slot_data,
                 pds_vnic_spec_t *spec) {
-    // from EGRESS_LOCAL_VNIC_INFO_RX table
+    // from EGRESS_LOCAL_VNIC_INFO table
     sdk::lib::memrev(
         spec->mac_addr,
-        egress_vnic_data->egress_local_vnic_info_rx_action.overlay_mac,
+        egress_vnic_data->egress_local_vnic_info_action.overlay_mac,
         ETH_ADDR_LEN);
     spec->wire_vlan =
-        egress_vnic_data->egress_local_vnic_info_rx_action.overlay_vlan_id;
+        egress_vnic_data->egress_local_vnic_info_action.overlay_vlan_id;
     spec->subnet.id =
-        egress_vnic_data->egress_local_vnic_info_rx_action.subnet_id;
+        egress_vnic_data->egress_local_vnic_info_action.subnet_id;
     // from VNIC_BY_VLAN_TX table
     spec->vcn.id = vnic_by_vlan_data->local_vnic_by_vlan_tx_info.vcn_id;
     spec->src_dst_check =
-        vnic_by_vlan_data->local_vnic_by_vlan_tx_info.skip_src_dst_check == true
+        vnic_by_vlan_data->local_vnic_by_vlan_tx_info.skip_src_dst_check1 == true
             ? false : true;
     spec->rsc_pool_id =
-        vnic_by_vlan_data->local_vnic_by_vlan_tx_info.resource_group_1;
+        vnic_by_vlan_data->local_vnic_by_vlan_tx_info.resource_group1;
     // from VNIC_BY_SLOT_RX table
     if (vnic_by_slot_key->vxlan_1_vni != 0) {
         spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
@@ -569,7 +575,7 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
     sdk_ret_t ret;
     vnic_tx_stats_actiondata_t vnic_tx_stats_data;
     vnic_rx_stats_actiondata_t vnic_rx_stats_data;
-    egress_local_vnic_info_rx_actiondata_t egress_vnic_data = { 0 };
+    egress_local_vnic_info_actiondata_t     egress_vnic_data = { 0 };
     local_vnic_by_vlan_tx_actiondata_t     vnic_by_vlan_data = { 0 };
     local_vnic_by_slot_rx_swkey_t          vnic_by_slot_key = { 0 };
     local_vnic_by_slot_rx_actiondata_t     vnic_by_slot_data = { 0 };
@@ -585,15 +591,15 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
-    // read EGRESS_LOCAL_VNIC_INFO_RX table
-    ret = vnic_impl_db()->egress_local_vnic_info_rx_tbl()->retrieve(
+    // read EGRESS_LOCAL_VNIC_INFO table
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(
               hw_id_, &egress_vnic_data);
     if (ret != SDK_RET_OK) {
         return ret;
     }
     // read LOCAL_VNIC_BY_VLAN_TX table
     ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->retrieve(
-              egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id,
+              egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
               &vnic_by_vlan_data);
     if (ret != SDK_RET_OK) {
         return ret;

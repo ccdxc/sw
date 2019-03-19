@@ -47,13 +47,14 @@
 /*****************************************************************************/
 #define P4I_DROP_SRC_MAC_ZERO           0
 #define P4I_DROP_SRC_MAC_MISMATCH       1
-#define P4I_DROP_SRC_DST_CHECK_FAIL     2
-#define P4I_DROP_FLOW_HIT               3
-#define P4I_DROP_TEP_RX_DST_IP_MISMATCH 4
-#define P4I_DROP_DST_SLOT_ID_MISS       5
-#define P4I_DROP_RVPATH_SRC_IP_MISMATCH 6
-#define P4I_DROP_RVPATH_VCN_MISMATCH    7
-#define P4I_DROP_NACL                   8
+#define P4I_DROP_VNIC_INFO_TX_MISS      2
+#define P4I_DROP_VNIC_INFO_RX_MISS      3
+#define P4I_DROP_SRC_DST_CHECK_FAIL     4
+#define P4I_DROP_FLOW_HIT               5
+#define P4I_DROP_TEP_RX_DST_IP_MISMATCH 6
+#define P4I_DROP_RVPATH_SRC_IP_MISMATCH 7
+#define P4I_DROP_RVPATH_VCN_MISMATCH    8
+#define P4I_DROP_NACL                   9
 #define P4I_DROP_REASON_MIN             P4I_DROP_SRC_MAC_ZERO
 #define P4I_DROP_REASON_MAX             P4I_DROP_NACL
 
@@ -81,7 +82,7 @@
 #define APOLLO_P4_TO_RXDMA_HDR_SZ       52
 #define APOLLO_P4_TO_ARM_HDR_SZ         2
 #define APOLLO_P4_TO_TXDMA_HDR_SZ       25
-#define APOLLO_I2E_HDR_SZ               40
+#define APOLLO_I2E_HDR_SZ               38
 
 #define PKTQ_PAGE_SIZE                  10240
 

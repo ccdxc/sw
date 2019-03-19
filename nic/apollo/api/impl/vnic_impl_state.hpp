@@ -54,7 +54,7 @@ private:
     indexer *vnic_idxr(void) { return vnic_idxr_; }
     directmap *local_vnic_by_vlan_tx_tbl(void) { return local_vnic_by_vlan_tx_tbl_; }
     sdk_hash *local_vnic_by_slot_rx_tbl(void) { return local_vnic_by_slot_rx_tbl_; }
-    directmap *egress_local_vnic_info_rx_tbl(void) { return egress_local_vnic_info_rx_tbl_; }
+    directmap *egress_local_vnic_info_tbl(void) { return egress_local_vnic_info_tbl_; }
     friend class vnic_impl;   /**< vnic_impl class is friend of vnic_impl_state */
 
 private:
@@ -67,7 +67,7 @@ private:
       */
     directmap    *local_vnic_by_vlan_tx_tbl_;        /**< directmap table for LOCAL_VNIC_BY_VLAN_TX */
     sdk_hash     *local_vnic_by_slot_rx_tbl_;        /**< hash table for LOCAL_VNIC_BY_SLOT_RX */
-    directmap    *egress_local_vnic_info_rx_tbl_;    /**< directmap table for EGRESS_LOCAL_VNIC_INFO_RX */
+    directmap    *egress_local_vnic_info_tbl_;       /**< directmap table for EGRESS_LOCAL_VNIC_INFO */
 };
 
 /** * @} */    // end of PDS_VNIC_IMPL_STATE

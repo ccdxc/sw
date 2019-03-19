@@ -34,6 +34,7 @@
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 
+#define EPOCH 0xb055
 #define ROUTE_LPM_MEM_SIZE (64 + (16 * 64) + (16 * 16 * 64))
 #define SACL_LPM_MEM_SIZE                                                     \
     (SACL_SPORT_TABLE_SIZE + SACL_IPV4_TABLE_SIZE +                          \
@@ -519,19 +520,21 @@ vnic_tx_init ()
     memset(&data, 0, sizeof(data));
     index = g_ctag1_vid;
     data.action_id = LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
+    local_vnic_info->epoch1_valid = true;
+    local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
-    local_vnic_info->skip_src_dst_check = true;
-    memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
+    local_vnic_info->skip_src_dst_check1 = true;
+    memcpy(local_vnic_info->overlay_mac1, &g_layer1_smac, 6);
     sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
-    memcpy(local_vnic_info->sacl_v4addr_1, &sacl_hbm_addr,
-           sizeof(local_vnic_info->sacl_v4addr_1));
-    memcpy(local_vnic_info->sacl_v4addr_2, &sacl_hbm_addr,
-           sizeof(local_vnic_info->sacl_v4addr_2));
+    memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr1));
+    memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr2));
     lpm_hbm_addr = get_mem_addr(JLPMV4BASE);
-    memcpy(local_vnic_info->lpm_v4addr_1, &lpm_hbm_addr,
-           sizeof(local_vnic_info->lpm_v4addr_1));
-    memcpy(local_vnic_info->lpm_v4addr_2, &lpm_hbm_addr,
-           sizeof(local_vnic_info->lpm_v4addr_2));
+    memcpy(local_vnic_info->lpm_v4addr1, &lpm_hbm_addr,
+           sizeof(local_vnic_info->lpm_v4addr1));
+    memcpy(local_vnic_info->lpm_v4addr2, &lpm_hbm_addr,
+           sizeof(local_vnic_info->lpm_v4addr2));
 
     entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
 }
@@ -550,13 +553,15 @@ vnic_rx_init ()
     memset(&data, 0, sizeof(data));
     key.mpls_dst_label = g_local_slot_id;
     data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
+    local_vnic_info->epoch1_valid = true;
+    local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
-    local_vnic_info->skip_src_dst_check = true;
+    local_vnic_info->skip_src_dst_check1 = true;
     sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
-    memcpy(local_vnic_info->sacl_v4addr_1, &sacl_hbm_addr,
-           sizeof(local_vnic_info->sacl_v4addr_1));
-    memcpy(local_vnic_info->sacl_v4addr_2, &sacl_hbm_addr,
-           sizeof(local_vnic_info->sacl_v4addr_2));
+    memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr1));
+    memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr2));
 
     entry_write(tbl_id, 0, &key, NULL, &data, true,
                 LOCAL_VNIC_BY_SLOT_TABLE_SIZE);
@@ -565,13 +570,15 @@ vnic_rx_init ()
     memset(&data, 0, sizeof(data));
     key.vxlan_1_vni = g_local_slot_id;
     data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
+    local_vnic_info->epoch1_valid = true;
+    local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
-    local_vnic_info->skip_src_dst_check = true;
+    local_vnic_info->skip_src_dst_check1 = true;
     sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
-    memcpy(local_vnic_info->sacl_v4addr_1, &sacl_hbm_addr,
-           sizeof(local_vnic_info->sacl_v4addr_1));
-    memcpy(local_vnic_info->sacl_v4addr_2, &sacl_hbm_addr,
-           sizeof(local_vnic_info->sacl_v4addr_2));
+    memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr1));
+    memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr2));
 
     entry_write(tbl_id, 0, &key, NULL, &data, true,
                 LOCAL_VNIC_BY_SLOT_TABLE_SIZE);
@@ -580,15 +587,15 @@ vnic_rx_init ()
 static void
 egress_vnic_info_init ()
 {
-    egress_local_vnic_info_rx_actiondata_t data;
-    egress_local_vnic_info_rx_egress_local_vnic_info_rx_t *local_vnic_info =
-        &data.action_u.egress_local_vnic_info_rx_egress_local_vnic_info_rx;
-    uint32_t tbl_id = P4TBL_ID_EGRESS_LOCAL_VNIC_INFO_RX;
+    egress_local_vnic_info_actiondata_t data;
+    egress_local_vnic_info_egress_local_vnic_info_t *local_vnic_info =
+        &data.action_u.egress_local_vnic_info_egress_local_vnic_info;
+    uint32_t tbl_id = P4TBL_ID_EGRESS_LOCAL_VNIC_INFO;
     uint32_t index;
 
     memset(&data, 0, sizeof(data));
     index = g_local_vnic_tag;
-    data.action_id = EGRESS_LOCAL_VNIC_INFO_RX_EGRESS_LOCAL_VNIC_INFO_RX_ID;
+    data.action_id = EGRESS_LOCAL_VNIC_INFO_EGRESS_LOCAL_VNIC_INFO_ID;
     local_vnic_info->overlay_vlan_id = g_ctag1_vid;
     memcpy(local_vnic_info->vr_mac, &g_layer1_dmac, 6);
     memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);

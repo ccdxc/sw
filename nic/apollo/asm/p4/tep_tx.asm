@@ -29,9 +29,7 @@ mpls_udp_tep_tx:
     phvwr       p.mpls_dst_0_bos, 1
     seq         c1, k.rewrite_metadata_encap_type, VNIC_ENCAP
     add.c1      r1, r1, 4
-    phvwr.c1    p.mpls_src_0_label, \
-                k.{p4e_apollo_i2e_src_slot_id_sbit0_ebit3, \
-                   p4e_apollo_i2e_src_slot_id_sbit4_ebit19}
+    phvwr.c1    p.mpls_src_0_label, k.rewrite_metadata_src_slot_id
     phvwr.c1    p.mpls_src_0_valid, 1
     phvwr       p.ipv4_0_totalLen, r1
     sub         r1, r1, 20
@@ -90,9 +88,7 @@ gre_tep_tx:
     phvwr       p.mpls_dst_0_bos, 1
     seq         c1, k.rewrite_metadata_encap_type, VNIC_ENCAP
     add.c1      r1, r1, 4
-    phvwr.c1    p.mpls_src_0_label, \
-                k.{p4e_apollo_i2e_src_slot_id_sbit0_ebit3, \
-                   p4e_apollo_i2e_src_slot_id_sbit4_ebit19}
+    phvwr.c1    p.mpls_src_0_label, k.rewrite_metadata_src_slot_id
     phvwr.c1    p.mpls_src_0_valid, 1
     phvwr.e     p.ipv4_0_totalLen, r1
     phvwr.f     p.gre_0_proto, ETHERTYPE_MPLS_UNICAST

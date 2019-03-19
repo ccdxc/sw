@@ -7,12 +7,12 @@ header_type apollo_i2e_metadata_t {
         entropy_hash                : 16;
         traffic_class               : 3;
         dnat_required               : 1;
-        src_slot_id                 : 20;
-        pad0                        : 7;
+        pad0                        : 4;
+        pad1                        : 7;
         xlate_index                 : 17;
-        pad1                        : 6;
-        resource_group              : 10;
         pad2                        : 6;
+        resource_group              : 10;
+        pad3                        : 6;
         classified_policer_index    : 10;
         pad4                        : 6;
         agg_policer_index           : 10;
