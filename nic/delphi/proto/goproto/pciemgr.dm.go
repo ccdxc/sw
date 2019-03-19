@@ -435,6 +435,10 @@ func (it *PciePortMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PciePortMetricsIterator) Next() *PciePortMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PciePortMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -1226,6 +1230,10 @@ func (it *PcieMgrMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PcieMgrMetricsIterator) Next() *PcieMgrMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PcieMgrMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr

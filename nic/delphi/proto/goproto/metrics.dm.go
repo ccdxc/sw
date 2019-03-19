@@ -1353,6 +1353,10 @@ func (it *LifMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *LifMetricsIterator) Next() *LifMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &LifMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr

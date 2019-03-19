@@ -42,6 +42,9 @@ error KvstoreMgr::Init(int32_t *kvstore_root, DelphiShmPtr shm_ptr) {
 
     // initialize the buckets to empty
     memset((void *)&ht->buckets[0], 0, (MAX_SEQ_BUCKETS * sizeof(ht_bucket_t)));
+    for (int i = 0; i < MAX_SEQ_BUCKETS; i++) {
+        spin_lock_init(&ht->buckets[i].rw_lock);
+    }
 
     // write the root offset
     *kvstore_root = OFFSET_FROM_PTR(shm_ptr->GetBase(), ht);
@@ -133,6 +136,9 @@ TableMgrUptr KvstoreMgr::createTable(string kind, int32_t size) {
 
             // initialize the buckets to empty
             memset((void *)&ht->buckets[0], 0, (size * sizeof(ht_bucket_t)));
+            for (int i = 0; i < size; i++) {
+                spin_lock_init(&ht->buckets[i].rw_lock);
+            }
 
             LogInfo("Created hash table for kind {} at 0x{}", kind, OFFSET_FROM_PTR(shm_ptr_->GetBase(), ht));
 

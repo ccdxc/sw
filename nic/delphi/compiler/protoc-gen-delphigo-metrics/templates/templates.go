@@ -137,6 +137,10 @@ func (it *{{.GetName}}Iterator) HasNext() bool {
 // Next returns the next metrics
 func (it *{{.GetName}}Iterator) Next() *{{.GetName}} {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &{{.GetName}}{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr

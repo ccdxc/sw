@@ -337,6 +337,9 @@ uint8_t * SlabAllocator::allocateChunk(Slab_t *slab, SlabList_t *layer) {
         assert(err.IsOK());
     } else {
         SlabChunk_t *next_chunk = SLAB_CHUNK_FROM_IDX(slab, chunk->next_chunk_idx);
+        if (next_chunk->chunk_idx != chunk->next_chunk_idx) {
+            LogError("Invalid chunk data, n->cidx: {}, c->nidx: {}, ", next_chunk->chunk_idx, chunk->next_chunk_idx);
+        }
         assert(next_chunk->chunk_idx == chunk->next_chunk_idx);
         next_chunk->prev_chunk_idx = 0;
         slab->free_chunk_head = next_chunk->chunk_idx;

@@ -24,6 +24,7 @@ class IteratorCtx {
 public:
     delphi::shm::TableMgrUptr     tbl_;
     delphi::shm::TableIterator    iter_;
+    char                          *currVal_ = NULL;
 };
 
 void DelphiMetricsInit_cgo() {
@@ -44,8 +45,8 @@ DelphiMetricsIterator_cgo NewMetricsIterator_cgo(const char *kind) {
     MetricsCreateTable(kind);
 
     // create temporary context
-    // FIXME: when to free this memory?
     IteratorCtx *metr = new IteratorCtx();
+    assert(metr->currVal_ == NULL);
 
     // find the table
     metr->tbl_ = std::move(shm->Kvstore()->Table(kind));
@@ -66,14 +67,19 @@ bool MetricsIteratorIsNil_cgo(DelphiMetricsIterator_cgo metr) {
 }
 
 DelphiMetrics_cgo MetricsIteratorNext_cgo(DelphiMetricsIterator_cgo metr) {
-    // get current value
-    auto *mptr = ((IteratorCtx *)metr)->iter_.Value();
+     // release old value
+     if (((IteratorCtx *)metr)->currVal_ != NULL) {
+         ((IteratorCtx *)metr)->iter_.ReleaseValue(((IteratorCtx *)metr)->currVal_);
+     }
 
+    // get current value
+    ((IteratorCtx *)metr)->currVal_ = ((IteratorCtx *)metr)->iter_.AcquireValue();
+    
     // move the iterator
     ((IteratorCtx *)metr)->iter_.Next();
 
     // return current value
-    return (void *)mptr;
+    return (void *)((IteratorCtx *)metr)->currVal_;
 }
 
 DelphiMetrics_cgo MetricsIteratorFind_cgo(DelphiMetricsIterator_cgo metr, char *key, int keylen) {
@@ -94,10 +100,15 @@ DelphiMetrics_cgo MetricsIteratorGet_cgo(DelphiMetricsIterator_cgo metr) {
 
 // MetricsIteratorFree_cgo frees the memory associated with iterator
 void MetricsIteratorFree_cgo(DelphiMetricsIterator_cgo metr) {
-    IteratorCtx *mptr = ((IteratorCtx *)metr);
+    IteratorCtx *mitr = ((IteratorCtx *)metr);
 
-    mptr->tbl_ = nullptr;
-    delete mptr;
+     // release old value
+     if (mitr->currVal_ != NULL) {
+         mitr->iter_.ReleaseValue(mitr->currVal_);
+     }
+
+    mitr->tbl_ = nullptr;
+    delete mitr;
 }
 
 const char *MetricsEntryKey(DelphiMetrics_cgo mtr) {

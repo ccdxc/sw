@@ -75,8 +75,8 @@ void printKvstoreInfo(string tbl_name) {
 
 void printShmInfo() {
     auto shm = delphi::metrics::DelphiMetrics::GetDelphiShm();
+    shm->Kvstore()->DumpInfo();
     shm->DumpMeta();
-    // shm->Kvstore()->DumpInfo();
 }
 
 void listMetricsKind(string kind, string matchstr) {

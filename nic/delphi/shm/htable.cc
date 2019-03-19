@@ -168,14 +168,6 @@ error TableMgr::Publish(const char *key, int16_t keylen, const char *val, int16_
         return NULL;
     }
 
-    // check if the key already exists
-    void *oldVal = this->Find(key, keylen);
-    if (oldVal != NULL) {
-        this->Release(oldVal);
-        // FIXME: we should flip atomically to new value
-        err = this->Delete(key, keylen);
-        assert(err.IsOK());
-    }
 
     // create hash entry
     ht_entry_t *entry = this->createHashEntry(key, keylen, val_len);
@@ -189,6 +181,16 @@ error TableMgr::Publish(const char *key, int16_t keylen, const char *val, int16_
     memcpy(VAL_PTR_FROM_HASH_ENTRY(entry), val, val_len);
 
     LogDebug("Publishing key {} in table {}, offset 0x{}", key, ht_->tbl_name, OFFSET_FROM_PTR(shm_ptr_->GetBase(), entry));
+
+    // if old entry exists, atomically swap to new entry
+    ht_entry_t *old_entry = this->findEntry(key, keylen);
+    if (old_entry != NULL) {
+        auto old_val_ptr = VAL_PTR_FROM_HASH_ENTRY(old_entry);
+        Release(old_val_ptr);
+
+        // atomically swap old entry with new
+        return swapHashEntry(entry, key, keylen);
+    }
 
     // insert the hash entry into table
     err = this->insertHashEntry(key, keylen, entry);
@@ -329,12 +331,107 @@ ht_entry_t * TableMgr::findMatchingEntry(int32_t offset, const char *key, int16_
     return NULL;
 }
 
+// swapHashEntry atomically swaps an entry in hash table with new one
+error TableMgr::swapHashEntry(ht_entry_t *entry, const char *key, int16_t keylen) {
+    // compute hash on the key
+    uint32_t hash = fnv_hash(key, keylen);
+    // calculate the hash bucket index
+    int32_t idx = (int32_t)(hash % ht_->num_buckets);
+
+    // check if this is single level or multi level table
+    if (!HTABLE_IS_TWO_LEVEL(ht_)) {
+        ht_bucket_t *bkt = &ht_->buckets[idx];
+        spin_lock(&bkt->rw_lock);
+        if (bkt->ht_entry != 0) {
+            int32_t *offset = &bkt->ht_entry;
+            while (*offset != 0) {
+                ht_entry_t *curr_entry = (ht_entry_t *)PTR_FROM_OFFSET(shm_ptr_->GetBase(), *offset);
+                int8_t *hkey = (int8_t *)curr_entry + sizeof(ht_entry_t);
+                if ((curr_entry->key_len == keylen) && (!memcmp(hkey, key, keylen))) {
+                    // swap the entry in linked list
+                    entry->next_entry = curr_entry->next_entry;
+                    *offset = OFFSET_FROM_PTR(shm_ptr_->GetBase(), entry);
+                    curr_entry->next_entry = 0;
+
+                    // decrement ref count and free memory
+                    ht_entry_trailer_t *trailer = TRAILER_FROM_HASH_ENTRY(curr_entry);
+                    int refcnt = atomic_decrement(&trailer->refcnt);
+                    if (refcnt <= 1) {
+                        // free the memory
+                        shm_ptr_->Free(curr_entry);
+                    }
+                    break;
+                }
+
+                offset = &curr_entry->next_entry;
+            }
+        } else {
+            error err = atomicInsert(bkt, entry);
+            assert(err.IsOK());
+        }
+
+        spin_unlock(&bkt->rw_lock);
+    } else {
+        // calculate tablet index and bucket index
+        int32_t tablet_idx = idx / ht_->num_buckets_per_tablet;
+        int32_t bkt_idx = idx % ht_->num_buckets_per_tablet;
+
+        // get a pointer to the tablet
+        assert(tablet_idx < ht_->num_tablets);
+        assert(ht_->buckets[tablet_idx].ht_entry != 0);
+        auto tptr = PTR_FROM_OFFSET(shm_ptr_->GetBase(), ht_->buckets[tablet_idx].ht_entry);
+        ht_tablet_t *tablet = (ht_tablet_t *)tptr;
+
+        ht_bucket_t *bkt = &tablet->buckets[bkt_idx];
+        spin_lock(&bkt->rw_lock);
+        if (bkt->ht_entry != 0) {
+            int32_t *offset = &bkt->ht_entry;
+            while (*offset != 0) {
+                ht_entry_t *curr_entry = (ht_entry_t *)PTR_FROM_OFFSET(shm_ptr_->GetBase(), *offset);
+                int8_t *hkey = (int8_t *)curr_entry + sizeof(ht_entry_t);
+                if ((curr_entry->key_len == keylen) && (!memcmp(hkey, key, keylen))) {
+                    // swap the entry in linked list
+                    entry->next_entry = curr_entry->next_entry;
+                    *offset = OFFSET_FROM_PTR(shm_ptr_->GetBase(), entry);
+                    curr_entry->next_entry = 0;
+
+                    // decrement ref count and free memory
+                    ht_entry_trailer_t *trailer = TRAILER_FROM_HASH_ENTRY(curr_entry);
+                    int refcnt = atomic_decrement(&trailer->refcnt);
+                    if (refcnt <= 1) {
+                        // free the memory
+                        shm_ptr_->Free(curr_entry);
+                    }
+                    break;
+                }
+
+                offset = &curr_entry->next_entry;
+            }
+        } else {
+            error err = atomicInsert(bkt, entry);
+            assert(err.IsOK());
+        }
+        spin_unlock(&bkt->rw_lock);
+    }
+
+    return error::OK();
+}
+
+// Acquire aincrements the refcount
+error TableMgr::Acquire(void *val_ptr) {
+    assert(((int64_t)val_ptr & 0x07) == 0);
+    ht_entry_trailer_t *trailer = TRAILER_FROM_VAL_PTR(val_ptr);
+    atomic_increment(&trailer->refcnt);
+
+    return error::OK();
+}
+
 // Release releases a hash entry, memory is freed when all users release a hash entry
 error TableMgr::Release(void *val_ptr) {
     assert(((int64_t)val_ptr & 0x07) == 0);
     ht_entry_trailer_t *trailer = TRAILER_FROM_VAL_PTR(val_ptr);
-    atomic_decrement(&trailer->refcnt);
-    if (trailer->refcnt <= 0) {
+    int refcnt = atomic_decrement(&trailer->refcnt);
+    if (refcnt <= 1) {
         ht_entry_t *entry = (ht_entry_t *)PTR_FROM_OFFSET(shm_ptr_->GetBase(), trailer->ht_entry);
         // free the memory
         return shm_ptr_->Free(entry);
@@ -424,8 +521,8 @@ error TableMgr::deleteMatchingEntry(int32_t *offset, const char *key, int16_t ke
 
             // decrement ref count
             ht_entry_trailer_t *trailer = TRAILER_FROM_HASH_ENTRY(entry);
-            atomic_decrement(&trailer->refcnt);
-            if (trailer->refcnt <= 0) {
+            int refcnt = atomic_decrement(&trailer->refcnt);
+            if (refcnt <= 1) {
                 // free the memory
                 return shm_ptr_->Free(entry);
             }

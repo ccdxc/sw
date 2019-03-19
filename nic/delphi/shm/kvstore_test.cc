@@ -12,24 +12,19 @@ using namespace delphi::shm;
 
 class KvstoreTest : public testing::Test {
 protected:
-    DelphiShmPtr srv_shm_;
     DelphiShmPtr client_shm_;
 public:
     virtual void SetUp() {
         usleep(1000);
-        // create the server
-        srv_shm_ = make_shared<DelphiShm>();
-        error err = srv_shm_->MemMap(DELPHI_SHM_NAME, DELPHI_SHM_SIZE, true);
-        assert(err.IsOK());
 
         // create the client
         client_shm_ = make_shared<DelphiShm>();
-        err = client_shm_->MemMap(DELPHI_SHM_NAME, DELPHI_SHM_SIZE, false);
+        error err = client_shm_->MemMap(DELPHI_SHM_NAME, DELPHI_SHM_SIZE, true);
         assert(err.IsOK());
     }
     virtual void TearDown() {
         usleep(1000);
-        srv_shm_->MemUnmap();
+        client_shm_->MemUnmap();
     }
 };
 
@@ -144,7 +139,7 @@ TEST_F(KvstoreTest, TableIteratorTest) {
 }
 
 TEST_F(KvstoreTest, HashCollisionTest) {
-    int test_count = 40;
+    int test_count = 400;
     TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_collision_kind", 10);
     ASSERT_TRUE(tbl != NULL) << "Failed to create table";
 
@@ -196,13 +191,14 @@ TEST_F(KvstoreTest, HashCollisionTest) {
     }
 
     tbl->DumpTable();
+    client_shm_->DumpMeta();
 }
 
 TEST_F(KvstoreTest, KvPublishTest) {
     client_shm_->Kvstore()->DumpInfo();
 
     // create a table
-    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_kind", 100);
+    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_pub_kind", 100);
     ASSERT_TRUE(tbl != NULL) << "Failed to create table";
 
     // create an entry in table
@@ -268,7 +264,7 @@ TEST_F(KvstoreTest, DpstatsTest) {
     error err;
 
     // create a table
-    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_kind", 100);
+    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_dp_kind", 100);
     ASSERT_TRUE(tbl != NULL) << "Failed to create table";
     printf("After creating table:\n");
     client_shm_->Kvstore()->DumpInfo();
@@ -312,7 +308,7 @@ TEST_F(KvstoreTest, DpstatsTest) {
 
 TEST_F(KvstoreTest, KvstoreBenchmark) {
     // create a table
-    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_kind", 100);
+    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_bench_kind", 100);
     ASSERT_TRUE(tbl != NULL) << "Failed to create table";
 
     for (int i = 0; i < (200 * 1000); i++) {
@@ -328,7 +324,7 @@ TEST_F(KvstoreTest, KvstoreFindBenchmark) {
     int num_entries = 2000;
 
     // create a table
-    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_kind", 100);
+    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_bench_kind", 100);
     ASSERT_TRUE(tbl != NULL) << "Failed to create table";
 
     for (int i = 0; i < num_entries; i++) {
@@ -352,6 +348,7 @@ TEST_F(KvstoreTest, KvstoreFindBenchmark) {
         error err = tbl->Delete((char *)&key, sizeof(key));
         ASSERT_EQ(err, error::OK()) << "Error deleting the key";
     }
+    client_shm_->DumpMeta();
 }
 
 #define NUM_THREADS 25
@@ -369,6 +366,12 @@ typedef struct concurrent_test_ctx_ {
 void * startTestThread(void* targ) {
     concurrent_test_ctx_t *ctx = (concurrent_test_ctx_t *)targ;
 
+    // error checking
+    if (ctx->tbl == NULL) {
+        pthread_exit(NULL);
+        return NULL;
+    }
+
     // repeatedly create/ delete
     for (int i = 0; i < NUM_CREATE_DELETE; i++) {
         int32_t key = (i + 1) * NUM_THREADS + ctx->my_id;
@@ -376,11 +379,13 @@ void * startTestThread(void* targ) {
         if (valptr != NULL) ctx->create_count++;
 
         char *gptr = (char *)ctx->tbl->Find((char *)&key, sizeof(key));
-        if (gptr != NULL) ctx->find_count++;
-        error err = ctx->tbl->Release(gptr);
-        if (err.IsOK()) ctx->release_count++;
+        if (gptr != NULL) {
+            ctx->find_count++;
+            error err = ctx->tbl->Release(gptr);
+            if (err.IsOK()) ctx->release_count++;
+        }
 
-        err = ctx->tbl->Delete((char *)&key, sizeof(key));
+        error err = ctx->tbl->Delete((char *)&key, sizeof(key));
         if (err.IsOK()) ctx->delete_count++;
     }
 
@@ -429,12 +434,14 @@ TEST_F(KvstoreTest, ParallelCreateDeleteTest) {
     }
 }
 
-#define NUM_OBJS_TO_PUBLISH 100
+#define NUM_OBJS_TO_PUBLISH 1000
 #define NUM_PUBLISH_ITERATIONS 1000
-#define NUM_WALK_ITERATIONS 1000
+#define NUM_WALK_ITERATIONS 3000
 #define PUBLISH_VAL_LEN 18
 #define NUM_PUBLISH_THREADS 5
 #define NUM_ITERATOR_THREADS 20
+#define PUBLISHER_EN 1
+#define ITERATOR_EN 1
 
 void * runPublishThread(void* targ) {
     concurrent_test_ctx_t *ctx = (concurrent_test_ctx_t *)targ;
@@ -447,8 +454,6 @@ void * runPublishThread(void* targ) {
             auto err = ctx->tbl->Publish((char *)&key, sizeof(key), val, PUBLISH_VAL_LEN);
             if (err.IsOK()) ctx->create_count++;
         }
-        int sleep_time = (rand() % 5000) + 5000;
-        usleep(sleep_time);
     }
 
     LogInfo("Published {} entries, {} iterations", ctx->create_count, NUM_PUBLISH_ITERATIONS);
@@ -469,8 +474,6 @@ void * runIteratorThread(void* targ) {
                 LogError("Invalid keylen {} or vallen {}", it.Keylen(), it.ValLen());
             }
         }
-        int sleep_time = (rand() % 5000) + 5000;
-        usleep(sleep_time);
     }
 
     LogInfo("Iterated {} entries, {} iterations", ctx->find_count, NUM_WALK_ITERATIONS);
@@ -485,20 +488,25 @@ TEST_F(KvstoreTest, ParallelPublishIterateTest) {
     concurrent_test_ctx_t pub_ctx[NUM_PUBLISH_THREADS];
     concurrent_test_ctx_t iter_ctx[NUM_ITERATOR_THREADS];
     usleep(1000);
+    const char *names[] = { "ppitest1", "ppitest2", "ppitest3", "ppitest4", "ppitest5" };
 
-    // create a table
-    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("ptest", 2000);
-    ASSERT_TRUE(tbl != NULL) << "Failed to create table";
+    // create tables
+    for (int i = 0; i < NUM_PUBLISH_THREADS; i++) {
+        TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable(names[i], 2000);
+        ASSERT_TRUE(tbl != NULL) << "Failed to create table";
+    }
+    client_shm_->Kvstore()->DumpInfo();
+    client_shm_->DumpMeta();
 
     // setup thread context
     for (int i = 0; i < NUM_PUBLISH_THREADS; i++) {
-        pub_ctx[i].tbl = client_shm_->Kvstore()->Table("ptest");
+        pub_ctx[i].tbl = client_shm_->Kvstore()->Table(names[i]);
         pub_ctx[i].create_count = 0;
         pub_ctx[i].find_count = 0;
         pub_ctx[i].my_id = i + 1;
     }
     for (int i = 0; i < NUM_ITERATOR_THREADS; i++) {
-        iter_ctx[i].tbl = client_shm_->Kvstore()->Table("ptest");
+        iter_ctx[i].tbl = client_shm_->Kvstore()->Table(names[i%NUM_PUBLISH_THREADS]);
         iter_ctx[i].create_count = 0;
         iter_ctx[i].find_count = 0;
         iter_ctx[i].my_id = i + 1 + NUM_PUBLISH_THREADS;
@@ -508,20 +516,30 @@ TEST_F(KvstoreTest, ParallelPublishIterateTest) {
     pthread_attr_t tattr;
     pthread_attr_init (&tattr);
     pthread_attr_setscope(&tattr, PTHREAD_SCOPE_SYSTEM);
+    if (PUBLISHER_EN > 0) {
     for (int i = 0; i < NUM_PUBLISH_THREADS; i++) {
         pthread_create(&pub_threads[i], &tattr, &runPublishThread, (void*)&pub_ctx[i]);
     }
+    }
+    if (ITERATOR_EN > 0) {
     for (int i = 0; i < NUM_ITERATOR_THREADS; i++) {
         pthread_create(&iter_threads[i], &tattr, &runIteratorThread, (void*)&iter_ctx[i]);
     }
+    }
 
     // wait for the tests to complete
+    if (PUBLISHER_EN > 0) {
     for (int i = 0; i < NUM_PUBLISH_THREADS; i++) {
         pthread_join(pub_threads[i], NULL);
     }
+    }
+    if (ITERATOR_EN > 0) {
     for (int i = 0; i < NUM_ITERATOR_THREADS; i++) {
         pthread_join(iter_threads[i], NULL);
     }
+    }
+    client_shm_->Kvstore()->DumpInfo();
+    client_shm_->DumpMeta();
 }
 
 } // namespace

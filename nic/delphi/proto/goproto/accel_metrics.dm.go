@@ -123,6 +123,10 @@ func (it *AccelSeqQueueInfoMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *AccelSeqQueueInfoMetricsIterator) Next() *AccelSeqQueueInfoMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &AccelSeqQueueInfoMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -575,6 +579,10 @@ func (it *AccelSeqQueueMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *AccelSeqQueueMetricsIterator) Next() *AccelSeqQueueMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &AccelSeqQueueMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -785,6 +793,10 @@ func (it *AccelHwRingMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *AccelHwRingMetricsIterator) Next() *AccelHwRingMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &AccelHwRingMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr

@@ -111,6 +111,10 @@ func (it *AsicTemperatureMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *AsicTemperatureMetricsIterator) Next() *AsicTemperatureMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &AsicTemperatureMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -272,6 +276,10 @@ func (it *AsicPowerMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *AsicPowerMetricsIterator) Next() *AsicPowerMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &AsicPowerMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr

@@ -219,6 +219,10 @@ func (it *DppintcreditMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DppintcreditMetricsIterator) Next() *DppintcreditMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DppintcreditMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -434,6 +438,10 @@ func (it *DppintfifoMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DppintfifoMetricsIterator) Next() *DppintfifoMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DppintfifoMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -847,6 +855,10 @@ func (it *Dppintreg1MetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *Dppintreg1MetricsIterator) Next() *Dppintreg1Metrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &Dppintreg1Metrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -990,6 +1002,10 @@ func (it *Dppintreg2MetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *Dppintreg2MetricsIterator) Next() *Dppintreg2Metrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &Dppintreg2Metrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -1673,6 +1689,10 @@ func (it *IntspareMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *IntspareMetricsIterator) Next() *IntspareMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &IntspareMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -1852,6 +1872,10 @@ func (it *DppintsramseccMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DppintsramseccMetricsIterator) Next() *DppintsramseccMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DppintsramseccMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -2031,6 +2055,10 @@ func (it *DprintcreditMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DprintcreditMetricsIterator) Next() *DprintcreditMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DprintcreditMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -2246,6 +2274,10 @@ func (it *DprintfifoMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DprintfifoMetricsIterator) Next() *DprintfifoMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DprintfifoMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -2713,6 +2745,10 @@ func (it *DprintflopfifoMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DprintflopfifoMetricsIterator) Next() *DprintflopfifoMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DprintflopfifoMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -3342,6 +3378,10 @@ func (it *Dprintreg1MetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *Dprintreg1MetricsIterator) Next() *Dprintreg1Metrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &Dprintreg1Metrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -3593,6 +3633,10 @@ func (it *Dprintreg2MetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *Dprintreg2MetricsIterator) Next() *Dprintreg2Metrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &Dprintreg2Metrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -3916,6 +3960,10 @@ func (it *DprintsramseccMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DprintsramseccMetricsIterator) Next() *DprintsramseccMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DprintsramseccMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -4347,6 +4395,10 @@ func (it *SsepicsintbadaddrMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *SsepicsintbadaddrMetricsIterator) Next() *SsepicsintbadaddrMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &SsepicsintbadaddrMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -4742,6 +4794,10 @@ func (it *SsepicsintbgMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *SsepicsintbgMetricsIterator) Next() *SsepicsintbgMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &SsepicsintbgMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -4903,6 +4959,10 @@ func (it *SsepicsintpicsMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *SsepicsintpicsMetricsIterator) Next() *SsepicsintpicsMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &SsepicsintpicsMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -5136,6 +5196,10 @@ func (it *DbwaintdbMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DbwaintdbMetricsIterator) Next() *DbwaintdbMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DbwaintdbMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -5297,6 +5361,10 @@ func (it *DbwaintlifqstatemapMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DbwaintlifqstatemapMetricsIterator) Next() *DbwaintlifqstatemapMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DbwaintlifqstatemapMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -5764,6 +5832,10 @@ func (it *SgeteinterrMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *SgeteinterrMetricsIterator) Next() *SgeteinterrMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &SgeteinterrMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -6177,6 +6249,10 @@ func (it *SgeteintinfoMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *SgeteintinfoMetricsIterator) Next() *SgeteintinfoMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &SgeteintinfoMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -6770,6 +6846,10 @@ func (it *SgempuinterrMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *SgempuinterrMetricsIterator) Next() *SgempuinterrMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &SgempuinterrMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -7021,6 +7101,10 @@ func (it *SgempuintinfoMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *SgempuintinfoMetricsIterator) Next() *SgempuintinfoMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &SgempuintinfoMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -7164,6 +7248,10 @@ func (it *MdhensintaxierrMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *MdhensintaxierrMetricsIterator) Next() *MdhensintaxierrMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &MdhensintaxierrMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -7307,6 +7395,10 @@ func (it *MdhensinteccMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *MdhensinteccMetricsIterator) Next() *MdhensinteccMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &MdhensinteccMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -7558,6 +7650,10 @@ func (it *MdhensintipcoreMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *MdhensintipcoreMetricsIterator) Next() *MdhensintipcoreMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &MdhensintipcoreMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -7809,6 +7905,10 @@ func (it *MpmpnsintcryptoMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *MpmpnsintcryptoMetricsIterator) Next() *MpmpnsintcryptoMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &MpmpnsintcryptoMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -7952,6 +8052,10 @@ func (it *PbpbcintcreditunderflowMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PbpbcintcreditunderflowMetricsIterator) Next() *PbpbcintcreditunderflowMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PbpbcintcreditunderflowMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -8095,6 +8199,10 @@ func (it *InteccdescMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *InteccdescMetricsIterator) Next() *InteccdescMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &InteccdescMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -8634,6 +8742,10 @@ func (it *PbpbcintpbusviolationMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PbpbcintpbusviolationMetricsIterator) Next() *PbpbcintpbusviolationMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PbpbcintpbusviolationMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -8777,6 +8889,10 @@ func (it *PbpbcintrplMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PbpbcintrplMetricsIterator) Next() *PbpbcintrplMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PbpbcintrplMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -9136,6 +9252,10 @@ func (it *PbpbcintwriteMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PbpbcintwriteMetricsIterator) Next() *PbpbcintwriteMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PbpbcintwriteMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -9315,6 +9435,10 @@ func (it *PbpbchbmintecchbmrbMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PbpbchbmintecchbmrbMetricsIterator) Next() *PbpbchbmintecchbmrbMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PbpbchbmintecchbmrbMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -9476,6 +9600,10 @@ func (it *PbpbchbminthbmaxierrrspMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PbpbchbminthbmaxierrrspMetricsIterator) Next() *PbpbchbminthbmaxierrrspMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PbpbchbminthbmaxierrrspMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -9943,6 +10071,10 @@ func (it *PbpbchbminthbmdropMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PbpbchbminthbmdropMetricsIterator) Next() *PbpbchbminthbmdropMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PbpbchbminthbmdropMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -10410,6 +10542,10 @@ func (it *PbpbchbminthbmpbusviolationMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PbpbchbminthbmpbusviolationMetricsIterator) Next() *PbpbchbminthbmpbusviolationMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PbpbchbminthbmpbusviolationMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -10535,6 +10671,10 @@ func (it *PbpbchbminthbmxoffMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *PbpbchbminthbmxoffMetricsIterator) Next() *PbpbchbminthbmxoffMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &PbpbchbminthbmxoffMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -10678,6 +10818,10 @@ func (it *McmchintmcMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *McmchintmcMetricsIterator) Next() *McmchintmcMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &McmchintmcMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr

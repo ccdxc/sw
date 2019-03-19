@@ -93,6 +93,10 @@ func (it *FteCPSMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *FteCPSMetricsIterator) Next() *FteCPSMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &FteCPSMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -344,6 +348,10 @@ func (it *FteLifQMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *FteLifQMetricsIterator) Next() *FteLifQMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &FteLifQMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -631,6 +639,10 @@ func (it *SessionSummaryMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *SessionSummaryMetricsIterator) Next() *SessionSummaryMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &SessionSummaryMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr

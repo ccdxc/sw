@@ -93,6 +93,9 @@ func DecodeScalarKey(key interface{}, buf []byte) {
 	case *int32:
 		*key.(*int32) = int32(binary.LittleEndian.Uint32(buf[0:]))
 	case *uint64:
+		if len(buf) < 8 {
+			log.Errorf("Invalid key len %d", len(buf))
+		}
 		*key.(*uint64) = binary.LittleEndian.Uint64(buf[0:])
 	case *int64:
 		*key.(*int64) = int64(binary.LittleEndian.Uint64(buf[0:]))

@@ -149,6 +149,7 @@ public:
     error Publish(const char *key, int16_t keylen, const char *val, int16_t val_len); // atomically publish kev,val into hash table
     void *Find(const char *key, int16_t keylen);     // finds an entry by key
     uint64_t FindDpstats(const char *key, int16_t keylen); // find dpstats by key
+    error Acquire(void *val_ptr);                    // increment refcount for the object
     error Release(void *val_ptr);                    // release a hash entry from use
     error Delete(const char *key, int16_t keylen);   // delete an entry
     int32_t RefCount(void *val_ptr);                 // returns ref count of hash entry (for tetsing only)
@@ -166,6 +167,7 @@ private:
     ht_entry_t * findEntry(const char *key, int16_t keylen);
     ht_entry_t * findMatchingEntry(int32_t offset, const char *key, int16_t keylen);
     error deleteMatchingEntry(int32_t *offset, const char *key, int16_t keylen);
+    error swapHashEntry(ht_entry_t *entry, const char *key, int16_t keylen);
     error atomicInsert(ht_bucket_t *bkt, ht_entry_t *entry);
     ht_entry_t * getNextEntry(int idx);
 
@@ -202,6 +204,17 @@ public:
             return NULL;
         }
         return (char *)VAL_PTR_FROM_HASH_ENTRY(entry_);
+    }
+    inline char *AcquireValue() {
+        if (IsNil()) {
+            return NULL;
+        }
+        auto val_ptr = VAL_PTR_FROM_HASH_ENTRY(entry_);
+        tbl_->Acquire(val_ptr);
+        return (char *)val_ptr;
+    }
+    inline error ReleaseValue(char *val_ptr) {
+        return tbl_->Release(val_ptr);
     }
     inline bool IsNil() {
         return (entry_ == NULL);

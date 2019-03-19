@@ -219,6 +219,10 @@ func (it *UpgradeMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *UpgradeMetricsIterator) Next() *UpgradeMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &UpgradeMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr

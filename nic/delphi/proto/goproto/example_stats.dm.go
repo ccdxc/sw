@@ -167,6 +167,10 @@ func (it *ExampleMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *ExampleMetricsIterator) Next() *ExampleMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &ExampleMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -392,6 +396,10 @@ func (it *NestedKeyExampleMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *NestedKeyExampleMetricsIterator) Next() *NestedKeyExampleMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &NestedKeyExampleMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -608,6 +616,10 @@ func (it *SingletonExampleMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *SingletonExampleMetricsIterator) Next() *SingletonExampleMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &SingletonExampleMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -822,6 +834,10 @@ func (it *DpExampleMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *DpExampleMetricsIterator) Next() *DpExampleMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &DpExampleMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
@@ -1037,6 +1053,10 @@ func (it *NestedKeyDpExampleMetricsIterator) HasNext() bool {
 // Next returns the next metrics
 func (it *NestedKeyDpExampleMetricsIterator) Next() *NestedKeyDpExampleMetrics {
 	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
 	tmtr := &NestedKeyDpExampleMetrics{metrics: mtr}
 	tmtr.Unmarshal()
 	return tmtr
