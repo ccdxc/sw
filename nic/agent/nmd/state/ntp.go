@@ -8,7 +8,7 @@ func syncTimeOnce(servers []string) error {
 	}
 	cmd := "/usr/sbin/ntpd -q "
 	for _, s := range servers {
-		cmd = cmd + "-p " + s
+		cmd = cmd + " -p " + s
 	}
 	return runCmd(cmd)
 }
@@ -20,7 +20,7 @@ func startNtpClient(servers []string) error {
 
 	cmd := "/sbin/start-stop-daemon -b -S  -m -p /var/run/ntpd.pid --exec /usr/sbin/ntpd -- -n "
 	for _, s := range servers {
-		cmd = cmd + "-p " + s
+		cmd = cmd + " -p " + s
 	}
 	return runCmd(cmd)
 }
