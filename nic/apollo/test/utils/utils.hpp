@@ -18,7 +18,6 @@
 
 namespace api_test {
 
-
 /// \brief utils operation
 typedef enum op_e {
     OP_NONE,            ///< None
@@ -103,6 +102,8 @@ void send_packet(const uint8_t *tx_pkt, uint32_t tx_pkt_len, uint32_t tx_port,
 /// param data Data to be printed
 void dump_packet(std::vector<uint8_t> data);
 
+uint32_t pds_get_next_addr16(uint32_t addr);
+
 }    // namespace api_test
 
-#endif    // __TEST_UTILS_VNIC_HPP__
+#endif    // __TEST_UTILS_UTILS_HPP__

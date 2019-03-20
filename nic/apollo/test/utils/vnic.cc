@@ -116,4 +116,25 @@ vnic_util::many_create(uint32_t num_vnics)
     return SDK_RET_OK;
 }
 
+sdk::sdk_ret_t
+vnic_util::many_delete(uint32_t num_vnics)
+{
+    sdk::sdk_ret_t rv;
+    mac_addr_t mac;
+    uint64_t mac_u64;
+
+    for (uint32_t idx = 1; idx <= num_vnics; idx++) {
+        MAC_UINT64_TO_ADDR(mac, mac_u64);
+        vnic_mac = macaddr2str(mac);
+        if ((rv = del()) != SDK_RET_OK) {
+            return rv;
+        }
+        vnic_id++;
+        vlan_tag++;
+        mpls_slot++;
+        mac_u64++;
+    }
+    return SDK_RET_OK;
+}
+
 } // namespace api_test

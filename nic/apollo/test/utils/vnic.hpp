@@ -59,14 +59,23 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     sdk_ret_t del(void);
 
-    /// \brief Create many VNIC for the given subnet and VCN
+    /// \brief Create many VNICs for the given subnet and VCN
     ///
-    /// This incements the vnic_id, vlan_tag, and mpls_slot.
+    /// This increments the vnic_id, vlan_tag, and mpls_slot.
     ///
     /// \param num_vnics Number of vnics to be created
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
     sdk_ret_t many_create(uint32_t num_vnics);
+
+    /// \brief Delete many VNICs for the given subnet and VCN
+    ///
+    /// This increments the vnic_id, vlan_tag, and mpls_slot.
+    ///
+    /// \param num_vnics Number of vnics to be created
+    ///
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t many_delete(uint32_t num_vnics);
 };
 
 } // namespace api_test

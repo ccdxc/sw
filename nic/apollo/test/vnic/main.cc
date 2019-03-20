@@ -88,10 +88,9 @@ TEST_F(vnic_test, vnic_create) {
     vcn_util vcn(PDS_VCN_TYPE_TENANT, vcn_id, vcn_cidr);
     ASSERT_TRUE(vcn.create() == SDK_RET_OK);
 
-   // Create remote tep
+    // Create remote tep
     tep_util rtep(sub_rem_gw, PDS_TEP_ENCAP_TYPE_VNIC);
     ASSERT_TRUE(rtep.create() == SDK_RET_OK);
-
 
     // Create ipv6 route for remote subnet
     rt_tbl.key.id = rt_id;
@@ -188,6 +187,13 @@ TEST_F(vnic_test, DISABLED_vnic_delete) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
     ASSERT_TRUE(vnic.del() == SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
+}
+
+/// \brief Create and delete VCNs in the same batch
+/// The operation should be de-duped by framework and is
+/// a NO-OP from hardware perspective
+TEST_F(vnic_test, DISABLED_vnic_workflow_1) {
+
 }
 
 /// @}

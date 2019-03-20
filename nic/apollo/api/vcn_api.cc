@@ -82,8 +82,9 @@ pds_vcn_read (pds_vcn_key_t *key, pds_vcn_info_t *info)
     if (key == NULL || info == NULL)
         return sdk::SDK_RET_INVALID_ARG;
 
-    if ((entry = pds_vcn_entry_find(key)) == NULL)
+    if ((entry = pds_vcn_entry_find(key)) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
 
     if ((rv = pds_vcn_spec_fill(entry, &info->spec)) != sdk::SDK_RET_OK)
         return rv;

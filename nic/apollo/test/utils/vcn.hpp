@@ -21,6 +21,8 @@ class vcn_util {
 public:
     /// \brief constructor
     vcn_util(pds_vcn_type_t type, pds_vcn_id_t id, std::string cidr_str);
+    vcn_util(pds_vcn_id_t id, std::string cidr_str);
+    vcn_util(pds_vcn_id_t id);
 
     /// \brief destructor
     ~vcn_util();
@@ -30,58 +32,48 @@ public:
     std::string cidr_str;    // VCN CIDR
     pds_vcn_type_t type;     /// VCN type
 
-    /// \brief Create VCN
+    /// \brief Create a VCN from VCN object
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t create();
 
-    /// \brief Delete a VCN given its id
+    /// \brief Read VCN
     ///
-    /// \param[in] vcn_id VCN id
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t del(pds_vcn_id_t vcn_id);
-
-    /// \brief Update a VCN given its id and updated spec
-    ///
-    /// \param[in] vcn_spec VCN spec
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t update(pds_vcn_spec_t *vcn_spec);
-
-    /// \brief Read a VCN
-    ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read();
+    /// \param[in] compare_spec validation to be done or not
+    /// \param[out] info vcn information
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_vcn_info_t *info, bool compare_spec=TRUE);
 
     /// \brief Update the VCN
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update();
+    sdk_ret_t update(pds_vcn_spec_t *spec);
 
-    /// \brief Delete a VCN given its
+    /// \brief Delete a VCN given its key
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t del();
 
-    /// \brief Delete all VCN
+    /// \brief Create many VCNs
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(uint32_t num_vcn, std::string pfxstr,
+    static sdk_ret_t many_create(pds_vcn_key_t key, std::string pfxstr,
+                                 uint32_t num_vcns,
                                  pds_vcn_type_t vcn_type = PDS_VCN_TYPE_TENANT);
 
-    /// \brief Delete all VCNs configured
+    /// \brief Read many VCNs
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t all_delete(void);
+    static sdk_ret_t many_read(pds_vcn_key_t key, uint32_t num_vcns,
+                               sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
 
-    /// \brief Get all VCNs configured on the NAPLES
+    /// \brief Delete multiple VCNs
     ///
-    /// \param[out] count number of VCN objects
-    /// \param[out] vcn list of VCN objects
+    /// Delete "num_vcns" VCNs of type "vcn_type" starting from id
     ///
-    /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t all_get(int *count, pds_vcn_spec_t *vcn);
+    /// \param[in] num_vcns number of VCNs to be deleted
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t many_delete(pds_vcn_key_t key, uint32_t num_vcns);
 };
 
 }    // namespace api_test
