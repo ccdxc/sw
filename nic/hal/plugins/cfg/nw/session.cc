@@ -1564,9 +1564,17 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
             sep = find_ep_by_handle(session->sep_handle);
 
         if (sep == NULL) {
-            HAL_TRACE_ERR("Couldnt get SEP/DEP from session :{}", key);
+            HAL_TRACE_ERR("Couldnt get SEP from session :{}", key);
             return 0;
         }
+
+        if (session->dep_handle != HAL_HANDLE_INVALID)
+            dep = find_ep_by_handle(session->dep_handle);
+
+        if (dep == NULL) {
+            HAL_TRACE_ERR("Couldnt get DEP from session :{}", key);
+            return 0;
+        } 
     }
     sl2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
     if (sl2seg == NULL) {
