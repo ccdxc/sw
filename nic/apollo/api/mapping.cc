@@ -29,7 +29,7 @@ mapping_entry::factory(pds_mapping_spec_t *pds_mapping) {
     mapping_entry *mapping;
 
     // create mapping entry with defaults, if any
-    mapping = mapping_db()->mapping_alloc();
+    mapping = mapping_db()->alloc();
     if (mapping) {
         new (mapping) mapping_entry();
         mapping->impl_ =
@@ -52,7 +52,7 @@ mapping_entry::destroy(mapping_entry *mapping) {
         impl_base::destroy(impl::IMPL_OBJ_ID_MAPPING, mapping->impl_);
     }
     mapping->~mapping_entry();
-    mapping_db()->mapping_free(mapping);
+    mapping_db()->free(mapping);
 }
 
 mapping_entry *
@@ -60,7 +60,7 @@ mapping_entry::build(pds_mapping_key_t *key) {
     mapping_entry *mapping;
 
     // create mapping entry with defaults, if any
-    mapping = mapping_db()->mapping_alloc();
+    mapping = mapping_db()->alloc();
     if (mapping) {
         new (mapping) mapping_entry();
         mapping->impl_ = impl_base::build(impl::IMPL_OBJ_ID_MAPPING, key);
@@ -78,7 +78,7 @@ mapping_entry::soft_delete(mapping_entry *mapping) {
         impl_base::soft_delete(impl::IMPL_OBJ_ID_MAPPING, mapping->impl_);
     }
     mapping->~mapping_entry();
-    mapping_db()->mapping_free(mapping);
+    mapping_db()->free(mapping);
 }
 
 sdk_ret_t

@@ -156,16 +156,6 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nexthop id %u",
                     ipv4addr2str(tep_spec->key.ip_addr),
                     PDS_REMOTE_TEP_MAC, hw_id_, nh_id_);
-#if 0
-    {
-        char buff[2048];
-        tep_impl_db()->nh_tx_tbl()->retrieve(nh_id_, &nh_tx_data);
-        tep_impl_db()->nh_tx_tbl()->entry_to_str(&nh_tx_data, nh_id_,
-                                                 buff, sizeof(buff));
-        PDS_TRACE_DEBUG("NH entry %s", buff);
-    }
-#endif
-
     return ret;
 }
 

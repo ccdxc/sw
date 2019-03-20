@@ -479,9 +479,9 @@ capri_init (capri_cfg_t *cfg)
     return SDK_RET_OK;
 }
 
-} // namespace capri
-} // namespace platform
-} // namespace sdk
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk
 
 namespace sdk {
 namespace asic {
@@ -523,5 +523,5 @@ asic_init (asic_cfg_t *cfg)
     return capri_init(&capri_cfg);
 }
 
-} // namespace asic
-} // namespace sdk
+}    // namespace asic
+}    // namespace sdk

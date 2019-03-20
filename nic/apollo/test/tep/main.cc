@@ -410,7 +410,7 @@ TEST_F(tep_test, DISABLED_tep_max_create) {
     pds_batch_params_t batch_params = {0};
     uint32_t num_teps = PDS_MAX_TEP - 1;
     std::string tep_first_ip_str = "10.10.1.2/8";
-    tep_util tep_obj("10.10.5.1/8");
+    tep_util tep_obj("10.10.5.1", PDS_TEP_ENCAP_TYPE_VNIC);
 
     // Setup
     batch_params.epoch = ++api_test::g_batch_epoch;
@@ -445,16 +445,12 @@ TEST_F(tep_test, DISABLED_tep_max_create) {
 
 /// \brief Create 1 TEP after table full
 /// Attempt to create only one TEP when table is already full
-// TODO: we have delayed delete enabled in the code, we can't
-//       expect TEPs created in previous cases to be deleted
-//       instantaneously ... will figure out a way to disable
-//       this delay delete logic
-TEST_F(tep_test, DISABLED_tep_beyondmax_create) {
+TEST_F(tep_test, tep_beyondmax_create) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP;
     std::string tep_first_ip_str = "10.20.1.1/8";
-    tep_util tep_obj("10.20.5.1/8");
+    tep_util tep_obj("10.20.5.1", PDS_TEP_ENCAP_TYPE_VNIC);
 
     // Setup
     batch_params.epoch = ++api_test::g_batch_epoch;
@@ -480,7 +476,7 @@ TEST_F(tep_test, DISABLED_tep_beyondmax_create) {
     ASSERT_TRUE(tep_util::many_delete(
         num_teps, tep_first_ip_str,
         PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(tep_obj.read(&info, FALSE) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -637,13 +633,13 @@ TEST_F(tep_test, tep_multi_max_delete) {
 
 /// \brief Delete max no of TEPs - 1 in a single batch
 /// Delete max supported no of TEPs but one in a single batch
-TEST_F(tep_test, DISABLED_tep_multi_max_delete_1) {
+TEST_F(tep_test, tep_multi_max_delete_1) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP;
     std::string tep_first_ip_str = "10.70.1.1/8";
-    std::string tep_last_ip_str = "10.70.5.0/8";
-    tep_util tep_obj(tep_last_ip_str);
+    std::string tep_last_ip_str = "10.70.4.255";
+    tep_util tep_obj(tep_last_ip_str, PDS_TEP_ENCAP_TYPE_VNIC);
 
     // Setup
     batch_params.epoch = ++api_test::g_batch_epoch;
@@ -656,9 +652,8 @@ TEST_F(tep_test, DISABLED_tep_multi_max_delete_1) {
     num_teps = PDS_MAX_TEP - 1;
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(tep_util::many_delete(
-        num_teps, tep_first_ip_str,
-        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_delete(num_teps, tep_first_ip_str,
+                                      PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // verify all num_teps entries are NOT programmed
@@ -763,15 +758,15 @@ TEST_F(tep_test, DISABLED_tep_read_nonexisting_when_single) {
 
 /// \brief Read a non existing TEP
 /// Read a non existing TEP with multiple entries in HW
-TEST_F(tep_test, DISABLED_tep_read_nonexisting_when_multiple) {
+TEST_F(tep_test, tep_read_nonexisting_when_multiple) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
-    tep_util tep_obj_1("10.1.1.21/8", PDS_TEP_ENCAP_TYPE_VNIC);
-    tep_util tep_obj_2("10.1.1.22/8", PDS_TEP_ENCAP_TYPE_VNIC);
-    tep_util tep_obj_3("10.1.1.23/8", PDS_TEP_ENCAP_TYPE_VNIC);
-    tep_util tep_obj_4("10.1.1.24/8", PDS_TEP_ENCAP_TYPE_VNIC);
-    tep_util tep_obj_5("10.1.1.25/8", PDS_TEP_ENCAP_TYPE_VNIC);
-    tep_util tep_obj("10.1.1.30/8", PDS_TEP_ENCAP_TYPE_VNIC);
+    tep_util tep_obj_1("10.1.1.21", PDS_TEP_ENCAP_TYPE_VNIC);
+    tep_util tep_obj_2("10.1.1.22", PDS_TEP_ENCAP_TYPE_VNIC);
+    tep_util tep_obj_3("10.1.1.23", PDS_TEP_ENCAP_TYPE_VNIC);
+    tep_util tep_obj_4("10.1.1.24", PDS_TEP_ENCAP_TYPE_VNIC);
+    tep_util tep_obj_5("10.1.1.25", PDS_TEP_ENCAP_TYPE_VNIC);
+    tep_util tep_obj("10.1.1.30", PDS_TEP_ENCAP_TYPE_VNIC);
 
     // Setup
     batch_params.epoch = ++api_test::g_batch_epoch;
@@ -833,10 +828,10 @@ TEST_F(tep_test, DISABLED_tep_read_nonexisting_when_multiple) {
 
 /// \brief Read an existing TEP
 /// Read an existing TEP with ONLY that entry in HW
-TEST_F(tep_test, DISABLED_tep_read_existing_when_single) {
+TEST_F(tep_test, tep_read_existing_when_single) {
     pds_batch_params_t batch_params = {0};
     pds_tep_info_t info;
-    tep_util tep_obj("10.1.1.31/8", PDS_TEP_ENCAP_TYPE_VNIC);
+    tep_util tep_obj("10.1.1.31", PDS_TEP_ENCAP_TYPE_VNIC);
 
     // Setup
     batch_params.epoch = ++api_test::g_batch_epoch;
@@ -944,7 +939,7 @@ TEST_F(tep_test, DISABLED_tep_read_existing_when_full) {
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP;
     std::string tep_first_ip_str = "10.110.1.1/8";
-    tep_util tep_obj("10.1.1.1/8");
+    tep_util tep_obj("10.1.1.1", PDS_TEP_ENCAP_TYPE_VNIC);
 
     // Trigger
     batch_params.epoch = ++api_test::g_batch_epoch;
@@ -1243,7 +1238,7 @@ TEST_F(tep_test, tep_workflow_neg_3) {
     pds_tep_info_t info;
     uint32_t num_teps = PDS_MAX_TEP;
     std::string tep_invalid_ip_str = "150.150.1.1/8";
-    tep_util tep_obj("192.168.9.1/8");
+    tep_util tep_obj("192.168.9.1", PDS_TEP_ENCAP_TYPE_VNIC);
 
     // Read NonEx, [ Delete NonExMax ]
 
@@ -1272,7 +1267,7 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_4) {
     pds_tep_info_t info;
     uint32_t num_teps = 10;
     std::string tep_first_ip_str = "50.50.1.1/8";
-    tep_util tep_obj("99.99.99.99/8");
+    tep_util tep_obj("99.99.99.99", PDS_TEP_ENCAP_TYPE_VNIC);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);

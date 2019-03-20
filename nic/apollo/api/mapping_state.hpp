@@ -39,13 +39,13 @@ public:
      * @brief    allocate memory required for a mapping
      * @return pointer to the allocated mapping, NULL if no memory
      */
-    mapping_entry *mapping_alloc(void);
+    mapping_entry *alloc(void);
 
     /**
      * @brief      free mapping instance back to slab
      * @param[in]  mapping   pointer to the allocated mapping
      */
-    void mapping_free(mapping_entry *mapping);
+    void free(mapping_entry *mapping);
 
 #if 0
     /**

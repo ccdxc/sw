@@ -11,17 +11,7 @@
 #include "platform/utils/mpartition.hpp"
 #include "asic/rw/asicrw.hpp"
 
-#if 0
-void push_qstate_to_capri(hal::LIFQState *qstate);
-void clear_qstate(hal::LIFQState *qstate);
-int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size);
-int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size);
-int32_t get_pc_offset(const char *handle, const char *prog_name,
-                      const char *label, uint8_t *offset);
-#endif
-
 using namespace sdk::platform::utils;
-
 
 namespace sdk {
 namespace platform {
@@ -142,6 +132,6 @@ int32_t LIFManager::GetPCOffset(const char *handle,
     return get_pc_offset(pinfo_, prog_name, label, ret_offset);
 }
 
-} // namespace capri
-} // namespace platform
-} // namespace sdk
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk

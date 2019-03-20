@@ -144,7 +144,6 @@ apollo_impl::asm_config_init(pds_init_params_t *init_params,
     asic_cfg->asm_cfg[0].name = init_params->pipeline + "_p4";
     asic_cfg->asm_cfg[0].path = std::string("p4_asm");
     asic_cfg->asm_cfg[0].base_addr = std::string(JP4_PRGM);
-
     asic_cfg->asm_cfg[0].sort_func = sort_mpu_programs_;
     asic_cfg->asm_cfg[1].name = init_params->pipeline + "_rxdma";
     asic_cfg->asm_cfg[1].path = std::string("rxdma_asm");

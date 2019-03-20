@@ -39,7 +39,7 @@ mapping_state::~mapping_state() {
  * @return    pointer to the allocated mapping , NULL if no memory
  */
 mapping_entry *
-mapping_state::mapping_alloc(void) {
+mapping_state::alloc(void) {
     return ((mapping_entry *)mapping_slab_->alloc());
 }
 
@@ -48,7 +48,7 @@ mapping_state::mapping_alloc(void) {
  * @param[in]  mapping   pointer to the allocated mapping
  */
 void
-mapping_state::mapping_free(mapping_entry *mapping) {
+mapping_state::free(mapping_entry *mapping) {
     mapping_slab_->free(mapping);
 }
 

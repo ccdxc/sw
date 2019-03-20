@@ -174,17 +174,6 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return ret;
     }
 
-    // TODO: remove once retrieve() issue is fixed
-    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(hw_id_, &egress_vnic_data);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("READING BACK FAILED AT %u", hw_id_);
-    } else {
-        PDS_TRACE_ERR("READING BACK SUCCESS AT %u", hw_id_);
-        PDS_TRACE_DEBUG("vlan id %u, subnet %u",
-                        egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
-                        egress_vnic_data.egress_local_vnic_info_action.subnet_id);
-    }
-
     // initialize rx stats tables for this vnic
     vnic_rx_stats_data.action_id = VNIC_RX_STATS_VNIC_RX_STATS_ID;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_RX_STATS,
