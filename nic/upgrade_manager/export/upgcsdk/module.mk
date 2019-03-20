@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libupgrade_app.so
+MODULE_PREREQS  = upg.submake
 MODULE_PIPELINE = iris gft
 MODULE_SOLIBS   = delphisdk upgradeutils
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc ${MODULE_SRC_DIR}/../../include/c/*cc)
