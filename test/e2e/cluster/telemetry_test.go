@@ -156,39 +156,64 @@ func testQueryingFwlogs() {
 		},
 	}
 	ctx := ts.tu.NewLoggedInContext(context.Background())
-	resp, err := tc.Fwlogs(ctx, query)
-	Expect(err).Should(BeNil())
 
-	// verify results
-	Expect(resp.Tenant).To(Equal(globals.DefaultTenant))
-	Expect(len(resp.Results)).To(Equal(5))
+	verifyLogs := func() {
+		Eventually(func() bool {
+			resp, err := tc.Fwlogs(ctx, query)
+			if err != nil {
+				log.Errorf("Fwlog query returned err %v", err)
+				return false
+			}
+			// Even if citadel isn't ready, it should return 5 results
+			Expect(len(resp.Results)).To(Equal(5))
+			if len(resp.Results[0].Logs) != 20 {
+				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[0].Logs))
+				return false
+			}
+			return true
+		}, 10, 1).Should(BeTrue(), "Citadel failed to return expected amount of results")
 
-	log.Infof("++++++[0] %+v", resp.Results[0].Logs)
+		resp, err := tc.Fwlogs(ctx, query)
+		Expect(err).Should(BeNil())
+		// verify results
+		Expect(resp.Tenant).To(Equal(globals.DefaultTenant))
+		Expect(len(resp.Results)).To(Equal(5))
 
-	Expect(resp.Results[0].StatementID).To(Equal(int32(0)))
-	Expect(len(resp.Results[0].Logs)).To(Equal(20))
-	resLog := resp.Results[0].Logs
-	reverse(resLog)
-	Expect(logs).Should(Equal(resLog))
+		log.Infof("++++++[0] %+v", resp.Results[0].Logs)
 
-	log.Infof("++++++[1] %+v", resp.Results[1].Logs)
+		Expect(resp.Results[0].StatementID).To(Equal(int32(0)))
+		Expect(len(resp.Results[0].Logs)).To(Equal(20))
+		resLog := resp.Results[0].Logs
+		reverse(resLog)
+		Expect(logs).Should(Equal(resLog))
 
-	Expect(resp.Results[1].StatementID).To(Equal(int32(1)))
-	Expect(len(resp.Results[1].Logs)).To(Equal(20))
-	Expect(logs).Should(Equal(resp.Results[1].Logs))
+		log.Infof("++++++[1] %+v", resp.Results[1].Logs)
 
-	log.Infof("++++++[2] %+v", resp.Results[2].Logs)
+		Expect(resp.Results[1].StatementID).To(Equal(int32(1)))
+		Expect(len(resp.Results[1].Logs)).To(Equal(20))
+		Expect(logs).Should(Equal(resp.Results[1].Logs))
 
-	Expect(resp.Results[2].StatementID).To(Equal(int32(2)))
-	Expect(len(resp.Results[2].Logs)).To(Equal(12))
+		log.Infof("++++++[2] %+v", resp.Results[2].Logs)
 
-	log.Infof("++++++[3] %+v", resp.Results[3].Logs)
-	Expect(resp.Results[3].StatementID).To(Equal(int32(3)))
-	Expect(len(resp.Results[3].Logs)).To(Equal(2))
+		Expect(resp.Results[2].StatementID).To(Equal(int32(2)))
+		Expect(len(resp.Results[2].Logs)).To(Equal(12))
 
-	log.Infof("++++++[4] %+v", resp.Results[4].Logs)
-	Expect(resp.Results[4].StatementID).To(Equal(int32(4)))
-	Expect(len(resp.Results[4].Logs)).To(Equal(0))
+		log.Infof("++++++[3] %+v", resp.Results[3].Logs)
+		Expect(resp.Results[3].StatementID).To(Equal(int32(3)))
+		Expect(len(resp.Results[3].Logs)).To(Equal(2))
+
+		log.Infof("++++++[4] %+v", resp.Results[4].Logs)
+		Expect(resp.Results[4].StatementID).To(Equal(int32(4)))
+		Expect(len(resp.Results[4].Logs)).To(Equal(0))
+	}
+	verifyLogs()
+
+	// Restart Citadel - logs should be persisted
+	log.Info("Restarting citadel...")
+	_, err = ts.tu.KillContainer(globals.Citadel)
+	Expect(err).To(BeNil())
+
+	verifyLogs()
 }
 
 var _ = Describe("telemetry test", func() {
@@ -255,8 +280,14 @@ func writePoints(url string, bp client.BatchPoints) {
 	for _, p := range points {
 		pointsStr = append(pointsStr, p.String())
 	}
-	res := ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl -XPOST "%s/write?db=%s" --data-binary '%s'`, url, bp.Database(), strings.Join(pointsStr, "\n")))
-	log.Infof("writing points returned %s", res)
+	Eventually(func() bool {
+		res := ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl -s -o /dev/null -w "%%{http_code}" -XPOST "%s/write?db=%s" --data-binary '%s'`, url, bp.Database(), strings.Join(pointsStr, "\n")))
+		log.Infof("writing points returned code %s", res)
+		if strings.HasPrefix(res, "20") {
+			return true
+		}
+		return false
+	}, 10, 1).Should(BeTrue(), "Failed to write logs")
 }
 
 func reverse(logs []*telemetry_query.Fwlog) {

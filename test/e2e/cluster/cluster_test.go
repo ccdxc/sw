@@ -162,7 +162,7 @@ func validateCluster() {
 	By(fmt.Sprintf("pen-base should be running on all nodes"))
 	for _, ip := range ts.tu.VeniceNodeIPs {
 		Eventually(func() string {
-			return ts.tu.CommandOutput(ip, "docker ps -q -f Name=pen-cmd")
+			return ts.tu.GetContainerOnNode(ip, "pen-cmd")
 		}, 10, 1).ShouldNot(BeEmpty(), "pen-cmd container should be running on %s", ip)
 	}
 
@@ -170,7 +170,7 @@ func validateCluster() {
 	for _, qnode := range ts.tu.QuorumNodes {
 		ip := ts.tu.NameToIPMap[qnode]
 		Eventually(func() string {
-			return ts.tu.CommandOutput(ip, "docker ps -q -f Name=pen-etcd")
+			return ts.tu.GetContainerOnNode(ip, "pen-etcd")
 		}, 10, 1).ShouldNot(BeEmpty(), "pen-etcd container should be running on %s(%s)", ts.tu.IPToNameMap[ip], ip)
 	}
 
@@ -178,7 +178,7 @@ func validateCluster() {
 	ips := ts.tu.NonQuorumNodes()
 	for nonQnode := range ips {
 		Eventually(func() string {
-			return ts.tu.CommandOutput(nonQnode, "docker ps -q -f Name=pen-etcd")
+			return ts.tu.GetContainerOnNode(nonQnode, "pen-etcd")
 		}, 10, 1).Should(BeEmpty(), "pen-etcd container should not be running on %s(%s)", ts.tu.IPToNameMap[nonQnode], nonQnode)
 	}
 

@@ -551,3 +551,43 @@ func (tu *TestUtils) populateVeniceModules() {
 		delete(tu.VeniceModules, m)
 	}
 }
+
+// KillContainer finds a container with servicename, kills it, and
+// returns the name of the node on which the container was killed
+func (tu *TestUtils) KillContainer(serviceName string) (string, error) {
+	containerID := ""
+	nodeIP := ""
+	for _, ip := range tu.VeniceNodeIPs {
+		containerID = tu.GetContainerOnNode(ip, serviceName)
+		if containerID != "" {
+			nodeIP = ip
+			break
+		}
+	}
+	if len(containerID) == 0 {
+		return "", fmt.Errorf("Couldn't find container for service %s", serviceName)
+	}
+	tu.KillContainerOnNodeByID(nodeIP, containerID)
+	return tu.IPToNameMap[nodeIP], nil
+}
+
+// KillContainerOnNodeByName finds a container with the serviceName on the given node ip and kills it
+func (tu *TestUtils) KillContainerOnNodeByName(ip string, serviceName string) error {
+	containerID := tu.GetContainerOnNode(ip, serviceName)
+	if len(containerID) == 0 {
+		return fmt.Errorf("Couldn't find container for service %s", serviceName)
+	}
+	tu.KillContainerOnNodeByID(ip, containerID)
+	return nil
+}
+
+// GetContainerOnNode returns the container ID for the given service name and node ip
+func (tu *TestUtils) GetContainerOnNode(ip string, serviceName string) string {
+	return tu.CommandOutput(ip, fmt.Sprintf("docker ps -q -f Name=%s", serviceName))
+}
+
+// KillContainerOnNodeByID kills the docker container running on the given node ip
+func (tu *TestUtils) KillContainerOnNodeByID(ip string, containerID string) {
+	cmd := fmt.Sprintf("docker kill %s > /dev/null", containerID)
+	_ = tu.CommandOutputIgnoreError(ip, cmd)
+}

@@ -46,7 +46,11 @@ var _ = Describe("Search test", func() {
 			},
 		}
 		testQueries(testCases)
-		restartSpyglass()
+
+		log.Info("Restarting spyglass...")
+		_, err := ts.tu.KillContainer(globals.Spyglass)
+		Expect(err).To(BeNil())
+
 		testQueries(testCases)
 		deleteDummyObj()
 		testCases = []*queryTestCase{
@@ -87,29 +91,6 @@ var _ = Describe("Search test", func() {
 		testQueries(testCases)
 	})
 })
-
-func restartSpyglass() {
-	log.Info("Restarting spyglass...")
-	getDockerContainerID := func(node, name string) string {
-		return ts.tu.CommandOutput(node, fmt.Sprintf("docker ps -q -f Name=%s", name))
-	}
-	restartDockerContainer := func(node, id string) {
-		cmd := fmt.Sprintf("docker kill %s > /dev/null", id)
-		_ = ts.tu.CommandOutputIgnoreError(node, cmd)
-	}
-
-	containerID := ""
-	nodeIP := ""
-	for _, ip := range ts.tu.VeniceNodeIPs {
-		containerID = getDockerContainerID(ip, "pen-spyglass")
-		if containerID != "" {
-			nodeIP = ip
-			break
-		}
-	}
-	Expect(len(containerID) > 0).To(BeTrue())
-	restartDockerContainer(nodeIP, containerID)
-}
 
 func createDummyObj() {
 	dummyPolicy := &monitoring.AlertPolicy{

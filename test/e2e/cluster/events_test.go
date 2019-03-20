@@ -42,7 +42,7 @@ var _ = Describe("events test", func() {
 		for _, node := range nodesList {
 			nodeName := node.GetName()
 			Eventually(func() string {
-				return ts.tu.CommandOutput(ts.tu.NameToIPMap[nodeName], fmt.Sprintf("docker ps -q -f Name=%s", globals.EvtsProxy))
+				return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[nodeName], globals.EvtsProxy)
 			}, 10, 1).ShouldNot(BeEmpty(), fmt.Sprintf("%s container should be running on %s", globals.EvtsProxy, ts.tu.NameToIPMap[nodeName]))
 		}
 	})
@@ -53,7 +53,7 @@ var _ = Describe("events test", func() {
 		for _, node := range nodesList {
 			nodeName := node.GetName()
 			Eventually(func() string {
-				return ts.tu.CommandOutput(ts.tu.NameToIPMap[nodeName], fmt.Sprintf("docker ps -q -f Name=%s", globals.EvtsMgr))
+				return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[nodeName], globals.EvtsMgr)
 			}, 10, 1).ShouldNot(BeEmpty(), fmt.Sprintf("%s container should be running on %s", globals.EvtsMgr, ts.tu.NameToIPMap[nodeName]))
 		}
 	})

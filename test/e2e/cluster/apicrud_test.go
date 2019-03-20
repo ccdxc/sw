@@ -344,20 +344,10 @@ var _ = Describe("API Crud tests", func() {
 		return 0, "", "", errors.New("api server not found")
 	}
 
-	getDockerContainerID := func(node, name string) string {
-		return ts.tu.CommandOutput(node, fmt.Sprintf("docker ps -q -f Name=%s", name))
-	}
-
-	restartDockerContainer := func(node, id string) {
-		ip := ts.tu.NameToIPMap[node]
-		cmd := fmt.Sprintf("docker kill %s > /dev/null", id)
-		_ = ts.tu.CommandOutputIgnoreError(ip, cmd)
-	}
-
 	waitETCDHealthy := func(node string) bool {
 		ip := ts.tu.NameToIPMap[node]
 		healthCmd := fmt.Sprintf("%s --cert-file=%s  --key-file=%s --ca-file=%s --endpoints https://%s:5002 cluster-health", etcdCtlPath, etcdCertFile, etcdKeyFile, caBundle, node)
-		id := getDockerContainerID(ip, "etcd")
+		id := ts.tu.GetContainerOnNode(ip, "etcd")
 		Eventually(func() bool {
 			out := ts.tu.CommandOutputIgnoreError(ip, fmt.Sprintf("docker exec %v %s", id, healthCmd))
 			lines := strings.Split(out, "\n")
@@ -375,9 +365,8 @@ var _ = Describe("API Crud tests", func() {
 
 	restartETCD := func(node string) {
 		ip := ts.tu.NameToIPMap[node]
-		id := getDockerContainerID(ip, "etcd")
 		waitETCDHealthy(node)
-		restartDockerContainer(ip, id)
+		ts.tu.KillContainerOnNodeByName(ip, "etcd")
 	}
 
 	drainNode := func(selNode string) {
@@ -566,8 +555,10 @@ var _ = Describe("API Crud tests", func() {
 			starts, apiServerNode, name, err := getAPIServerNodeNRestartCount()
 			Expect(err).To(BeNil())
 			ip := ts.tu.NameToIPMap[apiServerNode]
-			container := getDockerContainerID(ip, name)
-			restartDockerContainer(apiServerNode, container)
+
+			err = ts.tu.KillContainerOnNodeByName(ip, name)
+			Expect(err).To(BeNil())
+
 			Eventually(func() string {
 				newRestarts, _, _, err := getAPIServerNodeNRestartCount()
 				Expect(err).To(BeNil(), "Could not get API server restart count")
