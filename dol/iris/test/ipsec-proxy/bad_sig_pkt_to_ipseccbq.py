@@ -159,7 +159,7 @@ def TestCaseVerify(tc):
     brq_cur.GetMeta()
     brq_cur.GetRingEntries([brq.pi, brq_cur.pi])
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
-    if (brq_cur.pi != (brq.pi+1)):
+    if (brq_cur.pi != (brq.pi+1)) and (brq_cur.pi != (brq.pi+2)):
         print("brq pi/ci not as expected")
         #needs fix in HAL and support in model/p4+ for this check to work/pass
         return False

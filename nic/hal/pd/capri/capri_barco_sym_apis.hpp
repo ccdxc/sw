@@ -122,6 +122,8 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request(capri_barco_symm_enctype_e
 						      uint8_t *ciphertext, int ciphertext_len,
 						      uint8_t *auth_tag, int auth_tag_len, bool schedule_barco);
 
+hal_ret_t capri_barco_setup_dummy_gcm1_req(uint32_t key_idx);
+
 void capri_barco_init_drbg(void);
 
 }    // namespace pd

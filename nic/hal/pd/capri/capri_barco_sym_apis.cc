@@ -8,6 +8,8 @@
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
+#include "platform/capri/capri_common.hpp"
+#include "nic/include/capri_barco.h"
 
 namespace hal {
 namespace pd {
@@ -1345,6 +1347,160 @@ capri_barco_init_drbg (void)
     cap_drbg_read_ram_rand_num0(0, num0, 512, true);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 0:", (char *)num0, 512);
 }
+
+#define CAPRI_BARCO_GCM_DUMMY_INPUT_SZ      16
+#define CAPRI_BARCO_GCM_DUMMY_OUTPUT_SZ     16
+
+hal_ret_t capri_barco_setup_dummy_gcm1_req(uint32_t key_idx)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    uint64_t                    mem_addr, curr_addr;
+    uint64_t                    ilist_msg_descr_addr = 0, olist_msg_descr_addr = 0;
+    uint64_t                    ilist_mem_addr = 0, olist_mem_addr = 0, auth_tag_mem_addr = 0;
+    uint64_t                    iv_addr = 0, status_addr = 0, db_addr = 0, status = 0, curr_ptr = 0;
+    barco_symm_req_descriptor_t sym_req_descr; 
+    barco_sym_msg_descriptor_t  ilist_msg_descr, olist_msg_descr;
+    uint64_t                    gcm1_ring_base = 0, gcm1_slot_addr = 0;
+    uint32_t                    idx = 0;
+    pd::pd_capri_hbm_write_mem_args_t mem_args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+
+
+#define PRE_HDR "GCM1 Dummy Enc Req"
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
+				NULL, &mem_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR(PRE_HDR":Failed to allocate memory for composite content");
+        goto cleanup;
+    }
+    HAL_TRACE_DEBUG(PRE_HDR":Allocated memory @ {:x} to support dummy GCM request descriptor", mem_addr);
+
+    
+    ilist_msg_descr_addr = curr_addr = mem_addr;
+    curr_addr += sizeof(barco_sym_msg_descriptor_t);    /* 64B */
+
+    olist_msg_descr_addr = curr_addr;
+    curr_addr += sizeof(barco_sym_msg_descriptor_t);    /* 128B */
+
+    /* 16B input */
+    ilist_mem_addr = curr_addr;
+    curr_addr += CAPRI_BARCO_GCM_DUMMY_INPUT_SZ;        /* 144B */
+    
+    /* 16B output */
+    olist_mem_addr = curr_addr;
+    curr_addr += CAPRI_BARCO_GCM_DUMMY_OUTPUT_SZ;       /* 160B */
+
+    auth_tag_mem_addr = curr_addr;
+    curr_addr += 16;                                    /* 176B */
+
+    iv_addr = curr_addr;
+    curr_addr += 16;                                    /* 192B */
+
+    status_addr = curr_addr;
+    curr_addr += 16;                                    /* 208B */
+
+    db_addr = curr_addr;
+    curr_addr += 16;                                    /* 224B */
+
+    /* Setup Input list SYM MSG descriptor */
+    memset(&ilist_msg_descr, 0, sizeof(ilist_msg_descr));
+    ilist_msg_descr.A0_addr             = ilist_mem_addr;
+    ilist_msg_descr.O0_addr_offset      = 0;
+    ilist_msg_descr.L0_data_length      = CAPRI_BARCO_GCM_DUMMY_INPUT_SZ;
+    ilist_msg_descr.A1_addr             = 0;
+    ilist_msg_descr.O1_addr_offset      = 0;
+    ilist_msg_descr.L1_data_length      = 0;
+    ilist_msg_descr.A2_addr             = 0;
+    ilist_msg_descr.O2_addr_offset      = 0;
+    ilist_msg_descr.L2_data_length      = 0;
+    ilist_msg_descr.next_address        = 0;
+    ilist_msg_descr.reserved            = 0;
+
+#if 0
+    if (capri_hbm_write_mem(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
+			    sizeof(ilist_msg_descr))) {
+        HAL_TRACE_ERR(PRE_HDR":Failed to write ilist MSG Descr @ {:x}", (uint64_t) ilist_msg_descr_addr);
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
+    }
+#endif
+
+    mem_args.addr = ilist_msg_descr_addr;
+    mem_args.buf = (uint8_t*)&ilist_msg_descr;
+    mem_args.size = sizeof(ilist_msg_descr);
+    pd_func_args.pd_capri_hbm_write_mem = &mem_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
+
+    /* Setup Output list SYM MSG descriptor */
+    memset(&olist_msg_descr, 0, sizeof(olist_msg_descr));
+    olist_msg_descr.A0_addr             = olist_mem_addr;
+    olist_msg_descr.O0_addr_offset      = 0;
+    olist_msg_descr.L0_data_length      = CAPRI_BARCO_GCM_DUMMY_OUTPUT_SZ;
+    olist_msg_descr.A1_addr             = 0;
+    olist_msg_descr.O1_addr_offset      = 0;
+    olist_msg_descr.L1_data_length      = 0;
+    olist_msg_descr.A2_addr             = 0;
+    olist_msg_descr.O2_addr_offset      = 0;
+    olist_msg_descr.L2_data_length      = 0;
+    olist_msg_descr.next_address        = 0;
+    olist_msg_descr.reserved            = 0;
+
+#if 0
+    if (capri_hbm_write_mem(olist_msg_descr_addr, (uint8_t*)&olist_msg_descr,
+			    sizeof(olist_msg_descr))) {
+        HAL_TRACE_ERR(PRE_HDR":Failed to write olist MSG Descr @ {:x}", (uint64_t) olist_msg_descr_addr);
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
+    }
+#endif
+
+    mem_args.addr = olist_msg_descr_addr;
+    mem_args.buf = (uint8_t*)&olist_msg_descr;
+    mem_args.size = sizeof(olist_msg_descr);
+    pd_func_args.pd_capri_hbm_write_mem = &mem_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
+
+    memset(&sym_req_descr, 0, sizeof(barco_symm_req_descriptor_t));
+    sym_req_descr.input_list_addr       = ilist_msg_descr_addr;
+    sym_req_descr.output_list_addr      = olist_msg_descr_addr;
+    sym_req_descr.command               = CAPRI_BARCO_SYM_COMMAND_AES_GCM_Encrypt;
+    sym_req_descr.key_descr_idx         = key_idx;
+    sym_req_descr.iv_address            = iv_addr;
+    sym_req_descr.auth_tag_addr         = auth_tag_mem_addr;
+    sym_req_descr.header_size           = 0;
+    sym_req_descr.status_addr           = status_addr;
+    sym_req_descr.doorbell_addr         = db_addr;
+
+    assert((CAPRI_BARCO_RING_SLOTS & (CAPRI_BARCO_RING_SLOTS-1)) == 0);
+
+    gcm1_ring_base = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_GCM1);
+    for (idx = 0; idx < CAPRI_BARCO_RING_SLOTS; idx+=8) {
+        gcm1_slot_addr = gcm1_ring_base + (idx << CAPRI_BARCO_SYM_REQ_DESC_SZ_SHIFT);
+
+#if 0
+        if (capri_hbm_write_mem(gcm1_slot_addr, (uint8_t*)&sym_req_descr,
+                sizeof(sym_req_descr))) {
+            HAL_TRACE_ERR(PRE_HDR":Failed to write Sym req descr @ {:x}",
+                (uint64_t) gcm1_slot_addr);
+            ret = HAL_RET_INVALID_ARG;
+            goto cleanup;
+        }
+#endif
+
+        mem_args.addr = gcm1_slot_addr;
+        mem_args.buf = (uint8_t*)&sym_req_descr;
+        mem_args.size = sizeof(sym_req_descr);
+        pd_func_args.pd_capri_hbm_write_mem = &mem_args;
+        pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
+    }
+
+cleanup:
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG(PRE_HDR":Setup done");
+    }
+    return ret;
+}
+
 
 }    // namespace pd
 }    // namespace hal

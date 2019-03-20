@@ -5,6 +5,7 @@
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
+#include "platform/capri/capri_common.hpp"
 
 namespace hal {
 
@@ -68,7 +69,7 @@ capri_barco_ring_t  barco_rings[] = {
         CAPRI_HBM_REG_BARCO_RING_GCM0,
         0,
         BARCO_CRYPTO_DESC_ALIGN_BYTES,
-        1024,
+        CAPRI_BARCO_RING_SLOTS,
         BARCO_CRYPTO_DESC_SZ,
         0,
         0,
@@ -88,7 +89,7 @@ capri_barco_ring_t  barco_rings[] = {
         CAPRI_HBM_REG_BARCO_RING_GCM1,
         0,
         BARCO_CRYPTO_DESC_ALIGN_BYTES,
-        1024,
+        CAPRI_BARCO_RING_SLOTS,
         BARCO_CRYPTO_DESC_SZ,
         0,
         0,

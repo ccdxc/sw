@@ -4,6 +4,7 @@
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
+#include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 
 #define MAX_IPSEC_PAD_SIZE 256
 
@@ -238,6 +239,54 @@ crypto_init_ipsec_pad_table(void)
     return HAL_RET_OK;
 }
 
+/* This is to support the Barco GCM decrypt bug workaround */
+hal_ret_t capri_barco_setup_dummy_ring_desc(void)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    pd_crypto_alloc_key_args_t          alloc_key_args;
+    pd_func_args_t                      pd_func_args = {0};
+    int32_t                             key_idx = -1;
+    crypto_key_t                        pd_key;
+    pd::pd_crypto_write_key_args_t      write_key_args;
+#define CAPRI_BARCO_DUMMY_DEC_KEY_SZ    16
+    uint8_t                             key[CAPRI_BARCO_DUMMY_DEC_KEY_SZ];
+
+    /* Allocate key for dummy dec op */
+    alloc_key_args.key_idx = &key_idx;
+    pd_func_args.pd_crypto_alloc_key = &alloc_key_args;
+    ret = pd_crypto_alloc_key(&pd_func_args);
+
+    if ((ret != HAL_RET_OK) || (key_idx < 0)) {
+        HAL_TRACE_ERR("Failed to allocate key for dummy decrypt op: {}", ret);
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("Allocated key idx ({}) for dummy decrypt op", key_idx);
+
+    /* Setup key for dummy dec op */
+    pd_key.key_type = types::CRYPTO_KEY_TYPE_AES128;
+    pd_key.key_size = CAPRI_BARCO_DUMMY_DEC_KEY_SZ;
+    memset(key, 0, CAPRI_BARCO_DUMMY_DEC_KEY_SZ);
+    memcpy((void*)pd_key.key, key, pd_key.key_size);
+    write_key_args.key_idx = key_idx;
+    write_key_args.key = &pd_key;
+    pd_func_args.pd_crypto_write_key = &write_key_args;
+    ret = pd_crypto_write_key(&pd_func_args);
+
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to setup key for dummy decrypt op: {}", ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("Setup AES128 key at idx ({}) for dummy decrypt op", key_idx);
+
+    ret = capri_barco_setup_dummy_gcm1_req(key_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to setup descriptor for dummy decrypt op: {}", ret);
+        return ret;
+    }
+    return ret;
+}
+
 hal_ret_t crypto_pd_init(void)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -249,6 +298,10 @@ hal_ret_t crypto_pd_init(void)
     assert(key_mem_size >= CRYPTO_KEY_COUNT_MAX);
 
     ret = crypto_init_ipsec_pad_table();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    ret = capri_barco_setup_dummy_ring_desc();
     if (ret != HAL_RET_OK) {
         return ret;
     }
