@@ -47,6 +47,8 @@ struct rx_stats {
         u64 pkts;
         u64 bytes;
         u64 csum_err;
+        u64 csum_complete;
+        u64 no_csum;
 };
 
 #define QCQ_F_INITED            BIT(0)

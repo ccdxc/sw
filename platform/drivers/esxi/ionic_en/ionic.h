@@ -70,6 +70,8 @@ extern unsigned int nrxq_descs;
 extern unsigned int DRSS;
 extern unsigned int devcmd_timeout;
 extern struct ionic_driver ionic_driver;
+extern unsigned int vlan_tx_insert;
+extern unsigned int vlan_rx_strip;
 
 #ifdef FAKE_ADMINQ
 extern unsigned int use_AQ;

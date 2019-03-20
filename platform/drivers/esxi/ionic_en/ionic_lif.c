@@ -2193,10 +2193,8 @@ ionic_get_features(struct lif *lif)
 		.cmd.features = {
 			.opcode = CMD_OPCODE_FEATURES,
 			.set = FEATURE_SET_ETH_HW_FEATURES,
-			.wanted = ETH_HW_VLAN_TX_TAG
-				| ETH_HW_VLAN_RX_STRIP
-				| ETH_HW_VLAN_RX_FILTER
-				| ETH_HW_RX_HASH
+			.wanted = ETH_HW_VLAN_RX_FILTER
+			        | ETH_HW_RX_HASH
 				| ETH_HW_TX_SG
 				| ETH_HW_TX_CSUM
 				| ETH_HW_RX_CSUM
@@ -2205,6 +2203,14 @@ ionic_get_features(struct lif *lif)
 				| ETH_HW_TSO_ECN,
 		},
 	};
+
+        if (vlan_tx_insert) {
+                ctx.cmd.features.wanted |= ETH_HW_VLAN_TX_TAG;
+        }
+        
+        if (vlan_rx_strip) {
+                ctx.cmd.features.wanted |= ETH_HW_VLAN_RX_STRIP;
+        }
 
      	status = ionic_completion_create(ionic_driver.module_id,
 					 ionic_driver.heap_id,

@@ -139,12 +139,18 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                        stats->csum_err++;
                 } else {
                         vmk_PktSetCsumVfd(pkt);
+                        stats->csum_complete++;
                 }
+        } else {
+                stats->no_csum++;
         }
 
         if (uplink_handle->hw_features & ETH_HW_VLAN_RX_STRIP) {
                 if (comp->V) {
-                        vmk_PktVlanIDSet(pkt, comp->vlan_tci);
+                        vmk_PktVlanIDSet(pkt, comp->vlan_tci & IONIC_VLAN_MASK);
+                        vmk_PktPrioritySet(pkt,
+                                           (comp->vlan_tci >> IONIC_VLAN_PRIO_SHIFT) &
+                                           IONIC_VLAN_PRIO_MASK);
                 }
         }
 
@@ -1074,7 +1080,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
                 vmk_CPUMemFenceReadWrite();
 
                 if (VMK_LIKELY(ionic_q_has_space(q, ndescs))) {
-                        stats->tx_queue_waken++;
+                        stats->wake++;
                         ionic_en_txq_start(uplink_handle,
                                            tx_ring->shared_q_data_idx,
                                            VMK_TRUE);
@@ -1090,7 +1096,14 @@ ionic_start_xmit(vmk_PktHandle *pkt,
 
         ctx.offload_flags |= vmk_PktIsLargeTcpPacket(pkt) ? IONIC_TX_TSO : 0;
         ctx.offload_flags |= vmk_PktIsMustCsum(pkt) ? IONIC_TX_CSO : 0;
-        ctx.offload_flags |= vmk_PktMustVlanTag(pkt) ? IONIC_TX_VLAN : 0;
+
+        if (uplink_handle->hw_features & ETH_HW_VLAN_TX_TAG) {
+                if (vmk_PktMustVlanTag(pkt)) {
+                        ctx.offload_flags |= IONIC_TX_VLAN;
+                        ctx.vlan_id    = vmk_PktVlanIDGet(pkt);
+                        ctx.priority   = vmk_PktPriorityGet(pkt);
+                }
+        }
 
         status = ionic_pkt_header_parse(pkt,
                                         &ctx);
@@ -1100,8 +1113,6 @@ ionic_start_xmit(vmk_PktHandle *pkt,
                 goto err_out_drop;
         }
 
-        ctx.priority   = vmk_PktPriorityGet(pkt);
-        ctx.vlan_id    = vmk_PktVlanIDGet(pkt);
         ctx.mapped_len = vmk_PktFrameMappedLenGet(pkt);
 
         if (ctx.is_tso_needed) {

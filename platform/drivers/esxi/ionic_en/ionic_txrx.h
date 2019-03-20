@@ -32,7 +32,9 @@
 #define IONIC_EN_MAX_FILTERS_PER_RX_Q           32
 #define IONIC_MAX_NUM_RX_RINGS_PER_RSS_QUEUE    16
 #define IONIC_EN_WAKE_QUEUE_THRESHOLD           IONIC_MIN(64, ntxq_descs >> 1)
-
+#define IONIC_VLAN_MASK                         0xfff
+#define IONIC_VLAN_PRIO_SHIFT                   13
+#define IONIC_VLAN_PRIO_MASK                    0x7
 
 struct ionic_en_priv_data;
 struct ionic_en_uplink_handle;

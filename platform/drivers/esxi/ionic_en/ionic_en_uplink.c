@@ -38,18 +38,14 @@ vmk_UplinkOps ionic_en_uplink_ops = {
         .uplinkReset           = ionic_en_uplink_reset,
 };
 
-#define IONIC_EN_NUM_SUPPORTED_MODES    11
+#define IONIC_EN_NUM_SUPPORTED_MODES   7 
 
 vmk_UplinkSupportedMode ionic_en_uplink_modes[IONIC_EN_NUM_SUPPORTED_MODES] = {
-        {VMK_LINK_SPEED_1000_MBPS, VMK_LINK_DUPLEX_HALF},
         {VMK_LINK_SPEED_1000_MBPS, VMK_LINK_DUPLEX_FULL},
-        {VMK_LINK_SPEED_10000_MBPS, VMK_LINK_DUPLEX_HALF},
         {VMK_LINK_SPEED_10000_MBPS, VMK_LINK_DUPLEX_FULL},
-        {VMK_LINK_SPEED_40000_MBPS, VMK_LINK_DUPLEX_HALF},
+        {VMK_LINK_SPEED_25000_MBPS, VMK_LINK_DUPLEX_FULL},
         {VMK_LINK_SPEED_40000_MBPS, VMK_LINK_DUPLEX_FULL},
-        {VMK_LINK_SPEED_50000_MBPS, VMK_LINK_DUPLEX_HALF},
         {VMK_LINK_SPEED_50000_MBPS, VMK_LINK_DUPLEX_FULL},
-        {VMK_LINK_SPEED_100000_MBPS, VMK_LINK_DUPLEX_HALF},
         {VMK_LINK_SPEED_100000_MBPS, VMK_LINK_DUPLEX_FULL},
         {VMK_LINK_SPEED_AUTO,       VMK_LINK_DUPLEX_AUTO}
 };
@@ -132,15 +128,29 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
         for (i = 0; i < lif->nrxqcqs; i++) {
                 rx_stats = &lif->rxqcqs[i]->stats.rx;
                 stat_buf += vmk_Sprintf((char *) stat_buf,
-                                        "\n    %s[%d]: packets=%lu, bytes=%lu",
-                                        "rx_queue", i, rx_stats->pkts, rx_stats->bytes);
+                                        "\n    %s[%d]: packets=%lu, bytes=%lu,"
+                                        " alloc_err=%lu, csum_err=%lu"
+                                        " csum_complete=%lu, no_csum=%lu",
+                                        "rx_queue", i, rx_stats->pkts,
+                                        rx_stats->bytes, rx_stats->alloc_err,
+                                        rx_stats->csum_err,
+                                        rx_stats->csum_complete,
+                                        rx_stats->no_csum);
         }
 
         for (i = 0; i < lif->ntxqcqs; i++) {
                 tx_stats = &lif->txqcqs[i]->stats.tx;
                 stat_buf += vmk_Sprintf((char *) stat_buf,
-                                        "\n    %s[%d]: packets=%lu, bytes=%lu",
-                                        "tx_queue", i, tx_stats->pkts, tx_stats->bytes);
+                                        "\n    %s[%d]: packets=%lu, bytes=%lu,"
+                                        " tso=%lu, csum=%lu, no_csum=%lu,"
+                                        " linearize=%lu, frags=%lu, wake=%lu,"
+                                        " stop=%lu, clean=%lu",
+                                        "tx_queue", i, tx_stats->pkts,
+                                        tx_stats->bytes, tx_stats->tso,
+                                        tx_stats->csum, tx_stats->no_csum,
+                                        tx_stats->linearize, tx_stats->frags,
+                                        tx_stats->wake, tx_stats->stop,
+                                        tx_stats->clean);
         }
         
         vmk_SemaUnlock(&uplink_handle->stats_binary_sema);
@@ -152,7 +162,6 @@ static vmk_UplinkPrivStatsOps ionic_en_priv_stats = {
         .privStatsLengthGet   = ionic_en_priv_stats_len_get,
         .privStatsGet         = ionic_en_priv_stats_get,
 };
-
 
 static VMK_ReturnStatus
 ionic_en_queue_get_rss_params(vmk_AddrCookie driver_data,
@@ -168,7 +177,6 @@ ionic_en_queue_get_rss_params(vmk_AddrCookie driver_data,
   
         return VMK_OK;
 }
-
 
 static VMK_ReturnStatus
 ionic_en_queue_init_rss_state(vmk_AddrCookie driver_data,
@@ -397,7 +405,7 @@ ionic_en_uplink_link_state_update(struct ionic_en_uplink_handle *uplink_handle) 
         if (uplink_handle->is_ready_notify_linkup == VMK_FALSE) {
                 link_info.state = VMK_LINK_STATE_DOWN;
                 link_info.speed = 0; 
-                link_info.duplex = VMK_LINK_DUPLEX_HALF;
+                link_info.duplex = VMK_LINK_DUPLEX_FULL;
         } else {
                 vmk_Memcpy(&link_info,
                            &uplink_handle->link_status,
@@ -905,8 +913,6 @@ static void
 ionic_en_uplink_lif_stats_get(struct lif *lif,                  // IN
                               vmk_UplinkStats *uplink_stats)    // IN/OUT
 {
-        vmk_uint32 i;
-        struct rx_stats *rx_stats;
         struct ionic_lif_stats *ls = lif->lif_stats;
 
         uplink_stats->rxPkts = ls->rx_ucast_packets +
@@ -928,10 +934,6 @@ ionic_en_uplink_lif_stats_get(struct lif *lif,                  // IN
                                      ls->rx_desc_data_error;
         uplink_stats->rxErrors = uplink_stats->rxOverflowErrors +
                                  uplink_stats->rxMissErrors;
-        for (i = 0; i < lif->nrxqcqs; i++) {
-                rx_stats = &lif->rxqcqs[i]->stats.rx;
-                uplink_stats->rxErrors += rx_stats->csum_err;
-        }
 
         uplink_stats->txPkts = ls->tx_ucast_packets +
                                ls->tx_mcast_packets +
@@ -980,7 +982,6 @@ ionic_en_uplink_stats_get(vmk_AddrCookie driver_data,             // IN
         struct lif *lif;
         struct ionic_en_priv_data *priv_data =
                 (struct ionic_en_priv_data *) driver_data.ptr;
-        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle; 
 
         VMK_ASSERT(stats);
 
@@ -989,10 +990,8 @@ ionic_en_uplink_stats_get(vmk_AddrCookie driver_data,             // IN
 
         vmk_Memset(stats, 0, sizeof(vmk_UplinkStats));
 
-        vmk_SemaLock(&uplink_handle->stats_binary_sema);
         ionic_en_uplink_lif_stats_get(lif,
                                       stats);
-        vmk_SemaUnlock(&uplink_handle->stats_binary_sema);
 
         return VMK_OK;
 }
@@ -1069,17 +1068,20 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                  &priv_data->dev_recover_world);
         VMK_ASSERT(status == VMK_OK);
 
-/*
-        status = vmk_UplinkCapRegister(uplink,
-                                       VMK_UPLINK_CAP_VLAN_RX_STRIP,
-                                       NULL);
-        VMK_ASSERT(status == VMK_OK);
+        if (uplink_handle->hw_features & ETH_HW_VLAN_RX_STRIP) { 
+                status = vmk_UplinkCapRegister(uplink,
+                                               VMK_UPLINK_CAP_VLAN_RX_STRIP,
+                                               NULL);
+                VMK_ASSERT(status == VMK_OK);
+        }
 
-        status = vmk_UplinkCapRegister(uplink,
-                                       VMK_UPLINK_CAP_VLAN_TX_INSERT,
-                                       NULL);
-        VMK_ASSERT(status == VMK_OK);
-*/        
+        if (uplink_handle->hw_features & ETH_HW_VLAN_TX_TAG) { 
+                status = vmk_UplinkCapRegister(uplink,
+                                               VMK_UPLINK_CAP_VLAN_TX_INSERT,
+                                               NULL);
+                VMK_ASSERT(status == VMK_OK);
+        }
+        
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_PRIV_STATS,
                                        &ionic_en_priv_stats);
