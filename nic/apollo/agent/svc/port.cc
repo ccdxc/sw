@@ -10,20 +10,24 @@
 
 void
 pds_port_mac_stats_fill (sdk::linkmgr::port_args_t *port_info, void *ctxt) {
-    if (port_info->port_type != port_type_t::PORT_TYPE_ETH) {
-        return;
-    }
-
     pds::PortGetResponse *rsp = (pds::PortGetResponse *)ctxt;
     pds::Port *port = rsp->add_response();
     pds::PortSpec *spec = port->mutable_spec();
     pds::PortStats *stats = port->mutable_stats();
 
     spec->set_portid(port_info->port_num);
-    for (uint32_t i = 0; i < MAX_MAC_STATS; i++) {
-        auto macstats = stats->add_macstats();
-        macstats->set_type(pds::MacStatsType(i));
-        macstats->set_count(port_info->stats_data[i]);
+    if (port_info->port_type == port_type_t::PORT_TYPE_ETH) {
+        for (uint32_t i = 0; i < MAX_MAC_STATS; i++) {
+            auto macstats = stats->add_macstats();
+            macstats->set_type(pds::MacStatsType(i));
+            macstats->set_count(port_info->stats_data[i]);
+        }
+    } else if (port_info->port_type == port_type_t::PORT_TYPE_MGMT) {
+        for (uint32_t i = 0; i < MAX_MGMT_MAC_STATS; i++) {
+            auto macstats = stats->add_mgmtmacstats();
+            macstats->set_type(pds::MgmtMacStatsType(i));
+            macstats->set_count(port_info->stats_data[i]);
+        }
     }
 }
 

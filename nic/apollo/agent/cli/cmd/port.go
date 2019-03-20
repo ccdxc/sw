@@ -97,6 +97,7 @@ func printPortStatsHeader() {
 func printPortStats(resp *pds.Port) {
 	first := true
 	macStats := resp.GetStats().GetMacStats()
+	mgmtMacStats := resp.GetStats().GetMgmtMacStats()
 
 	fmt.Printf("%-7d", resp.GetSpec().GetPortId())
 	for _, s := range macStats {
@@ -106,6 +107,17 @@ func printPortStats(resp *pds.Port) {
 		fmt.Printf("%-25s%-5d\n",
 			strings.Replace(s.GetType().String(), "_", " ", -1),
 			s.GetCount())
+		first = false
+	}
+
+	first = true
+	for _, s := range mgmtMacStats {
+		if first == false {
+			fmt.Printf("%-7s", "")
+		}
+		str := strings.Replace(s.GetType().String(), "MGMT_MAC_", "", -1)
+		str = strings.Replace(str, "_", " ", -1)
+		fmt.Printf("%-25s%-5d\n", str, s.GetCount())
 		first = false
 	}
 }
