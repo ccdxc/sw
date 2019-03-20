@@ -174,10 +174,9 @@ header_type p4_to_rxdma_header_t {
                                         // queueing, could be either flow miss
                                         // or flow_state == queueing
 
-        pad                     : 3;
+        pad                     : 4;
         direction               : 1;
         udp_queue_drain         : 1;
-        fte_rss_enable          : 1;
 
         udp_oflow_index         : 24;
         udp_flow_qid            : 8;    // qid - useful when drain is set
