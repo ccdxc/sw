@@ -6,6 +6,7 @@
 #define __AGENT_SVC_UTIL_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "gen/proto/types.pb.h"
 
@@ -73,6 +74,37 @@ ippfx_api_spec_to_proto_spec_fill (const ip_prefix_t *in_ippfx,
     ipaddr_api_spec_to_proto_spec_fill(
                         &in_ippfx->addr, out_ippfx->mutable_addr());
     return sdk::SDK_RET_OK;
+}
+
+static inline void
+pds_encap_to_proto_encap (const pds_encap_t *pds_encap, types::Encap *proto_encap)
+{
+    switch (pds_encap->type) {
+    case PDS_ENCAP_TYPE_NONE:
+        proto_encap->set_type(types::ENCAP_TYPE_NONE);
+        break;
+
+    case PDS_ENCAP_TYPE_DOT1Q:
+        proto_encap->set_type(types::ENCAP_TYPE_DOT1Q);
+        proto_encap->mutable_value()->set_vlanid(pds_encap->val.vlan_tag);
+        break;
+
+    case PDS_ENCAP_TYPE_QINQ:
+        proto_encap->set_type(types::ENCAP_TYPE_QINQ);
+        break;
+
+    case PDS_ENCAP_TYPE_MPLSoUDP:
+        proto_encap->set_type(types::ENCAP_TYPE_MPLSoUDP);
+        proto_encap->mutable_value()->set_mplstag(pds_encap->val.mpls_tag);
+        break;
+
+    case PDS_ENCAP_TYPE_VXLAN:
+        proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
+        proto_encap->mutable_value()->set_vnid(pds_encap->val.vnid);
+        break;
+    default:
+        break;
+    }
 }
 
 static inline pds_encap_t

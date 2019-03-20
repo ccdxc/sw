@@ -191,38 +191,45 @@ port_get (uint32_t fp_port, port_get_cb_t port_get_cb, void *ctxt)
 
     if (fp_port == 0) {
         /**< iterate over all ports */
-        for (uint32_t fp_port = 1;
+        for (uint32_t fp_port = 1, port_num = 1;
              fp_port <= g_pds_state.catalogue()->num_fp_ports(); fp_port++) {
-            if (g_port_store[fp_port] == NULL)  {
-                PDS_TRACE_ERR("Port %u not created, skipping", fp_port);
+            if (g_port_store[port_num] == NULL)  {
+                PDS_TRACE_ERR("Port %u not created, skipping", port_num);
                 continue;
             }
             memset(&port_info, 0, sizeof(port_info));
             port_info.stats_data = stats_data;
-            ret = sdk::linkmgr::port_get(g_port_store[fp_port], &port_info);
+            ret = sdk::linkmgr::port_get(g_port_store[port_num], &port_info);
             if (ret != sdk::SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to get port %u info", fp_port);
+                PDS_TRACE_ERR("Failed to get port %u info", port_num);
                 continue;
             }
+            port_info.port_num = g_pds_state.catalogue()->port_num_to_fp_port(port_info.port_num);
             /** call the per port callback for this port */
             port_get_cb(&port_info, ctxt);
+            port_num += g_pds_state.catalogue()->num_lanes_fp(fp_port);
         }
     } else {
-        if (fp_port > PDS_MAX_PORT) {
+        uint32_t port_num = g_pds_state.catalogue()->fp_port_to_port_num(fp_port);
+
+        if (port_num > PDS_MAX_PORT) {
             PDS_TRACE_ERR("Invalid port number %u", fp_port);
             return SDK_RET_INVALID_ARG;
         }
-        if (g_port_store[fp_port] == NULL)  {
+
+        if (g_port_store[port_num] == NULL)  {
             PDS_TRACE_ERR("Port %u not created", fp_port);
             return SDK_RET_INVALID_OP;
         }
+
         memset(&port_info, 0, sizeof(port_info));
         port_info.stats_data = stats_data;
-        ret = sdk::linkmgr::port_get(g_port_store[fp_port], &port_info);
+        ret = sdk::linkmgr::port_get(g_port_store[port_num], &port_info);
         if (ret != sdk::SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to get port %u info", fp_port);
             return ret;
         }
+        port_info.port_num = g_pds_state.catalogue()->port_num_to_fp_port(port_info.port_num);
         /** call the per port callback for this port */
         port_get_cb(&port_info, ctxt);
     }

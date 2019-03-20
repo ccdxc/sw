@@ -6,6 +6,7 @@
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/sdk/linkmgr/port_mac.hpp"
+#include "nic/apollo/agent/svc/util.hpp"
 
 void
 pds_port_mac_stats_fill (sdk::linkmgr::port_args_t *port_info, void *ctxt) {
@@ -29,11 +30,19 @@ pds_port_mac_stats_fill (sdk::linkmgr::port_args_t *port_info, void *ctxt) {
 Status
 PortSvcImpl::PortGet(ServerContext *context, const pds::PortGetRequest *proto_req,
                       pds::PortGetResponse *proto_rsp) {
+    sdk_ret_t ret;
+
     PDS_TRACE_VERBOSE("Received Port Get");
+
     if (proto_req) {
         for (int i = 0; i < proto_req->portid_size(); i ++) {
-            if (api::port_get(proto_req->portid(i), pds_port_mac_stats_fill, proto_rsp) != SDK_RET_OK) {
-                return Status::CANCELLED;
+            if ((ret = api::port_get(proto_req->portid(i), pds_port_mac_stats_fill, proto_rsp)) != SDK_RET_OK) {
+                proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            }
+        }
+        if (proto_req->portid_size() == 0) {
+            if ((ret = api::port_get(0, pds_port_mac_stats_fill, proto_rsp)) != SDK_RET_OK) {
+                proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             }
         }
     }

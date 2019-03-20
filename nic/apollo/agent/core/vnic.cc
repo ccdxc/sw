@@ -4,6 +4,7 @@
 
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/tunnel.hpp"
+#include "nic/apollo/agent/core/vnic.hpp"
 
 namespace core {
 
@@ -35,6 +36,48 @@ vnic_delete (pds_vnic_key_t *key)
         return sdk::SDK_RET_ERR;
     }
     return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+vnic_get (pds_vnic_key_t *key, pds_vnic_info_t *info)
+{
+    sdk_ret_t ret;
+    pds_vnic_spec_t *spec;
+
+    spec = agent_state::state()->find_in_vnic_db(key);
+    if (spec == NULL) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    memcpy(&info->spec, spec, sizeof(pds_vnic_spec_t));
+    ret = pds_vnic_read(key, info);
+    return ret;
+}
+
+static inline sdk_ret_t
+vnic_get_all_cb (pds_vnic_spec_t *spec, void *ctxt)
+{
+    sdk_ret_t ret;
+    pds_vnic_info_t info;
+    vnic_db_cb_ctxt_t *cb_ctxt = (vnic_db_cb_ctxt_t *)ctxt;
+
+    memcpy(&info.spec, spec, sizeof(pds_vnic_spec_t));
+    ret = pds_vnic_read(&spec->key, &info);
+    if (ret == SDK_RET_OK) {
+        cb_ctxt->cb(&info, cb_ctxt->ctxt);
+    }
+    return ret;
+}
+
+sdk_ret_t
+vnic_get_all (vnic_get_cb_t vnic_get_cb, void *ctxt)
+{
+    vnic_db_cb_ctxt_t cb_ctxt;
+
+    cb_ctxt.cb = vnic_get_cb;
+    cb_ctxt.ctxt = ctxt;
+
+     return agent_state::state()->vnic_db_walk(vnic_get_all_cb, &cb_ctxt);
 }
 
 }    // namespace core

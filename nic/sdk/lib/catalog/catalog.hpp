@@ -157,7 +157,8 @@ public:
     platform_type_t platform_type(void) const { return catalog_db_.platform_type; }
     bool access_mock_mode(void) { return catalog_db_.access_mock_mode; }
     uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane);
-
+    static uint32_t fp_port_to_port_num(uint32_t fp_port);
+    static uint32_t port_num_to_fp_port(uint32_t port_num);
     uint32_t num_asic_ports(uint32_t asic) {
         return catalog_db_.asics[asic].max_ports;
     }

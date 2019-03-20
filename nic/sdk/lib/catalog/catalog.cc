@@ -698,6 +698,18 @@ catalog::port_type_fp (uint32_t port)
 }
 
 uint32_t
+catalog::fp_port_to_port_num (uint32_t fp_port)
+{
+    return ((fp_port - 1) * MAX_PORT_LANES) + 1;
+}
+
+uint32_t
+catalog::port_num_to_fp_port (uint32_t port_num)
+{
+    return ((port_num - 1) / MAX_PORT_LANES) + 1;
+}
+
+uint32_t
 catalog::num_lanes_fp (uint32_t port)
 {
     return catalog_db_.fp_ports[port-1].num_lanes;

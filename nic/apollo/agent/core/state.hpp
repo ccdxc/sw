@@ -18,10 +18,11 @@ using std::unordered_map;
 using std::make_pair;
 using sdk::lib::slab;
 
+namespace core {
+
 typedef sdk::sdk_ret_t (*pcn_walk_cb_t)(pds_vcn_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
-
-namespace core {
+typedef sdk::sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
 
 typedef slab *slab_ptr_t;
 
@@ -42,6 +43,7 @@ typedef unordered_map<uint32_t, pds_vnic_spec_t *> vnic_db_t;
 typedef unordered_map<uint32_t, pds_route_table_spec_t *> route_table_db_t;
 
 typedef pcn_db_t::const_iterator pcn_it_t;
+typedef vnic_db_t::const_iterator vnic_it_t;
 
 class cfg_db {
 public:
@@ -118,6 +120,7 @@ public:
     pds_vnic_spec_t *find_in_vnic_db(pds_vnic_key_t *key);
     sdk_ret_t add_to_vnic_db(pds_vnic_key_t *key,
                              pds_vnic_spec_t *spec);
+    sdk_ret_t vnic_db_walk(vnic_walk_cb_t cb, void *ctxt);
     bool del_from_vnic_db(pds_vnic_key_t *key);
     slab_ptr_t vnic_slab(void) const { return cfg_db_->vnic_slab(); }
 

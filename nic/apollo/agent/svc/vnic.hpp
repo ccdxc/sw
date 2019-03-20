@@ -22,7 +22,10 @@ public:
                       pds::VnicResponse *rsp) override;
     Status VnicDelete(ServerContext *context,
                       const pds::VnicDeleteRequest *proto_req,
-                      pds::VnicDeleteResponse *proto_rsp);
+                      pds::VnicDeleteResponse *proto_rsp) override;
+    Status VnicGet(ServerContext *context,
+                   const pds::VnicGetRequest *proto_req,
+                   pds::VnicGetResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_VNIC_HPP__

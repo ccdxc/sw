@@ -63,7 +63,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	} else {
 		// Get all Ports
 		req = &pds.PortGetRequest{
-			PortId: []uint32{0},
+			PortId: []uint32{},
 		}
 	}
 

@@ -271,6 +271,17 @@ agent_state::find_in_vnic_db(pds_vnic_key_t *key) {
     FIND_IN_DB(vnic, key);
 }
 
+sdk_ret_t
+agent_state::vnic_db_walk(vnic_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(vnic);
+    auto it_end = DB_END(vnic);
+
+    for (auto it = it_begin; it != it_end; it ++) {
+        cb(it->second, ctxt);
+    }
+    return SDK_RET_OK;
+}
+
 bool
 agent_state::del_from_vnic_db(pds_vnic_key_t *key) {
     DEL_FROM_DB(vnic, key);
