@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -436,11 +437,6 @@ func NaplesFileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		renderError(w, "Upload Path Not Specified\n", http.StatusBadRequest)
 		return
 	}
-	fileBytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		renderError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 
 	fileNameSlice := strings.Split(fileHeader.Filename, "/")
 
@@ -453,7 +449,8 @@ func NaplesFileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer newFile.Close() // idempotent, okay to call twice
-	if _, err := newFile.Write(fileBytes); err != nil || newFile.Close() != nil {
+	_, err = io.Copy(newFile, file)
+	if err != nil {
 		renderError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -464,7 +461,7 @@ func NaplesFileUploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderError(w http.ResponseWriter, message string, statusCode int) {
-	w.WriteHeader(http.StatusBadRequest)
+	w.WriteHeader(statusCode)
 	w.Write([]byte(message))
 }
 
