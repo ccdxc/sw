@@ -1030,7 +1030,7 @@ capri_table_entry_read (uint32_t tableid,
                  + (((tbl_col * tbl_info.entry_width) + tbl_info.top_left_x) /
                      CAPRI_SRAM_WORDS_PER_BLOCK);
     int block = blk;
-    int copy_bits = tbl_info.entry_width_bits;
+    int copy_bits = tbl_info.entry_width_bits, to_copy;
     uint16_t *_hwentry = (uint16_t*)hwentry;
 
     capri_sram_shadow_mem_t *shadow_sram;
@@ -1038,25 +1038,22 @@ capri_table_entry_read (uint32_t tableid,
     shadow_sram = get_sram_shadow_for_table(tableid, gress);
 
     while(copy_bits) {
-        if (copy_bits >= 16) {
-            *_hwentry = shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
-            _hwentry++;
-            copy_bits -= 16;
+        if (entry_start_word) {
+            int bits_in_macro = 128 - (entry_start_word * 16);
+            to_copy = (copy_bits > bits_in_macro) ? bits_in_macro : copy_bits;
         } else {
-            if (copy_bits > 8) {
-                *_hwentry = shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
-            } else {
-                *(uint8_t*)_hwentry =
-                    shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] >> 8;
-            }
-            copy_bits = 0;
+            to_copy = (copy_bits > 128) ? 128 : copy_bits;
         }
-        entry_start_word++;
-        if (entry_start_word % CAPRI_SRAM_WORDS_PER_BLOCK == 0) {
-            // crossed over to next block
-            block++;
-            entry_start_word = 0;
-        }
+        uint8_t to_copy_bytes = (to_copy + 7) >> 3;
+        to_copy_bytes += (to_copy_bytes & 0x1) ? 1 : 0;
+        memcpy(_hwentry,
+               (uint8_t*)&(shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT])
+                + (entry_start_word << 1),
+                to_copy_bytes);
+        copy_bits -= to_copy;
+        _hwentry += to_copy_bytes;
+        entry_start_word = 0;
+        block++;
     }
 
     *hwentry_bit_len = tbl_info.entry_width_bits;
@@ -1125,7 +1122,8 @@ capri_table_hw_entry_read (uint32_t tableid,
         } else {
             to_copy = (copy_bits > 128) ? 128 : copy_bits;
         }
-        uint8_t to_copy_bytes = ((((to_copy - 1) >> 4) + 1) << 4) / 8;
+        uint8_t to_copy_bytes = (to_copy + 7) >> 3;
+        to_copy_bytes += (to_copy_bytes & 0x1) ? 1 : 0;
         memcpy(_hwentry, temp + (entry_start_word << 1), to_copy_bytes);
         copy_bits -= to_copy;
         _hwentry += to_copy_bytes;
