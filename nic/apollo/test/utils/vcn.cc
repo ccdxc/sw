@@ -103,7 +103,6 @@ vcn_util_object_stepper(pds_vcn_key_t start_key, std::string start_pfxstr,
                         uint32_t num_vcns, utils_op_t op,
                         pds_vcn_type_t type, sdk_ret_t expected_result)
 {
-        printf("%s:%d \n", __func__, __LINE__);
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
     ip_prefix_t ip_pfx;
     uint32_t addr;
@@ -116,7 +115,6 @@ vcn_util_object_stepper(pds_vcn_key_t start_key, std::string start_pfxstr,
     }
     for (uint32_t idx = start_key.id; idx <= start_key.id + num_vcns; idx++) {
         ip_pfx.addr.addr.v4_addr = addr;
-        printf("%s:%d idx: %u\n", __func__, __LINE__, idx);
         vcn_util vcn_obj(type, idx, ippfx2str(&ip_pfx));
         switch (op) {
         case OP_MANY_CREATE:

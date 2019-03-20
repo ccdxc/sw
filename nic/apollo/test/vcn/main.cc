@@ -480,7 +480,8 @@ TEST_F(vcn, DISABLED_vcn_workflow_4) {
     ASSERT_TRUE(vcn_util::many_delete(key, num_vcns) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(vcn_util::many_read(key, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key, num_vcns, sdk::SDK_RET_OK) ==
+                sdk::SDK_RET_OK);
 }
 
 /// \brief Create and delete VCN in two batches
@@ -508,8 +509,10 @@ TEST_F(vcn, DISABLED_vcn_workflow_5) {
                                       PDS_VCN_TYPE_TENANT) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(vcn_util::many_read(key1, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vcn_util::many_read(key2, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key1, num_vcns, sdk::SDK_RET_OK) ==
+                sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key2, num_vcns, sdk::SDK_RET_OK) ==
+                sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
@@ -518,10 +521,12 @@ TEST_F(vcn, DISABLED_vcn_workflow_5) {
                                       PDS_VCN_TYPE_TENANT) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(vcn_util::many_read(key1, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
+    ASSERT_TRUE(vcn_util::many_read(key1, num_vcns,
+                          sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key2, num_vcns, sdk::SDK_RET_OK) ==
                 sdk::SDK_RET_OK);
-    ASSERT_TRUE(vcn_util::many_read(key2, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vcn_util::many_read(key3, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key3, num_vcns, sdk::SDK_RET_OK) ==
+                sdk::SDK_RET_OK);
 
     // Cleanup
     batch_params.epoch = ++g_batch_epoch;
@@ -550,7 +555,8 @@ TEST_F(vcn, DISABLED_vcn_workflow_neg_1) {
     ASSERT_TRUE(vcn_util::many_create(key, vcn_start_addr, num_vcns,
                                       PDS_VCN_TYPE_TENANT) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vcn_util::many_read(key, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key, num_vcns, sdk::SDK_RET_OK) ==
+                sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
@@ -558,7 +564,8 @@ TEST_F(vcn, DISABLED_vcn_workflow_neg_1) {
                                       PDS_VCN_TYPE_TENANT) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vcn_util::many_read(key, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key, num_vcns, sdk::SDK_RET_OK) ==
+                sdk::SDK_RET_OK);
 }
 
 /// \brief Create more than maximum number of VCNs supported.
@@ -578,8 +585,8 @@ TEST_F(vcn, DISABLED_vcn_workflow_neg_2) {
                                       PDS_VCN_TYPE_TENANT) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vcn_util::many_read(key, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-                sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key, num_vcns,
+                          sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Read of a non-existing VCN should return entry not found.
@@ -592,7 +599,8 @@ TEST_F(vcn, vcn_workflow_neg_3a) {
 
     key.id = 1;
     ASSERT_TRUE(vcn_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(vcn_util::many_read(key, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key, num_subnets,
+                          sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Deletion of a non-existing VCNs should fail.
@@ -639,8 +647,10 @@ TEST_F(vcn, DISABLED_vcn_workflow_neg_4) {
                                       PDS_VCN_TYPE_TENANT) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(vcn_util::many_read(key1, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vcn_util::many_read(key2, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key1, num_vcns, sdk::SDK_RET_OK)
+                == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(key2, num_vcns, sdk::SDK_RET_OK)
+                == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);

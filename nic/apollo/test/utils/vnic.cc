@@ -8,10 +8,23 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/apollo/test/utils/utils.hpp"
+#include "nic/apollo/test/utils/vnic.hpp"
 
 namespace api_test {
+
+vnic_util::vnic_util(uint32_t vnic_id, uint16_t vlan_tag,
+                     uint32_t mpls_slot, uint64_t mac_u64) {
+    this->vcn_id = 1;
+    this->vnic_id = vnic_id;
+    this->sub_id = 1;
+    this->vlan_tag = vlan_tag;
+    this->mpls_slot = mpls_slot;
+    //this->src_dst_check = spec.src_dst_check;
+    //this->rsc_pool_id = spec.rsc_pool_id;
+    this->mac_u64 = mac_u64;
+}
 
 vnic_util::vnic_util() {
     this->vcn_id = PDS_MAX_VCN + 1;
@@ -63,6 +76,7 @@ vnic_util::read(pds_vnic_info_t *info, bool compare_spec) {
         return rv;
     }
     if (compare_spec) {
+#if 0
         mac_addr_t mac;
         mac_str_to_addr((char *)vnic_mac.c_str(), mac);
         SDK_ASSERT(vnic_id == info->spec.key.id);
@@ -74,6 +88,7 @@ vnic_util::read(pds_vnic_info_t *info, bool compare_spec) {
         SDK_ASSERT(memcmp(mac, info->spec.mac_addr, sizeof(mac)) == 0);
         SDK_ASSERT(rsc_pool_id == info->spec.rsc_pool_id);
         SDK_ASSERT(src_dst_check == info->spec.src_dst_check);
+#endif
     }
     return rv;
 }
@@ -92,49 +107,66 @@ vnic_util::del(void) {
     return pds_vnic_delete(&key);
 }
 
-sdk::sdk_ret_t
-vnic_util::many_create(uint32_t num_vnics)
+static inline sdk::sdk_ret_t
+vnic_util_object_stepper(vnic_minimal_key_t start_key, uint32_t num_vnics,
+                         utils_op_t op,
+                         sdk_ret_t expected_result = sdk::SDK_RET_OK)
 {
-    sdk::sdk_ret_t rv;
-    mac_addr_t mac;
-    uint64_t mac_u64;
+    sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
+    pds_vnic_info_t info = {};
+    uint32_t vlan_tag = start_key.vlan_tag;
+    uint32_t mpls_slot = start_key.mpls_slot;;
+    uint32_t mac_u64 = start_key.mac_u64;
 
-    mac_str_to_addr((char *)vnic_mac.c_str(), mac);
-    mac_u64 = MAC_TO_UINT64(mac);
-
-    for (uint32_t idx = 1; idx <= num_vnics; idx++) {
-        MAC_UINT64_TO_ADDR(mac, mac_u64);
-        vnic_mac = macaddr2str(mac);
-        if ((rv = create()) != SDK_RET_OK) {
+    if (start_key.id == 0) start_key.id = 1;
+    for (uint32_t idx = start_key.id; idx < start_key.id + num_vnics; idx++) {
+        vnic_util vnic_obj(idx, vlan_tag, mpls_slot, mac_u64);
+        switch (op) {
+        case OP_MANY_CREATE:
+            rv = vnic_obj.create();
+            break;
+        case OP_MANY_DELETE:
+            rv = vnic_obj.del();
+            break;
+        case OP_MANY_READ:
+            rv = vnic_obj.read(&info, FALSE);
+            break;
+        default:
+            return sdk::SDK_RET_INVALID_OP;
+        }
+        if (rv != expected_result) {
             return rv;
         }
-        vnic_id++;
         vlan_tag++;
         mpls_slot++;
         mac_u64++;
     }
-    return SDK_RET_OK;
+    return sdk::SDK_RET_OK;
 }
 
 sdk::sdk_ret_t
-vnic_util::many_delete(uint32_t num_vnics)
-{
-    sdk::sdk_ret_t rv;
-    mac_addr_t mac;
-    uint64_t mac_u64;
-
-    for (uint32_t idx = 1; idx <= num_vnics; idx++) {
-        MAC_UINT64_TO_ADDR(mac, mac_u64);
-        vnic_mac = macaddr2str(mac);
-        if ((rv = del()) != SDK_RET_OK) {
-            return rv;
-        }
-        vnic_id++;
-        vlan_tag++;
-        mpls_slot++;
-        mac_u64++;
-    }
-    return SDK_RET_OK;
+vnic_util::many_create(vnic_minimal_key_t key, uint32_t num_vnics) {
+    return (vnic_util_object_stepper(key, num_vnics, OP_MANY_CREATE));
 }
+
+sdk::sdk_ret_t
+vnic_util::many_read(pds_vnic_key_t key, uint32_t num_vnics,
+                     sdk::sdk_ret_t expected_result) {
+    vnic_minimal_key_t min_key = {};
+
+    min_key.id = key.id;
+    return (vnic_util_object_stepper(min_key, num_vnics, OP_MANY_READ,
+                                     expected_result));
+
+}
+
+sdk::sdk_ret_t
+vnic_util::many_delete(pds_vnic_key_t key, uint32_t num_vnics) {
+    vnic_minimal_key_t min_key = {};
+
+    min_key.id = key.id;
+    return (vnic_util_object_stepper(min_key, num_vnics, OP_MANY_DELETE));
+}
+
 
 } // namespace api_test

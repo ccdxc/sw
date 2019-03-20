@@ -439,12 +439,13 @@ TEST_F(subnet, DISABLED_subnet_workflow_1)
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, subnet_start_addr, num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, subnet_start_addr,
+                                         num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(subnet_util::many_read(key, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-                sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_read(key, num_subnets,
+                             sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create, delete and create max subnets in the same batch.
@@ -463,9 +464,11 @@ TEST_F(subnet, DISABLED_subnet_workflow_2) {
     vcn_key.id = 1;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr, num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
+                                         num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, num_subnets) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr, num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
+                                         num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(subnet_util::many_read(key, num_subnets) == sdk::SDK_RET_OK);
@@ -492,17 +495,17 @@ TEST_F(subnet, DISABLED_subnet_workflow_3) {
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1, num_subnets)
-                                         == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key2, vcn_key, subnet_start_addr2, num_subnets)
-                                         == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1,
+                                         num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key2, vcn_key, subnet_start_addr2,
+                                         num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key3, vcn_key, subnet_start_addr3, num_subnets)
-                                         == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key3, vcn_key, subnet_start_addr3,
+                                         num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(subnet_util::many_read(key1, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-                sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_read(key1, num_subnets,
+                             sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_read(key2, num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_read(key3, num_subnets) == sdk::SDK_RET_OK);
 }
@@ -533,8 +536,8 @@ TEST_F(subnet, DISABLED_subnet_workflow_4) {
     ASSERT_TRUE(subnet_util::many_delete(key, num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(subnet_util::many_read(key, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-                sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_read(key, num_subnets,
+                             sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create two sets of subnets viz set1 and set2 in one batch.
@@ -559,10 +562,10 @@ TEST_F(subnet, DISABLED_subnet_workflow_5) {
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1, num_subnets)
-                                         == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key2, vcn_key, subnet_start_addr2, num_subnets)
-                                         == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1,
+                                         num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key2, vcn_key, subnet_start_addr2,
+                                         num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(subnet_util::many_read(key1, num_subnets) == sdk::SDK_RET_OK);
@@ -571,12 +574,12 @@ TEST_F(subnet, DISABLED_subnet_workflow_5) {
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key3, vcn_key, subnet_start_addr3, num_subnets)
-                                         == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key3, vcn_key, subnet_start_addr3,
+                                         num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(subnet_util::many_read(key1, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-                sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_read(key1, num_subnets,
+                             sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_read(key3, num_subnets) == sdk::SDK_RET_OK);
 }
 
@@ -596,19 +599,21 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_1) {
     vcn_key.id = 1;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr, num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
+                                         num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(subnet_util::many_read(key, num_subnets) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr, num_subnets) != sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
+                                         num_subnets) != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(subnet_util::many_read(key, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-                sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_read(key, num_subnets,
+                             sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create more than maximum number of subnets supported.
@@ -630,8 +635,8 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_2) {
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(subnet_util::many_read(key, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-                sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_read(key, num_subnets,
+                             sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Read of a non-existing subnet should return entry not found.
@@ -644,7 +649,8 @@ TEST_F(subnet, subnet_workflow_neg_3a) {
 
     key.id  = 1;
     ASSERT_TRUE(subnet_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
-    ASSERT_TRUE(subnet_util::many_read(key, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_read(key, num_subnets,
+                             sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Deletion of a non-existing subnet should fail.

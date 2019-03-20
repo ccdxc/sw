@@ -22,7 +22,7 @@
 #include "nic/apollo/test/utils/subnet.hpp"
 
 const char *g_cfg_file = "hal.json";
-
+int g_batch_epoch = 1;    // running batch epoch
 namespace api_test {
 
 //----------------------------------------------------------------------------
@@ -134,7 +134,13 @@ TEST_F(vnic_test, vnic_create) {
     vnic.vlan_tag = vlan_tag;
     vnic.mpls_slot = mpls_slot;
     vnic.rsc_pool_id = 0;
-    ASSERT_TRUE(vnic.create() == SDK_RET_OK);
+    //ASSERT_TRUE(vnic.create() == SDK_RET_OK);
+
+    vnic_util vnic1(vcn_id, ++vnic_id, sub_id, vnic_mac);
+    vnic1.vlan_tag = ++vlan_tag;
+    vnic1.mpls_slot = ++mpls_slot;
+    vnic1.rsc_pool_id = 0;
+    //ASSERT_TRUE(vnic1.create() == SDK_RET_OK);
 
     // Completed the configuration
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
@@ -157,10 +163,33 @@ TEST_F(vnic_test, DISABLED_vnic_get) {
     pds_vnic_info_t vnic_info;
     pds_vcn_id_t vcn_id = 1;
     pds_vnic_id_t vnic_id = 100;
+    uint16_t vlan_tag = 100;
+    uint16_t mpls_slot = 200;
+    const char *vnic_mac = "00:00:0a:01:01:03";
+    pds_subnet_id_t sub_id = 1;
 
-    vnic_util vnic(vcn_id, vnic_id);
+    //vnic_util vnic(vcn_id, vnic_id, vnic_mac);
+    vnic_util vnic(vcn_id, vnic_id, sub_id, vnic_mac);
+    vnic.vlan_tag = vlan_tag;
+    vnic.mpls_slot = mpls_slot;
+    vnic.rsc_pool_id = 0;
     // Read vnic info and compare the configuration packet count
     ASSERT_TRUE(vnic.read(&vnic_info) == SDK_RET_OK);
+    cout << "VNIC - vcn : " << vnic_info.spec.vcn.id << ", subnet : " <<
+        vnic_info.spec.subnet.id << ", vnic : " << vnic_info.spec.key.id <<
+        ", vlan : " << vnic_info.spec.wire_vlan << ", fabric_encap : " <<
+        vnic_info.spec.fabric_encap.val.mpls_tag << ", mac : " <<
+        vnic_info.spec.mac_addr << ", pool : " << vnic_info.spec.rsc_pool_id <<
+        ", src_dst : " << vnic_info.spec.src_dst_check;
+    memset(&vnic_info, 0, sizeof(vnic_info));
+    vnic_util vnic1(vcn_id, ++vnic_id);
+    ASSERT_TRUE(vnic.read(&vnic_info) == SDK_RET_OK);
+    cout << "VNIC - vcn : " << vnic_info.spec.vcn.id << ", subnet : " <<
+        vnic_info.spec.subnet.id << ", vnic : " << vnic_info.spec.key.id <<
+        ", vlan : " << vnic_info.spec.wire_vlan << ", fabric_encap : " <<
+        vnic_info.spec.fabric_encap.val.mpls_tag << ", mac : " <<
+        vnic_info.spec.mac_addr << ", pool : " << vnic_info.spec.rsc_pool_id <<
+        ", src_dst : " << vnic_info.spec.src_dst_check;
 }
 
 /// \brief VNIC source and destination check
@@ -177,7 +206,6 @@ TEST_F(vnic_test, vnic_src_dst_check) {}
 //        Failure is because reading of EGRESS_LOCAL_VNIC_INFO_RX table
 //        entry returns all 0s
 TEST_F(vnic_test, DISABLED_vnic_delete) {
-
     pds_batch_params_t batch_params = {0};
     pds_vcn_id_t vcn_id = 1;
     pds_vnic_id_t vnic_id = 100;
@@ -189,12 +217,347 @@ TEST_F(vnic_test, DISABLED_vnic_delete) {
     ASSERT_TRUE(pds_batch_commit() == SDK_RET_OK);
 }
 
-/// \brief Create and delete VCNs in the same batch
+/// \brief Create and delete VNICs in the same batch
 /// The operation should be de-duped by framework and is
 /// a NO-OP from hardware perspective
-TEST_F(vnic_test, DISABLED_vnic_workflow_1) {
+TEST_F(vnic_test, vnic_workflow_1) {
+    // [ Create SetMax, Delete SetMax ] - Read
+    pds_batch_params_t batch_params = {0};
+    pds_vnic_key_t key = {};
+    pds_vnic_info_t info = {};
+    uint32_t num_vnics = 1024;
+    vnic_minimal_key_t min_key = {};
+
+    key.id = 1;
+    min_key.id = 1;
+    min_key.vlan_tag = 1;
+    min_key.mpls_slot = 1;
+    min_key.mac_u64 = 0xa010104;
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_create(min_key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot, min_key.mac_u64);
+    vnic_obj.read(&info, FALSE);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+    //            == sdk::SDK_RET_OK);
 
 }
+
+/// \brief Create, delete and re-create max VNICs in the same batch
+/// create and delete should be de-deduped by framework and subsequent create
+/// should result in successful creation
+TEST_F(vnic_test, DISABLED_vnic_workflow_2) {
+    // [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+    pds_batch_params_t batch_params = {0};
+    pds_vnic_key_t key = {};
+    pds_vnic_info_t info = {};
+    uint32_t num_vnics = 1024;
+    vnic_minimal_key_t min_key = {};
+
+    key.id = 1;
+    min_key.id = 1;
+    min_key.vlan_tag = 1;
+    min_key.mpls_slot = 1;
+    min_key.mac_u64 = 0xa010104;
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_create(min_key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(min_key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot, min_key.mac_u64);
+    ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+    //            == sdk::SDK_RET_OK);
+
+    // Cleanup
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Create two sets of VNICs viz set1 and set2. Delete set1.
+/// Create a new set - set3. Try to read a VNIC from each set.
+TEST_F(vnic_test, vnic_workflow_3) {
+    // [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
+    pds_batch_params_t batch_params = {0};
+    pds_vnic_key_t key = {};
+    pds_vnic_info_t info = {};
+    uint32_t num_vnics = 20;
+    vnic_minimal_key_t min_key1 = {};
+    vnic_minimal_key_t min_key2 = {};
+    vnic_minimal_key_t min_key3 = {};
+
+    key.id = 1;
+    min_key1.id = 10;
+    min_key1.vlan_tag = 10;
+    min_key1.mpls_slot = 10;
+    min_key1.mac_u64 = 0xa010104;
+    min_key2.id = 40;
+    min_key2.vlan_tag = 40;
+    min_key2.mpls_slot = 40;
+    min_key2.mac_u64 = 0xa010134;
+    min_key3.id = 70;
+    min_key3.vlan_tag = 70;
+    min_key3.mpls_slot = 70;
+    min_key3.mac_u64 = 0xa010164;
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_create(min_key1, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(min_key2, num_vnics) == sdk::SDK_RET_OK);
+    key.id = 10;
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(min_key3, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    vnic_util vnic_obj(min_key1.id, min_key1.vlan_tag, min_key1.mpls_slot,
+                       min_key1.mac_u64);
+    //ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+    //            == sdk::SDK_RET_OK);
+
+    // Cleanup
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    key.id = 40;
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    key.id = 70;
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+}
+
+/// \brief Create and delete VNICs in two batches
+/// The hardware should create VNIC correctly
+/// and return entry not found after delete
+TEST_F(vnic_test, DISABLED_vnic_workflow_4) {
+    // [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+    pds_batch_params_t batch_params = {0};
+    pds_vnic_key_t key = {};
+    pds_vnic_info_t info = {};
+    uint32_t num_vnics = 1024;
+    vnic_minimal_key_t min_key = {};
+
+    key.id = 1;
+    min_key.id = 1;
+    min_key.vlan_tag = 1;
+    min_key.mpls_slot = 1;
+    min_key.mac_u64 = 0xa010104;
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_create(min_key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot,
+                       min_key.mac_u64);
+    ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+    //            == sdk::SDK_RET_OK);
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_read(key, num_vnics,
+                           sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+}
+
+/// \brief Create and delete VNICs in two batches
+/// The hardware should create VNICs correctly
+/// and return entry not found after delete
+TEST_F(vnic_test, vnic_workflow_5) {
+    // [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+    pds_batch_params_t batch_params = {0};
+    pds_vnic_key_t key = {};
+    pds_vnic_info_t info = {};
+    uint32_t num_vnics = 20;
+    vnic_minimal_key_t min_key1 = {};
+    vnic_minimal_key_t min_key2 = {};
+    vnic_minimal_key_t min_key3 = {};
+
+    key.id = 1;
+    min_key1.id = 10;
+    min_key1.vlan_tag = 10;
+    min_key1.mpls_slot = 10;
+    min_key1.mac_u64 = 0xa010104;
+    min_key2.id = 40;
+    min_key2.vlan_tag = 40;
+    min_key2.mpls_slot = 40;
+    min_key2.mac_u64 = 0xa010134;
+    min_key3.id = 70;
+    min_key3.vlan_tag = 70;
+    min_key3.mpls_slot = 70;
+    min_key3.mac_u64 = 0xa010164;
+
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_create(min_key1, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(min_key2, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    vnic_util vnic_obj(min_key1.id, min_key1.vlan_tag, min_key1.mpls_slot,
+                       min_key1.mac_u64);
+    //ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+    //            == sdk::SDK_RET_OK);
+
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    key.id = 10;
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(min_key3, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    //ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+    //            == sdk::SDK_RET_OK);
+
+    // Cleanup
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    key.id = 40;
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    key.id = 70;
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+}
+
+/// \brief Create maximum number of VNICs in two batches
+/// The hardware should program VNICs correctly in case of
+/// first create and return error in second create operation
+TEST_F(vnic_test, vnic_workflow_neg_1) {
+    // [ Create SetMax ] - [ Create SetMax ] - Read
+    pds_batch_params_t batch_params = {0};
+    pds_vnic_key_t key = {};
+    pds_vnic_info_t info = {};
+    uint32_t num_vnics = 1024;
+    vnic_minimal_key_t min_key = {};
+
+    key.id = 1;
+    min_key.id = 1;
+    min_key.vlan_tag = 1;
+    min_key.mpls_slot = 1;
+    min_key.mac_u64 = 0xa010104;
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_create(min_key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot,
+                       min_key.mac_u64);
+    ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+    //            == sdk::SDK_RET_OK);
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_create(min_key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics,
+    //                       sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+
+    // Cleanup
+#if 0
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_read(key, num_vnics,
+                           sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+#endif
+}
+
+/// \brief Create more than maximum number of VNICs supported.
+TEST_F(vnic_test, vnic_workflow_neg_2) {
+    // [ Create SetMax+1] - Read
+    pds_batch_params_t batch_params = {0};
+    pds_vnic_key_t key = {};
+    pds_vnic_info_t info = {};
+    uint32_t num_vnics = 1025;
+    vnic_minimal_key_t min_key = {};
+
+    key.id = 1;
+    min_key.id = 1;
+    min_key.vlan_tag = 1;
+    min_key.mpls_slot = 1;
+    min_key.mac_u64 = 0xa010104;
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_create(min_key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+
+    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot, min_key.mac_u64);
+    vnic_obj.read(&info, FALSE);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+    //            == sdk::SDK_RET_OK);
+}
+
+/// \brief Read of a non-existing VNIC should return entry not found.
+TEST_F(vnic_test, vnic_workflow_neg_3a) {
+    // Read NonEx
+    // [ Create SetMax, Delete SetMax ] - Read
+    pds_vnic_key_t key = {};
+    pds_vnic_info_t info = {};
+    uint32_t num_vnics = 1024;
+
+    key.id = 1;
+
+    vnic_util vnic_obj(1, 0, 0, 1);
+    vnic_obj.read(&info, FALSE);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+    //            == sdk::SDK_RET_OK);
+}
+
+/// \brief Deletion of a non-existing VNICs should fail.
+TEST_F(vnic_test, DISABLED_vnic_workflow_neg_3b) {
+    // [Delete NonEx]
+    pds_batch_params_t batch_params = {0};
+    pds_vnic_key_t key = {};
+    pds_vnic_info_t info = {};
+    uint32_t num_vnics = 1024;
+    vnic_minimal_key_t min_key = {};
+
+    key.id = 1;
+    min_key.id = 1;
+    min_key.vlan_tag = 1;
+    min_key.mpls_slot = 1;
+    min_key.mac_u64 = 0xa010104;
+    batch_params.epoch = ++g_batch_epoch;
+
+    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot,
+                       min_key.mac_u64);
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+
+    //ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+
+    //ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics,
+    //                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+
+}
+
+/// \brief Create a VNICs with an id which is not within the range.
+TEST_F(vnic_test, DISABLED_vnic_workflow_corner_case_4) {}
 
 /// @}
 }    // namespace api_test
