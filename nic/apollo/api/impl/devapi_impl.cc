@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/mem.hpp"
-#include "nic/apollo/nicmgr/devapi_impl.hpp"
+#include "nic/apollo/api/impl/devapi_impl.hpp"
 
 namespace api {
 namespace impl {

@@ -18,6 +18,7 @@
 #include "nic/apollo/api/impl/mapping_impl_state.hpp"
 #include "nic/apollo/api/impl/route_impl_state.hpp"
 #include "nic/apollo/api/impl/security_policy_impl_state.hpp"
+#include "nic/apollo/api/impl/lif_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -38,6 +39,7 @@ public:
     pds_impl_state();
     ~pds_impl_state();
     apollo_impl_state *apollo_impl_db(void) { return apollo_impl_db_; }
+    lif_impl_state *lif_impl_db(void) { return lif_impl_db_; }
     tep_impl_state *tep_impl_db(void) { return tep_impl_db_; }
     vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
     mapping_impl_state *mapping_impl_db(void) { return mapping_impl_db_; }
@@ -50,6 +52,7 @@ public:
 
 private:
     apollo_impl_state             *apollo_impl_db_;
+    lif_impl_state                *lif_impl_db_;
     tep_impl_state                *tep_impl_db_;
     vnic_impl_state               *vnic_impl_db_;
     mapping_impl_state            *mapping_impl_db_;
@@ -62,6 +65,12 @@ static inline apollo_impl_state *
 apollo_impl_db (void)
 {
     return  g_pds_impl_state.apollo_impl_db();
+}
+
+static inline lif_impl_state *
+lif_impl_db (void)
+{
+    return g_pds_impl_state.lif_impl_db();
 }
 
 static inline tep_impl_state *
