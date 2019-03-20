@@ -180,6 +180,7 @@ def Trigger(tc):
     tc.resp2 = api.Trigger(req1)
 
     result = changeMacAddrTrigger(tc)
+    time.sleep(5)
     api.Logger.debug("UC MAC filter : Trigger -> Change MAC addresses result ", result)
 
     tc.wload_ep_set, tc.host_ep_set, tc.naples_ep_set, tc.hal_ep_set = ValidateMacRegistration(tc)

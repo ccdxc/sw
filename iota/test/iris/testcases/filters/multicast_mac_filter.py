@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.harness.infra.resmgr as resmgr
 import iota.test.iris.utils.address as address_utils
+import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.hal_show as hal_show_utils
 import iota.test.iris.utils.host as host_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
@@ -215,6 +216,7 @@ def Setup(tc):
     tc.statsCount, tc.preStatsCount, tc.postStatsCount = getStatObjects(tc.naples_node)
 
     api.Logger.info("MC MAC filter : Setup final result - ", result)
+    debug_utils.collect_showtech(result)
     return result
 
 def Trigger(tc):
@@ -232,6 +234,7 @@ def Trigger(tc):
     result = triggerMCtraffic(tc)
 
     api.Logger.info("MC MAC filter : Trigger final result - ", result)
+    debug_utils.collect_showtech(result)
     return result
 
 def Verify(tc):
@@ -263,7 +266,7 @@ def Verify(tc):
         api.Logger.debug("MC MAC filter : Verify - verifyMCTrafficStats SUCCESS ")
 
     api.Logger.info("MC MAC filter : Verify final result - ", result)
-
+    debug_utils.collect_showtech(result)
     return result
 
 def Teardown(tc):
@@ -272,5 +275,5 @@ def Teardown(tc):
     if tc.skip: return api.types.status.IGNORED
 
     api.Logger.info("MC MAC filter : Teardown final result - ", result)
-
+    debug_utils.collect_showtech(result)
     return result

@@ -1,25 +1,34 @@
 import iota.harness.api as api
 import pdb
 
-def debug_dump_interface_info(node, interface):
+def debug_dump_display_info(resp):
     result = api.types.status.SUCCESS
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    if resp is None:
+        api.Logger.critical("debug_dump_display_info failed - no response")
+        return api.types.status.FAILURE
+    commands = resp.commands
+    for cmd in commands:
+        # pretty output of each cmd
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0:
+            api.Logger.critical("debug_dump_display_info failed for %s" % (cmd))
+            result = api.types.status.FAILURE
+    return result
+
+def debug_dump_interface_info(node, interface):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     cmd = "ifconfig " + interface
     api.Trigger_AddHostCommand(req, node, cmd)
     if api.GetNodeOs(node) == "linux":
         cmd = "ip -d link show " + interface
         api.Trigger_AddHostCommand(req, node, cmd)
+        cmd = "ip maddr show " + interface
+        api.Trigger_AddHostCommand(req, node, cmd)
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "netstat -aI " + interface
+        api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
-    if resp is None:
-        api.Logger.critical("debug_dump_interface_info failed - no response")
-        return api.types.status.FAILURE
-    commands = resp.commands
-    for cmd in commands:
-        if cmd.exit_code != 0:
-            api.Logger.critical("debug_dump_interface_info failed for %s" % (cmd))
-            api.PrintCommandResults(cmd)
-            result = api.types.status.FAILURE
-    return result
+    return debug_dump_display_info(resp)
 
 def debug_dump_workload_info(workload):
     w = workload
@@ -34,6 +43,36 @@ def debug_dump_all_workloads():
     for w in workloads:
         debug_dump_workload_info(w)
     api.Logger.verbose("debug_dump_all_workloads : END")
+    return
+
+def debug_dump_HostRoutingTable(node):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    cmd = "netstat -4r"
+    api.Trigger_AddHostCommand(req, node, cmd)
+    cmd = "netstat -6r"
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return debug_dump_display_info(resp)
+
+def debug_dump_HostArpTable(node):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    cmd = "arp -a"
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return debug_dump_display_info(resp)
+
+def debug_dump_node_info(node):
+    api.Logger.verbose("node info : ", node)
+    debug_dump_HostRoutingTable(node)
+    debug_dump_HostArpTable(node)
+    return
+
+def debug_dump_all_nodes():
+    api.Logger.verbose("debug_dump_all_nodes : START")
+    nodes = api.GetWorkloadNodeHostnames()
+    for node in nodes:
+        debug_dump_node_info(node)
+    api.Logger.verbose("debug_dump_all_nodes : END")
     return
 
 def GetHostMgmtInterface(node):

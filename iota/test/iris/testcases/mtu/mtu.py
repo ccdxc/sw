@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.host as host_utils
 import iota.test.iris.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.traffic as traffic_utils
@@ -161,6 +162,7 @@ def Setup(tc):
     api.Logger.info("MTU filter : new MTU - ", tc.new_mtu)
 
     api.Logger.info("MTU filter : Setup final result - ", result)
+    debug_utils.collect_showtech(result)
     return result
 
 def Trigger(tc):
@@ -173,12 +175,14 @@ def Trigger(tc):
     result = changeWorkloadIntfMTU(tc.new_mtu, tc.naples_node)
     if result is not api.types.status.SUCCESS:
         api.Logger.error("MTU filter : Trigger failed for changeWorkloadIntfMTU ", result)
+        debug_utils.collect_showtech(result)
         return result
 
     #Trigger ping across all remote workload pairs
     triggerMTUPings(tc)
 
     api.Logger.info("MTU filter : Trigger final result - ", result)
+    debug_utils.collect_showtech(result)
     return result
 
 def Verify(tc):
@@ -189,15 +193,17 @@ def Verify(tc):
     result = verifyMTUchange(tc)
     if result is not api.types.status.SUCCESS:
         api.Logger.error("MTU filter : Verify failed for verifyMTUchange ")
+        debug_utils.collect_showtech(result)
         return result
 
     result = verifyMTUPings(tc)
     if result is not api.types.status.SUCCESS:
         api.Logger.error("MTU filter : Verify failed for verifyMTUPings")
+        debug_utils.collect_showtech(result)
         return result
 
     api.Logger.info("MTU filter : Verify final result - ", result)
-
+    debug_utils.collect_showtech(result)
     return result
 
 def Teardown(tc):
@@ -211,5 +217,5 @@ def Teardown(tc):
         api.Logger.error("MTU filter : rollback failed for changeWorkloadIntfMTU ", result)
 
     api.Logger.info("MTU filter : Teardown final result - ", result)
-
+    debug_utils.collect_showtech(result)
     return result

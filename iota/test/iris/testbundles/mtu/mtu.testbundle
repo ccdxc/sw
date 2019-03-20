@@ -2,7 +2,7 @@ meta:
     name    : mtu
     os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox, intel, broadcom ]
-    targetcount : 10
+    targetcount : 5
 
 testcases:
     -   name    : MTU_Def_Min_Max

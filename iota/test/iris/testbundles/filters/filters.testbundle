@@ -2,7 +2,7 @@ meta:
     name    : filters
     os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox, intel, broadcom ]
-    targetcount : 10
+    targetcount : 4
 
 testcases:
     -   name    : Unicast_MAC_Filter

@@ -307,26 +307,6 @@ def getNaplesHALmcastEndPoints(naples_node):
 
     return hal_mc_ep_set
 
-"""
-def is_ipv4_mcast_mac(mac_addr_str):
-    #TODO
-    # ((mac & 0x1005e000000) == 0x1005e000000)
-    return True
-
-def is_ipv6_mcast_mac(mac_addr_str):
-    #TODO
-    # ((mac & 0x33330000000) == 0x33330000000)
-    return True
-
-def is_snma_mac(mac_addr_str):
-    #TODO
-    # Solicited Node Multicast Address
-    # ((mac & 0x3333ff00000) == 0x3333ff00000)
-    if "33:33:ff:xx:xx:xx" == mac_addr_str:
-        return True
-    return False
-"""
-
 def add_mc_mac_for_all_vlans(mac_addr_str):
     #TODO: Make it proper API
     if address_utils.is_gvrp_mcast_mac(mac_addr_str):

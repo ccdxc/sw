@@ -1,9 +1,11 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.host as host_utils
 import iota.test.iris.utils.traffic as traffic_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
 from collections import defaultdict
+import time
 
 def getAllEndPointsView(tc):
     # workload endpoints
@@ -116,6 +118,7 @@ def Setup(tc):
     api.Logger.debug("UC MAC filter : Setup wload_intf_vlan_map : ", wload_intf_vlan_map)
 
     api.Logger.info("UC MAC filter : Setup final result - ", result)
+    debug_utils.collect_showtech(result)
     return result
 
 def Trigger(tc):
@@ -125,6 +128,7 @@ def Trigger(tc):
 
     if tc.iterators.mac_change:
         result = changeMacAddrTrigger(tc)
+        time.sleep(5)
         api.Logger.debug("UC MAC filter : Trigger -> Change MAC addresses result ", result)
     else:
         api.Logger.debug("UC MAC filter : Trigger -> NO Change to MAC addresses")
@@ -135,6 +139,7 @@ def Trigger(tc):
     tc.cmd_cookies, tc.resp = traffic_utils.pingAllRemoteWloadPairs(mtu=tc.iterators.pktsize, af=str(tc.iterators.ipaf))
 
     api.Logger.info("UC MAC filter : Trigger final result - ", result)
+    debug_utils.collect_showtech(result)
     return result
 
 def Verify(tc):
@@ -156,6 +161,7 @@ def Verify(tc):
     if not verifyEndPoints(tc):
         api.Logger.error("UC MAC filter : Verify failed for verifyEndPoints")
         result = api.types.status.FAILURE
+        debug_utils.collect_showtech(result)
         return result
     else:
         api.Logger.debug("UC MAC filter : Verify - verifyEndPoints SUCCESS ")
@@ -174,7 +180,7 @@ def Verify(tc):
     result = traffic_utils.verifyPing(tc.cmd_cookies, tc.resp)
     
     api.Logger.info("UC MAC filter : Verify final result - ", result)
-
+    debug_utils.collect_showtech(result)
     return result
 
 def Teardown(tc):
@@ -189,5 +195,5 @@ def Teardown(tc):
         api.Logger.debug("UC MAC filter : Teardown -> NO rollback")
 
     api.Logger.info("UC MAC filter : Teardown final result - ", result)
-
+    debug_utils.collect_showtech(result)
     return result

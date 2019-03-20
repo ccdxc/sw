@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.hal_show as hal_show_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
@@ -177,6 +178,7 @@ def Setup(tc):
     tc.statsCount, tc.preStatsCount, tc.postStatsCount = getStatObjects(tc)
 
     api.Logger.info("BC MAC filter : Setup final result - ", result)
+    debug_utils.collect_showtech(result)
     return result
 
 def Trigger(tc):
@@ -188,12 +190,15 @@ def Trigger(tc):
     tc.intf_pktfilter_dict, res = filters_utils.getAllIntfPktFilter(tc.naples_node)
     if not res:
         api.Logger.error("BC MAC filter : Trigger failed for getAllIntfPktFilter ", res)
-        return api.types.status.FAILURE
+        result = api.types.status.FAILURE
+        debug_utils.collect_showtech(result)
+        return result
 
     #Trigger arping and get interface BC stats pre & post trigger
     triggerBCtraffic(tc)
 
     api.Logger.info("BC MAC filter : Trigger final result - ", result)
+    debug_utils.collect_showtech(result)
     return result
 
 def Verify(tc):
@@ -234,7 +239,7 @@ def Verify(tc):
         cookie_idx += 1
     
     api.Logger.info("BC MAC filter : Verify final result - ", result)
-
+    debug_utils.collect_showtech(result)
     return result
 
 def Teardown(tc):
@@ -243,5 +248,5 @@ def Teardown(tc):
     if tc.skip: return api.types.status.IGNORED
 
     api.Logger.info("BC MAC filter : Teardown final result - ", result)
-
+    debug_utils.collect_showtech(result)
     return result
