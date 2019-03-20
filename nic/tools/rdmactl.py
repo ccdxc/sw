@@ -261,9 +261,10 @@ class RdmaSQCB0state(Packet):
         LEShortField("p_index3", 0),
         LEShortField("c_index3", 0),
         LEShortField("sqd_cindex", 0),
-        LEShortField("sqcb0_rsvd1", 0),
+        ByteField("sqcb0_rsvd1", 0),
 
-        XIntField("pt_base_addr/sq_hbm_base_addr", 0),
+	XByteField("phy_base_addr_8", 0),
+        XIntField("pt_base_addr/sq_hbm_base_addr/phy_base_addr_32", 0),
         XIntField("sqcb0_header_template_addr/q_key", 0),
         IntField("pd", 0),
 
@@ -301,7 +302,8 @@ class RdmaSQCB0state(Packet):
         BitField("li_fence", 0, 1),
         BitField("busy", 0, 1),
 
-        BitField("sqcb0_rsvd2", 0, 8),
+        BitField("skip_pt", 0, 1),
+        BitField("sqcb0_rsvd2", 0, 7),
     ]
         
 class RdmaSQCB1state(Packet):
@@ -553,23 +555,23 @@ class RdmaRQCB0state(Packet):
         LEShortField("p_index5", 0),
         LEShortField("c_index5", 0),
 
-        XIntField("pt_base_addr/rq_hbm_base_addr", 0),
-        
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
         BitField("congestion_mgmt_enable", 0, 1),
-        BitField("state", 0, 3),
+        BitField("cb0_state", 0, 3),
         BitField("log_rsq_size", 0, 5),
-        BitField("serv_type", 0, 3),
-        BitField("log_pmtu", 0xa, 5),
+
+        XByteField("phy_base_addr_8", 0),
+        XIntField("pt_base_addr/rq_hbm_base_addr/phy_base_addr_32", 0),
         
         XIntField("rsq_base_addr", 0),
     
         X3BytesField("spec_read_rsp_psn", 0),
         BitField("spec_color", 0, 1),
         BitField("drain_in_progress", 0, 1),
-        BitField("rsvd", 0, 6),
+        BitField("skip_pt", 0, 1),
+        BitField("rsvd", 0, 5),
 
         XIntField("header_template_addr", 0),
 
@@ -588,7 +590,8 @@ class RdmaRQCB0state(Packet):
         BitField("ring_empty_sched_eval_done", 0, 1),
         BitField("rqcb0_rsvd1", 0, 7),
         ShortField("bt_rsq_cindex", 0),
-        ByteField("pad", 0),
+        BitField("serv_type", 0, 3),
+        BitField("log_pmtu", 0xa, 5),
     ]
 
 class RdmaRQCB1state(Packet):
@@ -599,7 +602,8 @@ class RdmaRQCB1state(Packet):
 
         XIntField("rsq_base_addr/q_key", 0),
     
-        XIntField("pt_base_addr/rq_hbm_base_addr", 0),
+        XByteField("phy_base_addr_8", 0),
+        XIntField("pt_base_addr/rq_hbm_base_addr/phy_base_addr_32", 0),
         
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
@@ -607,8 +611,6 @@ class RdmaRQCB1state(Packet):
         BitField("congestion_mgmt_enable", 0, 1),
         BitField("cb1_state", 0, 3),
         BitField("log_rsq_size", 0, 5),
-        BitField("serv_type", 0, 3),
-        BitField("log_pmtu", 0xa, 5),
         
         BitField("srq_enabled", 0, 1),
         BitField("cache", 0, 1),
@@ -616,7 +618,8 @@ class RdmaRQCB1state(Packet):
         BitField("rq_in_hbm", 0, 1),
         BitField("nak_prune", 0, 1),
         BitField("priv_oper_enable", 0, 1),
-        BitField("rqcb1_rsvd0", 0, 2),
+        BitField("skip_pt", 0, 1),
+        BitField("rqcb1_rsvd0", 0, 1),
 
         X3BytesField("cq_id", 0),
 
@@ -659,7 +662,8 @@ class RdmaRQCB1state(Packet):
         LEShortField("proxy_pindex", 0),
 
         X3BytesField("srq_id", 0),
-        BitField("rqcb1_pad", 0, 8),
+        BitField("serv_type", 0, 3),
+        BitField("log_pmtu", 0xa, 5),
     ]
 
 class RdmaRQCB2state(Packet):

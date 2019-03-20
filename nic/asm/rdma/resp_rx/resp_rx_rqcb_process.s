@@ -935,13 +935,19 @@ rc_checkout:
     // checkout a descriptor
     add         r1, r0, SPEC_RQ_C_INDEX
 
-    bbeq        d.rq_in_hbm, 0, pt_process
+    seq         c1, d.rq_in_hbm, 1
+    seq         c2, d.skip_pt, 1
+    bcf         [!c1 & !c2], pt_process
+    
     // flush the last tblwr in this path
     tblmincri.c7.f SPEC_RQ_C_INDEX, d.log_num_wqes, 1 // BD Slot
 
     sll         r2, r1, d.log_wqe_size
-    add         r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
-
+    add.c1      r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
+    add.c2      r2, r2, d.phy_base_addr, PHY_BASE_ADDR_SHIFT
+    or.c2       r2, r2, 1, 63
+    or.c2       r2, r2, CAPRI_RXDMA_INTRINSIC_LIF, 52
+    
     CAPRI_RESET_TABLE_0_ARG()
     phvwrpair   CAPRI_PHV_FIELD(WQE_INFO_P, remaining_payload_bytes), REM_PYLD_BYTES, \
                 CAPRI_PHV_FIELD(WQE_INFO_P, curr_wqe_ptr), r2

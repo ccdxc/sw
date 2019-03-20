@@ -148,9 +148,9 @@ create_qp:
 
     phvwrpair   p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_cqp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RESET
     phvwrpair   p.rqcb1.log_wqe_size, K_CQP_RQ_STRIDE_LOG2[4:0], p.rqcb1.log_num_wqes , K_CQP_RQ_DEPTH_LOG2[4:0]
-    phvwrpair   p.rqcb1.serv_type, k.rdma_aq_feedback_cqp_rq_type_state[2:0], p.rqcb1.pd, K_CQP_PD
+    phvwrpair   p.rqcb1.serv_type, k.rdma_aq_feedback_cqp_rq_type_state[2:0], p.rqcb1.log_pmtu, K_CQP_LOG_PMTU
     phvwrpair   p.rqcb1.priv_oper_enable, K_CQP_RQ_PRIVILEGED, p.rqcb1.cq_id, K_CQP_RQ_CQ_ID
-    phvwr       p.rqcb1.log_pmtu, K_CQP_LOG_PMTU
+    phvwr       p.rqcb1.pd, K_CQP_PD
 
     //RQCB2
     

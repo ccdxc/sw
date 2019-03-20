@@ -23,6 +23,10 @@ rdma_aq_rx_wqe_process:
 
     //Setup     DMA for RQ PT
 
+    add         r4, r0, K_RQ_MAP_COUNT 
+    beqi        r4, 1, qp_skip_dma_pt
+    crestore    [c1], K_RQ_CMB, 0x1 //BD Slot
+    
     PT_BASE_ADDR_GET2(r3) 
     add         r3, r3, k.t3_s2s_aqcb_to_wqe_info_rq_tbl_index, CAPRI_LOG_SIZEOF_U64
     srl         r5, r3, CAPRI_LOG_SIZEOF_U64
@@ -30,8 +34,6 @@ rdma_aq_rx_wqe_process:
     phvwr       p.rqcb1.pt_base_addr, r5
 
     add         r4, r0, K_RQ_MAP_COUNT, CAPRI_LOG_SIZEOF_U64
-    beqi        r4, 1<<CAPRI_LOG_SIZEOF_U64, qp_skip_dma_pt
-    crestore    [c1], K_RQ_CMB, 0x1 //BD Slot
 
     DMA_CMD_STATIC_BASE_GET(r6, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_CREATE_QP_RQPT_SRC)
 
@@ -45,15 +47,25 @@ rdma_aq_rx_wqe_process:
 
 qp_skip_dma_pt:
 
-    phvwr.c1    p.rqcb0.hbm_rq_base_addr, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr[33:HBM_RQ_BASE_ADDR_SHIFT]
-    phvwr.c1    p.rqcb1.hbm_rq_base_addr, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr[33:HBM_RQ_BASE_ADDR_SHIFT]
-    phvwr.c1    p.rqcb0.rq_in_hbm, 1
-    phvwr.c1    p.rqcb1.rq_in_hbm, 1
-    //copy      the phy address of a single page directly.
-    //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
-    //or          r2, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr, 0x1, 63    
-    memwr.!c1.dx    r3, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr
+    bcf         [!c1], qp_skip_rq_cmb
+    nop
+    
+    phvwr    p.rqcb0.hbm_rq_base_addr, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr[33:HBM_RQ_BASE_ADDR_SHIFT]
+    phvwr    p.rqcb1.hbm_rq_base_addr, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr[33:HBM_RQ_BASE_ADDR_SHIFT]
+    phvwr    p.rqcb0.rq_in_hbm, 1
+    phvwr    p.rqcb1.rq_in_hbm, 1
 
+    b           qp_no_skip_dma_pt
+    nop
+    
+qp_skip_rq_cmb: 
+    //copy      the phy address of a single page directly.
+
+    phvwr       p.rqcb0.phy_base_addr, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr[51:12] 
+    phvwr       p.rqcb1.phy_base_addr, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr[51:12]
+    phvwr       p.rqcb0.skip_pt, 1
+    phvwr       p.rqcb1.skip_pt, 1
+    
 qp_no_skip_dma_pt: 
 
     phvwr       p.rqcb1.spec_en, K_RQ_SPEC

@@ -31,6 +31,7 @@
 #define CQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 #define SQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 #define RQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
+#define PHY_BASE_ADDR_SHIFT 12
 
 #define MAX_SGES_PER_PASS   2
 #define HBM_NUM_SGES_PER_CACHELINE 4

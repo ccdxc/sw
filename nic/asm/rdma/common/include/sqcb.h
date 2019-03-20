@@ -66,11 +66,18 @@ struct sqcb0_t {
     struct capri_intrinsic_ring_t ring2;
     struct capri_intrinsic_ring_t ring3;
     sqd_cindex                    : 16; // RO S0, WO S5
-    rsvd1                         : 16;
+    rsvd1                         :  8;
 
     union {
-        pt_base_addr              : 32; // RO
-        hbm_sq_base_addr          : 32; // RO
+        struct {
+            rsvd3                 : 8;
+            pt_base_addr          : 32; // RO
+        };
+        struct {
+            rsvd4                 : 8;
+            hbm_sq_base_addr      : 32; // RO
+        };
+        phy_base_addr             : 40;
     };
     union {
         header_template_addr      : 32; // RO
@@ -131,9 +138,10 @@ struct sqcb0_t {
             busy                  : 1;
         };
     };
-    
+
     spec_enable                   : 1;
-    rsvd2                         : 7;
+    skip_pt                       : 1;
+    rsvd2                         : 6;
 
 };
 

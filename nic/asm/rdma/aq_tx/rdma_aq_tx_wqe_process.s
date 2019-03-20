@@ -421,14 +421,17 @@ create_qp:
     phvwr       p.sqcb0.intrinsic.pc, r4
     phvwr       p.sqcb1.pc, r4
 
+    add         r4, r0, d.{qp.sq_map_count}.wx //BD Slot
+    beqi        r4, 1, qp_skip_dma_pt
+    crestore    [c2, c1], d.{qp.rq_cmb...qp.sq_cmb}, 0x3
+    
+    // Setting up PT translations..
     PT_BASE_ADDR_GET2(r4) 
     add         r3, r4, d.{qp.sq_tbl_index_xrcd_id}.wx, CAPRI_LOG_SIZEOF_U64
     srl         r5, r3, CAPRI_LOG_SIZEOF_U64
     phvwr       p.sqcb0.pt_base_addr, r5
 
     add         r4, r0, d.{qp.sq_map_count}.wx, CAPRI_LOG_SIZEOF_U64 //BD Slot
-    beqi        r4, 1<<CAPRI_LOG_SIZEOF_U64, qp_skip_dma_pt
-    crestore    [c2, c1], d.{qp.rq_cmb...qp.sq_cmb}, 0x3
 
     //Setup     DMA for SQ PT
 
@@ -441,7 +444,7 @@ create_qp:
     b           qp_no_skip_dma_pt
     nop
 
-qp_skip_dma_pt:
+qp_skip_dma_pt: 
 
     bcf        [!c1 & !c2], qp_skip_cmb
     //obtain barmap end in r2
@@ -475,11 +478,15 @@ qp_skip_rq_cmb:
     phvwr      p.sqcb0.hbm_sq_base_addr, r4[33:HBM_SQ_BASE_ADDR_SHIFT]
     phvwr      p.sqcb0.sq_in_hbm, 1
 
+    b           qp_no_skip_dma_pt
+    nop
+    
 qp_skip_cmb:
-    //copy      the phy address of a single page directly.
-    //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
-    memwr.!c1.d    r3, d.qp.sq_dma_addr
 
+    add         r2, r0, d.{qp.sq_dma_addr}.dx
+    phvwr       p.sqcb0.phy_base_addr, r2[51:12]
+    phvwr       p.sqcb0.skip_pt, 1
+    
 qp_no_skip_dma_pt: 
     
     // setup DMA for SQCB

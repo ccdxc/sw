@@ -55,21 +55,26 @@ struct rqcb0_t {
     struct capri_intrinsic_ring_t ring4;
     struct capri_intrinsic_ring_t ring5;
 
-    // need for prefetch
-    union {
-        pt_base_addr: 32;       //Ronly
-        hbm_rq_base_addr: 32;   //Ronly
-    };
-
     log_rq_page_size: 5;        //Ronly
     log_wqe_size: 5;            //Ronly
     log_num_wqes: 5;            //Ronly
     congestion_mgmt_enable:1;   //Ronly
     state: 3;                   //Ronly?
     log_rsq_size: 5;            //Ronly
-    serv_type: 3;               //Ronly
-    log_pmtu: 5;                //Ronly
-    
+
+    // need for prefetch
+    union {
+        struct {
+            pad1 : 8;
+            pt_base_addr: 32;       //Ronly
+        };
+        struct {
+            pad2 : 8;
+            hbm_rq_base_addr: 32;   //Ronly
+        };
+        phy_base_addr             : 40;            
+    };
+
     union {
         rsq_base_addr: 32;      //Ronly
         q_key : 32;             //Ronly
@@ -78,7 +83,8 @@ struct rqcb0_t {
     spec_read_rsp_psn: 24;      //Written by S0, Read by S5
     spec_color: 1;              //Rw by S0
     drain_in_progress: 1;       //Rw by S0
-    rsvd: 6;
+    skip_pt: 1;
+    rsvd: 5;
 
     header_template_addr: 32;   //Ronly
 
@@ -100,7 +106,9 @@ struct rqcb0_t {
     // store the current backtrack progress
     bt_rsq_cindex: 16;          //Read by S0, write by Sx
 
-    pad: 8;   // 1B
+    serv_type: 3;               //Ronly
+    log_pmtu: 5;                //Ronly
+    
 };
 
 //Rx only cb
@@ -113,8 +121,15 @@ struct rqcb1_t {
     };
 
     union {
-        pt_base_addr: 32;       //Ronly
-        hbm_rq_base_addr: 32;   //Ronly
+        struct {
+           pad1 : 8;
+           pt_base_addr: 32;       //Ronly
+        };
+        struct {
+           pad2 : 8;
+           hbm_rq_base_addr: 32;   //Ronly
+        };
+        phy_base_addr             : 40;            
     };
 
     log_rq_page_size: 5;    //Ronly
@@ -123,8 +138,6 @@ struct rqcb1_t {
     congestion_mgmt_enable:1;   //Ronly
     state: 3;               //Ronly ?
     log_rsq_size: 5;        //Ronly     
-    serv_type: 3;           //Ronly
-    log_pmtu: 5;            //Ronly
     
     srq_enabled: 1;         //Ronly
     cache: 1;               //Ronly
@@ -132,7 +145,8 @@ struct rqcb1_t {
     rq_in_hbm: 1;           //Ronly
     nak_prune: 1;           //rw by S0
     priv_oper_enable: 1;    //Ronly
-    rsvd0: 2;
+    skip_pt :1;
+    rsvd0: 1;
 
     cq_id: 24;              //Ronly
 
@@ -182,7 +196,9 @@ struct rqcb1_t {
     proxy_pindex: 16;   // written by TxDMA, read by RxDMA
                        
     srq_id: 24;
-    pad: 8;  //1B
+
+    serv_type: 3;           //Ronly
+    log_pmtu: 5;            //Ronly
 };
 
 // rx -> tx cb. i.e., written by rxdma, read by txdma

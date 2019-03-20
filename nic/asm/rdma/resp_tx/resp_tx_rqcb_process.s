@@ -183,8 +183,9 @@ skip_drain:
 
 bt_in_progress:
 
-        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, log_rsq_size, d.log_rsq_size) 
-        CAPRI_SET_FIELD_RANGE2(BT_TO_S_INFO_P, log_pmtu, rsq_base_addr, d.{log_pmtu...rsq_base_addr})
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, log_rsq_size, d.log_rsq_size)
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, log_pmtu, d.log_pmtu)
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, rsq_base_addr, d.rsq_base_addr)
         CAPRI_SET_FIELD2(BT_TO_S_INFO_P, bt_cindex, BT_P_INDEX)
         // we want to end the search when we reach here
         CAPRI_SET_FIELD2(BT_TO_S_INFO_P, end_index, RSQ_P_INDEX)

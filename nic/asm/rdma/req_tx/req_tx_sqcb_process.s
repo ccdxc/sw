@@ -146,13 +146,23 @@ poll_for_work:
         // check if speculative cindex is matching current cindex. If so,
         // update state, otherwise discard and redo in the next scheduler slot
         add            r1, r0, SPEC_SQ_C_INDEX
-        
-        bbne           d.sq_in_hbm, 1, pt_process
-        sll            r2, r1, d.log_wqe_size // Branch Delay Slot
-        add            r2, r2, d.hbm_sq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
+
+        seq            c1, d.sq_in_hbm, 1
+        seq            c2, d.skip_pt, 1
+        bcf            [!c1 & !c2], pt_process
+
+    
+        sll         r2, r1, d.log_wqe_size // Branch Delay Slot
+        add.c1      r2, r2, d.hbm_sq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
+
+        add.c2      r2, r2, d.phy_base_addr, PHY_BASE_ADDR_SHIFT
+        or.c2       r2, r2, 1, 63
+        or.c2       r2, r2, CAPRI_TXDMA_INTRINSIC_LIF, 52
+    
         // Prefetch wqe addr so that its in cache by stage 2
         //cpref          r2
-        nop
+        //nop
+    
         // remaining_payload_bytes = (1 << sqcb0_p->log_pmtu), to start with
         sll            r4, 1, d.log_pmtu
         
