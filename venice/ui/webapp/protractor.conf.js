@@ -12,19 +12,34 @@ exports.config = {
     './e2e/**/*.spec.ts'
   ],
   suites: {
-    login: './e2e/login-e2e.spec.ts',
-    search: './e2e/search-e2e.spec.ts',
-    route: './e2e/routing-e2e.spec.ts',
-    all: './e2e/**/*e2e.spec.ts'
+    // how to run:
+    // ng e2e  --base-url="https://server:port" --suite=suitename (suitename listed below)
+    // e.g  ng e2e  --base-url="https://localhost:4200" --suite=login 
+
+    all: './e2e/**/*e2e.spec.ts',
+    alertsevents: 'e2e/alertsevents-e2e.spec.ts',
+    auditevents: 'e2e/auditevents-e2e.spec.ts',
+    // purposelly comment it out. Test it manually.->  authpolicy: 'e2e/authpolicy-e2e.spec.ts',
+    cluster: 'e2e/cluster-e2e.spec.ts',
+    flowexport: 'e2e/flowexport-e2e.spec.ts',
+    fwlogpolicies: 'e2e/fwlogpolicies-e2e.spec.ts',
+    fwlogs: 'e2e/fwlogs-e2e.spec.ts',
+    login: 'e2e/login-e2e.spec.ts',
+    naples: 'e2e/naples-e2e.spec.ts',
+    routing: 'e2e/routing-e2e.spec.ts',
+    search: 'e2e/search-e2e.spec.ts',
+    securityapps: 'e2e/securityapps-e2e.spec.ts',
+    techsupport: 'e2e/techsupport-e2e.spec.ts',
+    users: 'users-e2e.spec.ts',
   },
   capabilities: {
     browserName: 'chrome',
     unexpectedAlertBehaviour: 'accept',
     //binary: process.env.CHROME_BIN,
     chromeOptions: {
-      args: ["--headless",  "--no-sandbox", "--disable-gpu", "--window-size=1200,900"]  
+       args: ["--headless",  "--no-sandbox", "--disable-gpu", "--window-size=1200,900"]  
       // The following allowes watching the e2e test run and is helpful for debugging
-      //  args: ["--window-size=1400,1000"]
+      // args: ["--window-size=1400,1000",]
     },
     //  loggingPrefs: {driver: 'ALL', server: 'ALL', browser: 'ALL'}
   },
@@ -38,7 +53,7 @@ exports.config = {
   jasmineNodeOpts: {
     showColors: true,
     defaultTimeoutInterval: 60000,
-    print: function() { }
+    print: function () { }
   },
   onPrepare() {
     require('ts-node').register({

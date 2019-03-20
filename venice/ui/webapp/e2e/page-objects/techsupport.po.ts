@@ -48,7 +48,7 @@ export class TechSupport {
         const appPage4Collections = new AppPage();
         appPage4Collections.setContainerCSS ('.newtechsupport-row-collectionselector');
         await this.pressAddTechSupportButton() ;
-        await browser.sleep(2000); // wati for animation complete
+        await browser.sleep(5000); // wati for animation complete
         await this.getTechsupportName().sendKeys(techsupportRequestValue.name);
         await this.getTechsupportVerbosity().sendKeys(techsupportRequestValue.verbosity);
         await this.getTechsupportNodes().sendKeys(techsupportRequestValue.nodes);

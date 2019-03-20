@@ -2,10 +2,12 @@ import { browser, by, element, protractor, ElementFinder } from 'protractor';
 import { EventsEvent_severity_uihint } from '@sdk/v1/models/generated/events';
 import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus, MonitoringAlertPolicy, MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { E2EuiTools } from './E2EuiTools';
+import { AppPage } from './app.po';
+import { FieldSelectorCriteria } from './.';
 
 export class Alertsevents {
   configs = {
-    alertsevents : {
+    alertsevents: {
       url: '/#/monitoring/alertsevents',
       css: 'app-alertsevents'
     }
@@ -15,13 +17,13 @@ export class Alertsevents {
   }
 
   navigateTo(page: string) {
-    return browser.get(this.configs[page].url ); // '/#/monitoring/alertsevents');
+    return browser.get(this.configs[page].url); // '/#/monitoring/alertsevents');
   }
 
   async verifyPage(page: string) {
     const EC = protractor.ExpectedConditions;
     const alertseventsPageComponent = element(by.css(this.configs[page].css)); // 'app-alertsevents'
-    const urlEC = EC.urlContains(this.configs[page].url ); // '/monitoring/alertsevents'
+    const urlEC = EC.urlContains(this.configs[page].url); // '/monitoring/alertsevents'
     const componentEC = EC.presenceOf(alertseventsPageComponent);
     await browser.wait(EC.and(urlEC, componentEC));
   }
@@ -55,7 +57,7 @@ export class Alertsevents {
           const actualSeverityText = await colVal.element(by.css('div')).getText();
           expect(severityValues).toContain(actualSeverityText, 'severity value was not one of the ui hint values');
         } else {
-          if (colIndex < (colVals.length - 1) ) {
+          if (colIndex < (colVals.length - 1)) {
             expect(colText).not.toBe('');
           } else {
             expect(colText).toBe(''); // last column contains action icons
@@ -68,7 +70,7 @@ export class Alertsevents {
 
 
   async createAlertDestination(monitoringAlertDestination: IMonitoringAlertDestination) {
-    await this.openEventPolicyPage();
+    await this.openEventAlertPolicyPage();
     // open destinatin tab
     this.openDestionationTab();
     await browser.sleep(5000);  // wait for overlay node dismiss
@@ -77,9 +79,9 @@ export class Alertsevents {
     await browser.sleep(1000);
 
     // set name and other fields
-    await E2EuiTools.setInputBoxValue('app-newdestination .newdestination-name.ui-inputtext', monitoringAlertDestination.meta.name );
+    await E2EuiTools.setInputBoxValue('app-newdestination .newdestination-name.ui-inputtext', monitoringAlertDestination.meta.name);
 
-    await E2EuiTools.setInputBoxValue('app-newdestination .syslog-input.ui-inputtext[formcontrolname="destination"]', monitoringAlertDestination.spec['syslog-export'].targets[0].destination );
+    await E2EuiTools.setInputBoxValue('app-newdestination .syslog-input.ui-inputtext[formcontrolname="destination"]', monitoringAlertDestination.spec['syslog-export'].targets[0].destination);
 
     await E2EuiTools.setInputBoxValue('app-newdestination .syslog-input.ui-inputtext[formcontrolname="transport"]', monitoringAlertDestination.spec['syslog-export'].targets[0].transport);
 
@@ -87,8 +89,38 @@ export class Alertsevents {
     await E2EuiTools.clickElement('.toolbar-button.global-button-primary.eventalertpolicies-button-destination-SAVE');
   }
 
+  async updateAlertDestination(monitoringAlertDestination: IMonitoringAlertDestination, elemenetCSS: string, elementVale: any) {
+    await this.openEventAlertPolicyPage();
+    // open destinatin tab
+    await this.openDestionationTab();
+    await browser.sleep(5000);  // wait for overlay node dismiss
+    const tsTableRowActionUpdateButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringAlertDestination.meta.name) + ' .global-table-action-icon.mat-icon[mattooltip="Edit destination"]';
+    await E2EuiTools.clickElement(tsTableRowActionUpdateButtonCSS);
+    await browser.sleep(5000); // wait update panel show up
+
+    await E2EuiTools.setInputBoxValue(elemenetCSS, elementVale);
+    // click update-save button
+    await E2EuiTools.clickElement('app-destinations app-newdestination .newdestination-buttoncontainer div:nth-child(1) > span');
+  }
+
+  async verifyAlertDestination(monitoringAlertDestination: IMonitoringAlertDestination, elemenetCSS: string, elementVale: any, isToopenDestionationTab: boolean = false) {
+    // if update destination and verify updated destination are in one function block, there is no need to open Destination-Tab
+    if (isToopenDestionationTab) {
+      await this.openEventAlertPolicyPage();
+      // open destinatin tab
+      await this.openDestionationTab();
+    }
+    await browser.sleep(5000);  // wait for overlay node dismiss
+    const tsTableRowActionUpdateButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringAlertDestination.meta.name) + ' .global-table-action-icon.mat-icon[mattooltip="Edit destination"]';
+    await E2EuiTools.clickElement(tsTableRowActionUpdateButtonCSS);
+    await browser.sleep(2000); // wait update panel show up
+    const uiValue = await element(by.css(elemenetCSS)).getAttribute('value');
+    expect(uiValue === elementVale).toBeTruthy('Alert Destination transport value should be updated properly');
+
+  }
+
   async deleteAlertDestination(monitoringAlertDestination: IMonitoringAlertDestination) {
-    await this.openEventPolicyPage();
+    await this.openEventAlertPolicyPage();
     // open destinatin tab
     await this.openDestionationTab();
     await browser.sleep(5000);  // wait for overlay node dismiss
@@ -102,21 +134,55 @@ export class Alertsevents {
   ////////////////////////////////////////////////
 
   async createEventAlertPolicy(monitoringAlertPolicy: IMonitoringAlertPolicy) {
-    await this.openEventPolicyPage();
+    const appPage = new AppPage();
+    appPage.setContainerCSS('.neweventalertpolicy-content');
+    await this.openEventAlertPolicyPage();
 
     // click ' ADD ALERT POLICY' button
     await E2EuiTools.clickElement('.toolbar-button.global-button-primary.eventalertpolicies-button');
     await browser.sleep(2000);
 
     // set name
-    await E2EuiTools.setInputBoxValue('app-eventalertpolicies .neweventalertpolicy-name.ui-inputtext', monitoringAlertPolicy.meta.name );
+    await E2EuiTools.setInputBoxValue('app-eventalertpolicies .neweventalertpolicy-name.ui-inputtext', monitoringAlertPolicy.meta.name);
+    const fieldSelectorCriterias: FieldSelectorCriteria[] = [];
+    monitoringAlertPolicy.spec.requirements.forEach((req) => {
+      fieldSelectorCriterias.push({
+        key: req.key,
+        operator: req.operator,
+        value: req.values.join(',')
+      });
+    });
+    await appPage.setFieldSelectorValues(fieldSelectorCriterias, 0, true);
+    // click save button
+    await E2EuiTools.clickElement('.toolbar-button.global-button-primary.eventalertpolicies-button-eventalertpolicy-SAVE');
+  }
 
-     // click save button
-     await E2EuiTools.clickElement('.toolbar-button.global-button-primary.eventalertpolicies-button-eventalertpolicy-SAVE');
+  async updateventAlertPolicy(monitoringAlertPolicy: IMonitoringAlertPolicy) {
+    await this.openEventAlertPolicyPage();
+    const tsTableRowActionUpdateButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringAlertPolicy.meta.name) + ' .global-table-action-icon.mat-icon[mattooltip="Edit policy"]';
+    await E2EuiTools.clickElement(tsTableRowActionUpdateButtonCSS);
+    await browser.sleep(5000); // wait update panel show up
+
+    const dropdownCSS = 'app-eventalertpolicies  app-neweventalertpolicy .neweventalertpolicy-container p-dropdown[formControlName="severity"] .ui-dropdown-trigger > span';
+    await E2EuiTools.setDropdownValue(monitoringAlertPolicy.spec.severity, 0, dropdownCSS);
+    // click update-save button
+    await E2EuiTools.clickElement('app-eventalertpolicies app-neweventalertpolicy .neweventalertpolicy-buttoncontainer div:nth-child(1) > span');
+  }
+
+  async verifyEventAlertPolicy(monitoringAlertPolicy: IMonitoringAlertPolicy, severityValueCSS: string, elementValue: string, isToOpenEventPolicyPage: boolean = false) {
+    if (isToOpenEventPolicyPage) {
+      await this.openEventAlertPolicyPage();
+    }
+    const tsTableRowActionUpdateButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringAlertPolicy.meta.name) + ' .global-table-action-icon.mat-icon[mattooltip="Edit policy"]';
+    await E2EuiTools.clickElement(tsTableRowActionUpdateButtonCSS);
+    await browser.sleep(5000); // wait update panel show up
+
+    const uiValue = await element(by.css(severityValueCSS)).getText();
+    expect(uiValue === elementValue).toBeTruthy('EventAlert Policy severity value should be updated properly');
   }
 
   async deleteEventAlertPolicy(monitoringAlertPolicy: IMonitoringAlertPolicy) {
-    await this.openEventPolicyPage();
+    await this.openEventAlertPolicyPage();
     const tsTableRowActionDeleteButtonCSS = E2EuiTools.getTableEditViewTableRowActionTDCSS(monitoringAlertPolicy.meta.name) + ' .global-table-action-icon.mat-icon[mattooltip="Delete policy"]';
     await E2EuiTools.clickElement(tsTableRowActionDeleteButtonCSS);
     await browser.sleep(5000); // wait for alert pop-up
@@ -124,7 +190,7 @@ export class Alertsevents {
   }
 
 
-  private async openEventPolicyPage() {
+  private async openEventAlertPolicyPage() {
     // click 'Alert Policy' button
     await E2EuiTools.clickElement('.toolbar-button.global-button-primary.alertsevents-button');
     await browser.sleep(2000);

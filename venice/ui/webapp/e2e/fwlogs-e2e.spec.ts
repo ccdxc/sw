@@ -40,13 +40,16 @@ describe('venice-ui fwlogs', () => {
    */
   it('should have firewall log records in the table', async () => {
     const tableData = await appPage.getTableContent();
-    expect(tableData.length > 0).toBeTruthy('firewall log should have records');
-    const randomIndex = Math.floor(Math.random() * (tableData.length - 1)); // randomly pick a row between 0-10
-    const rowValues = tableData[randomIndex];
-    sourcePorts = rowValues[3];
-    destPorts = rowValues[4];
-    console.log('Get fwLog table search ports. ' + sourcePorts + ' ' + destPorts);
-    await browser.sleep(5000);
+    expect(tableData.length > 0).toBeTruthy('firewall log should always have records');
+    if (tableData.length > 0) {
+      // if Venice just starts up, there might be no fw-log record at all
+      const randomIndex = Math.floor(Math.random() * (tableData.length - 1)); // randomly pick a row between 0-10
+      const rowValues = tableData[randomIndex];
+      sourcePorts = rowValues[3];
+      destPorts = rowValues[4];
+      console.log('Get fwLog table search ports. ' + sourcePorts + ' ' + destPorts);
+      await browser.sleep(5000);
+    }
   });
 
   it('should search fwlogs ', async () => {
@@ -54,7 +57,7 @@ describe('venice-ui fwlogs', () => {
     browser.sleep(3000);
     const tableLenght = await appPage.getTableRowLength();
     if (tableLenght === 0) {
-      console.log('fwlog table has no data');
+      console.log('fwlog table has no data. We can not search record');
       expect(tableLenght).toBe(0, 'firewall log has no record');
     } else {
       await E2EuiTools.setInputBoxValue('.fwlogs .fwlogs-search .fwlogs-inputport.ui-inputtext[formcontrolname="source-ports"]', sourcePorts);

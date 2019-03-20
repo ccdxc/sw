@@ -22,14 +22,14 @@ describe('venice-ui alertsevents', () => {
       },
       'spec': {
         'resource': 'Event',
-        'severity': 'INFO',
+        'severity': 'Critical', // must match the event.severity dropdown option text
         'message': '',
         'requirements': [
           {
-            'key': 'severity',
-            'operator': 'in',
+            'key': 'severity',  // severity will bring up multi-select in field-selector.value part.
+            'operator': 'equals',
             'values': [
-              'CRITICAL'
+              'Critical'  // has to match multi-select option text
             ]
           }
         ],
@@ -130,6 +130,15 @@ describe('venice-ui alertsevents', () => {
     await browser.sleep(5000);
   });
 
+  it('should update Event-Alert Policy record', async () => {
+    await alertseventsPage.updateventAlertPolicy(monitoringAlertPolicy);
+    await browser.sleep(2000); // wait for web-socket to refresh data.
+    const severityValueCSS = 'app-eventalertpolicies  app-neweventalertpolicy .neweventalertpolicy-container p-dropdown[formControlName="severity"] label';
+   const  targetValue =  'Critical';
+    await alertseventsPage.verifyEventAlertPolicy(monitoringAlertPolicy, severityValueCSS, targetValue);
+    await browser.sleep(5000);
+  });
+
   it('should delete Event-Alert Policy record', async () => {
     await alertseventsPage.deleteEventAlertPolicy(monitoringAlertPolicy);
     await browser.sleep(2000); // wait for web-socket to refresh data.
@@ -143,6 +152,19 @@ describe('venice-ui alertsevents', () => {
     await alertseventsPage.createAlertDestination(monitoringAlertDestination);
     await browser.sleep(2000); // wait for web-socket to refresh data.
     await E2EuiTools.verifyRecordAddRemoveInTable(monitoringAlertDestination.meta.name, true);
+    await browser.sleep(5000);
+
+  });
+
+  it('should update Alert Destination record', async () => {
+    // for debug: monitoringAlertDestination.meta.name = 'alertDestination-a1e6';
+    const newTransportValue = 'TCP/8000';
+    const elementCSS = 'app-newdestination .syslog-input.ui-inputtext[formcontrolname="transport"]' ;
+    monitoringAlertDestination.spec['syslog-export'].targets[0].transport = newTransportValue;
+    await alertseventsPage.updateAlertDestination(monitoringAlertDestination, elementCSS, newTransportValue);
+    await browser.sleep(2000); // wait for web-socket to refresh data.
+
+    await alertseventsPage.verifyAlertDestination(monitoringAlertDestination, elementCSS, newTransportValue);
     await browser.sleep(5000);
 
   });

@@ -91,7 +91,7 @@ export class AppPage {
     return list; // all data in table. It is a maxtrix.
   }
 
-  async getTableContent( hasLimit: boolean = false ) {
+  async getTableContent(hasLimit: boolean = false) {
     const EC = protractor.ExpectedConditions;
     await browser.wait(element(by.css('.ui-table-scrollable-body-table tbody tr td')).isPresent(), 5000);
     // Let rendering finish
@@ -140,9 +140,23 @@ export class AppPage {
     await operatorSelectorArrows[rowIndex].click();
   }
 
+  async _openFieldSelectorValueDropDownPanel(rowIndex: number = 0 ) {
+    const valueSelectorArrows = await element.all(by.css(this.containerCSS + ' ' + '.repeater-selector.repeater-value .ui-multiselect-trigger.ui-corner-right > span'));
+    await valueSelectorArrows[rowIndex].click();
+  }
+
   async _setFieldSelectorValueInput(value: string, rowIndex: number = 0) {
     const valueInputs = await element.all(by.css(this.containerCSS + ' ' + '.repeater-selector.repeater-value .repeater-input.ui-inputtext'));
     await valueInputs[rowIndex].sendKeys(value);
+  }
+
+  async _setFieldSelectorValueMultiSelect(value: string, index: number, myValueCSS: string = null) {
+    const valueCSS = (myValueCSS) ? myValueCSS : '.ng-trigger.ng-trigger-overlayAnimation.ui-multiselect-panel.ui-widget .ui-multiselect-items-wrapper > ul > li > label';
+    await this._openFieldSelectorValueDropDownPanel(index);
+    const opsElements = await element.all(by.css(valueCSS));
+    const opsTexts = await element.all(by.css(valueCSS)).getText();
+    const opOption = E2EuiTools.findElementFinder(opsElements, opsTexts, value);
+    await opOption.click();
   }
 
   async _setFieldSelectorOperator(operator: string, index: number, myopCSS: string = null) {
@@ -195,7 +209,7 @@ export class AppPage {
    * @param fieldSelectorCriterias
    * @param startRowIndex
    */
-  async setFieldSelectorValues(fieldSelectorCriterias: FieldSelectorCriteria[], startRowIndex = 0) {
+  async setFieldSelectorValues(fieldSelectorCriterias: FieldSelectorCriteria[], startRowIndex = 0, valueIsDropDown: boolean = false) {
     await this.addRepeaterRows(fieldSelectorCriterias, startRowIndex);
 
     for (let i = 0; i < fieldSelectorCriterias.length; i++) {
@@ -207,12 +221,16 @@ export class AppPage {
       await browser.sleep(2000); // This wait is important as key change will invoke reload operators.
 
       await this._setFieldSelectorOperator(fieldSelectorCriteria.operator, startRowIndex + i);
+      if (valueIsDropDown) {
+        await this._setFieldSelectorValueMultiSelect(fieldSelectorCriteria.value, startRowIndex + i);
+      } else {
       // set Field selector value
       await this._setFieldSelectorValueInput(fieldSelectorCriteria.value, startRowIndex + i);
-      await browser.sleep(1000);
     }
-
+    await browser.sleep(1000);
   }
+
+}
 
   /**
    * Click "ADD" sign multiple times.
@@ -225,31 +243,31 @@ export class AppPage {
    *
    */
   private async addRepeaterRows(fieldSelectorCriterias: FieldSelectorCriteria[], startRowIndex: number) {
-    const addSigns = await element.all(by.css(this.containerCSS + ' ' + '.repeater-and >span'));
-    let addClickTimes = fieldSelectorCriterias.length;
-    if (startRowIndex === 0) {
-      addClickTimes = addClickTimes - 1;
-    }
-    const lastAddSign = (startRowIndex === 0) ? addSigns[0] : addSigns[startRowIndex - 1];
-    for (let i = 0; i < addClickTimes; i++) {
-      await lastAddSign.click();
-    }
+  const addSigns = await element.all(by.css(this.containerCSS + ' ' + '.repeater-and >span'));
+  let addClickTimes = fieldSelectorCriterias.length;
+  if (startRowIndex === 0) {
+    addClickTimes = addClickTimes - 1;
   }
-
-  async setLabelSelectorValues(fieldSelectorCriterias: FieldSelectorCriteria[], startRowIndex = 0) {
-    await this.addRepeaterRows(fieldSelectorCriterias, startRowIndex);
-
-    for (let i = 0; i < fieldSelectorCriterias.length; i++) {
-      const fieldSelectorCriteria = fieldSelectorCriterias[i];
-
-      // set Label selector KEY
-      await this._setLabelSelectorKey(fieldSelectorCriteria.key, startRowIndex + i);
-
-      await this._setLabelSelectorOperator(fieldSelectorCriteria.operator, startRowIndex + i);
-      // set Label selector value
-      await this._setLabelSelectorValueInput(fieldSelectorCriteria.value, startRowIndex + i);
-      await browser.sleep(1000);
-    }
+  const lastAddSign = (startRowIndex === 0) ? addSigns[0] : addSigns[startRowIndex - 1];
+  for (let i = 0; i < addClickTimes; i++) {
+    await lastAddSign.click();
   }
+}
+
+async setLabelSelectorValues(fieldSelectorCriterias: FieldSelectorCriteria[], startRowIndex = 0) {
+  await this.addRepeaterRows(fieldSelectorCriterias, startRowIndex);
+
+  for (let i = 0; i < fieldSelectorCriterias.length; i++) {
+    const fieldSelectorCriteria = fieldSelectorCriterias[i];
+
+    // set Label selector KEY
+    await this._setLabelSelectorKey(fieldSelectorCriteria.key, startRowIndex + i);
+
+    await this._setLabelSelectorOperator(fieldSelectorCriteria.operator, startRowIndex + i);
+    // set Label selector value
+    await this._setLabelSelectorValueInput(fieldSelectorCriteria.value, startRowIndex + i);
+    await browser.sleep(1000);
+  }
+}
 
 }

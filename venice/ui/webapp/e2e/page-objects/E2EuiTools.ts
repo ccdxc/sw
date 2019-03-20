@@ -52,6 +52,7 @@ export class E2EuiTools {
         return new Error(JSON.stringify(obj, null, 2));
     }
 
+
     public static async setDropdownValue(dropdownValue: string, index: number, dropdownArrowCSS: string, dropdownOptionCSS: string = null) {
         const opCSS = (dropdownOptionCSS) ? dropdownOptionCSS : '.ng-trigger.ng-trigger-overlayAnimation.ui-dropdown-panel.ui-widget .ui-dropdown-items-wrapper .ui-dropdown-item > span';
         await this.openDropdownPanel(dropdownArrowCSS, index);
@@ -101,6 +102,7 @@ export class E2EuiTools {
             await elementInput.sendKeys(values[i]);
         }
     }
+
 
     public static async setMultiSelectDropdownValue(selectedValues: string[], index: number, dropdownArrowCSS: string, dropdownOptionCSS: string = null, useDoubleClick: boolean = false) {
         const opCSS = (dropdownOptionCSS) ? dropdownOptionCSS : '.ng-trigger.ng-trigger-overlayAnimation.ui-multiselect-panel.ui-widget.ui-widget-content .ui-multiselect-items-wrapper label';
