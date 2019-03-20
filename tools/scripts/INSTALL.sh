@@ -33,6 +33,19 @@ function cleanupNode() {
         fi
 }
 
+function elasticSysctl() {
+    TARGET_KEY="vm.max_map_count"
+    CONFIG_FILE="/etc/sysctl.conf"
+    REPLACEMENT_VALUE=262144
+
+    if ${SUDO} grep -q "^[ ^I]*$TARGET_KEY[ ^I]*=" "$CONFIG_FILE"; then
+        ${SUDO} sed -i -e "s^A^\\([ ^I]*$TARGET_KEY[ ^I]*=[ ^I]*\\).*$^A\\1$REPLACEMENT_VALUE^A" "$CONFIG_FILE"
+    else
+        ${SUDO} echo "$TARGET_KEY = $REPLACEMENT_VALUE" >> "$CONFIG_FILE"
+    fi
+    ${SUDO} sysctl -p
+}
+
 if [ "$(id -u)" != "0" ]
 then
     SUDO="sudo"
@@ -52,6 +65,7 @@ fi
 for i in tars/pen* ; do docker load -i  $i; done
 docker run --rm --name pen-install -v /var/log/pensando:/host/var/log/pensando -v /var/lib/pensando:/host/var/lib/pensando -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript
 
+elasticSysctl
 
 ${SUDO} systemctl stop chronyd || echo
 ${SUDO} systemctl disable chronyd || echo

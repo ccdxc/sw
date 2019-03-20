@@ -181,6 +181,8 @@ func (t *tInfo) teardown() {
 
 	// remove the local persistent events store
 	t.logger.Infof("removing events store %s", t.storeConfig.Dir)
+	t.mockResolver.Stop()
+	t.mockResolver = nil
 
 	os.RemoveAll(t.storeConfig.Dir)
 }
@@ -209,6 +211,20 @@ func (t *tInfo) startElasticsearch() error {
 // updateResolver helper function to update mock resolver with the given service and URL
 func (t *tInfo) updateResolver(serviceName, url string) {
 	t.mockResolver.AddServiceInstance(&types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: serviceName,
+		},
+		Service: serviceName,
+		URL:     url,
+	})
+}
+
+// removeResolverEntry helper function to remove entry from mock resolver
+func (t *tInfo) removeResolverEntry(serviceName, url string) {
+	t.mockResolver.DeleteServiceInstance(&types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstance",
 		},

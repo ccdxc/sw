@@ -2475,6 +2475,7 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			time.Sleep(3 * time.Second)
 			testutils.StopElasticsearch(ti.elasticsearchName, ti.elasticsearchDir)
+			ti.removeResolverEntry(globals.ElasticSearch, ti.elasticsearchAddr)
 
 			// let elasticsearch come up on the same port as before.
 			// so, wait for the port to become available
