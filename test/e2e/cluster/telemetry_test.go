@@ -270,6 +270,14 @@ func writeFwlogs(logs []*telemetry_query.Fwlog) error {
 	return nil
 }
 
+func GetCitadelState() {
+	node := ts.tu.QuorumNodes[rand.Intn(len(ts.tu.QuorumNodes))]
+	nodeIP := ts.tu.NameToIPMap[node]
+	url := fmt.Sprintf("http://%s:%s", globals.Localhost, globals.CitadelHTTPPort)
+	res := ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl %s/info`, url))
+	log.Info(res)
+}
+
 // writePoints writes points to citadel using inflxdb client
 func writePoints(url string, bp client.BatchPoints) {
 	rand.Seed(time.Now().Unix())
@@ -287,6 +295,7 @@ func writePoints(url string, bp client.BatchPoints) {
 		if strings.HasPrefix(res, "20") {
 			return true
 		}
+		GetCitadelState()
 		return false
 	}, 10, 1).Should(BeTrue(), "Failed to write logs")
 }
