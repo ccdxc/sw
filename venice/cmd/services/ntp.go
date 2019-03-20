@@ -24,6 +24,7 @@ initstepslew 10 {{.}}
 
 makestep 1 3
 rtcsync
+rtconutc
 local stratum 10
 allow
 `

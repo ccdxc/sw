@@ -46,6 +46,18 @@ function elasticSysctl() {
     ${SUDO} sysctl -p
 }
 
+function disableNTP() {
+    ${SUDO} systemctl stop chronyd || echo
+    ${SUDO} systemctl disable chronyd || echo
+    ${SUDO} systemctl stop systemd-timesyncd.service || echo
+    ${SUDO} systemctl disable systemd-timesyncd.service || echo
+}
+
+function clockSettings() {
+    ${SUDO}  timedatectl set-local-rtc 0
+    ${SUDO}  hwclock -wu
+}
+
 if [ "$(id -u)" != "0" ]
 then
     SUDO="sudo"
@@ -62,13 +74,13 @@ then
     exit 0
 fi
 
+elasticSysctl
+disableNTP
+clockSettings
+
 for i in tars/pen* ; do docker load -i  $i; done
 docker run --rm --name pen-install -v /var/log/pensando:/host/var/log/pensando -v /var/lib/pensando:/host/var/lib/pensando -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript
 
-elasticSysctl
-
-${SUDO} systemctl stop chronyd || echo
-${SUDO} systemctl disable chronyd || echo
 ${SUDO} systemctl daemon-reload
 ${SUDO} systemctl enable pensando.target
 ${SUDO} systemctl start pensando.target

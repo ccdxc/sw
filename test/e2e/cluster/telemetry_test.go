@@ -275,6 +275,7 @@ func writePoints(url string, bp client.BatchPoints) {
 	rand.Seed(time.Now().Unix())
 	node := ts.tu.QuorumNodes[rand.Intn(len(ts.tu.QuorumNodes))]
 	nodeIP := ts.tu.NameToIPMap[node]
+	By(fmt.Sprintf("Selecting node %s to write points", node))
 	points := bp.Points()
 	pointsStr := []string{}
 	for _, p := range points {
