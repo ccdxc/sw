@@ -10,6 +10,14 @@ def Setup(tc):
 def Trigger(tc):
     tc.cmd_cookies = []
 
+    pairs = api.GetRemoteWorkloadPairs()
+    w1 = pairs[0][0]
+    w2 = pairs[0][1]
+
+    if w1.IsNaples() and w2.IsNaples():
+        api.Logger.info("naples-naples unsupported currently for tcp-proxy")
+        return api.types.status.DISABLED
+
     store_proxy_objects = netagent_cfg_api.QueryConfigs(kind='TCPProxyPolicy')
     if len(store_proxy_objects) == 0:
         api.Logger.error("No tcp proxy objects in store")
@@ -24,10 +32,6 @@ def Trigger(tc):
     if len(get_config_objects) == 0:
         api.Logger.error("Unable to fetch newly pushed objects")
         return api.types.status.FAILURE
-
-    pairs = api.GetRemoteWorkloadPairs()
-    w1 = pairs[0][0]
-    w2 = pairs[0][1]
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
@@ -73,6 +77,9 @@ def Trigger(tc):
     return api.types.status.SUCCESS
     
 def Verify(tc):
+    nodes = api.GetWorkloadNodeHostnames()
+    if api.IsNaplesNode(nodes[0]) and api.IsNaplesNode(nodes[1]):
+        return api.types.status.DISABLED
     if tc.resp is None:
         return api.types.status.FAILURE
 
