@@ -32,7 +32,7 @@ func versionToInt(v string) int {
 }
 
 // convertRules need not handle validation as the rules are already validate by the precommit api server hook
-func convertRules(veniceRules []security.SGRule) (agentRules []netproto.PolicyRule) {
+func convertRules(veniceRules []security.SGRule, sgPolicyKey string) (agentRules []netproto.PolicyRule) {
 	for _, v := range veniceRules {
 		a := netproto.PolicyRule{
 			Action: v.Action,
@@ -46,7 +46,7 @@ func convertRules(veniceRules []security.SGRule) (agentRules []netproto.PolicyRu
 				AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
 			},
 			AppName: strings.Join(v.Apps, ", "),
-			ID:      generateRuleHash(v),
+			ID:      generateRuleHash(v, sgPolicyKey),
 		}
 		agentRules = append(agentRules, a)
 	}
@@ -69,9 +69,10 @@ func convertAppConfig(apps []string, protoPorts []security.ProtoPort) (agentAppC
 }
 
 // generateRuleHash generates the hash of the rule
-func generateRuleHash(r security.SGRule) uint64 {
+func generateRuleHash(r security.SGRule, key string) uint64 {
 	h := fnv.New64()
 	rule, _ := r.Marshal()
+	rule = append(rule, []byte(key)...)
 	h.Write(rule)
 	return h.Sum64()
 }
@@ -84,7 +85,7 @@ func convertSGPolicy(sgp *SgpolicyState) *netproto.SGPolicy {
 		Spec: netproto.SGPolicySpec{
 			AttachTenant: sgp.SGPolicy.Spec.AttachTenant,
 			AttachGroup:  sgp.SGPolicy.Spec.AttachGroups,
-			Rules:        convertRules(sgp.SGPolicy.Spec.Rules),
+			Rules:        convertRules(sgp.SGPolicy.Spec.Rules, sgp.GetKey()),
 		},
 	}
 

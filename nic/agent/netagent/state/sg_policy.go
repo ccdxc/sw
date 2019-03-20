@@ -72,7 +72,8 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	for i, r := range sgp.Spec.Rules {
-		ruleHash := generateHash(&r)
+		key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
+		ruleHash := generateRuleHash(&r, key)
 		sgp.Spec.Rules[i].ID = ruleHash
 		if len(r.AppName) > 0 {
 			meta := api.ObjectMeta{
@@ -210,7 +211,7 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 
 	// Recompute hash
 	for i, r := range sgp.Spec.Rules {
-		ruleHash := generateHash(&r)
+		ruleHash := generateRuleHash(&r, sgp.GetKey())
 		sgp.Spec.Rules[i].ID = ruleHash
 		if len(r.AppName) > 0 {
 			meta := api.ObjectMeta{
@@ -341,10 +342,11 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 	return err
 }
 
-//generateHash generates rule hash for policy rule
-func generateHash(r *netproto.PolicyRule) uint64 {
+//generateRuleHash generates rule hash for policy rule
+func generateRuleHash(r *netproto.PolicyRule, key string) uint64 {
 	h := fnv.New64()
 	rule, _ := r.Marshal()
+	rule = append(rule, []byte(key)...)
 	h.Write(rule)
 	return h.Sum64()
 }
