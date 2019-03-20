@@ -85,7 +85,6 @@ func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
 		Spec: cluster.HostSpec{
 			SmartNICs: []cluster.SmartNICID{
 				{
-					Name:       n.NodeName,
 					MACAddress: naples.smartNic.Status.PrimaryMAC,
 				},
 			},

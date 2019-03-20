@@ -222,7 +222,44 @@ func (it *veniceIntegSuite) CheckNICVersionForAdmission(nicSku string, nicVersio
 
 // getNaplesMac returns naples mac for a naples instance
 func (it *veniceIntegSuite) getNaplesMac(nidx int) string {
-	return fmt.Sprintf("00:AE:CD:01:02:%02d", nidx+3)
+	return fmt.Sprintf("00:AE:CD:01:%02d:01", nidx)
+}
+
+func (it *veniceIntegSuite) createHostObjects() {
+	for i := 0; i < it.config.NumHosts; i++ {
+		hostName := fmt.Sprintf("host%d", i)
+
+		host := &pencluster.Host{
+			ObjectMeta: api.ObjectMeta{
+				Name: hostName,
+			},
+			Spec: pencluster.HostSpec{
+				SmartNICs: []pencluster.SmartNICID{
+					{
+						MACAddress: it.getNaplesMac(i),
+					},
+				},
+			},
+		}
+
+		_, err := it.apisrvClient.ClusterV1().Host().Create(it.ctx, host)
+		if err != nil {
+			log.Fatalf("Error creating Host object %v, err: %v", host, err)
+		}
+	}
+}
+
+func (it *veniceIntegSuite) deleteHostObjects() {
+	hosts, err := it.apisrvClient.ClusterV1().Host().List(it.ctx, &api.ListWatchOptions{})
+	if err != nil {
+		log.Fatalf("Couldn't get the list of host objects")
+	}
+	for _, h := range hosts {
+		_, err := it.apisrvClient.ClusterV1().Host().Delete(it.ctx, &h.ObjectMeta)
+		if err != nil {
+			log.Fatalf("Couldn't delete host object %+v", h)
+		}
+	}
 }
 
 func (it *veniceIntegSuite) launchCMDServer() {
@@ -275,28 +312,8 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		hostID := it.agents[i].NetworkAgent.NodeUUID
 		restURL := "localhost:0"
 		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
-		hostName := fmt.Sprintf("host%d", i)
-
-		// create a host object
-		host := &pencluster.Host{
-			ObjectMeta: api.ObjectMeta{
-				Name: hostName,
-			},
-			Spec: pencluster.HostSpec{
-				SmartNICs: []pencluster.SmartNICID{
-					{
-						MACAddress: it.getNaplesMac(i),
-					},
-				},
-			},
-		}
 
 		tutils.CreateFruJSON(it.getNaplesMac(i))
-
-		_, err := it.apisrvClient.ClusterV1().Host().Create(it.ctx, host)
-		if err != nil {
-			log.Fatalf("Error creating Host object %v, err: %v", host, err)
-		}
 
 		// create a platform agent
 		pa, err := platform.NewNaplesPlatformAgent()

@@ -38,7 +38,6 @@ var scaleCfgenParams = &Cfgen{
 			Spec: cluster.HostSpec{
 				SmartNICs: []cluster.SmartNICID{
 					{
-						Name:       "naples-{{iter-hostid:1001-2000}}",
 						MACAddress: "{{mac}}",
 					},
 				},

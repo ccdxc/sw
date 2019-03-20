@@ -16,7 +16,6 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
-	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -27,50 +26,14 @@ type clusterHooks struct {
 	logger log.Logger
 }
 
-// errInvalidHostConfig returns error associated with invalid hostname
-func (cl *clusterHooks) errInvalidHostConfig(host string) error {
-	return fmt.Errorf("mis-configured host policy, invalid hostname: %s", host)
-}
-
-// errInvalidMacConfig returns error associated with invalid mac-address
-func (cl *clusterHooks) errInvalidMacConfig(mac string) error {
-	return fmt.Errorf("mis-configured host policy, invalid mac address: %s", mac)
-}
-
 // errInvalidTenantConfig returns error associated with invalid tenant
 func (cl *clusterHooks) errInvalidTenantConfig() error {
 	return fmt.Errorf("invalid config, tenant should be empty")
 }
 
-// Validate the Host config
-func (cl *clusterHooks) validateHostConfig(i interface{}, ver string, ignStatus bool) []error {
-	var err []error
-	obj, ok := i.(cluster.Host)
-	if !ok {
-		return []error{fmt.Errorf("incorrect object type, expected host object")}
-	}
-
-	// validate the host object name
-	if vldtor.HostAddr(obj.Name) == false {
-		cl.logger.Errorf("Invalid host: %s", obj.Name)
-		err = append(err, cl.errInvalidHostConfig(obj.Name))
-	}
-
-	// validate tenant
-	if obj.Tenant != "" || len(obj.Tenant) != 0 {
-		err = append(err, cl.errInvalidTenantConfig())
-	}
-
-	// validate the mac address in the interface spec
-	for ii := range obj.Spec.SmartNICs {
-		mackey := obj.Spec.SmartNICs[ii].MACAddress
-		if vldtor.MacAddr(mackey) == false {
-			cl.logger.Errorf("Invalid mac key: %s", mackey)
-			err = append(err, cl.errInvalidMacConfig(mackey))
-		}
-	}
-
-	return err
+// errInvalidNamespaceConfig returns error associated with invalid namespace
+func (cl *clusterHooks) errInvalidNamespaceConfig() error {
+	return fmt.Errorf("invalid config, namespace should be empty")
 }
 
 // Validate the Node config
@@ -403,8 +366,8 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	r := clusterHooks{}
 	r.logger = logger.WithContext("Service", "ClusterHooks")
 	logger.Log("msg", "registering Hooks for cluster apigroup")
-	svc.GetCrudService("Host", apiintf.CreateOper).GetRequestType().WithValidate(r.validateHostConfig)
-	svc.GetCrudService("Host", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateHostConfig)
+	svc.GetCrudService("Host", apiintf.CreateOper).WithPreCommitHook(r.hostPreCommitHook).GetRequestType().WithValidate(r.validateHostConfig)
+	svc.GetCrudService("Host", apiintf.UpdateOper).WithPreCommitHook(r.hostPreCommitHook).GetRequestType().WithValidate(r.validateHostConfig)
 	svc.GetCrudService("Node", apiintf.CreateOper).GetRequestType().WithValidate(r.validateNodeConfig)
 	svc.GetCrudService("Node", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateNodeConfig)
 	svc.GetCrudService("Cluster", apiintf.CreateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).GetRequestType().WithValidate(r.validateClusterConfig)

@@ -143,6 +143,9 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 }
 
 func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
+	it.createHostObjects()
+	defer it.deleteHostObjects()
+
 	wrloads := make([]workload.Workload, it.config.NumHosts)
 
 	ctx, err := it.loggedInCtx()

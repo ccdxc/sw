@@ -16,6 +16,9 @@ import (
 )
 
 func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
+	it.createHostObjects()
+	defer it.deleteHostObjects()
+
 	wrloads := make([]workload.Workload, it.config.NumHosts)
 
 	ctx, err := it.loggedInCtx()
