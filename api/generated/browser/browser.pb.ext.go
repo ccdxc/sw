@@ -242,7 +242,11 @@ func init() {
 		m := i.(*BrowseRequest)
 
 		if _, ok := QueryType_value[m.QueryType]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"QueryType")
+			vals := []string{}
+			for k1, _ := range QueryType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"QueryType", vals)
 		}
 		return nil
 	})
@@ -264,7 +268,11 @@ func init() {
 		m := i.(*Object)
 
 		if _, ok := QueryType_value[m.QueryType]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"QueryType")
+			vals := []string{}
+			for k1, _ := range QueryType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"QueryType", vals)
 		}
 		return nil
 	})
@@ -274,7 +282,11 @@ func init() {
 		m := i.(*Object_URIs)
 
 		if _, ok := ReferenceTypes_value[m.RefType]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"RefType")
+			vals := []string{}
+			for k1, _ := range ReferenceTypes_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"RefType", vals)
 		}
 		return nil
 	})

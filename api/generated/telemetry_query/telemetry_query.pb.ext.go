@@ -566,7 +566,11 @@ func init() {
 		m := i.(*Fwlog)
 
 		if _, ok := FwlogActions_value[m.Action]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Action")
+			vals := []string{}
+			for k1, _ := range FwlogActions_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Action", vals)
 		}
 		return nil
 	})
@@ -575,7 +579,11 @@ func init() {
 		m := i.(*Fwlog)
 
 		if _, ok := FwlogDirections_value[m.Direction]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Direction")
+			vals := []string{}
+			for k1, _ := range FwlogDirections_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Direction", vals)
 		}
 		return nil
 	})
@@ -586,7 +594,11 @@ func init() {
 
 		for k, v := range m.Actions {
 			if _, ok := FwlogActions_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Actions", k)
+				vals := []string{}
+				for k1, _ := range FwlogActions_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Actions", k, vals)
 			}
 		}
 		return nil
@@ -622,7 +634,11 @@ func init() {
 
 		for k, v := range m.Directions {
 			if _, ok := FwlogDirections_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Directions", k)
+				vals := []string{}
+				for k1, _ := range FwlogDirections_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Directions", k, vals)
 			}
 		}
 		return nil
@@ -632,7 +648,11 @@ func init() {
 		m := i.(*FwlogsQuerySpec)
 
 		if _, ok := SortOrder_value[m.SortOrder]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"SortOrder")
+			vals := []string{}
+			for k1, _ := range SortOrder_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"SortOrder", vals)
 		}
 		return nil
 	})
@@ -680,7 +700,11 @@ func init() {
 		m := i.(*MetricsQuerySpec)
 
 		if _, ok := TsdbFunctionType_value[m.Function]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Function")
+			vals := []string{}
+			for k1, _ := range TsdbFunctionType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Function", vals)
 		}
 		return nil
 	})
@@ -723,7 +747,11 @@ func init() {
 		m := i.(*MetricsQuerySpec)
 
 		if _, ok := SortOrder_value[m.SortOrder]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"SortOrder")
+			vals := []string{}
+			for k1, _ := range SortOrder_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"SortOrder", vals)
 		}
 		return nil
 	})

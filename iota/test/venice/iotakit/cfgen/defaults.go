@@ -49,8 +49,9 @@ var scaleCfgenParams = &Cfgen{
 		WorkloadTemplate: &workload.Workload{
 			TypeMeta: api.TypeMeta{Kind: "Workload"},
 			ObjectMeta: api.ObjectMeta{
-				Tenant: "default",
-				Name:   "workload-host{{iter-hostid}}-w{{iter-worloadid}}",
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      "workload-host{{iter-hostid}}-w{{iter-worloadid}}",
 			},
 			Spec: workload.WorkloadSpec{
 				HostName: "host-{{iter:hostid}}",
@@ -156,9 +157,7 @@ var smartNicTemplate = &cluster.SmartNIC{
 		Kind: "SmartNIC",
 	},
 	ObjectMeta: api.ObjectMeta{
-		Tenant:    "default",
-		Name:      "{{mac:00.ac.dd}}",
-		Namespace: "default",
+		Name: "{{mac:00.ac.dd}}",
 	},
 	Spec: cluster.SmartNICSpec{
 		Hostname: "host-{{iter}}",

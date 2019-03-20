@@ -52,9 +52,13 @@ func (m *Tenant) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Tenant) Defaults(ver string) bool {
+	var ret bool
 	m.Kind = "Tenant"
-	m.Tenant, m.Namespace = "", ""
-	return false
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -110,6 +114,9 @@ func (m *Tenant) Validate(ver, path string, ignoreStatus bool) []error {
 
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Tenant"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Tenant"))
 	}
 
 	{

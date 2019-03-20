@@ -784,7 +784,11 @@ func init() {
 		m := i.(*PolicySearchResponse)
 
 		if _, ok := PolicySearchResponse_MatchStatus_value[m.Status]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
+			vals := []string{}
+			for k1, _ := range PolicySearchResponse_MatchStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
 		}
 		return nil
 	})
@@ -795,7 +799,11 @@ func init() {
 
 		for k, v := range m.Categories {
 			if _, ok := Category_Type_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Categories", k)
+				vals := []string{}
+				for k1, _ := range Category_Type_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Categories", k, vals)
 			}
 		}
 		return nil
@@ -819,7 +827,11 @@ func init() {
 
 		for k, v := range m.Kinds {
 			if _, ok := Kind_Type_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Kinds", k)
+				vals := []string{}
+				for k1, _ := range Kind_Type_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Kinds", k, vals)
 			}
 		}
 		return nil
@@ -867,7 +879,11 @@ func init() {
 		m := i.(*SearchRequest)
 
 		if _, ok := SearchRequest_RequestMode_value[m.Mode]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Mode")
+			vals := []string{}
+			for k1, _ := range SearchRequest_RequestMode_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Mode", vals)
 		}
 		return nil
 	})
@@ -900,7 +916,11 @@ func init() {
 		m := i.(*SearchRequest)
 
 		if _, ok := SearchRequest_SortOrderEnum_value[m.SortOrder]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"SortOrder")
+			vals := []string{}
+			for k1, _ := range SearchRequest_SortOrderEnum_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"SortOrder", vals)
 		}
 		return nil
 	})

@@ -249,6 +249,33 @@ func TestCrudOps(t *testing.T) {
 
 	// ========= TEST gRPC CRUD Operations ========= //
 	t.Logf("test GRPC crud operations")
+	{ // Create a resource with Tenant and namespace where it is not allowed and expect failure
+		pub1 := pub
+		pub1.Tenant = "default"
+		if _, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub1); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		pub1.Namespace = "default"
+		if _, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub1); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		pub1.Tenant = ""
+		if _, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub1); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		pub1.Namespace = "junk"
+		if _, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub1); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		pub1.Tenant = "junk"
+		if _, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub1); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		pub1.Namespace = ""
+		if _, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub1); err == nil {
+			t.Fatalf("expected to fail")
+		}
+	}
 	{ // --- Create resource via gRPC --- //
 		if ret, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub); err != nil {
 			t.Fatalf("failed to create publisher(%s)", err)
@@ -413,6 +440,33 @@ func TestCrudOps(t *testing.T) {
 		}
 		if order.Spec.Id != "unknown order" {
 			t.Fatalf("Not defaulted[%+v]", order)
+		}
+	}
+	{ // Create with Tenant and namespace and expect failure
+		or := order1
+		or.Tenant = "default"
+		if _, err := apicl.BookstoreV1().Order().Create(ctx, &or); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		or.Namespace = "default"
+		if _, err := apicl.BookstoreV1().Order().Create(ctx, &or); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		or.Tenant = ""
+		if _, err := apicl.BookstoreV1().Order().Create(ctx, &or); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		or.Namespace = "junk"
+		if _, err := apicl.BookstoreV1().Order().Create(ctx, &or); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		or.Tenant = "junk"
+		if _, err := apicl.BookstoreV1().Order().Create(ctx, &or); err == nil {
+			t.Fatalf("expected to fail")
+		}
+		or.Namespace = ""
+		if _, err := apicl.BookstoreV1().Order().Create(ctx, &or); err == nil {
+			t.Fatalf("expected to fail")
 		}
 	}
 	{ // ---  POST of the object via REST --- //
@@ -2175,6 +2229,33 @@ func TestStaging(t *testing.T) {
 			}
 		}
 	}
+	{ // Add more than allowed number of objects in the staging buffer and expect error
+		in := staging.ClearAction{}
+		in.Tenant = tenantName
+		in.Name = bufName
+		_, err := restcl.StagingV1().Buffer().Clear(ctx, &in)
+		if err != nil {
+			t.Fatalf("failed to Clear staging buffer %s", err)
+		}
+		cust := customers[0]
+		for i := 0; i <= 1024; i++ {
+			cust.Name = fmt.Sprintf("cust-%d", i)
+			_, err := stagecl.BookstoreV1().Customer().Create(ctx, &cust)
+			if err != nil {
+				t.Fatalf("Create of customer [%d] failed (%s)", i, err)
+			}
+		}
+		// new customer should fail
+		cust.Name = "cust-more"
+		_, err = stagecl.BookstoreV1().Customer().Create(ctx, &cust)
+		if err == nil {
+			t.Fatalf("Create of customer should have failed")
+		}
+		_, err = restcl.StagingV1().Buffer().Clear(ctx, &in)
+		if err != nil {
+			t.Fatalf("failed to Clear staging buffer %s", err)
+		}
+	}
 	{ // test restore path
 		lopts := api.ListWatchOptions{}
 		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
@@ -3080,4 +3161,66 @@ func TestSorting(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestConsistentUpdate(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	{ // create a publisher to satisfy dependency
+		pub := bookstore.Publisher{
+			ObjectMeta: api.ObjectMeta{
+				Name: "Sahara",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "Publisher",
+			},
+			Spec: bookstore.PublisherSpec{
+				Id:      "111",
+				Address: "#1 hilane, timbuktoo",
+				WebAddr: "http://sahara-books.org",
+			},
+		}
+		apicl.BookstoreV1().Publisher().Create(ctx, &pub)
+	}
+	b := bookstore.Book{}
+	b.Name = "ConsistentUpdateTest"
+	b.Spec.Category = "ChildrensLit"
+	_, err = apicl.BookstoreV1().Book().Create(ctx, &b)
+	AssertOk(t, err, "failed to create book (%s)", err)
+	var wg sync.WaitGroup
+
+	// Spawn multiple go routines to
+	updateBook := func(id string, count int) {
+		// create new client so as to truly create in parallel.
+		defer wg.Done()
+		updcl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+		if err != nil {
+			t.Fatalf("cannot create REST client")
+		}
+		AssertOk(t, err, "failed to create client [%v] (%s)", id, err)
+		b1 := b
+		for i := 0; i < count; i++ {
+			b1.Status.Inventory = int32(i)
+			_, e1 := updcl.BookstoreV1().Book().Update(ctx, &b1)
+			AssertOk(t, e1, "failed to update book")
+		}
+		updcl.Close()
+	}
+
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go updateBook(fmt.Sprintf("R%d", i), 100)
+	}
+	wg.Wait()
+
+	b1, err := apicl.BookstoreV1().Book().Get(ctx, &b.ObjectMeta)
+	AssertEquals(t, b1.Status.Inventory, int32(99), "Updated did not end up with final object")
 }

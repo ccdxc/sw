@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"strconv"
@@ -10,8 +9,7 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
-	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -30,55 +28,57 @@ type securityHooks struct {
 // `ToIPAddress` should have individual IP Address, IP Mask or hyphen separated IP Range
 // Specifying `AttachTenant` should mandatorily have `FromIPAddress` and `ToIPAddresses`
 // For `FromIPAddresses` and `ToIPAddresses` cannot be empty. If the intent is to allow all. Enforce a mandatory `any` keyword.
-func (s *securityHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+// func (s *securityHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (s *securityHooks) validateSGPolicy(i interface{}, ver string, ignoreStatus bool) []error {
 	sgp, ok := i.(security.SGPolicy)
+	ret := []error{}
 	if !ok {
-		return i, false, fmt.Errorf("invalid input type")
+		return []error{fmt.Errorf("invalid input type")}
 	}
 
 	if sgp.Spec.AttachTenant && len(sgp.Spec.AttachGroups) > 0 {
-		return i, false, fmt.Errorf("must specify a single attachment point")
+		ret = append(ret, fmt.Errorf("must specify a single attachment point"))
 	}
 
 	if sgp.Spec.AttachTenant == false && len(sgp.Spec.AttachGroups) == 0 {
-		return i, false, fmt.Errorf("must specify atleast one of attach-tenant or attach-groups")
+		ret = append(ret, fmt.Errorf("must specify a single attachment point"))
 	}
 	err := s.validateProtoPort(sgp.Spec.Rules)
 	if err != nil {
-		return i, false, err
+		ret = append(ret, err)
 	}
 
 	for _, r := range sgp.Spec.Rules {
 		if sgp.Spec.AttachTenant {
 			// AttachTenant must have To and From IPAddresses and groups
 			if len(r.FromIPAddresses) == 0 && len(r.FromSecurityGroups) == 0 {
-				return i, false, fmt.Errorf("must specify either from-ip-addresses or from-security-groups when attaching the policy at the tenant level. %v", r)
+				ret = append(ret, fmt.Errorf("must specify either from-ip-addresses or from-security-groups when attaching the policy at the tenant level. %v", r))
 			}
 			if len(r.ToIPAddresses) == 0 && len(r.ToSecurityGroups) == 0 {
-				return i, false, fmt.Errorf("must specify either to-ip-addresses or to-security-groups when attaching the policy at the tenant level. %v", r)
+				ret = append(ret, fmt.Errorf("must specify either to-ip-addresses or to-security-groups when attaching the policy at the tenant level. %v", r))
 			}
 			err := s.validateIPAddresses(r.FromIPAddresses)
 			if err != nil {
-				return i, false, fmt.Errorf("could not validate one or more ip address in %v. Error: %v", r.FromIPAddresses, err)
+				ret = append(ret, fmt.Errorf("could not validate one or more ip address in %v. Error: %v", r.FromIPAddresses, err))
 			}
 
 			err = s.validateIPAddresses(r.ToIPAddresses)
 			if err != nil {
-				return i, false, fmt.Errorf("could not validate one or more ip addresses in %v. Error: %v", r.ToIPAddresses, err)
+				ret = append(ret, fmt.Errorf("could not validate one or more ip addresses in %v. Error: %v", r.ToIPAddresses, err))
 			}
 		} else {
 			err := s.validateIPAddresses(r.ToIPAddresses)
 			if err != nil {
-				return i, false, fmt.Errorf("could not validate one or more ip addresses in to-ip-addresses %v. Error: %v", r.ToIPAddresses, err)
+				ret = append(ret, fmt.Errorf("could not validate one or more ip addresses in to-ip-addresses %v. Error: %v", r.ToIPAddresses, err))
 			}
 			err = s.validateIPAddresses(r.FromIPAddresses)
 			if err != nil {
-				return i, false, fmt.Errorf("could not validate one or more ip addresses in from-ip-addresses %v. Error: %v", r.FromIPAddresses, err)
+				ret = append(ret, fmt.Errorf("could not validate one or more ip addresses in from-ip-addresses %v. Error: %v", r.FromIPAddresses, err))
 			}
 		}
 	}
 
-	return i, true, nil
+	return ret
 }
 
 // validateProtoPort will enforce a valid proto/port declaration.
@@ -182,7 +182,8 @@ func (s *securityHooks) validateIPAddresses(addresses []string) error {
 }
 
 // validateApp validates contents of app
-func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, in interface{}) (interface{}, bool, error) {
+func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus bool) []error {
+	ret := []error{}
 	protocolNameValidate := func(protoNames []string, checkProto string, matchType string) bool {
 		switch matchType {
 		case "mustMatchAll":
@@ -198,7 +199,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 
 	app, ok := in.(security.App)
 	if !ok {
-		return in, false, fmt.Errorf("invalid input type")
+		return []error{fmt.Errorf("invalid input type")}
 	}
 
 	appProtos := []string{}
@@ -207,7 +208,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 		if err == nil {
 			// protocol number specified, check its between 0-255 range (0 is valid proto)
 			if protoNum < 0 || protoNum >= 255 {
-				return in, false, fmt.Errorf("Invalid protocol number %v", pp.Protocol)
+				ret = append(ret, fmt.Errorf("Invalid protocol number %v", pp.Protocol))
 			}
 		} else {
 			found := false
@@ -219,7 +220,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 			}
 
 			if !found {
-				return in, false, fmt.Errorf("invalid protocol %v", pp.Protocol)
+				ret = append(ret, fmt.Errorf("invalid protocol %v", pp.Protocol))
 			}
 		}
 		appProtos = append(appProtos, pp.Protocol)
@@ -231,20 +232,20 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				for _, port := range ports {
 					i, err := strconv.Atoi(port)
 					if err != nil {
-						return in, false, fmt.Errorf("port %v must be an integer value", port)
+						ret = append(ret, fmt.Errorf("port %v must be an integer value", port))
 					}
 					if 0 > i || i > 65535 {
-						return in, false, fmt.Errorf("port %v outside range", port)
+						ret = append(ret, fmt.Errorf("port %v outside range", port))
 					}
 				}
 				if len(ports) == 2 {
 					first, _ := strconv.Atoi(ports[0])
 					second, _ := strconv.Atoi(ports[1])
 					if first > second {
-						return in, false, fmt.Errorf("Invalid port range %v. first number bigger than second", prange)
+						ret = append(ret, fmt.Errorf("Invalid port range %v. first number bigger than second", prange))
 					}
 				} else if len(ports) > 2 {
-					return in, false, fmt.Errorf("Invalid port range format: %v", prange)
+					ret = append(ret, fmt.Errorf("Invalid port range format: %v", prange))
 				}
 			}
 		}
@@ -259,26 +260,26 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) ||
 				(app.Spec.ALG.Msrpc != nil) {
-				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
 
 			// validate ICMP type
 			if app.Spec.ALG.Icmp != nil && app.Spec.ALG.Icmp.Type != "" {
 				i, err := strconv.Atoi(app.Spec.ALG.Icmp.Type)
 				if err != nil {
-					return in, false, fmt.Errorf("ICMP Type %v must be an integer value", app.Spec.ALG.Icmp.Type)
+					ret = append(ret, fmt.Errorf("ICMP Type %v must be an integer value", app.Spec.ALG.Icmp.Type))
 				}
 				if 0 > i || i > 255 {
-					return in, false, fmt.Errorf("ICMP Type %v outside range", app.Spec.ALG.Icmp.Type)
+					ret = append(ret, fmt.Errorf("ICMP Type %v outside range", app.Spec.ALG.Icmp.Type))
 				}
 			}
 			if app.Spec.ALG.Icmp != nil && app.Spec.ALG.Icmp.Code != "" {
 				i, err := strconv.Atoi(app.Spec.ALG.Icmp.Code)
 				if err != nil {
-					return in, false, fmt.Errorf("ICMP Code %v must be an integer value", app.Spec.ALG.Icmp.Code)
+					ret = append(ret, fmt.Errorf("ICMP Code %v must be an integer value", app.Spec.ALG.Icmp.Code))
 				}
 				if 0 > i || i > 18 {
-					return in, false, fmt.Errorf("ICMP Code %v outside range", app.Spec.ALG.Icmp.Code)
+					ret = append(ret, fmt.Errorf("ICMP Code %v outside range", app.Spec.ALG.Icmp.Code))
 				}
 			}
 		case "DNS":
@@ -286,31 +287,31 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) ||
 				(app.Spec.ALG.Msrpc != nil) {
-				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
 			if !protocolNameValidate(appProtos, "udp", "mustMatchAll") {
-				return in, false, fmt.Errorf("Protocol(s) %v is not allowed with DNS ALG", appProtos)
+				ret = append(ret, fmt.Errorf("Protocol(s) %v is not allowed with DNS ALG", appProtos))
 			}
 		case "FTP":
 			if (app.Spec.ALG.Icmp != nil) ||
 				(app.Spec.ALG.Dns != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) ||
 				(app.Spec.ALG.Msrpc != nil) {
-				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
 		case "SunRPC":
 			if (app.Spec.ALG.Icmp != nil) ||
 				(app.Spec.ALG.Dns != nil) ||
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Msrpc != nil) {
-				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
 		case "MSRPC":
 			if (app.Spec.ALG.Icmp != nil) ||
 				(app.Spec.ALG.Dns != nil) ||
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) {
-				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
 		case "TFTP":
 			if (app.Spec.ALG.Icmp != nil) ||
@@ -318,7 +319,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) ||
 				(app.Spec.ALG.Msrpc != nil) {
-				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
 		case "RTSP":
 			if (app.Spec.ALG.Icmp != nil) ||
@@ -326,13 +327,13 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				(app.Spec.ALG.Ftp != nil) ||
 				(app.Spec.ALG.Sunrpc != nil) ||
 				(app.Spec.ALG.Msrpc != nil) {
-				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				ret = append(ret, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type))
 			}
 		default:
-			return in, false, fmt.Errorf("Invalid ALG type: %v", app.Spec.ALG.Type)
+			ret = append(ret, fmt.Errorf("Invalid ALG type: %v", app.Spec.ALG.Type))
 		}
 	}
-	return in, true, nil
+	return ret
 }
 
 func registerSGPolicyHooks(svc apiserver.Service, logger log.Logger) {
@@ -341,10 +342,8 @@ func registerSGPolicyHooks(svc apiserver.Service, logger log.Logger) {
 		logger: logger.WithContext("Service", "SecurityV1"),
 	}
 	logger.Log("msg", "registering Hooks")
-	svc.GetCrudService("SGPolicy", apiintf.CreateOper).WithPreCommitHook(r.validateSGPolicy)
-	svc.GetCrudService("SGPolicy", apiintf.UpdateOper).WithPreCommitHook(r.validateSGPolicy)
-	svc.GetCrudService("App", apiintf.CreateOper).WithPreCommitHook(r.validateApp)
-	svc.GetCrudService("App", apiintf.UpdateOper).WithPreCommitHook(r.validateApp)
+	svc.GetCrudService("SGPolicy", apiintf.CreateOper).GetRequestType().WithValidate(r.validateSGPolicy)
+	svc.GetCrudService("App", apiintf.CreateOper).GetRequestType().WithValidate(r.validateApp)
 }
 
 func init() {

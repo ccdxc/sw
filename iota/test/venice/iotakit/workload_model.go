@@ -59,8 +59,9 @@ func (sm *SysModel) createWorkload(wtype iota.WorkloadType, wimage, name string,
 	w := workload.Workload{
 		TypeMeta: api.TypeMeta{Kind: "Workload"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   name,
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      name,
 		},
 		Spec: workload.WorkloadSpec{
 			HostName: host.veniceHost.Name,

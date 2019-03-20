@@ -273,9 +273,8 @@ func makeTechSupportSmartNICNodeObject(name string, labels map[string]string) *c
 			Kind: statemgr.KindSmartNICNode,
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name:      name,
-			Namespace: "default",
-			Labels:    labels,
+			Name:   name,
+			Labels: labels,
 		},
 	}
 }
@@ -286,9 +285,8 @@ func makeTechSupportControllerNodeObject(name string, labels map[string]string) 
 			Kind: statemgr.KindControllerNode,
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name:      name,
-			Namespace: "default",
-			Labels:    labels,
+			Name:   name,
+			Labels: labels,
 		},
 	}
 }
@@ -584,9 +582,9 @@ func TestTechSupportNodeSelector(t *testing.T) {
 	}
 
 	AssertEventually(t, func() (bool, interface{}) {
-		blueNode, err := stateMgr.FindTechSupportObject("blue-node", "default", statemgr.KindSmartNICNode)
+		blueNode, err := stateMgr.FindTechSupportObject("blue-node", "", statemgr.KindSmartNICNode)
 		AssertOk(t, err, "Error getting object state")
-		greenStar, err := stateMgr.FindTechSupportObject("green-star", "default", statemgr.KindSmartNICNode)
+		greenStar, err := stateMgr.FindTechSupportObject("green-star", "", statemgr.KindSmartNICNode)
 		AssertOk(t, err, "Error getting object state")
 		return blueNode.GetObjectMeta().Labels["color"] == "black" &&
 			greenStar.GetObjectMeta().Labels["star"] == "false", nil

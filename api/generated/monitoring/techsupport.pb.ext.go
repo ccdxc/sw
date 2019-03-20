@@ -84,9 +84,12 @@ func (m *TechSupportRequest) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *TechSupportRequest) Defaults(ver string) bool {
-	m.Kind = "TechSupportRequest"
-	m.Tenant, m.Namespace = "", ""
 	var ret bool
+	m.Kind = "TechSupportRequest"
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -205,6 +208,9 @@ func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool) []err
 
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for TechSupportRequest"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for TechSupportRequest"))
 	}
 
 	{
@@ -353,7 +359,11 @@ func init() {
 		m := i.(*TechSupportNodeResult)
 
 		if _, ok := TechSupportJobStatus_value[m.Status]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
+			vals := []string{}
+			for k1, _ := range TechSupportJobStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
 		}
 		return nil
 	})
@@ -363,7 +373,11 @@ func init() {
 		m := i.(*TechSupportRequestStatus)
 
 		if _, ok := TechSupportJobStatus_value[m.Status]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
+			vals := []string{}
+			for k1, _ := range TechSupportJobStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
 		}
 		return nil
 	})

@@ -151,9 +151,12 @@ func (m *MirrorSession) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *MirrorSession) Defaults(ver string) bool {
-	m.Kind = "MirrorSession"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "MirrorSession"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -559,7 +562,11 @@ func init() {
 		m := i.(*MirrorCollector)
 
 		if _, ok := PacketCollectorType_value[m.Type]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
+			vals := []string{}
+			for k1, _ := range PacketCollectorType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
 		}
 		return nil
 	})
@@ -570,7 +577,11 @@ func init() {
 
 		for k, v := range m.PacketFilters {
 			if _, ok := MirrorSessionSpec_MirrorPacketFilter_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"PacketFilters", k)
+				vals := []string{}
+				for k1, _ := range MirrorSessionSpec_MirrorPacketFilter_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"PacketFilters", k, vals)
 			}
 		}
 		return nil
@@ -581,7 +592,11 @@ func init() {
 		m := i.(*MirrorSessionStatus)
 
 		if _, ok := MirrorSessionState_value[m.State]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"State")
+			vals := []string{}
+			for k1, _ := range MirrorSessionState_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"State", vals)
 		}
 		return nil
 	})

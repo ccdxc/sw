@@ -211,7 +211,11 @@ func init() {
 		m := i.(*EventAttributes)
 
 		if _, ok := SeverityLevel_value[m.Severity]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Severity")
+			vals := []string{}
+			for k1, _ := range SeverityLevel_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)
 		}
 		return nil
 	})

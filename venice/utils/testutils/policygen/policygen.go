@@ -14,7 +14,6 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/globals"
 )
 
 // CreateEventPolicyObj helper function to create event policy object with the given params.
@@ -194,7 +193,6 @@ func CreateSmartNIC(mac, phase, node string, condition *cluster.SmartNICConditio
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:            mac,
-			Namespace:       globals.DefaultNamespace,
 			ResourceVersion: fmt.Sprintf("%d", rand.Intn(10000)),
 			CreationTime: api.Timestamp{
 				Timestamp: *creationTime,

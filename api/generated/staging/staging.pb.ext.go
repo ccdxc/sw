@@ -76,9 +76,12 @@ func (m *Buffer) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Buffer) Defaults(ver string) bool {
-	m.Kind = "Buffer"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "Buffer"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -149,9 +152,12 @@ func (m *ClearAction) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *ClearAction) Defaults(ver string) bool {
-	m.Kind = "ClearAction"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "ClearAction"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -222,9 +228,12 @@ func (m *CommitAction) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *CommitAction) Defaults(ver string) bool {
-	m.Kind = "CommitAction"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "CommitAction"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -641,7 +650,11 @@ func init() {
 		m := i.(*BufferStatus)
 
 		if _, ok := BufferStatus_ValidationStatus_value[m.ValidationResult]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"ValidationResult")
+			vals := []string{}
+			for k1, _ := range BufferStatus_ValidationStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"ValidationResult", vals)
 		}
 		return nil
 	})
@@ -651,7 +664,11 @@ func init() {
 		m := i.(*ClearActionStatus)
 
 		if _, ok := ClearActionStatus_ClearStatus_value[m.Status]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
+			vals := []string{}
+			for k1, _ := range ClearActionStatus_ClearStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
 		}
 		return nil
 	})
@@ -661,7 +678,11 @@ func init() {
 		m := i.(*CommitActionStatus)
 
 		if _, ok := CommitActionStatus_CommitStatus_value[m.Status]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
+			vals := []string{}
+			for k1, _ := range CommitActionStatus_CommitStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
 		}
 		return nil
 	})

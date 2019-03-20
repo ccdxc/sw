@@ -78,9 +78,12 @@ func (m *Alert) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Alert) Defaults(ver string) bool {
-	m.Kind = "Alert"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "Alert"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -104,9 +107,12 @@ func (m *AlertDestination) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AlertDestination) Defaults(ver string) bool {
-	m.Kind = "AlertDestination"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "AlertDestination"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -175,9 +181,12 @@ func (m *AlertPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AlertPolicy) Defaults(ver string) bool {
-	m.Kind = "AlertPolicy"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "AlertPolicy"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -983,7 +992,11 @@ func init() {
 		m := i.(*AlertPolicySpec)
 
 		if _, ok := events.SeverityLevel_value[m.Severity]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Severity")
+			vals := []string{}
+			for k1, _ := range events.SeverityLevel_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)
 		}
 		return nil
 	})
@@ -993,7 +1006,11 @@ func init() {
 		m := i.(*AlertSpec)
 
 		if _, ok := AlertSpec_AlertState_value[m.State]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"State")
+			vals := []string{}
+			for k1, _ := range AlertSpec_AlertState_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"State", vals)
 		}
 		return nil
 	})
@@ -1003,7 +1020,11 @@ func init() {
 		m := i.(*AlertStatus)
 
 		if _, ok := events.SeverityLevel_value[m.Severity]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Severity")
+			vals := []string{}
+			for k1, _ := range events.SeverityLevel_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)
 		}
 		return nil
 	})
@@ -1013,7 +1034,11 @@ func init() {
 		m := i.(*SyslogExport)
 
 		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Format")
+			vals := []string{}
+			for k1, _ := range MonitoringExportFormat_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Format", vals)
 		}
 		return nil
 	})

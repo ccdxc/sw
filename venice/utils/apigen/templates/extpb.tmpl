@@ -80,12 +80,19 @@ func (m *{{getStr 0}}) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *{{getStr 0}}) Defaults(ver string) bool { {{if isSpecStatusMessage .}}
+func (m *{{getStr 0}}) Defaults(ver string) bool { {{$msg := .}}{{if isSpecStatusMessage .}}
+	var ret bool
 	m.Kind = "{{.Name}}" {{if isTenanted .}}
-	m.Tenant, m.Namespace = "default", "default" {{else}}
-	m.Tenant, m.Namespace = "", "" {{end}}{{end}}{{with index $defaults.Map (getStr 0)}}{{if eq (len .Fields) 0}}
-	return false {{else}}
-	var ret bool {{range $fldk, $defval := .Fields}}{{if $defval.Nested}}{{if $defval.Repeated}}
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}{{else}}
+    ret = m.Tenant != "" && m.Namespace != ""
+    if ret {
+	m.Tenant, m.Namespace = "", ""
+	}{{end}}{{end}}{{with index $defaults.Map (getStr 0)}}{{if eq (len .Fields) 0}}
+	{{if isSpecStatusMessage $msg}}return ret {{else}}return false {{end}}{{else}}{{if isSpecStatusMessage $msg}}{{else}}
+	var ret bool {{end}}{{range $fldk, $defval := .Fields}}{{if $defval.Nested}}{{if $defval.Repeated}}
 	for k := range m.{{$fldk}} { {{if $defval.Pointer}}
 		if m.{{$fldk}}[k] != nil {
 			i := m.{{$fldk}}[k]
@@ -170,7 +177,10 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 	{{if isTenanted $msg}}{{else}}
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for {{$msgname}}"))
-	}{{end}}{{end}}{{with (index $validators.Map $msgname)}}{{/*<1>*/}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{/*<2>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<3>*/}}{{if $fldv.Repeated}}{{/*<4>*/}}
+	}{{if isNamespaced $msg}}{{else}}
+	if m.Namespace != "" {
+			ret = append(ret, errors.New("Namespace not allowed for {{$msgname}}"))
+	}{{end}}{{end}}{{end}}{{with (index $validators.Map $msgname)}}{{/*<1>*/}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{/*<2>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<3>*/}}{{if $fldv.Repeated}}{{/*<4>*/}}
 	for k, v := range m.{{$fldk}} {
 		dlmtr := "."
 		if path == "" {
@@ -316,11 +326,19 @@ func init() {
 		{{if (strEq .Fn "StrEnum")}}{{/*<11>*/}}{{$enummap := (getEnumStrMap $file .Args)}}{{if $fldv.Repeated}}{{/*<12>*/}}
 		for k, v := range m.{{$fldk}} {
 			if _, ok := {{$enummap}}[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path + "." + "{{$fldk}}", k)
+				vals := []string{}
+				for k1, _ := range  {{$enummap}} {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path + "." + "{{$fldk}}", k, vals)
 			}
 		}{{else}}{{/*<12>*/}}
 		if _, ok := {{$enummap}}[m.{{$fldk}}]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path + "." + "{{$fldk}}")
+        	vals := []string{}
+        	for k1, _ := range  {{$enummap}} {
+        		vals = append(vals, k1)
+        	}
+			return fmt.Errorf("%v did not match allowed strings %v", path + "." + "{{$fldk}}", vals)
 		}{{end}}{{/*<12>*/}}{{else}}{{/*<11>*/}}args := make([]string, 0) {{$fnname := .Fn}}
 		{{range .Args}}{{/*<13>*/}}args = append(args, "{{.}}")
 		{{end}}{{/*<13>*/}}{{if $fldv.Repeated}}{{/*<14>*/}}

@@ -45,8 +45,7 @@ var _ = Describe("node tests", func() {
 					APIVersion: "v1",
 				},
 				ObjectMeta: api.ObjectMeta{
-					Name:      nonQnode,
-					Namespace: "tenant1",
+					Name: nonQnode,
 				},
 			}
 

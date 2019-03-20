@@ -9,6 +9,7 @@ import (
 	"net"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -82,6 +83,7 @@ func main() {
 		monitor   = flag.Bool("mon", false, "monitor GRPC connections")
 		moncount  = flag.Int("count", 10, "monitor connection count")
 		out       = flag.String("out", "", "send log output to")
+		cupd      = flag.Bool("cupd", false, "consistent update test")
 	)
 	flag.Parse()
 
@@ -120,6 +122,66 @@ func main() {
 		if err != nil {
 			l.Fatalf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
 		}
+	}
+	defer apicl.Close()
+
+	if *cupd {
+		{ // create a publisher to satisfy dependency
+			pub := bookstore.Publisher{
+				ObjectMeta: api.ObjectMeta{
+					Name: "Sahara",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind: "Publisher",
+				},
+				Spec: bookstore.PublisherSpec{
+					Id:      "111",
+					Address: "#1 hilane, timbuktoo",
+					WebAddr: "http://sahara-books.org",
+				},
+			}
+			apicl.BookstoreV1().Publisher().Create(ctx, &pub)
+		}
+		b := bookstore.Book{}
+		b.Name = "ConsistentUpdateTest"
+		b.Spec.Category = "ChildrensLit"
+		apicl.BookstoreV1().Book().Create(ctx, &b)
+		var wg sync.WaitGroup
+
+		// Spawn multiple go routines to
+		updateBook := func(id string, count int) {
+			// create new client so as to truly create in parallel.
+			defer wg.Done()
+			updcl, err := client.NewGrpcUpstream("test", url, l)
+			if err != nil {
+				log.Fatalf("failed to create client [%v] (%s)", id, err)
+			}
+			defer updcl.Close()
+			b1 := b
+			for i := 0; i < count; i++ {
+				b1.Status.Inventory = int32(i)
+				_, e1 := updcl.BookstoreV1().Book().Update(ctx, &b1)
+				if e1 != nil {
+					log.Fatalf("failed to update book [%v] (%v)", id, e1)
+				}
+			}
+
+		}
+
+		for i := 0; i < 2; i++ {
+			wg.Add(1)
+			go updateBook(fmt.Sprintf("R%d", i), 100)
+		}
+		wg.Wait()
+
+		b1, err := apicl.BookstoreV1().Book().Get(ctx, &b.ObjectMeta)
+		if err != nil {
+			l.Fatalf("failed to get book (%s)", err)
+		}
+		if b1.Status.Inventory != 99 {
+			l.Fatalf("Updated did not end up with final object [%v]", b1.Status.Inventory)
+		}
+		return
 	}
 
 	if *epCreate {

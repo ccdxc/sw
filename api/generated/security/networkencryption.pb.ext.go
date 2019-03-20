@@ -93,9 +93,13 @@ func (m *TrafficEncryptionPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *TrafficEncryptionPolicy) Defaults(ver string) bool {
+	var ret bool
 	m.Kind = "TrafficEncryptionPolicy"
-	m.Tenant, m.Namespace = "default", "default"
-	return false
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil

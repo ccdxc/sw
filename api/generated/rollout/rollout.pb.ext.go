@@ -57,9 +57,12 @@ func (m *Rollout) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Rollout) Defaults(ver string) bool {
-	m.Kind = "Rollout"
-	m.Tenant, m.Namespace = "", ""
 	var ret bool
+	m.Kind = "Rollout"
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -176,6 +179,9 @@ func (m *Rollout) Validate(ver, path string, ignoreStatus bool) []error {
 
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Rollout"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Rollout"))
 	}
 
 	{
@@ -334,7 +340,11 @@ func init() {
 		m := i.(*RolloutPhase)
 
 		if _, ok := RolloutPhase_Phases_value[m.Phase]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Phase")
+			vals := []string{}
+			for k1, _ := range RolloutPhase_Phases_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Phase", vals)
 		}
 		return nil
 	})
@@ -356,7 +366,11 @@ func init() {
 		m := i.(*RolloutSpec)
 
 		if _, ok := RolloutSpec_StrategyType_value[m.Strategy]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Strategy")
+			vals := []string{}
+			for k1, _ := range RolloutSpec_StrategyType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Strategy", vals)
 		}
 		return nil
 	})
@@ -365,7 +379,11 @@ func init() {
 		m := i.(*RolloutSpec)
 
 		if _, ok := RolloutSpec_SmartNICUpgradeType_value[m.UpgradeType]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"UpgradeType")
+			vals := []string{}
+			for k1, _ := range RolloutSpec_SmartNICUpgradeType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"UpgradeType", vals)
 		}
 		return nil
 	})
@@ -375,7 +393,11 @@ func init() {
 		m := i.(*RolloutStatus)
 
 		if _, ok := RolloutStatus_RolloutOperationalState_value[m.OperationalState]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"OperationalState")
+			vals := []string{}
+			for k1, _ := range RolloutStatus_RolloutOperationalState_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"OperationalState", vals)
 		}
 		return nil
 	})

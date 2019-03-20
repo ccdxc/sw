@@ -57,9 +57,12 @@ func (m *NetworkInterface) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *NetworkInterface) Defaults(ver string) bool {
-	m.Kind = "NetworkInterface"
-	m.Tenant, m.Namespace = "", ""
 	var ret bool
+	m.Kind = "NetworkInterface"
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -167,6 +170,9 @@ func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool) []error
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for NetworkInterface"))
 	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for NetworkInterface"))
+	}
 
 	{
 		dlmtr := "."
@@ -256,7 +262,11 @@ func init() {
 		m := i.(*NetworkInterfaceStatus)
 
 		if _, ok := NetworkInterfaceStatus_IFStatus_value[m.OperStatus]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"OperStatus")
+			vals := []string{}
+			for k1, _ := range NetworkInterfaceStatus_IFStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"OperStatus", vals)
 		}
 		return nil
 	})
@@ -273,7 +283,11 @@ func init() {
 		m := i.(*NetworkInterfaceStatus)
 
 		if _, ok := NetworkInterfaceStatus_IFType_value[m.Type]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
+			vals := []string{}
+			for k1, _ := range NetworkInterfaceStatus_IFType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
 		}
 		return nil
 	})

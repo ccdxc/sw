@@ -118,9 +118,13 @@ func (m *Cluster) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Cluster) Defaults(ver string) bool {
+	var ret bool
 	m.Kind = "Cluster"
-	m.Tenant, m.Namespace = "", ""
-	return false
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -225,9 +229,13 @@ func (m *Host) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Host) Defaults(ver string) bool {
+	var ret bool
 	m.Kind = "Host"
-	m.Tenant, m.Namespace = "", ""
-	return false
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -359,9 +367,12 @@ func (m *Node) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Node) Defaults(ver string) bool {
-	m.Kind = "Node"
-	m.Tenant, m.Namespace = "", ""
 	var ret bool
+	m.Kind = "Node"
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -597,6 +608,9 @@ func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Cluster"))
 	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Cluster"))
+	}
 
 	{
 		dlmtr := "."
@@ -656,6 +670,9 @@ func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Host"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Host"))
 	}
 
 	{
@@ -738,6 +755,9 @@ func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Node"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Node"))
 	}
 
 	{
@@ -952,7 +972,11 @@ func init() {
 		m := i.(*MemInfo)
 
 		if _, ok := MemInfo_MemType_value[m.Type]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
+			vals := []string{}
+			for k1, _ := range MemInfo_MemType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
 		}
 		return nil
 	})
@@ -962,7 +986,11 @@ func init() {
 		m := i.(*NodeCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
+			vals := []string{}
+			for k1, _ := range ConditionStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
 		}
 		return nil
 	})
@@ -971,7 +999,11 @@ func init() {
 		m := i.(*NodeCondition)
 
 		if _, ok := NodeCondition_ConditionType_value[m.Type]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
+			vals := []string{}
+			for k1, _ := range NodeCondition_ConditionType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
 		}
 		return nil
 	})
@@ -981,7 +1013,11 @@ func init() {
 		m := i.(*NodeStatus)
 
 		if _, ok := NodeStatus_NodePhase_value[m.Phase]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Phase")
+			vals := []string{}
+			for k1, _ := range NodeStatus_NodePhase_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Phase", vals)
 		}
 		return nil
 	})

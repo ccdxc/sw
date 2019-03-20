@@ -32,7 +32,7 @@ message SGRule {
     }
 
     // list of apps objects to which the rule applies to
-    repeated string Apps                = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "apps,omitempty"];
+    repeated string Apps                = 1 [(gogoproto.jsontag) = "apps,omitempty"];
 
     // list of (protocol, ports) pairs to which the rule applies to, in addition to apps
     repeated ProtoPort ProtoPorts       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "proto-ports,omitempty"];

@@ -56,9 +56,12 @@ func (m *Certificate) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Certificate) Defaults(ver string) bool {
-	m.Kind = "Certificate"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "Certificate"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -247,7 +250,11 @@ func init() {
 
 		for k, v := range m.Usages {
 			if _, ok := CertificateSpec_UsageValues_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Usages", k)
+				vals := []string{}
+				for k1, _ := range CertificateSpec_UsageValues_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Usages", k, vals)
 			}
 		}
 		return nil
@@ -258,7 +265,11 @@ func init() {
 		m := i.(*CertificateStatus)
 
 		if _, ok := CertificateStatus_ValidityValues_value[m.Validity]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Validity")
+			vals := []string{}
+			for k1, _ := range CertificateStatus_ValidityValues_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Validity", vals)
 		}
 		return nil
 	})

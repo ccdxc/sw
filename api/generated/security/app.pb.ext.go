@@ -95,9 +95,12 @@ func (m *App) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *App) Defaults(ver string) bool {
-	m.Kind = "App"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "App"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -482,7 +485,11 @@ func init() {
 		m := i.(*ALG)
 
 		if _, ok := ALG_ALGType_value[m.Type]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
+			vals := []string{}
+			for k1, _ := range ALG_ALGType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
 		}
 		return nil
 	})

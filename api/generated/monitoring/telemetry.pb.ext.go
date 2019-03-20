@@ -76,9 +76,12 @@ func (m *FlowExportPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *FlowExportPolicy) Defaults(ver string) bool {
-	m.Kind = "FlowExportPolicy"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "FlowExportPolicy"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -150,9 +153,12 @@ func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *FwlogPolicy) Defaults(ver string) bool {
-	m.Kind = "FwlogPolicy"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "FwlogPolicy"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -226,9 +232,12 @@ func (m *StatsPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *StatsPolicy) Defaults(ver string) bool {
-	m.Kind = "StatsPolicy"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "StatsPolicy"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -598,7 +607,11 @@ func init() {
 		m := i.(*FlowExportPolicySpec)
 
 		if _, ok := FlowExportPolicySpec_Formats_value[m.Format]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Format")
+			vals := []string{}
+			for k1, _ := range FlowExportPolicySpec_Formats_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Format", vals)
 		}
 		return nil
 	})
@@ -621,7 +634,11 @@ func init() {
 
 		for k, v := range m.Filter {
 			if _, ok := FwlogFilter_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Filter", k)
+				vals := []string{}
+				for k1, _ := range FwlogFilter_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Filter", k, vals)
 			}
 		}
 		return nil
@@ -631,7 +648,11 @@ func init() {
 		m := i.(*FwlogPolicySpec)
 
 		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Format")
+			vals := []string{}
+			for k1, _ := range MonitoringExportFormat_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Format", vals)
 		}
 		return nil
 	})

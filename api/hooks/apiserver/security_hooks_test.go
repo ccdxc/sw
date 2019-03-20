@@ -1,12 +1,10 @@
 package impl
 
 import (
-	"context"
 	"testing"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -51,8 +49,8 @@ func TestSGPolicyCreateAtTenant(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	AssertOk(t, err, "failed to create sg policy. Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
 
 func TestSGPolicyCreateAtSGs(t *testing.T) {
@@ -110,8 +108,8 @@ func TestSGPolicyCreateAtSGs(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	AssertOk(t, err, "failed to create sg policy. Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create sg policy. Error: %v", errs)
 }
 
 func TestAttachGroupsWithFromAddresses(t *testing.T) {
@@ -153,8 +151,8 @@ func TestAttachGroupsWithFromAddresses(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	AssertOk(t, err, "SG Policy attaching to the sgs with From Addresses must pass. Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) == 0, "SG Policy attaching to the sgs with From Addresses must pass. Error: %v", errs)
 }
 
 // #################### Corner Case Tests ####################
@@ -197,8 +195,8 @@ func TestBothAttachmentPoints(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "sg policy creates specifying both tenant and sg level must fail")
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "sg policy creates specifying both tenant and sg level must fail")
 }
 
 func TestMissingAttachmentPoint(t *testing.T) {
@@ -238,8 +236,8 @@ func TestMissingAttachmentPoint(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "sg policy creates with missing attachment points")
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "sg policy creates with missing attachment points")
 }
 
 func TestInvalidAppProto(t *testing.T) {
@@ -284,8 +282,8 @@ func TestInvalidAppProto(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "sg policy creates with invalid app proto fail")
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "sg policy creates with invalid app proto fail")
 }
 
 func TestAppPortEmpty(t *testing.T) {
@@ -330,8 +328,8 @@ func TestAppPortEmpty(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	AssertOk(t, err, "sg policy creates with empty port should suceed")
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) == 0, "sg policy creates with empty port should suceed")
 }
 
 func TestProtocolNumbers(t *testing.T) {
@@ -376,18 +374,18 @@ func TestProtocolNumbers(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	AssertOk(t, err, "sg policy creates with protocol number should suceed")
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) == 0, "sg policy creates with protocol number should suceed")
 
 	// invalid protocol number
 	sgp.Spec.Rules[0].ProtoPorts[0].Protocol = "256"
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "app incorrect protocol number must fail")
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "app incorrect protocol number must fail")
 
 	// invalid protocol number
 	sgp.Spec.Rules[0].ProtoPorts[0].Protocol = "-1"
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "app incorrect protocol number must fail")
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "app incorrect protocol number must fail")
 }
 
 func TestInvalidAppPortNonInteger(t *testing.T) {
@@ -432,8 +430,8 @@ func TestInvalidAppPortNonInteger(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "sg policy creates with non integer parsable port must fail")
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "sg policy creates with non integer parsable port must fail")
 }
 
 func TestRulePortRanges(t *testing.T) {
@@ -559,24 +557,24 @@ func TestRulePortRanges(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	AssertOk(t, err, "app range config failed")
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) == 0, "app range config failed")
 
 	sgp.Spec.Rules = rulesIncorrectPortFormat
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "app incorrect port range must fail")
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "app incorrect port range must fail")
 
 	sgp.Spec.Rules = rulesIncorrectPortRangeFormat
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "app incorrect port range format must fail")
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "app incorrect port range format must fail")
 
 	sgp.Spec.Rules = rulesIncorrectPortValFormat
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "app incorrect port value format must fail")
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "app incorrect port value format must fail")
 
 	sgp.Spec.Rules = rulesInvalidPortRange
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "app invalid port range must fail")
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "app invalid port range must fail")
 }
 
 func TestInvalidAppPortInvalidPortRange(t *testing.T) {
@@ -643,13 +641,13 @@ func TestInvalidAppPortInvalidPortRange(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "app ports outside 0 - 64K must fail")
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "app ports outside 0 - 64K must fail")
 
 	sgp.Spec.Rules = rulesAboveRange
 
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "app ports outside 0 - 64K must fail")
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "app ports outside 0 - 64K must fail")
 }
 
 func TestAttachTenantWithMissingToAndFromAddresses(t *testing.T) {
@@ -720,16 +718,16 @@ func TestAttachTenantWithMissingToAndFromAddresses(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy attaching to the tenant with missing To Addresses must fail. Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy attaching to the tenant with missing To Addresses must fail. Error: %v", errs)
 
 	sgp.Spec.Rules = rulesMissingFrom
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy attaching to the tenant with missing From Addresses must fail. Error: %v", err)
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy attaching to the tenant with missing From Addresses must fail. Error: %v", errs)
 
 	sgp.Spec.Rules = rulesMissingBoth
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy attaching to the tenant with missing To and From Addresses must fail. Error: %v", err)
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy attaching to the tenant with missing To and From Addresses must fail. Error: %v", errs)
 }
 
 func TestInvalidIPAddressOctet(t *testing.T) {
@@ -770,8 +768,8 @@ func TestInvalidIPAddressOctet(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy with invalid IP Address Octet must fail.  Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy with invalid IP Address Octet must fail.  Error: %v", errs)
 
 }
 
@@ -813,8 +811,8 @@ func TestInvalidIPAddressCIDR(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy with invalid CIDR block must fail.  Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy with invalid CIDR block must fail.  Error: %v", errs)
 }
 
 func TestInvalidIPAddressRange(t *testing.T) {
@@ -872,12 +870,12 @@ func TestInvalidIPAddressRange(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy with invalid IP Range must fail.  Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy with invalid IP Range must fail.  Error: %v", errs)
 
 	sgp.Spec.Rules = rulesInvalidRangeMultipleSep
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy with invalid IP Range must fail.  Error: %v", err)
+	errs = s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy with invalid IP Range must fail.  Error: %v", errs)
 }
 
 func TestInvalidKeyword(t *testing.T) {
@@ -918,8 +916,8 @@ func TestInvalidKeyword(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy rules having non any keywords must fail.  Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy rules having non any keywords must fail.  Error: %v", errs)
 }
 
 func TestAttachGroupsWithInvalidIPAddresses(t *testing.T) {
@@ -960,8 +958,8 @@ func TestAttachGroupsWithInvalidIPAddresses(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy attaching to the sgs with invalid IP addresses must fail. Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy attaching to the sgs with invalid IP addresses must fail. Error: %v", errs)
 }
 
 func TestAppWithMultipleSeparators(t *testing.T) {
@@ -1002,8 +1000,8 @@ func TestAppWithMultipleSeparators(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy with invalid app proto/port formats should fail. Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy with invalid app proto/port formats should fail. Error: %v", errs)
 }
 
 func TestAppWithInvalidProtocol(t *testing.T) {
@@ -1044,8 +1042,8 @@ func TestAppWithInvalidProtocol(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, sgp)
-	Assert(t, err != nil, "SG Policy with invalid app proto/port formats should fail. Error: %v", err)
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "SG Policy with invalid app proto/port formats should fail. Error: %v", errs)
 }
 
 func TestInvalidObjType(t *testing.T) {
@@ -1066,8 +1064,8 @@ func TestInvalidObjType(t *testing.T) {
 		Spec: security.AppSpec{},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid object casts must fail.  Error: %v", err)
+	errs := s.validateSGPolicy(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid object casts must fail.  Error: %v", errs)
 }
 
 func TestAppProtoPortConfig(t *testing.T) {
@@ -1096,8 +1094,8 @@ func TestAppProtoPortConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app. Error: %v", err)
+	errs := s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app. Error: %v", errs)
 
 	// empty protocol-port
 	app = security.App{
@@ -1112,8 +1110,8 @@ func TestAppProtoPortConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with empty protocol. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app with empty protocol. Error: %v", errs)
 
 	// protocol number
 	app = security.App{
@@ -1132,8 +1130,8 @@ func TestAppProtoPortConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with protocol number. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app with protocol number. Error: %v", errs)
 
 	// invalid protocol string
 	app = security.App{
@@ -1152,8 +1150,8 @@ func TestAppProtoPortConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid protocol name must fail.  Error: %v", errs)
 
 	// invalid protocol number
 	app = security.App{
@@ -1172,8 +1170,8 @@ func TestAppProtoPortConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid protocol number must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid protocol number must fail.  Error: %v", errs)
 
 	// app with port range
 	app = security.App{
@@ -1193,8 +1191,8 @@ func TestAppProtoPortConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app. Error: %v", errs)
 
 	// invalid port range
 	app = security.App{
@@ -1214,8 +1212,8 @@ func TestAppProtoPortConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid protocol name must fail.  Error: %v", errs)
 
 	// invalid port range
 	app = security.App{
@@ -1235,8 +1233,8 @@ func TestAppProtoPortConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid protocol name must fail.  Error: %v", errs)
 
 	// invalid port number
 	app = security.App{
@@ -1256,8 +1254,8 @@ func TestAppProtoPortConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid protocol name must fail.  Error: %v", errs)
 }
 
 func TestAppAlgConfig(t *testing.T) {
@@ -1292,8 +1290,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app. Error: %v", err)
+	errs := s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app. Error: %v", errs)
 
 	// App without any ALG
 	app = security.App{
@@ -1306,8 +1304,8 @@ func TestAppAlgConfig(t *testing.T) {
 		Spec: security.AppSpec{},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with empty ALG. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app with empty ALG. Error: %v", errs)
 
 	// ICMP ALG
 	app = security.App{
@@ -1333,8 +1331,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with ICMP ALG config. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app with ICMP ALG config. Error: %v", errs)
 
 	// ICMP ALG
 	app = security.App{
@@ -1356,8 +1354,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with ICMP ALG config without Specific Type. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app with ICMP ALG config without Specific Type. Error: %v", errs)
 
 	// DNS ALG
 	app = security.App{
@@ -1382,8 +1380,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with DNS ALG config. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app with DNS ALG config. Error: %v", errs)
 
 	// Sunrpc ALG
 	app = security.App{
@@ -1411,8 +1409,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with Sunrpc ALG config. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app with Sunrpc ALG config. Error: %v", errs)
 
 	// Msrpc ALG
 	app = security.App{
@@ -1440,8 +1438,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with Msrpc ALG config. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) == 0, "failed to create app with Msrpc ALG config. Error: %v", errs)
 
 	// invalid ALG type
 	app = security.App{
@@ -1458,8 +1456,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid protocol name must fail.  Error: %v", errs)
 
 	// invalid ICMP type
 	app = security.App{
@@ -1485,8 +1483,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid ICMP type must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid ICMP type must fail.  Error: %v", errs)
 
 	// invalid ICMP type
 	app = security.App{
@@ -1512,8 +1510,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid ICMP type must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid ICMP type must fail.  Error: %v", errs)
 
 	// invalid ICMP code
 	app = security.App{
@@ -1539,8 +1537,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid ICMP code must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid ICMP code must fail.  Error: %v", errs)
 
 	// invalid ICMP code
 	app = security.App{
@@ -1566,8 +1564,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "Invalid ICMP code must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "Invalid ICMP code must fail.  Error: %v", errs)
 
 	// ICMP LG with Ftp config
 	app = security.App{
@@ -1592,8 +1590,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "ICMP Alg with FTP config must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "ICMP Alg with FTP config must fail.  Error: %v", errs)
 
 	// FTP ALG with Icmp config
 	app = security.App{
@@ -1619,8 +1617,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "FTP  with ICMP config must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "FTP  with ICMP config must fail.  Error: %v", errs)
 
 	// DNS ALG with Icmp config
 	app = security.App{
@@ -1646,8 +1644,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "FTP  with ICMP config must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "FTP  with ICMP config must fail.  Error: %v", errs)
 
 	// DNS ALG with TCP proto config
 	app = security.App{
@@ -1669,8 +1667,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "TCP on DNS ALG must not be allowed. Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "TCP on DNS ALG must not be allowed. Error: %v", errs)
 
 	// SunRPC LG with Icmp config
 	app = security.App{
@@ -1696,8 +1694,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "SunRPC  with ICMP config must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "SunRPC  with ICMP config must fail.  Error: %v", errs)
 
 	// MSRPC LG with Icmp config
 	app = security.App{
@@ -1723,8 +1721,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "MSRPC  with ICMP config must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "MSRPC  with ICMP config must fail.  Error: %v", errs)
 
 	// TFTP LG with Icmp config
 	app = security.App{
@@ -1750,8 +1748,8 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "TFTP  with ICMP config must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "TFTP  with ICMP config must fail.  Error: %v", errs)
 
 	// RSTP LG with Icmp config
 	app = security.App{
@@ -1777,6 +1775,6 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
-	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiintf.CreateOper, false, app)
-	Assert(t, err != nil, "RSTP  with ICMP config must fail.  Error: %v", err)
+	errs = s.validateApp(app, "v1", false)
+	Assert(t, len(errs) != 0, "RSTP  with ICMP config must fail.  Error: %v", errs)
 }

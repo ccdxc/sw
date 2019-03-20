@@ -3,9 +3,11 @@ package cache
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/deckarep/golang-set"
 	"github.com/gogo/protobuf/proto"
@@ -26,6 +28,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
+
+const maxConsistentUpdateRetries = 10
+const maxOverlayOps = 1024
 
 type dryRunMarker struct {
 	verVer int64
@@ -124,14 +129,17 @@ type overlay struct {
 	server   apiserver.Server
 	revision int64
 	// verVer is verification version
-	verVer      int64
-	tenant      string
-	id          string
-	baseKey     string
-	ephemeral   bool
-	overlay     map[string]*overlayObj
-	comparators []kvstore.Cmp
-	reqs        apiintf.RequirementSet
+	verVer         int64
+	tenant         string
+	id             string
+	baseKey        string
+	ephemeral      bool
+	overlay        map[string]*overlayObj
+	comparators    []kvstore.Cmp
+	preCommitComps []kvstore.Cmp
+	reqs           apiintf.RequirementSet
+	versioner      runtime.Versioner
+	primaryCount   int
 }
 
 type overlayMap struct {
@@ -203,6 +211,7 @@ func NewOverlay(tenant, id, baseKey string, c apiintf.CacheInterface, apisrv api
 		server:         apisrv,
 		ephemeral:      local,
 		revision:       1,
+		versioner:      runtime.NewObjectVersioner(),
 	}
 	o.reqs = requirement.NewRequirementSet(apisrv.GetGraphDB(), o, apisrv)
 	log.Infof("creating new overlay %s, base path %s", id, o.baseKey)
@@ -664,7 +673,10 @@ func (c *overlay) update(ctx context.Context, service, method, uri, key string, 
 	}
 	ovObj.oper = oper
 	ovObj.primary = primary
-	ovObj.updateFn = updateFn
+	if !pcApply {
+		// If this is coming from an apply then retain the updateFn, else overwrite.
+		ovObj.updateFn = updateFn
+	}
 	ovObj.val = cacheObj
 	ovObj.URI = uri
 	ovObj.orig = orig
@@ -853,12 +865,23 @@ func (c *overlay) Get(ctx context.Context, key string, into runtime.Object) erro
 		defer c.RUnlock()
 		c.RLock()
 	}
+	cl, err := into.Clone(nil)
+	if err != nil {
+		return err
+	}
+	err = c.CacheInterface.Get(ctx, key, cl.(runtime.Object))
 	ovObj := c.overlay[key]
 	if ovObj != nil {
 		if ovObj.oper == operDelete {
 			return errors.New("not found")
 		}
 		ovObj.val.Clone(into)
+		if err == nil {
+			ver, err := c.versioner.GetVersion(cl.(runtime.Object))
+			if err == nil {
+				c.versioner.SetVersion(into, ver)
+			}
+		}
 		return nil
 	}
 
@@ -1003,7 +1026,10 @@ func (c *overlay) CreatePrimary(ctx context.Context, service, method, uri, key s
 	} else {
 		verVer = dm.verVer
 	}
-
+	if c.primaryCount > maxOverlayOps {
+		return fmt.Errorf("too many operations in the buffer")
+	}
+	c.primaryCount++
 	if !c.ephemeral && (service == "" || method == "") {
 		panic("primary with no service or method")
 	}
@@ -1018,6 +1044,10 @@ func (c *overlay) UpdatePrimary(ctx context.Context, service, method, uri, key s
 	} else {
 		verVer = dm.verVer
 	}
+	if c.primaryCount > maxOverlayOps {
+		return fmt.Errorf("too many operations in the buffer")
+	}
+	c.primaryCount++
 	if !c.ephemeral && (service == "" || method == "") {
 		panic("primary with no service or method")
 	}
@@ -1036,6 +1066,10 @@ func (c *overlay) DeletePrimary(ctx context.Context, service, method, uri, key s
 	} else {
 		verVer = dm.verVer
 	}
+	if c.primaryCount > maxOverlayOps {
+		return fmt.Errorf("too many operations in the buffer")
+	}
+	c.primaryCount++
 	if !c.ephemeral && (service == "" || method == "") {
 		panic("primary with no service or method")
 	}
@@ -1113,9 +1147,12 @@ func (c *overlay) ClearBuffer(ctx context.Context, action []apiintf.OverlayKey) 
 			uriSet.Add(v.URI)
 		}
 		for k, v := range c.overlay {
-			if uriSet.Contains(v.URI) {
-				c.deleteKvObj(ctx, k, v)
-				delete(c.overlay, k)
+			if v.primary {
+				c.primaryCount--
+				if uriSet.Contains(v.URI) {
+					c.deleteKvObj(ctx, k, v)
+					delete(c.overlay, k)
+				}
 			}
 		}
 		return nil
@@ -1124,6 +1161,7 @@ func (c *overlay) ClearBuffer(ctx context.Context, action []apiintf.OverlayKey) 
 		c.deleteKvObj(ctx, k, v)
 		delete(c.overlay, k)
 	}
+	c.primaryCount = 0
 	return nil
 }
 
@@ -1133,91 +1171,125 @@ func (c *overlay) commit(ctx context.Context, verVer int64, otxn kvstore.Txn) (k
 		err            error
 		pCount, sCount int
 	)
-	kv := c.GetKvConn()
-	if kv == nil {
-		return kvstore.TxnResponse{}, errors.New("no backend KV store connection")
-	}
-	ctx = setDryRun(ctx, verVer)
-	log.Infof("[%v]Comitting overlay (tenant:%s) with %d items", c.id, c.tenant, len(c.overlay))
-	ctxn := &cacheTxn{
-		Txn:    kv.NewTxn(),
-		parent: c.CacheInterface.(*cache),
-	}
-	nctx := setPreCommitApply(ctx)
-	otxn, _ = wrapOverlayTxn(nctx, otxn)
-	errs := c.reqs.Apply(ctx, otxn, c.CacheInterface)
-	if errs != nil {
-		return kvstore.TxnResponse{}, fmt.Errorf("%v", errs)
-	}
-	for k, v := range c.overlay {
-		// All objects that get added to the transaction should have the right verVer. Panic for now.
-		if verVer != 0 && v.verVer != verVer {
-			panic(fmt.Sprintf("found wrong version during commit[%s][%v][%s](%d/%d)", v.key, v.oper, v.URI, v.verVer, verVer))
-		}
-		if v.primary {
-			pCount++
-		} else {
-			sCount++
-		}
-		log.Infof("[%v]Adding key [%v] oper [%v] to txn", c.id, k, v.oper)
-		switch v.oper {
-		case operCreate:
-			ctxn.Create(k, v.val)
-		case operUpdate:
-			if v.touch {
-				ctxn.Touch(k)
-				continue
-			}
-			if v.updateFn != nil {
-				// txn is already updated skip
-				log.Infof("Consistent updated obj skipped [%v][%+v]", v.key, v.val)
-
-			}
-			err = ctxn.Update(k, v.val)
-			if err != nil {
-				return kvstore.TxnResponse{}, errors.Wrap(err, "adding to txn failed")
-			}
-		case operDelete:
-			err = ctxn.Delete(k)
-			if err != nil {
-				return kvstore.TxnResponse{}, errors.Wrap(err, "failed to add delete action to txn")
-			}
-		}
-		// Delete the persisted key
-		if v.primary && !c.ephemeral {
-			ctxn.Delete(c.makeBufferKey(k))
-		}
-	}
-	// Add all comparators
-	for _, cp := range c.comparators {
-		// Filter comparators before ading them
-		//  - comparator for version > 0 and overlay is creating the object.
-		if ovobj, ok := c.overlay[cp.Key]; ok {
-			if ovobj.oper == operCreate && cp.Target == kvstore.Version && cp.Operator == ">" && cp.Version == int64(0) {
-				continue
-			}
-		}
-		ctxn.AddComparator(cp)
-	}
 	var resp kvstore.TxnResponse
-	if ctxn.IsEmpty() {
-		resp.Succeeded = true
-	} else {
-		resp, err = ctxn.Commit(ctx)
-		if err != nil {
-			log.Errorf("[%v]error on Txn.Commit (%s)", c.id, err)
-			return resp, errors.Wrap(err, "Commit to backend failed")
+	retries := 0
+retryLoop:
+	for retries < maxConsistentUpdateRetries {
+		otxn = c.NewTxn()
+		if retries > 0 {
+			// give it a random sleep between 0 - 10ms
+			jitter := rand.Intn(500000)
+			time.Sleep(time.Duration(int(time.Microsecond) * jitter))
 		}
+		retries++
+		kv := c.GetKvConn()
+		if kv == nil {
+			return kvstore.TxnResponse{}, errors.New("no backend KV store connection")
+		}
+		ctx = setDryRun(ctx, verVer)
+		log.Infof("[%v]Comitting overlay (tenant:%s) with %d items", c.id, c.tenant, len(c.overlay))
+		ctxn := &cacheTxn{
+			Txn:    kv.NewTxn(),
+			parent: c.CacheInterface.(*cache),
+		}
+		nctx := setPreCommitApply(ctx)
+		otxn, _ = wrapOverlayTxn(nctx, otxn)
+		// Clear all the pre-commit Apply comparators
+		c.preCommitComps = nil
+		errs := c.reqs.Apply(ctx, otxn, c.CacheInterface)
+		if errs != nil {
+			return kvstore.TxnResponse{}, fmt.Errorf("%v", errs)
+		}
+		retry := false
+		for k, v := range c.overlay {
+			// All objects that get added to the transaction should have the right verVer. Panic for now.
+			if verVer != 0 && v.verVer != verVer {
+				panic(fmt.Sprintf("found wrong version during commit[%s][%v][%s](%d/%d)", v.key, v.oper, v.URI, v.verVer, verVer))
+			}
+			if v.primary {
+				pCount++
+			} else {
+				sCount++
+			}
+			log.Infof("[%v]Adding key [%v] oper [%v] to txn", c.id, k, v.oper)
+			switch v.oper {
+			case operCreate:
+				ctxn.Create(k, v.val)
+			case operUpdate:
+				if v.touch {
+					ctxn.Touch(k)
+					continue
+				}
+				if v.updateFn != nil {
+					// txn is already updated, no action needed
+					log.Infof("Consistent updated obj skipped [%v][%+v]", v.key, v.val)
+					retry = true
+				}
+				err = ctxn.Update(k, v.val)
+				if err != nil {
+					return kvstore.TxnResponse{}, errors.Wrap(err, "adding to txn failed")
+				}
+			case operDelete:
+				err = ctxn.Delete(k)
+				if err != nil {
+					return kvstore.TxnResponse{}, errors.Wrap(err, "failed to add delete action to txn")
+				}
+			}
+			// Delete the persisted key
+			if v.primary && !c.ephemeral {
+				ctxn.Delete(c.makeBufferKey(k))
+			}
+		}
+		// Add all comparators
+		for _, cp := range c.comparators {
+			// Filter comparators before ading them
+			//  - comparator for version > 0 and overlay is creating the object.
+			if ovobj, ok := c.overlay[cp.Key]; ok {
+				if ovobj.oper == operCreate && cp.Target == kvstore.Version && cp.Operator == ">" && cp.Version == int64(0) {
+					continue
+				}
+			}
+			ctxn.AddComparator(cp)
+		}
+
+		if ctxn.IsEmpty() {
+			resp.Succeeded = true
+		} else {
+			resp, err = ctxn.Commit(ctx)
+			if err != nil {
+				if retry {
+					log.Infof("[%v]Retrying failed transaction - retry %d (%s)", c.id, retries, err)
+					continue retryLoop
+				}
+				log.Errorf("[%v]error on Txn.Commit (%s)", c.id, err)
+				return resp, errors.Wrap(err, "Commit to backend failed")
+			}
+		}
+
+		if !resp.Succeeded {
+			log.Errorf("[%v]commit did not succeed", c.id)
+			// If all errors are related to consistent update keys then we can retry this commit
+			for _, r := range resp.Responses {
+				ovobj, ok := c.overlay[r.Key]
+				if r.Oper != kvstore.OperUpdate || !ok || ovobj.updateFn == nil {
+					// Not recoverable
+					return resp, errors.New("commit failed")
+				}
+			}
+			log.Infof("[%v]Retrying failed transaction - retry %d (%s)", c.id, retries, err)
+			continue retryLoop
+		}
+		break retryLoop
 	}
 
-	if !resp.Succeeded {
-		log.Errorf("[%v]commit did not succeed", c.id)
-		// XXX-TODO(sanjayt): Check if the error was due to any consistent update keys. If so retry
+	if retries == maxConsistentUpdateRetries {
+		// failed after max retries
+		log.Errorf("[%v/%v] failed commit after max retries", c.tenant, c.id)
 		return resp, errors.New("commit failed")
 	}
 
 	// Finalize the requirements
-	errs = c.reqs.Finalize(ctx)
+	errs := c.reqs.Finalize(ctx)
 	if errs != nil && len(errs) > 0 {
 		log.Errorf("[%v]Finalizing the references failed! (%v)", c.id, errs)
 	}
@@ -1225,6 +1297,7 @@ func (c *overlay) commit(ctx context.Context, verVer int64, otxn kvstore.Txn) (k
 	for k := range c.overlay {
 		delete(c.overlay, k)
 	}
+	c.primaryCount = 0
 	log.Infof("Completing commit for buffer [%s/%s] with %d primary and %d secondary objects %d objects left in overlay", c.tenant, c.id, pCount, sCount, len(c.overlay))
 	return resp, nil
 }
@@ -1397,7 +1470,11 @@ func (t *overlayTxn) AddComparator(cs ...kvstore.Cmp) {
 		defer t.ov.Unlock()
 		t.ov.Lock()
 	}
-	t.ov.comparators = append(t.ov.comparators, cs...)
+	if isPreCommitApply(t.context) {
+		t.ov.preCommitComps = append(t.ov.preCommitComps, cs...)
+	} else {
+		t.ov.comparators = append(t.ov.comparators, cs...)
+	}
 }
 
 // wrapOverlayTxn wraps the overlay in a context

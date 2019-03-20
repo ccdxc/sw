@@ -546,9 +546,12 @@ func (m *Book) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Book) Defaults(ver string) bool {
-	m.Kind = "Book"
-	m.Tenant, m.Namespace = "", ""
 	var ret bool
+	m.Kind = "Book"
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -768,9 +771,12 @@ func (m *Customer) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Customer) Defaults(ver string) bool {
-	m.Kind = "Customer"
-	m.Tenant, m.Namespace = "", ""
 	var ret bool
+	m.Kind = "Customer"
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -885,9 +891,12 @@ func (m *Order) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Order) Defaults(ver string) bool {
-	m.Kind = "Order"
-	m.Tenant, m.Namespace = "", ""
 	var ret bool
+	m.Kind = "Order"
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -1048,9 +1057,12 @@ func (m *Publisher) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Publisher) Defaults(ver string) bool {
-	m.Kind = "Publisher"
-	m.Tenant, m.Namespace = "", ""
 	var ret bool
+	m.Kind = "Publisher"
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -1186,9 +1198,13 @@ func (m *Store) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Store) Defaults(ver string) bool {
+	var ret bool
 	m.Kind = "Store"
-	m.Tenant, m.Namespace = "", ""
-	return false
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -1621,6 +1637,9 @@ func (m *Book) Validate(ver, path string, ignoreStatus bool) []error {
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Book"))
 	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Book"))
+	}
 
 	{
 		dlmtr := "."
@@ -1828,6 +1847,9 @@ func (m *Customer) Validate(ver, path string, ignoreStatus bool) []error {
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Customer"))
 	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Customer"))
+	}
 
 	{
 		dlmtr := "."
@@ -1975,6 +1997,9 @@ func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
 
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Order"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Order"))
 	}
 
 	{
@@ -2183,6 +2208,9 @@ func (m *Publisher) Validate(ver, path string, ignoreStatus bool) []error {
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Publisher"))
 	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Publisher"))
+	}
 
 	{
 		dlmtr := "."
@@ -2285,6 +2313,9 @@ func (m *Store) Validate(ver, path string, ignoreStatus bool) []error {
 
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Store"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Store"))
 	}
 
 	{
@@ -2471,7 +2502,11 @@ func init() {
 		m := i.(*BookSpec)
 
 		if _, ok := BookSpec_BookCategories_value[m.Category]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Category")
+			vals := []string{}
+			for k1, _ := range BookSpec_BookCategories_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Category", vals)
 		}
 		return nil
 	})
@@ -2521,7 +2556,11 @@ func init() {
 		m := i.(*OrderStatus)
 
 		if _, ok := OrderStatus_OrderStatus_value[m.Status]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
+			vals := []string{}
+			for k1, _ := range OrderStatus_OrderStatus_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
 		}
 		return nil
 	})

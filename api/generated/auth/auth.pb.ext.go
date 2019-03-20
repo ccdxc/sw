@@ -109,9 +109,12 @@ func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AuthenticationPolicy) Defaults(ver string) bool {
-	m.Kind = "AuthenticationPolicy"
-	m.Tenant, m.Namespace = "", ""
 	var ret bool
+	m.Kind = "AuthenticationPolicy"
+	ret = m.Tenant != "" && m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -520,9 +523,12 @@ func (m *Role) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Role) Defaults(ver string) bool {
-	m.Kind = "Role"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "Role"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -545,9 +551,13 @@ func (m *RoleBinding) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *RoleBinding) Defaults(ver string) bool {
+	var ret bool
 	m.Kind = "RoleBinding"
-	m.Tenant, m.Namespace = "default", "default"
-	return false
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -678,9 +688,12 @@ func (m *User) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *User) Defaults(ver string) bool {
-	m.Kind = "User"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "User"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -753,6 +766,9 @@ func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []e
 
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for AuthenticationPolicy"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for AuthenticationPolicy"))
 	}
 
 	{
@@ -1487,7 +1503,11 @@ func init() {
 
 		for k, v := range m.AuthenticatorOrder {
 			if _, ok := Authenticators_AuthenticatorType_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"AuthenticatorOrder", k)
+				vals := []string{}
+				for k1, _ := range Authenticators_AuthenticatorType_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"AuthenticatorOrder", k, vals)
 			}
 		}
 		return nil
@@ -1498,7 +1518,11 @@ func init() {
 		m := i.(*LdapServerStatus)
 
 		if _, ok := LdapServerStatus_LdapResult_value[m.Result]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Result")
+			vals := []string{}
+			for k1, _ := range LdapServerStatus_LdapResult_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Result", vals)
 		}
 		return nil
 	})
@@ -1534,7 +1558,11 @@ func init() {
 
 		for k, v := range m.Actions {
 			if _, ok := Permission_ActionType_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Actions", k)
+				vals := []string{}
+				for k1, _ := range Permission_ActionType_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Actions", k, vals)
 			}
 		}
 		return nil
@@ -1545,7 +1573,11 @@ func init() {
 		m := i.(*RadiusServer)
 
 		if _, ok := Radius_AuthMethod_value[m.AuthMethod]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"AuthMethod")
+			vals := []string{}
+			for k1, _ := range Radius_AuthMethod_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AuthMethod", vals)
 		}
 		return nil
 	})
@@ -1555,7 +1587,11 @@ func init() {
 		m := i.(*RadiusServerStatus)
 
 		if _, ok := RadiusServerStatus_RadiusResult_value[m.Result]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Result")
+			vals := []string{}
+			for k1, _ := range RadiusServerStatus_RadiusResult_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Result", vals)
 		}
 		return nil
 	})
@@ -1565,7 +1601,11 @@ func init() {
 		m := i.(*UserSpec)
 
 		if _, ok := UserSpec_UserType_value[m.Type]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
+			vals := []string{}
+			for k1, _ := range UserSpec_UserType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
 		}
 		return nil
 	})
@@ -1576,7 +1616,11 @@ func init() {
 
 		for k, v := range m.Authenticators {
 			if _, ok := Authenticators_AuthenticatorType_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Authenticators", k)
+				vals := []string{}
+				for k1, _ := range Authenticators_AuthenticatorType_value {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Authenticators", k, vals)
 			}
 		}
 		return nil

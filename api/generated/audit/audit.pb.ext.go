@@ -166,7 +166,11 @@ func init() {
 		m := i.(*EventAttributes)
 
 		if _, ok := Level_value[m.Level]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Level")
+			vals := []string{}
+			for k1, _ := range Level_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Level", vals)
 		}
 		return nil
 	})
@@ -175,7 +179,11 @@ func init() {
 		m := i.(*EventAttributes)
 
 		if _, ok := Outcome_value[m.Outcome]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Outcome")
+			vals := []string{}
+			for k1, _ := range Outcome_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Outcome", vals)
 		}
 		return nil
 	})
@@ -192,7 +200,11 @@ func init() {
 		m := i.(*EventAttributes)
 
 		if _, ok := Stage_value[m.Stage]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Stage")
+			vals := []string{}
+			for k1, _ := range Stage_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Stage", vals)
 		}
 		return nil
 	})

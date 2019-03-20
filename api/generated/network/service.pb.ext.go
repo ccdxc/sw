@@ -56,9 +56,12 @@ func (m *Service) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Service) Defaults(ver string) bool {
-	m.Kind = "Service"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "Service"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
@@ -289,7 +292,11 @@ func init() {
 		m := i.(*TLSServerPolicySpec)
 
 		if _, ok := TLSServerPolicySpec_ClientAuthTypes_value[m.ClientAuthentication]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"ClientAuthentication")
+			vals := []string{}
+			for k1, _ := range TLSServerPolicySpec_ClientAuthTypes_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"ClientAuthentication", vals)
 		}
 		return nil
 	})

@@ -494,7 +494,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			t.Errorf("%s: Expected test to fail but err was nil", i.desc)
 		} else if err != nil {
 			errStatus := apierrors.FromError(err)
-			if !reflect.DeepEqual(i.errMsgs, errStatus.GetMessage()) {
+			if !strings.HasPrefix(errStatus.GetMessage()[0], i.errMsgs[0]) {
 				t.Errorf("%s: Expected error message to be %v but error was %v", i.desc, i.errMsgs, errStatus.GetMessage())
 			}
 			if i.errCode != errStatus.GetCode() {

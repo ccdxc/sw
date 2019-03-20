@@ -52,7 +52,6 @@ func createTenant(name string) *cluster.Tenant {
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:            name,
-			Namespace:       infraNamespace,
 			UUID:            uuid.NewV4().String(),
 			ResourceVersion: fmt.Sprintf("%d", rand.Intn(10000)),
 			CreationTime: api.Timestamp{
@@ -64,6 +63,7 @@ func createTenant(name string) *cluster.Tenant {
 			Labels: map[string]string{
 				"Location":   "us-west-zone1",
 				"Department": "human resources",
+				"Namespace":  infraNamespace,
 			},
 		},
 	}
@@ -81,7 +81,6 @@ func createNIC(mac, phase, host string, condition *cluster.SmartNICCondition) *c
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:            mac,
-			Namespace:       infraNamespace,
 			UUID:            uuid.NewV4().String(),
 			ResourceVersion: fmt.Sprintf("%d", rand.Intn(10000)),
 			CreationTime: api.Timestamp{
@@ -91,7 +90,8 @@ func createNIC(mac, phase, host string, condition *cluster.SmartNICCondition) *c
 				Timestamp: *creationTime,
 			},
 			Labels: map[string]string{
-				"Location": "us-west-zone3",
+				"Location":  "us-west-zone3",
+				"Namespace": infraNamespace,
 			},
 		},
 		Spec: cluster.SmartNICSpec{

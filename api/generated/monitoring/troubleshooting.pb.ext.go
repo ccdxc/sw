@@ -140,9 +140,12 @@ func (m *TroubleshootingSession) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *TroubleshootingSession) Defaults(ver string) bool {
-	m.Kind = "TroubleshootingSession"
-	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
+	m.Kind = "TroubleshootingSession"
+	ret = m.Tenant != "default" && m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -662,7 +665,11 @@ func init() {
 		m := i.(*TroubleshootingSessionStatus)
 
 		if _, ok := TroubleshootingSessionState_value[m.State]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"State")
+			vals := []string{}
+			for k1, _ := range TroubleshootingSessionState_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"State", vals)
 		}
 		return nil
 	})

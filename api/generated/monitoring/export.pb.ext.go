@@ -377,7 +377,11 @@ func init() {
 		m := i.(*AuthConfig)
 
 		if _, ok := AuthConfig_Algos_value[m.Algo]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Algo")
+			vals := []string{}
+			for k1, _ := range AuthConfig_Algos_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Algo", vals)
 		}
 		return nil
 	})
@@ -408,7 +412,11 @@ func init() {
 		m := i.(*ExternalCred)
 
 		if _, ok := ExportAuthType_value[m.AuthType]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"AuthType")
+			vals := []string{}
+			for k1, _ := range ExportAuthType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AuthType", vals)
 		}
 		return nil
 	})
@@ -418,7 +426,11 @@ func init() {
 		m := i.(*PrivacyConfig)
 
 		if _, ok := PrivacyConfig_Algos_value[m.Algo]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Algo")
+			vals := []string{}
+			for k1, _ := range PrivacyConfig_Algos_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Algo", vals)
 		}
 		return nil
 	})
@@ -428,7 +440,11 @@ func init() {
 		m := i.(*SNMPTrapServer)
 
 		if _, ok := SNMPTrapServer_SNMPVersions_value[m.Version]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"Version")
+			vals := []string{}
+			for k1, _ := range SNMPTrapServer_SNMPVersions_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Version", vals)
 		}
 		return nil
 	})
@@ -438,7 +454,11 @@ func init() {
 		m := i.(*SyslogExportConfig)
 
 		if _, ok := SyslogFacility_value[m.FacilityOverride]; !ok {
-			return fmt.Errorf("%v did not match allowed strings", path+"."+"FacilityOverride")
+			vals := []string{}
+			for k1, _ := range SyslogFacility_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"FacilityOverride", vals)
 		}
 		return nil
 	})
