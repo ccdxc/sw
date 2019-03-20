@@ -5,6 +5,7 @@
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
+#include "nic/apollo/agent/trace.hpp"
 
 #if 0
 #include "nic/apollo/test/flow_test/flow_test.hpp"
@@ -38,23 +39,23 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
                               const pds::MappingRequest *proto_req,
                               pds::MappingResponse *proto_rsp) {
     if (proto_req) {
-        for (int i = 0; i < proto_req->request_size(); i ++) {
+        for (int i = 0; i < proto_req->request_size(); i++) {
             pds_mapping_spec_t api_spec = {0};
             pds_agent_mapping_api_spec_fill(proto_req->request(i), &api_spec);
 #if 0
-        // TODO: Adding this here since there is no proto defs for
-        // flows. This needs to be cleaned up
-        if (api_spec.tep.ip_addr == 0x01000001u) {
-            g_flow_test_obj->add_local_ep(api_spec.key.vcn.id,
-                                          api_spec.key.ip_addr);
-        } else {
-            g_flow_test_obj->add_remote_ep(api_spec.key.vcn.id,
-                                           api_spec.key.ip_addr);
-        }
+            // TODO: Adding this here since there is no proto defs for
+            // flows. This needs to be cleaned up
+            if (api_spec.tep.ip_addr == 0x01000001u) {
+                g_flow_test_obj->add_local_ep(api_spec.key.vcn.id,
+                                              api_spec.key.ip_addr);
+            } else {
+                g_flow_test_obj->add_remote_ep(api_spec.key.vcn.id,
+                                               api_spec.key.ip_addr);
+            }
 #endif
-            if (pds_mapping_create(&api_spec) == sdk::SDK_RET_OK)
-                return Status::OK;
+            if (pds_mapping_create(&api_spec) != sdk::SDK_RET_OK)
+                return Status::CANCELLED;
         }
     }
-    return Status::CANCELLED;
+    return Status::OK;
 }

@@ -142,6 +142,13 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
         }
 #endif
     }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover objects
+    rv = create_route_table_grpc(NULL);
+    if (rv != SDK_RET_OK) {
+        return rv;
+    }
+#endif
 
     tep_offset = 3;
     v6route_table.af = IP_AF_IPV6;
@@ -184,6 +191,13 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
         }
 #endif
     }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover objects
+    rv = create_route_table_grpc(NULL);
+    if (rv != SDK_RET_OK) {
+        return rv;
+    }
+#endif
 
     return rv;
 }
@@ -288,6 +302,14 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
             }
         }
     }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover objects
+    rv = create_mapping_grpc(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+#endif
 
     // create remote mappings
     SDK_ASSERT(num_vcns * num_remote_mappings <= (1 << 20));
@@ -363,6 +385,14 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
             }
         }
     }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover objects
+    rv = create_mapping_grpc(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+#endif
     return SDK_RET_OK;
 }
 
@@ -415,6 +445,14 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
             }
         }
     }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover objects
+    rv = create_vnic_grpc(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+#endif
 
     return rv;
 }
@@ -494,6 +532,19 @@ create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
             }
         }
     }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover vcn and subnet objects
+    rv = create_vcn_grpc(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+    rv = create_subnet_grpc(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+#endif
     return SDK_RET_OK;
 }
 
@@ -526,6 +577,14 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         }
 #endif
     }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover objects
+    rv = create_tunnel_grpc(0, NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+#endif
     return SDK_RET_OK;
 }
 

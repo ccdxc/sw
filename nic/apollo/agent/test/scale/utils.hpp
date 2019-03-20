@@ -137,6 +137,9 @@ encap_to_spec (types::Encap *encap_spec, pds_encap_t *encap)
 static void
 populate_route_table_request (RouteTableRequest *req, pds_route_table_spec_t *rt)
 {
+    if (!rt || !req)
+        return;
+
     RouteTableSpec *spec = req->add_request();
 
     if (rt->af == IP_AF_IPV4) {
@@ -159,6 +162,9 @@ populate_route_table_request (RouteTableRequest *req, pds_route_table_spec_t *rt
 static void
 populate_mapping_request (MappingRequest *req, pds_mapping_spec_t *mapping)
 {
+    if (!mapping || !req)
+        return;
+    
     MappingSpec *spec = req->add_request();
     spec->mutable_id()->set_pcnid(mapping->key.vcn.id);
     ip_addr_to_spec(spec->mutable_id()->mutable_ipaddr(),
@@ -175,6 +181,9 @@ populate_mapping_request (MappingRequest *req, pds_mapping_spec_t *mapping)
 static void
 populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
 {
+    if (!vnic || !req)
+        return;
+    
     VnicSpec *spec = req->add_request();
     spec->set_vnicid(vnic->vcn.id);
     spec->set_subnetid(vnic->subnet.id);
@@ -190,6 +199,9 @@ populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
 static void
 populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
 {
+    if (!subnet || !req)
+        return;
+    
     SubnetSpec *spec = req->add_request();
     ip_pfx_to_spec(spec->mutable_prefix(), &subnet->pfx);
     ip_addr_to_spec(spec->mutable_virtualrouterip(), &subnet->vr_ip);
@@ -211,6 +223,9 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
 static void
 populate_pcn_request (PCNRequest *req, pds_vcn_spec_t *vcn)
 {
+    if (!vcn || !req)
+        return;
+    
     PCNSpec *spec = req->add_request();
     ip_pfx_to_spec(spec->mutable_prefix(), &vcn->pfx);
     spec->set_id(vcn->key.id);
@@ -226,6 +241,9 @@ populate_pcn_request (PCNRequest *req, pds_vcn_spec_t *vcn)
 static void
 populate_tunnel_request (TunnelRequest *req, uint32_t tep_id, pds_tep_spec_t *tep)
 {
+    if (!tep || !req)
+        return;
+    
     TunnelSpec *spec = req->add_request();
     types::IPAddress ip_addr_spec;
 
@@ -252,6 +270,9 @@ populate_tunnel_request (TunnelRequest *req, uint32_t tep_id, pds_tep_spec_t *te
 static void
 populate_device_request (DeviceRequest *req, pds_device_spec_t *device)
 {
+    if (!device || !req)
+        return;
+    
     DeviceSpec *spec = req->mutable_request();
     ipv4_addr_to_spec(spec->mutable_ipaddr(), &device->device_ip_addr);
     ipv4_addr_to_spec(spec->mutable_gatewayip(), &device->gateway_ip_addr);
@@ -262,6 +283,9 @@ populate_device_request (DeviceRequest *req, pds_device_spec_t *device)
 static void
 populate_batch_spec (BatchSpec *spec, pds_batch_params_t *batch)
 {
+    if (!batch || !spec)
+        return;
+    
     spec->set_epoch(batch->epoch);
     spec->set_rollback_on_failure(false);
     return;

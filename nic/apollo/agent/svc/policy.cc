@@ -27,9 +27,9 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
         for (int i = 0; i < proto_req->request_size(); i ++) {
             pds_policy_spec_t api_spec; 
             pds_agent_policy_api_spec_fill(proto_req->request(i), &api_spec);
-            if (pds_policy_create(&api_spec) == sdk::SDK_RET_OK)
-                return Status::OK;
+            if (pds_policy_create(&api_spec) != sdk::SDK_RET_OK)
+                return Status::CANCELLED;
         }
     }
-    return Status::CANCELLED;
+    return Status::OK;
 }

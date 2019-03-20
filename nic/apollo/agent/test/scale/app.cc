@@ -34,19 +34,30 @@ std::unique_ptr<pds::TunnelSvc::Stub>    g_tunnel_stub_;
 std::unique_ptr<pds::DeviceSvc::Stub>    g_device_stub_;
 std::unique_ptr<pds::BatchSvc::Stub>     g_batch_stub_;
 
+RouteTableRequest   g_route_table_req;
+MappingRequest      g_mapping_req;
+VnicRequest         g_vnic_req;
+SubnetRequest       g_subnet_req;
+PCNRequest          g_pcn_req;
+TunnelRequest       g_tunnel_req;
+
+#define APP_GRPC_BATCH_COUNT    5000
+
 sdk_ret_t
 create_route_table_grpc (pds_route_table_spec_t *rt)
 {
-    RouteTableRequest   request;
     ClientContext       context;
     RouteTableResponse  response;
     Status              ret_status;
-
-    populate_route_table_request(&request, rt);
-    ret_status = g_route_table_stub_->RouteTableCreate(&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s: failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
+    
+    populate_route_table_request(&g_route_table_req, rt);
+    if ((g_route_table_req.request_size() >= APP_GRPC_BATCH_COUNT) || !rt) {
+        ret_status = g_route_table_stub_->RouteTableCreate(&context, g_route_table_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s: failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_route_table_req.clear_request();
     }
 
     return SDK_RET_OK;
@@ -55,16 +66,18 @@ create_route_table_grpc (pds_route_table_spec_t *rt)
 sdk_ret_t
 create_mapping_grpc (pds_mapping_spec_t *mapping)
 {
-    MappingRequest  request;
     ClientContext   context;
     MappingResponse response;
     Status          ret_status;
 
-    populate_mapping_request(&request, mapping);
-    ret_status = g_mapping_stub_->MappingCreate(&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s: failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
+    populate_mapping_request(&g_mapping_req, mapping);
+    if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !mapping) {
+        ret_status = g_mapping_stub_->MappingCreate(&context, g_mapping_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s: failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_mapping_req.clear_request();
     }
 
     return SDK_RET_OK;
@@ -73,16 +86,18 @@ create_mapping_grpc (pds_mapping_spec_t *mapping)
 sdk_ret_t
 create_vnic_grpc (pds_vnic_spec_t *vnic)
 {
-    VnicRequest     request;
     ClientContext   context;
     VnicResponse    response;
     Status          ret_status;
 
-    populate_vnic_request(&request, vnic);
-    ret_status = g_vnic_stub_->VnicCreate(&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s: failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
+    populate_vnic_request(&g_vnic_req, vnic);
+    if ((g_vnic_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vnic) {
+        ret_status = g_vnic_stub_->VnicCreate(&context, g_vnic_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s: failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_vnic_req.clear_request();
     }
 
     return SDK_RET_OK;
@@ -91,16 +106,18 @@ create_vnic_grpc (pds_vnic_spec_t *vnic)
 sdk_ret_t
 create_subnet_grpc (pds_subnet_spec_t *subnet)
 {
-    SubnetRequest   request;
     ClientContext   context;
     SubnetResponse  response;
     Status          ret_status;
 
-    populate_subnet_request(&request, subnet);
-    ret_status = g_subnet_stub_->SubnetCreate(&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s: failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
+    populate_subnet_request(&g_subnet_req, subnet);
+    if ((g_subnet_req.request_size() >= APP_GRPC_BATCH_COUNT) || !subnet) {
+        ret_status = g_subnet_stub_->SubnetCreate(&context, g_subnet_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s: failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_subnet_req.clear_request();
     }
 
     return SDK_RET_OK;
@@ -109,16 +126,18 @@ create_subnet_grpc (pds_subnet_spec_t *subnet)
 sdk_ret_t
 create_vcn_grpc (pds_vcn_spec_t *vcn)
 {
-    PCNRequest      request;
     ClientContext   context;
     PCNResponse     response;
     Status          ret_status;
 
-    populate_pcn_request(&request, vcn);
-    ret_status = g_pcn_stub_->PCNCreate(&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s: failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
+    populate_pcn_request(&g_pcn_req, vcn);
+    if ((g_pcn_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vcn) {
+        ret_status = g_pcn_stub_->PCNCreate(&context, g_pcn_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s: failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_pcn_req.clear_request();
     }
 
     return SDK_RET_OK;
@@ -127,16 +146,18 @@ create_vcn_grpc (pds_vcn_spec_t *vcn)
 sdk_ret_t
 create_tunnel_grpc (uint32_t id, pds_tep_spec_t *tep)
 {
-    TunnelRequest   request;
     ClientContext   context;
     TunnelResponse  response;
     Status          ret_status;
 
-    populate_tunnel_request(&request, id, tep);
-    ret_status = g_tunnel_stub_->TunnelCreate(&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s: failed!\n", __FUNCTION__);
-        return SDK_RET_ERR;
+    populate_tunnel_request(&g_tunnel_req, id, tep);
+    if ((g_tunnel_req.request_size() >= APP_GRPC_BATCH_COUNT) || !tep) {
+        ret_status = g_tunnel_stub_->TunnelCreate(&context, g_tunnel_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s: failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_tunnel_req.clear_request();
     }
 
     return SDK_RET_OK;
