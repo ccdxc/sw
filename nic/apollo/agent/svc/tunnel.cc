@@ -8,10 +8,51 @@
 #include "nic/apollo/agent/svc/tunnel.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 
+// Populate proto buf spec from tep API spec
+static inline void
+tep_api_spec_to_proto_spec_fill (const pds_tep_spec_t *api_spec,
+                                 pds::TunnelSpec *proto_spec)
+{
+    switch (api_spec->encap_type) {
+    case PDS_TEP_ENCAP_TYPE_VXLAN:
+        proto_spec->set_encap(pds::TUNNEL_ENCAP_VXLAN);
+        break;
+
+    case PDS_TEP_ENCAP_TYPE_GW_ENCAP:
+        proto_spec->set_encap(pds::TUNNEL_ENCAP_MPLSoUDP_TAGS_1);
+        break;
+
+    case PDS_TEP_ENCAP_TYPE_VNIC:
+        proto_spec->set_encap(pds::TUNNEL_ENCAP_MPLSoUDP_TAGS_2);
+        break;
+
+    default:
+        proto_spec->set_encap(pds::TUNNEL_ENCAP_VXLAN);
+        break;
+    }
+    if (api_spec->key.ip_addr != 0) {
+        proto_spec->mutable_remoteip()->set_v4addr(api_spec->key.ip_addr);
+    }
+}
+
+// Populate proto buf status from tep API status
+static inline void
+tep_api_status_to_proto_status_fill (const pds_tep_status_t *api_status,
+                                     pds::TunnelStatus *proto_status)
+{
+}
+
+// Populate proto buf stats from tep API stats
+static inline void
+tep_api_stats_to_proto_stats_fill (const pds_tep_stats_t *api_stats,
+                                   pds::TunnelStats *proto_stats)
+{
+}
+
 // Build TEP API spec from protobuf spec
 static inline void
-pds_agent_tep_api_spec_fill (const pds::TunnelSpec &proto_spec,
-                             pds_tep_spec_t *api_spec)
+tep_proto_spec_to_api_spec_fill (const pds::TunnelSpec &proto_spec,
+                                 pds_tep_spec_t *api_spec)
 {
     types::IPAddress remoteip = proto_spec.remoteip();
 
@@ -55,7 +96,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
             break;
         }
         auto request = proto_req->request(i);
-        pds_agent_tep_api_spec_fill(request, api_spec);
+        tep_proto_spec_to_api_spec_fill(request, api_spec);
         ret = core::tep_create(request.id(), api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -78,6 +119,34 @@ TunnelSvcImpl::TunnelDelete(ServerContext *context,
     for (int i = 0; i < proto_req->id_size(); i++) {
         ret = core::tep_delete(proto_req->id(i));
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    }
+    return Status::OK;
+}
+
+Status
+TunnelSvcImpl::TunnelGet(ServerContext *context,
+                         const pds::TunnelGetRequest *proto_req,
+                         pds::TunnelGetResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_tep_info_t info;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        ret = core::tep_get(proto_req->id(i), &info);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != sdk::SDK_RET_OK) {
+            break;
+        }
+        auto response = proto_rsp->add_response();
+        tep_api_spec_to_proto_spec_fill(
+                &info.spec, response->mutable_spec());
+        tep_api_status_to_proto_status_fill(
+                &info.status, response->mutable_status());
+        tep_api_stats_to_proto_stats_fill(
+                &info.stats, response->mutable_stats());
     }
     return Status::OK;
 }

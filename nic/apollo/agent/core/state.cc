@@ -245,6 +245,17 @@ agent_state::find_in_subnet_db(pds_subnet_key_t *key) {
     FIND_IN_DB(subnet, key);
 }
 
+sdk_ret_t
+agent_state::subnet_db_walk(subnet_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(subnet);
+    auto it_end = DB_END(subnet);
+
+    for (auto it = it_begin; it != it_end; it ++) {
+        cb(it->second, ctxt);
+    }
+    return SDK_RET_OK;
+}
+
 bool
 agent_state::del_from_subnet_db(pds_subnet_key_t *key) {
     DEL_FROM_DB(subnet, key);

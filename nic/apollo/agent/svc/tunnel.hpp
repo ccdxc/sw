@@ -22,7 +22,10 @@ public:
                         pds::TunnelResponse *rsp) override;
     Status TunnelDelete(ServerContext *context,
                         const pds::TunnelDeleteRequest *proto_req,
-                        pds::TunnelDeleteResponse *proto_rsp);
+                        pds::TunnelDeleteResponse *proto_rsp) override;
+    Status TunnelGet(ServerContext *context,
+                     const pds::TunnelGetRequest *proto_req,
+                     pds::TunnelGetResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_TUNNEL_HPP__

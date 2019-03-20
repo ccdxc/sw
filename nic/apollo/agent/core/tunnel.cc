@@ -40,4 +40,19 @@ tep_delete (uint32_t key)
     return sdk::SDK_RET_OK;
 }
 
+sdk_ret_t
+tep_get (uint32_t key, pds_tep_info_t *info)
+{
+    sdk_ret_t ret;
+    pds_tep_spec_t *spec;
+
+    spec = agent_state::state()->find_in_tep_db(key);
+    if (spec == NULL) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+    memcpy(&info->spec, spec, sizeof(pds_tep_spec_t));
+    ret = pds_tep_read(&spec->key, info);
+    return ret;
+}
+
 }    // namespace core

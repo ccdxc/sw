@@ -42,6 +42,22 @@ subnet_api_stats_to_proto_stats_fill (const pds_subnet_stats_t *api_stats,
 {
 }
 
+// Populate proto buf from subnet API info
+static inline void
+subnet_api_info_to_proto_fill (const pds_subnet_info_t *api_info,
+                               void *ctxt)
+{
+    pds::SubnetGetResponse *proto_rsp = (pds::SubnetGetResponse *)ctxt;
+    auto subnet = proto_rsp->add_response();
+    pds::SubnetSpec *proto_spec = subnet->mutable_spec();
+    pds::SubnetStatus *proto_status = subnet->mutable_status();
+    pds::SubnetStats *proto_stats = subnet->mutable_stats();
+
+    subnet_api_spec_to_proto_spec_fill(&api_info->spec, proto_spec);
+    subnet_api_status_to_proto_status_fill(&api_info->status, proto_status);
+    subnet_api_stats_to_proto_stats_fill(&api_info->stats, proto_stats);
+}
+
 // Build subnet API spec from proto buf spec
 static inline void
 subnet_proto_spec_to_api_spec_fill (const pds::SubnetSpec &proto_spec,
@@ -125,6 +141,11 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
+    if (proto_req->id_size() == 0) {
+        // get all
+        ret = core::subnet_get_all(subnet_api_info_to_proto_fill, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
     for (int i = 0; i < proto_req->id_size(); i++) {
         memset(&key, 0, sizeof(pds_subnet_key_t));
         key.id = proto_req->id(i);
@@ -133,12 +154,13 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
         if (ret != sdk::SDK_RET_OK) {
             break;
         }
+        auto response = proto_rsp->add_response();
         subnet_api_spec_to_proto_spec_fill(
-                &info.spec, proto_rsp->add_response()->mutable_spec());
+                &info.spec, response->mutable_spec());
         subnet_api_status_to_proto_status_fill(
-                &info.status, proto_rsp->add_response()->mutable_status());
+                &info.status, response->mutable_status());
         subnet_api_stats_to_proto_stats_fill(
-                &info.stats, proto_rsp->add_response()->mutable_stats());
+                &info.stats, response->mutable_stats());
     }
     return Status::OK;
 }

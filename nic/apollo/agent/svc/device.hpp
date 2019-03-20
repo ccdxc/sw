@@ -23,6 +23,9 @@ public:
     Status DeviceDelete(ServerContext *context,
                         const types::Empty *empty,
                         pds::DeviceDeleteResponse *proto_rsp) override;
+    Status DeviceGet(ServerContext *context,
+                     const types::Empty *empty,
+                     pds::DeviceGetResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_SWITCH_HPP__

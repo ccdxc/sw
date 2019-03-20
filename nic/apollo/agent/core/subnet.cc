@@ -52,4 +52,29 @@ subnet_get (pds_subnet_key_t *key, pds_subnet_info_t *info)
     return ret;
 }
 
+static inline sdk_ret_t
+subnet_get_all_cb (pds_subnet_spec_t *spec, void *ctxt)
+{
+    sdk_ret_t ret;
+    pds_subnet_info_t info;
+    subnet_db_cb_ctxt_t *cb_ctxt = (subnet_db_cb_ctxt_t *)ctxt;
+
+    memcpy(&info.spec, spec, sizeof(pds_subnet_spec_t));
+    ret = pds_subnet_read(&spec->key, &info);
+    if (ret == SDK_RET_OK) {
+        cb_ctxt->cb(&info, cb_ctxt->ctxt);
+    }
+    return ret;
+}
+
+sdk_ret_t
+subnet_get_all (subnet_get_cb_t subnet_get_cb, void *ctxt)
+{
+    subnet_db_cb_ctxt_t cb_ctxt;
+
+    cb_ctxt.cb = subnet_get_cb;
+    cb_ctxt.ctxt = ctxt;
+    return agent_state::state()->subnet_db_walk(subnet_get_all_cb, &cb_ctxt);
+}
+
 }    // namespace core

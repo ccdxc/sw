@@ -11,6 +11,7 @@ namespace core {
 
 sdk_ret_t tep_create(uint32_t key, pds_tep_spec_t *spec);
 sdk_ret_t tep_delete(uint32_t key);
+sdk_ret_t tep_get(uint32_t key, pds_tep_info_t *info);
 
 }    // namespace core
 

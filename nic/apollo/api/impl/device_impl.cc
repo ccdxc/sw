@@ -43,9 +43,8 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
 
     sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                               &val);
-    spec->device_ip_addr = be64toh(val);
+    spec->device_ip_addr = (ipv4_addr_t)val;
     sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_TEP_TX, &val);
-    val = be64toh(val);
     MAC_UINT64_TO_ADDR(spec->device_mac_addr, val);
 }
 
