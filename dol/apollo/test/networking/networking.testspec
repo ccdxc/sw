@@ -1,29 +1,29 @@
 # Test Spec
 selectors:
-    root: ref://store/templates/id=MAPPING
-    maxmappings: 4
-    mapping: filter://any
+    root: ref://store/templates/id=FLOW
+    maxlimits: 4
+    flow: filter://any
 
 packets:
     - packet:
-        id          : IN_PKT # Input packet
+        id          : IN_HOST_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByMapping/proto=TCP
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
-                src     : ref://testcase/config/smac
-                dst     : ref://testcase/config/dmac
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : ref://testcase/config/remotemapping/MACAddr
             qtag:
-                vlan    : ref://testcase/config/vlanid
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
-                src     : ref://testcase/config/sip
-                dst     : ref://testcase/config/dip
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
                 ttl     : 64
             ipv6:
-                src     : ref://testcase/config/sip
-                dst     : ref://testcase/config/dip
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
                 hlim    : 64
             tcp:
                 sport   : 100
@@ -32,36 +32,94 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : EXP_PKT # Expected packet
-        clone       : ref://testcase/packets/id=IN_PKT
+        id          : EXP_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=IN_HOST_PKT
         encaps      : callback://networking/packets/GetPacketEncapByMapping
         headers     :
             outereth:
-                src     : ref://testcase/config/tunsmac
-                dst     : ref://testcase/config/tundmac
+                src     : ref://testcase/config/devicecfg/MACAddr
+                dst     : 00:02:0b:0a:0d:0e
             outeripv4:
-                src     : ref://testcase/config/tunsip
-                dst     : ref://testcase/config/tundip
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : ref://testcase/config/remotemapping/TunIP
                 ttl     : 64
                 tos     : 0
                 id      : 0
             outermpls:
-                label   : ref://testcase/config/mplssslot
+                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
                 ttl     : 0
             mpls:
-                label   : ref://testcase/config/mplsdslot
+                label   : ref://testcase/config/remotemapping/MplsSlot
                 ttl     : 0
+
+
+    - packet:
+        id          : IN_SWITCH_PKT
+        clone       : ref://testcase/packets/id=EXP_SWITCH_PKT
+        headers     :
+            outereth:
+                dst     : ref://testcase/config/devicecfg/MACAddr
+                src     : 00:02:0b:0a:0d:0e
+            outeripv4:
+                dst     : ref://testcase/config/devicecfg/IP
+                src     : ref://testcase/config/remotemapping/TunIP
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            outermpls:
+                label   : ref://testcase/config/remotemapping/MplsSlot
+                ttl     : 0
+            mpls:
+                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
+                ttl     : 0
+            ipv4:
+                dst     : ref://testcase/config/localmapping/IP
+                src     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                dst     : ref://testcase/config/localmapping/IP
+                src     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+
+
+    - packet:
+        id          : EXP_HOST_PKT # Expected packet
+        clone       : ref://testcase/packets/id=IN_HOST_PKT
+        headers     :
+            eth:
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+                src     : ref://testcase/config/remotemapping/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                dst     : ref://testcase/config/localmapping/IP
+                src     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                dst     : ref://testcase/config/localmapping/IP
+                src     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
 trigger:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=IN_PKT
+            object  : ref://testcase/packets/id=IN_HOST_PKT
             port    : ref://testcase/config/hostport
+        - packet:
+            object  : ref://testcase/packets/id=IN_SWITCH_PKT
+            port    : ref://testcase/config/switchport
 
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EXP_PKT
+            object  : ref://testcase/packets/id=EXP_SWITCH_PKT
             port    : ref://testcase/config/switchport
-#            TODO: Packet is dropped till we push all config objects
-#            object  : None
+        - packet:
+            object  : ref://testcase/packets/id=EXP_HOST_PKT
+            port    : ref://testcase/config/hostport

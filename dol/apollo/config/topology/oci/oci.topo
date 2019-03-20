@@ -19,20 +19,22 @@ device:
     ipaddress   : None # Taken from resmgr
     gateway     : None # Taken from resmgr
     macaddress  : macaddr/0002.0100.0001
-    dual_stack  : True
-    tunnel      : 
+    tunnel      :
         - count : 1
           encap : mplsudp_tags1
         - count : 1
           encap : mplsudp_tags2
 
 pcn:
-    - v4count : 1
-      v6count : 1
+    # If dual stack true, PCN and Subnet will have both v4 & v6 based on the prefixlen. 
+    # Otherwise seperate PCN and Subnet will be created for each
+    - stack  : dual # dual, ipv4 , ipv6
+      count : 1
       type  : tenant
       subnet:
         - count     : 2
-          prefixlen : 24
+          v4prefixlen : 24
+          v6prefixlen : 64
           vnic:
             - count   : 1             # VNICs per subnet
               encap   : mplsoudp
@@ -41,10 +43,12 @@ pcn:
             - count : 1
               encap : mplsudp_tags2
         - count     : 2
-          prefixlen : 28
+          v4prefixlen : 28
+          v6prefixlen : 96
           rmap:
             - count : 1
               encap : mplsudp_tags2
       route:
-         - v4count : 1
-           v6count : 1
+         - count : 1
+           v4prefixlen : 28
+           v6prefixlen : 96

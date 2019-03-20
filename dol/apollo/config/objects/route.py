@@ -17,15 +17,15 @@ class RouteObject(base.ConfigObjectBase):
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         self.RouteTblId = next(resmgr.RouteTableIdAllocator)
         self.GID('RouteTbl%d'%self.RouteTblId)
-        if ipversion == 6:
+        if ipversion == utils.IP_VERSION_6:
             self.Prefix = next(resmgr.RouteIPv6Allocator)
-            self.af = 'IPV6'
+            self.AddrFamily = 'IPV6'
         else:
             self.Prefix = next(resmgr.RouteIPv4Allocator)
-            self.af = 'IPV4'
-        self.TunIP = tunip
+            self.AddrFamily = 'IPV4'
+        self.TunIPAddr = tunip
         self.PCNId = parent.PCNId
-        self.label = 'NETWORKING'
+        self.Label = 'NETWORKING'
         assert nroutes == 1 # TODO
 
         ##########################################################################
@@ -34,28 +34,18 @@ class RouteObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "RouteTblID:%d/PCNId:%d/Prefix:%s/NextHop:%s" %\
-               (self.RouteTblId, self.PCNId, str(self.Prefix), str(self.TunIP))
+        return "RouteTblID:%d|PCNId:%d|Prefix:%s|NextHop:%s" %\
+               (self.RouteTblId, self.PCNId, str(self.Prefix), str(self.TunIPAddr))
 
     def GetGrpcCreateMessage(self):
         grpcmsg = route_pb2.RouteTableRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.RouteTblId
-        if self.Prefix.version == 6:
-            spec.AF = types_pb2.IP_AF_INET6
-        else:
-            spec.AF = types_pb2.IP_AF_INET
-
         rtspec = spec.Routes.add()
-        if self.Prefix.version == 6:
-            rtspec.Prefix.Addr.Af = types_pb2.IP_AF_INET6
-            rtspec.Prefix.Addr.V6Addr = self.Prefix.network_address.packed
-        else:
-            rtspec.Prefix.Addr.Af = types_pb2.IP_AF_INET
-            rtspec.Prefix.Addr.V4Addr = int(self.Prefix.network_address)
-        rtspec.Prefix.Len = self.Prefix.prefixlen
+        utils.GetRpcIPPrefix(self.Prefix, rtspec.Prefix)
+        spec.AF = rtspec.Prefix.Addr.Af
         rtspec.NextHop.Af = types_pb2.IP_AF_INET
-        rtspec.NextHop.V4Addr = int(self.TunIP)
+        rtspec.NextHop.V4Addr = int(self.TunIPAddr)
         rtspec.PCNId = self.PCNId
         return grpcmsg
 
@@ -78,7 +68,7 @@ class RouteObjectClient:
         return
 
     def __internet_tunnel_get(self):
-        return self.__internet_tunnel.rrnext().RemoteIP
+        return self.__internet_tunnel.rrnext().RemoteIPAddr
 
     def Objects(self):
         return self.__objs
@@ -103,18 +93,26 @@ class RouteObjectClient:
 
         for route_spec_obj in pcn_spec_obj.route:
             tunip = self.__internet_tunnel_get()
-            if getattr(route_spec_obj, 'v4count', None) != None:
-                for c in range(route_spec_obj.v4count):
-                    obj = RouteObject(parent, route_spec_obj, tunip, 4, 1)
-                    self.__objs.append(obj)
-                    self.__v4objs[pcnid].append(obj)
-                self.__v4iter[pcnid] = utils.rrobiniter(self.__v4objs[pcnid])
-            if getattr(route_spec_obj, 'v6count', None) != None:
-                for c in range(route_spec_obj.v6count):
-                    obj = RouteObject(parent, route_spec_obj, tunip, 6, 1)
+            stack = parent.Stack
+            if getattr(route_spec_obj, 'count', None) == None:
+                continue
+            for c in range(route_spec_obj.count):
+                if stack == "dual" or stack == 'ipv6':
+                    obj = RouteObject(parent, route_spec_obj, tunip, utils.IP_VERSION_6, 1)
                     self.__objs.append(obj)
                     self.__v6objs[pcnid].append(obj)
+
+                if stack == "dual" or stack == 'ipv4':
+                    obj = RouteObject(parent, route_spec_obj, tunip, utils.IP_VERSION_4, 1)
+                    self.__objs.append(obj)
+                    self.__v4objs[pcnid].append(obj)
+
+            if len(self.__v6objs[pcnid]) != 0:
                 self.__v6iter[pcnid] = utils.rrobiniter(self.__v6objs[pcnid])
+
+            if len(self.__v4objs[pcnid]) != 0:
+                self.__v4iter[pcnid] = utils.rrobiniter(self.__v4objs[pcnid])
+
 
     def CreateObjects(self):
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))

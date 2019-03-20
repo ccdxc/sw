@@ -6,6 +6,6 @@ def Setup(infra, module):
 
     logger.info("Iterator Selectors")
     if iterelem:
-        if 'mapping' in iterelem.__dict__:
-            logger.info("- mapping: %s" % iterelem.mapping)
-            module.testspec.selectors.mapping.Extend(iterelem.mapping)
+        if 'flow' in iterelem.__dict__:
+            logger.info("Extending flow selector to : %s" % iterelem.flow)
+            module.testspec.selectors.flow.Extend(iterelem.flow)

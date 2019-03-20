@@ -21,9 +21,10 @@ class DeviceObject(base.ConfigObjectBase):
         self.GID("Device1")
         
         ################# PUBLIC ATTRIBUTES OF SWITCH OBJECT #####################
-        self.LocalIP = next(resmgr.TepIpAddressAllocator)
-        self.Gateway = next(resmgr.TepIpAddressAllocator)
-        self.MACAddress = spec.macaddress
+        self.IPAddr = next(resmgr.TepIpAddressAllocator)
+        self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
+        self.MACAddr = spec.macaddress
+        self.IP = str(self.IPAddr) # For testspec
 
         ################# PRIVATE ATTRIBUTES OF SWITCH OBJECT #####################
         self.__spec = spec
@@ -33,22 +34,16 @@ class DeviceObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Device1/LocalIP:%s/Gateway:%s/MAC:%s" %\
-               (self.LocalIP, self.Gateway, self.MACAddress.get())
-
-    def GetLocalIP(self):
-        return self.LocalIP
-
-    def GetLocalMac(self):
-        return self.MACAddress.get()
+        return "Device1|IPAddr:%s|GatewayAddr:%s|MAC:%s" %\
+               (self.IPAddr, self.GatewayAddr, self.MACAddr.get())
 
     def GetGrpcCreateMessage(self):
         grpcmsg = device_pb2.DeviceRequest()
         grpcmsg.Request.IPAddr.Af = types_pb2.IP_AF_INET
-        grpcmsg.Request.IPAddr.V4Addr = int(self.LocalIP)
+        grpcmsg.Request.IPAddr.V4Addr = int(self.IPAddr)
         grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
-        grpcmsg.Request.GatewayIP.V4Addr = int(self.Gateway)
-        grpcmsg.Request.MACAddr = self.MACAddress.getnum()
+        grpcmsg.Request.GatewayIP.V4Addr = int(self.GatewayAddr)
+        grpcmsg.Request.MACAddr = self.MACAddr.getnum()
         return grpcmsg
 
     def Show(self):
@@ -67,7 +62,7 @@ class DeviceObjectClient:
     def GenerateObjects(self, topospec):
         obj = DeviceObject(topospec.device)
         self.__objs.append(obj)
-        Store.SetSwitch(obj)
+        Store.SetDevice(obj)
         return
 
     def CreateObjects(self):

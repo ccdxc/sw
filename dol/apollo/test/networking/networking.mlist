@@ -1,21 +1,21 @@
 # Feature Test Modules List
 feature:
     id          : networking
-    sub         : l2uc
+    sub         : mapping
     package     : test.networking
     module      : networking
     enable      : True
     ignore      : False
 
 modules:
-#    - module:
-#        name    : IPV4_TCP_QTAG
-#        spec    : networking.testspec
-#        iterate :
-#            - mapping : filter://af=IPV4,label=NETWORKING
+    - module:
+        name    : IPV4_TCP_QTAG
+        spec    : networking.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
 
     - module:
         name    : IPV6_TCP_QTAG
         spec    : networking.testspec
         iterate :
-            - mapping : filter://af=IPV6,label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING

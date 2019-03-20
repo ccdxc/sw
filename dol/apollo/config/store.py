@@ -12,17 +12,17 @@ class ApolloConfigStore:
         # Custom Database for easy access.
         self.trunks = ObjectDatabase()
         self.tunnels = ObjectDatabase()
-        self.switch = None
+        self.device = None
         return
 
     def SetTunnels(self, objs):
         return self.tunnels.SetAll(objs)
 
-    def SetSwitch(self,obj):
-        self.switch = obj
+    def SetDevice(self,obj):
+        self.device = obj
 
-    def GetSwitch(self):
-        return self.switch
+    def GetDevice(self):
+        return self.device
 
     def GetTunnelsVxlan(self):
         vxlan_tunnels = []

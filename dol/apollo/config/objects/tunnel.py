@@ -17,28 +17,28 @@ from apollo.config.store import Store
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, local):
         super().__init__()
-        mplsbase = 20000
         self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
         self.__spec = spec
 
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
-        self.LocalIP = parent.LocalIP
+        self.LocalIPAddr = parent.IPAddr
         if local == True:
-            self.RemoteIP = self.LocalIP
+            self.RemoteIPAddr = self.LocalIPAddr
             self.Encap = tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2
         else:
-            self.RemoteIP = next(resmgr.TepIpAddressAllocator)
+            self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
             self.Encap = utils.GetTunnelEncapType(spec.encap)
-        self.RemoteVnicMplsSlotIdAllocator = iter(resmgr.irange(mplsbase,mplsbase + 1024)) # 1024 vnics per tep
+        self.RemoteVnicMplsSlotIdAllocator = resmgr.CreateRemoteVnicMplsSlotAllocator()
+
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
 
         self.Show()
         return
 
     def __repr__(self):
-        return "Tunnel%d/Encap:%s/LocalIP:%s/RemoteIP:%s" %\
-               (self.Id, self.Encap, self.LocalIP, self.RemoteIP)
+        return "Tunnel%d|Encap:%s|LocalIPAddr:%s|RemoteIPAddr:%s" %\
+               (self.Id, self.Encap, self.LocalIPAddr, self.RemoteIPAddr)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = tunnel_pb2.TunnelRequest()
@@ -47,9 +47,9 @@ class TunnelObject(base.ConfigObjectBase):
         spec.PCNId = 0 # TODO: Create Substrate PCN
         spec.Encap = self.Encap
         spec.LocalIP.Af = types_pb2.IP_AF_INET
-        spec.LocalIP.V4Addr = int(self.LocalIP)
+        spec.LocalIP.V4Addr = int(self.LocalIPAddr)
         spec.RemoteIP.Af = types_pb2.IP_AF_INET
-        spec.RemoteIP.V4Addr = int(self.RemoteIP)
+        spec.RemoteIP.V4Addr = int(self.RemoteIPAddr)
         return grpcmsg
 
     def IsMplsOverUdp2(self):

@@ -20,7 +20,7 @@ class VnicObject(base.ConfigObjectBase):
         self.VnicId = next(resmgr.VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)
         self.SUBNET = parent
-        self.MacAddr =  resmgr.VnicMacAllocator.get()
+        self.MACAddr =  resmgr.VnicMacAllocator.get()
         self.VlanId = next(resmgr.VnicVlanIdAllocator)
         self.MplsSlot = next(resmgr.VnicMplsSlotIdAllocator)
         self.Encap = utils.GetEncapType(spec.encap)
@@ -35,7 +35,7 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "VnicID:%dSubnetID:%d/PCNId:%d" %\
+        return "VnicID:%d|SubnetID:%d|PCNId:%d" %\
                (self.VnicId, self.SUBNET.SubnetId, self.SUBNET.PCN.PCNId)
 
     def GetGrpcCreateMessage(self):
@@ -45,7 +45,7 @@ class VnicObject(base.ConfigObjectBase):
         spec.SubnetId = self.SUBNET.SubnetId
         spec.PCNId = self.SUBNET.PCN.PCNId
         spec.WireVLAN = self.VlanId
-        spec.MACAddress = self.MacAddr.getnum()
+        spec.MACAddress = self.MACAddr.getnum()
         spec.ResourcePoolId = 0 # TODO, Need to allocate and use
         spec.SourceGuardEnable = False # TODO , Need a callback
         spec.Encap.type = self.Encap
@@ -55,7 +55,7 @@ class VnicObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("- VNIC object:", self)
         logger.info(" - %s" % repr(self))
-        logger.info(" - VNIC Vlan:%d/Mac:%s" % (self.VlanId, self.MacAddr))
+        logger.info(" - Vlan:%d|Mpls:%d|MAC:%s" % (self.VlanId, self.MplsSlot, self.MACAddr))
         return
 
     def SetupTestcaseConfig(self, obj):

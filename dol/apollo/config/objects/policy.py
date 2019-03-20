@@ -76,7 +76,7 @@ class PolicyObject(base.ConfigObjectBase):
         return grpcmsg
 
     def Show(self):
-        logger.info("Policy object:", self)
+        logger.info("Policy Object:", self)
         logger.info("- %s" % repr(self))
         if self.L3Match:
             logger.info("- Prefix:%s Dir:%d" %(self.Prefix, self.Direction))

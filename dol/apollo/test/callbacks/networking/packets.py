@@ -8,7 +8,7 @@ import infra.api.api as infra_api
 
 def __get_packet_template_impl(obj, args):
     template = 'ETH'
-    template += "_%s" % (obj.AF)
+    template += "_%s" % (obj.AddrFamily)
 
     if args is not None:
         template += "_%s" % (args.proto)

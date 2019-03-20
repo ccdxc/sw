@@ -7,6 +7,7 @@ import apollo.config.agent.api as api
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as route
+import apollo.config.objects.utils as utils
 import subnet_pb2 as subnet_pb2
 import types_pb2 as types_pb2
 
@@ -14,14 +15,17 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 class SubnetObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec):
+    def __init__(self, parent, spec, poolid):
         super().__init__()
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         self.SubnetId = next(resmgr.SubnetIdAllocator)
         self.GID('Subnet%d'%self.SubnetId)
         self.PCN = parent
-        self.Prefix = parent.AllocSubnetPrefix()
-        self.VirtualRouterIP = None
+        self.PfxSel = parent.PfxSel
+        self.IPPrefix = {}
+        self.IPPrefix[0] = parent.AllocIPv6SubnetPrefix(poolid)
+        self.IPPrefix[1] = parent.AllocIPv4SubnetPrefix(poolid)
+        self.VirtualRouterIP = {}
         self.VirtualRouterMac = None
         self.V4RouteTableId = route.client.GetRouteV4TableId(parent.PCNId)
         self.V6RouteTableId = route.client.GetRouteV6TableId(parent.PCNId)
@@ -29,12 +33,11 @@ class SubnetObject(base.ConfigObjectBase):
         self.IngV6SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
         self.EgV4SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
         self.EgV6SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
-        
+
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
-        if self.Prefix.version == 6:
-            self.__ipaddress_pool = resmgr.CreateIpv6AddrPool(self.Prefix)
-        else:
-            self.__ipaddress_pool = resmgr.CreateIpv4AddrPool(self.Prefix)
+        self.__ip_address_pool = {}
+        self.__ip_address_pool[0] = resmgr.CreateIpv6AddrPool(self.IPPrefix[0])
+        self.__ip_address_pool[1] = resmgr.CreateIpv4AddrPool(self.IPPrefix[1])
 
         self.__set_vrouter_attributes()
 
@@ -49,33 +52,28 @@ class SubnetObject(base.ConfigObjectBase):
 
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
-        self.VirtualRouterIP = next(self.__ipaddress_pool)
+        self.VirtualRouterIP[0] = next(self.__ip_address_pool[0])
+        self.VirtualRouterIP[1] = next(self.__ip_address_pool[1])
         self.VirtualRouterMac = resmgr.VirtualRouterMacAllocator.get()
         return
 
-    def AllocIPAddress(self):
-        return next(self.__ipaddress_pool)
+    def AllocIPv6Address(self):
+        return next(self.__ip_address_pool[0])
+
+    def AllocIPv4Address(self):
+        return next(self.__ip_address_pool[1])
 
     def __repr__(self):
-        return "SubnetID:%d/PCNId:%d/Prefix:%s" %\
-               (self.SubnetId, self.PCN.PCNId, str(self.Prefix))
+        return "SubnetID:%d|PCNId:%d|CfgSel:%d|Mac:%s" %\
+               (self.SubnetId, self.PCN.PCNId, self.PfxSel, self.VirtualRouterMac.get())
 
     def GetGrpcCreateMessage(self):
         grpcmsg = subnet_pb2.SubnetRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.SubnetId
         spec.PCNId = self.PCN.PCNId
-        spec.Prefix.Len = self.Prefix.prefixlen
-        if self.Prefix.version == 6:
-            spec.Prefix.Addr.Af = types_pb2.IP_AF_INET6
-            spec.Prefix.Addr.V6Addr = self.Prefix.network_address.packed
-            spec.VirtualRouterIP.Af = types_pb2.IP_AF_INET6
-            spec.VirtualRouterIP.V6Addr = self.VirtualRouterIP.packed
-        else:
-            spec.Prefix.Addr.Af = types_pb2.IP_AF_INET
-            spec.Prefix.Addr.V4Addr = int(self.Prefix.network_address)
-            spec.VirtualRouterIP.Af = types_pb2.IP_AF_INET
-            spec.VirtualRouterIP.V4Addr = int(self.VirtualRouterIP)
+        utils.GetRpcIPPrefix(self.IPPrefix[self.PfxSel], spec.Prefix)
+        utils.GetRpcIPAddr(self.VirtualRouterIP[self.PfxSel], spec.VirtualRouterIP)
         spec.VirtualRouterMac = self.VirtualRouterMac.getnum()
         spec.V4RouteTableId = self.V4RouteTableId
         spec.V6RouteTableId = self.V6RouteTableId
@@ -88,9 +86,10 @@ class SubnetObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("SUBNET object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- VirtualRouter IP:%s/Mac:%s" % (self.VirtualRouterIP, self.VirtualRouterMac.get()))
-        logger.info("- TableIds  V4:%d/V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
-        logger.info("- SecurityPolicyIDs IngV4:%d/IngV6:%d/EgV4:%d/EgV6:%d" %\
+        logger.info("- Prefix %s" % self.IPPrefix)
+        logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIP))
+        logger.info("- TableIds  V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
+        logger.info("- SecurityPolicyIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
                     (self.IngV4SecurityPolicyId, self.IngV6SecurityPolicyId, self.EgV4SecurityPolicyId, self.EgV6SecurityPolicyId))
         return
 
@@ -106,10 +105,13 @@ class SubnetObjectClient:
         return self.__objs
 
     def GenerateObjects(self, parent, pcn_spec_obj):
+        poolid = 0
         for subnet_spec_obj in pcn_spec_obj.subnet:
+            parent.InitSubnetPefixPools(poolid, subnet_spec_obj.v6prefixlen, subnet_spec_obj.v4prefixlen)
             for c in range(subnet_spec_obj.count):
-                obj = SubnetObject(parent, subnet_spec_obj)
+                obj = SubnetObject(parent, subnet_spec_obj, poolid)
                 self.__objs.append(obj)
+            poolid = poolid + 1
         return
 
     def CreateObjects(self):

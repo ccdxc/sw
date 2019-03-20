@@ -7,10 +7,11 @@ def irange(start, end):
     return range(start, end+1)
 
 EpochAllocator = iter(irange(1,4096))
-TunnelIdAllocator = iter(irange(1,4096))
+TunnelIdAllocator = iter(irange(1,1024))
 PcnIdAllocator = iter(irange(1,1024))
-SubnetIdAllocator = iter(irange(1,1024*1024))
+SubnetIdAllocator = iter(irange(1,1024))
 RemoteMappingIdAllocator = iter(irange(1,1*1024*1024))
+FlowIdAllocator = iter(irange(1,1*1024*1024))
 LocalMappingIdAllocator = iter(irange(1,33*1024))
 VnicVlanIdAllocator = iter(irange(1,1024))
 VnicMplsSlotIdAllocator = iter(irange(10000,11024))
@@ -27,24 +28,43 @@ RouteIPv4Allocator = iter(ipaddress.IPv4Network('192.0.0.0/8').subnets(new_prefi
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'
 # - sublen is the subnet length, gt base prefix length.
-def CreateIPv4SubnetPool(base, sublen):
+# - poolid , subnet pool index with in a pcn
+def CreateIPv4SubnetPool(base, sublen, poolid):
     assert(isinstance(base, ipaddress.IPv4Network))
+    assert(sublen >= 16)
+    assert(poolid < 16)
+    addr = base.network_address + (poolid << (32 - 12))
+    pfxstr = "%s/12" %(str(ipaddress.IPv4Address(addr)))
+    base = ipaddress.IPv4Network(pfxstr)
     return iter(base.subnets(new_prefix=sublen))
-def CreateIPv6SubnetPool(base, sublen):
+
+def CreateIPv6SubnetPool(base, sublen, poolid):
     assert(isinstance(base, ipaddress.IPv6Network))
+    assert(sublen >= 64)
+    assert(poolid < 16)
+    addr = base.network_address + (poolid << (128 - 56))
+    pfxstr = "%s/56" %(str(ipaddress.IPv6Address(addr)))
+    base = ipaddress.IPv6Network(pfxstr)
     return iter(base.subnets(new_prefix=sublen))
+
 def CreateIpv4AddrPool(subnet):
     assert(isinstance(subnet, ipaddress.IPv4Network))
     return iter(subnet.hosts())
+
 def CreateIpv6AddrPool(subnet):
     assert(isinstance(subnet, ipaddress.IPv6Network))
     return iter(subnet.hosts())
+
+# The below function will be called for every Remote TEP
+def  CreateRemoteVnicMplsSlotAllocator():
+    mplsbase = 20000
+    return iter(irange(mplsbase,mplsbase + 1024)) # 1024 vnics per tep
 
 # Starts PCN prefixes from 10/8 to 42/8
 PCN_V4_PREFIX_BASE=10
 # Create overlapping prefixes for every 32 PCNs
 PCN_V4_PREFIX_OVERLAP_DIST=32
-def GetPcnIpv4Prefix(pcnid):
+def GetPcnIPv4Prefix(pcnid):
     pfxstr = '%d.0.0.0/8'%((pcnid%PCN_V4_PREFIX_OVERLAP_DIST)+PCN_V4_PREFIX_BASE)
     return ipaddress.IPv4Network(pfxstr)
 
@@ -53,7 +73,7 @@ PCN_V6_BASE='aaaa:0001'
 PCN_V6_PREFIX_BASE=10
 # Create overlapping prefixes for every 32 PCNs
 PCN_V6_PREFIX_OVERLAP_DIST=128
-def GetPcnIpv6Prefix(pcnid):
+def GetPcnIPv6Prefix(pcnid):
     pfxstr = '%s:%04x::/48'%(PCN_V6_BASE, ((pcnid%PCN_V6_PREFIX_OVERLAP_DIST)+PCN_V6_PREFIX_BASE))
     return ipaddress.IPv6Network(pfxstr)
 

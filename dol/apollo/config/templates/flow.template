@@ -1,8 +1,8 @@
 # PCN Object Template
 meta:
-    id      : MAPPING
+    id      : FLOW
     package : config.objects
-    module  : mappinghelper
+    module  : flow
     feature_set:
         - apollo
 

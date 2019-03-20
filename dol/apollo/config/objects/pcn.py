@@ -6,6 +6,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.route as route
+import apollo.config.objects.utils as utils
 
 import pcn_pb2 as pcn_pb2
 import types_pb2 as types_pb2
@@ -14,24 +15,30 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 class PcnObject(base.ConfigObjectBase):
-    def __init__(self, spec, ipversion):
+    def __init__(self, spec, index):
         super().__init__()
 
         ################# PUBLIC ATTRIBUTES OF PCN OBJECT #####################
         self.PCNId = next(resmgr.PcnIdAllocator)
         self.GID('Pcn%d'%self.PCNId)
         self.Type = pcn_pb2.PCN_TYPE_TENANT
-        if ipversion == 6:
-            self.Prefix = resmgr.GetPcnIpv6Prefix(self.PCNId)
+        self.IPPrefix = {}
+        self.IPPrefix[0] = resmgr.GetPcnIPv6Prefix(self.PCNId)
+        self.IPPrefix[1] = resmgr.GetPcnIPv4Prefix(self.PCNId)
+        self.Stack = spec.stack
+        # As currently vcn can have only type IPV4 or IPV6, we will alternate 
+        # the configuration
+        if self.Stack == 'dual':
+            self.PfxSel = index % 2
+        elif obj.Stack == 'ipv4':
+            self.PfxSel = 1
         else:
-            self.Prefix = resmgr.GetPcnIpv4Prefix(self.PCNId)
+            self.PfxSel = 0
 
         ################# PRIVATE ATTRIBUTES OF PCN OBJECT #####################
-        # All subnets are of /24 Prefix length for IPV4 and 64 for IPV6
-        if ipversion == 6:
-            self.__subnet_prefix_pool = resmgr.CreateIPv6SubnetPool(self.Prefix, 64)
-        else:
-            self.__subnet_prefix_pool = resmgr.CreateIPv4SubnetPool(self.Prefix, 24)
+        self.__ip_subnet_prefix_pool = {}
+        self.__ip_subnet_prefix_pool[0] = {}
+        self.__ip_subnet_prefix_pool[1] = {}
 
         self.Show()
 
@@ -41,34 +48,34 @@ class PcnObject(base.ConfigObjectBase):
 
         # Generate Subnet configuration
         subnet.client.GenerateObjects(self, spec)
-
         return
 
-    def AllocSubnetPrefix(self):
-        return next(self.__subnet_prefix_pool)
+    def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):
+        self.__ip_subnet_prefix_pool[0][poolid] =  resmgr.CreateIPv6SubnetPool(self.IPPrefix[0], v6pfxlen, poolid)
+        self.__ip_subnet_prefix_pool[1][poolid] =  resmgr.CreateIPv4SubnetPool(self.IPPrefix[1], v4pfxlen, poolid)
+
+    def AllocIPv6SubnetPrefix(self, poolid):
+        return next(self.__ip_subnet_prefix_pool[0][poolid])
+
+    def AllocIPv4SubnetPrefix(self, poolid):
+        return next(self.__ip_subnet_prefix_pool[1][poolid])
 
     def __repr__(self):
-        return "PcnID:%d/Type:%d/Prefix:%s" %\
-               (self.PCNId, self.Type, str(self.Prefix))
+        return "PcnID:%d|Type:%d|PfxSel:%d" %\
+               (self.PCNId, self.Type, self.PfxSel)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = pcn_pb2.PCNRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.PCNId
         spec.Type = self.Type
-
-        spec.Prefix.Len = self.Prefix.prefixlen
-        if self.Prefix.version == 6:
-            spec.Prefix.Addr.Af = types_pb2.IP_AF_INET6
-            spec.Prefix.Addr.V6Addr = self.Prefix.network_address.packed
-        else:
-            spec.Prefix.Addr.Af = types_pb2.IP_AF_INET
-            spec.Prefix.Addr.V4Addr = int(self.Prefix.network_address)
+        utils.GetRpcIPPrefix(self.IPPrefix[self.PfxSel], spec.Prefix)
         return grpcmsg
 
     def Show(self):
-        logger.info("PCN object:", self)
+        logger.info("PCN Object:", self)
         logger.info("- %s" % repr(self))
+        logger.info("- Prefix:%s" %self.IPPrefix)
         return
 
 class PcnObjectClient:
@@ -81,14 +88,9 @@ class PcnObjectClient:
 
     def GenerateObjects(self, topospec):
         for p in topospec.pcn:
-            if getattr(p, 'v4count', None) != None:
-                for c in range(p.v4count):
-                    obj = PcnObject(p, 4)
-                    self.__objs.append(obj)
-            if getattr(p, 'v6count', None) != None:
-                for c in range(p.v6count):
-                    obj = PcnObject(p, 6)
-                    self.__objs.append(obj)
+            for c in range(p.count):
+                obj = PcnObject(p, c)
+                self.__objs.append(obj)
         return
 
     def CreateObjects(self):
