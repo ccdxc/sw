@@ -41,6 +41,7 @@ thread::init(const char *name, uint32_t thread_id,
     pthread_id_ = 0;
     running_ = false;
     memset(&hb_ts_, 0, sizeof(hb_ts_));
+    lfq_ = lfq::factory(32);
     return 0;
 }
 
@@ -138,6 +139,7 @@ thread::destroy(thread *th)
     if (!th) {
         return;
     }
+    lfq::destroy(th->lfq_);
     th->~thread();
     SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, th);
 }
