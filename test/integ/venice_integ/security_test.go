@@ -226,12 +226,12 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			foundLocal := false
 			for i := range it.agents {
 				epname := fmt.Sprintf("testWorkload%d-0001.0203.04%02d", i, i)
-				eps, perr := ag.NetworkAgent.FindEndpoint("default", "default", epname)
-				if perr != nil {
-					waitCh <- fmt.Errorf("Endpoint %s not found in datapath, eps=%+v, err=%v", epname, eps, perr)
-					return
+				epmeta := api.ObjectMeta{
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      epname,
 				}
-				sep, perr := ag.NetworkAgent.FindEndpoint("default", "default", epname)
+				sep, perr := ag.NetworkAgent.FindEndpoint(epmeta)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, ag.NetworkAgent.NodeUUID, perr, ag.NetworkAgent.EndpointDB)
 					return
@@ -279,7 +279,12 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			found := CheckEventually(func() (bool, interface{}) {
 				for i := range it.agents {
 					epname := fmt.Sprintf("testWorkload%d-0001.0203.04%02d", i, i)
-					sep, perr := ag.NetworkAgent.FindEndpoint("default", "default", epname)
+					epmeta := api.ObjectMeta{
+						Tenant:    "default",
+						Namespace: "default",
+						Name:      epname,
+					}
+					sep, perr := ag.NetworkAgent.FindEndpoint(epmeta)
 					if perr != nil {
 						return false, perr
 					}
@@ -295,8 +300,12 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			}
 			for i := range it.agents {
 				epname := fmt.Sprintf("testWorkload%d-0001.0203.04%02d", i, i)
-
-				sep, perr := ag.NetworkAgent.FindEndpoint("default", "default", epname)
+				epmeta := api.ObjectMeta{
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      epname,
+				}
+				sep, perr := ag.NetworkAgent.FindEndpoint(epmeta)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, epname, perr, ag.NetworkAgent.EndpointDB)
 					return

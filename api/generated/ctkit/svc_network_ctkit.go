@@ -9,6 +9,7 @@ package ctkit
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -105,10 +106,11 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Network)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Network_Updated_Events").Inc()
@@ -140,7 +142,6 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -319,6 +320,9 @@ func (api *networkAPI) Create(obj *network.Network) error {
 		}
 
 		_, err = apicl.NetworkV1().Network().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().Network().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -354,10 +358,7 @@ func (api *networkAPI) Delete(obj *network.Network) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().Network().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.NetworkV1().Network().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -474,10 +475,11 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Service)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Service_Updated_Events").Inc()
@@ -509,7 +511,6 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -688,6 +689,9 @@ func (api *serviceAPI) Create(obj *network.Service) error {
 		}
 
 		_, err = apicl.NetworkV1().Service().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().Service().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -723,10 +727,7 @@ func (api *serviceAPI) Delete(obj *network.Service) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().Service().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.NetworkV1().Service().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -843,10 +844,11 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*LbPolicy)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("LbPolicy_Updated_Events").Inc()
@@ -878,7 +880,6 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1057,6 +1058,9 @@ func (api *lbpolicyAPI) Create(obj *network.LbPolicy) error {
 		}
 
 		_, err = apicl.NetworkV1().LbPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1092,10 +1096,7 @@ func (api *lbpolicyAPI) Delete(obj *network.LbPolicy) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().LbPolicy().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.NetworkV1().LbPolicy().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})

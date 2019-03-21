@@ -91,7 +91,12 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 					name = nag.NetworkAgent.NodeUUID
 				}
 				epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
-				sep, perr := ag.NetworkAgent.FindEndpoint("default", "default", epname)
+				epmeta := api.ObjectMeta{
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      epname,
+				}
+				sep, perr := ag.NetworkAgent.FindEndpoint(epmeta)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, ag.NetworkAgent.NodeUUID, perr, ag.NetworkAgent.EndpointDB)
 					return

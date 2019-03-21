@@ -119,7 +119,12 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 		AssertEventually(c, func() (bool, interface{}) {
 			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 1, nil
 		}, "endpoint not found on agent", "10ms", it.pollTimeout())
-		_, err := ag.nagent.NetworkAgent.FindEndpoint("default", "default", "testEndpoint1")
+		epmeta := api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testEndpoint1",
+		}
+		_, err := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
 		c.Assert(err, Equals, nil)
 	}
 
@@ -150,7 +155,12 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify sg is removed from the endpoint
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			ep, err := ag.nagent.NetworkAgent.FindEndpoint("default", "default", "testEndpoint1")
+			epmeta := api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      "testEndpoint1",
+			}
+			ep, err := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
 			if err != nil {
 				return false, nil
 			}

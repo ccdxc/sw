@@ -3,6 +3,7 @@
 package ctrlerif
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
@@ -114,7 +115,12 @@ func (ag *fakeAgent) ListNetwork() []*netproto.Network {
 }
 
 func (ag *fakeAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
-	return nil, nil
+	nw, ok := ag.netAdded[objectKey(meta)]
+	if ok {
+		return nw, nil
+	}
+
+	return nil, fmt.Errorf("Network not found")
 }
 
 func (ag *fakeAgent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error) {
@@ -125,6 +131,15 @@ func (ag *fakeAgent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, err
 func (ag *fakeAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	ag.epUpdated[objectKey(ep.ObjectMeta)] = ep
 	return nil
+}
+
+func (ag *fakeAgent) FindEndpoint(meta api.ObjectMeta) (*netproto.Endpoint, error) {
+	ep, ok := ag.epAdded[objectKey(meta)]
+	if ok {
+		return ep, nil
+	}
+
+	return nil, fmt.Errorf("Endpoint not found")
 }
 
 func (ag *fakeAgent) DeleteEndpoint(tn, namespace, name string) error {
@@ -166,6 +181,15 @@ func (ag *fakeAgent) DeleteSecurityGroup(tn, namespace, name string) error {
 	}
 	ag.sgDeleted[objectKey(meta)] = true
 	return nil
+}
+
+func (ag *fakeAgent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error) {
+	sg, ok := ag.sgAdded[objectKey(meta)]
+	if ok {
+		return sg, nil
+	}
+
+	return nil, fmt.Errorf("SecurityGroup not found")
 }
 
 func (ag *fakeAgent) ListSecurityGroup() []*netproto.SecurityGroup {
@@ -443,7 +467,12 @@ func (ag *fakeAgent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 
 // FindSGPolicy finds a security group policy
 func (ag *fakeAgent) FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) {
-	return nil, nil
+	sgp, ok := ag.sgpAdded[objectKey(meta)]
+	if ok {
+		return sgp, nil
+	}
+
+	return nil, fmt.Errorf("SGPolicy not found")
 }
 
 // ListSGPolicy lists a security group policy
@@ -558,7 +587,12 @@ func (ag *fakeAgent) CreateSecurityProfile(profile *netproto.SecurityProfile) er
 
 // FindSecurityProfile finds a security profile. Stubbed out to satisfy interface
 func (ag *fakeAgent) FindSecurityProfile(meta api.ObjectMeta) (*netproto.SecurityProfile, error) {
-	return nil, nil
+	secp, ok := ag.secpAdded[objectKey(meta)]
+	if ok {
+		return secp, nil
+	}
+
+	return nil, fmt.Errorf("SecurityProfile not found")
 }
 
 // ListSecurityProfile lists a security profile. Stubbed out to satisfy interface
@@ -618,7 +652,12 @@ func (ag *fakeAgent) CreateApp(app *netproto.App) error {
 
 // FindApp finds an app. Stubbed out to satisfy interface
 func (ag *fakeAgent) FindApp(meta api.ObjectMeta) (*netproto.App, error) {
-	return nil, nil
+	ap, ok := ag.appAdded[objectKey(meta)]
+	if ok {
+		return ap, nil
+	}
+
+	return nil, fmt.Errorf("SecurityProfile not found")
 }
 
 // ListApp lists an app. Stubbed out to satisfy interface

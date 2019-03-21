@@ -9,6 +9,7 @@ package ctkit
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -105,10 +106,11 @@ func (ct *ctrlerCtx) handleBufferEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Buffer)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Buffer_Updated_Events").Inc()
@@ -140,7 +142,6 @@ func (ct *ctrlerCtx) handleBufferEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -319,6 +320,9 @@ func (api *bufferAPI) Create(obj *staging.Buffer) error {
 		}
 
 		_, err = apicl.StagingV1().Buffer().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.StagingV1().Buffer().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -354,10 +358,7 @@ func (api *bufferAPI) Delete(obj *staging.Buffer) error {
 			return err
 		}
 
-		_, err = apicl.StagingV1().Buffer().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.StagingV1().Buffer().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})

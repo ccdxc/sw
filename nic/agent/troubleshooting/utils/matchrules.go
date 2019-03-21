@@ -23,7 +23,7 @@ var ErrInvalidFlowMonitorRule = errors.New("Flow monitor rule is incorrect")
 // If all rules in the spec pass sanity check, then return true.
 // sanity check include correctness of IPaddr string, mac addr string,
 // application selectors
-func ValidateMatchRule(objMeta api.ObjectMeta, matchRules []tsproto.MatchRule, findEndpoint func(string, string, string) (*netproto.Endpoint, error)) error {
+func ValidateMatchRule(objMeta api.ObjectMeta, matchRules []tsproto.MatchRule, findEndpoint func(api.ObjectMeta) (*netproto.Endpoint, error)) error {
 	for _, rule := range matchRules {
 		srcSelectors := rule.Src
 		destSelectors := rule.Dst
@@ -31,7 +31,12 @@ func ValidateMatchRule(objMeta api.ObjectMeta, matchRules []tsproto.MatchRule, f
 		if srcSelectors != nil {
 			if len(srcSelectors.Endpoints) > 0 {
 				for _, ep := range srcSelectors.Endpoints {
-					if _, err := findEndpoint(objMeta.Tenant, objMeta.Namespace, ep); err != nil {
+					epMeta := api.ObjectMeta{
+						Tenant:    objMeta.Tenant,
+						Namespace: objMeta.Namespace,
+						Name:      ep,
+					}
+					if _, err := findEndpoint(epMeta); err != nil {
 						return fmt.Errorf("Src Endpoint %v not found, error: %s", ep, err)
 					}
 				}
@@ -68,7 +73,12 @@ func ValidateMatchRule(objMeta api.ObjectMeta, matchRules []tsproto.MatchRule, f
 		if destSelectors != nil {
 			if len(destSelectors.Endpoints) > 0 {
 				for _, ep := range destSelectors.Endpoints {
-					if _, err := findEndpoint(objMeta.Tenant, objMeta.Namespace, ep); err != nil {
+					epMeta := api.ObjectMeta{
+						Tenant:    objMeta.Tenant,
+						Namespace: objMeta.Namespace,
+						Name:      ep,
+					}
+					if _, err := findEndpoint(epMeta); err != nil {
 						return fmt.Errorf("Src Endpoint %v not found", ep)
 					}
 
@@ -242,7 +252,7 @@ func getPrefixLen(ip string) int32 {
 // The caller of the function is expected to create cross product of
 // these 3 lists and use each tuple (src, dest, app) as an atomic rule
 // that can be sent to HAL
-func ExpandCompositeMatchRule(objMeta api.ObjectMeta, rule *tsproto.MatchRule, findEndpoint func(string, string, string) (*netproto.Endpoint, error)) ([]*types.IPAddrDetails, []*types.IPAddrDetails, []uint64, []uint64, []*types.AppPortDetails, []string, []string) {
+func ExpandCompositeMatchRule(objMeta api.ObjectMeta, rule *tsproto.MatchRule, findEndpoint func(api.ObjectMeta) (*netproto.Endpoint, error)) ([]*types.IPAddrDetails, []*types.IPAddrDetails, []uint64, []uint64, []*types.AppPortDetails, []string, []string) {
 	srcSelectors := rule.Src
 	destSelectors := rule.Dst
 	appSelectors := rule.AppProtoSel
@@ -256,7 +266,12 @@ func ExpandCompositeMatchRule(objMeta api.ObjectMeta, rule *tsproto.MatchRule, f
 	if srcSelectors != nil {
 		if len(srcSelectors.Endpoints) > 0 {
 			for _, ep := range srcSelectors.Endpoints {
-				epObj, err := findEndpoint(objMeta.Tenant, objMeta.Namespace, ep)
+				epMeta := api.ObjectMeta{
+					Tenant:    objMeta.Tenant,
+					Namespace: objMeta.Namespace,
+					Name:      ep,
+				}
+				epObj, err := findEndpoint(epMeta)
 				if err == nil {
 					if epObj.Spec.IPv4Address != "" {
 						srcIPs = append(srcIPs, BuildIPAddrDetails(epObj.Spec.IPv4Address))
@@ -287,7 +302,12 @@ func ExpandCompositeMatchRule(objMeta api.ObjectMeta, rule *tsproto.MatchRule, f
 	if destSelectors != nil {
 		if len(destSelectors.Endpoints) > 0 {
 			for _, ep := range destSelectors.Endpoints {
-				epObj, err := findEndpoint(objMeta.Tenant, objMeta.Namespace, ep)
+				epMeta := api.ObjectMeta{
+					Tenant:    objMeta.Tenant,
+					Namespace: objMeta.Namespace,
+					Name:      ep,
+				}
+				epObj, err := findEndpoint(epMeta)
 				if err == nil {
 
 					if epObj.Spec.IPv4Address != "" {

@@ -3,6 +3,7 @@
 package npminteg
 
 import (
+	"fmt"
 	"time"
 
 	"gopkg.in/check.v1"
@@ -230,4 +231,95 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
+}
+
+func (it *integTestSuite) TestRestartWithWorkload(c *C) {
+	const numWorkloadPerHost = 10
+	// if not present create the default tenant
+	it.CreateTenant("default")
+
+	// create a host for each agent if it doesnt exist
+	for idx, ag := range it.agents {
+		it.CreateHost(fmt.Sprintf("testHost-%d", idx), ag.nagent.NetworkAgent.NodeUUID)
+	}
+
+	// create 100 workloads on each host
+	for i := range it.agents {
+		for j := 0; j < numWorkloadPerHost; j++ {
+			macAddr := fmt.Sprintf("00:01:02:03:%02x:%02x", i, j)
+			err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d-%d", i, j), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+j), 1)
+			AssertOk(c, err, "Error creating workload")
+		}
+	}
+
+	// wait for endpoints to be sent to agents
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), nil
+		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
+	}
+
+	// stop NPM
+	err := it.ctrler.Stop()
+	AssertOk(c, err, "Error stopping NPM")
+
+	// verify agents are all disconnected
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return !ag.nagent.IsNpmClientConnected(), nil
+		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
+	}
+
+	// restart the NPM
+	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, "", it.resolverClient, it.logger.WithContext("submodule", "pen-npm"))
+	c.Assert(err, IsNil)
+	time.Sleep(time.Millisecond * 100)
+
+	// verify agents are all connected back
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return ag.nagent.IsNpmClientConnected(), nil
+		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
+	}
+	time.Sleep(time.Millisecond * 100)
+
+	// verify agents have all endpoints
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), nil
+		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
+	}
+
+	// create one more workload on each host
+	for i := range it.agents {
+		macAddr := fmt.Sprintf("00:01:02:03:%02x:%02x", i, numWorkloadPerHost)
+		err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d-%d", i, numWorkloadPerHost), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+numWorkloadPerHost), 1)
+		AssertOk(c, err, "Error creating n+1 workload")
+	}
+
+	// verify agent has old and new endpoints
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * (numWorkloadPerHost + 1)), ag.nagent.NetworkAgent.ListEndpoint()
+		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
+	}
+
+	// delete workloads
+	for i := range it.agents {
+		for j := 0; j <= numWorkloadPerHost; j++ {
+			err := it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%d-%d", i, j))
+			AssertOk(c, err, "Error deleting workload")
+		}
+	}
+
+	// verify endpoints are gone
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, ag.nagent.NetworkAgent.ListEndpoint()
+		}, "Not all endpoints deleted from agent", "100ms", it.pollTimeout())
+	}
+
+	// delete the network
+	err = it.DeleteNetwork("default", "Network-Vlan-1")
+	c.Assert(err, IsNil)
 }

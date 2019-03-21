@@ -166,10 +166,12 @@ type CtrlerIntf interface {
 	CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error)                    // create an endpoint
 	UpdateEndpoint(ep *netproto.Endpoint) error                                 // update an endpoint
 	DeleteEndpoint(tn, ns, name string) error                                   // delete an endpoint
+	FindEndpoint(meta api.ObjectMeta) (*netproto.Endpoint, error)               // find an endpoint
 	ListEndpoint() []*netproto.Endpoint                                         // list all endpoints
 	CreateSecurityGroup(nt *netproto.SecurityGroup) error                       // create a sg
 	UpdateSecurityGroup(nt *netproto.SecurityGroup) error                       // update a sg
 	DeleteSecurityGroup(tn, ns, name string) error                              // delete a sg
+	FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error)     // find an sg
 	ListSecurityGroup() []*netproto.SecurityGroup                               // list all sgs
 	CreateTenant(tn *netproto.Tenant) error                                     // create a tenant
 	DeleteTenant(name string) error                                             // delete a tenant

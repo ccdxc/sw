@@ -76,12 +76,12 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 					name = ag.nagent.NetworkAgent.NodeUUID
 				}
 				epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
-				eps, perr := ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
-				if perr != nil {
-					waitCh <- fmt.Errorf("Endpoint %s not found in datapath, eps=%+v, err=%v", epname, eps, perr)
-					return
+				epmeta := api.ObjectMeta{
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      epname,
 				}
-				sep, perr := ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
+				sep, perr := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in netagent, err=%v", epname, perr)
 					return

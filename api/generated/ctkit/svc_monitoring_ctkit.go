@@ -9,6 +9,7 @@ package ctkit
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -105,10 +106,11 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*EventPolicy)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("EventPolicy_Updated_Events").Inc()
@@ -140,7 +142,6 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -319,6 +320,9 @@ func (api *eventpolicyAPI) Create(obj *monitoring.EventPolicy) error {
 		}
 
 		_, err = apicl.MonitoringV1().EventPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -354,10 +358,7 @@ func (api *eventpolicyAPI) Delete(obj *monitoring.EventPolicy) error {
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().EventPolicy().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().EventPolicy().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -474,10 +475,11 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*StatsPolicy)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("StatsPolicy_Updated_Events").Inc()
@@ -509,7 +511,6 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -688,6 +689,9 @@ func (api *statspolicyAPI) Create(obj *monitoring.StatsPolicy) error {
 		}
 
 		_, err = apicl.MonitoringV1().StatsPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -723,10 +727,7 @@ func (api *statspolicyAPI) Delete(obj *monitoring.StatsPolicy) error {
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().StatsPolicy().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().StatsPolicy().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleStatsPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -843,10 +844,11 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*FwlogPolicy)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("FwlogPolicy_Updated_Events").Inc()
@@ -878,7 +880,6 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1057,6 +1058,9 @@ func (api *fwlogpolicyAPI) Create(obj *monitoring.FwlogPolicy) error {
 		}
 
 		_, err = apicl.MonitoringV1().FwlogPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1092,10 +1096,7 @@ func (api *fwlogpolicyAPI) Delete(obj *monitoring.FwlogPolicy) error {
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().FwlogPolicy().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().FwlogPolicy().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1212,10 +1213,11 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 				}
 			} else {
 				obj := fobj.(*FlowExportPolicy)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("FlowExportPolicy_Updated_Events").Inc()
@@ -1247,7 +1249,6 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1426,6 +1427,9 @@ func (api *flowexportpolicyAPI) Create(obj *monitoring.FlowExportPolicy) error {
 		}
 
 		_, err = apicl.MonitoringV1().FlowExportPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1461,10 +1465,7 @@ func (api *flowexportpolicyAPI) Delete(obj *monitoring.FlowExportPolicy) error {
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().FlowExportPolicy().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().FlowExportPolicy().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1581,10 +1582,11 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Alert)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Alert_Updated_Events").Inc()
@@ -1616,7 +1618,6 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1795,6 +1796,9 @@ func (api *alertAPI) Create(obj *monitoring.Alert) error {
 		}
 
 		_, err = apicl.MonitoringV1().Alert().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().Alert().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1830,10 +1834,7 @@ func (api *alertAPI) Delete(obj *monitoring.Alert) error {
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().Alert().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().Alert().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1950,10 +1951,11 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*AlertPolicy)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("AlertPolicy_Updated_Events").Inc()
@@ -1985,7 +1987,6 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -2164,6 +2165,9 @@ func (api *alertpolicyAPI) Create(obj *monitoring.AlertPolicy) error {
 		}
 
 		_, err = apicl.MonitoringV1().AlertPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -2199,10 +2203,7 @@ func (api *alertpolicyAPI) Delete(obj *monitoring.AlertPolicy) error {
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().AlertPolicy().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().AlertPolicy().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -2319,10 +2320,11 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 				}
 			} else {
 				obj := fobj.(*AlertDestination)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("AlertDestination_Updated_Events").Inc()
@@ -2354,7 +2356,6 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -2533,6 +2534,9 @@ func (api *alertdestinationAPI) Create(obj *monitoring.AlertDestination) error {
 		}
 
 		_, err = apicl.MonitoringV1().AlertDestination().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -2568,10 +2572,7 @@ func (api *alertdestinationAPI) Delete(obj *monitoring.AlertDestination) error {
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().AlertDestination().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().AlertDestination().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -2688,10 +2689,11 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*MirrorSession)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("MirrorSession_Updated_Events").Inc()
@@ -2723,7 +2725,6 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -2902,6 +2903,9 @@ func (api *mirrorsessionAPI) Create(obj *monitoring.MirrorSession) error {
 		}
 
 		_, err = apicl.MonitoringV1().MirrorSession().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -2937,10 +2941,7 @@ func (api *mirrorsessionAPI) Delete(obj *monitoring.MirrorSession) error {
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().MirrorSession().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().MirrorSession().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -3057,10 +3058,11 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 				}
 			} else {
 				obj := fobj.(*TroubleshootingSession)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("TroubleshootingSession_Updated_Events").Inc()
@@ -3092,7 +3094,6 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -3271,6 +3272,9 @@ func (api *troubleshootingsessionAPI) Create(obj *monitoring.TroubleshootingSess
 		}
 
 		_, err = apicl.MonitoringV1().TroubleshootingSession().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -3306,10 +3310,7 @@ func (api *troubleshootingsessionAPI) Delete(obj *monitoring.TroubleshootingSess
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().TroubleshootingSession().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().TroubleshootingSession().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -3426,10 +3427,11 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 				}
 			} else {
 				obj := fobj.(*TechSupportRequest)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("TechSupportRequest_Updated_Events").Inc()
@@ -3461,7 +3463,6 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -3640,6 +3641,9 @@ func (api *techsupportrequestAPI) Create(obj *monitoring.TechSupportRequest) err
 		}
 
 		_, err = apicl.MonitoringV1().TechSupportRequest().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -3675,10 +3679,7 @@ func (api *techsupportrequestAPI) Delete(obj *monitoring.TechSupportRequest) err
 			return err
 		}
 
-		_, err = apicl.MonitoringV1().TechSupportRequest().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.MonitoringV1().TechSupportRequest().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})

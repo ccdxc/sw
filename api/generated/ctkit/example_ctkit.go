@@ -9,6 +9,7 @@ package ctkit
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -105,10 +106,11 @@ func (ct *ctrlerCtx) handleOrderEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Order)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Order_Updated_Events").Inc()
@@ -140,7 +142,6 @@ func (ct *ctrlerCtx) handleOrderEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -319,6 +320,9 @@ func (api *orderAPI) Create(obj *bookstore.Order) error {
 		}
 
 		_, err = apicl.BookstoreV1().Order().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Order().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -354,10 +358,7 @@ func (api *orderAPI) Delete(obj *bookstore.Order) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Order().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.BookstoreV1().Order().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -474,10 +475,11 @@ func (ct *ctrlerCtx) handleBookEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Book)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Book_Updated_Events").Inc()
@@ -509,7 +511,6 @@ func (ct *ctrlerCtx) handleBookEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -688,6 +689,9 @@ func (api *bookAPI) Create(obj *bookstore.Book) error {
 		}
 
 		_, err = apicl.BookstoreV1().Book().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Book().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -723,10 +727,7 @@ func (api *bookAPI) Delete(obj *bookstore.Book) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Book().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.BookstoreV1().Book().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleBookEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -843,10 +844,11 @@ func (ct *ctrlerCtx) handlePublisherEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Publisher)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Publisher_Updated_Events").Inc()
@@ -878,7 +880,6 @@ func (ct *ctrlerCtx) handlePublisherEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1057,6 +1058,9 @@ func (api *publisherAPI) Create(obj *bookstore.Publisher) error {
 		}
 
 		_, err = apicl.BookstoreV1().Publisher().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1092,10 +1096,7 @@ func (api *publisherAPI) Delete(obj *bookstore.Publisher) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Publisher().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.BookstoreV1().Publisher().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1212,10 +1213,11 @@ func (ct *ctrlerCtx) handleStoreEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Store)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Store_Updated_Events").Inc()
@@ -1247,7 +1249,6 @@ func (ct *ctrlerCtx) handleStoreEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1426,6 +1427,9 @@ func (api *storeAPI) Create(obj *bookstore.Store) error {
 		}
 
 		_, err = apicl.BookstoreV1().Store().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Store().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1461,10 +1465,7 @@ func (api *storeAPI) Delete(obj *bookstore.Store) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Store().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.BookstoreV1().Store().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1581,10 +1582,11 @@ func (ct *ctrlerCtx) handleCouponEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Coupon)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Coupon_Updated_Events").Inc()
@@ -1616,7 +1618,6 @@ func (ct *ctrlerCtx) handleCouponEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1795,6 +1796,9 @@ func (api *couponAPI) Create(obj *bookstore.Coupon) error {
 		}
 
 		_, err = apicl.BookstoreV1().Coupon().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1830,10 +1834,7 @@ func (api *couponAPI) Delete(obj *bookstore.Coupon) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Coupon().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.BookstoreV1().Coupon().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1950,10 +1951,11 @@ func (ct *ctrlerCtx) handleCustomerEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Customer)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Customer_Updated_Events").Inc()
@@ -1985,7 +1987,6 @@ func (ct *ctrlerCtx) handleCustomerEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -2164,6 +2165,9 @@ func (api *customerAPI) Create(obj *bookstore.Customer) error {
 		}
 
 		_, err = apicl.BookstoreV1().Customer().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -2199,10 +2203,7 @@ func (api *customerAPI) Delete(obj *bookstore.Customer) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Customer().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.BookstoreV1().Customer().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})

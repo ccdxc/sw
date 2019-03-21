@@ -9,6 +9,7 @@ package ctkit
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -105,10 +106,11 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*User)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("User_Updated_Events").Inc()
@@ -140,7 +142,6 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -319,6 +320,9 @@ func (api *userAPI) Create(obj *auth.User) error {
 		}
 
 		_, err = apicl.AuthV1().User().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().User().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -354,10 +358,7 @@ func (api *userAPI) Delete(obj *auth.User) error {
 			return err
 		}
 
-		_, err = apicl.AuthV1().User().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.AuthV1().User().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -474,10 +475,11 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 				}
 			} else {
 				obj := fobj.(*AuthenticationPolicy)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("AuthenticationPolicy_Updated_Events").Inc()
@@ -509,7 +511,6 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -688,6 +689,9 @@ func (api *authenticationpolicyAPI) Create(obj *auth.AuthenticationPolicy) error
 		}
 
 		_, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -723,10 +727,7 @@ func (api *authenticationpolicyAPI) Delete(obj *auth.AuthenticationPolicy) error
 			return err
 		}
 
-		_, err = apicl.AuthV1().AuthenticationPolicy().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.AuthV1().AuthenticationPolicy().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -843,10 +844,11 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Role)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Role_Updated_Events").Inc()
@@ -878,7 +880,6 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1057,6 +1058,9 @@ func (api *roleAPI) Create(obj *auth.Role) error {
 		}
 
 		_, err = apicl.AuthV1().Role().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().Role().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1092,10 +1096,7 @@ func (api *roleAPI) Delete(obj *auth.Role) error {
 			return err
 		}
 
-		_, err = apicl.AuthV1().Role().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.AuthV1().Role().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1212,10 +1213,11 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*RoleBinding)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("RoleBinding_Updated_Events").Inc()
@@ -1247,7 +1249,6 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1426,6 +1427,9 @@ func (api *rolebindingAPI) Create(obj *auth.RoleBinding) error {
 		}
 
 		_, err = apicl.AuthV1().RoleBinding().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1461,10 +1465,7 @@ func (api *rolebindingAPI) Delete(obj *auth.RoleBinding) error {
 			return err
 		}
 
-		_, err = apicl.AuthV1().RoleBinding().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.AuthV1().RoleBinding().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})

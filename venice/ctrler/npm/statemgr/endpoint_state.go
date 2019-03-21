@@ -47,7 +47,7 @@ func convertEndpoint(eps *EndpointState) *netproto.Endpoint {
 	// build endpoint
 	nep := netproto.Endpoint{
 		TypeMeta:   eps.Endpoint.TypeMeta,
-		ObjectMeta: eps.Endpoint.ObjectMeta,
+		ObjectMeta: agentObjectMeta(eps.Endpoint.ObjectMeta),
 		Spec: netproto.EndpointSpec{
 			WorkloadName:       eps.Endpoint.Status.WorkloadName,
 			WorkloadAttributes: eps.Endpoint.Status.WorkloadAttributes,
@@ -319,9 +319,11 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 	}
 
 	// free the IPv4 address
-	err = ns.freeIPv4Addr(eps.Endpoint.Status.IPv4Address)
-	if err != nil {
-		log.Errorf("Error freeing the endpoint address. Err: %v", err)
+	if eps.Endpoint.Status.IPv4Address != "" {
+		err = ns.freeIPv4Addr(eps.Endpoint.Status.IPv4Address)
+		if err != nil {
+			log.Errorf("Error freeing the endpoint address. Err: %v", err)
+		}
 	}
 
 	// delete the endpoint

@@ -49,7 +49,7 @@ func convertFirewallProfile(fps *FirewallProfileState) *netproto.SecurityProfile
 	// build sg message
 	fwp := netproto.SecurityProfile{
 		TypeMeta:   api.TypeMeta{Kind: "SecurityProfile"},
-		ObjectMeta: fps.FirewallProfile.ObjectMeta,
+		ObjectMeta: agentObjectMeta(fps.FirewallProfile.ObjectMeta),
 		Spec: netproto.SecurityProfileSpec{
 			Timeouts: &netproto.Timeouts{
 				SessionIdle:        fps.FirewallProfile.Spec.SessionIdleTimeout,

@@ -102,7 +102,6 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 			err = sm.ctrler.Endpoint().Create(&epInfo)
 			if err != nil {
 				log.Errorf("Error creating endpoint. Err: %v", err)
-				return err
 			}
 		} else if err != nil {
 			return err

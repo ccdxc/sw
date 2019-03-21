@@ -9,6 +9,7 @@ package ctkit
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -105,10 +106,11 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Cluster)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Cluster_Updated_Events").Inc()
@@ -140,7 +142,6 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -319,6 +320,9 @@ func (api *clusterAPI) Create(obj *cluster.Cluster) error {
 		}
 
 		_, err = apicl.ClusterV1().Cluster().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().Cluster().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -354,10 +358,7 @@ func (api *clusterAPI) Delete(obj *cluster.Cluster) error {
 			return err
 		}
 
-		_, err = apicl.ClusterV1().Cluster().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.ClusterV1().Cluster().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -474,10 +475,11 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Node)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Node_Updated_Events").Inc()
@@ -509,7 +511,6 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -688,6 +689,9 @@ func (api *nodeAPI) Create(obj *cluster.Node) error {
 		}
 
 		_, err = apicl.ClusterV1().Node().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().Node().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -723,10 +727,7 @@ func (api *nodeAPI) Delete(obj *cluster.Node) error {
 			return err
 		}
 
-		_, err = apicl.ClusterV1().Node().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.ClusterV1().Node().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -843,10 +844,11 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Host)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Host_Updated_Events").Inc()
@@ -878,7 +880,6 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1057,6 +1058,9 @@ func (api *hostAPI) Create(obj *cluster.Host) error {
 		}
 
 		_, err = apicl.ClusterV1().Host().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().Host().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1092,10 +1096,7 @@ func (api *hostAPI) Delete(obj *cluster.Host) error {
 			return err
 		}
 
-		_, err = apicl.ClusterV1().Host().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.ClusterV1().Host().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleHostEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1212,10 +1213,11 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*SmartNIC)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("SmartNIC_Updated_Events").Inc()
@@ -1247,7 +1249,6 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1426,6 +1427,9 @@ func (api *smartnicAPI) Create(obj *cluster.SmartNIC) error {
 		}
 
 		_, err = apicl.ClusterV1().SmartNIC().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1461,10 +1465,7 @@ func (api *smartnicAPI) Delete(obj *cluster.SmartNIC) error {
 			return err
 		}
 
-		_, err = apicl.ClusterV1().SmartNIC().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.ClusterV1().SmartNIC().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleSmartNICEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1581,10 +1582,11 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Tenant)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Tenant_Updated_Events").Inc()
@@ -1616,7 +1618,6 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1795,6 +1796,9 @@ func (api *tenantAPI) Create(obj *cluster.Tenant) error {
 		}
 
 		_, err = apicl.ClusterV1().Tenant().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.ClusterV1().Tenant().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1830,10 +1834,7 @@ func (api *tenantAPI) Delete(obj *cluster.Tenant) error {
 			return err
 		}
 
-		_, err = apicl.ClusterV1().Tenant().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.ClusterV1().Tenant().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})

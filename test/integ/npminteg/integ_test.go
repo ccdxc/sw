@@ -316,7 +316,12 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			}
 			for i := range it.agents {
 				epname := fmt.Sprintf("testEndpoint-%d", i)
-				_, perr := ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
+				epmeta := api.ObjectMeta{
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      epname,
+				}
+				_, perr := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint not found in datapath")
 					return

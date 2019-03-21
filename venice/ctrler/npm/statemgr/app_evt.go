@@ -61,7 +61,7 @@ func convertApp(aps *AppState) *netproto.App {
 	// build sg message
 	app := netproto.App{
 		TypeMeta:   aps.App.TypeMeta,
-		ObjectMeta: aps.App.ObjectMeta,
+		ObjectMeta: agentObjectMeta(aps.App.ObjectMeta),
 		Spec: netproto.AppSpec{
 			ProtoPorts:     protoPort,
 			AppIdleTimeout: aps.App.Spec.Timeout,

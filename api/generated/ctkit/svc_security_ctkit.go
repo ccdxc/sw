@@ -9,6 +9,7 @@ package ctkit
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -105,10 +106,11 @@ func (ct *ctrlerCtx) handleSecurityGroupEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*SecurityGroup)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("SecurityGroup_Updated_Events").Inc()
@@ -140,7 +142,6 @@ func (ct *ctrlerCtx) handleSecurityGroupEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -319,6 +320,9 @@ func (api *securitygroupAPI) Create(obj *security.SecurityGroup) error {
 		}
 
 		_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -354,10 +358,7 @@ func (api *securitygroupAPI) Delete(obj *security.SecurityGroup) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().SecurityGroup().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.SecurityV1().SecurityGroup().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -474,10 +475,11 @@ func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*SGPolicy)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("SGPolicy_Updated_Events").Inc()
@@ -509,7 +511,6 @@ func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -688,6 +689,9 @@ func (api *sgpolicyAPI) Create(obj *security.SGPolicy) error {
 		}
 
 		_, err = apicl.SecurityV1().SGPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -723,10 +727,7 @@ func (api *sgpolicyAPI) Delete(obj *security.SGPolicy) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().SGPolicy().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.SecurityV1().SGPolicy().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -843,10 +844,11 @@ func (ct *ctrlerCtx) handleAppEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*App)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("App_Updated_Events").Inc()
@@ -878,7 +880,6 @@ func (ct *ctrlerCtx) handleAppEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1057,6 +1058,9 @@ func (api *appAPI) Create(obj *security.App) error {
 		}
 
 		_, err = apicl.SecurityV1().App().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().App().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1092,10 +1096,7 @@ func (api *appAPI) Delete(obj *security.App) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().App().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.SecurityV1().App().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1212,10 +1213,11 @@ func (ct *ctrlerCtx) handleFirewallProfileEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*FirewallProfile)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("FirewallProfile_Updated_Events").Inc()
@@ -1247,7 +1249,6 @@ func (ct *ctrlerCtx) handleFirewallProfileEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1426,6 +1427,9 @@ func (api *firewallprofileAPI) Create(obj *security.FirewallProfile) error {
 		}
 
 		_, err = apicl.SecurityV1().FirewallProfile().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1461,10 +1465,7 @@ func (api *firewallprofileAPI) Delete(obj *security.FirewallProfile) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().FirewallProfile().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.SecurityV1().FirewallProfile().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1581,10 +1582,11 @@ func (ct *ctrlerCtx) handleCertificateEvent(evt *kvstore.WatchEvent) error {
 				}
 			} else {
 				obj := fobj.(*Certificate)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("Certificate_Updated_Events").Inc()
@@ -1616,7 +1618,6 @@ func (ct *ctrlerCtx) handleCertificateEvent(evt *kvstore.WatchEvent) error {
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -1795,6 +1796,9 @@ func (api *certificateAPI) Create(obj *security.Certificate) error {
 		}
 
 		_, err = apicl.SecurityV1().Certificate().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -1830,10 +1834,7 @@ func (api *certificateAPI) Delete(obj *security.Certificate) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().Certificate().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.SecurityV1().Certificate().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
@@ -1950,10 +1951,11 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEvent(evt *kvstore.WatchEvent)
 				}
 			} else {
 				obj := fobj.(*TrafficEncryptionPolicy)
-				obj.ObjectMeta = eobj.ObjectMeta
 
 				// see if it changed
-				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
+				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
+				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
+					obj.ObjectMeta = eobj.ObjectMeta
 					obj.Spec = eobj.Spec
 
 					ct.stats.Counter("TrafficEncryptionPolicy_Updated_Events").Inc()
@@ -1985,7 +1987,6 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEvent(evt *kvstore.WatchEvent)
 			obj.Unlock()
 			if err != nil {
 				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
-				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
@@ -2164,6 +2165,9 @@ func (api *trafficencryptionpolicyAPI) Create(obj *security.TrafficEncryptionPol
 		}
 
 		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+			_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
+		}
 		if err != nil {
 			return err
 		}
@@ -2199,10 +2203,7 @@ func (api *trafficencryptionpolicyAPI) Delete(obj *security.TrafficEncryptionPol
 			return err
 		}
 
-		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Delete(context.Background(), &obj.ObjectMeta)
-		if err != nil {
-			return err
-		}
+		apicl.SecurityV1().TrafficEncryptionPolicy().Delete(context.Background(), &obj.ObjectMeta)
 	}
 
 	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})

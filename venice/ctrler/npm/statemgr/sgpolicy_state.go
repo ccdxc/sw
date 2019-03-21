@@ -81,7 +81,7 @@ func convertSGPolicy(sgp *SgpolicyState) *netproto.SGPolicy {
 	// build sg message
 	nsg := netproto.SGPolicy{
 		TypeMeta:   sgp.SGPolicy.TypeMeta,
-		ObjectMeta: sgp.SGPolicy.ObjectMeta,
+		ObjectMeta: agentObjectMeta(sgp.SGPolicy.ObjectMeta),
 		Spec: netproto.SGPolicySpec{
 			AttachTenant: sgp.SGPolicy.Spec.AttachTenant,
 			AttachGroup:  sgp.SGPolicy.Spec.AttachGroups,

@@ -67,7 +67,7 @@ func ipv4toMac(macPrefix []byte, ip net.IP) net.HardwareAddr {
 func convertNetwork(nw *NetworkState) *netproto.Network {
 	nt := netproto.Network{
 		TypeMeta:   nw.Network.TypeMeta,
-		ObjectMeta: nw.Network.ObjectMeta,
+		ObjectMeta: agentObjectMeta(nw.Network.ObjectMeta),
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  nw.Network.Spec.IPv4Subnet,
 			IPv4Gateway: nw.Network.Spec.IPv4Gateway,

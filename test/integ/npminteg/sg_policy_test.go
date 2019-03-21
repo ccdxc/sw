@@ -5,6 +5,7 @@ package npminteg
 import (
 	"context"
 	"fmt"
+	"time"
 
 	. "gopkg.in/check.v1"
 
@@ -77,19 +78,23 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 		return true, nil
 	}, "SgPolicy status was not updated after creating the policy", "100ms", it.pollTimeout())
 
+	// wait a little so that we dont cause a race condition between NPM write ans updates
+	time.Sleep(time.Millisecond * 10)
+
 	// update the policy
 	newRule := security.SGRule{
 		Action:          "PERMIT",
-		ToIPAddresses:   []string{"10.1.1.1/24"},
-		FromIPAddresses: []string{"10.1.1.1/24"},
+		ToIPAddresses:   []string{"10.2.1.1/24"},
+		FromIPAddresses: []string{"10.2.1.1/24"},
 		ProtoPorts: []security.ProtoPort{
 			{
 				Protocol: "tcp",
-				Ports:    "80",
+				Ports:    "81",
 			},
 		},
 	}
 	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
+	sgp.ObjectMeta.GenerationID = "2"
 	_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
 	AssertOk(c, err, "error updating sg policy")
 

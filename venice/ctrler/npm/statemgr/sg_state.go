@@ -150,7 +150,7 @@ func NewSecurityGroupState(sg *ctkit.SecurityGroup, stateMgr *Statemgr) (*Securi
 func convertSecurityGroup(sgs *SecurityGroupState) *netproto.SecurityGroup {
 	sg := netproto.SecurityGroup{
 		TypeMeta:   sgs.SecurityGroup.TypeMeta,
-		ObjectMeta: sgs.SecurityGroup.ObjectMeta,
+		ObjectMeta: agentObjectMeta(sgs.SecurityGroup.ObjectMeta),
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "", // FIXME: fill in security profile
 		},

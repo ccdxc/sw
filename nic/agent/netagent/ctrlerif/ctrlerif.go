@@ -172,11 +172,21 @@ func (client *NpmClient) processNetworkEvent(evt netproto.NetworkEvent) {
 	for iter := 0; iter < maxOpretry; iter++ {
 		switch evt.EventType {
 		case api.EventType_CreateEvent:
-			// create the network
-			client.debugStats.AddFloat("net_create", 1.0)
-			err = client.agent.CreateNetwork(&evt.Network)
+			_, err = client.agent.FindNetwork(evt.Network.ObjectMeta)
 			if err != nil {
-				log.Errorf("Error creating the network {%+v}. Err: %v", evt, err)
+				// create the network
+				client.debugStats.AddFloat("net_create", 1.0)
+				err = client.agent.CreateNetwork(&evt.Network)
+				if err != nil {
+					log.Errorf("Error creating the network {%+v}. Err: %v", evt, err)
+				}
+			} else {
+				// update the network
+				client.debugStats.AddFloat("net_update", 1.0)
+				err = client.agent.UpdateNetwork(&evt.Network)
+				if err != nil {
+					log.Errorf("Error updating the network {%+v}. Err: %v", evt, err)
+				}
 			}
 		case api.EventType_UpdateEvent:
 			// update the network
@@ -220,10 +230,19 @@ func (client *NpmClient) processEndpointEvent(epevt netproto.EndpointEvent) {
 			_, ok := client.pendingEpCreate[objectKey(epevt.Endpoint.ObjectMeta)]
 			client.Unlock()
 			if !ok {
-				// create the endpoint
-				_, err = client.agent.CreateEndpoint(&epevt.Endpoint)
+				_, err = client.agent.FindEndpoint(epevt.Endpoint.ObjectMeta)
 				if err != nil {
-					log.Errorf("Error creating the endpoint {%+v}. Err: %v", epevt, err)
+					// create the endpoint
+					_, err = client.agent.CreateEndpoint(&epevt.Endpoint)
+					if err != nil {
+						log.Errorf("Error creating the endpoint {%+v}. Err: %v", epevt, err)
+					}
+				} else {
+					// update the endpoint
+					err = client.agent.UpdateEndpoint(&epevt.Endpoint)
+					if err != nil {
+						log.Errorf("Error creating the endpoint {%+v}. Err: %v", epevt, err)
+					}
 				}
 			}
 		case api.EventType_UpdateEvent:
@@ -266,10 +285,19 @@ func (client *NpmClient) processSecurityGroupEvent(evt netproto.SecurityGroupEve
 	for iter := 0; iter < maxOpretry; iter++ {
 		switch evt.EventType {
 		case api.EventType_CreateEvent:
-			// create the security group
-			err = client.agent.CreateSecurityGroup(&evt.SecurityGroup)
+			_, err = client.agent.FindSecurityGroup(evt.SecurityGroup.ObjectMeta)
 			if err != nil {
-				log.Errorf("Error creating the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
+				// create the security group
+				err = client.agent.CreateSecurityGroup(&evt.SecurityGroup)
+				if err != nil {
+					log.Errorf("Error creating the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
+				}
+			} else {
+				// update the sg
+				err = client.agent.UpdateSecurityGroup(&evt.SecurityGroup)
+				if err != nil {
+					log.Errorf("Error updating the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
+				}
 			}
 		case api.EventType_UpdateEvent:
 			// update the sg
@@ -305,12 +333,19 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 	for iter := 0; iter < maxOpretry; iter++ {
 		switch evt.EventType {
 		case api.EventType_CreateEvent:
-			// create the security policy
-			err = client.agent.CreateSGPolicy(&evt.SGPolicy)
+			_, err = client.agent.FindSecurityGroup(evt.SGPolicy.ObjectMeta)
 			if err != nil {
-				log.Errorf("Error creating the sg policy {%+v}. Err: %v", evt.SGPolicy, err)
+				// create the security policy
+				err = client.agent.CreateSGPolicy(&evt.SGPolicy)
+				if err != nil {
+					log.Errorf("Error creating the sg policy {%+v}. Err: %v", evt.SGPolicy, err)
+				}
 			} else {
-
+				// update the sg policy
+				err = client.agent.UpdateSGPolicy(&evt.SGPolicy)
+				if err != nil {
+					log.Errorf("Error updating the sg policy {%+v}. Err: %v", evt.SGPolicy, err)
+				}
 			}
 		case api.EventType_UpdateEvent:
 			// update the sg policy
@@ -356,12 +391,19 @@ func (client *NpmClient) processSecurityProfileEvent(evt netproto.SecurityProfil
 	for iter := 0; iter < maxOpretry; iter++ {
 		switch evt.EventType {
 		case api.EventType_CreateEvent:
-			// create the sec profile
-			err = client.agent.CreateSecurityProfile(&evt.SecurityProfile)
+			_, err = client.agent.FindSecurityProfile(evt.SecurityProfile.ObjectMeta)
 			if err != nil {
-				log.Errorf("Error creating the sec profile {%+v}. Err: %v", evt.SecurityProfile.ObjectMeta, err)
+				// create the sec profile
+				err = client.agent.CreateSecurityProfile(&evt.SecurityProfile)
+				if err != nil {
+					log.Errorf("Error creating the sec profile {%+v}. Err: %v", evt.SecurityProfile.ObjectMeta, err)
+				}
 			} else {
-
+				// update the sec profile
+				err = client.agent.UpdateSecurityProfile(&evt.SecurityProfile)
+				if err != nil {
+					log.Errorf("Error updating the sec profile {%+v}. Err: %v", evt.SecurityProfile.ObjectMeta, err)
+				}
 			}
 		case api.EventType_UpdateEvent:
 			// update the sec profile
@@ -393,12 +435,19 @@ func (client *NpmClient) processAppEvent(evt netproto.AppEvent) {
 	for iter := 0; iter < maxOpretry; iter++ {
 		switch evt.EventType {
 		case api.EventType_CreateEvent:
-			// create the security policy
-			err = client.agent.CreateApp(&evt.App)
+			_, err = client.agent.FindApp(evt.App.ObjectMeta)
 			if err != nil {
-				log.Errorf("Error creating the app {%+v}. Err: %v", evt.App.ObjectMeta, err)
+				// create the security policy
+				err = client.agent.CreateApp(&evt.App)
+				if err != nil {
+					log.Errorf("Error creating the app {%+v}. Err: %v", evt.App.ObjectMeta, err)
+				}
 			} else {
-
+				// update the sg policy
+				err = client.agent.UpdateApp(&evt.App)
+				if err != nil {
+					log.Errorf("Error updating the app {%+v}. Err: %v", evt.App.ObjectMeta, err)
+				}
 			}
 		case api.EventType_UpdateEvent:
 			// update the sg policy

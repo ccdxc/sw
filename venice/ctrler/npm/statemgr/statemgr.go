@@ -128,14 +128,17 @@ func NewStatemgr(apisrvURL string, rslvr resolver.Interface, mserver *nimbus.Mbu
 	if err != nil {
 		log.Fatalf("Error watching firewall profile")
 	}
-	err = ctrler.Host().Watch(statemgr)
-	if err != nil {
-		log.Fatalf("Error watching host")
-	}
 	err = ctrler.SmartNIC().Watch(statemgr)
 	if err != nil {
 		log.Fatalf("Error watching smartnic")
 	}
+	err = ctrler.Host().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching host")
+	}
+	// FIXME: little hack here to get smart nics before workloads
+	// we need to make this timing independent..
+	time.Sleep(time.Second)
 	err = ctrler.Workload().Watch(statemgr)
 	if err != nil {
 		log.Fatalf("Error watching workloads")
@@ -221,4 +224,14 @@ func newPeriodicUpdater() chan updatable {
 // PeriodicUpdaterPush enqueues an object to the periodic updater
 func (sm *Statemgr) PeriodicUpdaterPush(obj updatable) {
 	sm.periodicUpdaterQueue <- obj
+}
+
+// agentObjectMeta converts venice object meta to agent object meta
+func agentObjectMeta(vmeta api.ObjectMeta) api.ObjectMeta {
+	return api.ObjectMeta{
+		Tenant:       vmeta.Tenant,
+		Namespace:    vmeta.Namespace,
+		Name:         vmeta.Name,
+		GenerationID: vmeta.GenerationID,
+	}
 }

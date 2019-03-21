@@ -360,14 +360,10 @@ func (na *Nagent) DeleteEndpoint(tn, namespace, name string) error {
 }
 
 // FindEndpoint finds an endpoint by name
-func (na *Nagent) FindEndpoint(tn, namespace, name string) (*netproto.Endpoint, error) {
+func (na *Nagent) FindEndpoint(meta api.ObjectMeta) (*netproto.Endpoint, error) {
 	ep := &netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    tn,
-			Namespace: namespace,
-			Name:      name,
-		},
+		TypeMeta:   api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: meta,
 	}
 
 	// check if we have the endpoint

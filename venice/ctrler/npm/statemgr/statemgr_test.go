@@ -191,7 +191,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 	}
 
 	// find the network
-	nw, err := stateMgr.FindNetwork("default", "default")
+	_, err = stateMgr.FindNetwork("default", "default")
 	AssertOk(t, err, "Could not find the network")
 
 	// create endpoint
@@ -202,10 +202,6 @@ func TestEndpointCreateDelete(t *testing.T) {
 	Assert(t, (eps.Endpoint.TypeMeta.Kind == "Endpoint"), "Endpoint type meta did not match", eps)
 	Assert(t, (eps.Endpoint.Status.IPv4Address == "10.1.1.1/24"), "Endpoint address did not match", eps)
 	Assert(t, (eps.Endpoint.Status.IPv4Gateway == "10.1.1.254"), "Endpoint gateway did not match", eps)
-
-	// verify can not delete a network when it still has endpoints
-	err = stateMgr.ctrler.Network().Delete(&nw.Network.Network)
-	Assert(t, (err != nil), "Was able to delete network with endpoint")
 
 	// verify you cant create duplicate endpoints
 	epinfo.Status.IPv4Address = "10.1.1.5"
