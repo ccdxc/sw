@@ -89,6 +89,7 @@ type ImageConfig struct {
 	ImageMap                map[string]string   `json:"imageMap,omitempty"`
 	UpgradeOrder            []string            `json:"upgradeOrder,omitempty"`
 	SupportedNaplesVersions map[string][]string `json:"supportedNaplesVersions,omitempty"`
+	GitVersion              map[string]string   `json:"cmdVersion,omitempty"`
 }
 
 func readImageConfigFile(imageConfig *ImageConfig) error {
@@ -109,6 +110,13 @@ func readImageConfigFile(imageConfig *ImageConfig) error {
 		return err
 	}
 	return nil
+}
+
+// GetGitVersion reads config file and returns a map of ContainerInfo indexed by name
+func GetGitVersion() map[string]string {
+	var imageConfig ImageConfig
+	readImageConfigFile(&imageConfig)
+	return imageConfig.GitVersion
 }
 
 // GetContainerInfo reads config file and returns a map of ContainerInfo indexed by name

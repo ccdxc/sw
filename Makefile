@@ -66,6 +66,7 @@ E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
 E2E_CUSTOM_CONFIG ?= test/e2e/cluster/venice-conf.json
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
 GIT_VERSION ?= $(shell git describe --dirty --always)
+IMAGE_VERSION ?= ${GIT_VERSION}
 BUILD_DATE ?= $(shell date   +%Y-%m-%dT%H:%M:%S%z)
 export GIT_COMMIT GIT_VERSION BUILD_DATE
 
@@ -177,7 +178,7 @@ install:
 	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
-	@tools/scripts/createImage.py
+	@tools/scripts/createImage.py ${IMAGE_VERSION} ${GIT_VERSION}
 	@# the above script populates venice.json which needs to be 'installed' on the venice. Hence creation of installer is done at the end
 	@# For now the installer is a docker container.
 	@# In the future, this can be a shell script, rpm, curl script or whatever..

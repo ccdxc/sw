@@ -115,7 +115,18 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 
 		existingStatus, found := r.cachedStatus[key]
 		if !found {
-			st := r.doOP(opSpec.Op, opSpec.Version)
+			var st rolloutproto.VeniceOpStatus
+			cmdVersion := utils.GetGitVersion()
+			if env.GitVersion != cmdVersion[opSpec.Version] {
+				log.Infof("Performing Rollout to version %v", utils.GetGitVersion())
+				st = r.doOP(opSpec.Op, opSpec.Version)
+			} else {
+				st = rolloutproto.VeniceOpStatus{
+					Op:      opSpec.Op,
+					Version: opSpec.Version,
+				}
+				st.OpStatus = "success"
+			}
 			opStatus = append(opStatus, st)
 			r.cachedStatus[key] = st
 			needtoUpdateStatus = true

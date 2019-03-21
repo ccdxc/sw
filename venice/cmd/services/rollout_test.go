@@ -2,10 +2,17 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 
+	"github.com/pensando/sw/venice/cmd/utils"
 	rolloutproto "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
+
+	"github.com/pensando/sw/venice/cmd/env"
+	"github.com/pensando/sw/venice/cmd/server/options"
 )
 
 type rolloutTestHelper struct {
@@ -42,6 +49,32 @@ func (h *rolloutTestHelper) WriteStatus(ctx context.Context, s *rolloutproto.Ven
 
 func TestRolloutMgr(t *testing.T) {
 	r := newRolloutMgr()
+	env.Options = options.NewServerRunOptions()
+	env.Options.CommonConfigDir = "/"
+
+	tmpfile, err := ioutil.TempFile(os.TempDir(), "cconfig")
+	if err != nil {
+		t.Fatalf("Error creating temp file %#v", err)
+	}
+	env.Options.ContainerConfigFile = tmpfile.Name()
+	defer os.Remove(tmpfile.Name())
+	imageConfig := utils.ImageConfig{
+		ImageMap:                map[string]string{"testName": "testImage"},
+		UpgradeOrder:            []string{"testName", "testName2"},
+		SupportedNaplesVersions: map[string][]string{"naples1": {"ver1", "ver2", "ver3"}},
+		GitVersion:              map[string]string{"image_version_2": "cmd_version_3"},
+	}
+	var content []byte
+	if content, err = json.Marshal(imageConfig); err != nil {
+		t.Fatalf("unable to json.Marshall %v error: %v", imageConfig, err)
+	}
+
+	if _, err := tmpfile.Write(content); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
 
 	numupgradeServicesCalled, numgetUpgradeOrderCalled, numVenicePrecheckCalled, numVeniceRunVersionCalled := 0, 0, 0, 0
 	r.upgradeServices = func(srvList []string) error { numupgradeServicesCalled++; return nil }
@@ -61,7 +94,7 @@ func TestRolloutMgr(t *testing.T) {
 			Ops: []*rolloutproto.ServiceOpSpec{
 				&rolloutproto.ServiceOpSpec{
 					Op:      rolloutproto.ServiceOp_ServiceRunVersion,
-					Version: "dummy",
+					Version: "image_version_2",
 				},
 			},
 		},
@@ -123,7 +156,7 @@ func TestRolloutMgr(t *testing.T) {
 			Ops: []*rolloutproto.VeniceOpSpec{
 				&rolloutproto.VeniceOpSpec{
 					Op:      rolloutproto.VeniceOp_VenicePreCheck,
-					Version: "dummy",
+					Version: "image_version_2",
 				},
 			},
 		},
