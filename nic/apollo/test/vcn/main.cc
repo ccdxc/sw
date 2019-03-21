@@ -322,9 +322,9 @@ TEST_F(vcn, vcn_workflow_neg_4) {
     std::string vcn_start_addr2 = "40.0.0.0/16";
     uint32_t num_vcns = 20;
 
+    // Trigger
     key1.id = 10;
     key2.id = 40;
-
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key1, vcn_start_addr1, num_vcns,
