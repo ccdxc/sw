@@ -412,6 +412,9 @@ ipsec_exec_pkt(fte::ctx_t&ctx)
     if (!ctx.cpu_rxhdr()) {
         return fte::PIPELINE_CONTINUE; 
     }
+    if ((ctx.cpu_rxhdr()->flags & CPU_FLAGS_IPV6_VALID) == CPU_FLAGS_IPV6_VALID) {
+        return fte::PIPELINE_CONTINUE; 
+    }
 
     HAL_TRACE_DEBUG("IPSec flow forwarding role: {} direction: {} key {} src_lif {}", 
         ctx.role(), ctx.direction(), ctx.get_key(), ctx.cpu_rxhdr()->src_lif);

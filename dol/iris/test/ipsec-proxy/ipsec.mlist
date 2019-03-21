@@ -194,7 +194,7 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_ipv6_to_eth 
         spec    : decrypt_ipsec_ipv6_to_eth.testspec 
-        ignore  : False 
+        ignore  : True
         rtl     : True
         iterate :
             - flow: filter://type=IPV6
