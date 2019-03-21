@@ -9,10 +9,13 @@
         <div fxFlex="25px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
         <div fxFlex="noshrink" fxLayout="row" formGroupName="spec">
           <div fxFlex="nogrow" class="newfwlogpolicy-text">EXPORT:</div>
-          <p-multiSelect class="newfwlogpolicy-filter" fxFlex="300px" 
+          <p-multiSelect #logOptions class="newfwlogpolicy-filter" fxFlex="300px" 
                                   formControlName="filter" appendTo="body" styleClass="newfwlogpolicy-font"
-                                  [filter]="false" 
-                                  [options]="filterOptions"></p-multiSelect>
+                                  [filter]="false"  
+                                  defaultLabel="All Logs" 
+                                  [options]="filterOptions"
+                                  (onChange)="onLogOptionChange($event)"
+                                  ></p-multiSelect>
         </div>
 
         <div fxFlex="20px" fxLayout="row">

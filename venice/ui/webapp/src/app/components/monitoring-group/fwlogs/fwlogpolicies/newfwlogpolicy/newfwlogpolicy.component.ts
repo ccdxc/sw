@@ -5,7 +5,7 @@ import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringFwlogPolicy, MonitoringFwlogPolicy, MonitoringFwlogPolicySpec } from '@sdk/v1/models/generated/monitoring';
-import { SelectItem } from 'primeng/primeng';
+import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
 import { Utility } from '@app/common/Utility';
@@ -19,15 +19,20 @@ import { required } from '@sdk/v1/utils/validators';
   encapsulation: ViewEncapsulation.None,
 })
 export class NewfwlogpolicyComponent extends BaseComponent implements OnInit, AfterViewInit {
+  public static LOGOPTIONS_ALL = 'FIREWALL_ACTION_ALL';
+  public static LOGOPTIONS_NONE = 'FIREWALL_ACTION_NONE';
+
   // @ViewChild('fieldSelector') fieldSelector: FieldselectorComponent;
   @ViewChild('syslogComponent') syslogComponent: SyslogComponent;
+  @ViewChild('logOptions') logOptionsMultiSelect: MultiSelect;
+
   newPolicy: MonitoringFwlogPolicy;
 
   @Input() isInline: boolean = false;
   @Input() policyData: IMonitoringFwlogPolicy;
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
-  filterOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringFwlogPolicySpec.propInfo['filter'].enum);
+  filterOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringFwlogPolicySpec.propInfo['filter'].enum, [NewfwlogpolicyComponent.LOGOPTIONS_NONE]);
 
   oldButtons: ToolbarButton[] = [];
 
@@ -138,5 +143,32 @@ export class NewfwlogpolicyComponent extends BaseComponent implements OnInit, Af
       this.setPreviousToolbar();
     }
     this.formClose.emit();
+  }
+
+  /**
+   * event.itemValue is the changed item. event.value has the selections
+   * @param event
+   */
+  /* VS-124.
+     When there is any NONE-ALL options selected, OPTION_ALL will be removed
+     When none is seleced, we set OPTION_AL as default.
+  */
+  onLogOptionChange(event) {
+    const values = this.logOptionsMultiSelect.value;
+    if (values.length >= 1) {
+      const index = values.indexOf(NewfwlogpolicyComponent.LOGOPTIONS_ALL);
+      if (index > -1) {
+        values.splice(index, 1);
+        this.logOptionsMultiSelect.value = values;
+        this.filterOptions = Utility.convertEnumToSelectItem(MonitoringFwlogPolicySpec.propInfo['filter'].enum,
+          [NewfwlogpolicyComponent.LOGOPTIONS_NONE, NewfwlogpolicyComponent.LOGOPTIONS_ALL]);
+
+      }
+    } else {
+      // when there is no log option selected, set ALL as default
+      this.logOptionsMultiSelect.value = [NewfwlogpolicyComponent.LOGOPTIONS_ALL];
+      this.filterOptions = Utility.convertEnumToSelectItem(MonitoringFwlogPolicySpec.propInfo['filter'].enum,
+        [NewfwlogpolicyComponent.LOGOPTIONS_NONE]);
+    }
   }
 }
