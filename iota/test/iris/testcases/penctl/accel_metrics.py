@@ -9,6 +9,9 @@ import iota.test.iris.testcases.storage.ymltest2 as ymltest2
 
 def Setup(tc):
     tc.nodes = api.GetNaplesHostnames()
+    for n in tc.nodes:
+        if api.GetNodeOs(n) == "linux":
+            return api.types.status.SUCCESS
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
@@ -21,6 +24,9 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    for n in tc.nodes:
+        if api.GetNodeOs(n) == "linux":
+            return api.types.status.SUCCESS
 
     #Run Traffic test
     ret = ymltest2.RunTest(tc)
@@ -39,8 +45,16 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    for n in tc.nodes:
+        if api.GetNodeOs(n) == "linux":
+            return api.types.status.SUCCESS
+
     #Verify metrics here
     return api.types.status.SUCCESS
 
 def Teardown(tc):
+    for n in tc.nodes:
+        if api.GetNodeOs(n) == "linux":
+            return api.types.status.SUCCESS
+
     return api.types.status.SUCCESS
