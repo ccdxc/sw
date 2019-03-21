@@ -293,7 +293,7 @@ public:
     // static methods
     // ----------------------------------------------------
     static sdk_ret_t port_init(linkmgr_cfg_t *cfg);
-    static sdk_ret_t xcvr_port_mac_addr(uint32_t xcvr_port, mac_addr_t mac_addr);
+    static sdk_ret_t phy_port_mac_addr(uint32_t phy_port, mac_addr_t mac_addr);
     static uint32_t port_num_to_asic_port(uint32_t port_num) {
         return port_num - 1;
     }

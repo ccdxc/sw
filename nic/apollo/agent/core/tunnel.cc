@@ -55,4 +55,29 @@ tep_get (uint32_t key, pds_tep_info_t *info)
     return ret;
 }
 
+static inline sdk_ret_t
+tep_get_all_cb (pds_tep_spec_t *spec, void *ctxt)
+{
+    sdk_ret_t ret;
+    pds_tep_info_t info;
+    tep_db_cb_ctxt_t *cb_ctxt = (tep_db_cb_ctxt_t *)ctxt;
+
+    memcpy(&info.spec, spec, sizeof(pds_tep_spec_t));
+    ret = pds_tep_read(&spec->key, &info);
+    if (ret == SDK_RET_OK) {
+        cb_ctxt->cb(&info, cb_ctxt->ctxt);
+    }
+    return ret;
+}
+
+sdk_ret_t
+tep_get_all (tep_get_cb_t tep_get_cb, void *ctxt)
+{
+    tep_db_cb_ctxt_t cb_ctxt;
+
+    cb_ctxt.cb = tep_get_cb;
+    cb_ctxt.ctxt = ctxt;
+    return agent_state::state()->tep_db_walk(tep_get_all_cb, &cb_ctxt);
+}
+
 }    // namespace core

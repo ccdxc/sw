@@ -201,6 +201,17 @@ agent_state::find_in_tep_db(uint32_t key) {
     return iterator->second;
 }
 
+sdk_ret_t
+agent_state::tep_db_walk(tep_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(tep);
+    auto it_end = DB_END(tep);
+
+    for (auto it = it_begin; it != it_end; it ++) {
+        cb(it->second, ctxt);
+    }
+    return SDK_RET_OK;
+}
+
 bool
 agent_state::del_from_tep_db(uint32_t key) {
     tep_map()->erase(key);

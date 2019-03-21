@@ -94,7 +94,7 @@ sdk_ret_t
 xcvr_get (int port, xcvr_event_info_t *xcvr_event_info)
 {
     // Front panel ports are 1 based
-    xcvr_event_info->xcvr_port    = port + 1;
+    xcvr_event_info->phy_port    = port + 1;
     xcvr_event_info->state        = xcvr_state(port);
     xcvr_event_info->pid          = xcvr_pid(port);
     xcvr_event_info->cable_type   = cable_type(port);
@@ -130,12 +130,12 @@ xcvr_state_change (int port) {
 
     // TODO For testing
 #if 0
-    int xcvr_port = 0;
+    int phy_port = 0;
     int qsfp_present = 0;
     FILE *d_fp = fopen("/qsfp_presence", "r");
     if (d_fp) {
-        fscanf(d_fp, "%d %d", &xcvr_port, &qsfp_present);
-        if (xcvr_port == port + 1) {
+        fscanf(d_fp, "%d %d", &phy_port, &qsfp_present);
+        if (phy_port == port + 1) {
             present = qsfp_present == 1? true : false;
         }
         fclose(d_fp);

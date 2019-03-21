@@ -284,15 +284,15 @@ port::port_serdes_output_enable(bool enable)
         xcvr_en_mask |= (1 << lane);
     }
 
-    int xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_num());
+    int phy_port = sdk::lib::catalog::logical_port_to_phy_port(port_num());
 
-    if (xcvr_port != -1 &&
+    if (phy_port != -1 &&
         cable_type() == sdk::types::cable_type_t::CABLE_TYPE_FIBER) {
-        sdk_ret = sdk::platform::xcvr_enable(xcvr_port-1, enable, xcvr_en_mask);
+        sdk_ret = sdk::platform::xcvr_enable(phy_port-1, enable, xcvr_en_mask);
         if (sdk_ret != SDK_RET_OK) {
-            SDK_LINKMGR_TRACE_ERR ("Failed to %s xcvr_port: %d",
+            SDK_LINKMGR_TRACE_ERR ("Failed to %s phy_port: %d",
                                    enable == true? "enable" : "disable",
-                                   xcvr_port);
+                                   phy_port);
         }
     }
 
@@ -1349,7 +1349,7 @@ port::port_init(linkmgr_cfg_t *cfg)
 }
 
 sdk_ret_t
-port::xcvr_port_mac_addr(uint32_t xcvr_port, mac_addr_t mac_addr) {
+port::phy_port_mac_addr(uint32_t phy_port, mac_addr_t mac_addr) {
     std::string   mac_addr_str;
 
     if (readKey(MACADDRESS_KEY, mac_addr_str) == -1) {
@@ -1360,7 +1360,7 @@ port::xcvr_port_mac_addr(uint32_t xcvr_port, mac_addr_t mac_addr) {
 
     // base mac addr is for first xcvr port, increment the last byte for
     // subsequent ports
-    mac_addr[5] += (uint8_t)(xcvr_port - 1);
+    mac_addr[5] += (uint8_t)(phy_port - 1);
     return SDK_RET_OK;
 }
 

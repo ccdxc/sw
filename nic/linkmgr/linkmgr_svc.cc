@@ -428,7 +428,7 @@ populate_port_get_response_spec (port_args_t *port_args,
                 (linkmgr::sdk_port_oper_st_to_port_oper_st_spec
                                         (port_args->oper_status)));
 
-        xcvr_status->set_port(port_args->xcvr_event_info.xcvr_port);
+        xcvr_status->set_port(port_args->xcvr_event_info.phy_port);
         xcvr_status->set_state(port::PortXcvrState(
                                     port_args->xcvr_event_info.state));
         xcvr_status->set_pid(port::PortXcvrPid(

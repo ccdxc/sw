@@ -36,7 +36,7 @@ port_event_cb (uint32_t port_num, port_event_t event, port_speed_t port_speed)
 void
 xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 {
-    int xcvr_port = 0;
+    int phy_port = 0;
 
     /**< ignore xcvr events if xcvr valid check is disabled */
     if (!sdk::platform::xcvr_valid_check_enabled()) {
@@ -55,10 +55,10 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 
     for (int port = 0; port < PDS_MAX_PORT+1; ++port) {
         if (g_port_store[port] != NULL) {
-            xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port);
+            phy_port = sdk::lib::catalog::logical_port_to_phy_port(port);
 
-            if (xcvr_port == -1 ||
-                xcvr_port != (int)xcvr_event_info->xcvr_port) {
+            if (phy_port == -1 ||
+                phy_port != (int)xcvr_event_info->phy_port) {
                 continue;
             }
 
@@ -204,13 +204,13 @@ port_get (uint32_t fp_port, port_get_cb_t port_get_cb, void *ctxt)
                 PDS_TRACE_ERR("Failed to get port %u info", port_num);
                 continue;
             }
-            port_info.port_num = g_pds_state.catalogue()->port_num_to_fp_port(port_info.port_num);
+            port_info.port_num = g_pds_state.catalogue()->logical_port_to_fp_port(port_info.port_num);
             /** call the per port callback for this port */
             port_get_cb(&port_info, ctxt);
             port_num += g_pds_state.catalogue()->num_lanes_fp(fp_port);
         }
     } else {
-        uint32_t port_num = g_pds_state.catalogue()->fp_port_to_port_num(fp_port);
+        uint32_t port_num = g_pds_state.catalogue()->fp_port_to_logical_port(fp_port);
 
         if (port_num > PDS_MAX_PORT) {
             PDS_TRACE_ERR("Invalid port number %u", fp_port);
@@ -229,7 +229,7 @@ port_get (uint32_t fp_port, port_get_cb_t port_get_cb, void *ctxt)
             PDS_TRACE_ERR("Failed to get port %u info", fp_port);
             return ret;
         }
-        port_info.port_num = g_pds_state.catalogue()->port_num_to_fp_port(port_info.port_num);
+        port_info.port_num = g_pds_state.catalogue()->logical_port_to_fp_port(port_info.port_num);
         /** call the per port callback for this port */
         port_get_cb(&port_info, ctxt);
     }

@@ -32,7 +32,7 @@ void *xcvr_poll_timer_handle;
 
 // link down poll list
 void *port_link_poll_timer_handle;
-port *link_poll_timer_list[MAX_UPLINK_PORTS];
+port *link_poll_timer_list[MAX_LOGICAL_PORTS];
 
 // per producer request queues
 linkmgr_queue_t g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
@@ -357,7 +357,7 @@ sdk_ret_t
 port_link_poll_timer (linkmgr_entry_data_t *data)
 {
     if (port_link_poll_enabled() == true) {
-        for (int i = 0; i < MAX_UPLINK_PORTS; ++i) {
+        for (int i = 0; i < MAX_LOGICAL_PORTS; ++i) {
             port *port_p = link_poll_timer_list[i];
 
             if (port_p != NULL) {
@@ -638,20 +638,20 @@ validate_speed_lanes (port_speed_t speed, uint32_t num_lanes)
 void
 port_set_leds (uint32_t port_num, port_event_t event)
 {
-    int xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_num);
+    int phy_port = sdk::lib::catalog::logical_port_to_phy_port(port_num);
 
-    if (xcvr_port == -1) {
+    if (phy_port == -1) {
         return;
     }
 
     switch (event) {
     case port_event_t::PORT_EVENT_LINK_UP:
-        sdk::lib::pal_qsfp_set_led(xcvr_port,
+        sdk::lib::pal_qsfp_set_led(phy_port,
                                    pal_led_color_t::LED_COLOR_GREEN);
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
-        sdk::lib::pal_qsfp_set_led(xcvr_port,
+        sdk::lib::pal_qsfp_set_led(phy_port,
                                    pal_led_color_t::LED_COLOR_NONE);
         break;
 
@@ -674,13 +674,13 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
         return sdk_ret;
     }
 
-    int xcvr_port =
-        sdk::lib::catalog::port_num_to_qsfp_port(port_args.port_num);
+    int phy_port =
+        sdk::lib::catalog::logical_port_to_phy_port(port_args.port_num);
 
-    SDK_TRACE_DEBUG("port: %u, xcvr_port: %u, xcvr_event_port: %u, "
+    SDK_TRACE_DEBUG("port: %u, phy_port: %u, xcvr_event_port: %u, "
                     "xcvr_state: %u, user_admin: %u, admin: %u, "
                     "AN_cfg: %u, AN_enable: %u, num_lanes_cfg: %u",
-                    port_args.port_num, xcvr_port, xcvr_event_info->xcvr_port,
+                    port_args.port_num, phy_port, xcvr_event_info->phy_port,
                     static_cast<uint32_t>(xcvr_event_info->state),
                     static_cast<uint32_t>(port_args.user_admin_state),
                     static_cast<uint32_t>(port_args.admin_state),
@@ -688,7 +688,7 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
                     port_args.auto_neg_enable,
                     port_args.num_lanes_cfg);
 
-    if (xcvr_port == -1 || xcvr_port != (int)xcvr_event_info->xcvr_port) {
+    if (phy_port == -1 || phy_port != (int)xcvr_event_info->phy_port) {
         return SDK_RET_OK;
     }
 
@@ -697,10 +697,10 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
         port_args.cable_type   = xcvr_event_info->cable_type;
         port_args.port_an_args = xcvr_event_info->port_an_args;
 
-        SDK_TRACE_DEBUG("port: %u, xcvr_port: %u, "
+        SDK_TRACE_DEBUG("port: %u, phy_port: %u, "
                         "user_cap: %u, fec_ability: %u, fec_request: %u",
                         port_args.port_num,
-                        xcvr_port,
+                        phy_port,
                         port_args.port_an_args->user_cap,
                         port_args.port_an_args->fec_ability,
                         port_args.port_an_args->fec_request);
@@ -756,17 +756,17 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
     //     set admin_state as ADMIN_DOWN
     //     (only admin_state is down. user_admin_state as per request msg)
 
-    int xcvr_port =
-        sdk::lib::catalog::port_num_to_qsfp_port(port_args->port_num);
+    int phy_port =
+        sdk::lib::catalog::logical_port_to_phy_port(port_args->port_num);
 
-    port::xcvr_port_mac_addr(xcvr_port, port_args->mac_addr);
+    port::phy_port_mac_addr(phy_port, port_args->mac_addr);
 
     // default cable type is CU
     port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
 
-    if (xcvr_port != -1) {
-        if (sdk::platform::xcvr_valid(xcvr_port-1) == true) {
-            port_args->cable_type = sdk::platform::cable_type(xcvr_port-1);
+    if (phy_port != -1) {
+        if (sdk::platform::xcvr_valid(phy_port-1) == true) {
+            port_args->cable_type = sdk::platform::cable_type(phy_port-1);
 
             // for older boards, cable type returned is NONE.
             // Set it to CU
@@ -775,12 +775,12 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
             }
 
             port_args->port_an_args =
-                            sdk::platform::xcvr_get_an_args(xcvr_port - 1);
+                            sdk::platform::xcvr_get_an_args(phy_port - 1);
 
-           SDK_TRACE_DEBUG("port : %u, xcvr_port : %u, user_cap : %u "
+           SDK_TRACE_DEBUG("port : %u, phy_port : %u, user_cap : %u "
                               "fec ability : %u, fec request : %u, "
                               "cable_type : %u", port_args->port_num,
-                              xcvr_port, port_args->port_an_args->user_cap,
+                              phy_port, port_args->port_an_args->user_cap,
                               port_args->port_an_args->fec_ability,
                               port_args->port_an_args->fec_request,
                               port_args->cable_type);
@@ -791,11 +791,11 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
             // set the speed, fec, num_lanes based on cable
             if (port_args->auto_neg_enable == true) {
                 if ((port_args->cable_type == cable_type_t::CABLE_TYPE_FIBER) ||
-                    (sdk::platform::xcvr_type(xcvr_port-1) ==
+                    (sdk::platform::xcvr_type(phy_port-1) ==
                                             xcvr_type_t::XCVR_TYPE_SFP)) {
                     port_args->auto_neg_enable = false;
                     port_args->port_speed =
-                        sdk::platform::cable_speed(xcvr_port-1);
+                        sdk::platform::cable_speed(phy_port-1);
 
                     // TODO FEC assumed based on cable speed
                     switch (port_args->port_speed) {

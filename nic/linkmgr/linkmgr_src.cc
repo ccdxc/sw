@@ -148,7 +148,7 @@ static bool
 xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 {
     port_t *port     = NULL;
-    int    xcvr_port = -1;
+    int    phy_port = -1;
 
     port_ht_cb_ctxt_t *ht_cb_ctxt      = (port_ht_cb_ctxt_t*) ctxt;
     xcvr_event_info_t *xcvr_event_info = (xcvr_event_info_t*) ht_cb_ctxt->ctxt;
@@ -157,10 +157,10 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 
     port = (port_t *)hal_handle_get_obj(entry->handle_id);
 
-    xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port->port_num);
+    phy_port = sdk::lib::catalog::logical_port_to_phy_port(port->port_num);
 
     // Ignore transceiver events for non-transceiver ports (MGMT)
-    if (xcvr_port == -1 || xcvr_port != (int)xcvr_event_info->xcvr_port) {
+    if (phy_port == -1 || phy_port != (int)xcvr_event_info->phy_port) {
         return false;
     }
 
@@ -383,19 +383,19 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // send transceiver notification
 
-    int xcvr_port = 0;
+    int phy_port = 0;
     xcvr_event_info_t xcvr_event_info;
 
     memset (&xcvr_event_info, 0, sizeof(xcvr_event_info_t));
 
-    xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(pi_p->port_num);
+    phy_port = sdk::lib::catalog::logical_port_to_phy_port(pi_p->port_num);
 
-    if (xcvr_port != -1) {
+    if (phy_port != -1) {
         sdk_ret = sdk::platform::xcvr_get(
-                                xcvr_port-1, &xcvr_event_info);
+                                phy_port-1, &xcvr_event_info);
         if (sdk_ret != SDK_RET_OK) {
             HAL_TRACE_ERR("Failed to get xcvr for port: {}, err: {}",
-                          xcvr_port, sdk_ret);
+                          phy_port, sdk_ret);
             return ret;
         }
 
@@ -943,7 +943,7 @@ port_get_ht_cb (void *ht_entry, void *ctxt)
     port_t      *port     = NULL;
     port_args_t port_args = { 0 };
     uint64_t    stats_data[MAX_MAC_STATS];
-    int         xcvr_port;
+    int         phy_port;
 
     hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
 
@@ -962,13 +962,13 @@ port_get_ht_cb (void *ht_entry, void *ctxt)
                       port->port_num, sdk_ret);
     }
 
-    xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_args.port_num);
-    if (xcvr_port != -1) {
+    phy_port = sdk::lib::catalog::logical_port_to_phy_port(port_args.port_num);
+    if (phy_port != -1) {
         sdk_ret = sdk::platform::xcvr_get(
-                                xcvr_port - 1, &port_args.xcvr_event_info);
+                                phy_port - 1, &port_args.xcvr_event_info);
         if (sdk_ret != SDK_RET_OK) {
             HAL_TRACE_ERR("Failed to get xcvr for port: {}, err: {}",
-                          xcvr_port, sdk_ret);
+                          phy_port, sdk_ret);
         }
     }
 
@@ -1007,7 +1007,7 @@ port_get (port_args_t *port_args)
     hal_ret_t hal_ret   = HAL_RET_OK;
     sdk_ret_t sdk_ret   = SDK_RET_OK;
     port_t    *pi_p     = NULL;
-    int       xcvr_port;
+    int       phy_port;
 
     pi_p = find_port_by_id(port_args->port_num);
     if (!pi_p) {
@@ -1020,13 +1020,14 @@ port_get (port_args_t *port_args)
                       pi_p->port_num, sdk_ret);
     }
 
-    xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_args->port_num);
-    if (xcvr_port != -1) {
+    phy_port = sdk::lib::catalog::logical_port_to_phy_port(
+                                                port_args->port_num);
+    if (phy_port != -1) {
         sdk_ret = sdk::platform::xcvr_get(
-                        xcvr_port - 1, &port_args->xcvr_event_info);
+                        phy_port - 1, &port_args->xcvr_event_info);
         if (sdk_ret != SDK_RET_OK) {
             HAL_TRACE_ERR("Failed to get xcvr for port: {}, err: {}",
-                          xcvr_port, sdk_ret);
+                          phy_port, sdk_ret);
         }
     }
 

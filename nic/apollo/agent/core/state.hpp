@@ -23,6 +23,7 @@ namespace core {
 typedef sdk::sdk_ret_t (*pcn_walk_cb_t)(pds_vcn_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
+typedef sdk::sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
 
 typedef slab *slab_ptr_t;
 
@@ -100,6 +101,7 @@ public:
     pds_tep_spec_t *find_in_tep_db(uint32_t key);
     sdk_ret_t add_to_tep_db(uint32_t key,
                             pds_tep_spec_t *spec);
+    sdk_ret_t tep_db_walk(tep_walk_cb_t cb, void *ctxt);
     bool del_from_tep_db(uint32_t key);
     slab_ptr_t tep_slab(void) const { return cfg_db_->tep_slab(); }
 

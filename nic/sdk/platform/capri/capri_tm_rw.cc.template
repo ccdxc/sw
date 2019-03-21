@@ -3707,12 +3707,12 @@ capri_tm_init_qos_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
         g_capri_state_pd->mempartition()->start_addr(MEM_REGION_QOS_FIFO_NAME);
     tm_cfg_profile->hbm_fifo_size =
         g_capri_state_pd->mempartition()->size(MEM_REGION_QOS_FIFO_NAME);
-    tm_cfg_profile->num_active_uplink_ports = catalog->num_uplink_ports();
+    tm_cfg_profile->num_active_uplink_ports = catalog->num_fp_ports();
 
     if (tm_cfg_profile->num_active_uplink_ports <= 1) {
         tm_cfg_profile->num_active_uplink_ports = 1;
         SDK_TRACE_INFO("num_uplink_ports %u is not valid. resetting it to %u",
-                       catalog->num_uplink_ports(),
+                       catalog->num_fp_ports(),
                        tm_cfg_profile->num_active_uplink_ports);
     } else {
         // Do not count the BMC port

@@ -49,6 +49,22 @@ tep_api_stats_to_proto_stats_fill (const pds_tep_stats_t *api_stats,
 {
 }
 
+// Populate proto buf from tep API info
+static inline void
+tep_api_info_to_proto_fill (const pds_tep_info_t *api_info,
+                            void *ctxt)
+{
+    pds::TunnelGetResponse *proto_rsp = (pds::TunnelGetResponse *)ctxt;
+    auto tep = proto_rsp->add_response();
+    pds::TunnelSpec *proto_spec = tep->mutable_spec();
+    pds::TunnelStatus *proto_status = tep->mutable_status();
+    pds::TunnelStats *proto_stats = tep->mutable_stats();
+
+    tep_api_spec_to_proto_spec_fill(&api_info->spec, proto_spec);
+    tep_api_status_to_proto_status_fill(&api_info->status, proto_status);
+    tep_api_stats_to_proto_stats_fill(&api_info->stats, proto_stats);
+}
+
 // Build TEP API spec from protobuf spec
 static inline void
 tep_proto_spec_to_api_spec_fill (const pds::TunnelSpec &proto_spec,
@@ -133,6 +149,11 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
+    }
+    if (proto_req->id_size() == 0) {
+        // get all
+        ret = core::tep_get_all(tep_api_info_to_proto_fill, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
         ret = core::tep_get(proto_req->id(i), &info);

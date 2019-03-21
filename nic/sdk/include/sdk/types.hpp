@@ -183,7 +183,7 @@ typedef struct xcvr_sprom_data_t {
 } xcvr_sprom_data_t;
 
 typedef struct xcvr_event_info_s {
-    uint32_t          xcvr_port;      // transceiver port number
+    uint32_t          phy_port;       // transceiver port number
     uint32_t          port_num;       // front panel port number
     xcvr_state_t      state;
     xcvr_pid_t        pid;

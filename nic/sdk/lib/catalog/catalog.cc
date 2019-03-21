@@ -11,9 +11,9 @@ namespace sdk {
 namespace lib {
 
 int
-catalog::port_num_to_qsfp_port (uint32_t port_num)
+catalog::logical_port_to_phy_port(uint32_t logical_port)
 {
-    switch(port_num) {
+    switch (logical_port) {
     case 1 ... 4:
         return 1;
 
@@ -25,6 +25,16 @@ catalog::port_num_to_qsfp_port (uint32_t port_num)
     }
 }
 
+uint32_t
+catalog::logical_port_to_tm_port(uint32_t logical_port)
+{
+    uint32_t asic = 0;
+    uint32_t asic_port = 0;
+
+    logical_port_to_asic_port(logical_port, &asic, &asic_port);
+    return catalog_db_.asics[asic].ports[asic_port].tm_port;
+}
+
 sdk_ret_t
 catalog::populate_asic_port(ptree::value_type &asic_port,
                             catalog_asic_port_t *asic_port_p)
@@ -32,6 +42,7 @@ catalog::populate_asic_port(ptree::value_type &asic_port,
     asic_port_p->mac_id    = asic_port.second.get<uint32_t>("mac_id", 0);
     asic_port_p->mac_ch    = asic_port.second.get<uint32_t>("mac_ch", 0);
     asic_port_p->sbus_addr = asic_port.second.get<uint32_t>("sbus_addr", 0);
+    asic_port_p->tm_port   = asic_port.second.get<uint32_t>("tm_port", 0);
 
     return SDK_RET_OK;
 }
@@ -170,35 +181,24 @@ catalog::populate_fp_ports(ptree &prop_tree)
 }
 
 sdk_ret_t
-catalog::populate_uplink_port(ptree::value_type &uplink_port,
-                              catalog_uplink_port_t *uplink_port_p)
+catalog::populate_logical_port(ptree::value_type &logical_port,
+                              catalog_logical_port_t *logical_port_p)
 {
-    uplink_port_p->asic = uplink_port.second.get<uint32_t>("asic", 0);
-    uplink_port_p->asic_port = uplink_port.second.get<uint32_t>("asic_port", 0);
-    uplink_port_p->num_lanes = uplink_port.second.get<uint32_t>("num_lanes", 1);
-    uplink_port_p->enabled = uplink_port.second.get<bool>("enabled", true);
-
-    std::string speed = uplink_port.second.get<std::string>("speed", "");
-    uplink_port_p->speed = catalog_speed_to_port_speed(speed);
-
-    std::string fec_type = uplink_port.second.get<std::string>("fec", "");
-    uplink_port_p->fec_type = catalog_fec_type_to_port_fec_type(fec_type);
-
-    std::string type = uplink_port.second.get<std::string>("type", "");
-    uplink_port_p->type = catalog_type_to_port_type(type);
+    logical_port_p->asic = logical_port.second.get<uint32_t>("asic", 0);
+    logical_port_p->asic_port = logical_port.second.get<uint32_t>("asic_port", 0);
 
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-catalog::populate_uplink_ports(ptree &prop_tree)
+catalog::populate_logical_ports(ptree &prop_tree)
 {
-    for (ptree::value_type &uplink_port : prop_tree.get_child("uplink_ports")) {
-        catalog_uplink_port_t *uplink_port_p =
-                            &catalog_db_.uplink_ports[
-                            uplink_port.second.get<uint32_t>("port_num", 0) - 1];
+    for (ptree::value_type &logical_port : prop_tree.get_child("logical_ports")) {
+        catalog_logical_port_t *logical_port_p =
+                            &catalog_db_.logical_ports[
+                            logical_port.second.get<uint32_t>("port_num", 0) - 1];
 
-        populate_uplink_port(uplink_port, uplink_port_p);
+        populate_logical_port(logical_port, logical_port_p);
     }
 
     return SDK_RET_OK;
@@ -524,8 +524,8 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
     catalog_db_.memory_size = prop_tree.get<uint32_t>("memory_size", 0);
 
     catalog_db_.num_asics = prop_tree.get<uint32_t>("num_asics", 0);
-    catalog_db_.num_uplink_ports =
-                            prop_tree.get<uint32_t>("num_uplink_ports", 0);
+    catalog_db_.num_logical_ports =
+                            prop_tree.get<uint32_t>("num_logical_ports", 0);
 
     catalog_db_.num_fp_ports = prop_tree.get<uint32_t>("num_fp_ports", 0);
 
@@ -533,7 +533,7 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
 
     populate_fp_ports(prop_tree);
 
-    populate_uplink_ports(prop_tree);
+    populate_logical_ports(prop_tree);
 
     populate_mgmt_mac_profiles(prop_tree);
 
@@ -678,71 +678,40 @@ catalog::destroy(catalog *clog)
     SDK_FREE(sdk::SDK_MEM_ALLOC_CATALOG, clog);
 }
 
-catalog_uplink_port_t *
-catalog::uplink_port(uint32_t port)
+catalog_logical_port_t *
+catalog::logical_port(uint32_t logical_port)
 {
-    return &catalog_db_.uplink_ports[port-1];
-}
-
-port_speed_t
-catalog::port_speed(uint32_t port)
-{
-    // TODO: do out of bound error check here !!
-    return catalog_db_.uplink_ports[port-1].speed;
+    return &catalog_db_.logical_ports[logical_port-1];
 }
 
 port_type_t
-catalog::port_type_fp (uint32_t port)
+catalog::port_type_fp (uint32_t fp_port)
 {
-    return catalog_db_.fp_ports[port-1].type;
+    return catalog_db_.fp_ports[fp_port-1].type;
 }
 
 uint32_t
-catalog::fp_port_to_port_num (uint32_t fp_port)
+catalog::fp_port_to_logical_port(uint32_t fp_port)
 {
     return ((fp_port - 1) * MAX_PORT_LANES) + 1;
 }
 
 uint32_t
-catalog::port_num_to_fp_port (uint32_t port_num)
+catalog::logical_port_to_fp_port(uint32_t logical_port)
 {
-    return ((port_num - 1) / MAX_PORT_LANES) + 1;
+    return ((logical_port - 1) / MAX_PORT_LANES) + 1;
 }
 
 uint32_t
-catalog::num_lanes_fp (uint32_t port)
+catalog::num_lanes_fp (uint32_t fp_port)
 {
-    return catalog_db_.fp_ports[port-1].num_lanes;
+    return catalog_db_.fp_ports[fp_port-1].num_lanes;
 }
 
 uint32_t
-catalog::breakout_modes(uint32_t port)
+catalog::breakout_modes(uint32_t fp_port)
 {
-    return catalog_db_.fp_ports[port-1].breakout_modes;
-}
-
-uint32_t
-catalog::num_lanes(uint32_t port)
-{
-    return catalog_db_.uplink_ports[port-1].num_lanes;
-}
-
-port_type_t
-catalog::port_type(uint32_t port)
-{
-    return catalog_db_.uplink_ports[port-1].type;
-}
-
-port_fec_type_t
-catalog::port_fec_type(uint32_t port)
-{
-    return catalog_db_.uplink_ports[port-1].fec_type;
-}
-
-bool
-catalog::enabled(uint32_t port)
-{
-    return catalog_db_.uplink_ports[port-1].enabled;
+    return catalog_db_.fp_ports[fp_port-1].breakout_modes;
 }
 
 uint32_t
@@ -757,62 +726,50 @@ catalog::asic_port_to_mac_ch(uint32_t asic, uint32_t asic_port)
     return catalog_db_.asics[asic].ports[asic_port].mac_ch;
 }
 
-uint32_t
-catalog::mac_id(uint32_t port, uint32_t lane)
+void
+catalog::logical_port_to_asic_port(uint32_t logicalport,
+                                   uint32_t *asic, uint32_t *asic_port)
 {
-    catalog_uplink_port_t *catalog_uplink_port_p = uplink_port(port);
-    uint32_t asic = catalog_uplink_port_p->asic;
-    uint32_t asic_port = catalog_uplink_port_p->asic_port;
+    catalog_logical_port_t *catalog_logical_port_p = logical_port(logicalport);
+    *asic = catalog_logical_port_p->asic;
+    *asic_port = catalog_logical_port_p->asic_port;
+}
 
+uint32_t
+catalog::mac_id(uint32_t logical_port, uint32_t lane)
+{
+    uint32_t asic = 0;
+    uint32_t asic_port = 0;
+
+    logical_port_to_asic_port(logical_port, &asic, &asic_port);
     return catalog_db_.asics[asic].ports[asic_port + lane].mac_id;
 }
 
 uint32_t
-catalog::mac_ch(uint32_t port, uint32_t lane)
+catalog::mac_ch(uint32_t logical_port, uint32_t lane)
 {
-    catalog_uplink_port_t *catalog_uplink_port_p = uplink_port(port);
-    uint32_t asic = catalog_uplink_port_p->asic;
-    uint32_t asic_port = catalog_uplink_port_p->asic_port;
+    uint32_t asic = 0;
+    uint32_t asic_port = 0;
 
+    logical_port_to_asic_port(logical_port, &asic, &asic_port);
     return catalog_db_.asics[asic].ports[asic_port + lane].mac_ch;
 }
 
 uint32_t
-catalog::sbus_addr(uint32_t port, uint32_t lane)
+catalog::sbus_addr(uint32_t logical_port, uint32_t lane)
 {
-    catalog_uplink_port_t *catalog_uplink_port_p = uplink_port(port);
-    uint32_t asic = catalog_uplink_port_p->asic;
-    uint32_t asic_port = catalog_uplink_port_p->asic_port;
+    uint32_t asic = 0;
+    uint32_t asic_port = 0;
 
+    logical_port_to_asic_port(logical_port, &asic, &asic_port);
     return catalog_db_.asics[asic].ports[asic_port + lane].sbus_addr;
 }
 
 uint32_t
 catalog::sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
 {
-    uint32_t mac_id      = asic_num;
-    uint32_t mac_ch      = asic_port;
-    uint32_t l_asic_num  = 0;
-    uint32_t l_asic_port = 0;
-
     return catalog_db_.asics[asic_num].
                        ports[asic_port + lane].sbus_addr;
-
-    // TODO work around until port pd structure is
-    // updated to hold asic number and asic port
-    for (l_asic_num = 0; l_asic_num < MAX_ASICS; ++l_asic_num) {
-        for (l_asic_port = 0; l_asic_port < MAX_ASIC_PORTS; ++l_asic_port) {
-            catalog_asic_port_t *catalog_asic_port =
-                        &catalog_db_.asics[l_asic_num].ports[l_asic_port];
-            if (catalog_asic_port->mac_id == mac_id &&
-                catalog_asic_port->mac_ch == mac_ch) {
-                return catalog_db_.asics[l_asic_num].
-                                    ports[l_asic_port + lane].sbus_addr;
-            }
-        }
-    }
-
-    return 0x0;
 }
 
 serdes_info_t*

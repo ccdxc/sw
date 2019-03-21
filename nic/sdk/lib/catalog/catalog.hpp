@@ -15,7 +15,7 @@ using boost::property_tree::ptree;
 
 #define MAX_ASICS          1
 #define MAX_ASIC_PORTS     9
-#define MAX_UPLINK_PORTS   MAX_ASIC_PORTS
+#define MAX_LOGICAL_PORTS  MAX_ASIC_PORTS
 #define MAX_FP_PORTS       3
 #define MAX_PORT_LANES     4
 #define MAX_SERDES         9
@@ -68,15 +68,10 @@ typedef struct mac_profile_ {
    ch_profile_t ch_profile[MAX_PORT_LANES];
 } mac_profile_t;
 
-typedef struct catalog_uplink_port_s {
+typedef struct catalog_logical_port_s {
     uint32_t          asic;
     uint32_t          asic_port;
-    uint32_t          num_lanes;
-    bool              enabled;
-    port_speed_t      speed;
-    port_type_t       type;
-    port_fec_type_t   fec_type;
-} catalog_uplink_port_t;
+} catalog_logical_port_t;
 
 typedef struct catalog_fp_port_s {
     uint32_t    breakout_modes;   // bitmap of breakout modes
@@ -88,6 +83,7 @@ typedef struct catalog_asic_port_s {
     uint32_t    mac_id;
     uint32_t    mac_ch;
     uint32_t    sbus_addr;
+    uint32_t    tm_port;
 } catalog_asic_port_t;
 
 typedef struct catalog_asic_s {
@@ -114,12 +110,12 @@ typedef struct catalog_s {
     uint32_t                 emmc_size;                         // eMMC size on card
     uint32_t                 memory_size;                       // Total Memory on card
     uint32_t                 num_asics;                         // number of asics on the board
-    uint32_t                 num_uplink_ports;                  // number of uplinks in the board
+    uint32_t                 num_logical_ports;                 // number of logical port in the board
     uint32_t                 num_fp_ports;                      // number of front panel ports in the board
     platform_type_t          platform_type;                     // platform type
     bool                     access_mock_mode;                  // do not access HW, dump only reads/writes
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
-    catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
+    catalog_logical_port_t   logical_ports[MAX_LOGICAL_PORTS];  // per port information
     catalog_fp_port_t        fp_ports[MAX_FP_PORTS];            // per port information
     mac_profile_t            mac_profiles[MAC_MODE_MAX];        // MAC profiles
     mac_profile_t            mgmt_mac_profiles[MAC_MODE_MAX];   // MGMT MAC profiles
@@ -139,88 +135,88 @@ typedef struct catalog_s {
 
 class catalog {
 public:
-    static catalog *factory(std::string catalog_file_path, std::string catalog_file, platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM);
+    static catalog *factory(
+                std::string catalog_file_path,
+                std::string catalog_file,
+                platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM);
     static void destroy(catalog *clog);
+    static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
+    static uint32_t fp_port_to_logical_port(uint32_t fp_port);
+    static uint32_t logical_port_to_fp_port(uint32_t port_num);
+    static int logical_port_to_phy_port(uint32_t logical_port);
+
+    // catalog to sdk conversion
     static port_speed_t catalog_speed_to_port_speed(std::string speed);
     static port_type_t catalog_type_to_port_type(std::string type);
     static port_fec_type_t catalog_fec_type_to_port_fec_type(std::string type);
     static platform_type_t catalog_platform_type_to_platform_type(
                                             std::string platform_type);
+    // copp policer config
+    sdk_ret_t get_child_str(std::string path, std::string& child_str);
 
-    sdk_ret_t get_child_str(std::string path,
-                                   std::string& child_str);
-    static int port_num_to_qsfp_port(uint32_t port_num);
-
+    // catalog globals
     catalog_t *catalog_db(void) { return &catalog_db_; }
-    uint32_t num_uplink_ports(void) const { return catalog_db_.num_uplink_ports; }
-    uint32_t num_fp_ports(void) const { return catalog_db_.num_fp_ports; }
-    platform_type_t platform_type(void) const { return catalog_db_.platform_type; }
+    uint64_t cores_mask (void) const { return catalog_db_.cores_mask; }
+    card_id_t card_id(void) { return catalog_db_.card_id; }
+    platform_type_t platform_type(void) const {
+        return catalog_db_.platform_type;
+    }
     bool access_mock_mode(void) { return catalog_db_.access_mock_mode; }
-    uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane);
-    static uint32_t fp_port_to_port_num(uint32_t fp_port);
-    static uint32_t port_num_to_fp_port(uint32_t port_num);
+    uint32_t max_mpu_per_stage(void) const {
+        return catalog_db_.max_mpu_per_stage;
+    }
+    uint32_t mpu_trace_size (void) const {
+        return catalog_db_.mpu_trace_size;
+    }
+
+    // lookups based on asic, asic_port
     uint32_t num_asic_ports(uint32_t asic) {
         return catalog_db_.asics[asic].max_ports;
     }
-
     uint32_t sbus_addr_asic_port(uint32_t asic, uint32_t asic_port) {
         return catalog_db_.asics[asic].ports[asic_port].sbus_addr;
     }
-
-    port_speed_t port_speed(uint32_t port);
-    uint32_t num_lanes (uint32_t port);
-    port_type_t  port_type (uint32_t port);
-    bool enabled(uint32_t port);
-    uint32_t mac_id(uint32_t port, uint32_t lane);
-    uint32_t mac_ch(uint32_t port, uint32_t lane);
+    uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane);
     uint32_t asic_port_to_mac_id(uint32_t asic, uint32_t asic_port);
     uint32_t asic_port_to_mac_ch(uint32_t asic, uint32_t asic_port);
-    uint32_t sbus_addr(uint32_t port, uint32_t lane);
-    port_fec_type_t  port_fec_type(uint32_t port);
 
+    // lookups based on logical port
+    uint32_t num_logical_ports(void) const { return catalog_db_.num_logical_ports; }
+    uint32_t sbus_addr(uint32_t logical_port, uint32_t lane);
+    uint32_t mac_id(uint32_t logical_port, uint32_t lane);
+    uint32_t mac_ch(uint32_t logical_port, uint32_t lane);
+    uint32_t logical_port_to_tm_port(uint32_t logical_port);
+
+    // fp_port configs
+    uint32_t num_fp_ports(void) const { return catalog_db_.num_fp_ports; }
+    port_type_t  port_type_fp(uint32_t fp_port);
+    uint32_t     num_lanes_fp(uint32_t fp_port);
+    uint32_t     breakout_modes(uint32_t fp_port);
+
+    // MX configs
     uint32_t     glbl_mode(mac_mode_t mac_mode);
     uint32_t     ch_mode(mac_mode_t mac_mode, uint32_t ch);
-
     uint32_t     glbl_mode_mgmt(mac_mode_t mac_mode);
     uint32_t     ch_mode_mgmt(mac_mode_t mac_mode, uint32_t ch);
 
-    port_type_t  port_type_fp(uint32_t port);
-    uint32_t     num_lanes_fp(uint32_t port);
-    uint32_t     breakout_modes(uint32_t port);
-
+    // serdes configs
     uint32_t     jtag_id(void) { return catalog_db_.serdes_jtag_id;  }
     uint32_t     num_sbus_rings(void) { return catalog_db_.num_sbus_rings;  }
     uint32_t     sbm_clk_div(void) { return catalog_db_.sbm_clk_div;     }
     uint32_t     serdes_build_id(void) { return catalog_db_.serdes_build_id; }
     uint32_t     serdes_rev_id(void) { return catalog_db_.serdes_rev_id;   }
     std::string  serdes_fw_file(void) { return catalog_db_.serdes_fw_file;  }
-
     uint8_t aacs_server_en(void) { return catalog_db_.aacs_info.server_en; }
     uint8_t aacs_connect(void)   { return catalog_db_.aacs_info.connect; }
-
     std::string  aacs_server_ip(void) {
         return catalog_db_.aacs_info.server_ip;
     }
-
     uint32_t aacs_server_port(void) {
         return catalog_db_.aacs_info.server_port;
     }
-
-    card_id_t card_id(void) { return catalog_db_.card_id; }
-
     serdes_info_t* serdes_info_get(uint32_t sbus_addr,
                                    uint32_t port_speed,
                                    uint32_t cable_type);
-
-    uint32_t max_mpu_per_stage(void) const {
-        return catalog_db_.max_mpu_per_stage;
-    }
-
-    uint32_t mpu_trace_size (void) const {
-        return catalog_db_.mpu_trace_size;
-    }
-
-    uint64_t cores_mask (void) const { return catalog_db_.cores_mask; }
 
 private:
     catalog_t    catalog_db_;   // whole catalog database
@@ -249,12 +245,12 @@ private:
     sdk_ret_t populate_asic_ports(ptree::value_type &asic,
                                   catalog_asic_t *asic_p);
 
-    // populate uplink port level config
-    sdk_ret_t populate_uplink_port(ptree::value_type &uplink_port,
-                                   catalog_uplink_port_t *uplink_port_p);
+    // populate logical port level config
+    sdk_ret_t populate_logical_port(ptree::value_type &logical_port,
+                                    catalog_logical_port_t *logical_port_p);
 
-    // populate config for all uplink ports
-    sdk_ret_t populate_uplink_ports(ptree &prop_tree);
+    // populate config for all logical ports
+    sdk_ret_t populate_logical_ports(ptree &prop_tree);
 
     // populate fp port level config
     sdk_ret_t populate_fp_port(ptree::value_type &fp_port,
@@ -263,29 +259,30 @@ private:
     // populate config for all fp ports
     sdk_ret_t populate_fp_ports(ptree &prop_tree);
 
+    // catalog to sdk conversion
     port_breakout_mode_t parse_breakout_mode(std::string);
 
-    catalog_uplink_port_t *uplink_port(uint32_t port);
-
+    // populate MAC configs
     sdk_ret_t populate_mac_profile(mac_profile_t *mac_profile,
                                    std::string   str,
                                    ptree         &prop_tree);
-
     sdk_ret_t populate_mgmt_mac_profiles(ptree &prop_tree);
     sdk_ret_t populate_mac_profiles(ptree &prop_tree);
-
     sdk_ret_t populate_mac_ch_profile(ch_profile_t *ch_profile,
                                       std::string  profile_str,
                                       ptree        &prop_tree);
 
-    static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
-
+    // populate serdes configs
     sdk_ret_t populate_serdes(char *dir_name, ptree &prop_tree);
     sdk_ret_t parse_serdes_file(std::string& serdes_file);
     sdk_ret_t parse_serdes(ptree &prop_tree);
+
+    catalog_logical_port_t *logical_port(uint32_t port);
     uint32_t  serdes_index_get(uint32_t sbus_addr);
     uint8_t   cable_type_get(std::string cable_type_str);
     card_id_t catalog_card_id_to_sdk_card_id(uint32_t card_id);
+    void logical_port_to_asic_port(uint32_t logical_port,
+                                   uint32_t *asic, uint32_t *asic_port);
 };
 
 }    // namespace lib
@@ -307,4 +304,3 @@ using sdk::lib::catalog;
 #define MAC_MODE_4x1g mac_mode_t::MAC_MODE_4x1g
 
 #endif    //__CATALOG_HPP__
-
