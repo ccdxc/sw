@@ -73,7 +73,7 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
         break;
 
     default:
-        PDS_TRACE_ERR("Non-statless obj %u can't be soft deleted\n", obj_id);
+        PDS_TRACE_ERR("Non-statless obj %u can't be soft deleted", obj_id);
         break;
     }
 }

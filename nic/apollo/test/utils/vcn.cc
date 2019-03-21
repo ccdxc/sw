@@ -113,7 +113,7 @@ vcn_util_object_stepper(pds_vcn_key_t start_key, std::string start_pfxstr,
         SDK_ASSERT(str2ipv4pfx((char *)start_pfxstr.c_str(), &ip_pfx) == 0);
         addr = ip_pfx.addr.addr.v4_addr;
     }
-    for (uint32_t idx = start_key.id; idx <= start_key.id + num_vcns; idx++) {
+    for (uint32_t idx = start_key.id; idx < start_key.id + num_vcns; idx++) {
         ip_pfx.addr.addr.v4_addr = addr;
         vcn_util vcn_obj(type, idx, ippfx2str(&ip_pfx));
         switch (op) {

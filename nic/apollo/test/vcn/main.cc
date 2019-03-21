@@ -362,7 +362,7 @@ TEST_F(vcn, vcn_create_invalid_vcn) {
 /// \brief Create and delete VCNs in the same batch
 /// The operation should be de-duped by framework and is
 /// a NO-OP from hardware perspective
-TEST_F(vcn, DISABLED_vcn_workflow_1)
+TEST_F(vcn, vcn_workflow_1)
 {
     // [ Create SetMax, Delete SetMax ] - Read
     pds_batch_params_t batch_params = {0};
@@ -380,7 +380,7 @@ TEST_F(vcn, DISABLED_vcn_workflow_1)
     ASSERT_TRUE(vcn_util::many_delete(key, num_vcns) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(vcn_util::many_read(key, num_vcns, sdk::SDK_RET_OK)
+    ASSERT_TRUE(vcn_util::many_read(key, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND)
                 == sdk::SDK_RET_OK);
 }
 
@@ -418,7 +418,7 @@ TEST_F(vcn, DISABLED_vcn_workflow_2) {
 
 /// \brief Create two sets of vcns viz set1 and set2. Delete set1.
 /// Create a new set - set3. Try to read a vcn from each set.
-TEST_F(vcn, DISABLED_vcn_workflow_3) {
+TEST_F(vcn, vcn_workflow_3) {
     // [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
     pds_batch_params_t batch_params = {0};
     pds_vcn_key_t key1 = {}, key2 = {}, key3 = {};
@@ -540,6 +540,8 @@ TEST_F(vcn, DISABLED_vcn_workflow_5) {
 /// \brief Create maximum number of VCNs in two batches
 /// The hardware should program VCNs correctly in case of
 /// first create and return error in second create operation
+// TODO: @kalyanbade at the end of the this test VCNs are not
+//       deleted, so next set of tests fail
 TEST_F(vcn, DISABLED_vcn_workflow_neg_1) {
     // [ Create SetMax ] - [ Create SetMax ] - Read
     pds_batch_params_t batch_params = {0};
@@ -569,7 +571,7 @@ TEST_F(vcn, DISABLED_vcn_workflow_neg_1) {
 }
 
 /// \brief Create more than maximum number of VCNs supported.
-TEST_F(vcn, DISABLED_vcn_workflow_neg_2) {
+TEST_F(vcn, vcn_workflow_neg_2) {
     // [ Create SetMax+1] - Read
     pds_batch_params_t batch_params = {0};
     pds_vcn_key_t key = {};
@@ -625,7 +627,7 @@ TEST_F(vcn, vcn_workflow_neg_3b) {
 /// \brief Create and delete VCN in two batches
 /// The hardware should create VCN correctly
 /// and return entry not found after delete
-TEST_F(vcn, DISABLED_vcn_workflow_neg_4) {
+TEST_F(vcn, vcn_workflow_neg_4) {
     // [ Create Set1, Set2 ] - Read - [Delete Set1 - Delete Set3] - Read
     pds_batch_params_t batch_params = {0};
     pds_vcn_key_t key1 = {}, key2 = {}, key3 = {};
