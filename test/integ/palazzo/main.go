@@ -66,7 +66,7 @@ func main() {
 	veniceInteg.SetUpSuite(&check.C{})
 
 	time.Sleep(time.Second)
-	fmt.Printf("\n\n\n\n================================ Venice Emulator is ready =====================================\n\n\n\n")
+	fmt.Printf("\n\n\n\n=============== Venice Emulator is ready, ui https://localhost:9090 ==============================\n\n\n\n")
 
 	// wait for signal
 	sigs := make(chan os.Signal, 1)

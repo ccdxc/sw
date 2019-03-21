@@ -408,6 +408,8 @@ e2e-iota: e2e-naples
 
 # venice emulator
 palazzo:
+	# make ui
+	rm -rf $(GOPATH)/src/github.com/pensando/sw/tools/docker-files/apigw/dist && cp -r venice/ui/webapp/dist $(GOPATH)/src/github.com/pensando/sw/tools/docker-files/apigw/
 	go install -v github.com/pensando/sw/test/integ/palazzo/
 
 ui-framework:
