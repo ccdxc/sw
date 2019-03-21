@@ -51,6 +51,11 @@ import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.com
  * it will immediately show a policy is deleted overlay.
  * Again, if the policy becomes recreated the overlay will disappear
  * and will show the data.
+ *
+ *  VS-126 logic
+ *  if (sgPolicy.meta.generation-id == sgPolicy.status.propagation-status.generation-id  && sgPolicy.status.propagation-status.pending==0) it is good.
+ *   sgPolicy.status.propagation-status.pending + sgPolicy.status.propagation-status.updated === total # of naples
+ *
  */
 class SecuritySGRuleWrapper {
   order: number;
@@ -105,6 +110,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
 
   // TODO: Update with actual creator
   creator = 'pensando';
+
 
   sourceIpFormControl: FormControl = new FormControl('', [
   ]);
@@ -383,7 +389,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     return this.constructor.name;
   }
 
-  getSGPoliciesDetail() {
+   getSGPoliciesDetail() {
     // We perform a get as well as a watch so that we can know if the object the user is
     // looking for exists or not.
     const getSubscription = this.securityService.GetSGPolicy(this.selectedPolicyId).subscribe(

@@ -24,6 +24,17 @@
           <!-- Commented out as creator is not available currently -->
             <!-- <div class="sgpolicy-summary-panel-content-label"> Created By: </div>
             <div class="sgpolicy-summary-panel-content-value">{{creator}}</div> -->
+            <!--VS-126 add sgPolicy-vs-Naples statistics  -->
+            <div class="sgpolicy-summary-panel-content-label"> Propagation: </div>
+            <div class="sgpolicy-summary-panel-content-value sgpolicy-summary-panel-content-value-warning" 
+                 *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] != selectedPolicy?.meta['generation-id']" >
+                 Policy not propagated</div>
+            <div class="sgpolicy-summary-panel-content-value  sgpolicy-summary-panel-content-value-warning" 
+                  *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending>0">
+                  {{selectedPolicy.status['propagation-status'].pending}} Out Of {{selectedPolicy.status['propagation-status'].pending + selectedPolicy.status['propagation-status'].updated }} Pending</div>
+            <div class="sgpolicy-summary-panel-content-value" 
+                  *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending==0">
+                  Complete</div>
         </div>
         <div fxFlex="50">
             <div class="sgpolicy-summary-panel-content-label2">Last Modified: </div>
@@ -40,7 +51,7 @@
         <div fxFlex='20%'></div>
         <div *ngIf="showDeletionScreen" fxFlex='15%' class="sgpolicy-deleted-policy"></div>
         <div *ngIf="showMissingScreen" fxFlex='15%' class="sgpolicy-missing-policy"></div>
-        <div *ngIf="showDeletionScreen" fxFlex="none" class="sgpolicy-overlay-text">
+        <div *ngIf="showDeletionScreen" fxFlex="none" class="sgpolicy-overlay-text">*
           {{selectedPolicyId}} has been deleted
         </div>
         <div *ngIf="showMissingScreen" fxFlex="none" class="sgpolicy-overlay-text">
