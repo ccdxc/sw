@@ -7,10 +7,11 @@
 #ifndef __LFQ_HPP__
 #define __LFQ_HPP__
 
-#include "include/sdk/base.hpp"
+#include "nic/include/base.hpp"
+#include "nic/include/hal_mem.hpp"
 
-namespace sdk {
-namespace lib {
+namespace hal {
+namespace utils {
 
 class lfq {
 public:
@@ -20,7 +21,6 @@ public:
     void *dequeue(void);
 
 private:
-    // forward declaration
     class       lfq_impl;
     lfq_impl    *lfq_impl_;
 
@@ -30,7 +30,7 @@ private:
 };
 
 }    // namespace utils
-}    // namespace sdk
+}    // namespace hal
 
 #endif    // __LFQ_HPP__
 

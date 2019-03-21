@@ -2,5 +2,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := cpldapp.bin
 MODULE_SOLIBS   := sdkpal logger
-MODULE_LDLIBS   := dl pthread
+MODULE_LDLIBS   := dl pthread thread
 include ${MKDEFS}/post.mk

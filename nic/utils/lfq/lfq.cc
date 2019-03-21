@@ -1,11 +1,10 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include <boost/lockfree/queue.hpp>
-#include "include/sdk/mem.hpp"
-#include "lib/lfq/lfq.hpp"
+#include "lfq.hpp"
 
-namespace sdk {
-namespace lib {
+namespace hal {
+namespace utils {
 
 class lfq::lfq_impl {
 public:
@@ -13,7 +12,7 @@ public:
         void        *mem;
         lfq_impl    *new_lfq_impl;
 
-        mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_LFQ, sizeof(lfq_impl));
+        mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(lfq_impl));
         if (mem == NULL) {
             return NULL;
         }
@@ -24,19 +23,16 @@ public:
         }
         if (!new_lfq_impl->queue_.is_lock_free()) {
             new_lfq_impl->~lfq_impl();
-            SDK_FREE(SDK_MEM_ALLOC_LIB_LFQ, mem);
+            HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
             return NULL;
         }
         return new_lfq_impl;
     }
-
     static void destroy(lfq_impl *q_impl) {
         q_impl->~lfq_impl();
-        SDK_FREE(SDK_MEM_ALLOC_LIB_LFQ, q_impl);
+        HAL_FREE(HAL_MEM_ALLOC_INFRA, q_impl);
     }
-
     bool enqueue(void *item) { return queue_.push(item); }
-
     void *dequeue(void) {
         void    *item;
 
@@ -47,13 +43,12 @@ public:
     }
 
 private:
+    boost::lockfree::queue<void *>    queue_;
+
+private:
     lfq_impl(uint32_t size):queue_(size) {}
     lfq_impl():queue_() {}
     ~lfq_impl() {}
-
-private:
-    boost::lockfree::queue<void *>    queue_;
-
 };
 
 lfq::lfq() {
@@ -66,7 +61,7 @@ lfq::factory(uint32_t size) {
      lfq         *new_lfq;
      lfq_impl    *new_lfq_impl;
 
-     mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_LFQ, sizeof(lfq));
+     mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(lfq));
      if (mem == NULL) {
          return NULL;
      }
@@ -83,7 +78,7 @@ end:
 
     if (new_lfq) {
         new_lfq->~lfq();
-        SDK_FREE(SDK_MEM_ALLOC_LIB_LFQ, new_lfq);
+        HAL_FREE(HAL_MEM_ALLOC_INFRA, new_lfq);
     }
     return NULL;
 }
@@ -93,8 +88,8 @@ lfq::destroy(lfq *q) {
     lfq_impl::destroy(q->lfq_impl_);
     q->lfq_impl_ = NULL;
     q->~lfq();
-    SDK_FREE(SDK_MEM_ALLOC_LIB_LFQ, q);
+    HAL_FREE(HAL_MEM_ALLOC_INFRA, q);
 }
 
 }    // namespace utils
-}    // namespace sdk
+}    // namespace hal

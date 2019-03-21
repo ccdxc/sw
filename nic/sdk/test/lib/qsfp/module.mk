@@ -2,6 +2,6 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = qsfp_test.gtest
 MODULE_SOLIBS = sdkpal
-MODULE_LDLIBS = dl logger
+MODULE_LDLIBS = dl logger thread
 MODULE_ARCH   = aarch64
 include ${MKDEFS}/post.mk

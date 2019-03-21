@@ -10,7 +10,6 @@
 #include <pthread.h>
 #include "include/sdk/base.hpp"
 #include "include/sdk/timestamp.hpp"
-#include "lib/lfq/lfq.hpp"
 
 namespace sdk {
 namespace lib {
@@ -106,36 +105,26 @@ public:
         }
         return prio;
     }
-    // enqueue event to this thread
-    bool enqueue(void *item) {
-        return lfq_->enqueue(item);
-    }
-
-    // dequeue event from this thread
-    void *dequeue(void) {
-        return lfq_->dequeue();
-    }
 
 private:
-    char                          name_[SDK_MAX_THREAD_NAME_LEN];
-    uint32_t                      thread_id_;
-    thread_entry_func_t           entry_func_;
-    uint32_t                      prio_;
-    int                           sched_policy_;
-    bool                          can_yield_;
-    void                          *data_;
-    pthread_t                     pthread_id_;
-    bool                          running_;
-    thread_role_t                 thread_role_;
-    uint64_t                      cores_mask_;
-    timespec_t                    hb_ts_;
-    cpu_set_t                     cpu_set_;
-    lfq                           *lfq_;
-    static thread_local thread    *t_curr_thread_;
-    static uint64_t               control_cores_mask_;
-    static uint64_t               data_cores_free_;
-    static uint64_t               data_cores_mask_;
-    static bool                   super_user_;
+    char                       name_[SDK_MAX_THREAD_NAME_LEN];
+    uint32_t                   thread_id_;
+    thread_entry_func_t        entry_func_;
+    uint32_t                   prio_;
+    int                        sched_policy_;
+    bool                       can_yield_;
+    void                       *data_;
+    pthread_t                  pthread_id_;
+    bool                       running_;
+    thread_role_t              thread_role_;
+    uint64_t                   cores_mask_;
+    timespec_t                 hb_ts_;
+    cpu_set_t                  cpu_set_;
+    static thread_local thread *t_curr_thread_;
+    static uint64_t            control_cores_mask_;
+    static uint64_t            data_cores_free_;
+    static uint64_t            data_cores_mask_;
+    static bool                super_user_;
 
 private:
     thread() {};
