@@ -14,6 +14,7 @@ p4plus_app_prep:
   seq.c1      c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
   // XXX: The following line to be removed when RDMA multicast test is fixed
   sne         c1, r0, r0
+  phvwr.!c1   p.capri_intrinsic_lif, 0
   phvwr.!c1.e p.control_metadata_egress_drop_reason[EGRESS_DROP_PRUNE_SRC_PORT], 1
   phvwr.!c1   p.capri_intrinsic_drop, 1
 
