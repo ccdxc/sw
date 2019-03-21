@@ -260,15 +260,20 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       if (maxNaples == null || maxNaples.max === -1) {
         heroCard.thirdStat.value = null;
       } else {
-        const thirdStatName = this.getNaplesNameByKey(maxNaples.name);
-        let thirdStat: string = thirdStatName;
-        if (thirdStat.length > 0) {
-          if (thirdStat.length > 10) {
-            thirdStat = thirdStat.substring(0, 11) + '...';
+        const thirdStatNaples = this.getNaplesByKey(maxNaples.name);
+        if ((thirdStatNaples) != null) {
+          const thirdStatName = thirdStatNaples.spec.hostname;
+          let thirdStat: string = thirdStatName;
+          if (thirdStat.length > 0) {
+            if (thirdStat.length > 10) {
+              thirdStat = thirdStat.substring(0, 11) + '...';
+            }
+            thirdStat += ' (' + Math.round(maxNaples.max) + '%)';
+            heroCard.thirdStat.value = thirdStat;
+            heroCard.thirdStat.url = '/cluster/naples/' + thirdStatNaples.meta.name;
           }
-          thirdStat += ' (' + Math.round(maxNaples.max) + '%)';
-          heroCard.thirdStat.value = thirdStat;
-          heroCard.thirdStat.url = '/cluster/naples/' + thirdStatName;
+        } else {
+          heroCard.thirdStat.value = null;
         }
       }
     }
@@ -278,14 +283,14 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     }
   }
 
-  getNaplesNameByKey(mac: string) {
+  getNaplesByKey(name: string): ClusterSmartNIC {
     for (let index = 0; index < this.naples.length; index++) {
       const naple = this.naples[index];
-      if (naple.meta.name === mac) {
-        return naple.spec.hostname;
+      if (naple.meta.name === name) {
+        return naple;
       }
     }
-    return '';
+    return null;
   }
 
   ngOnDestroy() {
