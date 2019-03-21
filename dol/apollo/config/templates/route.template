@@ -1,0 +1,9 @@
+# PCN Object Template
+meta:
+    id      : ROUTE
+    package : config.objects
+    module  : route
+    feature_set:
+        - apollo
+
+Id: None

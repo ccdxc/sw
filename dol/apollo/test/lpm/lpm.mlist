@@ -1,0 +1,17 @@
+# Feature Test Modules List
+feature:
+    id          : lpm
+    sub         : lpm
+    package     : test.lpm
+    module      : lpm
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4_UDP_QTAG
+        spec    : lpm.testspec
+    
+    - module:
+        name    : IPV6_UDP_QTAG
+        spec    : lpmv6.testspec
