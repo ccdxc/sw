@@ -6,10 +6,10 @@ struct req_tx_phv_t p;
 struct req_tx_s6_t2_k k;
 struct sqcb0_t d;
 
-#define IN_TO_S_P to_s6_sqcb_wb_add_hdr_info
+#define IN_TO_S_P   to_s6_sqcb_wb_add_hdr_info
 
-#define K_SPEC_CINDEX        CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
-#define K_TO_S5_DATA         k1.{to_stage_5_to_stage_data_sbit0_ebit63...to_stage_5_to_stage_data_sbit112_ebit127}
+#define K_SPEC_CINDEX  CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
+#define K_SPEC_MSG_PSN CAPRI_KEY_RANGE(IN_TO_S_P, read_req_adjust_sbit0_ebit7, read_req_adjust_sbit8_ebit23)
 
 %%
 
@@ -24,6 +24,12 @@ req_tx_recirc_fetch_cindex_process:
     seq           c2, K_SPEC_CINDEX, SQ_C_INDEX // BD-slot
     bcf           [!c2], drop_recirc_spec_miss
     CAPRI_SET_TABLE_2_VALID(0) //BD-slot
+    bbeq           d.spec_enable, 0, skip_msg_psn_check
+    seq            c1, K_SPEC_MSG_PSN, d.msg_psn // BD-slot
+    bcf            [!c1], drop_recirc_spec_miss
+    nop //BD-slot
+
+skip_msg_psn_check:   
     nop.e
     nop
 

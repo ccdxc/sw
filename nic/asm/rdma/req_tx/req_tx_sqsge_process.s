@@ -240,7 +240,9 @@ sge_recirc:
                    p.common.rdma_recirc_recirc_spec_cindex, K_SPEC_CINDEX
     phvwr          p.common.p4_intr_recirc, 1
 
-    phvwr          CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, spec_cindex), K_SPEC_CINDEX
+    phvwrpair      CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, spec_cindex), K_SPEC_CINDEX, \
+                   CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, read_req_adjust), K_SPEC_MSG_PSN
+
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_recirc_fetch_cindex_process, r0)
 
 end:

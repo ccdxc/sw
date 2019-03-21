@@ -55,13 +55,15 @@ req_tx_sqwqe_base_sge_opt_process:
     bcf            [c2], decode_sge_default
 
     seq            c3, d.base.wqe_format, SQWQE_FORMAT_8x4 //BD-slot
-    bcf            [c3], decode_sge8x4
-    CAPRI_RESET_TABLE_0_ARG()  // BD-slot
+    CAPRI_RESET_TABLE_0_ARG()  
 
-decode_sge16x2:
+    // cur_sge_id = 0
+    add            r7, r0, r0
+    // Get to length-encoding.
+    add            r1, TXWQE_SGE_OFFSET_BITS, r0
 
-decode_sge8x4:
-
+decode_sge_len_encoding:
+    // 8x4 WQE format
     /*
      *    lower 32-byte encoding
      *    0          32          63
@@ -74,37 +76,51 @@ decode_sge8x4:
      *    -------------------------
      *    |     len   |    len    |
      *    -------------------------
+     */ 
+
+    // 16x2 WQE format
+    /*
+     *    lower 32-byte encoding
+     *    0    16    32    48    63
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
+     *    | len | len | len | len |
+     *    -------------------------
      */
 
-    // cur_sge_id = 0
-    add            r7, r0, r0
-    // Get to length-encoding.
-    sub            r1, TXWQE_SGE_OFFSET_BITS, 1, LOG_SIZEOF_WQE_8x4_T_BITS
 
-next_sge_len:
-    CAPRI_TABLE_GET_FIELD(r4, r1, WQE_8x4_T, len)
+    sub.c3            r1, r1, 1, LOG_SIZEOF_WQE_8x4_T_BITS
+    sub.!c3           r1, r1, 1, LOG_SIZEOF_WQE_16x2_T_BITS
+
+    CAPRI_TABLE_GET_FIELD_C(r4, r1, WQE_8x4_T, len, c3)
+    CAPRI_TABLE_GET_FIELD_C(r4, r1, WQE_16x2_T, len, !c3)
+
     // if total bytes transferred is within first sge's length, then
     // current_sge_offset is equal to total bytes transferred
-    blt            r2, r4, adjust_wqe_start_addr
+    blt            r2, r4, trigger_sqsge_process
     nop            // Branch Delay Slot
 
-    // if not, go to next sge length
-    // current_sge_offset = current_sge_offset - sge_len
-    sub            r2, r2, r4
     // cur_sge_id += 1
     add            r7, r7, 1
     slt            c1, r7, d.base.num_sges
-    bcf            [c1], next_sge_len
-    sub            r1, r1, 1, LOG_SIZEOF_WQE_8x4_T_BITS // Branch Delay Slot
-    bcf            [!c1], spec_drop // Not-expected !!
+    bcf            [c1], decode_sge_len_encoding
+    // current_sge_offset = current_sge_offset - sge_len
+    // if not, go to next sge length
+    sub            r2, r2, r4 //BD-slot
+    bcf            [!c1], spec_drop // Not-expected !! 
 
-adjust_wqe_start_addr:
+trigger_sqsge_process:
     // sge_list_addr = wqe_addr + TX_SGE_OFFSET
     mfspr          r3, spr_tbladdr  //Branch Delay Slot
     add            r3, r3, TXWQE_SGE_OFFSET
 
    // for sge_len encoded wqe, sge start is sge_list_addr + 32 + (cur_sge_id << log_size_of_sge_t)
-    add            r3, r3, 1, LOG_SIZEOF_WQE_8x4_T_BITS 
+    add            r3, r3, TXWQE_SGE_LEN_ENC_SIZE
     add            r3, r3, r7, LOG_SIZEOF_SGE_T
 
     seq            c3, CAPRI_KEY_FIELD(IN_P, in_progress), 1

@@ -1958,6 +1958,8 @@ action req_tx_write_back_process () {
     modify_field(to_s6_sqcb_wb_add_hdr_info_scr.wqe_addr, to_s6_sqcb_wb_add_hdr_info.wqe_addr);
     modify_field(to_s6_sqcb_wb_add_hdr_info_scr.spec_cindex, to_s6_sqcb_wb_add_hdr_info.spec_cindex);
     modify_field(to_s6_sqcb_wb_add_hdr_info_scr.fence, to_s6_sqcb_wb_add_hdr_info.fence);
+    modify_field(to_s6_sqcb_wb_add_hdr_info_scr.read_req_adjust, to_s6_sqcb_wb_add_hdr_info.read_req_adjust);
+
 
 
     // stage to stage

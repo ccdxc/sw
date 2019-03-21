@@ -20,6 +20,7 @@ struct req_tx_s2_t0_k k;
 #define TO_S3_SQSGE_P to_s3_sqsge_info
 #define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
 #define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
+#define TO_S6_SQCB_WB_ADD_HDR_P to_s6_sqcb_wb_add_hdr_info
 #define TO_S7_STATS_INFO_P to_s7_stats_info
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_FIELD(IN_P, current_sge_id)
@@ -33,6 +34,7 @@ struct req_tx_s2_t0_k k;
     .param    req_tx_sqlkey_process
     .param    req_tx_sqlkey_rsvd_lkey_process
     .param    req_tx_dcqcn_enforce_process
+    .param    req_tx_recirc_fetch_cindex_process
 
 .align
 req_tx_sqwqe_base_sge_process:
@@ -207,9 +209,13 @@ sge_recirc:
     phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
     // Pass packet_len to stage 3 to accumulate packet_len across sge recirc
     phvwr          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
-    phvwrpair.e    p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING, \
+    phvwrpair      p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING, \
                    p.common.rdma_recirc_recirc_spec_cindex, K_SPEC_CINDEX
     phvwr          p.common.p4_intr_recirc, 1
+
+    phvwr          CAPRI_PHV_FIELD(TO_S6_SQCB_WB_ADD_HDR_P, spec_cindex), K_SPEC_CINDEX
+
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_recirc_fetch_cindex_process, r0) 
 
 err_no_dma_cmds:
     phvwrpair      p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1), \
