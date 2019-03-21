@@ -1196,10 +1196,8 @@ cpdc_poll_all(struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	err = cpdc_poll(svc_info, NULL);
-	if (err) {
-		OSAL_LOG_ERROR("poll failed! err: %d", err);
+	if (err)
 		goto out;
-	}
 
 	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!st_desc) {
@@ -1226,8 +1224,6 @@ cpdc_poll_all(struct service_info *svc_info)
 
 	OSAL_LOG_DEBUG("exit! all desc(s) poll success! num_tags: %d",
 			svc_info->si_num_tags);
-	return err;
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
