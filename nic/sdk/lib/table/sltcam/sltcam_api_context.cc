@@ -28,7 +28,7 @@ rawstr(void *data, uint32_t len) {
 }
 
 int
-apicontext::swcompare(uint32_t idx) {
+sltctx::swcompare(uint32_t idx) {
     static uint8_t temp_swkey[SDK_TABLE_MAX_SW_KEY_LEN];
     static uint8_t temp_swkeymask[SDK_TABLE_MAX_SW_KEY_LEN];
     static uint8_t temp_swdata[SDK_TABLE_MAX_SW_DATA_LEN];
@@ -41,7 +41,7 @@ apicontext::swcompare(uint32_t idx) {
 }
 
 int
-apicontext::swcompare(uint32_t idx1, uint32_t idx2) {
+sltctx::swcompare(uint32_t idx1, uint32_t idx2) {
     uint8_t swkey1[SDK_TABLE_MAX_SW_KEY_LEN];
     uint8_t swkeymask1[SDK_TABLE_MAX_SW_KEY_LEN];
     uint8_t swdata1[SDK_TABLE_MAX_SW_DATA_LEN];
@@ -62,7 +62,7 @@ apicontext::swcompare(uint32_t idx1, uint32_t idx2) {
 }
 
 void
-apicontext::clearsw() {
+sltctx::clearsw() {
     // KEY's default value is always FF
     memset(swkey, 0xFF, SDK_TABLE_MAX_SW_KEY_LEN);
     memset(swkeymask, 0xFF, SDK_TABLE_MAX_SW_KEY_LEN);
@@ -72,7 +72,7 @@ apicontext::clearsw() {
 }
 
 void
-apicontext::clearhw() {
+sltctx::clearhw() {
     // KEY's default value is always FF
     memset(hwkey, 0xFF, SDK_TABLE_MAX_HW_KEY_LEN);
     memset(hwkeymask, 0xFF, SDK_TABLE_MAX_HW_KEY_LEN);
@@ -82,7 +82,7 @@ apicontext::clearhw() {
 }
 
 void
-apicontext::copyin() {
+sltctx::copyin() {
     memcpy(swkey, params->key, props->swkey_len);
     memcpy(swkeymask, params->mask, props->swkey_len);
     memcpy(swdata, params->appdata, props->swdata_len);
@@ -90,7 +90,7 @@ apicontext::copyin() {
 }
 
 void
-apicontext::copyout() {
+sltctx::copyout() {
     if (params->key) {
         memcpy(params->key, swkey, props->swkey_len);
     }
@@ -111,7 +111,7 @@ printbytes(const char *name, bytes2str_t b2s, void *b, uint32_t len) {
 }
 
 void
-apicontext::print_sw() {
+sltctx::print_sw() {
     SLTCAM_TRACE_VERBOSE("SW Fields");
     printbytes("Key", props->key2str, swkey, props->swkey_len);
     printbytes("Mask", props->key2str, swkeymask, props->swkey_len);
@@ -119,7 +119,7 @@ apicontext::print_sw() {
 }
 
 void
-apicontext::print_hw() {
+sltctx::print_hw() {
     SLTCAM_TRACE_VERBOSE("HW Fields");
     printbytes("Key", props->key2str, hwkey, props->hwkey_len);
     printbytes("Mask", props->key2str, hwkeymask, props->hwkey_len);
@@ -127,7 +127,7 @@ apicontext::print_hw() {
 }
 
 void
-apicontext::print_params() {
+sltctx::print_params() {
     if (params) {
         SLTCAM_TRACE_VERBOSE("Input Params");
         printbytes("Key", props->key2str, params->key, props->swkey_len);
@@ -137,7 +137,7 @@ apicontext::print_params() {
 }
 
 sdk_ret_t 
-apicontext::init() {
+sltctx::init() {
     params = NULL;
     tcam_index = 0;
     dbslot = 0;

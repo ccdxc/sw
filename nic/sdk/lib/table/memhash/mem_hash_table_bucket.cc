@@ -240,9 +240,9 @@ mem_hash_table_bucket::create_(mem_hash_api_context *ctx) {
     
     // Set the Handle
     if (ctx->is_main()) {
-        MEM_HASH_HANDLE_SET_INDEX(ctx, ctx->table_index);
+        ctx->handle->pindex(ctx->table_index);
     } else {
-        MEM_HASH_HANDLE_SET_HINT(ctx, ctx->table_index);
+        ctx->handle->sindex(ctx->table_index);
     }
 
     // Update the bucket meta data
@@ -551,7 +551,7 @@ mem_hash_table_bucket::remove_with_handle_(mem_hash_api_context *ctx) {
     clear_sw_key_(ctx);
     clear_sw_data_appdata_(ctx);
     valid_ = false;
-    ctx->table_stats->remove(ctx->handle->is_hint);
+    ctx->table_stats->remove(ctx->handle->svalid());
     return write_(ctx);
 }
 

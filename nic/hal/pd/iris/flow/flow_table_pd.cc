@@ -153,7 +153,7 @@ table_entry_fill(sdk_table_api_params_t *params) {
     TableResponse *rsp = static_cast<TableResponse*>(params->cbdata);
     TableFlowEntry *entry = rsp->mutable_flow_table()->add_flow_entry();
 
-    entry->set_handle(params->handle);
+    entry->set_handle(params->handle.tou64());
     str = key2str(params->key);
     entry->set_key(str);
     HAL_TRACE_DEBUG("Key: {}", str);

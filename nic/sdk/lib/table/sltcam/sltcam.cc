@@ -9,6 +9,8 @@
 #include "sltcam_utils.hpp"
 #include "sltcam_txn.hpp"
 
+using sltctx = sdk::table::sltcam_internal::sltctx;
+
 namespace sdk {
 namespace table {
 
@@ -30,20 +32,6 @@ namespace table {
 #define SLTCAM_API_END_(_status) {\
         SLTCAM_API_END(props_.name, (_status));\
         SDK_SPINLOCK_UNLOCK(&slock_);\
-}
-
-static sdk_table_handle_t index2handle(uint32_t tcam_index) {
-    sdk::table::sltcam_internal::handle_t hdl = {0};
-    hdl.index = tcam_index;
-    hdl.valid = true;
-    return hdl.value;
-}
-
-uint32_t handle2index(sdk_table_handle_t handle) {
-    sdk::table::sltcam_internal::handle_t hdl = {0};
-    hdl.value = handle;
-    SDK_ASSERT(hdl.valid);
-    return hdl.index;
 }
 
 //---------------------------------------------------------------------------
@@ -116,7 +104,7 @@ sltcam::destroy(sltcam *table)
 // Write entry to HW
 //----------------------------------------------------------------------------
 sdk_ret_t
-sltcam::write_(apicontext *ctx) {
+sltcam::write_(sltctx *ctx) {
     p4pd_error_t p4pdret;
     static char buff[4096] = {0};
 
@@ -142,7 +130,7 @@ sltcam::write_(apicontext *ctx) {
 // Read entry from HW
 //----------------------------------------------------------------------------
 sdk_ret_t
-sltcam::read_(apicontext *ctx) {
+sltcam::read_(sltctx *ctx) {
     p4pd_error_t p4pdret;
     SLTCAM_TRACE_DEBUG("hw index:%d", ctx->tcam_index);
     p4pdret =  p4pd_entry_read(ctx->props->table_id, ctx->tcam_index,
@@ -155,7 +143,7 @@ sltcam::read_(apicontext *ctx) {
 // Allocate a TCAM index
 //----------------------------------------------------------------------------
 sdk_ret_t
-sltcam::alloc_(apicontext *ctx) {
+sltcam::alloc_(sltctx *ctx) {
     SDK_ASSERT(ctx->tcam_index_valid == false);
     indexer::status irs = indexer_->alloc(&ctx->tcam_index);
     if (irs != indexer::SUCCESS) {
@@ -170,7 +158,7 @@ sltcam::alloc_(apicontext *ctx) {
 // free given index
 //----------------------------------------------------------------------------
 sdk_ret_t
-sltcam::dealloc_(apicontext *ctx) {
+sltcam::dealloc_(sltctx *ctx) {
     SDK_ASSERT(ctx->tcam_index_valid);
     indexer::status irs = indexer_->free(ctx->tcam_index);
     if (irs != indexer::SUCCESS) {
@@ -180,27 +168,25 @@ sltcam::dealloc_(apicontext *ctx) {
     return sdk::SDK_RET_OK;
 }
 
-static apicontext*
-create_apicontext(sdk::table::sdk_table_api_op_t op,
+static sltctx*
+create_sltctx(sdk::table::sdk_table_api_op_t op,
                   sdk::table::sdk_table_api_params_t *params,
                   sdk::table::sltcam_internal::properties *props) {
-    static apicontext ctx;
+    static sltctx ctx;
     ctx.init();
     ctx.params = params;
     ctx.props = props;
     ctx.op = op;
 
-    if (ctx.handle_valid()) {
-        ctx.tcam_index = handle2index(params->handle);
-        ctx.tcam_index_valid = true;
-    }
+    ctx.tcam_index = params ? params->handle.pindex() : 0;
+    ctx.tcam_index_valid = params ? params->handle.pvalid() : false;
 
     ctx.print_params();
     return &ctx;
 }
 
 sdk_ret_t
-sltcam::find_(apicontext *ctx) {
+sltcam::find_(sltctx *ctx) {
     return db_.find(ctx);
 }
 
@@ -213,7 +199,7 @@ __label__ done;
     sdk_ret_t ret = sdk::SDK_RET_OK;
     SLTCAM_API_BEGIN_();
 
-    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_INSERT, params, &props_);
+    auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_INSERT, params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
     // Validate this ctx (& api params) with the transaction
@@ -233,7 +219,7 @@ __label__ done;
     }
 
     // Allocate a tcam entry if not already reserved.
-    if (ctx->handle_valid() == false) {
+    if (ctx->params->handle.valid() == false) {
         ret = alloc_(ctx);
         if (ret != sdk::SDK_RET_OK) {
             SLTCAM_TRACE_ERR_GOTO(done, "alloc, r:%d", ret);
@@ -261,7 +247,7 @@ __label__ done;
    
 handle_set:
     // Save the handle
-    params->handle = index2handle(ctx->tcam_index);
+    params->handle.pindex(ctx->tcam_index);
 
 done:
     //db_.sanitize(ctx);
@@ -278,7 +264,7 @@ sltcam::update(sdk::table::sdk_table_api_params_t *params) {
 __label__ done;
     SLTCAM_API_BEGIN_();
 
-    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_UPDATE, params, &props_);
+    auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_UPDATE, params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
     // Validate this ctx (& api params) with the transaction
@@ -288,7 +274,7 @@ __label__ done;
     }
 
     // Find the tcam_index, if handle is not provided.
-    if (ctx->handle_valid() == false) {
+    if (ctx->params->handle.valid() == false) {
         ret = find_(ctx);
         if (ret != sdk::SDK_RET_OK) {
             SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
@@ -319,7 +305,7 @@ sltcam::remove(sdk::table::sdk_table_api_params_t *params) {
 __label__ done;
     SLTCAM_API_BEGIN_();
 
-    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_REMOVE, params, &props_);
+    auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_REMOVE, params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
     // Validate this ctx (& api params) with the transaction
@@ -376,7 +362,7 @@ sltcam::get(sdk::table::sdk_table_api_params_t *params) {
 __label__ done;
     SLTCAM_API_BEGIN_();
 
-    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_GET, params, &props_);
+    auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_GET, params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
     auto ret = find_(ctx);
@@ -405,7 +391,7 @@ sltcam::iterate(sdk::table::sdk_table_api_params_t *params) {
     sdk_table_api_params_t iterparams = { 0 };
     sdk_ret_t ret = sdk::SDK_RET_OK;
     SLTCAM_API_BEGIN_();
-    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_GET, params, &props_);
+    auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_GET, params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
     for(auto it = db_.begin(); it != db_.end(); it++) {
@@ -450,7 +436,7 @@ sltcam::reserve(sdk::table::sdk_table_api_params_t *params) {
 __label__ done;
     SLTCAM_API_BEGIN_();
 
-    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_RELEASE,
+    auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_RELEASE,
                                  params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
@@ -467,7 +453,7 @@ __label__ done;
     }
 
     // Save the handle
-    params->handle = index2handle(ctx->tcam_index);
+    params->handle.pindex(ctx->tcam_index);
 
 done:
     //db_.sanitize(ctx);
@@ -483,7 +469,7 @@ sdk_ret_t
 sltcam::release(sdk::table::sdk_table_api_params_t *params) {
     SLTCAM_API_BEGIN_();
 
-    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_RELEASE,
+    auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_RELEASE,
                                  params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
  
@@ -532,7 +518,7 @@ sltcam::txn_end() {
 //---------------------------------------------------------------------------
 sdk_ret_t
 sltcam::sanitize() {
-    auto ctx = create_apicontext(sdk::table::SDK_TABLE_API_UPDATE, NULL, &props_);
+    auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_UPDATE, NULL, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
     db_.sanitize(ctx);
     return sdk::SDK_RET_OK;

@@ -12,7 +12,7 @@ if [[ "$1" ==  --coveragerun ]]; then
     CMD_OPTS="COVFILE\=${COVFILE}"
 fi
 
-MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so
+#MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so
 set -e
 # PI gtests
 export PATH=${PATH}:${BLDDIR}/bin

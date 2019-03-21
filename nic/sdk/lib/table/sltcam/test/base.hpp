@@ -17,14 +17,14 @@ using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
 using sdk::table::sdk_table_factory_params_t;
-using sdk::table::sdk_table_handle_t;
+using sdk::table::handle_t;
 using sdk::table::sdk_table_api_op_t;
 
 #define SLTCAM_CHECK_RETURN(_exp, _ret) if (!(_exp)) return (_ret)
 
 typedef struct SltcamCacheEntry_ {
     sltcam_mock_table_entry_t table_entry;
-    sdk_table_handle_t handle;
+    handle_t handle;
 } SltcamCacheEntry;
 
 static inline char*
@@ -75,8 +75,8 @@ public:
         }
         return &entries[index].table_entry;
     }
-    sdk_table_handle_t gethandle(uint32_t index) { return entries[index].handle; } 
-    void sethandle(uint32_t index, sdk_table_handle_t handle) { entries[index].handle = handle; } 
+    handle_t gethandle(uint32_t index) { return entries[index].handle; } 
+    void sethandle(uint32_t index, handle_t handle) { entries[index].handle = handle; } 
 };
 
 class SltcamGtestBase: public ::testing::Test {
@@ -179,7 +179,7 @@ private:
                 rs = insert_(&params);
                 SLTCAM_CHECK_RETURN(rs == expret, rs);
                 if (rs == sdk::SDK_RET_OK) {
-                    assert(params.handle != SDK_TABLE_HANDLE_INVALID);
+                    assert(params.handle.valid());
                     cache.sethandle(i, params.handle);
                 }
                 break;
@@ -195,7 +195,7 @@ private:
                 rs = reserve_(&params);
                 SLTCAM_CHECK_RETURN(rs == expret, rs);
                 if (rs == sdk::SDK_RET_OK) {
-                    assert(params.handle != SDK_TABLE_HANDLE_INVALID);
+                    assert(params.handle.valid());
                     cache.sethandle(i, params.handle);
                 }
                 break;

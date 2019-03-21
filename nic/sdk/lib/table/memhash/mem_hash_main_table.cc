@@ -99,14 +99,15 @@ sdk_ret_t
 mem_hash_main_table::insert_with_handle_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
  
-    SDK_ASSERT(ctx->table_index == ctx->handle->index);
-    if (ctx->handle->is_hint == 0) {
+    SDK_ASSERT(ctx->handle->pvalid());
+    SDK_ASSERT(ctx->table_index == ctx->handle->pindex());
+    if (!ctx->handle->svalid()) {
         // This handle is for the main table.
         // Write key and data to the hardware.
         MEMHASH_TRACE_DEBUG("writing to main table.");
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->insert_with_handle_(ctx);
     } else {
-        ctx->hint = ctx->handle->hint;
+        ctx->hint = ctx->handle->sindex();
         MEMHASH_TRACE_DEBUG("adding to hint table, hint=%d", ctx->hint);
         ret = hint_table_->insert_(ctx);
     }
@@ -123,7 +124,7 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
     // If handle is valid, insert directly using the handle.
-    if (ctx->is_handle_valid()) {
+    if (ctx->handle->valid()) {
         return insert_with_handle_(ctx);
     }
 
@@ -153,7 +154,7 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
         //         written. we can update the main entry. This will ensure 
         //         make before break for any downstream changes.
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->write_(ctx);
-        MEM_HASH_HANDLE_SET_INDEX(ctx, ctx->table_index);
+        ctx->handle->pindex(ctx->table_index);
     } else {
         MEMHASH_TRACE_ERR("MainTable: insert failed: ret:%d", ret);
     }
@@ -168,14 +169,15 @@ sdk_ret_t
 mem_hash_main_table::remove_with_handle_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
  
-    SDK_ASSERT(ctx->table_index == ctx->handle->index);
-    if (ctx->handle->is_hint == 0) {
+    SDK_ASSERT(ctx->handle->pvalid());
+    SDK_ASSERT(ctx->table_index == ctx->handle->pindex());
+    if (!ctx->handle->svalid()) {
         // This handle is for the main table.
         // Write key and data to the hardware.
         MEMHASH_TRACE_DEBUG("writing to main table.");
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->remove_with_handle_(ctx);
     } else {
-        ctx->hint = ctx->handle->hint;
+        ctx->hint = ctx->handle->sindex();
         MEMHASH_TRACE_DEBUG("removing from hint table, hint=%d", ctx->hint);
         ret = hint_table_->remove_(ctx);
     }
@@ -192,7 +194,7 @@ mem_hash_main_table::remove_(mem_hash_api_context *ctx) {
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
     // If handle is valid, insert directly using the handle.
-    if (ctx->is_handle_valid()) {
+    if (ctx->handle->valid()) {
         return remove_with_handle_(ctx);
     }
 
@@ -303,9 +305,9 @@ __label__ done;
 
     // Set the Handle
     if (match_ctx->is_main()) {
-        MEM_HASH_HANDLE_SET_INDEX(match_ctx, match_ctx->table_index);
+        match_ctx->handle->pindex(match_ctx->table_index);
     } else {
-        MEM_HASH_HANDLE_SET_HINT(match_ctx, match_ctx->table_index);
+        match_ctx->handle->sindex(match_ctx->table_index);
     }
 
     memcpy(ctx->in_appdata, ctx->sw_appdata, ctx->sw_appdata_len); 

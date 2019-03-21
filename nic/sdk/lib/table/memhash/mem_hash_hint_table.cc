@@ -171,7 +171,7 @@ mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
 
-    if (hctx->is_handle_valid()) {
+    if (hctx->handle->valid()) {
         // If handle is valid, insert directly using the handle.
         ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->insert_with_handle_(hctx);
     } else {
@@ -322,7 +322,7 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
 
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
-    if (hctx->is_handle_valid()) {
+    if (hctx->handle->valid()) {
         // If handle is valid, insert directly using the handle.
         ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->remove_with_handle_(hctx);
     } else {

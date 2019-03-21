@@ -423,7 +423,7 @@ mem_hash::release(sdk_table_api_params_t *params) {
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
     MEM_HASH_API_BEGIN_();
-    SDK_ASSERT(params->key && params->handle);
+    SDK_ASSERT(params->key && params->handle.valid());
 
     ret = create_api_context_(sdk::table::SDK_TABLE_API_RELEASE,
                               params, (void **)&mctx);

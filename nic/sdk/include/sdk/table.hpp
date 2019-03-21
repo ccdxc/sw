@@ -6,7 +6,9 @@
 #ifndef __SDK_TABLE_HPP__
 #define __SDK_TABLE_HPP__
 
+#include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #define SDK_TABLE_BITS_TO_BYTES(_b) (((_b) >> 3) + (((_b) & 0x7) ? 1 : 0))
 #define SDK_TABLE_ALIGN_TO_64B(_s) \
@@ -23,7 +25,50 @@ typedef enum health_s {
     HEALTH_RED
 } health_t;
 
-#define SDK_TABLE_HANDLE_INVALID 0
+#define SDK_TABLE_HANDLE_STR_LEN 64
+struct handle_t {
+public:
+    static handle_t null() {
+        static handle_t nullhdl;
+        return nullhdl;
+    }
+
+    handle_t() { value_ = 0; }
+    handle_t(uint64_t v) { value_ = v; }
+    // Handle Valid or Not
+    uint32_t valid() { return (pvalid_ || svalid_); }
+    // Handle's Primary Index Valid or Not
+    uint32_t pvalid() { return pvalid_; }
+    // Handle's Secondary Index Valid or Not
+    uint32_t svalid() { return svalid_; }
+    // Handle's Primary Index (GET)
+    uint32_t pindex() { return pindex_; }
+    // Handle's Secondary Index (GET)
+    uint32_t sindex() { return sindex_; }
+    // Handle's Primary Index (SET)
+    void pindex(uint32_t p) { pindex_ = p; pvalid_ = 1; }
+    // Handle's Secondary Index (SET)
+    void sindex(uint32_t s) { sindex_ = s; svalid_ = 1; }
+    bool operator ==(const handle_t& h) { return value_ == h.value_; }
+    bool operator !=(const handle_t& h) { return value_ != h.value_; }
+    char *tostr(char *buff, uint32_t len) {
+        assert(len >= SDK_TABLE_HANDLE_STR_LEN); 
+        snprintf(buff, len, "%d.%d.%d.%d", pvalid_, pindex_, svalid_, sindex_);
+        return buff;
+    }
+    uint64_t tou64() { return value_; }
+
+private:
+    union {
+        struct {
+            uint32_t pindex_ : 32;
+            uint32_t sindex_ : 30;
+            uint32_t pvalid_ : 1;
+            uint32_t svalid_ : 1;
+        };
+        uint64_t value_;
+    } __attribute__((__packed__));
+};
 
 #define SDK_TABLE_MAX_SW_KEY_LEN 128
 #define SDK_TABLE_MAX_SW_DATA_LEN 128
@@ -35,11 +80,7 @@ typedef enum health_s {
 
 // Forward declaration
 typedef struct sdk_table_api_params_ sdk_table_api_params_t;
-
 typedef char* (*bytes2str_t)(void *bytes);
-
-typedef uint64_t sdk_table_handle_t;
-typedef char* (*handle2str)(sdk_table_handle_t handle);
 typedef void (*iterate_t)(sdk_table_api_params_t *params);
 
 typedef enum sdk_table_api_op_ {
@@ -112,7 +153,7 @@ typedef struct sdk_table_api_params_ {
     uint32_t hash_32b;
     // [Input/Output]
     // Handle of the entry, encoding differs for each table.
-    sdk_table_handle_t handle;
+    handle_t handle;
     // [Input]
     // Iterator callback function
     iterate_t itercb;

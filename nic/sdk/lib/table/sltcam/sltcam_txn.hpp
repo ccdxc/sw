@@ -26,7 +26,7 @@ private:
     sdk::lib::indexer *indexer_;
 
 private:
-    sdk_ret_t alloc_(apicontext *ctx) {
+    sdk_ret_t alloc_(sltctx *ctx) {
         SDK_ASSERT(ctx->tcam_index_valid);
         indexer::status irs = indexer_->alloc_withid(ctx->tcam_index);
         if (irs != indexer::SUCCESS) {
@@ -35,7 +35,7 @@ private:
         return sdk::SDK_RET_OK;
     }
 
-    sdk_ret_t dealloc_(apicontext *ctx) {
+    sdk_ret_t dealloc_(sltctx *ctx) {
         SDK_ASSERT(ctx->tcam_index_valid);
         indexer::status irs = indexer_->free(ctx->tcam_index);
         if (irs != indexer::SUCCESS) {
@@ -68,13 +68,13 @@ public:
         return valid_;
     }
 
-    sdk_ret_t validate(apicontext *ctx) {
+    sdk_ret_t validate(sltctx *ctx) {
         if (!valid()) {
             return sdk::SDK_RET_OK;
         }
         if (ctx->op == sdk::table::SDK_TABLE_API_INSERT ||
             ctx->op == sdk::table::SDK_TABLE_API_REMOVE) {
-            if (!ctx->handle_valid()) {
+            if (!ctx->params->handle.valid()) {
                 return sdk::SDK_RET_INVALID_ARG;
             }
         }
@@ -113,7 +113,7 @@ public:
         return sdk::SDK_RET_OK;
     }
 
-    sdk_ret_t reserve(apicontext *ctx) {
+    sdk_ret_t reserve(sltctx *ctx) {
         auto ret = alloc_(ctx);
         if (ret != sdk::SDK_RET_OK) {
             return ret;
@@ -123,7 +123,7 @@ public:
         return sdk::SDK_RET_OK;
     }
 
-    sdk_ret_t release(apicontext *ctx) {
+    sdk_ret_t release(sltctx *ctx) {
         if (!valid()) {
             return sdk::SDK_RET_TXN_NOT_FOUND;
         }

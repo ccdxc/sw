@@ -17,7 +17,7 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
-using sdk::table::sdk_table_handle_t;
+using sdk::table::handle_t;
 
 namespace api {
 namespace impl {
@@ -144,13 +144,9 @@ public:
 
 private:
     /**< @brief    constructor */
-    mapping_impl() {
-        overlay_ip_to_public_ip_nat_hdl_ = SDK_TABLE_HANDLE_INVALID;
-        public_ip_to_overlay_ip_nat_hdl_ = SDK_TABLE_HANDLE_INVALID;
-        overlay_ip_hdl_ = SDK_TABLE_HANDLE_INVALID;
-        overlay_ip_remote_vnic_tx_hdl_ = SDK_TABLE_HANDLE_INVALID;
-        public_ip_hdl_ = SDK_TABLE_HANDLE_INVALID;
-        public_ip_remote_vnic_tx_hdl_ = SDK_TABLE_HANDLE_INVALID;
+    mapping_impl() { 
+        handle_.local_.overlay_ip_to_public_ip_nat_hdl_ = 0;
+        handle_.local_.public_ip_to_overlay_ip_nat_hdl_ = 0;
     }
 
     /**< @brief    destructor */
@@ -260,22 +256,25 @@ private:
 
 private:
     bool    is_local_;
-    union {
+    union handle_s {
         // table handles for local mapping
-        struct {
-            sdk_table_handle_t    overlay_ip_to_public_ip_nat_hdl_;
-            sdk_table_handle_t    public_ip_to_overlay_ip_nat_hdl_;
-            sdk_table_handle_t    overlay_ip_hdl_;
-            sdk_table_handle_t    overlay_ip_remote_vnic_tx_hdl_;
-            sdk_table_handle_t    public_ip_hdl_;
-            sdk_table_handle_t    public_ip_remote_vnic_tx_hdl_;
-        };
+        struct local_s {
+            uint32_t    overlay_ip_to_public_ip_nat_hdl_;
+            uint32_t    public_ip_to_overlay_ip_nat_hdl_;
+            handle_t    overlay_ip_hdl_;
+            handle_t    overlay_ip_remote_vnic_tx_hdl_;
+            handle_t    public_ip_hdl_;
+            handle_t    public_ip_remote_vnic_tx_hdl_;
+            local_s() {}
+        } local_;
         // table handles for remote mapping
-        struct {
-            sdk_table_handle_t    remote_vnic_rx_hdl_;
-            sdk_table_handle_t    remote_vnic_tx_hdl_;
-        };
-    };
+        struct remote_s {
+            handle_t    remote_vnic_rx_hdl_;
+            handle_t    remote_vnic_tx_hdl_;
+            remote_s() {}
+        } remote_;
+        handle_s() {}
+    } handle_;
 };
 
 /** @} */    // end of PDS_MAPPING_IMPL

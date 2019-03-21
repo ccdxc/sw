@@ -11,13 +11,12 @@
 #include "include/sdk/base.hpp"
 
 #include "sltcam_properties.hpp"
-#include "sltcam_internal.hpp"
 
 namespace sdk {
 namespace table {
 namespace sltcam_internal {
 
-class apicontext {
+class sltctx {
 public:
     sdk::table::sltcam_internal::properties *props;
     sdk_table_api_params_t *params;
@@ -42,8 +41,8 @@ public:
     uint8_t hwdata[SDK_TABLE_MAX_HW_DATA_LEN];
 
 public:
-    apicontext() { init(); }
-    ~apicontext() {}
+    sltctx() { init(); }
+    ~sltctx() {}
 
     int swcompare(uint32_t idx);
     int swcompare(uint32_t idx1, uint32_t idx2);
@@ -56,10 +55,6 @@ public:
     void print_sw();
     void print_hw();
     void print_params();
-
-    bool handle_valid() {
-        return params && params->handle != SDK_TABLE_HANDLE_INVALID;
-    }
 };
 
 } // namespace sltcam_internal

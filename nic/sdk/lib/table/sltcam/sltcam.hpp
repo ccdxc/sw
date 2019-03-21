@@ -17,7 +17,7 @@
 #include "sltcam_txn.hpp"
 
 using sdk::lib::indexer;
-using sdk::table::sltcam_internal::apicontext;
+using sltctx = sdk::table::sltcam_internal::sltctx;
 using sdk::table::sdk_table_api_params_t;
 
 namespace sdk {
@@ -53,11 +53,11 @@ private:
         SDK_SPINLOCK_DESTROY(&slock_);
     }
     sdk_ret_t init_(sdk_table_factory_params_t *params);
-    sdk_ret_t read_(apicontext *ctx);
-    sdk_ret_t write_(apicontext *ctx);
-    sdk_ret_t find_(apicontext *ctx);
-    sdk_ret_t alloc_(apicontext *ctx);
-    sdk_ret_t dealloc_(apicontext *ctx);
+    sdk_ret_t read_(sltctx *ctx);
+    sdk_ret_t write_(sltctx *ctx);
+    sdk_ret_t find_(sltctx *ctx);
+    sdk_ret_t alloc_(sltctx *ctx);
+    sdk_ret_t dealloc_(sltctx *ctx);
 
 private:
     sdk::lib::indexer *indexer_;

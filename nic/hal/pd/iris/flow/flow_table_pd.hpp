@@ -9,7 +9,6 @@
 #include "gen/proto/table.pb.h"
 
 using sdk::table::mem_hash;
-using sdk::table::sdk_table_handle_t;
 using table::TableResponse;
 
 namespace hal {

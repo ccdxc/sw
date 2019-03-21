@@ -35,22 +35,22 @@ private:
 
 private:
     elem* elem_get_(uint32_t n) { return &elems_[n]; }
-    sdk_ret_t grow_(apicontext *ctx);
-    sdk_ret_t shrink_(apicontext *ctx);
-    sdk_ret_t findslot_(apicontext *ctx);
+    sdk_ret_t grow_(sltctx *ctx);
+    sdk_ret_t shrink_(sltctx *ctx);
+    sdk_ret_t findslot_(sltctx *ctx);
     bool isempty() { return count_ == 0; }
 
 public:
     db() { max_elems_ = 0; count_ = 0; elems_ = NULL; }
     ~db() { SDK_FREE(SDK_MEM_ALLOC_ABST_NODES, elems_); }
     sdk_ret_t init(uint32_t max_elems);
-    sdk_ret_t insert(apicontext *ctx);
-    sdk_ret_t remove(apicontext *ctx);
-    sdk_ret_t find(apicontext *ctx);
+    sdk_ret_t insert(sltctx *ctx);
+    sdk_ret_t remove(sltctx *ctx);
+    sdk_ret_t find(sltctx *ctx);
     uint32_t begin() { return 0; }
     uint32_t end() { return count_; }
     uint32_t element(uint32_t iter) { return elems_[iter].data(); }
-    void sanitize(apicontext *ctx);
+    void sanitize(sltctx *ctx);
 };
 
 } // namespace sltcam_internal

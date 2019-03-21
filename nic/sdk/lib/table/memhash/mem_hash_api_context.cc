@@ -165,7 +165,7 @@ mem_hash_api_context::factory(uint32_t op,
     ctx->props = props;
 
     // Use the handle from the params.
-    ctx->handle = reinterpret_cast<mem_hash_handle_t*>(&params->handle);
+    ctx->handle = &params->handle;
 
     // Save the table_stats pointer
     ctx->table_stats = table_stats;
@@ -173,7 +173,7 @@ mem_hash_api_context::factory(uint32_t op,
     // Save the transaction
     ctx->txn = txn;
     //if (SDK_TABLE_API_OP_IS_CRUD(ctx->op) && txn->is_valid()) {
-    //    SDK_ASSERT(ctx->is_handle_valid());
+    //    SDK_ASSERT(ctx->handle->valid());
     //}
 
     return ctx;
@@ -193,8 +193,8 @@ mem_hash_api_context::destroy(mem_hash_api_context* ctx) {
 
 void
 mem_hash_api_context::print_handle() {
-    MEMHASH_TRACE_DEBUG("- Handle: IsHint=%d Index=%d Hint=%d Value:%d",
-                        handle->is_hint, handle->index, handle->hint, handle->value);
+    char buff[SDK_TABLE_HANDLE_STR_LEN];
+    MEMHASH_TRACE_DEBUG("- Handle: %s", handle->tostr(buff, sizeof(buff)));
 }
 
 void
@@ -221,6 +221,5 @@ mem_hash_api_context::print_input() {
                                 mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
         }
     }
-
     print_handle();
 }

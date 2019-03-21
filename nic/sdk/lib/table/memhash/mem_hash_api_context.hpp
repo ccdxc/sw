@@ -26,27 +26,6 @@ namespace sdk {
 namespace table {
 namespace memhash {
 
-typedef union mem_hash_handle_ {
-    struct {
-        uint32_t is_hint:1;
-        uint32_t index:28;
-        uint32_t hint:24;
-        uint32_t valid:1;
-        uint32_t spare:10;
-    };
-    uint64_t value;
-} __attribute__((__packed__)) mem_hash_handle_t;
-
-#define MEM_HASH_HANDLE_SET_HINT(_ctx, _hint) { \
-        ((_ctx)->handle)->hint = (_hint); \
-        ((_ctx)->handle)->is_hint = true; \
-        ((_ctx)->handle)->valid = true; \
-}
-#define MEM_HASH_HANDLE_SET_INDEX(_ctx, _index) {\
-        ((_ctx)->handle)->index = (_index); \
-        ((_ctx)->handle)->valid = true; \
-}
-
 #define HINT_SLOT_IS_INVALID(_slot) \
         ((_slot) == mem_hash_api_context::hint_slot::HINT_SLOT_INVALID)
 #define HINT_SLOT_IS_VALID(_slot) \
@@ -158,7 +137,7 @@ public:
     mem_hash_api_context *pctx;
 
     // Handle to the entry
-    mem_hash_handle_t *handle;
+    sdk::table::handle_t *handle;
 
     // Table stats
     mem_hash_table_stats *table_stats;
@@ -277,10 +256,6 @@ public:
 
     bool is_release() {
         return (op == SDK_TABLE_API_RELEASE);
-    }
-
-    bool is_handle_valid() {
-        return handle->value != 0;
     }
 };
 

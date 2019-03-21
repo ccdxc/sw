@@ -24,7 +24,7 @@ db::init(uint32_t max_elems) {
 
 #define MID(_lo, _hi) ((_hi)>=(_lo)) ? ((_hi)+(_lo))/2 : (_lo)
 sdk_ret_t
-db::findslot_(apicontext *ctx) {
+db::findslot_(sltctx *ctx) {
 __label__ done, notfound;
     int cmpresult = 0;
     uint32_t lo = 0;
@@ -64,7 +64,7 @@ done:
 }
 
 void
-db::sanitize(apicontext *ctx) {
+db::sanitize(sltctx *ctx) {
     if (isempty()) {
         return;
     }
@@ -81,12 +81,12 @@ db::sanitize(apicontext *ctx) {
 }
 
 sdk_ret_t
-db::find(apicontext *ctx) {
+db::find(sltctx *ctx) {
     return findslot_(ctx);
 }
 
 sdk_ret_t
-db::grow_(apicontext *ctx) {
+db::grow_(sltctx *ctx) {
     SDK_ASSERT(ctx->dbslot_valid);
     if (elem_get_(ctx->dbslot)->valid()) {
         memmove(elems_+ctx->dbslot+1, elems_+ctx->dbslot,
@@ -96,7 +96,7 @@ db::grow_(apicontext *ctx) {
 }
 
 sdk_ret_t
-db::shrink_(apicontext *ctx) {
+db::shrink_(sltctx *ctx) {
     if (isempty()) {
         return sdk::SDK_RET_OK;
     }
@@ -108,7 +108,7 @@ db::shrink_(apicontext *ctx) {
 }
 
 sdk_ret_t
-db::insert(apicontext *ctx) {
+db::insert(sltctx *ctx) {
     // dbslot must be valid by now
     SDK_ASSERT(ctx->dbslot_valid);
     // Grow the DB for insertion
@@ -121,7 +121,7 @@ db::insert(apicontext *ctx) {
 }
 
 sdk_ret_t
-db::remove(apicontext *ctx) {
+db::remove(sltctx *ctx) {
     // dbslot must be valid by now
     SDK_ASSERT(ctx->dbslot_valid);
     // Delete the data

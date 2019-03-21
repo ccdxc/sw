@@ -125,7 +125,7 @@ private:
             rs = insert ? insert_(&params) : reserve_(&params);
             MHTEST_CHECK_RETURN(rs == expret, rs);
             
-            assert(params.handle != 0);
+            assert(params.handle.valid());
             entry->handle = params.handle;
         }
         return SDK_RET_OK;
@@ -149,7 +149,7 @@ private:
         rs = insert ? insert_(&params) : reserve_(&params);
         MHTEST_CHECK_RETURN(rs == sdk::SDK_RET_OK, rs);
 
-        assert(params.handle != 0);
+        assert(params.handle.valid());
         entry->handle = params.handle;
 
         for (ml = 1; ml < more_levels+1; ml++) {
@@ -159,7 +159,7 @@ private:
                     entry = h5_gen_cache_entry(&crc32, &params);
                     rs = insert ? insert_(&params) : reserve_(&params);
                     MHTEST_CHECK_RETURN(rs == sdk::SDK_RET_OK, rs);
-                    assert(params.handle != 0);
+                    assert(params.handle.valid());
                     entry->handle = params.handle;
                 }
             }

@@ -45,7 +45,7 @@ typedef struct h5_entry_s {
     mem_hash_h5_appdata_t appdata;
     h5_crc32_t crc32;
     bool crc32_valid;
-    uint64_t handle;
+    sdk::table::handle_t handle;
 } h5_entry_t;
 
 typedef struct h10_entry_s {
@@ -53,7 +53,7 @@ typedef struct h10_entry_s {
     mem_hash_h10_actiondata_t data;
     h10_crc32_t crc32;
     bool crc32_valid;
-    uint64_t handle;
+    sdk::table::handle_t handle;
 } h10_entry_t;
 
 
