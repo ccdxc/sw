@@ -2031,13 +2031,25 @@ static struct ib_mr *ionic_get_dma_mr(struct ib_pd *ibpd, int access)
 	return &mr->ibmr;
 }
 
+#ifdef HAVE_IB_USER_MR_INIT_ATTR
+static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd,
+				       struct ib_mr_init_attr *attr,
+				       struct ib_udata *udata)
+#else
 static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 				       u64 length, u64 addr, int access,
 				       struct ib_udata *udata)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_mr *mr;
+#ifdef HAVE_IB_USER_MR_INIT_ATTR
+	u64 start = attr->start;
+	u64 length = attr->length;
+	u64 addr = attr->hca_va;
+	int access = attr->access_flags;
+#endif
 	int rc;
 
 	rc = ionic_validate_udata(udata, 0, 0);

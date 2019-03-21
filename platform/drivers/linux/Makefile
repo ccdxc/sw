@@ -69,8 +69,13 @@ LINUXINCLUDE = $$(UBUNTUINCLUDE) \
 	       -include $$(srctree)/include/linux/kconfig.h
 OFA_KOPT += LINUXINCLUDE='$(LINUXINCLUDE)'
 OFA_KOPT += KBUILD_EXTRA_SYMBOLS='$(OFA_KSRC)/Module.symvers'
-# xxx: no ofa version detect, assuming mellanox ofed kernel 4.2
-OFA_KOPT += KCPPFLAGS="-DOFA_KERNEL"
+
+# OFA does not provide semantic versioning for its kernel api.
+# Out-of-tree compatibility is based on hash in compat_version.
+OFA_HASH := $(shell cat '$(OFA_KSRC)/compat_version')
+OFA_KOPT += KCPPFLAGS="-DOFA_KERNEL=$(OFA_HASH)"
+# Relying on undefined macros evaluate to zero, do not warn.
+OFA_KOPT += KCFLAGS="-Wno-undef"
 endif
 endif
 endif

@@ -87,7 +87,7 @@ if [ $# -eq 0 ] ; then
     done
 
     # build-test for each ofed rdma stack
-    for OFA_KSRC in ${@:-$SRC/ofa_kernel/*} ; do
+    for OFA_KSRC in ${@:-$SRC/ofa_kernel-*/*} ; do
         is_ofa && test_ofa
     done
 
