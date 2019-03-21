@@ -794,7 +794,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	uint16_t qtype;
 	uint8_t *seq_status_desc;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
-	struct interm_buf_list *iblist;
 
 	struct lif *lif;
 
@@ -845,14 +844,11 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
-	chain_params->ccp_comp_buf_addr = svc_info->si_dst_blist.blist->buffers[0].buf;
+	chain_params->ccp_comp_buf_addr = svc_info->si_dst_sgl.sgl->cs_addr_0;
 
 	chain_params->ccp_data_len = svc_info->si_dst_blist.len;
 	chain_params->ccp_alt_data_len = svc_info->si_bof_blist.len;
 	if (chn_service_has_interm_blist(svc_info)) {
-		iblist = &svc_info->si_iblist;
-		chain_params->ccp_comp_buf_addr = iblist->blist.buffers[0].buf;
-
 		if (chn_service_has_sgl_pdma(svc_info)) {
 			chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 			chain_params->ccp_aol_dst_vec_addr =
