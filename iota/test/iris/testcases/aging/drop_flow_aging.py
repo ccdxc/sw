@@ -45,7 +45,13 @@ def Trigger(tc):
     update_sgpolicy(client.ip_address, server.ip_address, tc.iterators.proto, server_port)
 
     profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 16")
+
+    # Get the SecurityProfile ID that netagent has created.
+    profile_id = get_hal_id(obj_name = "nwSecurityProfile")
+
+    halctl_show_nwsec_cmd = "/nic/bin/halctl show nwsec profile --id %s" % \
+                            profile_id
+    api.Trigger_AddNaplesCommand(profilereq, naples.node_name, halctl_show_nwsec_cmd)
     profcommandresp = api.Trigger(profilereq)
     cmd = profcommandresp.commands[-1]
     for command in profcommandresp.commands:

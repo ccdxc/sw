@@ -100,7 +100,7 @@ def update_field(field, val):
     for object in store_profile_objects:
         if (field == 'enable-connection-tracking'):
             object.spec.enable_connection_tracking = val
-   
+
     #Now push the update as we modified.
     netagent_cfg_api.UpdateConfigObjects(store_profile_objects)
 
@@ -125,6 +125,9 @@ def update_sgpolicy(src, dst, proto, dport, action="DENY"):
 
     return api.types.status.SUCCESS
 
+def get_hal_id(obj_name):
+    netagent_cfg_api.GetHALObjID(kind = "SecurityProfile", obj_name = obj_name)
+
 def get_tickleinfo(cmd):
     if cmd.stdout == '' or cmd.stdout.find('API_STATUS_NOT_FOUND') != -1:
        return 0, 0, 0, 0
@@ -137,7 +140,7 @@ def get_tickleinfo(cmd):
             init_flow = stats['initiatorflowstats']
             itickles = init_flow['numtcpticklessent']
             iresets = init_flow['numtcprstsent']
-             
+
             resp_flow = stats['responderflowstats']
             rtickles = resp_flow['numtcpticklessent']
             rresets = resp_flow['numtcprstsent']
@@ -175,4 +178,4 @@ def get_sess_handle(cmd):
     print(type(yaml_out))
     for data in yaml_out:
         if data is not None:
-             return data['status']['sessionhandle'] 
+             return data['status']['sessionhandle']
