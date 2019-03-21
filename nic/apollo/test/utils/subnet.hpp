@@ -59,7 +59,6 @@ public:
     ///
     /// \param[in] vcn_id VCN id
     /// \param[in] subnet_id subnet id
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t del();
 
@@ -68,7 +67,6 @@ public:
     /// \param[in] num_subnet number of subnets to create
     /// \param[in] vcn_id VCN id
     /// \param[in] pfxstr subnet prefix (cidr) in string form
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_create(pds_subnet_key_t subnet, pds_vcn_key_t vcn_key,
                                  std::string pfxstr, uint32_t num_subnet);
@@ -80,7 +78,6 @@ public:
                                sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
 
     /// \brief Delete multiple subnets
-    ///
     /// Delete "num_subnets" subnets starting from id
     ///
     /// \param[in] num_subnets number of VCNs to be deleted
