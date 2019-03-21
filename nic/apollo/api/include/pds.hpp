@@ -23,18 +23,20 @@
 #define PDS_POLICY_ID_INVALID         0x0    ///< Invalid policy ID
 
 // Basic PDS data types
-typedef uint32_t  pds_vcn_id_t;
-typedef uint32_t  pds_subnet_id_t;
-typedef uint16_t  pds_vnic_id_t;
-typedef uint32_t  pds_rule_id_t;
-typedef uint32_t  pds_rsc_pool_id_t;
-typedef uint32_t  pds_epoch_t;
-typedef uint32_t  pds_slot_id_t;
-typedef uint32_t  pds_vnid_id_t;
-typedef uint32_t  pds_mpls_tag_t;
-typedef uint32_t  pds_mapping_id_t;
-typedef uint32_t  pds_route_table_id_t;
-typedef uint32_t  pds_policy_id_t;
+typedef uint32_t pds_vcn_id_t;
+typedef uint32_t pds_subnet_id_t;
+typedef uint16_t pds_vnic_id_t;
+typedef uint32_t pds_rule_id_t;
+typedef uint32_t pds_rsc_pool_id_t;
+typedef uint32_t pds_epoch_t;
+typedef uint32_t pds_slot_id_t;
+typedef uint32_t pds_vnid_id_t;
+typedef uint32_t pds_mpls_tag_t;
+typedef uint32_t pds_mapping_id_t;
+typedef uint32_t pds_route_table_id_t;
+typedef uint32_t pds_policy_id_t;
+typedef uint32_t pds_port_id_t;
+typedef uint16_t pds_lif_key_t;
 
 /// \brief Encapsulation type
 typedef enum pds_encap_type_e {
