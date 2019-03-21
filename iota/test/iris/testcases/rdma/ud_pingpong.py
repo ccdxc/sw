@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import re
 
 def Setup(tc):
 
@@ -10,6 +11,14 @@ def Setup(tc):
     modes:  workload1 as server, workload2 as client
             workload2 as server, workload1 as client
     '''
+
+    unames = api.GetTestsuiteAttr("unames")
+    for name in unames:
+        # skip, UD in user space is broken with ib_uverbs of older uek kernel
+        m = re.match(r'^4\.14\.35-(\d+)\..*\.el7uek', name)
+        if m and int(m.group(1)) < 1844:
+            api.Logger.info("Skip ibv_ud_pingpong test with uname %s" % (name,))
+            return api.types.status.IGNORED
 
     tc.iota_path = api.GetTestsuiteAttr("driver_path")
 

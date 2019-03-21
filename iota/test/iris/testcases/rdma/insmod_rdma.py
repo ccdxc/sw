@@ -43,10 +43,12 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    req_uname = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     api.Logger.info("Installing RDMA driver on the following nodes: {0}".format(tc.nodes))
 
     for n in tc.nodes:
+        api.Trigger_AddHostCommand(req_uname, n, "uname -r")
         if tc.os == 'linux':
             api.Trigger_AddHostCommand(req, n, "tar xmf %s" % tc.pkgname_linux,
                                    rundir = 'rdma-drivers')
@@ -94,22 +96,36 @@ def Trigger(tc):
         api.Trigger_AddHostCommand(req, n, "mkdir -p %s" % api.GetHostToolsDir())
         api.Trigger_AddHostCommand(req, n, "cp show_gid %s" % api.GetHostToolsDir(),
                                    rundir = 'rdma-drivers')
+        api.Trigger_AddHostCommand(req_uname, n, "uname -r")
 
+    tc.resp_uname = api.Trigger(req_uname)
     tc.resp = api.Trigger(req)
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    if tc.resp is None:
+    if tc.resp_uname is None or tc.resp is None:
         return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS
+
     api.Logger.info("insmod_rdma results for the following nodes: {0}".format(tc.nodes))
+
+    unames = []
+    for cmd in tc.resp_uname.commands:
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
+            result = api.types.status.FAILURE
+        else:
+            unames.append(cmd.stdout)
+
+    api.SetTestsuiteAttr("unames", unames)
 
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             result = api.types.status.FAILURE
+
     return result
 
 def Teardown(tc):
