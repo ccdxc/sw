@@ -110,12 +110,9 @@ func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Inter
 		return i, false, cl.errHostSmartNICConflicts(host.Name, conflicts)
 	}
 
-	if oper == apiintf.UpdateOper {
-		// Note that List object is not versioned, so there is still a chance that by the time
-		// the transaction commits, another conflicting Host objects is present.
-		// In this case the conflict will be caught and reported asynchronously by CMD.
-		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", host.ResourceVersion))
-	}
+	// Note that there is still a chance that by the time this transaction commits,
+	// another conflicting Host objects is present.
+	// In that case the conflict will be caught and reported asynchronously by CMD.
 
 	return i, true, nil
 }
