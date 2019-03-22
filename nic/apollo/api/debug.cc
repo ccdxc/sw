@@ -106,6 +106,41 @@ std::string eth_mac_stats[MAX_MAC_STATS] = {
     "Frames Truncated",
 };
 
+std::string mgmt_mac_stats[MAX_MGMT_MAC_STATS] = {
+    "Frames Received OK",
+    "Frames Received All (Good/Bad Frames)",
+    "Frames Received with Bad FCS",
+    "Frames with any bad (CRC, Length, Align)",
+    "Octets Received in Good Frames",
+    "Octets Received (Good/Bad Frames)",
+    "Frames Received with Unicast Address",
+    "Frames Received with Multicast Address",
+    "Frames Received with Broadcast Address",
+    "Frames Received of type PAUSE",
+    "Frames Received with Bad Length",
+    "Frames Received Undersized",
+    "Frames Received Oversized",
+    "Fragments Received",
+    "Jabber Received",
+    "Frames Received Length=64",
+    "Frames Received Length=65~127",
+    "Frames Received Length=128~255",
+    "Frames Received Length=256~511",
+    "Frames Received Length=512~1023",
+    "Frames Received Length=1024~1518",
+    "Frames Received > 1518",
+    "Frames Received fifo full",
+    "Frames Transmitted OK",
+    "Frames Transmitted All (Good/Bad Frames)",
+    "Frames Transmitted Bad",
+    "Octets Transmitted Good",
+    "Octets Transmitted Total (Good/Bad)",
+    "Frames Transmitted with Unicast Address",
+    "Frames Transmitted with Multicast Address",
+    "Frames Transmitted with Broadcast Address",
+    "Frames Transmitted of type PAUSE",
+};
+
 static inline void
 port_info_dump (sdk::linkmgr::port_args_t *port_info, void *ctxt)
 {
@@ -121,8 +156,8 @@ port_info_dump (sdk::linkmgr::port_args_t *port_info, void *ctxt)
         }
     } else if (port_info->port_type == port_type_t::PORT_TYPE_MGMT) {
         for (uint32_t i = 0; i < MAX_MGMT_MAC_STATS; i++) {
-            //fprintf(fp, "%-41s : %lu\n", mgmt_mac_stats[i].c_str(),
-                    //port_info->stats_data[i]);
+            fprintf(fp, "%-41s : %lu\n", mgmt_mac_stats[i].c_str(),
+                    port_info->stats_data[i]);
         }
     }
     fprintf(fp, "\n");
