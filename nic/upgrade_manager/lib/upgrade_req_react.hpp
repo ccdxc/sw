@@ -30,6 +30,7 @@ class UpgReqReact : public delphi::objects::UpgReqReactor {
     bool InvokePreStateHandler(UpgReqStateType reqType);
 public:
     UpgReqReact(delphi::SdkPtr sk, sysmgr::ClientPtr sysMgr) {
+	upgReqType_ = InvalidCmd;
         sdk_ = sk;
         appRespFail_ = false;
         upgAborted_  = false;

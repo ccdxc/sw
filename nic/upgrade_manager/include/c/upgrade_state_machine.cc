@@ -147,7 +147,7 @@ string GetAppRespStrUtil(UpgStateRespType type, UpgType upgType) {
 string GetUpgAppRespValToStr(UpgStateRespType type, UpgType upgType) {
     bool ret = UpgRespStatePassType(type);
     UpgReqStateType req = UpgStateRespTypeToUpgReqStateType(type);
-    return (ret?UpgRespValPassStr(req, upgType):UpgRespValPassStr(req, upgType));
+    return (ret?UpgRespValPassStr(req, upgType):UpgRespValFailStr(req, upgType));
 }
 
 void InitStateMachineVector(void) {

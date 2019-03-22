@@ -34,11 +34,8 @@ delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr
             type = upgMgr_->GetNextState();
         }
         return upgMgr_->MoveStateMachine(type);
-    } else {
-        UPG_LOG_DEBUG("Cannot move state machine yet");
-        return delphi::error::OK();
     }
-
+    UPG_LOG_DEBUG("Cannot move state machine yet");
     return delphi::error::OK();
 }
 

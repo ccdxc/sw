@@ -220,6 +220,7 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
 UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah) {
     sdk_ = sk;
     svcName_ = name;
+    svcRole_ = NON_AGENT;
     upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, svcName_);
     if (!uh) {
         upgReqReactPtr_ = make_shared<UpgStateReqReact>(sk, svcName_, upgAppRespPtr_);
