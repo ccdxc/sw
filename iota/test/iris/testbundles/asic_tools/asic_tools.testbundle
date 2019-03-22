@@ -7,7 +7,7 @@ testcases:
     -   name    : Check_Captrace
         testcase: testcases.asic_tools.captrace
         stress  : True
-        ignore  : True
+        ignore  : False
         iterators :
             type    : simple
             case    : [ base, traffic ]
@@ -15,9 +15,9 @@ testcases:
     -   name    : Check_Capmon
         testcase: testcases.asic_tools.capmon
         stress  : True
-        ignore  : True
+        ignore  : False
 
     -   name    : Check_Capview
         testcase: testcases.asic_tools.capview
         stress  : True
-        ignore  : True
+        ignore  : False
