@@ -964,12 +964,10 @@ int serdes_an_core_status_hw (uint32_t sbus_addr)
 int
 serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
 {
-    int      ret       = 0;
     int      tx_width  = 0;
     int      rx_width  = 0;
     uint32_t an_hcd    = 0;
     uint8_t  num_lanes = 0;
-
     Avago_serdes_an_config_t  *config      = NULL;
     Avago_serdes_pmd_config_t *pmd_config  = NULL;
     Avago_addr_t              *addr_struct = NULL;
@@ -978,7 +976,6 @@ serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
 
     an_hcd =
         avago_serdes_an_read_status(aapl, sbus_addr, AVAGO_SERDES_AN_READ_HCD);
-
     switch (an_hcd) {
         case 0x08: /* 100GBASE-KR4 */
         case 0x09: /* 100GBASE-CR4 */
@@ -1024,16 +1021,10 @@ serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
             SDK_LINKMGR_TRACE_ERR("unsupported an_hcd: %d, an_hcd_str: %s",
                                   an_hcd,
                                   aapl_an_hcd_to_str(an_hcd));
-            ret = -1;
-            break;
+            return -1;
     }
-
     config     = avago_serdes_an_config_construct(aapl);
     pmd_config = avago_serdes_pmd_config_construct(aapl);
-
-    if (ret == -1) {
-        goto cleanup;
-    }
 
     // construct AAPL addr_list
     for (int i = 0; i < num_lanes; ++i) {
@@ -1048,13 +1039,9 @@ serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
             head = head->next;
         }
     }
-
     avago_serdes_an_configure_to_hcd(
                     aapl, addr_struct, config, pmd_config, tx_width, rx_width);
 
-    ret = aapl->return_code < 0 ? 1 : 0;
-
-cleanup:
     // cleanup
     avago_serdes_an_config_destruct(aapl, config);
     avago_serdes_pmd_config_destruct(aapl, pmd_config);
