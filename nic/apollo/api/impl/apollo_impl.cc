@@ -181,8 +181,7 @@ apollo_impl::key_native_init_(void) {
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
 
-    ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask,
-                                                     &data, (uint32_t *)&idx);
+    ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask, &data, &idx);
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -200,8 +199,7 @@ apollo_impl::key_native_init_(void) {
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
 
-    ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask,
-                                                     &data, (uint32_t *)&idx);
+    ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask, &data, &idx);
 
     return ret;
 }
@@ -235,7 +233,7 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ipv6_2_valid_mask = 0xFF;
 
     ret = apollo_impl_db()->key_tunneled_tbl()->insert(&key, &mask,
-                                                       &data, (uint32_t *)&idx);
+                                                       &data, &idx);
     return ret;
 }
 

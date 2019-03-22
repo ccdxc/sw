@@ -59,6 +59,7 @@ nic/build/x86_64/iris/lib/libsdkp4.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libsdkp4utils.so                          /nic/lib/
 nic/build/x86_64/iris/lib/libsknobs.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libslab.so                                /nic/lib/
+nic/build/x86_64/iris/lib/liblfq.so                                 /nic/lib/
 nic/build/x86_64/iris/lib/libssl.so.1.1                             /nic/lib/
 nic/build/x86_64/iris/lib/libstdc++.so.6                            /nic/lib/
 nic/build/x86_64/iris/lib/libtcam.so                                /nic/lib/

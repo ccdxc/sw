@@ -12,6 +12,7 @@
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "gen/p4gen/apollo/include/p4pd.h"
 
 namespace api {
 namespace impl {
@@ -19,6 +20,28 @@ namespace impl {
 /// \defgroup PDS_LIF_IMPL - lif entry datapath implementation
 /// \ingroup PDS_LIF
 /// \@{
+
+lif_impl *
+lif_impl::factory (pds_lif_spec_t *spec) {
+    lif_impl *impl;
+    impl = lif_impl_db()->alloc();
+    if (unlikely(impl == NULL)) {
+        return NULL;
+    }
+    new (impl) lif_impl(spec);
+    return impl;
+}
+
+void
+lif_impl::destroy(lif_impl *impl) {
+    impl->~lif_impl();
+    lif_impl_db()->free(impl);
+}
+
+lif_impl::lif_impl(pds_lif_spec_t *spec) {
+    memcpy(&key_, &spec->key, sizeof(key_));
+    pinned_port_id_ = spec->pinned_port_id;
+}
 
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
 sdk_ret_t
@@ -57,6 +80,44 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
         return ret;
     }
     return SDK_RET_OK;
+}
+
+#define nacl_redirect_action    action_u.nacl_nacl_redirect
+sdk_ret_t
+lif_impl::program_filters(lif_info_t *lif_params) {
+    sdk_ret_t ret;
+    nacl_swkey_t key = { 0 };
+    nacl_swkey_mask_t mask = { 0 };
+    nacl_actiondata_t data =  { 0 };
+    uint32_t idx;
+
+    // install NACL entry for traffic from ARM to uplink front panel port
+    key.capri_intrinsic_lif = key_;
+    mask.capri_intrinsic_lif_mask = 0xFFFF;
+    data.action_id = NACL_NACL_REDIRECT_ID;
+    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
+    // TODO: get oport from pinned port id
+    data.nacl_redirect_action.oport = TM_PORT_NCSI;
+    // TODO: hardcoding lif for now
+    data.nacl_redirect_action.lif = 0;
+    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
+                      "uplink %u, err %u", key_, pinned_port_id_, ret);
+        return ret;
+    }
+
+    // install NACL entry for traffic from uplink front panel port to ARM
+    key.capri_intrinsic_lif = 3;
+    data.nacl_redirect_action.oport = TM_PORT_DMA;
+    data.nacl_redirect_action.lif = key_;
+    data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
+    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
+                      "lif %u, err %u", pinned_port_id_, key_, ret);
+    }
+    return ret;
 }
 
 /// \@}

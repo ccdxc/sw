@@ -11,7 +11,9 @@
 #ifndef __LIF_IMPL_HPP__
 #define __LIF_IMPL_HPP__
 
+#include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
+#include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 
 namespace api {
@@ -22,7 +24,7 @@ class lif_impl_state;
 
 typedef struct pds_lif_spec_s {
     pds_lif_key_t    key;
-    pds_port_id_t    pinned_uplink;
+    pds_port_id_t    pinned_port_id;
 } pds_lif_spec_t;
 
 /// \defgroup PDS_LIF_IMPL - lif entry datapath implementation
@@ -39,10 +41,10 @@ public:
 
     /// \brief  release all the s/w state associate with the given lif,
     ///         if any, and free the memory
-    /// \param[in] lif  lif to be freed
+    /// \param[in] impl    lif impl instance to be freed
     ///                  NOTE: h/w entries should have been cleaned up (by
     ///                  calling impl->cleanup_hw() before calling this
-    static void destroy(lif_impl *lif);
+    static void destroy(lif_impl *impl);
 
     /// \brief     helper function to get key given lif entry
     /// \param[in] entry    pointer to lif instance
@@ -78,18 +80,26 @@ public:
     static sdk_ret_t program_tx_policer(uint32_t lif_id,
                                         sdk::policer_t *policer);
 
+    ///< \brief  return the pinned port id of the lif
+    /// \return  port id, lif is pinned to
+    pds_port_id_t pinned_port_id(void) const {
+        return pinned_port_id_;
+    }
+
+    ///< \brief    program necessary filter entries for this lif
+    ///< \param[in] lif_params    lif configuration parameters
+    sdk_ret_t program_filters(lif_info_t *lif_params);
+
 private:
     ///< constructor
-    lif_impl() {
-        pinned_fp_port_ = 0;
-    }
+    lif_impl(pds_lif_spec_t *spec);
 
     ///< destructor
     ~lif_impl() {}
 
 private:
     pds_lif_key_t    key_;               ///< (s/w & h/w) lif id
-    uint32_t         pinned_fp_port_;    ///< pinnned uplink, if any
+    pds_port_id_t    pinned_port_id_;    ///< pinnned port id, if any
     ht_ctxt_t        ht_ctxt_;           ///< hash table context
 
     friend class lif_impl_state;         ///< lif_impl_state is friend of lif_impl

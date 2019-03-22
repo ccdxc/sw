@@ -15,6 +15,7 @@ nic/build/x86_64/gft/lib/libsdkcapri_csrint.so                  /nic/lib/
 nic/build/x86_64/gft/lib/libsdkcapri_asicrw_if.so               /nic/lib/
 nic/build/x86_64/gft/lib/liblist.so                             /nic/lib/
 nic/build/x86_64/gft/lib/libslab.so                             /nic/lib/
+nic/build/x86_64/gft/lib/liblfq.so                              /nic/lib/
 nic/build/x86_64/gft/lib/libshmmgr.so                           /nic/lib/
 nic/build/x86_64/gft/lib/libmmgr.so                             /nic/lib/
 nic/build/x86_64/gft/lib/libsdkpal.so                           /nic/lib/

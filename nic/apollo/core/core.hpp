@@ -13,6 +13,7 @@
 
 #include <signal.h>
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 namespace core {
@@ -28,12 +29,13 @@ enum {
 };
 
 enum {
-    TIMER_ID_NONE          = 0,
-    TIMER_ID_SESSION_AGE   = 1,
-    TIMER_ID_SYSTEM_SCAN   = 2,
+    TIMER_ID_NONE         = 0,
+    TIMER_ID_SESSION_AGE  = 1,
+    TIMER_ID_SYSTEM_SCAN  = 2,
 };
 
 sdk_ret_t thread_spawn(pds_state *state);
+thread *thread_get(uint32_t thread_id);
 sdk_ret_t parse_global_config(string pipeline, string cfg_file,
                               pds_state *state);
 sdk_ret_t parse_pipeline_config(string pipeline, pds_state *state);

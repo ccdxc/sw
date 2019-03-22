@@ -10,6 +10,8 @@
 
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/apollo/api/impl/devapi_impl.hpp"
+#include "nic/apollo/api/impl/lif_impl.hpp"
+#include "nic/apollo/api/impl/pds_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -35,7 +37,18 @@ devapi_impl::destroy(devapi *impl) {
 
 sdk_ret_t
 devapi_impl::lif_create(lif_info_t *info) {
-    return SDK_RET_INVALID_OP;
+    lif_impl *lif;
+    pds_lif_spec_t spec = { 0 };
+
+    spec.key = info->lif_id;
+    spec.pinned_port_id = info->pinned_uplink_port_num;
+    lif = lif_impl::factory(&spec);
+    if (unlikely(lif == NULL)) {
+        return sdk::SDK_RET_OOM;
+    }
+    lif_impl_db()->insert(lif);
+    lif->program_filters(info);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

@@ -13,7 +13,6 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
-#include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/lib/periodic/periodic.hpp"
 #include "nic/apollo/nicmgr/nicmgr.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -28,6 +27,14 @@ using boost::property_tree::ptree;
 namespace core {
 
 thread *g_thread_store[THREAD_ID_MAX];
+
+thread *
+thread_get(uint32_t thread_id) {
+    if (thread_id >= THREAD_ID_MAX) {
+        return NULL;
+    }
+    return g_thread_store[thread_id];
+}
 
 static sdk_ret_t
 parse_cores_config (ptree &pt, pds_state *state)

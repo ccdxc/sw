@@ -34,7 +34,14 @@ void cap_bx_set_ch_enable(int chip_id, int inst_id, int value) {
 void cap_bx_set_glbl_mode(int chip_id, int inst_id, int value) { 
     int rdata = cap_bx_apb_read(chip_id, inst_id, 0x1f10);
     int wdata = (rdata & 0x3) | ((value & 0xf) << 2);
+    cap_bx_csr_t & bx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_bx_csr_t, chip_id, inst_id);
+
     cap_bx_apb_write(chip_id, inst_id, 0x1f10, wdata);
+
+    bx_csr.cfg_fixer.read();
+    // set the fixer timeout to 1024
+    bx_csr.cfg_fixer.timeout(1024);
+    bx_csr.cfg_fixer.write();
 }
 
 void cap_bx_set_tx_rx_enable(int chip_id, int inst_id, int value) { 
