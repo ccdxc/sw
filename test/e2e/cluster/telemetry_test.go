@@ -166,12 +166,29 @@ func testQueryingFwlogs() {
 			}
 			// Even if citadel isn't ready, it should return 5 results
 			Expect(len(resp.Results)).To(Equal(5))
+			// Since each query may go to a different replica, we check all the result lengths
 			if len(resp.Results[0].Logs) != 20 {
 				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[0].Logs))
 				return false
 			}
+			if len(resp.Results[1].Logs) != 20 {
+				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[1].Logs))
+				return false
+			}
+			if len(resp.Results[2].Logs) != 12 {
+				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[2].Logs))
+				return false
+			}
+			if len(resp.Results[3].Logs) != 2 {
+				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[3].Logs))
+				return false
+			}
+			if len(resp.Results[4].Logs) != 0 {
+				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[4].Logs))
+				return false
+			}
 			return true
-		}, 10, 1).Should(BeTrue(), "Citadel failed to return expected amount of results")
+		}, 60, 1).Should(BeTrue(), "Citadel failed to return expected amount of results")
 
 		resp, err := tc.Fwlogs(ctx, query)
 		Expect(err).Should(BeNil())

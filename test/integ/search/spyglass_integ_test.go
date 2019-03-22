@@ -530,6 +530,10 @@ func TestSpyglass(t *testing.T) {
 
 	// create the indexer again
 	t.Logf("Creating and starting new indexer instance")
+	// recreating elastic client as it should have been closed during idr.stop()
+	tInfo.esClient, err = testutils.CreateElasticClient(tInfo.elasticURL, tInfo.mockResolver, tInfo.l.WithContext("submodule", "elastic"), tInfo.signer, tInfo.trustRoots)
+	AssertOk(t, err, "Error creating elastic client")
+
 	AssertEventually(t,
 		func() (bool, interface{}) {
 			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l, indexer.WithElasticClient(tInfo.esClient))
