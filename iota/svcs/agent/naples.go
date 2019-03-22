@@ -45,7 +45,7 @@ var (
 	hntapCfgTempFile = "/tmp/hntap-cfg.json"
 	hntapProcessName = "nic_infra_hntap"
 	apiSuccess       = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK, ErrorMsg: "Api success"}
-	naplesHwUUIDFile = "/sysconfig/config0/sysuuid"
+	naplesHwUUIDFile = "/tmp/fru.json"
 )
 
 var workloadTypeMap = map[iota.WorkloadType]string{
@@ -872,11 +872,17 @@ func (naples *naplesHwNode) getHwUUID(in *iota.Node) (uuid string, err error) {
 	naples.logger.Printf("naples hw uuid err %s", cmdResp.Stderr)
 	naples.logger.Printf("naples hw uuid exit code %d", cmdResp.ExitCode)
 
-	if cmdResp.ExitCode != 0 {
-		return "", errors.Errorf("Running cat of %s failed : %s", naplesHwUUIDFile, cmdResp.Stdout)
+	var deviceJSON map[string]interface{}
+	if err := json.Unmarshal([]byte(cmdResp.Stdout), &deviceJSON); err != nil {
+		return "", errors.Errorf("Error reading %s file", naplesHwUUIDFile)
 	}
 
-	return strings.Trim(cmdResp.Stdout, "\r\n"), nil
+	if val, ok := deviceJSON["Mac Address"]; ok {
+		return val.(string), nil
+	}
+
+	return "", errors.Errorf("Mac address not present in  %s file", naplesHwUUIDFile)
+
 }
 
 //Init initalize node type

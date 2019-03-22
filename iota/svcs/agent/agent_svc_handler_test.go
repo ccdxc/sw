@@ -657,7 +657,7 @@ func startNaplesNode() {
 	touchCmd := []string{"docker", "exec", "naplesnode", "touch", "/mnt/sysuuid"}
 	exitCode, stdout, _ = Utils.RunCmd(touchCmd, 0, false, true, nil)
 	fmt.Println("Exit code stodu ", exitCode, stdout)
-	createUUID := []string{"docker", "exec", "naplesnode", "echo", ">", "11:33:44:55:66:77", "/mnt/sysuuid"}
+	createUUID := []string{"docker", "exec", "naplesnode", "sh", "-c", "'", "echo", "{ \\\"Mac Address\\\" : \\\"11:33:44:55:66:77\\\" }", ">", "/mnt/sysuuid", "'"}
 	exitCode, stdout, _ = Utils.RunCmd(createUUID, 0, false, true, nil)
 	fmt.Println("Exit code stodu ", exitCode, stdout)
 
