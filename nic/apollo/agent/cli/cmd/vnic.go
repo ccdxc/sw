@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -47,11 +48,6 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") == false {
-		fmt.Printf("Only yaml output supported right now. Use --yaml option\n")
-		return
-	}
-
 	client := pds.NewVnicSvcClient(c)
 
 	var req *pds.VnicGetRequest
@@ -80,10 +76,46 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Vnics
-	for _, resp := range respMsg.Response {
-		respType := reflect.ValueOf(resp)
-		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+	if cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printVnicHeader()
+		for _, resp := range respMsg.Response {
+			printVnic(resp)
+		}
 	}
+}
+
+func printVnicHeader() {
+	hdrLine := strings.Repeat("-", 97)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-7s%-6s%-9s%-6s%-20s%-10s%-10s%-14s%-15s\n",
+		"VnicID", "PcnID", "SubnetID", "Vlan", "MAC",
+		"RscPoolID", "SrcGuard", "Encap", "MirrorPolicyID")
+	fmt.Println(hdrLine)
+}
+
+func printVnic(vnic *pds.Vnic) {
+	spec := vnic.GetSpec()
+	encapType := spec.GetEncap().GetType()
+	encapStr := strings.Replace(encapType.String(), "ENCAP_TYPE_", "", -1)
+	switch encapType {
+	case pds.EncapType_ENCAP_TYPE_DOT1Q:
+		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVlanId())
+	case pds.EncapType_ENCAP_TYPE_MPLSoUDP:
+		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetMPLSTag())
+	case pds.EncapType_ENCAP_TYPE_VXLAN:
+		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVnid())
+	default:
+	}
+	fmt.Printf("%-7d%-6d%-9d%-6d%-20s%-10d%-10t%-14s%-15d\n",
+		spec.GetVnicId(), spec.GetPCNId(), spec.GetSubnetId(),
+		spec.GetWireVLAN(), utils.MactoStr(spec.GetMACAddress()),
+		spec.GetResourcePoolId(), spec.GetSourceGuardEnable(), encapStr,
+		spec.GetMirrorPolicyId())
 }

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -49,11 +50,6 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") == false {
-		fmt.Printf("Only yaml output supported right now. Use --yaml option\n")
-		return
-	}
-
 	if cmd.Flags().Changed("pcn-id") != cmd.Flags().Changed("ip") {
 		fmt.Printf("Cannot specify only one of PCN ID and mapping IP address\n")
 		return
@@ -92,10 +88,48 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	for _, resp := range respMsg.Response {
-		respType := reflect.ValueOf(resp)
-		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+	if cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printMappingHeader()
+		for _, resp := range respMsg.Response {
+			printMapping(resp)
+		}
 	}
+}
+
+func printMappingHeader() {
+	hdrLine := strings.Repeat("-", 93)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-10s%-7s%-16s\n",
+		"PcnID", "PrivateIP", "SubnetID", "TunnelID", "MAC",
+		"Encap", "VnicID", "PublicIP")
+	fmt.Println(hdrLine)
+}
+
+func printMapping(mapping *pds.Mapping) {
+	spec := mapping.GetSpec()
+	encapType := spec.GetEncap().GetType()
+	encapStr := strings.Replace(encapType.String(), "ENCAP_TYPE_", "", -1)
+	switch encapType {
+	case pds.EncapType_ENCAP_TYPE_DOT1Q:
+		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVlanId())
+	case pds.EncapType_ENCAP_TYPE_MPLSoUDP:
+		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetMPLSTag())
+	case pds.EncapType_ENCAP_TYPE_VXLAN:
+		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVnid())
+	default:
+	}
+	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-10s%-7s%-16s\n",
+		spec.GetId().GetPCNId(),
+		utils.IPAddrToStr(spec.GetId().GetIPAddr()),
+		spec.GetSubnetId(), spec.GetTunnelId(),
+		utils.MactoStr(spec.GetMACAddr()),
+		encapStr, spec.GetVnicId(),
+		utils.IPAddrToStr(spec.GetPublicIP()))
 }

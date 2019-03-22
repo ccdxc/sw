@@ -31,8 +31,8 @@ message BatchStatus {
 
 // Batch object
 message Batch {
-  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-  BatchSpec    Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  BatchStatus  Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  BatchSpec    Spec      = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  BatchStatus  Status    = 4 [(gogoproto.jsontag) = "status,omitempty"];
 }

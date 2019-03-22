@@ -18,7 +18,7 @@ message TypeMeta {
 }
 
 message Timestamp {
-  google.protobuf.Timestamp Time = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+  google.protobuf.Timestamp Time = 1 [(gogoproto.embed) = true];
 }
 
 // ObjectMeta contains metadata that all objects stored in kvstore must have
@@ -32,8 +32,8 @@ message ObjMeta {
   string UUID            = 2 [(gogoproto.jsontag) = "uuid,omitempty"];
   // CreationTime is the creation time of the object
   //  System generated and updated, not updatable by user.
-  Timestamp CreationTime = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "creation-time,omitempty"];
+  Timestamp CreationTime = 3 [(gogoproto.jsontag) = "creation-time,omitempty"];
   // ModTime is the Last Modification time of the object
   // System generated and updated, not updatable by user.
-  Timestamp ModTime      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "mod-time,omitempty"];
+  Timestamp ModTime      = 4 [(gogoproto.jsontag) = "mod-time,omitempty"];
 }

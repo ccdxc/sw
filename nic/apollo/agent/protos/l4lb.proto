@@ -76,11 +76,11 @@ message L4LbPolicyStats {
 
 // L4Lb policy object
 message L4LbPolicy {
-  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-  L4LbPolicySpec   Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  L4LbPolicyStatus Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-  L4LbPolicyStats  Stats    = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  L4LbPolicySpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  L4LbPolicyStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  L4LbPolicyStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // L4Lb policy create and update request

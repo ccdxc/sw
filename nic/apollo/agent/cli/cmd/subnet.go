@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -47,11 +48,6 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") == false {
-		fmt.Printf("Only yaml output supported right now. Use --yaml option\n")
-		return
-	}
-
 	client := pds.NewSubnetSvcClient(c)
 
 	var req *pds.SubnetGetRequest
@@ -80,10 +76,39 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Subnets
-	for _, resp := range respMsg.Response {
-		respType := reflect.ValueOf(resp)
-		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+	if cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printSubnetHeader()
+		for _, resp := range respMsg.Response {
+			printSubnet(resp)
+		}
 	}
+}
+
+func printSubnetHeader() {
+	hdrLine := strings.Repeat("-", 144)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-6s%-20s%-16s%-20s%-10s%-10s%-14s%-14s%-14s%-14s\n",
+		"ID", "PcnID", "IPPrefix", "VRouterIP", "VRouterMAC", "V4RtTblID",
+		"V6RtTblID", "IngV4SecPlcID", "IngV6SecPlcID", "EgV4SecPlcID", "EgV6SecPlcID")
+	fmt.Println(hdrLine)
+}
+
+func printSubnet(subnet *pds.Subnet) {
+	spec := subnet.GetSpec()
+	fmt.Printf("%-6d%-6d%-20s%-16s%-20s%-10d%-10d%-14d%-14d%-14d%-14d\n",
+		spec.GetId(), spec.GetPCNId(), utils.IPPrefixToStr(spec.GetPrefix()),
+		utils.IPAddrToStr(spec.GetVirtualRouterIP()),
+		utils.MactoStr(spec.GetVirtualRouterMac()),
+		spec.GetV4RouteTableId(), spec.GetV6RouteTableId(),
+		spec.GetIngV4SecurityPolicyId(),
+		spec.GetIngV6SecurityPolicyId(),
+		spec.GetEgV4SecurityPolicyId(),
+		spec.GetEgV6SecurityPolicyId())
 }

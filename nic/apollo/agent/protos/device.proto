@@ -20,10 +20,10 @@ service DeviceSvc {
 // device configuration
 message DeviceSpec {
   // local IP address in the substrate, only IPv4 is supported
-  types.IPAddress IPAddr  = 1 [(gogoproto.nullable) = false];
+  types.IPAddress IPAddr  = 1;
   uint64          MACAddr = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // IP address of the gateway in the substrate
-  types.IPAddress GatewayIP = 3 [(gogoproto.nullable) = false];
+  types.IPAddress GatewayIP = 3;
 }
 
 // device operational status
@@ -46,11 +46,11 @@ message DeviceStats {
 
 // device object
 message Device {
-  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-  DeviceSpec   Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  DeviceStatus Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-  DeviceStats  Stats     = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  DeviceSpec   Spec      = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  DeviceStatus Status    = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  DeviceStats  Stats     = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // device create and update request

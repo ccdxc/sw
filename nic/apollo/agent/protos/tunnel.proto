@@ -35,9 +35,9 @@ message TunnelSpec {
   // Tunnel encapsulation
   TunnelEncapType Encap    = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // local IP of the tunnel (used as outer SIP in tunneled packets)
-  types.IPAddress LocalIP  = 4 [(gogoproto.nullable) = false];
+  types.IPAddress LocalIP  = 4;
   // remote IP of the tunnel (used as outer DIP in tunneled packets)
-  types.IPAddress RemoteIP = 5 [(gogoproto.nullable) = false];
+  types.IPAddress RemoteIP = 5;
 }
 
 // operational status of the tunnel, if any
@@ -50,11 +50,11 @@ message TunnelStats {
 
 // tunnel object
 message Tunnel {
-  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-  TunnelSpec   Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  TunnelStatus Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-  TunnelStats  Stats     = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  TunnelSpec   Spec      = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  TunnelStatus Status    = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  TunnelStats  Stats     = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // tunnel create and update request

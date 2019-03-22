@@ -14,8 +14,8 @@ func IPAddrStrtoUint32(ip string) uint32 {
 }
 
 // IPAddrStrToPDSIPAddr converts string ip address to pds native IPAddress Type
-func IPAddrStrToPDSIPAddr(ip string) pds.IPAddress {
-	ipAddr := pds.IPAddress{
+func IPAddrStrToPDSIPAddr(ip string) *pds.IPAddress {
+	ipAddr := &pds.IPAddress{
 		Af: pds.IPAF_IP_AF_INET,
 		V4OrV6: &pds.IPAddress_V4Addr{
 			V4Addr: IPAddrStrtoUint32(ip),

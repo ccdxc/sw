@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -48,11 +49,6 @@ func pcnShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") == false {
-		fmt.Printf("Only yaml output supported right now. Use --yaml option\n")
-		return
-	}
-
 	client := pds.NewPCNSvcClient(c)
 
 	var req *pds.PCNGetRequest
@@ -81,10 +77,32 @@ func pcnShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print PCNs
-	for _, resp := range respMsg.Response {
-		respType := reflect.ValueOf(resp)
-		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+	if cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printPCNHeader()
+		for _, resp := range respMsg.Response {
+			printPCN(resp)
+		}
 	}
+}
+
+func printPCNHeader() {
+	hdrLine := strings.Repeat("-", 34)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-10s%-18s\n", "ID", "Type", "IPPrefix")
+	fmt.Println(hdrLine)
+}
+
+func printPCN(pcn *pds.PCN) {
+	spec := pcn.GetSpec()
+	fmt.Printf("%-6d%-10s%-18s\n",
+		spec.GetId(),
+		strings.Replace(spec.GetType().String(), "PCN_TYPE_", "", -1),
+		utils.IPPrefixToStr(spec.GetPrefix()))
 }

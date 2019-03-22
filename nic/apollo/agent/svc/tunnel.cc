@@ -31,6 +31,7 @@ tep_api_spec_to_proto_spec_fill (const pds_tep_spec_t *api_spec,
         break;
     }
     if (api_spec->key.ip_addr != 0) {
+        proto_spec->mutable_remoteip()->set_af(types::IP_AF_INET);
         proto_spec->mutable_remoteip()->set_v4addr(api_spec->key.ip_addr);
     }
 }

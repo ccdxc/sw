@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -42,11 +43,6 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") == false {
-		fmt.Printf("Only yaml output supported right now. Use --yaml option\n")
-		return
-	}
-
 	client := pds.NewDeviceSvcClient(c)
 
 	var req *pds.Empty
@@ -64,8 +60,28 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	respType := reflect.ValueOf(resp)
-	b, _ := yaml.Marshal(respType.Interface())
-	fmt.Println(string(b))
-	fmt.Println("---")
+	if cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		printDeviceHeader()
+		printDevice(resp)
+	}
+}
+
+func printDeviceHeader() {
+	hdrLine := strings.Repeat("-", 51)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-16s%-20s%-15s\n", "IPAddr", "MACAddr", "GatewayIP")
+	fmt.Println(hdrLine)
+}
+
+func printDevice(resp *pds.DeviceGetResponse) {
+	spec := resp.GetResponse().GetSpec()
+	fmt.Printf("%-16s%-20s%-15s\n",
+		utils.IPAddrToStr(spec.GetIPAddr()),
+		utils.MactoStr(spec.GetMACAddr()),
+		utils.IPAddrToStr(spec.GetGatewayIP()))
 }

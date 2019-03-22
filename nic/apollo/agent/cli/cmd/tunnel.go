@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -47,11 +48,6 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") == false {
-		fmt.Printf("Only yaml output supported right now. Use --yaml option\n")
-		return
-	}
-
 	client := pds.NewTunnelSvcClient(c)
 
 	var req *pds.TunnelGetRequest
@@ -80,10 +76,34 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Tunnels
-	for _, resp := range respMsg.Response {
-		respType := reflect.ValueOf(resp)
-		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+	if cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printTunnelHeader()
+		for _, resp := range respMsg.Response {
+			printTunnel(resp)
+		}
 	}
+}
+
+func printTunnelHeader() {
+	hdrLine := strings.Repeat("-", 54)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-6s%-10s%-16s%-16s\n",
+		"ID", "PcnID", "EncapType", "LocalIP", "RemoteIP")
+	fmt.Println(hdrLine)
+}
+
+func printTunnel(tunnel *pds.Tunnel) {
+	spec := tunnel.GetSpec()
+	fmt.Printf("%-6d%-6d%-10s%-16s%-16s\n",
+		spec.GetId(), spec.GetPCNId(),
+		strings.Replace(strings.Replace(spec.GetEncap().String(), "TUNNEL_ENCAP_", "", -1), "_", "-", -1),
+		utils.IPAddrToStr(spec.GetLocalIP()),
+		utils.IPAddrToStr(spec.GetRemoteIP()))
 }

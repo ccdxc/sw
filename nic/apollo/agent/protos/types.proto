@@ -47,15 +47,15 @@ message IPAddress {
 // IP Range
 message IPRange {
   // starting IP address
-  IPAddress Low  = 1 [(gogoproto.nullable) = false];
+  IPAddress Low  = 1;
   // ending IP address
-  IPAddress High = 2 [(gogoproto.nullable) = false];
+  IPAddress High = 2;
 }
 
 // IP Prefix object
 message IPPrefix {
   // IP prefix address
-  IPAddress Addr = 1 [(gogoproto.nullable) = false];
+  IPAddress Addr = 1;
   // IP Prefix length
   uint32    Len  = 2 [(gogoproto.moretags) = "meta:range=0-128"];
 }

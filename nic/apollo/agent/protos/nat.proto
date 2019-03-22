@@ -17,7 +17,7 @@ service NatSvc {
 }
 
 message NatPool {
-  repeated types.Address Addresses = 1 [(gogoproto.nullable) = false, (gogoproto.moretags) = "meta:mandatory"];
+  repeated types.Address Addresses = 1 [(gogoproto.moretags) = "meta:mandatory"];
   types.PortRange        Ports     = 2;
 }
 
@@ -43,7 +43,7 @@ message NatRule {
   // rule match criteria
   types.RuleMatch Match  = 2;
   // NAT rule action
-  NatRuleAction   Action = 3 [(gogoproto.nullable) = false, (gogoproto.moretags) = "meta:mandatory"];
+  NatRuleAction   Action = 3 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 message NatPolicySpec {
@@ -67,11 +67,11 @@ message NatPolicyStats {
 
 // NAT policy object
 message NatPolicy {
-  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-  NatPolicySpec   Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  NatPolicyStatus Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-  NatPolicyStats  Stats    = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "stats,omitempty"];
+  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  NatPolicySpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  NatPolicyStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  NatPolicyStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // NAT policy create and update request
