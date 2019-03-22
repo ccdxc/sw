@@ -70,6 +70,7 @@ type tInfo struct {
 	trustRoots        []*x509.Certificate          // trust roots to verify TLS certs
 	apicl             apiclient.Services
 	recorders         *recorders
+	testName          string
 }
 
 // list of recorders belonging to the test
@@ -86,7 +87,9 @@ func (t *tInfo) setup(tst *testing.T) error {
 	logConfig.Filter = log.AllowInfoFilter
 
 	t.logger = log.GetNewLogger(logConfig).WithContext("t_name", tst.Name())
+	t.logger.Infof("Starting test %s", tst.Name())
 	t.mockResolver = mockresolver.New()
+	t.testName = tst.Name()
 
 	// start certificate server
 	err = testutils.SetupIntegTLSProvider()
@@ -185,6 +188,7 @@ func (t *tInfo) teardown() {
 	t.mockResolver = nil
 
 	os.RemoveAll(t.storeConfig.Dir)
+	t.logger.Infof("completed test")
 }
 
 // createElasticClient helper function to create elastic client

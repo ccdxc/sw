@@ -188,7 +188,7 @@ func TestEventsProxyRestart(t *testing.T) {
 			ti.recorders.list = append(ti.recorders.list, evtsRecorder)
 			ti.recorders.Unlock()
 
-			ticker := time.NewTicker(10 * time.Millisecond)
+			ticker := time.NewTicker(100 * time.Millisecond)
 			for {
 				select {
 				case <-stopEventRecorders:
@@ -216,7 +216,9 @@ func TestEventsProxyRestart(t *testing.T) {
 		// and the events are delivered to elastic
 		for i := 0; i < 3; i++ {
 			time.Sleep(1 * time.Second)
+			evtsProxyURL := ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL()
 			ti.evtProxyServices.Stop()
+			ti.removeResolverEntry(globals.EvtsProxy, evtsProxyURL)
 
 			// proxy won't be able to accept any events for 2s
 			time.Sleep(1 * time.Second)
@@ -298,7 +300,7 @@ func TestEventsMgrRestart(t *testing.T) {
 			ti.recorders.list = append(ti.recorders.list, evtsRecorder)
 			ti.recorders.Unlock()
 
-			ticker := time.NewTicker(10 * time.Millisecond)
+			ticker := time.NewTicker(100 * time.Millisecond)
 			for {
 				select {
 				case <-stopEventRecorders:
@@ -892,7 +894,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 						}
 
 						return true, nil
-					}, "failed to get events", "20ms", "6s")
+					}, "failed to get events", "200ms", "6s")
 
 				Assert(t, rr.expResponse.numEvents == len(resp.GetItems()), "failed to get expected number of events")
 
@@ -933,7 +935,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					}
 
 					return true, nil
-				}, "failed to get events", "20ms", "6s")
+				}, "failed to get events", "200ms", "6s")
 
 			Assert(t, resp.GetUUID() != "", "failed to get event by UUID: %v", rr.requestURI)
 
@@ -1158,7 +1160,7 @@ func TestEventsAlertEngine(t *testing.T) {
 				}
 
 				return true, nil
-			}, "did not receive the expected alert", string("20ms"), string("10s"))
+			}, "did not receive the expected alert", string("200ms"), string("10s"))
 		}
 	}()
 
@@ -1197,7 +1199,7 @@ func TestEventsAlertEngine(t *testing.T) {
 			}
 
 			return true, nil
-		}, "alert status does not match the expected", string("20ms"), string("10s"))
+		}, "alert status does not match the expected", string("200ms"), string("10s"))
 	}
 
 	// resolve or acknowledge alerts
@@ -1253,7 +1255,7 @@ func TestEventsAlertEngine(t *testing.T) {
 					}
 
 					return true, nil
-				}, "failed to update alert state", "20ms", "6s")
+				}, "failed to update alert state", "200ms", "6s")
 		} else if at.resolve {
 			resp := monitoring.Alert{}
 			AssertEventually(t,
@@ -1273,7 +1275,7 @@ func TestEventsAlertEngine(t *testing.T) {
 					}
 
 					return true, nil
-				}, "failed to update alert state", "20ms", "6s")
+				}, "failed to update alert state", "200ms", "6s")
 		}
 
 		updatedAp := &monitoring.AlertPolicy{}
@@ -1287,19 +1289,19 @@ func TestEventsAlertEngine(t *testing.T) {
 	}
 
 	// delete all alerts
-	alerts, err = apiClient.MonitoringV1().Alert().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+	alerts, _ = apiClient.MonitoringV1().Alert().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
 	for _, a := range alerts {
 		apiClient.MonitoringV1().Alert().Delete(context.Background(), &a.ObjectMeta)
 	}
 
 	// delete all alert destinations
-	alertDestinations, err := apiClient.MonitoringV1().AlertDestination().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+	alertDestinations, _ := apiClient.MonitoringV1().AlertDestination().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
 	for _, ad := range alertDestinations {
 		apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), &ad.ObjectMeta)
 	}
 
 	// delete all alert policies
-	alertPolicies, err := apiClient.MonitoringV1().AlertPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+	alertPolicies, _ := apiClient.MonitoringV1().AlertPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
 	for _, ap := range alertPolicies {
 		apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), &ap.ObjectMeta)
 	}
@@ -1445,7 +1447,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 			}
 
 			return false, fmt.Sprintf("TotalNotificationSent expected:6, got: %v", ad.Status.TotalNotificationsSent)
-		}, fmt.Sprintf("alert destionation %v is not updated", alertDestBSDSyslog.GetName()), "20ms", "10s")
+		}, fmt.Sprintf("alert destionation %v is not updated", alertDestBSDSyslog.GetName()), "200ms", "10s")
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
@@ -1459,7 +1461,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 			}
 
 			return false, fmt.Sprintf("TotalNotificationSent expected:6, got: %v", ad.Status.TotalNotificationsSent)
-		}, fmt.Sprintf("alert destionation %v is not updated", alertDestRFC5424Syslog.GetName()), "20ms", "10s")
+		}, fmt.Sprintf("alert destionation %v is not updated", alertDestRFC5424Syslog.GetName()), "200ms", "10s")
 }
 
 // TestEventsAlertEngineWithTCPSyslogExport tests the syslog export of alerts with dummy UDP server
@@ -1597,7 +1599,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 			}
 
 			return false, fmt.Sprintf("TotalNotificationSent expected: 6, got: %v", ad.Status.TotalNotificationsSent)
-		}, fmt.Sprintf("alert destionation %v is not updated", alertDestBSDSyslog.GetName()), "20ms", "10s")
+		}, fmt.Sprintf("alert destionation %v is not updated", alertDestBSDSyslog.GetName()), "200ms", "10s")
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
@@ -1611,7 +1613,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 			}
 
 			return false, fmt.Sprintf("TotalNotificationSent expected: 3, got: %v", ad.Status.TotalNotificationsSent)
-		}, fmt.Sprintf("alert destionation %v is not updated", alertDestRFC5424Syslog.GetName()), "20ms", "10s")
+		}, fmt.Sprintf("alert destionation %v is not updated", alertDestRFC5424Syslog.GetName()), "200ms", "10s")
 }
 
 // ensures the delivery of expected syslog messages
@@ -1738,7 +1740,7 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 					return false, fmt.Sprintf("pending: %v", len(expectedMessages))
 				}
 				return true, nil
-			}, "did not receive all the expected syslog messages", "20ms", "10s")
+			}, "did not receive all the expected syslog messages", "200ms", "10s")
 
 		close(closeMsgCh)
 	}
@@ -2268,7 +2270,7 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 				return true, nil
 			}
 			return true, fmt.Sprintf("expected: %d messages to be received on the TCP syslog server, got: %d", count, receivedMsgs)
-		}, "syslog server did not receive the expected messages", "20ms", "2s")
+		}, "syslog server did not receive the expected messages", "200ms", "2s")
 
 	close(stopGoRoutines)
 	wg.Wait()
@@ -2405,7 +2407,7 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 				return true, nil
 			}
 			return false, fmt.Sprintf("expected: %d messages to be received on the TCP syslog server, got: %d", count, receivedMsgs)
-		}, "syslog server did not receive the expected messages", "60ms", "120s")
+		}, "syslog server did not receive the expected messages", "1s", "120s")
 
 	close(stopSyslogMessagesReceiver)
 	wg.Wait()
@@ -2448,7 +2450,7 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 			ti.recorders.list = append(ti.recorders.list, evtsRecorder)
 			ti.recorders.Unlock()
 
-			ticker := time.NewTicker(10 * time.Millisecond)
+			ticker := time.NewTicker(100 * time.Millisecond)
 			for {
 				select {
 				case <-stopEventRecorders:

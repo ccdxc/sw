@@ -18,9 +18,6 @@ import (
 )
 
 var (
-	// maxRetries maximum number of retries
-	maxRetries = 10
-
 	// delay between retries
 	retryDelay = 2 * time.Second
 
@@ -78,10 +75,7 @@ func NewWatcher(policyMgr *Manager, logger log.Logger, opts ...WOption) (*Watche
 	}
 
 	w.wg.Add(1)
-	go func() {
-		defer w.wg.Done()
-		w.start()
-	}()
+	go w.start()
 
 	return w, nil
 }
@@ -89,43 +83,37 @@ func NewWatcher(policyMgr *Manager, logger log.Logger, opts ...WOption) (*Watche
 // start creates the evtsmgr client to watch event policies; this function should be called in a goroutine
 func (w *Watcher) start() {
 	w.logger.Info("starting event policy watcher")
+	defer w.wg.Done()
+
+	var err error
 
 	for {
-		ctx, cancel := context.WithCancel(w.ctx)
-		defer cancel()
-
 		select {
-		case <-ctx.Done():
+		case <-w.ctx.Done():
 			w.logger.Errorf("context closed; event policy watcher")
 			return
 		default:
+			if err := w.ctx.Err(); err != nil {
+				return
+			}
 			// policy watcher connecting to evtsmgr to watch event policies
-			client, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-				if err := ctx.Err(); err != nil {
-					return nil, fmt.Errorf("context closed; event policy watcher")
-				}
-
-				if w.resolverClient != nil {
-					return rpckit.NewRPCClient(pkgName, globals.EvtsMgr,
-						rpckit.WithBalancer(balancer.New(w.resolverClient)), rpckit.WithRemoteServerName(globals.EvtsMgr))
-				}
-				return rpckit.NewRPCClient("events-policy-watcher", w.evtsMgrURL,
+			if w.resolverClient != nil {
+				w.rpcClient, err = rpckit.NewRPCClient(pkgName, globals.EvtsMgr,
+					rpckit.WithBalancer(balancer.New(w.resolverClient)), rpckit.WithRemoteServerName(globals.EvtsMgr))
+			} else {
+				w.rpcClient, err = rpckit.NewRPCClient("events-policy-watcher", w.evtsMgrURL,
 					rpckit.WithRemoteServerName(globals.EvtsMgr))
-			}, retryDelay, maxRetries)
+			}
+
 			if err != nil {
 				w.logger.Errorf("failed to connect to {%s}, err: %v", globals.EvtsMgr, err)
+				time.Sleep(retryDelay)
 				continue
 			}
 
 			w.logger.Infof("connected to {%s}", globals.EvtsMgr)
-
-			w.rpcClient = client.(*rpckit.RPCClient)
 			w.processEvents()
 			w.rpcClient.Close()
-			if err := ctx.Err(); err != nil {
-				return
-			}
-
 			time.Sleep(retryDelay)
 		}
 	}
@@ -140,10 +128,7 @@ func (w *Watcher) Stop() {
 
 // process watch events
 func (w *Watcher) processEvents() error {
-	ctx, cancelWatch := context.WithCancel(w.ctx)
-	defer cancelWatch()
-
-	return w.watchEventPolicy(ctx)
+	return w.watchEventPolicy(w.ctx)
 }
 
 // watch event policies and create required writers with the help of policy manager

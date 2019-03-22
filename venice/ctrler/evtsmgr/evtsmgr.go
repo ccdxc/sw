@@ -190,29 +190,30 @@ func (em *EventsManager) watchAPIServerEvents(parentCtx context.Context, resolve
 	defer em.wg.Done()
 	logger := em.logger.WithContext("pkg", fmt.Sprintf("%s-%s", globals.EvtsMgr, "api-client"))
 	for {
-		ctx, cancel := context.WithCancel(parentCtx)
-		defer cancel()
+		if err := parentCtx.Err(); err != nil {
+			em.logger.Errorf("watcher context error: %v", err)
+			return err
+		}
 
-		client, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-			return apiclient.NewGrpcAPIClient(globals.EvtsMgr, globals.APIServer, logger,
-				rpckit.WithBalancer(balancer.New(resolverClient)), rpckit.WithLogger(logger))
-		}, 2*time.Second, maxRetries)
+		client, err := apiclient.NewGrpcAPIClient(globals.EvtsMgr, globals.APIServer, logger,
+			rpckit.WithBalancer(balancer.New(resolverClient)), rpckit.WithLogger(logger))
 		if err != nil {
 			em.logger.Errorf("failed to create API client, err: %v", err)
+			time.Sleep(retryDelay)
 			continue
 		}
 
 		em.logger.Infof("created API server client")
 		em.apiClient = client.(apiclient.Services)
 
-		em.processEvents(ctx)
+		em.processEvents(parentCtx)
 		em.apiClient.Close()
-		if err := ctx.Err(); err != nil {
+		if err := parentCtx.Err(); err != nil {
 			em.logger.Errorf("watcher context error: %v", err)
 			return err
 		}
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(retryDelay)
 	}
 }
 
