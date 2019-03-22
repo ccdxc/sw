@@ -22,6 +22,13 @@ using acl::acl_ctx_t;
 using acl::ref_t;
 using acl::acl_config_t;
 namespace hal {
+enum AppType {
+    APP_NONE,
+    APP_TCP_UDP,
+    APP_ESP,
+    APP_ICMP,
+    APP_RPC
+};
 
 typedef struct rule_match_icmp_s {
     uint32_t    icmp_type;
@@ -29,6 +36,7 @@ typedef struct rule_match_icmp_s {
 } __PACK__ rule_match_icmp_t;
 
 typedef struct rule_match_app_s {
+    AppType            app_type;
     dllist_ctxt_t      l4srcport_list; // list elems of type port_list_elem_t;
     dllist_ctxt_t      l4dstport_list; // list elems of type port_list_elem_t;
     dllist_ctxt_t      rpc_list;       // list elems of type rpc/msrpc - TBD
@@ -64,6 +72,11 @@ struct ipv4_tuple {
     uint32_t  icmp_type;
     uint32_t  icmp_code;
 };
+
+#define PRINT_RULE_KEY(key) \
+    HAL_TRACE_DEBUG("key to acl: key->proto: {}, key->ip_src: {}, key->ip_dst: {}, key->mac_src: {}, key->mac_dst: {}, key->ethertype: {}," \
+    "key->port_src: {}, key->port_dst: {}, key->icmp_type: {}, key->icmp_code: {}", key->proto, key->ip_src, key->ip_dst, key->mac_src, key->mac_dst, key->key_ethertype, key->port_src, key->port_dst, key->icmp_type, key->icmp_code);
+    
 
 
 enum {

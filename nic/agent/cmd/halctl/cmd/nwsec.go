@@ -207,7 +207,7 @@ func nwsecPolicyShowOneResp(resp *halproto.SecurityPolicyGetResponse) {
 		fmt.Println("Rule Match:")
 		fmt.Printf("   Src IP Address:  ")
 		if len(rule.Match.SrcAddress) == 0 {
-			fmt.Printf("Any")
+			fmt.Printf("ANY\n")
 		}
 		for _, src := range rule.Match.SrcAddress {
 			switch src.Formats.(type) {
@@ -247,7 +247,7 @@ func nwsecPolicyShowOneResp(resp *halproto.SecurityPolicyGetResponse) {
 		}
 		fmt.Printf("   Dst IP Address:  ")
 		if len(rule.Match.DstAddress) == 0 {
-			fmt.Printf("Any")
+			fmt.Printf("ANY\n")
 		}
 		for _, dst := range rule.Match.DstAddress {
 			switch dst.Formats.(type) {
@@ -287,7 +287,7 @@ func nwsecPolicyShowOneResp(resp *halproto.SecurityPolicyGetResponse) {
 		}
 		proto := strings.Replace(rule.Match.GetProtocol().String(), "IPPROTO_", "", -1)
 		if proto == "NONE" {
-			proto = "ANY"
+			proto = "ANY\n"
 		}
 		fmt.Println("   Protocol: ", proto)
 		switch rule.Match.AppMatch.App.(type) {

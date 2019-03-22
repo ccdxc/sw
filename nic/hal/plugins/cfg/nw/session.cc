@@ -2604,7 +2604,7 @@ check_session_match (session_match_t *match, hal::session_t *session)
         if (key->svrf_id != match->key.svrf_id) { return FALSE; }
     }
     if (match->match_fields & SESSION_MATCH_V4_FLOW) {
-        if (key->flow_type !=  FLOW_KEY_LOOKUP_TYPE_IPV4) { return FALSE; }
+        if (key->flow_type !=  hal::FLOW_TYPE_V4) { return FALSE; }
     }
 
     // Extend this function to add more filter conditions

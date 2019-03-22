@@ -189,23 +189,27 @@ rule_match_app_spec_extract (const types::RuleMatch& spec, rule_match_t *match)
     // walk the apps
     const types::RuleMatch_AppMatch app = spec.app_match();
     if (app.App_case() == types::RuleMatch_AppMatch::kPortInfo) {
+        match->app.app_type = APP_TCP_UDP;
         ret = rule_match_port_app_spec_extract(app, &match->app);
         if (ret != HAL_RET_OK) {
             return ret;
         }
     } else if (app.App_case() == types::RuleMatch_AppMatch::kIcmpInfo) {
+        match->app.app_type = APP_ICMP;
         ret = rule_match_icmp_app_spec_extract(app, &match->app);
         if (ret != HAL_RET_OK) {
             return ret;
         }
 
     } else if (app.App_case() == types::RuleMatch_AppMatch::kEspInfo) {
+        match->app.app_type = APP_ESP;
         ret = rule_match_esp_app_spec_extract(app, &match->app);
         if (ret != HAL_RET_OK) {
             return ret;
         }
     } else {
         HAL_TRACE_ERR("App type not Handled {}", app.App_case());
+        match->app.app_type = APP_NONE;
         return HAL_RET_OK;
     }
     return HAL_RET_OK;
@@ -1037,11 +1041,10 @@ rule_match_src_port_spec_build (
 }
 
 static inline hal_ret_t
-rule_match_port_app_spec_build (rule_match_app_t *app, types::RuleMatch *spec)
+rule_match_port_app_spec_build (rule_match_app_t *app, types::RuleMatch_AppMatch *app_match)
 {
     hal_ret_t ret;
     types::RuleMatch_L4PortAppInfo *port_info;
-    types::RuleMatch_AppMatch *app_match = spec->mutable_app_match();
     
     if (!dllist_empty(&app->l4srcport_list) ||
         !dllist_empty(&app->l4dstport_list)) {
@@ -1059,15 +1062,29 @@ rule_match_port_app_spec_build (rule_match_app_t *app, types::RuleMatch *spec)
     return HAL_RET_OK;
 }
 
+static inline hal_ret_t
+rule_match_icmp_app_spec_build(rule_match_app_t *app, types::RuleMatch_AppMatch *app_match) {
+    hal_ret_t ret = HAL_RET_OK;
+    types::RuleMatch_ICMPAppInfo *icmp_info;
+    icmp_info = app_match->mutable_icmp_info();
+    icmp_info->set_icmp_type(app->icmp.icmp_type);
+    icmp_info->set_icmp_code(app->icmp.icmp_code);
+
+    return ret;
+}
+
 
 static inline hal_ret_t
 rule_match_app_spec_build (rule_match_t *match, types::RuleMatch *spec)
 {
-    hal_ret_t ret;
+    hal_ret_t ret = HAL_RET_OK;
+    types::RuleMatch_AppMatch *app_match = spec->mutable_app_match();
 
-    if ((ret = rule_match_port_app_spec_build(&match->app, spec)) != HAL_RET_OK)
-        return ret;
-
+    if (match->app.app_type == APP_TCP_UDP) {
+        ret = rule_match_port_app_spec_build(&match->app, app_match);
+    } else if (match->app.app_type == APP_ICMP) {
+        ret = rule_match_icmp_app_spec_build(&match->app, app_match);
+    }
     // TODO Other app types
     return ret;
 }
