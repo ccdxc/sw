@@ -586,8 +586,7 @@ p4_dump_program_info (const char *cfg_path)
                 for (int j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
                     pt::ptree    sym;
                     symbol = program_info[i].prog.symtab.get_byid(j);
-                    if ((symbol != NULL) && (symbol->type == MPUSYM_LABEL) &&
-                        symbol->val) {
+                    if ((symbol != NULL) && (symbol->type == MPUSYM_LABEL)) {
                         sym.put("name", symbol->name.c_str());
                         sym.put("addr", symbol->val);
 			snprintf(numbuf, sizeof(numbuf), "0x%lx",
