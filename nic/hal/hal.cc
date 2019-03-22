@@ -68,7 +68,8 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGTERM:
     case SIGQUIT:
         if (!getenv("DISABLE_FTE") &&
-            (g_hal_cfg.shm_mode == true)) {
+            (is_platform_type_hw() &&
+            !getenv("DISABLE_FWLOG"))) {
             ipc_logger::deinit();
         }
         HAL_GCOV_FLUSH();
@@ -268,7 +269,8 @@ hal_init (hal_cfg_t *hal_cfg)
             // start fte threads
             for (uint32_t i = 0; i < hal_cfg->num_data_cores; i++) {
                 // init IPC logger infra for FTE
-                if (!i && hal_cfg->shm_mode &&
+                if (!i && (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) && 
+                    !getenv("DISABLE_FWLOG") &&
                     ipc_logger::init(std::shared_ptr<logger>(utils::hal_logger())) != HAL_RET_OK) {
                     HAL_TRACE_ERR("IPC logger init failed");
                 }

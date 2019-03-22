@@ -423,9 +423,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             HAL_TRACE_ERR("Unknown feature set {}", sparam.c_str());
         }
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
-        // used to enable IPC logger
         hal_cfg->shm_mode = pt.get<bool>("sw.shm", false);
-
         // parse (control & data) core config
         hal_parse_cores_cfg(pt, hal_cfg);
     } catch (std::exception const& e) {

@@ -70,7 +70,6 @@ typedef struct hal_cfg_s {
     bool                     shm_mode;
     bool                     qemu;                      // true if this is running on QEMU
     bool                     bypass_fte;                // test mode, for PMD testing
-
 } hal_cfg_t;
 
 }    // namespace hal

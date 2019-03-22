@@ -214,6 +214,7 @@ TEST_F(rpc_test, sunrpc_app_sess_force_delete) {
     hal::session_t        *session = NULL;
     hal_ret_t              ret;
     hal_handle_t           sess_hdl = 0;
+    SessionDeleteResponseMsg delrsp;
 
     ret = hal::session_get_all(&resp);
     EXPECT_EQ(ret, HAL_RET_OK);
@@ -230,6 +231,12 @@ TEST_F(rpc_test, sunrpc_app_sess_force_delete) {
     ASSERT_TRUE(session != NULL);
     ret = session_delete(session, true);
     ASSERT_EQ(ret, HAL_RET_OK);
+
+    for (int i=0; i<10; i++) {
+         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+         hal::session_delete_all(&delrsp);
+         hal::hal_cfg_db_close();
+    }
 }
 
 TEST_F(rpc_test, sunrpc_session_fragmentation)
