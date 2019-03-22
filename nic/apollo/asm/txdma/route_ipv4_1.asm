@@ -5,19 +5,24 @@
 #include "ingress.h"
 
 struct phv_                p;
-struct route_ipv4_data_k   k;
-struct route_ipv4_data_d   d;
+struct route_ipv4_1_k      k;
+struct route_ipv4_1_d      d;
 
-#define action_name        search_routes32b_retrieve
+#define action_keys        search_routes32b1_d
+#define action_data        search_routes32b1_retrieve
+#define keys(a)            d.u.search_routes32b1_d.key ## a
+#define keys_(a)           d.u.search_routes32b1_retrieve_d.key ## a
+#define data(a)            d.u.search_routes32b1_retrieve_d.data ## a
 #define key                k.p4_to_txdma_header_lpm_dst
-#define keys(a)            d.search_routes32b_retrieve_d.key ## a
-#define data(a)            d.search_routes32b_retrieve_d.data ## a
+#define base_addr          k.{p4_to_txdma_header_lpm_addr_sbit0_ebit1...\
+                              p4_to_txdma_header_lpm_addr_sbit2_ebit33}
+#define curr_addr          k.{txdma_control_lpm_addr_sbit0_ebit1...\
+                              txdma_control_lpm_addr_sbit2_ebit33}
+#define next_addr          p.txdma_control_lpm_addr
 #define res_field          p.txdma_to_p4e_header_nexthop_index
 #define res_handler        route_ipv4_handler
 
-%%
-
-#include "../include/lpm32b_data.h"
+#include "../include/lpm32b.h"
 
 res_handler:
     phvwr.e         res_field, r7

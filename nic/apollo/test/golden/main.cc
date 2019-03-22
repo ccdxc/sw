@@ -32,6 +32,7 @@
 #include "nic/apollo/p4/include/table_sizes.h"
 #include "nic/apollo/p4/include/sacl_defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 
 #define EPOCH 0xb055
@@ -804,15 +805,52 @@ trie_mem_init (void)
 static void
 route_init (void)
 {
-    uint64_t data;
+    uint32_t len;
     uint64_t lpm_base_addr = get_mem_addr(JLPMV4BASE);
-    uint16_t offset = 64 + (16 * 64);
+    route_ipv4_actiondata_t sw_entry;
 
-    data = 0xFFFF;
-    data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
-    data |= ((uint64_t)htons(g_nexthop_index)) << 48;
-    sdk::asic::asic_mem_write(lpm_base_addr + offset, (uint8_t *)&data,
-                              sizeof(data));
+    struct cache_line_s {
+        uint8_t action_pc;
+        uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
+    } cache_line;
+
+    memset(&sw_entry, 0xFF, sizeof(sw_entry));
+
+    /* Program stage 0*/
+    sw_entry.action_id = ROUTE_IPV4_SEARCH_ROUTES32B_ID;
+    p4pd_apollo_txdma_raw_table_hwentry_query(P4_APOLLO_TXDMA_TBL_ID_ROUTE_IPV4,
+                                              ROUTE_IPV4_SEARCH_ROUTES32B_ID,
+                                              &len);
+    p4pd_apollo_txdma_entry_pack(P4_APOLLO_TXDMA_TBL_ID_ROUTE_IPV4,
+                                 ROUTE_IPV4_SEARCH_ROUTES32B_ID,
+                                 &sw_entry, cache_line.packed_entry);
+    cache_line.action_pc = sdk::asic::pd::asicpd_get_action_pc(
+                                P4_APOLLO_TXDMA_TBL_ID_ROUTE_IPV4,
+                                ROUTE_IPV4_SEARCH_ROUTES32B_ID);
+    sdk::asic::asic_mem_write(lpm_base_addr + 0, (uint8_t *)&cache_line,
+                              sizeof(cache_line));
+
+    /* Program stage 1*/
+    sdk::asic::asic_mem_write(lpm_base_addr + 64, (uint8_t *)&cache_line,
+                              sizeof(cache_line));
+
+    /* Program stage 2*/
+    sw_entry.action_u.route_ipv4_search_routes32b_retrieve.key0 =
+            (g_layer1_dip & 0xFFFF0000);
+    sw_entry.action_u.route_ipv4_search_routes32b_retrieve.data0 =
+            g_nexthop_index;
+
+    p4pd_apollo_txdma_raw_table_hwentry_query(P4_APOLLO_TXDMA_TBL_ID_ROUTE_IPV4,
+                                              ROUTE_IPV4_SEARCH_ROUTES32B_RETRIEVE_ID,
+                                              &len);
+    p4pd_apollo_txdma_entry_pack(P4_APOLLO_TXDMA_TBL_ID_ROUTE_IPV4,
+                                 ROUTE_IPV4_SEARCH_ROUTES32B_RETRIEVE_ID,
+                                 &sw_entry, cache_line.packed_entry);
+    cache_line.action_pc = sdk::asic::pd::asicpd_get_action_pc(
+                                P4_APOLLO_TXDMA_TBL_ID_ROUTE_IPV4,
+                                ROUTE_IPV4_SEARCH_ROUTES32B_RETRIEVE_ID);
+    sdk::asic::asic_mem_write(lpm_base_addr + 64 + (16 * 64), (uint8_t *)&cache_line,
+                              sizeof(cache_line));
 }
 
 static void

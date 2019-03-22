@@ -305,7 +305,6 @@ capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
                     stage, tableid, stage_tbl_id, pc);
     te_csr->cfg_table_property[stage_tbl_id].read();
     te_csr->cfg_table_property[stage_tbl_id].mpu_pc(pc >> 6);
-    te_csr->cfg_table_property[stage_tbl_id].mpu_pc_dyn(0);
     te_csr->cfg_table_property[stage_tbl_id].addr_base(0);
     te_csr->cfg_table_property[stage_tbl_id].write();
 }
