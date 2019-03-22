@@ -21,6 +21,7 @@ aliases:
     - &BATCH_DEPTH_ITER_LIST [ 1, 16, 31, 32, 33, 64 ]
     - &BATCH_DEPTH_LARGE_ITER_LIST [ 128, 256, 512 ]
     - &BATCH_DEPTH_ITER_LIST_ZERO_PAD [ 1, 16, 31, 32, 33, 64 ]
+    - &BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD_256 [ 128, 256 ]
     - &BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD [ 128, 256, 512 ]
     - &MODE_ITER_LIST [ sync, poll, async ]
     - &CPDC_TEST_YML cpdc.yml
@@ -91,15 +92,12 @@ testcases:
             cpflags     : *CPFLAGS_ZERO_PAD
             dcflags     : *DCFLAGS_ZERO_PAD
 
-    # PS-339
     -   name: CpDcZp4K8KLbd
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_ZERO_PAD
-            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD_256
             mode        : *MODE_ITER_LIST
             inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
@@ -154,12 +152,10 @@ testcases:
     # PS-344
     -   name: CpDcWHdrZp4K8KLbd
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_ZERO_PAD
-            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD_256
             mode        : *MODE_ITER_LIST
             inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
@@ -215,12 +211,10 @@ testcases:
 
     -   name: CpDcZp16K32KLbd
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_ZERO_PAD
-            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD_256
             mode        : *MODE_ITER_LIST
             inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
@@ -275,12 +269,10 @@ testcases:
 
     -   name: CpDcWHdrZp16K32KLbd
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_ZERO_PAD
-            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD_256
             mode        : *MODE_ITER_LIST
             inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
