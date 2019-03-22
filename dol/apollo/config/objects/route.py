@@ -160,7 +160,7 @@ class RouteObjectClient:
             if route_spec_obj.type == 'overlap':
                 if __is_v4stack(stack):
                     v4base = __get_first_subnet(ipaddress.ip_network(route_spec_obj.v4base.replace('\\','/')), route_spec_obj.v4prefixlen)
-                    routes += __get_overlap(v6base, count)
+                    routes += __get_overlap(v4base, count)
                 if __is_v6stack(stack):
                     v6base = __get_first_subnet(ipaddress.ip_network(route_spec_obj.v6base.replace('\\','/')), route_spec_obj.v6prefixlen)
                     routes += __get_overlap(v6base, count)
