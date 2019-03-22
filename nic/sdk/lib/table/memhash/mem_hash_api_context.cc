@@ -194,7 +194,7 @@ mem_hash_api_context::destroy(mem_hash_api_context* ctx) {
 void
 mem_hash_api_context::print_handle() {
     char buff[SDK_TABLE_HANDLE_STR_LEN];
-    MEMHASH_TRACE_DEBUG("- Handle: %s", handle->tostr(buff, sizeof(buff)));
+    MEMHASH_TRACE_PRINT("- Handle: %s", handle->tostr(buff, sizeof(buff)));
 }
 
 void
