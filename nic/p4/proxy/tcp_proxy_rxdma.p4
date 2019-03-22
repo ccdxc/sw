@@ -76,7 +76,6 @@
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
     modify_field(common_global_scratch.debug_dol, common_phv.debug_dol); \
-    modify_field(common_global_scratch.quick, common_phv.quick); \
     modify_field(common_global_scratch.process_ack_flag, \
                             common_phv.process_ack_flag); \
     modify_field(common_global_scratch.flags, common_phv.flags); \
@@ -93,6 +92,7 @@
     modify_field(common_global_scratch.skip_pkt_dma, common_phv.skip_pkt_dma); \
     modify_field(common_global_scratch.ooo_alloc_fail, common_phv.ooo_alloc_fail); \
     modify_field(common_global_scratch.ooq_tx2rx_pkt, common_phv.ooq_tx2rx_pkt); \
+    modify_field(common_global_scratch.ooq_tx2rx_win_upd, common_phv.ooq_tx2rx_win_upd); \
 
 #define GENERATE_S1_S2S_K \
     modify_field(s1_s2s_scratch.payload_len, s1_s2s.payload_len); \
@@ -190,6 +190,7 @@ header_type tcp_rx_d_t {
         pending                 : 3;
         write_serq              : 1;
         alloc_descr             : 1;    // used with .l not written back
+        dont_send_ack           : 1;    // used with .l not written back
     }
 }
 
@@ -466,7 +467,6 @@ header_type common_global_phv_t {
         snd_una                 : 32;
         debug_dol               : 8;
         flags                   : 8;
-        quick                   : 3;
         process_ack_flag        : 1;
         is_dupack               : 1;
         ooo_rcv                 : 1;
@@ -482,6 +482,7 @@ header_type common_global_phv_t {
         ip_tos_ecn              : 2;
         ooo_alloc_fail          : 1;
         ooq_tx2rx_pkt           : 1;
+        ooq_tx2rx_win_upd       : 1;
     }
 }
 
@@ -813,7 +814,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         snd_una, snd_wl1, pred_flags, snd_recover, bytes_rcvd, \
         snd_wnd, serq_pidx, num_dup_acks, cc_flags, quick, \
         flag, rto, state, parsed_state, rcv_wscale, limited_transmit, pending, \
-        write_serq, alloc_descr
+        write_serq, alloc_descr, dont_send_ack
 
 #define TCP_RX_CB_D \
     modify_field(tcp_rx_d.ooq_not_empty, ooq_not_empty); \
@@ -847,7 +848,8 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_rx_d.limited_transmit, limited_transmit); \
     modify_field(tcp_rx_d.pending, pending); \
     modify_field(tcp_rx_d.write_serq, write_serq); \
-    modify_field(tcp_rx_d.alloc_descr, alloc_descr);
+    modify_field(tcp_rx_d.alloc_descr, alloc_descr);\
+    modify_field(tcp_rx_d.dont_send_ack, dont_send_ack);
 
 /*
  * Stage 1 table 0 action

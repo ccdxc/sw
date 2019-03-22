@@ -52,8 +52,10 @@ tcp_ooq_load_qstate_process_next_pkt_descr:
     b.!c1           tcp_ooq_skip_doorbell
 
     /*
+     * We are done with all OOO queues
      * Ring doorbell to eval
      */
+    phvwr           p.common_phv_all_ooq_done, 1
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP,
                         DB_SCHED_UPD_EVAL, TCP_OOO_RX2TX_QTYPE, LIF_TCP)
     /* data will be in r3 */

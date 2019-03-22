@@ -19,7 +19,15 @@ struct s7_t0_tcp_rx_k_ k;
 %%
 	.align	
 tcp_rx_stats_stage_start:
-    CAPRI_CLEAR_TABLE_VALID(0)
+    // Note : Do not clear table 0 valid bit in stage 7
+    // This is needed for the tcp/app header in the OOO case
+    // We want table0_valid to be set to 1 for the correct table
+    // to be launched in RxDMA when the OOO packet is looped back
+    // from TxDMA to RxDMA
+    //
+    // No harm keeping this bit set for non-OOO case as this is the
+    // last stage and recirc should not be getting set.
+    //CAPRI_CLEAR_TABLE_VALID(0)
 
 // TODO: Move to multi stats update
 

@@ -638,6 +638,26 @@ tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
                   pd_tcp_global_stats_get_args.rcvd_ce_pkts);
     rsp->mutable_global_stats()->set_retx_pkts(
                   pd_tcp_global_stats_get_args.retx_pkts);
+    rsp->mutable_global_stats()->set_tcp_debug1(
+                  pd_tcp_global_stats_get_args.tcp_debug1);
+    rsp->mutable_global_stats()->set_tcp_debug2(
+                  pd_tcp_global_stats_get_args.tcp_debug2);
+    rsp->mutable_global_stats()->set_tcp_debug3(
+                  pd_tcp_global_stats_get_args.tcp_debug3);
+    rsp->mutable_global_stats()->set_tcp_debug4(
+                  pd_tcp_global_stats_get_args.tcp_debug4);
+    rsp->mutable_global_stats()->set_tcp_debug5(
+                  pd_tcp_global_stats_get_args.tcp_debug5);
+    rsp->mutable_global_stats()->set_tcp_debug6(
+                  pd_tcp_global_stats_get_args.tcp_debug6);
+    rsp->mutable_global_stats()->set_tcp_debug7(
+                  pd_tcp_global_stats_get_args.tcp_debug7);
+    rsp->mutable_global_stats()->set_tcp_debug8(
+                  pd_tcp_global_stats_get_args.tcp_debug8);
+    rsp->mutable_global_stats()->set_tcp_debug9(
+                  pd_tcp_global_stats_get_args.tcp_debug9);
+    rsp->mutable_global_stats()->set_tcp_debug10(
+                  pd_tcp_global_stats_get_args.tcp_debug10);
     rsp->set_api_status(types::API_STATUS_OK);
 
     return HAL_RET_OK;

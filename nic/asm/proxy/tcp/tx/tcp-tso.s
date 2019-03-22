@@ -109,30 +109,31 @@ dma_cmd_tcp_header:
     //CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_ts_opts_ts_ecr)
 
 dma_cmd_data:
-    seq             c2, k.t0_s2s_addr, r0
-    /* r6 has tcp data len being sent */
-    addi            r6, r0, 0
-    /* We can end up taking this branch if we ended up here
-     * to send pure ack and there is really no data in retx queue
-     * to send
+    /*
+     * Check for pure ack
      */
-    phvwri.c2       p.{tcp_header_dma_dma_pkt_eop...tcp_header_dma_dma_cmd_eop}, 3
-    bcf             [c2], flow_tso_process_done
-    nop
+    seq             c1, k.t0_s2s_addr, 0
+    b.c1            dma_cmd_write_tx2rx_shared
+    phvwri.c1       p.tcp_header_dma_dma_pkt_eop, 1
 
-    /* Write L = min(mss, descriptor entry len) */
+    /*
+     * This catches FIN/RST etc.
+     */
     seq             c1, k.t0_s2s_len, 0
     b.c1            pkts_sent_stats_update_start
     phvwri.c1       p.tcp_header_dma_dma_pkt_eop, 1
 
+    /*
+     * No TSO supported. Drop packet if greater than mss
+     */
     slt             c1, d.smss, k.t0_s2s_len
     b.c1            flow_tso_process_drop
-    add             r6, k.t0_s2s_len, r0
 
+    add             r6, k.t0_s2s_len, r0
     phvwrpair       p.data_dma_dma_cmd_size, r6, \
                         p.data_dma_dma_cmd_addr[33:0], k.t0_s2s_addr
-    phvwri          p.{data_dma_dma_cmd_pkt_eop...data_dma_dma_cmd_type}, \
-                        1 << 4 | CAPRI_DMA_COMMAND_MEM_TO_PKT
+                        phvwri          p.{data_dma_dma_cmd_pkt_eop...data_dma_dma_cmd_type}, \
+                            1 << 4 | CAPRI_DMA_COMMAND_MEM_TO_PKT
         
 bytes_sent_stats_update_start:
     CAPRI_STATS_INC(bytes_sent, r6, d.bytes_sent, p.to_s6_bytes_sent)

@@ -33,6 +33,7 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
+                tos     : 0
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -44,6 +45,35 @@ packets:
                 ack     : callback://tcpcb/tcpcb/GetAckNum
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+
+    - packet:
+        id          : PKT1_DUP_ACK_OUT
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        payloadsize : 0
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/dst/endpoint/macaddr
+                dst     : ref://testcase/config/src/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/dip
+                dst     : ref://testcase/config/flow/sip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/dip
+                dst     : ref://testcase/config/flow/sip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/flow/dport
+                dport   : ref://testcase/config/flow/sport
+                seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
+                ack     : callback://tcpcb/tcpcb/GetSeqNum
+                window  : 65535
+                flags   : ack
+                options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
+            payload:
 
     - packet:
         id          : PKT2
@@ -60,6 +90,7 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
+                tos     : 0
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -189,6 +220,34 @@ packets:
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
+    - packet:
+        id          : PKT1_ACK_OUT
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        payloadsize : 0
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/dst/endpoint/macaddr
+                dst     : ref://testcase/config/src/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/dst/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/dip
+                dst     : ref://testcase/config/flow/sip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/dip
+                dst     : ref://testcase/config/flow/sip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/flow/dport
+                dport   : ref://testcase/config/flow/sport
+                seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
+                ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
+                window  : 65535
+                flags   : ack
+                options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
+
 trigger:
     packets:
         - packet:
@@ -212,3 +271,12 @@ expect:
         - packet:
             object  : ref://testcase/packets/id=PKT3_OUT
             port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT1_DUP_ACK_OUT
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT1_DUP_ACK_OUT
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT1_ACK_OUT
+            port    : ref://testcase/config/src/endpoint/intf/ports

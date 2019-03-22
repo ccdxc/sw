@@ -230,6 +230,12 @@ tcp_ooo_book_keeping_done:
     /*
      * No queue became in-order
      */
+
+    /*
+     * TODO : Send an ack here as we would have suppressed
+     * sending of ack in tcp-rx for the new packet that came
+     * in-order
+     */
     CAPRI_CLEAR_TABLE_VALID(2)
     nop.e
     nop

@@ -18,11 +18,29 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 %%
 
     .param          tcp_rx_process_start
+    .param          tcp_rx_win_upd_process_start
     .align
 tcp_rx_read_shared_stage0_start:
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add             r4, r0, r0
 #endif
+    phvwrpair       p.common_phv_fid, k.p4_rxdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_rxdma_intr_qstate_addr
+    CAPRI_OPERAND_DEBUG(k.tcp_app_header_ecn)
+    phvwrpair       p.common_phv_debug_dol, d.debug_dol[7:0], \
+                        p.common_phv_ip_tos_ecn, k.tcp_app_header_ecn
+    phvwr           p.to_s5_serq_cidx, d.serq_cidx
+
+    seq             c1, k.tcp_app_header_from_ooq_txdma, 1
+    // HACK, For tx2rx feedback packets 1 byte following tcp_app_header contains
+    // pkt type. This falls in the tcp app header pad region of common rxdma phv.
+    // Until we can unionize this header correctly in p4, hardcoding the PHV
+    // location for now. This is prone to error, but hopefully if something
+    // breaks, we have DOL test cases to catch it.  (refer to
+    // iris/gen/p4gen/tcp_proxy_rxdma/asm_out/INGRESS_p.h)
+    seq.c1          c1, k._tcp_app_header_end_pad_88[15:8], TCP_TX2RX_FEEDBACK_WIN_UPD
+    b.c1            tcp_rx_tx2rx_win_upd
+
     tblwr           d.rx_ts, r4
 
     /* Write all the tx to rx shared state from table data into phv */
@@ -65,13 +83,7 @@ table_read_RX:
     phvwr.c1        p.common_phv_tsopt_enabled, 1
     phvwr.c1        p.common_phv_tsopt_available, 1    /* Until P4 is updated to support this in TCP app hdr */
 
-    phvwrpair       p.common_phv_fid, k.p4_rxdma_intr_qid, \
-                        p.common_phv_qstate_addr, k.p4_rxdma_intr_qstate_addr
-    phvwrpair       p.common_phv_debug_dol, d.debug_dol[7:0], \
-                        p.common_phv_ip_tos_ecn, k.tcp_app_header_ecn
-
     phvwr           p.to_s1_serq_cidx, d.serq_cidx
-    phvwr           p.to_s5_serq_cidx, d.serq_cidx
     phvwr           p.to_s6_payload_len, k.tcp_app_header_payload_len
 
     seq             c1, k.tcp_app_header_from_ooq_txdma, 1
@@ -103,4 +115,12 @@ flow_terminate:
     CAPRI_CLEAR_TABLE_VALID(2)
     CAPRI_CLEAR_TABLE_VALID(3)
     nop.e
+    nop
+
+tcp_rx_tx2rx_win_upd:
+    phvwr           p.common_phv_ooq_tx2rx_pkt, 1
+    phvwr           p.common_phv_ooq_tx2rx_win_upd, 1
+    CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_EN,
+                tcp_rx_win_upd_process_start, k.p4_rxdma_intr_qstate_addr,
+                TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)
     nop

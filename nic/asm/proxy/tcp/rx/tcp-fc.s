@@ -151,7 +151,10 @@ flow_fc_process_done:
     phvwr       p.rx2tx_extra_rcv_wnd, r4
     tblwr       d.rcv_wup, k.to_s5_rcv_nxt
 
-    bbeq        k.common_phv_ooo_rcv, 1, flow_fc_ooq
+    seq         c1, k.common_phv_ooo_rcv, 1
+    seq         c2, k.common_phv_ooq_tx2rx_win_upd, 1
+    phvwri.c2   p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(rx2tx_extra_dma_dma_cmd_type) / 16)
+    bcf         [c1 | c2], flow_fc_skip_serq
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_dma_serq_stage_start, k.common_phv_qstate_addr,
                 TCP_TCB_RX_DMA_OFFSET, TABLE_SIZE_512_BITS)
@@ -159,8 +162,8 @@ flow_fc_process_done:
     nop.e
     nop
 
-flow_fc_ooq:
-    // Tables launched from qbase load
+flow_fc_skip_serq:
+    // Skip serq launch for OOO pkt or win_upd packet
     CAPRI_CLEAR_TABLE_VALID(0)
 
     nop.e

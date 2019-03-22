@@ -137,16 +137,18 @@ tcp_schedule_del_ack:
     CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
                         TCP_SCHED_RING_DEL_ACK, d.u.tcp_rx_d.del_ack_pi)
     memwr.dx        r4, r3
-
+    
+    seq             c1, d.u.tcp_rx_d.dont_send_ack, 0
     b               tcp_ack_snd_check_end
-    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_DEL_ACK, \
+    phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_DEL_ACK, \
                         TCP_PENDING_TXDMA_DEL_ACK
 
 tcp_schedule_ack:
     // cancel del_ack timer and schedule immediate ack
     add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_ATO_OFFSET
     memwr.h         r1, 0
-    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
+    seq             c1, d.u.tcp_rx_d.dont_send_ack, 0
+    phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
 tcp_ack_snd_check_end:
 
@@ -229,10 +231,16 @@ tcp_rx_slow_path:
      * rcv_nxt + advertised_window
      */
     sne             c1, k.s1_s2s_seq, d.u.tcp_rx_d.rcv_nxt
+
+    // Don't send dupack for rx2tx packets
+    seq             c3, k.common_phv_ooq_tx2rx_pkt, 1
+    b.c3            tcp_rx_ooo_skip_dup_ack
+    nop
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
     phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
     phvwr.c1        p.to_s5_serq_pidx, d.u.tcp_rx_d.serq_pidx
+tcp_rx_ooo_skip_dup_ack:
     sne             c2, k.s1_s2s_payload_len, 0
     setcf           c3, [c1 & c2]
     phvwr.c3        p.common_phv_skip_pkt_dma, 1
@@ -332,9 +340,10 @@ tcp_rx_slow_path_post_fin_handling:
     nop
 tcp_rx_slow_path_handle_data:
     // if this is a tx2rx ooq packet, don't allocate descriptors
-    // TODO : Do we send acks in this case?
     seq             c2, k.common_phv_ooq_tx2rx_pkt, 1
     tblwr.c2.l      d.u.tcp_rx_d.alloc_descr, 0
+    // For OOQ feedback packets, dont send ack
+    tblwr.c2.l      d.u.tcp_rx_d.dont_send_ack, 1
     b.c2            tcp_rx_fast_path_queue_serq
 
     /*
@@ -353,6 +362,9 @@ tcp_rx_slow_path_handle_data:
 tcp_rx_slow_path_launch_ooo:
     phvwr           p.t2_s2s_seq, k.s1_s2s_seq
     phvwr           p.t2_s2s_payload_len, k.s1_s2s_payload_len
+    // Don't ack this packet. The last in-order packet from the OOQ
+    // should generate the extended ack
+    tblwr.l         d.u.tcp_rx_d.dont_send_ack, 1
     CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_EN, tcp_ooo_book_keeping_in_order,
                         k.common_phv_qstate_addr, TCP_TCB_OOO_BOOK_KEEPING_OFFSET0,
                         TABLE_SIZE_512_BITS)

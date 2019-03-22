@@ -140,5 +140,15 @@
 #define TCP_PROXY_STATS_INVALID_NMDR_DESCR      (8 << 3)
 #define TCP_PROXY_STATS_RCVD_CE_PKTS            (9 << 3)
 #define TCP_PROXY_STATS_RETX_PKTS               (10 << 3)
+#define TCP_PROXY_STATS_DEBUG1                  (11 << 3)
+#define TCP_PROXY_STATS_DEBUG2                  (12 << 3)
+#define TCP_PROXY_STATS_DEBUG3                  (13 << 3)
+#define TCP_PROXY_STATS_DEBUG4                  (14 << 3)
+#define TCP_PROXY_STATS_DEBUG5                  (15 << 3)
+#define TCP_PROXY_STATS_DEBUG6                  (16 << 3)
+#define TCP_PROXY_STATS_DEBUG7                  (17 << 3)
+#define TCP_PROXY_STATS_DEBUG8                  (18 << 3)
+#define TCP_PROXY_STATS_DEBUG9                  (19 << 3)
+#define TCP_PROXY_STATS_DEBUG10                 (20 << 3)
 
 #endif /* #ifndef __TCP_COMMON_H__ */

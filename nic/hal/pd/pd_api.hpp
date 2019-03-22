@@ -2997,6 +2997,17 @@ typedef struct pd_tcp_global_stats_get_args_s {
     uint64_t invalid_nmdr_descr;
     uint64_t rcvd_ce_pkts;
     uint64_t retx_pkts;
+
+    uint64_t tcp_debug1;
+    uint64_t tcp_debug2;
+    uint64_t tcp_debug3;
+    uint64_t tcp_debug4;
+    uint64_t tcp_debug5;
+    uint64_t tcp_debug6;
+    uint64_t tcp_debug7;
+    uint64_t tcp_debug8;
+    uint64_t tcp_debug9;
+    uint64_t tcp_debug10;
 } pd_tcp_global_stats_get_args_t;
 
 // generic pd call macros

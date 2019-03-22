@@ -108,7 +108,7 @@ header_type common_global_phv_t {
         // global k (max 128)
         fid                     : 24;
         qstate_addr             : 34;
-        pad                     : 70;
+        all_ooq_done            : 1;
     }
 }
 
@@ -153,7 +153,7 @@ header_type to_stage_5_phv_t {
 #define GENERATE_GLOBAL_K \
     modify_field(common_global_scratch.fid, common_phv.fid); \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
-    modify_field(common_global_scratch.pad, common_phv.pad);
+    modify_field(common_global_scratch.all_ooq_done, common_phv.all_ooq_done);
 
 /******************************************************************************
  * scratch for d-vector
@@ -210,9 +210,19 @@ metadata common_global_phv_t common_global_scratch;
 @pragma dont_trim
 metadata cap_phv_intr_rxdma_t intr_rxdma;
 @pragma dont_trim
+metadata cap_phv_intr_rxdma_t intr_rxdma2;
+@pragma dont_trim
 metadata ring_entry_t ooq_slot;
 @pragma dont_trim
 metadata semaphore_ci_t ooq_free_pi;
+
+header_type tx2rx_feedback_type_t {
+    fields {
+        entry : 8;
+    }
+}
+@pragma dont_trim
+metadata tx2rx_feedback_type_t feedback_type;
 
 @pragma pa_align 128
 @pragma dont_trim
@@ -223,6 +233,12 @@ metadata dma_cmd_phv2mem_t ooq_ring_entry;  // dma cmd 2
 metadata dma_cmd_phv2mem_t ooq_alloc_ci;    // dma cmd 3
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t tcp_app_header;  // dma cmd 4
+@pragma dont_trim
+metadata dma_cmd_phv2pkt_t intrinsic2;      // dma cmd 5
+@pragma dont_trim
+metadata dma_cmd_mem2pkt_t tcp_app_header2; // dma cmd 6
+@pragma dont_trim
+metadata dma_cmd_phv2pkt_t feedback;        // dma cmd 7
 
 
 /******************************************************************************

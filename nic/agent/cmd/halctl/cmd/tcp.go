@@ -168,6 +168,16 @@ func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
 		fmt.Printf("%-30s : %-6d\n", "InvalidNmdrDescr", respMsg.GlobalStats.InvalidNmdrDescr)
 		fmt.Printf("%-30s : %-6d\n", "RcvdCePkts", respMsg.GlobalStats.RcvdCePkts)
 		fmt.Printf("%-30s : %-6d\n", "RetxPkts", respMsg.GlobalStats.RetxPkts)
+		fmt.Printf("%-30s : %-6d\n", "debug1", respMsg.GlobalStats.TcpDebug1)
+		fmt.Printf("%-30s : %-6d\n", "debug2", respMsg.GlobalStats.TcpDebug2)
+		fmt.Printf("%-30s : %-6d\n", "debug3", respMsg.GlobalStats.TcpDebug3)
+		fmt.Printf("%-30s : %-6d\n", "debug4", respMsg.GlobalStats.TcpDebug4)
+		fmt.Printf("%-30s : %-6d\n", "debug5", respMsg.GlobalStats.TcpDebug5)
+		fmt.Printf("%-30s : %-6d\n", "debug6", respMsg.GlobalStats.TcpDebug6)
+		fmt.Printf("%-30s : %-6d\n", "debug7", respMsg.GlobalStats.TcpDebug7)
+		fmt.Printf("%-30s : %-6d\n", "debug8", respMsg.GlobalStats.TcpDebug8)
+		fmt.Printf("%-30s : %-6d\n", "debug9", respMsg.GlobalStats.TcpDebug9)
+		fmt.Printf("%-30s : %-6d\n", "debug10", respMsg.GlobalStats.TcpDebug10)
 	}
 }
 

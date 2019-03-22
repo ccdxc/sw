@@ -32,7 +32,27 @@ tcp_ooq_txdma_dma_cmds:
                                 intr_rxdma_qid, intr_rxdma_rxdma_rsv)
 
     add             r1, r0, d.descr_addr
-    CAPRI_DMA_CMD_MEM2PKT_SETUP_PKT_STOP(tcp_app_header_dma_cmd, r1, \
+    CAPRI_DMA_CMD_MEM2PKT_SETUP_STOP(tcp_app_header_dma_cmd, r1, \
                         P4PLUS_TCP_PROXY_BASE_HDR_SZ + P4PLUS_TCP_PROXY_OOQ_HDR_SZ)
+
+    seq             c1, k.common_phv_all_ooq_done, 1
+    b.c1            tcp_ooq_txdma_win_upd_dma
+    nop
+    nop.e
+    nop
+tcp_ooq_txdma_win_upd_dma:
+    phvwr           p.tcp_app_header_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic2_dma_cmd, p4_intr_global_tm_iport,
+                                p4_intr_packet_len,
+                                intr_rxdma2_qid, intr_rxdma2_rxdma_rsv)
+    phvwr           p.intr_rxdma2_qid, k.common_phv_fid
+    phvwr           p.intr_rxdma2_rx_splitter_offset, \
+                    (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                    P4PLUS_TCP_PROXY_BASE_HDR_SZ + 1)
+    CAPRI_DMA_CMD_MEM2PKT_SETUP(tcp_app_header2_dma_cmd, r1, \
+                        P4PLUS_TCP_PROXY_BASE_HDR_SZ)
+
+    phvwr           p.feedback_type_entry, TCP_TX2RX_FEEDBACK_WIN_UPD
+    CAPRI_DMA_CMD_PHV2PKT_SETUP_STOP(feedback_dma_cmd, feedback_type_entry, feedback_type_entry)
     nop.e
     nop

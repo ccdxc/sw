@@ -1106,6 +1106,7 @@ modules:
             ooo_seq_delta: 64
             num_rx_pkts : 2
             bypass_barco : 1
+            send_ack_flow1 : 1
         iterate :
             - flow: filter://type=IPV4
 

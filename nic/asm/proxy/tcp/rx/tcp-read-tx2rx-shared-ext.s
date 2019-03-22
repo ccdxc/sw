@@ -19,6 +19,16 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
     .align
 tcp_rx_read_shared_stage0_start_ext:
+    seq             c1, k.tcp_app_header_from_ooq_txdma, 1
+    // HACK, For tx2rx feedback packets 1 byte following tcp_app_header contains
+    // pkt type. This falls in app_data1 region of common rxdma phv.
+    // Until we can unionize this header correctly in p4, hardcoding the PHV
+    // location for now. This is prone to error, but hopefully if something
+    // breaks, we have DOL test cases to catch it.  (refer to
+    // iris/gen/p4gen/tcp_proxy_rxdma/asm_out/INGRESS_p.h)
+    seq.c1          c1, k._tcp_app_header_end_pad_88[15:8], TCP_TX2RX_FEEDBACK_WIN_UPD
+    b.c1            tcp_rx_read_shared_stage0_end_ext
+
     /* Setup the to-stage/stage-to-stage variables based
      * on the p42p4+ app header info
      */
@@ -35,5 +45,6 @@ tcp_rx_read_shared_stage0_start_ext:
     phvwrpair       p.s1_s2s_payload_len, k.tcp_app_header_payload_len, \
                         p.s1_s2s_seq, k.tcp_app_header_seqNo
     phvwr           p.to_s2_window, k.tcp_app_header_window
+tcp_rx_read_shared_stage0_end_ext:
     nop.e
     nop

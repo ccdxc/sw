@@ -29,7 +29,7 @@ struct s2_t0_tcp_rx_tcp_ack_d d;
 #define c_est c6
 
 tcp_ack_start:
-    bbeq            k.common_phv_ooq_tx2rx_pkt, 1, tcp_ack_done
+    bbeq            k.common_phv_ooq_tx2rx_pkt, 1, tcp_ack_skip
     /*
      * Pure data, ack_seq hasn't advanced
      *
@@ -65,8 +65,6 @@ tcp_ack_start:
     nop
 
 tcp_ack_fast:
-    tblwr           d.num_dup_acks, 0
-    tblwr           d.limited_transmit, 0
     phvwri          p.common_phv_process_ack_flag, 1
     phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_ACK_SIGNAL, \
                         p.to_s4_cc_flags, d.cc_flags
@@ -91,7 +89,10 @@ bytes_acked_stats_update_end:
      * Launch next stage
      */
 tcp_ack_done:
+    tblwr           d.num_dup_acks, 0
+    tblwr           d.limited_transmit, 0
     tblwr.f         d.snd_wnd, k.to_s2_window
+tcp_ack_skip:
     phvwr           p.to_s4_snd_wnd, k.to_s2_window
     phvwrpair       p.rx2tx_extra_snd_wnd, k.to_s2_window, \
                         p.rx2tx_extra_snd_una, d.snd_una
