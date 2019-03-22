@@ -19,8 +19,7 @@ def Trigger(tc):
         if w1.IsNaples():
             for if_ip in mgmt_ip:
                 ping_cmd = "ping -I oob_mnic0 -c3 %s" % (if_ip)
-            api.Trigger_AddNaplesCommand(req, w1.node_name, "dhclient oob_mnic0", background=True)
-            api.Trigger_AddNaplesCommand(req, w1.node_name, "echo \"Wait 10sec for DHCP client to retrieve IP for oob_mnic0 interface\"; sleep 10")
+            api.Trigger_AddNaplesCommand(req, w1.node_name, "dhclient oob_mnic0")
             api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig oob_mnic0")
             api.Trigger_AddNaplesCommand(req, w1.node_name, ping_cmd)
 
@@ -28,8 +27,7 @@ def Trigger(tc):
             for if_ip in mgmt_ip:
                 ping_cmd = "ping -I oob_mnic0 -c3 %s" % (if_ip)
 
-            api.Trigger_AddNaplesCommand(req, w1.node_name, "dhclient oob_mnic0", background=True)
-            api.Trigger_AddNaplesCommand(req, w1.node_name, "echo \"Wait 10sec for DHCP client to retrieve IP for oob_mnic0 interface\"; sleep 10")
+            api.Trigger_AddNaplesCommand(req, w2.node_name, "dhclient oob_mnic0")
             api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig oob_mnic0")
             api.Trigger_AddNaplesCommand(req, w2.node_name, ping_cmd)
 
@@ -44,7 +42,7 @@ def Verify(tc):
         return api.types.status.FAILURE
     result = api.types.status.SUCCESS
 
-    api.Logger.info("DPS: Ping Results for %s" % (tc.cmd_descr))
+    api.Logger.info("Ping Results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
