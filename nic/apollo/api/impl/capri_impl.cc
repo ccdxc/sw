@@ -119,20 +119,20 @@ capri_impl::debug_dump(FILE *fp) {
     tm_pb_debug_stats_t    debug_stats;
 
     fprintf(fp, "PB/TM statistics\n");
-    for (uint32_t port = 0; port < TM_NUM_PORTS; port++) {
+    for (uint32_t tm_port = 0; tm_port < TM_NUM_PORTS; tm_port++) {
         memset(&debug_stats, 0, sizeof(debug_stats));
-        ret = capri_tm_get_pb_debug_stats(port, &debug_stats, reset);
-        if ((port >= TM_UPLINK_PORT_BEGIN) && (port <= TM_UPLINK_PORT_END)) {
-            fprintf(fp, "  TM Uplink Port %u\n",
-                    sdk::platform::capri::capri_tm_port_to_fp_port(port));
+        ret = capri_tm_get_pb_debug_stats(tm_port, &debug_stats, reset);
+        if ((tm_port >= TM_UPLINK_PORT_BEGIN) &&
+            (tm_port <= TM_UPLINK_PORT_END)) {
+            fprintf(fp, "  TM Port %u\n", tm_port);
             dump_tm_debug_stats_(fp, &debug_stats);
-        } else if (port == TM_DMA_PORT_BEGIN) {
+        } else if (tm_port == TM_DMA_PORT_BEGIN) {
             fprintf(fp, "  DMA\n");
             dump_tm_debug_stats_(fp, &debug_stats);
-        } else if (port == TM_PORT_INGRESS) {
+        } else if (tm_port == TM_PORT_INGRESS) {
             fprintf(fp, "  P4 IG\n");
             dump_tm_debug_stats_(fp, &debug_stats);
-        } else if (port == TM_PORT_EGRESS) {
+        } else if (tm_port == TM_PORT_EGRESS) {
             fprintf(fp, "  P4 EG\n");
             dump_tm_debug_stats_(fp, &debug_stats);
         }

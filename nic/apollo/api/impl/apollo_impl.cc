@@ -238,6 +238,25 @@ apollo_impl::key_tunneled_init_(void) {
 }
 
 /**
+ * @brief    init routine to initialize ingress to rxdma table
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::ingress_to_rxdma_init_(void) {
+    p4pd_error_t p4pd_ret;
+    ingress_to_rxdma_actiondata_t data = { 0 };
+
+    data.action_id = INGRESS_TO_RXDMA_CLASSIC_NIC_APP_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
+                                       P4PLUS_APPTYPE_CLASSIC_NIC,
+                                       NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+/**
  * @brief    initialize egress drop stats table
  * @return   SDK_RET_OK on success, failure status code on error
  */
@@ -294,6 +313,10 @@ apollo_impl::table_init_(void) {
         return ret;
     }
     ret = key_tunneled_init_();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    ret = ingress_to_rxdma_init_();
     return ret;
 }
 
