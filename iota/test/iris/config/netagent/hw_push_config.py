@@ -106,7 +106,7 @@ def __add_config_worklads(req, target_node = None):
         wl_msg.workload_name = ep.meta.name
         wl_msg.node_name = node_name
         wl_msg.ip_prefix = __prepare_ip_address_str_for_endpoint(ep)
-        wl_msg.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
+        #wl_msg.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
         wl_msg.mac_address = ep.spec.mac_address
         wl_msg.pinned_port = 1
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
@@ -138,6 +138,8 @@ def __add_config_worklads(req, target_node = None):
 
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
+        wl_msg.cpus = api.GetWorkloadCpusForNode(wl_msg.node_name)
+        wl_msg.memory = api.GetWorkloadMemoryForNode(wl_msg.node_name)
 
 def GetIPv4Allocator(nw_name):
     global ipv4_subnet_allocator
@@ -424,7 +426,6 @@ def __add_workloads(target_node = None):
         if resp is None:
             sys.exit(1)
 
-#This function is hack for now as we need add workloads again if driver reloaded
 def AddWorkloads():
     __add_workloads()
 
@@ -489,7 +490,7 @@ def __readd_classic_workloads(target_node = None):
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
     if len(req.workloads):
-        resp = api.AddWorkloads(req, True)
+        resp = api.AddWorkloads(req)
         if resp is None:
             sys.exit(1)
 

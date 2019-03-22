@@ -33,7 +33,8 @@ def GetTopology():
     return __gl_topology
 
 class Workload:
-    def __init__(self, msg=None):
+    def __init__(self, msg=None, running=True):
+        self.running = running
         if msg:
             self.workload_name = msg.workload_name
             self.workload_type = msg.workload_type
@@ -77,17 +78,39 @@ class Workload:
     def SkipNodePush(self):
         return self.skip_node_push
 
-def AddWorkloads(req):
+    def IsWorkloadRunning(self):
+        return self.running
+
+    def WorkloadStopped(self):
+        self.running = False
+
+def IsWorkloadRunning(wl):
+    if wl not in __gl_workloads:
+        assert(0)
+    return __gl_workloads[wl].running
+
+def SetWorkloadStopped(wl):
+    if wl not in __gl_workloads:
+        assert(0)
+    __gl_workloads[wl].running = False
+
+def SetWorkloadRunning(wl):
+    if wl not in __gl_workloads:
+        assert(0)
+    __gl_workloads[wl].running = True
+
+
+def AddWorkloads(req, running=True):
     global __gl_workloads
     for wlmsg in req.workloads:
-        wl = Workload(wlmsg)
+        wl = Workload(wlmsg, running)
         __gl_workloads[wl.workload_name] = wl
     return
 
 def GetWorkloads(node = None):
     global __gl_workloads
     if node == None:
-        return __gl_workloads.values()
+        return list(__gl_workloads.values())
     workloads = []
     for wl in  __gl_workloads.values():
         if wl.node_name == node:

@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-const defaultRemoteUUIDName = "GWUUID"
+var defaultRemoteUUIDName = "GWUUID"
 
 type CfgGen struct {
 	NodeUUIDs    []string
@@ -24,12 +24,16 @@ type CfgGen struct {
 	Apps, SGPolicies, SecurityProfiles,
 	FlowExportPolicies, Tunnels, MirrorSessions pkg.IOTAConfig
 	EpCache     map[string][]string
-	NodeEPLUT   map[string]NodeEPPairs
+	NodeEPLUT   map[string]NwNodeEPPairs
 	SubnetIPLUT map[string][]string
 }
 
 type NodeEPPairs struct {
 	LocalEPPairs, RemoteEPPairs []EPPair
+}
+
+type NwNodeEPPairs struct {
+	NwMap map[string]*NodeEPPairs
 }
 
 type EPPair struct {
@@ -41,7 +45,7 @@ func NewGenerator(manifestFile, templateFile string, nodeUUIDs []string) (*CfgGe
 		ManifestFile: manifestFile,
 		NodeUUIDs:    nodeUUIDs,
 		SubnetIPLUT:  make(map[string][]string),
-		NodeEPLUT:    make(map[string]NodeEPPairs),
+		NodeEPLUT:    make(map[string]NwNodeEPPairs),
 		EpCache:      make(map[string][]string),
 	}
 
@@ -138,4 +142,9 @@ func writeJSON(filePath string, obj interface{}) error {
 		return err
 	}
 	return ioutil.WriteFile(filePath, dat, 0644)
+}
+
+//SetRemoteUUIDName set remote UUID name
+func SetRemoteUUIDName(name string) {
+	defaultRemoteUUIDName = name
 }

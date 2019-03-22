@@ -29,7 +29,7 @@ class _Testbed:
         self.curr_ts = None     # Current Testsuite
         self.prev_ts = None     # Previous Testsute
         self.__node_ips = []
-        self.__os = None
+        self.__os = set()
         self.esx_ctrl_vm_ip = None
 
         self.__fw_upgrade_done = False
@@ -61,9 +61,9 @@ class _Testbed:
         for instance in self.__tbspec.Instances:
             if instance.Type == "bm":
                 self.__bm_count += 1
-                if self.__os:
-                    assert(self.__os == getattr(instance, "NodeOs", "linux"))
-                self.__os = getattr(instance, "NodeOs", "linux")
+                #if self.__os:
+                #    assert(self.__os == getattr(instance, "NodeOs", "linux"))
+                self.__os.add(getattr(instance, "NodeOs", "linux"))
             elif instance.Type == "vm":
                 self.__vm_count += 1
             else:
@@ -321,6 +321,9 @@ class _Testbed:
 
     def AllocateVlan(self):
         return self.__vlan_allocator.Alloc()
+
+    def ResetVlanAlloc(self):
+        self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, api.GetNicMode())
 
     def GetVlanCount(self):
         return self.__vlan_allocator.Count()

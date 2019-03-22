@@ -42,7 +42,7 @@ func TestGRPCClient(t *testing.T) {
 	}
 
 	// Connect to the client
-	_, err = CreateNewGRPCClient("test-client", s.GetListenerURL())
+	_, err = CreateNewGRPCClient("test-client", s.GetListenerURL(), 0)
 	if err != nil {
 		t.Fatalf("Could not start a GRPC Server on port 13337")
 	}

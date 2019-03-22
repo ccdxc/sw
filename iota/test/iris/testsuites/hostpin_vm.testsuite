@@ -5,7 +5,7 @@ meta:
     cfgmode     : netagent
     nicmode     : hostpin
     enable      : True
-    os          : [ esx ]
+    os          : [ esx, linux ]
 
 packages:
     - iota.test.iris
@@ -17,12 +17,20 @@ setup:
     topology: test/iris/topologies/2Naples_VM/vm.topology
     config  :
         - step : config.netagent.hw_push_config
+          args :
+             spec : scale_cfg_1vrf_1nw_2ep_2rep.cfgyml
         - step : testcases.drivers.install_iperf
+        - step : testcases.penctl.install
 
 common:
     verifs:
         #-   step    : verif.utils.verify_cores
         #-   step    : verif.utils.verify_topology_health
+    debugs:
+        -   step : verif.utils.collect_logs_and_cores
+
+    debugs:
+        -   step : verif.utils.collect_logs_and_cores
 
 testbundles:
     sanity:

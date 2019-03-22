@@ -24,6 +24,10 @@ class TestBundle:
         self.__skip = False
         self.__aborted = False
         self.__timer = timeprofiler.TimeProfiler()
+        self.__sel_module = None
+        self.__sel_module_args = None
+        self.__max_select = None
+        self.__sel_entry = None
 
         self.__stats_pass = 0
         self.__stats_fail = 0
@@ -33,6 +37,7 @@ class TestBundle:
         self.__stats_target = 0
         self.__load_bundle()
         self.result = types.status.FAILURE
+        self.selected = None
         return
 
     def Name(self):
@@ -45,7 +50,7 @@ class TestBundle:
         return spec
 
     def __apply_skip_filters(self):
-        if not api.IsSimulation() and store.GetTestbed().GetOs() not in self.__spec.meta.os and not GlobalOptions.dryrun:
+        if not api.IsSimulation() and not store.GetTestbed().GetOs().intersection(self.__spec.meta.os) and not GlobalOptions.dryrun:
             Logger.info("Skipping Testbundle: %s due to OS mismatch." % self.__spec.meta.name)
             return True
         if GlobalOptions.testbundles and self.__spec.meta.name not in  GlobalOptions.testbundles:
@@ -61,6 +66,21 @@ class TestBundle:
         Logger.debug("Importing Testbundle %s" % fullpath)
         self.__spec = self.__read_spec(fullpath)
         return
+
+    def SetSelected(self, selected):
+        self.selected = selected
+
+    def GetSelector(self):
+        return self.selected
+
+
+    def __resolve_selector(self):
+        if getattr(self.__spec, "selector", None):
+            self.__sel_module = loader.Import(self.__spec.selector.module, self.__parent.GetPackages())
+            self.__sel_module_args = getattr(self.__spec.selector, "args", None)
+            self.__max_select = getattr(self.__spec.selector, "max_select", None)
+            if getattr(self.__spec.selector, "entry", None):
+                self.__sel_entry = loader.Import(self.__spec.selector.entry, self.__parent.GetPackages())
 
     def __resolve_testcases(self):
         for tc_spec in self.__spec.testcases:
@@ -106,15 +126,26 @@ class TestBundle:
 
     def __execute_testcases(self):
         result = types.status.SUCCESS
-        for tc in self.__testcases:
-            api.CurrentTestcase = tc
-            ret = tc.Main()
-            if ret != types.status.SUCCESS:
-                result = ret
-                if GlobalOptions.no_keep_going:
-                    return ret
-            if self.__aborted:
-                return types.status.FAILURE
+        selected_list = [None]
+        if self.__sel_module:
+            selected_list = loader.RunCallback(self.__sel_module, 'Main', False, self.__sel_module_args)
+            if self.__max_select:
+                selected_list = selected_list[:int(self.__max_select)]
+
+        for selected in selected_list:
+            if self.__sel_entry:
+                selected_list = loader.RunCallback(self.__sel_entry, 'Main', False, selected)
+            for tc in self.__testcases:
+                api.CurrentTestcase = tc
+                tc.SetSelected(selected)
+                tc.SetBundleStore(self.GetStore())
+                ret = tc.Main()
+                if ret != types.status.SUCCESS:
+                    result = ret
+                    if GlobalOptions.no_keep_going:
+                        return ret
+                if self.__aborted:
+                    return types.status.FAILURE
         return result
 
     def __update_stats(self):
@@ -146,15 +177,22 @@ class TestBundle:
 
         # Start the testsuite timer
         self.__timer.Start()
+        self.__resolve_selector()
         self.__resolve_testcases()
 
-        # Update logger
+        #Simple dict for testcases to share some data
+        self.__store = {}
         Logger.SetTestbundle(self.Name())
+        # Update logger
         Logger.info("Starting Testbundle: %s" % self.Name())
 
+        api.CurrentTestbundle = self
         self.result = self.__execute_testcases()
         self.__update_stats()
         Logger.info("Testbundle %s FINAL STATUS = %d" % (self.Name(), self.result))
 
         self.__timer.Stop()
         return self.result
+
+    def GetStore(self):
+        return  self.__store

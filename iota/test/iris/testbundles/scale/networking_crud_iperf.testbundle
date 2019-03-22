@@ -1,0 +1,63 @@
+meta:
+    name    : networking_crud_iperf
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+
+selector :
+    module : selectors.allowed_all
+    max_select : 1
+    entry : selectors.entry.bringup_workloads
+
+testcases:
+    -   name    : init
+        testcase: testcases.scale.iperf.init
+        args    :
+            num_ep_pairs : 4
+
+    -   name    : server_start
+        testcase: testcases.scale.iperf.server_start
+
+    -   name    : client_run
+        testcase: testcases.scale.iperf.run_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+            num_sessions : 1
+
+    -   name    : server_stop
+        testcase: testcases.scale.iperf.server_stop
+
+    -   name    : delete_add_config
+        testcase: testcases.config.delete_add_base
+        stress  : True
+
+    -   name    : server_start
+        testcase: testcases.scale.iperf.server_start
+
+    -   name    : client_run
+        testcase: testcases.scale.iperf.run_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 1
+
+    -   name    : delete_add_config
+        testcase: testcases.config.delete_add_base
+        stress  : True
+
+    -   name    : server_start
+        testcase: testcases.scale.iperf.server_start
+
+    -   name    : client_run
+        testcase: testcases.scale.iperf.run_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+
+    -   name    : server_stop
+        testcase: testcases.scale.iperf.server_stop

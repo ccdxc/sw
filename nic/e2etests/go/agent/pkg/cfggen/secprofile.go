@@ -50,6 +50,18 @@ func (c *CfgGen) GenerateSecurityProfiles() error {
 			},
 			Spec: netproto.SecurityProfileSpec{
 				AttachVrfs: []string{namespace.Name},
+				Timeouts: &netproto.Timeouts{
+					SessionIdle:        "90s",
+					TCP:                "45s",
+					TCPDrop:            "90s",
+					TCPConnectionSetup: "30s",
+					TCPHalfClose:       "60s",
+					TCPClose:           "30s",
+					Drop:               "30s",
+					UDP:                "100s",
+					UDPDrop:            "30s",
+					ICMP:               "6s",
+					ICMPDrop:           "30s"},
 			},
 		}
 		secProfiles = append(secProfiles, &p)

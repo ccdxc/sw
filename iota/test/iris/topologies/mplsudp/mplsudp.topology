@@ -7,12 +7,20 @@ nodes:
       name: node1
       role: auto
       workloads:
-            type    : WORKLOAD_TYPE_BARE_METAL_MAC_VLAN
-            image   : auto
+        linux:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
+        freebsd:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
 
     - node: node2
       name: node2
       role: auto
       workloads:
-            type    : WORKLOAD_TYPE_BARE_METAL_MAC_VLAN
-            image   : auto
+        linux:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
+        freebsd:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"

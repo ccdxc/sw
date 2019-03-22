@@ -1,5 +1,6 @@
 import glob
 import json
+import copy
 import iota.harness.api as api
 import iota.test.iris.config.infra.main as cfg_main
 import pdb
@@ -18,6 +19,18 @@ def ReadConfigs(directory, file_pattern="*.json"):
     for config in  glob.glob(directory + "/" + file_pattern):
         AddOneConfig(config)
 
+
+#Clone config objects
+def CloneConfigObjects(objects):
+    clone_objects = []
+    for object in objects:
+        clone_objects.append(copy.deepcopy(object))
+    return clone_objects
+
+def AddConfigObjects(objects):
+    for object in objects:
+        cfg_main.ObjectConfigStore.AddConfig(object)
+    return objects
 
 #Removes Config object from store
 def RemoveConfigObjects(objects):

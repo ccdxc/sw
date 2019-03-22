@@ -32,7 +32,7 @@ testcases:
         stress  : True
         iterators:
             type      : nested
-            proto     : [ udp, tcp ]
+            proto     : [ tcp ]
             bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
         args    :
             type: remote_only

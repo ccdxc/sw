@@ -215,7 +215,7 @@ func getIotaAgentClient(ip, username, password string) (iota.IotaAgentApiClient,
 
 	agentURL := fmt.Sprintf("%s:%d", ip, constants.IotaAgentPort)
 
-	c, err := constants.CreateNewGRPCClient("esxInit", agentURL)
+	c, err := constants.CreateNewGRPCClient("esxInit", agentURL, 0)
 	if err != nil {
 		log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent. Err: %v", err)
 		return nil, errors.New("Failed to establish GRPC connectio")

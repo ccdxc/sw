@@ -8,7 +8,7 @@ import (
 
 // global constants
 const (
-	GrpcMaxMsgSize = 1024 * 1024 * 10
+	GrpcMaxMsgSize = 1024 * 1024 * 16
 
 	// IotaSvcPort is the default IOTA Server Port
 	IotaSvcPort = 60000
@@ -76,6 +76,12 @@ const (
 	// EsxControlVmMemory Esx Control VM memory (4g)
 	EsxControlVMMemory = 4
 
+	// EsxDataVMCpus Esx Data VM Cpus
+	EsxDataVMCpus = 1
+
+	// EsxDataVMMemory Esx Data VM memory (2g)
+	EsxDataVMMemory = 2
+
 	// BuildItURL
 	BuildItURL = "buildit.test.pensando.io"
 
@@ -91,6 +97,8 @@ const (
 	EsxDataVMUsername            = "vm"
 	EsxDataVMPassword            = "vm"
 	EsxDataVMInterface           = "eth1"
+	EsxDataVMInterfaceExtra1     = "eth2"
+	EsxDataVMInterfaceExtra2     = "eth3"
 	EsxCtrlVMMgmtInterface       = "eth0"
 	EsxCtrlVMNaplesMgmtInterface = "eth1"
 	EsxDefaultNetwork            = "iota-def-network"
@@ -156,5 +164,5 @@ var (
 
 	EsxControlVMNetworks = []string{"VM Network", EsxDefaultNetwork, EsxDefaultNetwork, EsxDefaultNetwork}
 
-	EsxDataVMNetworks = []string{"VM Network", EsxVMNetwork, EsxDefaultNetwork, EsxDefaultNetwork}
+	EsxDataVMNetworks = []string{"VM Network", EsxDefaultNetwork, EsxDefaultNetwork, EsxDefaultNetwork}
 )

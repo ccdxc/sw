@@ -49,6 +49,20 @@ func (h *Host) NewVM(name string) (*VM, error) {
 
 // Destroy the VM
 func (vm *VM) Destroy() error {
+	if err := vm.PowerOff(); err != nil {
+		return err
+	}
+
+	task, err := vm.vm.Destroy(vm.host.context.context)
+	if err != nil {
+		return err
+	}
+
+	return task.Wait(vm.host.context.context)
+}
+
+// PowerOff the VM
+func (vm *VM) PowerOff() error {
 	state, err := vm.vm.PowerState(vm.host.context.context)
 	if err != nil {
 		return err
@@ -60,17 +74,10 @@ func (vm *VM) Destroy() error {
 			return err
 		}
 
-		if err := task.Wait(vm.host.context.context); err != nil {
-			return err
-		}
+		return task.Wait(vm.host.context.context)
 	}
 
-	task, err := vm.vm.Destroy(vm.host.context.context)
-	if err != nil {
-		return err
-	}
-
-	return task.Wait(vm.host.context.context)
+	return nil
 }
 
 //ReconfigureNetwork will connect interface connected from one network to other network

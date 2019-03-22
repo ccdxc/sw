@@ -157,6 +157,7 @@ class TestcaseData:
         self.args = args
         self.__instid = ""
         self.iterators = TestcaseDataIters()
+        self.selected = None
         return
 
     def SetTestCount(self, count):
@@ -199,6 +200,18 @@ class TestcaseData:
     def TotalTime(self):
         return self.__timer.TotalTime()
 
+    def SetSelected(self, selected):
+        self.selected = selected
+
+    def SetBundleStore(self, store):
+        self.bundle_store = store
+
+    def GetBundleStore(self):
+        return self.bundle_store
+
+    def GetSelector(self):
+        return self.selected
+
     def Name(self):
         return self.__instid
 
@@ -230,6 +243,7 @@ class Testcase:
         self.__stats_fail = 0
         self.__stats_ignored = 0
         self.__stats_error = 0
+        self.selected = None
         return
 
     def __apply_stress_factor(self):
@@ -259,6 +273,15 @@ class Testcase:
         elif self.__ignored:
             td.SetStatus(types.status.IGNORED)
         return td
+
+    def SetSelected(self, selected):
+        self.selected = selected
+
+    def SetBundleStore(self, store):
+        self.bundle_store = store
+
+    def GetBundleStore(self):
+        return self.bundle_store
 
     def __setup_simple_iters(self, spec):
         Logger.debug("Setting up simple iterators.")
@@ -320,6 +343,11 @@ class Testcase:
     def __resolve_testcase(self):
         Logger.debug("Resolving testcase module: %s" % self.__spec.testcase)
         self.__tc = loader.Import(self.__spec.testcase, self.__spec.packages)
+        if getattr(self.__spec, "selector", None):
+            self.__sel_module = loader.Import(self.__spec.selector.module, self.__spec.packages)
+            self.__sel_module_args = self.__spec.selector.args
+        else:
+            self.__sel_module = None
         setups_spec = getattr(self.__spec, 'setups', [])
         if setups_spec is None:
             return types.status.SUCCESS
@@ -357,7 +385,7 @@ class Testcase:
             api.Trigger_AddHostCommand(req, nodename, command)
         for wl in api.GetWorkloads():
             if api.IsWorkloadRunning(wl.workload_name):
-                api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, command)
+                api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, command, timeout=60)
         resp = api.Trigger(req)
         if not api.Trigger_IsSuccess(resp):
             Logger.error("Failed to create destination directory %s" % newdir)
@@ -404,6 +432,8 @@ class Testcase:
             api.ChangeDirectory("")
             instance_id = self.__get_instance_id(self.__iterid)
             iter_data.SetInstanceId(instance_id)
+            iter_data.SetSelected(self.selected)
+            iter_data.SetBundleStore(self.bundle_store)
             Logger.SetTestcase(instance_id)
             Logger.debug("Testcase Iteration directory = %s" % instance_id)
             ret = self.__mk_testcase_directory(instance_id)
@@ -458,7 +488,7 @@ class Testcase:
                     Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
                     Logger.error("Error: STOPPING ON FIRST FAILURE.")
                     iter_data.SetStatus(result)
-                    return ret
+                    return types.status.FAILURE
 
                 iter_data.SetStatus(result)
                 Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))

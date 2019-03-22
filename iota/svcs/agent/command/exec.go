@@ -46,13 +46,8 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 		} else {
 			fullCmd = fullCmd + " 2> " + shellStderr + " 1>" + shellStdout
 		}
-		if background {
-			newCmdArgs := []string{"sh", "-c", fullCmd}
-			process = exec.Command(newCmdArgs[0], newCmdArgs[1:]...)
-		} else {
-			newCmdArgs := []string{"nohup", "sh", "-c", fullCmd}
-			process = exec.Command(newCmdArgs[0], newCmdArgs[1:]...)
-		}
+		newCmdArgs := []string{"sh", "-c", fullCmd}
+		process = exec.Command(newCmdArgs[0], newCmdArgs[1:]...)
 	} else {
 		process = exec.Command(cmdArgs[0], cmdArgs[1:]...)
 	}
@@ -87,9 +82,9 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 	copyStdoutStderr := func() {
 		if shell {
 			//Sleep for couple of second for file dump complete.
-			if background {
-				time.Sleep(2 * time.Second)
-			}
+			//if background {
+			//	time.Sleep(2 * time.Second)
+			//}
 			if b, err := ioutil.ReadFile(shellStdout); err == nil {
 				cmdInfo.Ctx.Stdout = string(b)
 			}
@@ -106,6 +101,7 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 			cmdInfo.Ctx.Stderr = stderrBuf.String()
 		}
 	}
+	process.StdinPipe()
 	if background {
 		fmt.Println("Starting background command :", strings.Join(cmdArgs, " "))
 		//For now don't send signal to background process.
@@ -114,13 +110,12 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 			cmdInfo.Ctx.ExitCode = 1
 			cmdInfo.Ctx.Done = true
 			cmdInfo.Ctx.Stdout = errors.Wrapf(err, "Background process start failed!").Error()
-			copyStdoutStderr()
-			cmdInfo.Ctx.status <- nil
 			return cmdInfo, err
 		}
 		cmdInfo.Handle = process
 		go func(cmdInfo *CommandInfo) {
 			process.Wait()
+			fmt.Println("Process exited :", strings.Join(cmdArgs, " "))
 			cmdInfo.Ctx.Done = true
 			cmdInfo.Ctx.ExitCode = 1
 			copyStdoutStderr()
@@ -152,9 +147,11 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 		select {
 		case <-TimedOutEvent:
 			// TimedOut happened first, kill the process and print a message.
-			process.Process.Signal(os.Kill)
+			if process.Process != nil {
+				process.Process.Signal(os.Kill)
+				copyStdoutStderr()
+			}
 			cmdInfo.Ctx.ExitCode = 1
-			copyStdoutStderr()
 			cmdInfo.Ctx.TimedOut = true
 			cmdInfo.Ctx.Done = true
 			return cmdInfo, nil
@@ -194,16 +191,22 @@ func getChildPids(ppid int) []int {
 
 //StopExecCmd Stop bg process running
 func StopExecCmd(cmdInfo *CommandInfo) error {
+
+	if cmdInfo.Handle == nil {
+
+		return nil
+	}
 	process := cmdInfo.Handle.(*exec.Cmd)
 	if process != nil {
 		pids := getChildPids(cmdInfo.Handle.(*exec.Cmd).Process.Pid)
 		if len(pids) != 0 {
 			for _, pid := range pids {
 				if pid != 0 {
-					killCmd := []string{"sudo", "kill", "-SIGKILL", strconv.Itoa(pid)}
+					killCmd := []string{"sudo", "kill", "-SIGTERM", strconv.Itoa(pid)}
 					Utils.Run(killCmd, 0, false, true, nil)
 				}
 			}
+			time.Sleep(2 * time.Second)
 		}
 		cmdInfo.Handle.(*exec.Cmd).Process.Signal(syscall.SIGKILL)
 
@@ -216,8 +219,12 @@ func StopExecCmd(cmdInfo *CommandInfo) error {
 			timeoutEvent := time.After(time.Duration(5) * time.Second)
 			select {
 			case <-timeoutEvent:
-				killCmd := []string{"sudo", "kill", "-SIGKILL", strconv.Itoa(cmdInfo.Handle.(*exec.Cmd).Process.Pid)}
-				Utils.Run(killCmd, 0, false, true, nil)
+				if cmdInfo.Handle != nil {
+					killCmd := []string{"sudo", "kill", "-SIGKILL", strconv.Itoa(cmdInfo.Handle.(*exec.Cmd).Process.Pid)}
+					Utils.Run(killCmd, 0, false, true, nil)
+				} else {
+					break
+				}
 			case <-cmdInfo.Ctx.status:
 				//Command successfully terminated.
 				cmdInfo.Ctx.ExitCode = 0

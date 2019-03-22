@@ -64,8 +64,16 @@ class Node(object):
         self.__esx_ctrl_vm_ip = getattr(self.__inst, "esx_ctrl_vm_ip", "")
 
         if self.IsWorkloadNode():
-            self.__workload_type = topo_pb2.WorkloadType.Value(spec.workloads.type)
-            self.__workload_image = spec.workloads.image
+            osDetail = getattr(spec.workloads, self.__os,  None)
+            if not os:
+                Logger.error("Workload type for OS  : %s not found" % (self.__os))
+                sys.exit(1)
+            self.__workload_type = topo_pb2.WorkloadType.Value(osDetail.type)
+            self.__workload_image = osDetail.image
+            self.__ncpu  = int(getattr(osDetail, "ncpu", 1))
+            self.__memory  = int(getattr(osDetail, "memory", 2))
+
+            self.__concurrent_workloads = getattr(osDetail, "concurrent", sys.maxsize)
         Logger.info("- New Node: %s: %s (%s)" %\
                     (spec.name, self.__ip_address, topo_pb2.PersonalityType.Name(self.__role)))
         return
@@ -146,6 +154,15 @@ class Node(object):
 
     def WorkloadImage(self):
         return self.__workload_image
+
+    def WorkloadCpus(self):
+        return self.__ncpu
+
+    def WorkloadMemory(self):
+        return self.__memory
+
+    def GetMaxConcurrentWorkloads(self):
+        return self.__concurrent_workloads
 
     def AddToNodeMsg(self, msg, topology, testsuite):
         if self.IsThirdParty():
@@ -373,6 +390,12 @@ class Topology(object):
     def GetWorkloadImageForNode(self, node_name):
         return self.__nodes[node_name].WorkloadImage()
 
+    def GetWorkloadCpusForNode(self, node_name):
+        return self.__nodes[node_name].WorkloadCpus()
+
+    def GetWorkloadMemoryForNode(self, node_name):
+        return self.__nodes[node_name].WorkloadMemory()
+
     def AllocateHostInterfaceForNode(self, node_name):
         return self.__nodes[node_name].AllocateHostInterface()
 
@@ -388,6 +411,9 @@ class Topology(object):
 
     def GetNicIntMgmtIP(self, node_name):
         return self.__nodes[node_name].GetNicIntMgmtIP()
+
+    def GetMaxConcurrentWorkloads(self, node_name):
+        return self.__nodes[node_name].GetMaxConcurrentWorkloads()
 
     def GetNicType(self, node_name):
         return self.__nodes[node_name].GetNicType()

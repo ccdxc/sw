@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 	"unicode/utf8"
 
@@ -34,11 +36,15 @@ const (
 
 	//WorkloadTypeMacVlan  macvlan workload
 	WorkloadTypeMacVlan = "mac-vlan"
+
+	//WorkloadTypeMacVlanEncap  macvlan Encap workload
+	WorkloadTypeMacVlanEncap = "mac-vlan-encap"
 )
 
 var (
 	//ContainerPrivileged run container in privileged mode
-	ContainerPrivileged = true
+	ContainerPrivileged  = true
+	macVlanIntfPrefixCnt uint64
 )
 
 //Workload interface
@@ -50,11 +56,13 @@ type Workload interface {
 	RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error)
 	StopCommand(commandHandle string) (*Cmd.CommandCtx, error)
 	AddInterface(parent_interface string, workload_interface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error)
-	AddSecondaryIpv4Addresses(intf string, ipaddresses []string) (error)
-	AddSecondaryIpv6Addresses(intf string, ipaddresses []string) (error)
+	AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error
+	AddSecondaryIpv6Addresses(intf string, ipaddresses []string) error
 	MoveInterface(name string) error
 	IsHealthy() bool
 	SendArpProbe(ip string, intf string, vlan int) error
+	MgmtIP() string
+	GetWorkloadAgent() interface{}
 	TearDown()
 }
 
@@ -66,11 +74,12 @@ type workload interface {
 }
 
 type workloadBase struct {
-	name       string
-	parent     string
-	bgCmds     map[string]*Cmd.CommandInfo
+	name   string
+	parent string
+	bgCmds *sync.Map
+
 	logger     *log.Logger
-	bgCmdIndex uint32
+	bgCmdIndex uint64
 	baseDir    string
 }
 
@@ -92,6 +101,10 @@ type bareMetalMacVlanWorkload struct {
 	bareMetalWorkload
 }
 
+type bareMetalMacVlanEncapWorkload struct {
+	bareMetalWorkload
+}
+
 type vmWorkload struct {
 	workloadBase
 }
@@ -104,6 +117,11 @@ type containerWorkload struct {
 
 func vlanIntf(name string, vlan int) string {
 	return name + "_" + strconv.Itoa(vlan)
+}
+
+func generateMacVlanIntfName(vlan int) string {
+	cnt := atomic.AddUint64(&macVlanIntfPrefixCnt, 1)
+	return "mv_" + strconv.Itoa(vlan) + "_" + strconv.FormatUint(cnt, 10)
 }
 
 func freebsdVlanIntf(name string, vlan int) string {
@@ -135,8 +153,12 @@ func (app *workloadBase) SetBaseDir(dir string) error {
 
 func (app *workloadBase) genBgCmdHandle() string {
 	handleKey := fmt.Sprintf("%s-%s-%s-%v", app.parent, app.name, bgCmdHandlePrefix, app.bgCmdIndex)
-	app.bgCmdIndex++
+	atomic.AddUint64(&app.bgCmdIndex, 1)
 	return handleKey
+}
+
+func (app *workloadBase) MgmtIP() string {
+	return ""
 }
 
 func (app *workloadBase) AddVlanInterface(parentIntf string, parentMacAddress string, vlan int) (string, error) {
@@ -171,17 +193,26 @@ func (app *workloadBase) StopCommand(commandHandle string) (*Cmd.CommandCtx, err
 	return nil, nil
 }
 
+//GetWorkloadAgent handle.
+func (app *workloadBase) GetWorkloadAgent() interface{} {
+	return nil
+}
+
 func (app *workloadBase) IsHealthy() bool {
 	return true
 }
 
 func (app *workloadBase) TearDown() {
 
-	for cmdHandle := range app.bgCmds {
-		app.StopCommand(cmdHandle)
+	if app.bgCmds != nil {
+		app.bgCmds.Range(func(key interface{}, value interface{}) bool {
+			app.StopCommand(key.(string))
+			return true
+		})
 	}
 
-	app.bgCmds = make(map[string]*Cmd.CommandInfo)
+	app.bgCmds = new(sync.Map)
+
 }
 
 func (app *containerWorkload) BringUp(args ...string) error {
@@ -201,7 +232,8 @@ func (app *containerWorkload) BringUp(args ...string) error {
 	}
 
 	app.name = name
-	app.bgCmds = make(map[string]*Cmd.CommandInfo)
+	app.bgCmds = new(sync.Map)
+
 	return err
 }
 
@@ -338,7 +370,7 @@ func (app *containerWorkload) RunCommand(cmd []string, dir string, timeout uint3
 	handleKey := app.genBgCmdHandle()
 	cmdInfo := &Cmd.CommandInfo{Ctx: cmdCtx}
 	cmdInfo.Handle = (string)(containerCmdHandle)
-	app.bgCmds[handleKey] = cmdInfo
+	app.bgCmds.Store(handleKey, cmdInfo)
 
 	/* Give it couple of seconds to make sure command has started */
 	time.Sleep(2 * time.Second)
@@ -348,10 +380,12 @@ func (app *containerWorkload) RunCommand(cmd []string, dir string, timeout uint3
 
 func (app *containerWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx, error) {
 
-	cmdInfo, ok := app.bgCmds[commandHandle]
+	item, ok := app.bgCmds.Load(commandHandle)
 	if !ok {
 		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
 	}
+
+	cmdInfo := item.(*Cmd.CommandInfo)
 
 	if !cmdInfo.Ctx.Done {
 		app.containerHandle.StopCommand((Utils.CommandHandle)(cmdInfo.Handle.(string)))
@@ -360,7 +394,7 @@ func (app *containerWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx
 	/* Give it 1 second to dump output */
 	time.Sleep(1 * time.Second)
 
-	delete(app.bgCmds, commandHandle)
+	app.bgCmds.Delete(commandHandle)
 	//For bg command, always return exit code 0
 	cmdInfo.Ctx.ExitCode = 0
 	return cmdInfo.Ctx, nil
@@ -483,7 +517,6 @@ func (app *bareMetalMacVlanWorkload) AddInterface(parent_interface string, workl
 		return "", errors.Errorf("IP link failed to create mac vlan failed %s, err :%s", workload_interface, stdout)
 	}
 
-
 	if macAddress != "" {
 		var setMacAddrCmd []string
 		setMacAddrCmd = []string{"ifconfig", workload_interface, "hw", "ether", macAddress}
@@ -539,6 +572,71 @@ func (app *bareMetalMacVlanWorkload) AddSecondaryIpv6Addresses(intf string, ipad
 	return nil
 }
 
+func (app *bareMetalMacVlanEncapWorkload) AddInterface(parent_interface string, workload_interface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+
+	var addVlanCmd []string
+	var delVlanCmd []string
+
+	if isFreeBsd() {
+		return "", errors.New("Mac vlan Not supported on freebsd")
+	}
+
+	ifconfigCmd := []string{"ifconfig", parent_interface, "up"}
+	Utils.Run(ifconfigCmd, 0, false, false, nil)
+
+	if vlan == 0 {
+		return "", errors.Errorf("Need vlan for Mac vlan Encap workload on :%s", parent_interface)
+	}
+
+	vlanintf := vlanIntf(parent_interface, vlan)
+	addVlanCmd = []string{"ip", "link", "add", "link", parent_interface, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
+	//Ignore error as sub if could be created earlier
+	Utils.Run(addVlanCmd, 0, false, false, nil)
+
+	parent_interface = vlanintf
+	workload_interface = generateMacVlanIntfName(vlan)
+
+	ifconfigCmd = []string{"ifconfig", parent_interface, "up"}
+	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
+		return "", errors.Errorf("Could not bring up parent interface %s : %s", parent_interface, stdout)
+	}
+
+	delVlanCmd = []string{"ip", "link", "del", workload_interface}
+	addVlanCmd = []string{"ip", "link", "add", "link", parent_interface, "name", workload_interface, "type", "macvlan"}
+	Utils.Run(delVlanCmd, 0, false, false, nil)
+	if retCode, stdout, _ := Utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
+		return "", errors.Errorf("IP link failed to create mac vlan failed %s, err :%s", workload_interface, stdout)
+	}
+
+	if macAddress != "" {
+		var setMacAddrCmd []string
+		setMacAddrCmd = []string{"ifconfig", workload_interface, "hw", "ether", macAddress}
+		if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
+			return "", errors.Wrap(err, stdout)
+		}
+	}
+
+	if ipaddress != "" {
+		cmd := []string{"ifconfig", workload_interface, ipaddress}
+		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+			return "", errors.Wrap(err, stdout)
+		}
+	}
+
+	if ipv6address != "" {
+		//unset ipv6 address first
+		cmd := []string{"ifconfig", workload_interface, "inet6", "del", ipv6address}
+		Utils.Run(cmd, 0, false, false, nil)
+		cmd = []string{"ifconfig", workload_interface, "inet6", "add", ipv6address}
+		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+			return "", errors.Wrap(err, stdout)
+		}
+	}
+
+	app.subIF = workload_interface
+	return workload_interface, nil
+}
+
 func (app *bareMetalWorkload) TearDown() {
 	var delVlanCmd []string
 
@@ -561,7 +659,7 @@ func (app *bareMetalWorkload) TearDown() {
 
 func (app *bareMetalWorkload) BringUp(args ...string) error {
 	//app.name = name
-	app.bgCmds = make(map[string]*Cmd.CommandInfo)
+	app.bgCmds = new(sync.Map)
 	return nil
 }
 
@@ -578,25 +676,26 @@ func (app *bareMetalWorkload) RunCommand(cmd []string, dir string, timeout uint3
 	app.logger.Println("Running cmd ", strings.Join(cmd, " "))
 	cmdInfo, _ := Cmd.ExecCmd(cmd, runDir, (int)(timeout), background, shell, nil)
 
-	if background {
+	if background && cmdInfo.Ctx.ExitCode == 0 {
 		handleKey = app.genBgCmdHandle()
-		app.bgCmds[handleKey] = cmdInfo
+		app.bgCmds.Store(handleKey, cmdInfo)
 	}
 
 	return cmdInfo.Ctx, handleKey, nil
 }
 
 func (app *bareMetalWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx, error) {
-	cmdInfo, ok := app.bgCmds[commandHandle]
+	item, ok := app.bgCmds.Load(commandHandle)
 	if !ok {
 		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
 	}
 
+	cmdInfo := item.(*Cmd.CommandInfo)
 	app.logger.Printf("Stopping bare metal Running cmd %v %v\n", cmdInfo.Ctx.Stdout, cmdInfo.Handle)
 
 	Cmd.StopExecCmd(cmdInfo)
 	time.Sleep(2 * time.Second)
-	delete(app.bgCmds, commandHandle)
+	app.bgCmds.Delete(commandHandle)
 
 	return cmdInfo.Ctx, nil
 }
@@ -645,7 +744,7 @@ func (app *remoteWorkload) RunCommand(cmd []string, dir string, timeout uint32, 
 		break
 	}
 	handleKey := app.genBgCmdHandle()
-	app.bgCmds[handleKey] = cmdInfo
+	app.bgCmds.Store(handleKey, cmdInfo)
 
 	return cmdInfo.Ctx, handleKey, nil
 }
@@ -720,22 +819,24 @@ func (app *remoteWorkload) BringUp(args ...string) error {
 
 	err = app.Reinit()
 	//app.name = name
-	app.bgCmds = make(map[string]*Cmd.CommandInfo)
+	app.bgCmds = new(sync.Map)
 	return err
 }
 
 func (app *remoteWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx, error) {
 
-	cmdInfo, ok := app.bgCmds[commandHandle]
+	item, ok := app.bgCmds.Load(commandHandle)
 	if !ok {
 		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
 	}
+
+	cmdInfo := item.(*Cmd.CommandInfo)
 
 	Cmd.StopSSHCmd(cmdInfo)
 
 	time.Sleep(2 * time.Second)
 
-	delete(app.bgCmds, commandHandle)
+	app.bgCmds.Delete(commandHandle)
 	//For bg command, always return exit code 0
 	cmdInfo.Ctx.ExitCode = 0
 	return cmdInfo.Ctx, nil
@@ -753,6 +854,10 @@ func newBareMetalMacVlanWorkload(name string, parent string, logger *log.Logger)
 	return &bareMetalMacVlanWorkload{bareMetalWorkload: bareMetalWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}}
 }
 
+func newBareMetalMacVlanEncapWorkload(name string, parent string, logger *log.Logger) Workload {
+	return &bareMetalMacVlanEncapWorkload{bareMetalWorkload: bareMetalWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}}
+}
+
 func newVMWorkload(name string, parent string, logger *log.Logger) Workload {
 	return &vmWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
 }
@@ -762,12 +867,13 @@ func newRemoteWorkload(name string, parent string, logger *log.Logger) Workload 
 }
 
 var iotaWorkloads = map[string]func(name string, parent string, logger *log.Logger) Workload{
-	WorkloadTypeContainer: newContainerWorkload,
-	WorkloadTypeVM:        newVMWorkload,
-	WorkloadTypeESX:       newVMESXWorkload,
-	WorkloadTypeBareMetal: newBareMetalWorkload,
-	WorkloadTypeRemote:    newRemoteWorkload,
-	WorkloadTypeMacVlan:   newBareMetalMacVlanWorkload,
+	WorkloadTypeContainer:    newContainerWorkload,
+	WorkloadTypeVM:           newVMWorkload,
+	WorkloadTypeESX:          newVMESXWorkload,
+	WorkloadTypeBareMetal:    newBareMetalWorkload,
+	WorkloadTypeRemote:       newRemoteWorkload,
+	WorkloadTypeMacVlan:      newBareMetalMacVlanWorkload,
+	WorkloadTypeMacVlanEncap: newBareMetalMacVlanEncapWorkload,
 }
 
 //NewWorkload creates a workload

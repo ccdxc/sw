@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode/utf8"
 
@@ -48,16 +49,23 @@ var (
 )
 
 var workloadTypeMap = map[iota.WorkloadType]string{
-	iota.WorkloadType_WORKLOAD_TYPE_CONTAINER:           Workload.WorkloadTypeContainer,
-	iota.WorkloadType_WORKLOAD_TYPE_VM:                  Workload.WorkloadTypeESX,
-	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL:          Workload.WorkloadTypeBareMetal,
-	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL_MAC_VLAN: Workload.WorkloadTypeMacVlan,
+	iota.WorkloadType_WORKLOAD_TYPE_CONTAINER:                 Workload.WorkloadTypeContainer,
+	iota.WorkloadType_WORKLOAD_TYPE_VM:                        Workload.WorkloadTypeESX,
+	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL:                Workload.WorkloadTypeBareMetal,
+	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL_MAC_VLAN:       Workload.WorkloadTypeMacVlan,
+	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL_MAC_VLAN_ENCAP: Workload.WorkloadTypeMacVlanEncap,
 }
 
 var nodOSMap = map[iota.TestBedNodeOs]string{
 	iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX:   "linux",
 	iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD: "freebsd",
 	iota.TestBedNodeOs_TESTBED_NODE_OS_ESX:     "esx",
+}
+
+type commandNode struct {
+	iotaNode
+	bgCmds     *sync.Map
+	bgCmdIndex uint64
 }
 
 type dataNode struct {
@@ -477,15 +485,30 @@ func (dnode *dataNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg, er
 	}
 
 	pool, _ := errgroup.WithContext(context.Background())
-	for index, wload := range in.Workloads {
-		wload := wload
-		index := index
-		pool.Go(func() error {
-			resp := addWorkload(wload)
-			in.Workloads[index] = resp
-			return nil
-		})
+	maxParallelThreads := 128
+	currThreads := 0
+	scheduleWloads := []*iota.Workload{}
+	wloadIndex := []int{}
 
+	for index, wload := range in.Workloads {
+		currThreads++
+		scheduleWloads = append(scheduleWloads, wload)
+		wloadIndex = append(wloadIndex, index)
+		if currThreads == maxParallelThreads-1 || index+1 == len(in.Workloads) {
+			for thread, wl := range scheduleWloads {
+				wload := wl
+				index := wloadIndex[thread]
+				pool.Go(func() error {
+					resp := addWorkload(wload)
+					in.Workloads[index] = resp
+					return nil
+				})
+			}
+			pool.Wait()
+			scheduleWloads = []*iota.Workload{}
+			wloadIndex = []int{}
+			currThreads = 0
+		}
 	}
 
 	pool.Wait()
@@ -601,7 +624,7 @@ func (dnode *dataNode) DeleteWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg,
 }
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
-func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+func (dnode *dataNode) triggerValidate(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 	dnode.logger.Println("Trigger message received.")
 
 	validate := func() error {
@@ -616,6 +639,16 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 	}
 
 	if err := validate(); err != nil {
+		return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: err.Error()}}, err
+	}
+
+	return in, nil
+}
+
+// Trigger invokes the workload's trigger. It could be ping, start client/server etc..
+func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+	dnode.logger.Println("Trigger message received.")
+	if _, err := dnode.triggerValidate(in); err != nil {
 		return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: err.Error()}}, nil
 	}
 
@@ -637,6 +670,15 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		}
 
 		cmd.ExitCode, cmd.Stdout, cmd.Stderr, cmd.Handle, cmd.TimedOut = cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr, cmdKey, cmdResp.TimedOut
+
+		if cmd.StderrOnErr && cmd.ExitCode == 0 {
+			cmd.Stderr = ""
+		}
+
+		if cmd.StdoutOnErr && cmd.ExitCode == 0 {
+			cmd.Stdout = ""
+		}
+
 		dnode.logger.Println("Command error :", err)
 		dnode.logger.Println("Command exit code :", cmd.ExitCode)
 		dnode.logger.Println("Command timed out :", cmd.TimedOut)
@@ -1130,4 +1172,175 @@ func (dnode *dataNode) GetWorkloadMsgs() []*iota.Workload {
 	})
 
 	return wloadMsgs
+}
+
+// AddWorkload brings up a workload type on a given node
+func (node *commandNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
+	node.logger.Println("Add workload on command not supported.")
+	return &iota.WorkloadMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
+}
+
+// DeleteWorkloads deletes a given workloads
+func (node *commandNode) DeleteWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
+	node.logger.Println("Delete workload on command not supported.")
+	return &iota.WorkloadMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
+}
+
+//Init initalize node type
+func (node *commandNode) Init(in *iota.Node) (*iota.Node, error) {
+	node.logger.Println("Bring script up successful.")
+
+	node.bgCmds = new(sync.Map)
+	node.name = in.GetName()
+	return &iota.Node{Name: in.Name, IpAddress: in.IpAddress, Type: in.GetType(),
+		NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
+}
+
+// Trigger invokes the workload's trigger. It could be ping, start client/server etc..
+func (node *commandNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+	runCommand := func(cmd *iota.Command) error {
+
+		var err error
+		var cmdKey string
+		var cmdResp *Cmd.CommandCtx
+
+		if in.TriggerOp == iota.TriggerOp_EXEC_CMDS {
+			cmdResp, cmdKey, err = node.RunCommand(strings.Split(cmd.GetCommand(), " "),
+				cmd.GetRunningDir(), cmd.GetForegroundTimeout(),
+				cmd.GetMode() == iota.CommandMode_COMMAND_BACKGROUND, true)
+
+		} else {
+			cmdResp, err = node.StopCommand(cmd.Handle)
+			cmdKey = cmd.Handle
+		}
+
+		cmd.ExitCode, cmd.Stdout, cmd.Stderr, cmd.Handle, cmd.TimedOut = cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr, cmdKey, cmdResp.TimedOut
+		node.logger.Println("Command error :", err)
+		node.logger.Println("Command exit code :", cmd.ExitCode)
+		node.logger.Println("Command timed out :", cmd.TimedOut)
+		node.logger.Println("Command handle  :", cmd.Handle)
+		node.logger.Println("Command stdout :", cmd.Stdout)
+		node.logger.Println("Command stderr:", cmd.Stderr)
+
+		if cmd.StderrOnErr && cmd.ExitCode == 0 {
+			cmd.Stderr = ""
+		}
+
+		if cmd.StdoutOnErr && cmd.ExitCode == 0 {
+			cmd.Stdout = ""
+		}
+
+		fixUtf := func(r rune) rune {
+			if r == utf8.RuneError {
+				return -1
+			}
+			return r
+		}
+
+		cmd.Stdout = strings.Map(fixUtf, cmd.Stdout)
+		cmd.Stderr = strings.Map(fixUtf, cmd.Stderr)
+		if len(cmd.Stdout) > maxStdoutSize || len(cmd.Stderr) > maxStdoutSize {
+			cmd.Stdout = ""
+			cmd.Stderr = "Stdout/Stderr output limit Exceeded."
+			cmd.ExitCode = 127
+		}
+		return nil
+	}
+
+	if in.GetTriggerMode() == iota.TriggerMode_TRIGGER_NODE_PARALLEL {
+		maxParallelThreads := 8
+		currThreads := 0
+		scheduleCmds := []*iota.Command{}
+		for cmdIndex, cmd := range in.Commands {
+			currThreads++
+			scheduleCmds = append(scheduleCmds, cmd)
+			if currThreads == maxParallelThreads || cmdIndex+1 == len(in.Commands) {
+				pool, _ := errgroup.WithContext(context.Background())
+				for thread, cmd := range scheduleCmds {
+					cmd := cmd
+					node.logger.Println("Started thread :", thread)
+					pool.Go(func() error {
+						runCommand(cmd)
+						return nil
+					})
+				}
+				pool.Wait()
+				scheduleCmds = []*iota.Command{}
+				currThreads = 0
+			}
+
+		}
+
+	} else {
+		for _, cmd := range in.Commands {
+			runCommand(cmd)
+		}
+	}
+
+	node.logger.Println("Completed running trigger.")
+	in.ApiResponse = apiSuccess
+	return in, nil
+
+}
+
+// CheckHealth returns the node health
+func (node *commandNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, error) {
+	return &iota.NodeHealth{NodeName: in.GetNodeName(), HealthCode: iota.NodeHealth_HEALTH_OK}, nil
+}
+
+//NodeType return node type
+func (node *commandNode) NodeType() iota.PersonalityType {
+	return iota.PersonalityType_PERSONALITY_COMMAND_NODE
+}
+
+//GetMsg node msg
+func (node *commandNode) GetMsg() *iota.Node {
+	return node.nodeMsg
+}
+
+//GetWorkloadMsgs get workloads
+func (node *commandNode) GetWorkloadMsgs() []*iota.Workload {
+	return nil
+}
+
+// RunCommand runs a command on node nodes
+func (node *commandNode) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
+	handleKey := ""
+
+	runDir := Common.DstIotaEntitiesDir + "/" + node.name
+	if dir != "" {
+		runDir = runDir + "/" + dir
+	}
+
+	node.logger.Println("base dir ", runDir, dir)
+
+	node.logger.Println("Running cmd ", strings.Join(cmd, " "))
+	cmdInfo, _ := Cmd.ExecCmd(cmd, runDir, (int)(timeout), background, shell, nil)
+
+	if background {
+		handleKey = fmt.Sprintf("node-bg-cmd-%v", node.bgCmdIndex)
+		node.bgCmds.Store(handleKey, cmdInfo)
+		atomic.AddUint64(&node.bgCmdIndex, 1)
+		//Give it a second for bg command to be scheduled.
+		time.Sleep(1 * time.Second)
+	}
+
+	return cmdInfo.Ctx, handleKey, nil
+}
+
+// StopCommand stops a running command
+func (node *commandNode) StopCommand(commandHandle string) (*Cmd.CommandCtx, error) {
+	item, ok := node.bgCmds.Load(commandHandle)
+	if !ok {
+		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
+	}
+
+	cmdInfo := item.(*Cmd.CommandInfo)
+
+	node.logger.Printf("Stopping bare metal Running cmd %v %v\n", cmdInfo.Ctx.Stdout, cmdInfo.Handle)
+
+	Cmd.StopExecCmd(cmdInfo)
+	node.bgCmds.Delete(commandHandle)
+
+	return cmdInfo.Ctx, nil
 }

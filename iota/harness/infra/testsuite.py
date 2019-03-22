@@ -126,7 +126,9 @@ class TestSuite:
         for s in self.__spec.setup.config:
             Logger.debug("Resolving config step: %s" % s.step)
             s.name = s.step
+            args = getattr(s, "args", None)
             s.step = loader.Import(s.step, self.__spec.packages)
+            s.step.args = getattr(s, "args", None)
         return types.status.SUCCESS
 
     def __parse_setup(self):
@@ -144,7 +146,7 @@ class TestSuite:
             # Reset the running directory before every step
             Logger.info("Starting Config Step: ", s.step)
             api.ChangeDirectory(None)
-            status = loader.RunCallback(s.step, 'Main', True, None)
+            status = loader.RunCallback(s.step, 'Main', True, getattr(s.step, "args", None))
             if status != types.status.SUCCESS:
                 Logger.error("ERROR: Failed to run config step", s.step)
                 return status
@@ -211,7 +213,7 @@ class TestSuite:
             Logger.debug("Skipping Testsuite: %s due to testbed type mismatch." % self.Name())
             return True
 
-        if not store.GetTestbed().IsSimulation() and  store.GetTestbed().GetOs() not in self.__get_oss() and not GlobalOptions.dryrun:
+        if not store.GetTestbed().IsSimulation() and  not store.GetTestbed().GetOs().intersection(self.__get_oss()) and not GlobalOptions.dryrun:
             Logger.debug("Skipping Testsuite: %s due to OS mismatch." % self.Name())
             return True
 

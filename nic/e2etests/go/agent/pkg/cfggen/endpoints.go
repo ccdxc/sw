@@ -151,6 +151,7 @@ func (c *CfgGen) GenerateEndpoints() error {
 				NodeUUID:    defaultRemoteUUIDName,
 			},
 		}
+
 		c.EpCache[defaultRemoteUUIDName] = append(c.EpCache[defaultRemoteUUIDName], epIP)
 		endpoints = append(endpoints, &ep)
 	}

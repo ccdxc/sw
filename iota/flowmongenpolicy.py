@@ -5,7 +5,7 @@ import os
 import collections
 import random
 
-flowmonpolicy_template = { 
+flowmonpolicy_template = {
     "type" : "netagent",
     "rest-endpoint"    : "api/telemetry/flowexports/",
     "object-key" : "meta.tenant/meta.namespace/meta.name",
@@ -36,13 +36,14 @@ flowmonpolicy_template = {
     ]
 }
 
-def get_verif(dst_ip, src_ip, protocol, port, result):
+def get_verif(dst_ip, src_ip, protocol, port, collector, result):
     verif = {}
     verif['dst_ip'] = dst_ip
     verif['src_ip'] = src_ip
     verif['protocol'] = protocol
     verif['port'] = port
     verif['result'] = result
+    verif['collector'] = collector
     return verif
 
 def get_appconfig(protocol, port):
@@ -85,8 +86,8 @@ def get_source(src_ip):
 def get_rule(dst_ip, src_ip, protocol, port, action):
     rule = {}
     rule['destination'] = get_destination(dst_ip, protocol, port)
-    rule['source'] = get_source(src_ip) 
-    rule['app-protocol-selectors'] = get_app_proto(protocol, port) 
+    rule['source'] = get_source(src_ip)
+    rule['app-protocol-selectors'] = get_app_proto(protocol, port)
     #rule['action'] = action
     return rule
 
@@ -119,7 +120,7 @@ def Main():
     #import pdb; pdb.set_trace()
     with open(GlobalOptions.endpoint_file, 'r') as fp:
         obj = json.load(fp)
-    EP = [] 
+    EP = []
 
     for i in range(0, len(obj["objects"])):
         print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-address"]))
@@ -138,7 +139,7 @@ def Main():
             mirrorpolicy = flowmonpolicy_template
             match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
-            verif =[] 
+            verif =[]
             for i in range(0, len(EP)):
                 for j in range(i+1, len(EP)):
                     for k in GlobalOptions.ports:
@@ -159,7 +160,7 @@ def Main():
             mirrorpolicy = flowmonpolicy_template
             match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
-            verif =[] 
+            verif =[]
             for i in range(0, len(EP_SUBNET)):
                 for j in range(0, len(EP)):
                     for k in GlobalOptions.ports:
@@ -171,8 +172,8 @@ def Main():
                         verif.append(get_verif(EP[j], EP_SUBNET[i], protocol, k, action))
             json.dump(mirrorpolicy, open(GlobalOptions.topology_dir +"/{}/{}_{}_subnet_policy.json".format(protocol, protocol, action), "w"), indent=4)
             json.dump(verif, open(GlobalOptions.topology_dir + "/{}/{}_{}_subnet_verif.json".format(protocol, protocol, action), "w"), indent=4)
-    
-    EP_ANY = [] 
+
+    EP_ANY = []
     EP_ANY.append("any")
     GlobalOptions.ports.append("any")
     # Generic (any) Policy
@@ -181,7 +182,7 @@ def Main():
             mirrorpolicy = flowmonpolicy_template
             match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
-            verif =[] 
+            verif =[]
             for i in range(0, len(EP_ANY)):
                 for j in range(i, len(EP)):
                     for k in GlobalOptions.ports:
@@ -196,7 +197,7 @@ def Main():
 
     # Mixed Config
     del match_rules[:]
-    verif =[] 
+    verif =[]
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
             mirrorpolicy = flowmonpolicy_template

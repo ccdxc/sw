@@ -341,7 +341,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not get agent URL. Err: %v", err)
 			return req, nil
 		} else {
-			c, err := common.CreateNewGRPCClient(svcName, agentURL)
+			c, err := common.CreateNewGRPCClient(svcName, agentURL, common.GrpcMaxMsgSize)
 			if err != nil {
 				log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
 				req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR

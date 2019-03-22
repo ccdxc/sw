@@ -84,28 +84,41 @@ func (c *CfgGen) GenerateFirewallPolicies() error {
 	return nil
 }
 
-func (c *CfgGen) GenerateEPPairs(namespace, nodeUUID string, count int) (epPairs NodeEPPairs) {
-	var localEPs, remoteEPs []string
+func (c *CfgGen) GenerateEPPairs(namespace, nodeUUID string, count int) (nwEpPairs NwNodeEPPairs) {
 	// Get the endpoints object
 	eps, ok := c.Endpoints.Objects.([]*netproto.Endpoint)
 	if !ok {
 		log.Errorf("Failed to cast the object %v to endpoints.", c.Endpoints.Objects)
 	}
 
-	for _, ep := range eps {
-		if ep.Namespace == namespace {
-			if ep.Spec.NodeUUID == nodeUUID {
-				localEPs = append(localEPs, ep.Spec.IPv4Address)
-			} else {
-				remoteEPs = append(remoteEPs, ep.Spec.IPv4Address)
-			}
-		}
+	nws, ok := c.Networks.Objects.([]*netproto.Network)
+	if !ok {
+		log.Errorf("Failed to cast the object %v to networks.", c.Networks.Objects)
 	}
 
-	//remoteEPs = append(remoteEPs, gwEPs...)
+	nwEpPairs.NwMap = make(map[string]*NodeEPPairs)
+	var nodeEpPair *NodeEPPairs
 
-	epPairs.LocalEPPairs = c.genEPPairs(localEPs, nil, count)
-	epPairs.RemoteEPPairs = c.genEPPairs(localEPs, remoteEPs, count)
+	for _, nw := range nws {
+		var localEPs, remoteEPs []string
+		nodeEpPair = &NodeEPPairs{}
+		nwEpPairs.NwMap[nw.GetObjectMeta().GetName()] = nodeEpPair
+
+		for _, ep := range eps {
+			if ep.Namespace == namespace && ep.Spec.NetworkName == nw.GetObjectMeta().GetName() {
+				if ep.Spec.NodeUUID == nodeUUID {
+					localEPs = append(localEPs, ep.Spec.IPv4Address)
+				} else {
+					remoteEPs = append(remoteEPs, ep.Spec.IPv4Address)
+				}
+			}
+		}
+
+		//remoteEPs = append(remoteEPs, gwEPs...)
+		nodeEpPair.LocalEPPairs = c.genEPPairs(localEPs, nil, 0)
+		nodeEpPair.RemoteEPPairs = c.genEPPairs(localEPs, remoteEPs, 0)
+		fmt.Printf("Generated EP pairs local : %v , remote : %v \n", len(nodeEpPair.LocalEPPairs), len(nodeEpPair.RemoteEPPairs))
+	}
 	return
 }
 
@@ -123,27 +136,21 @@ func (c *CfgGen) genEPPairs(localEPs, remoteEPs []string, count int) (epPairs []
 		}
 		return
 	}
-	localCombinations := libs.GenPairs(localEPs, count)
-	remoteCombinations := libs.GenPairs(remoteEPs, count)
+	//localCombinations := libs.GenPairs(localEPs, count)
+	//remoteCombinations := libs.GenPairs(remoteEPs, count)
 
-	for _, l := range localCombinations {
-		for _, r := range remoteCombinations {
-			sIP1, _, _ := net.ParseCIDR(l[0])
-			sIP2, _, _ := net.ParseCIDR(l[1])
-			dIP1, _, _ := net.ParseCIDR(r[0])
-			dIP2, _, _ := net.ParseCIDR(r[1])
+	for _, l := range localEPs {
+		for _, r := range remoteEPs {
+			sIP1, _, _ := net.ParseCIDR(l)
+			dIP1, _, _ := net.ParseCIDR(r)
 			epPair := []EPPair{
 				{
 					SrcEP: sIP1.String(),
 					DstEP: dIP1.String(),
 				},
-				{
-					SrcEP: sIP2.String(),
-					DstEP: dIP2.String(),
-				},
 			}
 			epPairs = append(epPairs, epPair...)
-			if len(epPairs) == count {
+			if count > 0 && len(epPairs) >= count {
 				return
 			}
 		}
@@ -165,6 +172,7 @@ func (c *CfgGen) getRemoteEPs(nodeUUID string) []string {
 
 func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules []netproto.PolicyRule) {
 	for j := 0; j < count; j++ {
+		rulesAdded := false
 		for _, nodeUUID := range c.NodeUUIDs {
 			// Get the apps object
 			apps, ok := c.Apps.Objects.([]*netproto.App)
@@ -179,77 +187,75 @@ func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules [
 					curApps = append(curApps, a)
 				}
 			}
-			var localEPPair, remoteEPPair EPPair
+			for nw, nwEpPair := range c.NodeEPLUT[nodeUUID].NwMap {
 
-			//Pick a local and remote EP Pair for the rule
-			if len(c.NodeEPLUT[nodeUUID].LocalEPPairs) == 0 || len(c.NodeEPLUT[nodeUUID].RemoteEPPairs) == 0 {
-				c.NodeEPLUT[nodeUUID] = NodeEPPairs{
-					RemoteEPPairs: c.genEPPairs(c.EpCache[nodeUUID], c.EpCache[defaultRemoteUUIDName], count*2),
+				app := curApps[j%len(curApps)]
+
+				appConfig := c.generateL4Match(j % len(c.Template.FirewallPolicyRules))
+
+				rulesAdded = true
+				for _, localEPPair := range nwEpPair.LocalEPPairs {
+					rules := []netproto.PolicyRule{
+						{
+							Action:  "PERMIT",
+							AppName: app.Name,
+							Src: &netproto.MatchSelector{
+								Addresses: convertIPAddresses(localEPPair.SrcEP),
+							},
+							Dst: &netproto.MatchSelector{
+								Addresses: convertIPAddresses(localEPPair.DstEP),
+							},
+						},
+						{
+							Action: "PERMIT",
+							Src: &netproto.MatchSelector{
+								Addresses: convertIPAddresses(localEPPair.SrcEP),
+							},
+							Dst: &netproto.MatchSelector{
+								Addresses:  convertIPAddresses(localEPPair.DstEP),
+								AppConfigs: appConfig,
+							},
+						},
+					}
+					policyRules = append(policyRules, rules...)
 				}
+
+				for _, remoteEPPair := range nwEpPair.RemoteEPPairs {
+					rules := []netproto.PolicyRule{
+						{
+							Action:  "PERMIT",
+							AppName: app.Name,
+							Src: &netproto.MatchSelector{
+								Addresses: convertIPAddresses(remoteEPPair.SrcEP),
+							},
+							Dst: &netproto.MatchSelector{
+								Addresses: convertIPAddresses(remoteEPPair.DstEP),
+							},
+						},
+						{
+							Action: "PERMIT",
+							Src: &netproto.MatchSelector{
+								Addresses: convertIPAddresses(remoteEPPair.SrcEP),
+							},
+							Dst: &netproto.MatchSelector{
+								Addresses:  convertIPAddresses(remoteEPPair.DstEP),
+								AppConfigs: appConfig,
+							},
+						},
+					}
+					policyRules = append(policyRules, rules...)
+				}
+
+				delete(c.NodeEPLUT[nodeUUID].NwMap, nw)
 			}
 
-			localEPPairs := c.NodeEPLUT[nodeUUID].LocalEPPairs
-			remoteEPPairs := c.NodeEPLUT[nodeUUID].RemoteEPPairs
-
-			if len(c.NodeEPLUT[nodeUUID].LocalEPPairs) != 0 {
-				localEPPair, localEPPairs = localEPPairs[0], localEPPairs[1:]
-			} else {
-				localEPPair, localEPPairs = remoteEPPairs[0], remoteEPPairs[1:]
-			}
-			remoteEPPair, remoteEPPairs = remoteEPPairs[0], remoteEPPairs[1:]
-
-			c.NodeEPLUT[nodeUUID] = NodeEPPairs{
-				LocalEPPairs:  localEPPairs,
-				RemoteEPPairs: remoteEPPairs,
-			}
-			// Reserve additional remote IP Addresses for rules
-			var extraIPs []string
-			for len(extraIPs) < c.Template.IPAddressesPerRule-1 {
-				var epPair EPPair
-				epPair, remoteEPPairs = remoteEPPairs[0], remoteEPPairs[1:]
-				extraIPs = append(extraIPs, epPair.SrcEP, epPair.DstEP)
-			}
-			extraIPs = extraIPs[:c.Template.IPAddressesPerRule-1]
-			app := curApps[j%len(curApps)]
-
-			appConfig := c.generateL4Match(j % len(c.Template.FirewallPolicyRules))
-			rules := []netproto.PolicyRule{
-				{
-					Action:  "PERMIT",
-					AppName: app.Name,
-					Src: &netproto.MatchSelector{
-						Addresses: convertIPAddresses(localEPPair.SrcEP, extraIPs),
-					},
-					Dst: &netproto.MatchSelector{
-						Addresses: convertIPAddresses(localEPPair.DstEP, extraIPs),
-					},
-				},
-				{
-					Action: "PERMIT",
-					Src: &netproto.MatchSelector{
-						Addresses: convertIPAddresses(localEPPair.SrcEP, extraIPs),
-					},
-					Dst: &netproto.MatchSelector{
-						Addresses:  convertIPAddresses(localEPPair.DstEP, extraIPs),
-						AppConfigs: appConfig,
-					},
-				},
-				{
-					Action:  "DENY",
-					AppName: app.Name,
-					Src: &netproto.MatchSelector{
-						Addresses: convertIPAddresses(remoteEPPair.SrcEP, extraIPs),
-					},
-					Dst: &netproto.MatchSelector{
-						Addresses: convertIPAddresses(remoteEPPair.DstEP, extraIPs),
-					},
-				},
-			}
-
-			policyRules = append(policyRules, rules...)
 			if len(policyRules) > count {
 				return
 			}
+		}
+
+		if !rulesAdded {
+			log.Panic("Not enough EP pairs to generate all rules")
 		}
 	}
 	return
@@ -285,8 +291,8 @@ func (c *CfgGen) generateL4Match(offset int) []*netproto.AppConfig {
 	return appConfigs
 }
 
-func convertIPAddresses(baseIP string, extraIPs []string) (ipAddresses []string) {
-	ipAddresses = append(ipAddresses, baseIP)
-	ipAddresses = append(ipAddresses, extraIPs...)
+func convertIPAddresses(args ...string) (ipAddresses []string) {
+	ipAddresses = append(ipAddresses, args...)
+	//ipAddresses = append(ipAddresses, extraIPs...)
 	return
 }

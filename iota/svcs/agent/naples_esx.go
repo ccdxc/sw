@@ -3,8 +3,10 @@ package agent
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -27,6 +29,7 @@ type esxHwNode struct {
 	esxHostEntityKey string
 	nicType          string
 	host             *vmware.Host
+	imagesMap        map[string]string
 }
 
 type esxNaplesHwNode struct {
@@ -44,8 +47,10 @@ func (naples *esxHwNode) setupWorkload(wload Workload.Workload, in *iota.Workloa
 	wload.SetBaseDir(wDir)
 
 	naples.logger.Println("Doing bring up of esx workload")
-	if err := wload.BringUp(in.GetWorkloadName(), in.GetWorkloadImage(),
-		naples.hostIP, naples.hostUsername, naples.hostPassword); err != nil {
+	imageDir, _ := naples.imagesMap[in.GetWorkloadImage()]
+	if err := wload.BringUp(in.GetWorkloadName(), imageDir,
+		naples.hostIP, naples.hostUsername, naples.hostPassword,
+		strconv.Itoa(int(in.GetCpus())), strconv.Itoa(int(in.GetMemory()))); err != nil {
 		msg := fmt.Sprintf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
 		naples.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
@@ -54,6 +59,29 @@ func (naples *esxHwNode) setupWorkload(wload Workload.Workload, in *iota.Workloa
 	naples.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
 
 	return naples.configureWorkload(wload, in)
+}
+
+func (naples *esxHwNode) downloadDataVMImage(image string) (string, error) {
+
+	dataVMDir := Common.DataVMImageDirectory + "/" + image
+	dstImage := dataVMDir + "/" + image + ".ova"
+	mkdir := []string{"mkdir", "-p", dataVMDir}
+	if stdout, err := exec.Command(mkdir[0], mkdir[1:]...).CombinedOutput(); err != nil {
+		return "", errors.Wrap(err, string(stdout))
+	}
+
+	buildIt := []string{"/usr/local/bin/buildit", "-t", Common.BuildItURL, "image", "pull", "-o", dstImage, image}
+	if stdout, err := exec.Command(buildIt[0], buildIt[1:]...).CombinedOutput(); err != nil {
+		return "", errors.Wrap(err, string(stdout))
+	}
+
+	naples.logger.Info("Download complete for VM image")
+	tarCmd := []string{"tar", "-xvf", dstImage, "-C", dataVMDir}
+	if stdout, err := exec.Command(tarCmd[0], tarCmd[1:]...).CombinedOutput(); err != nil {
+		return "", errors.Wrap(err, string(stdout))
+	}
+
+	return dataVMDir, nil
 }
 
 // AddWorkload brings up a workload type on a given node
@@ -113,20 +141,50 @@ func (naples *esxHwNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg, 
 		}
 
 		iotaWload.workloadMsg = in
+		resp.MgmtIp = iotaWload.workload.MgmtIP()
 		naples.entityMap.Store(wloadKey, iotaWload)
 		naples.logger.Printf("Added workload : %s (%s)", in.GetWorkloadName(), in.GetWorkloadType())
 		return resp
 	}
 
+	//First download all VM images which we don't know about
+	for _, wload := range in.Workloads {
+
+		if _, ok := naples.imagesMap[wload.GetWorkloadImage()]; !ok {
+			if dataVMDir, err := naples.downloadDataVMImage(wload.GetWorkloadImage()); err != nil {
+				in.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: err.Error()}
+				return in, errors.New(in.ApiResponse.ErrorMsg)
+			} else {
+				naples.imagesMap[wload.GetWorkloadImage()] = dataVMDir
+			}
+		}
+	}
+
 	pool, _ := errgroup.WithContext(context.Background())
+	maxParallelThreads := 5
+	currThreads := 0
+	scheduleWloads := []*iota.Workload{}
+	wloadIndex := []int{}
+
 	for index, wload := range in.Workloads {
-		wload := wload
-		index := index
-		pool.Go(func() error {
-			resp := addWorkload(wload)
-			in.Workloads[index] = resp
-			return nil
-		})
+		currThreads++
+		scheduleWloads = append(scheduleWloads, wload)
+		wloadIndex = append(wloadIndex, index)
+		if currThreads == maxParallelThreads-1 || index+1 == len(in.Workloads) {
+			for thread, wl := range scheduleWloads {
+				wload := wl
+				index := wloadIndex[thread]
+				pool.Go(func() error {
+					resp := addWorkload(wload)
+					in.Workloads[index] = resp
+					return nil
+				})
+			}
+			pool.Wait()
+			scheduleWloads = []*iota.Workload{}
+			wloadIndex = []int{}
+			currThreads = 0
+		}
 	}
 
 	pool.Wait()
@@ -162,7 +220,13 @@ func (naples *esxHwNode) getDataIntfs() ([]string, error) {
 		return nil, errors.Errorf("Running command failed : %s", cmdResp.Stdout)
 	}
 
-	return strings.Split(cmdResp.Stdout, "\r\n"), nil
+	intfs := []string{}
+	for _, str := range strings.Split(cmdResp.Stdout, "\r\n") {
+		if str != "" {
+			intfs = append(intfs, str)
+		}
+	}
+	return intfs, nil
 }
 
 func (naples *esxHwNode) getNaplesMgmtIntf() (string, error) {
@@ -235,7 +299,13 @@ func (naples *esxHwNode) createNaplesDataSwitch() error {
 
 	naples.logger.Printf("Naples data interfaces are %v", naplesDataIntfs)
 	vsname := Common.EsxIotaDataSwitch
-	vsspec := vmware.VswitchSpec{Name: vsname, Pnics: []string{naplesDataIntfs[0]}}
+	vsspec := vmware.VswitchSpec{Name: vsname, Pnics: []string{}}
+	for _, intf := range naplesDataIntfs {
+		naples.logger.Printf("Adding Naples data interface %v", intf)
+		vsspec.Pnics = append(vsspec.Pnics, intf)
+		//Add just one interface for now
+		break
+	}
 	return naples.host.AddVswitch(vsspec)
 }
 
@@ -425,6 +495,7 @@ func (naples *esxHwNode) Init(in *iota.Node) (*iota.Node, error) {
 	naples.hostIP = in.GetEsxConfig().GetIpAddress()
 	naples.hostUsername = in.GetEsxConfig().GetUsername()
 	naples.hostPassword = in.GetEsxConfig().GetPassword()
+	naples.imagesMap = make(map[string]string)
 
 	host, err := vmware.NewHost(context.Background(), naples.hostIP, naples.hostUsername, naples.hostPassword)
 	if err != nil {
@@ -464,4 +535,96 @@ func (naples *esxHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		NodeInfo: &iota.Node_NaplesConfig{}}
 
 	return resp, nil
+}
+
+type triggerWrap struct {
+	triggerMsg *iota.TriggerMsg
+	cmdIndex   []int
+	wloadName  string
+}
+
+// Trigger invokes the workload's trigger.
+func (node *esxHwNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+
+	if _, err := node.dataNode.triggerValidate(in); err != nil {
+		return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: err.Error()}}, nil
+	}
+
+	runTrigger := func(client iota.IotaAgentApiClient, tw *triggerWrap) (*triggerWrap, error) {
+		var err error
+		node.logger.Printf("Sending trigger to : %s ", tw.wloadName)
+		tw.triggerMsg, err = client.Trigger(context.Background(), tw.triggerMsg)
+		node.logger.Printf("Completed trigger from  : %s ", tw.wloadName)
+		return tw, err
+	}
+	if in.GetTriggerMode() == iota.TriggerMode_TRIGGER_NODE_PARALLEL {
+		triggerMap := new(sync.Map)
+		var twrap *triggerWrap
+
+		for cmdIndex, cmd := range in.Commands {
+			if val, ok := triggerMap.Load(cmd.EntityName); !ok {
+				triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{},
+					TriggerOp:   in.GetTriggerOp(),
+					TriggerMode: in.GetTriggerMode()}
+				twrap = &triggerWrap{triggerMsg: triggerMsg, cmdIndex: []int{}, wloadName: cmd.EntityName}
+				triggerMap.Store(cmd.EntityName, twrap)
+			} else {
+				twrap = val.(*triggerWrap)
+			}
+
+			twrap.cmdIndex = append(twrap.cmdIndex, cmdIndex)
+			twrap.triggerMsg.Commands = append(twrap.triggerMsg.Commands, cmd)
+		}
+		pool, _ := errgroup.WithContext(context.Background())
+		triggerMap.Range(func(key interface{}, item interface{}) bool {
+			twrap := item.(*triggerWrap)
+			wload, _ := node.entityMap.Load(key.(string))
+			iotaWload := wload.(iotaWorkload)
+			wloadAgent := iotaWload.workload.GetWorkloadAgent()
+			if wloadAgent != nil {
+				pool.Go(func() error {
+					runTrigger(wloadAgent.(iota.IotaAgentApiClient), twrap)
+					return nil
+				})
+			} else {
+				pool.Go(func() error {
+					twrap.triggerMsg, _ = node.dataNode.Trigger(twrap.triggerMsg)
+					return nil
+				})
+			}
+			return true
+		})
+		pool.Wait()
+		triggerMap.Range(func(key interface{}, item interface{}) bool {
+			twrap := item.(*triggerWrap)
+			for index, cmd := range twrap.triggerMsg.GetCommands() {
+				realIndex := twrap.cmdIndex[index]
+				in.Commands[realIndex] = cmd
+			}
+
+			return true
+		})
+
+	} else {
+		for index, cmd := range in.Commands {
+			wload, _ := node.entityMap.Load(cmd.EntityName)
+			triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
+				TriggerOp:   in.GetTriggerOp(),
+				TriggerMode: in.GetTriggerMode()}
+			twrap := &triggerWrap{triggerMsg: triggerMsg, cmdIndex: []int{}, wloadName: cmd.EntityName}
+			iotaWload := wload.(iotaWorkload)
+			wloadAgent := iotaWload.workload.GetWorkloadAgent()
+			if wloadAgent != nil {
+				runTrigger(wloadAgent.(iota.IotaAgentApiClient), twrap)
+			} else {
+				twrap.triggerMsg, _ = node.dataNode.Trigger(twrap.triggerMsg)
+			}
+			in.Commands[index] = twrap.triggerMsg.GetCommands()[0]
+		}
+	}
+
+	node.logger.Println("Completed running trigger.")
+	in.ApiResponse = apiSuccess
+	return in, nil
+
 }

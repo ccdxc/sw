@@ -12,7 +12,6 @@ testcases:
             type: local_only
         iterators :
             type    : nested
-            pktsize : [  128 ] 
+            pktsize : [  128 ]
             #ipaf    : [ ipv4 ]
             ipaf    : [ ipv4 ]
-

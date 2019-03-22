@@ -7,6 +7,7 @@ nodes:
       name: node1
       role: auto
       workloads:
+        linux:
             type    : WORKLOAD_TYPE_CONTAINER
             image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.1"
 
@@ -15,5 +16,6 @@ nodes:
       name: node2
       role: auto
       workloads:
+        linux:
             type    : WORKLOAD_TYPE_CONTAINER
             image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.1"

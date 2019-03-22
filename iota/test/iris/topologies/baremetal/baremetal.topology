@@ -7,12 +7,20 @@ nodes:
       name: node1
       role: auto
       workloads:
+        linux:
             type    : WORKLOAD_TYPE_BARE_METAL
-            image   : "ubuntu18.04"
+            image   : "N/A"
+        freebsd:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
 
     - node: node2
       name: node2
       role: auto
       workloads:
+        linux:
             type    : WORKLOAD_TYPE_BARE_METAL
-            image   : "ubuntu18.04"
+            image   : "N/A"
+        freebsd:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"

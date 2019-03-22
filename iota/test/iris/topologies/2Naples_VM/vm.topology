@@ -7,13 +7,29 @@ nodes:
       name: node1
       role: auto
       workloads:
-            type    : WORKLOAD_TYPE_VM
-            image   : "build-137"
+        esx:
+            type       : WORKLOAD_TYPE_VM
+            image      : "build-142"
+            ncpu       : 4
+            memory     : 4
+            #Max number of concurrent workloads
+            concurrent : 25
+        linux:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
 
 
     - node: node2
       name: node2
       role: auto
       workloads:
+        esx:
             type    : WORKLOAD_TYPE_VM
-            image   : "build-137"
+            image   : "build-142"
+            ncpu       : 4
+            memory     : 4
+            #Max number of concurrent workloads
+            concurrent : 256
+        linux:
+            type    : WORKLOAD_TYPE_BARE_METAL_MAC_VLAN_ENCAP
+            image   : "N/A"

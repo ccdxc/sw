@@ -1,0 +1,76 @@
+meta:
+    name    : networking_crud_fuz
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+
+selector :
+    module : selectors.allowed_all
+    max_select : 1
+    entry : selectors.entry.bringup_workloads
+
+testcases:
+    -   name    : fuz_init
+        testcase: testcases.scale.fuz.init
+
+    -   name    : fuz_server_start
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run
+        testcase: testcases.scale.fuz.run_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 1
+            cps : 500
+            pcap : True
+            static_arp : True
+
+    -   name    : fuz_server_stop
+        testcase: testcases.scale.fuz.server_stop
+
+    -   name    : delete_add_config
+        testcase: testcases.config.delete_add_base
+        stress  : True
+
+    -   name    : fuz_server_start_1
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_1
+        testcase: testcases.scale.fuz.run_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 1
+            cps : 500
+            pcap : True
+            static_arp : True
+
+    -   name    : fuz_server_stop_1
+        testcase: testcases.scale.fuz.server_stop
+
+    -   name    : delete_add_config_1
+        testcase: testcases.config.delete_add_base
+        stress  : True
+
+    -   name    : fuz_server_start_2
+        testcase: testcases.scale.fuz.server_start
+
+    -   name    : fuz_client_run_2
+        testcase: testcases.scale.fuz.run_client
+        iterators:
+            type      : nested
+            #proto     : [ udp, tcp ]
+            proto     : [ tcp ]
+        args    :
+            num_sessions : 1
+            cps : 500
+            pcap : True
+            static_arp : True
+
+    -   name    : fuz_server_stop_2
+        testcase: testcases.scale.fuz.server_stop

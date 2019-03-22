@@ -4,9 +4,12 @@ import pdb
 import ipaddress
 import requests
 import json
+from collections import defaultdict
 import iota.harness.api as api
 import iota.test.iris.config.api as cfg_api
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+
+_cfg_dir = api.GetTopDir() + "/iota/test/iris/config/netagent/cfg/"
 
 base_url = "http://169.254.0.1:9007/"
 
@@ -173,7 +176,9 @@ def FlapPorts():
 def UpdateNodeUuidEndpoints(objects):
     agent_uuid_map = api.GetNaplesNodeUuidMap()
     for ep in objects:
-        node_name = getattr(ep.spec, "node_uuid", None)
+        node_name = getattr(ep.spec, "_node_name", None)
+        if not node_name:
+            node_name = ep.spec.node_uuid
         assert(node_name)
         ep.spec.node_uuid = agent_uuid_map[node_name]
         ep.spec._node_name = node_name
@@ -184,32 +189,266 @@ def UpdateTestBedVlans(objects):
         api.Logger.info("Network Object: %s, Allocated Vlan = %d" % (obj.meta.name, vlan))
         obj.spec.vlan_id = vlan
 
-def PushBaseConfig():
+__config_pushed = False
+def PushBaseConfig(ignore_error = True):
+    api.Testbed_ResetVlanAlloc()
+    objects = QueryConfigs(kind='Namespace')
+    ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='Network')
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     UpdateTestBedVlans(objects)
-    PushConfigObjects(objects, ignore_error=True)
+    ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='Endpoint')
     UpdateNodeUuidEndpoints(objects)
-    PushConfigObjects(objects, ignore_error=True)
+    ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='App')
-    PushConfigObjects(objects, ignore_error=True)
+    ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='SGPolicy')
-    PushConfigObjects(objects, ignore_error=True)
+    ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='SecurityProfile')
-    PushConfigObjects(objects, ignore_error=True)
+    ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='Tunnel')
-    PushConfigObjects(objects, ignore_error=True)
+    ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+    objects = QueryConfigs(kind='MirrorSession')
+    ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+    #objects = QueryConfigs(kind='FlowExportPolicy')
+    #ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    #if not ignore_error and ret != api.types.status.SUCCESS:
+    #    return api.types.status.FAILURE
+    global __config_pushed
+    __config_pushed = True
+    return api.types.status.SUCCESS
 
-def DeleteBaseConfig():
-    objects = QueryConfigs(kind='Tunnel')
-    DeleteConfigObjects(objects, ignore_error=True)
+def DeleteBaseConfig(ignore_error = True):
     objects = QueryConfigs(kind='SecurityProfile')
-    DeleteConfigObjects(objects, ignore_error=True)
+    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+    objects = QueryConfigs(kind='FlowExportPolicy')
+    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='SGPolicy')
-    DeleteConfigObjects(objects, ignore_error=True)
+    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='App')
-    DeleteConfigObjects(objects, ignore_error=True)
+    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+    objects = QueryConfigs(kind='MirrorSession')
+    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+    objects = QueryConfigs(kind='Tunnel')
+    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='Endpoint')
-    DeleteConfigObjects(objects, ignore_error=True)
+    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
     objects = QueryConfigs(kind='Network')
-    DeleteConfigObjects(objects, ignore_error=True)
+    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+    objects = QueryConfigs(kind='Namespace')
+    ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    if not ignore_error and ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+    return api.types.status.SUCCESS
+
+
+__allow_all_policies = {}
+def PushAllowAllPolicy(allowAllPolicy, node_names = None, namespaces = None):
+    newObjects = AddOneConfig(allowAllPolicy)
+    if len(newObjects) == 0:
+        api.Logger.error("Adding new objects to store failed")
+        return api.types.status.FAILURE
+
+    nsObjects = QueryConfigs(kind='Namespace')
+    for ns in nsObjects:
+        if namespaces and ns.meta.name not in namespaces:
+            continue
+        clone_objects = cfg_api.CloneConfigObjects(newObjects)
+        for object in clone_objects:
+            object.meta.namespace = ns.meta.name
+        cfg_api.AddConfigObjects(clone_objects)
+        ret = PushConfigObjects(clone_objects, node_names, ignore_error=True)
+        if ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+
+        #keep it if we want to delete it as well
+        __allow_all_policies[ns.meta.name] = clone_objects
+
+def DeleteAllowAllPolicy(node_names = None, namespaces = None):
+
+    if not namespaces:
+        nsObjects = QueryConfigs(kind='Namespace')
+        namespaces = [ns.meta.name for ns in nsObjects]
+
+    for ns in namespaces:
+        DeleteConfigObjects(__allow_all_policies[ns], ignore_error=True)
+        RemoveConfigObjects(__allow_all_policies[ns])
+
+
+def __findWorkloadsByIP(ip):
+    wloads = api.GetWorkloads()
+    for wload in wloads:
+        if wload.ip_address == ip:
+            return wload
+    api.Logger.error("Workload {} not found".format(ip))
+    return None
+
+
+WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1
+WORKLOAD_PAIR_TYPE_REMOTE_ONLY  = 2
+WORKLOAD_PAIR_TYPE_ANY           = 3
+
+def __wl_pair_type_matched(wl_pair, match):
+    if match == WORKLOAD_PAIR_TYPE_LOCAL_ONLY:
+        if wl_pair[0].node_name == wl_pair[1].node_name:
+            return True
+        return False
+
+    if match == WORKLOAD_PAIR_TYPE_REMOTE_ONLY:
+        if wl_pair[0].node_name != wl_pair[1].node_name:
+            return True
+        return False
+
+    return True
+
+def __sip_dip_key(sip, dip):
+    return sip + ":" + dip
+
+def __sip_dip_in_match_cache(sip, dip, match_cache):
+    for _, sip_dip_keys in match_cache.items():
+        if __sip_dip_key(sip, dip) in sip_dip_keys:
+            return True
+    return False
+
+def __add_sip_dip_to_match_cache(action, sip, dip, match_cache):
+    match_cache[action][__sip_dip_key(sip, dip)] = True
+
+def __get_wl_pairs_of_rule(rule, action, wl_pair_type, match_cache):
+    wl_pairs = []
+    for sip in rule.source.addresses:
+        src = __findWorkloadsByIP(sip)
+        if src:
+            for dip in rule.destination.addresses:
+                #Check if this combo already matched in our cache
+                if sip == dip or __sip_dip_in_match_cache(sip, dip, match_cache):
+                    continue
+                dst = __findWorkloadsByIP(dip)
+                if dst and __wl_pair_type_matched((src,dst), wl_pair_type):
+                    wl_pairs.append((src,dst))
+                    __add_sip_dip_to_match_cache(action, sip, dip, match_cache)
+    return wl_pairs
+
+
+
+def __GetAppWorkloadWorkloadPairs(afilter, action, wl_pair_type):
+
+    wl_pairs = []
+    match_cache = defaultdict(lambda: dict())
+    apps = QueryConfigs(kind='App',filter=afilter)
+    if not apps:
+        api.Logger.error("No icmp apps found in the config")
+        return None
+
+    ping_app_name = apps[0].meta.name
+    store_policy_objects = QueryConfigs(kind='SGPolicy')
+    if not store_policy_objects:
+        api.Logger.error("No store policy objects")
+        return None
+
+    for p_object in store_policy_objects:
+        for rule in p_object.spec.policy_rules:
+            if (getattr(rule, "app_name", None) == ping_app_name and rule.action == action
+                and getattr(rule, "source", None) and getattr(rule, "destination", None)):
+                wl_pairs.extend(__get_wl_pairs_of_rule(rule, action, wl_pair_type, match_cache))
+
+
+    return wl_pairs
+
+
+
+def __getWorkloadPairsBy(protocol, port, action, wl_pair_type=WORKLOAD_PAIR_TYPE_ANY):
+
+    wl_pairs = []
+    match_cache = defaultdict(lambda: dict())
+
+    store_policy_objects = QueryConfigs(kind='SGPolicy')
+    if not store_policy_objects:
+        api.Logger.error("No store policy objects")
+        return None
+
+    for p_object in store_policy_objects:
+        for rule in p_object.spec.policy_rules:
+            destination = getattr(rule, "destination", None)
+            # TODO may be way to just check action here.
+            if not destination:
+                continue
+            app_configs = getattr(destination, "app_configs", None)
+            if not app_configs:
+                continue
+            for app_config in app_configs:
+                if  app_config.protocol == protocol and \
+                    app_config.port == port and getattr(rule, "source", None):
+                    wl_pairs.extend(__get_wl_pairs_of_rule(rule, action, wl_pair_type, match_cache))
+
+    return wl_pairs
+
+def GetAllowAllWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+    if __config_pushed:
+        return __getWorkloadPairsBy('any', '1-65535', 'PERMIT', wl_pair_type=wl_pair_type)
+    return __get_default_workloads(wl_pair_type)
+
+def GetTcpAllowAllWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+    return __getWorkloadPairsBy('tcp', '1-65535', 'PERMIT', wl_pair_type=wl_pair_type)
+
+def GetUdpAllowAllWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+    return __getWorkloadPairsBy('udp', '1-65535', 'PERMIT', wl_pair_type=wl_pair_type)
+
+def GetTcpDenyAllWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+    return __getWorkloadPairsBy('tcp', '1-65535', 'DENY', wl_pair_type=wl_pair_type)
+
+def GetUdpDenyAllWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+    return __getWorkloadPairsBy('udp', '1-65535', 'DENY', wl_pair_type=wl_pair_type)
+
+
+def __get_default_workloads(wl_pair_type):
+    if wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY:
+        return api.GetLocalWorkloadPairs()
+    return api.GetRemoteWorkloadPairs()
+
+
+def GetPingableWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+    if __config_pushed:
+        return __GetAppWorkloadWorkloadPairs(afilter="spec.alg_type=icmp;spec.alg.icmp.type=1",
+            action="PERMIT", wl_pair_type=wl_pair_type)
+    return __get_default_workloads(wl_pair_type)
+
+
+def GetNonPingableWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+    if __config_pushed:
+        return __GetAppWorkloadWorkloadPairs(afilter="spec.alg_type=icmp;spec.alg.icmp.type=1",
+         action="DENY", wl_pair_type=wl_pair_type)
+    return []

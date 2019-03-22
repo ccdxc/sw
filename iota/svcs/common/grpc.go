@@ -54,9 +54,20 @@ func CreateNewGRPCServer(svcName, URL string, maxMsgSize int) (*GRPCServer, erro
 }
 
 // CreateNewGRPCClient creates a new GRPC Client
-func CreateNewGRPCClient(svcName, URL string) (*GRPCClient, error) {
+func CreateNewGRPCClient(svcName, URL string, maxMsgSize int) (*GRPCClient, error) {
 	log.Infof("Creating a new GRPC Client for service, %v. Dialing %v", svcName, URL)
-	conn, err := grpc.Dial(URL, grpc.WithInsecure(), grpc.WithTimeout(time.Minute*5), grpc.WithBlock())
+
+	copts := []grpc.DialOption{}
+
+	copts = append(copts, grpc.WithInsecure())
+	copts = append(copts, grpc.WithTimeout(time.Minute*5))
+	copts = append(copts, grpc.WithBlock())
+
+	if maxMsgSize != 0 {
+		copts = append(copts, grpc.WithMaxMsgSize(maxMsgSize))
+	}
+
+	conn, err := grpc.Dial(URL, copts...)
 	if err != nil {
 		log.Errorf("Error creating GRPC Client for %v. Err: %v", URL, err)
 		return nil, fmt.Errorf("error creating GRPC Client for %v. Err: %v", URL, err)
@@ -66,6 +77,7 @@ func CreateNewGRPCClient(svcName, URL string) (*GRPCClient, error) {
 		SvcName: svcName,
 		Client:  conn,
 	}
+
 	return &c, nil
 }
 

@@ -91,6 +91,8 @@ enum PersonalityType {
     PERSONALITY_MELLANOX                = 6;
     PERSONALITY_BROADCOM                = 7;
     PERSONALITY_INTEL                   = 8;
+    // Node just run commands
+    PERSONALITY_COMMAND_NODE            = 9;
 }
 
 enum EntityType {
@@ -267,11 +269,12 @@ enum InterfaceType {
 }
 
 enum WorkloadType {
-    WORKLOAD_TYPE_NONE                  = 0;
-    WORKLOAD_TYPE_CONTAINER             = 1;
-    WORKLOAD_TYPE_VM                    = 2;
-    WORKLOAD_TYPE_BARE_METAL            = 3;
-    WORKLOAD_TYPE_BARE_METAL_MAC_VLAN   = 4;
+    WORKLOAD_TYPE_NONE                       = 0;
+    WORKLOAD_TYPE_CONTAINER                  = 1;
+    WORKLOAD_TYPE_VM                         = 2;
+    WORKLOAD_TYPE_BARE_METAL                 = 3;
+    WORKLOAD_TYPE_BARE_METAL_MAC_VLAN        = 4;
+    WORKLOAD_TYPE_BARE_METAL_MAC_VLAN_ENCAP  = 5;
 }
 
 message Workload {
@@ -321,6 +324,15 @@ message Workload {
 
     // Secondary IPv6 addresses
     repeated string sec_ipv6_prefix         = 16;
+
+    // number of CPUs to be dedicated.
+    uint32 cpus                             = 17;
+
+    // Memory allocated
+    uint32 memory                           = 18;
+
+    // Management IP of the workload if VM
+    string mgmt_ip                          = 19;
 }
 
 enum TriggerOp {
@@ -392,6 +404,12 @@ message Command {
 
     // Whehther command timed out
     bool            timed_out           = 11;
+
+    // Copy Stderr on error only
+    bool            stdout_on_err       = 12;
+
+    // Copy Stderr on error only
+    bool            stderr_on_err       = 13;
 }
 
 // Captures the overall health of the e2e cluster

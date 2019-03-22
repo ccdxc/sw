@@ -17,8 +17,10 @@ def Setup(tc):
 def Trigger(tc):
     #Run all commands in parallel.
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    wload_bringup_req = api.BringUpWorkloadsRequest()
-    wload_teardown_req = api.TeardownWorkloadsRequest()
+
+    wloads =  api.GetWorkloads()
+
+    wloads = []
     #Start traffic commands in background
     for pair in tc.workload_pairs:
         w1 = pair[0]
@@ -33,10 +35,8 @@ def Trigger(tc):
         api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                                "%s -c %s" % (basecmd, w1.ip_address),  background = True)
 
-        api.AddWorkloadBringUp(wload_bringup_req, w1)
-        api.AddWorkloadBringUp(wload_bringup_req, w2)
-        api.AddWorkloadTeardown(wload_teardown_req, w1)
-        api.AddWorkloadTeardown(wload_teardown_req, w2)
+        wloads.append(w1)
+        wloads.append(w2)
 
         #Just try with 1 workload pair for now
         break
@@ -48,7 +48,7 @@ def Trigger(tc):
     #Sleep for some time for traffic to stabalize
     time.sleep(10)
     #Teardown workloads
-    ret = api.Trigger_TeardownWorkloadsRequest(wload_teardown_req)
+    ret = api.TeardownWorkloads(wloads)
     if ret != api.types.status.SUCCESS:
         api.Trigger_TerminateAllCommands(trig_resp)
         return api.types.status.FAILURE
@@ -57,7 +57,7 @@ def Trigger(tc):
     tc.resp = api.Trigger_TerminateAllCommands(trig_resp)
 
     #Bring up the same workoad loads
-    ret = api.Trigger_BringUpWorkloadsRequest(wload_bringup_req)
+    ret = api.BringUpWorkloads(wloads)
     if ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
 

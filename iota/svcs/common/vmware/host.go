@@ -337,26 +337,26 @@ func (h *Host) boot(name string, ncpus uint, memory uint, finder *find.Finder) (
 	vm, err := finder.VirtualMachine(h.context.context, name)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Could not find VM")
 	}
 
 	if err = h.reconfigureVM(vm, ncpus, memory); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Reconfiguration failed")
 	}
 
 	task, err := vm.PowerOn(h.context.context)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Power on task start failed")
 	}
 	err = task.Wait(h.context.context)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Power on task failed")
 	}
 
 	var ip string
 	ip, err = vm.WaitForIP(h.context.context)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Wait for IP failed")
 	}
 
 	return &VMInfo{Name: name, IP: ip}, nil // first arg is string, second is net.IP.
@@ -674,7 +674,9 @@ func (h *Host) importVapp(dir string, spec *types.OvfCreateImportSpecResult, fin
 		}
 	}
 
-	return lease.Complete(ctx)
+	lease.Complete(ctx)
+
+	return nil
 }
 
 func (h *Host) DeployVMOnDataStore(ds *Datastore, name string, ncpus uint, memory uint, networks []string, ovfDir string) (*VMInfo, error) {
@@ -693,9 +695,10 @@ func (h *Host) DeployVMOnDataStore(ds *Datastore, name string, ncpus uint, memor
 
 	err = h.importVapp(ovfDir, spec, finder)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Import vapp failed")
 	}
 
+	//SLeep for a while before booting.
 	time.Sleep(5 * time.Second)
 	return h.boot(name, ncpus, memory, finder)
 }

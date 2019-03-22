@@ -4,6 +4,8 @@ import pdb
 import os
 import sys
 import time
+from collections import defaultdict
+
 from iota.harness.infra.utils.logger import Logger as Logger
 
 import iota.protos.pygen.types_pb2 as types_pb2
@@ -22,23 +24,26 @@ DEFAULT_COMMAND_TIMEOUT = 30
 
 HOST_NAPLES_DIR         = "/naples"
 
-running_workloads = {}
 gl_iota_svc_channel = None
 gl_topo_svc_stub = None
 gl_cfg_svc_stub = None
 CurrentTestcase = None
+CurrentTestbundle = None
 
 topdir = os.path.dirname(sys.argv[0])
 topdir = os.path.abspath(topdir)
 iota_test_data_dir = topdir + "/test_data"
+__gl_rundir = None
 
 def GetTestDataDirectory():
-    return iota_test_data_dir 
+    return iota_test_data_dir
 
 def Init():
     server = 'localhost:' + str(GlobalOptions.svcport)
     Logger.info("Creating GRPC Channel to IOTA Service %s" % server)
-    gl_iota_svc_channel = grpc.insecure_channel(server)
+    gl_iota_svc_channel = grpc.insecure_channel(server,
+     options=[('grpc.max_send_message_length', 16 * 1024 * 1024),
+          ('grpc.max_receive_message_length', 16 * 1024 * 1024)])
     Logger.info("Waiting for IOTA Service to be UP")
     grpc.channel_ready_future(gl_iota_svc_channel).result()
     Logger.info("Connected to IOTA Service")
@@ -100,16 +105,12 @@ def ReloadNodes(req):
     return __rpc(req, gl_topo_svc_stub.ReloadNodes)
 
 def IsWorkloadRunning(wl):
-    global running_workloads
-    return wl in running_workloads
+    return store.IsWorkloadRunning(wl)
 
 def __bringup_workloads(req):
-    global running_workloads
     resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
     if IsApiResponseOk(resp):
         #make testcase directory for new workloads
-        for wlmsg in req.workloads:
-            running_workloads[wlmsg.workload_name] = True
         if CurrentTestcase:
             cur_dir = GetCurrentDirectory()
             ChangeDirectory("")
@@ -119,10 +120,9 @@ def __bringup_workloads(req):
     return None, types.status.FAILURE
 
 def __teardown_workloads(req):
-    global running_workloads
     resp = __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
     for wlmsg in req.workloads:
-        del running_workloads[wlmsg.workload_name]
+        store.SetWorkloadStopped(wlmsg.workload_name)
     if IsApiResponseOk(resp):
         return resp, types.status.SUCCESS
     return None, types.status.FAILURE
@@ -132,13 +132,16 @@ def AddWorkloads(req, skip_store=False, skip_bringup=False):
     global gl_topo_svc_stub
     Logger.debug("Add Workloads:")
     resp = None
+    running = True
     if not skip_bringup:
         resp, ret = __bringup_workloads(req)
     else:
         Logger.debug("Skipping workload bring up.")
         resp = req
+        running = False
     if not skip_store and resp is not None:
-        store.AddWorkloads(resp)
+        store.AddWorkloads(resp, running=running)
+
     return resp
 
 def DeleteWorkloads(req, skip_store=False):
@@ -171,6 +174,7 @@ def Trigger(req):
         req_cmd.exit_code = resp_cmd.exit_code
         req_cmd.timed_out = resp_cmd.timed_out
     return resp
+
 
 def EntityCopy(req):
     global gl_topo_svc_stub
@@ -254,9 +258,20 @@ def GetWorkloadNodeHostInterfaces(name):
 def GetWorkloadTypeForNode(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadTypeForNode(node_name)
 
+def IsBareMetalWorkloadType(node_name):
+    wl_type = store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadTypeForNode(node_name)
+    return wl_type in [topo_svc.WorkloadType.Value('WORKLOAD_TYPE_BARE_METAL'),
+                        topo_svc.WorkloadType.Value('WORKLOAD_TYPE_BARE_METAL_MAC_VLAN'),
+                        topo_svc.WorkloadType.Value('WORKLOAD_TYPE_BARE_METAL_MAC_VLAN_ENCAP')]
+
 def GetWorkloadImageForNode(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadImageForNode(node_name)
 
+def GetWorkloadCpusForNode(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadCpusForNode(node_name)
+
+def GetWorkloadMemoryForNode(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadMemoryForNode(node_name)
 def GetNodes():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes()
 
@@ -269,11 +284,17 @@ def GetNicMgmtIP(node_name):
 def GetNicIntMgmtIP(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicIntMgmtIP(node_name)
 
+def GetMaxConcurrentWorkloads(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetMaxConcurrentWorkloads(node_name)
+
 def DoNodeConfig(node_name):
     return store.GetTestbed().GetCurrentTestsuite().DoConfig()
 
 def Testbed_AllocateVlan():
     return store.GetTestbed().AllocateVlan()
+
+def Testbed_ResetVlanAlloc():
+    return store.GetTestbed().ResetVlanAlloc()
 
 def Testbed_GetVlanCount():
     return store.GetTestbed().GetVlanCount()
@@ -360,18 +381,6 @@ def IsApiResponseOk(resp):
     return True
 
 
-# ================================
-# Wrappers for Workload bring up and teardown APIs
-# ================================
-def BringUpWorkloadsRequest():
-    req = topo_svc.WorkloadMsg()
-    req.workload_op = topo_svc.ADD
-    return req
-
-def TeardownWorkloadsRequest():
-    req = topo_svc.WorkloadMsg()
-    req.workload_op = topo_svc.DELETE
-    return req
 
 def AddWorkloadTeardown(req, workload):
     assert(req.workload_op == topo_svc.DELETE)
@@ -412,9 +421,105 @@ def AddWorkloadBringUp(req, workload):
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
 
+def __bringUpWorkloads(wloads):
+
+    req = topo_svc.WorkloadMsg()
+    req.workload_op = topo_svc.ADD
+    for wload in wloads:
+        AddWorkloadBringUp(req, wload)
+    ret = Trigger_BringUpWorkloadsRequest(req)
+    if ret != types.status.SUCCESS:
+        return resp, types.status.FAILURE
+
+    return ret
+
+def __configOnlyBringupWorkloads(wloads):
+
+    node_wloads = defaultdict(lambda : set())
+    node_new_wloads = defaultdict(lambda : set())
+    store_wloads = GetWorkloads()
+    for wload in store_wloads:
+        if wload.IsWorkloadRunning():
+            node_wloads[wload.node_name].add(wload)
+    for wl in wloads:
+        node_new_wloads[wl.node_name].add(wl)
+
+    teardownWloads = []
+    bringupWloads = []
+    for node, wloads_new in node_new_wloads.items():
+        cur_wloads = node_wloads.get(node, set())
+        new_wloads =  wloads_new.union(cur_wloads)
+        if len(new_wloads) > GetMaxConcurrentWorkloads(node):
+            #Remove the difference
+            teardownWloads.extend(list(cur_wloads.difference(wloads_new)))
+        #Bring up the difference
+        bringupWloads.extend(list(wloads_new.difference(cur_wloads)))
+
+    if teardownWloads:
+        ret = TeardownWorkloads(teardownWloads)
+        if ret != types.status.SUCCESS:
+            Logger.error("teardown workloads failed")
+            return types.status.FAILURE
+
+    if bringupWloads:
+        ret = __bringUpWorkloads(bringupWloads)
+        if ret != types.status.SUCCESS:
+            Logger.error("Bring up workloads failed")
+            return types.status.FAILURE
+
+    return  types.status.SUCCESS
+
+
+def BringUpWorkloads(wloads):
+
+    if IsConfigOnly():
+        return __configOnlyBringupWorkloads(wloads)
+
+    return __bringUpWorkloads(wloads)
+
+
+def TeardownWorkloads(wloads):
+    req = topo_svc.WorkloadMsg()
+    req.workload_op = topo_svc.DELETE
+    for wload in wloads:
+        AddWorkloadTeardown(req, wload)
+    ret = Trigger_TeardownWorkloadsRequest(req)
+    if ret != types.status.SUCCESS:
+        return types.status.FAILURE
+
+    return ret
+
+def ReAddWorkloads(wloads):
+    ret = TeardownWorkloads(wloads)
+    if ret != types.status.SUCCESS:
+        return types.status.FAILURE
+
+    ret = BringUpWorkloads(wloads)
+    if ret != types.status.SUCCESS:
+        return types.status.FAILURE
+
+    return ret
+
+
+# ================================
+# Wrappers for Workload bring up and teardown APIs
+# ================================
+def BringUpWorkloadsRequest():
+    req = topo_svc.WorkloadMsg()
+    req.workload_op = topo_svc.ADD
+    return req
+
+def TeardownWorkloadsRequest():
+    req = topo_svc.WorkloadMsg()
+    req.workload_op = topo_svc.DELETE
+    return req
+
+
 def Trigger_BringUpWorkloadsRequest(req):
     assert(req.workload_op == topo_svc.ADD)
     resp, ret = __bringup_workloads(req)
+    #Some params might have changes, add ot store
+    store.AddWorkloads(resp)
     return ret
 
 def Trigger_TeardownWorkloadsRequest(req):
@@ -441,7 +546,9 @@ def Trigger_CreateAllParallelCommandsRequest():
 
 def Trigger_AddCommand(req, node_name, entity_name, command,
                        background = False, rundir = "",
-                       timeout = DEFAULT_COMMAND_TIMEOUT):
+                       timeout = DEFAULT_COMMAND_TIMEOUT,
+                       stdout_on_err = False,
+                       stderr_on_err = False):
     spl_workload = store.GetSplWorkload(entity_name)
     if spl_workload:
         return spl_workload.AddCommand(req, command, background)
@@ -452,6 +559,8 @@ def Trigger_AddCommand(req, node_name, entity_name, command,
     cmd.command = command
     cmd.running_dir = rundir
     cmd.foreground_timeout = timeout
+    cmd.stdout_on_err = stdout_on_err
+    cmd.stderr_on_err = stderr_on_err
     if __gl_rundir:
         cmd.running_dir = __gl_rundir + '/' + rundir
     return cmd
@@ -517,7 +626,6 @@ def IsApiResponseOk(resp):
 # ================================
 # Wrappers for Copy APIs
 # ================================
-__gl_rundir = None
 def ChangeDirectory(rundir):
     global __gl_rundir
     __gl_rundir = rundir
@@ -565,7 +673,7 @@ def CopyToHostTools(node_name, files):
 
 def CopyToNaples(node_name, files, dest_dir):
     # Assumption is that destination directory is always / and then user should move the file by executing a command.
-    # Will change this function to perform that operation as consumer test case is only 1 
+    # Will change this function to perform that operation as consumer test case is only 1
     copy_resp = __CopyCommon(topo_svc.DIR_IN, node_name,
                              "%s_host" % node_name, files, dest_dir)
     if not copy_resp:

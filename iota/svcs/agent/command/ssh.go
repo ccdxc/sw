@@ -55,6 +55,7 @@ func RunSSHCommand(SSHHandle *ssh.Client, cmd string, TimedOut uint32, sudo bool
 	var stdoutBuf, stderrBuf bytes.Buffer
 
 	cmdInfo := &CommandInfo{Ctx: &CommandCtx{}}
+
 	sshSession, sshOut, sshErr, err := createSSHSession(SSHHandle)
 	if err != nil {
 		logger.Println("SSH session creation failed!")

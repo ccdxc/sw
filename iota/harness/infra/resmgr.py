@@ -152,7 +152,7 @@ class TestbedVlanManager(object):
         return self.__count
 
 
-TESTBED_NUM_PORTS = 8000
+TESTBED_NUM_PORTS = 32000
 class TestbedPortAllocator():
     def __init__(self):
         self.__start = 6000

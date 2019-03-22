@@ -514,7 +514,7 @@ func (tb *TestBed) connectToIotaServer() error {
 	}
 
 	// connect to iota server
-	iotc, err := common.CreateNewGRPCClient("iota-server", srvURL)
+	iotc, err := common.CreateNewGRPCClient("iota-server", srvURL, 0)
 	if err != nil {
 		return err
 	}

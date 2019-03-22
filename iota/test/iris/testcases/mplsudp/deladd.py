@@ -13,8 +13,6 @@ def Setup(tc):
 
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    wload_bringup_req = api.BringUpWorkloadsRequest()
-    wload_teardown_req = api.TeardownWorkloadsRequest()
     result = tunnel.GetTunnelManager().DeleteTunnels()
     if result != api.types.status.SUCCESS:
         api.Logger.error("Failed to delete tunnels")
@@ -22,13 +20,11 @@ def Trigger(tc):
 
     trig_resp = api.Trigger(req)
 
-    for wl in api.GetWorkloads():
-        api.AddWorkloadBringUp(wload_bringup_req, wl)
-        api.AddWorkloadTeardown(wload_teardown_req, wl)
+    wloads =  api.GetWorkloads()
 
     api.Logger.info("Teardown all workloads")
     #Teardown workloads
-    ret = api.Trigger_TeardownWorkloadsRequest(wload_teardown_req)
+    ret = api.TeardownWorkloads(wloads)
     if ret != api.types.status.SUCCESS:
         api.Trigger_TerminateAllCommands(trig_resp)
         return api.types.status.FAILURE
@@ -41,7 +37,7 @@ def Trigger(tc):
 
     api.Logger.info("Bringup all workloads")
     #Bring up the same workoad loads
-    ret = api.Trigger_BringUpWorkloadsRequest(wload_bringup_req)
+    ret = api.BringUpWorkloads(wloads)
     if ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
     result = tunnel.GetTunnelManager().CreateTunnels()

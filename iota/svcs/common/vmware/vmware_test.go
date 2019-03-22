@@ -39,7 +39,7 @@ func Test_datastore(t *testing.T) {
 
 func Test_ovf_deploy(t *testing.T) {
 
-	host, err := NewHost(context.Background(), "192.168.69.181", "root", "ubuntu123")
+	host, err := NewHost(context.Background(), "tb60-host1", "root", "ubuntu123")
 
 	TestUtils.Assert(t, err == nil, "Connected to host")
 	TestUtils.Assert(t, host != nil, "Host context set")
@@ -49,10 +49,13 @@ func Test_ovf_deploy(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "successfuly found")
 	TestUtils.Assert(t, ds != nil, "Ds found")
 
-	vsname := "test-vs-1"
-	vsspec := VswitchSpec{Name: vsname, Pnics: []string{"vmnic4"}}
-	err = host.AddVswitch(vsspec)
-	TestUtils.Assert(t, err == nil, "Vss added")
+	if host.VMExists("iota-control-vm") {
+		TestUtils.Assert(t, false, "VM does not exist")
+	}
+	//vsname := "test-vs-1"
+	//vsspec := VswitchSpec{Name: vsname, Pnics: []string{"vmnic2", "vmnic3"}}
+	//err = host.AddVswitch(vsspec)
+	//TestUtils.Assert(t, err == nil, "Vss added")
 
 	/*
 		nws := []NWSpec{{Name: "pg_test1", Vlan: 1}, {Name: "pg_test2", Vlan: 2}}

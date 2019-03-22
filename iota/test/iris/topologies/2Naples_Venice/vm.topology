@@ -7,16 +7,18 @@ nodes:
       name: node1
       role: auto
       workloads:
+        esx:
             type    : WORKLOAD_TYPE_VM
-            image   : "build-130"
+            image   : "build-137"
 
 
     - node: node2
       name: node2
       role: auto
       workloads:
+        esx:
             type    : WORKLOAD_TYPE_VM
-            image   : "build-130"
+            image   : "build-137"
 
     - node: node3
       name: venice1

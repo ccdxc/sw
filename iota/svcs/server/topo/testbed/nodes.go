@@ -226,7 +226,7 @@ func (n *TestNode) ReloadNode() error {
 	}
 
 	agentURL := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.IotaAgentPort)
-	c, err := constants.CreateNewGRPCClient(n.Node.Name, agentURL)
+	c, err := constants.CreateNewGRPCClient(n.Node.Name, agentURL, constants.GrpcMaxMsgSize)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Could not create GRPC Connection to IOTA Agent. Err: %v", err)
 		log.Errorf("TOPO SVC | ReloadNode | ReloadNode call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Node.Name, errorMsg)

@@ -10,6 +10,7 @@ import (
 var (
 	manifestFile, templateFile, outDir string
 	nodeUUIDs                          []string
+	remoteUUIDName                     string
 )
 
 var genCmd = &cobra.Command{
@@ -21,6 +22,11 @@ var genCmd = &cobra.Command{
 			log.Error("Must specify --manifest-file, --output-dir and --node-uuid")
 			cmd.Usage()
 		}
+
+		if remoteUUIDName != "" {
+			cfggen.SetRemoteUUIDName(remoteUUIDName)
+		}
+
 		c, err := cfggen.NewGenerator(manifestFile, templateFile, nodeUUIDs)
 		if err != nil {
 			log.Errorf("Failed to initialize heimdall config generator. Err: %v", err)
@@ -86,5 +92,6 @@ func init() {
 	genCmd.Flags().StringVarP(&manifestFile, "manifest-file", "f", "", "Object config manifest file")
 	genCmd.Flags().StringVarP(&templateFile, "template-file", "t", "", "Optional template file to be used in object specs")
 	genCmd.Flags().StringVarP(&outDir, "output-dir", "o", "", "Output directory for the generated files")
+	genCmd.Flags().StringVarP(&remoteUUIDName, "remote-uuid", "", "", "Optional Remote UUID name")
 	genCmd.Flags().StringSliceVarP(&nodeUUIDs, "node-uuid", "u", nil, "Naples Node UUID for the configs")
 }

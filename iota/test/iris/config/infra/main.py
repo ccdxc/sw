@@ -133,10 +133,10 @@ class ConfigObject(DictObject):
         self.__raw = self.object_to_dict(self)
 
     def Key(self):
-        return self.meta.name
+        return "/".join([str(self._get_value(key)) for key in self.__key_fields])
 
     def __rest_path(self):
-        return self.__rest_ep + "/".join([str(self._get_value(key)) for key in self.__key_fields])
+        return self.__rest_ep + self.Key()
 
     def RestObjURL(self, url):
         return url + self.__rest_path()
@@ -266,11 +266,22 @@ class CfgNode:
         if GlobalOptions.debug:
             api.Logger.info("Url : %s" % url)
 
-        cmd = ["curl", "-X", oper, "-d", "\'" + json.dumps(json_data) + "\'" if json_data else " ", "-H", "\"Content-Type:application/json\"",
-                url]
+        cmd = None
+        if json_data and len(json.dumps(json_data)) > 100000:
+            filename = "/tmp/temp_config.json"
+            with open(filename, 'w') as outfile:
+                json.dump(json_data, outfile)
+            resp = api.CopyToHost(self.host_name, [filename], "")
+            if not api.IsApiResponseOk(resp):
+                assert(0)
+            cmd = ["curl", "-X", oper,  "-d", "@temp_config.json", "-H", "\"Content-Type:application/json\"",
+                    url]
+        else:
+            cmd = ["curl", "-X", oper, "-d", "\'" + json.dumps(json_data) + "\'" if json_data else " ", "-H", "\"Content-Type:application/json\"",
+                    url]
         cmd = " ".join(cmd)
         req = api.Trigger_CreateAllParallelCommandsRequest()
-        api.Trigger_AddHostCommand(req, self.host_name, cmd, timeout=180)
+        api.Trigger_AddHostCommand(req, self.host_name, cmd, timeout=3600)
 
         resp = api.Trigger(req)
         if GlobalOptions.debug:

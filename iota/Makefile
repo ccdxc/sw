@@ -1,5 +1,6 @@
 default: all
 TOPDIR                          		:= $(GOPATH)/src/github.com/pensando/sw/iota
+NICDIR                          		:= $(GOPATH)/src/github.com/pensando/sw/nic
 export IOTA_CMD_DIR             		:= ${TOPDIR}/svcs/cmd
 export IOTA_AGENT_DIR           		:= ${IOTA_CMD_DIR}/iota-agent
 export IOTA_SERVER_DIR          		:= ${IOTA_CMD_DIR}/iota-server
@@ -38,7 +39,10 @@ bin/agent/iota_agent.freebsd: ${SRCS}
 	GOOS=freebsd go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_FREEBSD_DIR)/iota_agent github.com/pensando/sw/iota/svcs/cmd/iota-agent
 	GOOS=freebsd go build -ldflags="-s -w" -o $(IOTA_AGENT_TEST_BIN_FREEBSD_DIR)/iota-agent-test github.com/pensando/sw/iota/svcs/agent/test
 
-iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz
+iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz heimdall
+
+heimdall:
+	make -C $(NICDIR) heimdall.gobin
 
 .PHONY: test
 test:

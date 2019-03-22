@@ -47,7 +47,7 @@ func RestartIOTAAgent() {
 	time.Sleep(1 * time.Second)
 	go StartIOTAAgent(&stubMode)
 	time.Sleep(1 * time.Second)
-	c, err := common.CreateNewGRPCClient("test-client", IOTAAgentListenURL)
+	c, err := common.CreateNewGRPCClient("test-client", IOTAAgentListenURL, 0)
 	if err != nil {
 		fmt.Println("Could not create a GRPC Client to the IOTA Agent Server")
 		os.Exit(1)
@@ -69,7 +69,7 @@ func TestMain(m *testing.M) {
 	os.Mkdir(common.DstIotaAgentDir, 0777)
 	os.Mkdir(common.DstIotaEntitiesDir, 0777)
 
-	c, err := common.CreateNewGRPCClient("test-client", IOTAAgentListenURL)
+	c, err := common.CreateNewGRPCClient("test-client", IOTAAgentListenURL, 0)
 	if err != nil {
 		fmt.Println("Could not create a GRPC Client to the IOTA Agent Server")
 		os.Exit(1)

@@ -5,7 +5,7 @@ import os
 import collections
 import random
 
-mirrorpolicy_template = { 
+mirrorpolicy_template = {
     "type" : "netagent",
     "rest-endpoint"    : "api/mirror/sessions/",
     "object-key" : "meta.tenant/meta.namespace/meta.name",
@@ -90,8 +90,8 @@ def get_source(src_ip):
 def get_rule(dst_ip, src_ip, protocol, port, action):
     rule = {}
     rule['destination'] = get_destination(dst_ip, protocol, port)
-    rule['source'] = get_source(src_ip) 
-    rule['app-protocol-selectors'] = get_app_proto(protocol, port) 
+    rule['source'] = get_source(src_ip)
+    rule['app-protocol-selectors'] = get_app_proto(protocol, port)
     #rule['action'] = action
     return rule
 
@@ -124,13 +124,14 @@ def Main():
     #import pdb; pdb.set_trace()
     with open(GlobalOptions.endpoint_file, 'r') as fp:
         obj = json.load(fp)
-    EP = [] 
+    EP = []
 
     for i in range(0, len(obj["objects"])):
         print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-address"]))
         EP.append(StripIpMask(obj["objects"][i]["spec"]["ipv4-address"]))
 
     #EP.append(GetIpRange(EP[0]))
+    EP = [ep.decode() for ep in EP]
     json.dump(EP, open("EP.json", "w"))
     GlobalOptions.topology_dir = GlobalOptions.topology_dir + '/gen/telemetry/mirror'
     for dir in GlobalOptions.directories:
@@ -143,7 +144,7 @@ def Main():
             mirrorpolicy = mirrorpolicy_template
             match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
-            verif =[] 
+            verif =[]
             for i in range(0, len(EP)):
                 for j in range(i+1, len(EP)):
                     for k in GlobalOptions.ports:
@@ -164,7 +165,7 @@ def Main():
             mirrorpolicy = mirrorpolicy_template
             match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
-            verif =[] 
+            verif =[]
             for i in range(0, len(EP_SUBNET)):
                 for j in range(0, len(EP)):
                     for k in GlobalOptions.ports:
@@ -176,8 +177,8 @@ def Main():
                         verif.append(get_verif(EP[j], EP_SUBNET[i], protocol, k, action))
             json.dump(mirrorpolicy, open(GlobalOptions.topology_dir +"/{}/{}_{}_subnet_policy.json".format(protocol, protocol, action), "w"), indent=4)
             json.dump(verif, open(GlobalOptions.topology_dir + "/{}/{}_{}_subnet_verif.json".format(protocol, protocol, action), "w"), indent=4)
-    
-    EP_ANY = [] 
+
+    EP_ANY = []
     EP_ANY.append("any")
     GlobalOptions.ports.append("any")
     # Generic (any) Policy
@@ -186,7 +187,7 @@ def Main():
             mirrorpolicy = mirrorpolicy_template
             match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
-            verif =[] 
+            verif =[]
             for i in range(0, len(EP_ANY)):
                 for j in range(i, len(EP)):
                     for k in GlobalOptions.ports:
@@ -201,7 +202,7 @@ def Main():
 
     # Mixed Config
     del match_rules[:]
-    verif =[] 
+    verif =[]
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
             mirrorpolicy = mirrorpolicy_template

@@ -30,9 +30,12 @@ func (c *CfgGen) GenerateTunnels() error {
 
 	log.Infof("Generating %v Tunnels.", tunnelManifest.Count)
 
-	remoteEPs := c.EpCache[defaultRemoteUUIDName]
-	remoteEPs = remoteEPs[:tunnelManifest.Count]
+	remoteEPs := []string{}
 
+	for _, v := range c.EpCache { 
+    		remoteEPs = append(remoteEPs, v...)
+	}
+	remoteEPs = remoteEPs[:tunnelManifest.Count]
 	for i := 0; i < tunnelManifest.Count; i++ {
 		// Get the namespaces object
 		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
