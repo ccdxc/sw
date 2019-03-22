@@ -181,6 +181,13 @@ port::port_mac_intr_clr(void)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+port::port_mac_faults_clear(void)
+{
+    mac_fns()->mac_faults_clear(this->mac_id(), this->mac_ch());
+    return SDK_RET_OK;
+}
+
 bool
 port::port_mac_faults_get(void)
 {
@@ -1071,6 +1078,8 @@ port::port_link_sm_process(void)
                     break;
                 }
 
+                port_mac_faults_clear();
+
                 // transition to mac faults to be cleared
                 this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR);
 
@@ -1079,6 +1088,8 @@ port::port_link_sm_process(void)
                 SDK_PORT_SM_DEBUG(this, "Wait MAC faults clear");
 
                 mac_faults = port_mac_faults_get();
+                mac_faults = port_mac_faults_get();
+                mac_faults = port_mac_faults_get();
 
                 if (mac_faults == true) {
                     set_mac_faults(this->mac_faults() + 1);
@@ -1086,22 +1097,21 @@ port::port_link_sm_process(void)
                     set_mac_faults(0);
                 }
 
-                // If there are PCS faults/errors after MAC sync, restart SM
+                // If the PCS faults/errors after MAC sync is persistent, restart SM
                 if (this->mac_faults() > 0) {
-                    if (this->mac_faults() < 2) {
+                    if (this->mac_faults() < 3) {
                         SDK_PORT_SM_DEBUG(this, "MAC faults detected");
                         timeout = 100;
                         this->bringup_timer_val_ += timeout;
-
                         this->link_bring_up_timer_ =
                             sdk::lib::timer_schedule(
                                 SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                                 (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                                 false);
-
                         break;
                     } else {
-                        SDK_PORT_SM_DEBUG(this, "MAC faults persistent, retry SM");
+                        SDK_PORT_SM_DEBUG(this,
+                                            "MAC faults persistent, retry SM");
                         retry_sm = true;
                         set_mac_faults(0);
                         port_link_sm_reset();

@@ -654,11 +654,21 @@ mac_intr_enable_hw (uint32_t port_num, uint32_t speed,
     return 0;
 }
 
+static int
+mac_faults_clear_hw (uint32_t inst_id, uint32_t mac_ch)
+{
+    int chip_id = 0;
+    return cap_mx_base_r_pcs_status2_clear(chip_id, inst_id, mac_ch);
+}
+
 static bool
 mac_faults_get_hw (uint32_t inst_id, uint32_t mac_ch)
 {
     int chip_id = 0;
-    return cap_mx_base_r_pcs_status2(chip_id, inst_id, mac_ch) != 0;
+    int faults = 0;
+    faults = cap_mx_base_r_pcs_status2(chip_id, inst_id, mac_ch);
+    SDK_LINKMGR_TRACE_DEBUG("inst: %u, ch: %u, faults: %u", inst_id, mac_ch, faults);
+    return faults != 0;
 }
 
 static bool
@@ -851,6 +861,12 @@ mac_mgmt_soft_reset_hw (uint32_t port_num, uint32_t speed,
     return 0;
 }
 
+static int
+mac_mgmt_faults_clear_hw (uint32_t inst_id, uint32_t mac_ch)
+{
+    return 0;
+}
+
 static bool
 mac_mgmt_faults_get_hw (uint32_t inst_id, uint32_t mac_ch)
 {
@@ -965,6 +981,12 @@ mac_intr_enable_default (uint32_t port_num, uint32_t speed,
     return 0;
 }
 
+static int
+mac_faults_clear_default (uint32_t inst_id, uint32_t mac_ch)
+{
+    return 0;
+}
+
 static bool
 mac_faults_get_default (uint32_t inst_id, uint32_t mac_ch)
 {
@@ -1017,6 +1039,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_fn->mac_intr_clear     = &mac_intr_clear_default;
     mac_fn->mac_intr_enable    = &mac_intr_enable_default;
     mac_fn->mac_faults_get     = &mac_faults_get_default;
+    mac_fn->mac_faults_clear   = &mac_faults_clear_default;
     mac_fn->mac_sync_get       = &mac_sync_get_default;
     mac_fn->mac_flush_set      = &mac_flush_set_default;
     mac_fn->mac_stats_get      = &mac_stats_get_default;
@@ -1030,6 +1053,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_mgmt_fn->mac_intr_clear     = &mac_intr_clear_default;
     mac_mgmt_fn->mac_intr_enable    = &mac_intr_enable_default;
     mac_mgmt_fn->mac_faults_get     = &mac_faults_get_default;
+    mac_mgmt_fn->mac_faults_clear   = &mac_faults_clear_default;
     mac_mgmt_fn->mac_sync_get       = &mac_sync_get_default;
     mac_mgmt_fn->mac_flush_set      = &mac_flush_set_default;
     mac_mgmt_fn->mac_stats_get      = &mac_stats_get_default;
@@ -1057,14 +1081,15 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_pause_src_addr = &mac_pause_src_addr_hw;
         mac_fn->mac_deinit         = &mac_deinit_hw;
 
-        mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
-        mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
-        mac_mgmt_fn->mac_soft_reset  = &mac_mgmt_soft_reset_hw;
-        mac_mgmt_fn->mac_faults_get  = &mac_mgmt_faults_get_hw;
-        mac_mgmt_fn->mac_sync_get    = &mac_sync_get_mock;
-        mac_mgmt_fn->mac_flush_set   = &mac_mgmt_flush_set_hw;
-        mac_mgmt_fn->mac_stats_get   = &mac_mgmt_stats_get_hw;
-        mac_mgmt_fn->mac_deinit      = &mac_mgmt_deinit_hw;
+        mac_mgmt_fn->mac_cfg          = &mac_mgmt_cfg_hw;
+        mac_mgmt_fn->mac_enable       = &mac_mgmt_enable_hw;
+        mac_mgmt_fn->mac_soft_reset   = &mac_mgmt_soft_reset_hw;
+        mac_mgmt_fn->mac_faults_get   = &mac_mgmt_faults_get_hw;
+        mac_mgmt_fn->mac_faults_clear = &mac_mgmt_faults_clear_hw;
+        mac_mgmt_fn->mac_sync_get     = &mac_sync_get_mock;
+        mac_mgmt_fn->mac_flush_set    = &mac_mgmt_flush_set_hw;
+        mac_mgmt_fn->mac_stats_get    = &mac_mgmt_stats_get_hw;
+        mac_mgmt_fn->mac_deinit       = &mac_mgmt_deinit_hw;
         break;
 
     case platform_type_t::PLATFORM_TYPE_ZEBU:
@@ -1076,6 +1101,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_intr_clear     = &mac_intr_clear_hw;
         mac_fn->mac_intr_enable    = &mac_intr_enable_hw;
         mac_fn->mac_faults_get     = &mac_faults_get_hw;
+        mac_fn->mac_faults_clear   = &mac_faults_clear_hw;
         mac_fn->mac_sync_get       = &mac_sync_get_hw;
         mac_fn->mac_flush_set      = &mac_flush_set_hw;
         mac_fn->mac_stats_get      = &mac_stats_get_hw;
@@ -1086,6 +1112,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
         mac_mgmt_fn->mac_soft_reset  = &mac_mgmt_soft_reset_hw;
         mac_mgmt_fn->mac_faults_get  = &mac_mgmt_faults_get_hw;
+        mac_mgmt_fn->mac_faults_clear = &mac_mgmt_faults_clear_hw;
         mac_mgmt_fn->mac_sync_get    = &mac_mgmt_sync_get_hw;
         mac_mgmt_fn->mac_flush_set   = &mac_mgmt_flush_set_hw;
         mac_mgmt_fn->mac_stats_get   = &mac_mgmt_stats_get_hw;

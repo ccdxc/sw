@@ -1360,3 +1360,31 @@ cap_mx_base_r_pcs_status2 (int chip_id, int inst_id, int mac_ch)
 
     return cap_mx_apb_read(chip_id, inst_id, addr);
 }
+
+int
+cap_mx_base_r_pcs_status2_clear (int chip_id, int inst_id, int mac_ch)
+{
+    int addr = 0x0;
+
+    switch (mac_ch) {
+    case 1:
+        addr = 0x921;
+        break;
+
+    case 2:
+        addr = 0xA21;
+        break;
+
+    case 3:
+        addr = 0xB21;
+        break;
+
+    case 0:
+    default:
+        addr = 0x821;
+        break;
+    }
+
+    cap_mx_apb_write(chip_id, inst_id, addr, 0x0);
+    return 0;
+}

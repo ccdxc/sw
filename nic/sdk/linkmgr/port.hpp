@@ -245,6 +245,7 @@ public:
 
     // mac faults
     bool port_mac_faults_get(void);
+    sdk_ret_t port_mac_faults_clear(void);
 
     // mac sync
     bool port_mac_sync_get(void);
