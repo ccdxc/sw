@@ -82,23 +82,6 @@ def GetConfigObjects(objects, node_names = None, ignore_error=False):
         return get_objects
     return []
 
-# Gets netagent allocated datapath ID for the object name.
-# Returns the first match by name
-def GetHALObjID(kind, obj_name):
-    filter = "meta.name=%s" % obj_name
-    # Get store configs
-    objects = QueryConfigs(kind, filter)
-    if len(objects) == 0:
-        api.Logger.error("No objects in store of kind %s " % kind)
-        return api.types.status.FAILURE
-    # Get pushed objects
-    objects = GetConfigObjects(objects)
-    if len(objects) == 0:
-        api.Logger.error("No objects in agent of kind %s " % kind)
-        return api.types.status.FAILURE
-    api.Logger.info("Found objects of kind: %s.\nObjects: %s Object[0]: %s Status: %s" %(kind, objects, objects[0], objects[0].status))
-    return objects[0].status.id
-
 def RemoveConfigObjects(objects):
     return cfg_api.RemoveConfigObjects(objects)
 
