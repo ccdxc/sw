@@ -21,8 +21,8 @@ public:
 
 private:
     // forward declaration
-    class       lfq_impl;
-    lfq_impl    *lfq_impl_;
+    class lfq_impl;
+    lfq_impl *lfq_impl_;
 
 private:
     lfq();

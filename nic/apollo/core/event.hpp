@@ -4,7 +4,8 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This file contains event identifiers and event data definitions
+/// This file contains event identifiers, event data definitions and related
+/// APIs
 ///
 //----------------------------------------------------------------------------
 
@@ -32,12 +33,31 @@ typedef struct port_event_info_s {
 } port_event_info_t;
 
 // event structure that gets passed around for every event
-typedef struct event_info_s {
+typedef struct event_s {
     event_id_t               event_id;
     union {
         port_event_info_t    port;
     };
-} event_info_t;
+} event_t;
+
+///< \brief    allocate event memory
+///< \return    allocated event instance
+event_t *event_alloc(void);
+
+///< \brief    free event memory
+///< \param[in] event    event to be freed back
+void event_free(event_t *event);
+
+///< enqueue event to a given thread
+///< event    event to be enqueued
+///< \param[in] thread_id    id of the thread to enqueue the event to
+///< \return    true if the operation succeeded or else false
+bool event_enqueue(event_t *event, uint32_t thread_id);
+
+///< \brief    dequeue event from given thread
+///< \param[in] thread_id    id of the thread from which event needs
+///<                         to be dequeued from
+event_t *event_dequeue(uint32_t thread_id);
 
 }    // namespace core
 

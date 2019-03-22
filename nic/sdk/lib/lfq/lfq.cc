@@ -53,7 +53,6 @@ private:
 
 private:
     boost::lockfree::queue<void *>    queue_;
-
 };
 
 lfq::lfq() {
@@ -94,6 +93,16 @@ lfq::destroy(lfq *q) {
     q->lfq_impl_ = NULL;
     q->~lfq();
     SDK_FREE(SDK_MEM_ALLOC_LIB_LFQ, q);
+}
+
+bool
+lfq::enqueue(void *item) {
+    return lfq_impl_->enqueue(item);
+}
+
+void *
+lfq::dequeue(void) {
+    return lfq_impl_->dequeue();
 }
 
 }    // namespace utils
