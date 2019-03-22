@@ -577,13 +577,17 @@
           "type": "string",
           "title": "Rule ID"
         },
+        "session-id": {
+          "type": "string",
+          "title": "Session ID"
+        },
         "policy-name": {
           "type": "string",
           "title": "policy name"
         },
         "reporter-id": {
           "type": "string",
-          "title": "Rule ID"
+          "title": "Reporter ID"
         },
         "time": {
           "type": "string",

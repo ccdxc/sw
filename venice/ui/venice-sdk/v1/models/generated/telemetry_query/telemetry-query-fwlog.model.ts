@@ -20,6 +20,7 @@ export interface ITelemetry_queryFwlog {
     'action': Telemetry_queryFwlog_action;
     'direction': Telemetry_queryFwlog_direction;
     'rule-id'?: string;
+    'session-id'?: string;
     'policy-name'?: string;
     'reporter-id'?: string;
     'time'?: Date;
@@ -36,6 +37,7 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
     'action': Telemetry_queryFwlog_action = null;
     'direction': Telemetry_queryFwlog_direction = null;
     'rule-id': string = null;
+    'session-id': string = null;
     'policy-name': string = null;
     'reporter-id': string = null;
     'time': Date = null;
@@ -77,6 +79,10 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
             type: 'string'
         },
         'rule-id': {
+            required: false,
+            type: 'string'
+        },
+        'session-id': {
             required: false,
             type: 'string'
         },
@@ -187,6 +193,13 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
         } else {
             this['rule-id'] = null
         }
+        if (values && values['session-id'] != null) {
+            this['session-id'] = values['session-id'];
+        } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('session-id')) {
+            this['session-id'] = Telemetry_queryFwlog.propInfo['session-id'].default;
+        } else {
+            this['session-id'] = null
+        }
         if (values && values['policy-name'] != null) {
             this['policy-name'] = values['policy-name'];
         } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('policy-name')) {
@@ -224,6 +237,7 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
                 'action': CustomFormControl(new FormControl(this['action'], [required, enumValidator(Telemetry_queryFwlog_action), ]), Telemetry_queryFwlog.propInfo['action']),
                 'direction': CustomFormControl(new FormControl(this['direction'], [required, enumValidator(Telemetry_queryFwlog_direction), ]), Telemetry_queryFwlog.propInfo['direction']),
                 'rule-id': CustomFormControl(new FormControl(this['rule-id']), Telemetry_queryFwlog.propInfo['rule-id']),
+                'session-id': CustomFormControl(new FormControl(this['session-id']), Telemetry_queryFwlog.propInfo['session-id']),
                 'policy-name': CustomFormControl(new FormControl(this['policy-name']), Telemetry_queryFwlog.propInfo['policy-name']),
                 'reporter-id': CustomFormControl(new FormControl(this['reporter-id']), Telemetry_queryFwlog.propInfo['reporter-id']),
                 'time': CustomFormControl(new FormControl(this['time']), Telemetry_queryFwlog.propInfo['time']),
@@ -247,6 +261,7 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
             this._formGroup.controls['action'].setValue(this['action']);
             this._formGroup.controls['direction'].setValue(this['direction']);
             this._formGroup.controls['rule-id'].setValue(this['rule-id']);
+            this._formGroup.controls['session-id'].setValue(this['session-id']);
             this._formGroup.controls['policy-name'].setValue(this['policy-name']);
             this._formGroup.controls['reporter-id'].setValue(this['reporter-id']);
             this._formGroup.controls['time'].setValue(this['time']);

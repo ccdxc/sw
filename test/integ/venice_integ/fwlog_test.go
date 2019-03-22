@@ -74,6 +74,11 @@ func (it *veniceIntegSuite) TestFwlog(c *C) {
 						c.Errorf("invalid action %v in %v", l.Action, l)
 						return false, l
 					}
+
+					if l.SessionID == "" {
+						c.Errorf("invalid session %v in %v", l.SessionID, l)
+						return false, l
+					}
 				}
 			}
 			return true, res

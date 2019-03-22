@@ -810,6 +810,13 @@ func (it *veniceIntegSuite) fwlogGen(fwlogShm string) error {
 					Fwaction:  halproto.SecurityAction(fwActionKey()),
 					Direction: uint32(rand.Int31n(2) + 1),
 					RuleId:    uint64(rand.Int63n(5000)),
+					SessionId: uint64(rand.Int63n(5000)),
+				}
+
+				if ev.IpProt == halproto.IPProtocol_IPPROTO_ICMP {
+					ev.Icmpcode = uint32(rand.Int31n(16))
+					ev.Icmptype = uint32(rand.Int31n(5))
+					ev.Icmpid = uint32(rand.Int31n(5000))
 				}
 				if err := fd.Write(ev); err != nil {
 					log.Errorf("failed to write fwlog, %s", err)

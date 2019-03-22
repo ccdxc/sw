@@ -93,29 +93,31 @@ enum FwlogDirections {
 
 message Fwlog {
     // Tenant
-    string Tenant = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
+    string Tenant      = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
     // Source IP, 
-    string Src = 2 [(gogoproto.jsontag) = "source,omitempty"];
+    string Src         = 2 [(gogoproto.jsontag) = "source,omitempty"];
     // Destination IP
-    string Dest = 3 [(gogoproto.jsontag) = "destination,omitempty"];
+    string Dest        = 3 [(gogoproto.jsontag) = "destination,omitempty"];
     // Source Port
-    uint32 SrcPort = 4 [(gogoproto.jsontag) = "source-port,omitempty"];
+    uint32 SrcPort     = 4 [(gogoproto.jsontag) = "source-port,omitempty"];
     // Destination Port
-    uint32 DestPort = 5 [(gogoproto.jsontag) = "destination-port,omitempty"];
+    uint32 DestPort    = 5 [(gogoproto.jsontag) = "destination-port,omitempty"];
     // Protocol, 
-    string Protocol = 6 [(gogoproto.jsontag) = "protocol,omitempty"];
+    string Protocol    = 6 [(gogoproto.jsontag) = "protocol,omitempty"];
     // Action 
-    string Action = 7 [(gogoproto.jsontag) = "action,omitempty", (venice.check)="StrEnum(FwlogActions)"];
+    string Action      = 7 [(gogoproto.jsontag) = "action,omitempty", (venice.check)="StrEnum(FwlogActions)"];
     // Flow Direction
-    string Direction = 8 [(gogoproto.jsontag) = "direction,omitempty", (venice.check)="StrEnum(FwlogDirections)"];
+    string Direction   = 8 [(gogoproto.jsontag) = "direction,omitempty", (venice.check)="StrEnum(FwlogDirections)"];
     // Rule ID
-    string RuleID = 9 [(gogoproto.jsontag) = "rule-id,omitempty"];
+    string RuleID      = 9 [(gogoproto.jsontag) = "rule-id,omitempty"];
+    // Session ID
+    string SessionID   = 10 [(gogoproto.jsontag) = "session-id,omitempty"];
     //policy name
-    string PolicyName = 10 [(gogoproto.jsontag) = "policy-name,omitempty"];
-    // Rule ID
-    string ReporterID = 11 [(gogoproto.jsontag) = "reporter-id,omitempty"];
+    string PolicyName  = 11 [(gogoproto.jsontag) = "policy-name,omitempty"];
+    // Reporter ID
+    string ReporterID  = 12 [(gogoproto.jsontag) = "reporter-id,omitempty"];
     // Time the log was created
-    api.Timestamp Time = 12 [(gogoproto.jsontag) = "time,omitempty"];
+    api.Timestamp Time = 13 [(gogoproto.jsontag) = "time,omitempty"];
 }
 
 // FwlogsQuerySpec allows selecting logs by all attributes

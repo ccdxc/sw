@@ -72,6 +72,12 @@ func (s *PolicyState) FwlogInit(path string) error {
 
 // ProcessFWEvent process fwlog event received from ipc
 func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
+
+	// ignore NONE action
+	if ev.GetFwaction() == halproto.SecurityAction_SECURITY_RULE_ACTION_NONE {
+		return
+	}
+
 	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
 	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
 	dPort := fmt.Sprintf("%v", ev.GetDport())
@@ -80,6 +86,7 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 	action := fmt.Sprintf("%v", strings.ToLower(strings.TrimPrefix(ev.GetFwaction().String(), "SECURITY_RULE_ACTION_")))
 	dir := fmt.Sprintf("%v", strings.ToLower(strings.TrimPrefix(halproto.FlowDirection_name[int32(ev.GetDirection())], "FLOW_DIRECTION_")))
 	ruleID := fmt.Sprintf("%v", ev.GetRuleId())
+	sessionID := fmt.Sprintf("%v", ev.GetSessionId())
 	unixnano := ev.GetTimestamp()
 	if unixnano != 0 {
 		// if a timestamp was specified in the msg, use it
@@ -87,8 +94,15 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 	}
 
 	point := &tsdb.Point{
-		Tags:   map[string]string{"source": ipSrc, "destination": ipDest, "source-port": sPort, "destination-port": dPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID},
+		Tags:   map[string]string{"source": ipSrc, "destination": ipDest, "source-port": sPort, "destination-port": dPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID, "session-id": sessionID},
 		Fields: map[string]interface{}{"flow_action": int64(ev.GetFlowaction())},
+	}
+
+	// icmp fields
+	if ev.GetIpProt() == halproto.IPProtocol_IPPROTO_ICMP {
+		point.Fields["icmp-type"] = int64(ev.GetIcmptype())
+		point.Fields["icmp-id"] = int64(ev.GetIcmpid())
+		point.Fields["icmp-code"] = int64(ev.GetIcmpcode())
 	}
 
 	log.Debugf("Fwlog: %+v", point)

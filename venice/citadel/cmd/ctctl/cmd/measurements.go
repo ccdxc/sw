@@ -93,7 +93,11 @@ func measurementCmdHandler(cmd *cobra.Command, args []string) {
 
 				for _, vl := range s.Values {
 					for _, v := range vl {
-						fmt.Fprintf(w, "%v\t", v)
+						if v != nil {
+							fmt.Fprintf(w, "%v\t", v)
+						} else {
+							fmt.Fprintf(w, "-\t")
+						}
 					}
 					fmt.Fprintln(w)
 				}

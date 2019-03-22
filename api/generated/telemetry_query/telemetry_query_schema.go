@@ -36,6 +36,8 @@ var typesMapTelemetry_query = map[string]*api.Struct{
 
 			"RuleID": api.Field{Name: "RuleID", CLITag: api.CLIInfo{ID: "rule-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rule-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
+			"SessionID": api.Field{Name: "SessionID", CLITag: api.CLIInfo{ID: "session-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "session-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"PolicyName": api.Field{Name: "PolicyName", CLITag: api.CLIInfo{ID: "policy-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "policy-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ReporterID": api.Field{Name: "ReporterID", CLITag: api.CLIInfo{ID: "reporter-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reporter-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},

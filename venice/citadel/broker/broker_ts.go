@@ -280,7 +280,7 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.PointsWrite(ctx, &req)
 		if err != nil || resp.Status != "" {
-			br.logger.Errorf("Error making PointsWrite rpc call. Err: %v, Node: %v", err, replMap[sid].NodeUUID)
+			br.logger.Errorf("Error making PointsWrite rpc call. Err: %v, rpc status: %v, Node: %v", err, rpcClient.GetState(), replMap[sid].NodeUUID)
 			// trigger db creation
 			if err != nil && strings.Contains(err.Error(), "database not found") {
 				if dbErr := br.CreateDatabase(ctx, database); dbErr != nil {
