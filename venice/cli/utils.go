@@ -313,3 +313,17 @@ func metricsQuery(server, tableName, token string) (*telemetryclient.MetricsQuer
 
 	return resp, err
 }
+
+// getTenant gets tenant name from context
+func getTenant(ctx *cliContext) string {
+	switch ctx.subcmd {
+	case "host":
+		return ""
+	case "smartnic":
+		return ""
+	case "cluster":
+		return ""
+	default:
+		return ctx.tenant
+	}
+}

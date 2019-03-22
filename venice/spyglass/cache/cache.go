@@ -110,6 +110,29 @@ func (c *Cache) matchApp(query *search.PolicySearchRequest, entry *security.SGRu
 	return false
 }
 
+// matchProtocolPort is the helper function to match protocol, port in a SG rule
+func (c *Cache) matchProtocolPort(query *search.PolicySearchRequest, entry *security.SGRule) bool {
+	// check for empty/any
+	if (query.Protocol == "" || strings.ToLower(query.Protocol) == "any") &&
+		(query.Port == "" || strings.ToLower(query.Port) == "any") {
+		return true
+	}
+
+	for _, pp := range entry.ProtoPorts {
+		if (strings.ToLower(pp.Protocol) == strings.ToLower(query.Protocol)) &&
+			strings.Contains(strings.ToLower(pp.Ports), strings.ToLower(query.Port)) {
+			return true
+		} else if (query.Protocol == "" || strings.ToLower(query.Protocol) == "any") &&
+			strings.Contains(strings.ToLower(pp.Ports), strings.ToLower(query.Port)) {
+			return true
+		} else if (query.Port == "" || strings.ToLower(query.Port) == "any") &&
+			(strings.ToLower(pp.Protocol) == strings.ToLower(query.Protocol)) {
+			return true
+		}
+	}
+	return false
+}
+
 // Helper function to parse and validate Ip in range format
 // eg:  30.1.1.1-30.1.1.10
 // TODO: Explore if policy validators code in apiserver can be reused here.
@@ -311,6 +334,7 @@ func (c *Cache) searchSGP(query *search.PolicySearchRequest, sgp *security.SGPol
 
 	for i, rule := range sgp.Spec.Rules {
 		if c.matchApp(query, &rule) &&
+			c.matchProtocolPort(query, &rule) &&
 			c.matchIP(query.FromIPAddress, rule.FromIPAddresses) &&
 			c.matchIP(query.ToIPAddress, rule.ToIPAddresses) &&
 			c.matchSG(query.FromSecurityGroup, rule.FromSecurityGroups) &&

@@ -87,7 +87,7 @@ var typesMapEndpoint = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"WorkloadName": api.Field{Name: "WorkloadName", CLITag: api.CLIInfo{ID: "workload-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workload-name", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Network": api.Field{Name: "Network", CLITag: api.CLIInfo{ID: "network", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "network", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Network": api.Field{Name: "Network", CLITag: api.CLIInfo{ID: "network", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "network", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"HomingHostAddr": api.Field{Name: "HomingHostAddr", CLITag: api.CLIInfo{ID: "homing-host-addr", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "homing-host-addr", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

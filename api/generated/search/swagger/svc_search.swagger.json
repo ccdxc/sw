@@ -52,7 +52,21 @@
           },
           {
             "name": "app",
-            "description": "App specification, proto/port format, or predefined apps and alg config\neg: tcp/443, udp/53.",
+            "description": "App specification,  predefined apps and alg config.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "protocol",
+            "description": "Protocol eg: tcp, udp, icmp.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "port",
+            "description": "TCP or UDP Port number.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -754,7 +768,15 @@
         },
         "app": {
           "type": "string",
-          "title": "App specification, proto/port format, or predefined apps and alg config\neg: tcp/443, udp/53"
+          "title": "App specification,  predefined apps and alg config"
+        },
+        "protocol": {
+          "type": "string",
+          "title": "Protocol eg: tcp, udp, icmp"
+        },
+        "port": {
+          "type": "string",
+          "title": "TCP or UDP Port number"
         },
         "from-ip-address": {
           "type": "string",

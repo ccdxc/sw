@@ -286,6 +286,45 @@ func TestInvalidAppProto(t *testing.T) {
 	Assert(t, len(errs) != 0, "sg policy creates with invalid app proto fail")
 }
 
+func TestAppProtoBoth(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+			},
+			Apps:            []string{"dns"},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	err := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, err != nil, "sg policy created with both app and proto")
+}
+
 func TestAppPortEmpty(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")

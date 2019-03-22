@@ -274,14 +274,23 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		}
 	}
 
+	for _, sgname := range []string{"dns-clients", "dns-servers", "test-servers", "web-servers", "app-servers"} {
+		sg := createSg("default", "default", sgname,
+			labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+		log.Infof("\nCreating Security-Group uuid: %s name: %s", sg.ObjectMeta.UUID, sg.Name)
+		if _, err := apiClient.SecurityV1().SecurityGroup().Create(ctx, sg); err != nil {
+			log.Errorf("Failed to create Security-Group object: %s err: %v", sg.Name, err)
+		}
+	}
 	// Create SGPolicy object-1
 	rules1 := []security.SGRule{
 		// 0
 		{
-			Apps: []string{
-				"tcp/80",
-				"udp/53",
+			ProtoPorts: []security.ProtoPort{
+				{Protocol: "tcp", Ports: "80"},
+				{Protocol: "udp", Ports: "53"},
 			},
+
 			FromIPAddresses: []string{
 				"172.0.0.1",
 				"172.0.0.2",
@@ -294,7 +303,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		},
 		// 1
 		{
-			Apps: []string{"tcp/443"},
+			ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "443"}},
 			FromIPAddresses: []string{
 				"37.232.218.135/22",
 			},
@@ -305,7 +314,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		},
 		// 2
 		{
-			Apps: []string{"tcp/22"},
+			ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "22"}},
 			FromIPAddresses: []string{
 				"any",
 			},
@@ -316,7 +325,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		},
 		// 3
 		{
-			Apps: []string{"icmp/1000"},
+			ProtoPorts: []security.ProtoPort{{Protocol: "icmp"}},
 			FromIPAddresses: []string{
 				"10.1.1.1",
 			},
@@ -327,7 +336,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		},
 		// 4
 		{
-			Apps: []string{"udp/53"},
+			ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "53"}},
 			FromSecurityGroups: []string{
 				"dns-clients",
 			},
@@ -338,7 +347,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		},
 		// 5
 		{
-			Apps: []string{"udp/53"},
+			ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "53"}},
 			FromSecurityGroups: []string{
 				"test-servers",
 			},
@@ -358,9 +367,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 	rules2 := []security.SGRule{
 		// 0
 		{
-			Apps: []string{
-				"tcp/1024",
-			},
+			ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "1024"}},
 			FromSecurityGroups: []string{
 				"web-servers",
 			},
@@ -370,7 +377,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			Action: security.SGRule_PERMIT.String(),
 		},
 		{
-			Apps: []string{"tcp/80"},
+			ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "80"}},
 			FromIPAddresses: []string{
 				"30.1.1.1-30.1.1.10",
 			},
@@ -392,7 +399,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 	rules3 := make([]security.SGRule, 70000)
 	for i := 0; i < 70000; i++ {
 		rules3[i] = security.SGRule{
-			Apps:            []string{fmt.Sprintf("%s/%d", proto[i%2], (i+1)%65536)},
+			ProtoPorts:      []security.ProtoPort{{Protocol: fmt.Sprintf("%s", proto[i%2]), Ports: fmt.Sprintf("%d", (i+1)%65536)}},
 			Action:          actions[i%2],
 			FromIPAddresses: []string{fmt.Sprintf("10.%d.%d.%d/32", (i/(256*256))%256, (i/256)%256, i%256)},
 			ToIPAddresses:   []string{fmt.Sprintf("20.%d.%d.%d/32", (i/(256*256))%256, (i/256)%256, i%256)},

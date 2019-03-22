@@ -32,7 +32,7 @@ message SGRule {
     }
 
     // list of apps objects to which the rule applies to
-    repeated string Apps                = 1 [(gogoproto.jsontag) = "apps,omitempty"];
+    repeated string Apps                = 1 [(venice.objRelation) = {Type: "NamedRef", To: "security/App"}, (gogoproto.jsontag) = "apps,omitempty"];
 
     // list of (protocol, ports) pairs to which the rule applies to, in addition to apps
     repeated ProtoPort ProtoPorts       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "proto-ports,omitempty"];
@@ -50,15 +50,15 @@ message SGRule {
     repeated string ToIPAddresses       = 5 [(gogoproto.jsontag) = "to-ip-addresses,omitempty"];
 
     // inbound rule from a given security group
-    repeated string FromSecurityGroups  = 6 [(gogoproto.jsontag) = "from-security-groups,omitempty"];
+    repeated string FromSecurityGroups  = 6 [(venice.objRelation) = {Type: "NamedRef", To: "security/SecurityGroup"}, (gogoproto.jsontag) = "from-security-groups,omitempty"];
 
     // outbound rule from a given security group
-    repeated string ToSecurityGroups    = 7 [(gogoproto.jsontag) = "to-security-groups,omitempty"];
+    repeated string ToSecurityGroups    = 7 [(venice.objRelation) = {Type: "NamedRef", To: "security/SecurityGroup"}, (gogoproto.jsontag) = "to-security-groups,omitempty"];
 }
 
 message SGPolicySpec {
     // list of security groups this policy is attached to
-    repeated string AttachGroups = 1 [(gogoproto.jsontag) = "attach-groups,omitempty"];
+    repeated string AttachGroups = 1 [(venice.objRelation) = {Type: "NamedRef", To: "security/SecurityGroup"}, (gogoproto.jsontag) = "attach-groups,omitempty"];
 
     // specifies if the set of rules need to be attached globally to a tenant
     bool AttachTenant           = 2 [(gogoproto.jsontag) = "attach-tenant,omitempty"];

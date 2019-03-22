@@ -11,6 +11,7 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/labels/selector.proto";
+import "github.com/pensando/sw/api/protos/cluster.proto";
 
 // ----------------------------- Workload Object -----------------------------
 //
@@ -39,7 +40,7 @@ message WorkloadSpec {
 
     // Hostname of the server where the workload is running.
     // cli-help: Host name where the workload runs
-    string HostName                         = 1 [(gogoproto.nullable) = true,
+    string HostName                         = 1 [(venice.objRelation) = {Type: "NamedRef", To: "cluster/Host"},
                                                 (venice.check) = "HostAddr()",
                                                 (gogoproto.jsontag) = "host-name"];
 

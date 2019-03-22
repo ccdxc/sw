@@ -237,8 +237,7 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 		},
 	}
 	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgpInv)
-	// FIXME: this check should be reversed once we have named ref validation
-	Assert(c, (err == nil), "sg policy create with unknown-app failed")
+	Assert(c, (err != nil), "sg policy create with unknown-app did not fail")
 
 	// verify agents dont have this policy
 	time.Sleep(time.Millisecond * 100)

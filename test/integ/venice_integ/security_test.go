@@ -355,3 +355,110 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	_, err = it.deleteNetwork("default", "Network-Vlan-1")
 	AssertOk(c, err, "Error deleting network")
 }
+
+func (it *veniceIntegSuite) TestSGPolicyRuleWithMultipleApps(c *C) {
+	ctx, err := it.loggedInCtx()
+	AssertOk(c, err, "Error creating logged in context")
+
+	sshApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "ssh",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "21",
+				},
+			},
+		},
+	}
+	httpApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "http",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+			},
+		},
+	}
+
+	// create apps
+	_, err = it.restClient.SecurityV1().App().Create(ctx, &sshApp)
+	AssertOk(c, err, "Error creating ssh app")
+	_, err = it.restClient.SecurityV1().App().Create(ctx, &httpApp)
+	AssertOk(c, err, "Error creating http app")
+
+	// sg policy params
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "policy1",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []security.SGRule{
+				{
+					FromIPAddresses: []string{"10.0.0.0/24"},
+					ToIPAddresses:   []string{"11.0.0.0/24"},
+					Apps:            []string{"ssh", "http"},
+					Action:          "PERMIT",
+				},
+			},
+		},
+	}
+
+	// create security policy
+	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgp)
+	AssertOk(c, err, "Error creating security policy")
+
+	// verify policy gets created in agent
+	AssertEventually(c, func() (bool, interface{}) {
+		notFound := false
+		for _, ag := range it.agents {
+			rsgp, cerr := ag.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			if (cerr != nil) || (rsgp.Name != sgp.Name) || len(rsgp.Spec.Rules) != 2 {
+				notFound = true
+			}
+		}
+		return (notFound == false), nil
+	}, "SgPolicy not found in agent", "100ms", it.pollTimeout())
+
+	// verify sgpolicy status reflects propagation status
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.restClient.SecurityV1().SGPolicy().Get(ctx, &sgp.ObjectMeta)
+		if err != nil {
+			return false, gerr
+		}
+		if tsgp.Status.PropagationStatus.GenerationID != tsgp.ObjectMeta.GenerationID {
+			return false, tsgp
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.config.NumHosts)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
+			(tsgp.Status.PropagationStatus.MinVersion != "") {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not updated", "100ms", it.pollTimeout())
+
+	// delete policy
+	_, err = it.restClient.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
+	AssertOk(c, err, "Error deleting sgpolicy")
+
+	// delete apps
+	_, err = it.restClient.SecurityV1().App().Delete(ctx, &sshApp.ObjectMeta)
+	AssertOk(c, err, "Error creating ssh app")
+	_, err = it.restClient.SecurityV1().App().Delete(ctx, &httpApp.ObjectMeta)
+	AssertOk(c, err, "Error creating http app")
+}

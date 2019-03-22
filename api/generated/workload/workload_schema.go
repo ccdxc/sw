@@ -93,7 +93,7 @@ var typesMapWorkload = map[string]*api.Struct{
 	"workload.WorkloadSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadSpec{}) },
 		Fields: map[string]api.Field{
-			"HostName": api.Field{Name: "HostName", CLITag: api.CLIInfo{ID: "host-name", Path: "", Skip: false, Insert: "", Help: "Host name where the workload runs"}, JSONTag: "host-name", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"HostName": api.Field{Name: "HostName", CLITag: api.CLIInfo{ID: "host-name", Path: "", Skip: false, Insert: "", Help: "Host name where the workload runs"}, JSONTag: "host-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadIntfSpec"},
 		},

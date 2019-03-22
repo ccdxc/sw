@@ -124,4 +124,86 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 		}
 		return true, nil
 	}, "SgPolicy status was not updated after updating the policy", "100ms", it.pollTimeout())
+
+	// delete sg policy
+	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	AssertOk(c, err, "error deleting sg policy")
+}
+
+func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
+	// if not present create the default tenant
+	it.CreateTenant("default")
+	// sg policy refering an app that doesnt exist
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []security.SGRule{
+				{
+					Action:          "PERMIT",
+					ToIPAddresses:   []string{"10.1.1.1/24"},
+					FromIPAddresses: []string{"10.1.1.1/24"},
+					Apps:            []string{"invalid"},
+				},
+			},
+		},
+	}
+
+	// create sg policy and verify it fails
+	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	Assert(c, err != nil, "sgpolicy create with invalid app reference didnt fail")
+
+	// create sg policy without app
+	sgp.Spec.Rules[0].Apps = []string{}
+	_, err = it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	AssertOk(c, err, "error creating sg policy")
+
+	// try updating the policy with invalid app
+	sgp.Spec.Rules[0].Apps = []string{"invalid"}
+	_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
+	Assert(c, err != nil, "sgpolicy update with invalid app reference didnt fail")
+
+	// ICMP app
+	icmpApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "icmp-app",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			Timeout: "5m",
+			ALG: &security.ALG{
+				Type: "ICMP",
+				Icmp: &security.Icmp{
+					Type: "1",
+					Code: "2",
+				},
+			},
+		},
+	}
+	_, err = it.apisrvClient.SecurityV1().App().Create(context.Background(), &icmpApp)
+	AssertOk(c, err, "Error creating icmp app")
+
+	// refer the app from sg policy
+	sgp.Spec.Rules[0].Apps = []string{"icmp-app"}
+	_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
+	AssertOk(c, err, "Error updating sgpolicy with reference to icmp app")
+
+	// try deleing the app, it should fail
+	_, err = it.apisrvClient.SecurityV1().App().Delete(context.Background(), &icmpApp.ObjectMeta)
+	Assert(c, err != nil, "Was able to delete app while sgpolicy was refering to it")
+
+	// finally, delete sg policy
+	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	AssertOk(c, err, "Error deleting sgpolicy with reference to icmp app")
+
+	// now, we should be able to delete the app
+	_, err = it.apisrvClient.SecurityV1().App().Delete(context.Background(), &icmpApp.ObjectMeta)
+	AssertOk(c, err, "Error deleting icmp app")
 }

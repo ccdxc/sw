@@ -3,11 +3,13 @@
 package npminteg
 
 import (
+	"context"
 	"fmt"
 
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -139,4 +141,61 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Vlan-1")
 		return (nerr != nil), nil
 	}, "Network still found in statemgr")
+}
+
+func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
+	// if not present create the default tenant
+	it.CreateTenant("default")
+
+	err := it.CreateWorkload("default", "default", "testWorkload-validator", "invalidHost", it.agents[0].nagent.NetworkAgent.NodeUUID, 101, 1)
+	Assert(c, err != nil, "was able to create workload without a host")
+
+	// create a host
+	err = it.CreateHost("testHost", "00:01:02:03:04:05")
+	AssertOk(c, err, "Error creating host")
+
+	// create workload for the new host
+	err = it.CreateWorkload("default", "default", "testWorkload-validator", "testHost", it.agents[0].nagent.NetworkAgent.NodeUUID, 101, 1)
+	AssertOk(c, err, "Error creating Workload")
+
+	// try updating the workload to invalid host
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload-validator",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "invalid",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   it.agents[0].nagent.NetworkAgent.NodeUUID,
+					MicroSegVlan: 101,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// verify we cant change the host to non-existing value
+	_, err = it.apisrvClient.WorkloadV1().Workload().Update(context.Background(), &wr)
+	Assert(c, err != nil, "was able to update workload without a host")
+
+	// verify we cant change the host to empty value
+	wr.Spec.HostName = ""
+	_, err = it.apisrvClient.WorkloadV1().Workload().Update(context.Background(), &wr)
+	Assert(c, err != nil, "was able to update workload to empty host")
+
+	// verify we cant delete the host
+	err = it.DeleteHost("testHost")
+	Assert(c, err != nil, "was able to delete host while workloads are refering to it")
+
+	// delete the workload
+	err = it.DeleteWorkload("default", "default", "testWorkload-validator")
+	AssertOk(c, err, "Error deleting Workload")
+
+	// finalyy delete the host
+	err = it.DeleteHost("testHost")
+	AssertOk(c, err, "Error deleting host")
 }

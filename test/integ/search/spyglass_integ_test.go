@@ -273,7 +273,7 @@ func (tInfo *testInfo) verifyElasticDocumentCount(t *testing.T, expectedIndexes 
 				return false, fmt.Errorf("Elastic didn't have index for default tenant")
 			}
 			elasticCount := index.Primaries.Docs.Count
-			if uint64(elasticCount) != expectedIndexes {
+			if uint64(elasticCount) < expectedIndexes {
 				return false, fmt.Errorf("Elastic index document mismatch - expected: %d actual: %d",
 					expectedIndexes, elasticCount)
 			}
@@ -484,7 +484,7 @@ func TestSpyglass(t *testing.T) {
 
 	// Validate the index operations counter
 	expectedCount := uint64(3*objectCount+int64(len(Tenants))) + sgPolicyCount
-	expectedCount += 10 // for cluster, default tenant, auth policy, test user, tesla admin role, tesla admin role binding, audi admin role, audi admin role binding, default admin role, default admin role binding
+	expectedCount += 15 // for cluster, default tenant, auth policy, test user, tesla admin role, tesla admin role binding, audi admin role, audi admin role binding, default admin role, default admin role binding & security groups
 	AssertEventually(t,
 		func() (bool, interface{}) {
 			if tInfo.idr.GetWriteCount() < expectedCount {
@@ -560,7 +560,7 @@ func TestSpyglass(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
-			if expectedCount != tInfo.idr.GetWriteCount() {
+			if tInfo.idr.GetWriteCount() < expectedCount {
 				t.Logf("Retrying, indexed objects count mismatch expected: %d actual: %d",
 					expectedCount, tInfo.idr.GetWriteCount())
 				return false, nil
@@ -2426,10 +2426,11 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-1": {
 						Rule: &security.SGRule{
-							Apps: []string{
-								"tcp/80",
-								"udp/53",
+							ProtoPorts: []security.ProtoPort{
+								{Protocol: "tcp", Ports: "80"},
+								{Protocol: "udp", Ports: "53"},
 							},
+
 							FromIPAddresses: []string{
 								"172.0.0.1",
 								"172.0.0.2",
@@ -2450,7 +2451,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Exact match on IP, APP and SGP",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/443",
+				Protocol:      "tcp",
+				Port:          "443",
 				FromIPAddress: "37.232.218.135",
 				ToIPAddress:   "37.232.218.136",
 				SGPolicy:      "sgp-1",
@@ -2460,7 +2462,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-1": {
 						Rule: &security.SGRule{
-							Apps: []string{"tcp/443"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "443"}},
 							FromIPAddresses: []string{
 								"37.232.218.135/22",
 							},
@@ -2479,7 +2481,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Exact match on IP and APP",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "icmp/1000",
+				Protocol:      "icmp",
 				FromIPAddress: "10.1.1.1",
 				ToIPAddress:   "20.1.1.1",
 			},
@@ -2488,7 +2490,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-1": {
 						Rule: &security.SGRule{
-							Apps: []string{"icmp/1000"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "icmp"}},
 							FromIPAddresses: []string{
 								"10.1.1.1",
 							},
@@ -2507,7 +2509,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Exact match on APP and Any IP",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/22",
+				Protocol:      "tcp",
+				Port:          "22",
 				FromIPAddress: "1.1.1.1",
 				ToIPAddress:   "2.1.1.1",
 			},
@@ -2516,7 +2519,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-1": {
 						Rule: &security.SGRule{
-							Apps: []string{"tcp/22"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "22"}},
 							FromIPAddresses: []string{
 								"any",
 							},
@@ -2535,7 +2538,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Subnet match on IP",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/80",
+				Protocol:      "tcp",
+				Port:          "80",
 				FromIPAddress: "10.0.0.2",
 				ToIPAddress:   "229.204.172.212",
 			},
@@ -2544,9 +2548,9 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-1": {
 						Rule: &security.SGRule{
-							Apps: []string{
-								"tcp/80",
-								"udp/53",
+							ProtoPorts: []security.ProtoPort{
+								{Protocol: "tcp", Ports: "80"},
+								{Protocol: "udp", Ports: "53"},
 							},
 							FromIPAddresses: []string{
 								"172.0.0.1",
@@ -2568,7 +2572,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Subnet mismatch on From-IP",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/80",
+				Protocol:      "tcp",
+				Port:          "80",
 				FromIPAddress: "10.0.0.6",
 				ToIPAddress:   "229.204.172.212",
 			},
@@ -2581,7 +2586,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Subnet mismatch on To-IP",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/80",
+				Protocol:      "tcp",
+				Port:          "80",
 				FromIPAddress: "10.0.0.2",
 				ToIPAddress:   "229.205.1.1",
 			},
@@ -2594,7 +2600,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Exact match on IP",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "icmp/5000",
+				Protocol:      "icmp",
+				Port:          "1000",
 				FromIPAddress: "10.1.1.1",
 				ToIPAddress:   "20.1.1.1",
 			},
@@ -2607,7 +2614,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Match on SGs #1",
 			search.PolicySearchRequest{
 				Tenant:            "default",
-				App:               "udp/53",
+				Protocol:          "udp",
+				Port:              "53",
 				FromSecurityGroup: "dns-clients",
 				ToSecurityGroup:   "dns-servers",
 			},
@@ -2616,7 +2624,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-1": {
 						Rule: &security.SGRule{
-							Apps: []string{"udp/53"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "53"}},
 							FromSecurityGroups: []string{
 								"dns-clients",
 							},
@@ -2635,7 +2643,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Match on SGs #2",
 			search.PolicySearchRequest{
 				Tenant:            "default",
-				App:               "udp/53",
+				Protocol:          "udp",
+				Port:              "53",
 				FromSecurityGroup: "test-servers",
 				ToSecurityGroup:   "dns-servers",
 				SGPolicy:          "sgp-1",
@@ -2645,7 +2654,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-1": {
 						Rule: &security.SGRule{
-							Apps: []string{"udp/53"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "53"}},
 							FromIPAddresses: []string{
 								"any",
 							},
@@ -2667,7 +2676,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Match on SGs #3",
 			search.PolicySearchRequest{
 				Tenant:            "default",
-				App:               "tcp/1024",
+				Protocol:          "tcp",
+				Port:              "1024",
 				FromSecurityGroup: "web-servers",
 				ToSecurityGroup:   "app-servers",
 			},
@@ -2676,9 +2686,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-2": {
 						Rule: &security.SGRule{
-							Apps: []string{
-								"tcp/1024",
-							},
+							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "1024"}},
 							FromSecurityGroups: []string{
 								"web-servers",
 							},
@@ -2697,7 +2705,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Match on IP range #1",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/80",
+				Protocol:      "tcp",
+				Port:          "80",
 				FromIPAddress: "30.1.1.1",
 				ToIPAddress:   "40.1.1.10",
 			},
@@ -2706,7 +2715,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-2": {
 						Rule: &security.SGRule{
-							Apps: []string{"tcp/80"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "80"}},
 							FromIPAddresses: []string{
 								"30.1.1.1-30.1.1.10",
 							},
@@ -2725,7 +2734,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Match on IP range #2",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/80",
+				Protocol:      "tcp",
+				Port:          "80",
 				FromIPAddress: "30.1.1.5",
 				ToIPAddress:   "40.1.1.5",
 			},
@@ -2734,7 +2744,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-2": {
 						Rule: &security.SGRule{
-							Apps: []string{"tcp/80"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "80"}},
 							FromIPAddresses: []string{
 								"30.1.1.1-30.1.1.10",
 							},
@@ -2753,7 +2763,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Miss on IP range #1",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/80",
+				Protocol:      "tcp",
+				Port:          "80",
 				FromIPAddress: "30.1.1.5",
 				ToIPAddress:   "40.1.1.20",
 			},
@@ -2766,7 +2777,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Miss on IP range #2",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/80",
+				Protocol:      "tcp",
+				Port:          "80",
 				FromIPAddress: "30.1.1.0",
 				ToIPAddress:   "40.1.1.0",
 			},
@@ -2779,7 +2791,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Miss on IP range #3",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/80",
+				Protocol:      "tcp",
+				Port:          "80",
 				FromIPAddress: "30.1.1.15",
 				ToIPAddress:   "40.1.1.15",
 			},
@@ -2792,7 +2805,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"No Match on IP",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/32000",
+				Protocol:      "tcp",
+				Port:          "32000",
 				FromIPAddress: "any",
 				ToIPAddress:   "any",
 			},
@@ -2805,7 +2819,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"No Match on SG",
 			search.PolicySearchRequest{
 				Tenant:            "default",
-				App:               "tcp/32000",
+				Protocol:          "tcp",
+				Port:              "32000",
 				FromSecurityGroup: "any",
 				ToSecurityGroup:   "any",
 			},
@@ -2831,7 +2846,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Scale test with match on any IP",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/1",
+				Protocol:      "tcp",
+				Port:          "1",
 				FromIPAddress: "any",
 				ToIPAddress:   "any",
 				SGPolicy:      "sgp-scale",
@@ -2841,7 +2857,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-scale": {
 						Rule: &security.SGRule{
-							Apps: []string{"tcp/1"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "1"}},
 							FromIPAddresses: []string{
 								"10.0.0.0/32",
 							},
@@ -2860,7 +2876,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Scale test with match on 35001th Rule",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "tcp/35001",
+				Protocol:      "tcp",
+				Port:          "35001",
 				FromIPAddress: "10.0.136.184",
 				ToIPAddress:   "any",
 				SGPolicy:      "sgp-scale",
@@ -2870,7 +2887,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-scale": {
 						Rule: &security.SGRule{
-							Apps: []string{"tcp/35001"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "35001"}},
 							FromIPAddresses: []string{
 								"10.0.136.184/32",
 							},
@@ -2889,7 +2906,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Scale test with match on 70000th Rule",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "udp/4464",
+				Protocol:      "udp",
+				Port:          "4464",
 				FromIPAddress: "10.1.17.111",
 				ToIPAddress:   "20.1.17.111",
 				SGPolicy:      "sgp-scale",
@@ -2899,7 +2917,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 				Results: map[string]*search.PolicyMatchEntry{
 					"sgp-scale": {
 						Rule: &security.SGRule{
-							Apps: []string{"udp/4464"},
+							ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "4464"}},
 							FromIPAddresses: []string{
 								"10.1.17.111/32",
 							},
@@ -2918,7 +2936,8 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			"Scale test MISS with 70k Rule",
 			search.PolicySearchRequest{
 				Tenant:        "default",
-				App:           "udp/80000",
+				Protocol:      "udp",
+				Port:          "80000",
 				FromIPAddress: "10.1.17.111",
 				ToIPAddress:   "20.1.17.111",
 				SGPolicy:      "sgp-scale",

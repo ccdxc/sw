@@ -13,6 +13,8 @@ export interface ISearchPolicySearchRequest {
     'namespace'?: string;
     'sg-policy'?: string;
     'app'?: string;
+    'protocol'?: string;
+    'port'?: string;
     'from-ip-address'?: string;
     'to-ip-address'?: string;
     'from-security-group'?: string;
@@ -33,6 +35,8 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
     be limited to the specified SGpolicy object name. */
     'sg-policy': string = null;
     'app': string = null;
+    'protocol': string = null;
+    'port': string = null;
     'from-ip-address': string = null;
     'to-ip-address': string = null;
     'from-security-group': string = null;
@@ -56,6 +60,14 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
             type: 'string'
         },
         'app': {
+            required: false,
+            type: 'string'
+        },
+        'protocol': {
+            required: false,
+            type: 'string'
+        },
+        'port': {
             required: false,
             type: 'string'
         },
@@ -135,6 +147,20 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
         } else {
             this['app'] = null
         }
+        if (values && values['protocol'] != null) {
+            this['protocol'] = values['protocol'];
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('protocol')) {
+            this['protocol'] = SearchPolicySearchRequest.propInfo['protocol'].default;
+        } else {
+            this['protocol'] = null
+        }
+        if (values && values['port'] != null) {
+            this['port'] = values['port'];
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('port')) {
+            this['port'] = SearchPolicySearchRequest.propInfo['port'].default;
+        } else {
+            this['port'] = null
+        }
         if (values && values['from-ip-address'] != null) {
             this['from-ip-address'] = values['from-ip-address'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('from-ip-address')) {
@@ -174,6 +200,8 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
                 'namespace': CustomFormControl(new FormControl(this['namespace']), SearchPolicySearchRequest.propInfo['namespace']),
                 'sg-policy': CustomFormControl(new FormControl(this['sg-policy']), SearchPolicySearchRequest.propInfo['sg-policy']),
                 'app': CustomFormControl(new FormControl(this['app']), SearchPolicySearchRequest.propInfo['app']),
+                'protocol': CustomFormControl(new FormControl(this['protocol']), SearchPolicySearchRequest.propInfo['protocol']),
+                'port': CustomFormControl(new FormControl(this['port']), SearchPolicySearchRequest.propInfo['port']),
                 'from-ip-address': CustomFormControl(new FormControl(this['from-ip-address']), SearchPolicySearchRequest.propInfo['from-ip-address']),
                 'to-ip-address': CustomFormControl(new FormControl(this['to-ip-address']), SearchPolicySearchRequest.propInfo['to-ip-address']),
                 'from-security-group': CustomFormControl(new FormControl(this['from-security-group']), SearchPolicySearchRequest.propInfo['from-security-group']),
@@ -193,6 +221,8 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
             this._formGroup.controls['namespace'].setValue(this['namespace']);
             this._formGroup.controls['sg-policy'].setValue(this['sg-policy']);
             this._formGroup.controls['app'].setValue(this['app']);
+            this._formGroup.controls['protocol'].setValue(this['protocol']);
+            this._formGroup.controls['port'].setValue(this['port']);
             this._formGroup.controls['from-ip-address'].setValue(this['from-ip-address']);
             this._formGroup.controls['to-ip-address'].setValue(this['to-ip-address']);
             this._formGroup.controls['from-security-group'].setValue(this['from-security-group']);

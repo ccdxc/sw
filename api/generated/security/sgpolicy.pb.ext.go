@@ -202,6 +202,16 @@ func (m *SGPolicy) References(tenant string, path string, resp map[string]apiint
 		if path == "" {
 			dlmtr = ""
 		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
 		tag := path + dlmtr + "meta.tenant"
 		uref, ok := resp[tag]
 		if !ok {
@@ -258,6 +268,41 @@ func (m *SGPolicyPropagationStatus) Validate(ver, path string, ignoreStatus bool
 
 func (m *SGPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "attach-groups"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		for _, v := range m.AttachGroups {
+
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/security/"+"security-groups/"+tenant+"/"+v)
+
+		}
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "rules"
+
+		for _, v := range m.Rules {
+
+			v.References(tenant, tag, resp)
+
+		}
+	}
 }
 
 func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -286,6 +331,72 @@ func (m *SGPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "apps"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		for _, v := range m.Apps {
+
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/security/"+"apps/"+tenant+"/"+v)
+
+		}
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "from-security-groups"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		for _, v := range m.FromSecurityGroups {
+
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/security/"+"security-groups/"+tenant+"/"+v)
+
+		}
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "to-security-groups"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		for _, v := range m.ToSecurityGroups {
+
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/security/"+"security-groups/"+tenant+"/"+v)
+
+		}
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *SGRule) Validate(ver, path string, ignoreStatus bool) []error {

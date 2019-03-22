@@ -162,6 +162,16 @@ func (m *Workload) References(tenant string, path string, resp map[string]apiint
 		if path == "" {
 			dlmtr = ""
 		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
 		tag := path + dlmtr + "meta.tenant"
 		uref, ok := resp[tag]
 		if !ok {
@@ -240,6 +250,27 @@ func (m *WorkloadIntfStatus) Validate(ver, path string, ignoreStatus bool) []err
 
 func (m *WorkloadSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "host-name"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.HostName != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"hosts/"+m.HostName)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *WorkloadSpec) Validate(ver, path string, ignoreStatus bool) []error {

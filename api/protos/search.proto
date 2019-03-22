@@ -461,27 +461,34 @@ message PolicySearchRequest {
     string SGPolicy             = 3 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "sg-policy,omitempty"];
 
-    // App specification, proto/port format, or predefined apps and alg config
-    // eg: tcp/443, udp/53
+    // App specification,  predefined apps and alg config
     string App                  = 4 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "app,omitempty"];
 
+    // Protocol eg: tcp, udp, icmp
+    string Protocol             = 5 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "protocol,omitempty"];
+
+    // TCP or UDP Port number 
+    string Port                 = 6 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "port,omitempty"];
+
     // Inbound ip-address, use any to refer to all ipaddresses
     // eg: 10.1.1.1, any
-    string FromIPAddress        = 5 [(gogoproto.nullable) = true,
+    string FromIPAddress        = 7 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "from-ip-address,omitempty"];
 
     // Outbound ip-address, use any to refer to all ipaddresses
     // eg: 20.1.1.1, any
-    string ToIPAddress          = 6 [(gogoproto.nullable) = true,
+    string ToIPAddress          = 8 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "to-ip-address,omitempty"];
 
     // Inbound security group
-    string FromSecurityGroup    = 7 [(gogoproto.nullable) = true,
+    string FromSecurityGroup    = 9 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "from-security-group,omitempty"];
 
     // Outbound security group
-    string ToSecurityGroup      = 8 [(gogoproto.nullable) = true,
+    string ToSecurityGroup      = 10 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "to-security-group,omitempty"];
 }
 

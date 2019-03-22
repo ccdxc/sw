@@ -148,7 +148,7 @@ func writeObj(ctx *cliContext, obj interface{}, specKvs map[string]cliField) err
 			typeMeta := api.TypeMeta{Kind: ctx.subcmd}
 			objValue.Field(i).Set(reflect.ValueOf(typeMeta))
 		case "ObjectMeta":
-			objectMeta := api.ObjectMeta{Tenant: ctx.tenant, Name: ctx.names[0], Labels: ctx.labels}
+			objectMeta := api.ObjectMeta{Tenant: getTenant(ctx), Name: ctx.names[0], Labels: ctx.labels}
 			objValue.Field(i).Set(reflect.ValueOf(objectMeta))
 		}
 	}

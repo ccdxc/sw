@@ -146,6 +146,10 @@ var typesMapSearch = map[string]*api.Struct{
 
 			"App": api.Field{Name: "App", CLITag: api.CLIInfo{ID: "app", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
+			"Protocol": api.Field{Name: "Protocol", CLITag: api.CLIInfo{ID: "protocol", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocol", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Port": api.Field{Name: "Port", CLITag: api.CLIInfo{ID: "port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "port", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"FromIPAddress": api.Field{Name: "FromIPAddress", CLITag: api.CLIInfo{ID: "from-ip-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "from-ip-address", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ToIPAddress": api.Field{Name: "ToIPAddress", CLITag: api.CLIInfo{ID: "to-ip-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "to-ip-address", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},

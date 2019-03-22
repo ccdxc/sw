@@ -85,6 +85,10 @@ func (s *securityHooks) validateSGPolicy(i interface{}, ver string, ignoreStatus
 // references to the named apps will be handled by the controller.
 func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 	for _, r := range rules {
+		// verify a rule cant have both proto port and app
+		if len(r.Apps) != 0 && len(r.ProtoPorts) != 0 {
+			return fmt.Errorf("Can not have both app and protocol/port in rule: %v", r)
+		}
 		for _, pp := range r.ProtoPorts {
 			protoNum, err := strconv.Atoi(pp.Protocol)
 			if err == nil {

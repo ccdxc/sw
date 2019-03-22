@@ -541,6 +541,32 @@ func (m *TsFlowLogs) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *TsPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "in-rules"
+
+		for _, v := range m.InRules {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "out-rules"
+
+		for _, v := range m.OutRules {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
@@ -578,6 +604,19 @@ func (m *TsReport) References(tenant string, path string, resp map[string]apiint
 		tag := path + dlmtr + "alerts"
 
 		for _, v := range m.Alerts {
+
+			v.References(tenant, tag, resp)
+
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "policies"
+
+		for _, v := range m.Policies {
 
 			v.References(tenant, tag, resp)
 

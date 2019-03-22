@@ -225,6 +225,19 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver, path string, ignor
 
 func (m *AutoMsgWorkloadWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgWorkloadWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -244,6 +257,18 @@ func (m *AutoMsgWorkloadWatchHelper) Validate(ver, path string, ignoreStatus boo
 
 func (m *AutoMsgWorkloadWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
@@ -284,6 +309,19 @@ func (m *EndpointList) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *WorkloadList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *WorkloadList) Validate(ver, path string, ignoreStatus bool) []error {

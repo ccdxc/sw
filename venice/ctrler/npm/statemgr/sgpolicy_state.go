@@ -34,21 +34,40 @@ func versionToInt(v string) int {
 // convertRules need not handle validation as the rules are already validate by the precommit api server hook
 func convertRules(veniceRules []security.SGRule, sgPolicyKey string) (agentRules []netproto.PolicyRule) {
 	for _, v := range veniceRules {
-		a := netproto.PolicyRule{
-			Action: v.Action,
-			Src: &netproto.MatchSelector{
-				SecurityGroups: v.FromSecurityGroups,
-				Addresses:      v.FromIPAddresses,
-			},
-			Dst: &netproto.MatchSelector{
-				SecurityGroups: v.ToSecurityGroups,
-				Addresses:      v.ToIPAddresses,
-				AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
-			},
-			AppName: strings.Join(v.Apps, ", "),
-			ID:      generateRuleHash(v, sgPolicyKey),
+		if len(v.Apps) > 0 {
+			for _, app := range v.Apps {
+				a := netproto.PolicyRule{
+					Action: v.Action,
+					Src: &netproto.MatchSelector{
+						SecurityGroups: v.FromSecurityGroups,
+						Addresses:      v.FromIPAddresses,
+					},
+					Dst: &netproto.MatchSelector{
+						SecurityGroups: v.ToSecurityGroups,
+						Addresses:      v.ToIPAddresses,
+						AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
+					},
+					AppName: app,
+					ID:      generateRuleHash(v, sgPolicyKey),
+				}
+				agentRules = append(agentRules, a)
+			}
+		} else {
+			a := netproto.PolicyRule{
+				Action: v.Action,
+				Src: &netproto.MatchSelector{
+					SecurityGroups: v.FromSecurityGroups,
+					Addresses:      v.FromIPAddresses,
+				},
+				Dst: &netproto.MatchSelector{
+					SecurityGroups: v.ToSecurityGroups,
+					Addresses:      v.ToIPAddresses,
+					AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
+				},
+				ID: generateRuleHash(v, sgPolicyKey),
+			}
+			agentRules = append(agentRules, a)
 		}
-		agentRules = append(agentRules, a)
 	}
 	return
 }

@@ -572,6 +572,18 @@ func (m *KindPreview) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *PolicyMatchEntry) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "rule"
+
+		if m.Rule != nil {
+			m.Rule.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *PolicyMatchEntry) Validate(ver, path string, ignoreStatus bool) []error {
@@ -602,6 +614,19 @@ func (m *PolicySearchRequest) Validate(ver, path string, ignoreStatus bool) []er
 
 func (m *PolicySearchResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "results"
+
+		for _, v := range m.Results {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
