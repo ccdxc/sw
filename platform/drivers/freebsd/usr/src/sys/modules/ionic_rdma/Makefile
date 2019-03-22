@@ -5,6 +5,7 @@ SRCS= \
 ionic_ibdebug.c \
 ionic_ibdev.c \
 ionic_queue.c \
+ionic_kcompat.c \
 res.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
 	opt_inet.h opt_inet6.h

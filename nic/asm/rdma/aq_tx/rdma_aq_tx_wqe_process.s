@@ -93,8 +93,8 @@ rdma_aq_tx_wqe_process:
 //TODO:  need to add stats code
         b           create_ah
         nop
-    .brcase     14
-        b           exit
+    .brcase     AQ_OP_TYPE_QUERY_AH
+        b           report_bad_cmd
         nop
     .brcase     15
         b           exit

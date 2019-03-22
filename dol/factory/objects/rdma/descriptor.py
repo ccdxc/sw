@@ -328,7 +328,8 @@ class RdmaAqDescriptorModQP(Packet):
 
 class RdmaAqDescriptorQueryQP(Packet):
   fields_desc = [
-    BitField("rsvd", 0, 320),
+    LELongField("hdr_dma_addr", 0),
+    BitField("rsvd", 0, 256),
     LELongField("sq_dma_addr", 0),
     LELongField("rq_dma_addr", 0),
   ]
@@ -997,7 +998,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
            logger.info("Reading Admin Query QP")
            sq_dma_addr = self.spec.fields.query_qp.sq_dma_addr if hasattr(self.spec.fields.query_qp, 'sq_dma_addr') else 0
            rq_dma_addr = self.spec.fields.query_qp.rq_dma_addr if hasattr(self.spec.fields.query_qp, 'rq_dma_addr') else 0
-           queryQp = RdmaAqDescriptorQueryQP(rsvd=0, sq_dma_addr=sq_dma_addr, rq_dma_addr=rq_dma_addr)
+           queryQp = RdmaAqDescriptorQueryQP(hdr_dma_addr=0, rsvd=0, sq_dma_addr=sq_dma_addr, rq_dma_addr=rq_dma_addr)
            desc = self.desc/queryQp
            self.__set_desc(desc)
            logger.ShowScapyObject(queryQp)
