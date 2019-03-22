@@ -360,6 +360,11 @@ struct lif {
 #define IONIC_RX_UNLOCK(x)		mtx_unlock(&(x)->rx_mtx)
 #define IONIC_RX_LOCK_OWNED(x)		mtx_owned(&(x)->rx_mtx)
 
+#define IONIC_MOD_INC(q, index) (((q)->index + 1) % (q)->num_descs)
+/* Q-full condition, head + 1 == tail. */
+#define IONIC_Q_FULL(q)		((((q)->head_index + 1) % (q)->num_descs) == (q)->tail_index)
+#define IONIC_Q_EMPTY(q)	((((q)->tail_index + 1) % (q)->num_descs) == (q)->head_index)
+
 int ionic_stop(struct net_device *netdev);
 void ionic_open_or_stop(struct lif *lif);
 
@@ -399,5 +404,15 @@ int ionic_set_multi(struct lif* lif);
 int ionic_set_mac(struct net_device *netdev);
 
 extern int ionic_devcmd_timeout;
+extern int ionic_rx_stride;
+extern int ionic_tx_stride;
 extern u32 ionic_rx_sg_size;
+extern int ionic_tx_descs;
+extern int ionic_rx_descs;
+extern int adminq_descs;
+extern int ionic_notifyq_descs;
+extern int ionic_rx_fill_threshold;
+extern int ionic_rx_process_limit;
+extern u32 ionic_tx_coalesce_usecs;
+extern u32 ionic_rx_coalesce_usecs;
 #endif /* _IONIC_LIF_H_ */

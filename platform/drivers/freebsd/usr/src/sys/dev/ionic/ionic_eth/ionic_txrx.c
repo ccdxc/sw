@@ -99,15 +99,15 @@ TUNABLE_INT("hw.ionic.notifyq_descs", &ionic_notifyq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, notifyq_descs, CTLFLAG_RDTUN,
     &ionic_notifyq_descs, 0, "Number of notifyq descriptors");
 
-int ntxq_descs = 2048;
-TUNABLE_INT("hw.ionic.tx_descs", &ntxq_descs);
+int ionic_tx_descs = 2048;
+TUNABLE_INT("hw.ionic.tx_descs", &ionic_tx_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, tx_descs, CTLFLAG_RDTUN,
-    &ntxq_descs, 0, "Number of Tx descriptors");
+    &ionic_tx_descs, 0, "Number of Tx descriptors");
 
-int nrxq_descs = 2048;
-TUNABLE_INT("hw.ionic.rx_descs", &nrxq_descs);
+int ionic_rx_descs = 2048;
+TUNABLE_INT("hw.ionic.rx_descs", &ionic_rx_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_descs, CTLFLAG_RDTUN,
-    &nrxq_descs, 0, "Number of Rx descriptors");
+    &ionic_rx_descs, 0, "Number of Rx descriptors");
 
 int ionic_rx_stride = 32;
 TUNABLE_INT("hw.ionic.rx_stride", &ionic_rx_stride);
@@ -130,10 +130,10 @@ SYSCTL_INT(_hw_ionic, OID_AUTO, tx_clean_threshold, CTLFLAG_RWTUN,
     &ionic_tx_clean_threshold, 0, "Tx clean threshold");
 
 /* Number of packets processed by ISR, rest is handled by task handler. */
-int ionic_rx_process_limit = 128;
-TUNABLE_INT("hw.ionic.rx_fill_threshold", &ionic_rx_process_limit);
-SYSCTL_INT(_hw_ionic, OID_AUTO, rx_process_limit, CTLFLAG_RWTUN,
-    &ionic_rx_process_limit, 0, "Rx can process maximum number of descriptors.");
+int ionic_rx_clean_limit = 128;
+TUNABLE_INT("hw.ionic.rx_clean_limit", &ionic_rx_clean_limit);
+SYSCTL_INT(_hw_ionic, OID_AUTO, rx_clean_limit, CTLFLAG_RWTUN,
+    &ionic_rx_clean_limit, 0, "Rx can process maximum number of descriptors.");
 
 u32 ionic_tx_coalesce_usecs = 64;
 TUNABLE_INT("hw.ionic.tx_coalesce_usecs", &ionic_tx_coalesce_usecs);
@@ -553,7 +553,7 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 	
 	rxstats->isr_count++;
 
-	work_done = ionic_rx_clean(rxq, ionic_rx_process_limit);
+	work_done = ionic_rx_clean(rxq, ionic_rx_clean_limit);
 	IONIC_RX_TRACE(rxq, "processed: %d packets, h/w credits: %d\n",
 		work_done, ionic_intr_credits(&rxq->intr));
 
@@ -706,7 +706,7 @@ static irqreturn_t ionic_legacy_isr(int irq, void *data)
 		ionic_intr_return_credits(&notifyq->intr, work_done, true, true);
 	}
 
-	for (i = 0; i < lif->nrxqs ; i++) {
+	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
 
 		KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
@@ -936,9 +936,8 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	stats->pkts++;
 	stats->bytes += m->m_len;
 
-	txq->head_index = (txq->head_index + 1) % txq->num_descs;
+	txq->head_index = IONIC_MOD_INC(txq, head_index);
 
-	/* XXX ping doorbell on 4 rx submission. */
 	ionic_tx_ring_doorbell(txq, txq->head_index);
 
 	return 0;
@@ -959,12 +958,12 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 	IONIC_TX_TRACE(txq, "TSO: VA: %p nsegs: %d length: %d\n",
 		m, nsegs, m->m_pkthdr.len);
 	
-	for ( i = 0 ; i < nsegs ; i++) {
+	for (i = 0; i < nsegs; i++) {
 		IONIC_TX_TRACE(txq, "seg[%d] pa: 0x%lx len:%ld\n",
 			i, seg[i].ds_addr, seg[i].ds_len);
 	}
 
-	for ( i = txq->head_index ; i < stop_index; i++ ) {
+	for (i = txq->head_index; i < stop_index; i++) {
 		txbuf = &txq->txbuf[i];
 		desc = &txq->cmd_ring[i];
 		sg = &txq->sg_ring[i];
@@ -974,7 +973,7 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 			i, desc->addr, desc->len, desc->S, desc->E, 
 			desc->C, desc->mss, desc->hdr_len, txbuf->m);
 
-		for ( j = 0; j < desc->num_sg_elems; j++ ) {
+		for (j = 0; j < desc->num_sg_elems; j++) {
 			len += sg->elems[j].len;
 			IONIC_TX_TRACE(txq, "sg[%d] pa: 0x%lx length: %d\n",
 				j, sg->elems[j].addr, sg->elems[j].len);
@@ -1075,8 +1074,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	 * Loop through all segments of mbuf and create mss size descriptors.
 	 * First descriptor points to header.
 	 */
-	for ( i = 0 ; i < nsegs  && remain_len > 0; )
-	{
+	for (i = 0 ; i < nsegs  && remain_len > 0;) {
 		desc = &txq->cmd_ring[index];
 		txbuf = &txq->txbuf[index];
 		sg = &txq->sg_ring[index];
@@ -1125,7 +1123,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		/* 
 		 * Now populate SG list, with the remaining fragments upto MSS size.
 		 */
-		for ( j = 0 ; j < IONIC_MAX_TSO_SG_ENTRIES && (i < nsegs) && desc_len < desc_max_size; j++) {
+		for (j = 0 ; j < IONIC_MAX_TSO_SG_ENTRIES && (i < nsegs) && desc_len < desc_max_size; j++) {
 			sg->elems[j].addr = seg[i].ds_addr + frag_offset;
 			sg->elems[j].len = min(frag_remain_len, (desc_max_size - desc_len));
 			frag_remain_len -= sg->elems[j].len;
@@ -1156,10 +1154,8 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 #ifdef IONIC_TSO_DEBUG
 	ionic_tx_tso_dump(txq, m, seg, nsegs, index);
 #endif
-	txq->head_index = index % txq->num_descs;
-	ionic_tx_ring_doorbell(txq, txq->head_index);
-	txq->head_index = index % txq->num_descs;
-	if (txq->head_index % ionic_tx_stride == 0)
+	txq->head_index = index;
+	if (txq->head_index % ionic_tx_stride)
 		ionic_tx_ring_doorbell(txq, txq->head_index);
 	
 	IONIC_TX_TRACE(txq, "Exit head: %d tail: %d\n", txq->head_index, txq->tail_index);

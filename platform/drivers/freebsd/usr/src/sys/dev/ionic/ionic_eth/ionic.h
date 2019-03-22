@@ -34,8 +34,10 @@
 #define DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"
 #define DRV_VERSION		"0.8.0"
 
-#define SIZE_1K				1024
+#define SIZE_1K			1024
+#define IONIX_TX_MIN_DESC	64
 #define IONIX_TX_MAX_DESC	(64 * SIZE_1K)
+#define IONIX_RX_MIN_DESC	64
 #define IONIX_RX_MAX_DESC	(64 * SIZE_1K)
 
 /* TSO DMA related definitions. */

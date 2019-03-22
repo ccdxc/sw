@@ -305,8 +305,8 @@ int ionic_adminq_clean(struct adminq* adminq, int limit)
 			     comp, sizeof(struct admin_comp), true);
 #endif
 
-		adminq->comp_index = (adminq->comp_index + 1) % adminq->num_descs;
-		adminq->tail_index = (adminq->tail_index + 1) % adminq->num_descs;
+		adminq->comp_index = IONIC_MOD_INC(adminq, comp_index);
+		adminq->tail_index = IONIC_MOD_INC(adminq, tail_index);
 		/* Roll over condition, flip color. */
 		if (adminq->comp_index == 0) {
 			adminq->done_color = !adminq->done_color;
@@ -1421,14 +1421,14 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	}
 
 	for (i = 0; i < lif->ntxqs; i++) {
-		err = ionic_txque_alloc(lif, i, ntxq_descs, lif->kern_pid,
+		err = ionic_txque_alloc(lif, i, ionic_tx_descs, lif->kern_pid,
 					&lif->txqs[i]);
 		if (err)
 			goto err_out_free_notifyq;
 	}
 
 	for (i = 0; i < lif->nrxqs; i++) {
-		err = ionic_rxque_alloc(lif, i, nrxq_descs, lif->kern_pid,
+		err = ionic_rxque_alloc(lif, i, ionic_rx_descs, lif->kern_pid,
 					&lif->rxqs[i]);
 		if (err)
 			goto err_out_free_txqs;
@@ -1525,17 +1525,7 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
 	lif->mc_addrs = malloc(sizeof(struct ionic_mc_addr) * ionic->ident->dev.nmcasts_per_lif, M_IONIC, M_NOWAIT | M_ZERO);
 
-	if (ntxq_descs > IONIX_TX_MAX_DESC) {
-		dev_err(dev, "num of tx descriptors > %d\n", IONIX_TX_MAX_DESC);
-		ntxq_descs = IONIX_TX_MAX_DESC;
-	}
-
-	if (nrxq_descs > IONIX_RX_MAX_DESC) {
-		dev_err(dev, "num of rx descriptors > %d\n", IONIX_RX_MAX_DESC);
-		nrxq_descs = IONIX_RX_MAX_DESC;
-	}
-
-	err = ionic_lif_netdev_alloc(lif, ntxq_descs);
+	err = ionic_lif_netdev_alloc(lif, ionic_tx_descs);
 	if (err) {
 		dev_err(dev, "Cannot allocate netdev, aborting\n");
 		return (err);
@@ -2017,7 +2007,7 @@ int ionic_notifyq_clean(struct notifyq* notifyq)
 
 	ionic_process_event(notifyq, comp);
 
-	notifyq->comp_index = (notifyq->comp_index + 1) % notifyq->num_descs;
+	notifyq->comp_index = IONIC_MOD_INC(notifyq, comp_index);
 
 	return 1;
 }
@@ -2199,7 +2189,7 @@ int ionic_tx_clean(struct txque* txq , int tx_limit)
 			batch = 0;
 		}
 
-		txq->comp_index = (txq->comp_index + 1) % txq->num_descs;
+		txq->comp_index = IONIC_MOD_INC(txq, comp_index);
 		txq->tail_index = (cmd_stop_index + 1) % txq->num_descs;
 		/* Roll over condition, flip color. */
 		if (txq->comp_index == 0) {
@@ -2284,13 +2274,12 @@ static void ionic_rx_fill(struct rxque *rxq)
 {
 	struct ionic_rx_buf *rxbuf;
 	int error, index;
-	bool db_ring = false, posted = false;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 
+	index = 0;
 	/* Fill till there is only one slot left empty which is Q full. */
-	for (; rxq->descs < rxq->num_descs - 1; rxq->descs++) {
-		posted = true;
+	for (; rxq->descs < rxq->num_descs && !IONIC_Q_FULL(rxq); rxq->descs++) {
 		index = rxq->head_index;
 		rxbuf = &rxq->rxbuf[index];
 
@@ -2301,16 +2290,14 @@ static void ionic_rx_fill(struct rxque *rxq)
 			break;
 		}
 
-		rxq->head_index = (rxq->head_index + 1) % rxq->num_descs;
+		rxq->head_index = IONIC_MOD_INC(rxq, head_index);
 
-		if (index % ionic_rx_stride == 0) {
+		if (index % ionic_rx_stride == 0)
 			ionic_rx_ring_doorbell(rxq, index);
-			db_ring = true;
-		}
 	 }
 
-	/* If we haven't rung the doorbell, do it now. */
-	if (!db_ring && posted)
+	/* If we haven't rung the doorbell for remaining descriptors. */
+	if (index % ionic_rx_stride)
 		ionic_rx_ring_doorbell(rxq, index);
 
 	IONIC_RX_TRACE(rxq, "head: %d tail :%d desc_posted: %d\n",
@@ -2362,7 +2349,7 @@ static void ionic_rx_empty(struct rxque *rxq)
 		ionic_rx_mbuf_free(rxq, rxbuf);
 		ionic_rx_destroy_map(rxq, rxbuf);
 
-		rxq->tail_index = (rxq->tail_index + 1) % rxq->num_descs;
+		rxq->tail_index = IONIC_MOD_INC(rxq, tail_index);
 	};
 
 	IONIC_RX_TRACE(rxq, "head: %d tail :%d desc_posted: %d\n",
@@ -2400,20 +2387,19 @@ int ionic_rx_clean(struct rxque* rxq , int rx_limit)
 				" len: %d desc_posted: %d\n",
 				comp_index, comp->color, rxq->done_color, comp->num_sg_elems,
 				comp->len, rxq->descs);
-
 		cmd_index = rxq->tail_index;
 		rxbuf = &rxq->rxbuf[cmd_index];
 		cmd = &rxq->cmd_ring[cmd_index];
 
 		ionic_rx_input(rxq, rxbuf, comp, cmd);
 
-		rxq->comp_index = (rxq->comp_index + 1) % rxq->num_descs;
+		rxq->comp_index = IONIC_MOD_INC(rxq, comp_index);
 		/* Roll over condition, flip color. */
 		if (rxq->comp_index == 0) {
 			rxq->done_color = !rxq->done_color;
 		}
 
-		rxq->tail_index = (rxq->tail_index + 1) % rxq->num_descs;
+		rxq->tail_index = IONIC_MOD_INC(rxq, tail_index);
 	}
 
 	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail :%d desc_posted: %d processed: %d\n",

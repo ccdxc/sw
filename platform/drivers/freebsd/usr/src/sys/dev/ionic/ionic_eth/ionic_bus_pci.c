@@ -213,15 +213,6 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	ionic->dev = dev;
 	pci_set_drvdata(pdev, ionic);
 
-	/* Validate some parameters. */
-	if (ionic_rx_sg_size > MCLBYTES) {
-		ionic_rx_sg_size = MJUMPAGESIZE;
-		printf("Adjusting hw.ionic.rx_sg_size to %d\n", ionic_rx_sg_size);
-	} else if (ionic_rx_sg_size) {
-		ionic_rx_sg_size = MCLBYTES;
-		printf("Adjusting hw.ionic.rx_sg_size to %d\n", ionic_rx_sg_size);
-	}
-
 	ionic->is_mgmt_nic = ent->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
 
 	err = ionic_pci_init(pdev);
@@ -336,6 +327,7 @@ static struct pci_driver ionic_driver = {
 
 int ionic_bus_register_driver(void)
 {
+
 	return pci_register_driver(&ionic_driver);
 }
 

@@ -52,15 +52,6 @@ void ionic_rx_destroy_map(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
 /* sysctl variables. */
 extern int ionic_use_adminq;
 extern int ionic_enable_msix;
-extern int ionic_rx_stride;
-extern int ionic_rx_fill_threshold;
-extern int ionic_rx_process_limit;
-extern u32 ionic_tx_coalesce_usecs;
-extern u32 ionic_rx_coalesce_usecs;
 extern int ionic_max_queues;
-extern int ntxq_descs;
-extern int nrxq_descs;
-extern int adminq_descs;
-extern int ionic_notifyq_descs;
 
 #endif /* _IONIC_TXRX_H_ */

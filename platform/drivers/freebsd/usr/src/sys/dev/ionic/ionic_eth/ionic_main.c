@@ -261,10 +261,44 @@ int ionic_reset(struct ionic *ionic)
 	return ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 }
 
+/*
+ * Validate user parameters.
+ */
+static void
+ionic_validate_params(void)
+{
+	const int div = 4;
+
+	ionic_tx_descs = max(ionic_tx_descs, IONIX_TX_MIN_DESC);
+	ionic_tx_descs = min(ionic_tx_descs, IONIX_TX_MAX_DESC);
+
+	ionic_rx_descs = max(ionic_rx_descs, IONIX_RX_MIN_DESC);
+	ionic_rx_descs = min(ionic_rx_descs, IONIX_RX_MAX_DESC);
+	/* SGL size validation */
+	if (ionic_rx_sg_size > MCLBYTES) {
+		ionic_rx_sg_size = MJUMPAGESIZE;
+	} else if (ionic_rx_sg_size) {
+		ionic_rx_sg_size = MCLBYTES;
+	}
+
+	/* Doorbell stride has to be between 1 <=  < descs */
+	ionic_rx_stride = max(ionic_rx_stride, 1);
+	ionic_rx_stride = min(ionic_rx_stride, ionic_rx_descs / div);
+	ionic_tx_stride = max(ionic_tx_stride, 1);
+	ionic_tx_stride = min(ionic_tx_stride, ionic_tx_descs / div);
+
+	/* Adjust Rx fill threshold. */
+	if (ionic_rx_fill_threshold >= ionic_rx_descs / div)
+		ionic_rx_fill_threshold /= div;
+}
+
 static int __init ionic_init_module(void)
 {
+
 	ionic_struct_size_checks();
+	ionic_validate_params();
 	pr_info("%s, ver: %s\n", DRV_DESCRIPTION, DRV_VERSION);
+
 	return ionic_bus_register_driver();
 }
 
