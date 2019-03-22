@@ -16,12 +16,12 @@
 
 namespace api_test {
 
-typedef struct vnic_minimal_key_s {
+typedef struct vnic_stepper_seed_s {
     uint32_t id;
     uint16_t vlan_tag;
     uint32_t mpls_slot;
     uint64_t mac_u64;
-} vnic_minimal_key_t;
+} vnic_stepper_seed_t;
 
 /// VNIC test utility class
 class vnic_util {
@@ -78,7 +78,7 @@ public:
     /// \param num_vnics Number of vnics to be created
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(vnic_minimal_key_t key, uint32_t num_vnics);
+    static sdk_ret_t many_create(vnic_stepper_seed_t key, uint32_t num_vnics);
 
     /// \brief Read many VNICs for the given subnet and VCN
     ///

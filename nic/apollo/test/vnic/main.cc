@@ -226,25 +226,26 @@ TEST_F(vnic_test, vnic_workflow_1) {
     pds_vnic_key_t key = {};
     pds_vnic_info_t info = {};
     uint32_t num_vnics = 1024;
-    vnic_minimal_key_t min_key = {};
+    vnic_stepper_seed_t min_key = {};
 
     key.id = 1;
     min_key.id = 1;
     min_key.vlan_tag = 1;
     min_key.mpls_slot = 1;
-    min_key.mac_u64 = 0xa010104;
+    min_key.mac_u64 = 0xa010101000000000;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_create(min_key, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    sleep(2);
 
-    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot, min_key.mac_u64);
+    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot,
+                       min_key.mac_u64);
     vnic_obj.read(&info, FALSE);
-    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
-    //            == sdk::SDK_RET_OK);
-
+    ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND)
+                == sdk::SDK_RET_OK);
 }
 
 /// \brief Create, delete and re-create max VNICs in the same batch
@@ -256,13 +257,13 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_2) {
     pds_vnic_key_t key = {};
     pds_vnic_info_t info = {};
     uint32_t num_vnics = 1024;
-    vnic_minimal_key_t min_key = {};
+    vnic_stepper_seed_t min_key = {};
 
     key.id = 1;
     min_key.id = 1;
     min_key.vlan_tag = 1;
     min_key.mpls_slot = 1;
-    min_key.mac_u64 = 0xa010104;
+    min_key.mac_u64 = 0xa010104000000000;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
 
@@ -270,18 +271,22 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_2) {
     ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_create(min_key, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    sleep(2);
 
-    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot, min_key.mac_u64);
+    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot,
+                       min_key.mac_u64);
     ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
-    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
-    //            == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
+                == sdk::SDK_RET_OK);
 
     // Cleanup
+#if 0
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_delete(key, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+#endif
 }
 
 /// \brief Create two sets of VNICs viz set1 and set2. Delete set1.
@@ -292,23 +297,23 @@ TEST_F(vnic_test, vnic_workflow_3) {
     pds_vnic_key_t key = {};
     pds_vnic_info_t info = {};
     uint32_t num_vnics = 20;
-    vnic_minimal_key_t min_key1 = {};
-    vnic_minimal_key_t min_key2 = {};
-    vnic_minimal_key_t min_key3 = {};
+    vnic_stepper_seed_t min_key1 = {};
+    vnic_stepper_seed_t min_key2 = {};
+    vnic_stepper_seed_t min_key3 = {};
 
     key.id = 1;
     min_key1.id = 10;
     min_key1.vlan_tag = 10;
     min_key1.mpls_slot = 10;
-    min_key1.mac_u64 = 0xa010104;
+    min_key1.mac_u64 = 0xa010101000000000;
     min_key2.id = 40;
     min_key2.vlan_tag = 40;
     min_key2.mpls_slot = 40;
-    min_key2.mac_u64 = 0xa010134;
+    min_key2.mac_u64 = 0xa010104000000000;
     min_key3.id = 70;
     min_key3.vlan_tag = 70;
     min_key3.mpls_slot = 70;
-    min_key3.mac_u64 = 0xa010164;
+    min_key3.mac_u64 = 0xa010107000000000;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
 
@@ -344,13 +349,13 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_4) {
     pds_vnic_key_t key = {};
     pds_vnic_info_t info = {};
     uint32_t num_vnics = 1024;
-    vnic_minimal_key_t min_key = {};
+    vnic_stepper_seed_t min_key = {};
 
     key.id = 1;
     min_key.id = 1;
     min_key.vlan_tag = 1;
     min_key.mpls_slot = 1;
-    min_key.mac_u64 = 0xa010104;
+    min_key.mac_u64 = 0xa010101000000000;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
 
@@ -360,7 +365,8 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_4) {
     vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot,
                        min_key.mac_u64);
     ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK) ==
+                sdk::SDK_RET_OK);
     //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
     //            == sdk::SDK_RET_OK);
     batch_params.epoch = ++g_batch_epoch;
@@ -381,23 +387,23 @@ TEST_F(vnic_test, vnic_workflow_5) {
     pds_vnic_key_t key = {};
     pds_vnic_info_t info = {};
     uint32_t num_vnics = 20;
-    vnic_minimal_key_t min_key1 = {};
-    vnic_minimal_key_t min_key2 = {};
-    vnic_minimal_key_t min_key3 = {};
+    vnic_stepper_seed_t min_key1 = {};
+    vnic_stepper_seed_t min_key2 = {};
+    vnic_stepper_seed_t min_key3 = {};
 
     key.id = 1;
     min_key1.id = 10;
     min_key1.vlan_tag = 10;
     min_key1.mpls_slot = 10;
-    min_key1.mac_u64 = 0xa010104;
+    min_key1.mac_u64 = 0xa010101000000000;
     min_key2.id = 40;
     min_key2.vlan_tag = 40;
     min_key2.mpls_slot = 40;
-    min_key2.mac_u64 = 0xa010134;
+    min_key2.mac_u64 = 0xa010104000000000;
     min_key3.id = 70;
     min_key3.vlan_tag = 70;
     min_key3.mpls_slot = 70;
-    min_key3.mac_u64 = 0xa010164;
+    min_key3.mac_u64 = 0xa010107000000000;
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
@@ -442,13 +448,13 @@ TEST_F(vnic_test, vnic_workflow_neg_1) {
     pds_vnic_key_t key = {};
     pds_vnic_info_t info = {};
     uint32_t num_vnics = 1024;
-    vnic_minimal_key_t min_key = {};
+    vnic_stepper_seed_t min_key = {};
 
     key.id = 1;
     min_key.id = 1;
     min_key.vlan_tag = 1;
     min_key.mpls_slot = 1;
-    min_key.mac_u64 = 0xa010104;
+    min_key.mac_u64 = 0xa010101000000000;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
 
@@ -458,7 +464,8 @@ TEST_F(vnic_test, vnic_workflow_neg_1) {
     vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot,
                        min_key.mac_u64);
     ASSERT_TRUE(vnic_obj.read(&info) == sdk::SDK_RET_OK);
-    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK) ==
+    //                                   sdk::SDK_RET_OK);
     //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
     //            == sdk::SDK_RET_OK);
     batch_params.epoch = ++g_batch_epoch;
@@ -489,13 +496,13 @@ TEST_F(vnic_test, vnic_workflow_neg_2) {
     pds_vnic_key_t key = {};
     pds_vnic_info_t info = {};
     uint32_t num_vnics = 1025;
-    vnic_minimal_key_t min_key = {};
+    vnic_stepper_seed_t min_key = {};
 
     key.id = 1;
     min_key.id = 1;
     min_key.vlan_tag = 1;
     min_key.mpls_slot = 1;
-    min_key.mac_u64 = 0xa010104;
+    min_key.mac_u64 = 0xa010101000000000;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
 
@@ -503,7 +510,8 @@ TEST_F(vnic_test, vnic_workflow_neg_2) {
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
-    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot, min_key.mac_u64);
+    vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot,
+                       min_key.mac_u64);
     vnic_obj.read(&info, FALSE);
     //ASSERT_TRUE(vnic_util::many_read(key, num_vnics, sdk::SDK_RET_OK)
     //            == sdk::SDK_RET_OK);
@@ -532,13 +540,13 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_3b) {
     pds_vnic_key_t key = {};
     pds_vnic_info_t info = {};
     uint32_t num_vnics = 1024;
-    vnic_minimal_key_t min_key = {};
+    vnic_stepper_seed_t min_key = {};
 
     key.id = 1;
     min_key.id = 1;
     min_key.vlan_tag = 1;
     min_key.mpls_slot = 1;
-    min_key.mac_u64 = 0xa010104;
+    min_key.mac_u64 = 0xa010101000000000;
     batch_params.epoch = ++g_batch_epoch;
 
     vnic_util vnic_obj(min_key.id, min_key.vlan_tag, min_key.mpls_slot,

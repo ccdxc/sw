@@ -108,7 +108,7 @@ vnic_util::del(void) {
 }
 
 static inline sdk::sdk_ret_t
-vnic_util_object_stepper(vnic_minimal_key_t start_key, uint32_t num_vnics,
+vnic_util_object_stepper(vnic_stepper_seed_t start_key, uint32_t num_vnics,
                          utils_op_t op,
                          sdk_ret_t expected_result = sdk::SDK_RET_OK)
 {
@@ -145,14 +145,14 @@ vnic_util_object_stepper(vnic_minimal_key_t start_key, uint32_t num_vnics,
 }
 
 sdk::sdk_ret_t
-vnic_util::many_create(vnic_minimal_key_t key, uint32_t num_vnics) {
+vnic_util::many_create(vnic_stepper_seed_t key, uint32_t num_vnics) {
     return (vnic_util_object_stepper(key, num_vnics, OP_MANY_CREATE));
 }
 
 sdk::sdk_ret_t
 vnic_util::many_read(pds_vnic_key_t key, uint32_t num_vnics,
                      sdk::sdk_ret_t expected_result) {
-    vnic_minimal_key_t min_key = {};
+    vnic_stepper_seed_t min_key = {};
 
     min_key.id = key.id;
     return (vnic_util_object_stepper(min_key, num_vnics, OP_MANY_READ,
@@ -162,7 +162,7 @@ vnic_util::many_read(pds_vnic_key_t key, uint32_t num_vnics,
 
 sdk::sdk_ret_t
 vnic_util::many_delete(pds_vnic_key_t key, uint32_t num_vnics) {
-    vnic_minimal_key_t min_key = {};
+    vnic_stepper_seed_t min_key = {};
 
     min_key.id = key.id;
     return (vnic_util_object_stepper(min_key, num_vnics, OP_MANY_DELETE));
