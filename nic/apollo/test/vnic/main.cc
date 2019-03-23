@@ -58,6 +58,15 @@ protected:
 /// \defgroup VNIC
 /// @{
 
+static inline void
+vnic_stepper_seed_init (int seed_base, vnic_stepper_seed_t *seed)
+{
+    seed->id = seed_base;
+    seed->vlan_tag = seed_base;
+    seed->mpls_slot = seed_base;
+    seed->mac_u64 = 0xa010101000000000;
+}
+
 /// \brief Create and delete max VNICs in the same batch
 /// The operation should be de-duped by framework and is
 /// a NO-OP from hardware perspective
@@ -67,20 +76,17 @@ TEST_F(vnic_test, vnic_workflow_1) {
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
-    seed.id = 1;
-    seed.vlan_tag = 1;
-    seed.mpls_slot = 1;
-    seed.mac_u64 = 0xa010101000000000;
-    batch_params.epoch = ++g_batch_epoch;
+    vnic_stepper_seed_init(1, &seed);
 
     // Trigger
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create, delete and create max VNICs in the same batch
@@ -92,26 +98,23 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_2) {
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
-    seed.id = 1;
-    seed.vlan_tag = 1;
-    seed.mpls_slot = 1;
-    seed.mac_u64 = 0xa010104000000000;
+    vnic_stepper_seed_init(1, &seed);
 
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     // Cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
@@ -126,40 +129,31 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_3) {
     vnic_stepper_seed_t seed3 = {};
     uint32_t num_vnics = 20;
 
-    seed1.id = 10;
-    seed1.vlan_tag = 10;
-    seed1.mpls_slot = 10;
-    seed1.mac_u64 = 0xa010101000000000;
-    seed2.id = 40;
-    seed2.vlan_tag = 40;
-    seed2.mpls_slot = 40;
-    seed2.mac_u64 = 0xa010104000000000;
-    seed3.id = 70;
-    seed3.vlan_tag = 70;
-    seed3.mpls_slot = 70;
-    seed3.mac_u64 = 0xa010107000000000;
+    vnic_stepper_seed_init(10, &seed1);
+    vnic_stepper_seed_init(40, &seed2);
+    vnic_stepper_seed_init(70, &seed3);
 
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed1, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed2, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed1, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed3, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed1, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed2, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed1, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed3, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed1, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed1, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_read(
-        seed2, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed2, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_read(
-        seed3, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed3, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     // Cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed2, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed3, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed2, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed3, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
@@ -172,27 +166,24 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_4) {
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
-    seed.id = 1;
-    seed.vlan_tag = 1;
-    seed.mpls_slot = 1;
-    seed.mac_u64 = 0xa010101000000000;
+    vnic_stepper_seed_init(1, &seed);
 
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create and delete mix and match of VNIC in two batches
@@ -204,49 +195,40 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_5) {
     vnic_stepper_seed_t seed3 = {};
     uint32_t num_vnics = 20;
 
-    seed1.id = 10;
-    seed1.vlan_tag = 10;
-    seed1.mpls_slot = 10;
-    seed1.mac_u64 = 0xa010101000000000;
-    seed2.id = 40;
-    seed2.vlan_tag = 40;
-    seed2.mpls_slot = 40;
-    seed2.mac_u64 = 0xa010104000000000;
-    seed3.id = 70;
-    seed3.vlan_tag = 70;
-    seed3.mpls_slot = 70;
-    seed3.mac_u64 = 0xa010107000000000;
+    vnic_stepper_seed_init(10, &seed1);
+    vnic_stepper_seed_init(40, &seed2);
+    vnic_stepper_seed_init(70, &seed3);
 
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed1, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed2, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed1, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed2, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed1, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed1, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_read(
-        seed2, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed2, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed1, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed3, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed1, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed3, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed1, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed1, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_read(
-        seed2, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed2, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_read(
-        seed3, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed3, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     // Cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed2, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed3, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed2, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed3, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
@@ -257,33 +239,30 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_1) {
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
-    seed.id = 1;
-    seed.vlan_tag = 1;
-    seed.mpls_slot = 1;
-    seed.mac_u64 = 0xa010101000000000;
+    vnic_stepper_seed_init(1, &seed);
 
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     // Cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
@@ -294,20 +273,17 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_2) {
     uint32_t num_vnics = 1025;
     vnic_stepper_seed_t seed = {};
 
-    seed.id = 1;
-    seed.vlan_tag = 1;
-    seed.mpls_slot = 1;
-    seed.mac_u64 = 0xa010101000000000;
+    vnic_stepper_seed_init(1, &seed);
 
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Read of a non-existing VNIC should return entry not found.
@@ -316,11 +292,11 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_3a) {
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
-    seed.id = 1;
+    vnic_stepper_seed_init(1, &seed);
 
     // Trigger
     ASSERT_TRUE(vnic_util::many_read(
-        seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Deletion of a non-existing VNICs should fail.
@@ -330,15 +306,12 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_3b) {
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
-    seed.id = 1;
-    seed.vlan_tag = 1;
-    seed.mpls_slot = 1;
-    seed.mac_u64 = 0xa010101000000000;
+    vnic_stepper_seed_init(1, &seed);
 
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }
@@ -351,39 +324,33 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_4) {
     vnic_stepper_seed_t seed2 = {};
     uint32_t num_vnics = 20;
 
-    seed1.id = 10;
-    seed1.vlan_tag = 10;
-    seed1.mpls_slot = 10;
-    seed1.mac_u64 = 0xa010101000000000;
-    seed2.id = 40;
-    seed2.vlan_tag = 40;
-    seed2.mpls_slot = 40;
-    seed2.mac_u64 = 0xa010104000000000;
+    vnic_stepper_seed_init(10, &seed1);
+    vnic_stepper_seed_init(40, &seed2);
 
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(seed1, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed1, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed1, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed1, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed1, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed2, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed1, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed2, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        seed1, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed1, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_read(
-        seed2, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed2, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 
     // Cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(seed1, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed1, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }

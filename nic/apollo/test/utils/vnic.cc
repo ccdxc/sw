@@ -108,18 +108,18 @@ vnic_util::del(void) {
 }
 
 static inline sdk::sdk_ret_t
-vnic_util_object_stepper(vnic_stepper_seed_t start_key, uint32_t num_vnics,
+vnic_util_object_stepper(vnic_stepper_seed_t *seed, uint32_t num_vnics,
                          utils_op_t op,
                          sdk_ret_t expected_result = sdk::SDK_RET_OK)
 {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
     pds_vnic_info_t info = {};
-    uint32_t vlan_tag = start_key.vlan_tag;
-    uint32_t mpls_slot = start_key.mpls_slot;;
-    uint32_t mac_u64 = start_key.mac_u64;
+    uint32_t vlan_tag = seed->vlan_tag;
+    uint32_t mpls_slot = seed->mpls_slot;;
+    uint32_t mac_u64 = seed->mac_u64;
 
-    if (start_key.id == 0) start_key.id = 1;
-    for (uint32_t idx = start_key.id; idx < start_key.id + num_vnics; idx++) {
+    if (seed->id == 0) seed->id = 1;
+    for (uint32_t idx = seed->id; idx < seed->id + num_vnics; idx++) {
         vnic_util vnic_obj(idx, vlan_tag, mpls_slot, mac_u64);
         switch (op) {
         case OP_MANY_CREATE:
@@ -145,19 +145,19 @@ vnic_util_object_stepper(vnic_stepper_seed_t start_key, uint32_t num_vnics,
 }
 
 sdk::sdk_ret_t
-vnic_util::many_create(vnic_stepper_seed_t seed, uint32_t num_vnics) {
+vnic_util::many_create(vnic_stepper_seed_t *seed, uint32_t num_vnics) {
     return (vnic_util_object_stepper(seed, num_vnics, OP_MANY_CREATE));
 }
 
 sdk::sdk_ret_t
-vnic_util::many_read(vnic_stepper_seed_t seed, uint32_t num_vnics,
+vnic_util::many_read(vnic_stepper_seed_t *seed, uint32_t num_vnics,
                      sdk::sdk_ret_t exp_result) {
     return (vnic_util_object_stepper(seed, num_vnics, OP_MANY_READ,
                                      exp_result));
 }
 
 sdk::sdk_ret_t
-vnic_util::many_delete(vnic_stepper_seed_t seed, uint32_t num_vnics) {
+vnic_util::many_delete(vnic_stepper_seed_t *seed, uint32_t num_vnics) {
     return (vnic_util_object_stepper(seed, num_vnics, OP_MANY_DELETE));
 }
 

@@ -16,6 +16,7 @@
 
 namespace api_test {
 
+// VNIC object seed used as base seed in many_* operations
 typedef struct vnic_stepper_seed_s {
     uint32_t id;
     uint16_t vlan_tag;
@@ -75,20 +76,20 @@ public:
     ///
     /// \param num_vnics Number of vnics to be created
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(vnic_stepper_seed_t seed, uint32_t num_vnics);
+    static sdk_ret_t many_create(vnic_stepper_seed_t *seed, uint32_t num_vnics);
 
     /// \brief Read many VNICs for the given subnet and VCN
     ///
     /// \param num_vnics Number of vnics to be read
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(vnic_stepper_seed_t seed, uint32_t num_vnics,
+    static sdk_ret_t many_read(vnic_stepper_seed_t *seed, uint32_t num_vnics,
                                sdk::sdk_ret_t exp_result = sdk::SDK_RET_OK);
 
     /// \brief Delete many VNICs for the given subnet and VCN
     ///
     /// \param num_vnics Number of vnics to be deleted
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(vnic_stepper_seed_t seed, uint32_t num_vnics);
+    static sdk_ret_t many_delete(vnic_stepper_seed_t *seed, uint32_t num_vnics);
 };
 
 } // namespace api_test
