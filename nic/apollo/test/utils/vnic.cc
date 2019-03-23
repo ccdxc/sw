@@ -145,28 +145,20 @@ vnic_util_object_stepper(vnic_stepper_seed_t start_key, uint32_t num_vnics,
 }
 
 sdk::sdk_ret_t
-vnic_util::many_create(vnic_stepper_seed_t key, uint32_t num_vnics) {
-    return (vnic_util_object_stepper(key, num_vnics, OP_MANY_CREATE));
+vnic_util::many_create(vnic_stepper_seed_t seed, uint32_t num_vnics) {
+    return (vnic_util_object_stepper(seed, num_vnics, OP_MANY_CREATE));
 }
 
 sdk::sdk_ret_t
-vnic_util::many_read(pds_vnic_key_t key, uint32_t num_vnics,
-                     sdk::sdk_ret_t expected_result) {
-    vnic_stepper_seed_t min_key = {};
-
-    min_key.id = key.id;
-    return (vnic_util_object_stepper(min_key, num_vnics, OP_MANY_READ,
-                                     expected_result));
-
+vnic_util::many_read(vnic_stepper_seed_t seed, uint32_t num_vnics,
+                     sdk::sdk_ret_t exp_result) {
+    return (vnic_util_object_stepper(seed, num_vnics, OP_MANY_READ,
+                                     exp_result));
 }
 
 sdk::sdk_ret_t
-vnic_util::many_delete(pds_vnic_key_t key, uint32_t num_vnics) {
-    vnic_stepper_seed_t min_key = {};
-
-    min_key.id = key.id;
-    return (vnic_util_object_stepper(min_key, num_vnics, OP_MANY_DELETE));
+vnic_util::many_delete(vnic_stepper_seed_t seed, uint32_t num_vnics) {
+    return (vnic_util_object_stepper(seed, num_vnics, OP_MANY_DELETE));
 }
-
 
 } // namespace api_test

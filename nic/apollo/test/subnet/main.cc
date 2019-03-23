@@ -355,7 +355,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_4) {
     ASSERT_TRUE(subnet_util::many_read(
         key2, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 
-    //Cleanup
+    // Cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) != sdk::SDK_RET_OK);
