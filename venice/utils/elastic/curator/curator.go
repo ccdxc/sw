@@ -78,14 +78,18 @@ func (c *Curator) Start() {
 // Stop curator
 func (c *Curator) Stop() {
 	c.Lock()
-	defer c.Unlock()
-
 	if c.running {
+		c.running = false
+		c.Unlock()
 		c.cancelFunc()
 		c.wg.Wait()
+
+		c.Lock()
 		c.indexConfigs = make(map[string]*Config)
-		c.running = false
+		c.Unlock()
 		c.logger.Infof("curator service stopped")
+	} else {
+		c.Unlock()
 	}
 }
 
