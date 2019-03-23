@@ -22,6 +22,7 @@
 #include "nic/apollo/api/mapping_state.hpp"
 #include "nic/apollo/api/route_state.hpp"
 #include "nic/apollo/api/policy_state.hpp"
+#include "nic/apollo/api/if_state.hpp"
 
 using std::string;
 //using sdk::platform::capri::LIFManager;
@@ -75,6 +76,7 @@ public:
     mapping_state *mapping_db(void) { return &mapping_db_; }
     route_table_state *route_table_db(void) { return &route_table_db_; }
     policy_state *policy_db(void) { return &poicy_db_; }
+    if_state *if_db(void) { return &if_db_; }
 
 private:
     string               cfg_path_;
@@ -96,6 +98,7 @@ private:
     mapping_state        mapping_db_;
     route_table_state    route_table_db_;
     policy_state         poicy_db_;
+    if_state             if_db_;
 };
 extern pds_state g_pds_state;
 
@@ -151,6 +154,12 @@ static inline policy_state *
 policy_db (void)
 {
     return api::g_pds_state.policy_db();
+}
+
+static inline if_state *
+if_db (void)
+{
+    return api::g_pds_state.if_db();
 }
 
 #endif    /** __PDS_STATE_HPP__ */
