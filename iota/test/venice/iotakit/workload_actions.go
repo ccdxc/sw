@@ -138,8 +138,15 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 		srvWorkloads[pair.first.iotaWorkload.WorkloadName] = pair.first.iotaWorkload
 	}
 
-	// run netcat servers on first workload
+	// stop old netcat servers if its running
 	trig := act.model.tb.NewTrigger()
+	for _, srvWrkld := range srvWorkloads {
+		trig.AddCommand("pkill nc", srvWrkld.WorkloadName, srvWrkld.NodeName)
+	}
+	trig.Run()
+
+	// run netcat servers on first workload
+	trig = act.model.tb.NewTrigger()
 	for _, srvWrkld := range srvWorkloads {
 		trig.AddBackgroundCommand(fmt.Sprintf("nc -lk %s -p %d", serverOpt, port), srvWrkld.WorkloadName, srvWrkld.NodeName)
 	}
@@ -152,7 +159,7 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 
 	// verify server cmd was successful
 	for _, cmdResp := range srvResp {
-		if cmdResp.ExitCode != 0 {
+		if cmdResp.ExitCode != 0 && !strings.Contains(cmdResp.Command, "pkill") {
 			log.Errorf("Netcat server command failed. %+v", cmdResp)
 			return fmt.Errorf("Netcat server command failed on %s. exit code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 
@@ -365,9 +372,11 @@ func (act *ActionCtx) startFTPServer(wpc *WorkloadPairCollection) error {
 
 	// verify server cmd was successful
 	for _, cmdResp := range srvResp {
-		if cmdResp.ExitCode != 0 && !strings.Contains(cmdResp.Stdout, "already exists") {
+		if cmdResp.ExitCode != 0 && !strings.Contains(cmdResp.Stdout, "already exists") &&
+			!strings.Contains(cmdResp.Stderr, "already exists") {
 			log.Errorf("FTP server start failed. %+v", cmdResp)
-			return fmt.Errorf("FTP server start failed on %s. exit code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+			return fmt.Errorf("FTP server start failed on %s. exit code %v, Out: %v, StdErr: %v",
+				cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 
 		}
 	}
