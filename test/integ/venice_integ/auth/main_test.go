@@ -133,12 +133,12 @@ func (tInfo *tInfo) teardown() {
 }
 
 func TestMain(m *testing.M) {
+	grpclog.SetLoggerV2(logger)
 	config := log.GetDefaultConfig("AuthIntegTest")
 	config.Filter = log.AllowAllFilter
 	l := log.GetNewLogger(config)
 	tinfo.l = l
 	tinfo.mockResolver = mockresolver.New()
-	grpclog.SetLogger(logger)
 
 	if err := tinfo.setup(); err != nil {
 		log.Fatalf("failed to setup test, err: %v", err)

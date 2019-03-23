@@ -1316,6 +1316,7 @@ func testSetup() {
 
 	// Disable open trace
 	ventrace.DisableOpenTrace()
+	grpclog.SetLoggerV2(logger)
 
 	// Init tsdb
 	ctx, cancel := context.WithCancel(context.Background())
@@ -1339,7 +1340,7 @@ func testSetup() {
 		GetOverlay: api_cache.GetOverlay,
 		IsDryRun:   api_cache.IsDryRun,
 	}
-	grpclog.SetLogger(logger)
+
 	tInfo.apiServer = apiserverpkg.MustGetAPIServer()
 	go tInfo.apiServer.Run(srvConfig)
 	tInfo.apiServer.WaitRunning()

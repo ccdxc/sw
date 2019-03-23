@@ -120,7 +120,7 @@ func Start() *Info {
 		GetOverlay: cache.GetOverlay,
 		IsDryRun:   cache.IsDryRun,
 	}
-	grpclog.SetLogger(logger)
+	grpclog.SetLoggerV2(logger)
 
 	// Start ApiServer
 	trace.Init("ApiServer")

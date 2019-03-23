@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 
-	"google.golang.org/grpc/grpclog"
-
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	grpcserver "github.com/pensando/sw/venice/cmd/grpc/server"
 	"github.com/pensando/sw/venice/cmd/rest"
@@ -20,7 +18,6 @@ import (
 func Run(options *options.ServerRunOptions) {
 	flag.Parse()
 
-	grpclog.SetLogger(log.GetNewLogger(log.GetDefaultConfig("cmd")))
 	s := rest.NewRESTServer()
 	go func() {
 		s.RunOnAddr(":" + options.RESTPort)

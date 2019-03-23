@@ -354,7 +354,7 @@ func TestSpyglassErrorHandling(t *testing.T) {
 	tInfo.mockResolver = mockresolver.New()
 	tInfo.l = logger.WithContext("t_name", t.Name())
 
-	tInfo.l.Info("Starting Spyglass Error Handeling Test")
+	tInfo.l.Info("Starting Spyglass Error Handling Test")
 
 	AssertOk(t, tInfo.setup(t), "failed to setup test")
 	defer tInfo.teardown()

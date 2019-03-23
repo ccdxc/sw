@@ -362,11 +362,6 @@ func Setup(m *testing.M) {
 	// Disable open trace
 	ventrace.DisableOpenTrace()
 
-	// Init tsdb
-	ctx, cancel := context.WithCancel(context.Background())
-	tsdb.Init(ctx, &tsdb.Opts{ClientName: "nic-config-test", ResolverClient: &rmock.ResolverClient{}})
-	defer cancel()
-
 	// Fill logger config params
 	os.Remove("/tmp/nicconfig.log")
 	logConfig := &log.Config{
@@ -387,6 +382,12 @@ func Setup(m *testing.M) {
 
 	// Initialize logger config
 	pl := log.SetConfig(logConfig)
+	grpclog.SetLoggerV2(pl)
+
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: "nic-config-test", ResolverClient: &rmock.ResolverClient{}})
+	defer cancel()
 
 	// create mock events recorder
 	recorder.Override(mockevtsrecorder.NewRecorder("nic_config_test", pl))
@@ -408,7 +409,6 @@ func Setup(m *testing.M) {
 		GetOverlay: apisrvCache.GetOverlay,
 		IsDryRun:   apisrvCache.IsDryRun,
 	}
-	grpclog.SetLogger(pl)
 	tInfo.apiServer = apiserverpkg.MustGetAPIServer()
 	go tInfo.apiServer.Run(srvConfig)
 	tInfo.apiServer.WaitRunning()

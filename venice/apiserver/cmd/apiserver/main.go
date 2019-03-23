@@ -15,7 +15,7 @@ import (
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	apisrv "github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -23,7 +23,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
-	trace "github.com/pensando/sw/venice/utils/trace"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 func main() {
@@ -66,6 +66,7 @@ func main() {
 		}
 		pl = log.SetConfig(logConfig)
 	}
+	grpclog.SetLoggerV2(pl)
 
 	kvstoreTLSConfig, err := etcd.GetEtcdClientCredentials()
 	if err != nil {
@@ -106,7 +107,6 @@ func main() {
 	if *devmode {
 		trace.DisableOpenTrace()
 	}
-	grpclog.SetLogger(pl)
 	pl.InfoLog("msg", "Starting Run", "KVStore", config.Kvstore, "GRPCServer", config.GrpcServerPort, "version", config.Version)
 	dbgPort := ":" + globals.APIServerRESTPort
 	dbgsock, err := net.Listen("tcp", dbgPort)

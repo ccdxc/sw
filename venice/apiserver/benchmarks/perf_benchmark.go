@@ -589,7 +589,7 @@ func main() {
 	tinfo.profStart = make(chan error)
 	tinfo.memtrace = *memtrace
 	oper = *operp
-	grpclog.SetLogger(l)
+	grpclog.SetLoggerV2(l)
 	if *list {
 		runList()
 	} else {

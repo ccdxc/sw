@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"google.golang.org/grpc/grpclog"
+
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -64,6 +66,7 @@ func main() {
 	env.GitVersion = GitVersion
 	env.GitCommit = GitCommit
 	env.BuildDate = BuildDate
+	grpclog.SetLoggerV2(env.Logger)
 
 	// create events recorder
 	// FIXME: eventSource.NodeName should match with the name in node object; either we

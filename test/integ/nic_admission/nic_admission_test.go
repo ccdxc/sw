@@ -663,17 +663,6 @@ func Setup(m *testing.M) {
 	// Init etcd cluster
 	var t testing.T
 
-	// start certificate server and set up TLS provider
-	// need to do this before Chdir() so that it finds the certificates on disk
-	err := testutils.SetupIntegTLSProvider()
-	if err != nil {
-		log.Fatalf("Error setting up TLS provider: %v", err)
-	}
-
-	// cluster bind mounts in local directory. certain filesystems (like vboxsf, nfs) dont support unix binds.
-	os.Chdir("/tmp")
-	cluster := integration.NewClusterV3(&t)
-
 	// Disable open trace
 	ventrace.DisableOpenTrace()
 
@@ -690,6 +679,18 @@ func Setup(m *testing.M) {
 
 	// Initialize logger config
 	pl := log.SetConfig(logConfig)
+	grpclog.SetLoggerV2(pl)
+
+	// start certificate server and set up TLS provider
+	// need to do this before Chdir() so that it finds the certificates on disk
+	err := testutils.SetupIntegTLSProvider()
+	if err != nil {
+		log.Fatalf("Error setting up TLS provider: %v", err)
+	}
+
+	// cluster bind mounts in local directory. certain filesystems (like vboxsf, nfs) dont support unix binds.
+	os.Chdir("/tmp")
+	cluster := integration.NewClusterV3(&t)
 
 	// Create api server
 	apiServerAddress := ":0"
@@ -710,7 +711,6 @@ func Setup(m *testing.M) {
 		GetOverlay: api_cache.GetOverlay,
 		IsDryRun:   api_cache.IsDryRun,
 	}
-	grpclog.SetLogger(pl)
 	tInfo.apiServer = apiserverpkg.MustGetAPIServer()
 	go tInfo.apiServer.Run(srvConfig)
 	tInfo.apiServer.WaitRunning()

@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
+
 	// needed to pull in swagger index
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -101,6 +102,7 @@ func main() {
 		// Add ApiGw specific context data
 		pl = pl.WithContext("host", *host+*httpaddr)
 	}
+	grpclog.SetLoggerV2(pl)
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
@@ -137,7 +139,7 @@ func main() {
 	pl.Log("msg", "Starting Run")
 
 	gw := apigwpkg.MustGetAPIGateway()
-	grpclog.SetLogger(pl)
+
 	pl.Infof("%s is running {%+v}", globals.APIGw, gw)
 	gw.Run(config)
 }

@@ -117,6 +117,7 @@ func startSpyglass() finder.Interface {
 }
 func TestMain(m *testing.M) {
 	l := log.WithContext("module", "CrudOpsTest")
+	grpclog.SetLoggerV2(l)
 	recorder.Override(mockevtsrecorder.NewRecorder("integration_main_test", l)) // mock events recorder
 
 	// TLS is needed for ApiServer to know who is making a request (ApiGw, controller, etc)
@@ -158,7 +159,6 @@ func TestMain(m *testing.M) {
 		GetOverlay: cache.GetOverlay,
 		IsDryRun:   cache.IsDryRun,
 	}
-	grpclog.SetLogger(l)
 
 	// Start spyglass server
 	fdr := startSpyglass()
