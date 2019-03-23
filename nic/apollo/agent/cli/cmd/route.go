@@ -29,7 +29,7 @@ var routeShowCmd = &cobra.Command{
 }
 
 func init() {
-	showCmd.AddCommand(routeShowCmd)
+	//	showCmd.AddCommand(routeShowCmd)
 	routeShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	routeShowCmd.Flags().Uint32VarP(&routeID, "route-id", "i", 0, "Specify Route ID")
 }

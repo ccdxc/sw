@@ -30,7 +30,7 @@ var mappingShowCmd = &cobra.Command{
 }
 
 func init() {
-	showCmd.AddCommand(mappingShowCmd)
+	//	showCmd.AddCommand(mappingShowCmd)
 	mappingShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	mappingShowCmd.Flags().Uint32Var(&pcnID, "pcn-id", 0, "Specify PCN ID")
 	mappingShowCmd.Flags().StringVar(&mappingIP, "ip", "0", "Specify mapping IP address")
