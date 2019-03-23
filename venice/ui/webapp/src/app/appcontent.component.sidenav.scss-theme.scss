@@ -55,7 +55,7 @@
       ul li a {
         background: map-get($sidenav, nested);
 
-        &.app-sidenav-selected, &:hover, {
+        &.app-sidenav-selected, &:hover {
           background: map-get($sidenav, nested_hover);
           color: map-get($colorPalette, primary);
         }

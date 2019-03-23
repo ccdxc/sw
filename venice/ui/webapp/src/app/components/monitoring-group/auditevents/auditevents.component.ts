@@ -54,7 +54,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
       top: '9px',
       left: '8px',
     },
-    url: '/assets/images/icons/security/ico-app-black.svg',
+    url: '/assets/images/icons/monitoring/ic_audit-black.svg',
   };
   // Backend currently only supports time being sorted
   cols: TableCol[] = [

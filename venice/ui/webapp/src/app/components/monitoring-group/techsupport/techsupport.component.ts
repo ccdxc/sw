@@ -27,7 +27,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       top: '9px',
       left: '8px',
     },
-    url: '/assets/images/icons/security/ico-app-black.svg',   // TODO: wait for new svg file
+    url: '/assets/images/icons/monitoring/ic_tech_support-black.svg',   // TODO: wait for new svg file
   };
   headerIcon: Icon = {
     margin: {

@@ -351,7 +351,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
             }
           });
           forkJoin(observables).subscribe(results => {
-            const isAllOK = this.isForkjoinResultAllOK(results);
+            const isAllOK = Utility.isForkjoinResultAllOK(results);
             if (isAllOK) {
               this.commitStagingBuffer(buffername).subscribe(
                 responseCommitBuffer => {
@@ -445,7 +445,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           }
         });
         forkJoin(observables).subscribe(results => {
-          const isAllOK = this.isForkjoinResultAllOK(results);
+          const isAllOK = Utility.isForkjoinResultAllOK(results);
           if (isAllOK) {
             this.commitStagingBuffer(buffername).subscribe(
               responseCommitBuffer => {
@@ -729,7 +729,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           }
         });
         forkJoin(observables).subscribe(results => {
-          const isAllOK = this.isForkjoinResultAllOK(results);
+          const isAllOK = Utility.isForkjoinResultAllOK(results);
           if (isAllOK) {
             this.commitStagingBuffer(buffername).subscribe(
               responseCommitBuffer => {
@@ -781,21 +781,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     );
   }
 
-  /**
-   * When using forkjoin, we have to loop through the results to see if all results are successful
-   */
-  isForkjoinResultAllOK(results: any[]): boolean {
-    let isAllOK: boolean = true;
-    for (let i = 0; i < results.length; i++) {
-      if (results[i]['statusCode'] === 200) {
-        // debug here. Do nothing
-      } else {
-        isAllOK = false;
-        break;
-      }
-    }
-    return isAllOK;
-  }
+
 
   /**
    * Check if newUserName already exist.

@@ -2,13 +2,12 @@ import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, OnDestro
 import { FormArray, Validators, FormGroup, AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { required } from '@sdk/v1/utils/validators';
 import { UsersComponent } from '../users.component';
-import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { StagingService } from '@app/services/generated/staging.service';
-import { AuthPermission, AuthPermission_actions } from '@sdk/v1/models/generated/auth';
+import { AuthPermission, AuthPermission_actions_uihint } from '@sdk/v1/models/generated/auth';
 import { AuthRoleBinding, AuthUser, AuthRole } from '@sdk/v1/models/generated/auth';
 import { Utility } from '@app/common/Utility';
 import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging';
@@ -44,6 +43,9 @@ import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging'
 export class NewroleComponent extends UsersComponent implements OnInit, OnDestroy, OnChanges {
 
   static KINDOPTIONS = 'kindOptions';
+  static ACTIONOPTIONS_ALL = 'AllActions';
+  static _ALL_ = '_All_';
+
   newAuthRole: AuthRole;
 
   @Input() selectedAuthRole: AuthRole;
@@ -52,7 +54,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
 
   groupOptions: SelectItem[] = Utility.convertCategoriesToSelectItem();
 
-  permissionOptions: SelectItem[] = Utility.convertEnumToSelectItem(AuthPermission_actions);
+  permissionOptions: SelectItem[] = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
 
 
   constructor(protected _controllerService: ControllerService,
@@ -191,6 +193,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    */
   onCancelAddRole($event) {
     this.newAuthRole.$formGroup.reset();
+    this.newAuthRole.setModelToBeFormGroupValues();
     this.selectedRolebindingsForUsers.length = 0;
     this.formClose.emit(false);
   }
@@ -297,7 +300,8 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    */
   addPermission() {
     const permissionArray = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
-    const newPermission = new AuthPermission();
+    const newPermission = new AuthPermission() ;
+    newPermission['actions'] = []; // clear out action field's default value
     newPermission[NewroleComponent.KINDOPTIONS] = [];
     permissionArray.insert(0, newPermission.$formGroup);
   }
@@ -343,8 +347,33 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    * @param selectItems
    */
   private addAllKindItem(selectItems: SelectItem[]): SelectItem[] {
-    selectItems.push({ label: 'All', value: '_All_' });  // note: '_All_' is special in server.Auth
+    selectItems.push({ label: 'All', value: NewroleComponent._ALL_});  // note: '_All_' is special in server.Auth
     return selectItems;
   }
 
+  onActionChange(event: any, permission: any , actionListboxWidget: any , permissionIndex: number) {
+    const values = event.value;
+    if (values.length > 1) {
+      const index = this.getAllActionIndex(values);
+      if (index !== -1) {
+        values.splice(index, 1);
+        actionListboxWidget.value = values;
+        this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
+      }
+    } else if ( values.length === 1) {  // there is only one option selected
+        const index = this.getAllActionIndex(values);
+        if (index === -1 ) {
+          // NewroleComponent.ACTIONOTIONT_ALL is NOT the only selected option. we take out
+          this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
+        }
+    } else {
+      this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
+    }
+
+  }
+
+
+  private getAllActionIndex(values: any): number {
+    return values.findIndex((value: SelectItem) => value.value === NewroleComponent.ACTIONOPTIONS_ALL);
+  }
 }

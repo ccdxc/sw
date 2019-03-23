@@ -132,7 +132,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
           }
         });
         forkJoin(observables).subscribe(results => {
-          const isAllOK = this.isForkjoinResultAllOK(results);
+          const isAllOK = Utility.isForkjoinResultAllOK(results);
           if (isAllOK) {
             this.commitStagingBuffer(buffername).subscribe(
               responseCommitBuffer => {

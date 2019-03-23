@@ -1287,6 +1287,22 @@ export class Utility {
     return 'Are you sure you want to delete ' + objectType + ':  name';
   }
 
+  /**
+   * When using forkjoin, we have to loop through the results to see if all results are successful
+   */
+  public static isForkjoinResultAllOK(results: any[]): boolean {
+    let isAllOK: boolean = true;
+    for (let i = 0; i < results.length; i++) {
+      if (results[i]['statusCode'] === 200) {
+        // debug here. Do nothing
+      } else {
+        isAllOK = false;
+        break;
+      }
+    }
+    return isAllOK;
+  }
+
 
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()

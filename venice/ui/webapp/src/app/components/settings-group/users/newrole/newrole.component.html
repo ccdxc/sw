@@ -74,7 +74,7 @@
                                   [options]="groupOptions" placeholder="group..." (onChange)="onGroupChange($event, permission, index)" ></p-dropdown>
                           </div>
                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
-                            <p-dropdown class="newrole-severity" fxFlex="170px" formControlName="resource-kind" styleClass="newrole-font"
+                            <p-dropdown  class="newrole-severity" fxFlex="170px" formControlName="resource-kind" styleClass="newrole-font"
                                   [options]="permission.kindOptions" placeholder="kind..."  ></p-dropdown>
                           </div>
                          <!-- TODO: 2019-01-10 comment it out per back-end request for now
@@ -101,8 +101,8 @@
                     Actions:
                   </div>
                   <div>
-                    <p-listbox [options]="permissionOptions" formControlName="actions" multiple="multiple" checkbox="checkbox"
-                      optionLabel="label"></p-listbox>
+                    <p-listbox #actionListbox [options]="permissionOptions" formControlName="actions" multiple="multiple" checkbox="checkbox" [showToggleAll]="false"
+                      optionLabel="label" (onChange)="onActionChange($event, permission, actionListbox , index)"></p-listbox>
                   </div>
                 </div>
               </div>
