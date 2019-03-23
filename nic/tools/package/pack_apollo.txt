@@ -119,6 +119,7 @@ nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libevutils.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/bin/cpld                                /nic/bin/
 
 # captrace config json files
 nic/conf/captrace/txdma-all.json                                  /nic/conf/captrace/

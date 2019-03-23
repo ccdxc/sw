@@ -7,7 +7,6 @@ nic/build/aarch64/iris/bin/cpld                                                 
 nic/build/aarch64/iris/bin/palutils                                             /platform/bin/
 nic/build/aarch64/iris/bin/captrace                                             /platform/bin/
 nic/build/aarch64/iris/bin/memtun                                               /platform/bin/
-nic/build/aarch64/iris/bin/cpld                                                 /platform/bin/
 nic/build/aarch64/iris/bin/eth_dbgtool                                          /platform/bin/
 nic/build/aarch64/iris/bin/palmacros                                            /platform/bin/
 nic/build/aarch64/iris/bin/pciemgrd                                             /platform/bin/
