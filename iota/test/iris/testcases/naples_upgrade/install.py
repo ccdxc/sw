@@ -9,9 +9,9 @@ import iota.harness.api as api
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.naples_upgrade.common as common
 
-def __installNaplesFwLatestImage(node):
+def __installNaplesFwLatestImage(node, img):
 
-    fullpath = api.GetTopDir() + '/' + common.UPGRADE_NAPLES_PKG
+    fullpath = api.GetTopDir() + '/nic/' + img
     api.Logger.info("fullpath for upg image: " + fullpath)
     resp = api.CopyToHost(node, [fullpath], "")
     if resp is None:
@@ -22,9 +22,9 @@ def __installNaplesFwLatestImage(node):
 
     return api.types.status.SUCCESS
 
-def __copyNaplesFwImage(node):
+def __copyNaplesFwImage(node, img):
 
-    copy_cmd = "sshpass -p pen123 scp -o ConnectTimeout=20 -o StrictHostKeyChecking=no naples_fw.tar root@{}:/update/".format(api.GetNicIntMgmtIP(node))
+    copy_cmd = "sshpass -p pen123 scp -o ConnectTimeout=20 -o StrictHostKeyChecking=no {} root@{}:/update/".format(img, api.GetNicIntMgmtIP(node))
     req = api.Trigger_CreateExecuteCommandsRequest()
     api.Trigger_AddHostCommand(req, node, copy_cmd)
     resp = api.Trigger(req)
@@ -42,12 +42,14 @@ def Main(step):
     assert(len(naplesHosts) != 0)
 
     api.ChangeDirectory(common.UPGRADE_ROOT_DIR)
-    for naplesHost in naplesHosts:
-        ret = __installNaplesFwLatestImage(naplesHost)
-        if ret != api.types.status.SUCCESS:
-            return ret
-        ret = __copyNaplesFwImage(naplesHost)
-        if ret != api.types.status.SUCCESS:
-            return ret
+    images = [common.UPGRADE_NAPLES_PKG, common.UPGRADE_NAPLES_PKG_COMPAT_CHECK]
+    for image in images:
+        for naplesHost in naplesHosts:
+            ret = __installNaplesFwLatestImage(naplesHost, image)
+            if ret != api.types.status.SUCCESS:
+                return ret
+            ret = __copyNaplesFwImage(naplesHost, image)
+            if ret != api.types.status.SUCCESS:
+                return ret
 
     return api.types.status.SUCCESS
