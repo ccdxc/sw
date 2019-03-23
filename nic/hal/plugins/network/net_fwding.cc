@@ -32,6 +32,22 @@ is_broadcast(fte::ctx_t &ctx) {
     return true;
 }
 
+static bool
+is_multicast_dmac(fte::ctx_t &ctx) {
+    const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
+    ether_header_t *eth_hdr;
+    if (!ctx.pkt()) {
+        return false;
+    }
+
+    eth_hdr = (ether_header_t*)(ctx.pkt() + cpu_hdr->l2_offset);
+    if (eth_hdr->dmac[0]&0x01) {
+        return true;
+    }
+
+    return false;
+}
+
 static inline hal_ret_t
 update_rewrite_info(fte::ctx_t&ctx)
 {
@@ -186,7 +202,12 @@ update_flow(fte::ctx_t&ctx)
 {
     hal_ret_t ret;
 
-    if (is_broadcast(ctx)) {
+    // DOLs still expect the ICMP Neighbor
+    // solicitation to be dropped because it
+    // runs in smart swithc. Hence the check
+    if (is_broadcast(ctx) || 
+        (hal::g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED && 
+         is_multicast_dmac(ctx))) {
         ctx.set_ignore_session_create(true);
         ret = HAL_RET_OK;
         return ret;

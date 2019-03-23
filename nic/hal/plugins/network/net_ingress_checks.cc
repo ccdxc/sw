@@ -60,7 +60,8 @@ update_src_if(fte::ctx_t&ctx)
     dst_local =  (ctx.dep() && ctx.dep()->ep_flags & EP_FLAGS_LOCAL);
     if_t *sif;
 
-    if (broadcast_pkt) {
+    if (broadcast_pkt || 
+        (hal::g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED && mcast_dmac)) {
         return HAL_RET_OK;
     }
 
@@ -69,7 +70,7 @@ update_src_if(fte::ctx_t&ctx)
         flowupd.action = session::FLOW_ACTION_DROP;
         HAL_TRACE_ERR("Dropping packet for multicast dmac");
         return ctx.update_flow(flowupd);
-    }
+    } 
 
     // drop remote to remote sessions
     if (!src_local &&  !dst_local) {
