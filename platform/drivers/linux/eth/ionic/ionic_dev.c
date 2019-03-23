@@ -497,11 +497,10 @@ void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 	desc_cb cb;
 
 	/* stop index must be for a descriptor that is net yet completed */
-	if (unlikely(!ionic_q_is_posted(q, stop_index))) {
-		pr_err("ionic stop is not posted %s stop %u tail %u head %u\n",
-		       q->name, stop_index, q->tail->index, q->head->index);
-		//return;
-	}
+	if (unlikely(!ionic_q_is_posted(q, stop_index)))
+		dev_err(q->lif->ionic->dev,
+			"ionic stop is not posted %s stop %u tail %u head %u\n",
+			q->name, stop_index, q->tail->index, q->head->index);
 
 	do {
 		desc_info = q->tail;

@@ -182,17 +182,19 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	struct qcq *qcq = napi_to_qcq(napi);
 	struct cq *cq = &qcq->cq;
 	unsigned int work_done;
+	bool unmask = false;
 
 	work_done = ionic_cq_service(cq, budget, cb, done_cb, done_arg);
-	if (work_done > 0)
-		ionic_intr_return_credits(cq->bound_intr, work_done,
-					  false, true);
 
-	if ((work_done < budget) && napi_complete_done(napi, work_done)) {
+	if (work_done < budget && napi_complete_done(napi, work_done)) {
+		unmask = true;
 		DEBUG_STATS_INTR_REARM(cq->bound_intr);
-		ionic_intr_return_credits(cq->bound_intr, 0,
-					  true, true);
 	}
+
+	if (work_done || unmask)
+		ionic_intr_return_credits(cq->bound_intr, work_done,
+					  unmask, true);
+
 	DEBUG_STATS_NAPI_POLL(qcq, work_done);
 
 	return work_done;

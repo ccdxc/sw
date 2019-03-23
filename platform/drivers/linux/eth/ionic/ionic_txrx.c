@@ -182,7 +182,7 @@ void ionic_rx_flush(struct cq *cq)
 
 	work_done = ionic_cq_service(cq, -1, ionic_rx_service, NULL, NULL);
 
-	if (work_done > 0)
+	if (work_done)
 		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 }
 
@@ -203,8 +203,7 @@ void ionic_tx_flush(struct cq *cq)
 	unsigned int work_done;
 
 	work_done = ionic_cq_service(cq, -1, ionic_tx_service, NULL, NULL);
-
-	if (work_done > 0)
+	if (work_done)
 		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 }
 
@@ -330,7 +329,7 @@ int ionic_rx_napi(struct napi_struct *napi, int budget)
 	struct lif *lif = rxcq->bound_q->lif;
 	struct cq *txcq = &lif->txqcqs[qi].qcq->cq;
 
-	ionic_cq_service(txcq, -1, ionic_tx_service, NULL, NULL);
+	ionic_tx_flush(txcq);
 
 	return ionic_napi(napi, budget, ionic_rx_service,
 			  ionic_rx_fill_cb, rxcq->bound_q);
