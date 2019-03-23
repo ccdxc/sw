@@ -76,6 +76,14 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude="pxe/" \
   "$ESXI_VIB_SRC/" "$GEN_DIR/drivers"
   
+# Set version string
+if [ -n "$SW_VERSION" ] ; then
+	VER=$SW_VERSION
+else
+	VER=`git describe`
+fi
+sed -i "s/^\\(#define DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
+	"$GEN_DIR/drivers/esxi/ionic_en/ionic.h"
 
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."

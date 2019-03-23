@@ -83,6 +83,16 @@ rsync -r --copy-links \
   --exclude=".tmp_versions/" \
   "$COMMON_SRC/" "$GEN_DIR/common"
 
+# Set version string
+if [ -n "$SW_VERSION" ] ; then
+	VER=$SW_VERSION
+else
+	VER=`git describe`
+fi
+echo "Setting Linux driver version to '$VER'"
+sed -i "s/^\\(#define DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
+	"$GEN_DIR/drivers/eth/ionic/ionic.h"
+
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."
 tar -cJ --exclude=.git -f "$GEN_PKG" "$(basename "$GEN_DIR")"

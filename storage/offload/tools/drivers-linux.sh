@@ -69,6 +69,15 @@ rsync -r --delete --delete-excluded --copy-links \
   "$DRIVERS_SRC/" "$GEN_DIR"
 report_version "$DRIVERS_SRC" > "$GEN_DIR/version.drivers"
 
+# Set version string
+if [ -n "$SW_VERSION" ] ; then
+	VER=$SW_VERSION
+else
+	VER=`git describe`
+fi
+sed -i "s/^\\(#define DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
+	"$GEN_DIR/src/drv/linux/kernel/sonic.h"
+
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."
 tar -cJ --exclude=.git -f "$GEN_PKG" "$(basename "$GEN_DIR")"

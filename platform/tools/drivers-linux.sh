@@ -175,6 +175,16 @@ rsync -r --delete --delete-excluded \
   --exclude="src/qperf.1" \
   "$QPERF_SRC/" "$GEN_DIR/qperf"
 
+# Set version string
+if [ -n "$SW_VERSION" ] ; then
+	VER=$SW_VERSION
+else
+	VER=`git describe`
+fi
+sed -i "s/^\\(#define DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
+	"$GEN_DIR/drivers/eth/ionic/ionic.h"                           \
+	"$GEN_DIR/drivers/rdma/drv/ionic/ionic_ibdev.c"
+
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."
 tar -cJ --exclude=.git -f "$GEN_PKG" "$(basename "$GEN_DIR")"
