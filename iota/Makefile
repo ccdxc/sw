@@ -76,5 +76,5 @@ docker/build-runtime-image: docker/install_box
 	cd .. && BOX_INCLUDE_ENV="NO_COPY USER USER_UID USER_GID GROUP_NAME" NO_COPY=1 USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
 
 docker/run: docker/build-runtime-image
-	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/iota pensando/nic su -l $(CUR_USER) -c 'cd ../iota && make && ./iota.py --testbed ${HARDWARE_TESTBED_COPIED} --testsuite ${TESTSUITE}  2>&1 | tee run.log'
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/iota pensando/nic su -l $(CUR_USER) -c 'set -o pipefail && cd ../iota && make && ./iota.py --testbed ${HARDWARE_TESTBED_COPIED} --testsuite ${TESTSUITE}  2>&1 | tee run.log'
 
