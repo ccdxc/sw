@@ -188,7 +188,7 @@ TEST_F(vnic_test, vnic_workflow_4) {
 
 /// \brief Create and delete mix and match of VNIC in two batches
 /// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
-TEST_F(vnic_test, DISABLED_vnic_workflow_5) {
+TEST_F(vnic_test, vnic_workflow_5) {
     pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed1 = {};
     vnic_stepper_seed_t seed2 = {};
@@ -234,7 +234,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_5) {
 
 /// \brief Create maximum number of VCINs in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
-TEST_F(vnic_test, DISABLED_vnic_workflow_neg_1) {
+TEST_F(vnic_test, vnic_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
@@ -268,7 +268,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_1) {
 
 /// \brief Create more than maximum number of VNICs supported.
 /// [ Create SetMax+1] - Read
-TEST_F(vnic_test, DISABLED_vnic_workflow_neg_2) {
+TEST_F(vnic_test, vnic_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     uint32_t num_vnics = 1025;
     vnic_stepper_seed_t seed = {};
@@ -288,7 +288,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_2) {
 
 /// \brief Read of a non-existing VNIC should return entry not found.
 /// Read NonEx
-TEST_F(vnic_test, DISABLED_vnic_workflow_neg_3a) {
+TEST_F(vnic_test, vnic_workflow_neg_3a) {
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
@@ -301,7 +301,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_3a) {
 
 /// \brief Deletion of a non-existing VNICs should fail.
 /// [Delete NonEx]
-TEST_F(vnic_test, DISABLED_vnic_workflow_neg_3b) {
+TEST_F(vnic_test, vnic_workflow_neg_3b) {
     pds_batch_params_t batch_params = {0};
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
@@ -318,6 +318,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_3b) {
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
 /// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
+// NOTE: to pass this test case we need rollback support in the infra
 TEST_F(vnic_test, DISABLED_vnic_workflow_neg_4) {
     pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed1 = {};
