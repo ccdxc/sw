@@ -60,7 +60,7 @@ protected:
 /// The operation should be de-duped by framework and is a NO-OP
 /// from hardware perspective
 /// [ Create SetMax, Delete SetMax ] - Read
-TEST_F(subnet, DISABLED_subnet_workflow_1) {
+TEST_F(subnet, subnet_workflow_1) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string subnet_start_addr = "10.0.0.0/16";

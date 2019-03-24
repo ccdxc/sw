@@ -106,7 +106,7 @@ subnet_util_object_stepper (pds_subnet_key_t start_key, pds_vcn_key_t vcn_key,
         addr = ip_pfx.addr.addr.v4_addr;
     }
     for (uint32_t idx = start_key.id; idx < start_key.id + num_objs; idx++) {
-        subnet_util subnet_obj(idx, vcn_key.id, ippfx2str(&ip_pfx));
+        subnet_util subnet_obj(vcn_key.id, idx, ippfx2str(&ip_pfx));
         ip_pfx.addr.addr.v4_addr = addr;
         switch (op) {
         case OP_MANY_CREATE:
