@@ -82,8 +82,8 @@ if [ -n "$SW_VERSION" ] ; then
 else
 	VER=`git describe`
 fi
-sed -i "s/^\\(#define DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
-	"$GEN_DIR/drivers/esxi/ionic_en/ionic.h"
+# sed -i "s/^\\(#define DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
+#	"$GEN_DIR/drivers/esxi/ionic_en/ionic.h"
 
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."
