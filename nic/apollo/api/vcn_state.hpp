@@ -63,7 +63,7 @@ private:
     friend class vcn_entry;    ///< vcn_entry class is friend of vcn_state
 
 private:
-    ht *vcn_ht_;           ///< hash table root
+    ht *vcn_ht_;           ///< vcn hash table
     indexer *vcn_idxr_;    ///< indexer to allocate hw vcn id
     slab *vcn_slab_;       ///< slab for allocating vcn entry
 };

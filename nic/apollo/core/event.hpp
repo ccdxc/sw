@@ -17,13 +17,13 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
-namespace core {
-
 // event identifiers
 typedef enum event_id_e {
     EVENT_ID_NONE = 0,
     EVENT_ID_PORT = 1,
 } event_id_t;
+
+namespace core {
 
 // port event specific information
 typedef struct port_event_info_s {

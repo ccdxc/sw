@@ -141,9 +141,9 @@ public:
                 platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM);
     static void destroy(catalog *clog);
     static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
-    static uint32_t fp_port_to_logical_port(uint32_t fp_port);
-    static uint32_t logical_port_to_fp_port(uint32_t port_num);
     static int logical_port_to_phy_port(uint32_t logical_port);
+    static uint32_t ifindex_to_logical_port(uint32_t ifindex);
+    static uint32_t logical_port_to_ifindex(uint32_t logical_port);
 
     // catalog to sdk conversion
     static port_speed_t catalog_speed_to_port_speed(std::string speed);
@@ -187,7 +187,8 @@ public:
     uint32_t mac_ch(uint32_t logical_port, uint32_t lane);
     uint32_t logical_port_to_tm_port(uint32_t logical_port);
 
-    // fp_port configs
+    // return number of physical ports (fp_ports == phy_ports)
+    uint8_t slot(void) { return 0; }
     uint32_t num_fp_ports(void) const { return catalog_db_.num_fp_ports; }
     port_type_t  port_type_fp(uint32_t fp_port);
     uint32_t     num_lanes_fp(uint32_t fp_port);

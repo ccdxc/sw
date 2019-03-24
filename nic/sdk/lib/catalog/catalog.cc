@@ -6,6 +6,7 @@
 #include "platform/fru/fru.hpp"
 #include "include/sdk/mem.hpp"
 #include "lib/utils/utils.hpp"
+#include "include/sdk/if.hpp"
 
 namespace sdk {
 namespace lib {
@@ -681,25 +682,13 @@ catalog::destroy(catalog *clog)
 catalog_logical_port_t *
 catalog::logical_port(uint32_t logical_port)
 {
-    return &catalog_db_.logical_ports[logical_port-1];
+    return &catalog_db_.logical_ports[logical_port - 1];
 }
 
 port_type_t
 catalog::port_type_fp (uint32_t fp_port)
 {
     return catalog_db_.fp_ports[fp_port-1].type;
-}
-
-uint32_t
-catalog::fp_port_to_logical_port(uint32_t fp_port)
-{
-    return ((fp_port - 1) * MAX_PORT_LANES) + 1;
-}
-
-uint32_t
-catalog::logical_port_to_fp_port(uint32_t logical_port)
-{
-    return ((logical_port - 1) / MAX_PORT_LANES) + 1;
 }
 
 uint32_t
@@ -808,6 +797,22 @@ catalog::ch_mode(mac_mode_t mac_mode, uint32_t ch)
 {
     int mode = static_cast<int>(mac_mode);
     return catalog_db_.mac_profiles[mode].ch_profile[ch].ch_mode;
+}
+
+uint32_t
+catalog::ifindex_to_logical_port(uint32_t ifindex)
+{
+    uint32_t parent = IFINDEX_TO_PARENT_PORT(ifindex);
+    uint32_t child = IFINDEX_TO_CHILD_PORT(ifindex);
+    return ((parent - 1) * MAX_PORT_LANES) + child;
+}
+
+uint32_t
+catalog::logical_port_to_ifindex(uint32_t logical_port)
+{
+    uint32_t parent = ((logical_port - 1)/MAX_PORT_LANES) + 1;
+    uint32_t child = ((logical_port - 1) % MAX_PORT_LANES) + 1;
+    return ETH_IFINDEX(0, parent, child);
 }
 
 }    // namespace lib
