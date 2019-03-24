@@ -170,6 +170,7 @@ apollo_impl::key_native_init_(void) {
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
 
+    // entry for native IPv4 packets
     key.ipv4_1_valid = 1;
     key.ipv6_1_valid = 0;
     key.ethernet_2_valid = 0;
@@ -181,13 +182,12 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-
     ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask, &data, &idx);
 
+    // entry for native IPv6 packets
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-
     key.ipv4_1_valid = 0;
     key.ipv6_1_valid = 1;
     key.ethernet_2_valid = 0;
@@ -199,9 +199,24 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-
     ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask, &data, &idx);
 
+    // entry for native non-IP packets
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 0;
+    key.ipv6_1_valid = 0;
+    key.ethernet_2_valid = 0;
+    key.ipv4_2_valid = 0;
+    key.ipv6_2_valid = 0;
+    data.action_id = KEY_NATIVE_NATIVE_NONIP_PACKET_ID;
+    mask.ipv4_1_valid_mask = 0xFF;
+    mask.ipv6_1_valid_mask = 0xFF;
+    mask.ethernet_2_valid_mask = 0xFF;
+    mask.ipv4_2_valid_mask = 0xFF;
+    mask.ipv6_2_valid_mask = 0xFF;
+    ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask, &data, &idx);
     return ret;
 }
 
@@ -221,18 +236,47 @@ apollo_impl::key_tunneled_init_(void) {
     memset(&mask, 0xFF, sizeof(mask));
     memset(&data, 0, sizeof(data));
 
-    key.ipv4_1_valid = 0;
+    // entry for tunneled (inner) IPv4 packets
+    key.ipv4_1_valid = 1;
     key.ipv6_1_valid = 0;
     key.ethernet_2_valid = 0;
     key.ipv4_2_valid = 1;
     key.ipv6_2_valid = 0;
     data.action_id = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
-    mask.ipv4_1_valid_mask = 0;
-    mask.ipv6_1_valid_mask = 0;
+    mask.ipv4_1_valid_mask = 0xFF;
+    mask.ipv6_1_valid_mask = 0xFF;
+    mask.ethernet_2_valid_mask = 0x0;
+    mask.ipv4_2_valid_mask = 0xFF;
+    mask.ipv6_2_valid_mask = 0xFF;
+    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&key, &mask,
+                                                       &data, &idx);
+    // entry for tunneled (inner) IPv6 packets
+    key.ipv4_1_valid = 1;
+    key.ipv6_1_valid = 0;
+    key.ethernet_2_valid = 0;
+    key.ipv4_2_valid = 0;
+    key.ipv6_2_valid = 1;
+    data.action_id = KEY_TUNNELED_TUNNELED_IPV6_PACKET_ID;
+    mask.ipv4_1_valid_mask = 0xFF;
+    mask.ipv6_1_valid_mask = 0xFF;
+    mask.ethernet_2_valid_mask = 0x0;
+    mask.ipv4_2_valid_mask = 0xFF;
+    mask.ipv6_2_valid_mask = 0xFF;
+    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&key, &mask,
+                                                       &data, &idx);
+
+    // entry for tunneled (inner) non-IP packets
+    key.ipv4_1_valid = 1;
+    key.ipv6_1_valid = 0;
+    key.ethernet_2_valid = 1;
+    key.ipv4_2_valid = 0;
+    key.ipv6_2_valid = 0;
+    data.action_id = KEY_TUNNELED_TUNNELED_NONIP_PACKET_ID;
+    mask.ipv4_1_valid_mask = 0xFF;
+    mask.ipv6_1_valid_mask = 0xFF;
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-
     ret = apollo_impl_db()->key_tunneled_tbl()->insert(&key, &mask,
                                                        &data, &idx);
     return ret;
