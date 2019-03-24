@@ -72,7 +72,7 @@ subnet_util::read(pds_subnet_info_t *info, bool compare_spec)
 
     memset(&key, 0, sizeof(pds_subnet_key_t));
     memset(info, 0, sizeof(pds_subnet_info_t));
-    key.id = info->spec.key.id;
+    key.id = this->id;
     rv = pds_subnet_read(&key, info);
     if (rv != sdk::SDK_RET_OK) {
         return rv;

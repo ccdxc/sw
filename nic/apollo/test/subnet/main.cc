@@ -118,7 +118,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_2) {
 /// The set1 subnet should be de-duped and set2 and set3 should be programmed
 /// in the hardware
 /// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
-TEST_F(subnet, DISABLED_subnet_workflow_3) {
+TEST_F(subnet, subnet_workflow_3) {
     // [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key1 = {}, key2 = {}, key3 = {};

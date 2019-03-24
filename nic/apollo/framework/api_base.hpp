@@ -24,7 +24,10 @@ namespace api {
 class api_base : public obj_base {
 public:
      /// \brief Constructor
-    api_base(){};
+    api_base() {
+        in_dirty_list_ = false;
+        stateless_ = false;
+    };
 
      /// \brief Destructor
     ~api_base(){};
