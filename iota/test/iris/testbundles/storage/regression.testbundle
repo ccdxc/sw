@@ -433,7 +433,6 @@ testcases:
 
     -   name        : Csum4K8KCrc32c
         testcase    : testcases.storage.ymltest2
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
@@ -448,8 +447,6 @@ testcases:
 
     -   name        : Csum4K8KCrc32cPb
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
