@@ -135,7 +135,6 @@ TEST_F(subnet, subnet_workflow_3) {
     vcn_key.id = 1;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-
     ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1,
                                          num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key2, vcn_key, subnet_start_addr2,
@@ -151,13 +150,27 @@ TEST_F(subnet, subnet_workflow_3) {
         key2, num_subnets, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_read(
         key3, num_subnets, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+
+    // Cleanup
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_delete(key2, num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_delete(key3, num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(subnet_util::many_read(key2, num_subnets,
+                                       sdk::SDK_RET_ENTRY_NOT_FOUND) ==
+                sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_read(key3, num_subnets,
+                                       sdk::SDK_RET_ENTRY_NOT_FOUND) ==
+                sdk::SDK_RET_OK);
 }
 
 /// \brief Create and delete max subnets in two batches
 /// The hardware should create and delete VCN correctly. Validate using reads
 /// at each batch end
 /// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
-TEST_F(subnet, DISABLED_subnet_workflow_4) {
+TEST_F(subnet, subnet_workflow_4) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string start_addr = "10.0.0.0/16";
@@ -187,7 +200,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_4) {
 
 /// \brief Create and delete mix and match of subnets in two batches
 /// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
-TEST_F(subnet, DISABLED_subnet_workflow_5) {
+TEST_F(subnet, subnet_workflow_5) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key1 = {}, key2 = {}, key3 = {};
     std::string subnet_start_addr1 = "10.0.0.0/16";
@@ -239,7 +252,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_5) {
 
 /// \brief Create maximum number of VCNs in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
-TEST_F(subnet, DISABLED_subnet_workflow_neg_1) {
+TEST_F(subnet, subnet_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string start_addr = "10.0.0.0/16";
@@ -253,17 +266,19 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_1) {
     ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
                                          num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
     ASSERT_TRUE(subnet_util::many_read(
         key, num_subnets, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
-                                         num_subnets) != sdk::SDK_RET_OK);
+                                         num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
+    // @kalyanbade why should this be ENTRY_NOT_FOUND ? seems like 1K subnet
+    // still exist right ? also, there is no cleanup of these subnets here, so
+    // next test will have impact due to this
     ASSERT_TRUE(subnet_util::many_read(
         key, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
@@ -283,6 +298,9 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_2) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
                                          num_subnets) == sdk::SDK_RET_OK);
+    // @kalyanbade we don't enforce that we support only 1024 subnets, as
+    // subnets are just s/w only strucutres .. this is failing because previous
+    // test didn't delete subnets !!!
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 

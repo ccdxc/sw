@@ -75,7 +75,7 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         if (api_obj->in_dirty_list() == false) {
             // attemping a CREATED on already created object
             PDS_TRACE_ERR("Creating an obj already created, obj %s",
-                          api_obj->key2str());
+                          api_obj->key2str().c_str());
             return SDK_RET_INVALID_OP;
         }
         obj_ctxt_t& octxt = batch_ctxt_.dirty_obj_map.find(api_obj)->second;
