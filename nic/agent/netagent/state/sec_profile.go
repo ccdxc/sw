@@ -198,13 +198,22 @@ func (na *Nagent) DeleteSecurityProfile(tn, namespace, name string) error {
 	}
 
 	// Find the attachment vrfs
-	for _, v := range existingSecurityProfile.Spec.AttachVrfs {
-		vrf, err := na.ValidateVrf(existingSecurityProfile.Tenant, existingSecurityProfile.Namespace, v)
+	if len(existingSecurityProfile.Spec.AttachVrfs) != 0 {
+		for _, v := range existingSecurityProfile.Spec.AttachVrfs {
+			vrf, err := na.ValidateVrf(existingSecurityProfile.Tenant, existingSecurityProfile.Namespace, v)
+			if err != nil {
+				log.Errorf("Failed to find the attachment vrf: %v. Err: %v", v, err)
+				return err
+			}
+			attachmentVrfs = append(attachmentVrfs, vrf)
+		}
+	} else {
+		defaultVrf, err := na.ValidateVrf(existingSecurityProfile.Tenant, existingSecurityProfile.Namespace, "default")
 		if err != nil {
-			log.Errorf("Failed to find the attachment vrf: %v. Err: %v", v, err)
+			log.Errorf("Failed to find the default vrf. Err: %v", err)
 			return err
 		}
-		attachmentVrfs = append(attachmentVrfs, vrf)
+		attachmentVrfs = append(attachmentVrfs, defaultVrf)
 	}
 
 	// check if the current security profile has any objects referring to it
