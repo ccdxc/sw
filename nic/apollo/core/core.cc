@@ -217,18 +217,21 @@ thread_spawn (pds_state *state)
                             "Periodic thread create failure");
     new_thread->start(new_thread);
 
-    // spawn nicmgr thread
-    new_thread =
-        thread_create("nicmgr", THREAD_ID_NICMGR,
-            sdk::lib::THREAD_ROLE_CONTROL,
-            0x0,    // use all control cores
-            nicmgr::nicmgr_thread_start,
-            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            NULL);
-    SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
-                            "nicmgr thread create failure");
-    new_thread->start(new_thread);
+    if ((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
+        (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) {
+        // spawn nicmgr thread
+        new_thread =
+            thread_create("nicmgr", THREAD_ID_NICMGR,
+                sdk::lib::THREAD_ROLE_CONTROL,
+                0x0,    // use all control cores
+                nicmgr::nicmgr_thread_start,
+                sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                NULL);
+        SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                                "nicmgr thread create failure");
+        new_thread->start(new_thread);
+    }
     return SDK_RET_OK;
 }
 
