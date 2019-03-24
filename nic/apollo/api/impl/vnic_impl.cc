@@ -239,11 +239,13 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group2 = 0;
 
     // program the LPM tree base address
-    addr =
-        ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
-    PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
-    MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v4addr1,
-                            addr, 5);
+    if (v4_route_table) {
+        addr =
+            ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
+        PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v4addr1,
+                                addr, 5);
+    }
     if (v6_route_table) {
         addr =
             ((impl::route_table_impl *)(v6_route_table->impl()))->lpm_root_addr();
@@ -560,30 +562,36 @@ vnic_impl::fill_vnic_spec_(
 
 sdk_ret_t
 vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
-    p4pd_error_t p4pd_ret;
     sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
     vnic_tx_stats_actiondata_t vnic_tx_stats_data;
     vnic_rx_stats_actiondata_t vnic_rx_stats_data;
-    egress_local_vnic_info_actiondata_t     egress_vnic_data = { 0 };
-    local_vnic_by_vlan_tx_actiondata_t     vnic_by_vlan_data = { 0 };
-    local_vnic_by_slot_rx_swkey_t          vnic_by_slot_key = { 0 };
-    local_vnic_by_slot_rx_actiondata_t     vnic_by_slot_data = { 0 };
+    egress_local_vnic_info_actiondata_t egress_vnic_data = { 0 };
+    local_vnic_by_vlan_tx_actiondata_t vnic_by_vlan_data = { 0 };
+    local_vnic_by_slot_rx_swkey_t vnic_by_slot_key = { 0 };
+    local_vnic_by_slot_rx_actiondata_t vnic_by_slot_data = { 0 };
 
     // read VNIC_TX_STATS and VNIC_RX_STATS
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_TX_STATS, hw_id_, NULL,
                                       NULL, &vnic_tx_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read VNIC_TX_STATS table for vnic %u",
+                      key->id);
         return sdk::SDK_RET_HW_READ_ERR;
     }
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_RX_STATS, hw_id_, NULL,
                                       NULL, &vnic_rx_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read VNIC_RX_STATS table for vnic %u",
+                      key->id);
         return sdk::SDK_RET_HW_READ_ERR;
     }
     // read EGRESS_LOCAL_VNIC_INFO table
     ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(
               hw_id_, &egress_vnic_data);
     if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read EGRESS_LOCAL_VNIC_INFO table for "
+                      "vnic %u, err %u", key->id, ret);
         return ret;
     }
     // read LOCAL_VNIC_BY_VLAN_TX table
@@ -591,6 +599,8 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
               egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
               &vnic_by_vlan_data);
     if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read LOCAL_VNIC_BY_VLAN_TX table for "
+                      "vnic %u, err %u", key->id, ret);
         return ret;
     }
     // read LOCAL_VNIC_BY_SLOT_RX table, this is to get encap type
@@ -598,7 +608,9 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
                                             vnic_by_slot_hash_idx_,
                                             &vnic_by_slot_key,
                                             &vnic_by_slot_data);
-     if (ret != SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read LOCAL_VNIC_BY_SLOT_RX table for "
+                      "vnic %u, err %u", key->id, ret);
         return ret;
     }
 
@@ -607,9 +619,9 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
     fill_vnic_spec_(&egress_vnic_data, &vnic_by_vlan_data,
                     &vnic_by_slot_key, &vnic_by_slot_data, &info->spec);
 
-    PDS_TRACE_DEBUG("wire vlan %u, overlay mac %s, subnet %u, vcn %u",
-                    info->spec.wire_vlan, macaddr2str(info->spec.mac_addr),
-                    info->spec.subnet.id, info->spec.vcn.id);
+    PDS_TRACE_DEBUG("vnic %u, subnet %u, vcn %u, wire vlan %u, overlay mac %s ",
+                    key->id, info->spec.subnet.id, info->spec.vcn.id,
+                    info->spec.wire_vlan, macaddr2str(info->spec.mac_addr));
     return SDK_RET_OK;
 }
 

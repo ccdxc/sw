@@ -93,7 +93,7 @@ TEST_F(vnic_test, vnic_workflow_1) {
 /// Create and delete should be de-deduped by framework and subsequent create
 /// should result in successful creation
 /// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
-TEST_F(vnic_test, DISABLED_vnic_workflow_2) {
+TEST_F(vnic_test, vnic_workflow_2) {
     pds_batch_params_t batch_params = {0};
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
@@ -122,7 +122,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_2) {
 /// The set1 vnic should be de-duped and set2 and set3 should be programmed
 /// in the hardware
 /// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
-TEST_F(vnic_test, DISABLED_vnic_workflow_3) {
+TEST_F(vnic_test, vnic_workflow_3) {
     pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed1 = {};
     vnic_stepper_seed_t seed2 = {};
@@ -161,7 +161,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_3) {
 /// The hardware should create and delete VNIC correctly. Validate using reads
 /// at each batch end
 /// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
-TEST_F(vnic_test, DISABLED_vnic_workflow_4) {
+TEST_F(vnic_test, vnic_workflow_4) {
     pds_batch_params_t batch_params = {0};
     uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};

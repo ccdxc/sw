@@ -218,9 +218,9 @@ private:
                 pds_vnic_spec_t *spec);
 private:
     /**< P4 datapath specific state */
-    uint16_t          hw_id_;      /**< hardware id */
+    uint16_t    hw_id_;      /**< hardware id */
     // TODO: if we have remove(key) API, we don't need to store this
-    uint16_t          vnic_by_slot_hash_idx_;
+    uint32_t    vnic_by_slot_hash_idx_;
 } __PACK__;
 
 /** @} */    // end of PDS_VNIC_IMPL

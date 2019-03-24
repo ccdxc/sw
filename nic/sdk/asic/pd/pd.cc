@@ -360,9 +360,14 @@ asicpd_tcam_table_hw_entry_read (uint32_t tableid,
     p4pd_global_table_properties_get(tableid, &tbl_ctx);
     assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
     asicpd_copy_capri_table_info(&cap_tbl_info, &tbl_ctx.tcam_layout, &tbl_ctx);
-    ret = capri_tcam_table_hw_entry_read(tableid, index, trit_x, trit_y,
-                                         hwentry_bit_len, cap_tbl_info,
-                                         (tbl_ctx.gress == P4_GRESS_INGRESS));
+    if (g_mock_mode_) {
+        ret = asicpd_tcam_table_entry_read(tableid, index, trit_x, trit_y,
+                                           hwentry_bit_len);
+    } else {
+        ret = capri_tcam_table_hw_entry_read(tableid, index, trit_x, trit_y,
+                                             hwentry_bit_len, cap_tbl_info,
+                                             (tbl_ctx.gress == P4_GRESS_INGRESS));
+    }
     return ret;
 }
 
