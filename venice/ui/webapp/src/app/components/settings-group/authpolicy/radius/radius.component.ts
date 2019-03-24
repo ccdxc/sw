@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, OnChanges, SimpleChanges, AfterContentInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, Output, EventEmitter, Input, OnChanges, SimpleChanges, AfterContentInit } from '@angular/core';
 import { required } from '@sdk/v1/utils/validators';
 import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
@@ -42,7 +42,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   @Output() invokeSaveRadius: EventEmitter<Boolean> = new EventEmitter();
   @Output() invokeCreateRadius: EventEmitter<AuthRadius> = new EventEmitter();
 
-  constructor(protected _controllerService: ControllerService) {
+  constructor(protected _controllerService: ControllerService , private cd: ChangeDetectorRef) {
     super(_controllerService);
   }
 
@@ -126,7 +126,10 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   addServer() {
     const servers = this.radiusObject.$formGroup.get('servers') as FormArray;
     const newServer = new AuthRadiusServer().$formGroup;
+    this.setValidatorOnServerControl(newServer);
     servers.insert(0, newServer);
+    this.setValidatorOnServerControl(newServer);
+    this.cd.detectChanges(); // this is the trick to avoid ExpressionChangedAfterItHasBeenCheckedError
   }
 
   removeServer(index) {
@@ -149,13 +152,13 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   }
 
   saveRadius() {
+    if (!this.isAllInputsValid(this.radiusObject)) {
+           this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are requried');
+           return;
+    }
     this.updateRadiusData();
     if (this.inCreateMode) {
-      if (this.isAllInputsValid(this.radiusObject)) {
         this.invokeCreateRadius.emit(this.radiusData);
-      } else {
-        this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are requried');
-      }
     } else {
       // POST DATA
       this.invokeSaveRadius.emit(false); // emit event to parent to update RADIUS if REST call succeeds, ngOnChange() will bb invoked and refresh data.

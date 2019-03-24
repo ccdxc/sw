@@ -52,7 +52,7 @@
                   <div>{{rowData.spec.interfaces[index]["mac-address"]}}  -  {{rowData.status.interfaces[index]["ip-addresses"].join(', ')}}</div>
                 </ng-container>
                 <ng-container *ngIf="rowData.status == null || rowData.status.interfaces == null || rowData.status.interfaces[index] == null || rowData.status.interfaces[index]['ip-addresses'] == null">
-                 <div>{{rowData.spec.interfaces[index]["mac-address"]}}</div>
+                 <div>{{rowData.spec.interfaces[index]["mac-address"]}} -  {{rowData.spec.interfaces[index]["ip-addresses"].join(', ')}}</div>
                 </ng-container>
                 <div @fastSlideInOut *ngIf="rowHoverName === rowData.meta.name" class="workload-column-values">Micro-seg vlan: {{rowData.spec.interfaces[index]["micro-seg-vlan"]}}        External vlan: {{rowData.spec.interfaces[index]["external-vlan"]}}</div>
               </ng-container>

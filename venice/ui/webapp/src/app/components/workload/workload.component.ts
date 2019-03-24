@@ -151,6 +151,10 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     return labels.join(', ');
   }
 
+  /**
+   * TODO: This API is not used. We may want to delete it. Let Rohan check it out first
+   * @param interfacesObj
+   */
   formatInterfaces(interfacesObj) {
     const interfaces = [];
     Object.keys(interfacesObj).forEach((key) => {
@@ -158,6 +162,10 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
       const network = interfacesObj[key]['network'];
       if (network != null) {
         ret += '    Network: ' + network + '    ';
+      }
+      const ipAddress = interfacesObj[key]['ip-addresses'];
+      if (ipAddress != null) {
+        ret += '    IP Addresses: ' + ipAddress.split(',');
       }
       const microSegVlan = interfacesObj[key]['micro-seg-vlan'];
       if (microSegVlan != null) {
