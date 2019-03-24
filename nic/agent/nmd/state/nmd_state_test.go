@@ -180,13 +180,13 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 	}, nil
 }
 
-func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
+func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.SmartNIC) error {
 	m.Lock()
 	defer m.Unlock()
 	m.numUpdateSmartNICReqCalls++
 	key := objectKey(nic.ObjectMeta)
 	m.nicDB[key] = nic
-	return nic, nil
+	return nil
 }
 
 func (m *mockCtrler) WatchSmartNICUpdates() {
@@ -204,6 +204,14 @@ func (m *mockCtrler) Stop() {
 
 func (m *mockCtrler) IsSmartNICWatcherRunning() bool {
 	return m.smartNICWatcherRunning
+}
+
+func (m *mockCtrler) GetNIC(meta *api.ObjectMeta) *cmd.SmartNIC {
+	m.Lock()
+	defer m.Unlock()
+
+	key := objectKey(*meta)
+	return m.nicDB[key]
 }
 
 func (m *mockCtrler) GetNumUpdateSmartNICReqCalls() int {
@@ -414,7 +422,7 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
+	nm, _, ct, _, _ := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -440,10 +448,11 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 			},
 		},
 	}
-	n, err := nm.UpdateSmartNICReq(&nic)
+	err = nm.UpdateSmartNICReq(&nic)
 	AssertOk(t, err, "Error updating nic")
-	Assert(t, n.Status.Conditions[0].Status == cmd.ConditionStatus_TRUE.String() &&
-		nic.ObjectMeta.Name == "2222.2222.2222", "NIC status did not match", n)
+	updNIC := ct.GetNIC(&nic.ObjectMeta)
+	Assert(t, updNIC.Status.Conditions[0].Status == cmd.ConditionStatus_TRUE.String() &&
+		updNIC.ObjectMeta.Name == "2222.2222.2222", "NIC status did not match", updNIC)
 }
 
 func TestNaplesDefaultHostMode(t *testing.T) {

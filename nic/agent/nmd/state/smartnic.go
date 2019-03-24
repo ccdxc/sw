@@ -32,20 +32,20 @@ func (n *NMD) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, 
 }
 
 // UpdateSmartNICReq registers a NIC with CMD/Venice cluster
-func (n *NMD) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
+func (n *NMD) UpdateSmartNICReq(nic *cmd.SmartNIC) error {
 
 	if n.cmd == nil {
 		log.Errorf("Failed to update NIC, mac: %s cmd not ready", nic.ObjectMeta.Name)
-		return nil, errors.New("cmd not ready yet")
+		return errors.New("cmd not ready yet")
 	}
-	nicObj, err := n.cmd.UpdateSmartNICReq(nic)
+	err := n.cmd.UpdateSmartNICReq(nic)
 	if err != nil || nic == nil {
 		log.Errorf("Failed to update NIC, mac: %s err: %v", nic.ObjectMeta.Name, err)
-		return nil, err
+		return err
 	}
 
-	log.Infof("Update NIC response mac: %s nic: %+v", nic.ObjectMeta.Name, nicObj)
-	return nicObj, nil
+	log.Infof("Update NIC response mac: %s", nic.ObjectMeta.Name)
+	return nil
 }
 
 // CreateSmartNIC creates a local smartNIC object

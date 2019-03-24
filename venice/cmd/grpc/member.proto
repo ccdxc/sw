@@ -212,9 +212,7 @@ message UpdateNICRequest {
 
 // Update NIC response
 message UpdateNICResponse {
-
-	// SmartNIC object
-	cluster.SmartNIC Nic = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nic,omitempty"];
+	// just need to return ok/error
 }
 
 // SmartNIC watch event

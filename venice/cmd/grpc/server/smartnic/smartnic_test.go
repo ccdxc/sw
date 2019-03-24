@@ -592,14 +592,17 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 					Nic: nic,
 				}
 
-				resp, err := smartNICUpdatesRPCClient.UpdateNIC(context.Background(), req)
+				_, err := smartNICUpdatesRPCClient.UpdateNIC(context.Background(), req)
 				if err != nil {
-					t.Logf("Testcase: %s Failed to update NIC, mac: %s req: %+v resp: %+v", tc.name, tc.mac, req.Nic, resp)
+					t.Logf("Testcase: %s Failed to update NIC, mac: %s req: %+v err: %+v", tc.name, tc.mac, req.Nic, err)
 					return false, nil
 				}
 
-				if resp.Nic.Status.Conditions[0].Type != tc.condition.Type || resp.Nic.Status.Conditions[0].Status != tc.condition.Status {
-					t.Logf("Testcase: %s,  Condition expected:\n%+v\nobtained:%+v", tc.name, tc.condition, resp.Nic.Status.Conditions[0])
+				nicObj, err := tInfo.smartNICServer.GetSmartNIC(ometa)
+				AssertOk(t, err, fmt.Sprintf("Error getting NIC object for mac:%s", tc.mac))
+
+				if nicObj.Status.Conditions[0].Type != tc.condition.Type || nicObj.Status.Conditions[0].Status != tc.condition.Status {
+					t.Logf("Testcase: %s,  Condition expected:\n%+v\nobtained:%+v", tc.name, tc.condition, nicObj.Status.Conditions[0])
 					return false, nil
 				}
 

@@ -345,7 +345,7 @@ func (n *NMD) SendNICUpdates() error {
 
 			// Send nic status
 			log.Infof("Sending NIC health update: %+v", nicObj)
-			_, err := n.UpdateSmartNICReq(nicObj)
+			err := n.UpdateSmartNICReq(nicObj)
 			if err != nil {
 				log.Errorf("Error updating nic, name:%s  err: %+v",
 					nicObj.Name, err)

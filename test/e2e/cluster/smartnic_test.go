@@ -5,13 +5,73 @@ import (
 	"fmt"
 	"time"
 
+	es "github.com/olivere/elastic"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	api "github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
+
+func validateNICHealth(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface, expectedNumNICS int, status cmd.ConditionStatus) {
+	Eventually(func() bool {
+		snics, err := snIf.List(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			By(fmt.Sprintf("Error getting list of NICs: %v", err))
+			return false
+		}
+		numMatchingNICs := 0
+		for _, snic := range snics {
+			for _, cond := range snic.Status.Conditions {
+				if cond.Type == cmd.SmartNICCondition_HEALTHY.String() &&
+					cond.Status == status.String() {
+					numMatchingNICs++
+					By(fmt.Sprintf("SmartNIC [%s] is %s", snic.Name, status.String()))
+				}
+			}
+		}
+		if numMatchingNICs != expectedNumNICS {
+			By(fmt.Sprintf("Found %d NICS with expected health status %s, want: %d", numMatchingNICs, status.String(), expectedNumNICS))
+			return false
+		}
+		By(fmt.Sprintf("ts:%s SmartNIC health status check validated for [%d] nics", time.Now().String(), numMatchingNICs))
+		return true
+	}, 90, 1).Should(BeTrue(), "SmartNIC health status check failed")
+}
+
+func getNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evtType string) *es.SearchResult {
+	var err error
+	var res *es.SearchResult
+
+	query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Cmd),
+		es.NewTermQuery("type.keyword", evtType))
+
+	Eventually(func() error {
+		res, err = esClient.Search(context.Background(),
+			elastic.GetIndex(globals.Events, globals.DefaultTenant),
+			elastic.GetDocType(globals.Events),
+			query, nil, 0, 100, "", true)
+		return err
+	}, 15, 3).Should(BeNil(), fmt.Sprintf("Error querying ElasticSearch for NIC Health Events: %v", err))
+
+	return res
+}
+
+func validateNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evtType string, numExpectedHits int) {
+	var err error
+
+	Eventually(func() error {
+		res := getNICHealthEvents(ctx, esClient, evtType)
+		if int(res.TotalHits()) < numExpectedHits {
+			return fmt.Errorf("could not find %d events of type %s, got %+v", numExpectedHits, evtType, res.TotalHits())
+		}
+		return nil
+	}, 60, 1).Should(BeNil(), fmt.Sprintf("failed to validate %d SmartNIC Health events of type %s, err: %v", numExpectedHits, evtType, err))
+}
 
 var _ = Describe("SmartNIC tests", func() {
 
@@ -98,11 +158,19 @@ var _ = Describe("SmartNIC tests", func() {
 
 	Context("SmartNIC health status and periodic updates test", func() {
 		var (
-			err  error
-			snIf cmd.ClusterV1SmartNICInterface
+			err      error
+			snIf     cmd.ClusterV1SmartNICInterface
+			esClient elastic.ESClient
 		)
 		BeforeEach(func() {
 			snIf = ts.tu.APIClient.ClusterV1().SmartNIC()
+
+			esAddr := fmt.Sprintf("%s:%s", ts.tu.FirstVeniceIP, globals.ElasticsearchRESTPort)
+			Eventually(func() error {
+				var err error
+				esClient, err = elastic.NewAuthenticatedClient(esAddr, nil, log.WithContext("submodule", "smartnic-health-events-test"))
+				return err
+			}, 30, 1).Should(BeNil(), "failed to initialize elastic client")
 		})
 
 		It("CMD should receive SmartNIC health updates and flag unresponsive NICs", func() {
@@ -155,33 +223,11 @@ var _ = Describe("SmartNIC tests", func() {
 					}
 				}
 				return true
-			}, 15, 1).Should(BeTrue(), "SmartNIC condition condition.LastTransitionTime check failed")
+			}, 30, 1).Should(BeTrue(), "SmartNIC condition condition.LastTransitionTime check failed")
+
+			// check that events were generated
+			validateNICHealthEvents(ctx, esClient, cmd.NICHealthUnknown, ts.tu.NumNaplesHosts)
+			validateNICHealthEvents(ctx, esClient, cmd.NICHealthy, ts.tu.NumNaplesHosts)
 		})
 	})
 })
-
-func validateNICHealth(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface, expectedNumNICS int, status cmd.ConditionStatus) {
-	Eventually(func() bool {
-		snics, err := snIf.List(ctx, &api.ListWatchOptions{})
-		if err != nil {
-			By(fmt.Sprintf("Error getting list of NICs: %v", err))
-			return false
-		}
-		numMatchingNICs := 0
-		for _, snic := range snics {
-			for _, cond := range snic.Status.Conditions {
-				if cond.Type == cmd.SmartNICCondition_HEALTHY.String() &&
-					cond.Status == status.String() {
-					numMatchingNICs++
-					By(fmt.Sprintf("SmartNIC [%s] is %s", snic.Name, status.String()))
-				}
-			}
-		}
-		if numMatchingNICs != expectedNumNICS {
-			By(fmt.Sprintf("Found %d NICS with expected health status %s, want: %d", numMatchingNICs, status.String(), expectedNumNICS))
-			return false
-		}
-		By(fmt.Sprintf("ts:%s SmartNIC health status check validated for [%d] nics", time.Now().String(), numMatchingNICs))
-		return true
-	}, 90, 1).Should(BeTrue(), "SmartNIC health status check failed")
-}

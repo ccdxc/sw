@@ -16,6 +16,8 @@ import (
 	"github.com/pensando/sw/api"
 	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/events"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/cmd/cache"
@@ -26,6 +28,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	perror "github.com/pensando/sw/venice/utils/errors"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -59,6 +62,15 @@ var (
 	// after which the server will cancel the request
 	nicRegTimeout = 3000 * time.Millisecond
 )
+
+func getNICCondition(nic *cluster.SmartNIC, condType cluster.SmartNICCondition_ConditionType) *cluster.SmartNICCondition {
+	for _, cond := range nic.Status.Conditions {
+		if cond.Type == condType.String() {
+			return &cond
+		}
+	}
+	return nil
+}
 
 // RPCServer implements SmartNIC gRPC service.
 type RPCServer struct {
@@ -348,39 +360,100 @@ func (s *RPCServer) GetSmartNIC(om api.ObjectMeta) (*cluster.SmartNIC, error) {
 }
 
 // UpdateSmartNIC creates or updates the smartNIC object
-func (s *RPCServer) UpdateSmartNIC(obj *cluster.SmartNIC) (*cluster.SmartNIC, error) {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return nil, errAPIServerDown
-	}
+func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC, error) {
+	var err error
+	var refObj *cluster.SmartNIC // reference object (before update)
+	var retObj *cluster.SmartNIC // return object (after update)
 
 	// Check if object exists.
 	// If it doesn't exist, do not create it, as it might have been deleted by user.
 	// NIC object creation (for example during NIC registration) should always be explicit.
-	var nicObj *cluster.SmartNIC
-	refObj, err := s.GetSmartNIC(obj.ObjectMeta)
-	if err == nil && refObj != nil {
 
-		updateAPIServer := !runtime.FilterUpdate(refObj.Status, obj.Status, []string{"LastTransitionTime"}, nil)
-
-		refObj.Status.Conditions = obj.Status.Conditions
-		// Always update the cache
-		err = s.stateMgr.UpdateSmartNIC(refObj)
-		if err != nil {
-			log.Errorf("Error updating statemgr state for nic %s: %v", refObj.ObjectMeta.Name, err)
-		}
-		// Update ApiServer if there is an actual state transition
-		if updateAPIServer {
-			nicObj, err = cl.SmartNIC().Update(context.Background(), refObj)
-		} else {
-			nicObj = refObj
-		}
+	// check local cache first
+	cachedNICState, err := s.stateMgr.FindSmartNIC(updObj.GetTenant(), updObj.GetName())
+	if cachedNICState != nil && err == nil {
+		// make a copy so that we don't need to worry about locking/unlocking
+		cachedNICState.Lock()
+		temp := *cachedNICState.SmartNIC
+		cachedNICState.Unlock()
+		refObj = &temp
 	} else {
-		return nil, fmt.Errorf("Unable to apply NIC update. Err: %v, update: %+v", err, obj)
+		// object not found in cache, try to get it from ApiServer
+		refObj, err = s.GetSmartNIC(updObj.ObjectMeta)
 	}
 
-	log.Debugf("UpdateSmartNIC nic: %+v", nicObj)
-	return nicObj, err
+	if err != nil || refObj == nil {
+		return nil, fmt.Errorf("Error retrieving reference object for NIC update. Err: %v, update: %+v", err, updObj)
+	}
+
+	nicName := updObj.Name
+
+	// decide whether to send to ApiServer or not before we make any adjustment
+	updateAPIServer := !runtime.FilterUpdate(refObj.Status, updObj.Status, []string{"LastTransitionTime"}, nil)
+
+	refHealthCond := getNICCondition(refObj, cluster.SmartNICCondition_HEALTHY)
+	updHealthCond := getNICCondition(updObj, cluster.SmartNICCondition_HEALTHY)
+
+	if updHealthCond == nil {
+		return nil, fmt.Errorf("Received a NIC update without health condition: %+v", updObj)
+	}
+
+	// generate event if there was a health transition
+	if refHealthCond != nil && refHealthCond.Status != updHealthCond.Status {
+		var evtType string
+		var severity events.SeverityLevel
+		var msg string
+
+		switch updHealthCond.Status {
+		case cluster.ConditionStatus_TRUE.String():
+			evtType = cluster.NICHealthy
+			severity = evtsapi.SeverityLevel_INFO
+			msg = fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nicName, cluster.ConditionStatus_TRUE.String())
+
+		case cluster.ConditionStatus_FALSE.String():
+			evtType = cluster.NICUnhealthy
+			severity = evtsapi.SeverityLevel_CRITICAL
+			msg = fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nicName, cluster.ConditionStatus_FALSE.String())
+
+		default:
+			// this should not happen
+			log.Errorf("NIC reported unknown health condition: %+v", updHealthCond)
+		}
+
+		if evtType != "" {
+			recorder.Event(evtType, severity, msg, nil)
+			log.Infof("Generated event, type: %v, sev: %v, msg: %s", evtType, severity.String(), msg)
+		}
+	}
+
+	// Store the update in local cache
+
+	// Ignore the time-stamp provided by NMD and replace it with our own.
+	// This will help mitigating issues due to clock misalignments between Venice and NAPLES
+	// As long as it gets periodic updates, CMD is happy.
+	// If it happens to process an old message by mistake, the next one will correct it.
+	updHealthCond.LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
+	refObj.Status.Conditions = updObj.Status.Conditions
+	err = s.stateMgr.UpdateSmartNIC(refObj)
+	if err != nil {
+		log.Errorf("Error updating statemgr state for NIC %s: %v", nicName, err)
+	}
+
+	// Update ApiServer if needed
+	if updateAPIServer {
+		cl := s.ClientGetter.APIClient()
+		if cl == nil {
+			log.Infof("Error getting APIServer client while preparing update for NIC %s", nicName)
+			return nil, errAPIServerDown
+		}
+		retObj, err = cl.SmartNIC().Update(context.Background(), refObj)
+		log.Infof("Sent NIC status updated to ApiServer: %+v, err: %v", refObj, err)
+	} else {
+		retObj = refObj
+	}
+
+	log.Debugf("UpdateSmartNIC nic: %+v", retObj)
+	return retObj, err
 }
 
 // DeleteSmartNIC deletes the SmartNIC object based on object meta name
@@ -639,10 +712,10 @@ func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (
 
 	if err != nil || nicObj == nil {
 		log.Errorf("Error updating SmartNIC object: %+v err: %v", obj, err)
-		return &grpc.UpdateNICResponse{Nic: nil}, err
+		return &grpc.UpdateNICResponse{}, err
 	}
 
-	return &grpc.UpdateNICResponse{Nic: nicObj}, nil
+	return &grpc.UpdateNICResponse{}, nil // no need to send back the full update
 }
 
 //ListSmartNICs lists all smartNICs matching object selector
@@ -813,6 +886,8 @@ func (s *RPCServer) MonitorHealth() {
 							if err != nil {
 								log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 							}
+							recorder.Event(cluster.NICHealthUnknown, evtsapi.SeverityLevel_WARNING,
+								fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nic.Name, cluster.ConditionStatus_UNKNOWN.String()), nil)
 						}
 						break
 					}

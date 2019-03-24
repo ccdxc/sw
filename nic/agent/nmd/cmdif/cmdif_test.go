@@ -211,7 +211,7 @@ func (srv *mockRPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequ
 	if req.Nic.Name == "invalid-mac" {
 		return nil, errors.New("Invalid request")
 	}
-	return &grpc.UpdateNICResponse{Nic: &req.Nic}, nil
+	return &grpc.UpdateNICResponse{}, nil
 }
 
 func (srv *mockRPCServer) WatchNICs(meta *api.ObjectMeta, stream grpc.SmartNICUpdates_WatchNICsServer) error {
@@ -321,7 +321,7 @@ func TestCmdClient(t *testing.T) {
 			},
 		},
 	}
-	_, err = cl.UpdateSmartNICReq(&nic)
+	err = cl.UpdateSmartNICReq(&nic)
 	AssertOk(t, err, "Error making smartNIC update request")
 }
 
@@ -434,7 +434,7 @@ func TestCmdClientErrorHandling(t *testing.T) {
 
 	// Test update nic failure
 	nic.Name = "invalid-mac"
-	_, err = cl.UpdateSmartNICReq(&nic)
+	err = cl.UpdateSmartNICReq(&nic)
 	Assert(t, err != nil, "Update NIC should have failed")
 
 	nic.Name = "1111.1111.1111"

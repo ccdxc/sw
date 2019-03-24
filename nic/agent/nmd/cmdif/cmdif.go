@@ -380,13 +380,13 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.Regist
 }
 
 // UpdateSmartNICReq send a status update of SmartNIC to CMD
-func (client *CmdClient) UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.SmartNIC, error) {
+func (client *CmdClient) UpdateSmartNICReq(nic *cluster.SmartNIC) error {
 
 	if client.getUpdatesRPCClient() == nil {
 		// initialize rpc client
 		err := client.initUpdatesRPC()
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -399,10 +399,9 @@ func (client *CmdClient) UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.Smar
 	if err != nil || resp == nil {
 		log.Errorf("Error resp from CMD for updateNIC, Nic: %v Err: %v Resp: %v",
 			nic.Name, err, resp)
-		return nil, err
 	}
 
-	return resp.GetNic(), err
+	return err
 }
 
 // WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates

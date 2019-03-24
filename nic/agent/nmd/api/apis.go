@@ -26,7 +26,7 @@ type CmdAPI interface {
 	RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error)
 
 	// SmartNIC update api
-	UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.SmartNIC, error)
+	UpdateSmartNICReq(nic *cluster.SmartNIC) error
 
 	// WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates
 	WatchSmartNICUpdates()
@@ -73,7 +73,7 @@ type NmdPlatformAPI interface {
 	RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error)
 
 	// SmartNIC update api
-	UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.SmartNIC, error)
+	UpdateSmartNICReq(nic *cluster.SmartNIC) error
 }
 
 // ==================================================================================
