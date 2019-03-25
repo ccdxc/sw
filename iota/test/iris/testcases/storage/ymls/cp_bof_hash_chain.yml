@@ -13,6 +13,7 @@ svc_chains:
             hdr_fmt_idx: 1
             threshold_delta: 7168
             output_file: '%test_id%_compressed.bin'
+            output_len: 8192
         - hash:
             algo_type: '$hash_algo'
             output_file: '%test_id%_hash_full.bin'
@@ -30,6 +31,7 @@ svc_chains:
             hdr_fmt_idx: 1
             threshold_delta: 7168
             output_file: '%test_id%_compressed.bin'
+            output_len: 8192
         - hash:
             algo_type: '$hash_algo'
             flags: 'per_block'
@@ -48,12 +50,12 @@ tests:
             retcode: 0
             svc_retcodes: 20004,0
         - size_compare:
-            idx: 1
+            idx: 2
             file1: '1_hash_full.bin'
             val: 64
 
   - test:
-      idx: 1
+      idx: 2
       svc_chains: 2
       repeat: 'param::repeat'
       batch_depth: 'param::batch_depth'
@@ -63,7 +65,7 @@ tests:
             idx: 1
             retcode: 0
             svc_retcodes: 20004,0
-        - size_compare:
-            idx: 1
-            file1: '1_hash_per_block.bin'
-            val: 128
+        #- size_compare:
+        #    idx: 2
+        #    file1: '1_hash_per_block.bin'
+        #    val: 128

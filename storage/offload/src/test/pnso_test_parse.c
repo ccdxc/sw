@@ -893,6 +893,7 @@ FUNC_SET_INT(test_set_input_min_block, ((struct test_svc_chain *)parent)->input.
 FUNC_SET_INT(test_set_input_max_block, ((struct test_svc_chain *)parent)->input.max_block_size, 0, UINT_MAX)
 FUNC_SET_INT(test_set_input_block_count, ((struct test_svc_chain *)parent)->input.block_count, 0, 1024)
 FUNC_SET_STRING(test_set_input_file, ((struct test_svc_chain *)parent)->input.pathname, TEST_MAX_PATH_LEN)
+FUNC_SET_STRING(test_set_input_output_file, ((struct test_svc_chain *)parent)->input.output_path, TEST_MAX_PATH_LEN)
 FUNC_SET_STRING(test_set_input_pattern, ((struct test_svc_chain *)parent)->input.pattern, TEST_MAX_PATTERN_LEN)
 FUNC_SET_STRING(test_set_output_file, ((struct test_svc *)parent)->output_path, TEST_MAX_PATH_LEN)
 
@@ -1343,7 +1344,8 @@ static pnso_error_t test_set_cp_hdr_type(struct test_desc *root,
 	return err;
 }
 
-
+FUNC_SET_INT(test_set_output_len, ((struct test_svc *)parent)->output_len,
+	     1, UINT_MAX);
 FUNC_SET_INT(test_set_decompress_hdr_fmt_idx,
 	     get_cur_svc(parent)->u.dc_desc.hdr_fmt_idx, 1, USHRT_MAX);
 FUNC_SET_INT(test_set_compress_hdr_fmt_idx,
@@ -1724,6 +1726,7 @@ CHILD_NODE_DESC(svc_chains_svc_chain_input, random_len,     NULL, test_set_input
 CHILD_NODE_DESC(svc_chains_svc_chain_input, offset,         NULL, test_set_input_offset, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_input, len,            NULL, test_set_input_len, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_input, file,           NULL, test_set_input_file, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_input, output_file,    NULL, test_set_input_output_file, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_input, pattern,        NULL, test_set_input_pattern, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_input, min_block_size, NULL, test_set_input_min_block, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_input, max_block_size, NULL, test_set_input_max_block, NULL) \
@@ -1745,38 +1748,45 @@ CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, threshold,       NULL, test_s
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, threshold_delta, NULL, test_set_compress_threshold_delta, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, output_file,     NULL, test_set_output_file, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, output_flags,    NULL, test_set_output_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, output_len,      NULL, test_set_output_len, NULL) \
 \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, flags,        NULL, test_set_op_flags, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, algo_type,    NULL, test_set_op_algo_type, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, hdr_fmt_idx,  NULL, test_set_decompress_hdr_fmt_idx, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, output_file,  NULL, test_set_output_file, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, output_flags, NULL, test_set_output_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, output_len,   NULL, test_set_output_len, NULL) \
 \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, algo_type,    NULL, test_set_op_algo_type, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, key_idx,      NULL, test_set_crypto_key_idx, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, iv_data,      NULL, test_set_crypto_iv_data, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, output_file,  NULL, test_set_output_file, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, output_flags, NULL, test_set_output_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, output_len,   NULL, test_set_output_len, NULL) \
 \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, algo_type,    NULL, test_set_op_algo_type, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, key_idx,      NULL, test_set_crypto_key_idx, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, iv_data,      NULL, test_set_crypto_iv_data, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, output_file,  NULL, test_set_output_file, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, output_flags, NULL, test_set_output_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, output_len,   NULL, test_set_output_len, NULL) \
 \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_hash, flags,        NULL, test_set_op_flags, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_hash, algo_type,    NULL, test_set_op_algo_type, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_hash, output_file,  NULL, test_set_output_file, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_hash, output_flags, NULL, test_set_output_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_hash, output_len,   NULL, test_set_output_len, NULL) \
 \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_chksum, flags,        NULL, test_set_op_flags, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_chksum, algo_type,    NULL, test_set_op_algo_type, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_chksum, output_file,  NULL, test_set_output_file, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_chksum, output_flags, NULL, test_set_output_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_chksum, output_len,   NULL, test_set_output_len, NULL) \
 \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompact, vvbn,         NULL, test_set_decompact_vvbn, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompact, output_file,  NULL, test_set_output_file, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompact, output_flags, NULL, test_set_output_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompact, output_len, NULL, test_set_output_len, NULL) \
 \
 CHILD_NODE_DESC(tests, test,            test_create_testcase, NULL, NULL) \
 CHILD_NODE_DESC(tests_test, idx,         NULL, test_set_idx, NULL) \

@@ -103,6 +103,7 @@ struct test_crypto_key {
 
 #define TEST_MAX_NAME_LEN 64
 #define TEST_MAX_PATTERN_LEN 8196
+#define TEST_MAX_BIN_PATTERN_LEN (TEST_MAX_PATTERN_LEN/2)
 #define TEST_MAX_PATH_LEN 128
 #define TEST_MAX_FILE_PREFIX_LEN 32
 #define TEST_MAX_FULL_PATH_LEN (TEST_MAX_PATH_LEN+(2*TEST_MAX_FILE_PREFIX_LEN))
@@ -130,11 +131,13 @@ struct test_input_desc {
 	uint32_t random_len;
 	char pattern[TEST_MAX_PATTERN_LEN];
 	char pathname[TEST_MAX_PATH_LEN];
+	char output_path[TEST_MAX_PATH_LEN];
 };
 
 struct test_svc {
 	struct test_node node;
 	uint32_t output_flags;
+	uint32_t output_len;
 	char output_path[TEST_MAX_PATH_LEN];
 	struct pnso_service svc;
 	union {

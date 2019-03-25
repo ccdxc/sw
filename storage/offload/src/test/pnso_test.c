@@ -220,13 +220,12 @@ static pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
 			       const char *pat, uint32_t pat_len)
 {
 	const uint8_t *pat_data;
-	uint8_t hex_pat[TEST_MAX_PATTERN_LEN];
+	uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
+	uint8_t hex_pat[TEST_MAX_BIN_PATTERN_LEN];
 
-	if (pat_len > TEST_MAX_PATTERN_LEN)
-		pat_len = TEST_MAX_PATTERN_LEN;
-	pat_data = get_normalized_pattern(pat, hex_pat, &pat_len);
+	pat_data = get_normalized_pattern(pat, hex_pat, &bin_len);
 
-	test_fill_buflist(buflist, pat_data, pat_len);
+	test_fill_buflist(buflist, pat_data, bin_len);
 
 	return PNSO_OK;
 }
@@ -242,11 +241,10 @@ static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
 	const struct pnso_flat_buffer *buf;
 	const uint8_t *pat_data;
 	uint8_t *dst;
-	uint8_t hex_pat[TEST_MAX_PATTERN_LEN];
+	uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
+	uint8_t hex_pat[TEST_MAX_BIN_PATTERN_LEN];
 
-	if (pat_len > TEST_MAX_PATTERN_LEN)
-		pat_len = TEST_MAX_PATTERN_LEN;
-	pat_data = get_normalized_pattern(pat, hex_pat, &pat_len);
+	pat_data = get_normalized_pattern(pat, hex_pat, &bin_len);
 
 	if (!len)
 		len = pbuf_get_buffer_list_len(buflist);
@@ -273,7 +271,7 @@ static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
 
 		dst = (uint8_t *) buflist->buffers[i].buf;
 		for (; j < buf->len && total_len < (offset+len); j++) {
-			ret = (int) (dst[j] - pat_data[pat_i % pat_len]);
+			ret = (int) (dst[j] - pat_data[pat_i % bin_len]);
 			pat_i++;
 			total_len++;
 			if (ret)
@@ -317,20 +315,99 @@ static void free_buffer_ctx(struct buffer_context *buf_ctx)
 	memset(buf_ctx, 0, sizeof(*buf_ctx));
 }
 
+/* Calculate the number of buffers required fill total_len */
+static uint32_t get_required_buf_count(uint32_t max_buf_len,
+				       uint32_t total_len,
+				       uint32_t block_size)
+{
+	uint32_t buf_count = 0;
+	uint32_t bufs_per_block;
+	uint32_t tmp_count;
+
+	OSAL_ASSERT(max_buf_len <= block_size);
+
+	if (total_len >= block_size) {
+		bufs_per_block = block_size / max_buf_len;
+		if (block_size % max_buf_len)
+			bufs_per_block++;
+
+		tmp_count = total_len / block_size;
+		buf_count = tmp_count * bufs_per_block;
+		total_len -= tmp_count * block_size;
+	}
+
+	if (total_len >= max_buf_len) {
+		tmp_count = total_len / max_buf_len;
+		buf_count += tmp_count;
+		total_len -= tmp_count * max_buf_len;
+	}
+
+	if (total_len)
+		buf_count++;
+
+	return buf_count;
+}
+
+/* Calculate a max_buf_len which will consume at most buf_count buffers */
+static uint32_t get_required_buf_len(uint32_t buf_count,
+				     uint32_t total_len,
+				     uint32_t block_size)
+{
+	uint32_t min, max, mid;
+	uint32_t tmp;
+
+	/* Simple cases */
+	if (total_len <= block_size)
+		return roundup_block_count(total_len, buf_count);
+	if (buf_count <= roundup_block_count(total_len, block_size))
+		return block_size;
+
+	/* Get upper and lower bounds */
+	max = roundup_block_count(roundup_len(total_len, block_size), buf_count);
+	min = ((total_len / block_size) * block_size) / buf_count;
+	if (!min)
+		min = 1;
+	OSAL_LOG_DEBUG("get_required_buf_len: min %u, max %u, total_len %u, buf_count %u\n",
+		       min, max, total_len, buf_count);
+
+	/* Find first buf len which works */
+	while (min < max) {
+		/* binary search */
+		mid = min + ((max - min) / 2);
+		tmp = get_required_buf_count(mid, total_len, block_size);
+		if (tmp < buf_count)
+			max = mid;
+		else if (tmp > buf_count)
+			min = mid + 1;
+		else {
+			max = mid;
+			break;
+		}
+	}
+
+	return max;
+}
+
 #define POISIN_BYTE 'P'
 static pnso_error_t alloc_buffer_ctx(struct buffer_context *buf_ctx,
 				     uint32_t count,
 				     uint32_t total_bytes,
+				     uint32_t max_buf_len,
 				     uint32_t alignment,
 				     bool poisin)
 {
 	uint32_t block_size;
+	uint32_t min_buf_len;
+	uint32_t bufs_per_block;
+	uint32_t offset;
 	uint32_t buflist_size;
+	uint32_t alloc_size;
+	uint32_t remain_len;
 	size_t i;
 
 	if (!count || !total_bytes)
 		return EINVAL;
-	block_size = (total_bytes + count - 1) / count;
+	alloc_size = roundup_len(total_bytes, alignment);
 
 	/* Allocate buflists if necessary */
 	if (count > buf_ctx->buflist_alloc_count) {
@@ -352,41 +429,69 @@ static pnso_error_t alloc_buffer_ctx(struct buffer_context *buf_ctx,
 	}
 
 	/* Allocate buf data if necessary */
-	if ((count*block_size) > buf_ctx->buf_alloc_sz) {
+	if (alloc_size > buf_ctx->buf_alloc_sz) {
 		if (buf_ctx->buf.buf)
 			TEST_FREE((void *) buf_ctx->buf.buf);
 		buf_ctx->buf.buf = (uint64_t) TEST_ALLOC_ALIGNED(alignment,
-							count*block_size);
+							alloc_size);
 		if (!buf_ctx->buf.buf) {
 			buf_ctx->buf_alloc_sz = 0;
 			goto no_mem;
 		}
-		buf_ctx->buf_alloc_sz = count*block_size;
+		buf_ctx->buf_alloc_sz = alloc_size;
 	}
 	if (poisin)
-		memset((void *) buf_ctx->buf.buf, POISIN_BYTE, count*block_size);
+		memset((void *) buf_ctx->buf.buf, POISIN_BYTE, alloc_size);
+
+	/* Calculate buffer count and lengths */
+	if (max_buf_len < alignment) {
+		/* Ensure buffers don't cross the alignment boundary */
+		bufs_per_block = alignment / max_buf_len;
+		min_buf_len = alignment % max_buf_len;
+		if (min_buf_len) {
+			bufs_per_block++;
+		} else {
+			min_buf_len = max_buf_len;
+		}
+	} else if (max_buf_len < total_bytes) {
+		bufs_per_block = total_bytes / max_buf_len;
+		min_buf_len = total_bytes % max_buf_len;
+		if (min_buf_len) {
+			bufs_per_block++;
+		} else {
+			min_buf_len = max_buf_len;
+		}
+	} else {
+		bufs_per_block = 1;
+		min_buf_len = total_bytes;
+	}
 
 	/* Point buflists to data */
+	remain_len = total_bytes;
+	offset = 0;
 	buf_ctx->buf.len = total_bytes;
 	buf_ctx->va_buflist->count = count;
 	buf_ctx->pa_buflist->count = count;
 	for (i = 0; i < count; i++) {
+		if ((i % bufs_per_block) == (bufs_per_block - 1)) {
+			block_size = min_buf_len;
+		} else {
+			block_size = max_buf_len;
+		}
+		if (block_size > remain_len)
+			block_size = remain_len;
+
 		buf_ctx->va_buflist->buffers[i].len = block_size;
 		buf_ctx->va_buflist->buffers[i].buf =
-			buf_ctx->buf.buf + (block_size * i);
+			buf_ctx->buf.buf + offset;
 		buf_ctx->pa_buflist->buffers[i].len = block_size;
 		buf_ctx->pa_buflist->buffers[i].buf =
 			osal_virt_to_phy((void *) buf_ctx->buf.buf +
-					 (block_size * i));
+					 offset);
+		offset += block_size;
+		remain_len -= block_size;
 	}
-
-	/* Adjust last block, in case total_bytes is not an even multiple */
-	if (block_size*count > total_bytes) {
-		buf_ctx->va_buflist->buffers[count-1].len = total_bytes -
-						(block_size*(count-1));
-		buf_ctx->pa_buflist->buffers[count-1].len = total_bytes -
-						(block_size*(count-1));
-	}
+	OSAL_ASSERT(remain_len == 0);
 
 	return PNSO_OK;
 
@@ -572,26 +677,49 @@ static int cmp_file_node_data(struct test_node_file *fnode1, struct test_node_fi
 	return ret;
 }
 
+#define MAX_FILE_PPRINT_LEN 64
+
 static void pprint_file_node(struct test_node_file *fnode, uint32_t offset)
 {
 	struct test_node_file fnode_dup;
+	char *file_data = NULL;
+	uint32_t file_data_sz, i, out_len;
 	char hexstr[129] = "";
 
 	if (g_osal_log_level < OSAL_LOG_LEVEL_DEBUG)
 		return;
 
+	file_data_sz = fnode->file_size;
+	if (file_data_sz) {
+		file_data = TEST_ALLOC(file_data_sz);
+		if (!file_data)
+			file_data_sz = 0;
+	}
+
 	osal_atomic_lock(&fnode->lock);
 	fnode_dup = *fnode;
-	if (offset < fnode->file_size) {
-		safe_bintohex(hexstr, 128, fnode->data+offset,
-			      fnode->file_size-offset);
-	}
+	if (file_data_sz > fnode->file_size)
+		file_data_sz = fnode->file_size;
+	if (file_data_sz)
+		memcpy(file_data, fnode->data, file_data_sz);
 	osal_atomic_unlock(&fnode->lock);
 
-	OSAL_LOG_DEBUG("File node: name %s, size %u, padded_size %u, data[%u]:\n",
+	OSAL_LOG_DEBUG("File node: name %s, size %u, padded_size %u\n",
 		       fnode_dup.filename, fnode_dup.file_size,
-		       fnode_dup.padded_size, offset);
-	OSAL_LOG_DEBUG("0x%s\n", hexstr);
+		       fnode_dup.padded_size);
+	if (file_data_sz > offset) {
+		out_len = 0;
+		for (i = offset; i < file_data_sz; i += 64) {
+			safe_bintohex(hexstr, 128, file_data+i, 64);
+			OSAL_LOG_DEBUG("  data[%u]: 0x%s\n", i, hexstr);
+			out_len += 64;
+			if (out_len >= MAX_FILE_PPRINT_LEN)
+				break;
+		}
+	}
+
+	if (file_data)
+		TEST_FREE(file_data);
 }
 
 static struct test_node_file *lookup_file_node(struct test_file_table *table,
@@ -1033,17 +1161,14 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 {
 	pnso_error_t err = PNSO_OK;
 	uint32_t input_len;
-	uint32_t min_block, max_block, block_count;
-	//uint32_t remain_len, buf_len;
-	//uint32_t i;
-	//uint8_t *buf;
+	uint32_t min_buf_len, max_buf_len;
+	uint32_t min_buf_count, buf_count;
 	char input_path[TEST_MAX_FULL_PATH_LEN] = "";
 
 	OSAL_ASSERT(!input->initialized);
 
 	/* construct input filename */
 	if (svc_chain->input.pathname[0]) {
-		test_ctx->vars[TEST_VAR_CHAIN] = svc_chain->node.idx;
 		err = construct_filename(test_ctx->desc, test_ctx->vars,
 					 input_path, svc_chain->input.pathname);
 		if (err != PNSO_OK) {
@@ -1075,37 +1200,59 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 		}
 	}
 
-	/* setup input sgl */
-	min_block = svc_chain->input.min_block_size;
-	max_block = svc_chain->input.max_block_size;
-	block_count = svc_chain->input.block_count;
-	if (!min_block) {
-		min_block = test_ctx->desc->init_params.block_size;
+	/* calculate block sizes */
+	min_buf_len = svc_chain->input.min_block_size;
+	max_buf_len = svc_chain->input.max_block_size;
+	if (!max_buf_len) {
+		if (svc_chain->input.block_count) {
+			max_buf_len = get_required_buf_len(
+				svc_chain->input.block_count, input_len,
+				test_ctx->desc->init_params.block_size);
+		} else {
+			max_buf_len = test_ctx->desc->init_params.block_size;
+		}
+	} else if (max_buf_len > test_ctx->desc->init_params.block_size) {
+		max_buf_len = test_ctx->desc->init_params.block_size;
 	}
-	if (!max_block) {
-		max_block = test_ctx->desc->init_params.block_size;
+	if (!min_buf_len) {
+		min_buf_len = 1;
+	} else if (min_buf_len > test_ctx->desc->init_params.block_size) {
+		min_buf_len = test_ctx->desc->init_params.block_size;
 	}
-	if (max_block < min_block) {
-		max_block = min_block;
-	}
-	if (!block_count) {
-		/* Pick smallest block count that works */
-		block_count = (input_len + max_block - 1) / max_block;
-	}
-
-	if ((block_count > MAX_INPUT_BUF_COUNT) ||
-	    (max_block * block_count) < input_len) {
-		PNSO_LOG_ERROR("Cannot represent %u bytes input with %u byte blocks\n",
-			       input_len, max_block);
+	if (max_buf_len < min_buf_len) {
+		PNSO_LOG_ERROR("max_buf_len %u < min_buf_len %u\n",
+			       max_buf_len, min_buf_len);
 		return EINVAL;
 	}
 
-	err = alloc_buffer_ctx(input, block_count, input_len,
+	/* calculate block count */
+	min_buf_count = get_required_buf_count(max_buf_len, input_len,
+				test_ctx->desc->init_params.block_size);
+	if (svc_chain->input.block_count) {
+		buf_count = svc_chain->input.block_count;
+	} else {
+		buf_count = min_buf_count;
+	}
+	if ((buf_count > MAX_INPUT_BUF_COUNT) ||
+	    (buf_count < min_buf_count)) {
+		PNSO_LOG_ERROR("Cannot represent %u bytes input with %u byte blocks\n",
+			       input_len, max_buf_len);
+		return EINVAL;
+	}
+	buf_count = min_buf_count;
+	if (svc_chain->input.block_count || svc_chain->input.max_block_size) {
+		PNSO_LOG_INFO("Alloc input buffer_ctx with total_len %u, buf_count %u, max_buf_len %u\n",
+			      input_len, buf_count, max_buf_len);
+	}
+
+	/* setup input sgl */
+	err = alloc_buffer_ctx(input, buf_count, input_len,
+			       max_buf_len,
 			       test_ctx->desc->init_params.block_size,
 			       false);
 	if (err != PNSO_OK) {
 		PNSO_LOG_ERROR("Failed to allocate input buffer_ctx with %u blocks, %u bytes\n",
-			       block_count, input_len);
+			       buf_count, input_len);
 		return err;
 	}
 
@@ -1181,14 +1328,13 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 
 		svc_status->svc_type = svc->svc.svc_type; /* TODO: needed? */
 		if (svc->output_path[0]) {
-			uint32_t output_len = get_max_output_len_by_type(
-							svc->svc.svc_type,
-							svc->output_flags,
-							input_len);
+			uint32_t output_len = get_max_output_len_by_svc(
+							svc, input_len);
 
 			if (svc->svc.svc_type == PNSO_SVC_TYPE_HASH ||
 			    svc->svc.svc_type == PNSO_SVC_TYPE_CHKSUM) {
-				err = alloc_buffer_ctx(buf_ctx, 1, output_len, 1, false);
+				err = alloc_buffer_ctx(buf_ctx, 1, output_len,
+					output_len, sizeof(uint64_t), false);
 				if (err != PNSO_OK) {
 					PNSO_LOG_TRACE(
 						"Out of memory for output tags\n");
@@ -1210,9 +1356,9 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 						 batch_ctx->desc->init_params.block_size),
 						output_len,
 						batch_ctx->desc->init_params.block_size,
+						batch_ctx->desc->init_params.block_size,
 						!testcase->turbo &&
-						svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS &&
-						(svc->svc.u.cp_desc.flags & PNSO_CP_DFLAG_ZERO_PAD));
+						svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS);
 				if (err != PNSO_OK) {
 					PNSO_LOG_TRACE(
 						"Out of memory for output_buf\n");
@@ -1557,16 +1703,15 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 #if 0 //#ifndef __KERNEL__
 			/* Metadata not available, do full file compare */
 			if (!fnode1) {
-				uint8_t hex_pat[TEST_MAX_PATTERN_LEN];
+				uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
+				uint8_t hex_pat[TEST_MAX_BIN_PATTERN_LEN];
 
-				if (pat_len > TEST_MAX_PATTERN_LEN)
-					pat_len = TEST_MAX_PATTERN_LEN;
 				pat = (const char *) get_normalized_pattern(pat,
-							hex_pat, &pat_len);
+							hex_pat, &bin_len);
 				cmp = test_compare_file_data(path,
 						     offset, len,
 						     (const uint8_t *) pat,
-						     pat_len);
+						     bin_len);
 			}
 #endif
 		} else {
@@ -2260,6 +2405,7 @@ static pnso_error_t init_testcase_svc_chains(struct testcase_context *test_ctx)
 
 	for (chain_i = 0; chain_i < test_ctx->chain_count; chain_i++) {
 		chain_ctx = test_ctx->chain_ctxs[chain_i];
+		test_ctx->vars[TEST_VAR_CHAIN] = chain_ctx->svc_chain->node.idx;
 		if (!testcase->batch_depth) {
 			/* batch depth inherited from chain */
 			max_inputs = chain_ctx->batch_weight;
@@ -2284,6 +2430,28 @@ static pnso_error_t init_testcase_svc_chains(struct testcase_context *test_ctx)
 				goto done;
 			}
 			chain_ctx->input_count = i + 1;
+		}
+
+		/* output the generated data if necessary */
+		if (chain_ctx->svc_chain->input.output_path[0]) {
+			char output_path[TEST_MAX_FULL_PATH_LEN] = "";
+			struct buffer_context *buf_ctx = &chain_ctx->inputs[0];
+			uint64_t checksum = 0;
+			uint32_t file_size = pbuf_get_buffer_list_len(
+						buf_ctx->va_buflist);
+
+			construct_filename(test_ctx->desc, test_ctx->vars,
+					output_path,
+					chain_ctx->svc_chain->input.output_path);
+			if (!test_ctx->testcase->turbo) {
+				checksum = compute_checksum(NULL,
+						(uint8_t *) buf_ctx->buf.buf,
+						file_size);
+			}
+			update_file_node(test_ctx->output_file_tbl,
+				output_path, checksum, file_size, 0, 0,
+				test_ctx->desc->init_params.block_size,
+				buf_ctx->va_buflist);
 		}
 	}
 
@@ -2589,13 +2757,13 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			       testcase->node.idx);
 		return ENOMEM;
 	}
+	ctx->vars[TEST_VAR_BLOCK_SIZE] = desc->init_params.block_size;
+	ctx->vars[TEST_VAR_ITER] = 0;
+
 	err = init_testcase_svc_chains(ctx);
 	if (err != PNSO_OK) {
 		goto free_ctx;
 	}
-
-	ctx->vars[TEST_VAR_BLOCK_SIZE] = desc->init_params.block_size;
-	ctx->vars[TEST_VAR_ITER] = 0;
 
 	/* Start worker threads */
 	osal_atomic_set(&g_testcase_active, 1);
@@ -2932,21 +3100,28 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core)
 }
 
 #define UNIT_TEST_BUFLIST_PATTERN "abcdefghijklmnopqrstuvwxyz01345"
-#define UNIT_TEST_BUFLIST_COUNT 2
+#define UNIT_TEST_BUFLIST_COUNT 4
 #define UNIT_TEST_BUFLIST_SIZE 16384
+#define UNIT_TEST_BUFLIST_MIN_BUFS (UNIT_TEST_BUFLIST_SIZE / 4096)
 pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 {
 	pnso_error_t err = PNSO_OK;
 	size_t i;
+	uint32_t buf_count;
 	char reason[80] = "success";
 	struct buffer_context buf_ctxs[UNIT_TEST_BUFLIST_COUNT];
 
 	memset(buf_ctxs, 0, sizeof(buf_ctxs));
 	for (i = 0; i < UNIT_TEST_BUFLIST_COUNT; i++) {
+		buf_count = (i+1)*UNIT_TEST_BUFLIST_MIN_BUFS;
 		if (alloc_buffer_ctx(&buf_ctxs[i],
-				     (i+1)*2, UNIT_TEST_BUFLIST_SIZE,
-				     desc->init_params.block_size,
-				     false) != PNSO_OK) {
+				buf_count,
+				UNIT_TEST_BUFLIST_SIZE,
+				get_required_buf_len(buf_count,
+					UNIT_TEST_BUFLIST_SIZE,
+					desc->init_params.block_size),
+				desc->init_params.block_size,
+				false) != PNSO_OK) {
 			err = ENOMEM;
 			safe_strcpy(reason, "alloc_buffer_ctx",
 				    sizeof(reason));

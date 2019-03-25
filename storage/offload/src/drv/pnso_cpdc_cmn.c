@@ -1131,7 +1131,7 @@ cpdc_setup_rmem_dst_blist(struct service_info *svc_info,
 		       svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
 
 	if ((svc_info->si_src_blist.len == 0) ||
-	    (svc_info->si_dst_blist.len < svc_info->si_src_blist.len)) {
+	    (svc_info->si_dst_blist.len == 0)) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("length error: src_len %u dst_len %u err: %d",
 				svc_info->si_src_blist.len,

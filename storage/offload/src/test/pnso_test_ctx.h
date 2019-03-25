@@ -33,53 +33,71 @@ enum {
 #define MAX_INPUT_BUF_COUNT 1024
 #define MAX_OUTPUT_BUF_COUNT (MAX_OUTPUT_BUF_LEN / 4096)
 #define MAX_COMPRESSION_FACTOR 10
+#define MAX_CP_HDR_LEN 8
 
-static inline uint32_t get_max_output_len_by_type(uint16_t svc_type,
-						  uint32_t output_flags,
-						  uint32_t input_len)
+static inline uint32_t get_max_output_len_by_svc(const struct test_svc *svc,
+						 uint32_t input_len)
 {
-	switch (svc_type) {
+	uint32_t hdr_len;
+
+	if (svc->output_len)
+		return svc->output_len;
+
+	switch (svc->svc.svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
-		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+		if (svc->output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
-		} else if (output_flags & TEST_OUTPUT_FLAG_JUMBO) {
+		} else if (svc->output_flags & TEST_OUTPUT_FLAG_JUMBO) {
 			return MAX_OUTPUT_BUF_LEN;
 		} else {
 			return input_len;
 		}
 	case PNSO_SVC_TYPE_COMPRESS:
-		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+		hdr_len = 0;
+		if (svc->svc.u.cp_desc.flags & PNSO_CP_DFLAG_INSERT_HEADER)
+			hdr_len = MAX_CP_HDR_LEN;
+		if (svc->output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
-		} else if (output_flags & TEST_OUTPUT_FLAG_JUMBO) {
+		} else if (svc->output_flags & TEST_OUTPUT_FLAG_JUMBO) {
 			return MAX_OUTPUT_BUF_LEN;
+		} else if (svc->u.cpdc.threshold_delta) {
+			if (input_len > svc->u.cpdc.threshold_delta) {
+				return hdr_len + input_len -
+					svc->u.cpdc.threshold_delta;
+			} else {
+				return DEFAULT_BLOCK_SIZE;
+			}
+		} else if (svc->svc.u.cp_desc.threshold_len) {
+			return hdr_len +
+				svc->svc.u.cp_desc.threshold_len;
 		} else {
 			return input_len;
 		}
 	case PNSO_SVC_TYPE_DECOMPRESS:
-		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+		if (svc->output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
-		} else if ((output_flags & TEST_OUTPUT_FLAG_JUMBO) ||
+		} else if ((svc->output_flags & TEST_OUTPUT_FLAG_JUMBO) ||
 			   (input_len * MAX_COMPRESSION_FACTOR > MAX_OUTPUT_BUF_LEN)) {
 			return MAX_OUTPUT_BUF_LEN;
 		} else {
 			return input_len * MAX_COMPRESSION_FACTOR;
 		}
 	case PNSO_SVC_TYPE_HASH:
-		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+		if (svc->output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return PNSO_HASH_TAG_LEN;
 		} else {
 			return MAX_OUTPUT_BUF_COUNT * PNSO_HASH_TAG_LEN;
 		}
 	case PNSO_SVC_TYPE_CHKSUM:
-		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+		if (svc->output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return PNSO_CHKSUM_TAG_LEN;
 		} else {
 			return MAX_OUTPUT_BUF_COUNT * PNSO_CHKSUM_TAG_LEN;
 		}
 	case PNSO_SVC_TYPE_DECOMPACT:
 	default:
-		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+		if (svc->output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return PNSO_CHKSUM_TAG_LEN;
 		} else {
 			return MAX_OUTPUT_BUF_LEN;

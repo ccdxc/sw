@@ -86,4 +86,5 @@ tests:
       validations:
         - retcode_compare:
             idx: 1
-            req_retcode: 22
+            type: gt
+            retcode: 20000
