@@ -303,8 +303,6 @@ func (naples *esxHwNode) createNaplesDataSwitch() error {
 	for _, intf := range naplesDataIntfs {
 		naples.logger.Printf("Adding Naples data interface %v", intf)
 		vsspec.Pnics = append(vsspec.Pnics, intf)
-		//Add just one interface for now
-		break
 	}
 	return naples.host.AddVswitch(vsspec)
 }
