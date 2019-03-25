@@ -324,8 +324,6 @@ testcases:
 
     -   name        : Hash4K8KSha2_256Pb
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
