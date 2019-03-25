@@ -303,14 +303,28 @@ func TestUserCreateCheck(t *testing.T) {
 	tests := []struct {
 		name       string
 		authGetter manager.AuthGetter
+		in         interface{}
 		skipCall   bool
 		err        error
 	}{
 		{
 			name:       "error in fetching auth policy",
 			authGetter: manager.NewMockAuthGetter(nil, true),
-			skipCall:   true,
-			err:        errors.New("authentication policy not found"),
+			in: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testuser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			skipCall: true,
+			err:      errors.New("authentication policy not found"),
 		},
 		{
 			name: "local auth disabled",
@@ -331,6 +345,19 @@ func TestUserCreateCheck(t *testing.T) {
 					},
 				},
 			}, false),
+			in: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testuser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
 			skipCall: true,
 			err:      errors.New("local authentication not enabled"),
 		},
@@ -353,8 +380,45 @@ func TestUserCreateCheck(t *testing.T) {
 					},
 				},
 			}, false),
+			in: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testuser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
 			skipCall: false,
 			err:      nil,
+		},
+		{
+			name: "external user",
+			in: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testuser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_External.String(),
+				},
+			},
+			skipCall: true,
+			err:      errors.New("cannot create External user type"),
+		},
+		{
+			name:     "invalid object",
+			in:       &struct{ name string }{name: "invalid object type"},
+			skipCall: true,
+			err:      errors.New("invalid input type"),
 		},
 	}
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
@@ -363,7 +427,7 @@ func TestUserCreateCheck(t *testing.T) {
 	r.logger = l
 	for _, test := range tests {
 		r.authGetter = test.authGetter
-		_, _, skipCall, err := r.userCreateCheck(context.TODO(), &auth.User{})
+		_, _, skipCall, err := r.userCreateCheck(context.TODO(), test.in)
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("expected skipCall [%v], got [%v], [%s] test failed", test.skipCall, skipCall, test.name))
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("expected err [%v], got [%v], %s] test failed", test.err, err, test.name))
 	}

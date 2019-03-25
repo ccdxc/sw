@@ -922,3 +922,31 @@ func TestPasswordValidation(t *testing.T) {
 	})
 	Assert(t, err != nil, "user created with non-compliant password")
 }
+
+func TestChangeUserType(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context")
+	var user *auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = tinfo.restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: testTenant})
+		return err == nil, err
+	}, "unable to retrieve user")
+	// changing user type to external should fail
+	user.Spec.Type = auth.UserSpec_External.String()
+	_, err = tinfo.restcl.AuthV1().User().Update(ctx, user)
+	Assert(t, err != nil, "error expected while changing user type")
+	// creating external user should fail
+	user.Name = "extUser"
+	_, err = tinfo.restcl.AuthV1().User().Create(ctx, user)
+	Assert(t, err != nil, "expected external user creation to fail")
+}

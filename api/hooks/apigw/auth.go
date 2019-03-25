@@ -158,6 +158,9 @@ func (a *authHooks) userCreateCheck(ctx context.Context, in interface{}) (contex
 	if !ok {
 		return ctx, in, true, errors.New("invalid input type")
 	}
+	if obj.Spec.Type == auth.UserSpec_External.String() {
+		return ctx, in, true, errors.New("cannot create External user type")
+	}
 	// check if authentication policy exists
 	policy, err := a.authGetter.GetAuthenticationPolicy()
 	if err != nil {
