@@ -337,7 +337,7 @@ func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AuthenticationPolicyList", t.Tenant, t.Namespace, "auth", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -365,7 +365,7 @@ func (a adapterAuthV1) AutoListRole(oldctx oldcontext.Context, t *api.ListWatchO
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "RoleList", t.Tenant, t.Namespace, "auth", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Role", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -393,7 +393,7 @@ func (a adapterAuthV1) AutoListRoleBinding(oldctx oldcontext.Context, t *api.Lis
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "RoleBindingList", t.Tenant, t.Namespace, "auth", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "RoleBinding", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -421,7 +421,7 @@ func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchO
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "UserList", t.Tenant, t.Namespace, "auth", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "User", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

@@ -753,7 +753,7 @@ func (a adapterMonitoringV1) AutoListAlert(oldctx oldcontext.Context, t *api.Lis
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AlertList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Alert", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -781,7 +781,7 @@ func (a adapterMonitoringV1) AutoListAlertDestination(oldctx oldcontext.Context,
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AlertDestinationList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -809,7 +809,7 @@ func (a adapterMonitoringV1) AutoListAlertPolicy(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AlertPolicyList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -837,7 +837,7 @@ func (a adapterMonitoringV1) AutoListEventPolicy(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "EventPolicyList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -865,7 +865,7 @@ func (a adapterMonitoringV1) AutoListFlowExportPolicy(oldctx oldcontext.Context,
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FlowExportPolicyList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -893,7 +893,7 @@ func (a adapterMonitoringV1) AutoListFwlogPolicy(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FwlogPolicyList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -921,7 +921,7 @@ func (a adapterMonitoringV1) AutoListMirrorSession(oldctx oldcontext.Context, t 
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "MirrorSessionList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -949,7 +949,7 @@ func (a adapterMonitoringV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "StatsPolicyList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -975,7 +975,7 @@ func (a adapterMonitoringV1) AutoListTechSupportRequest(oldctx oldcontext.Contex
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TechSupportRequestList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -1003,7 +1003,7 @@ func (a adapterMonitoringV1) AutoListTroubleshootingSession(oldctx oldcontext.Co
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TroubleshootingSessionList", t.Tenant, t.Namespace, "monitoring", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

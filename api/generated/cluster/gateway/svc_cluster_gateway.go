@@ -429,7 +429,7 @@ func (a adapterClusterV1) AutoListCluster(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "ClusterList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Cluster", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -455,7 +455,7 @@ func (a adapterClusterV1) AutoListHost(oldctx oldcontext.Context, t *api.ListWat
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "HostList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Host", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -481,7 +481,7 @@ func (a adapterClusterV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWat
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "NodeList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Node", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -507,7 +507,7 @@ func (a adapterClusterV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.Lis
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SmartNICList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -533,7 +533,7 @@ func (a adapterClusterV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListW
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TenantList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Tenant", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

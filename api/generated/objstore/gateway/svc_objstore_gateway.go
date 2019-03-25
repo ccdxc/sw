@@ -199,7 +199,7 @@ func (a adapterObjstoreV1) AutoListBucket(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "BucketList", t.Tenant, t.Namespace, "", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Bucket", t.Tenant, t.Namespace, "", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -226,7 +226,7 @@ func (a adapterObjstoreV1) AutoListObject(oldctx oldcontext.Context, t *api.List
 	if t.Tenant == "" {
 		t.Tenant = globals.DefaultTenant
 	}
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "ObjectList", t.Tenant, t.Namespace, "", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Object", t.Tenant, t.Namespace, "", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

@@ -67,7 +67,7 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	}{{else}}
 	t.Tenant = ""{{end}}{{if isNamespaced (getListTypeMsg .ResponseType)}}{{else}}
     t.Namespace = ""{{end}}
-	oper, kind, tenant, namespace, group, name:= apiintf.ListOper, "{{getOutputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", ""
+	oper, kind, tenant, namespace, group, name:= apiintf.ListOper, "{{getListType .ResponseType false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", ""
 	{{else}}{{if isActionMethod .}}
 	oper, kind, tenant, namespace, group, name := apiintf.{{$params.Oper}}, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
 	{{else}}

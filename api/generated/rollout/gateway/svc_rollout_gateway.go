@@ -130,7 +130,7 @@ func (a adapterRolloutV1) AutoListRollout(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "RolloutList", t.Tenant, t.Namespace, "rollout", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Rollout", t.Tenant, t.Namespace, "rollout", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

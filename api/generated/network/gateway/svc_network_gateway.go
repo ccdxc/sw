@@ -270,7 +270,7 @@ func (a adapterNetworkV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.Lis
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "LbPolicyList", t.Tenant, t.Namespace, "network", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "LbPolicy", t.Tenant, t.Namespace, "network", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -298,7 +298,7 @@ func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.List
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "NetworkList", t.Tenant, t.Namespace, "network", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Network", t.Tenant, t.Namespace, "network", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -326,7 +326,7 @@ func (a adapterNetworkV1) AutoListService(oldctx oldcontext.Context, t *api.List
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "ServiceList", t.Tenant, t.Namespace, "network", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Service", t.Tenant, t.Namespace, "network", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

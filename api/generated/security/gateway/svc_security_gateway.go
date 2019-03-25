@@ -477,7 +477,7 @@ func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWat
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AppList", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "App", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -505,7 +505,7 @@ func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "CertificateList", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Certificate", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -533,7 +533,7 @@ func (a adapterSecurityV1) AutoListFirewallProfile(oldctx oldcontext.Context, t 
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FirewallProfileList", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "FirewallProfile", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -561,7 +561,7 @@ func (a adapterSecurityV1) AutoListSGPolicy(oldctx oldcontext.Context, t *api.Li
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SGPolicyList", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SGPolicy", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -589,7 +589,7 @@ func (a adapterSecurityV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *a
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SecurityGroupList", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SecurityGroup", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -617,7 +617,7 @@ func (a adapterSecurityV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Con
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TrafficEncryptionPolicyList", t.Tenant, t.Namespace, "security", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

@@ -201,7 +201,7 @@ func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.Li
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "EndpointList", t.Tenant, t.Namespace, "workload", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Endpoint", t.Tenant, t.Namespace, "workload", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -229,7 +229,7 @@ func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.Li
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "WorkloadList", t.Tenant, t.Namespace, "workload", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Workload", t.Tenant, t.Namespace, "workload", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

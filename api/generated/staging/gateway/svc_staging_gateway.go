@@ -132,7 +132,7 @@ func (a adapterStagingV1) AutoListBuffer(oldctx oldcontext.Context, t *api.ListW
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "BufferList", t.Tenant, t.Namespace, "staging", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Buffer", t.Tenant, t.Namespace, "staging", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

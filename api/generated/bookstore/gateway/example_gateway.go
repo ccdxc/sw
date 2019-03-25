@@ -521,7 +521,7 @@ func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListW
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "BookList", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Book", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -547,7 +547,7 @@ func (a adapterBookstoreV1) AutoListCoupon(oldctx oldcontext.Context, t *api.Lis
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "CouponList", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Coupon", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -573,7 +573,7 @@ func (a adapterBookstoreV1) AutoListCustomer(oldctx oldcontext.Context, t *api.L
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "CustomerList", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Customer", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -599,7 +599,7 @@ func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "OrderList", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Order", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -625,7 +625,7 @@ func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "PublisherList", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Publisher", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -651,7 +651,7 @@ func (a adapterBookstoreV1) AutoListStore(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "StoreList", t.Tenant, t.Namespace, "bookstore", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Store", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
