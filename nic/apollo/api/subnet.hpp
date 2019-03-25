@@ -137,8 +137,9 @@ public:
     /// \return         0 if keys are same or else non-zero value
     static bool subnet_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(pds_subnet_key_t)))
+        if (!memcmp(key1, key2, sizeof(pds_subnet_key_t))) {
             return true;
+        }
 
         return false;
     }
@@ -181,7 +182,7 @@ private:
     ht_ctxt_t ht_ctxt_;                       ///< hash table context
 
     // P4 datapath specific state
-    uint16_t hw_id_;                 ///< hardware id
+    uint32_t hw_id_;                 ///< hardware id
 
     friend class subnet_state;    ///< subnet_state is friend of subnet_entry
 } __PACK__;

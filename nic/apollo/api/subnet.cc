@@ -78,13 +78,12 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     egr_v4_policy_.id = spec->egr_v4_policy.id;
     egr_v6_policy_.id = spec->egr_v6_policy.id;
     memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
-    this->ht_ctxt_.reset();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    if (subnet_db()->subnet_idxr()->alloc((uint32_t *)&this->hw_id_) !=
+    if (subnet_db()->subnet_idxr()->alloc(&this->hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }

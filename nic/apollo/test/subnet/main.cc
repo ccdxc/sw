@@ -42,7 +42,7 @@ protected:
         pds_batch_params_t batch_params = {0};
         vcn_util vcn_obj(1, "10.0.0.0/8");
 
-        batch_params.epoch = ++g_batch_epoch;
+        batch_params.epoch = g_batch_epoch++;
         ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
         ASSERT_TRUE(vcn_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
@@ -85,7 +85,7 @@ TEST_F(subnet, subnet_workflow_1) {
 /// Create and delete should be de-deduped by framework and subsequent create
 /// should result in successful creation
 /// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
-TEST_F(subnet, DISABLED_subnet_workflow_2) {
+TEST_F(subnet, subnet_workflow_2) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     pds_vcn_key_t vcn_key = {};
@@ -278,18 +278,25 @@ TEST_F(subnet, subnet_workflow_neg_1) {
 
     // @kalyanbade why should this be ENTRY_NOT_FOUND ? seems like 1K subnet
     // still exist right ? also, there is no cleanup of these subnets here, so
-    // next test will have impact due to this
+    // next test will have impact due to this .. adding cleanup below !!
+    // and this assert itself seems to be wrong here and in other gtests
     ASSERT_TRUE(subnet_util::many_read(
         key, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+
+    // Cleanup
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_delete(key, num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Create more than maximum number of subnets supported.
 /// [ Create SetMax+1] - Read
-TEST_F(subnet, DISABLED_subnet_workflow_neg_2) {
+TEST_F(subnet, subnet_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string start_addr = "10.0.0.0/16";
-    uint32_t num_subnets = 1025;
+    uint32_t num_subnets = PDS_MAX_SUBNET + 1;
     pds_vcn_key_t vcn_key = {};
 
     key.id = 1;
@@ -298,9 +305,6 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_2) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
                                          num_subnets) == sdk::SDK_RET_OK);
-    // @kalyanbade we don't enforce that we support only 1024 subnets, as
-    // subnets are just s/w only strucutres .. this is failing because previous
-    // test didn't delete subnets !!!
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
@@ -310,7 +314,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_2) {
 
 /// \brief Read of a non-existing subnet should return entry not found.
 /// Read NonEx
-TEST_F(subnet, DISABLED_subnet_workflow_neg_3a) {
+TEST_F(subnet, subnet_workflow_neg_3a) {
     // Read NonEx
     pds_subnet_key_t key = {};
     uint32_t num_subnets = 1024;
@@ -323,7 +327,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_3a) {
 
 /// \brief Deletion of a non-existing subnets should fail.
 /// [Delete NonEx]
-TEST_F(subnet, DISABLED_subnet_workflow_neg_3b) {
+TEST_F(subnet, subnet_workflow_neg_3b) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string start_addr = "10.0.0.0/16";
@@ -334,14 +338,14 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_3b) {
     vcn_key.id = 1;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_delete(key, num_subnets) != sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_delete(key, num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
 /// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
-TEST_F(subnet, DISABLED_subnet_workflow_neg_4) {
+TEST_F(subnet, subnet_workflow_neg_4) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key1 = {}, key2 = {};
     std::string subnet_start_addr1 = "10.0.0.0/16";
@@ -364,9 +368,10 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_4) {
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) != sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_delete(key2, num_subnets) != sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_delete(key2, num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(subnet_util::many_read(
         key1, num_subnets, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
@@ -376,9 +381,8 @@ TEST_F(subnet, DISABLED_subnet_workflow_neg_4) {
     // Cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
 /// \brief Subnet workflow corner case 4
