@@ -1,6 +1,7 @@
 //const URL = "10.7.100.108:10001"
 const URL = "10.7.100.21:10001"
-// const URL = "192.168.69.189:10001"
+// const URL = "192.168.69.189:10001" 
+// const URL = "10.8.101.146"  // Vipin's setup
 
 const PROXY_CONFIG =
   {

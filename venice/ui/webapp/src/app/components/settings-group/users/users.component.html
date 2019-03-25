@@ -114,15 +114,13 @@
             <div class="usertemplate-div-editdelete-buttons-div" fxLayout="column" fxFlex="none">
                 <div class="usertemplate-div-card-icon-buttons-div" *ngIf="!isRoleEditMode(role)">
                     <div class="usertemplate-div-card-icon-div-edit" *ngIf="showEditRoleButton(role)">
-                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button"
-                            title="Update Role">
-                            <mat-icon class="usertemplate-div-card-icon-button" (click)="onEditRole($event, role)">edit</mat-icon>
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button">
+                            <mat-icon [matTooltip]="'Update Role'" Save user changeclass="usertemplate-div-card-icon-button" (click)="onEditRole($event, role)">edit</mat-icon>
                         </button>
                     </div>
                     <div class="usertemplate-div-card-icon-div-delete" *ngIf="showDeleteRoleButton(role)">
-                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button  usertemplate-div-card-icon-delete-button"
-                            title="Delete Role">
-                            <mat-icon class="usertemplate-div-card-icon-button" (click)="onDeleteRole($event, role)">delete</mat-icon>
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button  usertemplate-div-card-icon-delete-button">
+                            <mat-icon [matTooltip]="'Delete Role'" class="usertemplate-div-card-icon-button" (click)="onDeleteRole($event, role)">delete</mat-icon>
                         </button>
                     </div>
                 </div>
@@ -151,35 +149,31 @@
             <div class="usertemplate-div-editdelete-buttons-div" fxLayout="column" fxFlex="none">
                 <div class="usertemplate-div-card-icon-buttons-div" *ngIf="!isUserEditMode(user)">
                     <div class="usertemplate-div-card-icon-div-edit" *ngIf="showEditUserButton(user)">
-                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button"
-                            title="Update user">
-                            <mat-icon class="usertemplate-div-card-icon-button" (click)="onEditUser($event, user)">edit</mat-icon>
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button">
+                            <mat-icon [matTooltip]="'Update user'" class="usertemplate-div-card-icon-button" (click)="onEditUser($event, user)">edit</mat-icon>
                         </button>
                     </div>
                     <div class="usertemplate-div-card-icon-div-edit" *ngIf="showEditButton(user)">
-                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-changepassword-button"
-                            title="change password">
-                            <mat-icon class="usertemplate-div-card-icon-button" (click)="onChangePassword($event, user)">lock</mat-icon>
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-changepassword-button">
+                            <mat-icon [matTooltip]="'Change password'" class="usertemplate-div-card-icon-button" (click)="onChangePassword($event, user)">lock</mat-icon>
                         </button>
                     </div>
                     <div class="usertemplate-div-card-icon-div-delete" *ngIf="showDeleteUserButton(user)">
-                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button  usertemplate-div-card-icon-delete-button"
-                            title="Delete user">
-                            <mat-icon class="usertemplate-div-card-icon-button" (click)="onDeleteUser($event, user)">delete</mat-icon>
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button  usertemplate-div-card-icon-delete-button"  >
+                            <mat-icon [matTooltip]="'Delete user'" class="usertemplate-div-card-icon-button" (click)="onDeleteUser($event, user)">delete</mat-icon>
                         </button>
                     </div>
                 </div>
                 <div class="usertemplate-div-card-icon-buttons-div" *ngIf="isUserEditMode(user)">
                     <div class="usertemplate-div-card-icon-div-save">
                         <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-save-button"
-                            title="Save user change" [disabled]="!isSelectedAuthUserInputValid()" (click)="onSaveEditUser($event, user)">
-                            <mat-icon class="usertemplate-div-card-icon-button usertemplate-UserEditMode" >save</mat-icon>
+                             [disabled]="!isSelectedAuthUserInputValid()" (click)="onSaveEditUser($event, user)">
+                            <mat-icon [matTooltip]="'Save user change'" class="usertemplate-div-card-icon-button usertemplate-UserEditMode" >save</mat-icon>
                         </button>
                     </div>
                     <div class="usertemplate-div-card-icon-div-cancel">
-                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-cancel-button"
-                            title="Cancel user update">
-                            <mat-icon class="usertemplate-div-card-icon-button usertemplate-UserEditMode" (click)="onCancelEditUser($event, user)">cancel</mat-icon>
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-cancel-button">
+                            <mat-icon  [matTooltip]="'Cancel user update'" class="usertemplate-div-card-icon-button usertemplate-UserEditMode" (click)="onCancelEditUser($event, user)">cancel</mat-icon>
                         </button>
                     </div>
                 </div>
@@ -262,15 +256,13 @@
             <div class="usertemplate-div-editdelete-buttons-div" fxLayout="column" fxFlex="none">
                 <div class="usertemplate-div-card-icon-buttons-div" *ngIf="!isRoleBindingEditMode(rolebinding)">
                     <div class="usertemplate-div-card-icon-div-edit" *ngIf="showEditBindingRoleButton(rolebinding)">
-                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button"
-                            title="Update RoleBinding">
-                            <mat-icon class="usertemplate-div-card-icon-button" (click)="onEditRoleBinding($event, rolebinding)">edit</mat-icon>
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button">
+                            <mat-icon [matTooltip]="'Update RoleBinding'" class="usertemplate-div-card-icon-button" (click)="onEditRoleBinding($event, rolebinding)">edit</mat-icon>
                         </button>
                     </div>
                     <div class="usertemplate-div-card-icon-div-delete" *ngIf="showDeleteRoleBindingButton(rolebinding)">
-                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button  usertemplate-div-card-icon-delete-button"
-                            title="Delete RoleBinding">
-                            <mat-icon class="usertemplate-div-card-icon-button" (click)="onDeleteRoleBinding($event, rolebinding)">delete</mat-icon>
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button  usertemplate-div-card-icon-delete-button">
+                            <mat-icon [matTooltip]="'Delete RoleBinding'"  class="usertemplate-div-card-icon-button" (click)="onDeleteRoleBinding($event, rolebinding)">delete</mat-icon>
                         </button>
                     </div>
                 </div>
