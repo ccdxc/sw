@@ -1104,24 +1104,51 @@ port_disable (uint32_t port_num)
 }
 
 static void
+port_led_blink (uint32_t key, port_args_t *port_args) {
+    pal_led_color_t blink = LED_COLOR_NONE;
+    delphi::objects::MacMetricsPtr mac_metrics_old;
+    int phy_port = sdk::lib::catalog::logical_port_to_phy_port(key);
+
+    mac_metrics_old = delphi::objects::MacMetrics::Find(key);
+    if (mac_metrics_old != NULL) {
+        if (mac_metrics_old->frames_rx_all()->Get() != port_args->stats_data[port::MacStatsType::FRAMES_RX_ALL] ||
+            mac_metrics_old->frames_tx_all()->Get() != port_args->stats_data[port::MacStatsType::FRAMES_TX_ALL]) {
+                blink = LED_COLOR_GREEN;
+        }
+
+        if (mac_metrics_old->frames_rx_bad_all()->Get() != port_args->stats_data[port::MacStatsType::FRAMES_RX_BAD_ALL] ||
+            mac_metrics_old->frames_tx_bad()->Get() != port_args->stats_data[port::MacStatsType::FRAMES_TX_BAD]) {
+                blink = LED_COLOR_YELLOW;
+        }
+
+        if (blink == LED_COLOR_NONE) {
+            if (port_args->oper_status == port_oper_status_t::PORT_OPER_STATUS_UP) {
+                sdk::lib::pal_qsfp_set_led(phy_port,
+                                           pal_led_color_t::LED_COLOR_GREEN);
+            } else {
+                sdk::lib::pal_qsfp_set_led(phy_port,
+                                           pal_led_color_t::LED_COLOR_NONE);
+            }
+        } else {
+            sdk::lib::pal_qsfp_set_led(phy_port, blink, pal_led_frequency_t::LED_FREQUENCY_2HZ);
+        }
+    }
+}
+
+static void
 port_metrics_update_helper (port_args_t *port_args,
                             void        *ctxt,
                             hal_ret_t   hal_ret)
 {
     port_t                               *pi_p   = NULL;
-    static delphi::objects::macmetrics_t mac_metrics;
+    delphi::objects::macmetrics_t mac_metrics;
 
     if (hal_ret != HAL_RET_OK) {
         return;
     }
 
     pi_p = find_port_by_id(port_args->port_num);
-
-    if (pi_p == NULL) {
-        HAL_TRACE_ERR("Failed to find port/metrics object for port {}",
-                      port_args->port_num);
-        return;
-    }
+    port_led_blink(pi_p->port_num, port_args);
 
     mac_metrics.frames_rx_ok = port_args->stats_data[port::MacStatsType::FRAMES_RX_OK];
     mac_metrics.frames_rx_all = port_args->stats_data[port::MacStatsType::FRAMES_RX_ALL];

@@ -65,7 +65,7 @@ typedef struct pal_rwvectors_s {
                              uint32_t nretry, uint32_t port);
     void*       (*mem_map)(uint64_t pa, uint32_t sz);
     void        (*mem_unmap)(void *va);
-    pal_ret_t   (*qsfp_set_led)(int port, pal_led_color_t led);
+    pal_ret_t   (*qsfp_set_led)(int port, pal_led_color_t led, pal_led_frequency_t frequency);
     pal_ret_t   (*program_marvell)(uint8_t marvell_addr, uint32_t data);
     int         (*get_cpld_rev)();
     int         (*get_cpld_id)();
@@ -211,9 +211,9 @@ pal_mem_unmap(void* va) {
 }
 
 static inline pal_ret_t
-pal_qsfp_set_led(int port, pal_led_color_t led)
+pal_qsfp_set_led(int port, pal_led_color_t led, pal_led_frequency_t frequency = LED_FREQUENCY_0HZ)
 {
-    return gl_pal_info.rwvecs.qsfp_set_led(port, led);
+    return gl_pal_info.rwvecs.qsfp_set_led(port, led, frequency);
 }
 
 inline pal_ret_t

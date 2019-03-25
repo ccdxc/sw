@@ -34,7 +34,7 @@ typedef int (*qsfp_write_fn_t)(const uint8_t *buffer, uint32_t size, uint32_t ad
                                uint32_t nretry, uint32_t port);
 typedef void*(*mem_map_fn_t)(const uint64_t pa, const uint32_t sz, uint32_t flags);
 typedef void(*mem_unmap_fn_t)(void *va);
-typedef int (*qsfp_set_led_fn_t)(int port, pal_led_color_t led);
+typedef int (*qsfp_set_led_fn_t)(int port, pal_led_color_t led, pal_led_frequency_t frequency);
 typedef int (*program_marvell_fn_t)(uint8_t addr, uint32_t data);
 typedef int (*get_cpld_id_fn_t)();
 typedef int (*get_cpld_rev_fn_t)();
@@ -367,9 +367,9 @@ pal_hw_mem_unmap(void *va)
 }
 
 static pal_ret_t
-pal_hw_qsfp_set_led(int port_no, pal_led_color_t led)
+pal_hw_qsfp_set_led(int port_no, pal_led_color_t led, pal_led_frequency_t frequency = LED_FREQUENCY_0HZ)
 {
-    if((*gl_hw_vecs.qsfp_set_led)(port_no, led) == 0) {
+    if((*gl_hw_vecs.qsfp_set_led)(port_no, led, frequency) == 0) {
         return PAL_RET_OK;
     }
     return PAL_RET_NOK;

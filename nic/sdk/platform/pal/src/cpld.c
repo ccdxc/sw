@@ -36,7 +36,8 @@ pal_qsfp_reset_low_power_mode(int port) {
 }
 
 int
-pal_qsfp_set_led(int port, pal_led_color_t led) {
+pal_qsfp_set_led(int port, pal_led_color_t led,
+                 pal_led_frequency_t frequency) {
     return -1;
 }
 
@@ -136,7 +137,7 @@ read_cpld_gpios(void)
     return (read_gpios(1, 0x3f) << 2) | read_gpios(0, 0xc0);
 }
 
-int
+static int
 cpld_read(uint8_t addr)
 {
     struct spi_ioc_transfer msg[2];
@@ -167,7 +168,7 @@ cpld_read(uint8_t addr)
     return read_cpld_gpios();
 }
 
-int
+static int
 cpld_write(uint8_t addr, uint8_t data)
 {
     struct spi_ioc_transfer msg[1];
@@ -195,7 +196,37 @@ cpld_write(uint8_t addr, uint8_t data)
 }
 
 static int
-cpld_reg_rd(int reg) {
+cpld_reg_bit_set(int reg, int bit) {
+    int cpld_data = 0;
+    int mask = 0x01 << bit;
+
+    cpld_data = cpld_reg_rd(reg);
+    if (cpld_data == -1) {
+        return cpld_data;
+    }
+
+    cpld_data |= mask;
+    return cpld_reg_wr(reg, cpld_data); 
+
+}
+
+static int
+cpld_reg_bit_reset(int reg, int bit) {
+    int cpld_data = 0;
+    int mask = 0x01 << bit;
+
+    cpld_data = cpld_reg_rd(reg);
+    if (cpld_data == -1) {
+        return cpld_data;
+    }
+
+    cpld_data &= ~mask;
+    return cpld_reg_wr(reg, cpld_data);
+
+}
+
+int
+cpld_reg_rd(uint8_t reg) {
     int rc = 0;
 
     if (!pal_wr_lock(CPLDLOCK)) {
@@ -212,7 +243,7 @@ cpld_reg_rd(int reg) {
     return rc;
 }
 
-static int
+int
 cpld_reg_wr(uint8_t reg, uint8_t data) {
     int rc = 0;
 
@@ -229,37 +260,6 @@ cpld_reg_wr(uint8_t reg, uint8_t data) {
 
     return rc;
 }
-
-static int
-cpld_reg_bit_set(int reg, int bit) {
-    int cpld_data = 0;
-    int mask = 0x01 << bit;
-
-    cpld_data = cpld_reg_rd(reg);
-    if (cpld_data == -1) {
-        return cpld_data;
-    }
-
-    cpld_data |= mask;   
-    return cpld_reg_wr(reg, cpld_data); 
-
-}
-
-static int
-cpld_reg_bit_reset(int reg, int bit) {
-    int cpld_data = 0;
-    int mask = 0x01 << bit;
-
-    cpld_data = cpld_read(reg);
-    if (cpld_data == -1) {
-        return cpld_data;
-    }
-
-    cpld_data &= ~mask;   
-    return cpld_write(reg, cpld_data);
-
-}
-
 
 /* Public APIs */
 int
@@ -341,39 +341,114 @@ pal_qsfp_reset_low_power_mode(int port)
     return cpld_reg_bit_reset(CPLD_REGISTER_QSFP_CTRL, bit);
 }
 
+static int
+pal_change_qsfp_frequency(uint8_t mask, uint8_t frequency) {
+    uint8_t frequency_orig;
+
+    if (frequency < 0 || frequency >= 4) {
+        return CPLD_FAIL;
+    }
+
+    frequency_orig = cpld_reg_rd(CPLD_REGISTER_QSFP_LED_FREQUENCY);
+    frequency_orig = frequency_orig & mask;
+    frequency_orig = frequency_orig | frequency;
+    return cpld_reg_wr(CPLD_REGISTER_QSFP_LED_FREQUENCY, frequency_orig);
+}
+
 int
-pal_qsfp_set_led(int port, pal_led_color_t led) {
+pal_qsfp_set_led(int port, pal_led_color_t led,
+                 pal_led_frequency_t frequency) {
+    static uint8_t qsfp_port1_led_color;
+    static uint8_t qsfp_port2_led_color;
+    static uint8_t qsfp_port1_green_led_frequency;
+    static uint8_t qsfp_port1_yellow_led_frequency;
+    static uint8_t qsfp_port2_green_led_frequency;
+    static uint8_t qsfp_port2_yellow_led_frequency;
+
     switch(port) {
         case 1:
-            switch(led) {
-                case LED_COLOR_GREEN:
-                    cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, 1); 
-                    return cpld_reg_bit_set(CPLD_REGISTER_QSFP_LED, 0);
-                case LED_COLOR_YELLOW:
-                    cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, 0);
-                    return cpld_reg_bit_set(CPLD_REGISTER_QSFP_LED, 1);
-                case LED_COLOR_NONE:
-                    cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, 0);
-                    cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, 1); 
-                    return CPLD_SUCCESS;
-                default:
-                    return CPLD_FAIL;
-            }
+            //check if the port1 LED has changed color
+            if (qsfp_port1_led_color == led) {
 
-        case 2:
-            switch(led) {
-                case LED_COLOR_GREEN:
-                    cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, 3);
-                    return cpld_reg_bit_set(CPLD_REGISTER_QSFP_LED, 2);
-                case LED_COLOR_YELLOW:
-                    cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, 2);
-                    return cpld_reg_bit_set(CPLD_REGISTER_QSFP_LED, 3);
-                case LED_COLOR_NONE:
-                    cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, 2);
-                    cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, 3);
-                    return CPLD_SUCCESS;
-                default:
+                //check if frequency needs to be changed.
+                if (led == LED_COLOR_GREEN &&
+                    qsfp_port1_green_led_frequency != frequency) {
+                        qsfp_port1_green_led_frequency =  frequency;
+                        return pal_change_qsfp_frequency((uint8_t)QSFP_PORT1_GREEN_BLINK_MASK,
+                                                         frequency << QSFP_PORT1_GREEN_BLINK_SHIFT);
+                } else if (led == LED_COLOR_YELLOW &&
+                           qsfp_port1_yellow_led_frequency != frequency) {
+                        qsfp_port1_yellow_led_frequency =  frequency;
+                        return pal_change_qsfp_frequency((uint8_t)QSFP_PORT1_YELLOW_BLINK_MASK,
+                                                         frequency << QSFP_PORT1_YELLOW_BLINK_SHIFT);
+                } else {
                     return CPLD_FAIL;
+                }
+
+            } else {
+                qsfp_port1_led_color = led;
+                switch(led) {
+                    case LED_COLOR_GREEN:
+                        cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT1_YELLOW_ON);
+                        cpld_reg_bit_set(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT1_GREEN_ON);
+                        qsfp_port1_green_led_frequency = frequency;
+                        return pal_change_qsfp_frequency((uint8_t)QSFP_PORT1_GREEN_BLINK_MASK,
+                                                         frequency << QSFP_PORT1_GREEN_BLINK_SHIFT);
+                    case LED_COLOR_YELLOW:
+                        cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT1_GREEN_ON);
+                        cpld_reg_bit_set(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT1_YELLOW_ON);
+                        qsfp_port1_yellow_led_frequency = frequency;
+                        return pal_change_qsfp_frequency((uint8_t)QSFP_PORT1_YELLOW_BLINK_MASK,
+                                                         frequency << QSFP_PORT1_YELLOW_BLINK_SHIFT);
+                    case LED_COLOR_NONE:
+                        cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT1_GREEN_ON);
+                        cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT1_YELLOW_ON);
+                        return CPLD_SUCCESS;
+                    default:
+                        return CPLD_FAIL;
+                }
+            }
+        case 2:
+            //check if the port2 LED has changed color
+            if (qsfp_port2_led_color == led) {
+
+                //check if frequency needs to be changed.
+                if (led == LED_COLOR_GREEN &&
+                    qsfp_port2_green_led_frequency != frequency) {
+                        qsfp_port2_green_led_frequency =  frequency;
+                        return pal_change_qsfp_frequency((uint8_t)QSFP_PORT2_GREEN_BLINK_MASK,
+                                                         frequency << QSFP_PORT2_GREEN_BLINK_SHIFT);
+                } else if (led == LED_COLOR_YELLOW &&
+                           qsfp_port2_yellow_led_frequency != frequency) {
+                        qsfp_port2_yellow_led_frequency =  frequency;
+                        return pal_change_qsfp_frequency((uint8_t)QSFP_PORT2_YELLOW_BLINK_MASK,
+                                                         frequency << QSFP_PORT2_YELLOW_BLINK_SHIFT);
+                } else {
+                    return CPLD_FAIL;
+                }
+
+            } else {
+                qsfp_port2_led_color = led;
+                switch(led) {
+                    case LED_COLOR_GREEN:
+                        cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT2_YELLOW_ON);
+                        cpld_reg_bit_set(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT2_GREEN_ON);
+                        qsfp_port2_green_led_frequency = frequency;
+                        return pal_change_qsfp_frequency((uint8_t)QSFP_PORT2_GREEN_BLINK_MASK,
+                                                         frequency << QSFP_PORT2_GREEN_BLINK_SHIFT);
+                    case LED_COLOR_YELLOW:
+                        cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT2_GREEN_ON);
+                        cpld_reg_bit_set(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT2_YELLOW_ON);
+                        qsfp_port2_yellow_led_frequency = frequency;
+                        return pal_change_qsfp_frequency((uint8_t)QSFP_PORT2_YELLOW_BLINK_MASK,
+                                                         frequency << QSFP_PORT2_YELLOW_BLINK_SHIFT);
+                    case LED_COLOR_NONE:
+                        cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT2_GREEN_ON);
+                        cpld_reg_bit_reset(CPLD_REGISTER_QSFP_LED, QSFP_LED_PORT2_YELLOW_ON);
+                        return CPLD_SUCCESS;
+                    default:
+                        return CPLD_FAIL;
+                }
             }
        default:
            return CPLD_FAIL;
@@ -387,11 +462,11 @@ pal_program_marvell(uint8_t marvell_addr, uint32_t data) {
         return CPLD_FAIL;
     }
 
-    cpld_write(0x7, marvell_addr);
-    cpld_write(0x8, (data >> 8) && 0xff);
-    cpld_write(0x9, data && 0xff);
-    cpld_write(0x6, (0xc << 3) | 0x4 | 0x1);
-    cpld_write(0x6, 0);
+    cpld_reg_wr(0x7, marvell_addr);
+    cpld_reg_wr(0x8, (data >> 8) && 0xff);
+    cpld_reg_wr(0x9, data && 0xff);
+    cpld_reg_wr(0x6, (0xc << 3) | 0x4 | 0x1);
+    cpld_reg_wr(0x6, 0);
 
     if (!pal_wr_unlock(CPLDLOCK)) {
         printf("Failed to unlock.\n");

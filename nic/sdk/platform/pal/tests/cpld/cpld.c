@@ -17,10 +17,10 @@ dumpregisters()
     printf("The cpld register are:\n");
 
     for(i = 0; i < 0x33; i++) {
-        printf("\n%02x : %02x", i, cpld_read(i));
+        printf("\n%02x : %02x", i, cpld_reg_rd(i));
     }
 
-    printf("\n0x80 : %02x", cpld_read(0x80));
+    printf("\n0x80 : %02x", cpld_reg_rd(0x80));
 }
 
 static void
@@ -42,14 +42,14 @@ main(int argc, char *argv[])
             return 1;
         }
         addr = strtoul(argv[2], NULL, 0);
-        printf("\nREAD : %x", cpld_read(addr));
+        printf("\nREAD : %x", cpld_reg_rd(addr));
     } else if (strcmp(argv[1], "-w") == 0) {
         if (argc < 4) {
             usage();
         }
         addr = strtoul(argv[2], NULL, 0);
         data = strtoul(argv[3], NULL, 0);
-        cpld_write(addr, data);
+        cpld_reg_wr(addr, data);
     } else if (strcmp(argv[1], "-sg") == 0) {
         if (argc < 3) {
             usage();

@@ -151,7 +151,7 @@ pal_default_mem_unmap(void  *va)
 }
 
 static pal_ret_t
-pal_default_qsfp_set_led(int port, pal_led_color_t led)
+pal_default_qsfp_set_led(int port, pal_led_color_t led, pal_led_frequency_t frequency = LED_FREQUENCY_0HZ)
 {
     SDK_TRACE_DEBUG("PAL default pal_default_qsfp_set_led");
     return PAL_RET_OK;
