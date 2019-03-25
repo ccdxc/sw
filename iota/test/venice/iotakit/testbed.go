@@ -114,6 +114,21 @@ type TestCaseResult struct {
 
 // NewTestBed initializes a new testbed and returns a testbed handler
 func NewTestBed(topoName string, paramsFile string) (*TestBed, error) {
+	// skip setup when we are re-running the tests
+	skipSetup := os.Getenv("SKIP_SETUP")
+	if skipSetup != "" {
+		log.Infof("Skipping setup...")
+		return newTestBed(topoName, paramsFile, true)
+	}
+	return newTestBed(topoName, paramsFile, false)
+}
+
+// GetTestbed returns a testbed handler without initializing the testbed.
+func GetTestbed(topoName string, paramsFile string) (*TestBed, error) {
+	return newTestBed(topoName, paramsFile, true)
+}
+
+func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, error) {
 	var params TestBedParams
 
 	// find the topology by name
@@ -186,12 +201,7 @@ func NewTestBed(topoName string, paramsFile string) (*TestBed, error) {
 		}
 	}
 
-	// skip setup when we are re-running the tests
-	skipSetup := os.Getenv("SKIP_SETUP")
-	if skipSetup != "" {
-		log.Infof("Skipping setup...")
-		tb.skipSetup = true
-	}
+	tb.skipSetup = skipSetup
 
 	// connect to iota server
 	err = tb.connectToIotaServer()

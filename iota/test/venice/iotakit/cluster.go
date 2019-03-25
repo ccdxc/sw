@@ -186,8 +186,8 @@ func (tb *TestBed) SetupVeniceNodes() error {
 }
 
 // CheckVeniceServiceStatus checks if all services are running on venice nodes
-func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) error {
-
+func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) (string, error) {
+	ret := ""
 	trig := tb.NewTrigger()
 	for _, node := range tb.Nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
@@ -201,15 +201,15 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) error {
 	triggerResp, err := trig.Run()
 	if err != nil {
 		log.Errorf("Failed to check cmd/etcd service status. Err: %v", err)
-		return err
+		return ret, err
 	}
 
 	for _, cmdResp := range triggerResp {
 		if cmdResp.ExitCode != 0 {
-			return fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+			return ret, fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 		}
 		if cmdResp.Stdout == "" {
-			return fmt.Errorf("Venice required service not running: %v", cmdResp.Command)
+			return ret, fmt.Errorf("Venice required service not running: %v", cmdResp.Command)
 		}
 	}
 
@@ -224,29 +224,29 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) error {
 			triggerResp, err = trig.Run()
 			if err != nil {
 				log.Errorf("Failed to get k8s service status Err: %v", err)
-				return err
+				return ret, err
 			}
 
 			for _, cmdResp := range triggerResp {
 				if cmdResp.ExitCode != 0 {
-					return fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+					return ret, fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 				}
 				if cmdResp.Stdout == "" {
-					return fmt.Errorf("Could not get any information from k8s: %v", cmdResp.Command)
+					return ret, fmt.Errorf("Could not get any information from k8s: %v", cmdResp.Command)
 				}
 				log.Debugf("Got kubectl resp\n%v", cmdResp.Stdout)
+				ret = cmdResp.Stdout
 				out := strings.Split(cmdResp.Stdout, "\n")
 				for _, line := range out {
 					if line != "" && !strings.Contains(line, "Running") {
 						fmt.Printf("Some kuberneted services were not running: %v", cmdResp.Stdout)
-						return fmt.Errorf("Some pods not running: %v", line)
+						return ret, fmt.Errorf("Some pods not running: %v", line)
 					}
 				}
 			}
 		}
 	}
-
-	return nil
+	return ret, nil
 }
 
 // CheckNaplesHealth checks if naples is healthy

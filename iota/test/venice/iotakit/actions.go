@@ -128,12 +128,30 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 	}
 
 	// check venice service status
-	err = act.model.tb.CheckVeniceServiceStatus(cl.Status.Leader)
+	_, err = act.model.tb.CheckVeniceServiceStatus(cl.Status.Leader)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// GetVeniceServices retrieves the state of the services from the leader node
+func (act *ActionCtx) GetVeniceServices() (string, error) {
+	// check iota cluster health
+	err := act.model.tb.CheckIotaClusterHealth()
+	if err != nil {
+		log.Errorf("Invalid Iota cluster state: %v", err)
+		return "", err
+	}
+
+	// check venice cluster status
+	cl, err := act.model.tb.GetCluster()
+	if err != nil {
+		log.Errorf("Could not get Venice cluster state: %v", err)
+		return "", err
+	}
+	return act.model.tb.CheckVeniceServiceStatus(cl.Status.Leader)
 }
 
 // VerifyPolicyStatus verifies SG policy status

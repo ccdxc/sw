@@ -577,6 +577,28 @@ func (tb *TestBed) GetEndpoint(meta *api.ObjectMeta) (ep *workload.Endpoint, err
 	return ep, err
 }
 
+// ListEndpoints returns list of endpoints known to Venice
+func (tb *TestBed) ListEndpoints(tenant string) (eps []*workload.Endpoint, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{}
+	opts.Tenant = tenant
+	for _, restcl := range restcls {
+		eps, err = restcl.WorkloadV1().Endpoint().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+	return eps, err
+}
+
 // CreateFirewallProfile creates firewall profile
 func (tb *TestBed) CreateFirewallProfile(fwp *security.FirewallProfile) error {
 	ctx, err := tb.VeniceLoggedInCtx()

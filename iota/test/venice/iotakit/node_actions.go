@@ -5,6 +5,8 @@ package iotakit
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -219,6 +221,59 @@ func (act *ActionCtx) PortFlap(npc *NaplesCollection) error {
 	}
 
 	return nil
+}
+
+// GetNaplesEndpoints returns a map of map[<mac-adress>]<vlan> indexed by naples name
+func (act *ActionCtx) GetNaplesEndpoints(npc *NaplesCollection) (map[string]map[string]struct {
+	Local bool
+	Vlan  int
+}, error) {
+	trig := act.model.tb.NewTrigger()
+	ret := make(map[string]map[string]struct {
+		Local bool
+		Vlan  int
+	})
+	for _, naples := range npc.nodes {
+		cmd := "/nic/bin/halctl show endpoint brief"
+		trig.AddCommand(cmd, naples.iotaNode.Name+"_naples", naples.iotaNode.Name)
+	}
+	resp, err := trig.Run()
+	if err != nil {
+		log.Errorf("failed to run halctl commends on naples (%s)", err)
+		return ret, fmt.Errorf("failed to run halctl commands on naples (%s)", err)
+	}
+	re := regexp.MustCompile(`^(\d+)\s+([0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+)\s+(\S+)$`)
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("failed to run halctl command on naples [%v] (%d) [ %v]", cmdResp.NodeName, cmdResp.ExitCode, cmdResp.Stderr)
+			return ret, fmt.Errorf("failed to run halctl command on naples [%v](%d)", cmdResp.NodeName, cmdResp.ExitCode)
+		}
+		macmap := make(map[string]struct {
+			Local bool
+			Vlan  int
+		})
+		for _, line := range strings.Split(cmdResp.Stdout, "\n") {
+			if re.Match([]byte(line)) {
+				strs := re.FindStringSubmatch(line)
+
+				vlan, err := strconv.ParseInt(strs[1], 10, 32)
+				if err != nil {
+					vlan = -1
+				}
+				mac := strs[2]
+				local := true
+				if strings.HasPrefix(strs[3], "Uplink") {
+					local = false
+				}
+				macmap[mac] = struct {
+					Local bool
+					Vlan  int
+				}{local, int(vlan)}
+			}
+		}
+		ret[cmdResp.NodeName] = macmap
+	}
+	return ret, nil
 }
 
 // runCommandOnGivenNaples runs the given command on given naples and returns stdout

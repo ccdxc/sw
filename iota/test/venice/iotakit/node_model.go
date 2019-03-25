@@ -5,6 +5,7 @@ package iotakit
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -306,4 +307,77 @@ func (vnc *VeniceNodeCollection) Leader() *VeniceNodeCollection {
 
 	return &VeniceNodeCollection{err: fmt.Errorf("Could not find a leader node")}
 
+}
+
+type selectParams struct {
+	names []string
+}
+
+func parseSelectorString(str string) (selectParams, error) {
+	ret := selectParams{}
+	// Only handling Spaces. not all space characters.
+	str = strings.Replace(str, " ", "", -1)
+	parts := strings.SplitN(str, "=", 2)
+	if len(parts) != 2 {
+		return ret, fmt.Errorf("failed to parse selector string")
+	}
+	if parts[0] != "name" {
+		return ret, fmt.Errorf("only name selector supported")
+	}
+	ret.names = strings.Split(parts[1], ",")
+	return ret, nil
+}
+
+// Select returns a collection with the specified venice nodes, error if any of the specified nodes is not found
+func (vnc *VeniceNodeCollection) Select(sel string) (*VeniceNodeCollection, error) {
+	if vnc.err != nil {
+		return nil, fmt.Errorf("node collection error (%s)", vnc.err)
+	}
+	ret := &VeniceNodeCollection{sm: vnc.sm}
+	params, err := parseSelectorString(sel)
+	if err != nil {
+		return ret, fmt.Errorf("could not parse selector")
+	}
+	var notFound []string
+nodeLoop:
+	for _, name := range params.names {
+		for _, node := range vnc.nodes {
+			if node.iotaNode.Name == name {
+				ret.nodes = append(ret.nodes, node)
+				continue nodeLoop
+			}
+		}
+		notFound = append(notFound, name)
+	}
+	if len(notFound) != 0 {
+		return nil, fmt.Errorf("%v not found", notFound)
+	}
+	return ret, nil
+}
+
+// Select returns a collection with the specified hosts, error if any of the specified hosts is not found
+func (hc *HostCollection) Select(sel string) (*HostCollection, error) {
+	if hc.err != nil {
+		return nil, fmt.Errorf("host collection error (%s)", hc.err)
+	}
+	ret := &HostCollection{}
+	params, err := parseSelectorString(sel)
+	if err != nil {
+		return ret, fmt.Errorf("could not parse selector")
+	}
+	var notFound []string
+hostLoop:
+	for _, name := range params.names {
+		for _, host := range hc.hosts {
+			if host.iotaNode.Name == name {
+				ret.hosts = append(ret.hosts, host)
+				continue hostLoop
+			}
+		}
+		notFound = append(notFound, name)
+	}
+	if len(notFound) != 0 {
+		return nil, fmt.Errorf("%v not found", notFound)
+	}
+	return ret, nil
 }
