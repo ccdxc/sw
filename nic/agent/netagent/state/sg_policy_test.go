@@ -85,6 +85,27 @@ func TestSGPolicyUpdate(t *testing.T) {
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
 	defer ag.Stop()
 
+	dns := &netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "dns",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"udp/53"},
+			ALG: &netproto.ALG{
+				DNS: &netproto.DNS{
+					DropLargeDomainPackets: true,
+					DropMultiZonePackets:   true,
+					QueryResponseTimeout:   "30s",
+				},
+			},
+		},
+	}
+	err := ag.CreateApp(dns)
+	AssertOk(t, err, "Failed to create dns app")
+
 	// sg policy
 	sgPolicy := netproto.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
@@ -100,31 +121,18 @@ func TestSGPolicyUpdate(t *testing.T) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
-							{
-								Port:     "80",
-								Protocol: "tcp",
-							},
-							{
-								Port:     "443",
-								Protocol: "tcp",
-							},
-							{
-								Port:     "53",
-								Protocol: "udp",
-							},
-						},
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
+					AppName: "dns",
 				},
 			},
 		},
 	}
 
 	// create sg policy
-	err := ag.CreateSGPolicy(&sgPolicy)
+	err = ag.CreateSGPolicy(&sgPolicy)
 	AssertOk(t, err, "Error creating sg policy")
 	sgp, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
 	AssertOk(t, err, "SG policy was not found in DB")
@@ -158,25 +166,12 @@ func TestSGPolicyUpdate(t *testing.T) {
 				{
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
-						AppConfigs: []*netproto.AppConfig{
-							{
-								Port:     "80",
-								Protocol: "tcp",
-							},
-							{
-								Port:     "443",
-								Protocol: "tcp",
-							},
-							{
-								Port:     "53",
-								Protocol: "udp",
-							},
-						},
+						Addresses: []string{"10.0.0.0 - 10.10.10.10"},
 					},
 					Dst: &netproto.MatchSelector{
 						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
+					AppName: "dns",
 				},
 			},
 		},

@@ -66,7 +66,7 @@ func TestSecurityProfileCreateDelete(t *testing.T) {
 	Assert(t, err != nil, "deleting non-existing security profile succeeded", ag)
 }
 
-func TestSecurityProfileUpdate(t *testing.T) {
+func TestSecurityProfileCreateDeleteImplicitDefaultVrf(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -78,7 +78,7 @@ func TestSecurityProfileUpdate(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testSecurityProfileUpdate",
+			Name:      "testSecurityProfile",
 		},
 		Spec: netproto.SecurityProfileSpec{
 			Timeouts: &netproto.Timeouts{
@@ -100,18 +100,91 @@ func TestSecurityProfileUpdate(t *testing.T) {
 	err := ag.CreateSecurityProfile(&profile)
 	AssertOk(t, err, "Error creating security profile")
 	sgp, err := ag.FindSecurityProfile(profile.ObjectMeta)
-	AssertOk(t, err, "SG policy was not found in DB")
-	Assert(t, sgp.Name == "testSecurityProfileUpdate", "Nat Pool names did not match", sgp)
+	AssertOk(t, err, "Security Profile was not found in DB")
+	Assert(t, sgp.Name == "testSecurityProfile", "SecurityProfile names did not match", sgp)
 
-	profileSpec := netproto.SecurityProfileSpec{
-		Timeouts: &netproto.Timeouts{
-			SessionIdle: "20s",
+	// verify duplicate tenant creations succeed
+	err = ag.CreateSecurityProfile(&profile)
+	AssertOk(t, err, "Error creating duplicate security profile")
+
+	// verify list api works.
+	sgpList := ag.ListSecurityProfile()
+	Assert(t, len(sgpList) == 1, "Incorrect number of sg policies")
+
+	// delete the security profile and verify its gone from db
+	err = ag.DeleteSecurityProfile(profile.Tenant, profile.Namespace, profile.Name)
+	AssertOk(t, err, "Error deleting security profile")
+	_, err = ag.FindSecurityProfile(profile.ObjectMeta)
+	Assert(t, err != nil, "Security Profile was still found in database after deleting", ag)
+
+	// verify you can not delete non-existing tenant
+	err = ag.DeleteSecurityProfile(profile.Tenant, profile.Namespace, profile.Name)
+	Assert(t, err != nil, "deleting non-existing security profile succeeded", ag)
+}
+
+func TestSecurityProfileUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// security profile
+	profile := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSecurityProfileUpdate",
+		},
+		Spec: netproto.SecurityProfileSpec{
+			AttachVrfs: []string{"default"},
+			Timeouts: &netproto.Timeouts{
+				SessionIdle:        "10s",
+				TCP:                "1m",
+				TCPDrop:            "5s",
+				TCPConnectionSetup: "300ms",
+				TCPClose:           "1h",
+				Drop:               "30s",
+				UDP:                "5s",
+				UDPDrop:            "1s",
+				ICMP:               "100ms",
+				ICMPDrop:           "1h10m15s",
+			},
 		},
 	}
 
-	profile.Spec = profileSpec
+	// create security profile
+	err := ag.CreateSecurityProfile(&profile)
+	AssertOk(t, err, "Error creating security profile")
+	sgp, err := ag.FindSecurityProfile(profile.ObjectMeta)
+	AssertOk(t, err, "SG policy was not found in DB")
+	Assert(t, sgp.Name == "testSecurityProfileUpdate", "sec profile names did not match", sgp)
 
-	err = ag.UpdateSecurityProfile(&profile)
+	updProfile := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSecurityProfileUpdate",
+		},
+		Spec: netproto.SecurityProfileSpec{
+			AttachVrfs: []string{"default"},
+			Timeouts: &netproto.Timeouts{
+				SessionIdle:        "20s",
+				TCP:                "1m",
+				TCPDrop:            "5s",
+				TCPConnectionSetup: "300ms",
+				TCPClose:           "1h",
+				Drop:               "30s",
+				UDP:                "5s",
+				UDPDrop:            "1s",
+				ICMP:               "100ms",
+				ICMPDrop:           "1h10m15s",
+			},
+		},
+	}
+
+	err = ag.UpdateSecurityProfile(&updProfile)
 	AssertOk(t, err, "Error updating security profile")
 }
 

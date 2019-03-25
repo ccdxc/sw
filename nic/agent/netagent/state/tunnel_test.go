@@ -84,14 +84,22 @@ func TestTunnelUpdate(t *testing.T) {
 	tunnel, err := ag.FindTunnel(tun.ObjectMeta)
 	AssertOk(t, err, "Tunnel not found in DB")
 	Assert(t, tunnel.Name == "testTunnel", "Tunnel names did not match", tunnel)
-
-	tunSpec := netproto.TunnelSpec{
-		Src: "172.0.0.1",
+	updtun := netproto.Tunnel{
+		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testTunnel",
+		},
+		Spec: netproto.TunnelSpec{
+			Type:        "VXLAN",
+			AdminStatus: "UP",
+			Src:         "10.1.1.1",
+			Dst:         "192.168.1.1",
+		},
 	}
 
-	tun.Spec = tunSpec
-
-	err = ag.UpdateTunnel(&tun)
+	err = ag.UpdateTunnel(&updtun)
 	AssertOk(t, err, "Error updating tunnel")
 
 }

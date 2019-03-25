@@ -164,6 +164,10 @@ func TestLocalEndpointUpdate(t *testing.T) {
 	_, err = ag.CreateEndpoint(epinfo)
 	AssertOk(t, err, "Endpoint create failed.")
 
+	ep, err := ag.FindEndpoint(epinfo.ObjectMeta)
+	AssertOk(t, err, "EP not found")
+	Assert(t, ep.Name == epinfo.Name, "Endpoints didn't match")
+
 	epinfo.Spec.WorkloadName = "updatedWorkloadName"
 	err = ag.UpdateEndpoint(epinfo)
 	AssertOk(t, err, "Local endpoint update failed")
