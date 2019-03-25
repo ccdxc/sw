@@ -188,7 +188,7 @@ public:
     uint32_t logical_port_to_tm_port(uint32_t logical_port);
 
     // return number of physical ports (fp_ports == phy_ports)
-    uint8_t slot(void) { return 0; }
+    uint8_t slot(void) { return 1; }
     uint32_t num_fp_ports(void) const { return catalog_db_.num_fp_ports; }
     port_type_t  port_type_fp(uint32_t fp_port);
     uint32_t     num_lanes_fp(uint32_t fp_port);

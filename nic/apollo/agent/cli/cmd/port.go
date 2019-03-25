@@ -8,12 +8,21 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
 )
+
+const IfTypeShift = 28
+const IfSlotShift = 24
+const IfParentPortShift = 16
+const IfTypeMask = 0xF
+const IfSlotMask = 0xF
+const IfParentPortMask = 0xFF
+const IfChildPortMask = 0xFF
 
 var (
 	portID uint32
@@ -90,8 +99,26 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 func printPortStatsHeader() {
 	hdrLine := strings.Repeat("-", 37)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-7s%-25s%-5s\n", "PortId", "Field", "Count")
+	fmt.Printf("%-8s%-25s%-5s\n", "PortId", "Field", "Count")
 	fmt.Println(hdrLine)
+}
+
+func ifIndexToSlot(ifIndex uint32) uint32 {
+    return (ifIndex >> IfSlotShift) & IfSlotMask
+}
+
+func ifIndexToParentPort(ifIndex uint32) uint32 {
+    return (ifIndex >> IfParentPortShift) & IfParentPortMask
+}
+
+func ifIndexToChildPort(ifIndex uint32) uint32 {
+    return ifIndex & IfChildPortMask
+}
+
+func ifIndexToPortIdStr(ifIndex uint32) string {
+    slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
+    parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
+    return "Eth " + slotStr + "/" + parentPortStr
 }
 
 func printPortStats(resp *pds.Port) {
@@ -99,10 +126,10 @@ func printPortStats(resp *pds.Port) {
 	macStats := resp.GetStats().GetMacStats()
 	mgmtMacStats := resp.GetStats().GetMgmtMacStats()
 
-	fmt.Printf("%-7d", resp.GetSpec().GetPortId())
+	fmt.Printf("%-8s", ifIndexToPortIdStr(resp.GetSpec().GetPortId()))
 	for _, s := range macStats {
 		if first == false {
-			fmt.Printf("%-7s", "")
+			fmt.Printf("%-8s", "")
 		}
 		fmt.Printf("%-25s%-5d\n",
 			strings.Replace(s.GetType().String(), "_", " ", -1),
@@ -113,7 +140,7 @@ func printPortStats(resp *pds.Port) {
 	first = true
 	for _, s := range mgmtMacStats {
 		if first == false {
-			fmt.Printf("%-7s", "")
+			fmt.Printf("%-8s", "")
 		}
 		str := strings.Replace(s.GetType().String(), "MGMT_MAC_", "", -1)
 		str = strings.Replace(str, "_", " ", -1)
