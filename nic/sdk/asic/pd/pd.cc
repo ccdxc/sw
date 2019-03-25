@@ -703,6 +703,12 @@ asic_pd_p4plus_invalidate_cache (mpartition_region_t *reg,
     return SDK_RET_OK;
 }
 
+uint32_t
+asic_pd_clock_freq_get (void)
+{
+    return capri_freq_get();
+}
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

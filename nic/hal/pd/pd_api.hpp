@@ -2929,6 +2929,7 @@ typedef struct pd_clock_detail_get_args_s {
     uint64_t   hw_clock;
     uint64_t   sw_delta;
     uint64_t   sw_clock;
+    uint8_t    clock_op;
 } __PACK__ pd_clock_detail_get_args_t;
 
 // packet buffer

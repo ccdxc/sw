@@ -55,13 +55,15 @@ def Trigger(tc):
 
     trig_resp = api.Trigger(req)
     control_seen = 0
+    data_seen = 0
     cmd = trig_resp.commands[-1]
     alginfo = get_alginfo(cmd, APP_SVC_FTP)
-    if len(alginfo) == 0: tc.controlageout_fail = 1
     for info in alginfo:
        if info['ftpinfo']['iscontrol'] == True:
           control_seen = 1
-    if control_seen == 0: tc.controlageout_fail = 1
+       if info['ftpinfo']['iscontrol'] == False:
+          data_seen = 1
+    if control_seen == 0 and data_seen == 1: tc.controlageout_fail = 1
  
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)

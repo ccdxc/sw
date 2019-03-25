@@ -7,6 +7,7 @@ from iota.test.iris.testcases.alg.sunrpc.sunrpc_utils import *
 import pdb
 
 def Setup(tc):
+    update_sgpolicy('sunrpc_tcp')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -23,6 +24,13 @@ def Trigger(tc):
           naples = client2
           if not client2.IsNaples():
              return api.types.status.SUCCESS
+
+    if client1.IsNaples() and client2.IsNaples() and server.IsNaples():
+       # switch so that flow-gates are formed in both naples
+       if client1.IsNaples() == server.IsNaples():
+           tmp = client1
+           client1 = client2
+           client2 = tmp
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\

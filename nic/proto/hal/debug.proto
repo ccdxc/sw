@@ -500,10 +500,17 @@ message FlushLogsResponseMsg {
   repeated FlushLogsResponse    response = 1;
 }
 
+// Clock Delta Op
+enum ClockOpType {
+  CLOCK_DELTA_OP_ADD                                = 0;
+  CLOCK_DELTA_OP_DEL                                = 1;
+}
+
 message ClockSpec {
-  uint64  hardware_clock      = 1; // Hardware clock in nanoseconds
-  uint64  software_delta      = 2; // Computed software delta in nanoseconds
-  uint64  software_clock      = 3; // Software clock after the delta has been applied
+  uint64      hardware_clock      = 1; // Hardware clock in nanoseconds
+  ClockOpType clock_op_type       = 2; // Clock delta operation type
+  uint64      software_delta      = 3; // Computed software delta in nanoseconds
+  uint64      software_clock      = 4; // Software clock after the delta has been applied
 }
 
 message ClockStatus {

@@ -6,6 +6,7 @@ from scapy import *
 from iota.test.iris.testcases.aging.aging_utils import *
 import pdb
 
+GRACE_TIME = 5
 def Setup(tc):
     api.Logger.info("Setup.")
     update_timeout('tcp-connection-setup', "10s")
@@ -88,10 +89,14 @@ def Trigger(tc):
                "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} -d 10 ".format(client_port, server_port, iseq_num, iack_num, server.ip_address))
     tc.cmd_cookies2.append("Send data on initiator flow")
 
+    #Step 6: Validate if session is exist
+    api.Trigger_AddNaplesCommand(req2, naples.node_name, "/nic/bin/halctl show session --handle {}".format(sess_hdl))
+    tc.cmd_cookies2.append("show session")
+
     #Sleep for 
     ######TBD -- uncomment this once agent update fix is in!!!
     cmd_cookie = "sleep"
-    api.Trigger_AddNaplesCommand(req2, naples.node_name, "sleep %s"%(timeout), timeout=300)
+    api.Trigger_AddNaplesCommand(req2, naples.node_name, "sleep %s"%(timeout-GRACE_TIME), timeout=300)
     tc.cmd_cookies2.append("sleep")
 
     #Step 6: Validate if session is exist

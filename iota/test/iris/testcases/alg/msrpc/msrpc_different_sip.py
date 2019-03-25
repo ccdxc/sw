@@ -32,6 +32,13 @@ def Trigger(tc):
           if not client1.IsNaples():
              return api.types.status.SUCCESS
 
+    if client.IsNaples() and client1.IsNaples() and server.IsNaples():
+       # switch so that flow-gates are formed in both naples
+       if client.IsNaples() == server.IsNaples():
+           tmp = client
+           client = client1
+           client1 = tmp
+
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (server.workload_name, server.ip_address, client.workload_name, client.ip_address)

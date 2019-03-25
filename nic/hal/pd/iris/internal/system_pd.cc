@@ -9,17 +9,20 @@
 #include "platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 namespace hal {
 namespace pd {
 
+double g_clock_adjustment = 0;
 thread_local void *t_clock_delta_timer = NULL;
 thread_local void *t_clock_rollover_timer = NULL;
 
 #define HAL_TIMER_ID_CLOCK_SYNC_INTVL     (60 * TIME_MSECS_PER_MIN)
 #define HAL_TIMER_ID_CLOCK_SYNC_INTVL_NS  (HAL_TIMER_ID_CLOCK_SYNC_INTVL * TIME_NSECS_PER_MSEC)
-#define HW_CLOCK_TICK_TO_NS(x)         (x * 1.200) //based on frequency of 833 MHz
-#define NS_TO_HW_CLOCK_TICK(x)         (x / 1.200)
+#define CLOCK_FREQ                     (sdk::asic::pd::asic_pd_clock_freq_get() * 1000000) // Freq in MHz
+#define HW_CLOCK_TICK_TO_NS(x)         (x * g_clock_adjustment)
+#define NS_TO_HW_CLOCK_TICK(x)         (x / g_clock_adjustment)
 
 static hal_ret_t
 pd_system_drop_stats_set (int id, drop_stats_actiondata_t *data)
@@ -669,14 +672,17 @@ pd_clock_detail_get (pd_func_args_t *pd_func_args)
  
     // Read hw time
     capri_tm_get_clock_tick(&hw_ns);
+    HAL_TRACE_DEBUG("Hardware tick:{}", hw_ns);
     args->hw_clock = HW_CLOCK_TICK_TO_NS(hw_ns);
     args->sw_delta = g_hal_state_pd->clock_delta();
+    args->clock_op = g_hal_state_pd->clock_delta_op();
 
     conv_args.hw_tick = args->hw_clock;
     conv_args.sw_ns = &args->sw_clock;
     conv_func_args.pd_conv_hw_clock_to_sw_clock = &conv_args;
     ret = pd_conv_hw_clock_to_sw_clock(&conv_func_args);
-
+    
+    HAL_TRACE_DEBUG("Hardware ns: {} sw ns: {}", args->hw_clock, args->sw_clock);
     return ret;
 }
 
@@ -740,6 +746,8 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
         pthread_yield();
     }
 
+    g_clock_adjustment = ((double)(((double)1)/CLOCK_FREQ))*TIME_NSECS_PER_SEC; 
+    printf("Freq: %d Adjustment: %lf\n", CLOCK_FREQ, g_clock_adjustment);
     clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
     t_clock_delta_timer =
         sdk::lib::timer_schedule(HAL_TIMER_ID_CLOCK_SYNC,            // timer_id

@@ -798,6 +798,7 @@ clock_get(ClockResponse *response)
     response->mutable_spec()->set_hardware_clock(clock_args.hw_clock);
     response->mutable_spec()->set_software_delta(clock_args.sw_delta);
     response->mutable_spec()->set_software_clock(clock_args.sw_clock);
+    response->mutable_spec()->set_clock_op_type((debug::ClockOpType)clock_args.clock_op);
 
     response->set_api_status(types::API_STATUS_OK);
 

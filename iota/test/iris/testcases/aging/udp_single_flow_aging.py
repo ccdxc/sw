@@ -31,14 +31,11 @@ def Trigger(tc):
         timeout = get_timeout('udp-timeout')
         server_port = api.AllocateUdpPort()
         client_port = api.AllocateUdpPort()
+
         for idx in range(0, 5):
             api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                               "hping3 -c 1 -s %s -p %s --udp %s -d 10" % (client_port, server_port, server.ip_address))
+                               "sudo hping3 -c 1 -s %s -p %s --udp %s -d 10" % (client_port, server_port, server.ip_address))
             tc.cmd_cookies.append("Send data from server to client")
-            #Get it from the config
-            cmd_cookie = "sleep"
-            api.Trigger_AddNaplesCommand(req, server.node_name, "sleep %s"%(int(timeout/5)), timeout=300)
-            tc.cmd_cookies.append(cmd_cookie)
  
         if server.IsNaples():
             cmd_cookie = "Before aging show session"

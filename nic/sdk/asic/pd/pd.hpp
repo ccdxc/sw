@@ -136,7 +136,7 @@ sdk_ret_t asic_pd_qstate_read (uint64_t addr, uint8_t *buf, uint32_t size);
 sdk_ret_t asic_pd_qstate_clear (lif_qstate_t *qstate);
 sdk_ret_t asic_pd_p4plus_invalidate_cache (mpartition_region_t *reg,
                                            uint64_t q_addr, uint32_t size);
-
+uint32_t asic_pd_clock_freq_get(void);
 
 }    // namespace pd
 }    // namespace asic

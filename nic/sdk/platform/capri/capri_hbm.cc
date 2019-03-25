@@ -533,7 +533,7 @@ populate_hbm_bw (uint64_t max_rd, uint64_t max_wr,
                     hbm_bw->max.read, hbm_bw->max.write);
 }
 
-static uint32_t
+uint32_t
 capri_freq_get (void)
 {
     uint64_t prev_ts     = 0;

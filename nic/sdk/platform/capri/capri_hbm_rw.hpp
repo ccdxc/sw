@@ -67,6 +67,7 @@ sdk_ret_t capri_nx_setup_llc_counters(uint32_t mask);
 sdk_ret_t capri_hbm_cache_init(capri_cfg_t *cfg);
 sdk_ret_t capri_hbm_cache_regions_init(void);
 mpartition_region_t* get_hbm_region_by_address(uint64_t addr);
+uint32_t capri_freq_get(void);
 
 }    // namespace capri
 }    // namespace platform
