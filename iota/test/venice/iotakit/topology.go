@@ -26,13 +26,13 @@ type Topology struct {
 
 // Topologies contains list of topologies
 var Topologies = map[string]*Topology{
-	"3Venice_3NaplesSim": &topo3Venice3NaplesSim,
-	"3Venice_Nodes":      &topo3VeniceNodes,
-	"5Venice_Nodes":      &topo5VeniceNodes,
-	"1Venice_2NaplesSim": &topo1Venice2NaplesSim,
-	"1Venice_2Naples":    &topo1Venice2Naples,
-	"3Venice_1Naples":    &topo3Venice1Naples,
-	"3Venice_2Naples":    &topo3Venice2Naples,
+	"3Venice_3NaplesSim":  &topo3Venice3NaplesSim,
+	"3Venice_Nodes":       &topo3VeniceNodes,
+	"5Venice_Nodes":       &topo5VeniceNodes,
+	"1Venice_2NaplesSim":  &topo1Venice2NaplesSim,
+	"1Venice_2Naples":     &topo1Venice2Naples,
+	"3Venice_1Naples":     &topo3Venice1Naples,
+	"3Venice_2Naples":     &topo3Venice2Naples,
 	"1Venice_ScaleNaples": &topo1VeniceScaleNaples,
 }
 
@@ -331,14 +331,72 @@ var topo1VeniceScaleNaples = Topology{
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
 			HostOS:      "esx",
 		},
-		/*
 		{
 			NodeName:    "naples8",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
 			HostOS:      "esx",
 		},
-		*/
+		{
+			NodeName:    "naples9",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples10",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples11",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples12",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples13",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples14",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples15",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples16",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples17",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples18",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
 		{
 			NodeName:    "venice1",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,

@@ -136,6 +136,7 @@ func (sm *SysModel) SetupDefaultConfig() error {
 			found := false
 			for _, gwrk := range getResp.Workloads {
 				if gwrk.WorkloadName == wrk.iotaWorkload.WorkloadName {
+					wrk.iotaWorkload.MgmtIp = gwrk.MgmtIp
 					found = true
 				}
 			}
@@ -164,6 +165,14 @@ func (sm *SysModel) SetupDefaultConfig() error {
 		err := wc.Bringup()
 		if err != nil {
 			return err
+		}
+	}
+
+	// update workload with management ip in the meta
+	for _, wr := range wc.workloads {
+		wr.veniceWorkload.ObjectMeta.Labels = map[string]string{"MgmtIp": wr.iotaWorkload.MgmtIp}
+		if err := sm.tb.CreateWorkload(wr.veniceWorkload); err != nil {
+			log.Errorf("unable to update the workload label")
 		}
 	}
 

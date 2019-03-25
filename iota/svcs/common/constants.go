@@ -46,6 +46,9 @@ const (
 	//MakeClusterTimeout waits for 5 minutes for the cluster to be up
 	MakeClusterTimeout = time.Duration(time.Minute * 5)
 
+	// MaxConcurrentNaplesToBringup
+	MaxConcurrentNaplesToBringup = 10
+
 	//WorkloadsPerNode captures the number of endpoints per node.
 	WorkloadsPerNode = 4
 

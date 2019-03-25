@@ -82,83 +82,94 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 	}
 	wsdir := gopath + "/src/github.com/pensando/sw"
 
-	pool, _ := errgroup.WithContext(context.Background())
-
-	// walk each node
-	for _, node := range req.Nodes {
-		if node.Type == iota.TestBedNodeType_TESTBED_NODE_TYPE_HW {
-			nodeOs := "esx"
-			switch node.Os {
-			case iota.TestBedNodeOs_TESTBED_NODE_OS_ESX:
-				nodeOs = "esx"
-			case iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX:
-				nodeOs = "linux"
-			case iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD:
-				nodeOs = "freebsd"
+	// split updates into pools of upto 'n' each
+	for nodeIdx := 0; nodeIdx < len(req.Nodes); {
+		poolNodes := []*iota.TestBedNode{}
+		for nodeIdx < len(req.Nodes) {
+			poolNodes = append(poolNodes, req.Nodes[nodeIdx])
+			nodeIdx++
+			if len(poolNodes) >= common.MaxConcurrentNaplesToBringup {
+				break
 			}
-			cmd := fmt.Sprintf("%s/iota/scripts/boot_naples_v2.py", wsdir)
-			cmd += fmt.Sprintf(" --console-ip %s", node.NicConsoleIpAddress)
-			cmd += fmt.Sprintf(" --console-port %s", node.NicConsolePort)
-			cmd += fmt.Sprintf(" --mnic-ip 169.254.0.1")
-			cmd += fmt.Sprintf(" --host-ip %s", node.IpAddress)
-			cmd += fmt.Sprintf(" --oob-ip %s", node.NicIpAddress)
-			cmd += fmt.Sprintf(" --cimc-ip %s", node.CimcIpAddress)
-			cmd += fmt.Sprintf(" --image %s/nic/naples_fw.tar", wsdir)
-			cmd += fmt.Sprintf(" --mode hostpin")
-			cmd += fmt.Sprintf(" --drivers-pkg %s/platform/gen/drivers-%s-eth.tar.xz", wsdir, nodeOs)
-			cmd += fmt.Sprintf(" --gold-firmware-image %s/platform/goldfw/naples/naples_fw.tar", wsdir)
-			cmd += fmt.Sprintf(" --uuid %s", node.NicUuid)
-			cmd += fmt.Sprintf(" --os %s", nodeOs)
-
-			latestGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/latest/drivers-%s-eth.tar.xz", wsdir, nodeOs, nodeOs)
-			oldGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/old/drivers-%s-eth.tar.xz", wsdir, nodeOs, nodeOs)
-			realPath, _ := filepath.EvalSymlinks(latestGoldDriver)
-			latestGoldDriverVer := filepath.Base(filepath.Dir(realPath))
-			realPath, _ = filepath.EvalSymlinks(oldGoldDriver)
-			oldGoldDriverVer := filepath.Base(filepath.Dir(realPath))
-			cmd += fmt.Sprintf(" --gold-firmware-latest-version %s", latestGoldDriverVer)
-			cmd += fmt.Sprintf(" --gold-drivers-latest-pkg %s", latestGoldDriver)
-			cmd += fmt.Sprintf(" --gold-firmware-old-version %s", oldGoldDriverVer)
-			cmd += fmt.Sprintf(" --gold-drivers-old-pkg %s", oldGoldDriver)
-
-			if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-				cmd += fmt.Sprintf(" --esx-script %s/iota/bin/iota_esx_setup", wsdir)
-				cmd += fmt.Sprintf(" --host-username %s", node.EsxUsername)
-				cmd += fmt.Sprintf(" --host-password %s", node.EsxPassword)
-
-			}
-			nodeName := node.NodeName
-
-			// add the command to pool to be executed in parallel
-			pool.Go(func() error {
-				command := exec.Command("sh", "-c", cmd)
-				log.Infof("Running command: %s", cmd)
-
-				// open the out file for writing
-				outfile, err := os.Create(fmt.Sprintf("%s/iota/%s-firmware-upgrade.log", wsdir, nodeName))
-				if err != nil {
-					log.Errorf("Error creating log file. Err: %v", err)
-					return err
-				}
-				defer outfile.Close()
-				command.Stdout = outfile
-				command.Stderr = outfile
-				err = command.Start()
-				if err != nil {
-					log.Errorf("Error running command %s. Err: %v", cmd, err)
-					return err
-				}
-
-				return command.Wait()
-			})
-
 		}
-	}
 
-	err := pool.Wait()
-	if err != nil {
-		log.Errorf("Error executing pool. Err: %v", err)
-		return nil, err
+		pool, _ := errgroup.WithContext(context.Background())
+		// walk each node
+		for _, node := range poolNodes {
+			if node.Type == iota.TestBedNodeType_TESTBED_NODE_TYPE_HW {
+				nodeOs := "esx"
+				switch node.Os {
+				case iota.TestBedNodeOs_TESTBED_NODE_OS_ESX:
+					nodeOs = "esx"
+				case iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX:
+					nodeOs = "linux"
+				case iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD:
+					nodeOs = "freebsd"
+				}
+				cmd := fmt.Sprintf("%s/iota/scripts/boot_naples_v2.py", wsdir)
+				cmd += fmt.Sprintf(" --console-ip %s", node.NicConsoleIpAddress)
+				cmd += fmt.Sprintf(" --console-port %s", node.NicConsolePort)
+				cmd += fmt.Sprintf(" --mnic-ip 169.254.0.1")
+				cmd += fmt.Sprintf(" --host-ip %s", node.IpAddress)
+				cmd += fmt.Sprintf(" --oob-ip %s", node.NicIpAddress)
+				cmd += fmt.Sprintf(" --cimc-ip %s", node.CimcIpAddress)
+				cmd += fmt.Sprintf(" --image %s/nic/naples_fw.tar", wsdir)
+				cmd += fmt.Sprintf(" --mode hostpin")
+				cmd += fmt.Sprintf(" --drivers-pkg %s/platform/gen/drivers-%s-eth.tar.xz", wsdir, nodeOs)
+				cmd += fmt.Sprintf(" --gold-firmware-image %s/platform/goldfw/naples/naples_fw.tar", wsdir)
+				cmd += fmt.Sprintf(" --uuid %s", node.NicUuid)
+				cmd += fmt.Sprintf(" --os %s", nodeOs)
+
+				latestGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/latest/drivers-%s-eth.tar.xz", wsdir, nodeOs, nodeOs)
+				oldGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/old/drivers-%s-eth.tar.xz", wsdir, nodeOs, nodeOs)
+				realPath, _ := filepath.EvalSymlinks(latestGoldDriver)
+				latestGoldDriverVer := filepath.Base(filepath.Dir(realPath))
+				realPath, _ = filepath.EvalSymlinks(oldGoldDriver)
+				oldGoldDriverVer := filepath.Base(filepath.Dir(realPath))
+				cmd += fmt.Sprintf(" --gold-firmware-latest-version %s", latestGoldDriverVer)
+				cmd += fmt.Sprintf(" --gold-drivers-latest-pkg %s", latestGoldDriver)
+				cmd += fmt.Sprintf(" --gold-firmware-old-version %s", oldGoldDriverVer)
+				cmd += fmt.Sprintf(" --gold-drivers-old-pkg %s", oldGoldDriver)
+
+				if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+					cmd += fmt.Sprintf(" --esx-script %s/iota/bin/iota_esx_setup", wsdir)
+					cmd += fmt.Sprintf(" --host-username %s", node.EsxUsername)
+					cmd += fmt.Sprintf(" --host-password %s", node.EsxPassword)
+
+				}
+				nodeName := node.NodeName
+
+				// add the command to pool to be executed in parallel
+				pool.Go(func() error {
+					command := exec.Command("sh", "-c", cmd)
+					log.Infof("Running command: %s", cmd)
+
+					// open the out file for writing
+					outfile, err := os.Create(fmt.Sprintf("%s/iota/%s-firmware-upgrade.log", wsdir, nodeName))
+					if err != nil {
+						log.Errorf("Error creating log file. Err: %v", err)
+						return err
+					}
+					defer outfile.Close()
+					command.Stdout = outfile
+					command.Stderr = outfile
+					err = command.Start()
+					if err != nil {
+						log.Errorf("Error running command %s. Err: %v", cmd, err)
+						return err
+					}
+
+					return command.Wait()
+				})
+
+			}
+		}
+
+		err := pool.Wait()
+		if err != nil {
+			log.Errorf("Error executing pool. Err: %v", err)
+			return nil, err
+		}
 	}
 
 	log.Infof("Recovering naples nodes complete...")
@@ -211,15 +222,24 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
 
 	// Run init
-	initTestBed := func(ctx context.Context) error {
-		pool, ctx := errgroup.WithContext(ctx)
+	ts.ProvisionedNodes = make(map[string]*testbed.TestNode)
+	// split init nodes into pools of upto 'n' each
+	for nodeIdx := 0; nodeIdx < len(req.Nodes); {
+		poolNodes := []*iota.TestBedNode{}
+		for nodeIdx < len(req.Nodes) {
+			poolNodes = append(poolNodes, req.Nodes[nodeIdx])
+			nodeIdx++
+			if len(poolNodes) >= common.MaxConcurrentNaplesToBringup {
+				break
+			}
+		}
+		pool, _ := errgroup.WithContext(context.Background())
 
-		for idx, node := range req.Nodes {
-			nodeName := fmt.Sprintf("iota-node-%d", idx)
+		for _, node := range poolNodes {
 			n := testbed.TestNode{
 				Node: &iota.Node{
 					IpAddress: node.IpAddress,
-					Name:      nodeName,
+					Name:      node.NodeName,
 					//Used if node OS is ESX
 					EsxConfig: &iota.VmwareESXConfig{
 						IpAddress: node.IpAddress,
@@ -242,10 +262,11 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 				return n.InitNode(ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
 			})
 		}
-		return pool.Wait()
+		err = pool.Wait()
+		if err != nil {
+			break
+		}
 	}
-	ts.ProvisionedNodes = make(map[string]*testbed.TestNode)
-	err = initTestBed(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Init Test Bed Call Failed. %v", err)
 		ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR

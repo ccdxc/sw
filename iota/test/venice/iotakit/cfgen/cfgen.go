@@ -174,6 +174,8 @@ func (cfgen *Cfgen) genWorkloads() []*workload.Workload {
 
 func (cfgen *Cfgen) genSGPolicies() []*security.SGPolicy {
 	sgpolicies := []*security.SGPolicy{}
+	cfgen.SGPolicyParams.SGRuleTemplate.Apps = []string{fmt.Sprintf("app-{{iter-appid:1-%d}}", cfgen.AppParams.NumApps)}
+
 	sgp := cfgen.SGPolicyParams.SGPolicyTemplate
 
 	sgpCtx := NewIterContext()
@@ -214,6 +216,7 @@ func (cfgen *Cfgen) genApps() []*security.App {
 		apps = append(apps, tApp)
 	}
 
+	cfgen.AppParams.AppTemplate.ObjectMeta.Name = fmt.Sprintf("app-{{iter-appid:1-%d}}", cfgen.AppParams.NumApps)
 	for ii := 0; ii < cfgen.AppParams.NumApps; ii++ {
 		app := cfgen.AppParams.AppTemplate
 		tApp := ctx.transform(app).(*security.App)

@@ -55,6 +55,12 @@ func (sm *SysModel) createWorkload(wtype iota.WorkloadType, wimage, name string,
 		return nil, err
 	}
 
+	// get an IP address for the owrkload
+	ipAddr, err := subnet.allocateIPAddr()
+	if err != nil {
+
+		return nil, err
+	}
 	// venice workload
 	w := workload.Workload{
 		TypeMeta: api.TypeMeta{Kind: "Workload"},
@@ -70,6 +76,7 @@ func (sm *SysModel) createWorkload(wtype iota.WorkloadType, wimage, name string,
 					ExternalVlan: subnet.vlan,
 					MicroSegVlan: usegVlan,
 					MACAddress:   mac,
+					IpAddresses:  []string{ipAddr},
 				},
 			},
 		},
@@ -79,10 +86,7 @@ func (sm *SysModel) createWorkload(wtype iota.WorkloadType, wimage, name string,
 		return nil, err
 	}
 
-	ipAddr, err := subnet.allocateIPAddr()
-	if err != nil {
-		return nil, err
-	}
+	// create iota workload object
 	iotaWorkload := iota.Workload{
 		WorkloadType:    wtype,
 		WorkloadName:    name,
@@ -244,6 +248,13 @@ func (wc *WorkloadCollection) Bringup() error {
 	} else if appResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		log.Errorf("Failed to instantiate Apps. resp: %+v.", appResp.ApiResponse)
 		return fmt.Errorf("Error creating IOTA workload. Resp: %+v", appResp.ApiResponse)
+	}
+	for _, wrk := range wc.workloads {
+		for _, gwrk := range appResp.Workloads {
+			if gwrk.WorkloadName == wrk.iotaWorkload.WorkloadName {
+				wrk.iotaWorkload.MgmtIp = gwrk.MgmtIp
+			}
+		}
 	}
 
 	return nil

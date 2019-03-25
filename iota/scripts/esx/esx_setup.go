@@ -126,6 +126,10 @@ func downloadControlVMImage() (string, error) {
 		return "", errors.Wrap(err, string(stdout))
 	}
 
+	if stdout, err := exec.Command("/bin/sync").CombinedOutput(); err != nil {
+		return "", errors.Wrap(err, string(stdout))
+	}
+
 	return ctrlVMDir, nil
 }
 

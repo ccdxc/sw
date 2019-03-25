@@ -589,13 +589,13 @@ class EsxHostManagement(HostManagement):
         outFile = "/tmp/esx_" +  GlobalOptions.host_ip + ".json"
         self.WaitForSsh(port=443)
         time.sleep(30)
-        esx_startup_cmd = ["timeout", "1200"]
+        esx_startup_cmd = ["timeout", "2400"]
         esx_startup_cmd.extend([GlobalOptions.esx_script])
         esx_startup_cmd.extend(["--esx-host", GlobalOptions.host_ip])
         esx_startup_cmd.extend(["--esx-username", GlobalOptions.host_username])
         esx_startup_cmd.extend(["--esx-password", GlobalOptions.host_password])
         esx_startup_cmd.extend(["--esx-outfile", outFile])
-        proc_hdl = subprocess.Popen(esx_startup_cmd)
+        proc_hdl = subprocess.Popen(esx_startup_cmd, stdout=sys.stdout.f, stderr=sys.stderr)
         while proc_hdl.poll() is None:
             time.sleep(5)
             continue
