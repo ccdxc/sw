@@ -17,6 +17,14 @@ message ImageInfo {
     string KernelCompatVersion = 6[(gogoproto.jsontag) = "kernel_compat_version,omitempty"];
 }
 
+message UbootFw {
+   ImageInfo Image = 1[(gogoproto.jsontag) = "image,omitempty"];
+}
+
+message GoldFw {
+   ImageInfo Image = 1[(gogoproto.jsontag) = "kernel_fit,omitempty"];
+}
+
 message FwVersion {
     ImageInfo SystemImage = 1[(gogoproto.jsontag) = "system_image,omitempty"];
     ImageInfo KernelFit = 2[(gogoproto.jsontag) = "kernel_fit,omitempty"];
@@ -24,9 +32,9 @@ message FwVersion {
 
 // Naples Software object
 message NaplesSoftwareVersion {
-    ImageInfo Uboot = 1 [(gogoproto.jsontag) = "uboot,omitempty"];
+    UbootFw Uboot = 1 [(gogoproto.jsontag) = "uboot,omitempty"];
     FwVersion MainFwA = 2 [(gogoproto.jsontag) = "mainfwa,omitempty"];
     FwVersion MainFwB = 3 [(gogoproto.jsontag) = "mainfwb,omitempty"];
-    ImageInfo GoldFw = 4 [(gogoproto.jsontag) = "goldfw,omitempty"];
+    GoldFw GoldFw = 4 [(gogoproto.jsontag) = "goldfw,omitempty"];
     ImageInfo DiagFw = 5 [(gogoproto.jsontag) = "diagfw,omitempty"];
 }

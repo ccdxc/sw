@@ -9,6 +9,8 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -18,7 +20,7 @@ import (
 )
 
 func getRunningSoftware() (string, error) {
-	out, err := exec.Command("/bin/bash", "-c", "fwupdate -r").Output()
+	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -r").Output()
 	if err != nil {
 		// TODO : Remove this. Adding this temporarily to ensure progress.
 		// All these APIs can be moved under nmd/platform as it feels a more natural
@@ -33,17 +35,20 @@ func getRunningSoftware() (string, error) {
 	return string(out), err
 }
 
-func getNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersion, error) {
-	out, err := exec.Command("/bin/bash", "-c", "fwupdate -l").Output()
+func getNaplesSoftwareVersionInfo() (*nmd.NaplesSoftwareVersion, error) {
+	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -l").Output()
 	if err != nil {
+		log.Errorf("Returning Software info default values")
 		n := &nmd.NaplesSoftwareVersion{
 			// TODO : Remove this. Adding this temporarily to ensure progress.
 			// All these APIs can be moved under nmd/platform as it feels a more natural
 			// home for this platform dependent code.
 			// The platformAgent allows for easy mocking of this API
 			// Tracker Jira : PS-1172
-			Uboot: &nmd.ImageInfo{
-				BaseVersion: "1.0E",
+			Uboot: &nmd.UbootFw{
+				Image: &nmd.ImageInfo{
+					BaseVersion: "1.0E",
+				},
 			},
 			MainFwA: &nmd.FwVersion{
 				SystemImage: &nmd.ImageInfo{
@@ -56,6 +61,8 @@ func getNaplesSoftwareInfo() (*nmd.NaplesSoftwareVersion, error) {
 
 	var naplesVersion nmd.NaplesSoftwareVersion
 	json.Unmarshal([]byte(out), &naplesVersion)
+
+	log.Infof("Got Naples Version %v", naplesVersion)
 
 	return &naplesVersion, nil
 }
@@ -131,21 +138,35 @@ func listInterfaces() []string {
 // updateCPUInfo - queries cardconfig and gets the CPU information
 func updateCPUInfo() *cmd.CPUInfo {
 	log.Info("updating CPU Info in SmartNIC object")
+	numProc, err := exec.Command("/bin/bash", "-c", "nproc").Output()
+	if err != nil {
+		return nil
+	}
+
+	cores, _ := strconv.Atoi(string(numProc))
+
 	return &cmd.CPUInfo{
-		Speed:      "2.0 Ghz",
-		NumSockets: 2,
-		NumCores:   4,
-		NumThreads: 1,
+		Speed:    "2.0 Ghz",
+		NumCores: int32(cores),
 	}
 }
 
 // updateOSInfo - updates the OS information in SmartNIC
 func updateOSInfo() *cmd.OsInfo {
 	log.Info("updating OS Info in SmartNIC object")
+	name, err := exec.Command("/bin/bash", "-c", "uname -s").Output()
+	if err != nil {
+		return nil
+	}
+
+	kernelRelease, err := exec.Command("/bin/bash", "-c", "uname -r").Output()
+	if err != nil {
+		return nil
+	}
+
 	return &cmd.OsInfo{
-		Name:          "Linux",
-		KernelRelease: "3.10.0-514.10.2.el7.x86_64",
-		Version:       "SMP",
+		Name:          strings.TrimSuffix(string(name), "\n"),
+		KernelRelease: strings.TrimSuffix(string(kernelRelease), "\n"),
 		Processor:     "ARMv7",
 	}
 }
@@ -197,7 +218,7 @@ func UpdateNaplesInfo() *cmd.SmartNICInfo {
 func updateBiosInfo(naplesVersion *nmd.NaplesSoftwareVersion) *cmd.BiosInfo {
 	log.Info("updating Bios Info in SmartNIC object")
 	return &cmd.BiosInfo{
-		Version: naplesVersion.Uboot.BaseVersion,
+		Version: naplesVersion.Uboot.Image.BaseVersion,
 	}
 }
 
@@ -206,7 +227,7 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 	log.Info("Updating Smart NIC information.")
 	nic, _ := n.GetSmartNIC()
 
-	naplesVersion, err := getNaplesSoftwareInfo()
+	naplesVersion, err := getNaplesSoftwareVersionInfo()
 	if err != nil {
 		log.Errorf("GetVersion failed. Err : %v", err)
 		return err
