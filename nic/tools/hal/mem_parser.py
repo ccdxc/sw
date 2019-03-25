@@ -108,12 +108,6 @@ def convert_size(sz):
 
 def parse_file():
 
-    nlist = ""
-    olist = ""
-    slist = ""
-    eslist = ""
-    clist = ""
-    rlist = ""
     idx = 0
 
     with open(sys.argv[1], 'r') as f:
@@ -131,10 +125,10 @@ def parse_file():
             if s == -1:
                 print('Invalid size specified for region %s', n)
                 return -1
-            if e.get('element_size') is None:
-                es = -1
+            if e.get('block_size') is None:
+                bs = -1
             else:
-                es = size_str_to_bytes(e['element_size'])
+                bs = size_str_to_bytes(e['block_size'])
 
             # Derive the basename for the macros
             nbase = name + (re.sub("[ -]", "_", n)).upper() + "_"
@@ -142,7 +136,7 @@ def parse_file():
             # Update name and size
             print >> fd, "#define %-60s \"%s\"" %(nbase + "NAME", n)
             print >> fd, "#define %-60s %ld" %(nbase + "SIZE", s)
-            print >> fd, "#define %-60s %ld" %(nbase + "ELEMENT_SIZE", es)
+            print >> fd, "#define %-60s %ld" %(nbase + "BLOCK_SIZE", bs)
 
             # Update start offset
             print >> fd, "#define %-60s 0x%lxUL" %(nbase + "START_OFFSET", off);

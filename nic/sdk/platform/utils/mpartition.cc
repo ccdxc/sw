@@ -18,7 +18,8 @@ namespace utils {
 #define JKEY_REGIONS        "regions"
 #define JKEY_REGION_NAME    "name"
 #define JKEY_SIZE           "size"
-#define JKEY_ELSIZE         "element_size"
+#define JKEY_BLKSIZE        "block_size"
+#define JKEY_MAX_ELEMENTS   "max_elements"
 #define JKEY_CACHE_PIPE     "cache"
 #define JKEY_RESET_REGION   "reset"
 
@@ -59,13 +60,15 @@ insert_common_regions (mpartition_region_t *reg, const char *name,
     reg->start_offset = offset;
     reg->size         = size;
     reg->reset        = reset;
-    reg->elem_size    = -1;
+    reg->block_size   = -1;
+    reg->max_elements = -1;
 
     SDK_TRACE_DEBUG(
-        "region : %s, size : %u, element size : %u, "
+        "region : %s, size : %u, block size : %u, max elems : %u, "
         "reset : %u, cpipe : %s, start : 0x%" PRIx64 ", end : 0x%" PRIx64 "",
-        reg->mem_reg_name, reg->size, reg->elem_size, reg->reset, "none",
-        MREGION_BASE_ADDR + offset, MREGION_BASE_ADDR + offset + reg->size);
+        reg->mem_reg_name, reg->size, reg->block_size, reg->max_elements,
+        reg->reset, "none", MREGION_BASE_ADDR + offset,
+        MREGION_BASE_ADDR + offset + reg->size);
 }
 
 sdk_ret_t
@@ -146,15 +149,19 @@ mpartition::region_init(const char *mpart_json_file, shmmgr *mmgr)
         }
         strcpy(reg->mem_reg_name, reg_name.c_str());
         reg->size = extract_size(p4_tbl.second.get<std::string>(JKEY_SIZE));
-        reg->elem_size = extract_size(p4_tbl.second.get<std::string>(
-            JKEY_ELSIZE, "4294967295B")); // -1 default
+        reg->block_size =
+            extract_size(p4_tbl.second.get<std::string>(JKEY_BLKSIZE,
+                                                        "4294967295B")); // -1 default
+        reg->max_elements =
+            extract_size(p4_tbl.second.get<std::string>(JKEY_MAX_ELEMENTS,
+                                                        "4294967295B")); // -1 default
         reg->start_offset = offset;
 
-        SDK_TRACE_DEBUG("region : %s, size : %u, element size : %u, "
-                        "reset : %u, cpipe : %s, start : 0x%" PRIx64
-                        ", end : 0x%" PRIx64 "",
-                        reg->mem_reg_name, reg->size, reg->elem_size,
-                        reg->reset, cache_pipe_name.c_str(),
+        SDK_TRACE_DEBUG("region : %s, size : %u, block size : %u, "
+                        "max elements : %u, reset : %u, cpipe : %s, "
+                        "start : 0x%" PRIx64 ", end : 0x%" PRIx64 "",
+                        reg->mem_reg_name, reg->size, reg->block_size,
+                        reg->max_elements, reg->reset, cache_pipe_name.c_str(),
                         addr(reg->start_offset),
                         addr(reg->start_offset + reg->size));
         offset += reg->size;
@@ -252,10 +259,17 @@ mpartition::size(const char *name)
 }
 
 uint32_t
-mpartition::element_size(const char *name)
+mpartition::block_size(const char *name)
 {
     mpartition_region_t *reg = region(name);
-    return reg ? reg->elem_size : 0;
+    return reg ? reg->block_size : 0;
+}
+
+uint32_t
+mpartition::max_elements(const char *name)
+{
+    mpartition_region_t *reg = region(name);
+    return reg ? reg->max_elements : 0;
 }
 
 mpartition_region_t *

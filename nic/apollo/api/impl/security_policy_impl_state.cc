@@ -34,7 +34,7 @@ security_policy_impl_state::security_policy_impl_state(pds_state *state) {
     v4_region_addr_ =
         state->mempartition()->start_addr("sacl_v4");
     v4_table_size_ =
-        state->mempartition()->element_size("sacl_v4");
+        state->mempartition()->block_size("sacl_v4");
 }
 
 /**

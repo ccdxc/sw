@@ -125,26 +125,28 @@
             "name": "lpm_v4",
             "_comment": "(1024+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "18M",
-            "element_size": "17472B",
+            "block_size": "17472B",
+            "max_elements": "1K",
             "cache": "p4plus-txdma"
         },
         {
             "name": "lpm_v6",
             "_comment": "(1024+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
             "size": "37M",
-            "element_size": "37440B",
+            "block_size": "37440B",
+            "max_elements": "1K",
             "cache": "p4plus-txdma"
         },
         {
             "name": "sacl_v4",
             "size": "264M",
-            "element_size": "264K",
+            "block_size": "264K",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "sacl_v6",
             "size": "330M",
-            "element_size": "330K",
+            "block_size": "330K",
             "cache": "p4plus-rxdma"
         },
         {

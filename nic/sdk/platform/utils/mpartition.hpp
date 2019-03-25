@@ -34,7 +34,8 @@ namespace utils {
 typedef struct mpartition_region_s {
     char            mem_reg_name[MEM_REG_NAME_MAX_LEN];   /**< Name */
     uint32_t        size;           /**< Size */
-    uint32_t        elem_size;      /**< Size of each element, if exists */
+    uint32_t        block_size;     /**< Size of each block, if exists */
+    uint32_t        max_elements;   /**< max. no. of elements, if exists */
     mem_addr_t      start_offset;   /**< Start address offset */
     cache_pipe_t    cache_pipe;     /**< Cached pipe */
     bool            reset;          /**< True to bzero this region during init */
@@ -112,13 +113,22 @@ public:
     uint32_t size(const char *name);
 
     /**
-     * @brief Get size of each element in mpartition region
+     * @brief Get size of each block in mpartition region
      *
      * @param[in] name Name of memory partition region
      *
-     * @return #Memory size of each element in mpartition region
+     * @return #Memory size of each block in mpartition region
      */
-    uint32_t element_size(const char *name);
+    uint32_t block_size(const char *name);
+
+    /**
+     * @brief Get number of elements in mpartition region
+     *
+     * @param[in] name Name of memory partition region
+     *
+     * @return number of elements in each block of mpartition region
+     */
+    uint32_t max_elements(const char *name);
 
     /**
      * @brief Get memory partition region info
