@@ -60,7 +60,7 @@ ionic_en_identification = {
    "description"     : driverDescription,
    "version"         : driverVersion,
 #   "version_bump"    : 1, 
-   "license"         : VMK_MODULE_LICENSE_GPLV2,
+   "license"         : "Pensando_Proprietary",
    "vendor"          : vendorName,
    "vendor_code"     : vendorCode,
    "vendor_email"    : vendorMailingList,
