@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	pcnID     uint32
+	vpcID     uint32
 	mappingIP string
 )
 
@@ -32,7 +32,7 @@ var mappingShowCmd = &cobra.Command{
 func init() {
 	//	showCmd.AddCommand(mappingShowCmd)
 	mappingShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	mappingShowCmd.Flags().Uint32Var(&pcnID, "pcn-id", 0, "Specify PCN ID")
+	mappingShowCmd.Flags().Uint32Var(&vpcID, "vpc-id", 0, "Specify VPC ID")
 	mappingShowCmd.Flags().StringVar(&mappingIP, "ip", "0", "Specify mapping IP address")
 }
 
@@ -50,19 +50,19 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("pcn-id") != cmd.Flags().Changed("ip") {
-		fmt.Printf("Cannot specify only one of PCN ID and mapping IP address\n")
+	if cmd.Flags().Changed("vpc-id") != cmd.Flags().Changed("ip") {
+		fmt.Printf("Cannot specify only one of VPC ID and mapping IP address\n")
 		return
 	}
 
 	client := pds.NewMappingSvcClient(c)
 
 	var req *pds.MappingGetRequest
-	if cmd.Flags().Changed("pcn-id") && cmd.Flags().Changed("ip") {
+	if cmd.Flags().Changed("vpc-id") && cmd.Flags().Changed("ip") {
 		// Get specific Mapping
 		var key *pds.MappingKey
 		key = &pds.MappingKey{
-			PCNId:  pcnID,
+			VPCId:  vpcID,
 			IPAddr: utils.IPAddrStrToPDSIPAddr(mappingIP),
 		}
 		req = &pds.MappingGetRequest{
@@ -107,7 +107,7 @@ func printMappingHeader() {
 	hdrLine := strings.Repeat("-", 93)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-10s%-7s%-16s\n",
-		"PcnID", "PrivateIP", "SubnetID", "TunnelID", "MAC",
+		"VpcID", "PrivateIP", "SubnetID", "TunnelID", "MAC",
 		"Encap", "VnicID", "PublicIP")
 	fmt.Println(hdrLine)
 }
@@ -126,7 +126,7 @@ func printMapping(mapping *pds.Mapping) {
 	default:
 	}
 	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-10s%-7s%-16s\n",
-		spec.GetId().GetPCNId(),
+		spec.GetId().GetVPCId(),
 		utils.IPAddrToStr(spec.GetId().GetIPAddr()),
 		spec.GetSubnetId(), spec.GetTunnelId(),
 		utils.MactoStr(spec.GetMACAddr()),

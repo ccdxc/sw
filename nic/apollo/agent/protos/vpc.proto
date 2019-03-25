@@ -1,0 +1,84 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for Virtual Private Cloud (VPC) object
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service VPCSvc {
+  rpc VPCCreate (VPCRequest) returns (VPCResponse) {}
+  rpc VPCGet (VPCGetRequest) returns (VPCGetResponse) {}
+  rpc VPCDelete (VPCDeleteRequest) returns (VPCDeleteResponse) {}
+}
+
+// type of the virtual private cloud
+enum VPCType {
+  VPC_TYPE_NONE      = 0;
+  VPC_TYPE_TENANT    = 1;
+  VPC_TYPE_SUBSTRATE = 2;
+}
+
+// VPCSpec captures VPC configuration
+message VPCSpec {
+  // unique key/identifier of VPC
+  uint32         Id     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // type of the VPC
+  VPCType        Type   = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // IP prefix of this VPC
+  types.IPPrefix Prefix = 3 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
+// operational status of a VPC, if any
+message VPCStatus {
+}
+
+// stats for a VPC, if any
+message VPCStats {
+}
+
+// Virtual Private Cloud object
+message VPC {
+  meta.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta    ObjMeta    = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  VPCSpec         Spec       = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  VPCStatus       Status     = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  VPCStats        Stats      = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// VPC create and update request
+message VPCRequest {
+  repeated VPCSpec Request = 1; // batched requests
+}
+
+// VPC create and update response
+message VPCResponse {
+  types.ApiStatus    ApiStatus = 1;
+  repeated VPCStatus Response  = 2; // batched response
+}
+
+// VPC get request
+message VPCGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// VPC get response
+message VPCGetResponse {
+  types.ApiStatus ApiStatus = 1; // API status code
+  repeated VPC    Response  = 2;
+}
+
+// VPC delete request
+message VPCDeleteRequest {
+  repeated uint32 Id = 1;
+}
+
+// VPC delete response
+message VPCDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1; // API status code
+}

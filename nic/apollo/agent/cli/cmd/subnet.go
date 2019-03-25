@@ -95,7 +95,7 @@ func printSubnetHeader() {
 	hdrLine := strings.Repeat("-", 144)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-6s%-6s%-20s%-16s%-20s%-10s%-10s%-14s%-14s%-14s%-14s\n",
-		"ID", "PcnID", "IPPrefix", "VRouterIP", "VRouterMAC", "V4RtTblID",
+		"ID", "VpcID", "IPPrefix", "VRouterIP", "VRouterMAC", "V4RtTblID",
 		"V6RtTblID", "IngV4SecPlcID", "IngV6SecPlcID", "EgV4SecPlcID", "EgV6SecPlcID")
 	fmt.Println(hdrLine)
 }
@@ -103,7 +103,7 @@ func printSubnetHeader() {
 func printSubnet(subnet *pds.Subnet) {
 	spec := subnet.GetSpec()
 	fmt.Printf("%-6d%-6d%-20s%-16s%-20s%-10d%-10d%-14d%-14d%-14d%-14d\n",
-		spec.GetId(), spec.GetPCNId(), utils.IPPrefixToStr(spec.GetPrefix()),
+		spec.GetId(), spec.GetVPCId(), utils.IPPrefixToStr(spec.GetPrefix()),
 		utils.IPAddrToStr(spec.GetVirtualRouterIP()),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
 		spec.GetV4RouteTableId(), spec.GetV6RouteTableId(),

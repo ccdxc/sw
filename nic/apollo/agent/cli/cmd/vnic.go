@@ -95,7 +95,7 @@ func printVnicHeader() {
 	hdrLine := strings.Repeat("-", 97)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-7s%-6s%-9s%-6s%-20s%-10s%-10s%-14s%-15s\n",
-		"VnicID", "PcnID", "SubnetID", "Vlan", "MAC",
+		"VnicID", "VpcID", "SubnetID", "Vlan", "MAC",
 		"RscPoolID", "SrcGuard", "Encap", "MirrorPolicyID")
 	fmt.Println(hdrLine)
 }
@@ -114,7 +114,7 @@ func printVnic(vnic *pds.Vnic) {
 	default:
 	}
 	fmt.Printf("%-7d%-6d%-9d%-6d%-20s%-10d%-10t%-14s%-15d\n",
-		spec.GetVnicId(), spec.GetPCNId(), spec.GetSubnetId(),
+		spec.GetVnicId(), spec.GetVPCId(), spec.GetSubnetId(),
 		spec.GetWireVLAN(), utils.MactoStr(spec.GetMACAddress()),
 		spec.GetResourcePoolId(), spec.GetSourceGuardEnable(), encapStr,
 		spec.GetMirrorPolicyId())

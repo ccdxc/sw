@@ -45,8 +45,8 @@ class RemoteMappingObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "RemoteMappingID:%d|SubnetId:%d|PCNId:%d" %\
-               (self.MappingId, self.SUBNET.SubnetId, self.SUBNET.PCN.PCNId)
+        return "RemoteMappingID:%d|SubnetId:%d|VPCId:%d" %\
+               (self.MappingId, self.SUBNET.SubnetId, self.SUBNET.VPC.VPCId)
 
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.flow.filters)
@@ -54,7 +54,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def GetGrpcCreateMessage(self):
         grpcmsg = mapping_pb2.MappingRequest()
         spec = grpcmsg.Request.add()
-        spec.Id.PCNId = self.SUBNET.PCN.PCNId
+        spec.Id.VPCId = self.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
         spec.SubnetId = self.SUBNET.SubnetId
         spec.TunnelId = int(self.TunIPAddr)
@@ -88,7 +88,7 @@ class RemoteMappingObjectClient:
     def GenerateObjects(self, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'rmap', None) == None:
             return
-        stack = parent.PCN.Stack
+        stack = parent.VPC.Stack
         self.__vnic_tunnel = utils.rrobiniter(Store.GetTunnelsMplsOverUdp2())
         self.__internet_tunnel = utils.rrobiniter(Store.GetTunnelsMplsOverUdp1())
 

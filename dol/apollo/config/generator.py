@@ -2,7 +2,7 @@
 import pdb
 import os
 import json
-from collections import defaultdict 
+from collections import defaultdict
 
 import infra.common.defs as defs
 import infra.common.utils as utils
@@ -15,7 +15,7 @@ import apollo.config.agent.api as agentapi
 
 import apollo.config.objects.batch as batch
 import apollo.config.objects.device as device
-import apollo.config.objects.pcn as pcn
+import apollo.config.objects.vpc as vpc
 import apollo.config.objects.policy as policy
 
 from infra.common.logging import logger as logger
@@ -30,8 +30,8 @@ def __generate(topospec):
     # Generate Device Configuration
     device.client.GenerateObjects(topospec)
 
-    # Generate PCN configuration
-    pcn.client.GenerateObjects(topospec)
+    # Generate VPC configuration
+    vpc.client.GenerateObjects(topospec)
 
     # Generate Policy configuration . TODO
     # policy.client.GenerateObjects(topospec)
@@ -44,8 +44,8 @@ def __create():
     # Create Switch Object
     device.client.CreateObjects()
 
-    # Create PCN Objects
-    pcn.client.CreateObjects()
+    # Create VPC Objects
+    vpc.client.CreateObjects()
 
     # Create Policy Objects . TODO
     # policy.client.CreateObjects()
@@ -62,11 +62,11 @@ def Main():
     topospec = parser.ParseFile('apollo/config/topology/%s/'% GlobalOptions.topology,
                                 '%s.topo' % GlobalOptions.topology)
     __generate(topospec)
-    
+
     logger.info("Creating objects in Agent")
     __create()
     timeprofiler.ConfigTimeProfiler.Stop()
-    
+
     ModelConnector.ConfigDone()
     return
 

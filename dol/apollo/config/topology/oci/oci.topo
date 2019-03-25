@@ -25,9 +25,9 @@ device:
         - count : 1
           encap : mplsudp_tags2
 
-pcn:
-    # If dual stack true, PCN and Subnet will have both v4 & v6 based on the prefixlen. 
-    # Otherwise seperate PCN and Subnet will be created for each
+vpc:
+    # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen. 
+    # Otherwise seperate VPC and Subnet will be created for each
     - stack  : dual # dual, ipv4 , ipv6
       count : 1
       type  : tenant

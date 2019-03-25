@@ -1,4 +1,4 @@
-# PCN Object Template
+# VPC Object Template
 meta:
     id      : FLOW
     package : config.objects

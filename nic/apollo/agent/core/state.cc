@@ -49,11 +49,11 @@ cfg_db::init(void) {
     }
     tep_map_ = new(mem) tep_db_t();
 
-    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(pcn_db_t));
+    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(vpc_db_t));
     if (mem == NULL) {
         return false;
     }
-    pcn_map_ = new(mem) pcn_db_t();
+    vpc_map_ = new(mem) vpc_db_t();
 
     mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(subnet_db_t));
     if (mem == NULL) {
@@ -73,8 +73,8 @@ cfg_db::init(void) {
     }
     route_table_map_ = new(mem) route_table_db_t();
 
-    slabs_[SLAB_ID_PCN] =
-        slab::factory("pcn", SLAB_ID_PCN, sizeof(pds_vcn_spec_t),
+    slabs_[SLAB_ID_VPC] =
+        slab::factory("vpc", SLAB_ID_VPC, sizeof(pds_vcn_spec_t),
                       16, true, true, true);
     slabs_[SLAB_ID_SUBNET] =
         slab::factory("subnet", SLAB_ID_SUBNET, sizeof(pds_subnet_spec_t),
@@ -97,7 +97,7 @@ cfg_db::init(void) {
 //------------------------------------------------------------------------------
 cfg_db::cfg_db() {
     tep_map_ = NULL;
-    pcn_map_ = NULL;
+    vpc_map_ = NULL;
     subnet_map_ = NULL;
     vnic_map_ = NULL;
     route_table_map_ = NULL;
@@ -133,7 +133,7 @@ cfg_db::~cfg_db() {
     uint32_t i;
 
     FREE(MEM_ALLOC_ID_INFRA, tep_map_);
-    FREE(MEM_ALLOC_ID_INFRA, pcn_map_);
+    FREE(MEM_ALLOC_ID_INFRA, vpc_map_);
     FREE(MEM_ALLOC_ID_INFRA, subnet_map_);
     FREE(MEM_ALLOC_ID_INFRA, vnic_map_);
     FREE(MEM_ALLOC_ID_INFRA, route_table_map_);
@@ -219,19 +219,19 @@ agent_state::del_from_tep_db(uint32_t key) {
 }
 
 sdk_ret_t
-agent_state::add_to_pcn_db(pds_vcn_key_t *key, pds_vcn_spec_t *spec) {
-    ADD_TO_DB(pcn, key, spec);
+agent_state::add_to_vpc_db(pds_vcn_key_t *key, pds_vcn_spec_t *spec) {
+    ADD_TO_DB(vpc, key, spec);
 }
 
 pds_vcn_spec_t *
-agent_state::find_in_pcn_db(pds_vcn_key_t *key) {
-    FIND_IN_DB(pcn, key);
+agent_state::find_in_vpc_db(pds_vcn_key_t *key) {
+    FIND_IN_DB(vpc, key);
 }
 
 sdk_ret_t
-agent_state::pcn_db_walk(pcn_walk_cb_t cb, void *ctxt) {
-    auto it_begin = DB_BEGIN(pcn);
-    auto it_end = DB_END(pcn);
+agent_state::vpc_db_walk(vpc_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(vpc);
+    auto it_end = DB_END(vpc);
 
     for (auto it = it_begin; it != it_end; it ++) {
         cb(it->second, ctxt);
@@ -241,8 +241,8 @@ agent_state::pcn_db_walk(pcn_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_pcn_db(pds_vcn_key_t *key) {
-    DEL_FROM_DB(pcn, key);
+agent_state::del_from_vpc_db(pds_vcn_key_t *key) {
+    DEL_FROM_DB(vpc, key);
 }
 
 sdk_ret_t

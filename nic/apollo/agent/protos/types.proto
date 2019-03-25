@@ -96,7 +96,7 @@ message PortRange {
   uint32 PortHigh = 2 [(gogoproto.moretags) = "meta:range:0-65535"];
 }
 
-// type of the private cloud network
+// type of the virtual private cloud
 enum RuleDir {
   RULE_DIR_NONE    = 0;
   RULE_DIR_INGRESS = 1;

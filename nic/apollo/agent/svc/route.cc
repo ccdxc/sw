@@ -33,7 +33,7 @@ pds_agent_route_table_api_spec_fill (const pds::RouteTableSpec &proto_spec,
         const pds::Route &proto_route = proto_spec.routes(i);
         ippfx_proto_spec_to_api_spec_fill(proto_route.prefix(), &api_spec->routes[i].prefix);
         ipaddr_proto_spec_to_api_spec_fill(proto_route.nexthop(), &api_spec->routes[i].nh_ip);
-        api_spec->routes[i].vcn_id = proto_route.pcnid();
+        api_spec->routes[i].vcn_id = proto_route.vpcid();
         // TODO: hardcoded for now
         api_spec->routes[i].nh_type = PDS_NH_TYPE_REMOTE_TEP;
     }

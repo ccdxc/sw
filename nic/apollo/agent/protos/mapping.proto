@@ -19,8 +19,8 @@ service MappingSvc {
 
 // MappingKey uniquley identifies the IP in the entire fabric
 message MappingKey {
-  // private cloud network mapping belongs to
-  uint32 PCNId           = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // virtual private cloud mapping belongs to
+  uint32 VPCId           = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // private/overlay IP of the mapping
   types.IPAddress IPAddr = 2;
 }

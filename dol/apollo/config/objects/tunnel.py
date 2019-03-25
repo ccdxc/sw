@@ -44,7 +44,7 @@ class TunnelObject(base.ConfigObjectBase):
         grpcmsg = tunnel_pb2.TunnelRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.Id
-        spec.PCNId = 0 # TODO: Create Substrate PCN
+        spec.VPCId = 0 # TODO: Create Substrate VPC
         spec.Encap = self.Encap
         spec.LocalIP.Af = types_pb2.IP_AF_INET
         spec.LocalIP.V4Addr = int(self.LocalIPAddr)

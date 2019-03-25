@@ -8,7 +8,7 @@
 #include <string>
 #include "nic/apollo/agent/svc/batch.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
-#include "nic/apollo/agent/svc/pcn.hpp"
+#include "nic/apollo/agent/svc/vpc.hpp"
 #include "nic/apollo/agent/svc/subnet.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
 #include "nic/apollo/agent/svc/route.hpp"
@@ -34,7 +34,7 @@ svc_reg (void)
     ServerBuilder     *server_builder;
     BatchSvcImpl      batch_svc;
     DeviceSvcImpl     device_svc;
-    PCNSvcImpl        pcn_svc;
+    VPCSvcImpl        vpc_svc;
     SubnetSvcImpl     subnet_svc;
     TunnelSvcImpl     tunnel_svc;
     RouteSvcImpl      route_svc;
@@ -55,7 +55,7 @@ svc_reg (void)
     // register for all the services
     server_builder->RegisterService(&batch_svc);
     server_builder->RegisterService(&device_svc);
-    server_builder->RegisterService(&pcn_svc);
+    server_builder->RegisterService(&vpc_svc);
     server_builder->RegisterService(&subnet_svc);
     server_builder->RegisterService(&tunnel_svc);
     server_builder->RegisterService(&route_svc);

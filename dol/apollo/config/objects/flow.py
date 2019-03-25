@@ -40,12 +40,12 @@ class FlowMapObject(base.ConfigObjectBase):
 
     def Show(self):
         logger.info("FlowMap Object: %s" % self)
-        logger.info("Local  Id:%d|IPAddr:%s|SubnetId:%d|PCNId:%d|VnicId:%d"\
+        logger.info("Local  Id:%d|IPAddr:%s|SubnetId:%d|VPCId:%d|VnicId:%d"\
              %(self.__lobj.MappingId, self.__lobj.IPAddr, self.__lobj.VNIC.SUBNET.SubnetId,\
-              self.__lobj.VNIC.SUBNET.PCN.PCNId, self.__lobj.VNIC.VnicId))
-        logger.info("Remote Id:%d|IPAddr:%s|SubnetId:%d|PCNId:%d"\
+              self.__lobj.VNIC.SUBNET.VPC.VPCId, self.__lobj.VNIC.VnicId))
+        logger.info("Remote Id:%d|IPAddr:%s|SubnetId:%d|VPCId:%d"\
              %(self.__robj.MappingId, self.__robj.IPAddr,\
-             self.__robj.SUBNET.SubnetId, self.__robj.SUBNET.PCN.PCNId))
+             self.__robj.SUBNET.SubnetId, self.__robj.SUBNET.VPC.VPCId))
         return
 
 class FlowMapObjectHelper:

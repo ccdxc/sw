@@ -34,8 +34,8 @@ class LocalMappingObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "LocalMappingID:%d|VnicId:%d|SubnetId:%d|PCNId:%d" %\
-               (self.MappingId, self.VNIC.VnicId, self.VNIC.SUBNET.SubnetId, self.VNIC.SUBNET.PCN.PCNId)
+        return "LocalMappingID:%d|VnicId:%d|SubnetId:%d|VPCId:%d" %\
+               (self.MappingId, self.VNIC.VnicId, self.VNIC.SUBNET.SubnetId, self.VNIC.SUBNET.VPC.VPCId)
 
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.flow.filters)
@@ -43,7 +43,7 @@ class LocalMappingObject(base.ConfigObjectBase):
     def GetGrpcCreateMessage(self):
         grpcmsg = mapping_pb2.MappingRequest()
         spec = grpcmsg.Request.add()
-        spec.Id.PCNId = self.VNIC.SUBNET.PCN.PCNId
+        spec.Id.VPCId = self.VNIC.SUBNET.VPC.VPCId
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
         spec.SubnetId = self.VNIC.SUBNET.SubnetId
         spec.VnicId = self.VNIC.VnicId
@@ -72,7 +72,7 @@ class LocalMappingObjectClient:
         return self.__objs
 
     def GenerateObjects(self, parent, vnic_spec_obj):
-        stack = parent.SUBNET.PCN.Stack
+        stack = parent.SUBNET.VPC.Stack
         for c in range (0, vnic_spec_obj.ipcount):
             if stack == "dual" or stack == 'ipv6':
                 obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_6)

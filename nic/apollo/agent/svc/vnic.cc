@@ -13,7 +13,7 @@ static inline void
 pds_agent_vnic_api_spec_fill (const pds::VnicSpec &proto_spec,
                               pds_vnic_spec_t *api_spec)
 {
-    api_spec->vcn.id = proto_spec.pcnid();
+    api_spec->vcn.id = proto_spec.vpcid();
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->key.id = proto_spec.vnicid();
     api_spec->wire_vlan = proto_spec.wirevlan();
@@ -80,7 +80,7 @@ vnic_api_spec_to_proto_spec_fill (const pds_vnic_spec_t *api_spec,
                                   pds::VnicSpec *proto_spec)
 {
     proto_spec->set_vnicid(api_spec->key.id);
-    proto_spec->set_pcnid(api_spec->vcn.id);
+    proto_spec->set_vpcid(api_spec->vcn.id);
     proto_spec->set_subnetid(api_spec->subnet.id);
     proto_spec->set_wirevlan(api_spec->wire_vlan);
     proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac_addr));

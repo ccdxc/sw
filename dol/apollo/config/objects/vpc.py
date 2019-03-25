@@ -8,23 +8,23 @@ import apollo.config.objects.subnet as subnet
 import apollo.config.objects.route as route
 import apollo.config.objects.utils as utils
 
-import pcn_pb2 as pcn_pb2
+import vpc_pb2 as vpc_pb2
 import types_pb2 as types_pb2
 
 from infra.common.logging import logger
 from apollo.config.store import Store
 
-class PcnObject(base.ConfigObjectBase):
+class VpcObject(base.ConfigObjectBase):
     def __init__(self, spec, index):
         super().__init__()
 
-        ################# PUBLIC ATTRIBUTES OF PCN OBJECT #####################
-        self.PCNId = next(resmgr.PcnIdAllocator)
-        self.GID('Pcn%d'%self.PCNId)
-        self.Type = pcn_pb2.PCN_TYPE_TENANT
+        ################# PUBLIC ATTRIBUTES OF VPC OBJECT #####################
+        self.VPCId = next(resmgr.VpcIdAllocator)
+        self.GID('Vpc%d'%self.VPCId)
+        self.Type = vpc_pb2.VPC_TYPE_TENANT
         self.IPPrefix = {}
-        self.IPPrefix[0] = resmgr.GetPcnIPv6Prefix(self.PCNId)
-        self.IPPrefix[1] = resmgr.GetPcnIPv4Prefix(self.PCNId)
+        self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
+        self.IPPrefix[1] = resmgr.GetVpcIPv4Prefix(self.VPCId)
         self.Stack = spec.stack
         # As currently vcn can have only type IPV4 or IPV6, we will alternate 
         # the configuration
@@ -35,7 +35,7 @@ class PcnObject(base.ConfigObjectBase):
         else:
             self.PfxSel = 0
 
-        ################# PRIVATE ATTRIBUTES OF PCN OBJECT #####################
+        ################# PRIVATE ATTRIBUTES OF VPC OBJECT #####################
         self.__ip_subnet_prefix_pool = {}
         self.__ip_subnet_prefix_pool[0] = {}
         self.__ip_subnet_prefix_pool[1] = {}
@@ -61,24 +61,24 @@ class PcnObject(base.ConfigObjectBase):
         return next(self.__ip_subnet_prefix_pool[1][poolid])
 
     def __repr__(self):
-        return "PcnID:%d|Type:%d|PfxSel:%d" %\
-               (self.PCNId, self.Type, self.PfxSel)
+        return "VpcID:%d|Type:%d|PfxSel:%d" %\
+               (self.VPCId, self.Type, self.PfxSel)
 
     def GetGrpcCreateMessage(self):
-        grpcmsg = pcn_pb2.PCNRequest()
+        grpcmsg = vpc_pb2.VPCRequest()
         spec = grpcmsg.Request.add()
-        spec.Id = self.PCNId
+        spec.Id = self.VPCId
         spec.Type = self.Type
         utils.GetRpcIPPrefix(self.IPPrefix[self.PfxSel], spec.Prefix)
         return grpcmsg
 
     def Show(self):
-        logger.info("PCN Object:", self)
+        logger.info("VPC Object:", self)
         logger.info("- %s" % repr(self))
         logger.info("- Prefix:%s" %self.IPPrefix)
         return
 
-class PcnObjectClient:
+class VpcObjectClient:
     def __init__(self):
         self.__objs = []
         return
@@ -87,15 +87,15 @@ class PcnObjectClient:
         return self.__objs
 
     def GenerateObjects(self, topospec):
-        for p in topospec.pcn:
+        for p in topospec.vpc:
             for c in range(p.count):
-                obj = PcnObject(p, c)
+                obj = VpcObject(p, c)
                 self.__objs.append(obj)
         return
 
     def CreateObjects(self):
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
-        api.client.Create(api.ObjectTypes.PCN, msgs)
+        api.client.Create(api.ObjectTypes.VPC, msgs)
 
         # Create Route object. This should be before subnet
         route.client.CreateObjects()
@@ -104,7 +104,7 @@ class PcnObjectClient:
         subnet.client.CreateObjects()
         return
 
-client = PcnObjectClient()
+client = VpcObjectClient()
 
 def GetMatchingObjects(selectors):
     return client.Objects()

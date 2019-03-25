@@ -20,15 +20,15 @@ class SubnetObject(base.ConfigObjectBase):
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         self.SubnetId = next(resmgr.SubnetIdAllocator)
         self.GID('Subnet%d'%self.SubnetId)
-        self.PCN = parent
+        self.VPC = parent
         self.PfxSel = parent.PfxSel
         self.IPPrefix = {}
         self.IPPrefix[0] = parent.AllocIPv6SubnetPrefix(poolid)
         self.IPPrefix[1] = parent.AllocIPv4SubnetPrefix(poolid)
         self.VirtualRouterIP = {}
         self.VirtualRouterMac = None
-        self.V4RouteTableId = route.client.GetRouteV4TableId(parent.PCNId)
-        self.V6RouteTableId = route.client.GetRouteV6TableId(parent.PCNId)
+        self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId)
+        self.V6RouteTableId = route.client.GetRouteV6TableId(parent.VPCId)
         self.IngV4SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
         self.IngV6SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
         self.EgV4SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
@@ -64,14 +64,14 @@ class SubnetObject(base.ConfigObjectBase):
         return next(self.__ip_address_pool[1])
 
     def __repr__(self):
-        return "SubnetID:%d|PCNId:%d|CfgSel:%d|Mac:%s" %\
-               (self.SubnetId, self.PCN.PCNId, self.PfxSel, self.VirtualRouterMac.get())
+        return "SubnetID:%d|VPCId:%d|CfgSel:%d|Mac:%s" %\
+               (self.SubnetId, self.VPC.VPCId, self.PfxSel, self.VirtualRouterMac.get())
 
     def GetGrpcCreateMessage(self):
         grpcmsg = subnet_pb2.SubnetRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.SubnetId
-        spec.PCNId = self.PCN.PCNId
+        spec.VPCId = self.VPC.VPCId
         utils.GetRpcIPPrefix(self.IPPrefix[self.PfxSel], spec.Prefix)
         utils.GetRpcIPAddr(self.VirtualRouterIP[self.PfxSel], spec.VirtualRouterIP)
         spec.VirtualRouterMac = self.VirtualRouterMac.getnum()
@@ -104,9 +104,9 @@ class SubnetObjectClient:
     def Objects(self):
         return self.__objs
 
-    def GenerateObjects(self, parent, pcn_spec_obj):
+    def GenerateObjects(self, parent, vpc_spec_obj):
         poolid = 0
-        for subnet_spec_obj in pcn_spec_obj.subnet:
+        for subnet_spec_obj in vpc_spec_obj.subnet:
             parent.InitSubnetPefixPools(poolid, subnet_spec_obj.v6prefixlen, subnet_spec_obj.v4prefixlen)
             for c in range(subnet_spec_obj.count):
                 obj = SubnetObject(parent, subnet_spec_obj, poolid)

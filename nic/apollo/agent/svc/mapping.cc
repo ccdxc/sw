@@ -12,7 +12,7 @@
 extern flow_test *g_flow_test_obj;
 #endif
 
-// Build PCN API spec from protobuf spec
+// Build VPC API spec from protobuf spec
 static inline void
 pds_agent_mapping_api_spec_fill (const pds::MappingSpec &proto_spec,
                                  pds_mapping_spec_t *api_spec)
@@ -20,7 +20,7 @@ pds_agent_mapping_api_spec_fill (const pds::MappingSpec &proto_spec,
     pds::MappingKey key;
 
     key = proto_spec.id();
-    api_spec->key.vcn.id = key.pcnid();
+    api_spec->key.vcn.id = key.vpcid();
     ipaddr_proto_spec_to_api_spec_fill(key.ipaddr(), &api_spec->key.ip_addr);
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->vnic.id = proto_spec.vnicid();

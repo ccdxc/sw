@@ -50,8 +50,8 @@ message BackendHealthCheck {
 message L4LbPolicySpec {
   // unique identifier of L4Lb policy
   uint32             Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];
-  // unique key/identifier of PCN in which service is running
-  uint32             PCNId        = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // unique key/identifier of VPC in which service is running
+  uint32             VPCId        = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // service Virtual IP (VIP)
   types.IPAddress    ServiceIP    = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // IP protocol - TCP or UDP

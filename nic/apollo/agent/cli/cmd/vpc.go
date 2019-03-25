@@ -18,24 +18,24 @@ import (
 )
 
 var (
-	// ID holds PCN ID
+	// ID holds VPC ID
 	ID uint32
 )
 
-var pcnShowCmd = &cobra.Command{
-	Use:   "pcn",
-	Short: "show PCN information",
-	Long:  "show PCN object information",
-	Run:   pcnShowCmdHandler,
+var vpcShowCmd = &cobra.Command{
+	Use:   "vpc",
+	Short: "show VPC information",
+	Long:  "show VPC object information",
+	Run:   vpcShowCmdHandler,
 }
 
 func init() {
-	showCmd.AddCommand(pcnShowCmd)
-	pcnShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	pcnShowCmd.Flags().Uint32VarP(&ID, "id", "i", 0, "Specify PCN ID")
+	showCmd.AddCommand(vpcShowCmd)
+	vpcShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	vpcShowCmd.Flags().Uint32VarP(&ID, "id", "i", 0, "Specify VPC ID")
 }
 
-func pcnShowCmdHandler(cmd *cobra.Command, args []string) {
+func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -49,25 +49,25 @@ func pcnShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := pds.NewPCNSvcClient(c)
+	client := pds.NewVPCSvcClient(c)
 
-	var req *pds.PCNGetRequest
+	var req *pds.VPCGetRequest
 	if cmd.Flags().Changed("id") {
-		// Get specific PCN
-		req = &pds.PCNGetRequest{
+		// Get specific VPC
+		req = &pds.VPCGetRequest{
 			Id: []uint32{ID},
 		}
 	} else {
-		// Get all PCNs
-		req = &pds.PCNGetRequest{
+		// Get all VPCs
+		req = &pds.VPCGetRequest{
 			Id: []uint32{},
 		}
 	}
 
 	// PDS call
-	respMsg, err := client.PCNGet(context.Background(), req)
+	respMsg, err := client.VPCGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting PCN failed. %v\n", err)
+		fmt.Printf("Getting VPC failed. %v\n", err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func pcnShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Print PCNs
+	// Print VPCs
 	if cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
@@ -85,24 +85,24 @@ func pcnShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println("---")
 		}
 	} else {
-		printPCNHeader()
+		printVPCHeader()
 		for _, resp := range respMsg.Response {
-			printPCN(resp)
+			printVPC(resp)
 		}
 	}
 }
 
-func printPCNHeader() {
+func printVPCHeader() {
 	hdrLine := strings.Repeat("-", 34)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-6s%-10s%-18s\n", "ID", "Type", "IPPrefix")
 	fmt.Println(hdrLine)
 }
 
-func printPCN(pcn *pds.PCN) {
-	spec := pcn.GetSpec()
+func printVPC(vpc *pds.VPC) {
+	spec := vpc.GetSpec()
 	fmt.Printf("%-6d%-10s%-18s\n",
 		spec.GetId(),
-		strings.Replace(spec.GetType().String(), "PCN_TYPE_", "", -1),
+		strings.Replace(spec.GetType().String(), "VPC_TYPE_", "", -1),
 		utils.IPPrefixToStr(spec.GetPrefix()))
 }

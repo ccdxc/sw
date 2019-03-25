@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
-// protobuf specification for Private Cloud Network (PCN) object
+// protobuf specification for port related objects
 //------------------------------------------------------------------------------
 
 syntax = "proto3";

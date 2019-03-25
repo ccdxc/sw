@@ -35,15 +35,15 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "VnicID:%d|SubnetID:%d|PCNId:%d" %\
-               (self.VnicId, self.SUBNET.SubnetId, self.SUBNET.PCN.PCNId)
+        return "VnicID:%d|SubnetID:%d|VPCId:%d" %\
+               (self.VnicId, self.SUBNET.SubnetId, self.SUBNET.VPC.VPCId)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = vnic_pb2.VnicRequest()
         spec = grpcmsg.Request.add()
         spec.VnicId = self.VnicId
         spec.SubnetId = self.SUBNET.SubnetId
-        spec.PCNId = self.SUBNET.PCN.PCNId
+        spec.VPCId = self.SUBNET.VPC.VPCId
         spec.WireVLAN = self.VlanId
         spec.MACAddress = self.MACAddr.getnum()
         spec.ResourcePoolId = 0 # TODO, Need to allocate and use

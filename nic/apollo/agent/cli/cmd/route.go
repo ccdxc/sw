@@ -95,7 +95,7 @@ func printRouteHeader() {
 	hdrLine := strings.Repeat("-", 54)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-6s%-6s%-6s%-20s%-16s\n",
-		"ID", "IPAF", "PCNID", "Prefix", "NextHop")
+		"ID", "IPAF", "VPCID", "Prefix", "NextHop")
 	fmt.Println(hdrLine)
 }
 
@@ -112,7 +112,7 @@ func printRoute(rt *pds.RouteTable) {
 			fmt.Printf("%-6s%-6s", "", "")
 		}
 		fmt.Printf("%-6d%-20s%-16s\n",
-			route.GetPCNId(),
+			route.GetVPCId(),
 			utils.IPPrefixToStr(route.GetPrefix()),
 			utils.IPAddrToStr(route.GetNextHop()))
 		first = false

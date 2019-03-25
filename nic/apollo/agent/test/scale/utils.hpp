@@ -9,7 +9,7 @@
 #include "gen/proto/batch.grpc.pb.h"
 #include "gen/proto/gogo.grpc.pb.h"
 #include "gen/proto/mapping.grpc.pb.h"
-#include "gen/proto/pcn.grpc.pb.h"
+#include "gen/proto/vpc.grpc.pb.h"
 #include "gen/proto/route.grpc.pb.h"
 #include "gen/proto/subnet.grpc.pb.h"
 #include "gen/proto/device.grpc.pb.h"
@@ -38,10 +38,10 @@ using pds::MappingRequest;
 using pds::MappingSpec;
 using pds::MappingResponse;
 using pds::Mapping;
-using pds::PCNRequest;
-using pds::PCNSpec;
-using pds::PCNResponse;
-using pds::PCN;
+using pds::VPCRequest;
+using pds::VPCSpec;
+using pds::VPCResponse;
+using pds::VPC;
 using pds::Route;
 using pds::RouteTableRequest;
 using pds::RouteTableSpec;
@@ -153,7 +153,7 @@ populate_route_table_request (RouteTableRequest *req, pds_route_table_spec_t *rt
         Route *route = spec->add_routes();
         ip_pfx_to_spec(route->mutable_prefix(), &rt->routes[i].prefix);
         ip_addr_to_spec(route->mutable_nexthop(), &rt->routes[i].nh_ip);
-        route->set_pcnid(rt->routes[i].vcn_id);
+        route->set_vpcid(rt->routes[i].vcn_id);
     }
     
     return;
@@ -166,7 +166,7 @@ populate_mapping_request (MappingRequest *req, pds_mapping_spec_t *mapping)
         return;
     
     MappingSpec *spec = req->add_request();
-    spec->mutable_id()->set_pcnid(mapping->key.vcn.id);
+    spec->mutable_id()->set_vpcid(mapping->key.vcn.id);
     ip_addr_to_spec(spec->mutable_id()->mutable_ipaddr(),
                     &mapping->key.ip_addr);
     spec->set_subnetid(mapping->subnet.id);
@@ -187,7 +187,7 @@ populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
     VnicSpec *spec = req->add_request();
     spec->set_vnicid(vnic->vcn.id);
     spec->set_subnetid(vnic->subnet.id);
-    spec->set_pcnid(vnic->key.id);
+    spec->set_vpcid(vnic->key.id);
     spec->set_wirevlan(vnic->wire_vlan);
     spec->set_macaddress(MAC_TO_UINT64(vnic->mac_addr));
     spec->set_resourcepoolid(vnic->rsc_pool_id);
@@ -207,7 +207,7 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
     ip_addr_to_spec(spec->mutable_virtualrouterip(), &subnet->vr_ip);
 
     spec->set_id(subnet->key.id);
-    spec->set_pcnid(subnet->vcn.id);
+    spec->set_vpcid(subnet->vcn.id);
     spec->set_virtualroutermac(MAC_TO_UINT64(subnet->vr_mac));
     
     spec->set_v4routetableid(subnet->v4_route_table.id);
@@ -221,18 +221,18 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
 }
 
 static void
-populate_pcn_request (PCNRequest *req, pds_vcn_spec_t *vcn)
+populate_vpc_request (VPCRequest *req, pds_vcn_spec_t *vcn)
 {
     if (!vcn || !req)
         return;
     
-    PCNSpec *spec = req->add_request();
+    VPCSpec *spec = req->add_request();
     ip_pfx_to_spec(spec->mutable_prefix(), &vcn->pfx);
     spec->set_id(vcn->key.id);
     if (vcn->type == PDS_VCN_TYPE_TENANT) {
-        spec->set_type(pds::PCN_TYPE_TENANT);
+        spec->set_type(pds::VPC_TYPE_TENANT);
     } else if (vcn->type == PDS_VCN_TYPE_SUBSTRATE) {
-        spec->set_type(pds::PCN_TYPE_SUBSTRATE);
+        spec->set_type(pds::VPC_TYPE_SUBSTRATE);
     }
 
     return;

@@ -7,7 +7,7 @@ import enum
 
 import batch_pb2_grpc as batch_pb2_grpc
 import device_pb2_grpc as device_pb2_grpc
-import pcn_pb2_grpc as pcn_pb2_grpc
+import vpc_pb2_grpc as vpc_pb2_grpc
 import subnet_pb2_grpc as subnet_pb2_grpc
 import tunnel_pb2_grpc as tunnel_pb2_grpc
 import vnic_pb2_grpc as vnic_pb2_grpc
@@ -37,7 +37,7 @@ class ObjectTypes(enum.IntEnum):
     NONE = 0
     BATCH = 1
     SWITCH = 2
-    PCN = 3
+    VPC = 3
     SUBNET = 4
     TUNNEL = 5
     VNIC = 6
@@ -101,7 +101,7 @@ class ApolloAgentClient:
         except:
             agentip = 'localhost'
         return agentip
-       
+
 
     def __connect(self):
         if GlobalOptions.dryrun: return
@@ -119,8 +119,8 @@ class ApolloAgentClient:
                                                      self.__channel, 'Batch')
         self.__stubs[ObjectTypes.SWITCH] = ClientStub(device_pb2_grpc.DeviceSvcStub,
                                                       self.__channel, 'Device')
-        self.__stubs[ObjectTypes.PCN] = ClientStub(pcn_pb2_grpc.PCNSvcStub,
-                                                   self.__channel, 'PCN')
+        self.__stubs[ObjectTypes.VPC] = ClientStub(vpc_pb2_grpc.VPCSvcStub,
+                                                   self.__channel, 'VPC')
         self.__stubs[ObjectTypes.SUBNET] = ClientStub(subnet_pb2_grpc.SubnetSvcStub,
                                                       self.__channel, 'Subnet')
         self.__stubs[ObjectTypes.TUNNEL] = ClientStub(tunnel_pb2_grpc.TunnelSvcStub,

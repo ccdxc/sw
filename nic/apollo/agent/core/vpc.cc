@@ -3,47 +3,47 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/pcn.hpp"
+#include "nic/apollo/agent/core/vpc.hpp"
 
 namespace core {
 
 sdk_ret_t
-pcn_create (pds_vcn_key_t *key, pds_vcn_spec_t *spec)
+vpc_create (pds_vcn_key_t *key, pds_vcn_spec_t *spec)
 {
-    if (agent_state::state()->find_in_pcn_db(key) != NULL) {
+    if (agent_state::state()->find_in_vpc_db(key) != NULL) {
         return sdk::SDK_RET_ENTRY_EXISTS;
     }
     if (pds_vcn_create(spec) != sdk::SDK_RET_OK) {
         return sdk::SDK_RET_ERR;
     }
-    if (agent_state::state()->add_to_pcn_db(key, spec) != sdk::SDK_RET_OK) {
+    if (agent_state::state()->add_to_vpc_db(key, spec) != sdk::SDK_RET_OK) {
         return sdk::SDK_RET_ERR;
     }
     return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
-pcn_delete (pds_vcn_key_t *key)
+vpc_delete (pds_vcn_key_t *key)
 {
-    if (agent_state::state()->find_in_pcn_db(key) == NULL) {
+    if (agent_state::state()->find_in_vpc_db(key) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     if (pds_vcn_delete(key) != sdk::SDK_RET_OK) {
         return sdk::SDK_RET_ERR;
     }
-    if (agent_state::state()->del_from_pcn_db(key) == false) {
+    if (agent_state::state()->del_from_vpc_db(key) == false) {
         return sdk::SDK_RET_ERR;
     }
     return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
-pcn_get (pds_vcn_key_t *key, pds_vcn_info_t *info)
+vpc_get (pds_vcn_key_t *key, pds_vcn_info_t *info)
 {
     sdk_ret_t ret;
     pds_vcn_spec_t *spec;
 
-    spec = agent_state::state()->find_in_pcn_db(key);
+    spec = agent_state::state()->find_in_vpc_db(key);
     if (spec == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
@@ -54,11 +54,11 @@ pcn_get (pds_vcn_key_t *key, pds_vcn_info_t *info)
 }
 
 static inline sdk_ret_t
-pcn_get_all_cb (pds_vcn_spec_t *spec, void *ctxt)
+vpc_get_all_cb (pds_vcn_spec_t *spec, void *ctxt)
 {
     sdk_ret_t ret;
     pds_vcn_info_t info;
-    pcn_db_cb_ctxt_t *cb_ctxt = (pcn_db_cb_ctxt_t *)ctxt;
+    vpc_db_cb_ctxt_t *cb_ctxt = (vpc_db_cb_ctxt_t *)ctxt;
 
     memcpy(&info.spec, spec, sizeof(pds_vcn_spec_t));
     ret = pds_vcn_read(&spec->key, &info);
@@ -69,14 +69,14 @@ pcn_get_all_cb (pds_vcn_spec_t *spec, void *ctxt)
 }
 
 sdk_ret_t
-pcn_get_all (pcn_get_cb_t pcn_get_cb, void *ctxt)
+vpc_get_all (vpc_get_cb_t vpc_get_cb, void *ctxt)
 {
-    pcn_db_cb_ctxt_t cb_ctxt;
+    vpc_db_cb_ctxt_t cb_ctxt;
 
-    cb_ctxt.cb = pcn_get_cb;
+    cb_ctxt.cb = vpc_get_cb;
     cb_ctxt.ctxt = ctxt;
 
-    return agent_state::state()->pcn_db_walk(pcn_get_all_cb, &cb_ctxt);
+    return agent_state::state()->vpc_db_walk(vpc_get_all_cb, &cb_ctxt);
 }
 
 }    // namespace core

@@ -20,7 +20,7 @@ class RouteObject(base.ConfigObjectBase):
         #self.RouteTblId = next(resmgr.RouteTableIdAllocator) ## TODO - Randum routetable id needs to be revisited 
         self.RouteTblId = prefix.version
         self.GID('RouteTbl%d'%self.RouteTblId)
-        if prefix.version == 6: 
+        if prefix.version == 6:
             self.Prefix = prefix
             self.AddrFamily = 'IPV6'
         else:
@@ -28,7 +28,7 @@ class RouteObject(base.ConfigObjectBase):
             self.AddrFamily = 'IPV4'
         self.TunIPAddr = tunip
         self.TunIP = str(self.TunIPAddr)
-        self.PCNId = parent.PCNId
+        self.VPCId = parent.VPCId
         self.Label = 'NETWORKING'
         #assert nroutes == 1 # TODO -- Walking thru count moved to client code
         self.TestDestination = str(next(self.Prefix.hosts()))
@@ -38,8 +38,8 @@ class RouteObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "RouteTblID:%d|PCNId:%d|Prefix:%s|AddrFamily:%s|NextHop:%s" %\
-               (self.RouteTblId, self.PCNId, str(self.Prefix),
+        return "RouteTblID:%d|VPCId:%d|Prefix:%s|AddrFamily:%s|NextHop:%s" %\
+               (self.RouteTblId, self.VPCId, str(self.Prefix),
                 self.AddrFamily, str(self.TunIPAddr))
 
     def GetGrpcCreateMessage(self):
@@ -51,7 +51,7 @@ class RouteObject(base.ConfigObjectBase):
         spec.AF = rtspec.Prefix.Addr.Af
         rtspec.NextHop.Af = types_pb2.IP_AF_INET
         rtspec.NextHop.V4Addr = int(self.TunIPAddr)
-        rtspec.PCNId = self.PCNId
+        rtspec.VPCId = self.VPCId
         return grpcmsg
 
     def Show(self):
@@ -95,23 +95,23 @@ class RouteObjectClient:
     def Objects(self):
         return self.__objs
 
-    def GetRouteV4TableId(self, pcnid):
-        if len(self.__v4objs[pcnid]) == 0:
+    def GetRouteV4TableId(self, vpcid):
+        if len(self.__v4objs[vpcid]) == 0:
             return 0
-        return self.__v4iter[pcnid].rrnext().RouteTblId
+        return self.__v4iter[vpcid].rrnext().RouteTblId
 
-    def GetRouteV6TableId(self, pcnid):
-        if len(self.__v6objs[pcnid]) == 0:
+    def GetRouteV6TableId(self, vpcid):
+        if len(self.__v6objs[vpcid]) == 0:
             return 0
-        return self.__v6iter[pcnid].rrnext().RouteTblId
+        return self.__v6iter[vpcid].rrnext().RouteTblId
 
-    def GenerateObjects(self, parent, pcn_spec_obj):
-        pcnid = parent.PCNId
+    def GenerateObjects(self, parent, vpc_spec_obj):
+        vpcid = parent.VPCId
         self.__internet_tunnel = utils.rrobiniter(Store.GetTunnelsMplsOverUdp1())
-        self.__v4objs[pcnid] = []
-        self.__v6objs[pcnid] = []
-        self.__v4iter[pcnid] = None
-        self.__v6iter[pcnid] = None
+        self.__v4objs[vpcid] = []
+        self.__v6objs[vpcid] = []
+        self.__v4iter[vpcid] = None
+        self.__v6iter[vpcid] = None
         def __get_next_subnet(ip):
             if ip.version == 4:
                 return ipaddress.ip_network(str(ip.network_address + 2 ** (32 - ip.prefixlen )) +'/'+ str(ip.prefixlen))
@@ -125,8 +125,8 @@ class RouteObjectClient:
             while c < count:
                 routes.append(__get_next_subnet(routes[c-1]))
                 c += 1
-            return routes 
-        
+            return routes
+
         def __get_overlap(base, count):
             # Keeping this function in case need to have different logic
             return  __get_adjacent_routes(base, count)
@@ -145,9 +145,9 @@ class RouteObjectClient:
             if stack == "dual" or stack == 'ipv6':
                 return True
             return False
-        
+
         routes = []
-        for route_spec_obj in pcn_spec_obj.route:
+        for route_spec_obj in vpc_spec_obj.route:
             stack = parent.Stack
             count = route_spec_obj.count
             if route_spec_obj.type == 'adjacent':
@@ -164,21 +164,21 @@ class RouteObjectClient:
                 if __is_v6stack(stack):
                     v6base = __get_first_subnet(ipaddress.ip_network(route_spec_obj.v6base.replace('\\','/')), route_spec_obj.v6prefixlen)
                     routes += __get_overlap(v6base, count)
-                
+
         tunip = self.__internet_tunnel_get()
         for route in routes:
             obj = RouteObject(parent, route, tunip)
             if route.version == 6:
-                self.__v6objs[pcnid].append(obj)
+                self.__v6objs[vpcid].append(obj)
             if route.version == 4:
-                self.__v4objs[pcnid].append(obj)
+                self.__v4objs[vpcid].append(obj)
             self.__objs.append(obj)
 
-        if len(self.__v6objs[pcnid]) != 0:
-            self.__v6iter[pcnid] = utils.rrobiniter(self.__v6objs[pcnid])
+        if len(self.__v6objs[vpcid]) != 0:
+            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
 
-        if len(self.__v4objs[pcnid]) != 0:
-            self.__v4iter[pcnid] = utils.rrobiniter(self.__v4objs[pcnid])
+        if len(self.__v4objs[vpcid]) != 0:
+            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
 
     def CreateObjects(self):
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))

@@ -8,7 +8,7 @@ def irange(start, end):
 
 EpochAllocator = iter(irange(1,4096))
 TunnelIdAllocator = iter(irange(1,1024))
-PcnIdAllocator = iter(irange(1,1024))
+VpcIdAllocator = iter(irange(1,1024))
 SubnetIdAllocator = iter(irange(1,1024))
 RemoteMappingIdAllocator = iter(irange(1,1*1024*1024))
 FlowIdAllocator = iter(irange(1,1*1024*1024))
@@ -28,7 +28,7 @@ RouteIPv4Allocator = iter(ipaddress.IPv4Network('192.0.0.0/8').subnets(new_prefi
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'
 # - sublen is the subnet length, gt base prefix length.
-# - poolid , subnet pool index with in a pcn
+# - poolid , subnet pool index with in a vpc
 def CreateIPv4SubnetPool(base, sublen, poolid):
     assert(isinstance(base, ipaddress.IPv4Network))
     assert(sublen >= 16)
@@ -60,20 +60,20 @@ def  CreateRemoteVnicMplsSlotAllocator():
     mplsbase = 20000
     return iter(irange(mplsbase,mplsbase + 1024)) # 1024 vnics per tep
 
-# Starts PCN prefixes from 10/8 to 42/8
-PCN_V4_PREFIX_BASE=10
-# Create overlapping prefixes for every 32 PCNs
-PCN_V4_PREFIX_OVERLAP_DIST=32
-def GetPcnIPv4Prefix(pcnid):
-    pfxstr = '%d.0.0.0/8'%((pcnid%PCN_V4_PREFIX_OVERLAP_DIST)+PCN_V4_PREFIX_BASE)
+# Starts VPC prefixes from 10/8 to 42/8
+VPC_V4_PREFIX_BASE=10
+# Create overlapping prefixes for every 32 VPCs
+VPC_V4_PREFIX_OVERLAP_DIST=32
+def GetVpcIPv4Prefix(vpcid):
+    pfxstr = '%d.0.0.0/8'%((vpcid%VPC_V4_PREFIX_OVERLAP_DIST)+VPC_V4_PREFIX_BASE)
     return ipaddress.IPv4Network(pfxstr)
 
-# Starts PCN prefixes from aaaa:0001:0010/48 to aaaa:0001:00042/48
-PCN_V6_BASE='aaaa:0001'
-PCN_V6_PREFIX_BASE=10
-# Create overlapping prefixes for every 32 PCNs
-PCN_V6_PREFIX_OVERLAP_DIST=128
-def GetPcnIPv6Prefix(pcnid):
-    pfxstr = '%s:%04x::/48'%(PCN_V6_BASE, ((pcnid%PCN_V6_PREFIX_OVERLAP_DIST)+PCN_V6_PREFIX_BASE))
+# Starts VPC prefixes from aaaa:0001:0010/48 to aaaa:0001:00042/48
+VPC_V6_BASE='aaaa:0001'
+VPC_V6_PREFIX_BASE=10
+# Create overlapping prefixes for every 32 VPCs
+VPC_V6_PREFIX_OVERLAP_DIST=128
+def GetVpcIPv6Prefix(vpcid):
+    pfxstr = '%s:%04x::/48'%(VPC_V6_BASE, ((vpcid%VPC_V6_PREFIX_OVERLAP_DIST)+VPC_V6_PREFIX_BASE))
     return ipaddress.IPv6Network(pfxstr)
 

@@ -1,9 +1,9 @@
-# PCN Object Template
+# VPC Object Template
 meta:
-    id      : PCN
+    id      : VPC
     package : config.objects
-    module  : pcn
+    module  : vpc
     feature_set:
         - apollo
 
-pcnid: None
+vpcid: None

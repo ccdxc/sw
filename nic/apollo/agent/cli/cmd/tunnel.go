@@ -95,14 +95,14 @@ func printTunnelHeader() {
 	hdrLine := strings.Repeat("-", 54)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-6s%-6s%-10s%-16s%-16s\n",
-		"ID", "PcnID", "EncapType", "LocalIP", "RemoteIP")
+		"ID", "VpcID", "EncapType", "LocalIP", "RemoteIP")
 	fmt.Println(hdrLine)
 }
 
 func printTunnel(tunnel *pds.Tunnel) {
 	spec := tunnel.GetSpec()
 	fmt.Printf("%-6d%-6d%-10s%-16s%-16s\n",
-		spec.GetId(), spec.GetPCNId(),
+		spec.GetId(), spec.GetVPCId(),
 		strings.Replace(strings.Replace(spec.GetEncap().String(), "TUNNEL_ENCAP_", "", -1), "_", "-", -1),
 		utils.IPAddrToStr(spec.GetLocalIP()),
 		utils.IPAddrToStr(spec.GetRemoteIP()))
