@@ -25,6 +25,7 @@
 #define PDS_MAX_SUBNET (5 * PDS_MAX_VCN)
 
 /// \brief Subnet key
+/// \remark subnet id is not scoped under a vcn, it is globally unique id
 typedef struct pds_subnet_key_s {
     pds_subnet_id_t id;    ///< Subnet ID
 } __PACK__ pds_subnet_key_t;

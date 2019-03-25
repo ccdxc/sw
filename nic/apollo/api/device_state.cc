@@ -24,8 +24,9 @@ namespace api {
  */
 device_entry *
 device_state::alloc(void) {
-    return (device_entry *)SDK_CALLOC(PDS_MEM_ALLOC_DEVICE,
-                                      sizeof(device_entry));
+    device_cfg_ = (device_entry *)SDK_CALLOC(PDS_MEM_ALLOC_DEVICE,
+                                             sizeof(device_entry));
+    return device_cfg_;
 }
 
 /**
@@ -35,6 +36,7 @@ device_state::alloc(void) {
 void
 device_state::free(device_entry *device) {
     SDK_FREE(PDS_MEM_ALLOC_DEVICE, device);
+    device_cfg_ = NULL;
 }
 
 /** @} */    // end of PDS_DEVICE_STATE

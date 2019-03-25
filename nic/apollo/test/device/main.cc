@@ -76,6 +76,7 @@ TEST_F(device_test, device_workflow_1) {
 /// \brief Create, delete and create a device in the same batch
 /// The operation should be program and unprogram device in hardware
 /// and return successful afetr create
+// TODO: this test fails because register reads in CAPRI_MOCK_MODE returns 0s
 TEST_F(device_test, DISABLED_device_workflow_2) {
     pds_batch_params_t batch_params = {0};
     pds_device_info_t info;
@@ -103,6 +104,7 @@ TEST_F(device_test, DISABLED_device_workflow_2) {
 /// \brief Create and delete device in different batches
 /// The hardware should create device correctly
 /// and return entry not found after delete
+// TODO: this test fails because register reads in CAPRI_MOCK_MODE returns 0s
 TEST_F(device_test, DISABLED_device_workflow_4) {
     pds_batch_params_t batch_params = {0};
     pds_device_info_t info;
@@ -131,6 +133,7 @@ TEST_F(device_test, DISABLED_device_workflow_4) {
 /// \brief Create and recreate device in two batches
 /// The hardware should program device correctly in case of
 /// first create and return error in second create operation
+// TODO: this test fails because register reads in CAPRI_MOCK_MODE returns 0s
 TEST_F(device_test, DISABLED_device_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
     pds_device_info_t info;
