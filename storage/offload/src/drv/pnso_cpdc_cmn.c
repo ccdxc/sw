@@ -670,26 +670,7 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 				svc_info->si_type, num_tags,
 				(uint64_t) desc, (uint64_t) bof_desc);
 	} else {
-		/*
-		 * P4+ chainer always expects a vector of SGLs (post CP/DC) for
-		 * ease of modification and this is true regardless of whether
-		 * the next service is operating per-block or full block.
-		 *
-		 * When a service is first in chain, there are no constraints
-		 * and it can use any types of SGL.
-		 *
-		 */
-		err = chn_service_is_starter(svc_info) ?
-			pc_res_sgl_packed_get(svc_info->si_pcr,
-					&svc_info->si_src_blist,
-					svc_info->si_block_size,
-					MPOOL_TYPE_CPDC_SGL,
-					&svc_info->si_src_sgl) :
-			pc_res_sgl_vec_packed_get(svc_info->si_pcr,
-					&svc_info->si_src_blist,
-					svc_info->si_block_size,
-					MPOOL_TYPE_CPDC_SGL_VECTOR,
-					&svc_info->si_src_sgl);
+		err = cpdc_update_service_info_src_sgl(svc_info);
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain src sgl from pool! svc_type: %d err: %d",
 					svc_info->si_type, err);
@@ -738,17 +719,41 @@ out:
 }
 
 pnso_error_t
-cpdc_update_service_info_sgls(struct service_info *svc_info)
+cpdc_update_service_info_src_sgl(struct service_info *svc_info)
 {
+	struct service_info *svc_prev;
 	pnso_error_t err;
 
-	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_src_blist,
-			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
-			&svc_info->si_src_sgl);
-	if (err) {
-		OSAL_LOG_ERROR("cannot obtain src sgl from pool! err: %d", err);
-		goto out;
+	/*
+	 * P4+ chainer always expects a vector of SGLs (post CP/DC) for
+	 * ease of modification and this is true regardless of whether
+	 * the next service is operating per-block or full block.
+	 *
+	 * When a service is first in chain, there are no constraints
+	 * and it can use any types of SGL.
+	 */
+	if (chn_service_is_starter(svc_info)) {
+		err = pc_res_sgl_packed_get(svc_info->si_pcr,
+				&svc_info->si_src_blist,
+				CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
+				&svc_info->si_src_sgl);
+	} else {
+		svc_prev = chn_service_prev_svc_get(svc_info);
+		err = pc_res_sgl_vec_packed_get(svc_info->si_pcr,
+				&svc_info->si_src_blist,
+				svc_info->si_block_size,
+				MPOOL_TYPE_CPDC_SGL_VECTOR,
+				&svc_info->si_src_sgl,
+				chn_service_is_cp_padding_applic(svc_prev));
 	}
+
+	return err;
+}
+
+pnso_error_t
+cpdc_update_service_info_dst_sgl(struct service_info *svc_info)
+{
+	pnso_error_t err;
 
 	if (!chn_service_has_sub_chain(svc_info) &&
 	    chn_service_is_cp_padding_applic(svc_info)) {
@@ -756,22 +761,33 @@ cpdc_update_service_info_sgls(struct service_info *svc_info)
 				&svc_info->si_dst_blist,
 				svc_info->si_block_size,
 				MPOOL_TYPE_CPDC_SGL_VECTOR,
-				&svc_info->si_dst_sgl);
+				&svc_info->si_dst_sgl, false);
 	} else {
 		err = pc_res_sgl_packed_get(svc_info->si_pcr,
 				&svc_info->si_dst_blist,
 				CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
 				&svc_info->si_dst_sgl);
 	}
-	if (err) {
-		OSAL_LOG_ERROR("cannot obtain dst sgl from pool! err: %d", err);
-		goto out_sgl;
-	}
 
 	return err;
+}
 
-out_sgl:
-	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
+pnso_error_t
+cpdc_update_service_info_sgls(struct service_info *svc_info)
+{
+	pnso_error_t err;
+
+	err = cpdc_update_service_info_src_sgl(svc_info);
+	if (err) {
+		OSAL_LOG_ERROR("cannot obtain src sgl from pool! err: %d", err);
+		goto out;
+	}
+
+	err = cpdc_update_service_info_dst_sgl(svc_info);
+	if (err) {
+		OSAL_LOG_ERROR("cannot obtain dst sgl from pool! err: %d", err);
+		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
+	}
 out:
 	return err;
 }

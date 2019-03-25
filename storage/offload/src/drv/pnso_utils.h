@@ -62,7 +62,8 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 			  const struct service_buf_list *svc_blist,
 			  uint32_t block_size,
 			  enum mem_pool_type vec_type,
-			  struct service_cpdc_sgl *svc_sgl);
+			  struct service_cpdc_sgl *svc_sgl,
+			  bool append_extra_sgl);
 struct chain_sgl_pdma *
 pc_res_sgl_pdma_packed_get(const struct per_core_resource *pcr,
 			   const struct service_buf_list *svc_blist);

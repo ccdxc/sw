@@ -344,11 +344,15 @@ crypto_chain(struct chain_entry *centry)
 		if (chn_service_type_is_decrypt(svc_info) &&
 		    chn_service_type_is_cpdc(svc_next)) {
 
+			/*
+			 * Crypto chaining does not do padding so does not
+			 * require an extra SGL.
+			 */
 			err = pc_res_sgl_vec_packed_get(svc_info->si_pcr,
 				    &svc_info->si_dst_blist,
 				    svc_info->si_block_size,
 				    MPOOL_TYPE_CPDC_SGL_VECTOR,
-				    &svc_info->si_src_sgl);
+				    &svc_info->si_src_sgl, false);
 			if (err) {
 				OSAL_LOG_ERROR("failed to setup chain decrypt SGL");
 				return err;

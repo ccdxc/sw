@@ -150,7 +150,8 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 			  const struct service_buf_list *svc_blist,
 			  uint32_t block_size,
 			  enum mem_pool_type vec_type,
-			  struct service_cpdc_sgl *svc_sgl)
+			  struct service_cpdc_sgl *svc_sgl,
+                          bool append_extra_sgl)
 {
 	struct buffer_list_iter buffer_list_iter;
 	struct buffer_list_iter *iter;
@@ -221,6 +222,23 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 
 		sgl_prev = sgl_vec++;
 		cur_count++;
+	}
+
+	/*
+	 * Currently the only use case for append_extra_sgl is for P4+ chainer
+         * padding modifications, and it's only needed if all tuples in the
+         * last SGL were filled.
+	 */
+	if (append_extra_sgl && sgl_prev && sgl_prev->cs_addr_2) {
+		if (cur_count >= num_vec_elems) {
+			err = ENOSPC;
+			OSAL_LOG_ERROR("no room in SGL vector for extra, cur_count %u err: %d",
+					cur_count, err);
+			goto out;
+		}
+		memset(sgl_vec, 0, sizeof(*sgl_vec));
+		sgl_prev->cs_next = sonic_virt_to_phy(sgl_vec);
+		CPDC_SGL_SWLINK_SET(sgl_prev, sgl_vec);
 	}
 
 	if (iter) {
