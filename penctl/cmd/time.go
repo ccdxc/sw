@@ -70,7 +70,7 @@ func setSystemTimeCmdHandler(cmd *cobra.Command, args []string) error {
 
 	v = &nmd.NaplesCmdExecute{
 		Executable: "/sbin/hwclock",
-		Opts:       strings.Join([]string{"-w"}, ""),
+		Opts:       strings.Join([]string{"-wu"}, ""),
 	}
 	return naplesExecCmd(v)
 }
