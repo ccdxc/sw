@@ -120,7 +120,11 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     }
     rtable->af = spec->af;
     rtable->default_nhid = PDS_DROP_NEXTHOP_HW_ID;
-    rtable->max_routes = PDS_MAX_ROUTE_PER_TABLE;
+    if (rtable->af == IP_AF_IPV4) {
+        rtable->max_routes = route_table_impl_db()->v4_max_routes();
+    } else {
+        rtable->max_routes = route_table_impl_db()->v6_max_routes();
+    }
     rtable->num_routes = spec->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
         rtable->routes[i].prefix = spec->routes[i].prefix;

@@ -33,8 +33,10 @@ route_table_impl_state::route_table_impl_state(pds_state *state) {
     SDK_ASSERT(v6_idxr_ != NULL);
     v4_region_addr_ = state->mempartition()->start_addr("lpm_v4");
     v4_table_size_ = state->mempartition()->block_size("lpm_v4");
+    v4_max_routes_ = state->mempartition()->max_elements("lpm_v4") - 1;
     v6_region_addr_ = state->mempartition()->start_addr("lpm_v6");
     v6_table_size_ = state->mempartition()->block_size("lpm_v6");
+    v6_max_routes_ = state->mempartition()->max_elements("lpm_v6") - 1;
 }
 
 /**
