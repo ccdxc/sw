@@ -85,6 +85,7 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 			//if background {
 			//	time.Sleep(2 * time.Second)
 			//}
+			Utils.Run([]string{"sync"}, 0, false, true, nil)
 			if b, err := ioutil.ReadFile(shellStdout); err == nil {
 				cmdInfo.Ctx.Stdout = string(b)
 			}
@@ -180,7 +181,7 @@ func getChildPids(ppid int) []int {
 	if err == nil && exitCode == 0 {
 		pids := strings.Split(stdoutStderr, "\n")
 		for _, pid := range pids {
-			if ipid, err := strconv.Atoi(pid); err == nil {
+			if ipid, err := strconv.Atoi(pid); err == nil && ipid != ppid {
 				ret = append(ret, ipid)
 			}
 		}
@@ -208,8 +209,7 @@ func StopExecCmd(cmdInfo *CommandInfo) error {
 			}
 			time.Sleep(2 * time.Second)
 		}
-		cmdInfo.Handle.(*exec.Cmd).Process.Signal(syscall.SIGKILL)
-
+		cmdInfo.Handle.(*exec.Cmd).Process.Signal(syscall.SIGTERM)
 		//For bg command, don't return success until command terminates
 		cmdInfo.Ctx.ExitCode = 255
 
