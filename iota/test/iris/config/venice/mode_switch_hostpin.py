@@ -51,6 +51,9 @@ def Main(step):
                 api.Logger.info("Reboot pending on node : %s" % n)
                 reboot_nodes.append(n)
                 nodes.remove(n)
+            elif out["status"]["transition-phase"] == "VENICE_REGISTRATION_DONE":
+                api.Logger.info("Node already transitioned : %s" % n)
+                nodes.remove(n)
             else:
                 api.Logger.info("Reboot not pending on node : %s" % n)
 
