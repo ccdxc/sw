@@ -843,6 +843,13 @@ ionic_en_scan(vmk_Device device)                                  // IN
                 goto lifs_init_err;
         }
 
+        status = ionic_en_uplink_supported_mode_init(&priv_data->uplink_handle);
+        if (status != VMK_OK) {
+                ionic_err("ionic_en_uplink_supported_mode_init() failed,"
+                          " status: %s", vmk_StatusToString(status));
+                goto sup_mode_err;
+        }
+
         ionic_en_uplink_default_coal_params_set(priv_data);
 
         status = ionic_logical_dev_register(ionic_driver.drv_handle,
@@ -853,12 +860,12 @@ ionic_en_scan(vmk_Device device)                                  // IN
         if (status != VMK_OK) {
                 ionic_err("ionic_logical_dev_register() failed, status: %s",
                           vmk_StatusToString(status));
-                goto logical_dev_err;
+                goto sup_mode_err;
         }
 
         return status;
 
-logical_dev_err:
+sup_mode_err:
         ionic_lifs_deinit(&priv_data->ionic);
 
 lifs_init_err:

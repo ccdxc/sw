@@ -172,6 +172,9 @@ void
 ionic_en_uplink_default_coal_params_set(struct ionic_en_priv_data *priv_data);
 
 VMK_ReturnStatus
+ionic_en_uplink_supported_mode_init(struct ionic_en_uplink_handle *uplink_handle);
+
+VMK_ReturnStatus
 ionic_en_uplink_init(struct ionic_en_priv_data *priv_data);
 
 void

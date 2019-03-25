@@ -38,16 +38,31 @@ vmk_UplinkOps ionic_en_uplink_ops = {
         .uplinkReset           = ionic_en_uplink_reset,
 };
 
-#define IONIC_EN_NUM_SUPPORTED_MODES   7 
+#define IONIC_EN_NUM_SUPPORTED_MODES_MNIC   1
+#define IONIC_EN_NUM_SUPPORTED_MODES_100G   4
+#define IONIC_EN_NUM_SUPPORTED_MODES_25G    3
+#define IONIC_EN_NUM_SUPPORTED_MODES_10G    2
 
-vmk_UplinkSupportedMode ionic_en_uplink_modes[IONIC_EN_NUM_SUPPORTED_MODES] = {
+vmk_UplinkSupportedMode ionic_en_uplink_modes_mnic[IONIC_EN_NUM_SUPPORTED_MODES_MNIC] = {
         {VMK_LINK_SPEED_1000_MBPS, VMK_LINK_DUPLEX_FULL},
+};
+
+vmk_UplinkSupportedMode ionic_en_uplink_modes_100g[IONIC_EN_NUM_SUPPORTED_MODES_100G] = {
+        {VMK_LINK_SPEED_AUTO,       VMK_LINK_DUPLEX_AUTO},
         {VMK_LINK_SPEED_10000_MBPS, VMK_LINK_DUPLEX_FULL},
         {VMK_LINK_SPEED_25000_MBPS, VMK_LINK_DUPLEX_FULL},
-        {VMK_LINK_SPEED_40000_MBPS, VMK_LINK_DUPLEX_FULL},
-        {VMK_LINK_SPEED_50000_MBPS, VMK_LINK_DUPLEX_FULL},
-        {VMK_LINK_SPEED_100000_MBPS, VMK_LINK_DUPLEX_FULL},
-        {VMK_LINK_SPEED_AUTO,       VMK_LINK_DUPLEX_AUTO}
+        {VMK_LINK_SPEED_100000_MBPS, VMK_LINK_DUPLEX_FULL}
+};
+
+vmk_UplinkSupportedMode ionic_en_uplink_modes_25g[IONIC_EN_NUM_SUPPORTED_MODES_25G] = {
+        {VMK_LINK_SPEED_AUTO,       VMK_LINK_DUPLEX_AUTO},
+        {VMK_LINK_SPEED_10000_MBPS, VMK_LINK_DUPLEX_FULL},
+        {VMK_LINK_SPEED_25000_MBPS, VMK_LINK_DUPLEX_FULL},
+};
+
+vmk_UplinkSupportedMode ionic_en_uplink_modes_10g[IONIC_EN_NUM_SUPPORTED_MODES_10G] = {
+        {VMK_LINK_SPEED_AUTO,       VMK_LINK_DUPLEX_AUTO},
+        {VMK_LINK_SPEED_10000_MBPS, VMK_LINK_DUPLEX_FULL},
 };
 
 #define IONIC_VLAN_FILTER_SIZE          4096
@@ -369,6 +384,81 @@ ionic_en_uplink_transceiver_type_set(vmk_AddrCookie driver_data,                
 {
         return VMK_NOT_SUPPORTED;
 }
+
+
+static vmk_UplinkTransceiverTypeOps ionic_en_uplink_transceiver_type_ops = {
+        .getTransceiverType  = ionic_en_uplink_transceiver_type_get,
+        .setTransceiverType  = ionic_en_uplink_transceiver_type_set,
+};
+
+
+VMK_ReturnStatus
+ionic_en_uplink_cable_type_get(vmk_AddrCookie driver_data,
+                               vmk_UplinkCableType *cableType)
+{
+        struct lif *lif;
+        vmk_uint8 xcvr_pid;
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+
+        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                             struct lif, list);
+
+        if (priv_data->uplink_handle.is_mgmt_nic) {
+                *cableType = VMK_UPLINK_CABLE_TYPE_TP;
+                goto out;
+        }
+
+        xcvr_pid = lif->notifyblock->port_status.xcvr.pid;
+        if (xcvr_pid >= XCVR_PID_QSFP_100G_CR4 &&
+            xcvr_pid <= XCVR_PID_SFP_25GBASE_CR_N) {
+                *cableType = VMK_UPLINK_CABLE_TYPE_DA;
+        } else if (xcvr_pid >= XCVR_PID_QSFP_100G_AOC &&
+                   xcvr_pid <= XCVR_PID_SFP_10GBASE_CU) {
+                *cableType = VMK_UPLINK_CABLE_TYPE_FIBRE;
+        } else {
+                *cableType = VMK_UPLINK_CABLE_TYPE_OTHER;
+        }
+
+out:
+        return VMK_OK;
+}
+
+
+VMK_ReturnStatus
+ionic_en_uplink_supported_cable_type_get(vmk_AddrCookie driver_data,
+                                         vmk_UplinkCableType *cableType)
+{
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+
+        if (priv_data->uplink_handle.is_mgmt_nic) {
+                *cableType = VMK_UPLINK_CABLE_TYPE_TP;
+                goto out;
+        }
+
+        *cableType = 0;
+        *cableType |= VMK_UPLINK_CABLE_TYPE_FIBRE;
+        *cableType |= VMK_UPLINK_CABLE_TYPE_DA;
+
+out:
+        return VMK_OK;
+}
+
+
+VMK_ReturnStatus
+ionic_en_uplink_cable_type_set(vmk_AddrCookie driver_data,
+                               vmk_UplinkCableType cableType)
+{
+        return VMK_NOT_SUPPORTED;
+}
+
+
+static vmk_UplinkCableTypeOps ionic_en_uplink_cable_type_ops = {
+        .getCableType           = ionic_en_uplink_cable_type_get,
+        .getSupportedCableTypes = ionic_en_uplink_supported_cable_type_get,
+        .setCableType           = ionic_en_uplink_cable_type_set,
+};
 
 
 /*
@@ -1081,6 +1171,11 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                                NULL);
                 VMK_ASSERT(status == VMK_OK);
         }
+
+        status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_TRANSCEIVER_TYPE,
+                                       &ionic_en_uplink_transceiver_type_ops);
+        VMK_ASSERT(status == VMK_OK || status == VMK_IS_DISABLED);
         
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_PRIV_STATS,
@@ -1090,6 +1185,11 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_LINK_STATUS_SET,
                                        ionic_en_link_status_set);
+        VMK_ASSERT(status == VMK_OK);
+
+        status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_CABLE_TYPE,
+                                       &ionic_en_uplink_cable_type_ops);
         VMK_ASSERT(status == VMK_OK);
 
         if (uplink_handle->is_mgmt_nic) {
@@ -1763,6 +1863,42 @@ ionic_en_uplink_default_coal_params_set(struct ionic_en_priv_data *priv_data) //
 }
 
 
+VMK_ReturnStatus
+ionic_en_uplink_supported_mode_init(struct ionic_en_uplink_handle *uplink_handle)
+{
+        vmk_UplinkSharedData *uplink_shared_data = &uplink_handle->uplink_shared_data;
+
+         if (uplink_handle->is_mgmt_nic) {
+                uplink_shared_data->supportedModesArraySz =
+                        IONIC_EN_NUM_SUPPORTED_MODES_MNIC;
+                uplink_shared_data->supportedModes =
+                        ionic_en_uplink_modes_mnic;
+        } else if(uplink_handle->cur_hw_link_status.speed ==
+                  VMK_LINK_SPEED_100000_MBPS) {
+                uplink_shared_data->supportedModesArraySz =
+                        IONIC_EN_NUM_SUPPORTED_MODES_100G;
+                uplink_shared_data->supportedModes =
+                        ionic_en_uplink_modes_100g;
+        } else if (uplink_handle->cur_hw_link_status.speed ==
+                   VMK_LINK_SPEED_25000_MBPS) {
+                uplink_shared_data->supportedModesArraySz =
+                        IONIC_EN_NUM_SUPPORTED_MODES_25G;
+                uplink_shared_data->supportedModes =
+                        ionic_en_uplink_modes_25g;
+        } else if (uplink_handle->cur_hw_link_status.speed ==
+                   VMK_LINK_SPEED_10000_MBPS) {
+                uplink_shared_data->supportedModesArraySz =
+                        IONIC_EN_NUM_SUPPORTED_MODES_10G;
+                uplink_shared_data->supportedModes =
+                        ionic_en_uplink_modes_10g;
+        } else {
+                return VMK_FAILURE;
+        }
+
+         return VMK_OK;
+}
+
+
 /*
  *****************************************************************************
  *
@@ -1821,9 +1957,6 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
         uplink_handle->cur_hw_link_status.state  = VMK_LINK_STATE_DOWN;
         uplink_handle->cur_hw_link_status.duplex = VMK_LINK_DUPLEX_AUTO;
         uplink_handle->cur_hw_link_status.speed  = VMK_LINK_SPEED_AUTO;
-
-        uplink_shared_data->supportedModesArraySz = IONIC_EN_NUM_SUPPORTED_MODES;
-        uplink_shared_data->supportedModes        = ionic_en_uplink_modes;
 
         status = ionic_en_uplink_driver_info_init(priv_data,
                                                   &uplink_shared_data->driverInfo);
@@ -1943,6 +2076,7 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                 goto default_q_err;
         }
 
+        uplink_handle->trans_type = VMK_UPLINK_TRANSCEIVER_TYPE_INTERNAL;
         uplink_handle->is_init = VMK_TRUE;
 
         return status;
