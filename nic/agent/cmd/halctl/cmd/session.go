@@ -571,6 +571,9 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus,
 	}
 
 	flowAction = flowActionStringCompact(flowInfo.GetFlowAction().String())
+	if keyType == "L2" || keyType == "IPv6" {
+		flowAction = flowActionStringCompact("FLOW_ACTION_ALLOW")
+	}
 	age := flowInfo.GetFlowAge()
 	ageStr := ""
 	if age > 59 {

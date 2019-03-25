@@ -1441,6 +1441,11 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
 end:
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_CREATE_SUCCESS);
+        session_match_t match = {};
+        match.match_fields |= SESSION_MATCH_SVRF;
+        match.match_fields |= SESSION_MATCH_V4_FLOW;
+        match.key.svrf_id = nwsec_policy->key.vrf_id;
+        session_eval_matching_session(&match); 
     } else {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_CREATE_FAIL);
     }
@@ -1718,6 +1723,7 @@ end:
         // On success, delete the flows
         session_match_t match = {};
         match.match_fields |= SESSION_MATCH_SVRF;
+        match.match_fields |= SESSION_MATCH_V4_FLOW; 
         match.key.svrf_id = policy->key.vrf_id;
         session_eval_matching_session(&match); 
     } else {
@@ -1930,9 +1936,13 @@ securitypolicy_is_allow (vrf_id_t svrf_id, hal::ipv4_tuple *acl_key, session::Fl
     const char *ctx_name = nwsec_acl_ctx_name(svrf_id);
     acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
-        HAL_TRACE_DEBUG("No policy on this vrf - use default config");
-        // Default is deny
-        return default_policy;
+        HAL_TRACE_DEBUG("No policy on this vrf - use default deny");
+        if (action != session::FlowAction::FLOW_ACTION_DROP) {
+            return false;
+        } else {
+            //Already session is deny continue to deny
+            return true;
+        }
     }
 
     ret = acl_classify(acl_ctx, (const uint8_t *)acl_key, (const acl_rule_t **)&rule,0x01);
