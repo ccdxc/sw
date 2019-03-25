@@ -341,6 +341,7 @@ static irqreturn_t ionic_adminq_isr(int irq, void *data)
 
 static int _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 {
+	struct rx_filter *f;
 	int err;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -349,6 +350,14 @@ static int _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 			.match = RX_FILTER_MATCH_MAC,
 		},
 	};
+
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
+	f = ionic_rx_filter_by_addr(lif, addr);
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+	if (f) {
+		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "duplicate");
+		return EINVAL;
+	}
 
 	memcpy(ctx.cmd.rx_filter_add.mac.addr, addr, ETH_ALEN);
 	err = ionic_adminq_post_wait(lif, &ctx);

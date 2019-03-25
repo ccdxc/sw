@@ -1457,9 +1457,9 @@ ionic_filter_sysctl(SYSCTL_HANDLER_ARGS)
 	for (i = 0; i < lif->num_mc_addrs; i++) {
 		mc = &lif->mc_addrs[i];
 		f = ionic_rx_filter_by_addr(lif, mc->addr);
-		sbuf_printf(sb, "\nMAC[%d](%d) 0x%02x:%02x:%02x:%02x:%02x:%02x", i, f ? f->filter_id : -1,
-			mc->addr[5], mc->addr[4], mc->addr[3],
-			mc->addr[2], mc->addr[1], mc->addr[0]);
+		sbuf_printf(sb, "\nMAC[%d](%d) %02x:%02x:%02x:%02x:%02x:%02x", i, f ? f->filter_id : -1,
+			mc->addr[0], mc->addr[1], mc->addr[2],
+			mc->addr[3], mc->addr[4], mc->addr[5]);
 	}
 
         err = sbuf_finish(sb);
