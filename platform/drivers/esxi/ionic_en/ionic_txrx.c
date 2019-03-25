@@ -585,12 +585,20 @@ ionic_tx_tso(struct queue *q,
         unsigned int len;
         unsigned int offset = 0;
         bool outer_csum = vmk_PktIsMustOuterCsum(pkt);
-        bool has_vlan = vmk_PktMustVlanTag(pkt);
+        bool has_vlan;
         bool start, done;
         u64 total_pkts = 0;
         u64 total_bytes = 0;
         vmk_uint32 i;
-        u16 vlan_tci = ctx->vlan_id;
+        u16 vlan_tci;
+
+        has_vlan = !!(ctx->offload_flags & IONIC_TX_VLAN);
+        if (has_vlan) {
+                vlan_tci = (ctx->vlan_id & IONIC_VLAN_MASK) |
+                           (ctx->priority << IONIC_VLAN_PRIO_SHIFT);
+        } else {
+                vlan_tci = 0;
+        }
 
         hdrlen = ctx->l4_hdr_entry->nextHdrOffset;
         len_left = vmk_PktFrameLenGet(pkt) - hdrlen;
@@ -739,15 +747,20 @@ ionic_tx_calc_csum(struct queue *q,
                 return VMK_DMA_MAPPING_FAILED;
         }
 
-//        is_insert_vlan = !!(ctx->offload_flags & IONIC_TX_VLAN);
-        is_insert_vlan = (ctx->offload_flags & IONIC_TX_VLAN) > 0?
-                         VMK_TRUE : VMK_FALSE;
+        is_insert_vlan = !!(ctx->offload_flags & IONIC_TX_VLAN);
 
         desc->opcode = TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP;
-        desc->num_sg_elems = ctx->nr_frags - 1; // 0
+        desc->num_sg_elems = ctx->nr_frags - 1;
         desc->len = ctx->mapped_len;
         desc->addr = addr;
-        desc->vlan_tci = is_insert_vlan ? ctx->vlan_id : 0;
+
+        if (is_insert_vlan) {
+                desc->vlan_tci = (ctx->vlan_id & IONIC_VLAN_MASK) |
+                                 (ctx->priority << IONIC_VLAN_PRIO_SHIFT);
+        } else {
+                desc->vlan_tci = 0;
+        }
+
         desc->hdr_len = 0;
 //        desc->csum_offset = 0; 
         desc->V = is_insert_vlan;
@@ -784,14 +797,20 @@ ionic_tx_calc_no_csum(struct queue *q,
                 return VMK_DMA_MAPPING_FAILED;
         }
 
-        is_insert_vlan = (ctx->offload_flags & IONIC_TX_VLAN) > 0 ?
-                         VMK_TRUE : VMK_FALSE;
+        is_insert_vlan = !!(ctx->offload_flags & IONIC_TX_VLAN);
 
         desc->opcode = TXQ_DESC_OPCODE_CALC_NO_CSUM;
         desc->num_sg_elems = ctx->nr_frags - 1;
         desc->len = ctx->mapped_len;
         desc->addr = addr;
-        desc->vlan_tci = is_insert_vlan ? ctx->vlan_id : 0;
+
+        if (is_insert_vlan) {
+                desc->vlan_tci = (ctx->vlan_id & IONIC_VLAN_MASK) |
+                                 (ctx->priority << IONIC_VLAN_PRIO_SHIFT);
+        } else {
+                desc->vlan_tci = 0;
+        }
+
         desc->hdr_len = 0;
         desc->csum_offset = 0;
         desc->V = is_insert_vlan;
@@ -1059,8 +1078,8 @@ ionic_start_xmit(vmk_PktHandle *pkt,
 
         if (ionic_en_is_queue_stop(uplink_handle,
                                    tx_ring->shared_q_data_idx)) {
-                ionic_err("Queue: %d is not available",
-                          tx_ring->shared_q_data_idx);
+                ionic_info("Queue: %d is not available",
+                           tx_ring->shared_q_data_idx);
                 return VMK_BUSY;
         }
 
