@@ -1,0 +1,66 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://any
+    route: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet from host
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:02:00:00:00:00
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                hlim    : 64
+            udp:
+                sport   : 100
+                dport   : 200
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet to network
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_MPLS
+        headers     :
+            outereth:
+                src     : ref://testcase/config/devicecfg/MACAddr
+                dst     : 00:02:0b:0a:0d:0e
+            outeripv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : ref://testcase/config/route/TunIP
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            mpls:
+                label   : 0
+                #label   : ref://testcase/config/route/Tunnel/EncapValue
+                ttl     : 0
+
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=FROM_HOST_PKT
+            port    : ref://testcase/config/hostport
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=TO_SWITCH_PKT
+            port    : ref://testcase/config/switchport

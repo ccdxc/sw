@@ -14,7 +14,7 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 class RouteObject(base.ConfigObjectBase):
-    def __init__(self, parent, prefix, tunip):
+    def __init__(self, parent, prefix, tunobj):
         super().__init__()
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         #self.RouteTblId = next(resmgr.RouteTableIdAllocator) ## TODO - Randum routetable id needs to be revisited 
@@ -26,7 +26,8 @@ class RouteObject(base.ConfigObjectBase):
         else:
             self.Prefix = prefix
             self.AddrFamily = 'IPV4'
-        self.TunIPAddr = tunip
+        self.Tunnel = tunobj
+        self.TunIPAddr = tunobj.RemoteIPAddr
         self.TunIP = str(self.TunIPAddr)
         self.VPCId = parent.VPCId
         self.Label = 'NETWORKING'
@@ -89,7 +90,7 @@ class RouteObjectClient:
         return
 
     def __internet_tunnel_get(self):
-        return resmgr.RemoteMplsInternetTunAllocator.rrnext().RemoteIPAddr
+        return resmgr.RemoteMplsInternetTunAllocator.rrnext()
 
     def Objects(self):
         return self.__objs
@@ -168,9 +169,9 @@ class RouteObjectClient:
                     v6base = __get_first_subnet(ipaddress.ip_network(route_spec_obj.v6base.replace('\\','/')), route_spec_obj.v6prefixlen)
                     routes += __get_overlap(v6base, count)
 
-        tunip = self.__internet_tunnel_get()
+        tunobj = self.__internet_tunnel_get()
         for route in routes:
-            obj = RouteObject(parent, route, tunip)
+            obj = RouteObject(parent, route, tunobj)
             if route.version == 6:
                 self.__v6objs[vpcid].append(obj)
             if route.version == 4:

@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import sys
+from random import choices
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 from infra.common.logging import logger
@@ -19,6 +20,11 @@ class rrobiniter:
             except:
                 self.iterator = iter(self.objs)
                 continue
+
+def GetFilteredObjects(objs, maxlimits):
+    if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
+        return objs
+    return choices(objs, k = maxlimits)
 
 def GetTunnelEncapType(e):
     if e == 'vxlan':

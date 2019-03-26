@@ -18,6 +18,11 @@ def __get_packet_template_impl(obj, args):
 def GetPacketTemplateFromMapping(testcase, packet, args=None):
     return __get_packet_template_impl(testcase.config.localmapping, args)
 
+def __get_host_from_route_impl(obj):
+    return str(next(obj.Prefix.hosts()))
+
+def GetUsableHostFromRoute(testcase, packet, args=None):
+    return __get_host_from_route_impl(testcase.config.route)
 
 def __get_packet_encap_impl(obj, args):
     if obj.Encap == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
