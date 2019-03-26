@@ -94,8 +94,8 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 	}
 
 	point := &tsdb.Point{
-		Tags:   map[string]string{"source": ipSrc, "destination": ipDest, "source-port": sPort, "destination-port": dPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID, "session-id": sessionID},
-		Fields: map[string]interface{}{"flow_action": int64(ev.GetFlowaction())},
+		Tags:   map[string]string{"source": ipSrc, "destination": ipDest, "destination-port": dPort, "protocol": ipProt},
+		Fields: map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID, "session-id": sessionID, "flow_action": ev.GetFlowaction().String()},
 	}
 
 	// icmp fields
@@ -115,7 +115,9 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 		ev.DestVrf:   true,
 	}
 
-	// todo: decide tags & fields in fwlog
+	for k, v := range point.Fields {
+		point.Tags[k] = fmt.Sprintf("%v", v)
+	}
 
 	// check dest/src vrf
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {

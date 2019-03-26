@@ -410,6 +410,8 @@ func (dn *DNode) newQueryStore() error {
 	cfg.CacheSnapshotMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
 	cfg.CacheSnapshotWriteColdDuration = toml.Duration(time.Duration(time.Hour))
 	cfg.CompactFullWriteColdDuration = toml.Duration(time.Duration(12 * time.Hour))
+	cfg.MaxSeriesPerDatabase = 5 * tsdb.DefaultMaxSeriesPerDatabase
+	cfg.MaxValuesPerTag = 0
 
 	// query tstore for this data node
 	ts, err := tstore.NewTstoreWithConfig(dn.querydbPath, cfg)

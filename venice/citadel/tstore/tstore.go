@@ -58,6 +58,10 @@ func NewTstore(dbPath string) (*Tstore, error) {
 	// set the WAL directory
 	ts.EngineOptions.Config.WALDir = filepath.Join(dbPath, "wal")
 
+	// update tag/series limits, TODO: check mem. utilization
+	ts.EngineOptions.Config.MaxSeriesPerDatabase = 5 * tsdb.DefaultMaxSeriesPerDatabase
+	ts.EngineOptions.Config.MaxValuesPerTag = 0
+
 	// open the tsdb store
 	err := ts.Open()
 	if err != nil {
