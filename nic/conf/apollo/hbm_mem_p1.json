@@ -127,16 +127,16 @@
         {
             "name": "lpm_v4",
             "_comment": "supports 256k IPv4 routes per table, 128 route tables",
-            "size": "576M",
-            "block_size": "17472B",
+            "size": "564M",
+            "block_size": "4473920B",
             "max_elements": "256K",
             "cache": "p4plus-txdma"
         },
         {
             "name": "lpm_v6",
             "_comment": "supports 64k IPv6 routes per table, 128 route tables",
-            "size": "296M",
-            "block_size": "37440B",
+            "size": "302M",
+            "block_size": "2396736B",
             "max_elements": "64K",
             "cache": "p4plus-txdma"
         },

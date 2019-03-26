@@ -18,41 +18,41 @@ sdk_ret_t
 lpm_ipv6_route_add_key_to_stage (uint8_t *bytes, uint32_t idx,
                                  lpm_inode_t *lpm_inode)
 {
-    auto table = (route_ipv6_keys_actiondata_t *)bytes;
+    auto table = (route_actiondata_t *)bytes;
 
     switch (idx) {
         case 0:
-            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key0,
+            sdk::lib::memrev(table->action_u.route_search_ipv6.key0,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
             break;
         case 1:
-            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key1,
+            sdk::lib::memrev(table->action_u.route_search_ipv6.key1,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
             break;
         case 2:
-            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key2,
+            sdk::lib::memrev(table->action_u.route_search_ipv6.key2,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
             break;
         case 3:
-            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key3,
+            sdk::lib::memrev(table->action_u.route_search_ipv6.key3,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
             break;
         case 4:
-            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key4,
+            sdk::lib::memrev(table->action_u.route_search_ipv6.key4,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
             break;
         case 5:
-            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key5,
+            sdk::lib::memrev(table->action_u.route_search_ipv6.key5,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
             break;
         case 6:
-            sdk::lib::memrev(table->action_u.route_ipv6_keys_search.key6,
+            sdk::lib::memrev(table->action_u.route_search_ipv6.key6,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
             break;
@@ -67,28 +67,28 @@ sdk_ret_t
 lpm_ipv6_route_add_key_to_last_stage (uint8_t *bytes, uint32_t idx,
                                       lpm_inode_t *lpm_inode)
 {
-    auto table = (route_ipv6_data_actiondata_t *)bytes;
+    auto table = (route_actiondata_t *)bytes;
 
     switch (idx) {
         case 0:
-            sdk::lib::memrev(table->action_u.route_ipv6_data_search_retrieve.key0,
+            sdk::lib::memrev(table->action_u.route_search_ipv6_retrieve.key0,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
-            table->action_u.route_ipv6_data_search_retrieve.data0 =
+            table->action_u.route_search_ipv6_retrieve.data0 =
                     (uint16_t)lpm_inode->data;
             break;
         case 1:
-            sdk::lib::memrev(table->action_u.route_ipv6_data_search_retrieve.key1,
+            sdk::lib::memrev(table->action_u.route_search_ipv6_retrieve.key1,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
-            table->action_u.route_ipv6_data_search_retrieve.data1 =
+            table->action_u.route_search_ipv6_retrieve.data1 =
                     (uint16_t)lpm_inode->data;
             break;
         case 2:
-            sdk::lib::memrev(table->action_u.route_ipv6_data_search_retrieve.key2,
+            sdk::lib::memrev(table->action_u.route_search_ipv6_retrieve.key2,
                    &lpm_inode->ipaddr.addr.v6_addr.addr8[IP6_ADDR8_LEN/2],
                    IP6_ADDR8_LEN/2);
-            table->action_u.route_ipv6_data_search_retrieve.data2 =
+            table->action_u.route_search_ipv6_retrieve.data2 =
                     (uint16_t)lpm_inode->data;
             break;
         default:
@@ -101,8 +101,8 @@ lpm_ipv6_route_add_key_to_last_stage (uint8_t *bytes, uint32_t idx,
 sdk_ret_t
 lpm_ipv6_route_set_default_data (uint8_t *bytes, uint32_t default_data)
 {
-    auto table = (route_ipv6_data_actiondata_t *) bytes;
-    table->action_u.route_ipv6_data_search_retrieve.data_ = (uint16_t)default_data;
+    auto table = (route_actiondata_t *) bytes;
+    table->action_u.route_search_ipv6_retrieve.data_ = (uint16_t)default_data;
     return SDK_RET_OK;
 }
 
@@ -110,16 +110,16 @@ sdk_ret_t
 lpm_ipv6_route_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
     return impl_base::pipeline_impl()->write_to_txdma_table(addr,
-               P4_APOLLO_TXDMA_TBL_ID_ROUTE_IPV6_KEYS,
-               ROUTE_IPV6_KEYS_SEARCH_ID, bytes);
+               P4_APOLLO_TXDMA_TBL_ID_ROUTE,
+               ROUTE_SEARCH_IPV6_ID, bytes);
 }
 
 sdk_ret_t
 lpm_ipv6_route_write_last_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
     return impl_base::pipeline_impl()->write_to_txdma_table(addr,
-               P4_APOLLO_TXDMA_TBL_ID_ROUTE_IPV6_DATA,
-               ROUTE_IPV6_DATA_SEARCH_RETRIEVE_ID, bytes);
+               P4_APOLLO_TXDMA_TBL_ID_ROUTE,
+               ROUTE_SEARCH_IPV6_RETRIEVE_ID, bytes);
 }
 
 /**

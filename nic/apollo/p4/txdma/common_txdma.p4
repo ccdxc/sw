@@ -1058,11 +1058,7 @@ control ingress {
     if (app_header.table3_valid == 1) {
         read_qstate();
         if (app_header.table0_valid == 1) {
-            if (app_header.table1_valid == 1) {
-                route_ipv6_lookup();
-            } else {
-                route_ipv4_lookup();
-            }
+            route_lookup();
         }
         dma();
     } else {

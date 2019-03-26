@@ -1,4 +1,9 @@
-#define LPM_TABLE_SIZE    (64)
+#define LPM_TABLE_SIZE     (64)
+#define LPM_LOG2_FANOUT32  (4)
+#define LPM_LOG2_FANOUT64  (3)
+#define LPM_STAGE_FANOUT32 (1<<LPM_LOG2_FANOUT32)
+#define LPM_STAGE_FANOUT64 (1<<LPM_LOG2_FANOUT64)
+
 #define LPM_B01_OFFSET    ( 1*LPM_TABLE_SIZE)
 #define LPM_B02_OFFSET    ( 2*LPM_TABLE_SIZE)
 #define LPM_B03_OFFSET    ( 3*LPM_TABLE_SIZE)
@@ -33,3 +38,4 @@
 #define LPM_B32_OFFSET    (32*LPM_TABLE_SIZE)
 
 #define error_handler(a)  a ## _error
+
