@@ -80,9 +80,6 @@ TEST_F(vcn, DISABLED_vcn_workflow_2) {
     pds_vcn_key_t key = {};
     std::string vcn_start_addr = "10.0.0.0/16";
 
-// TODO: @saratk crashing with 1024 and higher number of VCN, smaller number
-// seems ok checkout the framework part once
-
     // Trigger
     key.id = 1;
     batch_params.epoch = ++g_batch_epoch;
@@ -102,6 +99,9 @@ TEST_F(vcn, DISABLED_vcn_workflow_2) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key, k_max_vcn) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vcn_util::many_read(
+        key, k_max_vcn, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create Set1, Set2, Delete Set1, Create Set3 in same batch
@@ -116,13 +116,13 @@ TEST_F(vcn, vcn_workflow_3) {
     std::string vcn_start_addr3 = "60.0.0.0/16";
     uint32_t num_vcns = 20;
 
-    // Trigger
     key1.id = 10;
     key2.id = 40;
     key3.id = 70;
+
+    // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-
     ASSERT_TRUE(vcn_util::many_create(key1, vcn_start_addr1, num_vcns,
                                       PDS_VCN_TYPE_TENANT) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key2, vcn_start_addr2, num_vcns,
@@ -145,6 +145,11 @@ TEST_F(vcn, vcn_workflow_3) {
     ASSERT_TRUE(vcn_util::many_delete(key2, num_vcns) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key3, num_vcns) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vcn_util::many_read(
+        key2, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(
+        key3, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create and delete VCN in two batches
@@ -156,8 +161,9 @@ TEST_F(vcn, vcn_workflow_4) {
     pds_vcn_key_t key = {};
     std::string vcn_start_addr = "10.0.0.0/16";
 
-    // Trigger
     key.id = 1;
+
+    // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key, vcn_start_addr, k_max_vcn,
@@ -186,11 +192,11 @@ TEST_F(vcn, vcn_workflow_5) {
     std::string vcn_start_addr3 = "70.0.0.0/16";
     uint32_t num_vcns = 20;
 
-    // Trigger
     key1.id = 10;
     key2.id = 40;
     key3.id = 70;
 
+    // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key1, vcn_start_addr1, num_vcns,
@@ -224,6 +230,11 @@ TEST_F(vcn, vcn_workflow_5) {
     ASSERT_TRUE(vcn_util::many_delete(key2, num_vcns) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key3, num_vcns) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vcn_util::many_read(
+        key2, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vcn_util::many_read(
+        key3, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create maximum number of VCNs in two batches
@@ -233,8 +244,9 @@ TEST_F(vcn, vcn_workflow_neg_1) {
     pds_vcn_key_t key = {};
     std::string vcn_start_addr = "10.0.0.0/16";
 
-    // Trigger
     key.id = 1;
+
+    // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key, vcn_start_addr, k_max_vcn,
@@ -259,6 +271,9 @@ TEST_F(vcn, vcn_workflow_neg_1) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key, k_max_vcn) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vcn_util::many_read(
+        key, k_max_vcn, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create more than maximum number of VCNs supported.
@@ -268,8 +283,9 @@ TEST_F(vcn, vcn_workflow_neg_2) {
     pds_vcn_key_t key = {};
     std::string vcn_start_addr = "10.0.0.0/16";
 
-    // Trigger
     key.id = 1;
+
+    // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key, vcn_start_addr, k_max_vcn + 1,
@@ -286,8 +302,9 @@ TEST_F(vcn, vcn_workflow_neg_2) {
 TEST_F(vcn, vcn_workflow_neg_3a) {
     pds_vcn_key_t key = {};
 
-    // Trigger
     key.id = 1;
+
+    // Trigger
     ASSERT_TRUE(vcn_util::many_read(
         key, k_max_vcn, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
@@ -298,8 +315,9 @@ TEST_F(vcn, vcn_workflow_neg_3b) {
     pds_batch_params_t batch_params = {0};
     pds_vcn_key_t key = {};
 
-    // Trigger
     key.id = 1;
+
+    // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key, k_max_vcn) == sdk::SDK_RET_OK);
@@ -316,9 +334,10 @@ TEST_F(vcn, vcn_workflow_neg_4) {
     std::string vcn_start_addr2 = "40.0.0.0/16";
     uint32_t num_vcns = 20;
 
-    // Trigger
     key1.id = 10;
     key2.id = 40;
+
+    // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key1, vcn_start_addr1, num_vcns,
@@ -333,18 +352,21 @@ TEST_F(vcn, vcn_workflow_neg_4) {
     ASSERT_TRUE(vcn_util::many_delete(key1, num_vcns) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key2, num_vcns) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vcn_util::many_read(
         key1, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_read(
         key2, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 
-    //Cleanup
+    // Cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key1, num_vcns) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vcn_util::many_read(
+        key1, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create a VCN with an id which is not within the range.
