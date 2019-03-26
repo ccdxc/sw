@@ -23,8 +23,10 @@ namespace impl {
 class lif_impl_state;
 
 typedef struct pds_lif_spec_s {
+    ///< key for the lif
     pds_lif_key_t    key;
-    pds_port_id_t    pinned_port_id;
+    ///< if index of the pinned port/lif
+    pds_ifindex_t    pinned_ifidx;
 } pds_lif_spec_t;
 
 /// \defgroup PDS_LIF_IMPL - lif entry datapath implementation
@@ -81,9 +83,9 @@ public:
                                         sdk::policer_t *policer);
 
     ///< \brief  return the pinned port id of the lif
-    /// \return  port id, lif is pinned to
-    pds_port_id_t pinned_port_id(void) const {
-        return pinned_port_id_;
+    /// \return  ifindex this lif is pinned to
+    pds_ifindex_t pinned_ifindex(void) const {
+        return pinned_if_idx_;
     }
 
     ///< \brief    program necessary filter entries for this lif
@@ -99,7 +101,7 @@ private:
 
 private:
     pds_lif_key_t    key_;               ///< (s/w & h/w) lif id
-    pds_port_id_t    pinned_port_id_;    ///< pinnned port id, if any
+    pds_ifindex_t    pinned_if_idx_;     ///< pinnned port id, if any
     ht_ctxt_t        ht_ctxt_;           ///< hash table context
 
     friend class lif_impl_state;         ///< lif_impl_state is friend of lif_impl

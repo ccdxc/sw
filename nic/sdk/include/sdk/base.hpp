@@ -32,6 +32,8 @@ namespace sdk {
 #define __PACK__            __attribute__((packed))
 #endif
 
+#define __UNUSED__          __attribute__((unused))
+
 #define __ALIGN__           __attribute__((__aligned__(n)))
 #define __CACHE_ALIGN__     __ALIGN__(CACHE_LINE_SIZE)
 #define __ASSERT__(x)       assert(x)

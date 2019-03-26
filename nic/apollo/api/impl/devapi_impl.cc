@@ -9,9 +9,12 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/mem.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/devapi_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
 namespace api {
 namespace impl {
@@ -41,7 +44,7 @@ devapi_impl::lif_create(lif_info_t *info) {
     pds_lif_spec_t spec = { 0 };
 
     spec.key = info->lif_id;
-    spec.pinned_port_id = info->pinned_uplink_port_num;
+    spec.pinned_ifidx = info->pinned_uplink_port_num;
     lif = lif_impl::factory(&spec);
     if (unlikely(lif == NULL)) {
         return sdk::SDK_RET_OOM;
@@ -112,6 +115,28 @@ sdk_ret_t
 devapi_impl::qos_get_txtc_cos(const string &group, uint32_t uplink_port,
                               uint8_t *cos) {
     return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
+                           pds_ifindex_t ifidx, bool is_oob) {
+    sdk_ret_t ret;
+    if_entry *intf;
+    uint32_t logical_port, tm_port;
+
+    intf = if_db()->find(&ifidx);
+    if (intf == NULL) {
+        return SDK_RET_INVALID_ARG;
+    }
+    logical_port = sdk::lib::catalog::ifindex_to_logical_port(ifidx);
+    tm_port = g_pds_state.catalogue()->ifindex_to_tm_port(ifidx);
+    // we use logical port as uplink hw lif identifier in the system
+    ret = sdk::platform::capri::capri_tm_uplink_lif_set(tm_port, logical_port);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program uplink ifidx 0x%x's lif id "
+                      "in TM, err %u", ret);
+    }
+    return ret;
 }
 
 sdk_ret_t

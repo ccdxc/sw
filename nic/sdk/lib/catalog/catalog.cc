@@ -815,5 +815,14 @@ catalog::logical_port_to_ifindex(uint32_t logical_port)
     return ETH_IFINDEX(0, parent, child);
 }
 
+uint32_t
+catalog::ifindex_to_tm_port(uint32_t ifindex)
+{
+    uint32_t logical_port;
+
+    logical_port = ifindex_to_logical_port(ifindex);
+    return catalog::logical_port_to_tm_port(logical_port);
+}
+
 }    // namespace lib
 }    // namespace sdk

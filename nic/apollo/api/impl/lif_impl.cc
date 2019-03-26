@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
@@ -40,7 +41,7 @@ lif_impl::destroy(lif_impl *impl) {
 
 lif_impl::lif_impl(pds_lif_spec_t *spec) {
     memcpy(&key_, &spec->key, sizeof(key_));
-    pinned_port_id_ = spec->pinned_port_id;
+    pinned_if_idx_ = spec->pinned_ifidx;
 }
 
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
@@ -96,26 +97,27 @@ lif_impl::program_filters(lif_info_t *lif_params) {
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
-    // TODO: get oport from pinned port id
-    data.nacl_redirect_action.oport = TM_PORT_NCSI;
-    // TODO: hardcoding lif for now
+    data.nacl_redirect_action.oport =
+        g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
+    // lif doesn't matter in this direction
     data.nacl_redirect_action.lif = 0;
     ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
-                      "uplink %u, err %u", key_, pinned_port_id_, ret);
+                      "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
         return ret;
     }
 
     // install NACL entry for traffic from uplink front panel port to ARM
-    key.capri_intrinsic_lif = 3;
+    key.capri_intrinsic_lif =
+        sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = key_;
     data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
     ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
-                      "lif %u, err %u", pinned_port_id_, key_, ret);
+                      "lif %u, err %u", pinned_if_idx_, key_, ret);
     }
     return ret;
 }

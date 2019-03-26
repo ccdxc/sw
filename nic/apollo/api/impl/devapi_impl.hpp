@@ -46,22 +46,16 @@ public:
                                       bool all_multicast,
                                       bool promiscuous) override;
     virtual sdk_ret_t lif_upd_name(uint32_t lif_id, string name) override;
-
     // qos APIs
     virtual sdk_ret_t qos_get_txtc_cos(const string &group,
                                        uint32_t uplink_port,
                                        uint8_t *cos) override;
-
     // uplink APIs
-    virtual sdk_ret_t uplink_create(uint32_t id, uint32_t port, bool is_oob) {
-        // TODO: not clear why this APIs even exists
+    virtual sdk_ret_t uplink_create(uint32_t uplink_ifidx,
+                                    pds_ifindex_t ifidx, bool is_oob) override;
+    virtual sdk_ret_t uplink_destroy(pds_ifindex_t ifidx) {
         return SDK_RET_INVALID_OP;
     }
-    virtual sdk_ret_t uplink_destroy(uint32_t port) {
-        // TODO: not clear why this APIs even exists
-        return SDK_RET_INVALID_OP;
-    }
-
     // port APIs
     virtual sdk_ret_t port_get_status(uint32_t port_num,
                                       port_status_t *status) override;

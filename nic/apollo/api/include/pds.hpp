@@ -35,7 +35,6 @@ typedef uint32_t pds_mpls_tag_t;
 typedef uint32_t pds_mapping_id_t;
 typedef uint32_t pds_route_table_id_t;
 typedef uint32_t pds_policy_id_t;
-typedef uint32_t pds_port_id_t;
 typedef uint16_t pds_lif_key_t;
 typedef uint32_t pds_ifindex_t;
 

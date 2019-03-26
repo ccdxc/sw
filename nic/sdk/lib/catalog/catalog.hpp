@@ -144,6 +144,7 @@ public:
     static int logical_port_to_phy_port(uint32_t logical_port);
     static uint32_t ifindex_to_logical_port(uint32_t ifindex);
     static uint32_t logical_port_to_ifindex(uint32_t logical_port);
+    uint32_t ifindex_to_tm_port(uint32_t ifindex);
 
     // catalog to sdk conversion
     static port_speed_t catalog_speed_to_port_speed(std::string speed);
