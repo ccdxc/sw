@@ -561,7 +561,7 @@ func (c *IPClient) watchLeaseEvents() {
 					log.Errorf("Failed to update naples status : %v", err)
 				} else {
 					for _, cIP := range controllers {
-						if !vldtor.IPAddr(cIP) {
+						if vldtor.IPAddr(cIP) != nil {
 							c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
 							log.Errorf("Controllers returned is invalid IP")
 							return
