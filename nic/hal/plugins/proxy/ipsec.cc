@@ -219,6 +219,27 @@ ipsec_process_initiator_plain_flow(fte::ctx_t&ctx)
         acl::ref_t *user_ref = get_rule_data((acl_rule_t *) rule);
         rule_cfg = (ipsec_cfg_rule_t *)RULE_MATCH_USER_DATA(user_ref, ipsec_cfg_rule_t, ref_count);
 
+        rule_ctr_t *rule_ctr = get_rule_ctr((acl_rule_t *)rule);
+        rule_ctr->total_hits++;
+        switch ( ctx.get_key().proto) {
+            case types::IPPROTO_ICMP:
+            case types::IPPROTO_ICMPV6:
+                rule_ctr->icmp_hits++;
+                break;
+            case types::IPPROTO_ESP:
+                rule_ctr->esp_hits++;
+                break;
+            case types::IPPROTO_TCP:
+                rule_ctr->tcp_hits++;
+                break;
+            case types::IPPROTO_UDP:
+                rule_ctr->udp_hits++;
+                break;
+            default:
+                HAL_TRACE_DEBUG("Stats: Any proto:{}", ctx.key().proto);
+                rule_ctr->other_hits++;
+
+        }
         HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
             rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
             rule_cfg->action.sa_action_dec_handle);
@@ -290,6 +311,27 @@ ipsec_process_uplink_esp_flow(fte::ctx_t&ctx)
         acl::ref_t *user_ref = get_rule_data((acl_rule_t *) rule);
         rule_cfg = (ipsec_cfg_rule_t *)RULE_MATCH_USER_DATA(user_ref, ipsec_cfg_rule_t, ref_count);
 
+        rule_ctr_t *rule_ctr = get_rule_ctr((acl_rule_t *)rule);
+        rule_ctr->total_hits++;
+        switch ( ctx.get_key().proto) {
+            case types::IPPROTO_ICMP:
+            case types::IPPROTO_ICMPV6:
+                rule_ctr->icmp_hits++;
+                break;
+            case types::IPPROTO_ESP:
+                rule_ctr->esp_hits++;
+                break;
+            case types::IPPROTO_TCP:
+                rule_ctr->tcp_hits++;
+                break;
+            case types::IPPROTO_UDP:
+                rule_ctr->udp_hits++;
+                break;
+            default:
+                HAL_TRACE_DEBUG("Stats: Any proto:{}", ctx.key().proto);
+                rule_ctr->other_hits++;
+
+        }
         HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
             rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
             rule_cfg->action.sa_action_dec_handle);
@@ -380,6 +422,27 @@ ipsec_process_rflow(fte::ctx_t&ctx)
             acl::ref_t *user_ref = get_rule_data((acl_rule_t *) rule);
             rule_cfg = (ipsec_cfg_rule_t *)RULE_MATCH_USER_DATA(user_ref, ipsec_cfg_rule_t, ref_count);
 
+            rule_ctr_t *rule_ctr = get_rule_ctr((acl_rule_t *)rule);
+            rule_ctr->total_hits++;
+            switch ( ctx.get_key().proto) {
+            case types::IPPROTO_ICMP:
+            case types::IPPROTO_ICMPV6:
+                rule_ctr->icmp_hits++;
+                break;
+            case types::IPPROTO_ESP:
+                rule_ctr->esp_hits++;
+                break;
+            case types::IPPROTO_TCP:
+                rule_ctr->tcp_hits++;
+                break;
+            case types::IPPROTO_UDP:
+                rule_ctr->udp_hits++;
+                break;
+            default:
+                HAL_TRACE_DEBUG("Stats: Any proto:{}", ctx.key().proto);
+                rule_ctr->other_hits++;
+
+            }
             flowupd = {type: fte::FLOWUPD_FWDING_INFO};
             HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
                 rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
@@ -437,7 +500,7 @@ ipsec_exec_pkt(fte::ctx_t&ctx)
         } // Encrypted ESP packet from Uplink 
         // Decrypted packeted from Barco
         if ((ctx.get_key().proto != IP_PROTO_IPSEC_ESP) &&
-            (ctx.get_key().sport != UDP_SRC_PORT_TELEMETRY) && 
+            ((ctx.cpu_rxhdr()->flags & CPU_FLAGS_FROM_IPSEC_APP) == CPU_FLAGS_FROM_IPSEC_APP) &&
             (ctx.cpu_rxhdr()->src_lif == IPSEC_ARM_LIF)) {
             return ipsec_process_post_decrypt_flow(ctx);
         } // Post Encrypted ESP packet from Barco

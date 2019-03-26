@@ -493,6 +493,7 @@ ipsec_rule_delete (ipsec::IpsecRuleDeleteRequest& req, ipsec::IpsecRuleDeleteRes
     hal_ret_t       ret = HAL_RET_OK;
     ipsec_cfg_pol_t *policy;
 
+    HAL_TRACE_DEBUG("Policy delete for handle {}", req.key_or_handle().rule_handle());
     if ((policy = ipsec_cfg_pol_key_or_handle_lookup(req.key_or_handle())) == NULL) {
         ret = HAL_RET_IPSEC_RULE_NOT_FOUND;
         goto end;

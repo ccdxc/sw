@@ -319,6 +319,8 @@ f_p4plus_cpu_pkt:
   seq         c2, k.ipv4_ihl, 5
   setcf       c1, [c1 & !c2]
   or.c1       r2, r2, CPU_FLAGS_IP_OPTIONS_PRESENT
+  seq         c1, k.control_metadata_i2e_flags[P4_I2E_FLAGS_FROM_IPSEC_APP], 1
+  or.c1       r2, r2, CPU_FLAGS_FROM_IPSEC_APP
   seq         c1, k.tcp_valid, TRUE
   b.c1        lb_cpu_pkt_tcp
   or          r6, k.udp_valid, k.esp_valid
@@ -332,8 +334,6 @@ f_p4plus_cpu_pkt:
   add.c3      r1, r1, 4
   add.c4      r1, r1, 12
   phvwr       p.p4_to_p4plus_cpu_pkt_payload_offset, r1.hx
-  seq         c1, k.control_metadata_i2e_flags[P4_I2E_FLAGS_FROM_IPSEC_APP], 1
-  or.c1       r2, r2, CPU_FLAGS_FROM_IPSEC_APP
   jr          r7
   phvwr       p.p4_to_p4plus_cpu_pkt_flags, r2
 

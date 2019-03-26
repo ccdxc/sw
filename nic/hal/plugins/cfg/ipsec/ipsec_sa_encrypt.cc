@@ -92,6 +92,14 @@ add_ipsec_sa_to_db (ipsec_sa_t *ipsec)
     return HAL_RET_OK;
 }
 
+static inline hal_ret_t
+del_ipsec_sa_from_db(ipsec_sa_t *ipsec)
+{
+    g_hal_state->ipsec_sa_id_ht()->remove(&ipsec->ht_ctxt);
+    return HAL_RET_OK;
+}
+
+
 static inline void
 ipsec_sa_encrypt_spec_dump (IpsecSAEncrypt& spec)
 {
@@ -415,6 +423,8 @@ ipsec_saencrypt_delete (ipsec::IpsecSAEncryptDeleteRequest& req, ipsec::IpsecSAE
 
     // fill stats of this IPSEC CB
     rsp->set_api_status(types::API_STATUS_OK);
+    del_ipsec_sa_from_db(ipsec);
+    ipsec_sa_free(ipsec);
 
     return HAL_RET_OK;
 }
