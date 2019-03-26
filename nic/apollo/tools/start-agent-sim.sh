@@ -12,4 +12,4 @@ export LOG_DIR=$NIC_DIR/
 export ZMQ_SOC_DIR=${NIC_DIR}
 echo "Starting Agent: `date +%x_%H:%M:%S:%N`"
 BUILD_DIR=$NIC_DIR/build/x86_64/apollo
-$GDB $BUILD_DIR/bin/agent -c hal.json 2>&1
+$GDB $BUILD_DIR/bin/agent -c hal.json $* 2>&1
