@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/grpc/connectivity"
+
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
 	"google.golang.org/grpc"
@@ -123,7 +125,7 @@ func (br *Broker) getRPCClient(nodeUUID, clusterType string) (*grpc.ClientConn, 
 
 	// see if we already have an rpc client for this node
 	rclient, ok := br.rpcClients[nodeUUID]
-	if ok {
+	if ok && rclient.ClientConn != nil && rclient.ClientConn.GetState() == connectivity.Ready {
 		return rclient.ClientConn, nil
 	}
 
@@ -150,4 +152,11 @@ func (br *Broker) getRPCClient(nodeUUID, clusterType string) (*grpc.ClientConn, 
 	br.rpcClients[node.NodeUUID] = rclient
 
 	return rclient.ClientConn, nil
+}
+
+// DeleteRPCClient removes rpc client for a node
+func (br *Broker) DeleteRPCClient(nodeUUID string) {
+	br.Lock()
+	delete(br.rpcClients, nodeUUID)
+	br.Unlock()
 }

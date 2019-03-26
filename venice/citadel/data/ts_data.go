@@ -233,10 +233,10 @@ func (dn *DNode) replicatePoints(ctx context.Context, req *tproto.PointsWriteReq
 
 // replicateFailedPoints replicates failed points from the pending queue
 func (dn *DNode) replicateFailedPoints(sb *syncBufferState) error {
-	dn.logger.Infof("%s sync buffer queue len:%d for %+v", dn.nodeUUID, sb.queue.Len(), sb)
 	if sb.queue.Len() == 0 {
 		return nil
 	}
+	dn.logger.Infof("%s sync buffer queue len:%d for %+v", dn.nodeUUID, sb.queue.Len(), sb)
 
 	cl := dn.watcher.GetCluster(meta.ClusterTypeTstore)
 	if !cl.IsNodeAlive(sb.nodeUUID) {

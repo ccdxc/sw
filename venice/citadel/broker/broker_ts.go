@@ -248,16 +248,10 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 
 	// walk the per shard list and write it to each node
 	for sid, points := range pointsMap {
-		// get the rpc client for the node
-		rpcClient, err := br.getRPCClient(replMap[sid].NodeUUID, meta.ClusterTypeTstore)
-		if err != nil {
-			return err
-		}
-
 		// converts points to string
 		var data bytes.Buffer
 		for _, pt := range points {
-			_, err = data.WriteString(pt.PrecisionString("n"))
+			_, err := data.WriteString(pt.PrecisionString("n"))
 			if err != nil {
 				return err
 			}
@@ -268,7 +262,7 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 		}
 
 		// build the request
-		req := tproto.PointsWriteReq{
+		req := &tproto.PointsWriteReq{
 			ClusterType: meta.ClusterTypeTstore,
 			Database:    database,
 			ReplicaID:   replMap[sid].ReplicaID,
@@ -276,22 +270,50 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 			Points:      data.String(),
 		}
 
-		// make the rpc call
-		dnclient := tproto.NewDataNodeClient(rpcClient)
-		resp, err := dnclient.PointsWrite(ctx, &req)
-		if err != nil || resp.Status != "" {
-			br.logger.Errorf("Error making PointsWrite rpc call. Err: %v, rpc status: %v, Node: %v", err, rpcClient.GetState(), replMap[sid].NodeUUID)
-			// trigger db creation
-			if err != nil && strings.Contains(err.Error(), "database not found") {
-				if dbErr := br.CreateDatabase(ctx, database); dbErr != nil {
-					br.logger.Error("failed to create database %v", dbErr)
-				}
-			}
+		if err := br.writePointsInReplica(ctx, replMap[sid].NodeUUID, req); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// writePointsInReplica writes points to a replica in the data node
+func (br *Broker) writePointsInReplica(ctx context.Context, nodeuuid string, req *tproto.PointsWriteReq) error {
+	for i := 0; i < numBrokerRetries; i++ {
+		// get the rpc client for the node
+		rpcClient, err := br.getRPCClient(nodeuuid, meta.ClusterTypeTstore)
+		if err != nil {
+			return err
+		}
+
+		// make the rpc call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		resp, err := dnclient.PointsWrite(ctx, req)
+		if err == nil {
+			if resp.Status == "" {
+				return nil
+			}
+			br.logger.Errorf("points write failed with status %v", resp.Status)
+			continue
+		}
+
+		br.logger.Errorf("Error making PointsWrite rpc call. Err: %v, rpc status: %v, Node: %v", err, rpcClient.GetState(), nodeuuid)
+		// trigger db creation
+		if strings.Contains(err.Error(), "database not found") {
+			if dbErr := br.CreateDatabase(ctx, req.Database); dbErr != nil {
+				br.logger.Error("failed to create database %s, %v", req.Database, dbErr)
+			}
+			// continue
+		}
+
+		// reconnect
+		if strings.Contains(err.Error(), "connection error") {
+			br.DeleteRPCClient(nodeuuid)
+			// continue
+		}
+	}
+	return fmt.Errorf("retries exhaused for points write to %v, %+v", nodeuuid, req)
 }
 
 // queryShard queries replicas in a shard till it gets a successfull response

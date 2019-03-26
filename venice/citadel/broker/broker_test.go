@@ -666,3 +666,64 @@ func TestBrokerBenchmark(t *testing.T) {
 	err = meta.DestroyClusterState(meta.DefaultClusterConfig(), meta.ClusterTypeKstore)
 	AssertOk(t, err, "Error deleting cluster state")
 }
+
+func TestBrokerTstoreWriteRetry(t *testing.T) {
+	const numNodes = 4
+	dnodes := make([]*data.DNode, numNodes)
+	brokers := make([]*broker.Broker, numNodes)
+	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
+
+	// create nodes
+	for idx := 0; idx < numNodes; idx++ {
+		// create a temp dir
+		path, err := ioutil.TempDir("", fmt.Sprintf("tstore-%d-", idx))
+		AssertOk(t, err, "Error creating tmp dir")
+		defer os.RemoveAll(path)
+
+		qpath, err := ioutil.TempDir("", fmt.Sprintf("qstore-%d-", idx))
+		AssertOk(t, err, "Error creating tmp dir")
+
+		defer os.RemoveAll(qpath)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
+		AssertOk(t, err, "Error creating nodes")
+	}
+
+	// create the brokers
+	for idx := 0; idx < numNodes; idx++ {
+		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx), logger)
+		AssertOk(t, err, "Error creating broker")
+	}
+
+	// wait till all the shards are created
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(brokers[0].GetCluster(meta.ClusterTypeTstore).NodeMap) != numNodes {
+			return false, nil
+		}
+		for _, nd := range brokers[0].GetCluster(meta.ClusterTypeTstore).NodeMap {
+			if nd.NumShards != 4 {
+				return false, []interface{}{brokers[0].GetCluster(meta.ClusterTypeTstore), nd}
+			}
+		}
+		return true, nil
+	}, "nodes have invalid number of shards", "1s", "20s")
+
+	// write some points without creating db
+	data := fmt.Sprintf("cpu%d,host=serverB,svc=nginx value1=11,value2=12 %v\n", 0, time.Now().UnixNano()) +
+		fmt.Sprintf("cpu%d,host=serverC,svc=nginx value1=21,value2=22  %v\n", 0, time.Now().UnixNano())
+	points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
+	AssertOk(t, err, "Error parsing points")
+
+	// write the points
+	err = brokers[0].WritePoints(context.Background(), "db0", points)
+	AssertOk(t, err, "Error writing points")
+
+	// delete rpc client
+	for idx := range dnodes {
+		brokers[0].DeleteRPCClient(fmt.Sprintf("node-%d", idx))
+	}
+
+	// write the points, should reconnect
+	err = brokers[0].WritePoints(context.Background(), "db0", points)
+	AssertOk(t, err, "Error writing points")
+}
