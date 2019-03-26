@@ -19,6 +19,7 @@ import (
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/globals"
+	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/log"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
@@ -554,14 +555,21 @@ func (c *IPClient) watchLeaseEvents() {
 				}
 
 				controllers, _ := readAndParseLease(c.leaseFile)
-				if controllers == nil {
+				if len(controllers) == 0 {
 					// Vendor specified attributes is nil
 					c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
 					log.Errorf("Failed to update naples status : %v", err)
 				} else {
+					for _, cIP := range controllers {
+						if !vldtor.IPAddr(cIP) {
+							c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
+							log.Errorf("Controllers returned is invalid IP")
+							return
+						}
+					}
+
 					c.updateNaplesStatus(controllers)
 				}
-
 			}
 		// watch for errors
 		case <-c.watcher.Errors:
