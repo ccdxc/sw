@@ -171,7 +171,7 @@ populate_port_info (pds_ifindex_t ifindex, uint32_t phy_port,
     }
     port_args->debounce_time = 0;
     port_args->mtu = 0;    /**< default will be set to max mtu */
-    port_args->pause = port_pause_type_t::PORT_PAUSE_TYPE_LINK;
+    port_args->pause = port_pause_type_t::PORT_PAUSE_TYPE_NONE;
     port_args->loopback_mode = port_loopback_mode_t::PORT_LOOPBACK_MODE_NONE;
 
     for (uint32_t i = 0; i < port_args->num_lanes; i++) {
