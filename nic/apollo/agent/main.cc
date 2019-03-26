@@ -111,7 +111,6 @@ main (int argc, char **argv)
                 print_usage(argv);
                 exit(1);
             }
-            fprintf(stdout, "Got profile: %s\n", profile.c_str());
             break;
 
         case 'h':
