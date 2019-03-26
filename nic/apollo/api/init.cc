@@ -97,7 +97,7 @@ pds_init (pds_init_params_t *params)
 {
     sdk_ret_t     ret;
     asic_cfg_t    asic_cfg;
-    std::string   mpart_json;
+    std::string   mem_json;
 
     // initializer the logger
     sdk::lib::logger::init(params->trace_cb);
@@ -123,22 +123,29 @@ pds_init (pds_init_params_t *params)
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // parse hbm memory region configuration file
-    if (api::g_pds_state.pipeline_profile().empty()) {
-        mpart_json =
+    if (params->scale_profile == PDS_SCALE_PROFILE_DEFAULT) {
+        mem_json =
             api::g_pds_state.cfg_path() + "/" + params->pipeline +
             "/hbm_mem.json";
+    } else if (params->scale_profile == PDS_SCALE_PROFILE_P1) {
+        mem_json =
+            api::g_pds_state.cfg_path() + "/" + params->pipeline +
+            "/hbm_mem_p1.json";
     } else {
-        mpart_json =
-            api::g_pds_state.cfg_path() + "/" + params->pipeline + "/hbm_mem_" +
-            api::g_pds_state.pipeline_profile() + ".json";
+        PDS_TRACE_ERR("Unknown scale profile %u, aborting ...",
+                      params->scale_profile);
+        return SDK_RET_INVALID_ARG;
     }
-    if (access(mpart_json.c_str(), R_OK) < 0) {
+    api::g_pds_state.set_scale_profile(params->scale_profile);
+
+    // check if the memory carving configuration file exists
+    if (access(mem_json.c_str(), R_OK) < 0) {
         PDS_TRACE_ERR("memory config file %s doesn't exist or not accessible\n",
-                      mpart_json.c_str());
+                      mem_json.c_str());
         return ret;
     }
     api::g_pds_state.set_mpartition(
-        sdk::platform::utils::mpartition::factory(mpart_json.c_str()));
+        sdk::platform::utils::mpartition::factory(mem_json.c_str()));
 
     // setup all asic specific config params
     api::asic_global_config_init(params, &asic_cfg);

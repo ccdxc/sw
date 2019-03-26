@@ -75,9 +75,6 @@ parse_pipeline_config (string pipeline, pds_state *state)
     std::ifstream json_cfg(cfg_file.c_str());
     read_json(json_cfg, pt);
     parse_cores_config(pt, state);
-    if (pt.find("profile") != pt.not_found()) {
-        state->set_pipeline_profile(pt.get<string>("profile"));
-    }
     return SDK_RET_OK;
 }
 
