@@ -144,7 +144,7 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
                 rx_stats = &lif->rxqcqs[i]->stats.rx;
                 stat_buf += vmk_Sprintf((char *) stat_buf,
                                         "\n    %s[%d]: packets=%lu, bytes=%lu,"
-                                        " alloc_err=%lu, csum_err=%lu"
+                                        " alloc_err=%lu, csum_err=%lu,"
                                         " csum_complete=%lu, no_csum=%lu",
                                         "rx_queue", i, rx_stats->pkts,
                                         rx_stats->bytes, rx_stats->alloc_err,
@@ -198,7 +198,7 @@ ionic_en_queue_init_rss_state(vmk_AddrCookie driver_data,
                               vmk_UplinkQueueRSSHashKey *rss_hash_key,
                               vmk_UplinkQueueRSSIndTable *rss_ind_tbl)
 {
-        VMK_ReturnStatus status;
+        VMK_ReturnStatus status = VMK_OK;
         struct lif *lif;
         struct ionic_en_priv_data *priv_data =
                 (struct ionic_en_priv_data *) driver_data.ptr;
@@ -216,7 +216,7 @@ ionic_en_queue_init_rss_state(vmk_AddrCookie driver_data,
         }
 
         if (rss_ind_tbl->tableSize > RSS_IND_TBL_SIZE) {
-                ionic_err("RSS indirection talbe sie(%d) is not valid,"
+                ionic_err("RSS indirection talbe size(%d) is not valid,"
                           " it should be less or equal to (%d).",
                           rss_ind_tbl->tableSize, RSS_IND_TBL_SIZE);
                 return VMK_BAD_PARAM;
@@ -228,13 +228,7 @@ ionic_en_queue_init_rss_state(vmk_AddrCookie driver_data,
         vmk_Memcpy(lif->rss_ind_tbl,
                    rss_ind_tbl->table,
                    rss_ind_tbl->tableSize);
-	status = ionic_rss_ind_tbl_set(lif, NULL);
-	if (status != VMK_OK) {
-                ionic_err("ionic_rss_ind_tbl_set() failed, status: %s",
-                          vmk_StatusToString(status));
-		return status;
-        }
-
+        lif->rss_ind_tbl_size = rss_ind_tbl->tableSize;
 
         vmk_Memset(lif->rss_hash_key,
                    0,
@@ -242,13 +236,7 @@ ionic_en_queue_init_rss_state(vmk_AddrCookie driver_data,
         vmk_Memcpy(lif->rss_hash_key,
                    rss_hash_key->key,
                    rss_hash_key->keySize);
-	status = ionic_rss_hash_key_set(lif,
-                                        rss_hash_key->key);
-	if (status != VMK_OK) {
-                ionic_err("ionic_rss_hash_key_set() failed, status: %s",
-                          vmk_StatusToString(status));
-		return status;
-        }
+        lif->rss_key_size = rss_hash_key->keySize;
 
         return status;
 }
@@ -289,6 +277,14 @@ ionic_en_queue_update_rss_table(vmk_AddrCookie driver_data,
 		return status;
         }
 
+        status = ionic_rss_hash_key_set(lif,
+                                        lif->rss_hash_key);
+        if (status != VMK_OK) {
+                ionic_err("ionic_rss_hash_key_set() failed, status: %s",
+                          vmk_StatusToString(status));
+                return status;
+        }
+
         return status;
 }
 
@@ -306,10 +302,10 @@ ionic_en_queue_get_rss_table(vmk_AddrCookie driver_data,
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
 
-        rss_ind_tbl->tableSize = RSS_IND_TBL_SIZE;
+        rss_ind_tbl->tableSize = lif->rss_ind_tbl_size;
         vmk_Memcpy(rss_ind_tbl->table,
                    lif->rss_ind_tbl,
-                   RSS_IND_TBL_SIZE);
+                   lif->rss_ind_tbl_size);
 
         return VMK_OK;
 }

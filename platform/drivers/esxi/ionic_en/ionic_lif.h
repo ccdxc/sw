@@ -139,6 +139,8 @@ struct lif {
         dma_addr_t lif_stats_pa;
         u8 rss_hash_key[RSS_HASH_KEY_SIZE];
         u8 *rss_ind_tbl;
+        u32 rss_ind_tbl_size;
+        u32 rss_key_size;
         dma_addr_t rss_ind_tbl_pa;
         struct rx_filters rx_filters;
         struct ionic_work_queue *def_work_queue;///////

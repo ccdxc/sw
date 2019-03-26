@@ -1800,7 +1800,7 @@ ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
                 for (i = 0; i < RSS_IND_TBL_SIZE; i++)
                         lif->rss_ind_tbl[i] = indir[i];
 
-        ionic_info("rss_ind_tbl_set\n");
+        ionic_info("rss_ind_tbl_set");
 
         status = ionic_adminq_post_wait(lif, &ctx);
         ionic_completion_destroy(&ctx.work);
@@ -1900,12 +1900,8 @@ ionic_lif_rss_setup(struct lif *lif)
 	/* Fill indirection table with 'default' values */
 
 	for (i = 0; i < RSS_IND_TBL_SIZE; i++) {
-                if (DRSS == 0) {
-                        ind_tbl_value = i % lif->nrxqcqs;
-                } else {
-                        ind_tbl_value = (i % DRSS) +
-                                        priv_data->uplink_handle.max_rx_normal_queues;
-                }  
+                ind_tbl_value = (i % DRSS) +
+                                priv_data->uplink_handle.max_rx_normal_queues;
 		lif->rss_ind_tbl[i] = ind_tbl_value;
         }
 
@@ -1997,7 +1993,7 @@ static void ionic_lif_deinit(struct lif *lif)
 
 	ionic_lif_stats_stop(lif);
 	if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH &&
-            (!lif->uplink_handle->is_mgmt_nic)) {
+            (!lif->uplink_handle->is_mgmt_nic) && DRSS) {
                 ionic_lif_rss_teardown(lif);
         }
 
@@ -2194,7 +2190,6 @@ ionic_get_features(struct lif *lif)
 			.opcode = CMD_OPCODE_FEATURES,
 			.set = FEATURE_SET_ETH_HW_FEATURES,
 			.wanted = ETH_HW_VLAN_RX_FILTER
-			        | ETH_HW_RX_HASH
 				| ETH_HW_TX_SG
 				| ETH_HW_TX_CSUM
 				| ETH_HW_RX_CSUM
@@ -2203,6 +2198,10 @@ ionic_get_features(struct lif *lif)
 				| ETH_HW_TSO_ECN,
 		},
 	};
+
+        if (DRSS) {
+                ctx.cmd.features.wanted |= ETH_HW_RX_HASH;
+        }
 
         if (vlan_tx_insert) {
                 ctx.cmd.features.wanted |= ETH_HW_VLAN_TX_TAG;
@@ -2628,11 +2627,13 @@ ionic_lif_init(struct lif *lif)
         
 	if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH &&
             (!lif->uplink_handle->is_mgmt_nic)) {
-		status = ionic_lif_rss_setup(lif);
-		if (status != VMK_OK) {
-                        ionic_err("ionic_lif_rss_setup() failed, status: %s",
-                                  vmk_StatusToString(status));
-			goto rss_setup_err;
+                if (DRSS) {
+        		status = ionic_lif_rss_setup(lif);
+	        	if (status != VMK_OK) {
+                                ionic_err("ionic_lif_rss_setup() failed, status: %s",
+                                          vmk_StatusToString(status));
+        			goto rss_setup_err;
+                        }
                 }
 	}
 
@@ -2671,7 +2672,8 @@ err_out_rxqs_deinit:
 //        ionic_lif_txqs_deinit(lif);
 
 stats_start_err:
-        if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH) {
+        if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH &&
+            (!lif->uplink_handle->is_mgmt_nic) && DRSS) {
                 ionic_lif_rss_teardown(lif);
         }
 
