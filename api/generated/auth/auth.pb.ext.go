@@ -1491,8 +1491,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.TokenExpiry, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"TokenExpiry")
+		if err := validators.Duration(m.TokenExpiry, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"TokenExpiry", err.Error())
 		}
 		return nil
 	})
@@ -1534,8 +1534,8 @@ func init() {
 		args = append(args, "1")
 		args = append(args, "-1")
 
-		if !validators.StrLen(m.NewPassword, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"NewPassword")
+		if err := validators.StrLen(m.NewPassword, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"NewPassword", err.Error())
 		}
 		return nil
 	})
@@ -1546,8 +1546,8 @@ func init() {
 		args = append(args, "1")
 		args = append(args, "-1")
 
-		if !validators.StrLen(m.OldPassword, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"OldPassword")
+		if err := validators.StrLen(m.OldPassword, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"OldPassword", err.Error())
 		}
 		return nil
 	})

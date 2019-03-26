@@ -62,7 +62,7 @@ message WorkloadIntfSpec {
 
     // MACAddress contains the MAC address of the interface as seen by the workload
     // cli-help: MAC address of the interface as seen by the workload
-    string MACAddress           = 1 [(gogoproto.jsontag) = "mac-address,omitempty"];
+    string MACAddress           = 1 [(gogoproto.jsontag) = "mac-address,omitempty", (venice.check) = "MacAddr()"];
 
     // Micro-segmentation vlan assigned for this interface
     // cli-help: Vlan identifying host unique vlan id

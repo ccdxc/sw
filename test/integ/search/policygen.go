@@ -244,7 +244,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			phase = cluster.SmartNICStatus_PENDING.String()
 			condition = &unhealthy
 		}
-		mac := fmt.Sprintf("44.44.44.00.%02x.%02x", i/256, i%256)
+		mac := fmt.Sprintf("4444.4400.%02x%02x", i/256, i%256)
 		node := fmt.Sprintf("esx-%05x", i)
 		nic := createNIC(mac, phase, node, condition)
 		log.Infof("Creating SmartNIC uuid: %s name: %s", nic.ObjectMeta.UUID, nic.Name)
@@ -426,7 +426,7 @@ func DefaultTenantPolicyGenerator(ctx context.Context, apiClient apiclient.Servi
 				phase = cluster.SmartNICStatus_PENDING.String()
 				condition = &unhealthy
 			}
-			mac := fmt.Sprintf("44.44.44.00.%02x.%02x", i/256, i%256)
+			mac := fmt.Sprintf("4444.4400.%02x%02x", i/256, i%256)
 			node := fmt.Sprintf("esx-%05x", i)
 			nic := createNIC(mac, phase, node, condition)
 			log.Infof("Creating SmartNIC uuid: %s name: %s", nic.ObjectMeta.UUID, nic.Name)
@@ -472,7 +472,7 @@ func DeleteDefaultTenantPolicyGenerator(ctx context.Context, apiClient apiclient
 				phase = cluster.SmartNICStatus_PENDING.String()
 				condition = &unhealthy
 			}
-			mac := fmt.Sprintf("44.44.44.00.%02x.%02x", i/256, i%256)
+			mac := fmt.Sprintf("4444.4400.%02x%02x", i/256, i%256)
 			node := fmt.Sprintf("esx-%05x", i)
 			nic := createNIC(mac, phase, node, condition)
 			log.Infof("Deleting SmartNIC uuid: %s name: %s", nic.ObjectMeta.UUID, nic.Name)

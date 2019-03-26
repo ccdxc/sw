@@ -607,8 +607,8 @@ func init() {
 	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FwlogsQuerySpec)
 		for k, v := range m.DestIPs {
-			if !validators.IPAddr(v) {
-				return fmt.Errorf("%v[%v] validation failed", path+"."+"DestIPs", k)
+			if err := validators.IPAddr(v); err != nil {
+				return fmt.Errorf("%v[%v] failed validation: %s", path+"."+"DestIPs", k, err.Error())
 			}
 		}
 
@@ -622,8 +622,8 @@ func init() {
 		args = append(args, "65535")
 
 		for _, v := range m.DestPorts {
-			if !validators.IntRange(v, args) {
-				return fmt.Errorf("%v failed validation", path+"."+"DestPorts")
+			if err := validators.IntRange(v, args); err != nil {
+				return fmt.Errorf("%v failed validation: %s", path+"."+"DestPorts", err.Error())
 			}
 		}
 		return nil
@@ -660,8 +660,8 @@ func init() {
 	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FwlogsQuerySpec)
 		for k, v := range m.SourceIPs {
-			if !validators.IPAddr(v) {
-				return fmt.Errorf("%v[%v] validation failed", path+"."+"SourceIPs", k)
+			if err := validators.IPAddr(v); err != nil {
+				return fmt.Errorf("%v[%v] failed validation: %s", path+"."+"SourceIPs", k, err.Error())
 			}
 		}
 
@@ -675,8 +675,8 @@ func init() {
 		args = append(args, "65535")
 
 		for _, v := range m.SourcePorts {
-			if !validators.IntRange(v, args) {
-				return fmt.Errorf("%v failed validation", path+"."+"SourcePorts")
+			if err := validators.IntRange(v, args); err != nil {
+				return fmt.Errorf("%v failed validation: %s", path+"."+"SourcePorts", err.Error())
 			}
 		}
 		return nil
@@ -689,8 +689,8 @@ func init() {
 		args = append(args, "name")
 
 		for _, v := range m.Fields {
-			if !validators.EmptyOrRegExp(v, args) {
-				return fmt.Errorf("%v failed validation", path+"."+"Fields")
+			if err := validators.EmptyOr(validators.RegExp, v, args); err != nil {
+				return fmt.Errorf("%v failed validation: %s", path+"."+"Fields", err.Error())
 			}
 		}
 		return nil
@@ -714,8 +714,8 @@ func init() {
 		args := make([]string, 0)
 		args = append(args, "name")
 
-		if !validators.EmptyOrRegExp(m.GroupbyField, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"GroupbyField")
+		if err := validators.EmptyOr(validators.RegExp, m.GroupbyField, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"GroupbyField", err.Error())
 		}
 		return nil
 	})
@@ -726,8 +726,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.EmptyOrDuration(m.GroupbyTime, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"GroupbyTime")
+		if err := validators.EmptyOr(validators.Duration, m.GroupbyTime, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"GroupbyTime", err.Error())
 		}
 		return nil
 	})
@@ -737,8 +737,8 @@ func init() {
 		args := make([]string, 0)
 		args = append(args, "name")
 
-		if !validators.EmptyOrRegExp(m.Name, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"Name")
+		if err := validators.EmptyOr(validators.RegExp, m.Name, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Name", err.Error())
 		}
 		return nil
 	})
@@ -762,8 +762,8 @@ func init() {
 		args := make([]string, 0)
 		args = append(args, "1")
 
-		if !validators.IntMin(m.Count, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"Count")
+		if err := validators.IntMin(m.Count, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Count", err.Error())
 		}
 		return nil
 	})
@@ -773,8 +773,8 @@ func init() {
 		args := make([]string, 0)
 		args = append(args, "0")
 
-		if !validators.IntMin(m.Offset, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"Offset")
+		if err := validators.IntMin(m.Offset, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Offset", err.Error())
 		}
 		return nil
 	})

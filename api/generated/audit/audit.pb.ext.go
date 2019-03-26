@@ -190,8 +190,8 @@ func init() {
 
 	validatorMapAudit["EventAttributes"]["all"] = append(validatorMapAudit["EventAttributes"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventAttributes)
-		if !validators.URI(m.RequestURI) {
-			return fmt.Errorf("%v validation failed", path+"."+"RequestURI")
+		if err := validators.URI(m.RequestURI); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"RequestURI", err.Error())
 		}
 		return nil
 	})

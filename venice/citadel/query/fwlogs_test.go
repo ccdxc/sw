@@ -57,7 +57,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 					},
 				},
 			},
-			errMsg:  "[tenant required, Queries[0].SourceIPs[0] validation failed]",
+			errMsg:  "[tenant required, Queries[0].SourceIPs[0] failed validation: Value must be a valid IP in dot notation]",
 			errCode: codes.InvalidArgument,
 		},
 		{
@@ -71,7 +71,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 					},
 				},
 			},
-			errMsg:  "[Queries[0].SourceIPs[0] validation failed]",
+			errMsg:  "[Queries[0].SourceIPs[0] failed validation: Value must be a valid IP in dot notation]",
 			errCode: codes.InvalidArgument,
 		},
 		{
@@ -99,7 +99,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 					},
 				},
 			},
-			errMsg:  "[Queries[0].Pagination.Count failed validation]",
+			errMsg:  "[Queries[0].Pagination.Count failed validation: Value must be at least 1]",
 			errCode: codes.InvalidArgument,
 		},
 		{
@@ -116,11 +116,11 @@ func TestValidateFwlogsQuery(t *testing.T) {
 					},
 				},
 			},
-			errMsg:  "[Queries[0].Pagination.Count failed validation]",
+			errMsg:  "[Queries[0].Pagination.Count failed validation: Value must be at least 1]",
 			errCode: codes.InvalidArgument,
 		},
 		{
-			desc: "Pagination spec with negative count",
+			desc: "Pagination spec with negative offset",
 			ql: &telemetry_query.FwlogsQueryList{
 				Tenant: "tenant",
 				Queries: []*telemetry_query.FwlogsQuerySpec{
@@ -134,7 +134,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 					},
 				},
 			},
-			errMsg:  "[Queries[0].Pagination.Offset failed validation]",
+			errMsg:  "[Queries[0].Pagination.Offset failed validation: Value must be at least 0]",
 			errCode: codes.InvalidArgument,
 		},
 		{

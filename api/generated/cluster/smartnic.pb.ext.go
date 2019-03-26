@@ -454,16 +454,16 @@ func init() {
 
 	validatorMapSmartnic["MacRange"]["all"] = append(validatorMapSmartnic["MacRange"]["all"], func(path string, i interface{}) error {
 		m := i.(*MacRange)
-		if !validators.MacAddr(m.End) {
-			return fmt.Errorf("%v validation failed", path+"."+"End")
+		if err := validators.MacAddr(m.End); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"End", err.Error())
 		}
 		return nil
 	})
 
 	validatorMapSmartnic["MacRange"]["all"] = append(validatorMapSmartnic["MacRange"]["all"], func(path string, i interface{}) error {
 		m := i.(*MacRange)
-		if !validators.MacAddr(m.Start) {
-			return fmt.Errorf("%v validation failed", path+"."+"Start")
+		if err := validators.MacAddr(m.Start); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Start", err.Error())
 		}
 		return nil
 	})
@@ -515,8 +515,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "4095")
 
-		if !validators.IntRange(m.MgmtVlan, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"MgmtVlan")
+		if err := validators.IntRange(m.MgmtVlan, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MgmtVlan", err.Error())
 		}
 		return nil
 	})

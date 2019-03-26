@@ -16,6 +16,7 @@ export interface IClusterSmartNICID {
 
 export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     'name': string = null;
+    /** should be a valid MAC address */
     'mac-address': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
@@ -23,6 +24,8 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
             type: 'string'
         },
         'mac-address': {
+            description:  'should be a valid MAC address',
+            hint:  'aa:bb:cc:dd:00:00, aabb.ccdd.0000, aa-bb-cc-dd-00-00',
             required: false,
             type: 'string'
         },

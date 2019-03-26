@@ -555,7 +555,7 @@ func TestFieldProfiles(t *testing.T) {
 			field <
 				name: 'str_field2'
 				type: TYPE_STRING
-				options:<[venice.check]: "EmptyOrStrLen(4,30)" [venice.check]: "v1:StrLen(5,31)">
+				options:<[venice.check]: "EmptyOr(StrLen(4,30))" [venice.check]: "v1:StrLen(5,31)">
 				number: 5
 			>
 			field <
@@ -621,7 +621,7 @@ func TestFieldProfiles(t *testing.T) {
 			field <
 				name: 'regexp_field2'
 				type: TYPE_STRING
-				options:<[venice.check]: "EmptyOrRegExp(name)">
+				options:<[venice.check]: "EmptyOr(RegExp(name))">
 				number: 16
 			>
 			field <
@@ -645,7 +645,7 @@ func TestFieldProfiles(t *testing.T) {
 			field <
 				name: 'duration4'
 				type: TYPE_STRING
-				options:<[venice.check]: "EmptyOrDuration(4m,30m)">
+				options:<[venice.check]: "EmptyOr(Duration(4m,30m))">
 				number: 20
 			>
 		>
@@ -805,6 +805,9 @@ func TestFieldProfiles(t *testing.T) {
 						t.Fatalf("could not parse options for [%s](%s)", *fld.Name, err)
 					}
 					ValidatorProfileMap[fldv.Fn](fld, r, fldv.Ver, fldv.Args, &profile)
+					if fldv.AllowEmpty {
+						profile.Required[fldv.Ver] = false
+					}
 				}
 				if len(c.Enum) > 0 {
 					if !reflect.DeepEqual(c.Enum, profile.Enum) {

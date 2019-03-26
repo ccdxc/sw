@@ -228,8 +228,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.DropTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"DropTimeout")
+		if err := validators.Duration(m.DropTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"DropTimeout", err.Error())
 		}
 		return nil
 	})
@@ -240,8 +240,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.ICMPDropTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"ICMPDropTimeout")
+		if err := validators.Duration(m.ICMPDropTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"ICMPDropTimeout", err.Error())
 		}
 		return nil
 	})
@@ -252,8 +252,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.IcmpTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"IcmpTimeout")
+		if err := validators.Duration(m.IcmpTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"IcmpTimeout", err.Error())
 		}
 		return nil
 	})
@@ -264,8 +264,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.SessionIdleTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"SessionIdleTimeout")
+		if err := validators.Duration(m.SessionIdleTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"SessionIdleTimeout", err.Error())
 		}
 		return nil
 	})
@@ -276,8 +276,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.TCPCloseTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"TCPCloseTimeout")
+		if err := validators.Duration(m.TCPCloseTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"TCPCloseTimeout", err.Error())
 		}
 		return nil
 	})
@@ -288,8 +288,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.TCPConnectionSetupTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"TCPConnectionSetupTimeout")
+		if err := validators.Duration(m.TCPConnectionSetupTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"TCPConnectionSetupTimeout", err.Error())
 		}
 		return nil
 	})
@@ -300,8 +300,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.TCPDropTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"TCPDropTimeout")
+		if err := validators.Duration(m.TCPDropTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"TCPDropTimeout", err.Error())
 		}
 		return nil
 	})
@@ -312,8 +312,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.TCPHalfClosedTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"TCPHalfClosedTimeout")
+		if err := validators.Duration(m.TCPHalfClosedTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"TCPHalfClosedTimeout", err.Error())
 		}
 		return nil
 	})
@@ -324,8 +324,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.TcpTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"TcpTimeout")
+		if err := validators.Duration(m.TcpTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"TcpTimeout", err.Error())
 		}
 		return nil
 	})
@@ -336,8 +336,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.UDPDropTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"UDPDropTimeout")
+		if err := validators.Duration(m.UDPDropTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"UDPDropTimeout", err.Error())
 		}
 		return nil
 	})
@@ -348,8 +348,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.UdpTimeout, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"UdpTimeout")
+		if err := validators.Duration(m.UdpTimeout, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"UdpTimeout", err.Error())
 		}
 		return nil
 	})

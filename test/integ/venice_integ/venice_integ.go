@@ -357,7 +357,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 
 	// verify NIC is admitted with CMD
 	for i := 0; i < it.config.NumHosts; i++ {
-		hostID := fmt.Sprintf("44:44:44:44:%02x:%02x", i/256, i%256)
+		hostID := fmt.Sprintf("4444.4444.%02x%02x", i/256, i%256)
 		tutils.AssertEventually(c, func() (bool, interface{}) {
 			nm := it.nmds[i].GetNMD()
 

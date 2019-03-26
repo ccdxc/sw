@@ -57,8 +57,6 @@ func TestHostObjectValidation(t *testing.T) {
 		err []error
 	}{
 		{makeHostObj(".naples1-host.local", "00:01:02:03:04:05", ""), []error{hooks.errInvalidHostConfig(".naples1-host.local")}}, // invalid host name
-		{makeHostObj("naples2-host.local", "hello-world", ""), []error{hooks.errInvalidMacConfig("hello-world")}},                 // invalid mac addr #1
-		{makeHostObj("10.5.5.5", "01.02.03.04.05.06", ""), []error{hooks.errInvalidMacConfig("01.02.03.04.05.06")}},               // invalid mac addr #2
 		{makeHostObj("naples3-host.local", "0102.0304.0506", ""), []error{}},                                                      // valid host object #1
 		{makeHostObj("20.5.5.5", "01-02-03-04-05-06", ""), []error{}},                                                             // valid host object #2
 		{makeHostObj("20.5.5.5", "01-02-03-04-05-06", "hello-world"), []error{hooks.errInvalidSmartNIC()}},                        // both SmartNIC name and MAC Address

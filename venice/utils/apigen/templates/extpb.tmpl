@@ -311,13 +311,13 @@ func init() {
 	validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(path string, i interface{}) error {
 		m := i.(*{{$msgName}}){{if $fldv.Repeated}}{{/*<9.1>*/}}
 		for k, v := range m.{{$fldk}} {
-			if !validators.{{$fnname}}(v) {
-				return fmt.Errorf("%v[%v] validation failed", path + "." + "{{$fldk}}", k)
+			if err := {{if .AllowEmpty}}validators.EmptyOr({{$fnname}}, v, nil){{else}}validators.{{$fnname}}(v){{end}}; err != nil {
+				return fmt.Errorf("%v[%v] failed validation: %s", path + "." + "{{$fldk}}", k, err.Error())
 			}
 		}
 		{{else}}{{/*<9.1>*/}}
-		if !validators.{{.Fn}}(m.{{$fldk}}) {
-			return fmt.Errorf("%v validation failed", path + "." + "{{$fldk}}")
+		if err := {{if .AllowEmpty}}validators.EmptyOr(validators.{{.Fn}}, m.{{$fldk}}, nil){{else}}validators.{{.Fn}}(m.{{$fldk}}){{end}}; err != nil {
+			return fmt.Errorf("%v failed validation: %s", path + "." + "{{$fldk}}", err.Error())
 		}{{end}}{{/*<9.1>*/}}
 		return nil
 	})
@@ -343,12 +343,12 @@ func init() {
 		{{range .Args}}{{/*<13>*/}}args = append(args, "{{.}}")
 		{{end}}{{/*<13>*/}}{{if $fldv.Repeated}}{{/*<14>*/}}
 		for _, v := range m.{{$fldk}} {
-			if !validators.{{$fnname}}(v, args) {
-				return fmt.Errorf("%v failed validation", path + "." + "{{$fldk}}")
+			if err := {{if .AllowEmpty}}validators.EmptyOr(validators.{{$fnname}}, v, args){{else}}validators.{{$fnname}}(v, args){{end}}; err != nil {
+				return fmt.Errorf("%v failed validation: %s", path + "." + "{{$fldk}}", err.Error())
 			}
 		}{{else}}{{/*<14>*/}}
-		if !validators.{{$fnname}}(m.{{$fldk}}, args) {
-			return fmt.Errorf("%v failed validation", path + "." + "{{$fldk}}")
+		if err := {{if .AllowEmpty}}validators.EmptyOr(validators.{{$fnname}}, m.{{$fldk}}, args){{else}}validators.{{$fnname}}(m.{{$fldk}}, args){{end}}; err != nil {
+			return fmt.Errorf("%v failed validation: %s", path + "." + "{{$fldk}}", err.Error())
 		}{{end}}{{/*<14>*/}}{{end}}{{/*<11>*/}}
 		return nil
 	})

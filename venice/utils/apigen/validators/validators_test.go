@@ -8,397 +8,538 @@ import (
 )
 
 func TestStrLen(t *testing.T) {
-	str := ""
-	var args []string
-	args = append(args, "10", "25")
-
-	if StrLen(str, args) {
-		t.Errorf("Validation should have failed")
+	cases := []struct {
+		input  string
+		args   []string
+		errMsg string
+	}{
+		{
+			input:  "",
+			args:   []string{"10", "25"},
+			errMsg: "Value must have length of at least 10",
+		},
+		{
+			input:  "Abcdefghijklmnopqrstuvwzyz",
+			args:   []string{"10", "25"},
+			errMsg: "Value must have length of at most 25",
+		},
+		{
+			input:  "Abcdefghijklmnopqrstuvwzyz",
+			args:   []string{"10", "30"},
+			errMsg: "",
+		},
+		{
+			input:  "Abcdefghijklmnopqrstuvwzyz",
+			args:   []string{"10", "-10"},
+			errMsg: "",
+		},
 	}
-	str = "Abcdefghijklmnopqrstuvwzyz"
-	if StrLen(str, args) {
-		t.Errorf("Validation should have failed")
-	}
-	args[1] = "30"
-	if !StrLen(str, args) {
-		t.Errorf("Validation should have passed")
-	}
-	args[1] = "-10"
-	if !StrLen(str, args) {
-		t.Errorf("Validation should have passed")
-	}
-}
-
-func TestEmptyOrStrLen(t *testing.T) {
-	str := ""
-	var args []string
-	args = append(args, "10", "25")
-
-	if !EmptyOrStrLen(str, args) {
-		t.Errorf("Validation should have passed")
-	}
-	str = "Abcdefghijklmnopqrstuvwzyz"
-	if EmptyOrStrLen(str, args) {
-		t.Errorf("Validation should have failed")
-	}
-	args[1] = "30"
-	if !EmptyOrStrLen(str, args) {
-		t.Errorf("Validation should have passed")
+	for i, c := range cases {
+		err := StrLen(c.input, c.args)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
+		}
 	}
 }
 
 func TestIntRange(t *testing.T) {
-	var val int32 = -20
-	var args []string
-	args = append(args, "10", "25")
-	if IntRange(val, args) {
-		t.Errorf("validation expected to fail")
+	cases := []struct {
+		input  int32
+		args   []string
+		errMsg string
+	}{
+		{
+			input:  -20,
+			args:   []string{"10", "25"},
+			errMsg: "Value must be at least 10",
+		},
+		{
+			input:  20,
+			args:   []string{"10", "25"},
+			errMsg: "",
+		},
+		{
+			input:  10,
+			args:   []string{"10", "25"},
+			errMsg: "",
+		},
+		{
+			input:  25,
+			args:   []string{"10", "25"},
+			errMsg: "",
+		},
+		{
+			input:  25,
+			args:   []string{"-11", "25"},
+			errMsg: "",
+		},
+		{
+			input:  -12,
+			args:   []string{"-11", "25"},
+			errMsg: "Value must be at least -11",
+		},
 	}
-
-	val = 20
-	if !IntRange(val, args) {
-		t.Errorf("validation expected to pass")
-	}
-	val = 23
-	if !IntRange(val, args) {
-		t.Errorf("validation expected to pass")
-	}
-	val = 10
-	if !IntRange(val, args) {
-		t.Errorf("validation expected to pass")
-	}
-	args[0] = "-11"
-	val = 0
-	if !IntRange(val, args) {
-		t.Errorf("validation expected to pass")
-	}
-
-	val = -12
-	if IntRange(val, args) {
-		t.Errorf("validation expected to fail")
-	}
-	var v1 uint32 = 10
-	if !IntRange(v1, args) {
-		t.Errorf("validation expected to pass")
+	for i, c := range cases {
+		err := IntRange(c.input, c.args)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
+		}
 	}
 }
 
 func TestIntMin(t *testing.T) {
-	var val int32 = -20
-	var args []string
-	args = append(args, "10")
-	if IntMin(val, args) {
-		t.Errorf("validation expected to fail")
+	cases := []struct {
+		input  int32
+		args   []string
+		errMsg string
+	}{
+		{
+			input:  -20,
+			args:   []string{"10"},
+			errMsg: "Value must be at least 10",
+		},
+		{
+			input:  0,
+			args:   []string{"10"},
+			errMsg: "Value must be at least 10",
+		},
+		{
+			input:  10,
+			args:   []string{"10"},
+			errMsg: "",
+		},
+		{
+			input:  100,
+			args:   []string{"10", "25"},
+			errMsg: "",
+		},
 	}
-
-	val = 0
-	if IntMin(val, args) {
-		t.Errorf("validation expected to fail")
-	}
-	val = 10
-	if !IntMin(val, args) {
-		t.Errorf("validation expected to pass")
-	}
-	val = 100
-	if !IntMin(val, args) {
-		t.Errorf("validation expected to pass")
+	for i, c := range cases {
+		err := IntMin(c.input, c.args)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
+		}
 	}
 }
 
 func TestCIDR(t *testing.T) {
 	cases := []struct {
-		s   string
-		exp bool
+		s      string
+		errMsg string
 	}{
-		{s: "10.1.1.1/16", exp: true},
-		{s: "10.1.1.1", exp: false},
-		{s: "2001:db8::/32", exp: true},
-		{s: "2001:0db8:85a3:0000:0000:8a2e:0370:7334/64", exp: true},
-		{s: "193.138.3.20/60", exp: false},
-		{s: "500.323.2.23/43", exp: false},
-		{s: "", exp: false},
+		{s: "10.1.1.1/16", errMsg: ""},
+		{s: "10.1.1.1", errMsg: "Value must be in valid CIDR notation"},
+		{s: "2001:db8::/32", errMsg: ""},
+		{s: "2001:0db8:85a3:0000:0000:8a2e:0370:7334/64", errMsg: ""},
+		{s: "193.138.3.20/60", errMsg: "Value must be in valid CIDR notation"},
+		{s: "500.323.2.23/43", errMsg: "Value must be in valid CIDR notation"},
+		{s: "", errMsg: "Value must be in valid CIDR notation"},
 	}
-	for _, c := range cases {
-		if CIDR(c.s) != c.exp {
-			t.Errorf("Expected [%v] got [%v] for [%s]", c.exp, CIDR(c.s), c.s)
+	for i, c := range cases {
+		err := CIDR(c.s)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 func TestIpAddr(t *testing.T) {
 	cases := []struct {
-		s   string
-		exp bool
+		s      string
+		errMsg string
 	}{
-		{s: "10.1.1.1", exp: true},
-		{s: "10.1.1.", exp: false},
-		{s: "10.1.1", exp: false},
-		{s: "10.01.001.4", exp: true},
-		{s: ".10.1.1.100", exp: false},
-		{s: "localhost", exp: false},
-		{s: "169.1.1.11111", exp: false},
-		{s: "169.1.1,11", exp: false},
-		{s: "10.1.1.0/24", exp: false},
-		{s: "A.1.C.0/24", exp: false},
-		{s: "ff02::5", exp: true},
-		{s: "0012:3dae:2341:1:0:4:c:d:a", exp: false},
-		{s: "0012:3dae:2341:1:0:4:c:d", exp: true},
+		{s: "10.1.1.1", errMsg: ""},
+		{s: "10.1.1.", errMsg: "Value must be a valid IP in dot notation"},
+		{s: "10.1.1", errMsg: "Value must be a valid IP in dot notation"},
+		{s: "10.01.001.4", errMsg: ""},
+		{s: ".10.1.1.100", errMsg: "Value must be a valid IP in dot notation"},
+		{s: "localhost", errMsg: "Value must be a valid IP in dot notation"},
+		{s: "169.1.1.11111", errMsg: "Value must be a valid IP in dot notation"},
+		{s: "169.1.1,11", errMsg: "Value must be a valid IP in dot notation"},
+		{s: "10.1.1.0/24", errMsg: "Value must be a valid IP in dot notation"},
+		{s: "A.1.C.0/24", errMsg: "Value must be a valid IP in dot notation"},
+		{s: "ff02::5", errMsg: ""},
+		{s: "0012:3dae:2341:1:0:4:c:d:a", errMsg: "Value must be a valid IP in dot notation"},
+		{s: "0012:3dae:2341:1:0:4:c:d", errMsg: ""},
 	}
-	for _, c := range cases {
-		if IPAddr(c.s) != c.exp {
-			t.Errorf("Expected [%v] got [%v] for [%s]", c.exp, IPAddr(c.s), c.s)
+	for i, c := range cases {
+		err := IPAddr(c.s)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 
 func TestIpV4(t *testing.T) {
 	cases := []struct {
-		s   string
-		exp bool
+		s      string
+		errMsg string
 	}{
-		{s: "10.1.1.1", exp: true},
-		{s: "10.1.1.", exp: false},
-		{s: "10.1.1", exp: false},
-		{s: ".10.1.1.100", exp: false},
-		{s: "localhost", exp: false},
-		{s: "169.1.1.11111", exp: false},
-		{s: "169.1.1,11", exp: false},
-		{s: "0012:3dae:2341:1:0:4:c:d", exp: false},
+		{s: "10.1.1.1", errMsg: ""},
+		{s: "10.1.1.", errMsg: "Value must be a valid IPv4 address"},
+		{s: "10.1.1", errMsg: "Value must be a valid IPv4 address"},
+		{s: ".10.1.1.100", errMsg: "Value must be a valid IPv4 address"},
+		{s: "localhost", errMsg: "Value must be a valid IPv4 address"},
+		{s: "169.1.1.11111", errMsg: "Value must be a valid IPv4 address"},
+		{s: "169.1.1,11", errMsg: "Value must be a valid IPv4 address"},
+		{s: "0012:3dae:2341:1:0:4:c:d", errMsg: "Value must be a valid IPv4 address"},
 	}
-	for _, c := range cases {
-		if IPv4(c.s) != c.exp {
-			t.Errorf("Expected [%v] got [%v] for [%s]", c.exp, IPv4(c.s), c.s)
+	for i, c := range cases {
+		err := IPv4(c.s)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 
 func TestHostAddr(t *testing.T) {
 	cases := []struct {
-		s   string
-		exp bool
+		s      string
+		errMsg string
 	}{
-		{s: "10.1.1.1", exp: true},
-		{s: "10.1.1.", exp: true},
-		{s: "10.1.1", exp: true},
-		{s: "10.01.001.4", exp: true},
-		{s: "localhost", exp: true},
-		{s: "A.1.C.0", exp: true},
-		{s: "ff02::5", exp: true},
-		{s: "0012:3dae:2341:1:0:4:c:d", exp: true},
-		{s: "testhost.local", exp: true},
-		{s: "testhost.local.", exp: true},
-		{s: ".10.1.1.100", exp: false},
-		{s: "169.1.1,11", exp: false},
-		{s: "10.1.1.0/24", exp: false},
-		{s: "0012:3dae:2341:1:0:4:c:d:a", exp: false},
-		{s: ".testhost.local", exp: false},
+		{s: "10.1.1.1", errMsg: ""},
+		{s: "10.1.1.", errMsg: ""},
+		{s: "10.1.1", errMsg: ""},
+		{s: "10.01.001.4", errMsg: ""},
+		{s: "localhost", errMsg: ""},
+		{s: "A.1.C.0", errMsg: ""},
+		{s: "ff02::5", errMsg: ""},
+		{s: "0012:3dae:2341:1:0:4:c:d", errMsg: ""},
+		{s: "testhost.local", errMsg: ""},
+		{s: "testhost.local.", errMsg: ""},
+		{s: ".10.1.1.100", errMsg: "Value must be a valid IP or valid DNS name"},
+		{s: "169.1.1,11", errMsg: "Value must be a valid IP or valid DNS name"},
+		{s: "10.1.1.0/24", errMsg: "Value must be a valid IP or valid DNS name"},
+		{s: "0012:3dae:2341:1:0:4:c:d:a", errMsg: "Value must be a valid IP or valid DNS name"},
+		{s: ".testhost.local", errMsg: "Value must be a valid IP or valid DNS name"},
 	}
-	for _, c := range cases {
-		if HostAddr(c.s) != c.exp {
-			t.Errorf("Expected [%v] got [%v] for [%s]", c.exp, HostAddr(c.s), c.s)
+	for i, c := range cases {
+		err := HostAddr(c.s)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 
 func TestMacAddr(t *testing.T) {
 	cases := []struct {
-		s   string
-		exp bool
+		s      string
+		errMsg string
 	}{
-		{s: "aa:BB:cc:DD:00:00", exp: true},
-		{s: "aaBB.ccDD.0000", exp: true},
-		{s: "aa-BB-cc-DD-00-00", exp: true},
-		{s: "aaBB.ccDD.0000", exp: true},
-		{s: "aa.BB.cc.DD.00.00", exp: false},
-		{s: "aaBB.ccDD.00.00", exp: false},
-		{s: "aa:BB:cc:DD:00:00", exp: true},
-		{s: "aaXY.ccDD.0000", exp: false},
+		{s: "aa:BB:cc:DD:00:00", errMsg: ""},
+		{s: "aaBB.ccDD.0000", errMsg: ""},
+		{s: "aa-BB-cc-DD-00-00", errMsg: ""},
+		{s: "aaBB.ccDD.0000", errMsg: ""},
+		{s: "aa.BB.cc.DD.00.00", errMsg: "Value must be a valid MAC address"},
+		{s: "aaBB.ccDD.00.00", errMsg: "Value must be a valid MAC address"},
+		{s: "aa:BB:cc:DD:00:00", errMsg: ""},
+		{s: "aaXY.ccDD.0000", errMsg: "Value must be a valid MAC address"},
 	}
-	for _, c := range cases {
-		if MacAddr(c.s) != c.exp {
-			t.Errorf("Expected [%v] got [%v] for [%s]", c.exp, MacAddr(c.s), c.s)
+	for i, c := range cases {
+		err := MacAddr(c.s)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 
 func TestURI(t *testing.T) {
 	cases := []struct {
-		s   string
-		exp bool
+		s      string
+		errMsg string
 	}{
-		{s: "abc.x.y", exp: false},
-		{s: "https://abc.x.i", exp: true},
-		{s: "https://abc.x.in", exp: true},
-		{s: "https://10.1.1.1", exp: true},
-		{s: "https://10.1.1.1:8000", exp: true},
-		{s: "ldap://10.1.1.1:800", exp: true},
-		{s: "sd://testservice/xyz", exp: true},
-		{s: ".http:testservice/xyz", exp: false},
-		{s: "ref:testservice/xyz", exp: true},
-		{s: "10.1.1.1", exp: false},
-		{s: "/path/to/x", exp: true},
-		{s: "path/to/x", exp: false},
+		{s: "abc.x.y", errMsg: "Value must be a valid URI"},
+		{s: "https://abc.x.i", errMsg: ""},
+		{s: "https://abc.x.in", errMsg: ""},
+		{s: "https://10.1.1.1", errMsg: ""},
+		{s: "https://10.1.1.1:8000", errMsg: ""},
+		{s: "ldap://10.1.1.1:800", errMsg: ""},
+		{s: "sd://testservice/xyz", errMsg: ""},
+		{s: ".http:testservice/xyz", errMsg: "Value must be a valid URI"},
+		{s: "ref:testservice/xyz", errMsg: ""},
+		{s: "10.1.1.1", errMsg: "Value must be a valid URI"},
+		{s: "/path/to/x", errMsg: ""},
+		{s: "path/to/x", errMsg: "Value must be a valid URI"},
 	}
-	for _, c := range cases {
-		if URI(c.s) != c.exp {
-			t.Errorf("Expected [%v] got [%v] for [%s]", c.exp, URI(c.s), c.s)
+	for i, c := range cases {
+		err := URI(c.s)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 
 func TestUUID(t *testing.T) {
 	cases := []struct {
-		s   string
-		exp bool
+		s      string
+		errMsg string
 	}{
-		{s: "49943a2c-9d76-11e7-abc4-cec278b6b50a", exp: true},
-		{s: "970fd5c3-ebde-4a42-8212-d4bac833ddac", exp: true},
-		{s: "00000000-0000-0000-0000-000000000000", exp: true},
-		{s: "970fd5c3ebde4a428212d4bac833ddac", exp: false},
-		{s: "uuid:970fd5c3ebde4a428212d4bac833ddac", exp: false},
+		{s: "49943a2c-9d76-11e7-abc4-cec278b6b50a", errMsg: ""},
+		{s: "970fd5c3-ebde-4a42-8212-d4bac833ddac", errMsg: ""},
+		{s: "00000000-0000-0000-0000-000000000000", errMsg: ""},
+		{s: "970fd5c3ebde4a428212d4bac833ddac", errMsg: "Value must be a valid UUID"},
+		{s: "uuid:970fd5c3ebde4a428212d4bac833ddac", errMsg: "Value must be a valid UUID"},
 	}
-	for _, c := range cases {
-		if UUID(c.s) != c.exp {
-			t.Errorf("Expected [%v] got [%v] for [%s]", c.exp, UUID(c.s), c.s)
+	for i, c := range cases {
+		err := UUID(c.s)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 
 func TestL3L4Proto(t *testing.T) {
-	goodCases := []string{
-		"TCP/1234", "Udp", "udp/65535", "IcMp", "aRP", "ipprotocol/17", "ethertype/0x806",
-		"icmp/1", "icmp/3/2", "icmp/echo reply", "icmp/redirect/5",
+
+	cases := []struct {
+		s      string
+		errMsg string
+	}{
+		// Good cases
+		{s: "TCP/1234"},
+		{s: "Udp"},
+		{s: "udp/65535"},
+		{s: "IcMp"},
+		{s: "aRP"},
+		{s: "ipprotocol/17"},
+		{s: "ethertype/0x806"},
+		{s: "icmp/1"},
+		{s: "icmp/3/2"},
+		{s: "icmp/echo reply"},
+		{s: "icmp/redirect/5"},
+		// Bad cases
+		{s: "SCP/1234", errMsg: "Protocol must be a valid L3 or L4 <protocol>/<port>"},
+		{s: "Udp/1/2", errMsg: "Value had invalid format for udp, unexpected second '/' "},
+		{s: "udp/-123", errMsg: "Value had invalid format for udp, protocol number must be a 16 bit value"},
+		{s: "foo", errMsg: "Protocol must be a valid L3 or L4 <protocol>/<port>"},
+		{s: "ipprotocol", errMsg: "Value had invalid format for ipprotocol, expected ipprotocol/<port>"},
+		{s: "ipprotocol/17/1/2", errMsg: "Value had invalid format for ipprotocol, unexpected second '/' "},
+		{s: "ethertype/0x806/10", errMsg: "Value had invalid format for ethertype, unexpected second '/' "},
+		{s: "ethertype", errMsg: "Value had invalid format for ethertype, expected ethertype/<protocol number>"},
+		{s: "ethertype/abc", errMsg: "Value had invalid format for ethertype, protocol number must be a 16 bit value"},
+		{s: "ipprotocol/xyz", errMsg: "Value had invalid format for ipprotocol, protocol number must be an 8 bit value"},
+		{s: "ipprotocol/500", errMsg: "Value had invalid format for ipprotocol, protocol number must be an 8 bit value"},
+		{s: "icmp/xyz", errMsg: "Value had invalid format for icmp, protocol number must be a 16 bit value"},
 	}
-	badCases := []string{
-		"SCP/1234", "Udp/1/2", "udp/-123", "foo", "ipprotocol", "ipprotocol/17/1/2", "ethertype/0x806/10",
-		"ethertype", "ethertype/abc", "ipprotocol/xyz", "ipprotocol/500", "icmp/xyz",
-	}
-	for _, c := range goodCases {
-		if ok := ProtoPort(c); !ok {
-			t.Errorf("Incorrect Error detection in %v", c)
-		}
-	}
-	for _, c := range badCases {
-		if ok := ProtoPort(c); ok {
-			t.Errorf("Undetected error in %v", c)
+	for i, c := range cases {
+		err := ProtoPort(c.s)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 
 func TestDuration(t *testing.T) {
-	goodCases := []string{
-		"1h", "2m", "10s",
+	cases := []struct {
+		input  string
+		args   []string
+		errMsg string
+	}{
+		{
+			input: "1h",
+			args:  []string{"5s", "1h"},
+		},
+		{
+			input: "2m",
+			args:  []string{"5s", "1h"},
+		},
+		{
+			input: "10s",
+			args:  []string{"5s", "1h"},
+		},
+		// bad cases
+		{
+			input:  "1:20:10",
+			args:   []string{"5s", "1h"},
+			errMsg: "Value must be a valid duration",
+		},
+		{
+			input:  "mytime",
+			args:   []string{"5s", "1h"},
+			errMsg: "Value must be a valid duration",
+		},
+		{
+			input:  "3 s",
+			args:   []string{"5s", "1h"},
+			errMsg: "Value must be a valid duration",
+		},
+		{
+			input:  "",
+			args:   []string{"5s", "1h"},
+			errMsg: "Value cannot be empty",
+		},
+		{
+			input:  "2h",
+			args:   []string{"5s", "1h"},
+			errMsg: "Value duration must be at most 1h",
+		},
+		{
+			input:  "65m",
+			args:   []string{"5s", "1h"},
+			errMsg: "Value duration must be at most 1h",
+		},
+		{
+			input:  "2s",
+			args:   []string{"5s", "1h"},
+			errMsg: "Value duration must be at least 5s",
+		},
 	}
-	badCases := []string{
-		"1:20:10", "mytime", "3 s", "",
-	}
-	outOfRangeCases := []string{
-		"2h", "65m", "2s",
-	}
-	for _, c := range goodCases {
-		if ok := Duration(c, []string{"5s", "1h"}); !ok {
-			t.Errorf("Incorrect Error detection in %v", c)
-		}
-	}
-	for _, c := range badCases {
-		if ok := Duration(c, []string{"5s", "1h"}); ok {
-			t.Errorf("Undetected error in %v", c)
-		}
-	}
-	for _, c := range outOfRangeCases {
-		if ok := Duration(c, []string{"5s", "1h"}); ok {
-			t.Errorf("Undetected error in %v", c)
-		}
-	}
-
-	// all durations should pass if its empty
-	for _, c := range outOfRangeCases {
-		if ok := Duration(c, []string{"0", "0"}); !ok {
-			t.Errorf("Incorrect Error detection in %v", c)
+	for i, c := range cases {
+		err := Duration(c.input, c.args)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 
-func TestEmptyOrDuration(t *testing.T) {
-	goodCases := []string{
-		"10h", "2m", "3s", "",
+func TestEmptyOr(t *testing.T) {
+	casesDuration := []struct {
+		input  string
+		args   []string
+		errMsg string
+	}{
+		{
+			input: "10h",
+			args:  []string{"0", "0"},
+		},
+		{
+			input: "2m",
+			args:  []string{"0", "0"},
+		},
+		{
+			input: "3s",
+			args:  []string{"0", "0"},
+		},
+		{
+			input: "",
+			args:  []string{"0", "0"},
+		},
+		// bad cases
+		{
+			input:  "1:20:10",
+			args:   []string{"0", "0"},
+			errMsg: "Value must be a valid duration",
+		},
+		{
+			input:  "mytime",
+			args:   []string{"0", "0"},
+			errMsg: "Value must be a valid duration",
+		},
+		{
+			input:  "3 s",
+			args:   []string{"0", "0"},
+			errMsg: "Value must be a valid duration",
+		},
 	}
-	badCases := []string{
-		"1:20:10", "mytime", "3 s",
-	}
-	for _, c := range goodCases {
-		if ok := EmptyOrDuration(c, []string{"0", "0"}); !ok {
-			t.Errorf("Incorrect Error detection in %v", c)
+	for i, c := range casesDuration {
+		err := EmptyOr(Duration, c.input, c.args)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
-	for _, c := range badCases {
-		if ok := EmptyOrDuration(c, []string{"0", "0"}); ok {
-			t.Errorf("Undetected error in %v", c)
+	nameErrMsg := "Value must start and end with alpha numeric and can have alphanumeric, -, _, ."
+	alphanumErrMsg := "Value must be alpha-numerics"
+	alphaErrMsg := "Value must be only alphabets"
+	numErrMsg := "Value must be only numerics"
+	emailErrMsg := "Value must be a valid email"
+
+	casesRegex := []struct {
+		exp    string
+		val    string
+		errMsg string
+	}{
+		{exp: "name", val: "", errMsg: ""},
+		{exp: "name", val: "Andadaa_98", errMsg: ""},
+		{exp: "name", val: "Andadaa_:.98", errMsg: nameErrMsg},
+		{exp: "name", val: "_Andadaa_98", errMsg: nameErrMsg},
+		{exp: "name", val: "Andadaa_ 98", errMsg: nameErrMsg},
+		{exp: "name", val: "Andadaa%_98", errMsg: nameErrMsg},
+		{exp: "name", val: "Andadaa%_98", errMsg: nameErrMsg},
+		{exp: "alphanum", val: "", errMsg: ""},
+		{exp: "alphanum", val: "Andadaa98", errMsg: ""},
+		{exp: "alphanum", val: "Andadaa_98", errMsg: alphanumErrMsg},
+		{exp: "alpha", val: "", errMsg: ""},
+		{exp: "alpha", val: "Andadaa", errMsg: ""},
+		{exp: "alpha", val: "Andadaa1", errMsg: alphaErrMsg},
+		{exp: "num", val: "", errMsg: ""},
+		{exp: "num", val: "1123131122", errMsg: ""},
+		{exp: "num", val: "112313112a", errMsg: numErrMsg},
+		{exp: "email", val: "notAnEmail", errMsg: emailErrMsg},
+		{exp: "email", val: "", errMsg: ""},
+		{exp: "email", val: "test@pensando.io", errMsg: ""},
+	}
+	for i, c := range casesRegex {
+		err := EmptyOr(RegExp, c.val, []string{c.exp})
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
 
 func TestRegExp(t *testing.T) {
-	cases := []struct {
-		exp    string
-		val    string
-		result bool
-	}{
-		{exp: "name", val: "", result: false},
-		{exp: "name", val: "Andadaa_98", result: true},
-		{exp: "name", val: "Andadaa_:.98", result: false},
-		{exp: "name", val: "_Andadaa_98", result: false},
-		{exp: "name", val: "Andadaa_ 98", result: false},
-		{exp: "name", val: "Andadaa%_98", result: false},
-		{exp: "name", val: "Andadaa%_98", result: false},
-		{exp: "alphanum", val: "", result: false},
-		{exp: "alphanum", val: "Andadaa98", result: true},
-		{exp: "alphanum", val: "Andadaa_98", result: false},
-		{exp: "alpha", val: "", result: false},
-		{exp: "alpha", val: "Andadaa", result: true},
-		{exp: "alpha", val: "Andadaa1", result: false},
-		{exp: "num", val: "", result: false},
-		{exp: "num", val: "1123131122", result: true},
-		{exp: "num", val: "112313112a", result: false},
-		{exp: "email", val: "notAnEmail", result: false},
-		{exp: "email", val: "", result: false},
-		{exp: "email", val: "test@pensando.io", result: true},
-	}
-	for _, c := range cases {
-		args := []string{c.exp}
-		r := RegExp(c.val, args)
-		if r != c.result {
-			t.Errorf("[%v/[%v] expecting [%v] got [%v]", c.exp, c.val, c.result, r)
-		}
-	}
-}
+	nameErrMsg := "Value must start and end with alpha numeric and can have alphanumeric, -, _, ."
+	alphanumErrMsg := "Value must be alpha-numerics"
+	alphaErrMsg := "Value must be only alphabets"
+	numErrMsg := "Value must be only numerics"
+	emailErrMsg := "Value must be a valid email"
 
-func TestEmptyOrRegExp(t *testing.T) {
 	cases := []struct {
 		exp    string
 		val    string
-		result bool
+		errMsg string
 	}{
-		{exp: "name", val: "", result: true},
-		{exp: "name", val: "Andadaa_98", result: true},
-		{exp: "name", val: "_Andadaa_98", result: false},
-		{exp: "alphanum", val: "", result: true},
-		{exp: "alphanum", val: "Andadaa98", result: true},
-		{exp: "alphanum", val: "Andadaa_98", result: false},
-		{exp: "alpha", val: "", result: true},
-		{exp: "alpha", val: "Andadaa", result: true},
-		{exp: "alpha", val: "Andadaa1", result: false},
-		{exp: "num", val: "", result: true},
-		{exp: "num", val: "1123131122", result: true},
-		{exp: "num", val: "112313112a", result: false},
-		{exp: "email", val: "notAnEmail", result: false},
-		{exp: "email", val: "", result: true},
-		{exp: "email", val: "test@pensando.io", result: true},
+		{exp: "name", val: "", errMsg: nameErrMsg},
+		{exp: "name", val: "Andadaa_98", errMsg: ""},
+		{exp: "name", val: "Andadaa_:.98", errMsg: nameErrMsg},
+		{exp: "name", val: "_Andadaa_98", errMsg: nameErrMsg},
+		{exp: "name", val: "Andadaa_ 98", errMsg: nameErrMsg},
+		{exp: "name", val: "Andadaa%_98", errMsg: nameErrMsg},
+		{exp: "name", val: "Andadaa%_98", errMsg: nameErrMsg},
+		{exp: "alphanum", val: "", errMsg: alphanumErrMsg},
+		{exp: "alphanum", val: "Andadaa98", errMsg: ""},
+		{exp: "alphanum", val: "Andadaa_98", errMsg: alphanumErrMsg},
+		{exp: "alpha", val: "", errMsg: alphaErrMsg},
+		{exp: "alpha", val: "Andadaa", errMsg: ""},
+		{exp: "alpha", val: "Andadaa1", errMsg: alphaErrMsg},
+		{exp: "num", val: "", errMsg: numErrMsg},
+		{exp: "num", val: "1123131122", errMsg: ""},
+		{exp: "num", val: "112313112a", errMsg: numErrMsg},
+		{exp: "email", val: "notAnEmail", errMsg: emailErrMsg},
+		{exp: "email", val: "", errMsg: emailErrMsg},
+		{exp: "email", val: "test@pensando.io", errMsg: ""},
 	}
-	for _, c := range cases {
-		args := []string{c.exp}
-		r := EmptyOrRegExp(c.val, args)
-		if r != c.result {
-			t.Errorf("[%v/[%v] expecting [%v] got [%v]", c.exp, c.val, c.result, r)
+	for i, c := range cases {
+		err := RegExp(c.val, []string{c.exp})
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d: Validation should have failed", i)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d: Validation should have failed with %s but got %s", i, c.errMsg, err.Error())
 		}
 	}
 }
@@ -430,23 +571,28 @@ func TestValidKind(t *testing.T) {
 	}
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(types)
-	cases := map[string]bool{
-		"TestKind1": true, "TestKind2": true, "TestKind3": true, "testKind": false, "Dummy": false,
+	cases := map[string]string{
+		"TestKind1": "", "TestKind2": "", "TestKind3": "", "testKind": "Value must be a valid kind", "Dummy": "Value must be a valid kind",
 	}
 	for k, v := range cases {
-		r := ValidKind(k)
-		if r != v {
-			t.Errorf("ValidKind(%v) did not match want[%v] got [%v]", k, v, r)
+		err := ValidKind(k)
+		if err == nil && v != "" {
+			t.Errorf("Test case %s: Validation should have failed", k)
+		} else if err != nil && err.Error() != v {
+			t.Errorf("Test case %s: Validation should have failed with %s but got %s", k, v, err.Error())
 		}
 	}
 
-	cases = map[string]bool{
-		"TestGroup1": true, "TestGroup2": true, "UnknownGroup": false, "testGroup1": false,
+	cases = map[string]string{
+		"TestGroup1": "", "TestGroup2": "", "UnknownGroup": "Value must be a valid API group", "testGroup1": "Value must be a valid API group",
 	}
+
 	for k, v := range cases {
-		r := ValidGroup(k)
-		if r != v {
-			t.Errorf("ValidKind(%v) did not match want[%v] got [%v]", k, v, r)
+		err := ValidGroup(k)
+		if err == nil && v != "" {
+			t.Errorf("Test case %s: Validation should have failed", k)
+		} else if err != nil && err.Error() != v {
+			t.Errorf("Test case %s: Validation should have failed with %s but got %s", k, v, err.Error())
 		}
 	}
 }

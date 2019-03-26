@@ -60,7 +60,7 @@ func (q *Server) validateMetricsQuerySpec(qs *telemetry_query.MetricsQuerySpec) 
 
 	if qs.Kind == "" {
 		errorStrings = append(errorStrings, "kind required")
-	} else if !validators.RegExp(qs.Kind, []string{"name"}) {
+	} else if validators.RegExp(qs.Kind, []string{"name"}) != nil {
 		errorStrings = append(errorStrings, "invalid kind")
 	}
 

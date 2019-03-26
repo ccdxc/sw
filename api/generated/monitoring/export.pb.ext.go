@@ -393,16 +393,16 @@ func init() {
 		args = append(args, "1")
 		args = append(args, "2048")
 
-		if !validators.StrLen(m.Destination, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"Destination")
+		if err := validators.StrLen(m.Destination, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Destination", err.Error())
 		}
 		return nil
 	})
 
 	validatorMapExport["ExportConfig"]["all"] = append(validatorMapExport["ExportConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*ExportConfig)
-		if !validators.ProtoPort(m.Transport) {
-			return fmt.Errorf("%v validation failed", path+"."+"Transport")
+		if err := validators.ProtoPort(m.Transport); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Transport", err.Error())
 		}
 		return nil
 	})

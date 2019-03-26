@@ -4417,6 +4417,8 @@
         },
         "mac-address": {
           "type": "string",
+          "example": "aa:bb:cc:dd:00:00, aabb.ccdd.0000, aa-bb-cc-dd-00-00",
+          "description": "should be a valid MAC address",
           "title": "MACAddress contains the primary MAC address of a SmartNIC"
         }
       },

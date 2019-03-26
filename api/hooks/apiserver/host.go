@@ -130,9 +130,6 @@ func (cl *clusterHooks) validateHostSmartNICs(host *cluster.Host) []error {
 		if (sn.MACAddress == "") == (sn.Name == "") { // both empty or both non-empty
 			err = append(err, cl.errInvalidSmartNIC())
 		}
-		if sn.MACAddress != "" && vldtor.MacAddr(sn.MACAddress) == false {
-			err = append(err, cl.errInvalidMacConfig(sn.MACAddress))
-		}
 	}
 	return err
 }
@@ -146,7 +143,7 @@ func (cl *clusterHooks) validateHostConfig(i interface{}, ver string, ignStatus 
 	}
 
 	// validate the host object name
-	if vldtor.HostAddr(obj.Name) == false {
+	if vldtor.HostAddr(obj.Name) != nil {
 		cl.logger.Errorf("Invalid host: %s", obj.Name)
 		err = append(err, cl.errInvalidHostConfig(obj.Name))
 	}

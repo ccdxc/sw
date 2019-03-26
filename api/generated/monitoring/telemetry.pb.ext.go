@@ -622,8 +622,8 @@ func init() {
 		args = append(args, "1s")
 		args = append(args, "24h")
 
-		if !validators.Duration(m.Interval, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"Interval")
+		if err := validators.Duration(m.Interval, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Interval", err.Error())
 		}
 		return nil
 	})
@@ -664,8 +664,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.DownSampleRetentionTime, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"DownSampleRetentionTime")
+		if err := validators.Duration(m.DownSampleRetentionTime, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"DownSampleRetentionTime", err.Error())
 		}
 		return nil
 	})
@@ -676,8 +676,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if !validators.Duration(m.RetentionTime, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"RetentionTime")
+		if err := validators.Duration(m.RetentionTime, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"RetentionTime", err.Error())
 		}
 		return nil
 	})

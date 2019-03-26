@@ -251,9 +251,12 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		if len(hostname) != 0 && !vldtor.HostAddr(hostname) {
-			err = fmt.Errorf("invalid hostname %v", hostname)
-			return
+		if len(hostname) != 0 {
+			vErr := vldtor.HostAddr(hostname)
+			if vErr != nil {
+				err = fmt.Errorf("invalid hostname %v: %s", hostname, vErr.Error())
+				return
+			}
 		}
 		return
 
@@ -268,30 +271,30 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		for _, c := range controllers {
-			if !vldtor.HostAddr(c) {
+			if vldtor.HostAddr(c) != nil {
 				err = fmt.Errorf("invalid controller %v specified. Must be either IP Addresses or FQDNs", c)
 				return
 			}
 		}
 
-		if len(defaultGW) != 0 && !vldtor.IPAddr(defaultGW) {
+		if len(defaultGW) != 0 && vldtor.IPAddr(defaultGW) != nil {
 			err = fmt.Errorf("invalid default gateway %v", defaultGW)
 			return
 		}
 
 		for _, d := range dnsServers {
-			if !vldtor.IPAddr(d) {
+			if vldtor.IPAddr(d) != nil {
 				err = fmt.Errorf("invalid dns server %v specified. Must be a valid IP Addresses", d)
 				return
 			}
 		}
 
-		if len(mgmtIP) != 0 && !vldtor.CIDR(mgmtIP) {
+		if len(mgmtIP) != 0 && vldtor.CIDR(mgmtIP) != nil {
 			err = fmt.Errorf("invalid management IP %v specified. Must be in CIDR Format", mgmtIP)
 			return
 		}
 
-		if len(priMac) != 0 && !vldtor.MacAddr(priMac) {
+		if len(priMac) != 0 && vldtor.MacAddr(priMac) != nil {
 			err = fmt.Errorf("invalid MAC Address %v specified", priMac)
 			return
 		}
@@ -300,8 +303,12 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			err = fmt.Errorf("naples profile is not applicable when NAPLES is manged by network")
 		}
 
-		if len(hostname) != 0 && !vldtor.HostAddr(hostname) {
-			err = fmt.Errorf("invalid hostname %v", hostname)
+		if len(hostname) != 0 {
+			vErr := vldtor.HostAddr(hostname)
+			if vErr != nil {
+				err = fmt.Errorf("invalid hostname %v: %s", hostname, vErr.Error())
+				return
+			}
 			return
 		}
 		return

@@ -443,6 +443,9 @@ func generateVeniceCheckFieldProfile(field *descriptor.Field, reg *descriptor.Re
 			if err != nil {
 				glog.Fatalf("cannot parse validator (%s)", err)
 			}
+			if fldv.AllowEmpty {
+				profile.Required[ver] = false
+			}
 		}
 		return &profile, nil
 	}

@@ -257,8 +257,8 @@ func init() {
 		args = append(args, "2")
 		args = append(args, "512")
 
-		if !validators.StrLen(m.URI, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"URI")
+		if err := validators.StrLen(m.URI, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"URI", err.Error())
 		}
 		return nil
 	})

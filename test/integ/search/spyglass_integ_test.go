@@ -645,11 +645,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -672,9 +672,9 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
 						},
 					},
 				},
@@ -697,8 +697,8 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -863,11 +863,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -889,11 +889,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 						"Tenant": {
 							"tesla": nil,
@@ -936,11 +936,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 						"Tenant": {
 							"tesla": nil,
@@ -968,7 +968,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		{
 			// Precise match on a MAC address, part of smartNIC object
 			search.SearchRequest{
-				QueryString: "44.44.44.00.00.01",
+				QueryString: "4444.4400.0001",
 				From:        from,
 				MaxResults:  maxResults,
 			},
@@ -980,7 +980,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.01": nil,
+							"4444.4400.0001": nil,
 						},
 					},
 				},
@@ -1026,11 +1026,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -1052,11 +1052,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -1280,11 +1280,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -1310,9 +1310,9 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
 						},
 					},
 				},
@@ -1338,8 +1338,8 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -1527,11 +1527,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -1560,11 +1560,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -1592,11 +1592,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -1624,11 +1624,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 						"Tenant": {
 							"tesla": nil,
@@ -1677,11 +1677,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 						"Tenant": {
 							"tesla": nil,
@@ -1745,7 +1745,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							{
 								Key:      "meta.name",
 								Operator: "equals",
-								Values:   []string{"44.44.44.00.00.01"},
+								Values:   []string{"4444.4400.0001"},
 							},
 						},
 					},
@@ -1761,7 +1761,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.01": nil,
+							"4444.4400.0001": nil,
 						},
 					},
 				},
@@ -1778,7 +1778,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							{
 								Key:      "meta.name",
 								Operator: "notEquals",
-								Values:   []string{"44.44.44.00.00.01"},
+								Values:   []string{"4444.4400.0001"},
 							},
 						},
 					},
@@ -1794,10 +1794,10 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -1814,7 +1814,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							{
 								Key:      "meta.name",
 								Operator: "in",
-								Values:   []string{"44.44.44.00.00.00", "44.44.44.00.00.01"},
+								Values:   []string{"4444.4400.0000", "4444.4400.0001"},
 							},
 						},
 					},
@@ -1830,8 +1830,8 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
 						},
 					},
 				},
@@ -1848,7 +1848,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							{
 								Key:      "meta.name",
 								Operator: "notIn",
-								Values:   []string{"44.44.44.00.00.00", "44.44.44.00.00.01"},
+								Values:   []string{"4444.4400.0000", "4444.4400.0001"},
 							},
 						},
 					},
@@ -1864,9 +1864,9 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},
@@ -1925,11 +1925,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.04": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.00": nil,
+							"4444.4400.0004": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0000": nil,
 						},
 					},
 				},
@@ -2030,11 +2030,11 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				"default": {
 					"Cluster": {
 						"SmartNIC": {
-							"44.44.44.00.00.00": nil,
-							"44.44.44.00.00.01": nil,
-							"44.44.44.00.00.02": nil,
-							"44.44.44.00.00.03": nil,
-							"44.44.44.00.00.04": nil,
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
 						},
 					},
 				},

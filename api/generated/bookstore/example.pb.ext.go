@@ -2491,8 +2491,8 @@ func init() {
 		args = append(args, "4")
 		args = append(args, "4")
 
-		if !validators.StrLen(m.Year, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"Year")
+		if err := validators.StrLen(m.Year, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Year", err.Error())
 		}
 		return nil
 	})
@@ -2519,8 +2519,8 @@ func init() {
 		args = append(args, "16")
 
 		for _, v := range m.CreditCardNumbers {
-			if !validators.StrLen(v, args) {
-				return fmt.Errorf("%v failed validation", path+"."+"CreditCardNumbers")
+			if err := validators.StrLen(v, args); err != nil {
+				return fmt.Errorf("%v failed validation: %s", path+"."+"CreditCardNumbers", err.Error())
 			}
 		}
 		return nil
@@ -2533,8 +2533,8 @@ func init() {
 		args = append(args, "3")
 		args = append(args, "10")
 
-		if !validators.StrLen(m.ISBNId, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"ISBNId")
+		if err := validators.StrLen(m.ISBNId, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"ISBNId", err.Error())
 		}
 		return nil
 	})
@@ -2545,8 +2545,8 @@ func init() {
 		args = append(args, "1")
 		args = append(args, "30")
 
-		if !validators.IntRange(m.Quantity, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"Quantity")
+		if err := validators.IntRange(m.Quantity, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Quantity", err.Error())
 		}
 		return nil
 	})
@@ -2571,16 +2571,16 @@ func init() {
 		args := make([]string, 0)
 		args = append(args, "alphanum")
 
-		if !validators.RegExp(m.Id, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"Id")
+		if err := validators.RegExp(m.Id, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Id", err.Error())
 		}
 		return nil
 	})
 
 	validatorMapExample["PublisherSpec"]["all"] = append(validatorMapExample["PublisherSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*PublisherSpec)
-		if !validators.URI(m.WebAddr) {
-			return fmt.Errorf("%v validation failed", path+"."+"WebAddr")
+		if err := validators.URI(m.WebAddr); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"WebAddr", err.Error())
 		}
 		return nil
 	})
@@ -2590,8 +2590,8 @@ func init() {
 		args = append(args, "6")
 		args = append(args, "256")
 
-		if !validators.StrLen(m.WebAddr, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"WebAddr")
+		if err := validators.StrLen(m.WebAddr, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"WebAddr", err.Error())
 		}
 		return nil
 	})

@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -100,6 +101,18 @@ func getint(in interface{}) (int64, bool) {
 	}
 }
 
+// EmptyOr returns no error if the value is empty. If it isn't, it is passed
+// to the supplied validator
+func EmptyOr(fn interface{}, in string, args []string) error {
+	if len(in) == 0 {
+		return nil
+	}
+	if len(args) == 0 {
+		return fn.(func(string) error)(in)
+	}
+	return fn.(func(string, []string) error)(in, args)
+}
+
 // StrEnum validates that the the input string belongs to the set
 //  of values enumerated in the enum specified.
 //  This validator is built into the code generator and hence needs no
@@ -108,154 +121,152 @@ func getint(in interface{}) (int64, bool) {
 // StrLen validates that the input string is in the range
 //  args[0]  :  minimum length of string
 //  args[1]  :  maximum length of string, if negative there is no max length
-func StrLen(in string, args []string) bool {
+func StrLen(in string, args []string) error {
 	min, ok := convInt(args[0])
 	if !ok || len(in) < int(min) {
-		return false
+		return fmt.Errorf("Value must have length of at least %d", min)
 	}
 
 	max, ok := convInt(args[1])
 	if !ok || (max >= 0 && len(in) > int(max)) {
-		return false
+		return fmt.Errorf("Value must have length of at most %d", max)
 	}
-	return true
-}
-
-// EmptyOrStrLen validates that the input string is in the range
-//  args[0]  :  minimum length of string
-//  args[1]  :  maximum length of string
-// or is empty
-func EmptyOrStrLen(in string, args []string) bool {
-	if len(in) == 0 {
-		return true
-	}
-	return StrLen(in, args)
+	return nil
 }
 
 // IntRange validates that the input integer is in the range
 //  args[0]  :  minimum value
 //  args[1]  :  maximum value
-func IntRange(i interface{}, args []string) bool {
+func IntRange(i interface{}, args []string) error {
 	in, ok := getint(i)
 	if !ok {
-		return false
+		return fmt.Errorf("Value must be an integer")
 	}
 	min, ok := convInt(args[0])
 	if !ok {
-		return false
+		return fmt.Errorf("Internal error: min arg is not an integer")
 	}
 	max, ok := convInt(args[1])
 	if !ok {
-		return false
+		return fmt.Errorf("Internal error: max arg is not an integer")
 	}
-	if in < min || in > max {
-		return false
+	if in < min {
+		return fmt.Errorf("Value must be at least %d", min)
 	}
-	return true
+	if in > max {
+		return fmt.Errorf("Value must be at most %d", max)
+	}
+	return nil
 }
 
 // IntMin validates that the input integer is at  least the given int
 //  args[0]  :  minimum value
-func IntMin(i interface{}, args []string) bool {
+func IntMin(i interface{}, args []string) error {
 	in, ok := getint(i)
 	if !ok {
-		return false
+		return fmt.Errorf("Value must be an integer")
 	}
 	min, ok := convInt(args[0])
 	if !ok {
-		return false
+		return fmt.Errorf("Internal error: min arg is not an integer")
 	}
 	if in < min {
-		return false
+		return fmt.Errorf("Value must be at least %d", min)
 	}
-	return true
+	return nil
 }
 
 // CIDR checks if the string is an valid CIDR notiation (IPV4 & IPV6)
 //   see tests for valid formats
-func CIDR(i interface{}) bool {
-	in := i.(string)
-	return govldtr.IsCIDR(in)
+func CIDR(in string) error {
+	if govldtr.IsCIDR(in) {
+		return nil
+	}
+	return fmt.Errorf("Value must be in valid CIDR notation")
 }
 
 // IPAddr Checks the input is an IP address in dot notation (V4 or V6)
 //   see tests for valid formats
-func IPAddr(i interface{}) bool {
-	in := i.(string)
-	return govldtr.IsIP(in)
+func IPAddr(in string) error {
+	if govldtr.IsIP(in) {
+		return nil
+	}
+	return fmt.Errorf("Value must be a valid IP in dot notation")
 }
 
 // IPv4 Checks the input is an IPv4 address in dot notation
 //   see tests for valid formats
-func IPv4(i interface{}) bool {
-	in := i.(string)
-	return govldtr.IsIPv4(in)
+func IPv4(in string) error {
+	if govldtr.IsIPv4(in) {
+		return nil
+	}
+	return fmt.Errorf("Value must be a valid IPv4 address")
 }
 
 // HostAddr checks the input is either an hostname or address
 //   see tests for valid formats
-func HostAddr(i interface{}) bool {
-	in := i.(string)
-	return govldtr.IsHost(in)
+func HostAddr(in string) error {
+	if govldtr.IsHost(in) {
+		return nil
+	}
+	return fmt.Errorf("Value must be a valid IP or valid DNS name")
 }
 
 // MacAddr verifies it is a valid MAC address in one of the supported notations
 //   see tests for valid formats
-func MacAddr(i interface{}) bool {
-	in := i.(string)
-	return govldtr.IsMAC(in)
+func MacAddr(in string) error {
+	if govldtr.IsMAC(in) {
+		return nil
+	}
+	return fmt.Errorf("Value must be a valid MAC address")
 }
 
 // URI validates the input is a valid URI
 //   see tests for valid formats
-func URI(i interface{}) bool {
-	in := i.(string)
-	return govldtr.IsRequestURI(in)
+func URI(in string) error {
+	if govldtr.IsRequestURI(in) {
+		return nil
+	}
+	return fmt.Errorf("Value must be a valid URI")
 }
 
 // UUID validates the input is a valid UUID
 //   see tests for valid formats
-func UUID(i interface{}) bool {
-	in := i.(string)
-	return govldtr.IsUUID(in)
+func UUID(in string) error {
+	if govldtr.IsUUID(in) {
+		return nil
+	}
+	return fmt.Errorf("Value must be a valid UUID")
 }
 
 // Duration validates that inputs is a valid time Duration string
 //  args[0]  :  minimum time duration inclusive, 0 if any duration is allowed
 //  args[1]  :  maximum time duration inclusive, 0 if any duration is allowed
-func Duration(in string, args []string) bool {
+func Duration(in string, args []string) error {
 	if in == "" {
-		return false
+		return fmt.Errorf("Value cannot be empty")
 	}
 	min, err := time.ParseDuration(args[0])
 	if err != nil {
-		return false
+		return fmt.Errorf("Internal error: min arg is not a duration")
 	}
 	max, err := time.ParseDuration(args[1])
 	if err != nil {
-		return false
+		return fmt.Errorf("Internal error: max arg is not a duration")
 	}
 
 	inDuration, err := time.ParseDuration(in)
 	if err != nil {
-		return false
+		return fmt.Errorf("Value must be a valid duration")
 	}
 
 	if min != 0 && min.Nanoseconds() > inDuration.Nanoseconds() {
-		return false
+		return fmt.Errorf("Value duration must be at least %s", args[0])
 	}
 	if max != 0 && inDuration.Nanoseconds() > max.Nanoseconds() {
-		return false
+		return fmt.Errorf("Value duration must be at most %s", args[1])
 	}
-	return true
-}
-
-// EmptyOrDuration validates that input is a valid time Duration string or is an empty string
-func EmptyOrDuration(in string, args []string) bool {
-	if in == "" {
-		return true
-	}
-	return Duration(in, args)
+	return nil
 }
 
 // XXX We can make these maps programmable by the user, or allow user defined entries
@@ -372,7 +383,7 @@ func knownIcmpTypeCodeVldtr(l3l4Info []string) bool {
 	return false
 }
 
-func strProtoPortVldtr(i interface{}) bool {
+func strProtoPortVldtr(in string) error {
 	// Acceptable string formats are -
 	// L4_proto/port E.g. tcp/1234
 	// L3proto E.g. arp
@@ -380,45 +391,53 @@ func strProtoPortVldtr(i interface{}) bool {
 	// L3_proto_number E.g. ethertype/0x806
 	// special case for icmp: icmp/<type>/<code>
 
-	port := i.(string)
+	port := in
 	if port == "" {
-		return true
+		return nil
 	}
 	l3l4Info := strings.Split(port, "/")
-	l3l4proto := strings.ToLower(l3l4Info[0])
+	l3l4proto := strings.ToLower(strings.TrimSpace(l3l4Info[0]))
 	l4Info, l4ok := l4ProtoMap[l3l4proto]
 	l3Info, l3ok := l3ProtoMap[l3l4proto]
+
 	if !l3ok && !l4ok {
-		return false
+		return fmt.Errorf("Protocol must be a valid L3 or L4 <protocol>/<port>")
 	}
 	l4proto := l4Info
 	l3proto := l3Info
 
 	if l4ok {
 		if l4proto == 0 {
-			if len(l3l4Info) != 2 {
+			if len(l3l4Info) < 2 {
 				// allowed format is ipproto/<proto_num>
-				return false
+				return fmt.Errorf("Value had invalid format for %s, expected %s/<port>", l3l4proto, l3l4proto)
 			}
-		} else if strings.Contains(l3l4proto, "icmp") {
+			if len(l3l4Info) > 2 {
+				// allowed format is ipproto/<proto_num>
+				return fmt.Errorf("Value had invalid format for %s, unexpected second '/' ", l3l4proto)
+			}
+		} else if l3l4proto == "icmp" {
 			if len(l3l4Info) > 3 {
-				return false
+				return fmt.Errorf("Value had invalid format for %s, unexpected third '/' ", l3l4proto)
 			}
 			if knownIcmpTypeCodeVldtr(l3l4Info) {
-				return true
+				return nil
 			}
 			// if known type-code validation fails, try numeric values
 		} else if len(l3l4Info) > 2 {
-			return false
+			return fmt.Errorf("Value had invalid format for %s, unexpected second '/' ", l3l4proto)
 		}
 	}
 	if l3ok {
 		if l3proto == 0 {
-			if len(l3l4Info) != 2 {
-				return false
+			if len(l3l4Info) < 2 {
+				return fmt.Errorf("Value had invalid format for %s, expected %s/<protocol number>", l3l4proto, l3l4proto)
+			}
+			if len(l3l4Info) > 2 {
+				return fmt.Errorf("Value had invalid format for %s, unexpected second '/' ", l3l4proto)
 			}
 		} else if len(l3l4Info) > 1 {
-			return false
+			return fmt.Errorf("Value had invalid format for %s, unexpected second '/' ", l3l4proto)
 		}
 	}
 	// rest of the parameters must be numeric values
@@ -430,70 +449,60 @@ func strProtoPortVldtr(i interface{}) bool {
 		if p == 1 && l3ok && l3proto == 0 {
 			// ethertype are 16 bit values
 			_, err = strconv.ParseUint(l3l4Info[p], 0, 16)
+			if err != nil {
+				return fmt.Errorf("Value had invalid format for %s, protocol number must be a 16 bit value", l3l4proto)
+			}
 		} else if p == 1 && l4ok && l4proto == 0 {
 			// ip protocol are 8 bit values
 			_, err = strconv.ParseUint(l3l4Info[p], 0, 8)
+			if err != nil {
+				return fmt.Errorf("Value had invalid format for %s, protocol number must be an 8 bit value", l3l4proto)
+			}
 		} else {
 			_, err = strconv.ParseUint(l3l4Info[p], 0, 16)
-		}
-		if err != nil {
-			return false
+			if err != nil {
+				return fmt.Errorf("Value had invalid format for %s, protocol number must be a 16 bit value", l3l4proto)
+			}
 		}
 	}
-	return true
+	return nil
 }
 
 // ProtoPort validates L3/L4 protocol and port
-func ProtoPort(i interface{}) bool {
-	if port, ok := i.(string); ok {
-		return strProtoPortVldtr(port)
-	}
-	return false
+func ProtoPort(port string) error {
+	return strProtoPortVldtr(port)
 }
 
 // ValidKind validates that the kind is one of the registered Kinds
-func ValidKind(i interface{}) bool {
-	in, ok := i.(string)
-	if !ok {
-		return false
-	}
+func ValidKind(in string) error {
 	kindsMapOnce.Do(populateKindsMap)
-	_, ok = kindsMap[in]
-	return ok
+	if _, ok := kindsMap[in]; !ok {
+		return fmt.Errorf("Value must be a valid kind")
+	}
+	return nil
 }
 
 // ValidGroup validates the API group is one of the known groups
-func ValidGroup(i interface{}) bool {
-	in, ok := i.(string)
-	if !ok {
-		return false
-	}
+func ValidGroup(in string) error {
 	kindsMapOnce.Do(populateKindsMap)
-	_, ok = groupMap[in]
-	return ok
+	if _, ok := groupMap[in]; !ok {
+		return fmt.Errorf("Value must be a valid API group")
+	}
+	return nil
 }
 
 // RegExp validates input string against the named regexp specified in args[0]
-func RegExp(i interface{}, args []string) bool {
-	in, ok := i.(string)
-	if !ok {
-		return false
-	}
+func RegExp(in string, args []string) error {
+	// in, ok := i.(string)
+	// if !ok {
+	// 	return fmt.Errorf("Value must be a valid string")
+	// }
 	entry, ok := RegexpList[args[0]]
 	if !ok {
-		return false
+		return fmt.Errorf("Internal error: regexp name given not recognized")
 	}
-	return entry.Regexp.Match([]byte(in))
-}
-
-// EmptyOrRegExp validates input string against the named regexp specified in args[0] and allows empty strings
-func EmptyOrRegExp(i interface{}, args []string) bool {
-	in, ok := i.(string)
-	if !ok {
-		return false
+	if !entry.Regexp.Match([]byte(in)) {
+		return fmt.Errorf("Value %s", entry.HelpStr)
 	}
-	if len(in) == 0 {
-		return true
-	}
-	return RegExp(i, args)
+	return nil
 }

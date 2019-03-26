@@ -235,6 +235,7 @@ func (m *Host) Defaults(ver string) bool {
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -256,7 +257,12 @@ func (m *HostSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *HostSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	for k := range m.SmartNICs {
+		i := m.SmartNICs[k]
+		ret = i.Defaults(ver) || ret
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -521,7 +527,8 @@ func (m *SmartNICID) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *SmartNICID) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -685,6 +692,17 @@ func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -694,6 +712,16 @@ func (m *HostSpec) References(tenant string, path string, resp map[string]apiint
 
 func (m *HostSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.SmartNICs {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sSmartNICs[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -883,6 +911,19 @@ func (m *SmartNICID) References(tenant string, path string, resp map[string]apii
 
 func (m *SmartNICID) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapCluster["SmartNICID"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapCluster["SmartNICID"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -1018,6 +1059,16 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Phase", vals)
+		}
+		return nil
+	})
+
+	validatorMapCluster["SmartNICID"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapCluster["SmartNICID"]["all"] = append(validatorMapCluster["SmartNICID"]["all"], func(path string, i interface{}) error {
+		m := i.(*SmartNICID)
+		if err := validators.EmptyOr(validators.MacAddr, m.MACAddress, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MACAddress", err.Error())
 		}
 		return nil
 	})

@@ -3241,12 +3241,15 @@
     "workloadWorkloadIntfSpec": {
       "type": "object",
       "required": [
+        "mac-address",
         "micro-seg-vlan",
         "external-vlan"
       ],
       "properties": {
         "mac-address": {
           "type": "string",
+          "example": "aa:bb:cc:dd:00:00, aabb.ccdd.0000, aa-bb-cc-dd-00-00",
+          "description": "should be a valid MAC address",
           "title": "MACAddress contains the MAC address of the interface as seen by the workload\ncli-help: MAC address of the interface as seen by the workload"
         },
         "micro-seg-vlan": {

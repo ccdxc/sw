@@ -399,7 +399,8 @@ message SmartNICID {
     string Name = 1 [(gogoproto.jsontag) = "name,omitempty"];
 
     // MACAddress contains the primary MAC address of a SmartNIC
-    string MACAddress = 2 [(gogoproto.jsontag) = "mac-address,omitempty"];
+    string MACAddress = 2 [(gogoproto.jsontag) = "mac-address,omitempty",
+                            (venice.check) = "EmptyOr(MacAddr())"];
 }
 
 // HostStatus contains the current state of the Host.

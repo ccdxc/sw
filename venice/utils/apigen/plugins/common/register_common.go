@@ -413,7 +413,7 @@ func hostAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver stri
 }
 
 func macAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
-	str := "aa:BB:cc:DD:00:00, aabb.ccdd.0000, aa-BB-cc-DD-00-00"
+	str := "aa:bb:cc:dd:00:00, aabb.ccdd.0000, aa-bb-cc-dd-00-00"
 	prof.Example[ver] = prof.Example[ver] + str
 	prof.DocString[ver] = prof.DocString[ver] + "should be a valid MAC address"
 	prof.Required[ver] = true
@@ -512,9 +512,10 @@ func emptyOrRegexpProfile(field *descriptor.Field, reg *descriptor.Registry, ver
 
 // ValidateField specifies a validator specified on a field.
 type ValidateField struct {
-	Fn   string
-	Ver  string
-	Args []string
+	Fn         string
+	Ver        string
+	Args       []string
+	AllowEmpty bool
 }
 
 // IsString is a utility function to check if a string is valid
@@ -556,6 +557,9 @@ func ParseValidator(in string) (ValidateField, error) {
 	ret.Args = strings.Split(strings.Replace(params[3], " ", "", -1), ",")
 	if len(ret.Args) == 1 && ret.Args[0] == params[3] && params[3] == "" {
 		ret.Args = []string{}
+	}
+	if strings.Contains(in, "EmptyOr(") {
+		ret.AllowEmpty = true
 	}
 	if vargs, ok := ValidatorArgMap[ret.Fn]; ok {
 		if len(vargs) != len(ret.Args) {

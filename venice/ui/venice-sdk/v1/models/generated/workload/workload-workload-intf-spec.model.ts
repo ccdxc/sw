@@ -9,7 +9,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IWorkloadWorkloadIntfSpec {
-    'mac-address'?: string;
+    'mac-address': string;
     'micro-seg-vlan': number;
     'external-vlan': number;
     'ip-addresses'?: Array<string>;
@@ -17,6 +17,7 @@ export interface IWorkloadWorkloadIntfSpec {
 
 
 export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWorkloadIntfSpec {
+    /** should be a valid MAC address */
     'mac-address': string = null;
     /** value should be between 1 and 4095 */
     'micro-seg-vlan': number = null;
@@ -25,7 +26,9 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     'ip-addresses': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'mac-address': {
-            required: false,
+            description:  'should be a valid MAC address',
+            hint:  'aa:bb:cc:dd:00:00, aabb.ccdd.0000, aa-bb-cc-dd-00-00',
+            required: true,
             type: 'string'
         },
         'micro-seg-vlan': {
@@ -110,7 +113,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'mac-address': CustomFormControl(new FormControl(this['mac-address']), WorkloadWorkloadIntfSpec.propInfo['mac-address']),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address'], [required, ]), WorkloadWorkloadIntfSpec.propInfo['mac-address']),
                 'micro-seg-vlan': CustomFormControl(new FormControl(this['micro-seg-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['micro-seg-vlan']),
                 'external-vlan': CustomFormControl(new FormControl(this['external-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['external-vlan']),
                 'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), WorkloadWorkloadIntfSpec.propInfo['ip-addresses']),

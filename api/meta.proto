@@ -43,7 +43,7 @@ message ObjectMeta {
   // the tenant the user, who created the object, belongs to.
   // Should start and end in an alphanumeric character and can contain only alphanumerics.
   // Minimum length is 1 and maximum length is 48 characters
-  string Tenant               = 2 [(gogoproto.jsontag) = "tenant,omitempty", (venice.check) = "EmptyOrRegExp(alphanum)", (venice.check) = "EmptyOrStrLen(1,48)"];
+  string Tenant               = 2 [(gogoproto.jsontag) = "tenant,omitempty", (venice.check) = "EmptyOr(RegExp(alphanum))", (venice.check) = "EmptyOr(StrLen(1,48))"];
   // Namespace of the object, for scoped objects.
   // Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters
   // maximum length is 64 characters

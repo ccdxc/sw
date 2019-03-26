@@ -840,8 +840,8 @@ func init() {
 		args = append(args, "64")
 
 		for _, v := range m.Categories {
-			if !validators.EmptyOrStrLen(v, args) {
-				return fmt.Errorf("%v failed validation", path+"."+"Categories")
+			if err := validators.EmptyOr(validators.StrLen, v, args); err != nil {
+				return fmt.Errorf("%v failed validation: %s", path+"."+"Categories", err.Error())
 			}
 		}
 		return nil
@@ -868,8 +868,8 @@ func init() {
 		args = append(args, "64")
 
 		for _, v := range m.Kinds {
-			if !validators.EmptyOrStrLen(v, args) {
-				return fmt.Errorf("%v failed validation", path+"."+"Kinds")
+			if err := validators.EmptyOr(validators.StrLen, v, args); err != nil {
+				return fmt.Errorf("%v failed validation: %s", path+"."+"Kinds", err.Error())
 			}
 		}
 		return nil
@@ -882,8 +882,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "1023")
 
-		if !validators.IntRange(m.From, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"From")
+		if err := validators.IntRange(m.From, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"From", err.Error())
 		}
 		return nil
 	})
@@ -894,8 +894,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "8192")
 
-		if !validators.IntRange(m.MaxResults, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"MaxResults")
+		if err := validators.IntRange(m.MaxResults, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MaxResults", err.Error())
 		}
 		return nil
 	})
@@ -919,8 +919,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "256")
 
-		if !validators.EmptyOrStrLen(m.QueryString, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"QueryString")
+		if err := validators.EmptyOr(validators.StrLen, m.QueryString, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"QueryString", err.Error())
 		}
 		return nil
 	})
@@ -931,8 +931,8 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "256")
 
-		if !validators.EmptyOrStrLen(m.SortBy, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"SortBy")
+		if err := validators.EmptyOr(validators.StrLen, m.SortBy, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"SortBy", err.Error())
 		}
 		return nil
 	})
@@ -958,8 +958,8 @@ func init() {
 		args = append(args, "256")
 
 		for _, v := range m.Text {
-			if !validators.EmptyOrStrLen(v, args) {
-				return fmt.Errorf("%v failed validation", path+"."+"Text")
+			if err := validators.EmptyOr(validators.StrLen, v, args); err != nil {
+				return fmt.Errorf("%v failed validation: %s", path+"."+"Text", err.Error())
 			}
 		}
 		return nil

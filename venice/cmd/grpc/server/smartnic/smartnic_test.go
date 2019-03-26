@@ -228,7 +228,7 @@ func stopNMD(t *testing.T, ag *nmd.Agent, dbPath string) {
 }
 
 func getHostID(index int) string {
-	return fmt.Sprintf("44.44.44.44.%02x.%02x", index/256, index%256)
+	return fmt.Sprintf("4444.4444.%02x%02x", index/256, index%256)
 }
 
 func getRESTPort(index int) string {
@@ -674,7 +674,7 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	baseMac := "44.44.44.44.00."
+	baseMac := "4444.4444.00"
 
 	// set server-side timeout to a small value to speed-up tests
 	srvTimeout := 1000
@@ -930,7 +930,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	hostID := getHostID(1)
 	dbPath := getDBPath(1)
 	restURL := getRESTUrl(1)
-	testMac := "44.44.44.44.44.01"
+	testMac := "4444.4444.4401"
 
 	// Cleanup any prior DB files
 	os.Remove(dbPath)

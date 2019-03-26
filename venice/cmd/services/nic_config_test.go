@@ -87,7 +87,7 @@ func (t testInfo) CheckNICVersionForAdmission(nicSku string, nicVersion string) 
 }
 
 func getNodeID(index int) string {
-	return fmt.Sprintf("44.44.44.44.%02x.%02x", index/256, index%256)
+	return fmt.Sprintf("4444.4444.%02x%02x", index/256, index%256)
 }
 
 func getRESTPort(index int) string {

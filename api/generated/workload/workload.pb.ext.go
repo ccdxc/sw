@@ -84,7 +84,8 @@ func (m *WorkloadIntfSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *WorkloadIntfSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -127,6 +128,10 @@ func (m *WorkloadSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *WorkloadSpec) Defaults(ver string) bool {
 	var ret bool
+	for k := range m.Interfaces {
+		i := m.Interfaces[k]
+		ret = i.Defaults(ver) || ret
+	}
 	return ret
 }
 
@@ -327,8 +332,16 @@ func init() {
 		args = append(args, "1")
 		args = append(args, "4095")
 
-		if !validators.IntRange(m.ExternalVlan, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"ExternalVlan")
+		if err := validators.IntRange(m.ExternalVlan, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"ExternalVlan", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapWorkload["WorkloadIntfSpec"]["all"] = append(validatorMapWorkload["WorkloadIntfSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*WorkloadIntfSpec)
+		if err := validators.MacAddr(m.MACAddress); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MACAddress", err.Error())
 		}
 		return nil
 	})
@@ -339,8 +352,8 @@ func init() {
 		args = append(args, "1")
 		args = append(args, "4095")
 
-		if !validators.IntRange(m.MicroSegVlan, args) {
-			return fmt.Errorf("%v failed validation", path+"."+"MicroSegVlan")
+		if err := validators.IntRange(m.MicroSegVlan, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MicroSegVlan", err.Error())
 		}
 		return nil
 	})
@@ -349,8 +362,8 @@ func init() {
 
 	validatorMapWorkload["WorkloadSpec"]["all"] = append(validatorMapWorkload["WorkloadSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*WorkloadSpec)
-		if !validators.HostAddr(m.HostName) {
-			return fmt.Errorf("%v validation failed", path+"."+"HostName")
+		if err := validators.HostAddr(m.HostName); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"HostName", err.Error())
 		}
 		return nil
 	})
