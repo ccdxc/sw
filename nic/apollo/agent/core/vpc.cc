@@ -8,10 +8,32 @@
 namespace core {
 
 sdk_ret_t
+vpc_create_validate (pds_vcn_spec_t *spec)
+{
+    switch (spec->type) {
+    case PDS_VCN_TYPE_SUBSTRATE:
+        if (agent_state::state()->substrate_vpc_id() != PDS_VCN_ID_INVALID) {
+            return sdk::SDK_RET_ENTRY_EXISTS;
+        }
+        break;
+    case PDS_VCN_TYPE_TENANT:
+        break;
+    default:
+        return sdk::SDK_RET_INVALID_ARG; 
+    }
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
 vpc_create (pds_vcn_key_t *key, pds_vcn_spec_t *spec)
 {
+    sdk_ret_t ret;
+
     if (agent_state::state()->find_in_vpc_db(key) != NULL) {
         return sdk::SDK_RET_ENTRY_EXISTS;
+    }
+    if ((ret = vpc_create_validate(spec)) != sdk::SDK_RET_OK) {
+        return ret;
     }
     if (pds_vcn_create(spec) != sdk::SDK_RET_OK) {
         return sdk::SDK_RET_ERR;
@@ -19,17 +41,25 @@ vpc_create (pds_vcn_key_t *key, pds_vcn_spec_t *spec)
     if (agent_state::state()->add_to_vpc_db(key, spec) != sdk::SDK_RET_OK) {
         return sdk::SDK_RET_ERR;
     }
+    if (spec->type == PDS_VCN_TYPE_SUBSTRATE) {
+        agent_state::state()->substrate_vpc_id_set(spec->key.id);
+    }
     return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_delete (pds_vcn_key_t *key)
 {
-    if (agent_state::state()->find_in_vpc_db(key) == NULL) {
+    pds_vcn_spec_t *spec;
+
+    if ((spec = agent_state::state()->find_in_vpc_db(key)) == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     if (pds_vcn_delete(key) != sdk::SDK_RET_OK) {
         return sdk::SDK_RET_ERR;
+    }
+    if (spec->type == PDS_VCN_TYPE_SUBSTRATE) {
+        agent_state::state()->substrate_vpc_id_reset();
     }
     if (agent_state::state()->del_from_vpc_db(key) == false) {
         return sdk::SDK_RET_ERR;

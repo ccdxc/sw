@@ -57,6 +57,8 @@ public:
     subnet_db_t *subnet_map(void) { return subnet_map_; }
     vnic_db_t *vnic_map(void) { return vnic_map_; }
     route_table_db_t *route_table_map(void) { return route_table_map_; }
+    pds_vcn_id_t substrate_vpc_id(void) { return substrate_vpc_id_; }
+    void substrate_vpc_id_set(pds_vcn_id_t id) { substrate_vpc_id_ = id; }
 
     slab_ptr_t tep_slab(void) const {
         return slabs_[SLAB_ID_TEP];
@@ -82,6 +84,7 @@ private:
 private:
     tep_db_t *tep_map_;
     vpc_db_t *vpc_map_;
+    pds_vcn_id_t substrate_vpc_id_;
     subnet_db_t *subnet_map_;
     vnic_db_t *vnic_map_;
     route_table_db_t *route_table_map_;
@@ -131,6 +134,10 @@ public:
                                     pds_route_table_spec_t *spec);
     bool del_from_route_table_db(pds_route_table_key_t *key);
     slab_ptr_t route_table_slab(void) const { return cfg_db_->route_table_slab(); }
+
+    pds_vcn_id_t substrate_vpc_id(void) { return cfg_db_->substrate_vpc_id(); }
+    void substrate_vpc_id_set(pds_vcn_id_t id) { return cfg_db_->substrate_vpc_id_set(id); }
+    void substrate_vpc_id_reset(void) { return cfg_db_->substrate_vpc_id_set(PDS_VCN_ID_INVALID); }
 
 private:
     void cleanup(void);

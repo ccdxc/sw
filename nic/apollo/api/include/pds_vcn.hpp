@@ -17,8 +17,7 @@
 /// \defgroup PDS_VCN VCN API
 /// @{
 
-#define PDS_VCN_ID_INVALID 0xFFFF    ///< Invalid substrate ID
-#define PDS_VCN_ID_SUBSTRATE 0       ///< VCN ID reserved for substrate
+#define PDS_VCN_ID_INVALID 0         ///< Invalid substrate ID
 #define PDS_MAX_VCN 1024             ///< Max VCN
 
 /// \brief VCN key
