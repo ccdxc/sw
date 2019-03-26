@@ -122,7 +122,7 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 // initialize PDS library
 //------------------------------------------------------------------------------
 static inline sdk_ret_t
-init_pds (std::string cfg_file)
+init_pds (std::string cfg_file, std::string profile)
 {
     sdk_ret_t ret;
     pds_init_params_t init_params;
@@ -185,7 +185,7 @@ logger_init (void)
 // initialize the agent
 //------------------------------------------------------------------------------
 sdk_ret_t
-agent_init (std::string cfg_file)
+agent_init (std::string cfg_file, std::string profile)
 {
     sdk_ret_t    ret;
 
@@ -193,7 +193,7 @@ agent_init (std::string cfg_file)
     logger_init();
 
     // initialize PDS library
-    ret = init_pds(cfg_file);
+    ret = init_pds(cfg_file, profile);
 
     // init agent state
     ret = core::agent_state::init();

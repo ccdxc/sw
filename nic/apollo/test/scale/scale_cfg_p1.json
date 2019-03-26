@@ -1,0 +1,60 @@
+{
+    "_comment_" : "the order of the objects listed here should be maintained",
+    "objects" : [
+        {
+            "kind" : "device",
+            "gw-ip-addr": "1.0.0.1",
+            "ip-addr" : "1.0.0.2",
+            "mac-addr" : "0x000201000001",
+            "dual-stack": "true",
+            "_comment_" : "encap is either vxlan or mplsoudp",
+            "encap": "vxlan"
+        },
+        {
+            "kind" : "tep",
+            "count" : "1024",
+            "prefix": "1.0.0.0/8"
+        },
+        {
+            "_comment_" : "routes per routing table, middle 2 octets are used to create routes",
+            "kind" : "route-table",
+            "count" : "22527",
+            "prefix-start" : "4.0.0.0/8",
+            "v6-prefix-start" : "2021::/96"
+        },
+        {
+            "_comment_" : "security policy parameters here are per subnet per direction",
+            "kind" : "security-policy",
+            "count" : "4"
+        },
+        {
+            "_comment_" : "All VCNs have same prefix",
+            "kind" : "vcn",
+            "count" : "128",
+            "prefix" : "2.0.0.0/8",
+            "v6-prefix" : "2019::/96",
+            "subnets" : "1"
+        },
+        {
+            "_comment_" : "per vcn, per subnet vnic scale",
+            "kind" : "vnic",
+            "count" : "1",
+            "vlan-start" : "1"
+        },
+        {
+            "kind" : "mappings",
+            "remotes" : "512",
+            "locals" : "32",
+            "nat-prefix" : "3.0.0.0/8",
+            "v6-nat-prefix": "2020::/96"
+        },
+        {
+            "kind" : "flows",
+            "num_tcp": "0",
+            "num_udp": "1048576",
+            "num_icmp": "0",
+            "sport_base": "0",
+            "dport_base": "0"
+        }
+    ]
+}

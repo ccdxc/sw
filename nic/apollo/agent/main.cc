@@ -80,18 +80,18 @@ int
 main (int argc, char **argv)
 {
     int          oc;
-    string       cfg_path, cfg_file, file;
+    string       cfg_path, cfg_file, profile, file;
     sdk_ret_t    ret;
 
     struct option longopts[] = {
        { "config",    required_argument, NULL, 'c' },
-       { "platform",  optional_argument, NULL, 'p' },
+       { "profile",   required_argument, NULL, 'p' },
        { "help",      no_argument,       NULL, 'h' },
        { 0,           0,                 0,     0 }
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:p:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             if (optarg) {
@@ -101,6 +101,17 @@ main (int argc, char **argv)
                 print_usage(argv);
                 exit(1);
             }
+            break;
+
+        case 'p':
+            if (optarg) {
+                profile = std::string(optarg);
+            } else {
+                fprintf(stderr, "profile is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            fprintf(stdout, "Got profile: %s\n", profile.c_str());
             break;
 
         case 'h':
@@ -142,7 +153,7 @@ main (int argc, char **argv)
     }
 
     // initialize the agent
-    if ((ret = core::agent_init(cfg_file)) != SDK_RET_OK) {
+    if ((ret = core::agent_init(cfg_file, profile)) != SDK_RET_OK) {
         fprintf(stderr, "Agent initialization failed, err %u", ret);
     }
 
