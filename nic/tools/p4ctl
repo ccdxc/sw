@@ -5,7 +5,7 @@ if ! [ -x "$(command -v locale)" ]; then
   exit 1
 fi
 repl=1
-platform=iris
+platform=
 while getopts ":c:p:h" opt; do
   case ${opt} in
     c )
@@ -16,7 +16,7 @@ while getopts ":c:p:h" opt; do
       ;;
     p )
       platform=$OPTARG
-      if [ $platform != "iris" ] || [ $platform != "apollo" ]; then
+      if [ $platform != "iris" ] && [ $platform != "apollo" ]; then
         echo -e "-p <platform can be iris or apollo> \n Usage: p4ctl -p <iris|apollo> -c \"debug ...\""
         exit
       fi

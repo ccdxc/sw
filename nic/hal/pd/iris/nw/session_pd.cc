@@ -304,126 +304,130 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
     if (ret == HAL_RET_OK) {
         entry_exists = true;
     }
-    // get the flow attributes
+    
     if (role == FLOW_ROLE_INITIATOR) {
         flow_attrs = aug ? &session->iflow->assoc_flow->pgm_attrs :
-            &session->iflow->pgm_attrs;
-        flow_cfg = &session->iflow->config;
-        if (aug) {
-            d.action_u.flow_info_flow_info.ingress_mirror_session_id =
-                                 session->iflow->assoc_flow->config.ing_mirror_session;
-            d.action_u.flow_info_flow_info.egress_mirror_session_id =
-                                 session->iflow->assoc_flow->config.eg_mirror_session;
-        } else {
-            d.action_u.flow_info_flow_info.ingress_mirror_session_id =
-                                 flow_cfg->ing_mirror_session;
-            d.action_u.flow_info_flow_info.egress_mirror_session_id =
-                                 flow_cfg->eg_mirror_session;
-        }
+                &session->iflow->pgm_attrs;
     } else {
         flow_attrs = aug ? &session->rflow->assoc_flow->pgm_attrs :
-            &session->rflow->pgm_attrs;
-        flow_cfg = &session->rflow->config;
-        if (aug) {
-            d.action_u.flow_info_flow_info.ingress_mirror_session_id =
-                                 session->rflow->assoc_flow->config.ing_mirror_session;
-            d.action_u.flow_info_flow_info.egress_mirror_session_id =
-                                 session->rflow->assoc_flow->config.eg_mirror_session;
-        } else {
-            d.action_u.flow_info_flow_info.ingress_mirror_session_id =
-                                 flow_cfg->ing_mirror_session;
-            d.action_u.flow_info_flow_info.egress_mirror_session_id =
-                                 flow_cfg->eg_mirror_session;
-        }
+                &session->rflow->pgm_attrs;
     }
-
-    // populate the action information
     if (flow_attrs->drop) {
         d.action_id = FLOW_INFO_FLOW_HIT_DROP_ID;
+        d.action_u.flow_info_flow_hit_drop.start_timestamp = (clock>>16);
         HAL_TRACE_DEBUG("Action being set to drop");
+    
     } else {
         d.action_id = FLOW_INFO_FLOW_INFO_ID;
-    }
+        // get the flow attributes
+        if (role == FLOW_ROLE_INITIATOR) {
+            flow_cfg = &session->iflow->config;
+            if (aug) {
+                d.action_u.flow_info_flow_info.ingress_mirror_session_id =
+                                     session->iflow->assoc_flow->config.ing_mirror_session;
+                d.action_u.flow_info_flow_info.egress_mirror_session_id =
+                                     session->iflow->assoc_flow->config.eg_mirror_session;
+            } else {
+                d.action_u.flow_info_flow_info.ingress_mirror_session_id =
+                                     flow_cfg->ing_mirror_session;
+                d.action_u.flow_info_flow_info.egress_mirror_session_id =
+                                     flow_cfg->eg_mirror_session;
+            }
+        } else {
+            flow_cfg = &session->rflow->config;
+            if (aug) {
+                d.action_u.flow_info_flow_info.ingress_mirror_session_id =
+                                     session->rflow->assoc_flow->config.ing_mirror_session;
+                d.action_u.flow_info_flow_info.egress_mirror_session_id =
+                                     session->rflow->assoc_flow->config.eg_mirror_session;
+            } else {
+                d.action_u.flow_info_flow_info.ingress_mirror_session_id =
+                                     flow_cfg->ing_mirror_session;
+                d.action_u.flow_info_flow_info.egress_mirror_session_id =
+                                     flow_cfg->eg_mirror_session;
+            }
+        }
 
-    if (flow_attrs->export_en) {
-        d.action_u.flow_info_flow_info.export_id1 =
-                                             flow_attrs->export_id1;
-        d.action_u.flow_info_flow_info.export_id2 =
-                                             flow_attrs->export_id2;
-        d.action_u.flow_info_flow_info.export_id3 =
-                                             flow_attrs->export_id3;
-        d.action_u.flow_info_flow_info.export_id4 =
-                                             flow_attrs->export_id4;
-    }
+        if (flow_attrs->export_en) {
+            d.action_u.flow_info_flow_info.export_id1 =
+                                                 flow_attrs->export_id1;
+            d.action_u.flow_info_flow_info.export_id2 =
+                                                 flow_attrs->export_id2;
+            d.action_u.flow_info_flow_info.export_id3 =
+                                                 flow_attrs->export_id3;
+            d.action_u.flow_info_flow_info.export_id4 =
+                                                 flow_attrs->export_id4;
+        }
 
-    d.action_u.flow_info_flow_info.expected_src_lif_check_en =
-        flow_attrs->expected_src_lif_en;
-    d.action_u.flow_info_flow_info.expected_src_lif =
-        flow_attrs->expected_src_lif;
-    d.action_u.flow_info_flow_info.dst_lport = flow_attrs->lport;
-    d.action_u.flow_info_flow_info.multicast_en = flow_attrs->mcast_en;
-    d.action_u.flow_info_flow_info.multicast_ptr = flow_attrs->mcast_ptr;
+        d.action_u.flow_info_flow_info.expected_src_lif_check_en =
+            flow_attrs->expected_src_lif_en;
+        d.action_u.flow_info_flow_info.expected_src_lif =
+            flow_attrs->expected_src_lif;
+        d.action_u.flow_info_flow_info.dst_lport = flow_attrs->lport;
+        d.action_u.flow_info_flow_info.multicast_en = flow_attrs->mcast_en;
+        d.action_u.flow_info_flow_info.multicast_ptr = flow_attrs->mcast_ptr;
 
-    // Set the tunnel originate flag
-    d.action_u.flow_info_flow_info.tunnel_originate =
-                                                    flow_attrs->tunnel_orig;
-    // L4 LB (NAT) Info
-    d.action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_l4_port;
-    memcpy(d.action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_ip.addr,
-           sizeof(ipvx_addr_t));
-    if (flow_cfg->key.flow_type == FLOW_TYPE_V6) {
-        memrev(d.action_u.flow_info_flow_info.nat_ip,
-               sizeof(d.action_u.flow_info_flow_info.nat_ip));
-    }
-    d.action_u.flow_info_flow_info.twice_nat_idx = flow_attrs->twice_nat_idx;
+        // Set the tunnel originate flag
+        d.action_u.flow_info_flow_info.tunnel_originate =
+                                                        flow_attrs->tunnel_orig;
+        // L4 LB (NAT) Info
+        d.action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_l4_port;
+        memcpy(d.action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_ip.addr,
+               sizeof(ipvx_addr_t));
+        if (flow_cfg->key.flow_type == FLOW_TYPE_V6) {
+            memrev(d.action_u.flow_info_flow_info.nat_ip,
+                   sizeof(d.action_u.flow_info_flow_info.nat_ip));
+        }
+        d.action_u.flow_info_flow_info.twice_nat_idx = flow_attrs->twice_nat_idx;
 
-    // QOS Info
-    d.action_u.flow_info_flow_info.qos_class_en = flow_attrs->qos_class_en;
-    d.action_u.flow_info_flow_info.qos_class_id = flow_attrs->qos_class_id;
+        // QOS Info
+        d.action_u.flow_info_flow_info.qos_class_en = flow_attrs->qos_class_en;
+        d.action_u.flow_info_flow_info.qos_class_id = flow_attrs->qos_class_id;
 
-    // TBD: check class NIC mode and set this
-    d.action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;
-    if (flow_attrs->qid_en) {
-        d.action_u.flow_info_flow_info.qtype = flow_attrs->qtype;
-        d.action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->qid;
-    } else {
-        d.action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
-    }
+        // TBD: check class NIC mode and set this
+        d.action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;
+        if (flow_attrs->qid_en) {
+            d.action_u.flow_info_flow_info.qtype = flow_attrs->qtype;
+            d.action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->qid;
+        } else {
+            d.action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
+        }
 
-    /*
-     * For packets to host, the vlan id will be derived from output_mapping, but
-     * the decision to do vlan encap or not is coming from here.
-     */
-    d.action_u.flow_info_flow_info.tunnel_rewrite_index = flow_attrs->tnnl_rw_idx;
+        /*
+         * For packets to host, the vlan id will be derived from output_mapping, but
+         * the decision to do vlan encap or not is coming from here.
+         */
+        d.action_u.flow_info_flow_info.tunnel_rewrite_index = flow_attrs->tnnl_rw_idx;
 
-    // TBD: check analytics policy and set this
-    d.action_u.flow_info_flow_info.log_en = FALSE;
+        // TBD: check analytics policy and set this
+        d.action_u.flow_info_flow_info.log_en = FALSE;
 
-    d.action_u.flow_info_flow_info.rewrite_flags =
-        (flow_attrs->mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
-        (flow_attrs->mac_da_rewrite ? REWRITE_FLAGS_MAC_DA : 0) |
-        (flow_attrs->ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
+        d.action_u.flow_info_flow_info.rewrite_flags =
+            (flow_attrs->mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
+            (flow_attrs->mac_da_rewrite ? REWRITE_FLAGS_MAC_DA : 0) |
+            (flow_attrs->ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
 
-    if (flow_attrs->rw_act != REWRITE_NOP_ID) {
-        d.action_u.flow_info_flow_info.rewrite_index = flow_attrs->rw_idx;
-    }
-#if 0
-    // TODO: if we are doing routing, then set ttl_dec to TRUE
-    if ((role == FLOW_ROLE_INITIATOR && !aug) ||
-        (role == FLOW_ROLE_RESPONDER && aug)) {
-        // Assuming aug flows are either send to uplink or receive from uplink
-        d.action_u.flow_info_flow_info.flow_conn_track = true;
-    } else {
-        d.action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
-    }
-#endif
-    d.action_u.flow_info_flow_info.flow_conn_track = session->conn_track_en;
-    d.action_u.flow_info_flow_info.flow_ttl = 64;
-    d.action_u.flow_info_flow_info.flow_role = flow_attrs->role;
-    d.action_u.flow_info_flow_info.session_state_index =
-    d.action_u.flow_info_flow_info.flow_conn_track ?
-             sess_pd->session_state_idx : 0;
-    d.action_u.flow_info_flow_info.start_timestamp = (clock>>16);
+        if (flow_attrs->rw_act != REWRITE_NOP_ID) {
+            d.action_u.flow_info_flow_info.rewrite_index = flow_attrs->rw_idx;
+        }
+    #if 0
+        // TODO: if we are doing routing, then set ttl_dec to TRUE
+        if ((role == FLOW_ROLE_INITIATOR && !aug) ||
+            (role == FLOW_ROLE_RESPONDER && aug)) {
+            // Assuming aug flows are either send to uplink or receive from uplink
+            d.action_u.flow_info_flow_info.flow_conn_track = true;
+        } else {
+            d.action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
+        }
+    #endif
+        d.action_u.flow_info_flow_info.flow_conn_track = session->conn_track_en;
+        d.action_u.flow_info_flow_info.flow_ttl = 64;
+        d.action_u.flow_info_flow_info.flow_role = flow_attrs->role;
+        d.action_u.flow_info_flow_info.session_state_index =
+        d.action_u.flow_info_flow_info.flow_conn_track ?
+                 sess_pd->session_state_idx : 0;
+        d.action_u.flow_info_flow_info.start_timestamp = (clock>>16);
+    } // End updateion flow allow action
 
     if (entry_exists) {
        // Update the entry
@@ -1328,7 +1332,12 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     sdk_ret = info_table->retrieve(pd_flow.assoc_hw_id, &f);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
-        clock_args.hw_tick = f.action_u.flow_info_flow_info.start_timestamp;
+        if (f.action_id == FLOW_INFO_FLOW_HIT_DROP_ID) {
+            clock_args.hw_tick = f.action_u.flow_info_flow_hit_drop.start_timestamp;
+
+        } else {
+            clock_args.hw_tick = f.action_u.flow_info_flow_info.start_timestamp;
+        }
         clock_args.hw_tick = (clock_args.hw_tick << 16);
         clock_args.sw_ns = &args->flow_state->create_ts;
         pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
