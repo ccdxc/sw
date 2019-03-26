@@ -1932,6 +1932,9 @@ func GetSecurityGroupSpec(client clientApi.Client, key *SecurityGroupKeyHandle) 
 	return obj
 }
 
+func (m *SecurityGroupSpec) IsPersistent() bool {
+	return false
+}
 func SecurityGroupSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg SecurityGroupSpec
 	err := proto.Unmarshal(data, &msg)
@@ -2072,6 +2075,9 @@ func GetSecurityGroupStatus(client clientApi.Client, key *SecurityGroupKeyHandle
 	return obj
 }
 
+func (m *SecurityGroupStatus) IsPersistent() bool {
+	return false
+}
 func SecurityGroupStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg SecurityGroupStatus
 	err := proto.Unmarshal(data, &msg)
@@ -2912,6 +2918,9 @@ func GetSecurityPolicySpec(client clientApi.Client, key *SecurityPolicyKeyHandle
 	return obj
 }
 
+func (m *SecurityPolicySpec) IsPersistent() bool {
+	return false
+}
 func SecurityPolicySpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg SecurityPolicySpec
 	err := proto.Unmarshal(data, &msg)
@@ -3083,6 +3092,9 @@ func GetSecurityPolicyStatus(client clientApi.Client, key *SecurityPolicyKeyHand
 	return obj
 }
 
+func (m *SecurityPolicyStatus) IsPersistent() bool {
+	return false
+}
 func SecurityPolicyStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg SecurityPolicyStatus
 	err := proto.Unmarshal(data, &msg)

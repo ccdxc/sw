@@ -68,6 +68,7 @@ void UpgradeService::OnMountComplete() {
         upgMgr_->OnUpgReqCreate(upgReq);
     } else {
         UPG_LOG_DEBUG("Update request in progress. Check if State Machine can be moved.");
+        upgMgr_->SetStateMachine(upgReq);
         if (upgMgr_->CanMoveStateMachine()) {
             UPG_LOG_DEBUG("Can move state machine. Moving it forward.");
             UpgReqStateType type = upgStateReq->upgreqstate();

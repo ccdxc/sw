@@ -224,9 +224,10 @@ func (c *client) sendBatch(batch map[string]*change) error {
 		}
 		objlist = append(objlist,
 			&delphi_messenger.ObjectData{
-				Meta: chg.obj.GetDelphiMeta(),
-				Op:   chg.op,
-				Data: data,
+				Meta:    chg.obj.GetDelphiMeta(),
+				Op:      chg.op,
+				Persist: chg.obj.IsPersistent(),
+				Data:    data,
 			},
 		)
 	}

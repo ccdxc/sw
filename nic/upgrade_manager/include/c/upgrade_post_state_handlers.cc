@@ -63,6 +63,15 @@ bool UpgPostStateHandler::PostDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
 
 bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSuccess returning");
+    if (exists("/nic/tools/fwupdate")) {
+	int ret = 0;
+        string cmd = "rm -rf /update/" + ctx.firmwarePkgName;
+        UPG_LOG_INFO("Image is: {}", ctx.firmwarePkgName);
+        if ((ret = system (cmd.c_str())) != 0) {
+            UPG_LOG_INFO("Unable to remove firmware: /update/{} Ret: {}", ctx.firmwarePkgName, ret);
+            //return false;
+        }
+    }
     return true;
 }
 

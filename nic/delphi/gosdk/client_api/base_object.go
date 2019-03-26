@@ -54,6 +54,7 @@ func CreateIndex(fromKind string, fromKindFieldName string, toKind string,
 
 // BaseObject is the interfact that has to be implemented by Delphi objects
 type BaseObject interface {
+	IsPersistent() bool
 	GetDelphiMessage() proto.Message
 	GetDelphiMeta() *delphi.ObjectMeta
 	SetDelphiMeta(meta *delphi.ObjectMeta)

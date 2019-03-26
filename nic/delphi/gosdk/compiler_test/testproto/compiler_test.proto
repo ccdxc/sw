@@ -15,6 +15,7 @@ message MessageKey {
     uint32 Value = 1;
 }
 message MessageB {
+    option (delphi.persist)       = true;
     delphi.ObjectMeta Meta        = 1;
     MessageKey        Key         = 2;
     string            StringValue = 3;
@@ -22,9 +23,9 @@ message MessageB {
 
 // Singleton message
 message MessageC {
-    option (delphi.singleton) = true;
-    delphi.ObjectMeta  Meta  = 1;
-    string    StringValue = 3;
+    option (delphi.singleton)      = true;
+    delphi.ObjectMeta  Meta        = 1;
+    string             StringValue = 3;
 }
 
 message MessageD {

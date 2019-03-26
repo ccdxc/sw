@@ -247,6 +247,9 @@ func GetNaplesStatus(client clientApi.Client) *NaplesStatus {
 	return obj
 }
 
+func (m *NaplesStatus) IsPersistent() bool {
+	return false
+}
 func NaplesStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg NaplesStatus
 	err := proto.Unmarshal(data, &msg)

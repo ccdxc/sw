@@ -963,6 +963,9 @@ func GetPortSpec(client clientApi.Client, key *PortKeyHandle) *PortSpec {
 	return obj
 }
 
+func (m *PortSpec) IsPersistent() bool {
+	return false
+}
 func PortSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg PortSpec
 	err := proto.Unmarshal(data, &msg)
@@ -1179,6 +1182,9 @@ func GetPortStatus(client clientApi.Client, key *PortKeyHandle) *PortStatus {
 	return obj
 }
 
+func (m *PortStatus) IsPersistent() bool {
+	return false
+}
 func PortStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg PortStatus
 	err := proto.Unmarshal(data, &msg)

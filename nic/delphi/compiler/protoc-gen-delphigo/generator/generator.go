@@ -2053,6 +2053,20 @@ func (g *Generator) generateMessage(message *Descriptor) {
 			g.P()
 		}
 
+		// Persistence
+		opts := message.GetOptions()
+		persist := false
+		if opts != nil {
+			persist = proto.HasExtension(opts, delphi.E_Persist)
+		}
+		g.P("func (m* ", ccTypeName, ") IsPersistent() bool {")
+		if persist {
+			g.P("return true")
+		} else {
+			g.P("return false")
+		}
+		g.P("}")
+
 		// Factory
 		g.P(fmt.Sprintf(
 			`func %sFactory(sdkClient clientApi.Client, data []byte)`+

@@ -449,6 +449,9 @@ func GetLifSpec(client clientApi.Client, key *LifKeyHandle) *LifSpec {
 	return obj
 }
 
+func (m *LifSpec) IsPersistent() bool {
+	return false
+}
 func LifSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg LifSpec
 	err := proto.Unmarshal(data, &msg)
@@ -739,6 +742,9 @@ func GetLifStatus(client clientApi.Client, key *LifKeyHandle) *LifStatus {
 	return obj
 }
 
+func (m *LifStatus) IsPersistent() bool {
+	return false
+}
 func LifStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg LifStatus
 	err := proto.Unmarshal(data, &msg)
@@ -2662,6 +2668,9 @@ func GetInterfaceSpec(client clientApi.Client, key *InterfaceKeyHandle) *Interfa
 	return obj
 }
 
+func (m *InterfaceSpec) IsPersistent() bool {
+	return false
+}
 func InterfaceSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg InterfaceSpec
 	err := proto.Unmarshal(data, &msg)
@@ -3384,6 +3393,9 @@ func GetInterfaceStatus(client clientApi.Client, key *InterfaceKeyHandle) *Inter
 	return obj
 }
 
+func (m *InterfaceStatus) IsPersistent() bool {
+	return false
+}
 func InterfaceStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg InterfaceStatus
 	err := proto.Unmarshal(data, &msg)

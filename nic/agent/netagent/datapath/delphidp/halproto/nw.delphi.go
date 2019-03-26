@@ -73,6 +73,9 @@ func GetNetworkSpec(client clientApi.Client, key *NetworkKeyHandle) *NetworkSpec
 	return obj
 }
 
+func (m *NetworkSpec) IsPersistent() bool {
+	return false
+}
 func NetworkSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg NetworkSpec
 	err := proto.Unmarshal(data, &msg)
@@ -235,6 +238,9 @@ func GetNetworkStatus(client clientApi.Client, key *NetworkKeyHandle) *NetworkSt
 	return obj
 }
 
+func (m *NetworkStatus) IsPersistent() bool {
+	return false
+}
 func NetworkStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg NetworkStatus
 	err := proto.Unmarshal(data, &msg)

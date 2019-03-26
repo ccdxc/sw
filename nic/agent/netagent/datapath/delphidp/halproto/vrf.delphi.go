@@ -74,6 +74,9 @@ func GetVrfSpec(client clientApi.Client, key *VrfKeyHandle) *VrfSpec {
 	return obj
 }
 
+func (m *VrfSpec) IsPersistent() bool {
+	return false
+}
 func VrfSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg VrfSpec
 	err := proto.Unmarshal(data, &msg)
@@ -314,6 +317,9 @@ func GetVrfStatus(client clientApi.Client, key *VrfKeyHandle) *VrfStatus {
 	return obj
 }
 
+func (m *VrfStatus) IsPersistent() bool {
+	return false
+}
 func VrfStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg VrfStatus
 	err := proto.Unmarshal(data, &msg)

@@ -149,6 +149,9 @@ func GetEndpointSpec(client clientApi.Client, key *EndpointKeyHandle) *EndpointS
 	return obj
 }
 
+func (m *EndpointSpec) IsPersistent() bool {
+	return false
+}
 func EndpointSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg EndpointSpec
 	err := proto.Unmarshal(data, &msg)
@@ -409,6 +412,9 @@ func GetEndpointStatus(client clientApi.Client, key *EndpointKeyHandle) *Endpoin
 	return obj
 }
 
+func (m *EndpointStatus) IsPersistent() bool {
+	return false
+}
 func EndpointStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg EndpointStatus
 	err := proto.Unmarshal(data, &msg)

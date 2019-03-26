@@ -137,6 +137,9 @@ func GetL2SegmentSpec(client clientApi.Client, key *L2SegmentKeyHandle) *L2Segme
 	return obj
 }
 
+func (m *L2SegmentSpec) IsPersistent() bool {
+	return false
+}
 func L2SegmentSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg L2SegmentSpec
 	err := proto.Unmarshal(data, &msg)
@@ -439,6 +442,9 @@ func GetL2SegmentStatus(client clientApi.Client, key *L2SegmentKeyHandle) *L2Seg
 	return obj
 }
 
+func (m *L2SegmentStatus) IsPersistent() bool {
+	return false
+}
 func L2SegmentStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg L2SegmentStatus
 	err := proto.Unmarshal(data, &msg)

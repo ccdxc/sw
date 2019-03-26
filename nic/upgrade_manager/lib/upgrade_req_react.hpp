@@ -59,6 +59,8 @@ public:
     // findUpgReq finds the upgrade request object
     delphi::objects::UpgReqPtr findUpgReq();
 
+    void SetStateMachine(delphi::objects::UpgReqPtr req);
+
     UpgReqStateType GetNextState(void);
     bool IsRespTypeFail(UpgStateRespType type);
 

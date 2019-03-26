@@ -107,6 +107,9 @@ func GetHalStatus(client clientApi.Client) *HalStatus {
 	return obj
 }
 
+func (m *HalStatus) IsPersistent() bool {
+	return false
+}
 func HalStatusFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg HalStatus
 	err := proto.Unmarshal(data, &msg)

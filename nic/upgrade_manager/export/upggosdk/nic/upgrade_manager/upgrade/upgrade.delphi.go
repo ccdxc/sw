@@ -362,6 +362,9 @@ func GetUpgReq(client clientApi.Client) *UpgReq {
 	return obj
 }
 
+func (m *UpgReq) IsPersistent() bool {
+	return true
+}
 func UpgReqFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg UpgReq
 	err := proto.Unmarshal(data, &msg)
@@ -496,6 +499,9 @@ func GetUpgResp(client clientApi.Client) *UpgResp {
 	return obj
 }
 
+func (m *UpgResp) IsPersistent() bool {
+	return true
+}
 func UpgRespFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg UpgResp
 	err := proto.Unmarshal(data, &msg)
@@ -623,6 +629,9 @@ func GetUpgStateReq(client clientApi.Client) *UpgStateReq {
 	return obj
 }
 
+func (m *UpgStateReq) IsPersistent() bool {
+	return true
+}
 func UpgStateReqFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg UpgStateReq
 	err := proto.Unmarshal(data, &msg)
@@ -761,6 +770,9 @@ func GetUpgAppResp(client clientApi.Client, key string) *UpgAppResp {
 	return obj
 }
 
+func (m *UpgAppResp) IsPersistent() bool {
+	return true
+}
 func UpgAppRespFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg UpgAppResp
 	err := proto.Unmarshal(data, &msg)
@@ -897,6 +909,9 @@ func GetUpgApp(client clientApi.Client, key string) *UpgApp {
 	return obj
 }
 
+func (m *UpgApp) IsPersistent() bool {
+	return true
+}
 func UpgAppFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg UpgApp
 	err := proto.Unmarshal(data, &msg)
@@ -1036,6 +1051,9 @@ func GetUpgradeMetrics(client clientApi.Client, key uint32) *UpgradeMetrics {
 	return obj
 }
 
+func (m *UpgradeMetrics) IsPersistent() bool {
+	return false
+}
 func UpgradeMetricsFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg UpgradeMetrics
 	err := proto.Unmarshal(data, &msg)

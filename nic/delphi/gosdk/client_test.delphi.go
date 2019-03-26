@@ -105,6 +105,9 @@ func GetTestInterfaceSpec(client clientApi.Client, key *IntfIndex) *TestInterfac
 	return obj
 }
 
+func (m *TestInterfaceSpec) IsPersistent() bool {
+	return false
+}
 func TestInterfaceSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg TestInterfaceSpec
 	err := proto.Unmarshal(data, &msg)
@@ -236,6 +239,9 @@ func GetMessageFrom(client clientApi.Client, key uint32) *MessageFrom {
 	return obj
 }
 
+func (m *MessageFrom) IsPersistent() bool {
+	return false
+}
 func MessageFromFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg MessageFrom
 	err := proto.Unmarshal(data, &msg)
@@ -402,6 +408,9 @@ func GetMessageTo(client clientApi.Client, key uint32) *MessageTo {
 	return obj
 }
 
+func (m *MessageTo) IsPersistent() bool {
+	return false
+}
 func MessageToFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg MessageTo
 	err := proto.Unmarshal(data, &msg)

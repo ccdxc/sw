@@ -17,6 +17,28 @@ UpgCtx ctx;
 
 UpgStateMachine *StateMachine;
 
+void UpgReqReact::SetStateMachine(delphi::objects::UpgReqPtr req) {
+    ctx.upgType = req->upgreqtype();
+    ctx.firmwarePkgName = req->upgpkgname();
+    ctx.sysMgr = sysMgr_;
+    if (!GetUpgCtxFromMeta(ctx)) {
+	UPG_LOG_INFO("GetUpgCtxFromMeta failed");
+    }
+    if (req->upgreqcmd() == IsUpgPossible) {
+        UPG_LOG_INFO("CanUpgrade request restored");
+        StateMachine = CanUpgradeStateMachine;
+        upgReqType_ = IsUpgPossible;
+    } else {
+        UPG_LOG_INFO("StartUpgrade request restored");
+        if (req->upgreqtype() == UpgTypeDisruptive) {
+            StateMachine = DisruptiveUpgradeStateMachine;
+        } else {
+            StateMachine = NonDisruptiveUpgradeStateMachine;
+        }
+        upgReqType_ = UpgStart;
+    }
+}
+
 void UpgReqReact::RegNewApp(string name) {
     CreateUpgradeMetrics();
     if (appRegMap_[name] == false) {
