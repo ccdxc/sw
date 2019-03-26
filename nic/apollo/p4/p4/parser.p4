@@ -124,7 +124,7 @@ parser parse_service_header {
 @pragma xgress ingress
 parser parse_txdma {
     extract(capri_txdma_intrinsic);
-    return select(current(0, 4)) {
+    return select(current(72, 4)) {
         0 : parse_txdma_ingress;
         default : parse_txdma_app;
     }

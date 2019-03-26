@@ -48,7 +48,7 @@ classic_nic_app:
 
 classic_nic_to_uplink:
     phvwr.e         p.{p4plus_to_p4_vlan_valid,p4plus_to_p4_valid}, 0
-    nop
+    phvwr           p.capri_txdma_intrinsic_valid, 0
 
 classic_nic_to_rxdma:
     phvwr           p.{p4_to_p4plus_classic_nic_ip_valid, \
@@ -60,6 +60,7 @@ classic_nic_to_rxdma:
     seq             c1, k.ctag_1_valid, TRUE
     seq             c2, k.control_metadata_vlan_strip, TRUE
     bcf             ![c1&c2], classic_nic_to_rxdma_post_vlan_strip
+    nop
     phvwr           p.ethernet_1_etherType, k.ctag_1_etherType
     phvwr           p.{p4_to_p4plus_classic_nic_vlan_pcp...\
                         p4_to_p4plus_classic_nic_vlan_dei}, \

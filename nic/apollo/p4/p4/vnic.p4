@@ -172,6 +172,7 @@ action egress_local_vnic_info(vr_mac, overlay_mac, overlay_vlan_id,
         // add header towards host
         if (ethernet_2.valid == 1) {
             copy_header(ethernet_0, ethernet_2);
+            modify_field(ethernet_0.srcAddr, vr_mac);
         } else {
             add_header(ethernet_0);
             modify_field(ethernet_0.dstAddr, overlay_mac);
