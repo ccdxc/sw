@@ -9,8 +9,8 @@
 
 // Populate proto buf spec from device API spec
 static inline void
-device_api_spec_to_proto_spec_fill (const pds_device_spec_t *api_spec,
-                                    pds::DeviceSpec *proto_spec)
+device_api_spec_to_proto_spec (const pds_device_spec_t *api_spec,
+                               pds::DeviceSpec *proto_spec)
 {
     if (api_spec->device_ip_addr != 0) {
         proto_spec->mutable_ipaddr()->set_af(types::IP_AF_INET);
@@ -25,15 +25,15 @@ device_api_spec_to_proto_spec_fill (const pds_device_spec_t *api_spec,
 
 // Populate proto buf status from device API status
 static inline void
-device_api_status_to_proto_status_fill (const pds_device_status_t *api_status,
-                                        pds::DeviceStatus *proto_status)
+device_api_status_to_proto_status (const pds_device_status_t *api_status,
+                                   pds::DeviceStatus *proto_status)
 {
 }
 
 // Populate proto buf stats from device API stats
 static inline void
-device_api_stats_to_proto_stats_fill (const pds_device_stats_t *api_stats,
-                                      pds::DeviceStats *proto_stats)
+device_api_stats_to_proto_stats (const pds_device_stats_t *api_stats,
+                                 pds::DeviceStats *proto_stats)
 {
 }
 
@@ -114,11 +114,11 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
     if (ret != sdk::SDK_RET_OK) {
         return Status::OK;
     }
-    device_api_spec_to_proto_spec_fill(
+    device_api_spec_to_proto_spec(
             &info.spec, proto_rsp->mutable_response()->mutable_spec());
-    device_api_status_to_proto_status_fill(
+    device_api_status_to_proto_status(
             &info.status, proto_rsp->mutable_response()->mutable_status());
-    device_api_stats_to_proto_stats_fill(
+    device_api_stats_to_proto_stats(
             &info.stats, proto_rsp->mutable_response()->mutable_stats());
     return Status::OK;
 }

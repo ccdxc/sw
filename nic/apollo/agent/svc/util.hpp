@@ -14,7 +14,8 @@
 // convert IP address spec in proto to ip_addr
 //----------------------------------------------------------------------------
 static inline void
-ipaddr_proto_spec_to_api_spec_fill (const types::IPAddress &in_ipaddr, ip_addr_t *out_ipaddr)
+ipaddr_proto_spec_to_api_spec (const types::IPAddress &in_ipaddr,
+                               ip_addr_t *out_ipaddr)
 {
     memset(out_ipaddr, 0, sizeof(ip_addr_t));
     if (in_ipaddr.af() == types::IP_AF_INET) {
@@ -33,7 +34,8 @@ ipaddr_proto_spec_to_api_spec_fill (const types::IPAddress &in_ipaddr, ip_addr_t
 }
 
 static inline sdk_ret_t
-ippfx_proto_spec_to_api_spec_fill (const types::IPPrefix& in_ippfx, ip_prefix_t *ip_pfx)
+ippfx_proto_spec_to_api_spec (const types::IPPrefix& in_ippfx,
+                              ip_prefix_t *ip_pfx)
 {
     ip_pfx->len = in_ippfx.len();
     if (((in_ippfx.addr().af() == types::IP_AF_INET) &&
@@ -42,7 +44,7 @@ ippfx_proto_spec_to_api_spec_fill (const types::IPPrefix& in_ippfx, ip_prefix_t 
              (ip_pfx->len > 128))) {
         return sdk::SDK_RET_INVALID_ARG;
     } else {
-        ipaddr_proto_spec_to_api_spec_fill(in_ippfx.addr(), &ip_pfx->addr);
+        ipaddr_proto_spec_to_api_spec(in_ippfx.addr(), &ip_pfx->addr);
     }
     return sdk::SDK_RET_OK;
 }
@@ -51,8 +53,8 @@ ippfx_proto_spec_to_api_spec_fill (const types::IPPrefix& in_ippfx, ip_prefix_t 
 // convert ip_addr_t to IP address proto spec
 //----------------------------------------------------------------------------
 static inline void
-ipaddr_api_spec_to_proto_spec_fill (const ip_addr_t *in_ipaddr,
-                                    types::IPAddress *out_ipaddr)
+ipaddr_api_spec_to_proto_spec (const ip_addr_t *in_ipaddr,
+                               types::IPAddress *out_ipaddr)
 {
     if (in_ipaddr->af == IP_AF_IPV4) {
         out_ipaddr->set_af(types::IP_AF_INET);
@@ -67,17 +69,17 @@ ipaddr_api_spec_to_proto_spec_fill (const ip_addr_t *in_ipaddr,
 }
 
 static inline sdk_ret_t
-ippfx_api_spec_to_proto_spec_fill (const ip_prefix_t *in_ippfx,
-                                   types::IPPrefix *out_ippfx)
+ippfx_api_spec_to_proto_spec (const ip_prefix_t *in_ippfx,
+                              types::IPPrefix *out_ippfx)
 {
     out_ippfx->set_len(in_ippfx->len);
-    ipaddr_api_spec_to_proto_spec_fill(
-                        &in_ippfx->addr, out_ippfx->mutable_addr());
+    ipaddr_api_spec_to_proto_spec(&in_ippfx->addr, out_ippfx->mutable_addr());
     return sdk::SDK_RET_OK;
 }
 
 static inline void
-pds_encap_to_proto_encap (const pds_encap_t *pds_encap, types::Encap *proto_encap)
+pds_encap_to_proto_encap (const pds_encap_t *pds_encap,
+                          types::Encap *proto_encap)
 {
     switch (pds_encap->type) {
     case PDS_ENCAP_TYPE_NONE:

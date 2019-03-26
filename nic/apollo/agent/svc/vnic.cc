@@ -76,37 +76,37 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
 
 // Populate proto buf spec from vnic API spec
 static inline void
-vnic_api_spec_to_proto_spec_fill (const pds_vnic_spec_t *api_spec,
-                                  pds::VnicSpec *proto_spec)
+vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
+                             pds::VnicSpec *proto_spec)
 {
     proto_spec->set_vnicid(api_spec->key.id);
     proto_spec->set_vpcid(api_spec->vcn.id);
     proto_spec->set_subnetid(api_spec->subnet.id);
     proto_spec->set_wirevlan(api_spec->wire_vlan);
     proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac_addr));
-    pds_encap_to_proto_encap(&api_spec->fabric_encap, proto_spec->mutable_encap());
+    pds_encap_to_proto_encap(&api_spec->fabric_encap,
+                             proto_spec->mutable_encap());
     proto_spec->set_resourcepoolid(api_spec->rsc_pool_id);
     proto_spec->set_sourceguardenable(api_spec->src_dst_check);
 }
 
 // Populate proto buf status from vnic API status
 static inline void
-vnic_api_status_to_proto_status_fill (const pds_vnic_status_t *api_status,
-                                      pds::VnicStatus *proto_status) 
+vnic_api_status_to_proto_status (const pds_vnic_status_t *api_status,
+                                 pds::VnicStatus *proto_status) 
 {
 }
 
 // Populate proto buf stats from vnic API stats
 static inline void
-vnic_api_stats_to_proto_stats_fill (const pds_vnic_stats_t *api_stats,
-                                    pds::VnicStats *proto_stats)
+vnic_api_stats_to_proto_stats (const pds_vnic_stats_t *api_stats,
+                               pds::VnicStats *proto_stats)
 {
 }
 
 // Populate proto buf from vnic API info
 static inline void
-vnic_api_info_to_proto_fill (const pds_vnic_info_t *api_info,
-                            void *ctxt)
+vnic_api_info_to_proto (const pds_vnic_info_t *api_info, void *ctxt)
 {
     pds::VnicGetResponse *proto_rsp = (pds::VnicGetResponse *)ctxt;
     auto vnic = proto_rsp->add_response();
@@ -114,9 +114,9 @@ vnic_api_info_to_proto_fill (const pds_vnic_info_t *api_info,
     pds::VnicStatus *proto_status = vnic->mutable_status();
     pds::VnicStats *proto_stats = vnic->mutable_stats();
 
-    vnic_api_spec_to_proto_spec_fill(&api_info->spec, proto_spec);
-    vnic_api_status_to_proto_status_fill(&api_info->status, proto_status);
-    vnic_api_stats_to_proto_stats_fill(&api_info->stats, proto_stats);
+    vnic_api_spec_to_proto_spec(&api_info->spec, proto_spec);
+    vnic_api_status_to_proto_status(&api_info->status, proto_status);
+    vnic_api_stats_to_proto_stats(&api_info->stats, proto_stats);
 }
 
 Status
@@ -141,12 +141,12 @@ VnicSvcImpl::VnicGet(ServerContext *context,
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        vnic_api_info_to_proto_fill(&info, proto_rsp);
+        vnic_api_info_to_proto(&info, proto_rsp);
     }
 
     if (proto_req->vnicid_size() == 0) {
         // get all
-        ret = core::vnic_get_all(vnic_api_info_to_proto_fill, proto_rsp);
+        ret = core::vnic_get_all(vnic_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }   
     return Status::OK;

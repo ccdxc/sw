@@ -10,8 +10,8 @@
 
 // Populate proto buf spec from tep API spec
 static inline void
-tep_api_spec_to_proto_spec_fill (const pds_tep_spec_t *api_spec,
-                                 pds::TunnelSpec *proto_spec)
+tep_api_spec_to_proto_spec (const pds_tep_spec_t *api_spec,
+                            pds::TunnelSpec *proto_spec)
 {
     switch (api_spec->encap_type) {
     case PDS_TEP_ENCAP_TYPE_VXLAN:
@@ -38,22 +38,21 @@ tep_api_spec_to_proto_spec_fill (const pds_tep_spec_t *api_spec,
 
 // Populate proto buf status from tep API status
 static inline void
-tep_api_status_to_proto_status_fill (const pds_tep_status_t *api_status,
-                                     pds::TunnelStatus *proto_status)
+tep_api_status_to_proto_status (const pds_tep_status_t *api_status,
+                                pds::TunnelStatus *proto_status)
 {
 }
 
 // Populate proto buf stats from tep API stats
 static inline void
-tep_api_stats_to_proto_stats_fill (const pds_tep_stats_t *api_stats,
-                                   pds::TunnelStats *proto_stats)
+tep_api_stats_to_proto_stats (const pds_tep_stats_t *api_stats,
+                              pds::TunnelStats *proto_stats)
 {
 }
 
 // Populate proto buf from tep API info
 static inline void
-tep_api_info_to_proto_fill (const pds_tep_info_t *api_info,
-                            void *ctxt)
+tep_api_info_to_proto (const pds_tep_info_t *api_info, void *ctxt)
 {
     pds::TunnelGetResponse *proto_rsp = (pds::TunnelGetResponse *)ctxt;
     auto tep = proto_rsp->add_response();
@@ -61,15 +60,15 @@ tep_api_info_to_proto_fill (const pds_tep_info_t *api_info,
     pds::TunnelStatus *proto_status = tep->mutable_status();
     pds::TunnelStats *proto_stats = tep->mutable_stats();
 
-    tep_api_spec_to_proto_spec_fill(&api_info->spec, proto_spec);
-    tep_api_status_to_proto_status_fill(&api_info->status, proto_status);
-    tep_api_stats_to_proto_stats_fill(&api_info->stats, proto_stats);
+    tep_api_spec_to_proto_spec(&api_info->spec, proto_spec);
+    tep_api_status_to_proto_status(&api_info->status, proto_status);
+    tep_api_stats_to_proto_stats(&api_info->stats, proto_stats);
 }
 
 // Build TEP API spec from protobuf spec
 static inline void
-tep_proto_spec_to_api_spec_fill (const pds::TunnelSpec &proto_spec,
-                                 pds_tep_spec_t *api_spec)
+tep_proto_spec_to_api_spec (const pds::TunnelSpec &proto_spec,
+                            pds_tep_spec_t *api_spec)
 {
     types::IPAddress remoteip = proto_spec.remoteip();
 
@@ -113,7 +112,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
             break;
         }
         auto request = proto_req->request(i);
-        tep_proto_spec_to_api_spec_fill(request, api_spec);
+        tep_proto_spec_to_api_spec(request, api_spec);
         ret = core::tep_create(request.id(), api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -153,7 +152,7 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
     }
     if (proto_req->id_size() == 0) {
         // get all
-        ret = core::tep_get_all(tep_api_info_to_proto_fill, proto_rsp);
+        ret = core::tep_get_all(tep_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
@@ -163,12 +162,10 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
             break;
         }
         auto response = proto_rsp->add_response();
-        tep_api_spec_to_proto_spec_fill(
-                &info.spec, response->mutable_spec());
-        tep_api_status_to_proto_status_fill(
-                &info.status, response->mutable_status());
-        tep_api_stats_to_proto_stats_fill(
-                &info.stats, response->mutable_stats());
+        tep_api_spec_to_proto_spec(&info.spec, response->mutable_spec());
+        tep_api_status_to_proto_status(&info.status,
+                                       response->mutable_status());
+        tep_api_stats_to_proto_stats(&info.stats, response->mutable_stats());
     }
     return Status::OK;
 }

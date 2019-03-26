@@ -23,7 +23,7 @@ pds_agent_vpc_api_spec_fill (const pds::VPCSpec &proto_spec,
     } else if (type == pds::VPC_TYPE_SUBSTRATE) {
         api_spec->type = PDS_VCN_TYPE_SUBSTRATE;
     }
-    ippfx_proto_spec_to_api_spec_fill(proto_spec.prefix(), &api_spec->pfx);
+    ippfx_proto_spec_to_api_spec(proto_spec.prefix(), &api_spec->pfx);
 }
 
 Status
@@ -81,8 +81,8 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
 
 // Populate proto buf spec from vpc API spec
 static inline void
-vpc_api_spec_to_proto_spec_fill (const pds_vcn_spec_t *api_spec,
-                                 pds::VPCSpec *proto_spec)
+vpc_api_spec_to_proto_spec (const pds_vcn_spec_t *api_spec,
+                            pds::VPCSpec *proto_spec)
 {
     auto proto_pfx = proto_spec->mutable_prefix();
 
@@ -92,27 +92,26 @@ vpc_api_spec_to_proto_spec_fill (const pds_vcn_spec_t *api_spec,
     } else if (api_spec->type == PDS_VCN_TYPE_SUBSTRATE) {
         proto_spec->set_type(pds::VPC_TYPE_SUBSTRATE);
     }
-    ippfx_api_spec_to_proto_spec_fill(&api_spec->pfx, proto_pfx);
+    ippfx_api_spec_to_proto_spec(&api_spec->pfx, proto_pfx);
 }
 
 // Populate proto buf status from vpc API status
 static inline void
-vpc_api_status_to_proto_status_fill (const pds_vcn_status_t *api_status,
-                                     pds::VPCStatus *proto_status) 
+vpc_api_status_to_proto_status (const pds_vcn_status_t *api_status,
+                                pds::VPCStatus *proto_status) 
 {
 }
 
 // Populate proto buf stats from vpc API stats
 static inline void
-vpc_api_stats_to_proto_stats_fill (const pds_vcn_stats_t *api_stats,
-                                   pds::VPCStats *proto_stats)
+vpc_api_stats_to_proto_stats (const pds_vcn_stats_t *api_stats,
+                              pds::VPCStats *proto_stats)
 {
 }
 
 // Populate proto buf from vpc API info
 static inline void
-vpc_api_info_to_proto_fill (const pds_vcn_info_t *api_info,
-                            void *ctxt)
+vpc_api_info_to_proto (const pds_vcn_info_t *api_info, void *ctxt)
 {
     pds::VPCGetResponse *proto_rsp = (pds::VPCGetResponse *)ctxt;
     auto vpc = proto_rsp->add_response();
@@ -120,9 +119,9 @@ vpc_api_info_to_proto_fill (const pds_vcn_info_t *api_info,
     pds::VPCStatus *proto_status = vpc->mutable_status();
     pds::VPCStats *proto_stats = vpc->mutable_stats();
 
-    vpc_api_spec_to_proto_spec_fill(&api_info->spec, proto_spec);
-    vpc_api_status_to_proto_status_fill(&api_info->status, proto_status);
-    vpc_api_stats_to_proto_stats_fill(&api_info->stats, proto_stats);
+    vpc_api_spec_to_proto_spec(&api_info->spec, proto_spec);
+    vpc_api_status_to_proto_status(&api_info->status, proto_status);
+    vpc_api_stats_to_proto_stats(&api_info->stats, proto_stats);
 }
 
 Status
@@ -149,12 +148,11 @@ VPCSvcImpl::VPCGet(ServerContext *context,
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        vpc_api_info_to_proto_fill(&info, proto_rsp);
+        vpc_api_info_to_proto(&info, proto_rsp);
     }
 
     if (proto_req->id_size() == 0) {
-        // get all
-        ret = core::vpc_get_all(vpc_api_info_to_proto_fill, proto_rsp);
+        ret = core::vpc_get_all(vpc_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
 

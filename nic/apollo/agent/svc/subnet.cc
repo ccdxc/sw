@@ -10,14 +10,14 @@
 
 // Populate proto buf spec from subnet API spec
 static inline void
-subnet_api_spec_to_proto_spec_fill (const pds_subnet_spec_t *api_spec,
-                                    pds::SubnetSpec *proto_spec)
+subnet_api_spec_to_proto_spec (const pds_subnet_spec_t *api_spec,
+                               pds::SubnetSpec *proto_spec)
 {
     proto_spec->set_id(api_spec->key.id);
     proto_spec->set_vpcid(api_spec->vcn.id);
-    ippfx_api_spec_to_proto_spec_fill(
+    ippfx_api_spec_to_proto_spec(
                     &api_spec->pfx, proto_spec->mutable_prefix());
-    ipaddr_api_spec_to_proto_spec_fill(
+    ipaddr_api_spec_to_proto_spec(
                     &api_spec->vr_ip, proto_spec->mutable_virtualrouterip());
     proto_spec->set_virtualroutermac(MAC_TO_UINT64(api_spec->vr_mac));
     proto_spec->set_v4routetableid(api_spec->v4_route_table.id);
@@ -30,22 +30,21 @@ subnet_api_spec_to_proto_spec_fill (const pds_subnet_spec_t *api_spec,
 
 // Populate proto buf status from subnet API status
 static inline void
-subnet_api_status_to_proto_status_fill (const pds_subnet_status_t *api_status,
-                                        pds::SubnetStatus *proto_status)
+subnet_api_status_to_proto_status (const pds_subnet_status_t *api_status,
+                                   pds::SubnetStatus *proto_status)
 {
 }
 
 // Populate proto buf stats from subnet API stats
 static inline void
-subnet_api_stats_to_proto_stats_fill (const pds_subnet_stats_t *api_stats,
-                                      pds::SubnetStats *proto_stats)
+subnet_api_stats_to_proto_stats (const pds_subnet_stats_t *api_stats,
+                                 pds::SubnetStats *proto_stats)
 {
 }
 
 // Populate proto buf from subnet API info
 static inline void
-subnet_api_info_to_proto_fill (const pds_subnet_info_t *api_info,
-                               void *ctxt)
+subnet_api_info_to_proto (const pds_subnet_info_t *api_info, void *ctxt)
 {
     pds::SubnetGetResponse *proto_rsp = (pds::SubnetGetResponse *)ctxt;
     auto subnet = proto_rsp->add_response();
@@ -53,20 +52,20 @@ subnet_api_info_to_proto_fill (const pds_subnet_info_t *api_info,
     pds::SubnetStatus *proto_status = subnet->mutable_status();
     pds::SubnetStats *proto_stats = subnet->mutable_stats();
 
-    subnet_api_spec_to_proto_spec_fill(&api_info->spec, proto_spec);
-    subnet_api_status_to_proto_status_fill(&api_info->status, proto_status);
-    subnet_api_stats_to_proto_stats_fill(&api_info->stats, proto_stats);
+    subnet_api_spec_to_proto_spec(&api_info->spec, proto_spec);
+    subnet_api_status_to_proto_status(&api_info->status, proto_status);
+    subnet_api_stats_to_proto_stats(&api_info->stats, proto_stats);
 }
 
 // Build subnet API spec from proto buf spec
 static inline void
-subnet_proto_spec_to_api_spec_fill (const pds::SubnetSpec &proto_spec,
-                                    pds_subnet_spec_t *api_spec)
+subnet_proto_spec_to_api_spec (const pds::SubnetSpec &proto_spec,
+                               pds_subnet_spec_t *api_spec)
 {
     api_spec->key.id = proto_spec.id();
     api_spec->vcn.id = proto_spec.vpcid();
-    ippfx_proto_spec_to_api_spec_fill(proto_spec.prefix(), &api_spec->pfx);
-    ipaddr_proto_spec_to_api_spec_fill(
+    ippfx_proto_spec_to_api_spec(proto_spec.prefix(), &api_spec->pfx);
+    ipaddr_proto_spec_to_api_spec(
                             proto_spec.virtualrouterip(), &api_spec->vr_ip);
     MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
     api_spec->v4_route_table.id = proto_spec.v4routetableid();
@@ -99,7 +98,7 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
         auto request = proto_req->request(i);
         memset(&key, 0, sizeof(pds_subnet_key_t));
         key.id = request.id();
-        subnet_proto_spec_to_api_spec_fill(request, api_spec);
+        subnet_proto_spec_to_api_spec(request, api_spec);
         ret = core::subnet_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -143,7 +142,7 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
     }
     if (proto_req->id_size() == 0) {
         // get all
-        ret = core::subnet_get_all(subnet_api_info_to_proto_fill, proto_rsp);
+        ret = core::subnet_get_all(subnet_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
@@ -155,11 +154,11 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
             break;
         }
         auto response = proto_rsp->add_response();
-        subnet_api_spec_to_proto_spec_fill(
+        subnet_api_spec_to_proto_spec(
                 &info.spec, response->mutable_spec());
-        subnet_api_status_to_proto_status_fill(
+        subnet_api_status_to_proto_status(
                 &info.status, response->mutable_status());
-        subnet_api_stats_to_proto_stats_fill(
+        subnet_api_stats_to_proto_stats(
                 &info.stats, response->mutable_stats());
     }
     return Status::OK;
