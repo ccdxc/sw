@@ -242,7 +242,7 @@ func (act *ActionCtx) GetNaplesEndpoints(npc *NaplesCollection) (map[string]map[
 		log.Errorf("failed to run halctl commends on naples (%s)", err)
 		return ret, fmt.Errorf("failed to run halctl commands on naples (%s)", err)
 	}
-	re := regexp.MustCompile(`^(\d+)\s+([0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+)\s+(\S+)$`)
+	re := regexp.MustCompile(`^(\d+)\s+([0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+\:[0-9a-f]+)\s+(\S+)`)
 	for _, cmdResp := range resp {
 		if cmdResp.ExitCode != 0 {
 			log.Errorf("failed to run halctl command on naples [%v] (%d) [ %v]", cmdResp.NodeName, cmdResp.ExitCode, cmdResp.Stderr)
