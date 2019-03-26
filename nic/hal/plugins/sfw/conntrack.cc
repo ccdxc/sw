@@ -132,6 +132,8 @@ process_tcp_close(fte::ctx_t& ctx)
     const fte::cpu_rxhdr_t  *cpu_rxhdr = ctx.cpu_rxhdr();
     uint8_t                  tcp_flags;
     session::FlowTCPState    state;
+    hal::flow_role_t         role = (ctx.is_flow_swapped())?\
+                         hal::FLOW_ROLE_RESPONDER:hal::FLOW_ROLE_INITIATOR;
 
     tcp_flags = cpu_rxhdr->tcp_flags;
     if (tcp_flags & TCP_FLAG_FIN) {
@@ -152,26 +154,18 @@ process_tcp_close(fte::ctx_t& ctx)
             hal::schedule_tcp_half_closed_timer(ctx.session());
             goto done;
         }
+    } else if ((state == session::FLOW_TCP_STATE_FIN_RCVD) && 
+               ((role == hal::FLOW_ROLE_RESPONDER && 
+                 ctx.session()->iflow->state == session::FLOW_TCP_STATE_FIN_RCVD) ||
+		(role == hal::FLOW_ROLE_INITIATOR &&
+                 ctx.session()->rflow->state == session::FLOW_TCP_STATE_FIN_RCVD))) {
+            // Update the initiator 
+            role = hal::FLOW_ROLE_INITIATOR;
+            state = session::FLOW_TCP_STATE_BIDIR_FIN_RCVD;
     } else {
-        if ((ctx.session()->iflow->state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD ||
-             (ctx.session()->rflow &&
-              ctx.session()->rflow->state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD)) ||
-             ctx.session()->tcp_cxntrack_timer == NULL) {
-            /*
-             * We are here because we already have seen one of FIN/RST or both of them
-             * (a duplicate/retry ?) and in case of FIN the timer is NULL which means
-             * the close timer is already started so update the state and move on
-             */
-             goto done;
-        } else {
-             /*
-              * If we are here then we have one FIN RCVD and we started a timer and the
-              * timer is still pending and we received a FIN/RST now. So, we can go
-              * ahead and delete the half closed timer and start the TCP close timer
-              */
-             state = session::FLOW_TCP_STATE_BIDIR_FIN_RCVD;
-        }
+        return;
     }
+
     hal::schedule_tcp_close_timer(ctx.session());
 
 done:
@@ -179,7 +173,7 @@ done:
      * We run the TCP close pipeline only for IFLOW so we ALWAYS
      * update only iflow state. It is okay for TCP close processing
      */
-    session_set_tcp_state(ctx.session(), ctx.role(), state);
+    session_set_tcp_state(ctx.session(), role, state);
 }
 
 /*

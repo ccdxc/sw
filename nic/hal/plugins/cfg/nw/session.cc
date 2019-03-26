@@ -2415,7 +2415,7 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     hal_handle_t              session_handle = (hal_handle_t)ctxt;
     session_t                *session = NULL;
     pd::pd_session_get_args_t args;
-    session_state_t           state;
+    session_state_t           state = {0};
     pd::pd_func_args_t        pd_func_args = {0};
 
     session = hal::find_session_by_handle(session_handle);
@@ -2446,7 +2446,8 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     // If we havent received bidir FIN by now then we go ahead and cleanup
     // the session
-    if (state.iflow_state.state != session::FLOW_TCP_STATE_BIDIR_FIN_RCVD) {
+    if (state.iflow_state.state != session::FLOW_TCP_STATE_BIDIR_FIN_RCVD && 
+        state.rflow_state.state != session::FLOW_TCP_STATE_BIDIR_FIN_RCVD) {
         tcp_close_cb(timer, timer_id, (void *)(session->hal_handle));
     }
 }
