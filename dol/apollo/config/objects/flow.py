@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
+import copy
 
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
@@ -12,17 +13,15 @@ from apollo.config.store import Store
 
 # Flow based on Local and Remote mapping
 class FlowMapObject(base.ConfigObjectBase):
-    def __init__(self, lobj, robj):
+    def __init__(self, lobj, robj, fwdmode):
         super().__init__()
         self.Clone(Store.templates.Get('FLOW'))
         self.FlowMapId = next(resmgr.FlowIdAllocator)
         self.GID('FlowMap%d'%self.FlowMapId)
+        self.FwdMode = fwdmode
         self.__lobj = lobj
         self.__robj = robj
         self.__dev = Store.GetDevice()
-        # Used by packet template generator
-        self.AddrFamily = lobj.AddrFamily
-        self.FwType = robj.FwType
         self.Show()
         return
 
@@ -56,32 +55,43 @@ class FlowMapObjectHelper:
         objs = []
         fwdmode = None
         mapsel = selectors
+        key = 'FwdMode'
+        skip = 0
 
-        # Get the forwarding mode
-        for f in mapsel.flow.filters:
-            if f[0] == 'FwdMode':
-                fwdmode = f[1]
-                break
-        if fwdmode != None:
-            mapsel.flow.filters.remove((f[0], f[1]))
+        # Consider it only if TEST is for MAPPING
+        if mapsel.flow.GetValueByKey('FlType') != 'MAPPING':
+            return objs
 
-        assert (fwdmode == 'L2' or fwdmode == 'L3') == True
+        # Get the forwarding mode, fwdmode is not applicable for local & remote
+        fwdmode = mapsel.flow.GetValueByKey(key)
+        mapsel.flow.filters.remove((key, fwdmode))
+
+        # Src and Dst check is not applicable for remote
+        rmapsel = copy.deepcopy(mapsel)
+        key = 'SourceGuard'
+        value = rmapsel.flow.GetValueByKey(key)
+        if value != None:
+            rmapsel.flow.filters.remove((key, value))
 
         for lobj in lmapping.GetMatchingObjects(mapsel):
-            for robj in rmapping.GetMatchingObjects(mapsel):
+            for robj in rmapping.GetMatchingObjects(rmapsel):
                 # Select mappings from the same subnet if L2 is set
                 if fwdmode == 'L2':
                     if lobj.VNIC.SUBNET.SubnetId != robj.SUBNET.SubnetId:
                         continue
                 else:
-                    if lobj.IPPrefix.compare_networks(robj.IPPrefix) == 0:
+                    if lobj.VNIC.SUBNET.SubnetId == robj.SUBNET.SubnetId:
                         continue
-                obj = FlowMapObject(lobj, robj)
-                objs.append(obj)
                 if selectors.maxlimits is None:
-                    continue
-                if selectors.maxlimits <= len(objs):
+                    if skip < 100:  # TODO
+                        skip = skip + 1
+                        continue
+                    skip = 0
+                elif selectors.maxlimits <= len(objs):
                     return objs
+                obj = FlowMapObject(lobj, robj, fwdmode)
+                objs.append(obj)
+
         return objs
 
 

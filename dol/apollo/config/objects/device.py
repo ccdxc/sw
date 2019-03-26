@@ -7,7 +7,7 @@ import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.tunnel as tunnel
-import apollo.config.objects.utils as utils
+import apollo.config.utils as utils
 
 import device_pb2 as device_pb2
 import types_pb2 as types_pb2
@@ -19,7 +19,7 @@ class DeviceObject(base.ConfigObjectBase):
     def __init__(self, spec):
         super().__init__()
         self.GID("Device1")
-        
+
         ################# PUBLIC ATTRIBUTES OF SWITCH OBJECT #####################
         self.IPAddr = next(resmgr.TepIpAddressAllocator)
         self.GatewayAddr = next(resmgr.TepIpAddressAllocator)

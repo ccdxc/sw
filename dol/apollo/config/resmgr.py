@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 import infra.common.objects as objects
+import apollo.config.utils as utils
+from apollo.config.store import Store
 import ipaddress
 
 # Start and End inclusive range
@@ -24,6 +26,8 @@ RemoteMappingMacAllocator = objects.TemplateFieldObject("macstep/00EE.0000.0001/
 TepIpAddressAllocator = ipaddress.IPv4Network('172.16.0.0/21').hosts()
 RouteIPv6Allocator = iter(ipaddress.IPv6Network('cccc:0001:0001:0001::/64').subnets(new_prefix=96))
 RouteIPv4Allocator = iter(ipaddress.IPv4Network('192.0.0.0/8').subnets(new_prefix=24))
+RemoteMplsInternetTunAllocator = None
+RemoteMplsVnicTunAllocator = None
 
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'
@@ -55,10 +59,22 @@ def CreateIpv6AddrPool(subnet):
     assert(isinstance(subnet, ipaddress.IPv6Network))
     return iter(subnet.hosts())
 
+def CreateMplsInternetTunnels():
+    global RemoteMplsInternetTunAllocator
+    objs = Store.GetTunnelsMplsOverUdp1()
+    if len(objs) != 0:
+        RemoteMplsInternetTunAllocator = utils.rrobiniter(objs)
+
+def CreateMplsVnicTunnels():
+    global RemoteMplsVnicTunAllocator
+    objs = Store.GetTunnelsMplsOverUdp2()
+    if len(objs) != 0:
+        RemoteMplsVnicTunAllocator = utils.rrobiniter(objs)
+
 # The below function will be called for every Remote TEP
 def  CreateRemoteVnicMplsSlotAllocator():
     mplsbase = 20000
-    return iter(irange(mplsbase,mplsbase + 1024)) # 1024 vnics per tep
+    return iter(irange(mplsbase,mplsbase + 1027)) # 1M Remote Mappings/1022 Teps
 
 # Starts VPC prefixes from 10/8 to 42/8
 VPC_V4_PREFIX_BASE=10

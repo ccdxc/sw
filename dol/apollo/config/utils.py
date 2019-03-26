@@ -32,11 +32,33 @@ def GetTunnelEncapType(e):
         sys.exit(1)
         return None
 
+def GetTunnelEncapString(e):
+    if e == tunnel_pb2.TUNNEL_ENCAP_VXLAN:
+        return "vxlan"
+    elif e == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_1:
+        return "mplsoudp-tag1"
+    elif e == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
+        return "mplsoudp-tag2"
+    else:
+        logger.error("ERROR: Invalid/Unknown Tunnel Encap: %s" % e)
+        sys.exit(1)
+        return None
+
 def GetEncapType(e):
     if e == 'vxlan':
         return types_pb2.ENCAP_TYPE_VXLAN
     elif e == 'mplsoudp':
         return types_pb2.ENCAP_TYPE_MPLSoUDP
+    else:
+        logger.error("ERROR: Invalid/Unknown Encap: %s" % e)
+        sys.exit(1)
+        return None
+
+def GetEncapTypeString(e):
+    if e == types_pb2.ENCAP_TYPE_VXLAN:
+        return "vxlan"
+    elif e == types_pb2.ENCAP_TYPE_MPLSoUDP:
+        return "mplsoudp"
     else:
         logger.error("ERROR: Invalid/Unknown Encap: %s" % e)
         sys.exit(1)

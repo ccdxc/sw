@@ -5,7 +5,7 @@ import ipaddress
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
-import apollo.config.objects.utils as utils
+import apollo.config.utils as utils
 import mapping_pb2 as mapping_pb2
 import types_pb2 as types_pb2
 
@@ -26,6 +26,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         else:
             self.IPAddr = parent.SUBNET.AllocIPv4Address();
             self.AddrFamily = 'IPV4'
+        self.SourceGuard = parent.SourceGuard
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # For testspec
@@ -73,13 +74,16 @@ class LocalMappingObjectClient:
 
     def GenerateObjects(self, parent, vnic_spec_obj):
         stack = parent.SUBNET.VPC.Stack
-        for c in range (0, vnic_spec_obj.ipcount):
+        c = 0
+        while c < vnic_spec_obj.ipcount:
             if stack == "dual" or stack == 'ipv6':
                 obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_6)
                 self.__objs.append(obj)
-            if stack == "dual" or stack == 'ipv4':
+                c = c + 1
+            if c < vnic_spec_obj.ipcount and (stack == "dual" or stack == 'ipv4'):
                 obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_4)
                 self.__objs.append(obj)
+                c = c + 1
         return
 
     def CreateObjects(self):

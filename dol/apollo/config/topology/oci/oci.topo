@@ -27,7 +27,6 @@ device:
 
 vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen. 
-    # Otherwise seperate VPC and Subnet will be created for each
     - stack  : dual # dual, ipv4 , ipv6
       count : 1
       type  : tenant
@@ -38,17 +37,22 @@ vpc:
           vnic:
             - count   : 1             # VNICs per subnet
               encap   : mplsoudp
-              ipcount : 1             # Local IP mapping per vnic
+              ipcount : 2             # Local IP mapping per vnic
+              srcguard : true         # true or false (default false)
+            - count   : 1             # VNICs per subnet
+              encap   : mplsoudp
+              ipcount : 2             # Local IP mapping per vnic
+              srcguard : false        # true or false (default false)
           rmap:                       # Remote IP mappings per subnet
-            - count : 1
-              encap : mplsudp_tags2
+            - count : 2
+              encap : mplsoudp
         - count     : 2
           v4prefixlen : 28
           v6prefixlen : 96
           rmap:
-            - count : 1
-              encap : mplsudp_tags2
-      route:
+            - count : 2
+              encap : mplsoudp
+      routetbl:
              - type: adjacent
                count : 2
                v4base: '64.0.0.0\16' # TEMP Infra issue and will reverse this in test logic

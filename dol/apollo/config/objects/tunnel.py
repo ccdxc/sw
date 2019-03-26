@@ -6,7 +6,7 @@ import sys
 
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
-import apollo.config.objects.utils as utils
+import apollo.config.utils as utils
 import apollo.config.agent.api as api
 import tunnel_pb2 as tunnel_pb2
 import types_pb2 as types_pb2
@@ -17,9 +17,9 @@ from apollo.config.store import Store
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, local):
         super().__init__()
+        self.__spec = spec
         self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
-        self.__spec = spec
 
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
         self.LocalIPAddr = parent.IPAddr
@@ -29,7 +29,8 @@ class TunnelObject(base.ConfigObjectBase):
         else:
             self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
             self.Encap = utils.GetTunnelEncapType(spec.encap)
-        self.RemoteVnicMplsSlotIdAllocator = resmgr.CreateRemoteVnicMplsSlotAllocator()
+            if self.Encap == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
+               self.RemoteVnicMplsSlotIdAllocator = resmgr.CreateRemoteVnicMplsSlotAllocator()
 
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
 
@@ -38,7 +39,8 @@ class TunnelObject(base.ConfigObjectBase):
 
     def __repr__(self):
         return "Tunnel%d|Encap:%s|LocalIPAddr:%s|RemoteIPAddr:%s" %\
-               (self.Id, self.Encap, self.LocalIPAddr, self.RemoteIPAddr)
+               (self.Id, utils.GetTunnelEncapString(self.Encap),
+               self.LocalIPAddr, self.RemoteIPAddr)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = tunnel_pb2.TunnelRequest()
@@ -85,6 +87,8 @@ class TunnelObjectClient:
                 obj = TunnelObject(parent, t, False)
                 self.__objs.append(obj)
         Store.SetTunnels(self.__objs)
+        resmgr.CreateMplsInternetTunnels()
+        resmgr.CreateMplsVnicTunnels()
         return
 
     def CreateObjects(self):

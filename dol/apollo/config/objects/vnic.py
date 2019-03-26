@@ -5,7 +5,7 @@ import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.lmapping as lmapping
-import apollo.config.objects.utils as utils
+import apollo.config.utils as utils
 import vnic_pb2 as vnic_pb2
 import tunnel_pb2 as tunnel_pb2
 import types_pb2 as types_pb2
@@ -24,6 +24,10 @@ class VnicObject(base.ConfigObjectBase):
         self.VlanId = next(resmgr.VnicVlanIdAllocator)
         self.MplsSlot = next(resmgr.VnicMplsSlotIdAllocator)
         self.Encap = utils.GetEncapType(spec.encap)
+        self.SourceGuard = False
+        c = getattr(spec, 'srcguard', None)
+        if c != None:
+            self.SourceGuard = c
 
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
         self.Show()
@@ -47,7 +51,7 @@ class VnicObject(base.ConfigObjectBase):
         spec.WireVLAN = self.VlanId
         spec.MACAddress = self.MACAddr.getnum()
         spec.ResourcePoolId = 0 # TODO, Need to allocate and use
-        spec.SourceGuardEnable = False # TODO , Need a callback
+        spec.SourceGuardEnable = self.SourceGuard
         spec.Encap.type = self.Encap
         spec.Encap.value.MPLSTag  = self.MplsSlot # TODO vxlan support
         return grpcmsg
@@ -55,7 +59,8 @@ class VnicObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("- VNIC object:", self)
         logger.info(" - %s" % repr(self))
-        logger.info(" - Vlan:%d|Mpls:%d|MAC:%s" % (self.VlanId, self.MplsSlot, self.MACAddr))
+        logger.info(" - Vlan:%d|Mpls:%d|MAC:%s|SourceGuard:%s"\
+             % (self.VlanId, self.MplsSlot, self.MACAddr, str(self.SourceGuard)))
         return
 
     def SetupTestcaseConfig(self, obj):
@@ -75,6 +80,7 @@ class VnicObjectClient:
             return
         for vnic_spec_obj in subnet_spec_obj.vnic:
             for c in range(vnic_spec_obj.count):
+                # Alternate src dst validations
                 obj = VnicObject(parent, vnic_spec_obj)
                 self.__objs.append(obj)
         return

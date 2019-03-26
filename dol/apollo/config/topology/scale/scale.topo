@@ -1,0 +1,45 @@
+# Topology Specification
+meta:
+    id: TOPO_OCI
+
+uplink:
+    - entry:
+        id      : host
+        port    : 1
+        mode    : host
+        status  : UP
+
+    - entry:
+        id      : switch
+        port    : 2
+        mode    : switch
+        status  : UP
+
+device:
+    ipaddress   : None # Taken from resmgr
+    gateway     : None # Taken from resmgr
+    macaddress  : macaddr/0002.0100.0001
+    tunnel      :
+        - count : 1022           # Local tunnel(entry 1), drop-hole(entry 0) (1022 Max including Local & drop-hole)
+          encap : mplsudp_tags2
+
+pcn:
+    # If dual stack true, PCN and Subnet will have both v4 & v6 mappings based on the prefixlen.
+    - stack  : dual # dual, ipv4 , ipv6
+      count : 1024
+      type  : tenant
+      subnet:
+        - count     : 1               # 1K in total
+          v4prefixlen : 16            # Minimum is 16 (0 to 15 are reserved)
+          v6prefixlen : 64            # Minimum is 64 (0 to 63 are reserved)
+          vnic:
+            - count   : 1             # VNICs per subnets (1K in total)
+              encap   : mplsoudp
+              ipcount : 33            # Local IP mapping per vnic , 1 Primary & 32 secondary (33 in total)
+          rmap:                       # Remote IP mappings per subnet
+            - count : 700             # Remote mapping (1K subnets * 1K vnic = 1M in total). Setting to 700K as there are collisions
+              encap : mplsoudp
+      routetbl:
+         - count : 1
+           v4prefixlen : 28
+           v6prefixlen : 96

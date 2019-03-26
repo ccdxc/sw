@@ -4,7 +4,7 @@ import pdb
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
-import apollo.config.objects.utils as utils
+import apollo.config.utils as utils
 import apollo.config.objects.lmapping as lmapping
 import route_pb2 as route_pb2
 import types_pb2 as types_pb2
@@ -82,7 +82,6 @@ class RouteObject(base.ConfigObjectBase):
 class RouteObjectClient:
     def __init__(self):
         self.__objs = []
-        self.__internet_tunnel = None;
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
@@ -90,7 +89,7 @@ class RouteObjectClient:
         return
 
     def __internet_tunnel_get(self):
-        return self.__internet_tunnel.rrnext().RemoteIPAddr
+        return resmgr.RemoteMplsInternetTunAllocator.rrnext().RemoteIPAddr
 
     def Objects(self):
         return self.__objs
@@ -107,11 +106,11 @@ class RouteObjectClient:
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
-        self.__internet_tunnel = utils.rrobiniter(Store.GetTunnelsMplsOverUdp1())
         self.__v4objs[vpcid] = []
         self.__v6objs[vpcid] = []
         self.__v4iter[vpcid] = None
         self.__v6iter[vpcid] = None
+
         def __get_next_subnet(ip):
             if ip.version == 4:
                 return ipaddress.ip_network(str(ip.network_address + 2 ** (32 - ip.prefixlen )) +'/'+ str(ip.prefixlen))
@@ -146,8 +145,12 @@ class RouteObjectClient:
                 return True
             return False
 
+        if resmgr.RemoteMplsInternetTunAllocator == None:
+            logger.info("Skipping route creation as there are no Internet tunnels")
+            return
+
         routes = []
-        for route_spec_obj in vpc_spec_obj.route:
+        for route_spec_obj in vpc_spec_obj.routetbl:
             stack = parent.Stack
             count = route_spec_obj.count
             if route_spec_obj.type == 'adjacent':

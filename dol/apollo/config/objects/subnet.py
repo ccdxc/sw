@@ -7,7 +7,7 @@ import apollo.config.agent.api as api
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as route
-import apollo.config.objects.utils as utils
+import apollo.config.utils as utils
 import subnet_pb2 as subnet_pb2
 import types_pb2 as types_pb2
 
@@ -25,8 +25,8 @@ class SubnetObject(base.ConfigObjectBase):
         self.IPPrefix = {}
         self.IPPrefix[0] = parent.AllocIPv6SubnetPrefix(poolid)
         self.IPPrefix[1] = parent.AllocIPv4SubnetPrefix(poolid)
-        self.VirtualRouterIP = {}
-        self.VirtualRouterMac = None
+        self.VirtualRouterIPAddr = {}
+        self.VirtualRouterMacAddr = None
         self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId)
         self.V6RouteTableId = route.client.GetRouteV6TableId(parent.VPCId)
         self.IngV4SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
@@ -52,9 +52,9 @@ class SubnetObject(base.ConfigObjectBase):
 
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
-        self.VirtualRouterIP[0] = next(self.__ip_address_pool[0])
-        self.VirtualRouterIP[1] = next(self.__ip_address_pool[1])
-        self.VirtualRouterMac = resmgr.VirtualRouterMacAllocator.get()
+        self.VirtualRouterIPAddr[0] = next(self.__ip_address_pool[0])
+        self.VirtualRouterIPAddr[1] = next(self.__ip_address_pool[1])
+        self.VirtualRouterMACAddr = resmgr.VirtualRouterMacAllocator.get()
         return
 
     def AllocIPv6Address(self):
@@ -64,8 +64,8 @@ class SubnetObject(base.ConfigObjectBase):
         return next(self.__ip_address_pool[1])
 
     def __repr__(self):
-        return "SubnetID:%d|VPCId:%d|CfgSel:%d|Mac:%s" %\
-               (self.SubnetId, self.VPC.VPCId, self.PfxSel, self.VirtualRouterMac.get())
+        return "SubnetID:%d|VPCId:%d|PfxSel:%d|MAC:%s" %\
+               (self.SubnetId, self.VPC.VPCId, self.PfxSel, self.VirtualRouterMACAddr.get())
 
     def GetGrpcCreateMessage(self):
         grpcmsg = subnet_pb2.SubnetRequest()
@@ -73,8 +73,8 @@ class SubnetObject(base.ConfigObjectBase):
         spec.Id = self.SubnetId
         spec.VPCId = self.VPC.VPCId
         utils.GetRpcIPPrefix(self.IPPrefix[self.PfxSel], spec.Prefix)
-        utils.GetRpcIPAddr(self.VirtualRouterIP[self.PfxSel], spec.VirtualRouterIP)
-        spec.VirtualRouterMac = self.VirtualRouterMac.getnum()
+        utils.GetRpcIPAddr(self.VirtualRouterIPAddr[self.PfxSel], spec.VirtualRouterIP)
+        spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         spec.V4RouteTableId = self.V4RouteTableId
         spec.V6RouteTableId = self.V6RouteTableId
         spec.IngV4SecurityPolicyId = self.IngV4SecurityPolicyId
@@ -87,7 +87,7 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("SUBNET object:", self)
         logger.info("- %s" % repr(self))
         logger.info("- Prefix %s" % self.IPPrefix)
-        logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIP))
+        logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
         logger.info("- TableIds  V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
         logger.info("- SecurityPolicyIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
                     (self.IngV4SecurityPolicyId, self.IngV6SecurityPolicyId, self.EgV4SecurityPolicyId, self.EgV6SecurityPolicyId))

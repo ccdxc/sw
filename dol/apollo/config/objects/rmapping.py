@@ -4,7 +4,7 @@ import ipaddress
 
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
-import apollo.config.objects.utils as utils
+import apollo.config.utils as utils
 import apollo.config.agent.api as api
 import mapping_pb2 as mapping_pb2
 import types_pb2 as types_pb2
@@ -14,7 +14,7 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 class RemoteMappingObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec, encap, tunobj, ipversion):
+    def __init__(self, parent, spec, tunobj, ipversion):
         super().__init__()
 
         ################# PUBLIC ATTRIBUTES OF MAPPING OBJECT #####################
@@ -22,13 +22,9 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.GID('RemoteMapping%d'%self.MappingId)
         self.SUBNET = parent
         self.MACAddr = resmgr.RemoteMappingMacAllocator.get()
-        self.Encap = tunobj.Encap
+        self.Encap = utils.GetEncapType(spec.encap)
         self.TunIPAddr = tunobj.RemoteIPAddr
         self.MplsSlot =  next(tunobj.RemoteVnicMplsSlotIdAllocator)
-        if self.Encap == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_1:
-            self.FwType = 'INTERNET'
-        else:
-            self.FwType = 'VNIC'
         if ipversion == utils.IP_VERSION_6:
             self.IPAddr = parent.AllocIPv6Address();
             self.AddrFamily = 'IPV6'
@@ -76,10 +72,6 @@ class RemoteMappingObject(base.ConfigObjectBase):
 class RemoteMappingObjectClient:
     def __init__(self):
         self.__objs = []
-        self.__vnic_tunnel = None
-        self.__internet_tunnel = None
-        self.__tunip = 0
-        self.__mplsslot = 0
         return
 
     def Objects(self):
@@ -88,23 +80,21 @@ class RemoteMappingObjectClient:
     def GenerateObjects(self, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'rmap', None) == None:
             return
+            
         stack = parent.VPC.Stack
-        self.__vnic_tunnel = utils.rrobiniter(Store.GetTunnelsMplsOverUdp2())
-        self.__internet_tunnel = utils.rrobiniter(Store.GetTunnelsMplsOverUdp1())
 
         for rmap_spec_obj in subnet_spec_obj.rmap:
-            encap = utils.GetTunnelEncapType(rmap_spec_obj.encap)
-            for c in range (0, rmap_spec_obj.count):
-                if  encap == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_1:
-                    tunobj = self.__internet_tunnel.rrnext()
-                else:
-                    tunobj = self.__vnic_tunnel.rrnext()
+            c = 0
+            while c < rmap_spec_obj.count:
+                tunobj = resmgr.RemoteMplsVnicTunAllocator.rrnext()
                 if stack == "dual" or stack == 'ipv6':
-                    obj = RemoteMappingObject(parent, subnet_spec_obj, encap, tunobj, utils.IP_VERSION_6)
+                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6)
                     self.__objs.append(obj)
-                if stack == "dual" or stack == 'ipv4':
-                    obj = RemoteMappingObject(parent, subnet_spec_obj, encap, tunobj, utils.IP_VERSION_4)
+                    c = c + 1
+                if c < rmap_spec_obj.count and (stack == "dual" or stack == 'ipv4'):
+                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4)
                     self.__objs.append(obj)
+                    c = c + 1
         return
 
     def CreateObjects(self):

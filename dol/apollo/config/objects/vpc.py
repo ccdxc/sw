@@ -6,7 +6,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.route as route
-import apollo.config.objects.utils as utils
+import apollo.config.utils as utils
 
 import vpc_pb2 as vpc_pb2
 import types_pb2 as types_pb2
@@ -26,11 +26,11 @@ class VpcObject(base.ConfigObjectBase):
         self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
         self.IPPrefix[1] = resmgr.GetVpcIPv4Prefix(self.VPCId)
         self.Stack = spec.stack
-        # As currently vcn can have only type IPV4 or IPV6, we will alternate 
+        # As currently vcn can have only type IPV4 or IPV6, we will alternate
         # the configuration
         if self.Stack == 'dual':
             self.PfxSel = index % 2
-        elif obj.Stack == 'ipv4':
+        elif self.Stack == 'ipv4':
             self.PfxSel = 1
         else:
             self.PfxSel = 0
