@@ -136,6 +136,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     switch (tep_spec->encap_type) {
     case PDS_TEP_ENCAP_TYPE_GW_ENCAP:
         nh_tx_data.nh_tx_action.encap_type = GW_ENCAP;
+        nh_tx_data.nh_tx_action.snat_required = 1;
         break;
     case PDS_TEP_ENCAP_TYPE_VNIC:
         nh_tx_data.nh_tx_action.encap_type = VNIC_ENCAP;
