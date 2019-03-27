@@ -1,0 +1,78 @@
+# Test Spec
+# This test case covers all invalid test cases
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 4
+    flow: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : 00:00:00:00:00:01  # Invalid SRC vnic mac
+                dst     : ref://testcase/config/remotemapping/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : FROM_SWITCH_PKT
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                dst     : 00:00:00:00:00:01  # Invalid DST vnic mac
+                src     : 00:02:0b:0a:0d:0e
+            outeripv4:
+                dst     : ref://testcase/config/devicecfg/IP
+                src     : ref://testcase/config/remotemapping/TunIP
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            outermpls:
+                label   : ref://testcase/config/remotemapping/MplsSlot
+                ttl     : 0
+            mpls:
+                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
+                ttl     : 0
+            ipv4:
+                dst     : ref://testcase/config/localmapping/IP
+                src     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                dst     : ref://testcase/config/localmapping/IP
+                src     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+
+
+trigger:
+    packets:
+#        - packet:
+#            object  : ref://testcase/packets/id=FROM_SWITCH_PKT
+#            port    : ref://testcase/config/switchport
+
+        - packet:
+            object  : ref://testcase/packets/id=FROM_HOST_PKT
+            port    : ref://testcase/config/hostport
+
+expect:
+    packets:
+        - packet:
+            object  : None

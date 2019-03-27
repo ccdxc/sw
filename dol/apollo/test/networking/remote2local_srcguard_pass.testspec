@@ -1,32 +1,22 @@
 # Test Spec
-# Select local mappings where src and dst ip checks are true. 
-# Packets will be dropped if it is not matching.
-# src will be checked from host to switch. Dst on reverse path
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 4
-    flow: filter://SourceGuard=True
+    flow: filter://SourceGuard=False
 
 packets:
     - packet:
-        id          : FROM_HOST_PKT # Input packet
+        id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : ref://testcase/config/remotemapping/MACAddr
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
-                src     : 1.0.0.1
-                dst     : ref://testcase/config/remotemapping/IP
+                dst     : 1.0.0.1
+                src     : ref://testcase/config/remotemapping/IP
                 ttl     : 64
             ipv6:
-                src     : aaaa:0010:0010:0010::0010
-                dst     : ref://testcase/config/remotemapping/IP
+                dst     : aaaa:0010:0010:0010::0010
+                src     : ref://testcase/config/remotemapping/IP
                 hlim    : 64
             tcp:
                 sport   : 100
@@ -35,8 +25,8 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : FROM_SWITCH_PKT
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        id          : FROM_SWITCH_PKT # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
@@ -54,21 +44,23 @@ packets:
             mpls:
                 label   : ref://testcase/config/localmapping/VNIC/MplsSlot
                 ttl     : 0
-            ipv4:
-                dst     : 1.0.0.1
-                src     : ref://testcase/config/remotemapping/IP
-                ttl     : 64
-            ipv6:
-                dst     : aaaa:0010:0010:0010::0010
-                src     : ref://testcase/config/remotemapping/IP
-                hlim    : 64
 
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
 
 trigger:
     packets:
-        - packet:
-            object  : ref://testcase/packets/id=FROM_HOST_PKT
-            port    : ref://testcase/config/hostport
         - packet:
             object  : ref://testcase/packets/id=FROM_SWITCH_PKT
             port    : ref://testcase/config/switchport
@@ -76,8 +68,5 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : None
-            port    : ref://testcase/config/switchport
-        - packet:
-            object  : None
+            object  : ref://testcase/packets/id=TO_HOST_PKT
             port    : ref://testcase/config/hostport

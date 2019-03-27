@@ -53,73 +53,14 @@ packets:
                 ttl     : 0
 
 
-    - packet:
-        id          : FROM_SWITCH_PKT
-        clone       : ref://testcase/packets/id=TO_SWITCH_PKT
-        headers     :
-            outereth:
-                dst     : ref://testcase/config/devicecfg/MACAddr
-                src     : 00:02:0b:0a:0d:0e
-            outeripv4:
-                dst     : ref://testcase/config/devicecfg/IP
-                src     : ref://testcase/config/remotemapping/TunIP
-                ttl     : 64
-                tos     : 0
-                id      : 0
-            outermpls:
-                label   : ref://testcase/config/remotemapping/MplsSlot
-                ttl     : 0
-            mpls:
-                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
-                ttl     : 0
-            ipv4:
-                dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
-                ttl     : 64
-            ipv6:
-                dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
-                hlim    : 64
-
-
-    - packet:
-        id          : TO_HOST_PKT # Expected packet
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
-        headers     :
-            eth:
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
-            ipv4:
-                dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
-                ttl     : 64
-            ipv6:
-                dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
-                hlim    : 64
-            tcp:
-                sport   : 100
-                dport   : 200
-            payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
-
 trigger:
     packets:
         - packet:
             object  : ref://testcase/packets/id=FROM_HOST_PKT
             port    : ref://testcase/config/hostport
-        - packet:
-            object  : ref://testcase/packets/id=FROM_SWITCH_PKT
-            port    : ref://testcase/config/switchport
 
 expect:
     packets:
         - packet:
             object  : ref://testcase/packets/id=TO_SWITCH_PKT
             port    : ref://testcase/config/switchport
-        - packet:
-            object  : ref://testcase/packets/id=TO_HOST_PKT
-            port    : ref://testcase/config/hostport

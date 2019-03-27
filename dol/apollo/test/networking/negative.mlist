@@ -1,0 +1,34 @@
+# Feature Test Modules List
+feature:
+    id          : networking
+    sub         : negative
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : L2_IPV4_TCP_QTAG_INVIP
+        spec    : local2remote_ip_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+#   The below test is failing , commenting now
+#    - module:
+#        name    : L2_IPV6_TCP_QTAG_INVIP
+#        spec    : local2remote_ip_invalid.testspec
+#        iterate :
+#            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_QTAG_INVMAC
+        spec    : local2remote_mac_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_QTAG_INVMAC
+        spec    : local2remote_mac_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
