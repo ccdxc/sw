@@ -8,13 +8,13 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <getopt.h>
+#include <gtest/gtest.h>
+#include <stdio.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 #include "nic/apollo/test/utils/vcn.hpp"
-#include <getopt.h>
-#include <gtest/gtest.h>
-#include <stdio.h>
 
 using std::cerr;
 using std::cout;
@@ -100,7 +100,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_2) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     pds_vcn_key_t vcn_key = {};
-    std::string start_addr = "10.0.0.0/16";
+    std::string subnet_start_addr = "10.0.0.0/16";
 
     key.id = 1;
     vcn_key.id = 1;
@@ -108,10 +108,10 @@ TEST_F(subnet, DISABLED_subnet_workflow_2) {
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
+    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, subnet_start_addr,
                                          k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, k_max_subnet) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
+    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, subnet_start_addr,
                                          k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 

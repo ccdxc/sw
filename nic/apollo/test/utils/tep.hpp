@@ -50,12 +50,12 @@ public:
     /// \brief Update TEP
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void);
+    sdk_ret_t update();
 
     /// \brief Delete TEP
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void);
+    sdk_ret_t del();
 
     /// \brief Create multiple TEPs
     /// Create "num_tep" TEPs of type "tep_type" with IPs in range
@@ -66,7 +66,8 @@ public:
     /// \param[in] type TEP encap type
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_create(uint32_t num_tep, std::string ip_str,
-                                 pds_tep_encap_type_t type = PDS_TEP_ENCAP_TYPE_VNIC);
+                                 pds_tep_encap_type_t type =
+                                     PDS_TEP_ENCAP_TYPE_VNIC);
 
     /// \brief Read & validate multiple TEPs
     /// Read "num_tep" TEPs of type "tep_type" with IPs in range
@@ -77,29 +78,10 @@ public:
     /// \param[in] ip_str starting IP address
     /// \param[in] type TEP encap type
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(sdk_ret_t expected_result, uint32_t num_tep,
-                               std::string ip_str,
-                               pds_tep_encap_type_t type = PDS_TEP_ENCAP_TYPE_VNIC);
-
-    /// \brief Get all TEPs configured on the NAPLES
-    ///
-    /// \param[out] count number of TEP objects
-    /// \param[out] teps_info list of TEP objects
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t all_get(int *count, pds_tep_info_t *teps_info);
-
-    /// \brief Update a TEP given its IP and updated spec
-    ///
-    /// \param[in] ip_str TEP IP
-    /// \param[in] new_tep_spec modified TEP spec
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t update(std::string ip_str, pds_tep_spec_t *new_tep_spec);
-
-    /// \brief Delete a TEP given its IP
-    ///
-    /// \param[in] ip_str TEP IP
-    /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t del(std::string ip_str);
+    static sdk_ret_t many_read(uint32_t num_tep, std::string ip_str,
+                               pds_tep_encap_type_t type =
+                                   PDS_TEP_ENCAP_TYPE_VNIC,
+                               sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
 
     /// \brief Delete multiple TEPs
     /// Delete "num_tep" TEPs of type "tep_type" with IPs in range
@@ -110,7 +92,8 @@ public:
     /// \param[in] type TEP encap type
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(uint32_t num_tep, std::string ip_str,
-                                 pds_tep_encap_type_t type = PDS_TEP_ENCAP_TYPE_VNIC);
+                                 pds_tep_encap_type_t type =
+                                     PDS_TEP_ENCAP_TYPE_VNIC);
 };
 
 }    // namespace api_test

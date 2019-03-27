@@ -38,6 +38,7 @@ tep_util_object_stepper(std::string pfxstr, pds_tep_encap_type_t type,
     ip_prefix_t ip_pfx;
 
     SDK_ASSERT(str2ipv4pfx((char *)pfxstr.c_str(), &ip_pfx) == 0);
+
     for (uint32_t idx = 1; idx <= num_tep; ++idx) {
         tep_util tep_obj(ippfx2str(&ip_pfx), type);
         switch (op) {
@@ -46,7 +47,7 @@ tep_util_object_stepper(std::string pfxstr, pds_tep_encap_type_t type,
             break;
         case OP_MANY_READ:
             pds_tep_info_t info;
-            rv = tep_obj.read(&info);
+            rv = tep_obj.read(&info, FALSE);
             break;
         case OP_MANY_DELETE:
             rv = tep_obj.del();
@@ -131,10 +132,10 @@ tep_util::read(pds_tep_info_t *info, bool compare_spec) {
     memset(&key, 0, sizeof(pds_tep_key_t));
     memset(info, 0, sizeof(pds_tep_info_t));
     key.ip_addr = ip_pfx.addr.addr.v4_addr;
-    rv = pds_tep_read(&key, info);
-    if (rv != sdk::SDK_RET_OK) {
+
+    if ((rv = pds_tep_read(&key, info)) != sdk::SDK_RET_OK)
         return rv;
-    }
+
     if (compare_spec) {
         // TODO: Temporary untill p4pd_entry_read() works for directmap
         debug_dump_tep_info(info);
@@ -149,14 +150,15 @@ tep_util::read(pds_tep_info_t *info, bool compare_spec) {
             return sdk::SDK_RET_ERR;
         }
     }
+
     return sdk::SDK_RET_OK;
 }
 
 sdk::sdk_ret_t
-tep_util::many_read(sdk_ret_t ret_code, uint32_t num_tep, std::string pfxstr,
-                    pds_tep_encap_type_t type) {
+tep_util::many_read(uint32_t num_tep, std::string pfxstr,
+                    pds_tep_encap_type_t type, sdk_ret_t expected_result) {
     return (tep_util_object_stepper(pfxstr, type, num_tep, OP_MANY_READ,
-                                    ret_code));
+                                    expected_result));
 }
 
 sdk::sdk_ret_t

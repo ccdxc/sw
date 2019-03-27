@@ -76,7 +76,7 @@ TEST_F(vcn, vcn_workflow_1)
 /// Create and delete should be de-deduped by framework and subsequent create
 /// should result in successful creation
 /// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
-TEST_F(vcn, DISABLED_vcn_workflow_2) {
+TEST_F(vcn, vcn_workflow_2) {
     pds_batch_params_t batch_params = {0};
     pds_vcn_key_t key = {};
     std::string vcn_start_addr = "10.0.0.0/16";
