@@ -582,9 +582,6 @@ rule_lib_alloc()
     rule->data.category_mask = 0x01;
     ref_init(&rule->ref_count, [] (const ref_t * ref_count) {
         ipv4_rule_t *rule  = (ipv4_rule_t *)acl_rule_from_ref(ref_count);
-        HAL_TRACE_DEBUG("decrement userdata: {:#x} is_shared: {}", 
-                         (uint64_t) rule->data.userdata,
-                         ref_is_shared((acl::ref_t *)rule->data.userdata));
         ref_dec((acl::ref_t *)rule->data.userdata);
         g_hal_state->ipv4_rule_slab()->free((void *)acl_rule_from_ref(ref_count));
     });

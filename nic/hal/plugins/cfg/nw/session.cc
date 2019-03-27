@@ -1676,7 +1676,7 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
     tcp_hdr->rst = (setrst)?1:0;
     tcp_hdr->syn = 0;
     tcp_hdr->fin = (setfin)?1:0;
-    tcp_hdr->window = state.tcp_win_sz;
+    tcp_hdr->window = htons(state.tcp_win_sz);
     tcp_hdr->check = 0;    // let P4 datapath compute checksum
     tcp_hdr->urg_ptr = 0;
 
@@ -1845,6 +1845,13 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
         else
             ret = SESSION_AGED_RFLOW;
     }
+
+#if SESSION_AGE_DEBUG
+    HAL_TRACE_DEBUG("Iflow Packets: {} context iflow packets: {} rflow packets: {} context rflow packets: {}"
+                    "ret: {}", session_state.iflow_state.packets, ctx->session_state.iflow_state.packets,
+                    session_state.rflow_state.packets, ctx->session_state.rflow_state.packets, ret);
+#endif
+
     ctx->session_state = session_state;
     if (ret == SESSION_AGED_NONE) {
         HAL_TRACE_DEBUG("Bailing session aging on session {}",
@@ -1917,9 +1924,11 @@ build_and_send_tcp_pkt (void *data)
             SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
         }
 
+#if SESSION_AGE_DEBUG
         HAL_TRACE_DEBUG("Sending another tickle and starting timer {} iflow stats: {} rflow stats {}",
                          session->hal_handle, session->iflow->stats.num_tcp_tickles_sent, 
                          (session->rflow)?session->rflow->stats.num_tcp_tickles_sent:0);
+#endif
 
         /*
          * If Tickles were generated then we increment the tickle count

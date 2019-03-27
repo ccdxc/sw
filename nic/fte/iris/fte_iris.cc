@@ -491,6 +491,7 @@ ctx_t::update_flow_table()
     hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
     hal::pd::pd_func_args_t          pd_func_args = {0};
     std::string      update_type = "create";
+    hal::app_redir::app_redir_ctx_t* app_ctx = hal::app_redir::app_redir_ctx(*this, false);
 
     session_args.session = &session_cfg;
     session_cfg.idle_timeout = HAL_MAX_INACTIVTY_TIMEOUT;
@@ -501,10 +502,9 @@ ctx_t::update_flow_table()
     }
 
     if (ignore_session_create()) {
-        return HAL_RET_OK;
+        goto end;
     }
 
-    hal::app_redir::app_redir_ctx_t* app_ctx = hal::app_redir::app_redir_ctx(*this, false);
     if (!(flow_miss() ||
         (app_redir_pipeline() && app_ctx && app_ctx->appid_completed()))) {
         return HAL_RET_OK;
@@ -742,6 +742,11 @@ ctx_t::update_flow_table()
         HAL_TRACE_DEBUG("Session {} of session {} successful", update_type, session_handle);
     }
 
+    if (protobuf_request()) {
+        sess_resp_->mutable_status()->set_session_handle(session_handle);
+    }
+
+end:
     uint8_t istage = 0, rstage = 0;
     add_flow_logging(key_, session_handle, &iflow_log_[istage]);
     if (++istage <= istage_)
@@ -750,10 +755,6 @@ ctx_t::update_flow_table()
     add_flow_logging(rkey_, session_handle, &rflow_log_[rstage]);
     if (++rstage <= rstage_)
         add_flow_logging(rkey_, session_handle, &rflow_log_[rstage]);
-
-    if (protobuf_request()) {
-        sess_resp_->mutable_status()->set_session_handle(session_handle);
-    }
 
     return ret;
 }
