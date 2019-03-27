@@ -545,6 +545,7 @@ func (c *IPClient) watchLeaseEvents() {
 		// watch for events
 		case event := <-c.watcher.Events:
 			log.Infof("EVENT! %#v\n", event)
+			var controllers []string
 
 			if event.Op&fsnotify.Write == fsnotify.Write && getFileSize(c.leaseFile) > 0 {
 				ip, _ := getIPFromLease(c.leaseFile)
@@ -553,8 +554,13 @@ func (c *IPClient) watchLeaseEvents() {
 					log.Errorf("Lease file does not have IP address in it.")
 					return
 				}
+				// Use the statically passed controllers if available.
+				if len(c.nmdState.config.Spec.Controllers) == 0 {
+					controllers, _ = readAndParseLease(c.leaseFile)
+				} else {
+					controllers = c.nmdState.config.Spec.Controllers
+				}
 
-				controllers, _ := readAndParseLease(c.leaseFile)
 				if len(controllers) == 0 {
 					// Vendor specified attributes is nil
 					c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
