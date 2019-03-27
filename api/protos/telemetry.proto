@@ -128,16 +128,19 @@ message FlowExportPolicySpec {
         Ipfix = 0;
     }
 
+    // VrfName specifies the name of the VRF that the current flow export Policy belongs to
+    string VrfName                  = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+
     // Interval defines how often to push the records to an external collector
     // The value is specified as a string format, '10s', '20m'
-    string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty", (venice.default)="10s", (venice.check)="Duration(1s,24h)"];
+    string Interval                 = 2 [(gogoproto.jsontag) = "interval,omitempty", (venice.default)="10s", (venice.check)="Duration(1s,24h)"];
 
-    string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportPolicySpec.Formats)"];
+    string Format                   = 3 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportPolicySpec.Formats)"];
 
-    repeated MatchRule  MatchRules = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
+    repeated MatchRule  MatchRules  = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
 
     // Export contains export parameters.
-    repeated ExportConfig Exports = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
+    repeated ExportConfig Exports   = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
 }
 
 message FlowExportPolicy {

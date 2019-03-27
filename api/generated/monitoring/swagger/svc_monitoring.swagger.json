@@ -3604,6 +3604,13 @@
             "type": "string"
           },
           {
+            "name": "spec.vrf-name",
+            "description": "VrfName specifies the name of the VRF that the current flow export Policy belongs to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "spec.interval",
             "description": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'. should be a valid time duration between 1s and 24h0m0s",
             "in": "query",
@@ -8774,6 +8781,13 @@
           {
             "name": "meta.self-link",
             "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.vrf-name",
+            "description": "VrfName specifies the name of the VRF that the current flow export Policy belongs to.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -13984,6 +13998,10 @@
         "format"
       ],
       "properties": {
+        "vrf-name": {
+          "type": "string",
+          "title": "VrfName specifies the name of the VRF that the current flow export Policy belongs to"
+        },
         "interval": {
           "type": "string",
           "default": "10s",

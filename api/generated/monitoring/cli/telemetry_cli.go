@@ -28,6 +28,13 @@ var CreateFlowExportPolicyFlags = []gen.CliFlag{
 		Skip:   false,
 		Insert: "",
 	},
+	{
+		ID:     "vrf-name",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
 }
 
 func removeFlowExportPolicyOper(obj interface{}) error {

@@ -12,6 +12,7 @@ import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-ru
 import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
 
 export interface IMonitoringFlowExportPolicySpec {
+    'vrf-name'?: string;
     'interval': string;
     'format': MonitoringFlowExportPolicySpec_format;
     'match-rules'?: Array<IMonitoringMatchRule>;
@@ -20,6 +21,7 @@ export interface IMonitoringFlowExportPolicySpec {
 
 
 export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonitoringFlowExportPolicySpec {
+    'vrf-name': string = null;
     /** should be a valid time duration between 1s and 24h0m0s */
     'interval': string = null;
     'format': MonitoringFlowExportPolicySpec_format = null;
@@ -27,6 +29,10 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     /** Export contains export parameters. */
     'exports': Array<MonitoringExportConfig> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'vrf-name': {
+            required: false,
+            type: 'string'
+        },
         'interval': {
             default: '10s',
             description:  'should be a valid time duration between 1s and 24h0m0s',
@@ -83,6 +89,13 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['vrf-name'] != null) {
+            this['vrf-name'] = values['vrf-name'];
+        } else if (fillDefaults && MonitoringFlowExportPolicySpec.hasDefaultValue('vrf-name')) {
+            this['vrf-name'] = MonitoringFlowExportPolicySpec.propInfo['vrf-name'].default;
+        } else {
+            this['vrf-name'] = null
+        }
         if (values && values['interval'] != null) {
             this['interval'] = values['interval'];
         } else if (fillDefaults && MonitoringFlowExportPolicySpec.hasDefaultValue('interval')) {
@@ -114,6 +127,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'vrf-name': CustomFormControl(new FormControl(this['vrf-name']), MonitoringFlowExportPolicySpec.propInfo['vrf-name']),
                 'interval': CustomFormControl(new FormControl(this['interval'], [required, ]), MonitoringFlowExportPolicySpec.propInfo['interval']),
                 'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFlowExportPolicySpec_format), ]), MonitoringFlowExportPolicySpec.propInfo['format']),
                 'match-rules': new FormArray([]),
@@ -143,6 +157,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['vrf-name'].setValue(this['vrf-name']);
             this._formGroup.controls['interval'].setValue(this['interval']);
             this._formGroup.controls['format'].setValue(this['format']);
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
