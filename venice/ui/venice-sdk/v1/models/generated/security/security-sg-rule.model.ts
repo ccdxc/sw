@@ -8,7 +8,7 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityProtoPort, ISecurityProtoPort } from './security-proto-port.model';
-import { SecuritySGRule_action,  } from './enums';
+import { SecuritySGRule_action,  SecuritySGRule_action_uihint  } from './enums';
 
 export interface ISecuritySGRule {
     'apps'?: Array<string>;
@@ -39,7 +39,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
             type: 'object'
         },
         'action': {
-            enum: SecuritySGRule_action,
+            enum: SecuritySGRule_action_uihint,
             default: 'PERMIT',
             required: true,
             type: 'string'

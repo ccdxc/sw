@@ -23,7 +23,8 @@ export enum StatArrowDirection {
 export enum CardStates {
   READY = 'READY',
   LOADING = 'LOADING',
-  FAILED = 'FAILED'
+  FAILED = 'FAILED',
+  NO_DATA = 'NO_DATA'
 }
 
 export interface BaseCardOptions {

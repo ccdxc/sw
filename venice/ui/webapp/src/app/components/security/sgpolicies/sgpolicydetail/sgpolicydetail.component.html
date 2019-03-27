@@ -95,7 +95,7 @@
                 <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
                     [formControl]="portFormControl" type="text" pInputText
                     (keyup)="keyUpInput($event)" app-errorTooltip
-                  placeholder="Protocol / Port" maxlength="15" autocomplete="off">
+                  placeholder="<Protocol>/<Port> or App" maxlength="15" autocomplete="off">
               </div>
               <mat-icon fxFlex="none" class="sgpolicy-search-button"
                         (click)="invokePolicySearch()" (keydown)="($event.which ==13)? invokePolicySearch() : return " tabindex="0"
@@ -133,24 +133,7 @@
           <tr [class]="rowData.order===selectedRuleIndex ? 'sgpolicy-row sgpolicy-match' : 'sgpolicy-row'">
               <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
           [style.width]="col.width + '%'">
-          
-          <ng-container [ngSwitch]="col.field">
-          <ng-container *ngSwitchCase="'ruleNum'">
-              {{ rowData.order + 1}}
-          </ng-container>
-          <ng-container *ngSwitchCase="'sourceIPs'">
-              {{  rowData.rule['from-ip-addresses'].join(', ') }}
-          </ng-container>
-          <ng-container *ngSwitchCase="'destIPs'">
-              {{  rowData.rule['to-ip-addresses'].join(', ') }}
-          </ng-container>
-          <ng-container *ngSwitchCase="'action'">
-            {{rowData.rule.action}}
-          </ng-container>
-          <ng-container *ngSwitchCase="'protocolPort'">
-              {{ formatApp(rowData.rule) }}
-          </ng-container>
-          </ng-container>
+          {{displayColumn(rowData, col)}}
         </ng-template>
       </p-table>
     </app-lazyrender>

@@ -26,8 +26,11 @@ message ProtoPort {
 message SGRule {
     enum PolicyAction
     {
+        // ui-hint: Permit
         PERMIT  = 0;  // permit traffic flow
+        // ui-hint: Deny
         DENY    = 1;  // drop traffic without any response to the client
+        // ui-hint: Reject
         REJECT  = 2;  // drop traffic and report unreachable to client
     }
 

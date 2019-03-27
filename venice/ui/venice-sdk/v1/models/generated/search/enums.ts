@@ -132,6 +132,12 @@ export enum LabelsRequirement_operator_uihint {
     'notIn' = "not in",
 }
 
+export enum SecuritySGRule_action_uihint {
+    'DENY' = "Deny",
+    'PERMIT' = "Permit",
+    'REJECT' = "Reject",
+}
+
 
 
 
@@ -176,4 +182,5 @@ export class AllEnums {
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
+    SecuritySGRule_action_uihint = SecuritySGRule_action_uihint;
 }

@@ -529,5 +529,16 @@ export class MetricsUtility {
     return naples.meta.name;
   }
 
+  public static setCardStatesFailed(cards: HeroCardOptions[]) {
+    cards.forEach((c) => {
+      c.cardState = CardStates.FAILED;
+    });
+  }
+
+  public static setCardStatesNoData(cards: HeroCardOptions[]) {
+    cards.forEach((c) => {
+      c.cardState = CardStates.NO_DATA;
+    });
+  }
 
 }

@@ -24,11 +24,11 @@ var _ = math.Inf
 type SGRule_PolicyAction int32
 
 const (
-	//
+	// ui-hint: Permit
 	SGRule_PERMIT SGRule_PolicyAction = 0
-	//
+	// ui-hint: Deny
 	SGRule_DENY SGRule_PolicyAction = 1
-	//
+	// ui-hint: Reject
 	SGRule_REJECT SGRule_PolicyAction = 2
 )
 

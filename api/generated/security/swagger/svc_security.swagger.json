@@ -9393,6 +9393,11 @@
             "REJECT"
           ],
           "default": "PERMIT",
+          "x-ui-hints": {
+            "DENY": "Deny",
+            "PERMIT": "Permit",
+            "REJECT": "Reject"
+          },
           "title": "SGRule action, either PERMIT, DENY or REJECT"
         },
         "from-ip-addresses": {

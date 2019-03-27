@@ -195,12 +195,16 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
     const sub = this.metricsqueryService.pollMetrics('dsbdCards', queryList).subscribe(
       (data: ITelemetry_queryMetricsQueryResponse) => {
         if (data && data.results && data.results.length === queryList.queries.length) {
-          this.timeSeriesData = data.results[0];
-          this.currentData = data.results[1];
-          this.prevData = data.results[2];
-          this.avgDayData = data.results[3];
-          this.lastUpdateTime = new Date().toISOString();
-          this.enableSystemCapacityCard();
+          if (MetricsUtility.resultHasData(data.results[1])) {
+            this.timeSeriesData = data.results[0];
+            this.currentData = data.results[1];
+            this.prevData = data.results[2];
+            this.avgDayData = data.results[3];
+            this.lastUpdateTime = new Date().toISOString();
+            this.enableSystemCapacityCard();
+          } else {
+            this.enableSystemCapacityNoData();
+          }
         }
       },
       (err) => {
@@ -216,6 +220,10 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
 
   setSystemCapacityErrorState() {
     this.systemCapacity.cardState = CardStates.FAILED;
+  }
+
+  enableSystemCapacityNoData() {
+    this.systemCapacity.cardState = CardStates.NO_DATA;
   }
 
   /**

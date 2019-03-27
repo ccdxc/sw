@@ -35,7 +35,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   inCreateMode: boolean = false;
   radiusObject: AuthRadius = new AuthRadius();
 
-  serverAuthMethodOptions: SelectItem[] = Utility.convertEnumToSelectItem(AuthRadiusServer.propInfo['auth-method'].enum);
+  serverAuthMethodOptions: SelectItem[] = Utility.convertEnumToSelectItem(AuthRadiusServer.propInfo['auth-method'].enum, ["PEAP_MSCHAPv2", "EAP_TTLS_PAP"]);
 
 
   @Input() radiusData: AuthRadius;
@@ -43,7 +43,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   @Output() invokeCreateRadius: EventEmitter<AuthRadius> = new EventEmitter();
   @Output() invokeRemoveRadius: EventEmitter<AuthRadius> = new EventEmitter();
 
-  constructor(protected _controllerService: ControllerService , private cd: ChangeDetectorRef) {
+  constructor(protected _controllerService: ControllerService, private cd: ChangeDetectorRef) {
     super(_controllerService);
   }
 
@@ -165,12 +165,12 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
   saveRadius() {
     if (!this.isAllInputsValid(this.radiusObject)) {
-           this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are requried');
-           return;
+      this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are requried');
+      return;
     }
     this.updateRadiusData();
     if (this.inCreateMode) {
-        this.invokeCreateRadius.emit(this.radiusData);
+      this.invokeCreateRadius.emit(this.radiusData);
     } else {
       // POST DATA
       this.invokeSaveRadius.emit(false); // emit event to parent to update RADIUS if REST call succeeds, ngOnChange() will bb invoked and refresh data.

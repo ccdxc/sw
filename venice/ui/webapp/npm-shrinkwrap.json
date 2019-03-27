@@ -1561,9 +1561,9 @@
       "integrity": "sha512-Es6WcD0nO5l+2BOQS4uLfNPYQaNDfbot3X1XUoloz+x0mPDS3eeORZJl06HXjwBG1fOGwCRnzK88LMdxKRrd6Q=="
     },
     "@ng-idle/core": {
-      "version": "6.0.0-beta.3",
-      "resolved": "https://registry.npmjs.org/@ng-idle/core/-/core-6.0.0-beta.3.tgz",
-      "integrity": "sha512-EPzc1v+gK+f6RpqtD6Dbx1eJsCuzP+gUZR7AkqyTftUcpmSuBA41c7ilZSvUQhMFebZ7B40S7GakxmHTeAhOCg=="
+      "version": "6.0.0-beta.4",
+      "resolved": "https://registry.npmjs.org/@ng-idle/core/-/core-6.0.0-beta.4.tgz",
+      "integrity": "sha512-mbcQhL/P5eNGSKwfF0uAClafRXiiFX7xXbJC/dTU4Fj/seDWPCMxUqxE5gSvbtsE1UthIEH9480ZKAbixbrllg=="
     },
     "@ng-idle/keepalive": {
       "version": "6.0.0-beta.3",

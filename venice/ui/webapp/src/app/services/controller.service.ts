@@ -72,8 +72,7 @@ export class ControllerService {
   public useRealData = false;
   private _enableIdle = true;
   // time to idle before warning user of logout (in seconds)
-  // default of 2 hours
-  private _idleTime = 60 * 60 * 2;
+  private _idleTime = 60 * 60 * 1;
 
   constructor(
     private _router: Router,

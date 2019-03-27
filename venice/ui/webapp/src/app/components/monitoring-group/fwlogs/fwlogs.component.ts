@@ -53,14 +53,16 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   // Only time is supported as sortable by the backend
   cols: TableCol[] = [
     { field: 'time', header: 'Time', class: 'fwlogs-column', sortable: true, width: 12 },
-    { field: 'source', header: 'Source', class: 'fwlogs-column-ip', sortable: false, width: 17 },
-    { field: 'destination', header: 'Destination', class: 'fwlogs-column-ip', sortable: false, width: 17 },
+    { field: 'source', header: 'Source', class: 'fwlogs-column-ip', sortable: false, width: 11 },
+    { field: 'destination', header: 'Destination', class: 'fwlogs-column-ip', sortable: false, width: 11 },
     { field: 'protocol', header: 'Protocol', class: 'fwlogs-column-port', sortable: false, width: 10 },
     { field: 'source-port', header: 'Src Port', class: 'fwlogs-column-port', sortable: false, width: 8 },
     { field: 'destination-port', header: 'Dest Port', class: 'fwlogs-column-port', sortable: false, width: 8 },
-    { field: 'action', header: 'Action', class: 'fwlogs-column', sortable: false, width: 8 },
-    { field: 'reporter-id', header: 'Reporter', class: 'fwlogs-column', sortable: false, width: 10 },
-    { field: 'direction', header: 'Direction', class: 'fwlogs-column', sortable: false, width: 10 },
+    { field: 'action', header: 'Action', class: 'fwlogs-column', sortable: false, width: 7 },
+    { field: 'reporter-id', header: 'Reporter', class: 'fwlogs-column', sortable: false, width: 9 },
+    { field: 'direction', header: 'Direction', class: 'fwlogs-column', sortable: false, width: 8 },
+    { field: 'rule-id', header: 'Rule ID', class: 'fwlogs-column', sortable: false, width: 8 },
+    { field: 'session-id', header: 'Session ID', class: 'fwlogs-column', sortable: false, width: 8 },
   ];
 
   constructor(

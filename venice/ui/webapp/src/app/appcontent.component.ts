@@ -138,6 +138,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.unsubscribeStore$.complete();
     this.unsubscribeAll();
     this._boolInitApp = false;
+    this.idle.stop();
   }
 
   /**
@@ -302,9 +303,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   private _subscribeToEvents() {
 
 
-    // this.subscriptions[Eventtypes.IDLE_CHANGE] = this._controllerService.subscribe(Eventtypes.IDLE_CHANGE, (payload) => {
-    //   this.handleIdleChange(payload);
-    // });
+    this.subscriptions[Eventtypes.IDLE_CHANGE] = this._controllerService.subscribe(Eventtypes.IDLE_CHANGE, (payload) => {
+      this.handleIdleChange(payload);
+    });
 
     this.subscriptions[Eventtypes.LOGOUT] = this._controllerService.subscribe(Eventtypes.LOGOUT, (payload) => {
       this.onLogout(payload);
@@ -338,16 +339,21 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     }
     this._boolInitApp = true;
     // Idle currently doesn't work. Commenting out for now.
-    // this._setupIdle();
+    this._setupIdle();
   }
 
   _setupIdle() {
     this.idle.setIdle(this._controllerService.idleTime);
     this.idle.setTimeout(10);
     this.idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
-    this.idle.onIdleEnd.subscribe(() => { this.showIdleWarning = false; });
+    this.idle.onIdleEnd.subscribe(() => {
+      this.showIdleWarning = false;
+      this.idleDialogRef.close();
+      this.idleDialogRef = null;
+    });
     this.idle.onTimeout.subscribe(() => {
       this.idleDialogRef.close();
+      this.idleDialogRef = null;
       this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Idle timeout' });
     });
     this.idle.onTimeoutWarning.subscribe((countdown) => {
@@ -359,7 +365,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           data: { countdown: countdown }
         });
       } else {
-        this.idleDialogRef.componentInstance.updateCountdown(countdown);
+        if (this.idleDialogRef != null && this.idleDialogRef.componentInstance != null) {
+          this.idleDialogRef.componentInstance.updateCountdown(countdown);
+        }
       }
     });
     if (this._controllerService.enableIdle) {

@@ -14,9 +14,10 @@ import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
-import { ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { ISecuritySGRule, SecuritySGPolicy, SecuritySGRule_action_uihint } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { CustomFormControl } from '@sdk/v1/utils/validators';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -112,14 +113,14 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   creator = 'pensando';
 
 
-  sourceIpFormControl: FormControl = new FormControl('', [
-  ]);
+  sourceIpFormControl: FormControl = CustomFormControl(new FormControl('', [
+  ]), { description: "Value must be in dot notation" });
 
-  destIpFormControl: FormControl = new FormControl('', [
-  ]);
+  destIpFormControl: FormControl = CustomFormControl(new FormControl('', [
+  ]), { description: "Value must be in dot notation" });
 
-  portFormControl: FormControl = new FormControl('', [
-  ]);
+  portFormControl: FormControl = CustomFormControl(new FormControl('', [
+  ]), { description: "Value should be either <protocol>/<port> or app name" });
 
   // Holds all policy objects
   sgPolicies: ReadonlyArray<SecuritySGPolicy>;
@@ -275,7 +276,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     }
   }
 
-  invokePolicySearch(sourceIP = null, destIP = null, port = null) {
+  invokePolicySearch(sourceIP = null, destIP = null, port: string = null) {
     // Read values from form control if not provided
     if (sourceIP == null && destIP == null && port == null) {
       sourceIP = this.sourceIpFormControl.value;
@@ -307,7 +308,13 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     req.namespace = Utility.getInstance().getNamespace();
     req['sg-policy'] = this.selectedPolicyId;
     if (port != null && port.trim().length !== 0) {
-      req.app = port.trim();
+      const portInput = port.trim().split('/');
+      if (portInput.length > 1) {
+        req.protocol = portInput[0];
+        req.port = portInput[1];
+      } else {
+        req.app = portInput[0];
+      }
     }
     if (sourceIP != null && sourceIP.trim().length !== 0) {
       req['from-ip-address'] = sourceIP.trim();
@@ -389,7 +396,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     return this.constructor.name;
   }
 
-   getSGPoliciesDetail() {
+  getSGPoliciesDetail() {
     // We perform a get as well as a watch so that we can know if the object the user is
     // looking for exists or not.
     const getSubscription = this.securityService.GetSGPolicy(this.selectedPolicyId).subscribe(
@@ -461,6 +468,24 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       );
     });
     return retRules;
+  }
+
+  displayColumn(rowData: SecuritySGRuleWrapper, col): any {
+    const fields = col.field.split('.');
+    const value = Utility.getObjectValueByPropertyPath(rowData, fields);
+    const column = col.field;
+    switch (column) {
+      case 'ruleNum':
+        return rowData.order + 1;
+      case 'protocolPort':
+        return this.formatApp(rowData.rule);
+      case 'sourceIPs':
+        return rowData.rule['from-ip-addresses'].join(', ');
+      case 'destIPs':
+        return rowData.rule['to-ip-addresses'].join(', ');
+      case 'action':
+        return SecuritySGRule_action_uihint[rowData.rule.action];
+    }
   }
 
   formatApp(rule: ISecuritySGRule) {

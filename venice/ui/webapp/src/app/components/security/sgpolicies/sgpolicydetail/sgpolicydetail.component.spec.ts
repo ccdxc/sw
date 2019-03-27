@@ -41,7 +41,17 @@ function setNewRuleData(component, fixture, numRules: number = 40) {
       order: index,
       rule: {
         'apps': [
-          'tcp/8080',
+          'customApp',
+        ],
+        'proto-ports': [
+          {
+            'protocol': 'tcp',
+            'ports': '8080'
+          },
+          {
+            'protocol': 'udp',
+            'ports': '53'
+          },
         ],
         'action': 'PERMIT',
         'from-ip-addresses': [
@@ -117,10 +127,16 @@ describe('SgpolicydetailComponent', () => {
             break;
 
           case 'action':
-            expect(field.nativeElement.textContent).toContain(rowData.action);
+            expect(field.nativeElement.textContent.toUpperCase()).toContain(rowData.action);
             break;
           case 'protocolPort':
             expect(field.nativeElement.textContent).toContain(rowData.apps.join(', '));
+            if (rowData['proto-ports'] != null) {
+              rowData['proto-ports'].forEach((entry) => {
+                expect(field.nativeElement.textContent).toContain(entry.protocol + '/' + entry.ports);
+              });
+            }
+
             break;
           default:
             const fieldData = Utility.getObjectValueByPropertyPath(data[rowIndex], colData.field.split('.'));
@@ -396,7 +412,21 @@ describe('SgpolicydetailComponent', () => {
     expectedReq['tenant'] = 'default';
     expectedReq['namespace'] = 'default';
     expectedReq['to-ip-address'] = '10.1.1.8';
-    expectedReq['app'] = 'tcp/80';
+    expectedReq['protocol'] = 'tcp';
+    expectedReq['port'] = '80';
+    expectedReq['sg-policy'] = 'policy1';
+    calledObj = postQuerySpy.calls.mostRecent().args[0];
+    expect(_.isEqual(expectedReq.getFormGroupValues(), calledObj.getFormGroupValues())).toBeTruthy();
+
+    // Putting text into APP
+    testingUtility.setText(portInput, 'appSearch');
+    testingUtility.sendEnterKeyup(sourceIPInput);
+    expectedReq = new SearchPolicySearchRequest();
+    expectedReq['from-ip-address'] = '10.1.1.1';
+    expectedReq['tenant'] = 'default';
+    expectedReq['namespace'] = 'default';
+    expectedReq['to-ip-address'] = '10.1.1.8';
+    expectedReq['app'] = 'appSearch';
     expectedReq['sg-policy'] = 'policy1';
     calledObj = postQuerySpy.calls.mostRecent().args[0];
     expect(_.isEqual(expectedReq.getFormGroupValues(), calledObj.getFormGroupValues())).toBeTruthy();

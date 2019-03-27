@@ -106,7 +106,7 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
       total += c.width;
     });
     if (total !== 100) {
-      console.error('Table columns don\'t add up to 100');
+      console.error('Table columns don\'t add up to 100, added up to ' + total);
     }
   }
 

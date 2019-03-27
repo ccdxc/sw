@@ -211,7 +211,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         }
       },
       (err) => {
-        this.setChartErrorStates();
+        MetricsUtility.setCardStatesFailed(this.heroCards);
       }
     );
     this.subscriptions.push(sub);
@@ -308,14 +308,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       this.genCharts('mean_MemUsedPercent', this.memChartData);
       this.genCharts('mean_DiskUsedPercent', this.diskChartData);
     } else {
-      this.setChartErrorStates();
+      MetricsUtility.setCardStatesNoData(this.heroCards);
     }
-  }
-
-  private setChartErrorStates() {
-    this.heroCards.forEach((card) => {
-      card.cardState = CardStates.FAILED;
-    });
   }
 
   genCharts(fieldName, heroCard: HeroCardOptions) {

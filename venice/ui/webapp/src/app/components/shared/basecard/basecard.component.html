@@ -19,11 +19,15 @@
       <ng-content fxFlex="100%"></ng-content>
     </div>
   </div>
-  <div [@fade] *ngIf="cardState === cardStates.LOADING || cardState === cardStates.FAILED" class="basecard-foreground">
+  <div [@fade] *ngIf="cardState === cardStates.LOADING || cardState === cardStates.FAILED || cardState === cardStates.NO_DATA" class="basecard-foreground">
       <!-- Failed state -->
       <div *ngIf="cardState === cardStates.FAILED" fxFlex fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="20px">
         <mat-icon fxFlex="nogrow" class="basecard-failed-icon">error_outline</mat-icon>
         <div fxFlex="nogrow" class="basecard-failed-text">Failed to get metric data</div>
+      </div>
+      <div *ngIf="cardState === cardStates.NO_DATA" fxFlex fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="20px">
+        <mat-icon fxFlex="nogrow" class="basecard-failed-icon">error_outline</mat-icon>
+        <div fxFlex="nogrow" class="basecard-failed-text">No data available</div>
       </div>
     <app-spinner *ngIf="cardState === cardStates.LOADING"></app-spinner>
   </div>
