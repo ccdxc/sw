@@ -53,9 +53,6 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 #endif
 
         if (comp->status) {
-                ionic_err("ionic_rx_clean() rx cq is bad, index: %d, status: %d, len: %d, addr: %lx",
-                          comp->comp_index, comp->status, comp->len, (dma_addr_t)desc->addr);
-                // TODO record errors
                 ionic_rx_recycle(q, desc_info, pkt);
                 return;
         }
