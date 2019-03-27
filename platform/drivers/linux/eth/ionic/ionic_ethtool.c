@@ -102,36 +102,6 @@ static void ionic_get_drvinfo(struct net_device *netdev,
 		sizeof(drvinfo->bus_info));
 }
 
-static bool ionic_is_mnic(struct ionic *ionic)
-{
-	return ionic->pfdev || ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
-}
-
-static bool ionic_is_pf(struct ionic *ionic)
-{
-	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF;
-}
-
-#if 0  /* save these for later */
-static bool ionic_is_vf(struct ionic *ionic)
-{
-	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF;
-}
-
-static bool ionic_is_25g(struct ionic *ionic)
-{
-	return ionic_is_pf(ionic) &&
-	       ionic->pdev->subsystem_device == IONIC_SUBDEV_ID_NAPLES_25;
-}
-
-static bool ionic_is_100g(struct ionic *ionic)
-{
-	return ionic_is_pf(ionic) &&
-	       (ionic->pdev->subsystem_device == IONIC_SUBDEV_ID_NAPLES_100_4 ||
-		ionic->pdev->subsystem_device == IONIC_SUBDEV_ID_NAPLES_100_8);
-}
-#endif
-
 static int ionic_get_link_ksettings(struct net_device *netdev,
 				    struct ethtool_link_ksettings *ks)
 {

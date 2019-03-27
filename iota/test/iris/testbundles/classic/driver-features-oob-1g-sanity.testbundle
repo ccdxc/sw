@@ -41,7 +41,7 @@ testcases:
         ignore: False
         iterators :
             type               : nested
-            mtu                : [ '8192']
+            mtu                : [ '1500']
             tso_offload        : [ 'off', 'on']
             #Sg seems to be on for TSO testing.
             sg_offload         : [ 'on']

@@ -7,9 +7,9 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/etherdevice.h>
+#include "ionic.h"
 #include "ionic_dev.h"
 #include "ionic_lif.h"
-#include "ionic.h"
 
 /* BAR0 resources
  */

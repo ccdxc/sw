@@ -780,6 +780,12 @@ static int ionic_set_mac_address(struct net_device *netdev, void *sa)
 	return ionic_addr_add(netdev, mac);
 }
 
+static int ionic_mnic_change_mtu(struct net_device *netdev, int new_mtu)
+{
+	netdev_err(netdev, "MTU change not allowed on mnic device\n");
+	return -EOPNOTSUPP;
+}
+
 static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 {
 	struct lif *lif = netdev_priv(netdev);
@@ -1105,6 +1111,34 @@ static const struct net_device_ops ionic_netdev_ops = {
 #else
 	.ndo_dfwd_add_station	= ionic_dfwd_add_station,
 	.ndo_dfwd_del_station	= ionic_dfwd_del_station,
+#endif
+
+#ifdef HAVE_RHEL7_NET_DEVICE_OPS_EXT
+/* RHEL7 requires this to be defined to enable extended ops.  RHEL7 uses the
+ * function get_ndo_ext to retrieve offsets for extended fields from with the
+ * net_device_ops struct and ndo_size is checked to determine whether or not
+ * the offset is valid.
+ */
+	.ndo_size		= sizeof(const struct net_device_ops),
+#endif
+};
+
+static const struct net_device_ops ionic_mnic_netdev_ops = {
+	.ndo_open               = ionic_open,
+	.ndo_stop               = ionic_stop,
+	.ndo_start_xmit		= ionic_start_xmit,
+	.ndo_get_stats64	= ionic_get_stats64,
+	.ndo_set_rx_mode	= ionic_set_rx_mode,
+	.ndo_set_features	= ionic_set_features,
+	.ndo_set_mac_address	= ionic_set_mac_address,
+	.ndo_validate_addr	= eth_validate_addr,
+	.ndo_tx_timeout         = ionic_tx_timeout,
+	.ndo_vlan_rx_add_vid    = ionic_vlan_rx_add_vid,
+	.ndo_vlan_rx_kill_vid   = ionic_vlan_rx_kill_vid,
+#ifdef HAVE_RHEL7_EXTENDED_MIN_MAX_MTU
+	.extended.ndo_change_mtu = ionic_mnic_change_mtu,
+#else
+	.ndo_change_mtu         = ionic_mnic_change_mtu,
 #endif
 
 #ifdef HAVE_RHEL7_NET_DEVICE_OPS_EXT
@@ -1531,7 +1565,11 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		lif->netdev = netdev;
 		ionic->master_lif = lif;
 
-		netdev->netdev_ops = &ionic_netdev_ops;
+		if (ionic_is_mnic(ionic))
+			netdev->netdev_ops = &ionic_mnic_netdev_ops;
+		else
+			netdev->netdev_ops = &ionic_netdev_ops;
+
 		ionic_ethtool_set_ops(netdev);
 		netdev->watchdog_timeo = 2 * HZ;
 
