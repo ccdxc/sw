@@ -37,12 +37,21 @@ class RdmaBufferObject(base.FactoryObjectBase):
             rq_buffer = RdmaQueryRqBuffer(state=spec.fields.state, pmtu=spec.fields.pmtu, retry_cnt=spec.fields.retry_cnt,
                         rnr_retry=spec.fields.rnr_retry, rrq_depth=spec.fields.rrq_depth, rsq_depth=spec.fields.rsq_depth,
                         sq_psn=spec.fields.sq_psn, ah_id_len=spec.fields.ah_id_len)
-            buffer = sq_buffer/rq_buffer
+            hdr_buffer = spec.fields.hdr_data
+            buffer = sq_buffer/rq_buffer/hdr_buffer
             self.data = bytes(buffer)
             self.size = len(buffer)
             logger.info("Creating Rdma Query Buffer size: %d " % (self.size))
             logger.ShowScapyObject(sq_buffer)
             logger.ShowScapyObject(rq_buffer)
+            logger.ShowScapyObject(hdr_buffer)
+
+        elif self.buffer_type == 2:
+            hdr_buffer = spec.fields.hdr_data
+            self.data = bytes(hdr_buffer)
+            self.size = len(hdr_buffer)
+            logger.info("Creating Rdma Query AH Buffer size: %d " % (self.size))
+            logger.ShowScapyObject(hdr_buffer)
 
         else:
             if hasattr(spec.fields, 'segments'):

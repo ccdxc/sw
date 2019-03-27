@@ -328,11 +328,18 @@ class RdmaAqDescriptorModQP(Packet):
 
 class RdmaAqDescriptorQueryQP(Packet):
   fields_desc = [
-    LELongField("hdr_dma_addr", 0),
-    BitField("rsvd", 0, 256),
-    LELongField("sq_dma_addr", 0),
-    LELongField("rq_dma_addr", 0),
+        LELongField("hdr_dma_addr", 0),
+        LEIntField("ah_id", 0),
+        BitField("rsvd", 0, 224),
+        LELongField("sq_dma_addr", 0),
+        LELongField("rq_dma_addr", 0),
   ]
+
+class RdmaAqDescriptorQueryAH(Packet):
+	fields_desc = [
+		LELongField("dma_addr", 0),
+		BitField("rsvd", 0, 384),
+	]
 
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
@@ -998,10 +1005,20 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
            logger.info("Reading Admin Query QP")
            sq_dma_addr = self.spec.fields.query_qp.sq_dma_addr if hasattr(self.spec.fields.query_qp, 'sq_dma_addr') else 0
            rq_dma_addr = self.spec.fields.query_qp.rq_dma_addr if hasattr(self.spec.fields.query_qp, 'rq_dma_addr') else 0
-           queryQp = RdmaAqDescriptorQueryQP(hdr_dma_addr=0, rsvd=0, sq_dma_addr=sq_dma_addr, rq_dma_addr=rq_dma_addr)
+           hdr_dma_addr = self.spec.fields.query_qp.hdr_dma_addr if hasattr(self.spec.fields.query_qp, 'hdr_dma_addr') else 0
+           ah_id = self.spec.fields.query_qp.ah_id if hasattr(self.spec.fields.query_qp, 'ah_id') else 0
+           queryQp = RdmaAqDescriptorQueryQP(hdr_dma_addr=hdr_dma_addr, ah_id=ah_id, rsvd=0, sq_dma_addr=sq_dma_addr, rq_dma_addr=rq_dma_addr)
            desc = self.desc/queryQp
            self.__set_desc(desc)
            logger.ShowScapyObject(queryQp)
+
+        if self.spec != None and hasattr(self.spec.fields, 'query_ah'):
+            logger.info("Reading Admin Query AH")
+            dma_addr = self.spec.fields.query_ah.dma_addr if hasattr(self.spec.fields.query_ah, 'dma_addr') else 0
+            queryAh = RdmaAqDescriptorQueryAH(dma_addr=dma_addr, rsvd=0)
+            desc = self.desc/queryAh
+            self.__set_desc(desc)
+            logger.ShowScapyObject(queryAh)
 
         if self.spec != None and hasattr(self.spec.fields, 'modify_qp'):
             logger.info("Reading Admin Modify QP")
@@ -1057,9 +1074,16 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
         if self.desc.op == 10: # AQ_OP_TYPE_QUERY_QP
             mem_handle.va += len(RdmaAqDescriptorBase())
             self.queryQP = RdmaAqDescriptorQueryQP(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaAqDescriptorQueryQP())))
+            self.hdr_dma_addr = self.queryQP.hdr_dma_addr
             self.sq_dma_addr = self.queryQP.sq_dma_addr
             self.rq_dma_addr = self.queryQP.rq_dma_addr
             logger.ShowScapyObject(self.queryQP)
+
+        elif self.desc.op == 14: # AQ_OP_TYPE_QUERY_AH
+            mem_handle.va += len(RdmaAqDescriptorBase())
+            self.queryAH = RdmaAqDescriptorQueryAH(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaAqDescriptorQueryAH())))
+            self.dma_addr = self.queryAH.dma_addr
+            logger.ShowScapyObject(self.queryAH)
 
     def Show(self):
         logger.ShowScapyObject(self.desc)
@@ -1111,21 +1135,51 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             total_size = 0
             sq_data_len = len(rdmabuffer.RdmaQuerySqBuffer())
             rq_data_len = len(rdmabuffer.RdmaQueryRqBuffer())
-            logger.info("Reading query_qp content. len: %d sq_dma_addr: 0x%x rq_dma_addr: 0x%x" %(len(self.queryQP), self.sq_dma_addr, self.rq_dma_addr))
+            page_size = 4096     # hostmem_pg_size
+            logger.info("Reading query_qp content. len: %d hdr_dma_addr: 0x%x sq_dma_addr: 0x%x rq_dma_addr: 0x%x" %(len(self.queryQP), self.hdr_dma_addr, self.sq_dma_addr, self.rq_dma_addr))
 
             mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.sq_dma_addr), self.sq_dma_addr)
             sq_data = resmgr.HostMemoryAllocator.read(mem_handle, sq_data_len)
             total_data.extend(sq_data)
             total_size += sq_data_len
-            
+            logger.info("SQ data: %s" % sq_data)
+
             mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.rq_dma_addr), self.rq_dma_addr)
             rq_data = resmgr.HostMemoryAllocator.read(mem_handle, rq_data_len)
             total_data.extend(rq_data)
             total_size += rq_data_len
-            
+            logger.info("RQ data: %s" % rq_data)
+
+            mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.hdr_dma_addr), self.hdr_dma_addr)
+            hdr_data = resmgr.HostMemoryAllocator.read(mem_handle, page_size)
+            pkt = Ether(hdr_data)
+            total_data.extend(bytes(pkt))
+            total_size += len(pkt)
+            logger.info("HDR data: ")
+            logger.ShowScapyObject(pkt)
+
             rdmabuff.data = bytes(total_data)
             rdmabuff.size = total_size
-            logger.info("Total data: %s" % bytes(total_data))
+
+            return rdmabuff
+
+        elif self.desc.op == 14: # AQ_OP_TYPE_QUERY_AH
+            rdmabuff = rdmabuffer.RdmaBufferObject()
+            total_data = bytearray()
+            total_size = 0
+            page_size = 4096    # hostmem_pg_size
+            logger.info("Reading query_ah content. len: %d dma_addr: 0x%x" %(len(self.queryAH), self.dma_addr))
+
+            mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(self.dma_addr), self.dma_addr)
+            hdr_data = resmgr.HostMemoryAllocator.read(mem_handle, page_size)
+            pkt = Ether(hdr_data)
+            total_data.extend(bytes(pkt))
+            total_size += len(pkt)
+            logger.info("HDR data: ")
+            logger.ShowScapyObject(pkt)
+
+            rdmabuff.data = bytes(total_data)
+            rdmabuff.size = total_size
 
             return rdmabuff
 

@@ -94,7 +94,7 @@ rdma_aq_tx_wqe_process:
         b           create_ah
         nop
     .brcase     AQ_OP_TYPE_QUERY_AH
-        b           report_bad_cmd
+        b           query_ah
         nop
     .brcase     15
         b           exit
@@ -704,9 +704,32 @@ query_qp:
 
     // rqcb2 address
     add         r2, r2, (CB_UNIT_SIZE_BYTES * 2)
+    add         r3, r0, d.{query.hdr_dma_addr}.dx
+    beq         r3, r0, prepare_feedback
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_INFO_P, cb_addr), r2   // BD Slot
 
-    b prepare_feedback
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_INFO_P, cb_addr), r2       // BD Slot
+    b           query_common
+    mul         r2, d.{query.ah_id}.wx, AT_ENTRY_SIZE_BYTES   // BD Slot
+
+query_ah:
+    phvwr       p.rdma_feedback.aq_completion.op, AQ_OP_TYPE_QUERY_AH
+    mul         r2, d.{id_ver}.wx, AT_ENTRY_SIZE_BYTES
+    add         r3, r0, d.{query_ah.dma_addr}.dx
+
+query_common:
+    // r2 = AH table offset, previous instruction might have a latency
+    // r3 = Host DMA Address
+    add         r4, r0, K_AH_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT
+    add         r2, r2, r4
+
+    //Setup DMA to copy AH header from HBM to host
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_QUERY_HDR_SRC)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, HDR_TEMPLATE_T_SIZE_BYTES, r2)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_QUERY_HDR_DST)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, HDR_TEMPLATE_T_SIZE_BYTES, r3)
+
+    b           prepare_feedback
+    nop
 
 modify_qp:
 

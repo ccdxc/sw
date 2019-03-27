@@ -4542,6 +4542,7 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 	wr.wqe.query_qp.sq_dma_addr = cpu_to_le64(query_sqdma);
 	wr.wqe.query_qp.rq_dma_addr = cpu_to_le64(query_rqdma);
 	wr.wqe.query_qp.hdr_dma_addr = cpu_to_le64(hdr_dma);
+	wr.wqe.query_qp.ah_id = cpu_to_le32(qp->ahid);
 
 	ionic_admin_post(dev, &wr);
 	ionic_admin_wait(dev, &wr);

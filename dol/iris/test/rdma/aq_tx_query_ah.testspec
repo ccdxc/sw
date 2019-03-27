@@ -7,26 +7,6 @@ selectors:
 
 buffers:
     - buffer:
-        id      : AQ_SQ_BUF
-        template: ref://factory/templates/id=RDMA_BUFFER
-        fields:
-            slab    : callback://rdma/rdma/GetNewSlab
-            offset  : 0
-            segments:
-                - size    : 20 # QUERY_QP_SQ
-                  data    : None
-
-    - buffer:
-        id      : AQ_RQ_BUF
-        template: ref://factory/templates/id=RDMA_BUFFER
-        fields:
-            slab    : callback://rdma/rdma/GetNewSlab
-            offset  : 0
-            segments:
-                - size    : 12
-                  data    : None
-
-    - buffer:
         id      : AQ_HDR_BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
@@ -39,20 +19,8 @@ buffers:
     - buffer:
         id      : EXP_AQ_BUF
         template: ref://factory/templates/id=RDMA_QUERY_BUFFER
-        buffer_type: 1 # QUERY_SQ_BUF
+        buffer_type: 2 # QUERY_AH_BUF
         fields:
-            rnr_timer       : ref://testcase/pvtdata/rq_pre_qstate/rnr_timeout
-            retry_timeout   : ref://testcase/pvtdata/sq_pre_qstate/local_ack_timeout
-            qkey_dest_qpn   : ref://testcase/pvtdata/sq_pre_qstate/dst_qp
-            rq_psn          : ref://testcase/pvtdata/rq_psn
-            state           : ref://testcase/pvtdata/sq_pre_qstate/sqcb1_state
-            pmtu            : ref://testcase/pvtdata/sq_pre_qstate/sqcb1_log_pmtu
-            retry_cnt       : ref://testcase/pvtdata/sq_pre_qstate/err_retry_count
-            rnr_retry       : ref://testcase/pvtdata/sq_pre_qstate/rnr_retry_count
-            rrq_depth       : ref://testcase/pvtdata/sq_pre_qstate/sqcb1_log_rrq_size
-            rsq_depth       : ref://testcase/pvtdata/rq_pre_qstate/log_rsq_size
-            sq_psn          : ref://testcase/pvtdata/sq_pre_qstate/sqcb1_tx_psn
-            ah_id_len       : 0
             hdr_data        : ref://testcase/config/rdmasession/lqp/HdrTemplate
 
 descriptors:
@@ -60,24 +28,21 @@ descriptors:
         id      : DESC
         template: ref://factory/templates/id=DESC_RDMA_AQ
         fields:
-            op          : 10  # AQ_OP_TYPE_QUERY_QP
+            op          : 14  # AQ_OP_TYPE_QUERY_AH
             type_state  : 0
             dbid_flags  : 0
-            id_ver      : ref://testcase/config/rdmasession/lqp/id
-            query_qp    :
-                  hdr_dma_addr  : ref://testcase/buffers/id=AQ_HDR_BUF/phy_address
-                  ah_id         : ref://testcase/config/rdmasession/lqp/ah_handle
-                  sq_dma_addr   : ref://testcase/buffers/id=AQ_SQ_BUF/phy_address
-                  rq_dma_addr   : ref://testcase/buffers/id=AQ_RQ_BUF/phy_address
+            id_ver      : ref://testcase/config/rdmasession/lqp/ah_handle
+            query_ah    :
+                  dma_addr  : ref://testcase/buffers/id=AQ_HDR_BUF/phy_address
 
     - descriptor:
         id      : EXP_AQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_AQ
         fields:
-            op          : 10  # AQ_OP_TYPE_QUERY_QP
+            op          : 14  # AQ_OP_TYPE_QUERY_AH
             type_state  : 0
             dbid_flags  : 0
-            id_ver      : ref://testcase/config/rdmasession/lqp/id
+            id_ver      : ref://testcase/config/rdmasession/lqp/ah_handle
             buff        : ref://testcase/buffers/id=EXP_AQ_BUF
 
     - descriptor:
@@ -85,7 +50,7 @@ descriptors:
         template: ref://factory/templates/id=DESC_RDMA_CQ_ADMIN
         fields:
             wqe_id : ref://testcase/pvtdata/aq_pre_qstate/c_index0
-            op     : 10  # AQ_OP_TYPE_QUERY_QP
+            op     : 14  # AQ_OP_TYPE_QUERY_AH
             qid: ref://testcase/pvtdata/aq/id
             status : 0  # CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetAdminCQExpColor/cq_wqe_num=0

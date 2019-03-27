@@ -730,7 +730,8 @@ struct ionic_v1_admin_wqe {
 		} mod_qp;
 		struct {
 			__le64		hdr_dma_addr;
-			__u8		rsvd[32];
+			__le32		ah_id;
+			__u8		rsvd[28];
 			__le64		sq_dma_addr;
 			__le64		rq_dma_addr;
 		} query_qp;

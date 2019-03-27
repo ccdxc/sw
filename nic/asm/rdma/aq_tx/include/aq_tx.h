@@ -33,8 +33,10 @@
 #define AQ_TX_DMA_CMD_CREATE_QP_SQPT_DST  (AQ_TX_MAX_DMA_CMDS -4)
 #define AQ_TX_DMA_CMD_CREATE_QP_SQPT_SRC  (AQ_TX_MAX_DMA_CMDS -5)
 
-/* DMA Cmds for Query QP */
+/* DMA Cmds for Query QP, AH */
 #define AQ_TX_DMA_CMD_QUERY_QP_SQ       (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_QUERY_HDR_DST		(AQ_TX_MAX_DMA_CMDS - 4)
+#define AQ_TX_DMA_CMD_QUERY_HDR_SRC		(AQ_TX_MAX_DMA_CMDS - 5)
 
 /* DMA Cmds for Modify QP */
 // Modify QP to ERR

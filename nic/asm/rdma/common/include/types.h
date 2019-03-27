@@ -1676,8 +1676,13 @@ struct aqwqe_t {
             rsvd:320;
         } ah;
         struct {
+            dma_addr: 64;
+            rsvd: 384;
+        } query_ah;
+        struct {
             hdr_dma_addr: 64;
-            rsvd: 256;
+            ah_id: 32;
+            rsvd: 224;
             sq_dma_addr: 64;
             rq_dma_addr: 64;
         } query;

@@ -35,6 +35,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_AQ_TX_QUERY_AH
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_query_ah
+        spec    : aq_tx_query_ah.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_AQ_TX_MODIFY_QP_SQD_ASYNC
         enable  : True
         package : test.rdma
