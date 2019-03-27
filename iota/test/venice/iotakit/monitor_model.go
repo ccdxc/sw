@@ -32,7 +32,7 @@ func (sm *SysModel) Events() *EventsCollection {
 // LinkUpEventsSince returns all the link up events since the given time
 func (sm *SysModel) LinkUpEventsSince(since time.Time) *EventsCollection {
 	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v",
-		halproto.PortOperStatus_PORT_OPER_STATUS_UP, since.Format(time.RFC3339Nano))
+		halproto.PortOperState_PORT_OPER_STATUS_UP, since.Format(time.RFC3339Nano))
 	eventsList, err := sm.tb.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
 	if err != nil {
 		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
@@ -45,7 +45,7 @@ func (sm *SysModel) LinkUpEventsSince(since time.Time) *EventsCollection {
 // LinkDownEventsSince returns all the link down events since the given time
 func (sm *SysModel) LinkDownEventsSince(since time.Time) *EventsCollection {
 	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v",
-		halproto.PortOperStatus_PORT_OPER_STATUS_DOWN, since.Format(time.RFC3339Nano))
+		halproto.PortOperState_PORT_OPER_STATUS_DOWN, since.Format(time.RFC3339Nano))
 	eventsList, err := sm.tb.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
 	if err != nil {
 		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
