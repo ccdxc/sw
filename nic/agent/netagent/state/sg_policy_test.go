@@ -30,6 +30,9 @@ func TestSGPolicyCreateDelete(t *testing.T) {
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
 						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 						AppConfigs: []*netproto.AppConfig{
 							{
 								Port:     "80",
@@ -43,10 +46,19 @@ func TestSGPolicyCreateDelete(t *testing.T) {
 								Port:     "53",
 								Protocol: "udp",
 							},
+							{
+								Port:     "0-40",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "60000-65535",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "0-65535",
+								Protocol: "tcp",
+							},
 						},
-					},
-					Dst: &netproto.MatchSelector{
-						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 				},
 			},

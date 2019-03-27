@@ -505,12 +505,12 @@ func (hd *Datapath) convertPort(port string) (*halproto.L4PortRange, error) {
 	// port range
 	case 2:
 		startPort, err := strconv.Atoi(portSlice[0])
-		if err != nil || startPort <= 0 || startPort > 65535 {
+		if err != nil || startPort < 0 || startPort > 65535 {
 			log.Errorf("invalid port format. %v", port)
 			return nil, fmt.Errorf("invalid port format. %v", port)
 		}
 		endPort, err := strconv.Atoi(portSlice[1])
-		if err != nil || endPort <= 0 || endPort > 65535 {
+		if err != nil || endPort < 0 || endPort > 65535 {
 			log.Errorf("invalid port format. %v", port)
 			return nil, fmt.Errorf("invalid port format. %v", port)
 		}
