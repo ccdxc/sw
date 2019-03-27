@@ -2,6 +2,11 @@
   "auth.RoleBindingSpec": [
     {
       "Type": "NamedRef",
+      "To": "auth/User",
+      "Field": "Users"
+    },
+    {
+      "Type": "NamedRef",
       "To": "auth/Role",
       "Field": "Role"
     }

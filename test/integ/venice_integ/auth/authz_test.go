@@ -61,7 +61,7 @@ func TestAuthorization(t *testing.T) {
 	MustCreateTestUser(tinfo.apicl, testUser, testPassword, testTenant2)
 	defer MustDeleteUser(tinfo.apicl, testUser, testTenant2)
 	MustUpdateRoleBinding(tinfo.apicl, globals.AdminRoleBinding, testTenant2, globals.AdminRole, []string{testUser}, nil)
-
+	defer MustUpdateRoleBinding(tinfo.apicl, globals.AdminRoleBinding, testTenant2, globals.AdminRole, nil, nil)
 	ctx, err = NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: testUser, Password: testPassword, Tenant: testTenant2})
 	AssertOk(t, err, "error creating logged in context for testtenant2 admin user")
 	// tenant boundaries should be respected; retrieving testtenant AdminRole should fail
@@ -303,6 +303,7 @@ func TestBootstrapFlag(t *testing.T) {
 	MustCreateTestUser(tinfo.restcl, testUser, testPassword, globals.DefaultTenant)
 	defer MustDeleteUser(tinfo.apicl, testUser, globals.DefaultTenant)
 	MustUpdateRoleBinding(tinfo.restcl, globals.AdminRoleBinding, globals.DefaultTenant, globals.AdminRole, []string{testUser}, nil)
+	defer MustUpdateRoleBinding(tinfo.apicl, globals.AdminRoleBinding, globals.DefaultTenant, globals.AdminRole, nil, nil)
 	// set bootstrap flag
 	AssertEventually(t, func() (bool, interface{}) {
 		var err error
@@ -487,7 +488,8 @@ func TestUserDelete(t *testing.T) {
 	Assert(t, strings.Contains(err.Error(), "self-deletion of user is not allowed"), fmt.Sprintf("unexpected error: %v", err))
 	// should be able to delete another admin user
 	MustCreateTestUser(tinfo.apicl, "admin", testPassword, testTenant)
-	MustUpdateRoleBinding(tinfo.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{"admin"}, nil)
+	MustCreateRoleBinding(tinfo.apicl, "AdminRoleBinding2", testTenant, globals.AdminRole, []string{"admin"}, nil)
+	MustDeleteRoleBinding(tinfo.apicl, "AdminRoleBinding2", testTenant)
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := tinfo.restcl.AuthV1().User().Delete(adminCtx, &api.ObjectMeta{Name: "admin", Tenant: testTenant})
 		return err == nil, err

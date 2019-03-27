@@ -418,8 +418,8 @@ func UpdateRoleBinding(ctx context.Context, apicl apiclient.Services, name, tena
 	if roleName != "" {
 		roleBinding.Spec.Role = roleName
 	}
-	roleBinding.Spec.Users = append(roleBinding.Spec.Users, users...)
-	roleBinding.Spec.UserGroups = append(roleBinding.Spec.Users, groups...)
+	roleBinding.Spec.Users = users
+	roleBinding.Spec.UserGroups = groups
 	var updatedRoleBinding *auth.RoleBinding
 	if !testutils.CheckEventually(func() (bool, interface{}) {
 		updatedRoleBinding, err = apicl.AuthV1().RoleBinding().Update(ctx, roleBinding)

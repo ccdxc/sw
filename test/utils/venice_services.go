@@ -90,14 +90,14 @@ func SetupAuth(apiServerAddr string, enableLocalAuth bool, ldapConf *auth.Ldap, 
 	authntestutils.MustCreateCluster(apiClient)
 	// create tenant
 	authntestutils.MustCreateTenant(apiClient, creds.GetTenant())
+	// create authentication policy
+	authntestutils.MustCreateAuthenticationPolicy(apiClient, &auth.Local{Enabled: enableLocalAuth}, ldapConf, radiusConf)
 	// create local user
 	if enableLocalAuth && creds != nil {
 		authntestutils.MustCreateTestUser(apiClient, creds.GetUsername(), creds.GetPassword(), creds.GetTenant())
 	}
 	// update admin role binding
 	authntestutils.MustUpdateRoleBinding(apiClient, globals.AdminRoleBinding, creds.GetTenant(), globals.AdminRole, []string{creds.GetUsername()}, nil)
-	// create authentication policy
-	authntestutils.MustCreateAuthenticationPolicy(apiClient, &auth.Local{Enabled: enableLocalAuth}, ldapConf, radiusConf)
 	// set auth bootstrap flag to true
 	authntestutils.MustSetAuthBootstrapFlag(apiClient)
 	return nil
@@ -111,17 +111,18 @@ func CleanupAuth(apiServerAddr string, enableLocalAuth, enableLdapAuth bool, cre
 		return fmt.Errorf("failed to create gRPC client, err: %v", err)
 	}
 	defer apiClient.Close()
-
+	// update admin role binding
+	authntestutils.MustUpdateRoleBinding(apiClient, globals.AdminRoleBinding, creds.GetTenant(), globals.AdminRole, nil, nil)
 	// delete local user
 	if enableLocalAuth && creds != nil {
 		authntestutils.MustDeleteUser(apiClient, creds.GetUsername(), creds.GetTenant())
 	}
 	// delete authentication policy
 	authntestutils.MustDeleteAuthenticationPolicy(apiClient)
-	// delete cluster
-	authntestutils.MustDeleteCluster(apiClient)
 	// delete tenant
 	authntestutils.MustDeleteTenant(apiClient, creds.GetTenant())
+	// delete cluster
+	authntestutils.MustDeleteCluster(apiClient)
 	return nil
 }
 

@@ -77,7 +77,7 @@ message Authenticators {
     }
 
     // Order in which authenticators are applied. If an authenticator returns success, others are skipped
-    repeated string AuthenticatorOrder = 1 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticator-order,omitempty"];
+    repeated string AuthenticatorOrder = 1 [(venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticator-order,omitempty"];
     Ldap Ldap                          = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ldap,omitempty"];
     Local Local                        = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "local,omitempty"];
     Radius Radius                      = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "radius,omitempty"];
@@ -263,10 +263,10 @@ message Permission {
 
     // ResourceNames identify specific objects on which this permission applies. If resource name is not specified in permission then
     // it implies all resources of the specified kind
-    repeated string ResourceNames = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "resource-names,omitempty"];
+    repeated string ResourceNames = 5 [(gogoproto.jsontag) = "resource-names,omitempty"];
 
     // Actions are actions on a resource that a permission allows
-    repeated string Actions       = 6 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(Permission.ActionType)", (gogoproto.jsontag) = "actions,omitempty"];
+    repeated string Actions       = 6 [(venice.check) = "StrEnum(Permission.ActionType)", (gogoproto.jsontag) = "actions,omitempty"];
 }
 
 // spec part of role object
@@ -296,8 +296,8 @@ message Role {
 
 // spec part of role binding object
 message RoleBindingSpec {
-    repeated string Users      = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "users,omitempty"];
-    repeated string UserGroups = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-groups,omitempty"];
+    repeated string Users      = 1 [(gogoproto.jsontag) = "users,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "auth/User"}];
+    repeated string UserGroups = 2 [(gogoproto.jsontag) = "user-groups,omitempty"];
     string Role                = 3 [(gogoproto.jsontag) = "role,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "auth/Role"}];
 }
 

@@ -115,7 +115,7 @@ func TestWatcher(t *testing.T) {
 			Name:   "testRoleBinding",
 		},
 		Spec: auth.RoleBindingSpec{
-			Users:      []string{"testUser"},
+			Users:      []string{},
 			UserGroups: []string{"testGroup"},
 			Role:       "testRole",
 		},

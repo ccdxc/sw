@@ -1440,6 +1440,28 @@ func (m *RoleBindingSpec) References(tenant string, path string, resp map[string
 			resp[tag] = uref
 		}
 	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "users"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		for _, v := range m.Users {
+
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/auth/"+"users/"+tenant+"/"+v)
+
+		}
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *RoleBindingSpec) Validate(ver, path string, ignoreStatus bool) []error {

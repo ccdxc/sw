@@ -107,7 +107,7 @@ var typesMapAuth = map[string]*api.Struct{
 	"auth.Authenticators": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Authenticators{}) },
 		Fields: map[string]api.Field{
-			"AuthenticatorOrder": api.Field{Name: "AuthenticatorOrder", CLITag: api.CLIInfo{ID: "authenticator-order", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "authenticator-order", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"AuthenticatorOrder": api.Field{Name: "AuthenticatorOrder", CLITag: api.CLIInfo{ID: "authenticator-order", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "authenticator-order", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Ldap": api.Field{Name: "Ldap", CLITag: api.CLIInfo{ID: "ldap", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ldap", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.Ldap"},
 
@@ -263,9 +263,9 @@ var typesMapAuth = map[string]*api.Struct{
 
 			"ResourceNamespace": api.Field{Name: "ResourceNamespace", CLITag: api.CLIInfo{ID: "resource-namespace", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-namespace", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ResourceNames": api.Field{Name: "ResourceNames", CLITag: api.CLIInfo{ID: "resource-names", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-names", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"ResourceNames": api.Field{Name: "ResourceNames", CLITag: api.CLIInfo{ID: "resource-names", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-names", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Actions": api.Field{Name: "Actions", CLITag: api.CLIInfo{ID: "actions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "actions", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Actions": api.Field{Name: "Actions", CLITag: api.CLIInfo{ID: "actions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "actions", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.Radius": &api.Struct{
@@ -410,9 +410,9 @@ var typesMapAuth = map[string]*api.Struct{
 	"auth.RoleBindingSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBindingSpec{}) },
 		Fields: map[string]api.Field{
-			"Users": api.Field{Name: "Users", CLITag: api.CLIInfo{ID: "users", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "users", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Users": api.Field{Name: "Users", CLITag: api.CLIInfo{ID: "users", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "users", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"UserGroups": api.Field{Name: "UserGroups", CLITag: api.CLIInfo{ID: "user-groups", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user-groups", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"UserGroups": api.Field{Name: "UserGroups", CLITag: api.CLIInfo{ID: "user-groups", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user-groups", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Role": api.Field{Name: "Role", CLITag: api.CLIInfo{ID: "role", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "role", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},

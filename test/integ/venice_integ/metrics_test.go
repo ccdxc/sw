@@ -130,6 +130,7 @@ func (it *veniceIntegSuite) TestMetricsAuthz(c *C) {
 	MustCreateTestUser(it.apisrvClient, testUser, utils.TestLocalPassword, testTenant)
 	defer MustDeleteUser(it.apisrvClient, testUser, testTenant)
 	MustUpdateRoleBinding(it.apisrvClient, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testUser}, nil)
+	defer MustUpdateRoleBinding(it.apisrvClient, globals.AdminRoleBinding, testTenant, globals.AdminRole, nil, nil)
 	ctx, err := it.loggedInCtxWithCred(testTenant, testUser, utils.TestLocalPassword)
 	AssertOk(c, err, "error in logging in testtenant")
 	nodeQuery := &telemetry_query.MetricsQueryList{

@@ -3194,12 +3194,12 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 	MustCreateTestUser(tInfo.apiClient, testutils.TestLocalUser, testutils.TestLocalPassword, "audi")
 	defer MustDeleteUser(tInfo.apiClient, testutils.TestLocalUser, "audi")
 	MustUpdateRoleBinding(tInfo.apiClient, globals.AdminRoleBinding, "audi", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
+	defer MustUpdateRoleBinding(tInfo.apiClient, globals.AdminRoleBinding, "audi", globals.AdminRole, nil, nil)
 	// create tesla admin
 	MustCreateTestUser(tInfo.apiClient, testutils.TestLocalUser, testutils.TestLocalPassword, "tesla")
 	defer MustDeleteUser(tInfo.apiClient, testutils.TestLocalUser, "tesla")
-	//MustCreateRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
 	MustUpdateRoleBinding(tInfo.apiClient, globals.AdminRoleBinding, "tesla", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
-	//defer MustDeleteRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla")
+	defer MustUpdateRoleBinding(tInfo.apiClient, globals.AdminRoleBinding, "tesla", globals.AdminRole, nil, nil)
 	// create user with no role in tesla tenant
 	MustCreateTestUser(tInfo.apiClient, "noRoleUser", testutils.TestLocalPassword, "tesla")
 	defer MustDeleteUser(tInfo.apiClient, "noRoleUser", "tesla")
