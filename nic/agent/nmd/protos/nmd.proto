@@ -122,6 +122,9 @@ message NaplesStatus {
 
     // Naples generated SmartNIC name which should be used as UUID for Naples
     string SmartNicName           = 8 [(gogoproto.jsontag) = "smartnic-name,omitempty"];
+
+    // TimeZone
+    string TimeZone                 = 9 [(gogoproto.jsontag) = "timezone,omitempty", (venice.default)="UTC"];
 }
 
 // NaplesCmdExecute contains information on what command to execute

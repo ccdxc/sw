@@ -323,3 +323,19 @@ func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile de
 
 	return
 }
+
+// SetTimeZone sets the timezone of Naples
+func (n *NMD) SetTimeZone(timeZone string) {
+	n.Lock()
+	defer n.Unlock()
+
+	n.config.Status.TimeZone = timeZone
+}
+
+// GetTimeZone gets the timezone of Naples
+func (n *NMD) GetTimeZone() string {
+	n.Lock()
+	defer n.Unlock()
+
+	return n.config.Status.TimeZone
+}

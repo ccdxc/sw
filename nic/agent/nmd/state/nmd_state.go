@@ -125,7 +125,8 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 			},
 		},
 		Status: nmd.NaplesStatus{
-			Fru: ReadFruFromJSON(),
+			Fru:      ReadFruFromJSON(),
+			TimeZone: "UTC",
 		},
 	}
 	// List available NaplesProfiles
@@ -171,6 +172,11 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		stopNICUpd:         make(chan bool, 1),
 		config:             config,
 		completedOps:       make(map[roprotos.SmartNICOpSpec]bool),
+	}
+
+	err = nm.updateLocatTimeZone()
+	if err != nil {
+		log.Errorf("Could not set timezone to %v. Err : %v", config.Status.TimeZone, err)
 	}
 
 	// check if naples NaplesProfiles exist in emdb
@@ -519,7 +525,7 @@ func (n *NMD) StartRestServer() error {
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
 	t2.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileGetHandler))
 	t2.HandleFunc(NaplesInfoURL, httputils.MakeHTTPHandler(n.NaplesInfoGetHandler))
-	t2.HandleFunc(CmdEXECUrl, NaplesCmdExecHandler)
+	t2.HandleFunc(CmdEXECUrl, n.NaplesCmdExecHandler)
 	t2.HandleFunc("/api/{*}", unknownAction)
 	t2.HandleFunc("/debug/pprof/", pprof.Index)
 	t2.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -770,7 +776,7 @@ func naplesHostDisruptiveUpgrade(pkgName string) (string, error) {
 }
 
 //NaplesCmdExecHandler is the REST handler to execute any binary on naples and return the output
-func NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
+func (n *NMD) NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
 	req := nmd.NaplesCmdExecute{}
 	resp := NaplesConfigResp{}
 	defer r.Body.Close()
@@ -794,6 +800,20 @@ func NaplesCmdExecHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+
+	// TODO : Remove this once we get rid of all the Exec commands
+	if req.Executable == "pensettimezone" {
+		timeZone := req.Opts[:len(req.Opts)-1]
+		n.SetTimeZone(timeZone)
+
+		err := n.updateLocatTimeZone()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			n.store.Write(&n.config)
+		}
+	}
+
 	w.Write([]byte(stdErrOut))
 }
 
@@ -802,4 +822,33 @@ func (n *NMD) NaplesInfoGetHandler(r *http.Request) (interface{}, error) {
 	n.UpdateNaplesInfoFromConfig()
 	info := n.nic
 	return info, nil
+}
+
+func (n *NMD) updateLocatTimeZone() error {
+	timeZone := n.GetTimeZone()
+
+	v := &nmd.NaplesCmdExecute{
+		Executable: "pensettimezone",
+		Opts:       strings.Join([]string{timeZone}, ""),
+	}
+	_, err := naplesExecCmd(v)
+
+	if err != nil {
+		log.Error("Failed to write in /etc/timezon file")
+		return err
+	}
+
+	symLink := "/usr/share/zoneinfo/" + timeZone
+
+	v = &nmd.NaplesCmdExecute{
+		Executable: "ln",
+		Opts:       strings.Join([]string{"-sf", symLink, "/etc/localtime"}, " "),
+	}
+	_, err = naplesExecCmd(v)
+	if err != nil {
+		log.Errorf("Failed to create the symlink to :%v", symLink)
+		return err
+	}
+
+	return nil
 }
