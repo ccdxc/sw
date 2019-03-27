@@ -113,7 +113,7 @@ describe('LdapComponent', () => {
     fixture.debugElement.triggerEventHandler('mouseenter', null);
     fixture.detectChanges();
     const arrow_container = fixture.debugElement.query(By.css('.authpolicy-arrow-up'));
-    expect(arrow_container.children.length).toBe(1);
+    expect(arrow_container.children.length).toBe(2);
     arrow_container.children[0].nativeElement.click();
     fixture.detectChanges();
 
@@ -168,7 +168,7 @@ describe('LdapComponent', () => {
     fixture.debugElement.triggerEventHandler('mouseenter', null);
     fixture.detectChanges();
     arrow_container = fixture.debugElement.query(By.css('.authpolicy-arrow-up'));
-    expect(arrow_container.children.length).toBe(1);
+    expect(arrow_container.children.length).toBe(2);
     arrow_container.children[0].nativeElement.click();
     fixture.detectChanges();
 
@@ -492,7 +492,7 @@ describe('LdapComponent', () => {
     fixture.detectChanges();
     arrow_container = fixture.debugElement.queryAll(By.css('.authpolicy-arrow-up'));
     expect(arrow_container.length).toBe(1);
-    expect(arrow_container[0].children.length).toBe(2);
+    expect(arrow_container[0].children.length).toBe(3);
     arrow_container[0].children[0].nativeElement.click();
     fixture.detectChanges();
 

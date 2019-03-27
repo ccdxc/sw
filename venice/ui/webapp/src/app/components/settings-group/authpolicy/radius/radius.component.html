@@ -53,10 +53,13 @@
   <div *ngIf="!radiusEditMode" fxFlex="nogrow" fxLayout="column">
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" fxLayoutGap="10px" class="authpolicy-arrow-up">
       <!-- NOT EDIT MODE, SHOW EDIT BUTTON AND ARROW -->
-      <mat-icon  class="radius-edit-icon" *ngIf="isHover && !radiusEditMode" fxFlex="nogrow" (click)="toggleEdit()">
+      <mat-icon  [matTooltip]="'Edit RADIUS Config'"  class="radius-edit-icon" *ngIf="isHover && !radiusEditMode" fxFlex="nogrow" (click)="toggleEdit()">
         edit
       </mat-icon>
-      <mat-icon *ngIf="!radiusEditMode && canRaiseAuthRank()" (click)="raiseAuthRank()">
+      <mat-icon [matTooltip]="'Delete RADIUS Config'"   class="radius-edit-icon" *ngIf="isHover && !radiusEditMode" fxFlex="nogrow" (click)="onDeleteRadius()">
+          delete
+      </mat-icon>
+      <mat-icon  [matTooltip]="'Move RADIUS Order Up'" *ngIf="!radiusEditMode && canRaiseAuthRank()" (click)="raiseAuthRank()">
         arrow_upward
       </mat-icon>
     </div>
@@ -64,7 +67,7 @@
       <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}} </div>
     </div>
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
-      <mat-icon fxFlex="nogrow" *ngIf="!radiusEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
+      <mat-icon   [matTooltip]="'Move RADIUS Order Down'" fxFlex="nogrow" *ngIf="!radiusEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
         arrow_downward
       </mat-icon>
     </div>
@@ -91,7 +94,7 @@
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>NAS ID:</span>
+              <span>NAS ID</span>
             </div>
           </div>
           <!-- Field Values - edit mode -->
@@ -153,7 +156,7 @@
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>* Server/Port:</span>
+              <span>* Server:Port</span>
             </div>
           </div>
           <!-- Field Values -->
@@ -169,7 +172,7 @@
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>* Server Secret:</span>
+              <span>* Server Secret</span>
             </div>
           </div>
           <!-- Field Values - edit mode -->
@@ -186,7 +189,7 @@
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>* Auth Method:</span>
+              <span>* Auth Method</span>
             </div>
           </div>
           <!-- Field Values - edit mode -->

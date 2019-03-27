@@ -20,7 +20,7 @@
             <ng-container *ngSwitchCase="'LDAP'">
               <app-ldap fxFlex="nogrow" fxLayout="column" [LDAPData]="authPolicy.spec.authenticators.ldap" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"
               (invokeSaveLDAP)="onInvokeSaveLDAP($event)" (invokeCheckLDAPServerConnect)="onCheckLDAPServerConnect($event)" (invokeCheckLDAPBindConnect)="onCheckLDAPBindConnect($event)"  
-              [ldapConnCheckResponse]="_ldapConnCheckResponse"   [ldapBindCheckResponse]="_ldapBindCheckResponse" 
+              [ldapConnCheckResponse]="_ldapConnCheckResponse"   [ldapBindCheckResponse]="_ldapBindCheckResponse"  (invokeRemoveLDAP)="onInvokeRemoveLDAP($event)"
               ></app-ldap>
             </ng-container>
             <ng-container *ngSwitchCase="'LOCAL'">
@@ -28,7 +28,7 @@
             </ng-container>
             <ng-container *ngSwitchCase="'RADIUS'">
               <app-radius fxFlex="nogrow" fxLayout="column" [radiusData]="authPolicy.spec.authenticators.radius" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"
-              (invokeSaveRadius)="onInvokeSaveRadius($event)" 
+              (invokeSaveRadius)="onInvokeSaveRadius($event)" (invokeRemoveRadius)="onInvokeRemoveRadius($event)"
               ></app-radius>
             </ng-container>
           </ng-container>

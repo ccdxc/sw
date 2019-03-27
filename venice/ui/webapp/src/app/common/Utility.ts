@@ -29,6 +29,7 @@ export class Utility {
   public static XSRF_NAME = 'Grpc-Metadata-Csrf-Token';
   // Key for the observable obtained from localStorage.getUserdataObservable
   public static USER_DATA_OBSERVABLE = 'UserDataObservable';
+  public static WEBSOCKET_403 =  'Please check your authorization settings and contact system administrator.';  // see VS=157
 
   myControllerService: ControllerService;
   myLogService: LogService;
@@ -1284,7 +1285,7 @@ export class Utility {
   }
 
   public static generateDeleteConfirmMsg(objectType: string, name: string): string {
-    return 'Are you sure you want to delete ' + objectType + ':  name';
+    return 'Are you sure you want to delete ' + objectType + ': ' +  name;
   }
 
   /**

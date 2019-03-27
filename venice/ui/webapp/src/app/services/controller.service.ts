@@ -9,6 +9,7 @@ import {
 import { MatIconRegistry } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { Utility } from '@app/common/Utility';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { PinPayload } from '@app/models/frontend/shared/pinpayload.interface.ts';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface.ts';
@@ -407,7 +408,8 @@ export class ControllerService {
   }
 
   invokeRESTErrorToaster(summary, error) {
-    const errorMsg = error.body != null ? error.body.message : '';
+    // TODO: VS-138. (user role can not access web-socket url)  We use Utility.WS_ROLE_403 as error msg.
+    const errorMsg = error.body != null ? error.body.message : Utility.WEBSOCKET_403;
     this.invokeErrorToaster(summary, errorMsg);
   }
 

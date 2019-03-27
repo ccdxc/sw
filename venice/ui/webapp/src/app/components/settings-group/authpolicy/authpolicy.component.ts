@@ -203,7 +203,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
           window.clearTimeout(setTime1);
         }, 3000);
       },
-      this.restErrorHandler('Update Failed')
+      this.restErrorHandler('Authentication Policy Update Failed')
     );
   }
 
@@ -217,5 +217,21 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.RADIUS);
     this.authPolicy.spec.authenticators.radius = radius;
     this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
+  }
+
+  onInvokeRemoveRadius(radius: AuthRadius ) {
+    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.RADIUS );
+  }
+
+  onInvokeRemoveLDAP(ldap: AuthLdap ) {
+    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.LDAP );
+  }
+
+  _onInvokeRemoveConfigHelper(type: any) {
+    const saveData = this.authPolicy.getFormGroupValues(); // extract data out first
+    const configIndex = saveData.spec.authenticators['authenticator-order'].findIndex( (value) => value === type);
+    saveData.spec.authenticators['authenticator-order'].splice(configIndex, 1);
+    delete saveData.spec.authenticators[type.toLowerCase()]; // remove radius or ldap
+    this.saveAuthenticationPolicy(saveData);
   }
 }

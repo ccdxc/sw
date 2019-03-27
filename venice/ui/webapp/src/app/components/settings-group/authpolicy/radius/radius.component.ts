@@ -41,6 +41,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   @Input() radiusData: AuthRadius;
   @Output() invokeSaveRadius: EventEmitter<Boolean> = new EventEmitter();
   @Output() invokeCreateRadius: EventEmitter<AuthRadius> = new EventEmitter();
+  @Output() invokeRemoveRadius: EventEmitter<AuthRadius> = new EventEmitter();
 
   constructor(protected _controllerService: ControllerService , private cd: ChangeDetectorRef) {
     super(_controllerService);
@@ -97,6 +98,17 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
       }
       this.setRadiusValidationRules();
     }
+  }
+
+  onDeleteRadius() {
+    this._controllerService.invokeConfirm({
+      header: Utility.generateDeleteConfirmMsg('Config', 'RADIUS'),
+      message: 'This action cannot be reversed',
+      acceptLabel: 'Delete',
+      accept: () => {
+        this.invokeRemoveRadius.emit(this.radiusData);
+      }
+    });
   }
 
   isAllInputsValid(authRadius: AuthRadius): boolean {

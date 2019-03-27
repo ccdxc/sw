@@ -50,6 +50,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   @Output() invokeCheckLDAPBindConnect: EventEmitter<AuthLdap> = new EventEmitter();
   @Output() invokeSaveLDAP: EventEmitter<Boolean> = new EventEmitter();
   @Output() invokeCreateLDAP: EventEmitter<AuthLdap> = new EventEmitter();
+  @Output() invokeRemoveLDAP: EventEmitter<AuthLdap> = new EventEmitter();
 
   @Input() parentAuthPolicy: AuthAuthenticationPolicy = null;
 
@@ -143,6 +144,17 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
       });
     }
     this.setLDAPEnableControl();
+  }
+
+  onDeleteLDAP() {
+    this._controllerService.invokeConfirm({
+      header: Utility.generateDeleteConfirmMsg('Config', 'LDAP'),
+      message: 'This action cannot be reversed',
+      acceptLabel: 'Delete',
+      accept: () => {
+        this.invokeRemoveLDAP.emit(this.LDAPData);
+      }
+    });
   }
 
   setLDAPEnableControl() {

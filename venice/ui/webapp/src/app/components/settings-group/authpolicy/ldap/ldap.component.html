@@ -56,10 +56,13 @@
   <div *ngIf="!LDAPEditMode" fxFlex="nogrow" fxLayout="column">
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" fxLayoutGap="10px" class="authpolicy-arrow-up">
       <!-- NOT EDIT MODE, SHOW EDIT BUTTON AND ARROW -->
-      <mat-icon class="ldap-edit-icon" *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="toggleEdit()">
+      <mat-icon  [matTooltip]="'Edit LDAP Config'" class="ldap-edit-icon" *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="toggleEdit()">
         edit
       </mat-icon>
-      <mat-icon *ngIf="!LDAPEditMode && canRaiseAuthRank()" (click)="raiseAuthRank()">
+      <mat-icon [matTooltip]="'Delete LDAP Config'" class="ldap-edit-icon" *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="onDeleteLDAP()">
+          delete
+        </mat-icon>
+      <mat-icon  [matTooltip]="'Move LDAP Order Up'" *ngIf="!LDAPEditMode && canRaiseAuthRank()" (click)="raiseAuthRank()">
         arrow_upward
       </mat-icon>
     </div>
@@ -67,7 +70,7 @@
       <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}} </div>
     </div>
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
-      <mat-icon fxFlex="nogrow" *ngIf="!LDAPEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
+      <mat-icon   [matTooltip]="'Move LDAP Order Down'" fxFlex="nogrow" *ngIf="!LDAPEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
           arrow_downward
       </mat-icon>
     </div>
