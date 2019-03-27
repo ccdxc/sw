@@ -15,10 +15,13 @@ subnet_api_spec_to_proto_spec (const pds_subnet_spec_t *api_spec,
 {
     proto_spec->set_id(api_spec->key.id);
     proto_spec->set_vpcid(api_spec->vcn.id);
+    ipv4pfx_api_spec_to_proto_spec(
+                    &api_spec->v4_pfx, proto_spec->mutable_v4prefix());
     ippfx_api_spec_to_proto_spec(
-                    &api_spec->pfx, proto_spec->mutable_prefix());
-    ipaddr_api_spec_to_proto_spec(
-                    &api_spec->vr_ip, proto_spec->mutable_virtualrouterip());
+                    &api_spec->v6_pfx, proto_spec->mutable_v6prefix());
+    proto_spec->set_ipv4virtualrouterip(api_spec->v4_vr_ip);
+    proto_spec->set_ipv6virtualrouterip(&api_spec->v6_vr_ip.addr.v6_addr.addr8,
+                                        IP6_ADDR8_LEN);
     proto_spec->set_virtualroutermac(MAC_TO_UINT64(api_spec->vr_mac));
     proto_spec->set_v4routetableid(api_spec->v4_route_table.id);
     proto_spec->set_v6routetableid(api_spec->v6_route_table.id);
@@ -64,9 +67,11 @@ subnet_proto_spec_to_api_spec (const pds::SubnetSpec &proto_spec,
 {
     api_spec->key.id = proto_spec.id();
     api_spec->vcn.id = proto_spec.vpcid();
-    ippfx_proto_spec_to_api_spec(proto_spec.prefix(), &api_spec->pfx);
-    ipaddr_proto_spec_to_api_spec(
-                            proto_spec.virtualrouterip(), &api_spec->vr_ip);
+    ipv4pfx_proto_spec_to_api_spec(proto_spec.v4prefix(), &api_spec->v4_pfx);
+    api_spec->v4_vr_ip = proto_spec.ipv4virtualrouterip();
+    api_spec->v6_vr_ip.af = IP_AF_IPV6;
+    memcpy(api_spec->v6_vr_ip.addr.v6_addr.addr8,
+           proto_spec.ipv6virtualrouterip().c_str(), IP6_ADDR8_LEN);  
     MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
     api_spec->v4_route_table.id = proto_spec.v4routetableid();
     api_spec->v6_route_table.id = proto_spec.v6routetableid();

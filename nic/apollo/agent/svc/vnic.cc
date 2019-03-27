@@ -84,8 +84,8 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
     proto_spec->set_subnetid(api_spec->subnet.id);
     proto_spec->set_wirevlan(api_spec->wire_vlan);
     proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac_addr));
-    pds_encap_to_proto_encap(&api_spec->fabric_encap,
-                             proto_spec->mutable_encap());
+    pds_encap_to_proto_encap(proto_spec->mutable_encap(),
+                             &api_spec->fabric_encap);
     proto_spec->set_resourcepoolid(api_spec->rsc_pool_id);
     proto_spec->set_sourceguardenable(api_spec->src_dst_check);
 }

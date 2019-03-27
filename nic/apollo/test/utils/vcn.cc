@@ -47,7 +47,8 @@ vcn_util::create() {
     memset(&spec, 0, sizeof(spec));
     spec.type = this->type;
     spec.key.id = this->id;
-    spec.pfx = ip_pfx;
+    spec.v4_pfx.len = ip_pfx.len;
+    spec.v4_pfx.v4_addr = ip_pfx.addr.addr.v4_addr;
     return (pds_vcn_create(&spec));
 }
 
@@ -62,7 +63,7 @@ vcn_util::read(pds_vcn_info_t *info, bool compare_spec)
     key.id = this->id;
     rv = pds_vcn_read(&key, info);
     cout << "vcn : key : " << key.id << ", id : " << info->spec.key.id << ", addr : "
-         << ippfx2str(&info->spec.pfx) << "\n";
+         << ipv4pfx2str(&info->spec.v4_pfx) << "\n";
     if (rv != sdk::SDK_RET_OK) {
         return rv;
     }

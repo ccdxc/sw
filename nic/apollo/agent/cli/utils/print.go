@@ -24,7 +24,7 @@ func MactoStr(mac uint64) string {
 	return macStr
 }
 
-// IPAddrToStr converts HAL proto IP address to string
+// IPAddrToStr converts PDS proto IP address to string
 func IPAddrToStr(ipAddr *pds.IPAddress) string {
 	if ipAddr.GetAf() == pds.IPAF_IP_AF_INET {
 		v4Addr := ipAddr.GetV4Addr()
@@ -40,6 +40,13 @@ func IPAddrToStr(ipAddr *pds.IPAddress) string {
 		return "-"
 	}
 
+}
+
+// Uint32IPAddrtoStr converts uint32 IP to string
+func Uint32IPAddrtoStr(addr uint32) string {
+    ip := make(net.IP, 4)
+    binary.BigEndian.PutUint32(ip, addr)
+    return ip.String()
 }
 
 // IPPrefixToStr converts prefix to string

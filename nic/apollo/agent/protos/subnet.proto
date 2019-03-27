@@ -20,29 +20,34 @@ service SubnetSvc {
 // SubnetSpec captures subnet specific coniguration
 message SubnetSpec {
   // unique identifier of the subnet
-  uint32          Id                     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32         Id                    = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // virtual private cloud this subnet is belongs to
-  uint32          VPCId                  = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // IP prefix of this subnet, this must be a sub prefix of VPC's prefix
-  types.IPPrefix  Prefix                 = 3 [(gogoproto.moretags) = "meta:mandatory"];
-  // Virtual Router (VR) IP of this subnet, this IP is owned by the device and
-  // packets originated by this device carry this IP as source IP
-  types.IPAddress VirtualRouterIP        = 4;
+  uint32         VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // IPv4 prefix of this subnet, this must be a sub prefix of VPC's prefix
+  types.IPPrefix V4Prefix              = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // IPv6 prefix of this subnet, this must be a sub prefix of VPC's prefix
+  types.IPPrefix V6Prefix              = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  // IPv4 Virtual Router (VR) IP of this subnet, this IP is owned by the device
+  // and packets originated by this device carry this IP as source IP
+  uint32         IPv4VirtualRouterIP   = 5;
+  // Ipv6 Virtual Router (VR) IP of this subnet, this IP is owned by the device
+  // and packets originated by this device carry this IP as source IP
+  bytes          IPv6VirtualRouterIP   = 6;
   // Virtual Router (VR) MAC address, any packets originated or routed by
   // the device carry this MAC as source MAC
-  uint64           VirtualRouterMac      = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64         VirtualRouterMac      = 7 [(gogoproto.moretags) = "meta:mandatory"];
   // identifier of the IPv4 route table to be used
-  uint32           V4RouteTableId        = 6 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32         V4RouteTableId        = 8 [(gogoproto.moretags) = "meta:mandatory"];
   // identifier of the IPv6 route table to be used, if any
-  uint32           V6RouteTableId        = 7;
+  uint32         V6RouteTableId        = 9;
   // identifier of ingress IPv4 security policy to be enforced
-  uint32           IngV4SecurityPolicyId = 8;
+  uint32         IngV4SecurityPolicyId = 10;
   // identifier of ingress IPv6 security policy to be enforced
-  uint32           IngV6SecurityPolicyId = 9;
+  uint32         IngV6SecurityPolicyId = 11;
   // identifier of egress IPv4 security policy to be enforced
-  uint32           EgV4SecurityPolicyId  = 10;
+  uint32         EgV4SecurityPolicyId  = 12;
   // identifier of egress IPv6 security policy to be enforced
-  uint32           EgV6SecurityPolicyId  = 11;
+  uint32         EgV6SecurityPolicyId  = 13;
 }
 
 // operational status of the subnet, if any

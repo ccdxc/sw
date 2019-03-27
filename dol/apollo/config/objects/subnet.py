@@ -72,8 +72,11 @@ class SubnetObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.SubnetId
         spec.VPCId = self.VPC.VPCId
-        utils.GetRpcIPPrefix(self.IPPrefix[self.PfxSel], spec.Prefix)
-        utils.GetRpcIPAddr(self.VirtualRouterIPAddr[self.PfxSel], spec.VirtualRouterIP)
+        # TODO: set both ?
+        utils.GetRpcIPPrefix(self.IPPrefix[1], spec.V4Prefix)
+        utils.GetRpcIPPrefix(self.IPPrefix[0], spec.V6Prefix)
+        spec.IPv4VirtualRouterIP = int(self.VirtualRouterIPAddr[1])
+        spec.IPv6VirtualRouterIP = self.VirtualRouterIPAddr[0].packed
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         spec.V4RouteTableId = self.V4RouteTableId
         spec.V6RouteTableId = self.V6RouteTableId

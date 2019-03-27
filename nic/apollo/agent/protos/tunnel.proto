@@ -17,27 +17,33 @@ service TunnelSvc {
   rpc TunnelDelete (TunnelDeleteRequest) returns (TunnelDeleteResponse) {}
 }
 
-// encapsulation types
-enum TunnelEncapType {
-  TUNNEL_ENCAP_NONE            = 0;
-  TUNNEL_ENCAP_VXLAN           = 1;  // VXLAN encapsulation
-  TUNNEL_ENCAP_MPLSoUDP_TAGS_1 = 2;  // MPLS over UDP towards external GW
-  TUNNEL_ENCAP_MPLSoUDP_TAGS_2 = 3;  // MPLS over UDP for East-West traffic
+// TunnelType defines the role of the tunnel
+enum TunnelType {
+  TUNNEL_TYPE_NONE     = 0;
+  TUNNEL_TYPE_IGW      = 1;    // Tunnel type for Internet Gateway
+  TUNNEL_TYPE_WORKLOAD = 2;    // Tunnel type for east-traffic workloads
 }
 
 // tunnel configuration
+// tunnel is uniquely identified by the 3-tuple (LocalIP, RemoteIP, encap)
 message TunnelSpec {
   // unique tunnel identifier
   // NOTE: Tunnel id of 0 is reserve for local TEP/host
   uint32          Id       = 1 [(gogoproto.moretags) = "meta:mandatory"];;
   // virtual private cloud this is tunnel belongs to
   uint32          VPCId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // Tunnel encapsulation
-  TunnelEncapType Encap    = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // local IP of the tunnel (used as outer SIP in tunneled packets)
-  types.IPAddress LocalIP  = 4;
+  types.IPAddress LocalIP  = 3;
   // remote IP of the tunnel (used as outer DIP in tunneled packets)
-  types.IPAddress RemoteIP = 5;
+  types.IPAddress RemoteIP = 4;
+  // type of this tunnel
+  TunnelType      Type     = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  // encap used while sending traffic to this tunnel
+  types.Encap     Encap    = 6;
+  // if Nat is set to true, do (static) source NAT for the traffic going to
+  // this tunnel and (static) destination NAT in the reverse direction if
+  // the local IP mapping has NAT/public IP configured
+  bool            Nat      = 7;
 }
 
 // operational status of the tunnel, if any

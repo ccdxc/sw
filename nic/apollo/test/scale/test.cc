@@ -37,7 +37,7 @@ typedef struct test_params_s {
         uint32_t device_ip;
         uint64_t device_mac;
         uint32_t device_gw_ip;
-        pds_tep_encap_type_t tep_encap;
+        pds_encap_t fabric_encap;
     };
     // TEP config
     struct {
@@ -234,7 +234,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                         (g_test_params.vcn_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
                     pds_mapping.subnet.id = (i - 1) * num_subnets + j;
-                    if (g_test_params.tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                    if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                         pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                         //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
                         pds_mapping.fabric_encap.val.vnid = vnic_key;
@@ -326,7 +326,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     (g_test_params.vcn_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
                 pds_mapping.subnet.id = (i - 1) * num_subnets + j;
-                if (g_test_params.tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                     pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
                     pds_mapping.fabric_encap.val.vnid = remote_slot++;
@@ -417,7 +417,7 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
                 pds_vnic.subnet.id = (i - 1) * num_subnets + j;
                 pds_vnic.key.id = vnic_key;
                 pds_vnic.wire_vlan = vlan_start + vnic_key - 1;
-                if (g_test_params.tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
+                if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                     pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     //pds_vnic.fabric_encap.val.vnid = VNID_BASE + pds_vnic.subnet.id;
                     pds_vnic.fabric_encap.val.vnid = vnic_key;
@@ -461,7 +461,7 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
 // leaving LSB 14 bits for VNIC IPs
 sdk_ret_t
 create_subnets (uint32_t vcn_id, uint32_t num_vcns,
-                uint32_t num_subnets, ip_prefix_t *vcn_pfx)
+                uint32_t num_subnets, ipv4_prefix_t *vcn_pfx)
 {
     sdk_ret_t rv;
     pds_subnet_spec_t pds_subnet;
@@ -472,17 +472,15 @@ create_subnets (uint32_t vcn_id, uint32_t num_vcns,
         memset(&pds_subnet, 0, sizeof(pds_subnet));
         pds_subnet.key.id = (vcn_id - 1) * num_subnets + i;
         pds_subnet.vcn.id = vcn_id;
-        pds_subnet.pfx = *vcn_pfx;
-        pds_subnet.pfx.addr.addr.v4_addr =
-            (pds_subnet.pfx.addr.addr.v4_addr) | ((i - 1) << 14);
-        pds_subnet.pfx.len = 18;
-        pds_subnet.vr_ip.af = IP_AF_IPV4;
-        // pds_subnet.vr_ip.addr.v4_addr = pds_subnet.pfx.addr.addr.v4_addr |
-        // 0x1;
-        pds_subnet.vr_ip.addr.v4_addr = pds_subnet.pfx.addr.addr.v4_addr;
+        pds_subnet.v4_pfx = *vcn_pfx;
+        pds_subnet.v4_pfx.v4_addr =
+            (pds_subnet.v4_pfx.v4_addr) | ((i - 1) << 14);
+        pds_subnet.v4_pfx.len = 18;
+        pds_subnet.v4_vr_ip = pds_subnet.v4_pfx.v4_addr;
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
-                           (uint64_t)pds_subnet.vr_ip.addr.v4_addr);
-        pds_subnet.v6_route_table.id = route_table_id + (num_subnets * num_vcns);
+                           (uint64_t)pds_subnet.v4_vr_ip);
+        pds_subnet.v6_route_table.id =
+            route_table_id + (num_subnets * num_vcns);
         pds_subnet.v4_route_table.id = route_table_id++;
         pds_subnet.egr_v4_policy.id = id++;
 #ifdef TEST_GRPC_APP
@@ -511,9 +509,8 @@ create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
         memset(&pds_vcn, 0, sizeof(pds_vcn));
         pds_vcn.type = PDS_VCN_TYPE_TENANT;
         pds_vcn.key.id = i;
-        pds_vcn.pfx = *ip_pfx;
-        pds_vcn.pfx.len = 8; // fix this to /8
-        pds_vcn.pfx.addr.addr.v4_addr &= 0xFF000000;
+        pds_vcn.v4_pfx.v4_addr = ip_pfx->addr.addr.v4_addr & 0xFF000000;
+        pds_vcn.v4_pfx.len = 8; // fix this to /8
 #ifdef TEST_GRPC_APP
         rv = create_vcn_grpc(&pds_vcn);
         if (rv != SDK_RET_OK) {
@@ -526,7 +523,7 @@ create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
         }
 #endif
         for (uint32_t j = 1; j <= num_subnets; j++) {
-            rv = create_subnets(i, num_vcns, j, &pds_vcn.pfx);
+            rv = create_subnets(i, num_vcns, j, &pds_vcn.v4_pfx);
             if (rv != SDK_RET_OK) {
                 return rv;
             }
@@ -560,10 +557,12 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
         // so we skip the 1st (even for MyTEP we create a TEP)
         pds_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 1 + i;
-        if (g_test_params.tep_encap == PDS_TEP_ENCAP_TYPE_VXLAN) {
-            pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VXLAN;
+        if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+            pds_tep.encap.type = PDS_ENCAP_TYPE_VXLAN;
+            pds_tep.type = PDS_TEP_TYPE_WORKLOAD;
         } else {
-            pds_tep.encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
+            pds_tep.encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+            pds_tep.type = PDS_TEP_TYPE_WORKLOAD;
         }
 #ifdef TEST_GRPC_APP
         rv = create_tunnel_grpc(i, &pds_tep);
@@ -723,20 +722,20 @@ create_objects (void)
                 g_test_params.device_gw_ip = ntohl(gwip.s_addr);
 
                 if (!obj.second.get<std::string>("encap").compare("vxlan")) {
-                    g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VXLAN;
+                    g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                 } else {
-                    g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VNIC;
+                    g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
                 }
                 // If env var is set, it overrides the json value
                 if (getenv("APOLLO_TEST_TEP_ENCAP")) {
                     tep_encap_env = getenv("APOLLO_TEST_TEP_ENCAP");
                     if (!strcmp(tep_encap_env, "vxlan")) {
-                        g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VXLAN;
+                        g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     } else {
-                        g_test_params.tep_encap = PDS_TEP_ENCAP_TYPE_VNIC;
+                        g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
                     }
                     printf("TEP encap env var: %s, encap: %d\n", 
-                            tep_encap_env, g_test_params.tep_encap);
+                            tep_encap_env, g_test_params.fabric_encap.type);
                 }
             } else if (kind == "tep") {
                 g_test_params.num_teps = std::stol(obj.second.get<std::string>("count"));

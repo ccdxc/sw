@@ -23,7 +23,8 @@ pds_agent_vpc_api_spec_fill (const pds::VPCSpec &proto_spec,
     } else if (type == pds::VPC_TYPE_SUBSTRATE) {
         api_spec->type = PDS_VCN_TYPE_SUBSTRATE;
     }
-    ippfx_proto_spec_to_api_spec(proto_spec.prefix(), &api_spec->pfx);
+    ipv4pfx_proto_spec_to_api_spec(proto_spec.v4prefix(), &api_spec->v4_pfx);
+    ippfx_proto_spec_to_api_spec(proto_spec.v6prefix(), &api_spec->v6_pfx);
 }
 
 Status
@@ -84,15 +85,14 @@ static inline void
 vpc_api_spec_to_proto_spec (const pds_vcn_spec_t *api_spec,
                             pds::VPCSpec *proto_spec)
 {
-    auto proto_pfx = proto_spec->mutable_prefix();
-
     proto_spec->set_id(api_spec->key.id);
     if (api_spec->type == PDS_VCN_TYPE_TENANT) {
         proto_spec->set_type(pds::VPC_TYPE_TENANT);
     } else if (api_spec->type == PDS_VCN_TYPE_SUBSTRATE) {
         proto_spec->set_type(pds::VPC_TYPE_SUBSTRATE);
     }
-    ippfx_api_spec_to_proto_spec(&api_spec->pfx, proto_pfx);
+    ipv4pfx_api_spec_to_proto_spec(&api_spec->v4_pfx, proto_spec->mutable_v4prefix());
+    ippfx_api_spec_to_proto_spec(&api_spec->v6_pfx, proto_spec->mutable_v6prefix());
 }
 
 // Populate proto buf status from vpc API status

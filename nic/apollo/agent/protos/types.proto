@@ -52,6 +52,22 @@ message IPRange {
   IPAddress High = 2;
 }
 
+// IPv4 Prefix
+message IPv4Prefix {
+  // IPv4 address portion
+  fixed32 Addr = 1;
+  // prefix length
+  uint32  Len  = 2 [(gogoproto.moretags) = "meta:range=0-32"];
+}
+
+// IPv6 Prefix
+message IPv6Prefix {
+  // IPv6 address bytes
+  bytes  Addr = 1;
+  // prefix length
+  uint32 Len  = 2 [(gogoproto.moretags) = "meta:range=0-128"];
+}
+
 // IP Prefix object
 message IPPrefix {
   // IP prefix address

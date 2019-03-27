@@ -27,6 +27,7 @@ RemoteMappingMacAllocator = objects.TemplateFieldObject("macstep/00EE.0000.0001/
 TepIpAddressAllocator = ipaddress.IPv4Network('172.16.0.0/21').hosts()
 RouteIPv6Allocator = iter(ipaddress.IPv6Network('cccc:0001:0001:0001::/64').subnets(new_prefix=96))
 RouteIPv4Allocator = iter(ipaddress.IPv4Network('192.0.0.0/8').subnets(new_prefix=24))
+IGWMplsSlotIdAllocator = iter(irange(30001,31024))
 RemoteMplsInternetTunAllocator = None
 RemoteMplsVnicTunAllocator = None
 

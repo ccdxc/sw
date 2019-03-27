@@ -24,29 +24,27 @@ class rrobiniter:
 def GetFilteredObjects(objs, maxlimits):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
         return objs
-    return choices(objs, k = maxlimits)
+    # TEMP Hack to workaround route table issue PR#10834
+    return objs[0:maxlimits]
+    #return choices(objs, k = maxlimits)
 
-def GetTunnelEncapType(e):
-    if e == 'vxlan':
-        return tunnel_pb2.TUNNEL_ENCAP_VXLAN
-    elif e == 'mplsudp_tags1':
-        return tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_1
-    elif e == 'mplsudp_tags2':
-        return tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2
+def GetTunnelType(e):
+    if e == 'internet-gateway':
+        return tunnel_pb2.TUNNEL_TYPE_IGW
+    elif e == 'workload':
+        return tunnel_pb2.TUNNEL_TYPE_WORKLOAD
     else:
-        logger.error("ERROR: Invalid/Unknown Tunnel Encap: %s" % e)
-        sys.exit(1)
-        return None
+        return tunnel_pb2.TUNNEL_TYPE_NONE
 
-def GetTunnelEncapString(e):
-    if e == tunnel_pb2.TUNNEL_ENCAP_VXLAN:
-        return "vxlan"
-    elif e == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_1:
-        return "mplsoudp-tag1"
-    elif e == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
-        return "mplsoudp-tag2"
+def GetTunnelTypeString(e):
+    if e == tunnel_pb2.TUNNEL_TYPE_IGW:
+        return "internet-gateway"
+    elif e == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
+        return "workload"
+    elif e == tunnel_pb2.TUNNEL_TYPE_NONE:
+        return "None"
     else:
-        logger.error("ERROR: Invalid/Unknown Tunnel Encap: %s" % e)
+        logger.error("ERROR: Invalid/Unknown Tunnel Type: %s" % e)
         sys.exit(1)
         return None
 

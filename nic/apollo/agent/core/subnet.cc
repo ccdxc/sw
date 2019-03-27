@@ -13,8 +13,8 @@ sdk_ret_t
 subnet_create_validate (pds_subnet_spec_t *spec)
 {
     pds_vcn_spec_t *vpc_spec;
-    ip_addr_t vpc_ip_hi, vpc_ip_lo;
-    ip_addr_t subnet_ip_hi, subnet_ip_lo;
+    //ip_addr_t vpc_ip_hi, vpc_ip_lo;
+    //ip_addr_t subnet_ip_hi, subnet_ip_lo;
     mac_addr_t zero_mac = {0};
 
     // verify VCN exists
@@ -22,6 +22,8 @@ subnet_create_validate (pds_subnet_spec_t *spec)
         PDS_TRACE_VERBOSE("Subnet Create VPC invalid")
         return sdk::SDK_RET_INVALID_ARG;
     }
+
+#if 0
     // IP prefix for subnet must be within VPC prefix
     if (!ip_prefix_is_equal(&spec->pfx, &vpc_spec->pfx)) {
         ip_prefix_ip_low(&spec->pfx, &subnet_ip_lo);
@@ -34,14 +36,17 @@ subnet_create_validate (pds_subnet_spec_t *spec)
             return sdk::SDK_RET_INVALID_ARG;
         }
     }
+#endif
+
     // validate VR IP
-    if (ip_addr_is_zero(&spec->vr_ip)) {
-        PDS_TRACE_VERBOSE("Subnet Create VR IP invalid")
+    if (spec->v4_vr_ip == 0) {
+        PDS_TRACE_VERBOSE("IPv4 Virtual Router IP invalid in subnet spec");
         return sdk::SDK_RET_INVALID_ARG;
     }
+
     // validate VR MAC
     if (memcmp(&spec->vr_mac, &zero_mac, sizeof(spec->vr_mac)) == 0) {
-        PDS_TRACE_VERBOSE("Subnet Create VR MAC invalid")
+        PDS_TRACE_VERBOSE("VR MAC invalid in subnet spec");
         return sdk::SDK_RET_INVALID_ARG;
     }
     return sdk::SDK_RET_OK; 

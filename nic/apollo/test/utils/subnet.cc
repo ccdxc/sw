@@ -47,15 +47,16 @@ subnet_util::create() {
     memset(&spec, 0, sizeof(pds_subnet_spec_t));
     spec.vcn.id = this->vcn.id;
     spec.key.id = this->id;
-    spec.pfx = ip_pfx;
+    spec.v4_pfx.len = ip_pfx.len;
+    spec.v4_pfx.v4_addr = ip_pfx.addr.addr.v4_addr;;
     // Set the subnets IP (virtual router interface IP)
     if (!vr_ip.empty()) {
-        extract_ip_addr(this->vr_ip.c_str(), &spec.vr_ip);
+        extract_ipv4_addr(this->vr_ip.c_str(), &spec.v4_vr_ip);
     }
     // Derive mac address from vr_ip if it has not been configured
     if (vr_mac.empty()) {
         MAC_UINT64_TO_ADDR(spec.vr_mac,
-                       (uint64_t)spec.vr_ip.addr.v4_addr);
+                       (uint64_t)spec.v4_vr_ip);
     } else {
         mac_str_to_addr((char *)vr_mac.c_str(), spec.vr_mac);
     }

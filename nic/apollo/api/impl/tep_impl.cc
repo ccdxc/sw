@@ -103,16 +103,15 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     // program TEP Tx table
     tep_spec = &obj_ctxt->api_params->tep_spec;
-    switch (tep_spec->encap_type) {
-    case PDS_TEP_ENCAP_TYPE_GW_ENCAP:
-    case PDS_TEP_ENCAP_TYPE_VNIC:
+    switch (tep_spec->encap.type) {
+    case PDS_ENCAP_TYPE_MPLSoUDP:
         tep_tx_data.action_id = TEP_TX_MPLS_UDP_TEP_TX_ID;
         tep_tx_data.tep_tx_mpls_udp_action.dipo = tep_spec->key.ip_addr;
         MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_mpls_udp_action.dmac,
                            PDS_REMOTE_TEP_MAC);
         break;
 
-    case PDS_TEP_ENCAP_TYPE_VXLAN:
+    case PDS_ENCAP_TYPE_VXLAN:
         tep_tx_data.action_id = TEP_TX_VXLAN_TEP_TX_ID;
         tep_tx_data.tep_tx_vxlan_action.dipo = tep_spec->key.ip_addr;
         MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_vxlan_action.dmac,
@@ -133,20 +132,22 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // program nexthop table
     nh_tx_data.action_id = NEXTHOP_TX_NEXTHOP_INFO_ID;
     nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index = hw_id_;
-    switch (tep_spec->encap_type) {
-    case PDS_TEP_ENCAP_TYPE_GW_ENCAP:
-        nh_tx_data.nh_tx_action.encap_type = GW_ENCAP;
+    if (tep_spec->nat) {
         nh_tx_data.nh_tx_action.snat_required = 1;
+    }
+    switch (tep_spec->type) {
+    case PDS_TEP_TYPE_IGW:
+        nh_tx_data.nh_tx_action.encap_type = GW_ENCAP;
         break;
-    case PDS_TEP_ENCAP_TYPE_VNIC:
+    case PDS_TEP_TYPE_WORKLOAD:
         nh_tx_data.nh_tx_action.encap_type = VNIC_ENCAP;
         break;
-    case PDS_TEP_ENCAP_TYPE_VXLAN:
-        nh_tx_data.nh_tx_action.encap_type = 0;    // don't care
-        break;
     default:
-        ret = SDK_RET_INVALID_ARG;
         break;
+    }
+    if (tep_spec->encap.type != PDS_ENCAP_TYPE_NONE) {
+        nh_tx_data.action_u.nexthop_tx_nexthop_info.dst_slot_id =
+            tep_spec->encap.val.value;
     }
     ret = tep_impl_db()->nh_tx_tbl()->insert_atid(&nh_tx_data, nh_id_);
     if (unlikely(ret != SDK_RET_OK)) {
@@ -210,18 +211,22 @@ tep_impl::fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
                      tep_tx_actiondata_t *tep_tx_data, pds_tep_spec_t *spec)
 {
     if (tep_tx_data->action_id == TEP_TX_MPLS_UDP_TEP_TX_ID) {
+        spec->encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+        spec->key.ip_addr = tep_tx_data->tep_tx_mpls_udp_action.dipo;
         switch (nh_tx_data->nh_tx_action.encap_type) {
         case GW_ENCAP:
-            spec->encap_type = PDS_TEP_ENCAP_TYPE_GW_ENCAP;
-            spec->key.ip_addr = tep_tx_data->tep_tx_mpls_udp_action.dipo;
+            spec->type = PDS_TEP_TYPE_IGW;
             break;
         case VNIC_ENCAP:
-            spec->encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
-            spec->key.ip_addr = tep_tx_data->tep_tx_mpls_udp_action.dipo;
+            spec->type = PDS_TEP_TYPE_WORKLOAD;
             break;
         }
+        spec->encap.val.mpls_tag =
+            nh_tx_data->action_u.nexthop_tx_nexthop_info.dst_slot_id;
     } else if (tep_tx_data->action_id == TEP_TX_VXLAN_TEP_TX_ID) {
-        spec->encap_type = PDS_TEP_ENCAP_TYPE_VXLAN;
+        spec->encap.type = PDS_ENCAP_TYPE_VXLAN;
+        spec->encap.val.vnid =
+            nh_tx_data->action_u.nexthop_tx_nexthop_info.dst_slot_id;
         spec->key.ip_addr = tep_tx_data->tep_tx_vxlan_action.dipo;
     }
 }

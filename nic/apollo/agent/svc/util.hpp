@@ -49,6 +49,20 @@ ippfx_proto_spec_to_api_spec (const types::IPPrefix& in_ippfx,
     return sdk::SDK_RET_OK;
 }
 
+static inline sdk_ret_t
+ipv4pfx_proto_spec_to_api_spec (const types::IPPrefix& in_ippfx,
+                              ipv4_prefix_t *ip_pfx)
+{
+    ip_pfx->len = in_ippfx.len();
+    if ((in_ippfx.addr().af() == types::IP_AF_INET) &&
+             (ip_pfx->len > 32)) {
+        return sdk::SDK_RET_INVALID_ARG;
+    } else {
+        ip_pfx->v4_addr = in_ippfx.addr().v4addr(); 
+    }
+    return sdk::SDK_RET_OK;
+}
+
 //----------------------------------------------------------------------------
 // convert ip_addr_t to IP address proto spec
 //----------------------------------------------------------------------------
@@ -77,9 +91,20 @@ ippfx_api_spec_to_proto_spec (const ip_prefix_t *in_ippfx,
     return sdk::SDK_RET_OK;
 }
 
+static inline sdk_ret_t
+ipv4pfx_api_spec_to_proto_spec (const ipv4_prefix_t *in_ippfx,
+                              types::IPPrefix *out_ippfx)
+{
+    auto out_addr = out_ippfx->mutable_addr(); 
+    out_ippfx->set_len(in_ippfx->len);
+    out_addr->set_af(types::IP_AF_INET);
+    out_addr->set_v4addr(in_ippfx->v4_addr);
+    return sdk::SDK_RET_OK;
+}
+
 static inline void
-pds_encap_to_proto_encap (const pds_encap_t *pds_encap,
-                          types::Encap *proto_encap)
+pds_encap_to_proto_encap (types::Encap *proto_encap,
+                          const pds_encap_t *pds_encap)
 {
     switch (pds_encap->type) {
     case PDS_ENCAP_TYPE_NONE:

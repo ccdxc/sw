@@ -48,8 +48,7 @@ packets:
                 tos     : 0
                 id      : 0
             mpls:
-                label   : 0
-                #label   : ref://testcase/config/route/Tunnel/EncapValue
+                label   : ref://testcase/config/route/Tunnel/EncapValue
                 ttl     : 0
 
 

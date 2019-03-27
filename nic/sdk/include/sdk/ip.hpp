@@ -242,10 +242,23 @@ ipaddr2str (const ip_addr_t *ip_addr)
         break;
 
     default:
-        buf = ipaddr_str[ipaddr_str_next++ &0x3];
+        buf = ipaddr_str[ipaddr_str_next++ & 0x3];
         strcpy(buf, "NULL");
         return buf;
     }
+}
+
+static inline char *
+ipv4pfx2str (const ipv4_prefix_t *v4_pfx)
+{
+    static thread_local char       pfx_str[4][44];
+    static thread_local uint8_t    pfx_str_next = 0;
+    char                           *buf, *ip_addr_buf;
+
+    buf = pfx_str[pfx_str_next++ & 0x3];
+    ip_addr_buf = ipv4addr2str(v4_pfx->v4_addr);
+    sprintf(buf, "%s/%d", ip_addr_buf, v4_pfx->len);
+    return buf;
 }
 
 //------------------------------------------------------------------------------

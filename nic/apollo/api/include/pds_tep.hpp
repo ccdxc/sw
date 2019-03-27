@@ -4,7 +4,7 @@
 ///----------------------------------------------------------------------------
 ///
 /// \file
-/// This module defines TEP API
+/// This module defines Tunnel EndPoint (TEP) APIs
 ///
 ///----------------------------------------------------------------------------
 
@@ -20,15 +20,14 @@
 
 #define PDS_MAX_TEP 1023
 
-/// \brief Encapsulation type
-typedef enum pds_tep_encap_type_e {
-    PDS_TEP_ENCAP_TYPE_NONE     = 0,    ///< No encap
-    ///< MPLSoUDP encap types
-    PDS_TEP_ENCAP_TYPE_GW_ENCAP = 1,    ///< MPLSoUDP with single mpls label
-    PDS_TEP_ENCAP_TYPE_VNIC     = 2,    ///< MPLSoUDP with two mpls labels
-    ///< VxLAN encap
-    PDS_TEP_ENCAP_TYPE_VXLAN    = 3,    ///< VxLAN encap
-} pds_tep_encap_type_t;
+/// \brief type of the TEP
+typedef enum pds_tep_type_e {
+    PDS_TEP_TYPE_NONE     = 0,    ///< invalid TEP type
+    PDS_TEP_TYPE_IGW      = 1,    ///< TEP for north-south traffic going
+                                  ///< to Internet
+    PDS_TEP_TYPE_WORKLOAD = 2,    ///< TEP for east-west traffic between
+                                  ///< workloads
+} pds_tep_type_t;
 
 /// \brief TEP key
 typedef struct pds_tep_key_s {
@@ -37,8 +36,21 @@ typedef struct pds_tep_key_s {
 
 /// \brief TEP specification
 typedef struct pds_tep_spec_s {
-    pds_tep_key_t key;                  ///< Key
-    pds_tep_encap_type_t encap_type;    ///< Encapsulation Type
+    pds_tep_key_t key;      ///< Key
+    ipv4_addr_t ip_addr;    ///< outer source IP to be used
+                            ///< (unused currently)
+    pds_tep_type_t type;    ///< type/role of the TEP
+    ///< encap to be used, if specified
+    ///< for PDS_TEP_TYPE_WORKLOAD type TEP, encap value itself comes from the
+    ///< mapping configuration so need not be specified here, however for the
+    ///< PDS_TEP_TYPE_IGW, encap has to be specified here ... PDS will take
+    ///< the encap value, if specified here, always so agent needs to set this
+    ///< appropriately
+    pds_encap_t encap;
+    bool        nat;        ///< perform SNAT for traffic going to this TEP and
+                            ///< DNAT for traffic coming from this TEP, if this
+                            ///< is set to true (note that mappings need to have
+                            ///< public IP configured for this to take effect)
 } __PACK__ pds_tep_spec_t;
 
 /// \brief TEP status

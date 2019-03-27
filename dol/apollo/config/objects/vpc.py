@@ -69,7 +69,8 @@ class VpcObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.VPCId
         spec.Type = self.Type
-        utils.GetRpcIPPrefix(self.IPPrefix[self.PfxSel], spec.Prefix)
+        utils.GetRpcIPPrefix(self.IPPrefix[1], spec.V4Prefix)
+        utils.GetRpcIPPrefix(self.IPPrefix[0], spec.V6Prefix)
         return grpcmsg
 
     def Show(self):

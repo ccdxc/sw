@@ -16,12 +16,15 @@
 
 namespace api_test {
 
+extern pds_encap_t default_encap;
+
 /// TEP test utility class
 class tep_util {
 public:
     // Test parameters
     std::string ip_str;           ///< TEP IP
-    pds_tep_encap_type_t type;    ///< TEP type
+    pds_tep_type_t type;          ///< TEP type
+    pds_encap_t encap;            ///< TEP encap
 
     /// \brief default constructor
     tep_util();
@@ -30,7 +33,7 @@ public:
     tep_util(std::string ip_str);
 
     /// \brief parameterized constructor
-    tep_util(std::string ip_str, pds_tep_encap_type_t type);
+    tep_util(std::string ip_str, pds_tep_type_t type, pds_encap_t encap);
 
     /// \brief destructor
     ~tep_util();
@@ -66,8 +69,8 @@ public:
     /// \param[in] type TEP encap type
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_create(uint32_t num_tep, std::string ip_str,
-                                 pds_tep_encap_type_t type =
-                                     PDS_TEP_ENCAP_TYPE_VNIC);
+                                 pds_tep_type_t type = PDS_TEP_TYPE_WORKLOAD,
+                                 pds_encap_t encap = default_encap);
 
     /// \brief Read & validate multiple TEPs
     /// Read "num_tep" TEPs of type "tep_type" with IPs in range
@@ -79,8 +82,8 @@ public:
     /// \param[in] type TEP encap type
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_read(uint32_t num_tep, std::string ip_str,
-                               pds_tep_encap_type_t type =
-                                   PDS_TEP_ENCAP_TYPE_VNIC,
+                               pds_tep_type_t type = PDS_TEP_TYPE_WORKLOAD,
+                               pds_encap_t encap = default_encap,
                                sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
 
     /// \brief Delete multiple TEPs
@@ -92,8 +95,8 @@ public:
     /// \param[in] type TEP encap type
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(uint32_t num_tep, std::string ip_str,
-                                 pds_tep_encap_type_t type =
-                                     PDS_TEP_ENCAP_TYPE_VNIC);
+                                 pds_tep_type_t type = PDS_TEP_TYPE_WORKLOAD,
+                                 pds_encap_t encap = default_encap);
 };
 
 }    // namespace api_test

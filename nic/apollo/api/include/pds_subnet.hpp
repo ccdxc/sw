@@ -32,13 +32,15 @@ typedef struct pds_subnet_key_s {
 
 /// \brief Subnet specification
 typedef struct pds_subnet_spec_s {
-    pds_subnet_key_t key;                    ///< Key
+    pds_subnet_key_t key;                    ///< key
     pds_vcn_key_t vcn;                       ///< VCN key
-    ip_prefix_t pfx;                         ///< CIDR block
-    ip_addr_t vr_ip;                         ///< Virtual router IP
-    mac_addr_t vr_mac;                       ///< Virtual router mac
-    pds_route_table_key_t v4_route_table;    ///< Route table id
-    pds_route_table_key_t v6_route_table;    ///< Route table id
+    ipv4_prefix_t v4_pfx;                    ///< IPv4 CIDR block
+    ip_prefix_t v6_pfx;                      ///< IPv6 CIDR block
+    ipv4_addr_t v4_vr_ip;                    ///< IPv4 virtual router IP
+    ip_addr_t v6_vr_ip;                      ///< IPv6 virtual router IP
+    mac_addr_t vr_mac;                       ///< virtual router mac
+    pds_route_table_key_t v4_route_table;    ///< IPv4 Route table id
+    pds_route_table_key_t v6_route_table;    ///< IPv6 Route table id
     pds_policy_key_t ing_v4_policy;          ///< ingress IPv4 policy table
     pds_policy_key_t ing_v6_policy;          ///< ingress IPv6 policy table
     pds_policy_key_t egr_v4_policy;          ///< egress IPv4 policy table

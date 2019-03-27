@@ -5,7 +5,7 @@ from infra.common.objects import IpAddress
 from infra.common.objects import Ipv6Address
 from infra.common.objects import MacAddressBase
 import infra.api.api as infra_api
-import tunnel_pb2 as tunnel_pb2
+import types_pb2 as types_pb2
 
 def __get_packet_template_impl(obj, args):
     template = 'ETH'
@@ -25,10 +25,8 @@ def GetUsableHostFromRoute(testcase, packet, args=None):
     return __get_host_from_route_impl(testcase.config.route)
 
 def __get_packet_encap_impl(obj, args):
-    if obj.Encap == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
+    if obj.Encap == types_pb2.ENCAP_TYPE_MPLSoUDP:
         encap = 'ENCAP_MPLS2'
-    elif obj.Encap == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_1:
-        encap = 'ENCAP_MPLS'
     else:
         assert 0
     return infra_api.GetPacketTemplate(encap)

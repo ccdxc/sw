@@ -33,9 +33,10 @@ typedef enum pds_vcn_type_e {
 
 /// \brief VCN specification
 typedef struct pds_vcn_spec_s {
-    pds_vcn_key_t key;      ///< Key
-    pds_vcn_type_t type;    ///< Type
-    ip_prefix_t pfx;        ///< CIDR block
+    pds_vcn_key_t key;       ///< Key
+    pds_vcn_type_t type;     ///< Type
+    ipv4_prefix_t v4_pfx;    ///< IPv4 CIDR block
+    ip_prefix_t v6_pfx;      ///< IPv6 CIDR block
 } __PACK__ pds_vcn_spec_t;
 
 /// \brief VCN status

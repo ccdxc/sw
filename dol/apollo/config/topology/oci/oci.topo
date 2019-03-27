@@ -21,9 +21,11 @@ device:
     macaddress  : macaddr/0002.0100.0001
     tunnel      :
         - count : 1
-          encap : mplsudp_tags1
+          encap : mplsoudp
+          type  : internet-gateway
         - count : 1
-          encap : mplsudp_tags2
+          encap : mplsoudp
+          type  : workload
 
 vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen. 

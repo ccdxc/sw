@@ -10,43 +10,41 @@
 
 // Populate proto buf spec from tep API spec
 static inline void
-tep_api_spec_to_proto_spec (const pds_tep_spec_t *api_spec,
-                            pds::TunnelSpec *proto_spec)
+tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
+                            const pds_tep_spec_t *api_spec)
 {
-    switch (api_spec->encap_type) {
-    case PDS_TEP_ENCAP_TYPE_VXLAN:
-        proto_spec->set_encap(pds::TUNNEL_ENCAP_VXLAN);
-        break;
-
-    case PDS_TEP_ENCAP_TYPE_GW_ENCAP:
-        proto_spec->set_encap(pds::TUNNEL_ENCAP_MPLSoUDP_TAGS_1);
-        break;
-
-    case PDS_TEP_ENCAP_TYPE_VNIC:
-        proto_spec->set_encap(pds::TUNNEL_ENCAP_MPLSoUDP_TAGS_2);
-        break;
-
-    default:
-        proto_spec->set_encap(pds::TUNNEL_ENCAP_VXLAN);
-        break;
-    }
     if (api_spec->key.ip_addr != 0) {
         proto_spec->mutable_remoteip()->set_af(types::IP_AF_INET);
         proto_spec->mutable_remoteip()->set_v4addr(api_spec->key.ip_addr);
     }
+    switch (api_spec->type) {
+    case PDS_TEP_TYPE_WORKLOAD:
+        proto_spec->set_type(pds::TUNNEL_TYPE_WORKLOAD);
+        break;
+    case PDS_TEP_TYPE_IGW:
+        proto_spec->set_type(pds::TUNNEL_TYPE_IGW);
+        break;
+    case PDS_TEP_TYPE_NONE:
+    default:
+        proto_spec->set_type(pds::TUNNEL_TYPE_NONE);
+        break;
+    }
+    pds_encap_to_proto_encap(proto_spec->mutable_encap(),
+                             &api_spec->encap);
+    // TODO: fill Nat here
 }
 
 // Populate proto buf status from tep API status
 static inline void
-tep_api_status_to_proto_status (const pds_tep_status_t *api_status,
-                                pds::TunnelStatus *proto_status)
+tep_api_status_to_proto_status (pds::TunnelStatus *proto_status,
+                                const pds_tep_status_t *api_status)
 {
 }
 
 // Populate proto buf stats from tep API stats
 static inline void
-tep_api_stats_to_proto_stats (const pds_tep_stats_t *api_stats,
-                              pds::TunnelStats *proto_stats)
+tep_api_stats_to_proto_stats (pds::TunnelStats *proto_stats,
+                              const pds_tep_stats_t *api_stats)
 {
 }
 
@@ -60,31 +58,39 @@ tep_api_info_to_proto (const pds_tep_info_t *api_info, void *ctxt)
     pds::TunnelStatus *proto_status = tep->mutable_status();
     pds::TunnelStats *proto_stats = tep->mutable_stats();
 
-    tep_api_spec_to_proto_spec(&api_info->spec, proto_spec);
-    tep_api_status_to_proto_status(&api_info->status, proto_status);
-    tep_api_stats_to_proto_stats(&api_info->stats, proto_stats);
+    tep_api_spec_to_proto_spec(proto_spec, &api_info->spec);
+    tep_api_status_to_proto_status(proto_status, &api_info->status);
+    tep_api_stats_to_proto_stats(proto_stats, &api_info->stats);
 }
 
 // Build TEP API spec from protobuf spec
 static inline void
-tep_proto_spec_to_api_spec (const pds::TunnelSpec &proto_spec,
-                            pds_tep_spec_t *api_spec)
+tep_proto_spec_to_api_spec (pds_tep_spec_t *api_spec,
+                            const pds::TunnelSpec &proto_spec)
 {
     types::IPAddress remoteip = proto_spec.remoteip();
-
     memset(api_spec, 0, sizeof(pds_tep_spec_t));
-    switch (proto_spec.encap()) {
-    case pds::TUNNEL_ENCAP_VXLAN:
-        api_spec->encap_type = PDS_TEP_ENCAP_TYPE_VXLAN;
+    switch (proto_spec.type()) {
+    case pds::TUNNEL_TYPE_IGW:
+        api_spec->type = PDS_TEP_TYPE_IGW;
         break;
-    case pds::TUNNEL_ENCAP_MPLSoUDP_TAGS_1:
-        api_spec->encap_type = PDS_TEP_ENCAP_TYPE_GW_ENCAP;
-        break;
-    case pds::TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
-        api_spec->encap_type = PDS_TEP_ENCAP_TYPE_VNIC;
+    case pds::TUNNEL_TYPE_WORKLOAD:
+        api_spec->type = PDS_TEP_TYPE_WORKLOAD;
         break;
     default:
-        api_spec->encap_type = PDS_TEP_ENCAP_TYPE_NONE;
+        api_spec->type = PDS_TEP_TYPE_NONE;
+        break;
+    }
+    switch (proto_spec.encap().type()) {
+    case types::ENCAP_TYPE_VXLAN:
+        api_spec->encap.type = PDS_ENCAP_TYPE_VXLAN;
+        api_spec->encap.val.vnid = proto_spec.encap().value().vnid();
+        break;
+    case types::ENCAP_TYPE_MPLSoUDP:
+        api_spec->encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+        api_spec->encap.val.mpls_tag = proto_spec.encap().value().mplstag();
+        break;
+    default:
         break;
     }
     if (types::IP_AF_INET == remoteip.af()) {
@@ -112,7 +118,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
             break;
         }
         auto request = proto_req->request(i);
-        tep_proto_spec_to_api_spec(request, api_spec);
+        tep_proto_spec_to_api_spec(api_spec, request);
         ret = core::tep_create(request.id(), api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -162,10 +168,9 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
             break;
         }
         auto response = proto_rsp->add_response();
-        tep_api_spec_to_proto_spec(&info.spec, response->mutable_spec());
-        tep_api_status_to_proto_status(&info.status,
-                                       response->mutable_status());
-        tep_api_stats_to_proto_stats(&info.stats, response->mutable_stats());
+        tep_api_spec_to_proto_spec(response->mutable_spec(), &info.spec);
+        tep_api_status_to_proto_status(response->mutable_status(), &info.status);
+        tep_api_stats_to_proto_stats(response->mutable_stats(), &info.stats);
     }
     return Status::OK;
 }

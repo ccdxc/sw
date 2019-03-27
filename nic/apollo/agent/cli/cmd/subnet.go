@@ -103,8 +103,8 @@ func printSubnetHeader() {
 func printSubnet(subnet *pds.Subnet) {
 	spec := subnet.GetSpec()
 	fmt.Printf("%-6d%-6d%-20s%-16s%-20s%-10d%-10d%-14d%-14d%-14d%-14d\n",
-		spec.GetId(), spec.GetVPCId(), utils.IPPrefixToStr(spec.GetPrefix()),
-		utils.IPAddrToStr(spec.GetVirtualRouterIP()),
+		spec.GetId(), spec.GetVPCId(), utils.IPPrefixToStr(spec.GetV4Prefix()),
+		utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
 		spec.GetV4RouteTableId(), spec.GetV6RouteTableId(),
 		spec.GetIngV4SecurityPolicyId(),

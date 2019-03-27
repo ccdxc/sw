@@ -23,14 +23,19 @@ class TunnelObject(base.ConfigObjectBase):
 
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
         self.LocalIPAddr = parent.IPAddr
+        self.EncapValue = 0
         if local == True:
             self.RemoteIPAddr = self.LocalIPAddr
-            self.Encap = tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2
+            self.EncapType = types_pb2.ENCAP_TYPE_MPLSoUDP
+            self.Type = tunnel_pb2.TUNNEL_TYPE_NONE
         else:
             self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
-            self.Encap = utils.GetTunnelEncapType(spec.encap)
-            if self.Encap == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
-               self.RemoteVnicMplsSlotIdAllocator = resmgr.CreateRemoteVnicMplsSlotAllocator()
+            self.EncapType = utils.GetEncapType(spec.encap)
+            self.Type = utils.GetTunnelType(spec.type)
+            if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
+                self.RemoteVnicMplsSlotIdAllocator = resmgr.CreateRemoteVnicMplsSlotAllocator()
+            elif self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
+                self.EncapValue = next(resmgr.IGWMplsSlotIdAllocator)
 
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
 
@@ -38,16 +43,18 @@ class TunnelObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Tunnel%d|Encap:%s|LocalIPAddr:%s|RemoteIPAddr:%s" %\
-               (self.Id, utils.GetTunnelEncapString(self.Encap),
-               self.LocalIPAddr, self.RemoteIPAddr)
+        return "Tunnel%d|Encap:%s|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s" %\
+               (self.Id, utils.GetEncapTypeString(self.EncapType),
+               self.LocalIPAddr, self.RemoteIPAddr, utils.GetTunnelTypeString(self.Type))
 
     def GetGrpcCreateMessage(self):
         grpcmsg = tunnel_pb2.TunnelRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.Id
         spec.VPCId = 0 # TODO: Create Substrate VPC
-        spec.Encap = self.Encap
+        spec.Encap.type = self.EncapType
+        spec.Encap.value.MPLSTag = self.EncapValue
+        spec.Type = self.Type
         spec.LocalIP.Af = types_pb2.IP_AF_INET
         spec.LocalIP.V4Addr = int(self.LocalIPAddr)
         spec.RemoteIP.Af = types_pb2.IP_AF_INET
@@ -55,12 +62,12 @@ class TunnelObject(base.ConfigObjectBase):
         return grpcmsg
 
     def IsMplsOverUdp2(self):
-        if self.Encap == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_2:
+        if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
             return True
         return False
 
     def IsMplsOverUdp1(self):
-        if self.Encap == tunnel_pb2.TUNNEL_ENCAP_MPLSoUDP_TAGS_1:
+        if self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
             return True
         return False
 

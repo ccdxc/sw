@@ -51,8 +51,9 @@ sdk_ret_t
 vcn_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vcn_spec_t *spec = &api_ctxt->api_params->vcn_spec;
 
-    PDS_TRACE_DEBUG("Intializing vcn %u, type %u, pfx %s", spec->key.id,
-                    spec->type, ippfx2str(&spec->pfx));
+    PDS_TRACE_DEBUG("Intializing vcn %u, type %u, v4 pfx %s, v6 pfx %s",
+                    spec->key.id, spec->type, ipv4pfx2str(&spec->v4_pfx),
+                    ippfx2str(&spec->v6_pfx));
     memcpy(&this->key_, &spec->key, sizeof(pds_vcn_key_t));
     return SDK_RET_OK;
 }

@@ -57,12 +57,13 @@ protected:
 /// Does initial setup for route table testcases
 TEST_F(route_test, initial_setup) {
     pds_batch_params_t batch_params = {0};
+    pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // create max TEPs which can be used as NHs for routes
     ASSERT_TRUE(tep_util::many_create(PDS_MAX_TEP-1, k_first_nh_ip_str,
-        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_TYPE_WORKLOAD, encap) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
     // TODO: Because of delayed delete,
     // immediate TEP creation in the successive test case is not possible.
@@ -517,12 +518,13 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_neg_4) {
 /// Does cleanup for route table testcases
 TEST_F(route_test, final_teardown) {
     pds_batch_params_t batch_params = {0};
+    pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // delete the TEPs created as part of SetUp()
     ASSERT_TRUE(tep_util::many_delete(PDS_MAX_TEP-1, k_first_nh_ip_str,
-        PDS_TEP_ENCAP_TYPE_VNIC) == sdk::SDK_RET_OK);
+        PDS_TEP_TYPE_WORKLOAD, encap) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
     // TODO: Because of delayed delete,
     // immediate TEP creation in the successive test case is not possible.

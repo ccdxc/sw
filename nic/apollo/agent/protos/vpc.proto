@@ -30,16 +30,18 @@ message VPCSpec {
   uint32         Id             = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // type of the VPC
   VPCType        Type           = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // IP prefix of this VPC
-  types.IPPrefix Prefix         = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // IPv4 prefix of this VPC
+  types.IPPrefix V4Prefix       = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // IPv6 prefix of this VPC
+  types.IPPrefix V6Prefix       = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // identifier of the IPv4 route table to be used and this route table is
   // inherited by the subnets under this VPC, if they are created with no route
   // table explicitly
-  uint32         V4RouteTableId = 4;
+  uint32         V4RouteTableId = 5;
   // identifier of the IPv6 route table to be used, if any and this route table
   // is inherited by the subnets under this VPC, if they are created with no
   // route table explicitly
-  uint32         V6RouteTableId = 5;
+  uint32         V6RouteTableId = 6;
 }
 
 // operational status of a VPC, if any

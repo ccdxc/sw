@@ -104,5 +104,5 @@ func printVPC(vpc *pds.VPC) {
 	fmt.Printf("%-6d%-10s%-18s\n",
 		spec.GetId(),
 		strings.Replace(spec.GetType().String(), "VPC_TYPE_", "", -1),
-		utils.IPPrefixToStr(spec.GetPrefix()))
+		utils.IPPrefixToStr(spec.GetV4Prefix()))
 }
