@@ -223,4 +223,25 @@
     right: 0.5em;
     color: #1b1d1f;
   }
+
+  .ui-chips  {
+    @include primary-font(16px);
+  }
+
+  .ui-chips  ul.ui-inputtext .ui-chips-token {    
+    background: #86a8d7 !important;
+    color: #ffffff  !important;;
+  }
+
+  .ui-chips  .ui-chips-token .ui-chips-token-icon {
+    right: 10px;
+  }
+
+  .ui-chips  .ui-inputtext {
+    padding-left:0px;
+  }
+
+  .ui-chips :focus {
+    outline-width: 1px !important;
+  }
 }

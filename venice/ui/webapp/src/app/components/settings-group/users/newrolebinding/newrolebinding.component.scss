@@ -84,3 +84,11 @@
 .newrolebinding .ui-picklist .ui-picklist-filter-container .ui-picklist-filter {
     text-indent: 0.1em;
 }
+/* customize primeng widget */
+.newrolebinding .ui-dropdown.ui-widget {
+  margin-left:3px;
+}
+
+.newrolebinding .ui-chips-input-token input {
+  width: 15em;
+}

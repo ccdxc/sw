@@ -82,7 +82,6 @@ export class NewrolebindingComponent extends UsersComponent implements OnInit, O
         this.isRolebindingnameValid(this.veniceRolebindings)
       ]);
 
-      const users = this.newAuthRolebinding.$formGroup.get(['spec', 'users']) as FormArray;
       this.onUsersAvailable();
       this.onRolesAvailable();
     }

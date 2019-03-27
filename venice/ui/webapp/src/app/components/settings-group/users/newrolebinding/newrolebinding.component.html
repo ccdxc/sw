@@ -14,7 +14,11 @@
            <p-dropdown [options]="sourceRoles" formControlName="role" *ngIf="!isEditMode()" placeholder="Select one" ></p-dropdown>
             <span *ngIf="isEditMode()" class="newrolebinding-input-item newrolebinding-rolename">{{newAuthRolebinding.spec.role}}</span>
         </div>
-      </div>
+    </div>
+    <div fxLayout="row" formGroupName="spec">
+        <div class="newrolebinding-panel-rolegroup-header-add-property-label newrolebinding-panel-rolegroup-header-add-property-label-usergroup">User Groups:</div>
+        <p-chips formControlName="user-groups" class="newrolebinding-input-item newrolebinding-usergroups" [matTooltip]="'Type in user-group name and hit enter key.'" placeholder="User groups ..." ></p-chips>
+    </div>
     <div fxLayout="row" class="newrolebinding-panel-rolegroup-header-add-property-label">Users:</div>
 
     <p-pickList [source]="sourceUsers" [target]="targetUsers" filterBy="name" sourceHeader="Available" targetHeader="Selected"
@@ -25,6 +29,7 @@
         </div>
       </ng-template>
     </p-pickList>
+    
   </div>
   <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
       <div fxFlex="nogrow">
