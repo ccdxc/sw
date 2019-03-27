@@ -1,0 +1,6146 @@
+[
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa1",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0001",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0001",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 1,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa2",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0002",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0002",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 2,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa3",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0003",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0003",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 3,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa4",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0004",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0004",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 4,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa5",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0005",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0005",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 5,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa6",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0006",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0006",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 6,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa7",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0007",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0007",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 7,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa8",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0008",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0008",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 8,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa9",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0009",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0009",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 9,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa10",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0010",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0010",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 10,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa11",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0011",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0011",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 11,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa12",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0012",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0012",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 12,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa13",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0013",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0013",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 13,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa14",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0014",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0014",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 14,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa15",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0015",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0015",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 15,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa16",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0016",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0016",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 16,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa17",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0017",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0017",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 17,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa18",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0018",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0018",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 18,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa19",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0019",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0019",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 19,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa20",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0020",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0020",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 20,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa21",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0021",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0021",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 21,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa22",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0022",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0022",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 22,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa23",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0023",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0023",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 23,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa24",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0024",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0024",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 24,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa25",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0025",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0025",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 25,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa26",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0026",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0026",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 26,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa27",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0027",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0027",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 27,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa28",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0028",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0028",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 28,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa29",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0029",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0029",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 29,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa30",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0030",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0030",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 30,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa31",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0031",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0031",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 31,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa32",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0032",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0032",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 32,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa33",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0033",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0033",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 33,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa34",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0034",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0034",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 34,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa35",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0035",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0035",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 35,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa36",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0036",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0036",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 36,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa37",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0037",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0037",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 37,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa38",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0038",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0038",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 38,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa39",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0039",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0039",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 39,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa40",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0040",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0040",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 40,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa41",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0041",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0041",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 41,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa42",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0042",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0042",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 42,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa43",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0043",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0043",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 43,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa44",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0044",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0044",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 44,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa45",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0045",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0045",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 45,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa46",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0046",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0046",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 46,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa47",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0047",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0047",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 47,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa48",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0048",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0048",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 48,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa49",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0049",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0049",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 49,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa50",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0050",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0050",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 50,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa51",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0051",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0051",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 51,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa52",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0052",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0052",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 52,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa53",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0053",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0053",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 53,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa54",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0054",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0054",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 54,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa55",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0055",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0055",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 55,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa56",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0056",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0056",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 56,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa57",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0057",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0057",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 57,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa58",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0058",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0058",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 58,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa59",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0059",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0059",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 59,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa60",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0060",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0060",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 60,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa61",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0061",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0061",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 61,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa62",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0062",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0062",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 62,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa63",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0063",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0063",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 63,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa64",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0064",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0064",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 64,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa65",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0065",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0065",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 65,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa66",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0066",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0066",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 66,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa67",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0067",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0067",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 67,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa68",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0068",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0068",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 68,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa69",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0069",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0069",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 69,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa70",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0070",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0070",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 70,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa71",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0071",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0071",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 71,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa72",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0072",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0072",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 72,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa73",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0073",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0073",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 73,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa74",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0074",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0074",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 74,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa75",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0075",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0075",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 75,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa76",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0076",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0076",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 76,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa77",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0077",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0077",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 77,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa78",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0078",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0078",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 78,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa79",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0079",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0079",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 79,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa80",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0080",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0080",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 80,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa81",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0081",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0081",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 81,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa82",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0082",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0082",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 82,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa83",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0083",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0083",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 83,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa84",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0084",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0084",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 84,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa85",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0085",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0085",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 85,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa86",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0086",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0086",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 86,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa87",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0087",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0087",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 87,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa88",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0088",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0088",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 88,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa89",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0089",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0089",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 89,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa90",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0090",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0090",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 90,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa91",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0091",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0091",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 91,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa92",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0092",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0092",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 92,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa93",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0093",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0093",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 93,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa94",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0094",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0094",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 94,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa95",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0095",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0095",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 95,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa96",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0096",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0096",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 96,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa97",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0097",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0097",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 97,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa98",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0098",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0098",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 98,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa99",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0099",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0099",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 99,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa100",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0100",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0100",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 100,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa101",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0101",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0101",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 101,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa102",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0102",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0102",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 102,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa103",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0103",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0103",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 103,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa104",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0104",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0104",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 104,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa105",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0105",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0105",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 105,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa106",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0106",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0106",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 106,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa107",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0107",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0107",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 107,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa108",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0108",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0108",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 108,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa109",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0109",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0109",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 109,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa110",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0110",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0110",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 110,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa111",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0111",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0111",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 111,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa112",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0112",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0112",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 112,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa113",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0113",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0113",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 113,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa114",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0114",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0114",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 114,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa115",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0115",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0115",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 115,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa116",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0116",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0116",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 116,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa117",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0117",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0117",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 117,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa118",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0118",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0118",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 118,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa119",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0119",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0119",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 119,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa120",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0120",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0120",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 120,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa121",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0121",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0121",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 121,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa122",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0122",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0122",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 122,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa123",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0123",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0123",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 123,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa124",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0124",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0124",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 124,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa125",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0125",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0125",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 125,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa126",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0126",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0126",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 126,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa127",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0127",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0127",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 127,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa128",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0128",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0128",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 128,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa129",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0129",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0129",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 129,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa130",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0130",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0130",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 130,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa131",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0131",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0131",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 131,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa132",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0132",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0132",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 132,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa133",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0133",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0133",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 133,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa134",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0134",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0134",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 134,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa135",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0135",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0135",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 135,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa136",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0136",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0136",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 136,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa137",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0137",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0137",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 137,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa138",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0138",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0138",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 138,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa139",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0139",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0139",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 139,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa140",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0140",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0140",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 140,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa141",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0141",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0141",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 141,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa142",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0142",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0142",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 142,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa143",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0143",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0143",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 143,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa144",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0144",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0144",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 144,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa145",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0145",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0145",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 145,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa146",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0146",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0146",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 146,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa147",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0147",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0147",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 147,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa148",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0148",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0148",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 148,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa149",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0149",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0149",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 149,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa150",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0150",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0150",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 150,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa151",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0151",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0151",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 151,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa152",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0152",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0152",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 152,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa153",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0153",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0153",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 153,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa154",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0154",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0154",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 154,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa155",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0155",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0155",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 155,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa156",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0156",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0156",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 156,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa157",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0157",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0157",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 157,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa158",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0158",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0158",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 158,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa159",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0159",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0159",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 159,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa160",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0160",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0160",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 160,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa161",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0161",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0161",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 161,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa162",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0162",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0162",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 162,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa163",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0163",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0163",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 163,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa164",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0164",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0164",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 164,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa165",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0165",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0165",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 165,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa166",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0166",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0166",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 166,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa167",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0167",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0167",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 167,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa168",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0168",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0168",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 168,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa169",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0169",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0169",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 169,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa170",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0170",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0170",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 170,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa171",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0171",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0171",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 171,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa172",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0172",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0172",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 172,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa173",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0173",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0173",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 173,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa174",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0174",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0174",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 174,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa175",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0175",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0175",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 175,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa176",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0176",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0176",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 176,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa177",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0177",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0177",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 177,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa178",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0178",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0178",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 178,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa179",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0179",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0179",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 179,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa180",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0180",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0180",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 180,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa181",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0181",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0181",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 181,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa182",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0182",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0182",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 182,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa183",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0183",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0183",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 183,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa184",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0184",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0184",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 184,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa185",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0185",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0185",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 185,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa186",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0186",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0186",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 186,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa187",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0187",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0187",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 187,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa188",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0188",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0188",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 188,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa189",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0189",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0189",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 189,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa190",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0190",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0190",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 190,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa191",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0191",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0191",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 191,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa192",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0192",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0192",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 192,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa193",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0193",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0193",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 193,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa194",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0194",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0194",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 194,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa195",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0195",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0195",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 195,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa196",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0196",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0196",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 196,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa197",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0197",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0197",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 197,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa198",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0198",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0198",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 198,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa199",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0199",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0199",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 199,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa200",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0200",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0200",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 200,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa201",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0201",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0201",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 201,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa202",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0202",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0202",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 202,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa203",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0203",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0203",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 203,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa204",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0204",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0204",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 204,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa205",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0205",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0205",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 205,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa206",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0206",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0206",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 206,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa207",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0207",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0207",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 207,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa208",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0208",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0208",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 208,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa209",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0209",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0209",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 209,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa210",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0210",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0210",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 210,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa211",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0211",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0211",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 211,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa212",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0212",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0212",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 212,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa213",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0213",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0213",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 213,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa214",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0214",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0214",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 214,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa215",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0215",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0215",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 215,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa216",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0216",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0216",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 216,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa217",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0217",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0217",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 217,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa218",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0218",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0218",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 218,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa219",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0219",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0219",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 219,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa220",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0220",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0220",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 220,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa221",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0221",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0221",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 221,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa222",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0222",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0222",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 222,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa223",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0223",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0223",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 223,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa224",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0224",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0224",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 224,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa225",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0225",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0225",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 225,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa226",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0226",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0226",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 226,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa227",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0227",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0227",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 227,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa228",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0228",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0228",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 228,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa229",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0229",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0229",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 229,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa230",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0230",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0230",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 230,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa231",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0231",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0231",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 231,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa232",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0232",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0232",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 232,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa233",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0233",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0233",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 233,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa234",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0234",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0234",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 234,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa235",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0235",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0235",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 235,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa236",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0236",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0236",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 236,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa237",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0237",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0237",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 237,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa238",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0238",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0238",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 238,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa239",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0239",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0239",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 239,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa240",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0240",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0240",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 240,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa241",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0241",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0241",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 241,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa242",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0242",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0242",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 242,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa243",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0243",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0243",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 243,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa244",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0244",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0244",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 244,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa245",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0245",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0245",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 245,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa246",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0246",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0246",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 246,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa247",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0247",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0247",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 247,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa248",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0248",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0248",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 248,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa249",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0249",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0249",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 249,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa250",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0250",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0250",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 250,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa251",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0251",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0251",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 251,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa252",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0252",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0252",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 252,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa253",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0253",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0253",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 253,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa254",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0254",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0254",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 254,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa255",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0255",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0255",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 255,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  },
+  {
+    "kind": "IPSecSADecrypt",
+    "meta": {
+      "name": "ipsec-decrypt-sa256",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "vrf-name": "scale-vrf-2",
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0256",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAA0256",
+      "local-gateway-ip": "10.7.6.4",
+      "remote-gateway-ip": "10.7.6.3",
+      "spi": 256,
+      "tep-vrf": "scale-vrf-0"
+    },
+    "status":  {}
+  }
+]
