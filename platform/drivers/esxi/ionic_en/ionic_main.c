@@ -433,13 +433,26 @@ ionic_setup(struct ionic *ionic)
 
 	ionic_dbg("ionic_setup() called");
 
+        status = ionic_mutex_create("ionic_dev_cmd_lock",
+                                    ionic_driver.module_id,
+                                    ionic_driver.heap_id,
+                                    VMK_LOCKDOMAIN_INVALID,
+                                    VMK_MUTEX,
+                                    VMK_MUTEX_UNRANKED,
+                                    &ionic->dev_cmd_lock);
+        if (status != VMK_OK) {
+                ionic_err("ionic_mutex_create() faild, status: %s",
+                          vmk_StatusToString(status));
+                return status;
+        }
+
         status = ionic_dev_setup(&ionic->en_dev.idev,
                                  ionic->bars,
                                  ionic->num_bars);
         if (status != VMK_OK) {
 		ionic_err("ionic_dev_setup() failed, status: %s",
 			  vmk_StatusToString(status));
-                return status;
+                goto dev_setup_err;
         }
 
         status = ionic_spinlock_create("ionic->lifs_lock",
@@ -500,6 +513,9 @@ cmd_lock_err:
 lifs_lock_err:
         ionic_dev_clean(ionic);
 
+dev_setup_err:
+        ionic_mutex_destroy(ionic->dev_cmd_lock);
+
         return status;
 }
 
@@ -512,6 +528,7 @@ ionic_clean(struct ionic *ionic)
         ionic_spinlock_destroy(ionic->cmd_lock);
 #endif
         ionic_spinlock_destroy(ionic->lifs_lock);
+        ionic_mutex_destroy(ionic->dev_cmd_lock);
         ionic_dev_clean(ionic);
 }
 
@@ -520,14 +537,23 @@ ionic_clean(struct ionic *ionic)
 VMK_ReturnStatus
 ionic_reset(struct ionic *ionic)
 {
+        VMK_ReturnStatus status;
         struct ionic_dev *idev = &ionic->en_dev.idev;
 
 	ionic_dbg("ionic_reset() called");
 
+        vmk_MutexLock(ionic->dev_cmd_lock);
         ionic_dev_cmd_reset(idev);
 
-        return ionic_dev_cmd_wait_check(idev,
-                                        HZ * devcmd_timeout);
+        status = ionic_dev_cmd_wait_check(idev,
+                                          HZ * devcmd_timeout);
+        vmk_MutexUnlock(ionic->dev_cmd_lock);
+        if (status != VMK_OK) {
+                ionic_err("ionic_dev_cmd_wait_check() failed, status: %s",
+                          vmk_StatusToString(status));
+        }
+
+        return status;
 }
 
 
@@ -579,10 +605,12 @@ ionic_identify(struct ionic *ionic)
                 ionic_writel_raw(idev->ident->words[i],
                                  (vmk_VA)&ident->words[i]);
 #endif
-
+        vmk_MutexLock(ionic->dev_cmd_lock);
         ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
 
         status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+        vmk_MutexUnlock(ionic->dev_cmd_lock);
+
         if (status != VMK_OK) {
                 ionic_err("ionic_dev_cmd_wait_check() failed, status: %s",
                           vmk_StatusToString(status));
@@ -611,6 +639,32 @@ dev_cmd_wait_err:
 
         return status;
 }
+
+
+VMK_ReturnStatus
+ionic_port_config(struct ionic *ionic,
+                  struct port_config *pc)
+{
+        VMK_ReturnStatus status;
+        struct ionic_dev *idev = &ionic->en_dev.idev;
+
+         ionic_dbg("port_config state=0x%x speed=0x%x mtu=0x%x an_enable=0x%x"
+                  " fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
+                  pc->state, pc->speed, pc->mtu, pc->an_enable,
+                  pc->fec_type, pc->pause_type, pc->loopback_mode);
+
+         vmk_MutexLock(ionic->dev_cmd_lock);
+        ionic_dev_cmd_port_config(idev, pc);
+        status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+        vmk_MutexUnlock(ionic->dev_cmd_lock);
+        if (status != VMK_OK) {
+                ionic_err("ionic_dev_cmd_wait_check() failed, status: %s",
+                          vmk_StatusToString(status));
+        }
+
+         return status;
+}
+
 
 
 /*

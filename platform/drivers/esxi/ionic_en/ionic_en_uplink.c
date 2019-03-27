@@ -319,6 +319,77 @@ static vmk_UplinkQueueRSSDynOps ionic_en_dyn_rss_ops = {
 };
 
 
+static VMK_ReturnStatus
+ionic_en_uplink_pause_params_get(vmk_AddrCookie driver_data,
+                                 vmk_UplinkPauseParams *params)
+{
+        struct lif *lif;
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+
+        ionic_dbg("ionic_en_uplink_pause_params_get() called"); 
+
+        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                             struct lif, list);
+
+        vmk_Memset(params, 0, sizeof(vmk_UplinkPauseParams));
+
+        params->autoNegotiate = lif->notifyblock->port_config.an_enable;
+
+        if (lif->notifyblock->port_config.pause_type) {
+                params->rxPauseEnabled = VMK_TRUE;
+                params->txPauseEnabled = VMK_TRUE;
+        }
+
+        return VMK_OK;
+}
+
+
+static VMK_ReturnStatus
+ionic_en_uplink_pause_params_set(vmk_AddrCookie driver_data,
+                                 vmk_UplinkPauseParams params)
+{
+        VMK_ReturnStatus status;
+        struct port_config pc;
+        vmk_uint32 requested_pause;
+        struct lif *lif;
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+
+        ionic_dbg("ionic_en_uplink_pause_params_set() called");
+
+        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                             struct lif, list);
+
+        pc = lif->notifyblock->port_config;
+
+        if (params.rxPauseEnabled && params.txPauseEnabled) {
+                requested_pause = PORT_PAUSE_TYPE_LINK;
+        } else if (!params.rxPauseEnabled && !params.txPauseEnabled) {
+                requested_pause = PORT_PAUSE_TYPE_NONE;
+        } else {
+                return VMK_FAILURE;
+        }
+
+        pc.an_enable = params.autoNegotiate;
+        pc.pause_type = requested_pause;
+
+        status = ionic_port_config(lif->ionic,
+                                   &pc);
+        if (status != VMK_OK) {
+                ionic_err("ionic_port_config() failed, status: %s",
+                          vmk_StatusToString(status));
+        } 
+
+        return status;
+}
+
+static vmk_UplinkPauseParamsOps ionic_en_uplink_pause_ops = {
+        .pauseParamsGet       = ionic_en_uplink_pause_params_get,
+        .pauseParamsSet       = ionic_en_uplink_pause_params_set,
+};
+
+
 /*
  *****************************************************************************
  *
@@ -1224,6 +1295,11 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
         VMK_ASSERT(status == VMK_OK);
 
         status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_PAUSE_PARAMS,
+                                       &ionic_en_uplink_pause_ops);
+        VMK_ASSERT(status == VMK_OK);
+
+        status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_SG_TX,
                                        NULL);
         VMK_ASSERT(status == VMK_OK);
@@ -1567,7 +1643,23 @@ ionic_en_uplink_quiesce_io(vmk_AddrCookie driver_data)            // IN
 VMK_ReturnStatus
 ionic_en_uplink_reset(vmk_AddrCookie driver_data)                 // IN	
 {
-        return VMK_NOT_IMPLEMENTED;
+        VMK_ReturnStatus status;
+        ionic_dbg("ionic_en_uplink_reset() called");
+
+        status = ionic_en_uplink_quiesce_io(driver_data);
+        if (status != VMK_OK) {
+                ionic_err("ionic_en_uplink_quiesce_io() failed, status: %s",
+                          vmk_StatusToString(status));
+                return VMK_FAILURE;
+        }
+
+        status = ionic_en_uplink_start_io(driver_data);
+        if (status != VMK_OK) {
+                ionic_err("ionic_en_uplink_start_io() failed, status: %s",
+                          vmk_StatusToString(status));
+        }
+
+        return status;
 }
 
 

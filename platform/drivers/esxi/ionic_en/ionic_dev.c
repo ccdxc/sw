@@ -75,7 +75,6 @@ ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
         /* BAR2 resources
         */
 
-        //mutex_init(&idev->cmb_inuse_lock);
         status = ionic_mutex_create("ionic_cmb_mutex",
                                     ionic_driver.module_id,
                                     ionic_driver.heap_id,
@@ -166,6 +165,18 @@ void ionic_dev_cmd_reset(struct ionic_dev *idev)
 
         ionic_dev_cmd_go(idev, &cmd);
 }
+
+
+void ionic_dev_cmd_port_config(struct ionic_dev *idev, struct port_config *pc)
+{
+        union dev_cmd cmd = {
+                .port_config.opcode = CMD_OPCODE_PORT_CONFIG_SET,
+                .port_config.config = *pc,
+        };
+
+         ionic_dev_cmd_go(idev, &cmd);
+}
+
 
 void ionic_dev_cmd_hang_notify(struct ionic_dev *idev)
 {

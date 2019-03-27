@@ -119,16 +119,8 @@ struct ionic {
         unsigned int ntxqs_per_lif;
         unsigned int nrxqs_per_lif;
         unsigned int nintrs;
-
+        vmk_Mutex dev_cmd_lock;
         ionic_bitmap intrs;
-//        DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
-#ifdef CONFIG_DEBUG_FS
-#ifdef DEBUGFS_TEST_API
-        void *scratch_bufs[NUM_SCRATCH_BUFS];
-        dma_addr_t scratch_bufs_pa[NUM_SCRATCH_BUFS];
-        struct debugfs_blob_wrapper scratch_bufs_blob[NUM_SCRATCH_BUFS];
-#endif
-#endif
 #ifdef FAKE_ADMINQ
         spinlock_t cmd_lock;
  //       struct list_head cmd_list;
@@ -189,5 +181,9 @@ ionic_reset(struct ionic *ionic);
 
 VMK_ReturnStatus
 ionic_identify(struct ionic *ionic);
+
+VMK_ReturnStatus
+ionic_port_config(struct ionic *ionic,
+                  struct port_config *pc);
 
 #endif /* End of _IONIC_H_ */
