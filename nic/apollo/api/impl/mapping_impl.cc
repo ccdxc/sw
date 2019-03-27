@@ -420,7 +420,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
         goto error;
     }
     PDS_TRACE_DEBUG("Reserved overlay_ip_to_public_ip_nat_hdl %u, "
-                    "handle_.local_.public_ip_to_overlay_ip_nat_hdl_ %u",
+                    "public_ip_to_overlay_ip_nat_hdl_ %u",
                     handle_.local_.overlay_ip_to_public_ip_nat_hdl_,
                     handle_.local_.public_ip_to_overlay_ip_nat_hdl_);
 

@@ -347,6 +347,9 @@ __label__ done;
         SLTCAM_TRACE_ERR("dealloc, r:%d", ret);
     }
 
+    // Save the handle
+    params->handle.pindex(ctx->tcam_index);
+
 done:
     //db_.sanitize(ctx);
     SLTCAM_API_END_(ret);
@@ -375,7 +378,11 @@ __label__ done;
         SLTCAM_TRACE_ERR_GOTO(done, "read, r:%d", ret);
     }
 
+    // Copy the data out
     ctx->copyout();
+
+    // Save the handle
+    params->handle.pindex(ctx->tcam_index);
 
 done:
     SLTCAM_API_END_(ret);

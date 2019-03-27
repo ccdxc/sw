@@ -57,6 +57,7 @@ public:
         return buff;
     }
     uint64_t tou64() { return value_; }
+    void clear() { value_ = 0; }
 
 private:
     union {
