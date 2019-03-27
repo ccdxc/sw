@@ -1,0 +1,39 @@
+meta:
+    description: Memory Calculator Parameter File for Dual-Stack Profile
+
+vpc:
+    count: 1K
+
+policy_tables:
+    count: 1K
+    ipv4:
+        ingress: 1K
+        egress : 0
+    ipv6:
+        ingress: 1K
+        egress : 0
+
+route_tables:
+    count: 1K
+    routes:
+        ipv4: 1K
+        ipv6: 1K
+    nexthops: 1K
+
+flows:
+    count : 2M
+
+mappings:
+    locals: 
+        ipv4: 32K
+        ipv6: 32K
+    remotes: 
+        instances: 2
+        ipv4: 512K
+        ipv6: 512K
+
+teps:
+    count: 1K
+
+nat:
+    count: 64K
