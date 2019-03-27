@@ -438,7 +438,10 @@ pciehcfg_add_standard_caps(pciehcfg_t *pcfg)
      * Extended capabilities.
      */
     addextcap(pcfg, cs, cp, "aer");
-    addextcap(pcfg, cs, cp, "ari");
+    if (!cfgspace_is_bridge(cp)) {
+        /* only endpoints need ARI */
+        addextcap(pcfg, cs, cp, "ari");
+    }
     if (pcfg->dsn) {
         addextcap(pcfg, cs, cp, "dsn");
     }
