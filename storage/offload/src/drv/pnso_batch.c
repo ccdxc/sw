@@ -568,9 +568,8 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 		req_params->rp_page = batch_page;
 		req_params->rp_batch_index = idx;
 
-		chain = chn_create_chain(req_params);
-		if (!chain) {
-			err = EINVAL;
+		err = chn_create_chain(req_params, &chain);
+		if (err) {
 			OSAL_LOG_DEBUG("failed to build batch of chains! idx: %d err: %d",
 					idx, err);
 			PAS_INC_NUM_CHAIN_FAILURES(batch_info->bi_pcr);

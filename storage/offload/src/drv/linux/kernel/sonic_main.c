@@ -675,6 +675,7 @@ int sonic_crypto_key_index_update(const void *key1,
 		ctx1.cmd.crypto_key_update.trigger_update = true;
 		memcpy(ctx1.cmd.crypto_key_update.key_data, key2, key_size);
 		err = sonic_adminq_post_wait(lif, &ctx1);
+		err = SONIC_TO_PNSO_ERR(err);
 	}
 	return err;
 }

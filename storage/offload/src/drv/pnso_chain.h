@@ -308,7 +308,8 @@ struct service_chain {
 	void *sc_req_cb_ctx;		/* caller supplied cb context */
 };
 
-struct service_chain *chn_create_chain(struct request_params *req_params);
+pnso_error_t chn_create_chain(struct request_params *req_params,
+		struct service_chain **ret_chain);
 
 pnso_error_t chn_execute_chain(struct service_chain *chain);
 

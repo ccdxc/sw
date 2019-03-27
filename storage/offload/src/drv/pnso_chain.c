@@ -694,8 +694,9 @@ set_service_mode(uint16_t mode_flags, uint16_t *flags)
 		*flags |= CHAIN_SFLAG_MODE_ASYNC;
 }
 
-struct service_chain *
-chn_create_chain(struct request_params *req_params)
+pnso_error_t
+chn_create_chain(struct request_params *req_params,
+		struct service_chain **ret_chain)
 {
 	pnso_error_t err = EINVAL;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
@@ -712,6 +713,8 @@ chn_create_chain(struct request_params *req_params)
 	uint32_t i;
 
 	OSAL_LOG_DEBUG("enter ...");
+
+	*ret_chain = NULL;
 
 	svc_chain_mpool = pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN];
 	if (!svc_chain_mpool) {
@@ -861,16 +864,16 @@ chn_create_chain(struct request_params *req_params)
 			goto out_chain;
 	}
 
+	*ret_chain = chain;
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
-	return chain;
+	return err;
 
 out_chain:
 	chn_destroy_chain(chain);
-	chain = NULL;
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
-	return chain;
+	return err;
 }
 
 void

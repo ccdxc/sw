@@ -833,9 +833,8 @@ submit_chain(struct request_params *req_params)
 	struct service_chain *chain = NULL;
 	bool is_sync_mode;
 
-	chain = chn_create_chain(req_params);
-	if (!chain) {
-		err = EINVAL;
+	err = chn_create_chain(req_params, &chain);
+	if (err) {
 		OSAL_LOG_ERROR("failed to create request/chain! err: %d",
 				err);
 		goto out;

@@ -497,7 +497,7 @@ int sonic_q_unconsume(struct queue *q, uint32_t count)
 		goto out;
 
 	if (count >= q->num_descs) {
-		err = -EPERM;
+		err = EPERM;
 		goto out;
 	}
 

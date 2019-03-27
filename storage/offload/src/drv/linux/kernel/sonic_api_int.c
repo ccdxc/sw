@@ -338,7 +338,7 @@ int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
 	if (unlikely((count > high_water) || (high_water == 0))) {
 		OSAL_LOG_ERROR("Accounting take error: count %u, high_water %u",
 			       count, high_water);
-		return -EPERM;
+		return EAGAIN;
 	}
 
 	if (unlikely(count == 0))
@@ -348,7 +348,7 @@ int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
 		return PNSO_OK;
 
 	osal_atomic_fetch_sub(atomic_c, count);
-	return -EPERM;
+	return EAGAIN;
 }
 
 int sonic_accounting_atomic_give(osal_atomic_int_t *atomic_c,
@@ -362,7 +362,7 @@ int sonic_accounting_atomic_give(osal_atomic_int_t *atomic_c,
 		OSAL_LOG_ERROR("Accounting counter underflow on sub count %u",
 			       count);
 		OSAL_ASSERT(0);
-		return -EPERM;
+		return EAGAIN;
 	}
 	return PNSO_OK;
 }
@@ -404,7 +404,7 @@ int sonic_accel_rings_sanity_check(void)
 				if (count) {
 					OSAL_LOG_WARN("HW ring %s descs_inuse %d",
 						      ring->name, count);
-					err = -EBUSY;
+					err = EBUSY;
 				}
 			}
 		}

@@ -29,6 +29,8 @@
 #define SONIC_DEVCMD_ERROR		(-EIO)
 #define SONIC_SEQ_Q_BATCH_KEY_EXIST	(-EEXIST)
 
+#define SONIC_TO_PNSO_ERR(err) (-1 * err)
+
 extern unsigned int devcmd_timeout;
 extern unsigned int core_count;
 

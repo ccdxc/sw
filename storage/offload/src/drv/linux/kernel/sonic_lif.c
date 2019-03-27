@@ -1684,7 +1684,7 @@ int
 sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		struct queue **q)
 {
-	int err = -EPERM;
+	int err = -EAGAIN;
 	int free_qid = -1;
 	struct per_core_resource *pc_res = NULL;
 
@@ -1715,6 +1715,7 @@ sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		}
 		break;
 	default:
+		err = -EPERM;
 		break;
 	}
 
@@ -1806,15 +1807,10 @@ static int sonic_lif_seq_q_legacy_init(struct queue *q)
 	q->qtype = ctx.comp.seq_queue_init.qtype;
 	q->db = sonic_db_map(q->idev, q);
 
-	if (err)
-		return err;
-
-	//q->flags |= QCQ_F_INITED;
-
 	OSAL_LOG_INFO("seq_q->qid %d", q->qid);
 	OSAL_LOG_INFO("seq_q->qtype %d", q->qtype);
 	OSAL_LOG_INFO("seq_q->db " PRIx64, (u64) q->db);
-	// err = sonic_debugfs_add_q(lif, q);
+
 	return err;
 }
 
