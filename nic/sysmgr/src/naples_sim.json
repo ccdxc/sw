@@ -12,22 +12,22 @@
     "name": "netagent",
     "command": "/naples/nic/bin/netagent -datapath hal",
     "dependencies": ["delphi", "hal"],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "nmd",
     "command": "/naples/nic/bin/nmd -hostif lo -standalone=false -mode host",
     "dependencies": ["delphi"],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "tmagent",
     "command": "/naples/nic/bin/tmagent",
     "dependencies": ["delphi", "hal"],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "nevtsproxy",
     "command": "/naples/nic/bin/nevtsproxy",
     "dependencies": ["delphi",  "hal"],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "upgrade",
     "command": "/naples/nic/bin/upgrade",

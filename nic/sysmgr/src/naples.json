@@ -22,7 +22,7 @@
     "name": "netagent",
     "command": "/nic/bin/netagent -datapath hal",
     "dependencies": ["delphi", "hal"],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "asicerrord",
     "command": "/platform/bin/asicerrord",
@@ -32,17 +32,17 @@
     "name": "nmd",
     "command": "/bin/sh /nic/tools/start-nmd.sh",
     "dependencies": ["delphi"],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "tmagent",
     "command": "/nic/bin/tmagent",
     "dependencies": ["delphi", "hal"],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "nevtsproxy",
     "command": "/nic/bin/nevtsproxy",
     "dependencies": ["delphi",  "hal"],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "sysmond",
     "command": "/platform/bin/sysmond",
