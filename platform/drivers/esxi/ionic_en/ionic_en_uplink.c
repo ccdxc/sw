@@ -1980,7 +1980,13 @@ ionic_en_uplink_supported_mode_init(struct ionic_en_uplink_handle *uplink_handle
                 uplink_shared_data->supportedModes =
                         ionic_en_uplink_modes_10g;
         } else {
-                return VMK_FAILURE;
+                /* Since now we don't have a way to detect the
+                 * max speed that supported, consider 100G as
+                 * max speed for this case */
+                uplink_shared_data->supportedModesArraySz =
+                        IONIC_EN_NUM_SUPPORTED_MODES_100G;
+                uplink_shared_data->supportedModes =
+                        ionic_en_uplink_modes_100g;
         }
 
          return VMK_OK;
