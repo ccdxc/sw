@@ -178,6 +178,13 @@ typedef struct flow_key_s {
     } __PACK__;
 } __PACK__ flow_key_t;
 
+// Flow's L2 key info
+typedef struct flow_l2key_s {
+    l2seg_id_t    l2seg_id;          // L2 segment
+    mac_addr_t    smac;              // source MAC address of flow
+    mac_addr_t    dmac;              // destination MAC address of flow
+} __PACK__ flow_l2key_t;
+
 // spdlog formatter for flow_key_t
 const char *flowkey2str(const flow_key_t& key);
 inline std::ostream& operator<<(std::ostream& os, const flow_key_t& key)
@@ -200,6 +207,7 @@ typedef struct flow_cfg_s {
     uint8_t                   eg_mirror_session;   // Mirror sessions in egress direction
     uint8_t                   ing_mirror_session;  // Mirror sessions in ingress direction
     uint32_t                  idle_timeout;        // Idle timeout for session
+    flow_l2key_t              l2_info;             // Flow's l2 info
 } __PACK__ flow_cfg_t;
 
 typedef struct flow_pgm_attrs_s {

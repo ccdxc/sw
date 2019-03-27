@@ -18,6 +18,8 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
 #define UPLINK_IF_ID_OFFSET 127
+#define ENIC_IF_ID_OFFSET 150
+#define LIF_ID_OFFSET     60
 
 using namespace hal::plugins::sfw;
 
@@ -28,6 +30,7 @@ uint32_t fte_base_test::nwsec_id_ = 0;
 uint32_t fte_base_test::nh_id_ = 0;
 uint32_t fte_base_test::pool_id_ = 0;
 uint64_t fte_base_test::flowmon_rule_id_ = 0;
+uint32_t fte_base_test::lif_id_ = 0;
 fte::ctx_t fte_base_test::ctx_ = {};
 bool  fte_base_test::ipc_logging_disable_ = false;
 std::vector<dev_handle_t> fte_base_test::handles;
@@ -114,6 +117,39 @@ hal_handle_t fte_base_test::add_l2segment(hal_handle_t nwh, uint16_t vlan_id)
     return resp.mutable_l2segment_status()->key_or_handle().l2segment_handle();
 }
 
+hal_handle_t fte_base_test::add_enic(hal_handle_t l2segh, uint32_t useg, uint64_t mac, hal_handle_t uplinkh)
+{
+    hal_ret_t ret;
+    intf::InterfaceSpec spec;
+    intf::InterfaceResponse resp;
+    intf::LifSpec           lif_spec;
+    intf::LifResponse       lif_rsp;
+    uint32_t                lif_id;
+
+    // Create a lif
+    lif_id = LIF_ID_OFFSET + ++lif_id_;
+    lif_spec.mutable_key_or_handle()->set_lif_id(lif_id);
+    lif_spec.mutable_pinned_uplink_if_key_handle()->set_if_handle(uplinkh);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    spec.set_type(intf::IF_TYPE_ENIC);
+    spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_handle(lif_rsp.mutable_status()->lif_handle());
+    spec.mutable_key_or_handle()->set_interface_id(ENIC_IF_ID_OFFSET + ++intf_id_);
+    spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_l2segment_handle(l2segh);
+    spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(mac);
+    spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(useg);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(spec, &resp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK); 
+
+    return resp.mutable_status()->if_handle();
+}
+
 hal_handle_t fte_base_test::add_uplink(uint8_t port_num)
 {
     hal_ret_t ret;
@@ -134,7 +170,7 @@ hal_handle_t fte_base_test::add_uplink(uint8_t port_num)
 
 hal_handle_t fte_base_test::add_endpoint(hal_handle_t l2segh, hal_handle_t intfh,
                                          uint32_t ip, uint64_t mac, uint16_t useg_vlan,
-                                         bool enable_e2e)
+                                         bool enable_e2e, bool set_uplink, hal_handle_t uplink)
 {
     hal_ret_t ret;
     endpoint::EndpointSpec spec;
@@ -153,9 +189,11 @@ hal_handle_t fte_base_test::add_endpoint(hal_handle_t l2segh, hal_handle_t intfh
         ->mutable_l2segment_key_handle()->set_l2segment_handle(l2segh);
     spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(intfh);
     spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac);
-    auto addr = spec.mutable_endpoint_attrs()->add_ip_address();
-    addr->set_ip_af(types::IP_AF_INET);
-    addr->set_v4_addr(ip);
+    if (ip != 0x0) {
+        auto addr = spec.mutable_endpoint_attrs()->add_ip_address();
+        addr->set_ip_af(types::IP_AF_INET);
+        addr->set_v4_addr(ip);
+    }
     spec.mutable_endpoint_attrs()->set_useg_vlan(useg_vlan);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(spec, &resp);
@@ -477,6 +515,7 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
                               hal_handle_t src_ifh, hal_handle_t src_l2segh,
                               std::vector<Tins::EthernetII> &pkts)
 {
+    hal::pd::pd_if_get_hw_lif_id_args_t lif_args;
     hal::if_t *sif = hal::find_if_by_handle(src_ifh);
     hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(src_l2segh);
     EXPECT_NE(l2seg, nullptr);
@@ -495,8 +534,15 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
     hal::pd::l2seg_hw_id_t hwid = args.hwid;
 
+    if (sif->if_type == intf::IF_TYPE_ENIC) {
+        hal::pd::pd_func_args_t pd_func_args = {0};
+        lif_args.pi_if = sif;
+        pd_func_args.pd_if_get_hw_lif_id = &lif_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, &pd_func_args);  
+    }
+
     fte::cpu_rxhdr_t cpu_rxhdr = {};
-    cpu_rxhdr.src_lif = sif->if_id;
+    cpu_rxhdr.src_lif = (sif->if_type == intf::IF_TYPE_ENIC)?lif_args.hw_lif_id:sif->if_id;
     cpu_rxhdr.lif = lifq.lif;
     cpu_rxhdr.qtype = lifq.qtype;
     cpu_rxhdr.qid = lifq.qid;

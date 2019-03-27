@@ -3563,9 +3563,11 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_if_get_hw_lif_id);
         PD_UNION_ARGS_FIELD(pd_if_get_lport_id);
         PD_UNION_ARGS_FIELD(pd_if_get_tm_oport);
+   
+        // rw entry
+        PD_UNION_ARGS_FIELD(pd_rw_entry_find_or_alloc);
 
         // twice nat
-        PD_UNION_ARGS_FIELD(pd_rw_entry_find_or_alloc);
         PD_UNION_ARGS_FIELD(pd_twice_nat_add);
         PD_UNION_ARGS_FIELD(pd_twice_nat_del);
 
@@ -4001,8 +4003,10 @@ PD_FUNCP_TYPEDEF(pd_if_get_hw_lif_id);
 PD_FUNCP_TYPEDEF(pd_if_get_lport_id);
 PD_FUNCP_TYPEDEF(pd_if_get_tm_oport);
 
-// twice nat
+//rwentry
 PD_FUNCP_TYPEDEF(pd_rw_entry_find_or_alloc);
+
+// twice nat
 PD_FUNCP_TYPEDEF(pd_twice_nat_add);
 PD_FUNCP_TYPEDEF(pd_twice_nat_del);
 

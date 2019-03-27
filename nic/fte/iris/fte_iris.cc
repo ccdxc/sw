@@ -223,7 +223,7 @@ ctx_t::lookup_flow_objs()
             dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
             if (dep_) {
                 HAL_TRACE_INFO("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
-	 	        dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
+                dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
             }
         }
     }
@@ -242,6 +242,7 @@ ctx_t::lookup_flow_objs()
              }
         }
     }
+
     return HAL_RET_OK;
 }
 //-----------------------------------------------------------------------------
@@ -351,11 +352,25 @@ hal_ret_t
 ctx_t::create_session()
 {
     hal_ret_t ret;
+    hal::flow_key_t l2_info;
+    ether_header_t *ethhdr = NULL;
+
+    if (sl2seg_) {
+        l2_info.l2seg_id = sl2seg_->seg_id;
+    } else if (dl2seg_) {
+        l2_info.l2seg_id = dl2seg_->seg_id;
+    }
+    if (cpu_rxhdr_ != NULL) {
+        ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
+        memcpy(l2_info.smac, ethhdr->smac, sizeof(l2_info.smac));
+        memcpy(l2_info.dmac, ethhdr->dmac, sizeof(l2_info.dmac));
+    }
 
     HAL_TRACE_DEBUG("fte: create session");
 
     for (int i = 0; i < MAX_STAGES; i++) {
         iflow_[i]->set_key(key_);
+        iflow_[i]->set_l2_info(l2_info);
     }
 
     cleanup_hal_ = false;
@@ -388,8 +403,14 @@ ctx_t::create_session()
     if (valid_rflow_) {
         rkey_.dir = (dep_ && (dep_->ep_flags & EP_FLAGS_LOCAL)) ?
             hal::FLOW_DIR_FROM_DMA : hal::FLOW_DIR_FROM_UPLINK;
+        if (cpu_rxhdr_ != NULL) {
+            ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
+            memcpy(l2_info.smac, ethhdr->dmac, sizeof(l2_info.smac));
+            memcpy(l2_info.dmac, ethhdr->smac, sizeof(l2_info.dmac));
+        }
         for (int i = 0; i < MAX_STAGES; i++) {
             rflow_[i]->set_key(rkey_);
+            rflow_[i]->set_l2_info(l2_info);
         }
     }
 
@@ -569,7 +590,7 @@ ctx_t::update_flow_table()
                         "slif_en={} slif={} qos_class_en={} qos_class_id={} "
                         "is_proxy_en={} is_proxy_mcast={} export_en={} export_id1={} "
                         "export_id2={} export_id3={} export_id4={} conn_track_en={} "
-                        "session_idle_timeout={}",
+                        "session_idle_timeout={} smac={} dmac={} l2seg_id={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_attrs.vrf_hwid,
                         iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -583,7 +604,10 @@ ctx_t::update_flow_table()
                         iflow_attrs.qos_class_en, iflow_attrs.qos_class_id, iflow_attrs.is_proxy_en,
                         iflow_attrs.is_proxy_mcast, iflow_attrs.export_en, iflow_attrs.export_id1,
                         iflow_attrs.export_id2, iflow_attrs.export_id3, iflow_attrs.export_id4,
-                        session_cfg.conn_track_en, session_cfg.idle_timeout);
+                        session_cfg.conn_track_en, session_cfg.idle_timeout,
+                        ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.smac),
+                        ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.dmac),
+                        iflow_cfg.l2_info.l2seg_id); 
     }
 
     for (uint8_t stage = 0; valid_rflow_ && !hal_cleanup() && stage <= rstage_; stage++) {
@@ -647,7 +671,7 @@ ctx_t::update_flow_table()
                         "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={} "
                         "ing_mirror_session={} eg_mirror_session={} "
                         "qos_class_en={} qos_class_id={} export_en={} export_id1={} "
-                        "export_id2={} export_id3={} export_id4={}",
+                        "export_id2={} export_id3={} export_id4={} smac={} dmac={} l2_segid={}",
                         stage, rflow_cfg.key, rflow_attrs.lkp_inst,
                         rflow_attrs.vrf_hwid, rflow_cfg.action,
                         rflow_attrs.mac_sa_rewrite,
@@ -660,7 +684,10 @@ ctx_t::update_flow_table()
                         rflow_cfg.ing_mirror_session, rflow_cfg.eg_mirror_session,
                         rflow_attrs.qos_class_en, rflow_attrs.qos_class_id,
                         rflow_attrs.export_en, rflow_attrs.export_id1,
-                        rflow_attrs.export_id2, rflow_attrs.export_id3, rflow_attrs.export_id4);
+                        rflow_attrs.export_id2, rflow_attrs.export_id3, rflow_attrs.export_id4, 
+                        ether_ntoa((struct ether_addr*)&rflow_cfg.l2_info.smac),
+                        ether_ntoa((struct ether_addr*)&rflow_cfg.l2_info.dmac),
+                        rflow_cfg.l2_info.l2seg_id);
     }
 
     if (cpu_rxhdr_) {

@@ -315,8 +315,10 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_IF_GET_LPORT_ID, pd_if_get_lport_id);
     PD_FUNC_LOAD(PD_FUNC_ID_IF_GET_TM_OPORT, pd_if_get_tm_oport);
 
-    // twice nat
+    //Rwentry 
     PD_FUNC_LOAD(PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, pd_rw_entry_find_or_alloc);
+
+    // twice nat
     PD_FUNC_LOAD(PD_FUNC_ID_TWICE_NAT_ADD, pd_twice_nat_add);
     PD_FUNC_LOAD(PD_FUNC_ID_TWICE_NAT_DEL, pd_twice_nat_del);
 

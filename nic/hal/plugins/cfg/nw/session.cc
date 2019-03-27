@@ -1526,20 +1526,20 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
                   pd::p4plus_to_p4_header_t *p4plus_header,
                   uint8_t *pkt, uint8_t flags)
 {
-    vlan_header_t                           *vlan_hdr = NULL;
-    ether_header_t                          *eth_hdr = NULL;
-    ipv4_header_t                           *ip_hdr = NULL;
-    tcp_header_t                            *tcp_hdr = NULL;
-    hal_ret_t                                ret = HAL_RET_OK;
-    ep_t                                    *sep = NULL, *dep = NULL;
-    l2seg_t                                 *sl2seg = NULL;
-    pd::pd_func_args_t                      pd_func_args = {0};
-    hal::flow_key_t                         key = flow->config.key;
-    uint32_t                                offset = 0;
-    tcp_ts_option_t                         *tcp_ts = NULL;
-    bool                                    send_tcp_ts = (flags & BUILD_TCP_SEND_TIMESTAMP);
-    bool                                    setrst = (flags & BUILD_TCP_SEND_RST);
-    bool                                    setfin = (flags & BUILD_TCP_SEND_FIN);
+    vlan_header_t       *vlan_hdr = NULL;
+    ether_header_t      *eth_hdr = NULL;
+    ipv4_header_t       *ip_hdr = NULL;
+    tcp_header_t        *tcp_hdr = NULL;
+    hal_ret_t            ret = HAL_RET_OK;
+    ep_t                *sep = NULL, *dep = NULL;
+    l2seg_t             *l2seg = NULL;
+    pd::pd_func_args_t   pd_func_args = {0};
+    hal::flow_key_t      key = flow->config.key;
+    uint32_t             offset = 0;
+    tcp_ts_option_t     *tcp_ts = NULL;
+    bool                 send_tcp_ts = (flags & BUILD_TCP_SEND_TIMESTAMP);
+    bool                 setrst = (flags & BUILD_TCP_SEND_RST);
+    bool                 setfin = (flags & BUILD_TCP_SEND_FIN);
 
     if (!pkt) {
         return HAL_RET_INVALID_ARG;
@@ -1560,26 +1560,28 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
 
     ret = ep_get_from_flow_key(&key, &sep, &dep);
     if (ret != HAL_RET_OK) {
-        if (session->sep_handle != HAL_HANDLE_INVALID) 
-            sep = find_ep_by_handle(session->sep_handle);
-
+        sep = find_ep_by_l2_key(flow->config.l2_info.l2seg_id, flow->config.l2_info.smac);
+        dep = find_ep_by_l2_key(flow->config.l2_info.l2seg_id, flow->config.l2_info.dmac);
         if (sep == NULL) {
-            HAL_TRACE_ERR("Couldnt get SEP from session :{}", key);
+            if (key.dir == FLOW_DIR_FROM_DMA || dep == NULL) {
+                HAL_TRACE_ERR("Couldnt get SEP/DEP from session :{}", key);
+                return 0;
+            }
+        }
+    }
+
+    if (sep) {
+        l2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
+        if (l2seg == NULL) {
+            HAL_TRACE_ERR("Couldnt get source l2seg for session :{}", key);
             return 0;
         }
-
-        if (session->dep_handle != HAL_HANDLE_INVALID)
-            dep = find_ep_by_handle(session->dep_handle);
-
-        if (dep == NULL) {
-            HAL_TRACE_ERR("Couldnt get DEP from session :{}", key);
+    } else if (dep) {
+        l2seg = hal::l2seg_lookup_by_handle(dep->l2seg_handle);
+        if (l2seg == NULL) {
+            HAL_TRACE_ERR("Couldnt get dest l2seg for session :{}", key);
             return 0;
-        } 
-    }
-    sl2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
-    if (sl2seg == NULL) {
-        HAL_TRACE_ERR("Couldnt get source l2seg for session :{}", key);
-        return 0;
+        }
     }
 
     if (key.dir == FLOW_DIR_FROM_UPLINK) {
@@ -1596,7 +1598,7 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
             }
         } else {
             pd::pd_l2seg_get_fromcpu_vlanid_args_t   args;
-            args.l2seg = sl2seg;
+            args.l2seg = l2seg;
             args.vid = &cpu_header->hw_vlan_id;
 
             pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
@@ -1630,9 +1632,8 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
         eth_hdr = (ether_header_t *)vlan_hdr;
     }
 
-
-    memcpy(eth_hdr->dmac, dep->l2_key.mac_addr, ETH_ADDR_LEN);
-    memcpy(eth_hdr->smac, sep->l2_key.mac_addr, ETH_ADDR_LEN);
+    memcpy(eth_hdr->smac, flow->config.l2_info.smac, ETH_ADDR_LEN);
+    memcpy(eth_hdr->dmac, flow->config.l2_info.dmac, ETH_ADDR_LEN);
 
     // fix the IP header
     if (key.flow_type == FLOW_TYPE_V4) {
@@ -1837,7 +1838,7 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
         (session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
          session_state.rflow_state.packets < (ctx->session_state.rflow_state.packets + 1)) ||
         (ctx->aged_flow == SESSION_AGED_BOTH &&
-        (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
+        (session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
          session_state.rflow_state.packets <= (ctx->session_state.rflow_state.packets + 1))) {
         if (ret == SESSION_AGED_IFLOW)
             ret = SESSION_AGED_BOTH;
@@ -1900,7 +1901,7 @@ build_and_send_tcp_pkt (void *data)
                              pkt, flags);
             // There was some issue with packet construction
             // bail out
-            if (!sz) goto cleanup;
+            if (!sz) goto triggerdelete;
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_tickles_sent, 1);
         }
@@ -1911,7 +1912,7 @@ build_and_send_tcp_pkt (void *data)
                              pkt, flags);
             // There was some issue with packet construction
             // bail out
-            if (!sz) goto cleanup; 
+            if (!sz) goto triggerdelete; 
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
         }
@@ -1939,9 +1940,10 @@ build_and_send_tcp_pkt (void *data)
         sz = build_tcp_packet(session->iflow, session,
                               ctxt->session_state.iflow_state, &cpu_header, &p4plus_header,
                               pkt, flags);
-        if (!sz) goto cleanup;
-        fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
-        SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
+        if (sz)  {
+            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+            SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
+        }
     }
     if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
         ctxt->aged_flow == SESSION_AGED_BOTH) {
@@ -1949,12 +1951,13 @@ build_and_send_tcp_pkt (void *data)
         sz = build_tcp_packet(session->rflow, session,
                               ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
                               pkt, flags);
-        if (!sz) goto cleanup;
-        fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
-  
-        SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
+        if (sz)  {
+            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+            SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
+        }
     }
 
+triggerdelete:
     HAL_SESSION_STATS_PTR(session->fte_id)->aged_sessions += 1;
     // time to clean up the session
     ret = fte::session_delete_in_fte(session->hal_handle);

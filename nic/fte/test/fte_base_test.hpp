@@ -49,9 +49,10 @@ public:
                                     uint8_t prefix_len, uint64_t rmac);
     static hal_handle_t add_l2segment(hal_handle_t nwh, uint16_t vlan_id);
     static hal_handle_t add_uplink(uint8_t port_num);
+    static hal_handle_t add_enic(hal_handle_t l2segh, uint32_t useg_vlan, uint64_t mac, hal_handle_t uplink);
     static hal_handle_t add_endpoint(hal_handle_t l2segh, hal_handle_t intfh,
                                      uint32_t ip, uint64_t mac, uint16_t useg_vlan,
-                                     bool enable_e2e=false);
+                                     bool enable_e2e=false, bool set_uplink=false, hal_handle_t uplink=HAL_HANDLE_INVALID);
     static hal_handle_t add_route(hal_handle_t vrfh,
                                   uint32_t v4_addr, uint8_t prefix_len,
                                   hal_handle_t eph);
@@ -288,7 +289,7 @@ protected:
     static fte::ctx_t ctx_;
 
 private:
-    static uint32_t vrf_id_, l2seg_id_, intf_id_, nwsec_id_, nh_id_, pool_id_;
+    static uint32_t vrf_id_, l2seg_id_, intf_id_, nwsec_id_, nh_id_, pool_id_, lif_id_;
     static uint64_t flowmon_rule_id_;
     static bool ipc_logging_disable_;
     static std::map<hal_handle_t, ep_info_t> eps;

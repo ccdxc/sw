@@ -263,6 +263,20 @@ public:
         return valid_.aging_info;
     }
 
+    // Store the mac for remote EPs. We might need those
+    // to construct the keepalives in case of TCP
+    hal_ret_t set_l2_info(const hal::flow_key_t &key) {
+        l2_info_ = key;
+        valid_.l2_info = true;
+        return HAL_RET_OK;
+    }
+    const hal::flow_key_t& l2_info() const {
+        return l2_info_;
+    };
+    bool valid_l2_info() const {
+        return valid_.l2_info;
+    };
+
 private:
     // Max header updates we track per flow
     // This is enough to pop the outer, rewrite inner and push new outer
@@ -271,22 +285,24 @@ private:
     ctx_t                    *ctx_;
 
     struct {
-        uint8_t key:1;
-        uint8_t attrs:1;
-        uint8_t action:1;
-        uint8_t flow_state:1;
-        uint8_t fwding:1;
-        uint8_t mcast_info:1;
-        uint8_t ingress_info:1;
-        uint8_t mirror_info:1;
-        uint8_t qos_info:1;
-        uint8_t lkp_info:1;
-        uint8_t export_info:1;
-        uint8_t aging_info:1;
+        uint16_t key:1;
+        uint16_t attrs:1;
+        uint16_t action:1;
+        uint16_t flow_state:1;
+        uint16_t fwding:1;
+        uint16_t mcast_info:1;
+        uint16_t ingress_info:1;
+        uint16_t mirror_info:1;
+        uint16_t qos_info:1;
+        uint16_t lkp_info:1;
+        uint16_t export_info:1;
+        uint16_t aging_info:1;
+        uint16_t l2_info:1;
      } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
     hal::flow_pgm_attrs_t     attrs_;               // Restored flow attrs
+    hal::flow_key_t           l2_info_;             // flow's l2 info
 
     session::FlowAction       action_;              // firwall action
     flow_state_t              flow_state_;          // connection tracking
