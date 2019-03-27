@@ -14,7 +14,14 @@ modules:
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
 
-#   The below test is failing , commenting now
+    - module:
+        name    : L2_IPV4_TCP_QTAG_INVVLAN
+        spec    : local2remote_vlan_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+
+#   Below test is failing , commenting now
 #    - module:
 #        name    : L2_IPV6_TCP_QTAG_INVIP
 #        spec    : local2remote_ip_invalid.testspec
@@ -32,3 +39,37 @@ modules:
         spec    : local2remote_mac_invalid.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+#
+#   - module:
+#        name    : L2_IPV6_TCP_QTAG_INVCSUM
+#        spec    : local2remote_csum_invalid.testspec
+#        iterate :
+#            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+#   Below test is failing , commenting now
+#    - module:
+#        name    : L2_IPV4_TCP_ENCAP_INVMAC
+#        spec    : remote2local_mac_invalid.testspec
+#        iterate :
+#            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+ 
+    - module:
+        name    : L2_IPV4_TCP_ENCAP_INVTUN
+        spec    : remote2local_tunip_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+ 
+#   Below test is failing , commenting now
+#    - module:
+#        name    : L2_IPV4_TCP_ENCAP_INVSRCTAG
+#        spec    : remote2local_srctag_invalid.testspec
+#        iterate :
+#            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_ENCAP_INVDSTTAG
+        spec    : remote2local_dsttag_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
