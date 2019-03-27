@@ -9,6 +9,7 @@ package rollout
 import (
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -25,6 +26,56 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// RolloutPhase_Phases_normal is a map of normalized values for the enum
+var RolloutPhase_Phases_normal = map[string]string{
+	"COMPLETE":           "COMPLETE",
+	"DEPENDENCIES_CHECK": "DEPENDENCIES_CHECK",
+	"FAIL":               "FAIL",
+	"PRE_CHECK":          "PRE_CHECK",
+	"PROGRESSING":        "PROGRESSING",
+	"WAITING_FOR_TURN":   "WAITING_FOR_TURN",
+	"complete":           "COMPLETE",
+	"dependencies_check": "DEPENDENCIES_CHECK",
+	"fail":               "FAIL",
+	"pre_check":          "PRE_CHECK",
+	"progressing":        "PROGRESSING",
+	"waiting_for_turn":   "WAITING_FOR_TURN",
+}
+
+// RolloutSpec_StrategyType_normal is a map of normalized values for the enum
+var RolloutSpec_StrategyType_normal = map[string]string{
+	"EXPONENTIAL": "EXPONENTIAL",
+	"LINEAR":      "LINEAR",
+	"exponential": "EXPONENTIAL",
+	"linear":      "LINEAR",
+}
+
+// RolloutSpec_SmartNICUpgradeType_normal is a map of normalized values for the enum
+var RolloutSpec_SmartNICUpgradeType_normal = map[string]string{
+	"Disruptive":       "Disruptive",
+	"OnNextHostReboot": "OnNextHostReboot",
+	"disruptive":       "Disruptive",
+	"onnexthostreboot": "OnNextHostReboot",
+}
+
+// RolloutStatus_RolloutOperationalState_normal is a map of normalized values for the enum
+var RolloutStatus_RolloutOperationalState_normal = map[string]string{
+	"DEADLINE_EXCEEDED":   "DEADLINE_EXCEEDED",
+	"FAILURE":             "FAILURE",
+	"PROGRESSING":         "PROGRESSING",
+	"SCHEDULED":           "SCHEDULED",
+	"SUCCESS":             "SUCCESS",
+	"SUSPENDED":           "SUSPENDED",
+	"SUSPEND_IN_PROGRESS": "SUSPEND_IN_PROGRESS",
+	"deadline_exceeded":   "DEADLINE_EXCEEDED",
+	"failure":             "FAILURE",
+	"progressing":         "PROGRESSING",
+	"scheduled":           "SCHEDULED",
+	"success":             "SUCCESS",
+	"suspend_in_progress": "SUSPEND_IN_PROGRESS",
+	"suspended":           "SUSPENDED",
+}
 
 var _ validators.DummyVar
 var validatorMapRollout = make(map[string]map[string][]func(string, interface{}) error)
@@ -219,6 +270,16 @@ func (m *Rollout) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Rollout) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *RolloutPhase) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -239,6 +300,12 @@ func (m *RolloutPhase) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *RolloutPhase) Normalize() {
+
+	m.Phase = RolloutPhase_Phases_normal[strings.ToLower(m.Phase)]
+
 }
 
 func (m *RolloutSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -271,6 +338,20 @@ func (m *RolloutSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *RolloutSpec) Normalize() {
+
+	for _, v := range m.OrderConstraints {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	m.Strategy = RolloutSpec_StrategyType_normal[strings.ToLower(m.Strategy)]
+
+	m.UpgradeType = RolloutSpec_SmartNICUpgradeType_normal[strings.ToLower(m.UpgradeType)]
+
 }
 
 func (m *RolloutStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -323,6 +404,30 @@ func (m *RolloutStatus) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *RolloutStatus) Normalize() {
+
+	for _, v := range m.ControllerNodesStatus {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	for _, v := range m.ControllerServicesStatus {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	m.OperationalState = RolloutStatus_RolloutOperationalState_normal[strings.ToLower(m.OperationalState)]
+
+	for _, v := range m.SmartNICsStatus {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 // Transformers

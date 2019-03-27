@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -26,6 +27,88 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// Authenticators_AuthenticatorType_normal is a map of normalized values for the enum
+var Authenticators_AuthenticatorType_normal = map[string]string{
+	"LDAP":   "LDAP",
+	"LOCAL":  "LOCAL",
+	"RADIUS": "RADIUS",
+	"ldap":   "LDAP",
+	"local":  "LOCAL",
+	"radius": "RADIUS",
+}
+
+// LdapServerStatus_LdapResult_normal is a map of normalized values for the enum
+var LdapServerStatus_LdapResult_normal = map[string]string{
+	"Bind_Failure":    "Bind_Failure",
+	"Bind_Success":    "Bind_Success",
+	"Connect_Failure": "Connect_Failure",
+	"Connect_Success": "Connect_Success",
+	"bind_failure":    "Bind_Failure",
+	"bind_success":    "Bind_Success",
+	"connect_failure": "Connect_Failure",
+	"connect_success": "Connect_Success",
+}
+
+// Permission_ResrcKind_normal is a map of normalized values for the enum
+var Permission_ResrcKind_normal = map[string]string{
+	"APIEndpoint":  "APIEndpoint",
+	"AuditEvent":   "AuditEvent",
+	"Event":        "Event",
+	"FwlogsQuery":  "FwlogsQuery",
+	"MetricsQuery": "MetricsQuery",
+	"Search":       "Search",
+	"apiendpoint":  "APIEndpoint",
+	"auditevent":   "AuditEvent",
+	"event":        "Event",
+	"fwlogsquery":  "FwlogsQuery",
+	"metricsquery": "MetricsQuery",
+	"search":       "Search",
+}
+
+// Permission_ActionType_normal is a map of normalized values for the enum
+var Permission_ActionType_normal = map[string]string{
+	"AllActions": "AllActions",
+	"Clear":      "Clear",
+	"Commit":     "Commit",
+	"Create":     "Create",
+	"Delete":     "Delete",
+	"Read":       "Read",
+	"Update":     "Update",
+	"allactions": "AllActions",
+	"clear":      "Clear",
+	"commit":     "Commit",
+	"create":     "Create",
+	"delete":     "Delete",
+	"read":       "Read",
+	"update":     "Update",
+}
+
+// Radius_AuthMethod_normal is a map of normalized values for the enum
+var Radius_AuthMethod_normal = map[string]string{
+	"EAP_TTLS_PAP":  "EAP_TTLS_PAP",
+	"PAP":           "PAP",
+	"PEAP_MSCHAPv2": "PEAP_MSCHAPv2",
+	"eap_ttls_pap":  "EAP_TTLS_PAP",
+	"pap":           "PAP",
+	"peap_mschapv2": "PEAP_MSCHAPv2",
+}
+
+// RadiusServerStatus_RadiusResult_normal is a map of normalized values for the enum
+var RadiusServerStatus_RadiusResult_normal = map[string]string{
+	"Connect_Failure": "Connect_Failure",
+	"Connect_Success": "Connect_Success",
+	"connect_failure": "Connect_Failure",
+	"connect_success": "Connect_Success",
+}
+
+// UserSpec_UserType_normal is a map of normalized values for the enum
+var UserSpec_UserType_normal = map[string]string{
+	"External": "External",
+	"Local":    "Local",
+	"external": "External",
+	"local":    "Local",
+}
 
 var _ validators.DummyVar
 var validatorMapAuth = make(map[string]map[string][]func(string, interface{}) error)
@@ -806,6 +889,16 @@ func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+func (m *AuthenticationPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *AuthenticationPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -839,6 +932,12 @@ func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool)
 	return ret
 }
 
+func (m *AuthenticationPolicySpec) Normalize() {
+
+	m.Authenticators.Normalize()
+
+}
+
 func (m *AuthenticationPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -866,6 +965,22 @@ func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus boo
 		}
 	}
 	return ret
+}
+
+func (m *AuthenticationPolicyStatus) Normalize() {
+
+	for _, v := range m.LdapServers {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	for _, v := range m.RadiusServers {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *Authenticators) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -902,6 +1017,18 @@ func (m *Authenticators) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Authenticators) Normalize() {
+
+	for k, v := range m.AuthenticatorOrder {
+		m.AuthenticatorOrder[k] = Authenticators_AuthenticatorType_normal[strings.ToLower(v)]
+	}
+
+	if m.Radius != nil {
+		m.Radius.Normalize()
+	}
+
+}
+
 func (m *Ldap) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -909,6 +1036,10 @@ func (m *Ldap) References(tenant string, path string, resp map[string]apiintf.Re
 func (m *Ldap) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Ldap) Normalize() {
+
 }
 
 func (m *LdapAttributeMapping) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -920,6 +1051,10 @@ func (m *LdapAttributeMapping) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+func (m *LdapAttributeMapping) Normalize() {
+
+}
+
 func (m *LdapServer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -927,6 +1062,10 @@ func (m *LdapServer) References(tenant string, path string, resp map[string]apii
 func (m *LdapServer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *LdapServer) Normalize() {
+
 }
 
 func (m *LdapServerStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -951,6 +1090,12 @@ func (m *LdapServerStatus) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *LdapServerStatus) Normalize() {
+
+	m.Result = LdapServerStatus_LdapResult_normal[strings.ToLower(m.Result)]
+
+}
+
 func (m *Local) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -958,6 +1103,10 @@ func (m *Local) References(tenant string, path string, resp map[string]apiintf.R
 func (m *Local) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Local) Normalize() {
+
 }
 
 func (m *PasswordChangeRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -982,6 +1131,12 @@ func (m *PasswordChangeRequest) Validate(ver, path string, ignoreStatus bool) []
 	return ret
 }
 
+func (m *PasswordChangeRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *PasswordCredential) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -991,6 +1146,10 @@ func (m *PasswordCredential) Validate(ver, path string, ignoreStatus bool) []err
 	return ret
 }
 
+func (m *PasswordCredential) Normalize() {
+
+}
+
 func (m *PasswordResetRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -998,6 +1157,12 @@ func (m *PasswordResetRequest) References(tenant string, path string, resp map[s
 func (m *PasswordResetRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *PasswordResetRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
 }
 
 func (m *Permission) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1022,6 +1187,14 @@ func (m *Permission) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Permission) Normalize() {
+
+	for k, v := range m.Actions {
+		m.Actions[k] = Permission_ActionType_normal[strings.ToLower(v)]
+	}
+
+}
+
 func (m *Radius) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1039,6 +1212,16 @@ func (m *Radius) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *Radius) Normalize() {
+
+	for _, v := range m.Servers {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *RadiusServer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1061,6 +1244,12 @@ func (m *RadiusServer) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *RadiusServer) Normalize() {
+
+	m.AuthMethod = Radius_AuthMethod_normal[strings.ToLower(m.AuthMethod)]
+
 }
 
 func (m *RadiusServerStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1095,6 +1284,16 @@ func (m *RadiusServerStatus) Validate(ver, path string, ignoreStatus bool) []err
 		}
 	}
 	return ret
+}
+
+func (m *RadiusServerStatus) Normalize() {
+
+	m.Result = RadiusServerStatus_RadiusResult_normal[strings.ToLower(m.Result)]
+
+	if m.Server != nil {
+		m.Server.Normalize()
+	}
+
 }
 
 func (m *Role) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1151,6 +1350,14 @@ func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Role) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *RoleBinding) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	tenant = m.Tenant
@@ -1204,6 +1411,12 @@ func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RoleBinding) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *RoleBindingSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
@@ -1234,6 +1447,10 @@ func (m *RoleBindingSpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *RoleBindingSpec) Normalize() {
+
+}
+
 func (m *RoleBindingStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1241,6 +1458,10 @@ func (m *RoleBindingStatus) References(tenant string, path string, resp map[stri
 func (m *RoleBindingStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *RoleBindingStatus) Normalize() {
+
 }
 
 func (m *RoleSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1262,6 +1483,15 @@ func (m *RoleSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RoleSpec) Normalize() {
+
+	for _, v := range m.Permissions {
+		v.Normalize()
+
+	}
+
+}
+
 func (m *RoleStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1271,6 +1501,10 @@ func (m *RoleStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RoleStatus) Normalize() {
+
+}
+
 func (m *TLSOptions) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1278,6 +1512,10 @@ func (m *TLSOptions) References(tenant string, path string, resp map[string]apii
 func (m *TLSOptions) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TLSOptions) Normalize() {
+
 }
 
 func (m *User) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1345,6 +1583,16 @@ func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *User) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *UserSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1367,6 +1615,12 @@ func (m *UserSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *UserSpec) Normalize() {
+
+	m.Type = UserSpec_UserType_normal[strings.ToLower(m.Type)]
+
+}
+
 func (m *UserStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1387,6 +1641,14 @@ func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *UserStatus) Normalize() {
+
+	for k, v := range m.Authenticators {
+		m.Authenticators[k] = Authenticators_AuthenticatorType_normal[strings.ToLower(v)]
+	}
+
 }
 
 // Transformers

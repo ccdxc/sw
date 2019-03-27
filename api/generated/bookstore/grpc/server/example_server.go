@@ -276,6 +276,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.ApplyDiscountReq)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.ApplyDiscountReq)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.ApplyDiscountReq)
@@ -475,6 +479,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.Book)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.Book)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.Book)
@@ -770,6 +778,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.Coupon)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.Coupon)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.Coupon)
@@ -989,6 +1001,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.Customer)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.Customer)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.Customer)
@@ -1296,6 +1312,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.Order)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.Order)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.Order)
@@ -1590,6 +1610,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.OutageRequest)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.OutageRequest)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.OutageRequest)
@@ -1783,6 +1807,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.Publisher)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.Publisher)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.Publisher)
@@ -2076,6 +2104,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.RestockRequest)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.RestockRequest)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.RestockRequest)
@@ -2260,6 +2292,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.RestockResponse)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.RestockResponse)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.RestockResponse)
@@ -2453,6 +2489,10 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(bookstore.Store)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(bookstore.Store)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(bookstore.Store)

@@ -231,6 +231,10 @@ func (s *snetworkNetworkBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(network.Network)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(network.Network)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(network.Network)

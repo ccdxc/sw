@@ -202,6 +202,16 @@ func (m *AutoMsgBucketWatchHelper) Validate(ver, path string, ignoreStatus bool)
 	return ret
 }
 
+func (m *AutoMsgBucketWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *AutoMsgBucketWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -223,6 +233,14 @@ func (m *AutoMsgBucketWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 	return ret
 }
 
+func (m *AutoMsgBucketWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgObjectWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -240,6 +258,16 @@ func (m *AutoMsgObjectWatchHelper) Validate(ver, path string, ignoreStatus bool)
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgObjectWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgObjectWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -263,6 +291,14 @@ func (m *AutoMsgObjectWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 	return ret
 }
 
+func (m *AutoMsgObjectWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *BucketList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -282,6 +318,16 @@ func (m *BucketList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BucketList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *ObjectList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -299,6 +345,16 @@ func (m *ObjectList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *ObjectList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 // Transformers

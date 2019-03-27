@@ -231,6 +231,10 @@ func (s *ssecurityFwprofileBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sc
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(security.FirewallProfile)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(security.FirewallProfile)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(security.FirewallProfile)

@@ -28,6 +28,13 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+{{range .Enums}} {{ $name := getNormalizedEnumName .}}{{ $values := getNormalizedEnum .}}
+// {{$name}} is a map of normalized values for the enum
+var {{$name}} = map[string]string {
+	{{$values}}
+}
+{{end}}
 {{if $validators.Fmap}}
 var _ validators.DummyVar
 var validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(string, interface{})error)
@@ -242,6 +249,27 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	} {{end}}{{/*<13>*/}}{{end}}{{/*<1>*/}}
 	return ret
+}
+
+func (m *{{$msgname}}) Normalize() {
+{{with (index $validators.Map $msgname)}}{{/*<1>*/}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{/*<2>*/}}{{if eq 0 (len $fldv.Validators)}}{{/* this is a vector with validators */}}{{/*<3>*/}}{{if $fldv.Repeated}}{{/*<4>*/}}
+	for _, v := range m.{{$fldk}} { {{if $fldv.Pointer}}
+		if v != nil { {{end}}
+		v.Normalize()
+		{{if $fldv.Pointer}} } {{end}}
+	} {{else}}{{/*<4>*/}} {{if $fldv.Pointer}}
+	if m.{{$fldk}} != nil { {{end}}
+		m.{{$fldk}}.Normalize()
+	{{if $fldv.Pointer}}  } {{end}}
+	{{end}}{{/*<4>*/}}
+	{{else}}{{/* <3> this is a field in this object with a validator */}}{{range $fldv.Validators}}{{if (strEq .Fn "StrEnum")}}{{/*<4>*/}}
+	{{if $fldv.Repeated}}{{/*<5>*/}}
+	for k, v := range  m.{{$fldk}} {
+		m.{{$fldk}}[k] = {{getEnumStrNormalMap $file .Args}}[strings.ToLower(v)]
+ 	}{{else}}
+		m.{{$fldk}} = {{getEnumStrNormalMap $file .Args}}[strings.ToLower(m.{{$fldk}})]
+	{{end}}{{end}}{{/*<4>*/}}{{end}}
+	{{end}}{{end}}{{end}}
 }
 {{end}}{{/*<0>*/}}{{end}}{{/*<0-1>*/}}
 

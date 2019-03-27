@@ -231,6 +231,10 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.Alert)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(monitoring.Alert)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(monitoring.Alert)
@@ -506,6 +510,10 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.AlertDestination)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(monitoring.AlertDestination)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(monitoring.AlertDestination)
@@ -783,6 +791,10 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.AlertPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(monitoring.AlertPolicy)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(monitoring.AlertPolicy)

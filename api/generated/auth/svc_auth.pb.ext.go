@@ -24,6 +24,12 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
+// EventTypesV1_normal is a map of normalized values for the enum
+var EventTypesV1_normal = map[string]string{
+	"LoginFailed": "LoginFailed",
+	"loginfailed": "LoginFailed",
+}
+
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicyList) MakeKey(prefix string) string {
 	obj := AuthenticationPolicy{}
@@ -361,6 +367,16 @@ func (m *AuthenticationPolicyList) Validate(ver, path string, ignoreStatus bool)
 	return ret
 }
 
+func (m *AuthenticationPolicyList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *AutoMsgAuthenticationPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -378,6 +394,16 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) Validate(ver, path string, igno
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgAuthenticationPolicyWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -399,6 +425,14 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Validate(ver, path s
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
 }
 
 func (m *AutoMsgRoleBindingWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -431,6 +465,16 @@ func (m *AutoMsgRoleBindingWatchHelper) Validate(ver, path string, ignoreStatus 
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgRoleBindingWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -466,6 +510,14 @@ func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) Validate(ver, path string, ig
 	return ret
 }
 
+func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgRoleWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -483,6 +535,16 @@ func (m *AutoMsgRoleWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgRoleWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgRoleWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -506,6 +568,14 @@ func (m *AutoMsgRoleWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 	return ret
 }
 
+func (m *AutoMsgRoleWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgUserWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -523,6 +593,16 @@ func (m *AutoMsgUserWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgUserWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgUserWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -544,6 +624,14 @@ func (m *AutoMsgUserWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgUserWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
 }
 
 func (m *RoleBindingList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -578,6 +666,16 @@ func (m *RoleBindingList) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *RoleBindingList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *RoleList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -597,6 +695,16 @@ func (m *RoleList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RoleList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *UserList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -614,6 +722,16 @@ func (m *UserList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *UserList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 // Transformers

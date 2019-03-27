@@ -231,6 +231,10 @@ func (s *sclusterNetworkinterfaceBackend) regMsgsFunc(l log.Logger, scheme *runt
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.NetworkInterface)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(cluster.NetworkInterface)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(cluster.NetworkInterface)

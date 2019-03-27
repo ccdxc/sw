@@ -8,6 +8,7 @@ package monitoring
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,6 +25,14 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// MonitoringExportFormat_normal is a map of normalized values for the enum
+var MonitoringExportFormat_normal = map[string]string{
+	"SYSLOG_BSD":     "SYSLOG_BSD",
+	"SYSLOG_RFC5424": "SYSLOG_RFC5424",
+	"syslog_bsd":     "SYSLOG_BSD",
+	"syslog_rfc5424": "SYSLOG_RFC5424",
+}
 
 var _ validators.DummyVar
 var validatorMapEventpolicy = make(map[string]map[string][]func(string, interface{}) error)
@@ -170,6 +179,14 @@ func (m *EventPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *EventPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *EventPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -226,6 +243,26 @@ func (m *EventPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *EventPolicySpec) Normalize() {
+
+	m.Format = MonitoringExportFormat_normal[strings.ToLower(m.Format)]
+
+	if m.Selector != nil {
+		m.Selector.Normalize()
+	}
+
+	if m.SyslogConfig != nil {
+		m.SyslogConfig.Normalize()
+	}
+
+	for _, v := range m.Targets {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *EventPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -233,6 +270,10 @@ func (m *EventPolicyStatus) References(tenant string, path string, resp map[stri
 func (m *EventPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *EventPolicyStatus) Normalize() {
+
 }
 
 // Transformers

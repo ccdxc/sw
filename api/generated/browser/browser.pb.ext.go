@@ -8,6 +8,7 @@ package browser
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,6 +25,24 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// QueryType_normal is a map of normalized values for the enum
+var QueryType_normal = map[string]string{
+	"DependedBy":   "DependedBy",
+	"Dependencies": "Dependencies",
+	"dependedby":   "DependedBy",
+	"dependencies": "Dependencies",
+}
+
+// ReferenceTypes_normal is a map of normalized values for the enum
+var ReferenceTypes_normal = map[string]string{
+	"NamedReference":    "NamedReference",
+	"SelectorReference": "SelectorReference",
+	"WeakReference":     "WeakReference",
+	"namedreference":    "NamedReference",
+	"selectorreference": "SelectorReference",
+	"weakreference":     "WeakReference",
+}
 
 var _ validators.DummyVar
 var validatorMapBrowser = make(map[string]map[string][]func(string, interface{}) error)
@@ -167,6 +186,14 @@ func (m *BrowseRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BrowseRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.QueryType = QueryType_normal[strings.ToLower(m.QueryType)]
+
+}
+
 func (m *BrowseResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -184,6 +211,17 @@ func (m *BrowseResponse) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *BrowseResponse) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	for _, v := range m.Objects {
+		v.Normalize()
+
+	}
+
 }
 
 func (m *Object) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -218,6 +256,19 @@ func (m *Object) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Object) Normalize() {
+
+	for _, v := range m.Links {
+		v.Normalize()
+
+	}
+
+	m.ObjectMeta.Normalize()
+
+	m.QueryType = QueryType_normal[strings.ToLower(m.QueryType)]
+
+}
+
 func (m *Object_URIs) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -225,6 +276,10 @@ func (m *Object_URIs) References(tenant string, path string, resp map[string]api
 func (m *Object_URIs) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Object_URIs) Normalize() {
+
 }
 
 // Transformers

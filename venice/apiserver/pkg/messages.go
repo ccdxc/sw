@@ -29,8 +29,8 @@ type MessageHdlr struct {
 	// transforms is a map of version transform functions indexed
 	// by [from-version][to-version].
 	transforms map[string]map[string]apisrv.TransformFunc
-	// defaulter is the registered defaulting function for the message
-	defualter apisrv.DefaulterFunc
+	// normalizer is the registered function for normalizing the message
+	normalizer apisrv.NormalizerFunc
 	// validater is a list of registered validating functions
 	validater []apisrv.ValidateFunc
 	// keyFunc is the function that generates the key for this object
@@ -100,9 +100,9 @@ func (m *MessageHdlr) WithValidate(fn apisrv.ValidateFunc) apisrv.Message {
 	return m
 }
 
-// WithDefaulter registers a function to apply custom defaults to the message.
-func (m *MessageHdlr) WithDefaulter(fn apisrv.DefaulterFunc) apisrv.Message {
-	m.defualter = fn
+// WithNormalizer registers a function to apply custom defaults to the message.
+func (m *MessageHdlr) WithNormalizer(fn apisrv.NormalizerFunc) apisrv.Message {
+	m.normalizer = fn
 	return m
 }
 
@@ -307,10 +307,10 @@ func (m *MessageHdlr) PrepareMsg(from, to string, i interface{}) (interface{}, e
 	return nil, errors.New("unsupported tranformation")
 }
 
-// Default Applies Defaults to the Message if any custom defaulter was registered.
-func (m *MessageHdlr) Default(i interface{}) interface{} {
-	if m.defualter != nil {
-		return m.defualter(i)
+// Normalize normalizes the object to pre-defined strings if needed.
+func (m *MessageHdlr) Normalize(i interface{}) interface{} {
+	if m.normalizer != nil {
+		return m.normalizer(i)
 	}
 	return i
 }

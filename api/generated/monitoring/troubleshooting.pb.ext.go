@@ -8,6 +8,7 @@ package monitoring
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,6 +25,16 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// TroubleshootingSessionState_normal is a map of normalized values for the enum
+var TroubleshootingSessionState_normal = map[string]string{
+	"TS_RUNNING":   "TS_RUNNING",
+	"TS_SCHEDULED": "TS_SCHEDULED",
+	"TS_STOPPED":   "TS_STOPPED",
+	"ts_running":   "TS_RUNNING",
+	"ts_scheduled": "TS_SCHEDULED",
+	"ts_stopped":   "TS_STOPPED",
+}
 
 var _ validators.DummyVar
 var validatorMapTroubleshooting = make(map[string]map[string][]func(string, interface{}) error)
@@ -378,6 +389,10 @@ func (m *PingPktStats) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *PingPktStats) Normalize() {
+
+}
+
 func (m *PingStats) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -385,6 +400,10 @@ func (m *PingStats) References(tenant string, path string, resp map[string]apiin
 func (m *PingStats) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *PingStats) Normalize() {
+
 }
 
 func (m *TimeWindow) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -396,6 +415,10 @@ func (m *TimeWindow) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *TimeWindow) Normalize() {
+
+}
+
 func (m *TraceRouteInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -403,6 +426,10 @@ func (m *TraceRouteInfo) References(tenant string, path string, resp map[string]
 func (m *TraceRouteInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TraceRouteInfo) Normalize() {
+
 }
 
 func (m *TroubleshootingSession) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -470,6 +497,16 @@ func (m *TroubleshootingSession) Validate(ver, path string, ignoreStatus bool) [
 	return ret
 }
 
+func (m *TroubleshootingSession) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *TroubleshootingSessionSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -488,6 +525,12 @@ func (m *TroubleshootingSessionSpec) Validate(ver, path string, ignoreStatus boo
 		}
 	}
 	return ret
+}
+
+func (m *TroubleshootingSessionSpec) Normalize() {
+
+	m.FlowSelector.Normalize()
+
 }
 
 func (m *TroubleshootingSessionStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -512,6 +555,12 @@ func (m *TroubleshootingSessionStatus) Validate(ver, path string, ignoreStatus b
 	return ret
 }
 
+func (m *TroubleshootingSessionStatus) Normalize() {
+
+	m.State = TroubleshootingSessionState_normal[strings.ToLower(m.State)]
+
+}
+
 func (m *TsAuditTrail) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -519,6 +568,10 @@ func (m *TsAuditTrail) References(tenant string, path string, resp map[string]ap
 func (m *TsAuditTrail) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TsAuditTrail) Normalize() {
+
 }
 
 func (m *TsFlowCounters) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -530,6 +583,10 @@ func (m *TsFlowCounters) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *TsFlowCounters) Normalize() {
+
+}
+
 func (m *TsFlowLogs) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -537,6 +594,10 @@ func (m *TsFlowLogs) References(tenant string, path string, resp map[string]apii
 func (m *TsFlowLogs) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TsFlowLogs) Normalize() {
+
 }
 
 func (m *TsPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -592,6 +653,22 @@ func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *TsPolicy) Normalize() {
+
+	for _, v := range m.InRules {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	for _, v := range m.OutRules {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *TsReport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -671,6 +748,29 @@ func (m *TsReport) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *TsReport) Normalize() {
+
+	for _, v := range m.Alerts {
+		v.Normalize()
+
+	}
+
+	for _, v := range m.Events {
+		v.Normalize()
+
+	}
+
+	if m.MirrorStatus != nil {
+		m.MirrorStatus.Normalize()
+	}
+
+	for _, v := range m.Policies {
+		v.Normalize()
+
+	}
+
+}
+
 func (m *TsResult) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -680,6 +780,10 @@ func (m *TsResult) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *TsResult) Normalize() {
+
+}
+
 func (m *TsStats) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -687,6 +791,10 @@ func (m *TsStats) References(tenant string, path string, resp map[string]apiintf
 func (m *TsStats) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TsStats) Normalize() {
+
 }
 
 // Transformers

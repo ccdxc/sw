@@ -2011,6 +2011,98 @@ func TestGetEumStrMap(t *testing.T) {
 	}
 }
 
+func TestGetEumNormalizedMap(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		enum_type:<
+			name:"Enum1"
+			value:<name:"value1" number:0 >
+			value:<name:"Value2" number:1 >
+			value:<name:"VALUE3" number:2 >
+		>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	cases := []struct {
+		in  string
+		ok  bool
+		exp string
+	}{
+		{
+			in:  "TestMsg.TestEnum",
+			ok:  true,
+			exp: "TestMsg_TestEnum_normal",
+		},
+		{
+			in:  "TestEnum",
+			ok:  true,
+			exp: "TestEnum_normal",
+		},
+		{
+			in:  ".anotherproto.TestEnum",
+			ok:  true,
+			exp: "anotherproto.TestEnum_normal",
+		},
+	}
+	for _, c := range cases {
+		input := []string{c.in}
+		ret, err := getEnumStrNormalMap(file, input)
+		if (err == nil) != c.ok {
+			t.Errorf("expecting success [%v] got [%v]", c.ok, (err == nil))
+		}
+		if ret != c.exp {
+			t.Errorf("expecting result [%v] got [%v]", c.exp, ret)
+		}
+	}
+
+	e := file.Enums[0]
+	name, err := getNormalizedEnumName(e)
+	if err != nil {
+		t.Fatalf("Could not get getNormalizedEnumName(%s)", err)
+	}
+	if name != "Enum1_normal" {
+		t.Fatalf("expecting Enum1_normal got [%v]", name)
+	}
+
+	e.Outers = []string{"Out1", "Out2"}
+	name, err = getNormalizedEnumName(e)
+	if err != nil {
+		t.Fatalf("Could not get getNormalizedEnumName(%s)", err)
+	}
+	if name != "Out1_Out2_Enum1_normal" {
+		t.Fatalf("expecting Enum1_normal got [%v]", name)
+	}
+
+	values, err := getNormalizedEnum(e)
+	if err != nil {
+		t.Fatalf("Could not get getNormalizedEnumName(%s)", err)
+	}
+	values = strings.TrimSpace(values)
+	values = strings.Replace(values, " ", "", -1)
+	expVal := "\"VALUE3\":\"VALUE3\",\n\"Value2\":\"Value2\",\n\"value1\":\"value1\",\n\"value2\":\"Value2\",\n\"value3\":\"VALUE3\","
+	if values != expVal {
+		t.Fatalf("got[%v]", values)
+	}
+}
+
 func TestScratchVars(t *testing.T) {
 	scratch.setInt(100, 0)
 	scratch.setInt(201, 1)

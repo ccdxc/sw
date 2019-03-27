@@ -147,6 +147,12 @@ func (m *Endpoint) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Endpoint) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *EndpointSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -156,6 +162,10 @@ func (m *EndpointSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *EndpointSpec) Normalize() {
+
+}
+
 func (m *EndpointStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -163,6 +173,10 @@ func (m *EndpointStatus) References(tenant string, path string, resp map[string]
 func (m *EndpointStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *EndpointStatus) Normalize() {
+
 }
 
 // Transformers

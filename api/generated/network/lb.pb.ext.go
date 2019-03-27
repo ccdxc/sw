@@ -134,6 +134,10 @@ func (m *HealthCheckSpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *HealthCheckSpec) Normalize() {
+
+}
+
 func (m *LbPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	tenant = m.Tenant
@@ -177,6 +181,12 @@ func (m *LbPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *LbPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *LbPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -186,6 +196,10 @@ func (m *LbPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *LbPolicySpec) Normalize() {
+
+}
+
 func (m *LbPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -193,6 +207,10 @@ func (m *LbPolicyStatus) References(tenant string, path string, resp map[string]
 func (m *LbPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *LbPolicyStatus) Normalize() {
+
 }
 
 // Transformers

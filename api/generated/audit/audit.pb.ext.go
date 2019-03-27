@@ -8,6 +8,7 @@ package audit
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -23,6 +24,34 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// Level_normal is a map of normalized values for the enum
+var Level_normal = map[string]string{
+	"Basic":           "Basic",
+	"Request":         "Request",
+	"RequestResponse": "RequestResponse",
+	"Response":        "Response",
+	"basic":           "Basic",
+	"request":         "Request",
+	"requestresponse": "RequestResponse",
+	"response":        "Response",
+}
+
+// Stage_normal is a map of normalized values for the enum
+var Stage_normal = map[string]string{
+	"RequestAuthorization": "RequestAuthorization",
+	"RequestProcessing":    "RequestProcessing",
+	"requestauthorization": "RequestAuthorization",
+	"requestprocessing":    "RequestProcessing",
+}
+
+// Outcome_normal is a map of normalized values for the enum
+var Outcome_normal = map[string]string{
+	"Failure": "Failure",
+	"Success": "Success",
+	"failure": "Failure",
+	"success": "Success",
+}
 
 var _ validators.DummyVar
 var validatorMapAudit = make(map[string]map[string][]func(string, interface{}) error)
@@ -122,6 +151,14 @@ func (m *Event) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Event) Normalize() {
+
+	m.EventAttributes.Normalize()
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *EventAttributes) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -144,6 +181,16 @@ func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *EventAttributes) Normalize() {
+
+	m.Level = Level_normal[strings.ToLower(m.Level)]
+
+	m.Outcome = Outcome_normal[strings.ToLower(m.Outcome)]
+
+	m.Stage = Stage_normal[strings.ToLower(m.Stage)]
+
+}
+
 func (m *EventRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -151,6 +198,10 @@ func (m *EventRequest) References(tenant string, path string, resp map[string]ap
 func (m *EventRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *EventRequest) Normalize() {
+
 }
 
 // Transformers

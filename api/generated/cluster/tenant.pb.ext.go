@@ -132,6 +132,12 @@ func (m *Tenant) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Tenant) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *TenantSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -141,6 +147,10 @@ func (m *TenantSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *TenantSpec) Normalize() {
+
+}
+
 func (m *TenantStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -148,6 +158,10 @@ func (m *TenantStatus) References(tenant string, path string, resp map[string]ap
 func (m *TenantStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TenantStatus) Normalize() {
+
 }
 
 // Transformers

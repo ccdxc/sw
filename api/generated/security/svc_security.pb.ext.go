@@ -518,6 +518,16 @@ func (m *AppList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AppList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *AutoMsgAppWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -535,6 +545,16 @@ func (m *AutoMsgAppWatchHelper) Validate(ver, path string, ignoreStatus bool) []
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgAppWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgAppWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -558,6 +578,14 @@ func (m *AutoMsgAppWatchHelper_WatchEvent) Validate(ver, path string, ignoreStat
 	return ret
 }
 
+func (m *AutoMsgAppWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgCertificateWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -575,6 +603,16 @@ func (m *AutoMsgCertificateWatchHelper) Validate(ver, path string, ignoreStatus 
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgCertificateWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgCertificateWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -598,6 +636,14 @@ func (m *AutoMsgCertificateWatchHelper_WatchEvent) Validate(ver, path string, ig
 	return ret
 }
 
+func (m *AutoMsgCertificateWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgFirewallProfileWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -615,6 +661,16 @@ func (m *AutoMsgFirewallProfileWatchHelper) Validate(ver, path string, ignoreSta
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgFirewallProfileWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -636,6 +692,14 @@ func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Validate(ver, path string
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
 }
 
 func (m *AutoMsgSGPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -668,6 +732,16 @@ func (m *AutoMsgSGPolicyWatchHelper) Validate(ver, path string, ignoreStatus boo
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgSGPolicyWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -703,6 +777,14 @@ func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignor
 	return ret
 }
 
+func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgSecurityGroupWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -720,6 +802,16 @@ func (m *AutoMsgSecurityGroupWatchHelper) Validate(ver, path string, ignoreStatu
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgSecurityGroupWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -743,6 +835,14 @@ func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) Validate(ver, path string, 
 	return ret
 }
 
+func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -760,6 +860,16 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Validate(ver, path string, i
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -783,6 +893,14 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent) Validate(ver, pat
 	return ret
 }
 
+func (m *AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *CertificateList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -802,6 +920,16 @@ func (m *CertificateList) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *CertificateList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *FirewallProfileList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -819,6 +947,16 @@ func (m *FirewallProfileList) Validate(ver, path string, ignoreStatus bool) []er
 		}
 	}
 	return ret
+}
+
+func (m *FirewallProfileList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *SGPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -853,6 +991,16 @@ func (m *SGPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SGPolicyList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *SecurityGroupList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -872,6 +1020,16 @@ func (m *SecurityGroupList) Validate(ver, path string, ignoreStatus bool) []erro
 	return ret
 }
 
+func (m *SecurityGroupList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *TrafficEncryptionPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -889,6 +1047,16 @@ func (m *TrafficEncryptionPolicyList) Validate(ver, path string, ignoreStatus bo
 		}
 	}
 	return ret
+}
+
+func (m *TrafficEncryptionPolicyList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 // Transformers

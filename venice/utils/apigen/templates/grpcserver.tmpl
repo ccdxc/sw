@@ -250,6 +250,10 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 		}){{$msgname := .Name}}{{with (index $validators.Map (derefStr .Name))}}.WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.({{$pkgname}}.{{$msgname}})
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+        	r := i.({{$pkgname}}.{{$msgname}})
+			r.Normalize()
+			return r
 		}){{end}}.WithReferencesGetter(func (i interface{}) (map[string]apiintf.ReferenceObj, error) {
             ret := make(map[string]apiintf.ReferenceObj)
             r := i.({{$pkgname}}.{{.Name}})

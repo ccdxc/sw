@@ -123,6 +123,16 @@ func (m *AutoMsgBufferWatchHelper) Validate(ver, path string, ignoreStatus bool)
 	return ret
 }
 
+func (m *AutoMsgBufferWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *AutoMsgBufferWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -144,6 +154,14 @@ func (m *AutoMsgBufferWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 	return ret
 }
 
+func (m *AutoMsgBufferWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *BufferList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -161,6 +179,16 @@ func (m *BufferList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *BufferList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 // Transformers

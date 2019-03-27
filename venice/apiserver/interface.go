@@ -123,8 +123,8 @@ type Config struct {
 // TransformFunc is a function that tranforms a message from "from" version to the "to" version.
 type TransformFunc func(from, to string, i interface{}) interface{}
 
-// DefaulterFunc is a function that performs custom defaulting on the message.
-type DefaulterFunc func(i interface{}) interface{}
+// NormalizerFunc is a function that performs normalization of values in the message.
+type NormalizerFunc func(i interface{}) interface{}
 
 // ValidateFunc is a function the validates the message. returns nil on success and error
 //  when validation fails.
@@ -226,8 +226,8 @@ type MessageRegistration interface {
 	WithTransform(from, to string, fn TransformFunc) Message
 	// WithValidate registers a custom validation function
 	WithValidate(fn ValidateFunc) Message
-	// WithDefaulter registers a custom defaulting function
-	WithDefaulter(fn DefaulterFunc) Message
+	// WithNormalizer registers a custom defaulting function
+	WithNormalizer(fn NormalizerFunc) Message
 	// WithKeyGenerator registers a key generator function.
 	WithKeyGenerator(fn KeyGenFunc) Message
 	// ObjectVersionFunc registers a version writer function.
@@ -294,8 +294,8 @@ type MessageAction interface {
 	WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, prefix string) error
 	// PrepareMsg prepares the message to the "to" version by applying any transforms needed.
 	PrepareMsg(from, to string, i interface{}) (interface{}, error)
-	// Default applies the custom defaulter if registered.
-	Default(i interface{}) interface{}
+	// Normalize normalizes the object if registered.
+	Normalize(i interface{}) interface{}
 	// Validate validates the message by invoking the custom validation function registered.
 	Validate(i interface{}, ver string, ignoreStatus bool) []error
 	// CreateUUID creates uuid when the object is first created

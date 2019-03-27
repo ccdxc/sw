@@ -281,6 +281,16 @@ func (m *AutoMsgLbPolicyWatchHelper) Validate(ver, path string, ignoreStatus boo
 	return ret
 }
 
+func (m *AutoMsgLbPolicyWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -302,6 +312,14 @@ func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignor
 	return ret
 }
 
+func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgNetworkWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -319,6 +337,16 @@ func (m *AutoMsgNetworkWatchHelper) Validate(ver, path string, ignoreStatus bool
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgNetworkWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgNetworkWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -342,6 +370,14 @@ func (m *AutoMsgNetworkWatchHelper_WatchEvent) Validate(ver, path string, ignore
 	return ret
 }
 
+func (m *AutoMsgNetworkWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgServiceWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -359,6 +395,16 @@ func (m *AutoMsgServiceWatchHelper) Validate(ver, path string, ignoreStatus bool
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgServiceWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgServiceWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -382,6 +428,14 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Validate(ver, path string, ignore
 	return ret
 }
 
+func (m *AutoMsgServiceWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *LbPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -399,6 +453,16 @@ func (m *LbPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *LbPolicyList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *NetworkList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -420,6 +484,16 @@ func (m *NetworkList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *NetworkList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *ServiceList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -437,6 +511,16 @@ func (m *ServiceList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *ServiceList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 // Transformers

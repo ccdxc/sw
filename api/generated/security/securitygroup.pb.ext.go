@@ -158,6 +158,14 @@ func (m *SecurityGroup) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SecurityGroup) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *SecurityGroupSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -179,6 +187,14 @@ func (m *SecurityGroupSpec) Validate(ver, path string, ignoreStatus bool) []erro
 	return ret
 }
 
+func (m *SecurityGroupSpec) Normalize() {
+
+	if m.WorkloadSelector != nil {
+		m.WorkloadSelector.Normalize()
+	}
+
+}
+
 func (m *SecurityGroupStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -186,6 +202,10 @@ func (m *SecurityGroupStatus) References(tenant string, path string, resp map[st
 func (m *SecurityGroupStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *SecurityGroupStatus) Normalize() {
+
 }
 
 // Transformers

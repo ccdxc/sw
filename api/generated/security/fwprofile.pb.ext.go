@@ -180,6 +180,14 @@ func (m *FirewallProfile) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *FirewallProfile) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *FirewallProfileSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -202,6 +210,10 @@ func (m *FirewallProfileSpec) Validate(ver, path string, ignoreStatus bool) []er
 	return ret
 }
 
+func (m *FirewallProfileSpec) Normalize() {
+
+}
+
 func (m *FirewallProfileStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -209,6 +221,10 @@ func (m *FirewallProfileStatus) References(tenant string, path string, resp map[
 func (m *FirewallProfileStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *FirewallProfileStatus) Normalize() {
+
 }
 
 // Transformers

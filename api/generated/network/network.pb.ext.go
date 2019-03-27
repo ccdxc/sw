@@ -147,6 +147,12 @@ func (m *Network) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Network) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *NetworkSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -156,6 +162,10 @@ func (m *NetworkSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *NetworkSpec) Normalize() {
+
+}
+
 func (m *NetworkStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -163,6 +173,10 @@ func (m *NetworkStatus) References(tenant string, path string, resp map[string]a
 func (m *NetworkStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *NetworkStatus) Normalize() {
+
 }
 
 // Transformers

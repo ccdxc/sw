@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -26,6 +27,44 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// MemInfo_MemType_normal is a map of normalized values for the enum
+var MemInfo_MemType_normal = map[string]string{
+	"DDR":     "DDR",
+	"HBM":     "HBM",
+	"UNKNOWN": "UNKNOWN",
+	"ddr":     "DDR",
+	"hbm":     "HBM",
+	"unknown": "UNKNOWN",
+}
+
+// NodeCondition_ConditionType_normal is a map of normalized values for the enum
+var NodeCondition_ConditionType_normal = map[string]string{
+	"LEADER": "LEADER",
+	"leader": "LEADER",
+}
+
+// NodeStatus_NodePhase_normal is a map of normalized values for the enum
+var NodeStatus_NodePhase_normal = map[string]string{
+	"FAILED":  "FAILED",
+	"JOINED":  "JOINED",
+	"PENDING": "PENDING",
+	"UNKNOWN": "UNKNOWN",
+	"failed":  "FAILED",
+	"joined":  "JOINED",
+	"pending": "PENDING",
+	"unknown": "UNKNOWN",
+}
+
+// ConditionStatus_normal is a map of normalized values for the enum
+var ConditionStatus_normal = map[string]string{
+	"FALSE":   "FALSE",
+	"TRUE":    "TRUE",
+	"UNKNOWN": "UNKNOWN",
+	"false":   "FALSE",
+	"true":    "TRUE",
+	"unknown": "UNKNOWN",
+}
 
 var _ validators.DummyVar
 var validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)
@@ -605,6 +644,10 @@ func (m *CPUInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *CPUInfo) Normalize() {
+
+}
+
 func (m *Cluster) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -632,6 +675,12 @@ func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Cluster) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *ClusterAuthBootstrapRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -639,6 +688,12 @@ func (m *ClusterAuthBootstrapRequest) References(tenant string, path string, res
 func (m *ClusterAuthBootstrapRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ClusterAuthBootstrapRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
 }
 
 func (m *ClusterSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -650,6 +705,10 @@ func (m *ClusterSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ClusterSpec) Normalize() {
+
+}
+
 func (m *ClusterStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -659,6 +718,10 @@ func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ClusterStatus) Normalize() {
+
+}
+
 func (m *DockerInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -666,6 +729,10 @@ func (m *DockerInfo) References(tenant string, path string, resp map[string]apii
 func (m *DockerInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *DockerInfo) Normalize() {
+
 }
 
 func (m *Host) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -706,6 +773,14 @@ func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Host) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *HostSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -725,6 +800,15 @@ func (m *HostSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *HostSpec) Normalize() {
+
+	for _, v := range m.SmartNICs {
+		v.Normalize()
+
+	}
+
+}
+
 func (m *HostStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -734,6 +818,10 @@ func (m *HostStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *HostStatus) Normalize() {
+
+}
+
 func (m *InterfaceInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -741,6 +829,10 @@ func (m *InterfaceInfo) References(tenant string, path string, resp map[string]a
 func (m *InterfaceInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *InterfaceInfo) Normalize() {
+
 }
 
 func (m *MemInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -765,6 +857,12 @@ func (m *MemInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *MemInfo) Normalize() {
+
+	m.Type = MemInfo_MemType_normal[strings.ToLower(m.Type)]
+
+}
+
 func (m *NetworkInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -772,6 +870,10 @@ func (m *NetworkInfo) References(tenant string, path string, resp map[string]api
 func (m *NetworkInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *NetworkInfo) Normalize() {
+
 }
 
 func (m *Node) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -812,6 +914,14 @@ func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Node) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *NodeCondition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -832,6 +942,14 @@ func (m *NodeCondition) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *NodeCondition) Normalize() {
+
+	m.Status = ConditionStatus_normal[strings.ToLower(m.Status)]
+
+	m.Type = NodeCondition_ConditionType_normal[strings.ToLower(m.Type)]
+
 }
 
 func (m *NodeInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -855,6 +973,14 @@ func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *NodeInfo) Normalize() {
+
+	if m.MemoryInfo != nil {
+		m.MemoryInfo.Normalize()
+	}
+
+}
+
 func (m *NodeSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -862,6 +988,10 @@ func (m *NodeSpec) References(tenant string, path string, resp map[string]apiint
 func (m *NodeSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *NodeSpec) Normalize() {
+
 }
 
 func (m *NodeStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -896,6 +1026,17 @@ func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *NodeStatus) Normalize() {
+
+	for _, v := range m.Conditions {
+		v.Normalize()
+
+	}
+
+	m.Phase = NodeStatus_NodePhase_normal[strings.ToLower(m.Phase)]
+
+}
+
 func (m *OsInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -903,6 +1044,10 @@ func (m *OsInfo) References(tenant string, path string, resp map[string]apiintf.
 func (m *OsInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *OsInfo) Normalize() {
+
 }
 
 func (m *SmartNICID) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -927,6 +1072,10 @@ func (m *SmartNICID) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SmartNICID) Normalize() {
+
+}
+
 func (m *StorageDeviceInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -934,6 +1083,10 @@ func (m *StorageDeviceInfo) References(tenant string, path string, resp map[stri
 func (m *StorageDeviceInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *StorageDeviceInfo) Normalize() {
+
 }
 
 func (m *StorageInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -945,6 +1098,10 @@ func (m *StorageInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *StorageInfo) Normalize() {
+
+}
+
 func (m *UpdateTLSConfigRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -952,6 +1109,12 @@ func (m *UpdateTLSConfigRequest) References(tenant string, path string, resp map
 func (m *UpdateTLSConfigRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *UpdateTLSConfigRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
 }
 
 // Transformers

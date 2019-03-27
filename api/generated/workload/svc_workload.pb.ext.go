@@ -202,6 +202,16 @@ func (m *AutoMsgEndpointWatchHelper) Validate(ver, path string, ignoreStatus boo
 	return ret
 }
 
+func (m *AutoMsgEndpointWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *AutoMsgEndpointWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -221,6 +231,14 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver, path string, ignor
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgEndpointWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
 }
 
 func (m *AutoMsgWorkloadWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -253,6 +271,16 @@ func (m *AutoMsgWorkloadWatchHelper) Validate(ver, path string, ignoreStatus boo
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgWorkloadWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgWorkloadWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -288,6 +316,14 @@ func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Validate(ver, path string, ignor
 	return ret
 }
 
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *EndpointList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -305,6 +341,16 @@ func (m *EndpointList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *EndpointList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *WorkloadList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -337,6 +383,16 @@ func (m *WorkloadList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *WorkloadList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 // Transformers

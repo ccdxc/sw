@@ -1348,6 +1348,10 @@ func getEnumStrMap(file *descriptor.File, in []string) (string, error) {
 	return common.GetEnumStr(file, in, "value")
 }
 
+func getEnumStrNormalMap(file *descriptor.File, in []string) (string, error) {
+	return common.GetEnumStr(file, in, "normal")
+}
+
 // relationRef is reference to relations
 type relationRef struct {
 	Type  string
@@ -2648,6 +2652,33 @@ func isSrvBinStream(m *descriptor.Method) (bool, error) {
 	return bin.(bool), nil
 }
 
+func getNormalizedEnumName(e *descriptor.Enum) (name string, err error) {
+	for _, v := range e.Outers {
+		name = name + v + "_"
+	}
+	name = name + *e.Name + "_normal"
+	return name, nil
+}
+func getNormalizedEnum(e *descriptor.Enum) (values string, err error) {
+	ret := make(map[string]string)
+	for k := range e.Value {
+		val := *e.Value[k].Name
+		ret[val] = val
+		if ret[val] != strings.ToLower(val) {
+			ret[strings.ToLower(val)] = val
+		}
+	}
+	keys := []string{}
+	for k := range ret {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, v := range keys {
+		values = fmt.Sprintf("%s\"%s\":\"%s\",\n", values, v, ret[v])
+	}
+	return
+}
+
 func init() {
 	cliTagRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
 
@@ -2700,6 +2731,7 @@ func init() {
 	reg.RegisterFunc("getRequirementsManifest", getRequirementsManifest)
 	reg.RegisterFunc("derefStr", derefStr)
 	reg.RegisterFunc("getEnumStrMap", getEnumStrMap)
+	reg.RegisterFunc("getEnumStrNormalMap", getEnumStrNormalMap)
 	reg.RegisterFunc("getStorageTransformersManifest", getStorageTransformersManifest)
 	reg.RegisterFunc("isSpecStatusMessage", isSpecStatusMessage)
 	reg.RegisterFunc("saveBool", scratch.setBool)
@@ -2740,6 +2772,8 @@ func init() {
 	reg.RegisterFunc("getJSONTagByName", getJSONTagByName)
 	reg.RegisterFunc("getMsgName", getMsgName)
 	reg.RegisterFunc("isSrvBinStream", isSrvBinStream)
+	reg.RegisterFunc("getNormalizedEnum", getNormalizedEnum)
+	reg.RegisterFunc("getNormalizedEnumName", getNormalizedEnumName)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

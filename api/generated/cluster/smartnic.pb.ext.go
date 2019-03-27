@@ -9,6 +9,7 @@ package cluster
 import (
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -25,6 +26,44 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// SmartNICCondition_ConditionType_normal is a map of normalized values for the enum
+var SmartNICCondition_ConditionType_normal = map[string]string{
+	"HEALTHY":     "HEALTHY",
+	"UNREACHABLE": "UNREACHABLE",
+	"healthy":     "HEALTHY",
+	"unreachable": "UNREACHABLE",
+}
+
+// SmartNICSpec_MgmtModes_normal is a map of normalized values for the enum
+var SmartNICSpec_MgmtModes_normal = map[string]string{
+	"HOST":    "HOST",
+	"NETWORK": "NETWORK",
+	"host":    "HOST",
+	"network": "NETWORK",
+}
+
+// SmartNICSpec_NetworkModes_normal is a map of normalized values for the enum
+var SmartNICSpec_NetworkModes_normal = map[string]string{
+	"INBAND": "INBAND",
+	"OOB":    "OOB",
+	"inband": "INBAND",
+	"oob":    "OOB",
+}
+
+// SmartNICStatus_Phase_normal is a map of normalized values for the enum
+var SmartNICStatus_Phase_normal = map[string]string{
+	"ADMITTED":    "ADMITTED",
+	"PENDING":     "PENDING",
+	"REGISTERING": "REGISTERING",
+	"REJECTED":    "REJECTED",
+	"UNKNOWN":     "UNKNOWN",
+	"admitted":    "ADMITTED",
+	"pending":     "PENDING",
+	"registering": "REGISTERING",
+	"rejected":    "REJECTED",
+	"unknown":     "UNKNOWN",
+}
 
 var _ validators.DummyVar
 var validatorMapSmartnic = make(map[string]map[string][]func(string, interface{}) error)
@@ -251,6 +290,10 @@ func (m *BiosInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BiosInfo) Normalize() {
+
+}
+
 func (m *IPConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -258,6 +301,10 @@ func (m *IPConfig) References(tenant string, path string, resp map[string]apiint
 func (m *IPConfig) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *IPConfig) Normalize() {
+
 }
 
 func (m *MacRange) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -280,6 +327,10 @@ func (m *MacRange) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *MacRange) Normalize() {
+
 }
 
 func (m *SmartNIC) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -331,6 +382,16 @@ func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SmartNIC) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *SmartNICCondition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -351,6 +412,14 @@ func (m *SmartNICCondition) Validate(ver, path string, ignoreStatus bool) []erro
 		}
 	}
 	return ret
+}
+
+func (m *SmartNICCondition) Normalize() {
+
+	m.Status = ConditionStatus_normal[strings.ToLower(m.Status)]
+
+	m.Type = SmartNICCondition_ConditionType_normal[strings.ToLower(m.Type)]
+
 }
 
 func (m *SmartNICInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -374,6 +443,14 @@ func (m *SmartNICInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SmartNICInfo) Normalize() {
+
+	if m.MemoryInfo != nil {
+		m.MemoryInfo.Normalize()
+	}
+
+}
+
 func (m *SmartNICSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -394,6 +471,14 @@ func (m *SmartNICSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SmartNICSpec) Normalize() {
+
+	m.MgmtMode = SmartNICSpec_MgmtModes_normal[strings.ToLower(m.MgmtMode)]
+
+	m.NetworkMode = SmartNICSpec_NetworkModes_normal[strings.ToLower(m.NetworkMode)]
+
 }
 
 func (m *SmartNICStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -438,6 +523,21 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SmartNICStatus) Normalize() {
+
+	m.AdmissionPhase = SmartNICStatus_Phase_normal[strings.ToLower(m.AdmissionPhase)]
+
+	for _, v := range m.Conditions {
+		v.Normalize()
+
+	}
+
+	if m.SystemInfo != nil {
+		m.SystemInfo.Normalize()
+	}
+
 }
 
 // Transformers

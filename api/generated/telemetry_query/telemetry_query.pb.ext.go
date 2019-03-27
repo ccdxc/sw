@@ -8,6 +8,7 @@ package telemetry_query
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -23,6 +24,37 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// TsdbFunctionType_normal is a map of normalized values for the enum
+var TsdbFunctionType_normal = map[string]string{
+	"MAX":  "MAX",
+	"MEAN": "MEAN",
+	"NONE": "NONE",
+	"max":  "MAX",
+	"mean": "MEAN",
+	"none": "NONE",
+}
+
+// SortOrder_normal is a map of normalized values for the enum
+var SortOrder_normal = map[string]string{
+	"Ascending":  "Ascending",
+	"Descending": "Descending",
+	"ascending":  "Ascending",
+	"descending": "Descending",
+}
+
+// FwlogActions_normal is a map of normalized values for the enum
+var FwlogActions_normal = map[string]string{
+	"allow":  "allow",
+	"deny":   "deny",
+	"reject": "reject",
+}
+
+// FwlogDirections_normal is a map of normalized values for the enum
+var FwlogDirections_normal = map[string]string{
+	"from_host":   "from_host",
+	"from_uplink": "from_uplink",
+}
 
 var _ validators.DummyVar
 var validatorMapTelemetry_query = make(map[string]map[string][]func(string, interface{}) error)
@@ -348,6 +380,14 @@ func (m *Fwlog) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Fwlog) Normalize() {
+
+	m.Action = FwlogActions_normal[strings.ToLower(m.Action)]
+
+	m.Direction = FwlogDirections_normal[strings.ToLower(m.Direction)]
+
+}
+
 func (m *FwlogsQueryList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -365,6 +405,16 @@ func (m *FwlogsQueryList) Validate(ver, path string, ignoreStatus bool) []error 
 		}
 	}
 	return ret
+}
+
+func (m *FwlogsQueryList) Normalize() {
+
+	for _, v := range m.Queries {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *FwlogsQueryResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -386,6 +436,16 @@ func (m *FwlogsQueryResponse) Validate(ver, path string, ignoreStatus bool) []er
 	return ret
 }
 
+func (m *FwlogsQueryResponse) Normalize() {
+
+	for _, v := range m.Results {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *FwlogsQueryResult) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -403,6 +463,16 @@ func (m *FwlogsQueryResult) Validate(ver, path string, ignoreStatus bool) []erro
 		}
 	}
 	return ret
+}
+
+func (m *FwlogsQueryResult) Normalize() {
+
+	for _, v := range m.Logs {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *FwlogsQuerySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -439,6 +509,24 @@ func (m *FwlogsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *FwlogsQuerySpec) Normalize() {
+
+	for k, v := range m.Actions {
+		m.Actions[k] = FwlogActions_normal[strings.ToLower(v)]
+	}
+
+	for k, v := range m.Directions {
+		m.Directions[k] = FwlogDirections_normal[strings.ToLower(v)]
+	}
+
+	if m.Pagination != nil {
+		m.Pagination.Normalize()
+	}
+
+	m.SortOrder = SortOrder_normal[strings.ToLower(m.SortOrder)]
+
+}
+
 func (m *MetricsQueryList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -458,6 +546,16 @@ func (m *MetricsQueryList) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *MetricsQueryList) Normalize() {
+
+	for _, v := range m.Queries {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *MetricsQueryResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -467,6 +565,10 @@ func (m *MetricsQueryResponse) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+func (m *MetricsQueryResponse) Normalize() {
+
+}
+
 func (m *MetricsQueryResult) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -474,6 +576,10 @@ func (m *MetricsQueryResult) References(tenant string, path string, resp map[str
 func (m *MetricsQueryResult) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *MetricsQueryResult) Normalize() {
+
 }
 
 func (m *MetricsQuerySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -522,6 +628,22 @@ func (m *MetricsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *MetricsQuerySpec) Normalize() {
+
+	m.Function = TsdbFunctionType_normal[strings.ToLower(m.Function)]
+
+	if m.Pagination != nil {
+		m.Pagination.Normalize()
+	}
+
+	if m.Selector != nil {
+		m.Selector.Normalize()
+	}
+
+	m.SortOrder = SortOrder_normal[strings.ToLower(m.SortOrder)]
+
+}
+
 func (m *PaginationSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -544,6 +666,10 @@ func (m *PaginationSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *PaginationSpec) Normalize() {
+
+}
+
 func (m *ResultSeries) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -551,6 +677,10 @@ func (m *ResultSeries) References(tenant string, path string, resp map[string]ap
 func (m *ResultSeries) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ResultSeries) Normalize() {
+
 }
 
 // Transformers

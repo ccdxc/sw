@@ -9,6 +9,7 @@ package monitoring
 import (
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -25,6 +26,18 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// TechSupportJobStatus_normal is a map of normalized values for the enum
+var TechSupportJobStatus_normal = map[string]string{
+	"Completed": "Completed",
+	"Failed":    "Failed",
+	"Running":   "Running",
+	"Scheduled": "Scheduled",
+	"completed": "Completed",
+	"failed":    "Failed",
+	"running":   "Running",
+	"scheduled": "Scheduled",
+}
 
 var _ validators.DummyVar
 var validatorMapTechsupport = make(map[string]map[string][]func(string, interface{}) error)
@@ -199,6 +212,12 @@ func (m *TechSupportNodeResult) Validate(ver, path string, ignoreStatus bool) []
 	return ret
 }
 
+func (m *TechSupportNodeResult) Normalize() {
+
+	m.Status = TechSupportJobStatus_normal[strings.ToLower(m.Status)]
+
+}
+
 func (m *TechSupportRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -248,6 +267,16 @@ func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool) []err
 	return ret
 }
 
+func (m *TechSupportRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *TechSupportRequestSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -281,6 +310,18 @@ func (m *TechSupportRequestSpec) Validate(ver, path string, ignoreStatus bool) [
 	return ret
 }
 
+func (m *TechSupportRequestSpec) Normalize() {
+
+	if m.CollectionSelector != nil {
+		m.CollectionSelector.Normalize()
+	}
+
+	if m.NodeSelector != nil {
+		m.NodeSelector.Normalize()
+	}
+
+}
+
 func (m *TechSupportRequestSpec_NodeSelectorSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -300,6 +341,14 @@ func (m *TechSupportRequestSpec_NodeSelectorSpec) Validate(ver, path string, ign
 		}
 	}
 	return ret
+}
+
+func (m *TechSupportRequestSpec_NodeSelectorSpec) Normalize() {
+
+	if m.Labels != nil {
+		m.Labels.Normalize()
+	}
+
 }
 
 func (m *TechSupportRequestStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -342,6 +391,24 @@ func (m *TechSupportRequestStatus) Validate(ver, path string, ignoreStatus bool)
 		}
 	}
 	return ret
+}
+
+func (m *TechSupportRequestStatus) Normalize() {
+
+	for _, v := range m.ControllerNodeResults {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	for _, v := range m.SmartNICNodeResults {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	m.Status = TechSupportJobStatus_normal[strings.ToLower(m.Status)]
+
 }
 
 // Transformers

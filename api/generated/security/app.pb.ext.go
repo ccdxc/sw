@@ -8,6 +8,7 @@ package security
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,6 +25,24 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// ALG_ALGType_normal is a map of normalized values for the enum
+var ALG_ALGType_normal = map[string]string{
+	"DNS":    "DNS",
+	"FTP":    "FTP",
+	"ICMP":   "ICMP",
+	"MSRPC":  "MSRPC",
+	"RTSP":   "RTSP",
+	"SunRPC": "SunRPC",
+	"TFTP":   "TFTP",
+	"dns":    "DNS",
+	"ftp":    "FTP",
+	"icmp":   "ICMP",
+	"msrpc":  "MSRPC",
+	"rtsp":   "RTSP",
+	"sunrpc": "SunRPC",
+	"tftp":   "TFTP",
+}
 
 var _ validators.DummyVar
 var validatorMapApp = make(map[string]map[string][]func(string, interface{}) error)
@@ -302,6 +321,24 @@ func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ALG) Normalize() {
+
+	for _, v := range m.Msrpc {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	for _, v := range m.Sunrpc {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	m.Type = ALG_ALGType_normal[strings.ToLower(m.Type)]
+
+}
+
 func (m *App) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	tenant = m.Tenant
@@ -356,6 +393,14 @@ func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *App) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *AppSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -390,6 +435,14 @@ func (m *AppSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AppSpec) Normalize() {
+
+	if m.ALG != nil {
+		m.ALG.Normalize()
+	}
+
+}
+
 func (m *AppStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -397,6 +450,10 @@ func (m *AppStatus) References(tenant string, path string, resp map[string]apiin
 func (m *AppStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AppStatus) Normalize() {
+
 }
 
 func (m *Dns) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -408,6 +465,10 @@ func (m *Dns) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Dns) Normalize() {
+
+}
+
 func (m *Ftp) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -417,6 +478,10 @@ func (m *Ftp) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Ftp) Normalize() {
+
+}
+
 func (m *Icmp) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -424,6 +489,10 @@ func (m *Icmp) References(tenant string, path string, resp map[string]apiintf.Re
 func (m *Icmp) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Icmp) Normalize() {
+
 }
 
 func (m *Msrpc) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -448,6 +517,10 @@ func (m *Msrpc) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Msrpc) Normalize() {
+
+}
+
 func (m *Sunrpc) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -468,6 +541,10 @@ func (m *Sunrpc) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *Sunrpc) Normalize() {
+
 }
 
 // Transformers

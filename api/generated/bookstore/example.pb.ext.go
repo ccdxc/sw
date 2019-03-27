@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -26,6 +27,34 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// BookSpec_BookCategories_normal is a map of normalized values for the enum
+var BookSpec_BookCategories_normal = map[string]string{
+	"ChildrensLit": "ChildrensLit",
+	"Fiction":      "Fiction",
+	"NonFiction":   "NonFiction",
+	"YoungAdult":   "YoungAdult",
+	"childrenslit": "ChildrensLit",
+	"fiction":      "Fiction",
+	"nonfiction":   "NonFiction",
+	"youngadult":   "YoungAdult",
+}
+
+// OrderStatus_OrderStatus_normal is a map of normalized values for the enum
+var OrderStatus_OrderStatus_normal = map[string]string{
+	"COMPLETED":  "COMPLETED",
+	"CREATED":    "CREATED",
+	"DISCOUNTED": "DISCOUNTED",
+	"FILLED":     "FILLED",
+	"PROCESSING": "PROCESSING",
+	"SHIPPED":    "SHIPPED",
+	"completed":  "COMPLETED",
+	"created":    "CREATED",
+	"discounted": "DISCOUNTED",
+	"filled":     "FILLED",
+	"processing": "PROCESSING",
+	"shipped":    "SHIPPED",
+}
 
 var _ validators.DummyVar
 var validatorMapExample = make(map[string]map[string][]func(string, interface{}) error)
@@ -1302,6 +1331,12 @@ func (m *ApplyDiscountReq) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *ApplyDiscountReq) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *AutoMsgBookWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
@@ -1332,6 +1367,16 @@ func (m *AutoMsgBookWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgBookWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgBookWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1367,6 +1412,14 @@ func (m *AutoMsgBookWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 	return ret
 }
 
+func (m *AutoMsgBookWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgCouponWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1384,6 +1437,16 @@ func (m *AutoMsgCouponWatchHelper) Validate(ver, path string, ignoreStatus bool)
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgCouponWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgCouponWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1405,6 +1468,14 @@ func (m *AutoMsgCouponWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgCouponWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
 }
 
 func (m *AutoMsgCustomerWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1437,6 +1508,16 @@ func (m *AutoMsgCustomerWatchHelper) Validate(ver, path string, ignoreStatus boo
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgCustomerWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgCustomerWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1472,6 +1553,14 @@ func (m *AutoMsgCustomerWatchHelper_WatchEvent) Validate(ver, path string, ignor
 	return ret
 }
 
+func (m *AutoMsgCustomerWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgOrderWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
@@ -1502,6 +1591,16 @@ func (m *AutoMsgOrderWatchHelper) Validate(ver, path string, ignoreStatus bool) 
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgOrderWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgOrderWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1537,6 +1636,14 @@ func (m *AutoMsgOrderWatchHelper_WatchEvent) Validate(ver, path string, ignoreSt
 	return ret
 }
 
+func (m *AutoMsgOrderWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgPublisherWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1554,6 +1661,16 @@ func (m *AutoMsgPublisherWatchHelper) Validate(ver, path string, ignoreStatus bo
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgPublisherWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgPublisherWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1577,6 +1694,14 @@ func (m *AutoMsgPublisherWatchHelper_WatchEvent) Validate(ver, path string, igno
 	return ret
 }
 
+func (m *AutoMsgPublisherWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgStoreWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1594,6 +1719,16 @@ func (m *AutoMsgStoreWatchHelper) Validate(ver, path string, ignoreStatus bool) 
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgStoreWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *AutoMsgStoreWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1615,6 +1750,14 @@ func (m *AutoMsgStoreWatchHelper_WatchEvent) Validate(ver, path string, ignoreSt
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgStoreWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
 }
 
 func (m *Book) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1665,6 +1808,14 @@ func (m *Book) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Book) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *BookEdition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1685,6 +1836,10 @@ func (m *BookEdition) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *BookEdition) Normalize() {
+
 }
 
 func (m *BookList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1719,6 +1874,16 @@ func (m *BookList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BookList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *BookReview) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1726,6 +1891,10 @@ func (m *BookReview) References(tenant string, path string, resp map[string]apii
 func (m *BookReview) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *BookReview) Normalize() {
+
 }
 
 func (m *BookSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1781,6 +1950,18 @@ func (m *BookSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BookSpec) Normalize() {
+
+	m.Category = BookSpec_BookCategories_normal[strings.ToLower(m.Category)]
+
+	for _, v := range m.Editions {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *BookStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1790,6 +1971,10 @@ func (m *BookStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BookStatus) Normalize() {
+
+}
+
 func (m *Coupon) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1797,6 +1982,12 @@ func (m *Coupon) References(tenant string, path string, resp map[string]apiintf.
 func (m *Coupon) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Coupon) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
 }
 
 func (m *CouponList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1818,6 +2009,16 @@ func (m *CouponList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *CouponList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *CouponSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1825,6 +2026,10 @@ func (m *CouponSpec) References(tenant string, path string, resp map[string]apii
 func (m *CouponSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *CouponSpec) Normalize() {
+
 }
 
 func (m *Customer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1875,6 +2080,14 @@ func (m *Customer) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Customer) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *CustomerList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
@@ -1907,6 +2120,16 @@ func (m *CustomerList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *CustomerList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *CustomerPersonalInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1914,6 +2137,10 @@ func (m *CustomerPersonalInfo) References(tenant string, path string, resp map[s
 func (m *CustomerPersonalInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *CustomerPersonalInfo) Normalize() {
+
 }
 
 func (m *CustomerSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1936,6 +2163,10 @@ func (m *CustomerSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *CustomerSpec) Normalize() {
+
 }
 
 func (m *CustomerStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -1966,6 +2197,10 @@ func (m *CustomerStatus) References(tenant string, path string, resp map[string]
 func (m *CustomerStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *CustomerStatus) Normalize() {
+
 }
 
 func (m *Order) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -2037,6 +2272,16 @@ func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Order) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *OrderItem) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
@@ -2080,6 +2325,10 @@ func (m *OrderItem) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *OrderItem) Normalize() {
+
+}
+
 func (m *OrderList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
@@ -2112,6 +2361,16 @@ func (m *OrderList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *OrderList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *OrderSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
@@ -2142,6 +2401,16 @@ func (m *OrderSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *OrderSpec) Normalize() {
+
+	for _, v := range m.Order {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *OrderStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -2189,6 +2458,18 @@ func (m *OrderStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *OrderStatus) Normalize() {
+
+	for _, v := range m.Filled {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	m.Status = OrderStatus_OrderStatus_normal[strings.ToLower(m.Status)]
+
+}
+
 func (m *OutageRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -2196,6 +2477,12 @@ func (m *OutageRequest) References(tenant string, path string, resp map[string]a
 func (m *OutageRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *OutageRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
 }
 
 func (m *Publisher) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -2236,6 +2523,14 @@ func (m *Publisher) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Publisher) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *PublisherList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -2253,6 +2548,16 @@ func (m *PublisherList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *PublisherList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *PublisherSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -2277,6 +2582,10 @@ func (m *PublisherSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *PublisherSpec) Normalize() {
+
+}
+
 func (m *PublisherStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -2284,6 +2593,10 @@ func (m *PublisherStatus) References(tenant string, path string, resp map[string
 func (m *PublisherStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *PublisherStatus) Normalize() {
+
 }
 
 func (m *RestockRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -2295,6 +2608,12 @@ func (m *RestockRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RestockRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *RestockResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -2302,6 +2621,12 @@ func (m *RestockResponse) References(tenant string, path string, resp map[string
 func (m *RestockResponse) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *RestockResponse) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
 }
 
 func (m *Store) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -2331,6 +2656,12 @@ func (m *Store) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Store) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *StoreList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -2350,6 +2681,16 @@ func (m *StoreList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *StoreList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *StoreSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -2357,6 +2698,10 @@ func (m *StoreSpec) References(tenant string, path string, resp map[string]apiin
 func (m *StoreSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *StoreSpec) Normalize() {
+
 }
 
 func (m *StoreStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -2368,6 +2713,10 @@ func (m *StoreStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *StoreStatus) Normalize() {
+
+}
+
 func (m *UnusedMessage) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -2375,6 +2724,10 @@ func (m *UnusedMessage) References(tenant string, path string, resp map[string]a
 func (m *UnusedMessage) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *UnusedMessage) Normalize() {
+
 }
 
 // Transformers

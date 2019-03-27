@@ -8,6 +8,7 @@ package search
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -23,6 +24,122 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// Category_Type_normal is a map of normalized values for the enum
+var Category_Type_normal = map[string]string{
+	"Alerts":     "Alerts",
+	"AuditTrail": "AuditTrail",
+	"Auth":       "Auth",
+	"Cluster":    "Cluster",
+	"Events":     "Events",
+	"Monitoring": "Monitoring",
+	"Network":    "Network",
+	"Security":   "Security",
+	"Telemetry":  "Telemetry",
+	"Workload":   "Workload",
+	"alerts":     "Alerts",
+	"audittrail": "AuditTrail",
+	"auth":       "Auth",
+	"cluster":    "Cluster",
+	"events":     "Events",
+	"monitoring": "Monitoring",
+	"network":    "Network",
+	"security":   "Security",
+	"telemetry":  "Telemetry",
+	"workload":   "Workload",
+}
+
+// Kind_Type_normal is a map of normalized values for the enum
+var Kind_Type_normal = map[string]string{
+	"Alert":                   "Alert",
+	"AlertDestination":        "AlertDestination",
+	"AlertPolicy":             "AlertPolicy",
+	"App":                     "App",
+	"AppUser":                 "AppUser",
+	"AppUserGrp":              "AppUserGrp",
+	"AuditEvent":              "AuditEvent",
+	"AuthenticationPolicy":    "AuthenticationPolicy",
+	"Certificate":             "Certificate",
+	"Cluster":                 "Cluster",
+	"Endpoint":                "Endpoint",
+	"Event":                   "Event",
+	"EventPolicy":             "EventPolicy",
+	"FlowExportPolicy":        "FlowExportPolicy",
+	"FwlogPolicy":             "FwlogPolicy",
+	"Host":                    "Host",
+	"LbPolicy":                "LbPolicy",
+	"MirrorSession":           "MirrorSession",
+	"Network":                 "Network",
+	"Node":                    "Node",
+	"Role":                    "Role",
+	"RoleBinding":             "RoleBinding",
+	"Rollout":                 "Rollout",
+	"SGPolicy":                "SGPolicy",
+	"SecurityGroup":           "SecurityGroup",
+	"Service":                 "Service",
+	"SmartNIC":                "SmartNIC",
+	"StatsPolicy":             "StatsPolicy",
+	"Tenant":                  "Tenant",
+	"TrafficEncryptionPolicy": "TrafficEncryptionPolicy",
+	"User":                    "User",
+	"Workload":                "Workload",
+	"alert":                   "Alert",
+	"alertdestination":        "AlertDestination",
+	"alertpolicy":             "AlertPolicy",
+	"app":                     "App",
+	"appuser":                 "AppUser",
+	"appusergrp":              "AppUserGrp",
+	"auditevent":              "AuditEvent",
+	"authenticationpolicy":    "AuthenticationPolicy",
+	"certificate":             "Certificate",
+	"cluster":                 "Cluster",
+	"endpoint":                "Endpoint",
+	"event":                   "Event",
+	"eventpolicy":             "EventPolicy",
+	"flowexportpolicy":        "FlowExportPolicy",
+	"fwlogpolicy":             "FwlogPolicy",
+	"host":                    "Host",
+	"lbpolicy":                "LbPolicy",
+	"mirrorsession":           "MirrorSession",
+	"network":                 "Network",
+	"node":                    "Node",
+	"role":                    "Role",
+	"rolebinding":             "RoleBinding",
+	"rollout":                 "Rollout",
+	"securitygroup":           "SecurityGroup",
+	"service":                 "Service",
+	"sgpolicy":                "SGPolicy",
+	"smartnic":                "SmartNIC",
+	"statspolicy":             "StatsPolicy",
+	"tenant":                  "Tenant",
+	"trafficencryptionpolicy": "TrafficEncryptionPolicy",
+	"user":                    "User",
+	"workload":                "Workload",
+}
+
+// PolicySearchResponse_MatchStatus_normal is a map of normalized values for the enum
+var PolicySearchResponse_MatchStatus_normal = map[string]string{
+	"MATCH": "MATCH",
+	"MISS":  "MISS",
+	"match": "MATCH",
+	"miss":  "MISS",
+}
+
+// SearchRequest_RequestMode_normal is a map of normalized values for the enum
+var SearchRequest_RequestMode_normal = map[string]string{
+	"Full":    "Full",
+	"Preview": "Preview",
+	"full":    "Full",
+	"preview": "Preview",
+}
+
+// SearchRequest_SortOrderEnum_normal is a map of normalized values for the enum
+var SearchRequest_SortOrderEnum_normal = map[string]string{
+	"Ascending":  "Ascending",
+	"Descending": "Descending",
+	"ascending":  "Ascending",
+	"descending": "Descending",
+}
 
 var _ validators.DummyVar
 var validatorMapSearch = make(map[string]map[string][]func(string, interface{}) error)
@@ -489,6 +606,10 @@ func (m *Category) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Category) Normalize() {
+
+}
+
 func (m *CategoryAggregation) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -496,6 +617,10 @@ func (m *CategoryAggregation) References(tenant string, path string, resp map[st
 func (m *CategoryAggregation) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *CategoryAggregation) Normalize() {
+
 }
 
 func (m *CategoryPreview) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -507,6 +632,10 @@ func (m *CategoryPreview) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *CategoryPreview) Normalize() {
+
+}
+
 func (m *ConfigEntry) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -514,6 +643,12 @@ func (m *ConfigEntry) References(tenant string, path string, resp map[string]api
 func (m *ConfigEntry) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ConfigEntry) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
 }
 
 func (m *Entry) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -525,6 +660,10 @@ func (m *Entry) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Entry) Normalize() {
+
+}
+
 func (m *EntryList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -532,6 +671,10 @@ func (m *EntryList) References(tenant string, path string, resp map[string]apiin
 func (m *EntryList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *EntryList) Normalize() {
+
 }
 
 func (m *Error) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -543,6 +686,10 @@ func (m *Error) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Error) Normalize() {
+
+}
+
 func (m *Kind) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -550,6 +697,10 @@ func (m *Kind) References(tenant string, path string, resp map[string]apiintf.Re
 func (m *Kind) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Kind) Normalize() {
+
 }
 
 func (m *KindAggregation) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -561,6 +712,10 @@ func (m *KindAggregation) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *KindAggregation) Normalize() {
+
+}
+
 func (m *KindPreview) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -568,6 +723,10 @@ func (m *KindPreview) References(tenant string, path string, resp map[string]api
 func (m *KindPreview) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *KindPreview) Normalize() {
+
 }
 
 func (m *PolicyMatchEntry) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -603,6 +762,14 @@ func (m *PolicyMatchEntry) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *PolicyMatchEntry) Normalize() {
+
+	if m.Rule != nil {
+		m.Rule.Normalize()
+	}
+
+}
+
 func (m *PolicySearchRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -610,6 +777,10 @@ func (m *PolicySearchRequest) References(tenant string, path string, resp map[st
 func (m *PolicySearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *PolicySearchRequest) Normalize() {
+
 }
 
 func (m *PolicySearchResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -655,6 +826,18 @@ func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []e
 		}
 	}
 	return ret
+}
+
+func (m *PolicySearchResponse) Normalize() {
+
+	for _, v := range m.Results {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	m.Status = PolicySearchResponse_MatchStatus_normal[strings.ToLower(m.Status)]
+
 }
 
 func (m *SearchQuery) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -713,6 +896,32 @@ func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SearchQuery) Normalize() {
+
+	for k, v := range m.Categories {
+		m.Categories[k] = Category_Type_normal[strings.ToLower(v)]
+	}
+
+	if m.Fields != nil {
+		m.Fields.Normalize()
+	}
+
+	for k, v := range m.Kinds {
+		m.Kinds[k] = Kind_Type_normal[strings.ToLower(v)]
+	}
+
+	if m.Labels != nil {
+		m.Labels.Normalize()
+	}
+
+	for _, v := range m.Texts {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *SearchRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -747,6 +956,18 @@ func (m *SearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SearchRequest) Normalize() {
+
+	m.Mode = SearchRequest_RequestMode_normal[strings.ToLower(m.Mode)]
+
+	if m.Query != nil {
+		m.Query.Normalize()
+	}
+
+	m.SortOrder = SearchRequest_SortOrderEnum_normal[strings.ToLower(m.SortOrder)]
+
+}
+
 func (m *SearchResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -754,6 +975,10 @@ func (m *SearchResponse) References(tenant string, path string, resp map[string]
 func (m *SearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *SearchResponse) Normalize() {
+
 }
 
 func (m *TenantAggregation) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -765,6 +990,10 @@ func (m *TenantAggregation) Validate(ver, path string, ignoreStatus bool) []erro
 	return ret
 }
 
+func (m *TenantAggregation) Normalize() {
+
+}
+
 func (m *TenantPreview) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -772,6 +1001,10 @@ func (m *TenantPreview) References(tenant string, path string, resp map[string]a
 func (m *TenantPreview) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TenantPreview) Normalize() {
+
 }
 
 func (m *TextRequirement) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -794,6 +1027,10 @@ func (m *TextRequirement) Validate(ver, path string, ignoreStatus bool) []error 
 		}
 	}
 	return ret
+}
+
+func (m *TextRequirement) Normalize() {
+
 }
 
 // Transformers

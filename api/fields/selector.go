@@ -243,6 +243,9 @@ func (r *Requirement) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+// Normalize normalizes the object if needed
+func (r *Requirement) Normalize() {}
+
 // Print returns a human-readable string for the Selector.
 func (s *Selector) Print() string {
 	var reqs []string
@@ -257,6 +260,9 @@ func (s *Selector) Print() string {
 func (s *Selector) Validate(ver, path string, ignoreStatus bool) []error {
 	return nil
 }
+
+// Normalize normalizes the object if needed
+func (s *Selector) Normalize() {}
 
 // SelectorParser implements ref.CustomParser for field selector.
 type SelectorParser struct {

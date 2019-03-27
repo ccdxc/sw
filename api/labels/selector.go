@@ -209,6 +209,9 @@ func (s *Selector) Validate(ver, path string, ignoreStatus bool) []error {
 	return nil
 }
 
+// Normalize normalizes the object if needed
+func (t *Selector) Normalize() {}
+
 // Token represents constant definition for lexer token
 type Token int
 

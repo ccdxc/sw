@@ -8,6 +8,7 @@ package network
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,6 +25,16 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// TLSServerPolicySpec_ClientAuthTypes_normal is a map of normalized values for the enum
+var TLSServerPolicySpec_ClientAuthTypes_normal = map[string]string{
+	"Mandatory": "Mandatory",
+	"None":      "None",
+	"Optional":  "Optional",
+	"mandatory": "Mandatory",
+	"none":      "None",
+	"optional":  "Optional",
+}
 
 var _ validators.DummyVar
 var validatorMapService = make(map[string]map[string][]func(string, interface{}) error)
@@ -216,6 +227,14 @@ func (m *Service) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Service) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *ServiceSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -237,6 +256,14 @@ func (m *ServiceSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ServiceSpec) Normalize() {
+
+	if m.TLSServerPolicy != nil {
+		m.TLSServerPolicy.Normalize()
+	}
+
+}
+
 func (m *ServiceStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -246,6 +273,10 @@ func (m *ServiceStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ServiceStatus) Normalize() {
+
+}
+
 func (m *TLSClientPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -253,6 +284,10 @@ func (m *TLSClientPolicySpec) References(tenant string, path string, resp map[st
 func (m *TLSClientPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TLSClientPolicySpec) Normalize() {
+
 }
 
 func (m *TLSServerPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -275,6 +310,12 @@ func (m *TLSServerPolicySpec) Validate(ver, path string, ignoreStatus bool) []er
 		}
 	}
 	return ret
+}
+
+func (m *TLSServerPolicySpec) Normalize() {
+
+	m.ClientAuthentication = TLSServerPolicySpec_ClientAuthTypes_normal[strings.ToLower(m.ClientAuthentication)]
+
 }
 
 // Transformers

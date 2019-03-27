@@ -8,6 +8,7 @@ package events
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -23,6 +24,16 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// SeverityLevel_normal is a map of normalized values for the enum
+var SeverityLevel_normal = map[string]string{
+	"CRITICAL": "CRITICAL",
+	"INFO":     "INFO",
+	"WARNING":  "WARNING",
+	"critical": "CRITICAL",
+	"info":     "INFO",
+	"warning":  "WARNING",
+}
 
 var _ validators.DummyVar
 var validatorMapEvents = make(map[string]map[string][]func(string, interface{}) error)
@@ -148,6 +159,14 @@ func (m *Event) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Event) Normalize() {
+
+	m.EventAttributes.Normalize()
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *EventAttributes) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -170,6 +189,12 @@ func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *EventAttributes) Normalize() {
+
+	m.Severity = SeverityLevel_normal[strings.ToLower(m.Severity)]
+
+}
+
 func (m *EventList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -189,6 +214,16 @@ func (m *EventList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *EventList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *EventSource) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -196,6 +231,10 @@ func (m *EventSource) References(tenant string, path string, resp map[string]api
 func (m *EventSource) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *EventSource) Normalize() {
+
 }
 
 // Transformers

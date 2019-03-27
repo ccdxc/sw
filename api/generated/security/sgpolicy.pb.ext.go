@@ -8,6 +8,7 @@ package security
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,6 +25,16 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// SGRule_PolicyAction_normal is a map of normalized values for the enum
+var SGRule_PolicyAction_normal = map[string]string{
+	"DENY":   "DENY",
+	"PERMIT": "PERMIT",
+	"REJECT": "REJECT",
+	"deny":   "DENY",
+	"permit": "PERMIT",
+	"reject": "REJECT",
+}
 
 var _ validators.DummyVar
 var validatorMapSgpolicy = make(map[string]map[string][]func(string, interface{}) error)
@@ -193,6 +204,10 @@ func (m *ProtoPort) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ProtoPort) Normalize() {
+
+}
+
 func (m *SGPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	tenant = m.Tenant
@@ -257,6 +272,14 @@ func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SGPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *SGPolicyPropagationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -264,6 +287,10 @@ func (m *SGPolicyPropagationStatus) References(tenant string, path string, resp 
 func (m *SGPolicyPropagationStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *SGPolicyPropagationStatus) Normalize() {
+
 }
 
 func (m *SGPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -320,6 +347,15 @@ func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SGPolicySpec) Normalize() {
+
+	for _, v := range m.Rules {
+		v.Normalize()
+
+	}
+
+}
+
 func (m *SGPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -327,6 +363,10 @@ func (m *SGPolicyStatus) References(tenant string, path string, resp map[string]
 func (m *SGPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *SGPolicyStatus) Normalize() {
+
 }
 
 func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -415,6 +455,12 @@ func (m *SGRule) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SGRule) Normalize() {
+
+	m.Action = SGRule_PolicyAction_normal[strings.ToLower(m.Action)]
+
 }
 
 // Transformers

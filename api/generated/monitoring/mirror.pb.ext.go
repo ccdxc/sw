@@ -8,6 +8,7 @@ package monitoring
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,6 +25,40 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// MirrorSessionSpec_MirrorPacketFilter_normal is a map of normalized values for the enum
+var MirrorSessionSpec_MirrorPacketFilter_normal = map[string]string{
+	"ALL_DROPS":            "ALL_DROPS",
+	"ALL_PKTS":             "ALL_PKTS",
+	"FIREWALL_POLICY_DROP": "FIREWALL_POLICY_DROP",
+	"NETWORK_POLICY_DROP":  "NETWORK_POLICY_DROP",
+	"all_drops":            "ALL_DROPS",
+	"all_pkts":             "ALL_PKTS",
+	"firewall_policy_drop": "FIREWALL_POLICY_DROP",
+	"network_policy_drop":  "NETWORK_POLICY_DROP",
+}
+
+// PacketCollectorType_normal is a map of normalized values for the enum
+var PacketCollectorType_normal = map[string]string{
+	"ERSPAN": "ERSPAN",
+	"VENICE": "VENICE",
+	"erspan": "ERSPAN",
+	"venice": "VENICE",
+}
+
+// MirrorSessionState_normal is a map of normalized values for the enum
+var MirrorSessionState_normal = map[string]string{
+	"ERR_NO_MIRROR_SESSION": "ERR_NO_MIRROR_SESSION",
+	"NONE":                  "NONE",
+	"RUNNING":               "RUNNING",
+	"SCHEDULED":             "SCHEDULED",
+	"STOPPED":               "STOPPED",
+	"err_no_mirror_session": "ERR_NO_MIRROR_SESSION",
+	"none":                  "NONE",
+	"running":               "RUNNING",
+	"scheduled":             "SCHEDULED",
+	"stopped":               "STOPPED",
+}
 
 var _ validators.DummyVar
 var validatorMapMirror = make(map[string]map[string][]func(string, interface{}) error)
@@ -299,6 +334,10 @@ func (m *AppProtoSelector) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *AppProtoSelector) Normalize() {
+
+}
+
 func (m *MatchRule) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -320,6 +359,14 @@ func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *MatchRule) Normalize() {
+
+	if m.AppProtoSel != nil {
+		m.AppProtoSel.Normalize()
+	}
+
+}
+
 func (m *MatchSelector) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -327,6 +374,10 @@ func (m *MatchSelector) References(tenant string, path string, resp map[string]a
 func (m *MatchSelector) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *MatchSelector) Normalize() {
+
 }
 
 func (m *MirrorCollector) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -361,6 +412,16 @@ func (m *MirrorCollector) Validate(ver, path string, ignoreStatus bool) []error 
 		}
 	}
 	return ret
+}
+
+func (m *MirrorCollector) Normalize() {
+
+	if m.ExportCfg != nil {
+		m.ExportCfg.Normalize()
+	}
+
+	m.Type = PacketCollectorType_normal[strings.ToLower(m.Type)]
+
 }
 
 func (m *MirrorSession) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -428,6 +489,16 @@ func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *MirrorSession) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *MirrorSessionSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -481,6 +552,26 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []erro
 	return ret
 }
 
+func (m *MirrorSessionSpec) Normalize() {
+
+	for _, v := range m.Collectors {
+		v.Normalize()
+
+	}
+
+	for _, v := range m.MatchRules {
+		v.Normalize()
+
+	}
+
+	for k, v := range m.PacketFilters {
+		m.PacketFilters[k] = MirrorSessionSpec_MirrorPacketFilter_normal[strings.ToLower(v)]
+	}
+
+	m.StopConditions.Normalize()
+
+}
+
 func (m *MirrorSessionStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -503,6 +594,12 @@ func (m *MirrorSessionStatus) Validate(ver, path string, ignoreStatus bool) []er
 	return ret
 }
 
+func (m *MirrorSessionStatus) Normalize() {
+
+	m.State = MirrorSessionState_normal[strings.ToLower(m.State)]
+
+}
+
 func (m *MirrorStartConditions) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -510,6 +607,10 @@ func (m *MirrorStartConditions) References(tenant string, path string, resp map[
 func (m *MirrorStartConditions) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *MirrorStartConditions) Normalize() {
+
 }
 
 func (m *MirrorStopConditions) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -532,6 +633,10 @@ func (m *MirrorStopConditions) Validate(ver, path string, ignoreStatus bool) []e
 		}
 	}
 	return ret
+}
+
+func (m *MirrorStopConditions) Normalize() {
+
 }
 
 // Transformers

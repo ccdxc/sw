@@ -9,6 +9,7 @@ package cluster
 import (
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -25,6 +26,26 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// NetworkInterfaceStatus_IFStatus_normal is a map of normalized values for the enum
+var NetworkInterfaceStatus_IFStatus_normal = map[string]string{
+	"DOWN": "DOWN",
+	"UP":   "UP",
+	"down": "DOWN",
+	"up":   "UP",
+}
+
+// NetworkInterfaceStatus_IFType_normal is a map of normalized values for the enum
+var NetworkInterfaceStatus_IFType_normal = map[string]string{
+	"HOST_PF":     "HOST_PF",
+	"NONE":        "NONE",
+	"UPLINK_ETH":  "UPLINK_ETH",
+	"UPLINK_MGMT": "UPLINK_MGMT",
+	"host_pf":     "HOST_PF",
+	"none":        "NONE",
+	"uplink_eth":  "UPLINK_ETH",
+	"uplink_mgmt": "UPLINK_MGMT",
+}
 
 var _ validators.DummyVar
 var validatorMapNetworkinterface = make(map[string]map[string][]func(string, interface{}) error)
@@ -198,6 +219,14 @@ func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *NetworkInterface) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *NetworkInterfaceHostStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -207,6 +236,10 @@ func (m *NetworkInterfaceHostStatus) Validate(ver, path string, ignoreStatus boo
 	return ret
 }
 
+func (m *NetworkInterfaceHostStatus) Normalize() {
+
+}
+
 func (m *NetworkInterfaceSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -214,6 +247,10 @@ func (m *NetworkInterfaceSpec) References(tenant string, path string, resp map[s
 func (m *NetworkInterfaceSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *NetworkInterfaceSpec) Normalize() {
+
 }
 
 func (m *NetworkInterfaceStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -238,6 +275,14 @@ func (m *NetworkInterfaceStatus) Validate(ver, path string, ignoreStatus bool) [
 	return ret
 }
 
+func (m *NetworkInterfaceStatus) Normalize() {
+
+	m.OperStatus = NetworkInterfaceStatus_IFStatus_normal[strings.ToLower(m.OperStatus)]
+
+	m.Type = NetworkInterfaceStatus_IFType_normal[strings.ToLower(m.Type)]
+
+}
+
 func (m *NetworkInterfaceUplinkStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -245,6 +290,10 @@ func (m *NetworkInterfaceUplinkStatus) References(tenant string, path string, re
 func (m *NetworkInterfaceUplinkStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *NetworkInterfaceUplinkStatus) Normalize() {
+
 }
 
 // Transformers

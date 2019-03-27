@@ -8,6 +8,7 @@ package security
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,6 +25,28 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// CertificateSpec_UsageValues_normal is a map of normalized values for the enum
+var CertificateSpec_UsageValues_normal = map[string]string{
+	"Client":    "Client",
+	"Server":    "Server",
+	"TrustRoot": "TrustRoot",
+	"client":    "Client",
+	"server":    "Server",
+	"trustroot": "TrustRoot",
+}
+
+// CertificateStatus_ValidityValues_normal is a map of normalized values for the enum
+var CertificateStatus_ValidityValues_normal = map[string]string{
+	"Expired": "Expired",
+	"Invalid": "Invalid",
+	"Unknown": "Unknown",
+	"Valid":   "Valid",
+	"expired": "Expired",
+	"invalid": "Invalid",
+	"unknown": "Unknown",
+	"valid":   "Valid",
+}
 
 var _ validators.DummyVar
 var validatorMapX509 = make(map[string]map[string][]func(string, interface{}) error)
@@ -190,6 +213,16 @@ func (m *Certificate) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Certificate) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *CertificateSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -212,6 +245,14 @@ func (m *CertificateSpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *CertificateSpec) Normalize() {
+
+	for k, v := range m.Usages {
+		m.Usages[k] = CertificateSpec_UsageValues_normal[strings.ToLower(v)]
+	}
+
+}
+
 func (m *CertificateStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -232,6 +273,12 @@ func (m *CertificateStatus) Validate(ver, path string, ignoreStatus bool) []erro
 		}
 	}
 	return ret
+}
+
+func (m *CertificateStatus) Normalize() {
+
+	m.Validity = CertificateStatus_ValidityValues_normal[strings.ToLower(m.Validity)]
+
 }
 
 // Transformers

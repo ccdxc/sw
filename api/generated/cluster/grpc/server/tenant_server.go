@@ -231,6 +231,10 @@ func (s *sclusterTenantBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.Tenant)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(cluster.Tenant)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(cluster.Tenant)

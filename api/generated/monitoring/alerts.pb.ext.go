@@ -8,6 +8,7 @@ package monitoring
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -26,6 +27,16 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// AlertSpec_AlertState_normal is a map of normalized values for the enum
+var AlertSpec_AlertState_normal = map[string]string{
+	"ACKNOWLEDGED": "ACKNOWLEDGED",
+	"OPEN":         "OPEN",
+	"RESOLVED":     "RESOLVED",
+	"acknowledged": "ACKNOWLEDGED",
+	"open":         "OPEN",
+	"resolved":     "RESOLVED",
+}
 
 var _ validators.DummyVar
 var validatorMapAlerts = make(map[string]map[string][]func(string, interface{}) error)
@@ -524,6 +535,16 @@ func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Alert) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
 func (m *AlertDestination) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	tenant = m.Tenant
@@ -578,6 +599,14 @@ func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *AlertDestination) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *AlertDestinationSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -623,6 +652,22 @@ func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+func (m *AlertDestinationSpec) Normalize() {
+
+	if m.SNMPExport != nil {
+		m.SNMPExport.Normalize()
+	}
+
+	if m.Selector != nil {
+		m.Selector.Normalize()
+	}
+
+	if m.SyslogExport != nil {
+		m.SyslogExport.Normalize()
+	}
+
+}
+
 func (m *AlertDestinationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -630,6 +675,10 @@ func (m *AlertDestinationStatus) References(tenant string, path string, resp map
 func (m *AlertDestinationStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AlertDestinationStatus) Normalize() {
+
 }
 
 func (m *AlertPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -696,6 +745,14 @@ func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AlertPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *AlertPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
@@ -750,6 +807,18 @@ func (m *AlertPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *AlertPolicySpec) Normalize() {
+
+	for _, v := range m.Requirements {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+	m.Severity = events.SeverityLevel_normal[strings.ToLower(m.Severity)]
+
+}
+
 func (m *AlertPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -757,6 +826,10 @@ func (m *AlertPolicyStatus) References(tenant string, path string, resp map[stri
 func (m *AlertPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AlertPolicyStatus) Normalize() {
+
 }
 
 func (m *AlertReason) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -799,6 +872,16 @@ func (m *AlertReason) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AlertReason) Normalize() {
+
+	for _, v := range m.MatchedRequirements {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *AlertSource) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -806,6 +889,10 @@ func (m *AlertSource) References(tenant string, path string, resp map[string]api
 func (m *AlertSource) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AlertSource) Normalize() {
+
 }
 
 func (m *AlertSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -828,6 +915,12 @@ func (m *AlertSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *AlertSpec) Normalize() {
+
+	m.State = AlertSpec_AlertState_normal[strings.ToLower(m.State)]
+
 }
 
 func (m *AlertStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -873,6 +966,14 @@ func (m *AlertStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AlertStatus) Normalize() {
+
+	m.Reason.Normalize()
+
+	m.Severity = events.SeverityLevel_normal[strings.ToLower(m.Severity)]
+
+}
+
 func (m *AuditInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -882,6 +983,10 @@ func (m *AuditInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AuditInfo) Normalize() {
+
+}
+
 func (m *EmailExport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -889,6 +994,10 @@ func (m *EmailExport) References(tenant string, path string, resp map[string]api
 func (m *EmailExport) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *EmailExport) Normalize() {
+
 }
 
 func (m *MatchedRequirement) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -912,6 +1021,14 @@ func (m *MatchedRequirement) Validate(ver, path string, ignoreStatus bool) []err
 	return ret
 }
 
+func (m *MatchedRequirement) Normalize() {
+
+	if m.Requirement != nil {
+		m.Requirement.Normalize()
+	}
+
+}
+
 func (m *SNMPExport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -929,6 +1046,16 @@ func (m *SNMPExport) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SNMPExport) Normalize() {
+
+	for _, v := range m.SNMPTrapServers {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 func (m *SyslogExport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -973,6 +1100,22 @@ func (m *SyslogExport) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SyslogExport) Normalize() {
+
+	if m.Config != nil {
+		m.Config.Normalize()
+	}
+
+	m.Format = MonitoringExportFormat_normal[strings.ToLower(m.Format)]
+
+	for _, v := range m.Targets {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 // Transformers

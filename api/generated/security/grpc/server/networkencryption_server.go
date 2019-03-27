@@ -233,6 +233,10 @@ func (s *ssecurityNetworkencryptionBackend) regMsgsFunc(l log.Logger, scheme *ru
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(security.TrafficEncryptionPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(security.TrafficEncryptionPolicy)
+			r.Normalize()
+			return r
 		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
 			ret := make(map[string]apiintf.ReferenceObj)
 			r := i.(security.TrafficEncryptionPolicy)

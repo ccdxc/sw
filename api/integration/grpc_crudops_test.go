@@ -727,10 +727,19 @@ func TestCrudOps(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Validation expected to fail")
 		}
-		book1mod.Spec.Category = "ChildrensLit"
+		// Set the Enum to wrong case to validste case insensitiveness ChildrensLit
+		book1mod.Spec.Category = "childRensLit"
 		_, err = apicl.BookstoreV1().Book().Update(ctx, &book1mod)
 		if err != nil {
 			t.Fatalf("Expected to succeed")
+		}
+		book1mod.Normalize()
+		if book1mod.Spec.Category != bookstore.BookSpec_ChildrensLit.String() {
+			t.Fatalf("object not normalized")
+		}
+		retb, err := apicl.BookstoreV1().Book().Get(ctx, &book1mod.ObjectMeta)
+		if !reflect.DeepEqual(retb.Spec, book1mod.Spec) {
+			t.Fatalf("Object not normalized on get [%+v]/[%+v]", retb.Spec, book1mod.Spec)
 		}
 		evp := book1mod
 		recordWatchEvent(nil, &evp, kvstore.Updated)

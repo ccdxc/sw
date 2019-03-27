@@ -68,7 +68,7 @@ func (s fakeGrpcStream) SetTrailer(_ metadata.MD) {
 func TestMessageWith(t *testing.T) {
 	MustGetAPIServer()
 	f := mocks.NewFakeMessage("TestType1", "/test", true).(*mocks.FakeMessage)
-	m := NewMessage("TestType1").WithValidate(f.ValidateFunc).WithDefaulter(f.DefaultFunc)
+	m := NewMessage("TestType1").WithValidate(f.ValidateFunc).WithNormalizer(f.NormalizerFunc)
 	m = m.WithKvUpdater(f.KvUpdateFunc).WithKvGetter(f.KvGetFunc).WithKvDelFunc(f.KvDelFunc).WithObjectVersionWriter(f.ObjverwriteFunc)
 	m = m.WithKvTxnUpdater(f.TxnUpdateFunc).WithKvTxnDelFunc(f.DelFromKvTxnFunc).WithSelfLinkWriter(f.SelfLinkWriterFunc)
 	m = m.WithKvWatchFunc(f.KvwatchFunc).WithKvListFunc(f.KvListFunc).WithReplaceStatusFunction(f.GetUpdateStatusFunc())
@@ -83,7 +83,7 @@ func TestMessageWith(t *testing.T) {
 	if f.ValidateCalled != 1 {
 		t.Errorf("Expecting 1 validation found %d", f.ValidateCalled)
 	}
-	m.Default(nil)
+	m.Normalize(nil)
 	if f.DefaultCalled != 1 {
 		t.Errorf("Expecting 1 call to Defaulter function found %d", f.DefaultCalled)
 	}

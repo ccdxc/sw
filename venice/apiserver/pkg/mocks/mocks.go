@@ -294,8 +294,8 @@ func (m *FakeMessage) WithTransform(from, to string, fn apisrv.TransformFunc) ap
 // WithValidate is a mock method for testing
 func (m *FakeMessage) WithValidate(fn apisrv.ValidateFunc) apisrv.Message { return m }
 
-// WithDefaulter is a mock method for testing
-func (m *FakeMessage) WithDefaulter(fn apisrv.DefaulterFunc) apisrv.Message { return m }
+// WithNormalizer is a mock method for testing
+func (m *FakeMessage) WithNormalizer(fn apisrv.NormalizerFunc) apisrv.Message { return m }
 
 // WithKeyGenerator is a mock method for testing
 func (m *FakeMessage) WithKeyGenerator(fn apisrv.KeyGenFunc) apisrv.Message { return m }
@@ -453,8 +453,8 @@ func (m *FakeMessage) PrepareMsg(from, to string, i interface{}) (interface{}, e
 	return i, nil
 }
 
-// Default is a mock method for testing
-func (m *FakeMessage) Default(i interface{}) interface{} {
+// Normalize is a mock method for testing
+func (m *FakeMessage) Normalize(i interface{}) interface{} {
 	return i
 }
 
@@ -493,8 +493,8 @@ func (m *FakeMessage) ValidateFunc(i interface{}, ver string, ignstatus bool) []
 	return nil
 }
 
-// DefaultFunc is a mock method for testing
-func (m *FakeMessage) DefaultFunc(i interface{}) interface{} {
+// NormalizerFunc is a mock method for testing
+func (m *FakeMessage) NormalizerFunc(i interface{}) interface{} {
 	m.DefaultCalled++
 	return i
 }

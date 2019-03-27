@@ -24,6 +24,12 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
+// Buckets_normal is a map of normalized values for the enum
+var Buckets_normal = map[string]string{
+	"images":      "images",
+	"techsupport": "techsupport",
+}
+
 // MakeKey generates a KV store key for the object
 func (m *Bucket) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "buckets/", m.Name)
@@ -232,6 +238,12 @@ func (m *Bucket) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Bucket) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *BucketSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -241,6 +253,10 @@ func (m *BucketSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BucketSpec) Normalize() {
+
+}
+
 func (m *BucketStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -248,6 +264,10 @@ func (m *BucketStatus) References(tenant string, path string, resp map[string]ap
 func (m *BucketStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *BucketStatus) Normalize() {
+
 }
 
 func (m *Object) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -293,6 +313,12 @@ func (m *Object) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Object) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *ObjectSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -300,6 +326,10 @@ func (m *ObjectSpec) References(tenant string, path string, resp map[string]apii
 func (m *ObjectSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ObjectSpec) Normalize() {
+
 }
 
 func (m *ObjectStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -311,6 +341,10 @@ func (m *ObjectStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ObjectStatus) Normalize() {
+
+}
+
 func (m *StreamChunk) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -318,6 +352,10 @@ func (m *StreamChunk) References(tenant string, path string, resp map[string]api
 func (m *StreamChunk) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *StreamChunk) Normalize() {
+
 }
 
 // Transformers

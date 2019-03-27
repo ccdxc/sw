@@ -222,6 +222,14 @@ func (m *Workload) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Workload) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *WorkloadIntfSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -244,6 +252,10 @@ func (m *WorkloadIntfSpec) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *WorkloadIntfSpec) Normalize() {
+
+}
+
 func (m *WorkloadIntfStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -251,6 +263,10 @@ func (m *WorkloadIntfStatus) References(tenant string, path string, resp map[str
 func (m *WorkloadIntfStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *WorkloadIntfStatus) Normalize() {
+
 }
 
 func (m *WorkloadSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -306,6 +322,15 @@ func (m *WorkloadSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *WorkloadSpec) Normalize() {
+
+	for _, v := range m.Interfaces {
+		v.Normalize()
+
+	}
+
+}
+
 func (m *WorkloadStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -313,6 +338,10 @@ func (m *WorkloadStatus) References(tenant string, path string, resp map[string]
 func (m *WorkloadStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *WorkloadStatus) Normalize() {
+
 }
 
 // Transformers

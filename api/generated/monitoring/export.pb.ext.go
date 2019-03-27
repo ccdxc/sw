@@ -8,6 +8,7 @@ package monitoring
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -23,6 +24,86 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// AuthConfig_Algos_normal is a map of normalized values for the enum
+var AuthConfig_Algos_normal = map[string]string{
+	"MD5":  "MD5",
+	"SHA1": "SHA1",
+	"md5":  "MD5",
+	"sha1": "SHA1",
+}
+
+// PrivacyConfig_Algos_normal is a map of normalized values for the enum
+var PrivacyConfig_Algos_normal = map[string]string{
+	"AES128": "AES128",
+	"DES56":  "DES56",
+	"aes128": "AES128",
+	"des56":  "DES56",
+}
+
+// SNMPTrapServer_SNMPVersions_normal is a map of normalized values for the enum
+var SNMPTrapServer_SNMPVersions_normal = map[string]string{
+	"V2C": "V2C",
+	"V3":  "V3",
+	"v2c": "V2C",
+	"v3":  "V3",
+}
+
+// ExportAuthType_normal is a map of normalized values for the enum
+var ExportAuthType_normal = map[string]string{
+	"AUTHTYPE_CERTS":            "AUTHTYPE_CERTS",
+	"AUTHTYPE_NONE":             "AUTHTYPE_NONE",
+	"AUTHTYPE_TOKEN":            "AUTHTYPE_TOKEN",
+	"AUTHTYPE_USERNAMEPASSWORD": "AUTHTYPE_USERNAMEPASSWORD",
+	"authtype_certs":            "AUTHTYPE_CERTS",
+	"authtype_none":             "AUTHTYPE_NONE",
+	"authtype_token":            "AUTHTYPE_TOKEN",
+	"authtype_usernamepassword": "AUTHTYPE_USERNAMEPASSWORD",
+}
+
+// SyslogFacility_normal is a map of normalized values for the enum
+var SyslogFacility_normal = map[string]string{
+	"LOG_AUTH":     "LOG_AUTH",
+	"LOG_AUTHPRIV": "LOG_AUTHPRIV",
+	"LOG_CRON":     "LOG_CRON",
+	"LOG_DAEMON":   "LOG_DAEMON",
+	"LOG_FTP":      "LOG_FTP",
+	"LOG_KERN":     "LOG_KERN",
+	"LOG_LOCAL0":   "LOG_LOCAL0",
+	"LOG_LOCAL1":   "LOG_LOCAL1",
+	"LOG_LOCAL2":   "LOG_LOCAL2",
+	"LOG_LOCAL3":   "LOG_LOCAL3",
+	"LOG_LOCAL4":   "LOG_LOCAL4",
+	"LOG_LOCAL5":   "LOG_LOCAL5",
+	"LOG_LOCAL6":   "LOG_LOCAL6",
+	"LOG_LOCAL7":   "LOG_LOCAL7",
+	"LOG_LPR":      "LOG_LPR",
+	"LOG_MAIL":     "LOG_MAIL",
+	"LOG_NEWS":     "LOG_NEWS",
+	"LOG_SYSLOG":   "LOG_SYSLOG",
+	"LOG_USER":     "LOG_USER",
+	"LOG_UUCP":     "LOG_UUCP",
+	"log_auth":     "LOG_AUTH",
+	"log_authpriv": "LOG_AUTHPRIV",
+	"log_cron":     "LOG_CRON",
+	"log_daemon":   "LOG_DAEMON",
+	"log_ftp":      "LOG_FTP",
+	"log_kern":     "LOG_KERN",
+	"log_local0":   "LOG_LOCAL0",
+	"log_local1":   "LOG_LOCAL1",
+	"log_local2":   "LOG_LOCAL2",
+	"log_local3":   "LOG_LOCAL3",
+	"log_local4":   "LOG_LOCAL4",
+	"log_local5":   "LOG_LOCAL5",
+	"log_local6":   "LOG_LOCAL6",
+	"log_local7":   "LOG_LOCAL7",
+	"log_lpr":      "LOG_LPR",
+	"log_mail":     "LOG_MAIL",
+	"log_news":     "LOG_NEWS",
+	"log_syslog":   "LOG_SYSLOG",
+	"log_user":     "LOG_USER",
+	"log_uucp":     "LOG_UUCP",
+}
 
 var _ validators.DummyVar
 var validatorMapExport = make(map[string]map[string][]func(string, interface{}) error)
@@ -218,6 +299,12 @@ func (m *AuthConfig) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AuthConfig) Normalize() {
+
+	m.Algo = AuthConfig_Algos_normal[strings.ToLower(m.Algo)]
+
+}
+
 func (m *ExportConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -252,6 +339,14 @@ func (m *ExportConfig) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ExportConfig) Normalize() {
+
+	if m.Credentials != nil {
+		m.Credentials.Normalize()
+	}
+
+}
+
 func (m *ExternalCred) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -274,6 +369,12 @@ func (m *ExternalCred) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ExternalCred) Normalize() {
+
+	m.AuthType = ExportAuthType_normal[strings.ToLower(m.AuthType)]
+
+}
+
 func (m *PrivacyConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -294,6 +395,12 @@ func (m *PrivacyConfig) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *PrivacyConfig) Normalize() {
+
+	m.Algo = PrivacyConfig_Algos_normal[strings.ToLower(m.Algo)]
+
 }
 
 func (m *SNMPTrapServer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -342,6 +449,20 @@ func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SNMPTrapServer) Normalize() {
+
+	if m.AuthConfig != nil {
+		m.AuthConfig.Normalize()
+	}
+
+	if m.PrivacyConfig != nil {
+		m.PrivacyConfig.Normalize()
+	}
+
+	m.Version = SNMPTrapServer_SNMPVersions_normal[strings.ToLower(m.Version)]
+
+}
+
 func (m *SyslogExportConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -362,6 +483,12 @@ func (m *SyslogExportConfig) Validate(ver, path string, ignoreStatus bool) []err
 		}
 	}
 	return ret
+}
+
+func (m *SyslogExportConfig) Normalize() {
+
+	m.FacilityOverride = SyslogFacility_normal[strings.ToLower(m.FacilityOverride)]
+
 }
 
 // Transformers

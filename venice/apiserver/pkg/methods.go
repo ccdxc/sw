@@ -479,8 +479,9 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		}
 	}
 
-	// Apply any defaults to the request message
-	i = m.requestType.Default(i)
+	// Normalize the request message
+	i = m.requestType.Normalize(i)
+
 	// Validate the request.
 	if oper == apiintf.CreateOper || oper == apiintf.UpdateOper {
 		errs := m.requestType.Validate(i, singletonAPISrv.version, updateSpec)

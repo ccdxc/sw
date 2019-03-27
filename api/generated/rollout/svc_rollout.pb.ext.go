@@ -123,6 +123,16 @@ func (m *AutoMsgRolloutWatchHelper) Validate(ver, path string, ignoreStatus bool
 	return ret
 }
 
+func (m *AutoMsgRolloutWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *AutoMsgRolloutWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -144,6 +154,14 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) Validate(ver, path string, ignore
 	return ret
 }
 
+func (m *AutoMsgRolloutWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *RolloutList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -161,6 +179,16 @@ func (m *RolloutList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *RolloutList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
 }
 
 // Transformers

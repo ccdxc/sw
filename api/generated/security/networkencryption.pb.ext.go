@@ -155,6 +155,10 @@ func (m *IPsecProtocolSpec) Validate(ver, path string, ignoreStatus bool) []erro
 	return ret
 }
 
+func (m *IPsecProtocolSpec) Normalize() {
+
+}
+
 func (m *TLSProtocolSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -162,6 +166,10 @@ func (m *TLSProtocolSpec) References(tenant string, path string, resp map[string
 func (m *TLSProtocolSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TLSProtocolSpec) Normalize() {
+
 }
 
 func (m *TrafficEncryptionPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -207,6 +215,12 @@ func (m *TrafficEncryptionPolicy) Validate(ver, path string, ignoreStatus bool) 
 	return ret
 }
 
+func (m *TrafficEncryptionPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *TrafficEncryptionPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -216,6 +230,10 @@ func (m *TrafficEncryptionPolicySpec) Validate(ver, path string, ignoreStatus bo
 	return ret
 }
 
+func (m *TrafficEncryptionPolicySpec) Normalize() {
+
+}
+
 func (m *TrafficEncryptionPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -223,6 +241,10 @@ func (m *TrafficEncryptionPolicyStatus) References(tenant string, path string, r
 func (m *TrafficEncryptionPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TrafficEncryptionPolicyStatus) Normalize() {
+
 }
 
 // Transformers

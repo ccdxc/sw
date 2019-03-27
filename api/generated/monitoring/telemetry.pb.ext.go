@@ -8,6 +8,7 @@ package monitoring
 
 import (
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -24,6 +25,26 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// FlowExportPolicySpec_Formats_normal is a map of normalized values for the enum
+var FlowExportPolicySpec_Formats_normal = map[string]string{
+	"Ipfix": "Ipfix",
+	"ipfix": "Ipfix",
+}
+
+// FwlogFilter_normal is a map of normalized values for the enum
+var FwlogFilter_normal = map[string]string{
+	"FIREWALL_ACTION_ALL":    "FIREWALL_ACTION_ALL",
+	"FIREWALL_ACTION_ALLOW":  "FIREWALL_ACTION_ALLOW",
+	"FIREWALL_ACTION_DENY":   "FIREWALL_ACTION_DENY",
+	"FIREWALL_ACTION_NONE":   "FIREWALL_ACTION_NONE",
+	"FIREWALL_ACTION_REJECT": "FIREWALL_ACTION_REJECT",
+	"firewall_action_all":    "FIREWALL_ACTION_ALL",
+	"firewall_action_allow":  "FIREWALL_ACTION_ALLOW",
+	"firewall_action_deny":   "FIREWALL_ACTION_DENY",
+	"firewall_action_none":   "FIREWALL_ACTION_NONE",
+	"firewall_action_reject": "FIREWALL_ACTION_REJECT",
+}
 
 var _ validators.DummyVar
 var validatorMapTelemetry = make(map[string]map[string][]func(string, interface{}) error)
@@ -347,6 +368,14 @@ func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *FlowExportPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *FlowExportPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -389,6 +418,22 @@ func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+func (m *FlowExportPolicySpec) Normalize() {
+
+	for _, v := range m.Exports {
+		v.Normalize()
+
+	}
+
+	m.Format = FlowExportPolicySpec_Formats_normal[strings.ToLower(m.Format)]
+
+	for _, v := range m.MatchRules {
+		v.Normalize()
+
+	}
+
+}
+
 func (m *FlowExportPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -396,6 +441,10 @@ func (m *FlowExportPolicyStatus) References(tenant string, path string, resp map
 func (m *FlowExportPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *FlowExportPolicyStatus) Normalize() {
+
 }
 
 func (m *FwlogPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -452,6 +501,14 @@ func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *FwlogPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *FwlogPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -496,6 +553,25 @@ func (m *FwlogPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *FwlogPolicySpec) Normalize() {
+
+	if m.Config != nil {
+		m.Config.Normalize()
+	}
+
+	for k, v := range m.Filter {
+		m.Filter[k] = FwlogFilter_normal[strings.ToLower(v)]
+	}
+
+	m.Format = MonitoringExportFormat_normal[strings.ToLower(m.Format)]
+
+	for _, v := range m.Targets {
+		v.Normalize()
+
+	}
+
+}
+
 func (m *FwlogPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -503,6 +579,10 @@ func (m *FwlogPolicyStatus) References(tenant string, path string, resp map[stri
 func (m *FwlogPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *FwlogPolicyStatus) Normalize() {
+
 }
 
 func (m *StatsPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -559,6 +639,14 @@ func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *StatsPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
 func (m *StatsPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -581,6 +669,10 @@ func (m *StatsPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *StatsPolicySpec) Normalize() {
+
+}
+
 func (m *StatsPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -588,6 +680,10 @@ func (m *StatsPolicyStatus) References(tenant string, path string, resp map[stri
 func (m *StatsPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *StatsPolicyStatus) Normalize() {
+
 }
 
 // Transformers
