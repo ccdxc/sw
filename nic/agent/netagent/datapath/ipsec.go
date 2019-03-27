@@ -200,6 +200,43 @@ func (hd *Datapath) UpdateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf, tepVr
 
 // DeleteIPSecSAEncrypt deletes an IPSecSA encrypt rule in the datapath
 func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, vrf *netproto.Vrf) error {
+	hd.Lock()
+	defer hd.Unlock()
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: vrf.Status.VrfID,
+		},
+	}
+
+	ipSecSAEncryptDelReqMsg := &halproto.IpsecSAEncryptDeleteRequestMsg{
+		Request: []*halproto.IpsecSAEncryptDeleteRequest{
+			{
+				KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle{
+					KeyOrHandle: &halproto.IpsecSAEncryptKeyHandle_CbId{
+						CbId: sa.Status.IPSecSAEncryptID,
+					},
+					VrfKeyOrHandle: vrfKey,
+				},
+			},
+		},
+	}
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.IPSecclient.IpsecSAEncryptDelete(context.Background(), ipSecSAEncryptDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting IPSec Encrypt SA Rule. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+		}
+	} else {
+		_, err := hd.Hal.IPSecclient.IpsecSAEncryptDelete(context.Background(), ipSecSAEncryptDelReqMsg)
+		if err != nil {
+			log.Errorf("Error deleting IPSec Encrypt SA Rule. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
