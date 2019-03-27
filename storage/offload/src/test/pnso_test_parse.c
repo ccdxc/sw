@@ -800,6 +800,24 @@ static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 	return EINVAL; \
 }
 
+#define FUNC_SET_INT_EXT(fname, field, min, max, ext) \
+static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
+			  const char *val) \
+{ \
+	unsigned long long param; \
+ \
+	ALIAS_SWAP(root, val); \
+	param = safe_strtoll(val); \
+	PNSO_LOG_TRACE("Calling %s(%s)\n", #fname, val ? val : ""); \
+	if (param >= (min) && param <= (max)) { \
+		field = param; \
+		ext; \
+		return PNSO_OK; \
+	} \
+	PNSO_LOG_ERROR("Invalid value for %s\n", #fname); \
+	return EINVAL; \
+}
+
 #define FUNC_SET_STRING(fname, field, maxlen) \
 static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 			  const char *val) \
@@ -919,8 +937,10 @@ FUNC_SET_PARAM(test_set_validation_data_offset, ((struct test_validation *)paren
 FUNC_SET_PARAM(test_set_validation_data_len, ((struct test_validation *)parent)->len,
 	       g_dyn_offset_map, 0, 0, UINT_MAX)
 FUNC_SET_INT(test_set_validation_svc_chain, ((struct test_validation *)parent)->svc_chain_idx, 0, UINT_MAX)
-FUNC_SET_INT(test_set_validation_retcode, ((struct test_validation *)parent)->retcode, 0, UINT_MAX)
-FUNC_SET_INT(test_set_validation_req_retcode, ((struct test_validation *)parent)->req_retcode, 0, UINT_MAX)
+FUNC_SET_INT_EXT(test_set_validation_retcode, ((struct test_validation *)parent)->retcode, 0, UINT_MAX,
+		 ((struct test_validation *)parent)->flags |= VALIDATION_FLAG_CHECK_RETCODE)
+FUNC_SET_INT_EXT(test_set_validation_req_retcode, ((struct test_validation *)parent)->req_retcode, 0, UINT_MAX,
+		 ((struct test_validation *)parent)->flags |= VALIDATION_FLAG_CHECK_REQ_RETCODE)
 
 FUNC_SET_INT(test_set_cp_hdr_offset, ((struct test_cp_header *)parent)->fmt.fields[
 	((struct test_cp_header *)parent)->fmt.num_fields - 1].offset, 0, UINT_MAX);
@@ -2239,7 +2259,7 @@ pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc)
 	return err;
 }
 
-#define TEST_MAX_VALIDATION_STAT_LEN 128
+#define TEST_MAX_VALIDATION_STAT_LEN 256
 static uint32_t validation_stats_to_yaml(const struct test_validation *validation, char *dst)
 {
 	uint32_t len = 0;
@@ -2262,6 +2282,12 @@ static uint32_t validation_stats_to_yaml(const struct test_validation *validatio
 
 	len += safe_strcpy(dst+len, "        \"failure\": ", max_len-len);
 	len += safe_itoa(dst+len, max_len-len, validation->rt_failure_count);
+
+	if (validation->rt_reason[0] != '\0') {
+		len += safe_strcpy(dst+len, ",\n        \"reason\": \"", max_len-len);
+		len += safe_strcpy(dst+len, validation->rt_reason, max_len - len);
+		len += safe_strcpy(dst+len, "\"", max_len-len);
+	}
 
 	len += safe_strcpy(dst+len, "\n    }},\n", max_len-len);
 

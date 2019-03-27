@@ -232,25 +232,26 @@ static pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
 
 /* Compare buffer to the given repeating pattern */
 static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
-		     uint32_t offset, uint32_t len,
-		     const char *pat, uint32_t pat_len)
+			    uint32_t offset, uint32_t len,
+			    const char *pat, uint32_t pat_len,
+			    uint32_t *total_len)
 {
 	int ret = -1;
 	size_t i, j, pat_i;
-	size_t total_len = 0;
 	const struct pnso_flat_buffer *buf;
 	const uint8_t *pat_data;
 	uint8_t *dst;
 	uint32_t bin_len = TEST_MAX_BIN_PATTERN_LEN;
 	uint8_t hex_pat[TEST_MAX_BIN_PATTERN_LEN];
 
+	*total_len = 0;
 	pat_data = get_normalized_pattern(pat, hex_pat, &bin_len);
 
 	if (!len)
 		len = pbuf_get_buffer_list_len(buflist);
 
 	pat_i = 0;
-	for (i = 0; i < buflist->count && total_len < (offset+len); i++) {
+	for (i = 0; i < buflist->count && *total_len < (offset+len); i++) {
 		buf = &buflist->buffers[i];
 
 		if (!buf->len) {
@@ -259,21 +260,21 @@ static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
 
 		/* Skip past offset bytes */
 		j = 0;
-		if (total_len < offset) {
-			if (buf->len <= offset - total_len) {
-				total_len += buf->len;
+		if (*total_len < offset) {
+			if (buf->len <= offset - *total_len) {
+				*total_len += buf->len;
 				continue;
 			} else {
-				j = offset - total_len;
-				total_len = offset;
+				j = offset - *total_len;
+				*total_len = offset;
 			}
 		}
 
 		dst = (uint8_t *) buflist->buffers[i].buf;
-		for (; j < buf->len && total_len < (offset+len); j++) {
+		for (; j < buf->len && *total_len < (offset+len); j++) {
 			ret = (int) (dst[j] - pat_data[pat_i % bin_len]);
 			pat_i++;
-			total_len++;
+			(*total_len)++;
 			if (ret)
 				return ret;
 		}
@@ -574,20 +575,25 @@ static int cmp_file_node_metadata(struct test_node_file *fnode1, struct test_nod
 	return -1;
 }
 
+/*
+ * Compare two buflists, returning comparison value.
+ * total_len is set to offset at which last comparison took place.
+ */
 static int cmp_buflists(const struct pnso_buffer_list *buflist1,
 			const struct pnso_buffer_list *buflist2,
 			uint32_t offset,
-			uint32_t len)
+			uint32_t len,
+			uint32_t *total_len)
 {
 	int ret = -1;
 	size_t i1, i2;
 	uint32_t offset1;
 	uint32_t offset2;
 	uint32_t cmp_len;
-	uint32_t total_len = 0;
 	const struct pnso_flat_buffer *buf1;
 	const struct pnso_flat_buffer *buf2;
 
+	*total_len = 0;
 	if (!len) {
 		len = pbuf_get_buffer_list_len(buflist1);
 		if (len != pbuf_get_buffer_list_len(buflist2))
@@ -608,14 +614,14 @@ static int cmp_buflists(const struct pnso_buffer_list *buflist1,
 			cmp_len = buf1->len - offset1;
 			if (cmp_len > (buf2->len - offset2))
 				cmp_len = buf2->len - offset2;
-			if (cmp_len > (len - total_len))
-				cmp_len = len - total_len;
+			if (cmp_len > (len - *total_len))
+				cmp_len = len - *total_len;
 			if (cmp_len) {
 				ret = memcmp((void*)buf1->buf+offset1,
 					     (void*)buf2->buf+offset2,
 					     cmp_len);
-				total_len += cmp_len;
-				if (ret || total_len >= len)
+				*total_len += cmp_len;
+				if (ret || *total_len >= len)
 					return ret;
 				offset1 += cmp_len;
 				offset2 += cmp_len;
@@ -640,6 +646,7 @@ static int cmp_file_node_data(struct test_node_file *fnode1, struct test_node_fi
 			      uint32_t offset, uint32_t len)
 {
 	int ret;
+	uint32_t cmp_len = 0;
 
 	if (!fnode1 || !fnode2)
 		return -1;
@@ -662,7 +669,7 @@ static int cmp_file_node_data(struct test_node_file *fnode1, struct test_node_fi
 		/* Only compare data if we have to */
 		ret = cmp_buflists(fnode1->buflist,
 				   fnode2->buflist,
-				   offset, len);
+				   offset, len, &cmp_len);
 	}
 
 	/* Unlock in reverse order */
@@ -943,6 +950,12 @@ static uint32_t get_svc_status_data_len(const struct pnso_service_status *svc_st
 	return ret;
 }
 
+static inline bool is_svc_bypass_onfail(const struct test_svc *svc)
+{
+	return (svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS) &&
+		(svc->svc.u.cp_desc.flags & PNSO_CP_DFLAG_BYPASS_ONFAIL);
+}
+
 static void output_results(struct request_context *req_ctx,
 			   const struct test_svc_chain *svc_chain)
 {
@@ -965,7 +978,11 @@ static void output_results(struct request_context *req_ctx,
 	FOR_EACH_NODE(svc_chain->svcs) {
 		struct test_svc *svc = (struct test_svc *) node;
 		struct pnso_service_status *svc_status = &req_ctx->svc_res.svc[i];
-		if (svc->output_path[0] && svc_status->err == PNSO_OK) {
+		if (svc_status->err != PNSO_OK) {
+			if (!is_svc_bypass_onfail(svc))
+				break;
+			/* else continue */
+		} else if (svc->output_path[0]) {
 			err = construct_filename(batch_ctx->desc, req_ctx->vars,
 						 output_path, svc->output_path);
 			if (err != PNSO_OK) {
@@ -1554,6 +1571,24 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 		       ts1->io_stats[1].batches, ns);
 }
 
+static const char *compare_type_str_tbl[COMPARE_TYPE_MAX+1] = {
+	"==",
+	"!=",
+	"<",
+	"<=",
+	">",
+	">=",
+	"NA"
+};
+
+static const char *get_compare_type_str(uint16_t cmp_type)
+{
+	if (cmp_type > COMPARE_TYPE_MAX)
+		cmp_type = COMPARE_TYPE_MAX;
+
+	return compare_type_str_tbl[cmp_type];
+}
+
 static bool is_compare_true(uint16_t cmp_type, int cmp)
 {
 	bool success = true;
@@ -1589,7 +1624,8 @@ static bool is_compare_true(uint16_t cmp_type, int cmp)
 static void update_validation_stats(struct testcase_context *test_ctx,
 				    struct test_validation *validation,
 				    int cmp,
-				    pnso_error_t err)
+				    pnso_error_t err,
+				    const char *reason)
 {
 	osal_atomic_lock(&test_ctx->stats_lock);
 	if (err == PNSO_OK) {
@@ -1599,12 +1635,27 @@ static void update_validation_stats(struct testcase_context *test_ctx,
 		} else {
 			validation->rt_failure_count++;
 			test_ctx->stats.agg_stats.validation_failures++;
+			if (*reason) {
+				memcpy(validation->rt_reason, reason, TEST_MAX_REASON_LEN);
+				validation->rt_reason[TEST_MAX_REASON_LEN-1] = '\0';
+			}
 		}
 	} else {
 		validation->rt_failure_count++;
 		test_ctx->stats.agg_stats.validation_failures++;
+		if (*reason) {
+			memcpy(validation->rt_reason, reason, TEST_MAX_REASON_LEN);
+			validation->rt_reason[TEST_MAX_REASON_LEN-1] = '\0';
+		}
 	}
 	osal_atomic_unlock(&test_ctx->stats_lock);
+
+	if (*reason) {
+		PNSO_LOG_DEBUG("Testcase %u validation %u: %s\n",
+			       test_ctx->testcase->node.idx,
+			       validation->node.idx,
+			       reason);
+	}
 }
 
 static pnso_error_t run_data_validation(struct batch_context *ctx,
@@ -1616,11 +1667,17 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 	struct test_node_file *fnode1 = NULL, *fnode2;
 	char path1[TEST_MAX_FULL_PATH_LEN] = "";
 	char path2[TEST_MAX_FULL_PATH_LEN] = "";
+	char reason[TEST_MAX_REASON_LEN] = "";
 	int cmp = 0;
+	uint32_t cmp_len = 0;
 	uint32_t offset = validation->offset;
 	uint32_t len = validation->len;
+	uint32_t file_len, file2_len;
 
 	if (ctx->req_rc != PNSO_OK) {
+		snprintf(reason, TEST_MAX_REASON_LEN,
+			 "unexpected req_retcode %d",
+			 ctx->req_rc);
 		err = ctx->req_rc;
 		goto done;
 	}
@@ -1639,13 +1696,16 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 					 path2, validation->file2);
 	}
 	if (err != PNSO_OK) {
+		snprintf(reason, TEST_MAX_REASON_LEN,
+			 "construct_filename err %d",
+			 err);
 		goto done;
 	}
 
 	/* calculate dynamic offset/len */
 	if (validation->offset >= DYN_OFFSET_START ||
 	    validation->len >= DYN_OFFSET_START) {
-		uint32_t file_len = lookup_file_node_size(
+		file_len = lookup_file_node_size(
 					test_ctx->output_file_tbl, path1);
 
 		if (offset == DYN_OFFSET_EOF)
@@ -1679,6 +1739,18 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 							 offset, len);
 			}
 #endif
+			if (!is_compare_true(validation->cmp_type, cmp)) {
+				if (!fnode1) {
+					snprintf(reason, TEST_MAX_REASON_LEN,
+						 "missing file1");
+				} else if (!fnode2) {
+					snprintf(reason, TEST_MAX_REASON_LEN,
+						 "missing file2");
+				} else {
+					snprintf(reason, TEST_MAX_REASON_LEN,
+						 "file1 mismatches file2");
+				}
+			}
 		} else if (validation->pattern[0] && (path1[0] || path2[0])) {
 			char *path = path1;
 			const char *pat = validation->pattern;
@@ -1691,12 +1763,17 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 				osal_atomic_lock(&fnode1->lock);
 				cmp = test_cmp_pattern(fnode1->buflist,
 						       offset, len,
-						       pat, pat_len);
+						       pat, pat_len, &cmp_len);
 				osal_atomic_unlock(&fnode1->lock);
-				if (cmp) {
+				if (!is_compare_true(validation->cmp_type, cmp)) {
 					pprint_file_node(fnode1, offset);
+					snprintf(reason, TEST_MAX_REASON_LEN,
+						 "file mismatches pattern at offset %u",
+						 cmp_len);
 				}
 			} else {
+				snprintf(reason, TEST_MAX_REASON_LEN,
+					 "missing file");
 				cmp = -1;
 			}
 
@@ -1715,32 +1792,49 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 			}
 #endif
 		} else {
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "invalid cfg");
 			err = EINVAL;
 		}
 		break;
 	case VALIDATION_SIZE_COMPARE:
 		if (path1[0] && path2[0]) {
 			/* Compare size of 2 files */
-			cmp = (int) lookup_file_node_size(
-					test_ctx->output_file_tbl, path1) -
-				(int) lookup_file_node_size(
+			file_len = lookup_file_node_size(
+					test_ctx->output_file_tbl, path1);
+			file2_len = lookup_file_node_size(
 					test_ctx->output_file_tbl, path2);
+
+			cmp = (int) file_len - (int) file2_len;
+			if (!is_compare_true(validation->cmp_type, cmp)) {
+				snprintf(reason, TEST_MAX_REASON_LEN,
+					 "file1 len %u mismatches file2 len %u",
+					 file_len, file2_len);
+			}
 		} else {
 			/* Test static length */
-			cmp = (int) lookup_file_node_size(
-					test_ctx->output_file_tbl, path1) -
-				(int) len;
+			file_len = lookup_file_node_size(
+					test_ctx->output_file_tbl, path1);
+			cmp = (int) file_len - (int) len;
+			if (!is_compare_true(validation->cmp_type, cmp)) {
+				snprintf(reason, TEST_MAX_REASON_LEN,
+					 "file1 len %u mismatches %u",
+					 file_len, len);
+			}
 		}
 		break;
 	default:
 		PNSO_LOG_ERROR("Invalid validation type %u\n",
 			       validation->type);
 		err = EINVAL;
+		snprintf(reason, TEST_MAX_REASON_LEN,
+			 "invalid validation type %u",
+			 validation->type);
 		break;
 	}
 
 done:
-	update_validation_stats(test_ctx, validation, cmp, err);
+	update_validation_stats(test_ctx, validation, cmp, err, reason);
 	return err;
 }
 
@@ -1753,29 +1847,48 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 	int cmp = 0;
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
+	char reason[TEST_MAX_REASON_LEN] = "";
 
-	cmp = (int) batch_ctx->req_rc - (int) validation->req_retcode;
-	if (cmp != 0 || batch_ctx->req_rc != PNSO_OK) {
-		if (cmp && validation->cmp_type == COMPARE_TYPE_EQ)
-			PNSO_LOG_INFO("Testcase %u expected req_retcode %u, got %u\n",
-				testcase->node.idx, validation->req_retcode,
-				batch_ctx->req_rc);
+	if (validation->flags & VALIDATION_FLAG_CHECK_REQ_RETCODE) {
+		cmp = (int) batch_ctx->req_rc - (int) validation->req_retcode;
+		if (!is_compare_true(validation->cmp_type, cmp)) {
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "expected req_retcode %s %u, got %u",
+				 get_compare_type_str(validation->cmp_type),
+				 validation->req_retcode,
+				 batch_ctx->req_rc);
+			goto done;
+		}
+	}
+
+	if (batch_ctx->req_rc != PNSO_OK) {
+		if ((validation->flags & VALIDATION_FLAG_CHECK_RETCODE) ||
+		    validation->svc_count) {
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "unexpected req_retcode %u",
+				 batch_ctx->req_rc);
+			err = EINVAL;
+		}
 		goto done;
 	}
 
-	cmp = (int) req_ctx->svc_res.err - (int) validation->retcode;
-	if (cmp != 0) {
-		if (validation->cmp_type == COMPARE_TYPE_EQ)
-			PNSO_LOG_INFO("Testcase %u expected retcode %u, got %u\n",
-				testcase->node.idx, validation->retcode,
-				req_ctx->svc_res.err);
-		goto done;
+	if (validation->flags & VALIDATION_FLAG_CHECK_RETCODE) {
+		cmp = (int) req_ctx->svc_res.err - (int) validation->retcode;
+		if (!is_compare_true(validation->cmp_type, cmp)) {
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "expected retcode %s %u, got %u",
+				 get_compare_type_str(validation->cmp_type),
+				 validation->retcode,
+				 req_ctx->svc_res.err);
+			goto done;
+		}
 	}
 
 	if (req_ctx->svc_res.num_services < validation->svc_count) {
-		PNSO_LOG_WARN("Testcase %u expected num_services %u, got %u\n",
-			testcase->node.idx, validation->svc_count,
-			req_ctx->svc_res.num_services);
+		snprintf(reason, TEST_MAX_REASON_LEN,
+			 "expected num_services >= %u, got %u",
+			 validation->svc_count,
+			 req_ctx->svc_res.num_services);
 		err = EINVAL;
 		goto done;
 	}
@@ -1783,18 +1896,19 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 	for (i = 0; i < validation->svc_count; i++) {
 		cmp = (int) req_ctx->svc_res.svc[i].err -
 			(int) validation->svc_retcodes[i];
-		if (cmp != 0) {
-			if (validation->cmp_type == COMPARE_TYPE_EQ)
-				PNSO_LOG_INFO("Testcase %u expected svc_retcode[%u] %u, got %u\n",
-					       testcase->node.idx, i,
-					       validation->svc_retcodes[i],
-					       req_ctx->svc_res.svc[i].err);
+		if (!is_compare_true(validation->cmp_type, cmp)) {
+			snprintf(reason, TEST_MAX_REASON_LEN,
+				 "expected svc_retcode[%u] %s %u, got %u",
+				 i, get_compare_type_str(validation->cmp_type),
+				 validation->svc_retcodes[i],
+				 req_ctx->svc_res.svc[i].err);
 			break;
 		}
+		/* TODO: how to handle "type: ne" for multiple svcs? */
 	}
 
 done:
-	update_validation_stats(test_ctx, validation, cmp, err);
+	update_validation_stats(test_ctx, validation, cmp, err, reason);
 	return err;
 }
 
@@ -1808,9 +1922,13 @@ static pnso_error_t run_data_len_validation(struct request_context *req_ctx,
 	uint32_t len;
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
+	char reason[TEST_MAX_REASON_LEN] = "";
 
 	if (batch_ctx->req_rc != PNSO_OK) {
 		err = batch_ctx->req_rc;
+		snprintf(reason, TEST_MAX_REASON_LEN,
+			 "unexpected req_retcode %u",
+			 batch_ctx->req_rc);
 		goto done;
 	}
 
@@ -1822,18 +1940,21 @@ static pnso_error_t run_data_len_validation(struct request_context *req_ctx,
 
 		cmp = (int) len - (int) validation->len;
 		if (cmp != 0) {
-			if (validation->cmp_type == COMPARE_TYPE_EQ)
-				PNSO_LOG_INFO("Testcase %u expected total data_len %u, got %u\n",
-					       testcase->node.idx,
-					       validation->len, len);
+			if (!is_compare_true(validation->cmp_type, cmp)) {
+				snprintf(reason, TEST_MAX_REASON_LEN,
+					 "expected total data_len %s %u, got %u",
+					 get_compare_type_str(validation->cmp_type),
+					 validation->len, len);
+			}
 			goto done;
 		}
 	}
 
 	if (req_ctx->svc_res.num_services < validation->svc_count) {
-		PNSO_LOG_WARN("Testcase %u expected num_services %u, got %u\n",
-			testcase->node.idx, validation->svc_count,
-			req_ctx->svc_res.num_services);
+		snprintf(reason, TEST_MAX_REASON_LEN,
+			 "expected num_services >= %u, got %u",
+			 validation->svc_count,
+			 req_ctx->svc_res.num_services);
 		err = EINVAL;
 		goto done;
 	}
@@ -1842,16 +1963,18 @@ static pnso_error_t run_data_len_validation(struct request_context *req_ctx,
 		len = get_svc_status_data_len(&req_ctx->svc_res.svc[i]);
 		cmp = (int) len - (int) validation->svc_retcodes[i];
 		if (cmp != 0) {
-			if (validation->cmp_type == COMPARE_TYPE_EQ)
-				PNSO_LOG_INFO("Testcase %u expected svc[%u] data_len %d, got %u\n",
-					      testcase->node.idx, i,
-					      validation->svc_retcodes[i], len);
+			if (!is_compare_true(validation->cmp_type, cmp)) {
+				snprintf(reason, TEST_MAX_REASON_LEN,
+					 "expected svc[%u] data_len %s %d, got %u",
+					 i, get_compare_type_str(validation->cmp_type),
+					 validation->svc_retcodes[i], len);
+			}
 			break;
 		}
 	}
 
 done:
-	update_validation_stats(test_ctx, validation, cmp, err);
+	update_validation_stats(test_ctx, validation, cmp, err, reason);
 	return err;
 }
 
@@ -1869,7 +1992,6 @@ static pnso_error_t run_req_validation(struct request_context *req_ctx)
 
 	/* Output at least the first result of each worker or chain */
 	if (batch_ctx->req_rc == PNSO_OK &&
-	    req_ctx->svc_res.err == PNSO_OK &&
 	    (!testcase->turbo ||
 	     (req_ctx->req_id <
 	      batch_ctx->test_ctx->chain_lb_table_count))) {
@@ -3108,6 +3230,7 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 	pnso_error_t err = PNSO_OK;
 	size_t i;
 	uint32_t buf_count;
+	uint32_t cmp_len;
 	char reason[80] = "success";
 	struct buffer_context buf_ctxs[UNIT_TEST_BUFLIST_COUNT];
 
@@ -3136,7 +3259,7 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 		}
 		if (0 != test_cmp_pattern(buf_ctxs[i].va_buflist, 0, UNIT_TEST_BUFLIST_SIZE,
 					  UNIT_TEST_BUFLIST_PATTERN,
-					  strlen(UNIT_TEST_BUFLIST_PATTERN))) {
+					  strlen(UNIT_TEST_BUFLIST_PATTERN), &cmp_len)) {
 			err = EINVAL;
 			safe_strcpy(reason, "test_cmp_pattern",
 				    sizeof(reason));
@@ -3144,7 +3267,7 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 		}
 		if (i >= 1) {
 			if (0 != cmp_buflists(buf_ctxs[i-1].va_buflist, buf_ctxs[i].va_buflist,
-					      0, UNIT_TEST_BUFLIST_SIZE)) {
+					      0, UNIT_TEST_BUFLIST_SIZE, &cmp_len)) {
 				err = EINVAL;
 				safe_strcpy(reason, "cmp_buflists",
 					    sizeof(reason));

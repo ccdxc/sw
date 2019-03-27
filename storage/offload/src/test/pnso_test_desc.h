@@ -105,6 +105,7 @@ struct test_crypto_key {
 #define TEST_MAX_PATTERN_LEN 8196
 #define TEST_MAX_BIN_PATTERN_LEN (TEST_MAX_PATTERN_LEN/2)
 #define TEST_MAX_PATH_LEN 128
+#define TEST_MAX_REASON_LEN 128
 #define TEST_MAX_FILE_PREFIX_LEN 32
 #define TEST_MAX_FULL_PATH_LEN (TEST_MAX_PATH_LEN+(2*TEST_MAX_FILE_PREFIX_LEN))
 
@@ -215,11 +216,15 @@ enum {
 	DYN_OFFSET_START = DYN_OFFSET_EOB,
 };
 
+#define VALIDATION_FLAG_CHECK_RETCODE     0x01
+#define VALIDATION_FLAG_CHECK_REQ_RETCODE 0x02
+
 struct test_validation {
 	struct test_node node;
 	char name[TEST_MAX_NAME_LEN];
 	uint16_t type; /* VALIDATION_* */
 	uint16_t cmp_type; /* COMPARE_TYPE_* */
+	uint16_t flags;
 	char file1[TEST_MAX_PATH_LEN];
 	char file2[TEST_MAX_PATH_LEN];
 	char pattern[TEST_MAX_PATTERN_LEN];
@@ -234,6 +239,7 @@ struct test_validation {
 	/* runtime stats, protect with lock */
 	uint64_t rt_success_count;
 	uint64_t rt_failure_count;
+	char rt_reason[TEST_MAX_REASON_LEN];
 };
 
 struct test_cp_header {

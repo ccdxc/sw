@@ -112,7 +112,6 @@ tests:
             - retcode_compare:
                 idx         : 1
                 req_retcode     : 20008
-                retcode     : 20008
 
     - test:
         idx       : 5
@@ -125,5 +124,4 @@ tests:
             - retcode_compare:
                 idx         : 1
                 req_retcode     : 20009
-                retcode     : 20009
 

@@ -65,7 +65,7 @@ tests:
             idx: 1
             retcode: 0
             svc_retcodes: 20004,0
-        #- size_compare:
-        #    idx: 2
-        #    file1: '1_hash_per_block.bin'
-        #    val: 128
+        - size_compare:
+            idx: 2
+            file1: '2_hash_per_block.bin'
+            val: 128
