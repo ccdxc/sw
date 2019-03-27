@@ -22,10 +22,10 @@ using std::endl;
 
 namespace api_test {
 
-// GLobals
+// Globals
 char *g_cfg_file = NULL;
-static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
-constexpr int k_max_subnet = 1024; // PDS_MAX_SUBNET
+static pds_epoch_t g_batch_epoch = 1; // PDS_EPOCH_INVALID;
+constexpr int k_max_subnet = PDS_MAX_SUBNET;
 
 //----------------------------------------------------------------------------
 // Subnet test class
@@ -39,7 +39,6 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         pds_test_base::SetUpTestCase(g_cfg_file, false);
-
         pds_batch_params_t batch_params = {0};
         vcn_util vcn_obj(1, "10.0.0.0/8");
 
@@ -97,7 +96,7 @@ TEST_F(subnet, subnet_workflow_1) {
 /// Create and delete should be de-deduped by framework and subsequent create
 /// should result in successful creation
 /// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
-TEST_F(subnet, subnet_workflow_2) {
+TEST_F(subnet, DISABLED_subnet_workflow_2) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     pds_vcn_key_t vcn_key = {};
@@ -124,6 +123,9 @@ TEST_F(subnet, subnet_workflow_2) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(subnet_util::many_read(
+        key, k_max_subnet, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create Set1, Set2, Delete Set1, Create Set3 in same batch
@@ -139,10 +141,10 @@ TEST_F(subnet, subnet_workflow_3) {
     uint32_t num_subnets = 20;
     pds_vcn_key_t vcn_key = {};
 
+    vcn_key.id = 1;
     key1.id = 10;
     key2.id = 40;
     key3.id = 70;
-    vcn_key.id = 1;
 
     // Trigger
     batch_params.epoch = ++g_batch_epoch;
@@ -258,6 +260,11 @@ TEST_F(subnet, subnet_workflow_5) {
     ASSERT_TRUE(subnet_util::many_delete(key2, num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key3, num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(subnet_util::many_read(
+        key2, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(subnet_util::many_read(
+        key3, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create maximum number of VCNs in two batches
@@ -296,6 +303,9 @@ TEST_F(subnet, subnet_workflow_neg_1) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(subnet_util::many_read(
+        key, k_max_subnet, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create more than maximum number of subnets supported.
@@ -303,7 +313,7 @@ TEST_F(subnet, subnet_workflow_neg_1) {
 // @saratk - need to enable this after fixing the max subnet value; search
 // for g_max_subnet assignmnet at the top. If I use PDS_MAX_SUBNET, things
 // are crashing, so left it at 1024 for now.
-TEST_F(subnet, DISABLED_subnet_workflow_neg_2) {
+TEST_F(subnet, subnet_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string start_addr = "10.0.0.0/16";
@@ -396,6 +406,9 @@ TEST_F(subnet, subnet_workflow_neg_4) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(subnet_util::many_read(
+        key1, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Subnet workflow corner case 4

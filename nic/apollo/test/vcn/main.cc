@@ -58,8 +58,9 @@ TEST_F(vcn, vcn_workflow_1)
     pds_vcn_key_t key = {};
     std::string vcn_start_addr = "10.0.0.0/16";
 
-    // Trigger
     key.id = 1;
+
+    // Trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key, vcn_start_addr, k_max_vcn,
