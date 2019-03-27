@@ -291,7 +291,7 @@ typedef struct ipsec_global_stats_cb_s {
 } __PACK__ ipsec_global_stats_cb_t;
 
 // max. number of CBs supported  (TODO: we can take this from cfg file)
-#define HAL_MAX_IPSEC_SA                          2048 
+#define HAL_MAX_IPSEC_SA                          4096 
 #define IPSEC_BARCO_ENCRYPT_AES_GCM_256           0x30000000
 #define IPSEC_BARCO_DECRYPT_AES_GCM_256           0x30100000
 

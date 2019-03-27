@@ -612,6 +612,10 @@ pd_ipsec_encrypt_delete (pd_func_args_t *pd_func_args)
 
     HAL_TRACE_DEBUG("IPSECCB pd delete");
 
+    if (ipsec_sa_pd == NULL) {
+       return HAL_RET_INVALID_ARG;
+    }
+
     free_key_args.key_idx = ipsec_sa->key_index;
     pd_func_args1.pd_crypto_free_key = &free_key_args;
     ret = pd_crypto_free_key(&pd_func_args1);

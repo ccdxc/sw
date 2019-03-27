@@ -106,6 +106,10 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
         return HAL_RET_VRF_ID_INVALID;
     }
 
+    if (spec.key_or_handle().cb_id() > (HAL_MAX_IPSEC_SA/2)) {
+        return HAL_RET_INVALID_ARG;
+    }
+
     ipsec_sa = ipsec_sa_alloc_init();
     if (ipsec_sa == NULL) {
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
