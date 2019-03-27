@@ -17,15 +17,15 @@ class RouteObject(base.ConfigObjectBase):
     def __init__(self, parent, prefix, tunobj):
         super().__init__()
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
-        #self.RouteTblId = next(resmgr.RouteTableIdAllocator) ## TODO - Randum routetable id needs to be revisited 
-        self.RouteTblId = prefix.version
-        self.GID('RouteTbl%d'%self.RouteTblId)
         if prefix.version == 6:
+            self.RouteTblId = next(resmgr.V6RouteTableIdAllocator)
             self.Prefix = prefix
             self.AddrFamily = 'IPV6'
         else:
+            self.RouteTblId = next(resmgr.V4RouteTableIdAllocator)
             self.Prefix = prefix
             self.AddrFamily = 'IPV4'
+        self.GID('RouteTbl%d'%self.RouteTblId)
         self.Tunnel = tunobj
         self.TunIPAddr = tunobj.RemoteIPAddr
         self.TunIP = str(self.TunIPAddr)
@@ -60,20 +60,9 @@ class RouteObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         return
 
-    def __is_lmapping_match(self, lmapping):
-        if lmapping.AddrFamily == 'IPV4':
-            return lmapping.AddrFamily == self.AddrFamily and\
-               lmapping.VNIC.SUBNET.V4RouteTableId == self.RouteTblId
-        if lmapping.AddrFamily == 'IPV6':
-            return lmapping.AddrFamily == self.AddrFamily and\
-               lmapping.VNIC.SUBNET.V6RouteTableId == self.RouteTblId
-
-
     def SetupTestcaseConfig(self, obj):
         print(self.TestDestination)
-        lobjs = list(filter(lambda x: self.__is_lmapping_match(x), 
-                            lmapping.client.Objects()))
-        obj.local_mapping = lobjs[0]
+        obj.local_mapping = self.l_obj
         obj.route = self
         obj.hostport = 1
         obj.switchport = 2
@@ -191,6 +180,31 @@ class RouteObjectClient:
 
 client = RouteObjectClient()
 
+class RouteTableObjectHelper:
+    def __init__(self):
+        return
+
+    def __is_lmapping_match(self, route_obj, lobj):
+        if lobj.AddrFamily == 'IPV4':
+            return lobj.AddrFamily == route_obj.AddrFamily and\
+               lobj.VNIC.SUBNET.V4RouteTableId == route_obj.RouteTblId
+        if lobj.AddrFamily == 'IPV6':
+            return lobj.AddrFamily == route_obj.AddrFamily and\
+               lobj.VNIC.SUBNET.V6RouteTableId == route_obj.RouteTblId
+
+    def GetMatchingConfigObjects(self, selectors):
+        objs = []
+        for route_obj in client.Objects():
+            if not route_obj.IsFilterMatch(selectors.route.filters):
+                continue
+            for lobj in lmapping.GetMatchingObjects(selectors):
+                if self.__is_lmapping_match(route_obj, lobj):
+                    route_obj.l_obj = lobj
+                    objs.append(route_obj)
+        return utils.GetFilteredObjects(objs, selectors.maxlimits)
+
+
+RouteTableHelper = RouteTableObjectHelper()
+
 def GetMatchingObjects(selectors):
-    mobjs = list(filter(lambda x: x.IsFilterMatch(selectors.route.filters), client.Objects()))
-    return mobjs
+    return RouteTableHelper.GetMatchingConfigObjects(selectors)

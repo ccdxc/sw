@@ -2,6 +2,7 @@
 selectors:
     root: ref://store/templates/id=ROUTE
     maxlimit: None
+    flow: filter://any
     route: filter://AddrFamily=IPV6
     local_mapping: filter://AddrFamily=IPV6
 
