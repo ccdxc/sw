@@ -20,10 +20,10 @@ var _ = Describe("firewall tests", func() {
 
 		// delete test policy if its left over. we can ignore the error here
 		ts.model.SGPolicy("test-policy").Delete()
-		ts.model.SGPolicy("default-policy").Delete()
+		ts.model.DefaultSGPolicy().Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()).ShouldNot(HaveOccurred())
+		Expect(ts.model.DefaultSGPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 
 	Context("Basic firewall tests", func() {

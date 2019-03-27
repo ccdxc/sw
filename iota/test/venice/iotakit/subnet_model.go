@@ -10,17 +10,19 @@ import (
 
 	"github.com/willf/bitset"
 
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Network represents a Vlan with a subnet (called network in venice)
 type Network struct {
-	Name       string // subnet name
-	vlan       uint32
-	ipPrefix   string
-	bitmask    *bitset.BitSet
-	subnetSize int
-	sm         *SysModel // pointer back to the model
+	Name          string // subnet name
+	vlan          uint32
+	ipPrefix      string
+	bitmask       *bitset.BitSet
+	subnetSize    int
+	veniceNetwork *network.Network
+	sm            *SysModel // pointer back to the model
 }
 
 // NetworkCollection is a list of subnets

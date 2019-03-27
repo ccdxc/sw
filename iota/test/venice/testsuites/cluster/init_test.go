@@ -18,6 +18,7 @@ import (
 var testbedParams = flag.String("testbed", "/warmd.json", "testbed params file (i.e warmd.json)")
 var topoName = flag.String("topo", "3Venice_Nodes", "topology name")
 var debugFlag = flag.Bool("debug", false, "set log level to debug")
+var scaleFlag = flag.Bool("scale", false, "enable scale configuration")
 
 // TestSuite : cluster test suite - all venice only test cases go here
 type TestSuite struct {
@@ -46,7 +47,7 @@ func TestIotaVeniceCluster(t *testing.T) {
 
 // BeforeSuite runs before the test suite and sets up the testbed
 var _ = BeforeSuite(func() {
-	tb, model, err := iotakit.InitSuite(*topoName, *testbedParams)
+	tb, model, err := iotakit.InitSuite(*topoName, *testbedParams, *scaleFlag)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify cluster, workload are in good health

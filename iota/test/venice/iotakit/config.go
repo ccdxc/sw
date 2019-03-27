@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	loginctx "github.com/pensando/sw/api/login/context"
@@ -261,6 +262,49 @@ func (tb *TestBed) CreateHost(host *cluster.Host) error {
 	return err
 }
 
+// GetHostList gets all hosts from venice cluster
+func (tb *TestBed) ListHost() (objs []*cluster.Host, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
+
+	for _, restcl := range restcls {
+		objs, err = restcl.ClusterV1().Host().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+//DeleteHost deletes host object
+func (tb *TestBed) DeleteHost(wrkld *cluster.Host) error {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.ClusterV1().Host().Delete(ctx, &wrkld.ObjectMeta)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
 // CreateWorkload creates workload
 func (tb *TestBed) CreateWorkload(wrkld *workload.Workload) error {
 	ctx, err := tb.VeniceLoggedInCtx()
@@ -325,6 +369,29 @@ func (tb *TestBed) DeleteWorkload(wrkld *workload.Workload) error {
 		}
 	}
 	return err
+}
+
+// ListWorkload gets all workloads from venice cluster
+func (tb *TestBed) ListWorkload() (objs []*workload.Workload, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
+
+	for _, restcl := range restcls {
+		objs, err = restcl.WorkloadV1().Workload().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
 }
 
 // CreateSGPolicy creates SG policy
@@ -392,6 +459,29 @@ func (tb *TestBed) GetSGPolicy(meta *api.ObjectMeta) (sgp *security.SGPolicy, er
 	}
 
 	return sgp, err
+}
+
+// ListSGPolicy gets all SGPolicies from venice cluster
+func (tb *TestBed) ListSGPolicy() (objs []*security.SGPolicy, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
+
+	for _, restcl := range restcls {
+		objs, err = restcl.SecurityV1().SGPolicy().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
 }
 
 // DeleteSGPolicy deletes SG policy
@@ -625,6 +715,50 @@ func (tb *TestBed) CreateFirewallProfile(fwp *security.FirewallProfile) error {
 	return err
 }
 
+// ListFirewallProfile gets all fw profile apps from venice cluster
+func (tb *TestBed) ListFirewallProfile() (objs []*security.FirewallProfile, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
+
+	for _, restcl := range restcls {
+		objs, err = restcl.SecurityV1().FirewallProfile().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// DeleteFirewallProfile deletes FirewallProfile object
+func (tb *TestBed) DeleteFirewallProfile(fwprofile *security.FirewallProfile) error {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.SecurityV1().FirewallProfile().Delete(ctx, &fwprofile.ObjectMeta)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
+}
+
 // CreateApp creates an app in venice
 func (tb *TestBed) CreateApp(app *security.App) error {
 	ctx, err := tb.VeniceLoggedInCtx()
@@ -645,6 +779,115 @@ func (tb *TestBed) CreateApp(app *security.App) error {
 			if err == nil {
 				break
 			}
+		}
+	}
+
+	return err
+}
+
+// ListApp gets all apps from venice cluster
+func (tb *TestBed) ListApp() (objs []*security.App, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
+
+	for _, restcl := range restcls {
+		objs, err = restcl.SecurityV1().App().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// DeleteApp deletes App object
+func (tb *TestBed) DeleteApp(app *security.App) error {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.SecurityV1().App().Delete(ctx, &app.ObjectMeta)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
+}
+
+// CreateNetwork creates an Network in venice
+func (tb *TestBed) CreateNetwork(obj *network.Network) error {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.NetworkV1().Network().Create(ctx, obj)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
+}
+
+// ListNetwork gets all networks from venice cluster
+func (tb *TestBed) ListNetwork() (objs []*network.Network, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
+
+	for _, restcl := range restcls {
+		objs, err = restcl.NetworkV1().Network().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// DeleteNetwork deletes Network object
+func (tb *TestBed) DeleteNetwork(net *network.Network) error {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.NetworkV1().Network().Delete(ctx, &net.ObjectMeta)
+		if err == nil {
+			break
 		}
 	}
 

@@ -255,17 +255,17 @@ var _ = Describe("firewall policy model tests", func() {
 		}).Should(Succeed())
 
 		// delete the default allow policy
-		Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
+		Expect(ts.model.DefaultSGPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
 
 		// delete test policy if its left over. we can ignore the error here
 		ts.model.SGPolicy("test-policy").Delete()
-		ts.model.SGPolicy("default-policy").Delete()
+		ts.model.DefaultSGPolicy().Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()).Should(Succeed())
+		Expect(ts.model.DefaultSGPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 	Context("policy model tests", func() {
 		It("Should be able to verify whitelist policies", func() {

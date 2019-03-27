@@ -1042,7 +1042,7 @@ func (tb *TestBed) Cleanup() error {
 }
 
 // InitSuite initializes test suite
-func InitSuite(topoName, paramsFile string) (*TestBed, *SysModel, error) {
+func InitSuite(topoName, paramsFile string, scale bool) (*TestBed, *SysModel, error) {
 	// create testbed
 	tb, err := NewTestBed(topoName, paramsFile)
 	if err != nil {
@@ -1063,11 +1063,15 @@ func InitSuite(topoName, paramsFile string) (*TestBed, *SysModel, error) {
 		return nil, nil, err
 	}
 
-	// FIXME: this is bit of hack, we need to fully cleanup venice config
-	model.NewSGPolicy("test-policy").Delete()
+	// fully clean up venice/iota config before starting the tests
+	err = model.CleanupAllConfig()
+	if err != nil {
+		tb.CollectLogs()
+		return nil, nil, err
+	}
 
 	// setup default config for the sysmodel
-	err = model.SetupDefaultConfig()
+	err = model.SetupDefaultConfig(scale)
 	if err != nil {
 		tb.CollectLogs()
 		return nil, nil, err

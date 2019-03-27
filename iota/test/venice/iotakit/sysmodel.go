@@ -5,13 +5,18 @@ package iotakit
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
+	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/security"
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	"github.com/pensando/sw/iota/test/venice/iotakit/cfgen"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -23,12 +28,18 @@ const defaultNumNetworks = 2
 
 // SysModel represents a model of the system under test
 type SysModel struct {
-	hosts       map[string]*Host       // hosts
-	naples      map[string]*Naples     // Naples instances
-	workloads   map[string]*Workload   // workloads
-	subnets     []*Network             // subnets
-	sgpolicies  map[string]*SGPolicy   // security policies
-	veniceNodes map[string]*VeniceNode // Venice nodes
+	hosts          map[string]*Host       // hosts
+	naples         map[string]*Naples     // Naples instances
+	workloads      map[string]*Workload   // workloads
+	subnets        []*Network             // subnets
+	sgpolicies     map[string]*SGPolicy   // security policies
+	veniceNodes    map[string]*VeniceNode // Venice nodes
+	fakeHosts      map[string]*Host       // simulated hosts
+	fakeNaples     map[string]*Naples     // simulated Naples instances
+	fakeWorkloads  map[string]*Workload   // simulated workloads
+	fakeSubnets    map[string]*Network    // simulated subnets
+	fakeApps       map[string]*App        // simulated apps
+	fakeSGPolicies map[string]*SGPolicy   // simulated security policies
 
 	tb *TestBed // testbed
 
@@ -38,13 +49,19 @@ type SysModel struct {
 // NewSysModel creates a sysmodel for a testbed
 func NewSysModel(tb *TestBed) (*SysModel, error) {
 	sm := SysModel{
-		tb:           tb,
-		hosts:        make(map[string]*Host),
-		naples:       make(map[string]*Naples),
-		veniceNodes:  make(map[string]*VeniceNode),
-		workloads:    make(map[string]*Workload),
-		sgpolicies:   make(map[string]*SGPolicy),
-		allocatedMac: make(map[string]bool),
+		tb:             tb,
+		hosts:          make(map[string]*Host),
+		naples:         make(map[string]*Naples),
+		veniceNodes:    make(map[string]*VeniceNode),
+		workloads:      make(map[string]*Workload),
+		sgpolicies:     make(map[string]*SGPolicy),
+		fakeHosts:      make(map[string]*Host),
+		fakeNaples:     make(map[string]*Naples),
+		fakeWorkloads:  make(map[string]*Workload),
+		fakeSubnets:    make(map[string]*Network),
+		fakeApps:       make(map[string]*App),
+		fakeSGPolicies: make(map[string]*SGPolicy),
+		allocatedMac:   make(map[string]bool),
 	}
 
 	// build naples and venice nodes
@@ -66,11 +83,134 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 	return &sm, nil
 }
 
+// CleanupAllConfig cleans up any configuration present in the system
+// this function would query all Venice objects and delete them from Venice
+// - it does not clean up any state left out in Naples or inernal components of Venice
+func (sm *SysModel) CleanupAllConfig() error {
+	var err error
+
+	if !sm.tb.skipSetup {
+		return nil
+	}
+
+	// get all venice configs
+	veniceHosts, err := sm.tb.ListHost()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+	veniceSGPolicies, err := sm.tb.ListSGPolicy()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+	veniceNetworks, err := sm.tb.ListNetwork()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+	veniceApps, err := sm.tb.ListApp()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+	veniceWorkloads, err := sm.tb.ListWorkload()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+
+	log.Infof("Cleanup: hosts %d, sgpolicy %d workloads %d hosts %d networks %d",
+		len(veniceHosts), len(veniceSGPolicies), len(veniceWorkloads), len(veniceHosts), len(veniceNetworks))
+
+	// get all iota configs
+	gwlm := &iota.WorkloadMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+		WorkloadOp:  iota.Op_GET,
+	}
+	topoClient := iota.NewTopologyApiClient(sm.tb.iotaClient.Client)
+	getResp, err := topoClient.GetWorkloads(context.Background(), gwlm)
+	if err != nil {
+		err = fmt.Errorf("Cleanup config failed, topo svc returned error. Err: %v", err)
+		log.Errorf("%s", err)
+		return err
+	} else if getResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		err = fmt.Errorf("Cleanup config failed, Invalid API response: %+v.", getResp.ApiResponse)
+		log.Errorf("%s", err)
+		return err
+	}
+
+	// delete iota workloads
+	getResp.WorkloadOp = iota.Op_DELETE
+	delResp, err := topoClient.DeleteWorkloads(context.Background(), getResp)
+	log.Debugf("Got get workload resp: %+v, err: %v", delResp, err)
+	if err != nil {
+		err = fmt.Errorf("Failed to delete old workload in iota. Err: %v", err)
+		log.Errorf("%s", err)
+		return err
+	}
+
+	// delete venice objects
+	for _, obj := range veniceSGPolicies {
+		if err := sm.tb.DeleteSGPolicy(obj); err != nil {
+			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
+			log.Errorf("%s", err)
+			return err
+		}
+	}
+	for _, obj := range veniceApps {
+		if err := sm.tb.DeleteApp(obj); err != nil {
+			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
+			log.Errorf("%s", err)
+			return err
+		}
+	}
+	for _, obj := range veniceWorkloads {
+		if err := sm.tb.DeleteWorkload(obj); err != nil {
+			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
+			log.Errorf("%s", err)
+			return err
+		}
+	}
+	for _, obj := range veniceHosts {
+		if err := sm.tb.DeleteHost(obj); err != nil {
+			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
+			log.Errorf("%s", err)
+			return err
+		}
+	}
+	for _, obj := range veniceNetworks {
+		if err := sm.tb.DeleteNetwork(obj); err != nil {
+			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
+			log.Errorf("%s", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
 // SetupDefaultConfig sets up a default config for the system
-func (sm *SysModel) SetupDefaultConfig() error {
+func (sm *SysModel) SetupDefaultConfig(scale bool) error {
 	var wc WorkloadCollection
 
 	log.Infof("Setting up default config...")
+
+	// build host list for configuration
+	var naplesNodes []*TestNode
+	for _, nr := range sm.tb.Nodes {
+		if nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM || nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			naplesNodes = append(naplesNodes, nr)
+		}
+	}
+
+	// generate scale configuration if required
+	if scale {
+		err := sm.populateScaleConfig()
+		if err != nil {
+			return fmt.Errorf("Error generating scale config: %s", err)
+		}
+	}
 
 	// create some networks
 	for i := 0; i < defaultNumNetworks; i++ {
@@ -79,14 +219,6 @@ func (sm *SysModel) SetupDefaultConfig() error {
 		if err != nil {
 			log.Errorf("Error creating network: vlan %v. Err: %v", vlanID, err)
 			return err
-		}
-	}
-
-	// build host list for configuration
-	var naplesNodes []*TestNode
-	for _, nr := range sm.tb.Nodes {
-		if nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM || nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			naplesNodes = append(naplesNodes, nr)
 		}
 	}
 
@@ -190,13 +322,121 @@ func (sm *SysModel) SetupDefaultConfig() error {
 		return err
 	}
 
-	// create default allow policy
-	err = sm.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()
+	// start with default allow policy
+	err = sm.DefaultSGPolicy().Restore()
 	if err != nil {
 		log.Errorf("Error creating default policy. Err: %v", err)
 		return err
 	}
 
+	return nil
+}
+
+// populateScaleConfig creates scale configuration based on some predetermined parameters
+// TBD: we can enhance this to take the scale parameters fromt he user
+func (sm *SysModel) populateScaleConfig() error {
+	cfg := cfgen.DefaultCfgenParams
+	cfg.SGPolicyParams.NumPolicies = 1
+	cfg.SGPolicyParams.NumRulesPerPolicy = 50000
+	cfg.WorkloadParams.WorkloadsPerHost = 200
+	cfg.AppParams.NumApps = 5000
+	// TBD - override default-policy
+	// cfg.SGPolicyParams.SGPolicyTemplate.ObjectMeta.Name = "default-policy"
+
+	smartnics := []*cluster.SmartNIC{}
+	for _, naples := range sm.naples {
+		smartnics = append(smartnics, naples.smartNic)
+	}
+	cfg.Smartnics = smartnics
+
+	// generate the configuration now
+	cfg.Do()
+
+	// verify and keep the data in some file
+	ofile, err := os.OpenFile("/tmp/scale.json", os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, o := range cfg.Networks {
+		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+			return err
+		} else {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+		sm.fakeSubnets[o.ObjectMeta.Name] = &Network{veniceNetwork: o}
+		if err := sm.tb.CreateNetwork(o); err != nil {
+			return fmt.Errorf("error creating network: %s", err)
+		}
+	}
+	for _, o := range cfg.Hosts {
+		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+			return err
+		} else {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+		sm.fakeHosts[o.ObjectMeta.Name] = &Host{veniceHost: o}
+		// TBD: push the workloads and host when we simulate Naples
+	}
+	for _, o := range cfg.Workloads {
+		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+			return err
+		} else {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+		sm.fakeWorkloads[o.ObjectMeta.Name] = &Workload{veniceWorkload: o}
+		// TBD: push the workloads and host when we simulate Naples
+	}
+	for _, o := range cfg.Apps {
+		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+			return err
+		} else {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+		sm.fakeApps[o.ObjectMeta.Name] = &App{veniceApp: o}
+		if err := sm.tb.CreateApp(o); err != nil {
+			return fmt.Errorf("error creating app: %s", err)
+		}
+	}
+
+	if len(cfg.SGPolicies) > 1 {
+		panic("can't have more than one sgpolicy")
+	}
+
+	for _, o := range cfg.SGPolicies {
+		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+			return err
+		} else {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+		sm.fakeSGPolicies[o.ObjectMeta.Name] = &SGPolicy{venicePolicy: o}
+		if err := sm.tb.CreateSGPolicy(o); err != nil {
+			return fmt.Errorf("error creating sgpolicy: %s", err)
+		}
+
+		// verify that sgpolicy object has reached all naples
+		iter := 1
+		for ; iter <= 20; iter++ {
+			time.Sleep(time.Second * time.Duration(iter))
+			if retSgp, err := sm.tb.GetSGPolicy(&o.ObjectMeta); err != nil {
+				return fmt.Errorf("error getting back policy %s", o.ObjectMeta.Name)
+			} else if retSgp.Status.PropagationStatus.Updated == int32(len(smartnics)) {
+				log.Infof("got back policy satus %+v", o.Status.PropagationStatus)
+				break
+			}
+		}
+		if iter > 20 {
+			return fmt.Errorf("unable to update policy '%s' on all naples %+v",
+				o.ObjectMeta.Name, o.Status.PropagationStatus)
+		}
+	}
+
+	ofile.Close()
 	return nil
 }
 

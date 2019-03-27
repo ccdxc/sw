@@ -35,6 +35,12 @@ type SGRuleCollection struct {
 	rules []*sgRuleCtx
 }
 
+// App represents app object
+type App struct {
+	veniceApp *security.App
+	sm        *SysModel // pointer back to the model
+}
+
 // NewSGPolicy creates a new SG policy
 func (sm *SysModel) NewSGPolicy(name string) *SGPolicyCollection {
 	return &SGPolicyCollection{
@@ -79,6 +85,16 @@ func (sm *SysModel) SGPolicies() *SGPolicyCollection {
 	}
 
 	return &spc
+}
+
+// Default policy resturns default-policy that prevails across tests cases in the system
+func (sm *SysModel) DefaultSGPolicy() *SGPolicyCollection {
+	return sm.NewSGPolicy("default-policy")
+}
+
+// Restore is a very context specific function, which restores permit any any policy
+func (spc *SGPolicyCollection) Restore() error {
+	return spc.AddRule("any", "any", "", "PERMIT").Commit()
 }
 
 // AddRule adds a rule to the policy
