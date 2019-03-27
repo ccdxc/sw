@@ -17,6 +17,7 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/utils/log"
+	conv "github.com/pensando/sw/venice/utils/strconv"
 )
 
 func getRunningSoftware() (string, error) {
@@ -105,6 +106,12 @@ func ReadFruFromJSON() *nmd.NaplesFru {
 		return nil
 	}
 
+	var macStr string
+	if macStr, err = conv.ParseMacAddr(dat["Mac Address"].(string)); err != nil {
+		log.Errorf("Failed to parse mac address. Err : %v", err)
+		return nil
+	}
+
 	return &nmd.NaplesFru{
 		ManufacturingDate: dat["Manufacturing date"].(string),
 		Manufacturer:      dat["Manufacturer"].(string),
@@ -114,7 +121,7 @@ func ReadFruFromJSON() *nmd.NaplesFru {
 		BoardId:           dat["Engineering Change level"].(string),
 		EngChangeLevel:    dat["Board Id Number"].(string),
 		NumMacAddr:        dat["NumMac Address"].(string),
-		MacStr:            dat["Mac Address"].(string),
+		MacStr:            macStr,
 	}
 }
 

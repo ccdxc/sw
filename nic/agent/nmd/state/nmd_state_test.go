@@ -44,7 +44,7 @@ var (
 	emDBPath = "/tmp/nmd.db"
 
 	// NIC to be admitted
-	nicKey1 = "2222.2222.2222"
+	nicKey1 = "00ae.cd01.0203"
 
 	// NIC to be in pending state
 	nicKey2 = "4444.4444.4444"
@@ -126,7 +126,7 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 
 	key := objectKey(nic.ObjectMeta)
 	m.nicDB[key] = nic
-	if strings.HasPrefix(nic.Name, nicKey1) {
+	if strings.HasPrefix(nic.Spec.Hostname, nicKey1) {
 		// we don't have the actual csr from the NIC request, so we just make up
 		// a certificate on the spot
 		key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -164,7 +164,7 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 		return resp, nil
 	}
 
-	if strings.HasPrefix(nic.Name, nicKey2) {
+	if strings.HasPrefix(nic.Spec.Hostname, nicKey2) {
 		return grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
 				Phase: cmd.SmartNICStatus_PENDING.String(),
@@ -407,7 +407,7 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 	AssertOk(t, err, "Error updating nic")
 	n, err = nm.GetSmartNIC()
 	AssertOk(t, err, "NIC was not found in DB")
-	Assert(t, n.Status.Conditions[0].Status == cmd.ConditionStatus_TRUE.String() && nic.ObjectMeta.Name == "2222.2222.2222", "NIC status did not match", n)
+	Assert(t, n.Status.Conditions[0].Status == cmd.ConditionStatus_TRUE.String() && nic.ObjectMeta.Name == "00ae.cd01.0203", "NIC status did not match", n)
 
 	// delete smartNIC
 	err = nm.DeleteSmartNIC(&nic)
@@ -432,6 +432,9 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: nicKey1,
 		},
+		Spec: cmd.SmartNICSpec{
+			Hostname: nicKey1,
+		},
 	}
 
 	// create smartNIC
@@ -452,7 +455,7 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 	AssertOk(t, err, "Error updating nic")
 	updNIC := ct.GetNIC(&nic.ObjectMeta)
 	Assert(t, updNIC.Status.Conditions[0].Status == cmd.ConditionStatus_TRUE.String() &&
-		updNIC.ObjectMeta.Name == "2222.2222.2222", "NIC status did not match", updNIC)
+		updNIC.ObjectMeta.Name == "00ae.cd01.0203", "NIC status did not match", updNIC)
 }
 
 func TestNaplesDefaultHostMode(t *testing.T) {
@@ -796,7 +799,7 @@ func TestNaplesNetworkModeManualApproval(t *testing.T) {
 		}
 
 		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_PENDING.String() {
-			log.Errorf("NIC is not admitted, expected %v, found %v", cmd.SmartNICStatus_PENDING.String(), nic.Status.AdmissionPhase)
+			log.Errorf("NIC is not pending, expected %v, found %v", cmd.SmartNICStatus_PENDING.String(), nic.Status.AdmissionPhase)
 			return false, nil
 		}
 
@@ -853,7 +856,7 @@ func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 	f2 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
+		log.Infof("CFG: %+v Status : %+v err: %+v", cfg.Spec.Mode, cfg.Status, err)
 		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK.String() {
 			log.Errorf("Failed to switch to network mode")
 			return false, nil

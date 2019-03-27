@@ -67,7 +67,7 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 			NetworkName:    "default",
 			SecurityGroups: []string{"test-sg"},
 			IPv4Address:    "10.0.0.1/24",
-			MacAddress:     "42:42:42:42:42:42",
+			MacAddress:     "4242.4242.4242",
 		},
 	}
 

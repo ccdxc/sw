@@ -89,12 +89,12 @@ ts=2018-08-28T18:16:33.264618214Z module=Default pid=3725 caller=new_logger.go:1
 		    "host-name": "esx-node12",
 		    "interfaces": [
 			  {
-		        "mac-address": "00:11:22:33:44:55",
+		        "mac-address": "0011.2233.4455",
        		    "micro-seg-vlan": 1001,
 		        "external-vlan": 100
 		      },
 		      {
-				"mac-address": "00:22:33:44:55:66",
+				"mac-address": "0022.3344.5566",
 		        "micro-seg-vlan": 2001,
 		        "external-vlan": 200
 		      }
@@ -116,8 +116,8 @@ ts=2018-08-28T18:16:33.264618214Z module=Default pid=3725 caller=new_logger.go:1
 	}
 	if len(obj.Spec.Interfaces) != 2 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "00:11:22:33:44:55", ExternalVlan: 100, MicroSegVlan: 1001},
-			{MACAddress: "00:22:33:44:55:66", ExternalVlan: 200, MicroSegVlan: 2001}}) {
+			{MACAddress: "0011.2233.4455", ExternalVlan: 100, MicroSegVlan: 1001},
+			{MACAddress: "0022.3344.5566", ExternalVlan: 200, MicroSegVlan: 2001}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 }
@@ -133,12 +133,12 @@ func TestFindJsonRecord(t *testing.T) {
                     "host-name": "esx-node12",
                     "interfaces": [
                       {
-                        "mac-address": "00:11:22:33:44:55",
+                        "mac-address": "0011.2233.4455",
                         "micro-seg-vlan": 1001,
                         "external-vlan": 101
                       },
                       {
-                        "mac-address": "00:22:33:44:55:66",
+                        "mac-address": "0022.3344.5566",
                         "micro-seg-vlan": 2001,
                         "external-vlan": 201
                       }
@@ -154,12 +154,12 @@ func TestFindJsonRecord(t *testing.T) {
                     "host-name": "esx-node12",
                     "interfaces": [
                       {
-                        "mac-address": "00:11:22:33:00:55",
+                        "mac-address": "0011.2233.0055",
                         "micro-seg-vlan": 1002,
                         "external-vlan": 102
                       },
                       {
-                        "mac-address": "00:22:33:44:00:66",
+                        "mac-address": "0022.3344.0066",
                         "micro-seg-vlan": 2002,
                         "external-vlan": 202
                       }
@@ -183,8 +183,8 @@ func TestFindJsonRecord(t *testing.T) {
 	}
 	if len(obj.Spec.Interfaces) != 2 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "00:11:22:33:44:55", ExternalVlan: 101, MicroSegVlan: 1001},
-			{MACAddress: "00:22:33:44:55:66", ExternalVlan: 201, MicroSegVlan: 2001}}) {
+			{MACAddress: "0011.2233.4455", ExternalVlan: 101, MicroSegVlan: 1001},
+			{MACAddress: "0022.3344.5566", ExternalVlan: 201, MicroSegVlan: 2001}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 
@@ -204,8 +204,8 @@ func TestFindJsonRecord(t *testing.T) {
 	}
 	if len(obj.Spec.Interfaces) != 2 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "00:11:22:33:00:55", ExternalVlan: 102, MicroSegVlan: 1002},
-			{MACAddress: "00:22:33:44:00:66", ExternalVlan: 202, MicroSegVlan: 2002}}) {
+			{MACAddress: "0011.2233.0055", ExternalVlan: 102, MicroSegVlan: 1002},
+			{MACAddress: "0022.3344.0066", ExternalVlan: 202, MicroSegVlan: 2002}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 
@@ -223,21 +223,21 @@ func TestDumpStruct(t *testing.T) {
 	obj.Spec = workload.WorkloadSpec{
 		HostName: "node021",
 		Interfaces: []workload.WorkloadIntfSpec{
-			{MACAddress: "11:11:11:11:11:11", ExternalVlan: 11, MicroSegVlan: 1000},
-			{MACAddress: "22:22:22:22:22:22", ExternalVlan: 22, MicroSegVlan: 2000},
-			{MACAddress: "33:33:33:33:33:33", ExternalVlan: 33, MicroSegVlan: 3000},
+			{MACAddress: "1111.1111.1111", ExternalVlan: 11, MicroSegVlan: 1000},
+			{MACAddress: "2222.2222.2222", ExternalVlan: 22, MicroSegVlan: 2000},
+			{MACAddress: "3333.3333.3333", ExternalVlan: 33, MicroSegVlan: 3000},
 		},
 	}
 
 	// dump yml output
 	out := dumpStruct(true, obj)
-	if !strings.Contains(string(out), "33:33:33:33:33:33") {
+	if !strings.Contains(string(out), "3333.3333.3333") {
 		t.Fatalf("unable to find interface object: out %s", out)
 	}
 
 	// dump json output
 	out = dumpStruct(false, obj)
-	if !strings.Contains(string(out), "33:33:33:33:33:33") {
+	if !strings.Contains(string(out), "3333.3333.3333") {
 		t.Fatalf("unable to find interface object: out %s", out)
 	}
 }
@@ -245,11 +245,11 @@ func TestDumpStruct(t *testing.T) {
 func TestMatchLineFields(t *testing.T) {
 	out := `name         labels     mac-address external-vlan         host-name       micro-seg-vlan
 		----         ------     ----------- -------------         ---------       --------------
-		TestReadVm1  key1=val1  00:de:ed:de:ed:d0 55  dc12_rack3_bm4  2222
-		             key2=val2  00:f0:0d:f0:0d:d0 66                  3333
-		TestReadVm3  key1=val1  00:de:ed:de:ed:d0 55  dc12_rack3_bm4  2224
+		TestReadVm1  key1=val1  00de.edde.edd0 55  dc12_rack3_bm4  2222
+		             key2=val2  00f0.0df0.0dd0 66                  3333
+		TestReadVm3  key1=val1  00de.edde.edd0 55  dc12_rack3_bm4  2224
 		             key3=val3                                  `
-	if !matchLineFields(out, []string{"TestReadVm1", "dc12_rack3_bm4", "00:de:ed:de:ed:d0", "55", "2222"}) {
+	if !matchLineFields(out, []string{"TestReadVm1", "dc12_rack3_bm4", "00de.edde.edd0", "55", "2222"}) {
 		t.Fatalf("unable to match fields")
 	}
 
@@ -257,7 +257,7 @@ func TestMatchLineFields(t *testing.T) {
 		t.Fatalf("unable to match lines")
 	}
 
-	if matchLineFields(out, []string{"TestReadVm11", "dc12_rack3_bm4", "00:de:ed:de:ed:d0", "55", "2224"}) {
+	if matchLineFields(out, []string{"TestReadVm11", "dc12_rack3_bm4", "00de.edde.edd0", "55", "2224"}) {
 		t.Fatalf("able to match unexpected fields")
 	}
 

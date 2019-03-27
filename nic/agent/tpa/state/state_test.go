@@ -1070,7 +1070,7 @@ func TestTpaDebug(t *testing.T) {
 				{
 					Src: &tsproto.MatchSelector{
 						IPAddresses:  []string{"1.1.1.1"},
-						MACAddresses: []string{"00:a0:f8:02:03:04"},
+						MACAddresses: []string{"00a0.f802.0304"},
 					},
 					Dst: &tsproto.MatchSelector{
 						IPAddresses: []string{"1.1.1.2"},
@@ -1081,10 +1081,10 @@ func TestTpaDebug(t *testing.T) {
 				},
 				{
 					Src: &tsproto.MatchSelector{
-						MACAddresses: []string{"00:a0:f8:02:03:04"},
+						MACAddresses: []string{"00a0.f802.0304"},
 					},
 					Dst: &tsproto.MatchSelector{
-						MACAddresses: []string{"00:a0:f8:02:03:05"},
+						MACAddresses: []string{"00a0.f802.0305"},
 					},
 					AppProtoSel: &tsproto.AppProtoSelector{
 						Ports: []string{"TCP/1000"},
