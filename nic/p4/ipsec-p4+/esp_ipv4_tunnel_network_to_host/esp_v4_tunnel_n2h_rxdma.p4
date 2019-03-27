@@ -111,8 +111,8 @@ header_type doorbell_data_pad_t {
 
 header_type ipsec_sem_read_t {
     fields {
-        in_desc_index : 32;
-        full           : 8;
+        in_desc_pi : 32;
+        in_desc_ci : 32;
     }
 }
 
@@ -430,7 +430,7 @@ action rxmda_ring_full_error(N2H_STATS_UPDATE_PARAMS)
 }
 
 //stage 1
-action esp_v4_tunnel_n2h_allocate_input_desc_semaphore(in_desc_ring_index, full)
+action esp_v4_tunnel_n2h_allocate_input_desc_semaphore(in_desc_pi, in_desc_ci)
 {
     IPSEC_TO_STAGE1_SCRATCH
 
@@ -440,8 +440,8 @@ action esp_v4_tunnel_n2h_allocate_input_desc_semaphore(in_desc_ring_index, full)
     modify_field(common_te0_phv.table_lock_en, 0);
     //modify_field(common_te0_phv.table_addr, IN_DESC_RING_BASE+(DESC_PTR_SIZE * in_desc_ring_index));
     
-    modify_field(ipsec_sem_read_scratch.in_desc_index, in_desc_ring_index);
-    modify_field(ipsec_sem_read_scratch.full, full);
+    modify_field(ipsec_sem_read_scratch.in_desc_pi, in_desc_pi);
+    modify_field(ipsec_sem_read_scratch.in_desc_ci, in_desc_ci);
 
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S

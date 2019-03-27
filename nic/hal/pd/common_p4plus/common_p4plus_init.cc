@@ -14,7 +14,7 @@ namespace pd {
 
 #define IPSEC_N2H_GLOBAL_STATS_OFFSET 512 
 
-#define P4PLUS_SYMBOLS_MAX 54
+#define P4PLUS_SYMBOLS_MAX 58
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -108,6 +108,26 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 
     symbols[i].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
     symbols[i].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
+    i++;
+
+    symbols[i].name = IPSEC_ENC_NMDR_PI;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                    CAPRI_IPSEC_ENC_NMDR_ALLOC_PI;
+    i++;
+
+    symbols[i].name = IPSEC_ENC_NMDR_CI;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                    CAPRI_IPSEC_ENC_NMDR_ALLOC_CI;
+    i++;
+
+    symbols[i].name = IPSEC_DEC_NMDR_PI;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                    CAPRI_IPSEC_DEC_NMDR_ALLOC_PI;
+    i++;
+
+    symbols[i].name = IPSEC_DEC_NMDR_CI;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                    CAPRI_IPSEC_DEC_NMDR_ALLOC_CI;
     i++;
 
     symbols[i].name = TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE;

@@ -12,6 +12,7 @@ struct phv_ p;
     .param IPSEC_PAGE_ADDR_RX
     .param IPSEC_PAGE_ADDR_TX
     .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
+    .param IPSEC_ENC_NMDR_CI
     .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_free_resources:
     and r2, d.sem_cindex, IPSEC_DESC_RING_INDEX_MASK
@@ -35,7 +36,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_free_resources:
 
     add r2, d.sem_cindex, IPSEC_DESC_RING_SIZE
     phvwr p.ipsec_to_stage4_sem_cindex, r2.wx 
-    addi r1, r0, CAPRI_SEM_IPSEC_RNMDR_ALLOC_CI_RAW_ADDR 
+    addui r1, r0, hiword(IPSEC_ENC_NMDR_CI)
+    addi r1, r1, loword(IPSEC_ENC_NMDR_CI)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(sem_cindex_dma_cmd, r1, ipsec_to_stage4_sem_cindex, ipsec_to_stage4_sem_cindex)
     CAPRI_DMA_CMD_STOP_FENCE(sem_cindex_dma_cmd)
 

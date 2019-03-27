@@ -11,6 +11,7 @@ struct phv_ p;
     .param esp_ipv4_tunnel_n2h_rxmda_ring_full_error
     .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     .param esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore
+    .param IPSEC_DEC_NMDR_PI
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
     //seq c6, d.is_v6, 0xFF
     //bcf [c6], rxdma_freeze2
@@ -57,8 +58,9 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_to_stage2_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_RXDMA_ENTER_OFFSET, 1)
-    addi r1, r0, INDESC_SEMAPHORE_ADDR_DEC
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore, r1, TABLE_SIZE_64_BITS)
+    addui r1, r0, hiword(IPSEC_DEC_NMDR_PI)
+    addi r1, r1, loword(IPSEC_DEC_NMDR_PI)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore, r1, TABLE_SIZE_64_BITS)
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.ipsec_to_stage3_iv_size, d.iv_size

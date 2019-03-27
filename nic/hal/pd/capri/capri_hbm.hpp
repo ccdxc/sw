@@ -143,6 +143,10 @@
 #define RNMDR_TLS_GC_TABLE_BASE "hbm_rnmdr_tls_gc_table_base"
 #define GC_GLOBAL_TABLE_BASE    "hbm_gc_table_base"
 #define TCP_PROXY_STATS         "tcp_proxy_stats"
+#define IPSEC_ENC_NMDR_PI       "ipsec_enc_nmdr_pi"
+#define IPSEC_ENC_NMDR_CI       "ipsec_enc_nmdr_ci"
+#define IPSEC_DEC_NMDR_PI       "ipsec_dec_nmdr_pi"
+#define IPSEC_DEC_NMDR_CI       "ipsec_dec_nmdr_ci"
 
 #define IPSEC_CB_BASE "ipsec_cb_base"
 #define IPSEC_PAD_BYTES_HBM_TABLE_BASE "ipsec_pad_table_base"
