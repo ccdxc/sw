@@ -58,7 +58,7 @@ trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 /// Called at the beginning of all test cases in this class,
 /// initialize PDS HAL
 void
-pds_test_base::SetUpTestCase(const char *cfg_file, bool enable_fte)
+pds_test_base::SetUpTestCase(test_case_params_t &params)
 {
     pds_init_params_t init_params;
 
@@ -66,7 +66,13 @@ pds_test_base::SetUpTestCase(const char *cfg_file, bool enable_fte)
     init_params.init_mode = PDS_INIT_MODE_COLD_START;
     init_params.trace_cb  = trace_cb;
     init_params.pipeline  = "apollo";
-    init_params.cfg_file  = std::string(cfg_file);
+    init_params.cfg_file  = std::string(params.cfg_file);
+    init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
+    if (!params.profile.empty()) {
+        if (params.profile.compare("p1") == 0) {
+            init_params.scale_profile = PDS_SCALE_PROFILE_P1;
+        }
+    }
     pds_init(&init_params);
 }
 

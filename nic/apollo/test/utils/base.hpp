@@ -13,6 +13,12 @@
 
 #include <gtest/gtest.h>
 
+typedef struct test_case_params_t_ {
+    const char  *cfg_file;
+    bool        enable_fte;
+    std::string profile;
+} test_case_params_t;
+
 /// Base class for all gtests. Implements init and teardown routines common
 /// to all test cases
 class pds_test_base : public ::testing::Test {
@@ -30,7 +36,7 @@ protected:
     virtual void TearDown(void) {}
 
     /// called at the beginning of all test cases in this class
-    static void SetUpTestCase(const char *cfgfile, bool enable_fte = false);
+    static void SetUpTestCase(test_case_params_t &params);
 
     /// called at the end of all test cases in this class
     static void TearDownTestCase(void);

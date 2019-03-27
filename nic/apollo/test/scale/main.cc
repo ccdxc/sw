@@ -19,6 +19,7 @@
 char *g_input_cfg_file = NULL;
 char *g_cfg_file = NULL;
 bool g_daemon_mode = false;
+string g_profile;
 
 // this packet is supposed to hit a LPM route
 // Encap with LPM
@@ -214,7 +215,11 @@ protected:
     /**< called at the beginning of all test cases in this class */
     static void SetUpTestCase() {
         /**< call base class function */
-        pds_test_base::SetUpTestCase(g_cfg_file, false);
+        test_case_params_t params;
+        params.cfg_file = g_cfg_file;
+        params.enable_fte = false;
+        params.profile = g_profile;
+        pds_test_base::SetUpTestCase(params);
     }
 };
 
@@ -407,19 +412,30 @@ main (int argc, char **argv)
 {
     int oc;
     struct option longopts[] = {
-        {"config", required_argument, NULL, 'c'},
-        {"daemon", required_argument, NULL, 'd'},
+        {"config",  required_argument, NULL, 'c'},
+        {"daemon",  required_argument, NULL, 'd'},
+        {"profile", required_argument, NULL, 'p'},
         {"help", no_argument, NULL, 'h'},
         {0, 0, 0, 0}
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hdc:i:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hdc:i:p:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             g_cfg_file = optarg;
             if (!g_cfg_file) {
                 fprintf(stderr, "HAL config file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'p':
+            if (optarg) {
+                g_profile = std::string(optarg);
+            } else {
+                fprintf(stderr, "profile is not specified\n");
                 print_usage(argv);
                 exit(1);
             }

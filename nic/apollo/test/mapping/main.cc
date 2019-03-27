@@ -64,7 +64,10 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        pds_test_base::SetUpTestCase(g_cfg_file, false);
+        test_case_params_t params;
+        params.cfg_file = g_cfg_file;
+        params.enable_fte = false;
+        pds_test_base::SetUpTestCase(params);
     }
 };
 

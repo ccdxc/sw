@@ -46,7 +46,10 @@ protected:
     /**< called at the beginning of all test cases in this class */
     static void SetUpTestCase() {
         /**< call base class function */
-        pds_test_base::SetUpTestCase(g_cfg_file, false);
+        test_case_params_t params;
+        params.cfg_file = g_cfg_file;
+        params.enable_fte = false;
+        pds_test_base::SetUpTestCase(params);
     }
 };
 

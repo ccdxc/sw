@@ -37,7 +37,10 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        pds_test_base::SetUpTestCase(g_cfg_file, false);
+        test_case_params_t params;
+        params.cfg_file = g_cfg_file;
+        params.enable_fte = false;
+        pds_test_base::SetUpTestCase(params);
 
         pds_batch_params_t batch_params = {0};
         vcn_util vcn_obj(1, "10.0.0.0/8");
