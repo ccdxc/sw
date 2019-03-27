@@ -18,6 +18,7 @@ testcases:
 
     -   name    : Flowmon_Policy
         testcase: testcases.telemetry.flowmon_policy
+        ignore : True
         args    :
             type: remote_only
             collector: 192.168.100.103

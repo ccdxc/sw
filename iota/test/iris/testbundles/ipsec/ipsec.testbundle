@@ -7,6 +7,7 @@ meta:
 testcases:
     -   name    : iperf_over_ipsec
         testcase: testcases.ipsec.iperf
+        ignore : True
         iterators:
             type  : nested
             protocol : [tcp, udp]
@@ -15,6 +16,7 @@ testcases:
 
     -   name    : nc_over_ipsec
         testcase: testcases.ipsec.nc_client
+        ignore : True
         iterators:
             type  : nested
             protocol : [tcp]
