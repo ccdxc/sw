@@ -2,7 +2,7 @@ meta:
     name    : ipsec
     os      : [ linux, esx ]
     nics    : [ pensando, mellanox, intel, broadcom ]
-    targetcount : 35
+    #targetcount : 35
 
 testcases:
     -   name    : iperf_over_ipsec
@@ -20,5 +20,32 @@ testcases:
         iterators:
             type  : nested
             protocol : [tcp]
-            port  : [20001, 20002]
- 
+            port  : [20003, 20004]
+
+    -   name    : multi_iperf_over_one_ipsec
+        testcase: testcases.ipsec.multi_iperf
+        args :
+            ports_list : [ 20011, 20012, 20013, 20014]
+            spi_list : [ '0x01', '0x01', '0x01', '0x01' ]
+            aead_list : [ '0x414141414141414141414141414141414141414141414141414141414141414100000000',
+                          '0x414141414141414141414141414141414141414141414141414141414141414100000000',
+                          '0x414141414141414141414141414141414141414141414141414141414141414100000000',
+                          '0x414141414141414141414141414141414141414141414141414141414141414100000000' ]
+        iterators:
+            type  : nested
+            protocol : [tcp, udp]
+            pktsize : [96, 2048, 8192]
+
+    -   name    : multi_iperf_over_multi_ipsec
+        testcase: testcases.ipsec.multi_iperf
+        args :
+            ports_list : [ 20021, 21021, 22021, 23021]
+            spi_list : [ '0x01', '0x02', '0x03', '0x04' ]
+            aead_list : [ '0x414141414141414141414141414141414141414141414141414141414141414100000000',
+                          '0x424242424242424242424242424242424242424242424242424242424242424200000000',
+                          '0x434343434343434343434343434343434343434343434343434343434343434300000000',
+                          '0x444444444444444444444444444444444444444444444444444444444444444400000000' ]
+        iterators:
+            type  : nested
+            protocol : [tcp, udp]
+            pktsize : [96, 2048, 8192]

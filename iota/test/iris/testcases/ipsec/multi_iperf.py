@@ -87,29 +87,30 @@ def Trigger(tc):
       api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
                              "sudo ip xfrm policy flush")
 
-      api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto tcp dport %s dir in tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % (tc.iterators.port))
+      for port,spi,aead in zip(tc.args.ports_list, tc.args.spi_list, tc.args.aead_list):
+          api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
+                                 "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto tcp dport %s dir in tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % port)
 
-      api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto tcp dport %s dir fwd tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % (tc.iterators.port))
+          api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
+                                 "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto tcp dport %s dir fwd tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % port)
 
-      api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto tcp sport %s dir out tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % (tc.iterators.port))
+          api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
+                                 "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto tcp sport %s dir out tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % port)
 
-      api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
-                               "sudo ip xfrm state add src 192.168.100.103 dst 192.168.100.101 proto esp spi 0x01 mode tunnel aead 'rfc4106(gcm(aes))' 0x414141414141414141414141414141414141414141414141414141414141414100000000 128 sel src 192.168.100.103/32 dst 192.168.100.101/32")
+          api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
+                                 "sudo ip xfrm state add src 192.168.100.103 dst 192.168.100.101 proto esp spi %s mode tunnel aead 'rfc4106(gcm(aes))' %s 128 sel src 192.168.100.103/32 dst 192.168.100.101/32" % (spi, aead))
 
-      api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
-                               "sudo ip xfrm state add src 192.168.100.101 dst 192.168.100.103 proto esp spi 0x01 mode tunnel aead 'rfc4106(gcm(aes))' 0x414141414141414141414141414141414141414141414141414141414141414100000000 128 sel src 192.168.100.101/32 dst 192.168.100.103/32")
+          api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
+                                 "sudo ip xfrm state add src 192.168.100.101 dst 192.168.100.103 proto esp spi %s mode tunnel aead 'rfc4106(gcm(aes))' %s 128 sel src 192.168.100.101/32 dst 192.168.100.103/32" % (spi, aead))
 
-      api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto udp dport %s dir in tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % (tc.iterators.port))
+          api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
+                                 "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto udp dport %s dir in tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % port)
 
-      api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto udp dport %s dir fwd tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % (tc.iterators.port))
+          api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
+                                 "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto udp dport %s dir fwd tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % port)
 
-      api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto udp sport %s dir out tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % (tc.iterators.port))
+          api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
+                                 "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto udp sport %s dir out tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % port)
 
       api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
                              "sudo ip xfrm state list")
@@ -187,29 +188,30 @@ def Trigger(tc):
         api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
                                "sudo ip xfrm policy flush")
 
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto tcp dport %s dir in tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % (tc.iterators.port))
+        for port,spi,aead in zip(tc.args.ports_list, tc.args.spi_list, tc.args.aead_list):
+            api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
+                                   "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto tcp dport %s dir in tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % port)
 
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto tcp dport %s dir fwd tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % (tc.iterators.port))
+            api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
+                                   "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto tcp dport %s dir fwd tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % port)
 
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto tcp sport %s dir out tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % (tc.iterators.port))
+            api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
+                                   "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto tcp sport %s dir out tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % port)
 
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
-                               "sudo ip xfrm state add src 192.168.100.101 dst 192.168.100.103 proto esp spi 0x01 mode tunnel aead 'rfc4106(gcm(aes))' 0x414141414141414141414141414141414141414141414141414141414141414100000000 128 sel src 192.168.100.101/32 dst 192.168.100.103/32")
+            api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
+                                   "sudo ip xfrm state add src 192.168.100.101 dst 192.168.100.103 proto esp spi %s mode tunnel aead 'rfc4106(gcm(aes))' %s 128 sel src 192.168.100.101/32 dst 192.168.100.103/32" % (spi, aead))
 
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
-                               "sudo ip xfrm state add src 192.168.100.103 dst 192.168.100.101 proto esp spi 0x01 mode tunnel aead 'rfc4106(gcm(aes))' 0x414141414141414141414141414141414141414141414141414141414141414100000000 128 sel src 192.168.100.103/32 dst 192.168.100.101/32")
+            api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
+                                   "sudo ip xfrm state add src 192.168.100.103 dst 192.168.100.101 proto esp spi %s mode tunnel aead 'rfc4106(gcm(aes))' %s 128 sel src 192.168.100.103/32 dst 192.168.100.101/32" % (spi, aead))
 
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto udp dport %s dir in tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % (tc.iterators.port))
+            api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
+                                   "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto udp dport %s dir in tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % port)
 
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto udp dport %s dir fwd tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % (tc.iterators.port))
+            api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
+                                   "sudo ip xfrm policy add src 192.168.100.101/32 dst 192.168.100.103/32 proto udp dport %s dir fwd tmpl src 192.168.100.101 dst 192.168.100.103 proto esp mode tunnel" % port)
 
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
-                               "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto udp sport %s dir out tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % (tc.iterators.port))
+            api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
+                                   "sudo ip xfrm policy add src 192.168.100.103/32 dst 192.168.100.101/32 proto udp sport %s dir out tmpl src 192.168.100.103 dst 192.168.100.101 proto esp mode tunnel" % port)
 
         api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name, "sudo ip xfrm state list")
 
@@ -238,70 +240,80 @@ def Trigger(tc):
         iperf_client_wl = w2
         iperf_server_wl = w1
 
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    req3 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s) on %s port %s" %\
-                   (iperf_server_wl.workload_name, iperf_server_wl.ip_address, iperf_client_wl.workload_name, iperf_client_wl.ip_address, tc.iterators.protocol, tc.iterators.port)
-   
+    cmd_cookie = "Set rcv socket buffer size on %s" %(w1.workload_name)
+    api.Trigger_AddCommand(req3, w1.node_name, w1.workload_name,
+                           "sysctl -w net.ipv4.tcp_rmem='4096 2147483647 2147483647'")
+    tc.cmd_cookies.append(cmd_cookie)
+
+    cmd_cookie = "Set rcv socket buffer size on %s" %(w2.workload_name)
+    api.Trigger_AddCommand(req3, w2.node_name, w2.workload_name,
+                           "sysctl -w net.ipv4.tcp_rmem='4096 2147483647 2147483647'")
+    tc.cmd_cookies.append(cmd_cookie)
+
+    cmd_cookie = "Setting MTU to smaller value on %s" % (iperf_client_wl.workload_name)
+    api.Trigger_AddCommand(req3, iperf_client_wl.node_name, iperf_client_wl.workload_name,
+                           "ifconfig %s mtu 1048" % iperf_client_wl.interface)
+    tc.cmd_cookies.append(cmd_cookie)
+
+    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s) on %s" %\
+                   (iperf_server_wl.workload_name, iperf_server_wl.ip_address, iperf_client_wl.workload_name, iperf_client_wl.ip_address, tc.iterators.protocol)
     api.Logger.info("Starting Iperf test over IPSec from %s" % (tc.cmd_descr))
 
     if bypass_test == 0:
-      cmd_cookie = "Set rcv socket buffer size on %s" %(w1.workload_name)
-      api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                           "sysctl -w net.ipv4.tcp_rmem='4096 2147483647 2147483647'")
-      tc.cmd_cookies.append(cmd_cookie)
+      for port in tc.args.ports_list:
+          cmd_cookie = "Running iperf server on %s port %s" % (iperf_server_wl.workload_name, port)
+          api.Trigger_AddCommand(req3, iperf_server_wl.node_name, iperf_server_wl.workload_name,
+                                 "iperf -s -p %s" % (port), background = True)
+          tc.cmd_cookies.append(cmd_cookie)
 
-      cmd_cookie = "Set rcv socket buffer size on %s" %(w2.workload_name)
-      api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
-                           "sysctl -w net.ipv4.tcp_rmem='4096 2147483647 2147483647'")
-      tc.cmd_cookies.append(cmd_cookie)
-
-      cmd_cookie = "Setting MTU to smaller value on %s" % (iperf_client_wl.workload_name)
-      api.Trigger_AddCommand(req, iperf_client_wl.node_name, iperf_client_wl.workload_name,
-                             "ifconfig %s mtu 1048" % iperf_client_wl.interface)
-      tc.cmd_cookies.append(cmd_cookie)
-
-      cmd_cookie = "Running iperf server on %s" % (iperf_server_wl.workload_name)
-      api.Trigger_AddCommand(req, iperf_server_wl.node_name, iperf_server_wl.workload_name,
-                           "iperf -s -p %s" % (tc.iterators.port), background = True)
-      tc.cmd_cookies.append(cmd_cookie)
-
-      cmd_cookie = "Brief Sleep"
-      api.Trigger_AddCommand(req, iperf_client_wl.node_name, iperf_client_wl.workload_name,
+    req4 = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    if bypass_test == 0:
+      cmd_cookie = "Brief Sleep" 
+      api.Trigger_AddCommand(req4, iperf_client_wl.node_name, iperf_client_wl.workload_name,
                              "sleep 1")
       tc.cmd_cookies.append(cmd_cookie)
-    
-      cmd_cookie = "Running iperf client on %s" % (iperf_client_wl.workload_name)
-      if tc.iterators.protocol == "tcp":
-          api.Trigger_AddCommand(req, iperf_client_wl.node_name, iperf_client_wl.workload_name,
-                                 "iperf -c %s -p %s -M %s" % (iperf_server_wl.ip_address, tc.iterators.port, tc.iterators.pktsize))
-      else:
-          api.Trigger_AddCommand(req, iperf_client_wl.node_name, iperf_client_wl.workload_name,
-                                 "iperf --udp -c %s -p %s -M %s" % (iperf_server_wl.ip_address, tc.iterators.port, tc.iterators.pktsize))
-      tc.cmd_cookies.append(cmd_cookie)
-    
+      for port in tc.args.ports_list:
+          cmd_cookie = "Running iperf client on %s port %s" % (iperf_client_wl.workload_name, port)
+          if tc.iterators.protocol == "tcp":
+              api.Trigger_AddCommand(req4, iperf_client_wl.node_name, iperf_client_wl.workload_name,
+                                     "iperf -c %s -p %s -M %s" % (iperf_server_wl.ip_address, port, tc.iterators.pktsize))
+          else:
+              api.Trigger_AddCommand(req4, iperf_client_wl.node_name, iperf_client_wl.workload_name,
+                                     "iperf --udp -c %s -p %s -M %s" % (iperf_server_wl.ip_address, port, tc.iterators.pktsize))
+          tc.cmd_cookies.append(cmd_cookie)
+
+    req5 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     if w1.IsNaples():
         cmd_cookie = "IPSec state on %s AFTER running iperf traffic" % (w1.node_name)
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show ipsec-global-stats")
+        api.Trigger_AddNaplesCommand(req5, w1.node_name, "/nic/bin/halctl show ipsec-global-stats")
         tc.cmd_cookies.append(cmd_cookie)
     else:
         cmd_cookie = "IPSec state on %s AFTER running iperf traffic" % (w1.node_name)
-        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, "sudo ip xfrm policy show")
+        api.Trigger_AddCommand(req5, w1.node_name, w1.workload_name, "sudo ip xfrm policy show")
         tc.cmd_cookies.append(cmd_cookie) 
 
     if w2.IsNaples():
         cmd_cookie = "IPSec state on %s AFTER running iperf traffic" % (w2.node_name)
-        api.Trigger_AddNaplesCommand(req, w2.node_name, "/nic/bin/halctl show ipsec-global-stats")
+        api.Trigger_AddNaplesCommand(req5, w2.node_name, "/nic/bin/halctl show ipsec-global-stats")
         tc.cmd_cookies.append(cmd_cookie)
     else:
         cmd_cookie = "IPSec state on %s AFTER running iperf traffic" % (w2.node_name)
-        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, "sudo ip xfrm policy show")
+        api.Trigger_AddCommand(req5, w2.node_name, w2.workload_name, "sudo ip xfrm policy show")
         tc.cmd_cookies.append(cmd_cookie) 
 
-    trig_resp = api.Trigger(req)
-    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+    trig_resp3 = api.Trigger(req3)
+    trig_resp4 = api.Trigger(req4)
+    trig_resp5 = api.Trigger(req5)
 
-    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    term_resp3 = api.Trigger_TerminateAllCommands(trig_resp3)
+    term_resp4 = api.Trigger_TerminateAllCommands(trig_resp4)
+    term_resp5 = api.Trigger_TerminateAllCommands(trig_resp5)
+
+    agg_resp4 = api.Trigger_AggregateCommandsResponse(trig_resp4, term_resp4)
+    tc.resp = agg_resp4
+
     return api.types.status.SUCCESS
     
 def Verify(tc):
@@ -310,7 +322,7 @@ def Verify(tc):
 
     result = api.types.status.SUCCESS
     cookie_idx = 0
-    api.Logger.info("Iperf Results for %s" % (tc.cmd_descr))
+    api.Logger.info("Multi Iperf Results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
         api.Logger.info("%s" % (tc.cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)

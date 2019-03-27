@@ -33,7 +33,7 @@ def Trigger(tc):
              api.Logger.error("Adding new objects to store failed for ipsec_encryption_node1.json")
              return api.types.status.FAILURE
 
-        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_0)
+        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_0, ignore_error=True)
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Unable to push ipsec-encryption objects to node %s" % nodes[0])
             return api.types.status.FAILURE
@@ -50,7 +50,7 @@ def Trigger(tc):
              api.Logger.error("Adding new objects to store failed for ipsec_decryption_node1.json")
              return api.types.status.FAILURE
 
-        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_0)
+        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_0, ignore_error=True)
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Unable to push ipsec-encryption objects to node %s" % nodes[0])
             return api.types.status.FAILURE
@@ -67,7 +67,7 @@ def Trigger(tc):
             api.Logger.error("Adding new objects to store failed for ipsec_policies_node1.json")
             return api.types.status.FAILURE
 
-        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_0)
+        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_0, ignore_error=True)
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Unable to push ipsec-policy objects to node %s" % nodes[0])
             return api.types.status.FAILURE
@@ -82,11 +82,6 @@ def Trigger(tc):
       w1 = workloads[0]
 
       req1 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-
-      cmd_info = "IPSec policy on %s BEFORE running nc traffic" % (w1.node_name)
-      tc.cmd_cookies1.append(cmd_info)
-
-      api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name, "sudo ip xfrm policy show; sudo ip xfrm state show")
 
       api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name,
                              "sudo ip xfrm state flush")
@@ -126,9 +121,6 @@ def Trigger(tc):
 
       trig_resp1 = api.Trigger(req1)
       term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
-      for cmd in trig_resp1.commands:
-          api.PrintCommandResults(cmd)
-
 
     # Configure IPsec on Node 2
 
@@ -141,7 +133,7 @@ def Trigger(tc):
             api.Logger.error("Adding new objects to store failed for ipsec_encryption_node2.json")
             return api.types.status.FAILURE
 
-        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_1)
+        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_1, ignore_error=True)
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Unable to push ipsec-encryption objects to node %s" % nodes[1])
             return api.types.status.FAILURE
@@ -158,7 +150,7 @@ def Trigger(tc):
             api.Logger.error("Adding new objects to store failed for ipsec_decryption_node2.json")
             return api.types.status.FAILURE
 
-        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_1)
+        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_1, ignore_error=True)
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Unable to push ipsec-encryption objects to node %s" % nodes[1])
             return api.types.status.FAILURE
@@ -175,7 +167,7 @@ def Trigger(tc):
             api.Logger.error("Adding new objects to store failed for ipsec_policies_node2.json")
             return api.types.status.FAILURE
 
-        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_1)
+        ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_node_1, ignore_error=True)
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Unable to push ipsec-encryption objects to node %s" % nodes[1])
             return api.types.status.FAILURE
@@ -190,10 +182,6 @@ def Trigger(tc):
         w2 = workloads[0]
 
         req2 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-
-        cmd_info2 = "IPSec policy on %s BEFORE running nc traffic" % (w2.node_name)
-        tc.cmd_cookies2.append(cmd_info2)
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name, "sudo ip xfrm policy show; sudo ip xfrm state show")
 
         api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name,
                                "sudo ip xfrm state flush")
@@ -231,8 +219,6 @@ def Trigger(tc):
 
         trig_resp2 = api.Trigger(req2)
         term_resp2 = api.Trigger_TerminateAllCommands(trig_resp2)
-        for cmd in trig_resp2.commands:
-            api.PrintCommandResults(cmd)
 
     workloads = api.GetWorkloads(nodes[0])
     w1 = workloads[0]
@@ -255,24 +241,6 @@ def Trigger(tc):
         nc_server_wl = w1
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-
-    if w2.IsNaples():
-        cmd_cookie = "IPSec state on %s BEFORE running nc traffic" % (w2.node_name)
-        api.Trigger_AddNaplesCommand(req, w2.node_name, "/nic/bin/halctl show ipsec-global-stats")
-        tc.cmd_cookies.append(cmd_cookie)
-    else:
-        cmd_cookie = "IPSec state on %s BEFORE running nc traffic" % (w2.node_name)
-        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, "sudo ip xfrm policy show")
-        tc.cmd_cookies.append(cmd_cookie)        
-
-    if w1.IsNaples():
-        cmd_cookie = "IPSec state on %s BEFORE running nc traffic" % (w1.node_name)
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show ipsec-global-stats")
-        tc.cmd_cookies.append(cmd_cookie)
-    else:
-        cmd_cookie = "IPSec state on %s BEFORE running nc traffic" % (w1.node_name)
-        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, "sudo ip xfrm policy show")
-        tc.cmd_cookies.append(cmd_cookie)        
 
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s) on %s port %s" %\
                    (nc_server_wl.workload_name, nc_server_wl.ip_address, nc_client_wl.workload_name, nc_client_wl.ip_address, tc.iterators.protocol, tc.iterators.port)
