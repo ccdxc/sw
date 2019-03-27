@@ -114,6 +114,7 @@ def create_symbol_file(sym_dir, sym_file):
 
     with open(sym_file, 'w') as f:
         json.dump(config, f)
+    print("Generated symbol file - " + os.path.dirname(__file__) + "/" + (sym_file))
 
 
 def load_symbol_file(syms_file='captrace.syms'):

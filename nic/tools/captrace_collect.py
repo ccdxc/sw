@@ -93,6 +93,11 @@ def collect(ch, args):
         sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/pipeline-all.json /captrace.cfg', '[Pp]assword.*')
         sendCmd(ch, 'docker', '#')
 
+    global g_pipeline
+    g_pipeline = args.pipeline
+    if g_pipeline != 'iris' and g_pipeline != 'apollo':
+        g_pipeline = 'iris'
+
     op = sendCmd(ch, 'cat /captrace.cfg', '#')
 
     # reset
@@ -132,6 +137,7 @@ if __name__ == "__main__":
     parser.add_argument('--p4ig', help='enable captrace for P4 ingress')
     parser.add_argument('--p4eg', help='enable captrace for P4 egress')
     parser.add_argument('--all', help='enable captrace for all pipelines')
+    parser.add_argument('--pipeline', help='specify iris/apollo pipeline for captrace.syms')
 
     args=parser.parse_args()
 
@@ -236,8 +242,7 @@ if __name__ == "__main__":
     if (ret != 0):
         logging.info("ERROR: failed to copy mpu_prog_info.json from {0}".format(args.host))
         exit()
-
-    cmd = pwd + '/../sdk/platform/mputrace/captrace.py gen_syms'
+    cmd = pwd + '/../sdk/platform/mputrace/captrace.py gen_syms --pipeline=%s' % g_pipeline
     ret = os.system(cmd)
     if (ret != 0):
         logging.info("ERROR: failed to generate captrace.syms")

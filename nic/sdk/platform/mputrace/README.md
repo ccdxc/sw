@@ -278,8 +278,9 @@ Following is a sample config.json file for reference -
     1 Copy the following files into the container
         - the dump file from 'captrace dump' command
         - /nic/conf/gen/mpu_prog_info.json file from the naples device
-    2 Generate captrace.syms symbol file in container (from sw/nic dir).
-        - sdk/platform/mputrace/captrace.py gen_syms
+    2 Generate captrace.syms symbol file in container (from /sw/nic dir).
+        - sdk/platform/mputrace/captrace.py gen_syms --pipeline=<pipeline>
+            - <pipeline> can be iris or apollo
         - this will generate captrace.syms in nic/
     2 Run captrace.py script on the binary with mpu_prog_info.conf and
       captrace.syms files

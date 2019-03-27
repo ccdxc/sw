@@ -14,8 +14,8 @@ parser = argparse.ArgumentParser(prog='captrace')
 
 subparsers = parser.add_subparsers(dest='command')
 
-syms_parser = subparsers.add_parser('gen_syms', help='Create Symbol File')
-syms_parser.add_argument('--sym_dir', default='./build/aarch64/iris/out/', help='Symbol root')
+syms_parser = subparsers.add_parser('gen_syms', help='Generate symbol file for pipeline type mentioned with --pipeline')
+syms_parser.add_argument('--pipeline', help='Pipeline type - apollo, iris etc.,')
 syms_parser.add_argument('--sym_file', default='captrace.syms', help='Symbol file')
 
 phv_parser = subparsers.add_parser('phv', help='Parse P-vector')
@@ -47,7 +47,14 @@ file_parser.add_argument('--fltr', nargs='+', default=list(), help='Header filte
 args = parser.parse_args()
 
 if args.command == "gen_syms":
-    create_symbol_file(sym_dir=args.sym_dir, sym_file=args.sym_file)
+    if args.pipeline is not None:
+        if args.pipeline == "apollo" or args.pipeline ==  "iris":
+            sym_dir = 'build/aarch64/%s/out/' % args.pipeline
+            create_symbol_file(sym_dir, sym_file=args.sym_file)
+        else:
+            print('Pipeline %s is incorrect. Please use iris or apollo.' % args.pipeline)
+    else:
+        print('Please provide a pipeline name, either iris or apollo with --pipeline option')
 elif args.command == "phv":
     if args.sym:
         load_symbol_file(args.sym)
