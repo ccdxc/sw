@@ -12,7 +12,8 @@ label1=PENGRUB
 label2=PENBOOT
 label3=PENCFG
 label4=PENDATA
-SRCMNT=/run/initramfs/live
+DEF_SRC=/run/initramfs/live
+pen_install_src=${DEF_SRC}
 debug=0
 
 if [ -z "$(grep pen.live.install /proc/cmdline )" -a $debug -eq 0 ]
@@ -26,6 +27,9 @@ for o in `cat /proc/cmdline` ; do
     case $o in
     pen.live.device=*)
         device="${o#pen.live.device=}"
+        ;;
+    pen.install.src=*)
+        pen_install_src="${o#pen.install.src=}"
         ;;
     esac
 done
@@ -45,16 +49,15 @@ fi
 device=/dev/${device}
 echo Installing to ${device}
 
-# version of the pensando-base image
-VERSION=$(grep version: /run/initramfs/live/LiveOS/PEN-VERSION  | awk '{print $2}')
-if [ -z "$VERSION" ]
-then
-    VERSION=pver1
-fi
 
-copyFile() {
+copyLocalFile() {
 	rsync --inplace -P "$1" "$2"
 }
+
+copyRemoteFile() {
+    curl --progress-bar -SL "$1" -o "$2"
+}
+
 
 # this will delete everything from /dev/sda
 /usr/sbin/wipefs -a $device
@@ -109,14 +112,37 @@ TGTMNT1=$(mktemp -d /tmp/tgttmp.XXXXXX)
 mount -L ${label2} $TGTMNT1
 grub2-install --root-directory=${TGTMNT1} ${device}
 
-TGTDIR=$TGTMNT1/OS-${VERSION}
-mkdir -p $TGTDIR
-copyFile $SRCMNT/LiveOS/PEN-VERSION $TGTDIR/PEN-VERSION
-copyFile $SRCMNT/LiveOS/squashfs.img $TGTDIR/squashfs.img
-copyFile $SRCMNT/isolinux/initrd0.img $TGTDIR/initrd0.img
-copyFile $SRCMNT/isolinux/vmlinuz0 $TGTDIR/vmlinuz0
-copyFile $SRCMNT/LiveOS/venice.tgz $TGTDIR/venice.tgz
-copyFile $SRCMNT/LiveOS/naples_fw.tar $TGTDIR/naples_fw.tar
+
+if [ ${pen_install_src} == ${DEF_SRC} ]
+then
+    # cd based
+    copyLocalFile ${pen_install_src}/LiveOS/PEN-VERSION /tmp/PEN-VERSION
+
+    VERSION=$(grep version: /tmp/PEN-VERSION  | awk '{print $2}')
+    TGTDIR=$TGTMNT1/OS-${VERSION}
+    mkdir -p $TGTDIR
+
+    copyLocalFile ${pen_install_src}/LiveOS/PEN-VERSION $TGTDIR/PEN-VERSION
+    copyLocalFile ${pen_install_src}/LiveOS/squashfs.img $TGTDIR/squashfs.img
+    copyLocalFile ${pen_install_src}/isolinux/initrd0.img $TGTDIR/initrd0.img
+    copyLocalFile ${pen_install_src}/isolinux/vmlinuz0 $TGTDIR/vmlinuz0
+    copyLocalFile ${pen_install_src}/LiveOS/venice.tgz $TGTDIR/venice.tgz
+    copyLocalFile ${pen_install_src}/LiveOS/naples_fw.tar $TGTDIR/naples_fw.tar
+else
+    # http based
+    copyRemoteFile ${pen_install_src}/tools/docker-files/vinstall/PEN-VERSION /tmp/PEN-VERSION
+
+    VERSION=$(grep version: /tmp/PEN-VERSION  | awk '{print $2}')
+    TGTDIR=$TGTMNT1/OS-${VERSION}
+    mkdir -p $TGTDIR
+
+    copyRemoteFile ${pen_install_src}/tools/docker-files/vinstall/PEN-VERSION $TGTDIR/PEN-VERSION
+    copyRemoteFile ${pen_install_src}/bin/venice-install/initrd0.img $TGTDIR/initrd0.img
+    copyRemoteFile ${pen_install_src}/bin/venice-install/vmlinuz0 $TGTDIR/vmlinuz0
+    copyRemoteFile ${pen_install_src}/bin/venice-install/squashfs.img $TGTDIR/squashfs.img
+    copyRemoteFile ${pen_install_src}/bin/venice.tgz $TGTDIR/venice.tgz
+    copyRemoteFile ${pen_install_src}/nic/naples_fw.tar $TGTDIR/naples_fw.tar
+fi
 
 
 cat >${TGTMNT1}/boot/grub2/grub.cfg <<EOF

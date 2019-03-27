@@ -21,6 +21,10 @@ set -o pipefail
 #
 
 #start of script
+mkdir -p /venice-bin/pxe
+cd /venice-bin/pxe
+livecd-iso-to-pxeboot /venice-bin/pen-install.iso
+
 cd /
 
 # after the iso got created we need to edit the iso. Start by copying the contents of iso to /iso directory
@@ -31,10 +35,18 @@ mount /venice-bin/pen-install.iso /t
 cp -a /t/* /iso
 umount /t
 
-cp /pen/PEN-VERSION /iso/LiveOS/PEN-VERSION || :
-cp /venice-bin/venice.tgz /iso/LiveOS/venice.tgz || :
-cp /nic/naples_fw.tar /iso/LiveOS/naples_fw.tar || :
-cp /pen/venice-cleaninstall.sh /iso/LiveOS/venice-cleaninstall.sh || :
+mkdir -p /venice-bin/venice-install
+cp /iso/LiveOS/squashfs.img /venice-bin/venice-install/squashfs.img
+cp /iso/isolinux/vmlinuz0 /venice-bin/venice-install/vmlinuz0
+cp /iso/isolinux/initrd0.img /venice-bin/venice-install/initrd0.img
+
+#copy my copy of isolinux.cfg
+cp /pen/isolinux.cfg /iso/isolinux/isolinux.cfg || :
+# our own grub.cfg indicating that EFI is not supported
+cp /pen/grub-efi.cfg /iso/EFI/BOOT/grub.cfg || :
+
+#cp /pen/PEN-VERSION /iso/LiveOS/PEN-VERSION || :
+#cp /pen/venice-cleaninstall.sh /iso/LiveOS/venice-cleaninstall.sh || :
 
 #finally create the iso back with our custom isolinux and grub
 cd /iso
@@ -45,5 +57,6 @@ mkisofs -o /venice-bin/pen-install.iso \
   -eltorito-alt-boot -e isolinux/macboot.img -no-emul-boot  \
   /iso
 /usr/bin/isohybrid -u -m /venice-bin/pen-install.iso
+
 
 exit 0
