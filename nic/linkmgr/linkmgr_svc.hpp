@@ -34,7 +34,7 @@ using port::PortInfoGetRequest;
 using port::PortInfoGetResponse;
 
 using port::PortStats;
-using port::PortOperStatus;
+using port::PortOperState;
 using port::PortType;
 using port::PortSpeed;
 using port::PortAdminState;

@@ -179,10 +179,11 @@ devapi_port::port_hal_get_status(port_status_t *st)
         goto end;
     }
     st->id = rsp.status().key_or_handle().port_id();
-    st->status = rsp.status().oper_status();
-    st->speed = port_speed_enum_to_mbps(rsp.status().port_speed());
+    st->status = rsp.status().link_status().oper_state();
+    st->speed = port_speed_enum_to_mbps(
+                    rsp.status().link_status().port_speed());
     NIC_FUNC_DEBUG("{}: port_speed_enum {} port_speed {}", port_num_,
-                   rsp.status().port_speed(), st->speed);
+                   rsp.status().link_status().port_speed(), st->speed);
     st->xcvr.state = rsp.status().xcvr_status().state();
     st->xcvr.phy = rsp.status().xcvr_status().cable_type();
     st->xcvr.pid = rsp.status().xcvr_status().pid();

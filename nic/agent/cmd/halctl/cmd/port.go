@@ -216,7 +216,7 @@ func handlePortStatusShowCmd(cmd *cobra.Command, ofile *os.File) {
 			continue
 		}
 		adminState := resp.GetSpec().GetAdminState()
-		operStatus := resp.GetStatus().GetOperStatus()
+		operStatus := resp.GetStatus().GetLinkStatus().GetOperState()
 
 		adminStateStr := "DOWN"
 		operStatusStr := "DOWN"
@@ -474,7 +474,7 @@ func portShowOneResp(resp *halproto.PortGetResponse) {
 	macStr := fmt.Sprintf("%d/%d/%d", spec.GetMacId(), spec.GetMacCh(), spec.GetNumLanes())
 	speedStr := strings.Replace(spec.GetPortSpeed().String(), "PORT_SPEED_", "", -1)
 	fecStr := strings.Replace(spec.GetFecType().String(), "PORT_FEC_TYPE_", "", -1)
-	linkSmStr := strings.Replace(resp.GetLinkState().String(), "PORT_LINK_SM_", "", -1)
+	linkSmStr := strings.Replace(resp.GetLinksmState().String(), "PORT_LINK_SM_", "", -1)
 	loopbackStr := strings.Replace(spec.GetLoopbackMode().String(), "PORT_LOOPBACK_MODE_", "", -1)
 
 	if strings.Compare(fecStr, "NONE") == 0 {
@@ -485,7 +485,7 @@ func portShowOneResp(resp *halproto.PortGetResponse) {
 	portStr = fmt.Sprintf("%s/%d", portStr, spec.GetKeyOrHandle().GetPortId())
 	pauseStr := strings.ToLower(strings.Replace(spec.GetPause().String(), "PORT_PAUSE_TYPE_", "", -1))
 	adminStateStr := strings.Replace(resp.GetSpec().GetAdminState().String(), "PORT_ADMIN_STATE_", "", -1)
-	operStatusStr := strings.Replace(resp.GetStatus().GetOperStatus().String(), "PORT_OPER_STATUS_", "", -1)
+	operStatusStr := strings.Replace(resp.GetStatus().GetLinkStatus().GetOperState().String(), "PORT_OPER_STATUS_", "", -1)
 
 	fmt.Printf("%-12s%-10s%-15s%-10s%-15t%-6d%-10s%-10d%-12s%-12s%-12d%-20s%-10s\n",
 		portStr, speedStr, macStr, fecStr, spec.GetAutoNegEnable(),

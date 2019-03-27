@@ -396,55 +396,61 @@ populate_port_get_response_spec (port_args_t *port_args,
     PortGetResponse    *response = rsp->add_response();
 
     if (hal_ret == HAL_RET_OK) {
+        // populate spec
         spec = response->mutable_spec();
+        spec->mutable_key_or_handle()->set_port_id(port_args->port_num);
+        spec->set_port_type(
+                linkmgr::sdk_port_type_to_port_type_spec(port_args->port_type));
+        spec->set_port_speed(
+                linkmgr::sdk_port_speed_to_port_speed_spec(
+                                          port_args->port_speed));
+        spec->set_admin_state(
+                linkmgr::sdk_port_admin_st_to_port_admin_st_spec
+                                          (port_args->admin_state));
+        spec->set_fec_type(
+                linkmgr::sdk_port_fec_type_to_port_fec_type_spec
+                                          (port_args->fec_type));
+        spec->set_pause(
+                linkmgr::sdk_port_pause_type_to_port_pause_type_spec
+                                          (port_args->pause));
+        spec->set_loopback_mode(
+                linkmgr::sdk_port_lp_mode_to_port_lp_mode_spec(
+                                         port_args->loopback_mode));
+        spec->set_mac_id(port_args->mac_id);
+        spec->set_mac_ch(port_args->mac_ch);
+        spec->set_num_lanes(port_args->num_lanes);
+        spec->set_mtu(port_args->mtu);
+        spec->set_auto_neg_enable(port_args->auto_neg_enable);
+        spec->set_debounce_time(port_args->debounce_time);
+
+        // populate oper status
         auto status = response->mutable_status();
         auto xcvr_status = status->mutable_xcvr_status();
+        auto link_status = status->mutable_link_status();
 
-        spec->mutable_key_or_handle()->set_port_id(port_args->port_num);
+        status->mutable_key_or_handle()->set_port_id(port_args->port_num);
 
-        spec->set_port_type
-                (linkmgr::sdk_port_type_to_port_type_spec(port_args->port_type));
-        spec->set_port_speed
-                (linkmgr::sdk_port_speed_to_port_speed_spec(
-                                        port_args->port_speed));
-        spec->set_admin_state
-                (linkmgr::sdk_port_admin_st_to_port_admin_st_spec
-                                        (port_args->admin_state));
-        spec->set_fec_type
-                (linkmgr::sdk_port_fec_type_to_port_fec_type_spec
-                                        (port_args->fec_type));
-        spec->set_pause
-                (linkmgr::sdk_port_pause_type_to_port_pause_type_spec
-                                        (port_args->pause));
-
-        spec->set_mac_id    (port_args->mac_id);
-        spec->set_mac_ch    (port_args->mac_ch);
-        spec->set_num_lanes (port_args->num_lanes);
-        spec->set_mtu       (port_args->mtu);
-        spec->set_auto_neg_enable (port_args->auto_neg_enable);
-        spec->set_debounce_time   (port_args->debounce_time);
-
-        status->set_oper_status(
+        // link status
+        link_status->set_oper_state(
                 (linkmgr::sdk_port_oper_st_to_port_oper_st_spec
                                         (port_args->oper_status)));
+        link_status->set_port_speed(
+                linkmgr::sdk_port_speed_to_port_speed_spec(
+                                          port_args->port_speed));
 
+        // transceiver status
         xcvr_status->set_port(port_args->xcvr_event_info.phy_port);
         xcvr_status->set_state(port::PortXcvrState(
                                     port_args->xcvr_event_info.state));
         xcvr_status->set_pid(port::PortXcvrPid(
                                     port_args->xcvr_event_info.pid));
-
         linkmgr::port_populate_xcvr_status_sprom(
                         xcvr_status, &port_args->xcvr_event_info.xcvr_sprom);
 
         // set the internal link state machine
-        response->set_link_state(
+        response->set_linksm_state(
             linkmgr::sdk_port_link_sm_to_port_link_sm_spec(port_args->link_sm));
 
-        // loopback mode
-        spec->set_loopback_mode (
-                linkmgr::sdk_port_lp_mode_to_port_lp_mode_spec(
-                                    port_args->loopback_mode));
         // MAC stats
         stats = response->mutable_stats();
 
@@ -464,7 +470,6 @@ populate_port_get_response_spec (port_args_t *port_args,
             }
         }
     }
-
     response->set_api_status(hal_ret_to_api_status(hal_ret));
 }
 

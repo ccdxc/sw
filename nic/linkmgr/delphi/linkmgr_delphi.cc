@@ -22,7 +22,7 @@ namespace linkmgr {
 using grpc::Status;
 using delphi::error;
 using port::PortResponse;
-using port::PortOperStatus;
+using port::PortOperState;
 using port::PortXcvrState;
 using port::PortXcvrPid;
 using delphi::objects::PortSpec;
@@ -59,7 +59,7 @@ Status port_svc_init(delphi::SdkPtr sdk) {
                            "linkmgr.events",     // name; this should end with ".events"
                            2048, // size of the shared memory
                            "linkmgr", // component that records the event
-                           port::PortOperStatus_descriptor(), // list of event types
+                           port::PortOperState_descriptor(), // list of event types
                            std::shared_ptr<logger>(hal::utils::hal_logger())); // logger
 
     if (g_linkmgr_svc.recorder == nullptr) {
@@ -179,15 +179,15 @@ error port_svc::OnPortSpecDelete(PortSpecPtr portSpec) {
 
 // update_port_status updates port status in delphi
 error port_svc::update_port_status(google::protobuf::uint32 port_num,
-                                   PortOperStatus           status,
+                                   PortOperState            status,
                                    PortSpeed                speed)
 {
     // create port status object
     PortStatusPtr port = std::make_shared<PortStatus>();
 
     port->mutable_key_or_handle()->set_port_id(port_num);
-    port->set_oper_status(status);
-    port->set_port_speed(speed);
+    port->mutable_link_status()->set_oper_state(status);
+    port->mutable_link_status()->set_port_speed(speed);
 
     // add it to database
     sdk_->QueueUpdate(port);
@@ -253,6 +253,7 @@ error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
 
     auto xcvr_status = port->mutable_xcvr_status();
 
+    xcvr_status->set_port(port_num);
     xcvr_status->set_state(state);
     xcvr_status->set_pid(pid);
     xcvr_status->set_cable_type(cable_type);

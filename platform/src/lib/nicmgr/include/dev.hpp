@@ -71,6 +71,7 @@ public:
 
     void HalEventHandler(bool is_up);
     void LinkEventHandler(port_status_t *evd);
+    void XcvrEventHandler(port_status_t *evd);
     void DelphiMountEventHandler(bool mounted);
 
     void CreateUplinkVRFs();

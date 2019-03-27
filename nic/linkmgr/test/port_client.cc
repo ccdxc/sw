@@ -437,7 +437,8 @@ public:
                       << "Port Get succeeded for port "
                       << port_id << std::endl
                       << " Port oper status: "
-                      << rsp_msg.response(i).status().oper_status() << std::endl
+                      << rsp_msg.response(i).status().link_status().oper_state()
+                      << std::endl
                       << " Port type: "
                       << rsp_msg.response(i).spec().port_type() << std::endl
                       << " Admin state: "

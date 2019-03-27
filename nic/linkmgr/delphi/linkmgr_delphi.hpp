@@ -20,7 +20,7 @@ using grpc::Status;
 using delphi::error;
 using delphi::objects::PortSpecPtr;
 using port::PortSpeed;
-using port::PortOperStatus;
+using port::PortOperState;
 using port::PortXcvrState;
 using port::PortXcvrPid;
 using port::CableType;
@@ -46,8 +46,8 @@ public:
 
     // update_port_status updates port status in delphi
     error update_port_status(::google::protobuf::uint32 port_id,
-                           PortOperStatus status,
-                           PortSpeed      speed);
+                           PortOperState status,
+                           PortSpeed     speed);
 
     // update_xcvr_status updates port status in delphi
     error update_xcvr_status(::google::protobuf::uint32 port_id,

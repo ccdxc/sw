@@ -966,6 +966,7 @@ It has these top-level messages:
 	SecurityFlowGateDeleteResponseMsg
 	PortXcvrStatus
 	PortSpec
+	PortLinkStatus
 	PortStatus
 	PortRequestMsg
 	PortResponse

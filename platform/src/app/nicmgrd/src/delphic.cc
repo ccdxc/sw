@@ -102,27 +102,46 @@ error port_status_handler::update_port_status(PortStatusPtr port) {
         return error::OK();
     }
 
+    // ignore if there is no link/xcvr event
+    if (!port->has_link_status() && !port->has_xcvr_status()) {
+        return error::OK();
+    }
+
     port_status_t st = {0};
 
     st.id = port->key_or_handle().port_id();
-    st.status = port->oper_status();
-    NIC_FUNC_DEBUG("{}: port_speed {}", port->key_or_handle().port_id(), port->port_speed());
-    // st.speed = HalClient::PortSpeedInMbps(port->port_speed());
-    st.speed = devapi_port::port_speed_enum_to_mbps(port->port_speed());
-    st.xcvr.state = port->xcvr_status().state();
-    st.xcvr.pid = port->xcvr_status().pid();
-    st.xcvr.phy = port->xcvr_status().cable_type();
-    memcpy(st.xcvr.sprom,
-        port->xcvr_status().xcvr_sprom().c_str(),
-        MIN(port->xcvr_status().xcvr_sprom().size(),
-        sizeof (st.xcvr.sprom)));
+    if (port->has_link_status()) {
+        NIC_FUNC_DEBUG("Received link status: id: {} oper_state: {}, speed: {}",
+                       port->key_or_handle().port_id(),
+                       port->link_status().oper_state(),
+                       port->link_status().port_speed());
+        st.status = port->link_status().oper_state();
+        // st.speed = HalClient::PortSpeedInMbps(port->port_speed());
+        st.speed = devapi_port::port_speed_enum_to_mbps(
+                                        port->link_status().port_speed());
+        devmgr->LinkEventHandler(&st);
+    }
+    if (port->has_xcvr_status()) {
+        NIC_FUNC_DEBUG("Received xcvr status: id: {} state: {}, "
+                       "cable_type: {}, pid: {}",
+                       port->key_or_handle().port_id(),
+                       port->xcvr_status().state(),
+                       port->xcvr_status().cable_type(),
+                       port->xcvr_status().pid());
+        st.xcvr.state = port->xcvr_status().state();
+        st.xcvr.pid = port->xcvr_status().pid();
+        st.xcvr.phy = port->xcvr_status().cable_type();
+        memcpy(st.xcvr.sprom,
+            port->xcvr_status().xcvr_sprom().c_str(),
+            MIN(port->xcvr_status().xcvr_sprom().size(),
+            sizeof (st.xcvr.sprom)));
+        devmgr->XcvrEventHandler(&st);
+    }
 
     NIC_FUNC_DEBUG("id {} status {} speed {} "
         " xcvr.state {} xcvr.phy {} xcvr.pid {}",
         st.id, st.status, st.speed,
         st.xcvr.state, st.xcvr.phy, st.xcvr.pid);
-
-    devmgr->LinkEventHandler(&st);
 
     return error::OK();
 }

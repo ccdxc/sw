@@ -412,6 +412,20 @@ DeviceManager::LinkEventHandler(port_status_t *evd)
 }
 
 void
+DeviceManager::XcvrEventHandler(port_status_t *evd)
+{
+    NIC_HEADER_TRACE("Xcvr Event");
+
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+            Eth *eth_dev = (Eth *) dev;
+            eth_dev->XcvrEventHandler(evd);
+        }
+    }
+}
+
+void
 DeviceManager::DelphiMountEventHandler(bool mounted)
 {
     NIC_HEADER_TRACE("Mount Event");

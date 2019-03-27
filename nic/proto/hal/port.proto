@@ -32,8 +32,8 @@ enum PortBreakoutMode {
   PORT_BREAKOUT_MODE_2x50G = 3;
 }
 
-// PortOperStatus reflects the current status of the port
-enum PortOperStatus {
+// PortOperState reflects the current status of the port
+enum PortOperState {
   // enum_stringer will generate string values for the enum.
   // events will be recorded with the string values rather integer enums.
   option (gogoproto.goproto_enum_stringer) = false;
@@ -134,7 +134,7 @@ enum PortPauseType {
   PORT_PAUSE_TYPE_PFC  = 2;   // PFC
 }
 
-enum PortLinkState {
+enum PortLinkSM {
   PORT_LINK_SM_DISABLED            =  0;
   PORT_LINK_SM_ENABLED             =  1;
   PORT_LINK_SM_AN_CFG              =  2;
@@ -186,13 +186,17 @@ message PortSpec {
   bool              mac_stats_reset  = 15;  // Reset port mac stats. Only during update
 }
 
+message PortLinkStatus {
+    PortOperState     oper_state     = 1;    // operational state of port
+    PortSpeed         port_speed     = 2;    // operational speed of the port
+}
+
 message PortStatus {
     option (delphi.update_event) = true;
     delphi.ObjectMeta      Meta        = 1;
     kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
-    PortOperStatus    oper_status      = 3;    // operational state of port
+    PortLinkStatus    link_status      = 3;    // operational link status
     PortXcvrStatus    xcvr_status      = 4;    // transceiver status
-    PortSpeed         port_speed       = 5;    // speed of the port
 }
 
 //------------------------------------------------------------------------------
@@ -408,11 +412,11 @@ message PortGetRequestMsg {
 // PortGetResponse captures all the information about a port
 // only if api_status indicates success, other fields are valid
 message PortGetResponse {
-  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  PortSpec         spec       = 2;    // port configuration
-  PortStatus       status     = 3;    // status of port
-  PortLinkState    link_state = 4;    // internal port link state machine
-  PortStats        stats      = 5;    // Port statistics
+  types.ApiStatus  api_status   = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  PortSpec         spec         = 2;    // port configuration
+  PortStatus       status       = 3;    // status of port
+  PortLinkSM       linksm_state = 4;    // internal port link state machine
+  PortStats        stats        = 5;    // Port statistics
 }
 
 //------------------------------------------------------------------------------
@@ -454,7 +458,7 @@ message PortInfoGetResponseMsg {
 //------------------------------------------------------------------------------
 message PortEvent {
   kh.PortKeyHandle  key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
-  PortOperStatus    oper_status   = 2;
+  PortOperState     oper_state    = 2;
   PortAdminState    admin_status  = 3;
   string            msg           = 4;    // message with relevant information about the event
 }

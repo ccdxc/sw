@@ -109,6 +109,7 @@ public:
     static types::LifType ConvertDevTypeToLifType(EthDevType dev_type);
 
     void LinkEventHandler(port_status_t *evd);
+    void XcvrEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
 
     void SetHalClient(devapi *dapi);

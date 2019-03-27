@@ -100,6 +100,7 @@ public:
     status_code_t CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
     void LinkEventHandler(port_status_t *evd);
+    void XcvrEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
 
     void SetHalClient(devapi *dev_api);

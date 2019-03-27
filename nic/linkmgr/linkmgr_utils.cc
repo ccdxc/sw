@@ -181,7 +181,7 @@ sdk_port_pause_type_to_port_pause_type_spec (port_pause_type_t pause_type)
     return ::port::PORT_PAUSE_TYPE_NONE;
 }
 
-::port::PortLinkState
+::port::PortLinkSM
 sdk_port_link_sm_to_port_link_sm_spec (port_link_sm_t link_sm)
 {
     switch(link_sm) {
@@ -300,7 +300,7 @@ port_lb_mode_spec_to_sdk_port_lb_mode (::port::PortLoopBackMode loopback_mode)
     }
 }
 
-::port::PortOperStatus
+::port::PortOperState
 sdk_port_oper_st_to_port_oper_st_spec (port_oper_status_t oper_st)
 {
     switch (oper_st) {

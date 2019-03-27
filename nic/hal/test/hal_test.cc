@@ -253,7 +253,7 @@ using types::L4PortRange;
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
 
-port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
+port::PortOperState  port_oper_state  = port::PORT_OPER_STATUS_NONE;
 port::PortType       port_type        = port::PORT_TYPE_NONE;
 port::PortAdminState port_admin_state = port::PORT_ADMIN_STATE_NONE;
 port::PortSpeed      port_speed       = port::PORT_SPEED_NONE;
@@ -396,29 +396,31 @@ public:
             if (port_handle_api_status(
                     rsp_msg.response(0).api_status(), port_id) == true) {
                 std::cout << "Port Get succeeded for port "
-                          << port_id << std::endl
-                          << " Port oper status: "
-                          << rsp_msg.response(0).status().oper_status() << std::endl
-                          << " Port type: "
-                          << rsp_msg.response(0).spec().port_type() << std::endl
-                          << " Admin state: "
-                          << rsp_msg.response(0).spec().admin_state() << std::endl
-                          << " Port speed: "
-                          << rsp_msg.response(0).spec().port_speed() << std::endl
-                          << " MAC ID: "
-                          << rsp_msg.response(0).spec().mac_id() << std::endl
-                          << " MAC channel: "
-                          << rsp_msg.response(0).spec().mac_ch() << std::endl
-                          << " Num lanes: "
-                          << rsp_msg.response(0).spec().num_lanes() << std::endl;
+                      << port_id << std::endl
+                      << " Port oper status: "
+                      << rsp_msg.response(0).status().link_status().oper_state()
+                      << std::endl
+                      << " Port type: "
+                      << rsp_msg.response(0).spec().port_type() << std::endl
+                      << " Admin state: "
+                      << rsp_msg.response(0).spec().admin_state() << std::endl
+                      << " Port speed: "
+                      << rsp_msg.response(0).spec().port_speed() << std::endl
+                      << " MAC ID: "
+                      << rsp_msg.response(0).spec().mac_id() << std::endl
+                      << " MAC channel: "
+                      << rsp_msg.response(0).spec().mac_ch() << std::endl
+                      << " Num lanes: "
+                      << rsp_msg.response(0).spec().num_lanes() << std::endl;
             } else {
                 return -1;
             }
 
             if (compare == true) {
-                if (port_oper_status != port::PORT_OPER_STATUS_NONE) {
-                    assert(rsp_msg.response(0).status().oper_status()
-                                                == port_oper_status);
+                if (port_oper_state != port::PORT_OPER_STATUS_NONE) {
+                    assert(
+                        rsp_msg.response(0).status().link_status().oper_state()
+                                                            == port_oper_state);
                 }
                 if (port_type != port::PORT_TYPE_NONE) {
                     assert(rsp_msg.response(0).spec().port_type() == port_type);

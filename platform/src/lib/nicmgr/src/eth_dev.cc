@@ -893,6 +893,15 @@ Eth::LinkEventHandler(port_status_t *evd)
     }
 }
 
+void
+Eth::XcvrEventHandler(port_status_t *evd)
+{
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        EthLif *eth_lif = it->second;
+        eth_lif->XcvrEventHandler(evd);
+    }
+}
+
 int
 Eth::GenerateQstateInfoJson(pt::ptree &lifs)
 {
