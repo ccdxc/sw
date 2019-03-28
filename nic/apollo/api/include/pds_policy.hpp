@@ -102,7 +102,7 @@ struct pds_policy_spec_s {
     pds_policy_spec_s() { rules = NULL; }
     ~pds_policy_spec_s() {
         if (rules) {
-            SDK_FREE(PDS_MEM_ALLOC_SEUCURITY_POLICY, rules);
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rules);
         }
     }
     pds_policy_spec_t& operator= (const pds_policy_spec_t& policy) {
@@ -116,25 +116,23 @@ struct pds_policy_spec_s {
         direction = policy.direction;
         num_rules = policy.num_rules;
         if (rules) {
-            SDK_FREE(PDS_MEM_ALLOC_SEUCURITY_POLICY, rules);
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rules);
         }
         rules =
-            (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_SEUCURITY_POLICY,
-                                          num_rules * sizeof(rule_t));
+            (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                 num_rules * sizeof(rule_t));
         memcpy(rules, policy.rules, num_rules * sizeof(rule_t));
         return *this;
     }
 } __PACK__;
 
-/// \brief Create policy
-///
-/// \param[in] policy Policy information
+/// \brief create policy
+/// \param[in] policy    policy information
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_create(pds_policy_spec_t *policy);
 
-/// \brief Delete policy
-///
-/// \param[in] key Key
+/// \brief delete policy
+/// \param[in] key    policy key
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_delete(_In_ pds_policy_key_t *key);
 

@@ -162,10 +162,6 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
     ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->proto_port_tree,
                              tree_base_addr, tree_size,
                              SACL_PROTO_DPORT_TREE_MAX_NODES >> 1);
-    if (ret != SDK_RET_OK) {
-        goto cleanup;
-    }
-    return SDK_RET_OK;
 
 cleanup:
 

@@ -61,12 +61,27 @@ api_params_alloc (obj_id_t obj_id, api_op_t api_op)
 static inline void
 api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
 {
-    if (obj_id == api::OBJ_ID_ROUTE_TABLE &&
-        (api_op == api::API_OP_CREATE || (api_op == api::API_OP_UPDATE))) {
-        if (api_params->route_table_spec.routes) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                     api_params->route_table_spec.routes);
+    switch (obj_id) {
+    case api::OBJ_ID_ROUTE_TABLE:
+        if ((api_op == api::API_OP_CREATE) || (api_op == api::API_OP_UPDATE)) {
+            if (api_params->route_table_spec.routes) {
+                SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                         api_params->route_table_spec.routes);
+            }
         }
+        break;
+
+    case api::OBJ_ID_POLICY:
+        if ((api_op == api::API_OP_CREATE) || (api_op == api::API_OP_UPDATE)) {
+            if (api_params->policy_spec.rules) {
+                SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY,
+                         api_params->policy_spec.rules);
+            }
+        }
+        break;
+
+    default:
+        break;
     }
     return api_params_slab()->free(api_params);
 }
