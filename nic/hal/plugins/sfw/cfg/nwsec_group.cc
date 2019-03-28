@@ -1160,7 +1160,7 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx
                 fn_ctx->ret = HAL_RET_ERR;
                 return true;
             }    
-            HAL_TRACE_DEBUG("rule id is {}", rulelist->rule_id);
+            HAL_TRACE_VERBOSE("rule id is {}", rulelist->rule_id);
             dllist_for_each_safe(curr, next, &rulelist->head) {
                 nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
                 fn_ctx->ret = rule_match_rule_add(fn_ctx->acl_ctx, &rule->fw_rule_match, rule->rule_id, rule->priority, &rule->ref_count);

@@ -855,9 +855,9 @@ rule_match_rule_add (const acl_ctx_t  **acl_ctx,
     }
     rule_ctr = alloc_init_rule_ctr(rule_cfg, rule_key);
 
-    HAL_TRACE_DEBUG("alloc rule data with key : {}", rule_key);
+    HAL_TRACE_VERBOSE("alloc rule data with key : {}", rule_key);
     rule_data = alloc_init_rule_data(ref_count, &rule_ctr->ref_count);
-    HAL_TRACE_DEBUG("userdata: {:#x} is_shared: {}", 
+    HAL_TRACE_VERBOSE("userdata: {:#x} is_shared: {}", 
                          (uint64_t) &rule_data->ref_cnt,
                          ref_is_shared((acl::ref_t *)&rule_data->ref_cnt));
     rule_ctr->rule_data = rule_data;
