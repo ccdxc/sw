@@ -268,27 +268,28 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
         /**< nexthop id for the IP beyond this prefix is the fallback nexthop */
         elem.interval.data = s.top().fallback_nhid;
         /**
-         * fallback nexthop for anyroute within the current prefix is this
+         * fallback nexthop for any route within the current prefix is this
          * route's nexthop
          */
         elem.fallback_nhid = route_table->routes[i].nhid;
 
         /**
-         * if stack top is same as the interval's end node, pop it as we will
-         * push more specific node now, we hit this case, when one route is
-         * overlpping with the other towards right edge of the larger prefix
-         * e.g. route1 = 11.11.0.0/16 and route2 = 11.11.255.0/24
-         * while processing route2, top of the stack wil have 11.12.0.0 with
-         * a fallback nexthop that is not relevant anymore once we saw
-         * 11.11.255.0, so we should pop it
+         * if stack top is same as the interval's end node, update its fallback
+         * nhid to reflect the current route's nhid. We hit this case, when one
+         * route is overlapping with the other towards right edge of the larger
+         * prefix. E.g. route1 = 11.11.0.0/16 and route2 = 11.11.255.0/24
+         * while processing route2, top of the stack wil have 11.12.0.0 with a
+         * fallback nexthop pointing to 11.11.0.0/16. We need to update this to
+         * point to 11.11.255.0/24. If the stack top is different from the
+         * interval's end node, push the end node to the stack.
          */
         SDK_ASSERT(s.empty() == false);
         if (IPADDR_EQ(&(s.top().interval.ipaddr), &elem.interval.ipaddr)) {
-            s.pop();
+            s.top().fallback_nhid = route_table->routes[i].nhid;
+        } else {
+            /**< push this interval's end node to stack */
+            s.push(elem);
         }
-
-        /**< push this interval's end node to stack */
-        s.push(elem);
     }
 
     /**< emit whatever is remaining on the stack now */
