@@ -48,3 +48,12 @@ def __get_packet_srcmac_impl(fwdmode, robj, lobj, args):
 def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
     return __get_packet_srcmac_impl(testcase.config.root.FwdMode,
             testcase.config.remotemapping, testcase.config.localmapping, args)
+
+def __get_ip_localmapping_impl(localmapping):
+    if hasattr(localmapping, "PublicIP"):
+        return localmapping.PublicIP
+    else:
+        return localmapping.IP
+
+def GetIPFromLocalMapping(testcase, packet, args=None):
+    return __get_ip_localmapping_impl(testcase.config.localmapping)

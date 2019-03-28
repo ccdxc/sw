@@ -24,7 +24,9 @@ pds_agent_mapping_api_spec_fill (const pds::MappingSpec &proto_spec,
     ipaddr_proto_spec_to_api_spec(key.ipaddr(), &api_spec->key.ip_addr);
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->vnic.id = proto_spec.vnicid();
-    if (api_spec->public_ip_valid == true) {
+    if (proto_spec.publicip().af() == types::IP_AF_INET ||
+        proto_spec.publicip().af() == types::IP_AF_INET6) {
+        api_spec->public_ip_valid = true;
         ipaddr_proto_spec_to_api_spec(proto_spec.publicip(),
                                       &api_spec->public_ip);
     }

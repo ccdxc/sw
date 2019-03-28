@@ -1,0 +1,86 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://any
+    route: filter://any
+    localmapping: filter://any
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
+        headers     :
+            ipv4:
+                ttl     : 64
+            ipv6:
+                hlim    : 64
+            udp:
+                sport   : 100
+                dport   : 200
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:02:00:00:00:00
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+                hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_NETWORK_PKT # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_MPLS
+        headers     :
+            outereth:
+                src     : ref://testcase/config/devicecfg/MACAddr
+                dst     : 00:02:0b:0a:0d:0e
+            outeripv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : ref://testcase/config/route/TunIP
+                ttl     : 64
+                id      : 0
+                tos     : 0
+            mpls:
+                #label   : ref://testcase/config/route/Tunnel/GWMplsSlotId
+                label   : 0
+                ttl     : 0
+            ipv4:
+                src     : callback://networking/packets/GetIPFromLocalMapping
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+            ipv6:
+                src     : callback://networking/packets/GetIPFromLocalMapping
+                dst     : callback://networking/packets/GetUsableHostFromRoute
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=FROM_HOST_PKT
+            port    : ref://testcase/config/hostport
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=TO_NETWORK_PKT
+            port    : ref://testcase/config/switchport

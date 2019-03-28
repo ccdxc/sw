@@ -30,6 +30,8 @@ RouteIPv4Allocator = iter(ipaddress.IPv4Network('192.0.0.0/8').subnets(new_prefi
 IGWMplsSlotIdAllocator = iter(irange(30001,31024))
 RemoteMplsInternetTunAllocator = None
 RemoteMplsVnicTunAllocator = None
+PublicIpAddressAllocator = ipaddress.IPv4Network('200.0.0.0/24').hosts()
+PublicIpv6AddressAllocator = ipaddress.IPv6Network('eeee:0:0:0::/64').hosts()
 
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'

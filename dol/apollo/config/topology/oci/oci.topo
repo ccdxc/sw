@@ -44,6 +44,7 @@ vpc:
             - count   : 1             # VNICs per subnet
               encap   : mplsoudp
               ipcount : 2             # Local IP mapping per vnic
+              public  : true
               srcguard : false        # true or false (default false)
           rmap:                       # Remote IP mappings per subnet
             - count : 2

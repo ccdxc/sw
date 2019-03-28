@@ -4,20 +4,17 @@ selectors:
     maxlimits: 1
     flow: filter://any
     route: filter://any
+    localmapping: filter://any
 
 packets:
     - packet:
-        id          : BASE_PKT # Base Packet from internet
+        id          : BASE_PKT # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
         headers     :
             ipv4:
-                src     : callback://networking/packets/GetUsableHostFromRoute
-                dst     : ref://testcase/config/localmapping/IP
                 ttl     : 64
             ipv6:
-                src     : callback://networking/packets/GetUsableHostFromRoute
-                dst     : ref://testcase/config/localmapping/IP
                 hlim    : 64
             udp:
                 sport   : 100
@@ -26,7 +23,7 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : FROM_SWITCH_PKT # Input packet from network
+        id          : FROM_NETWORK_PKT # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_MPLS
@@ -41,26 +38,40 @@ packets:
                 tos     : 0
                 id      : 0
             mpls:
-                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
+                #label   : ref://testcase/config/localmapping/VNIC/MplsSlot
+                label   : 0
                 ttl     : 0
+            ipv4:
+                src     : callback://networking/packets/GetUsableHostFromRoute
+                dst     : callback://networking/packets/GetIPFromLocalMapping
+                ttl     : 64
+            ipv6:
+                src     : callback://networking/packets/GetUsableHostFromRoute
+                dst     : callback://networking/packets/GetIPFromLocalMapping
 
     - packet:
-        id          : TO_HOST_PKT # Expected packet to host
+        id          : TO_HOST_PKT # Expected packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
+                src     : 00:02:00:00:00:00
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
+            ipv4:
+                src     : callback://networking/packets/GetUsableHostFromRoute
+                dst     : ref://testcase/config/localmapping/IP
+                ttl     : 64
+            ipv6:
+                src     : callback://networking/packets/GetUsableHostFromRoute
+                dst     : ref://testcase/config/localmapping/IP
 
 trigger:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=FROM_SWITCH_PKT
+            object  : ref://testcase/packets/id=FROM_NETWORK_PKT
             port    : ref://testcase/config/switchport
 
 expect:

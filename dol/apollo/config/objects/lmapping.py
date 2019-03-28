@@ -20,16 +20,23 @@ class LocalMappingObject(base.ConfigObjectBase):
         self.MappingId = next(resmgr.LocalMappingIdAllocator)
         self.GID('LocalMapping%d'%self.MappingId)
         self.VNIC = parent
-        if ipversion == utils.IP_VERSION_6:
-            self.IPAddr = parent.SUBNET.AllocIPv6Address();
-            self.AddrFamily = 'IPV6'
-        else:
-            self.IPAddr = parent.SUBNET.AllocIPv4Address();
-            self.AddrFamily = 'IPV4'
+        self.PublicIPAddr = None
         self.SourceGuard = parent.SourceGuard
+        if ipversion == utils.IP_VERSION_6:
+            self.AddrFamily = 'IPV6'
+            self.IPAddr = parent.SUBNET.AllocIPv6Address();
+            if (hasattr(spec, 'public')):
+                self.PublicIPAddr = next(resmgr.PublicIpv6AddressAllocator)
+        else:
+            self.AddrFamily = 'IPV4'
+            self.IPAddr = parent.SUBNET.AllocIPv4Address();
+            if (hasattr(spec, 'public')):
+                self.PublicIPAddr = next(resmgr.PublicIpAddressAllocator)
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
-        self.IP = str(self.IPAddr) # For testspec
+        self.IP = str(self.IPAddr) # for testspec
+        if self.PublicIPAddr is not None:
+            self.PublicIP = str(self.PublicIPAddr) # for testspec
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
         self.Show()
         return
@@ -52,13 +59,17 @@ class LocalMappingObject(base.ConfigObjectBase):
         spec.MACAddr = self.VNIC.MACAddr.getnum()
         spec.Encap.type = self.VNIC.Encap
         spec.Encap.value.MPLSTag  = self.VNIC.MplsSlot
-        spec.PublicIP.Af = types_pb2.IP_AF_NONE # TODO Public IP support
+        spec.PublicIP.Af = types_pb2.IP_AF_NONE
+        if self.PublicIPAddr is not None:
+            utils.GetRpcIPAddr(self.PublicIPAddr, spec.PublicIP)
         return grpcmsg
 
     def Show(self):
         logger.info("LocalMapping Object:", self)
         logger.info("- %s" % repr(self))
         logger.info("- IPAddr:%s" % str(self.IPAddr))
+        if self.PublicIPAddr is not None:
+            logger.info("- Public IPAddr:%s" % str(self.PublicIPAddr))
         return
 
     def SetupTestcaseConfig(self, obj):

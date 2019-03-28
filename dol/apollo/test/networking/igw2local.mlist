@@ -19,3 +19,16 @@ modules:
         spec    : igw2local.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+
+    # Commenting till dnat_required flag is set in the p4
+    #- module:
+    #    name    : IPV4_DNAT
+    #    spec    : igw2local_dnat.testspec
+    #    iterate :
+    #        - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+
+    #- module:
+    #    name    : IPV6_DNAT
+    #    spec    : igw2local_dnat.testspec
+    #    iterate :
+    #        - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
