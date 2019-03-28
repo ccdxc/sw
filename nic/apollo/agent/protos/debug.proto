@@ -1,0 +1,26 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for the top level device object
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service DebugSvc {
+  rpc ClockFrequencyUpdate (ClockFrequencyRequest) returns (ClockFrequencyResponse) {}
+}
+
+message ClockFrequencyRequest {
+  meta.TypeMeta TypeMeta       = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta        = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  uint32        ClockFrequency = 3; 
+}
+
+message ClockFrequencyResponse {
+  types.ApiStatus ApiStatus = 1;
+}
