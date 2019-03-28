@@ -14,8 +14,8 @@
 // convert IP address spec in proto to ip_addr
 //----------------------------------------------------------------------------
 static inline void
-ipaddr_proto_spec_to_api_spec (const types::IPAddress &in_ipaddr,
-                               ip_addr_t *out_ipaddr)
+ipaddr_proto_spec_to_api_spec (ip_addr_t *out_ipaddr,
+                               const types::IPAddress &in_ipaddr)
 {
     memset(out_ipaddr, 0, sizeof(ip_addr_t));
     if (in_ipaddr.af() == types::IP_AF_INET) {
@@ -34,8 +34,8 @@ ipaddr_proto_spec_to_api_spec (const types::IPAddress &in_ipaddr,
 }
 
 static inline sdk_ret_t
-ippfx_proto_spec_to_api_spec (const types::IPPrefix& in_ippfx,
-                              ip_prefix_t *ip_pfx)
+ippfx_proto_spec_to_api_spec (ip_prefix_t *ip_pfx,
+                              const types::IPPrefix& in_ippfx)
 {
     ip_pfx->len = in_ippfx.len();
     if (((in_ippfx.addr().af() == types::IP_AF_INET) &&
@@ -44,14 +44,14 @@ ippfx_proto_spec_to_api_spec (const types::IPPrefix& in_ippfx,
              (ip_pfx->len > 128))) {
         return sdk::SDK_RET_INVALID_ARG;
     } else {
-        ipaddr_proto_spec_to_api_spec(in_ippfx.addr(), &ip_pfx->addr);
+        ipaddr_proto_spec_to_api_spec(&ip_pfx->addr, in_ippfx.addr());
     }
     return sdk::SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-ipv4pfx_proto_spec_to_api_spec (const types::IPPrefix& in_ippfx,
-                              ipv4_prefix_t *ip_pfx)
+ipv4pfx_proto_spec_to_api_spec (ipv4_prefix_t *ip_pfx,
+                                const types::IPPrefix& in_ippfx)
 {
     ip_pfx->len = in_ippfx.len();
     if ((in_ippfx.addr().af() == types::IP_AF_INET) &&
@@ -67,8 +67,8 @@ ipv4pfx_proto_spec_to_api_spec (const types::IPPrefix& in_ippfx,
 // convert ip_addr_t to IP address proto spec
 //----------------------------------------------------------------------------
 static inline void
-ipaddr_api_spec_to_proto_spec (const ip_addr_t *in_ipaddr,
-                               types::IPAddress *out_ipaddr)
+ipaddr_api_spec_to_proto_spec (types::IPAddress *out_ipaddr,
+                               const ip_addr_t *in_ipaddr)
 {
     if (in_ipaddr->af == IP_AF_IPV4) {
         out_ipaddr->set_af(types::IP_AF_INET);
@@ -83,17 +83,17 @@ ipaddr_api_spec_to_proto_spec (const ip_addr_t *in_ipaddr,
 }
 
 static inline sdk_ret_t
-ippfx_api_spec_to_proto_spec (const ip_prefix_t *in_ippfx,
-                              types::IPPrefix *out_ippfx)
+ippfx_api_spec_to_proto_spec (types::IPPrefix *out_ippfx,
+                              const ip_prefix_t *in_ippfx)
 {
     out_ippfx->set_len(in_ippfx->len);
-    ipaddr_api_spec_to_proto_spec(&in_ippfx->addr, out_ippfx->mutable_addr());
+    ipaddr_api_spec_to_proto_spec(out_ippfx->mutable_addr(), &in_ippfx->addr);
     return sdk::SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-ipv4pfx_api_spec_to_proto_spec (const ipv4_prefix_t *in_ippfx,
-                              types::IPPrefix *out_ippfx)
+ipv4pfx_api_spec_to_proto_spec (types::IPPrefix *out_ippfx,
+                                const ipv4_prefix_t *in_ippfx)
 {
     auto out_addr = out_ippfx->mutable_addr(); 
     out_ippfx->set_len(in_ippfx->len);

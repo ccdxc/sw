@@ -14,21 +14,21 @@ extern flow_test *g_flow_test_obj;
 
 // Build VPC API spec from protobuf spec
 static inline void
-pds_agent_mapping_api_spec_fill (const pds::MappingSpec &proto_spec,
-                                 pds_mapping_spec_t *api_spec)
+pds_agent_mapping_api_spec_fill (pds_mapping_spec_t *api_spec,
+                                 const pds::MappingSpec &proto_spec)
 {
     pds::MappingKey key;
 
     key = proto_spec.id();
     api_spec->key.vcn.id = key.vpcid();
-    ipaddr_proto_spec_to_api_spec(key.ipaddr(), &api_spec->key.ip_addr);
+    ipaddr_proto_spec_to_api_spec(&api_spec->key.ip_addr, key.ipaddr());
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->vnic.id = proto_spec.vnicid();
     if (proto_spec.publicip().af() == types::IP_AF_INET ||
         proto_spec.publicip().af() == types::IP_AF_INET6) {
         api_spec->public_ip_valid = true;
-        ipaddr_proto_spec_to_api_spec(proto_spec.publicip(),
-                                      &api_spec->public_ip);
+        ipaddr_proto_spec_to_api_spec(&api_spec->public_ip,
+                                      proto_spec.publicip());
     }
     MAC_UINT64_TO_ADDR(api_spec->overlay_mac, proto_spec.macaddr());
     api_spec->tep.ip_addr = proto_spec.tunnelid();
@@ -44,7 +44,7 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
     if (proto_req) {
         for (int i = 0; i < proto_req->request_size(); i++) {
             pds_mapping_spec_t api_spec = {0};
-            pds_agent_mapping_api_spec_fill(proto_req->request(i), &api_spec);
+            pds_agent_mapping_api_spec_fill(&api_spec, proto_req->request(i));
 #if 0
             // TODO: Adding this here since there is no proto defs for
             // flows. This needs to be cleaned up

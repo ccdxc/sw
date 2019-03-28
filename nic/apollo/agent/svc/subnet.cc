@@ -10,15 +10,15 @@
 
 // Populate proto buf spec from subnet API spec
 static inline void
-subnet_api_spec_to_proto_spec (const pds_subnet_spec_t *api_spec,
-                               pds::SubnetSpec *proto_spec)
+subnet_api_spec_to_proto_spec (pds::SubnetSpec *proto_spec,
+                               const pds_subnet_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id);
     proto_spec->set_vpcid(api_spec->vcn.id);
     ipv4pfx_api_spec_to_proto_spec(
-                    &api_spec->v4_pfx, proto_spec->mutable_v4prefix());
+                    proto_spec->mutable_v4prefix(), &api_spec->v4_pfx);
     ippfx_api_spec_to_proto_spec(
-                    &api_spec->v6_pfx, proto_spec->mutable_v6prefix());
+                    proto_spec->mutable_v6prefix(), &api_spec->v6_pfx);
     proto_spec->set_ipv4virtualrouterip(api_spec->v4_vr_ip);
     proto_spec->set_ipv6virtualrouterip(&api_spec->v6_vr_ip.addr.v6_addr.addr8,
                                         IP6_ADDR8_LEN);
@@ -33,15 +33,15 @@ subnet_api_spec_to_proto_spec (const pds_subnet_spec_t *api_spec,
 
 // Populate proto buf status from subnet API status
 static inline void
-subnet_api_status_to_proto_status (const pds_subnet_status_t *api_status,
-                                   pds::SubnetStatus *proto_status)
+subnet_api_status_to_proto_status (pds::SubnetStatus *proto_status,
+                                   const pds_subnet_status_t *api_status)
 {
 }
 
 // Populate proto buf stats from subnet API stats
 static inline void
-subnet_api_stats_to_proto_stats (const pds_subnet_stats_t *api_stats,
-                                 pds::SubnetStats *proto_stats)
+subnet_api_stats_to_proto_stats (pds::SubnetStats *proto_stats,
+                                 const pds_subnet_stats_t *api_stats)
 {
 }
 
@@ -55,20 +55,20 @@ subnet_api_info_to_proto (const pds_subnet_info_t *api_info, void *ctxt)
     pds::SubnetStatus *proto_status = subnet->mutable_status();
     pds::SubnetStats *proto_stats = subnet->mutable_stats();
 
-    subnet_api_spec_to_proto_spec(&api_info->spec, proto_spec);
-    subnet_api_status_to_proto_status(&api_info->status, proto_status);
-    subnet_api_stats_to_proto_stats(&api_info->stats, proto_stats);
+    subnet_api_spec_to_proto_spec(proto_spec, &api_info->spec);
+    subnet_api_status_to_proto_status(proto_status, &api_info->status);
+    subnet_api_stats_to_proto_stats(proto_stats, &api_info->stats);
 }
 
 // Build subnet API spec from proto buf spec
 static inline void
-subnet_proto_spec_to_api_spec (const pds::SubnetSpec &proto_spec,
-                               pds_subnet_spec_t *api_spec)
+subnet_proto_spec_to_api_spec (pds_subnet_spec_t *api_spec,
+                               const pds::SubnetSpec &proto_spec)
 {
     api_spec->key.id = proto_spec.id();
     api_spec->vcn.id = proto_spec.vpcid();
-    ipv4pfx_proto_spec_to_api_spec(proto_spec.v4prefix(), &api_spec->v4_pfx);
-    ippfx_proto_spec_to_api_spec(proto_spec.v6prefix(), &api_spec->v6_pfx);
+    ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_pfx, proto_spec.v4prefix());
+    ippfx_proto_spec_to_api_spec(&api_spec->v6_pfx, proto_spec.v6prefix());
     api_spec->v4_vr_ip = proto_spec.ipv4virtualrouterip();
     api_spec->v6_vr_ip.af = IP_AF_IPV6;
     memcpy(api_spec->v6_vr_ip.addr.v6_addr.addr8,
@@ -104,7 +104,7 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
         auto request = proto_req->request(i);
         memset(&key, 0, sizeof(pds_subnet_key_t));
         key.id = request.id();
-        subnet_proto_spec_to_api_spec(request, api_spec);
+        subnet_proto_spec_to_api_spec(api_spec, request);
         ret = core::subnet_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
@@ -161,11 +161,11 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
         }
         auto response = proto_rsp->add_response();
         subnet_api_spec_to_proto_spec(
-                &info.spec, response->mutable_spec());
+                response->mutable_spec(), &info.spec);
         subnet_api_status_to_proto_status(
-                &info.status, response->mutable_status());
+                response->mutable_status(), &info.status);
         subnet_api_stats_to_proto_stats(
-                &info.stats, response->mutable_stats());
+                response->mutable_stats(), &info.stats);
     }
     return Status::OK;
 }

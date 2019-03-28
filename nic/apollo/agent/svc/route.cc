@@ -9,8 +9,8 @@
 #include "nic/apollo/agent/svc/route.hpp"
 
 static inline void
-pds_agent_route_table_api_spec_fill (const pds::RouteTableSpec &proto_spec,
-                                     pds_route_table_spec_t *api_spec)
+pds_agent_route_table_api_spec_fill (pds_route_table_spec_t *api_spec,
+                                     const pds::RouteTableSpec &proto_spec)
 {
     api_spec->key.id = proto_spec.id();
     switch (proto_spec.af()) {
@@ -31,8 +31,8 @@ pds_agent_route_table_api_spec_fill (const pds::RouteTableSpec &proto_spec,
                                                  api_spec->num_routes);
     for (int i = 0; i < proto_spec.routes_size(); i++) {
         const pds::Route &proto_route = proto_spec.routes(i);
-        ippfx_proto_spec_to_api_spec(proto_route.prefix(), &api_spec->routes[i].prefix);
-        ipaddr_proto_spec_to_api_spec(proto_route.nexthop(), &api_spec->routes[i].nh_ip);
+        ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix, proto_route.prefix());
+        ipaddr_proto_spec_to_api_spec(&api_spec->routes[i].nh_ip, proto_route.nexthop());
         api_spec->routes[i].vcn_id = proto_route.vpcid();
         // TODO: hardcoded for now
         api_spec->routes[i].nh_type = PDS_NH_TYPE_REMOTE_TEP;
@@ -61,7 +61,7 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
         auto request = proto_req->request(i);
         memset(&key, 0, sizeof(pds_route_table_key_t));
         key.id = request.id();
-        pds_agent_route_table_api_spec_fill(request, api_spec);
+        pds_agent_route_table_api_spec_fill(api_spec, request);
         ret = core::route_table_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {
