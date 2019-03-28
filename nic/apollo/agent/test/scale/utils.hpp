@@ -186,7 +186,9 @@ populate_mapping_request (MappingRequest *req, pds_mapping_spec_t *mapping)
     spec->set_macaddr(MAC_TO_UINT64(mapping->overlay_mac));
     pds_encap_to_proto_encap(spec->mutable_encap(), &mapping->fabric_encap);
     spec->set_vnicid(mapping->vnic.id);
-    ip_addr_to_spec(spec->mutable_publicip(), &mapping->public_ip);
+    if (mapping->public_ip_valid) {
+        ip_addr_to_spec(spec->mutable_publicip(), &mapping->public_ip);
+    }
     return;
 }
 

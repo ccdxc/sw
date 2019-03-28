@@ -24,11 +24,13 @@ pds_agent_mapping_api_spec_fill (pds_mapping_spec_t *api_spec,
     ipaddr_proto_spec_to_api_spec(&api_spec->key.ip_addr, key.ipaddr());
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->vnic.id = proto_spec.vnicid();
-    if (proto_spec.publicip().af() == types::IP_AF_INET ||
-        proto_spec.publicip().af() == types::IP_AF_INET6) {
-        api_spec->public_ip_valid = true;
-        ipaddr_proto_spec_to_api_spec(&api_spec->public_ip,
-                                      proto_spec.publicip());
+    if (proto_spec.has_publicip()) {
+        if (proto_spec.publicip().af() == types::IP_AF_INET ||
+            proto_spec.publicip().af() == types::IP_AF_INET6) {
+            api_spec->public_ip_valid = true;
+            ipaddr_proto_spec_to_api_spec(&api_spec->public_ip,
+                                          proto_spec.publicip());
+        }
     }
     MAC_UINT64_TO_ADDR(api_spec->overlay_mac, proto_spec.macaddr());
     api_spec->tep.ip_addr = proto_spec.tunnelid();

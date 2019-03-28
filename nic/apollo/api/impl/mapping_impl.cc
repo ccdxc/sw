@@ -495,10 +495,11 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     vcn = vcn_db()->find(&spec->key.vcn);
 
     PDS_TRACE_DEBUG("Reserving resources for mapping (vcn %u, ip %s), "
-                    "local %u, subnet %u, tep %s, vnic %u",
+                    "local %u, subnet %u, tep %s, vnic %u, "
+                    "pub_ip_valid %u pub_ip %s",
                     spec->key.vcn.id, ipaddr2str(&spec->key.ip_addr), is_local_,
                     spec->subnet.id, ipv4addr2str(spec->tep.ip_addr),
-                    spec->vnic.id);
+                    spec->vnic.id, spec->public_ip_valid, ipaddr2str(&spec->public_ip));
 
     if (is_local_) {
         return reserve_local_ip_mapping_resources_(orig_obj, vcn, spec);
