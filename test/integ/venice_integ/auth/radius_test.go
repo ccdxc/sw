@@ -24,6 +24,18 @@ func getACSConfig() *RadiusConfig {
 	}
 }
 
+func getACSNoGroupUserConfig() *RadiusConfig {
+	return &RadiusConfig{
+		URL:        "10.11.100.101:1812",
+		NasID:      "Venice",
+		NasSecret:  "testing123",
+		User:       "nogroup",
+		Password:   "password",
+		Tenant:     "default",
+		UserGroups: []string{},
+	}
+}
+
 func createAuthenticationPolicy(radiusConf *auth.Radius) (*auth.AuthenticationPolicy, error) {
 	return CreateAuthenticationPolicyWithOrder(tinfo.apicl, nil, nil, radiusConf, []string{auth.Authenticators_RADIUS.String()}, ExpiryDuration)
 }
@@ -209,4 +221,38 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 func TestACSAuthentication(t *testing.T) {
 	config := getACSConfig()
 	testAuthenticator(t, config)
+}
+
+func testNoGroupUser(t *testing.T, config *RadiusConfig) {
+	radiusConf := &auth.Radius{
+		Enabled: true,
+		Servers: []*auth.RadiusServer{{
+			Url:        config.URL,
+			Secret:     config.NasSecret,
+			AuthMethod: auth.Radius_PAP.String(),
+		}},
+		NasID: config.NasID,
+	}
+	policy, err := createAuthenticationPolicy(radiusConf)
+	if err != nil {
+		t.Errorf("Error creating authentication policy: %v", err)
+		return
+	}
+	// create password authenticator
+	authenticator := radius.NewRadiusAuthenticator(policy.Spec.Authenticators.Radius)
+
+	// authenticate
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: config.User, Password: config.Password})
+	DeleteAuthenticationPolicy(tinfo.apicl)
+
+	Assert(t, ok, "expected user without group to successfully authenticate")
+
+	Assert(t, autheduser.Name == config.User, fmt.Sprintf("User [%s] returned by radius authenticator didn't match user [%s] being authenticated", autheduser.Name, config.User))
+	Assert(t, autheduser.Tenant == config.Tenant, fmt.Sprintf("Incorrect tenant [%v] returned by radius authenticator", autheduser.Tenant))
+	Assert(t, len(autheduser.Status.GetUserGroups()) == 0, fmt.Sprintf("expected no user groups, got [%#v]", autheduser.Status.GetUserGroups()))
+	Assert(t, autheduser.Spec.GetType() == auth.UserSpec_External.String(), "User created is not of type EXTERNAL")
+}
+
+func TestACSNoUserGroup(t *testing.T) {
+	testNoGroupUser(t, getACSNoGroupUserConfig())
 }

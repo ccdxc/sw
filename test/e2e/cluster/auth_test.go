@@ -485,4 +485,24 @@ var _ = Describe("auth tests", func() {
 			}, 30, 1).Should(BeNil())
 		})
 	})
+	Context("user status", func() {
+		It("check login timestamp", func() {
+			var user *auth.User
+			var err error
+			Eventually(func() error {
+				user, err = ts.restSvc.AuthV1().User().Get(ts.loggedInCtx, &api.ObjectMeta{Name: ts.tu.User, Tenant: globals.DefaultTenant})
+				return err
+			}, 10, 1).Should(BeNil())
+			loginTime, err := user.Status.LastLogin.Time()
+			Expect(err).ShouldNot(HaveOccurred())
+			ts.loggedInCtx = ts.tu.NewLoggedInContext(context.TODO())
+			Eventually(func() error {
+				user, err = ts.restSvc.AuthV1().User().Get(ts.loggedInCtx, &api.ObjectMeta{Name: ts.tu.User, Tenant: globals.DefaultTenant})
+				return err
+			}, 10, 1).Should(BeNil())
+			newLoginTime, err := user.Status.LastLogin.Time()
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(newLoginTime.After(loginTime)).Should(BeTrue())
+		})
+	})
 })

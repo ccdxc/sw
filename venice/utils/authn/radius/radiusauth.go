@@ -87,8 +87,7 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		return nil, false, err
 	}
 	if len(groups) == 0 {
-		log.Errorf("User (%s) is not a member of any group", username)
-		return nil, false, authn.ErrNoGroupMembership
+		log.Infof("User (%s) is not a member of any group", username)
 	}
 	log.Debugf("groups retrieved from RADIUS attribute: %v", groups)
 

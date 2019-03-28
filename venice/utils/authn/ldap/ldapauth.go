@@ -117,8 +117,8 @@ func (a *authenticator) bind(username, password string) (*ldap.Entry, []string, 
 		// Recursively fetch all groups that this user is member of
 		groups = append(groups, sr.Entries[0].GetAttributeValues(a.ldapConfig.GetAttributeMapping().GetGroup())...)
 		if len(groups) == 0 {
-			log.Errorf("User entry [%q] has no group attributes defined for attribute mapping [%q]", sr.Entries[0].DN, a.ldapConfig.GetAttributeMapping().GetGroup())
-			return false, authn.ErrNoGroupMembership
+			log.Infof("User entry [%q] has no group attributes defined for attribute mapping [%q]", sr.Entries[0].DN, a.ldapConfig.GetAttributeMapping().GetGroup())
+			return false, nil
 		}
 		log.Debugf("User entry [%q] is member of groups [%v]", sr.Entries[0].DN, groups)
 		groups, err = a.getLdapGroups(referral, server.TLSOptions, groups)

@@ -10,7 +10,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/venice/utils/authn"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 
@@ -121,9 +120,11 @@ func TestBind(t *testing.T) {
 			url:      ldapURL,
 			username: testUser,
 			password: testPassword,
-			entry:    nil,
-			groups:   nil,
-			err:      authn.ErrNoGroupMembership,
+			entry: &ldap.Entry{
+				DN: BaseDN,
+			},
+			groups: nil,
+			err:    nil,
 		},
 		{
 			name:     ConnectionError,
