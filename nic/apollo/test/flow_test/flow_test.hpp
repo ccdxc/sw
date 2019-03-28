@@ -53,7 +53,7 @@ flow_appdata2str(void *appdata) {
     return str;
 }
 
-#define MAX_VCNS        1024+1
+#define MAX_VCNS        128
 #define MAX_LOCAL_EPS   32
 #define MAX_REMOTE_EPS  1024
 #define MAX_EP_PAIRS_PER_VCN (MAX_LOCAL_EPS*MAX_REMOTE_EPS)
@@ -115,7 +115,10 @@ private:
     }
 
     void add_local_ep_(uint32_t vcn_id, uint32_t ipaddr) {
-        assert(vcn_id && vcn_id < MAX_VCNS);
+        assert(vcn_id);
+        if (vcn_id > MAX_VCNS) {
+            return;
+        }
         if (epdb[vcn_id].v4_lcount >= MAX_LOCAL_EPS) {
             return;
         }
@@ -127,7 +130,10 @@ private:
     }
 
     void add_local_ep_(uint32_t vcn_id, ipv6_addr_t ip6addr) {
-        assert(vcn_id && vcn_id < MAX_VCNS);
+        assert(vcn_id);
+        if (vcn_id > MAX_VCNS) {
+            return;
+        }
         if (epdb[vcn_id].v6_lcount >= MAX_LOCAL_EPS) {
             return;
         }
@@ -139,7 +145,10 @@ private:
     }
 
     void add_remote_ep_(uint32_t vcn_id, uint32_t ipaddr) {
-        assert(vcn_id && vcn_id < MAX_VCNS);
+        assert(vcn_id);
+        if (vcn_id > MAX_VCNS) {
+            return;
+        }
         if (epdb[vcn_id].v4_rcount >= MAX_REMOTE_EPS) {
             return;
         }
@@ -151,7 +160,10 @@ private:
     }
 
     void add_remote_ep_(uint32_t vcn_id, ipv6_addr_t ip6addr) {
-        assert(vcn_id && vcn_id < MAX_VCNS);
+        assert(vcn_id);
+        if (vcn_id > MAX_VCNS) {
+            return;
+        }
         if (epdb[vcn_id].v6_rcount >= MAX_REMOTE_EPS) {
             return;
         }

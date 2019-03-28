@@ -23,7 +23,7 @@
 
 using std::string;
 
-std::string  svc_endpoint_  = "localhost:9999";
+extern std::string  g_svc_endpoint_;
 
 std::unique_ptr<pds::RouteSvc::Stub>     g_route_table_stub_;
 std::unique_ptr<pds::MappingSvc::Stub>   g_mapping_stub_;
@@ -181,19 +181,19 @@ create_device_grpc (pds_device_spec_t *device)
     return SDK_RET_OK;
 }
 
+int g_epoch = 0;
+
 sdk_ret_t
-test_app_push_configs (void)
+batch_start_grpc (void)
 {
     BatchSpec           spec;
     ClientContext       start_context;
-    ClientContext       commit_context;
-    BatchStatus         status;
     Status              ret_status;
     pds_batch_params_t  params;
-    types::Empty        empty_spec;
-    types::Empty        response;
-
-    params.epoch = 1;
+    BatchStatus         status;
+    
+    g_epoch++;
+    params.epoch = g_epoch;
     populate_batch_spec(&spec, &params);
     
     /* Batch start */
@@ -204,26 +204,18 @@ test_app_push_configs (void)
         return SDK_RET_ERR;
     }
     
-    printf("%s: Pushing objects...\n", __FUNCTION__);
-    /* Create objects */
-    create_objects();
-    
-#if 0
-    // TODO: Adding this here since there is no proto defs for
-    // flows. This needs to be cleaned up
-    sdk_ret_t ret = SDK_RET_OK;
+    return SDK_RET_OK;
+}
 
-    ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, false);
-    if (ret != sdk::SDK_RET_OK) {
-        return Status::CANCELLED;
-    }
 
-    ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, true);
-    if (ret != sdk::SDK_RET_OK) {
-        return Status::CANCELLED;
-    }
-#endif
-    
+sdk_ret_t
+batch_commit_grpc (void)
+{
+    ClientContext       commit_context;
+    types::Empty        empty_spec;
+    types::Empty        response;
+    Status              ret_status;
+
     printf("%s: Batch commit START\n", __FUNCTION__);
     /* Batch commit */
     ret_status = g_batch_stub_->BatchCommit(&commit_context, empty_spec, &response);
@@ -232,7 +224,18 @@ test_app_push_configs (void)
         return SDK_RET_ERR;
     }
     printf("%s: Batch commit DONE!\n", __FUNCTION__);
+    return SDK_RET_OK;
+}
 
+sdk_ret_t
+test_app_push_configs (void)
+{
+    BatchStatus         status;
+    Status              ret_status;
+
+    /* Create objects */
+    create_objects();
+    
     return SDK_RET_OK;
 }
 
@@ -240,7 +243,10 @@ void
 test_app_init (void)
 {
     grpc_init();
-    std::shared_ptr<Channel> channel = grpc::CreateChannel(svc_endpoint_,
+    if (g_svc_endpoint_.empty()) {
+        g_svc_endpoint_ = std::string("localhost:9999");
+    }
+    std::shared_ptr<Channel> channel = grpc::CreateChannel(g_svc_endpoint_,
                                grpc::InsecureChannelCredentials());
     g_route_table_stub_ = pds::RouteSvc::NewStub(channel);
     g_mapping_stub_ = pds::MappingSvc::NewStub(channel);

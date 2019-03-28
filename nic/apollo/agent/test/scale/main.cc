@@ -50,6 +50,8 @@ static void inline print_usage(char **argv)
             argv[0]);
 }
 
+std::string  g_svc_endpoint_;
+
 int
 main (int argc, char **argv)
 {
@@ -57,12 +59,13 @@ main (int argc, char **argv)
     struct option longopts[] = {
         {"config", required_argument, NULL, 'c'},
         {"daemon", required_argument, NULL, 'd'},
+        {"server", required_argument, NULL, 's'},
         {"help", no_argument, NULL, 'h'},
         {0, 0, 0, 0}
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hdc:i:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hdc:i:s:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'd':
             g_daemon_mode = true;
@@ -75,6 +78,16 @@ main (int argc, char **argv)
                 print_usage(argv);
                 exit(1);
             }
+            break;
+
+        case 's':
+            g_svc_endpoint_ = optarg;
+            if (g_svc_endpoint_.empty()) {
+                fprintf(stderr, "server ip is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            g_svc_endpoint_ = g_svc_endpoint_ + ":9999";
             break;
 
         default:

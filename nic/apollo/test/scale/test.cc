@@ -95,65 +95,20 @@ test_params_t g_test_params = { 0 };
 // create route tables
 //------------------------------------------------------------------------------
 sdk_ret_t
-create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+create_v6_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                      uint32_t num_routes, ip_prefix_t *tep_pfx,
                      ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx)
 {
     uint32_t ntables = num_vcns * num_subnets;
     uint32_t tep_offset = 3;
-    static uint32_t rtnum = 0;
-    static uint32_t v6rtnum = 0;
-    pds_route_table_spec_t route_table;
+    uint32_t v6rtnum = 0;
     pds_route_table_spec_t v6route_table;
     sdk_ret_t rv = SDK_RET_OK;
-
-    route_table.af = IP_AF_IPV4;
-    route_table.routes =
-        (pds_route_t *)malloc((num_routes * sizeof(pds_route_t)));
-    route_table.num_routes = num_routes;
-    for (uint32_t i = 1; i <= ntables; i++) {
-        route_table.key.id = i;
-        for (uint32_t j = 0; j < num_routes; j++) {
-            route_table.routes[j].prefix.len = 24;
-            route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
-            route_table.routes[j].prefix.addr.addr.v4_addr =
-                ((0xC << 28) | (rtnum++ << 8));
-            route_table.routes[j].nh_ip.af = IP_AF_IPV4;
-            route_table.routes[j].nh_ip.addr.v4_addr =
-                tep_pfx->addr.addr.v4_addr + tep_offset++;
-
-            tep_offset %= (num_teps + 3);
-            if (tep_offset == 0) {
-                // skip MyTEP and gateway IPs
-                tep_offset += 3;
-            }
-            route_table.routes[j].nh_type = PDS_NH_TYPE_REMOTE_TEP;
-            route_table.routes[j].vcn_id = PDS_VCN_ID_INVALID;
-        }
-#ifdef TEST_GRPC_APP
-        rv = create_route_table_grpc(&route_table);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#else
-        rv = pds_route_table_create(&route_table);
-        if (rv != SDK_RET_OK) {
-            return rv;
-        }
-#endif
-    }
-#ifdef TEST_GRPC_APP
-    // Batching: push leftover objects
-    rv = create_route_table_grpc(NULL);
-    if (rv != SDK_RET_OK) {
-        return rv;
-    }
-#endif
 
     tep_offset = 3;
     v6route_table.af = IP_AF_IPV6;
     v6route_table.routes =
-            (pds_route_t *)malloc((num_routes * sizeof(pds_route_t)));
+            (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE, (num_routes * sizeof(pds_route_t)));
     v6route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
         v6route_table.key.id = ntables + i;
@@ -198,7 +153,76 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
         return rv;
     }
 #endif
+    
+    return rv;
+}
 
+sdk_ret_t
+create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+                     uint32_t num_routes, ip_prefix_t *tep_pfx,
+                     ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx)
+{
+    uint32_t ntables = num_vcns * num_subnets;
+    uint32_t tep_offset = 3;
+    uint32_t rtnum = 0;
+    pds_route_table_spec_t route_table;
+    sdk_ret_t rv = SDK_RET_OK;
+
+    route_table.af = IP_AF_IPV4;
+    route_table.routes =
+        (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE, (num_routes * sizeof(pds_route_t)));
+    route_table.num_routes = num_routes;
+    for (uint32_t i = 1; i <= ntables; i++) {
+        route_table.key.id = i;
+        for (uint32_t j = 0; j < num_routes; j++) {
+            route_table.routes[j].prefix.len = 24;
+            route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
+            route_table.routes[j].prefix.addr.addr.v4_addr =
+                ((0xC << 28) | (rtnum++ << 8));
+            route_table.routes[j].nh_ip.af = IP_AF_IPV4;
+            route_table.routes[j].nh_ip.addr.v4_addr =
+                tep_pfx->addr.addr.v4_addr + tep_offset++;
+
+            tep_offset %= (num_teps + 3);
+            if (tep_offset == 0) {
+                // skip MyTEP and gateway IPs
+                tep_offset += 3;
+            }
+            route_table.routes[j].nh_type = PDS_NH_TYPE_REMOTE_TEP;
+            route_table.routes[j].vcn_id = PDS_VCN_ID_INVALID;
+        }
+#ifdef TEST_GRPC_APP
+        printf("Route table: %d\n", i);
+        rv = create_route_table_grpc(&route_table);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+        // Batching: push leftover objects
+        rv = create_route_table_grpc(NULL);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+        rv = batch_commit_grpc();
+        if (rv != SDK_RET_OK) {
+            printf("%s: Batch commit failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        rv = batch_start_grpc();
+        if (rv != SDK_RET_OK) {
+            printf("%s: Batch start failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+#else
+        rv = pds_route_table_create(&route_table);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#endif
+    }
+
+    rv = create_v6_route_tables(num_teps, num_vcns, num_subnets,
+                     num_routes, tep_pfx, route_pfx, v6_route_pfx);
+    
     return rv;
 }
 
@@ -788,6 +812,16 @@ create_objects (void)
         std::cerr << e.what() << std::endl;
         exit(1);
     }
+    
+
+#ifdef TEST_GRPC_APP
+    /* BATCH START */
+    ret = batch_start_grpc();
+    if (ret != SDK_RET_OK) {
+        printf("%s: Batch start failed!\n", __FUNCTION__);
+        return SDK_RET_ERR;
+    }
+#endif
 
     // create device config
     ret = create_device_cfg(g_test_params.device_ip, g_test_params.device_mac,
@@ -866,6 +900,15 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+    
+#ifdef TEST_GRPC_APP
+    /* BATCH COMMIT */
+    ret = batch_commit_grpc();
+    if (ret != SDK_RET_OK) {
+        printf("%s: Batch commit failed!\n", __FUNCTION__);
+        return SDK_RET_ERR;
+    }
+#endif
 
     return ret;
 }

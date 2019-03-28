@@ -43,7 +43,7 @@ Status
 RouteSvcImpl::RouteTableCreate(ServerContext *context,
                                const pds::RouteTableRequest *proto_req,
                                pds::RouteTableResponse *proto_rsp) {
-    sdk_ret_t ret;
+    sdk_ret_t ret = sdk::SDK_RET_OK;
     pds_route_table_key_t key;
     pds_route_table_spec_t *api_spec;
 
