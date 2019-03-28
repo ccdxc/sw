@@ -11,6 +11,9 @@ describe('venice-ui fwlogs', () => {
   let sourcePorts = 0;
   let destPorts = 0;
 
+  const sourceColumn = 4;
+  const destinationColumn = 5;
+
   beforeEach(async (done) => {
     appPage = new AppPage();
     firewallLogsPage = new FirewallLogs();
@@ -45,8 +48,8 @@ describe('venice-ui fwlogs', () => {
       // if Venice just starts up, there might be no fw-log record at all
       const randomIndex = Math.floor(Math.random() * (tableData.length - 1)); // randomly pick a row between 0-10
       const rowValues = tableData[randomIndex];
-      sourcePorts = rowValues[3];
-      destPorts = rowValues[4];
+      sourcePorts = rowValues[sourceColumn];
+      destPorts = rowValues[destinationColumn];
       console.log('Get fwLog table search ports. ' + sourcePorts + ' ' + destPorts);
       await browser.sleep(5000);
     }
@@ -76,14 +79,14 @@ describe('venice-ui fwlogs', () => {
         const rowValues = tableData[i];
         for (let j = 0; j < rowValues.length; j++) {
           const columnIdx = j;
-          if (columnIdx === 3) { // sourcePort column
+          if (columnIdx === sourceColumn) { // sourcePort column
             const celValueSrcPorts = rowValues[columnIdx];
             if (celValueSrcPorts !== sourcePorts) {
               sourcePortMatch = false;
               break;
             }
           }
-          if (columnIdx === 4) { // destinationPort column
+          if (columnIdx === destinationColumn) { // destinationPort column
             const celValueDstPorts = rowValues[columnIdx];
             if (celValueDstPorts !== destPorts) {
               destPortMatch = false;

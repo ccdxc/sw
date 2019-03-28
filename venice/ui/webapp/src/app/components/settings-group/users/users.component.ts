@@ -437,13 +437,15 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
         const buffername = createdBuffer.meta.name;
         const observables: Observable<any>[] = [];
-        observables.push(this._authService.DeleteRole(deletedRole.meta.name, buffername));
+        // We want to delete all referenced role-binding first
         this.authRoleBindings.forEach((rolebinding: AuthRoleBinding) => {
           if (rolebinding.spec.role === deletedRole.meta.name) {
             const observable = this._authService.DeleteRoleBinding(rolebinding.meta.name, buffername);
             observables.push(observable);
           }
         });
+        // Delete role after delete role-binding.
+        observables.push(this._authService.DeleteRole(deletedRole.meta.name, buffername));
         forkJoin(observables).subscribe(results => {
           const isAllOK = Utility.isForkjoinResultAllOK(results);
           if (isAllOK) {

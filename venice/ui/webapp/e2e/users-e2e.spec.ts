@@ -38,7 +38,7 @@ describe('venice-ui RBAC management', () => {
                 'resource-group': 'Cluster',
                 'resource-kind': 'Tenant',
                 'actions': [
-                  'AllActions'
+                  'All Actions'
                 ]
               }
             ]
