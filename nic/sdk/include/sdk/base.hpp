@@ -214,6 +214,7 @@ using sdk::SDK_RET_ERR;
 using sdk::SDK_RET_INVALID_ARG;
 using sdk::SDK_RET_INVALID_OP;
 using sdk::SDK_RET_ENTRY_NOT_FOUND;
+using sdk::SDK_RET_ENTRY_EXISTS;
 using sdk::SDK_RET_COMM_FAIL;
 using sdk::sdk_status_t;
 
