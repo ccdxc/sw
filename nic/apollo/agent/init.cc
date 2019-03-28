@@ -12,8 +12,8 @@
 namespace core {
 
 // number of trace files to keep
-#define TRACE_NUM_FILES                        10
-#define TRACE_FILE_SIZE                        (100 << 20)
+#define TRACE_NUM_FILES                        5
+#define TRACE_FILE_SIZE                        (20 << 20)
 typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 
 //------------------------------------------------------------------------------
