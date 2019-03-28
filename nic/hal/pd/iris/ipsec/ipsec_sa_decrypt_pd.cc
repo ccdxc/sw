@@ -71,7 +71,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size = ipsec_sa_pd->ipsec_sa->iv_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size = ipsec_sa_pd->ipsec_sa->block_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size = ipsec_sa_pd->ipsec_sa->icv_size;
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.ipsec_cb_index = htons(ipsec_sa_pd->ipsec_sa->sa_id);
+        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.ipsec_cb_index = htons(ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4));
 
         //data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = ipsec_sa_pd->ipsec_sa->barco_enc_cmd;
         // for now aes-decrypt-encoding hard-coded.
@@ -87,7 +87,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         // the below may have to use a different range for the reverse direction
 
         ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ,
-                                     (ipsec_sa_pd->ipsec_sa->sa_id) + 4,
+                                     (ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)) + 4,
                                      &ipsec_cb_ring_addr);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
@@ -100,7 +100,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         HAL_TRACE_DEBUG("key_index {}, new_key_index {}", ipsec_sa_pd->ipsec_sa->key_index, ipsec_sa_pd->ipsec_sa->new_key_index);
         // the below may have to use a different range for the reverse direction
         ipsec_cb_ring_base = get_mem_addr(CAPRI_HBM_REG_IPSECCB);
-        ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipsec_sa_pd->ipsec_sa->sa_id * IPSEC_CB_RING_ENTRY_SIZE));
+        ipsec_cb_ring_addr = (ipsec_cb_ring_base+((ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4))* IPSEC_CB_RING_ENTRY_SIZE));
 #endif
 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr = htonl((uint32_t)ipsec_cb_ring_addr & 0xFFFFFFFF);
@@ -108,7 +108,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex = 0;
 
         ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ_BARCO,
-                                     (ipsec_sa_pd->ipsec_sa->sa_id) + 4,
+                                     (ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)) + 4,
                                      &ipsec_barco_ring_addr);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
@@ -342,7 +342,7 @@ pd_ipsec_decrypt_get_base_hw_index(pd_ipsec_t* ipsec_sa_pd)
     // Get the base address of IPSEC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
     uint64_t base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_IPSEC_ESP, 1, 0);
-    uint64_t offset = base + (ipsec_sa_pd->ipsec_sa->sa_id * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
+    uint64_t offset = base + ((ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)) * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
     HAL_TRACE_DEBUG("received decrypt base {:#x} offset {:#x}", base, offset);
     return offset;
 }
@@ -599,7 +599,7 @@ pd_ipsec_decrypt_get (pd_func_args_t *pd_func_args)
     pd_crypto_read_key_args_t read_key;
     crypto_key_t              key;
 
-    HAL_TRACE_DEBUG("IPSECCB pd get for id: {}", args->ipsec_sa->sa_id);
+    HAL_TRACE_DEBUG("IPSECCB pd get for id: {}", (args->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)));
 
     // allocate PD ipsec_sa state
     ipsec_pd_decrypt_init(&ipsec_sa_pd);
@@ -612,7 +612,7 @@ pd_ipsec_decrypt_get (pd_func_args_t *pd_func_args)
     // get hw ipsec_sa entry
     ret = p4pd_get_ipsec_decrypt_entry(&ipsec_sa_pd);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for id: 0x{:#x}", ipsec_sa_pd.ipsec_sa->sa_id);
+        HAL_TRACE_ERR("Get request failed for id: 0x{:#x}", (ipsec_sa_pd.ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)));
     }
 
     read_key.key_idx = ipsec_sa_pd.ipsec_sa->key_index;

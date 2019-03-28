@@ -117,7 +117,7 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     }
 
     ipsec_sa->vrf = vrf->vrf_id;
-    ipsec_sa->sa_id = spec.key_or_handle().cb_id();
+    ipsec_sa->sa_id = spec.key_or_handle().cb_id() + (HAL_MAX_IPSEC_SA/4);
 
     ipsec_sa->iv_size = IPSEC_DEF_IV_SIZE;
     ipsec_sa->block_size = IPSEC_AES_GCM_DEF_BLOCK_SIZE;
@@ -178,7 +178,7 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->mutable_ipsec_sa_status()->set_ipsec_sa_handle(ipsec_sa->hal_handle);
 
-    HAL_TRACE_DEBUG("Returning Success for SA ID {}", ipsec_sa->sa_id);
+    HAL_TRACE_DEBUG("Returning Success for SA ID {}", (ipsec_sa->sa_id -(HAL_MAX_IPSEC_SA/4)));
     return HAL_RET_OK;
 
 cleanup:
@@ -204,7 +204,7 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec_sa_decrypt_spec_dump(spec);
     auto kh = spec.key_or_handle();
 
-    ipsec = find_ipsec_sa_by_id(kh.cb_id());
+    ipsec = find_ipsec_sa_by_id(kh.cb_id() + (HAL_MAX_IPSEC_SA/4));
     if (ipsec == NULL) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_IPSEC_CB_NOT_FOUND;
@@ -272,7 +272,7 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     }
 
     rsp->set_api_status(types::API_STATUS_OK);
-    HAL_TRACE_DEBUG("Returning Success for SA ID {}", ipsec->sa_id);
+    HAL_TRACE_DEBUG("Returning Success for SA ID {}", (ipsec->sa_id - (HAL_MAX_IPSEC_SA/4)));
 
     return HAL_RET_OK;
 }
@@ -292,7 +292,7 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
 
     auto kh = req.key_or_handle();
 
-    ipsec = find_ipsec_sa_by_id(kh.cb_id());
+    ipsec = find_ipsec_sa_by_id(kh.cb_id() + (HAL_MAX_IPSEC_SA/4));
     if (ipsec == NULL) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_IPSEC_CB_NOT_FOUND;
@@ -312,7 +312,7 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
     }
 
     // fill config spec of this IPSEC CB
-    rsp->mutable_spec()->mutable_key_or_handle()->set_cb_id(ripsec.sa_id);
+    rsp->mutable_spec()->mutable_key_or_handle()->set_cb_id(ripsec.sa_id -(HAL_MAX_IPSEC_SA/4));
 
     if (ripsec.barco_enc_cmd == IPSEC_BARCO_DECRYPT_AES_GCM_256) {
         rsp->mutable_spec()->set_authentication_algorithm(ipsec::AUTHENTICATION_AES_GCM);
@@ -366,7 +366,7 @@ ipsec_sadecrypt_delete (ipsec::IpsecSADecryptDeleteRequest& req, ipsec::IpsecSAD
     pd::pd_func_args_t          pd_func_args = {0};
 
     auto kh = req.key_or_handle();
-    ipsec = find_ipsec_sa_by_id(kh.cb_id());
+    ipsec = find_ipsec_sa_by_id(kh.cb_id() + (HAL_MAX_IPSEC_SA/4));
     if (ipsec == NULL) {
         rsp->set_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;

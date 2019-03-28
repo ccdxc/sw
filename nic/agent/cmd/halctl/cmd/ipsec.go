@@ -166,10 +166,10 @@ func showIpsecEncryptSA(resp *halproto.IpsecSAEncryptGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "iv", spec.Iv)
 	fmt.Printf("%-30s : %-6d\n", "key_index", spec.KeyIndex)
 	fmt.Printf("%-30s : %-6d\n", "seq_no", spec.SeqNo)
-	fmt.Printf("%-30s : %-6d\n", "total_rx_pkts", spec.TotalRxPkts)
-	fmt.Printf("%-30s : %-6d\n", "total_rx_drops", spec.TotalRxDrops)
+	//fmt.Printf("%-30s : %-6d\n", "total_rx_pkts", spec.TotalRxPkts)
+	//fmt.Printf("%-30s : %-6d\n", "total_rx_drops", spec.TotalRxDrops)
 	fmt.Printf("%-30s : %-6d\n", "total_pkts", spec.TotalPkts)
-	fmt.Printf("%-30s : %-6d\n", "total_drops", spec.TotalDrops)
+	//fmt.Printf("%-30s : %-6d\n", "total_drops", spec.TotalDrops)
 }
 
 func showIpsecDecryptSA(resp *halproto.IpsecSADecryptGetResponse) {
@@ -195,10 +195,10 @@ func showIpsecDecryptSA(resp *halproto.IpsecSADecryptGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "salt", spec.Salt)
 	fmt.Printf("%-30s : %-6d\n", "expected_seq_no", spec.SeqNo)
 	fmt.Printf("%-30s : %-6d\n", "seq_no_bmp", spec.SeqNoBmp)
-	fmt.Printf("%-30s : %-6d\n", "total_rx_pkts", spec.TotalRxPkts)
-	fmt.Printf("%-30s : %-6d\n", "total_rx_drops", spec.TotalRxDrops)
+	//fmt.Printf("%-30s : %-6d\n", "total_rx_pkts", spec.TotalRxPkts)
+	//fmt.Printf("%-30s : %-6d\n", "total_rx_drops", spec.TotalRxDrops)
 	fmt.Printf("%-30s : %-6d\n", "total_pkts", spec.TotalPkts)
-	fmt.Printf("%-30s : %-6d\n", "total_drops", spec.TotalDrops)
+	//fmt.Printf("%-30s : %-6d\n", "total_drops", spec.TotalDrops)
 }
 
 func ipsecGlobalStatisticsShowCmdHandler(cmd *cobra.Command, args []string) {
