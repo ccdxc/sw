@@ -136,7 +136,6 @@ testcases:
 
     -   name: CpDcWHdrZp4K8K
         testcase    : testcases.storage.ymltest2
-        ignore      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
@@ -181,8 +180,6 @@ testcases:
     # PS-360
     -   name: CpDc16K32KLbd
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
@@ -253,8 +250,6 @@ testcases:
 
     -   name: CpDcWHdrZp16K32K
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
