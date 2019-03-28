@@ -21,6 +21,7 @@ set -o pipefail
 #
 
 #start of script
+rm -fr /venice-bin/pxe
 mkdir -p /venice-bin/pxe
 cd /venice-bin/pxe
 livecd-iso-to-pxeboot /venice-bin/pen-install.iso
@@ -58,5 +59,6 @@ mkisofs -o /venice-bin/pen-install.iso \
   /iso
 /usr/bin/isohybrid -u -m /venice-bin/pen-install.iso
 
+chmod -R 777 /venice-bin
 
 exit 0
