@@ -21,9 +21,9 @@ vnic_util::vnic_util(uint32_t vnic_id, uint16_t vlan_tag,
     this->sub_id = 1;
     this->vlan_tag = vlan_tag;
     this->mpls_slot = mpls_slot;
-    //this->src_dst_check = spec.src_dst_check;
-    //this->rsc_pool_id = spec.rsc_pool_id;
     this->mac_u64 = mac_u64;
+    this->rsc_pool_id = 0;
+    this->src_dst_check = true;;
 }
 
 vnic_util::vnic_util() {
@@ -32,8 +32,8 @@ vnic_util::vnic_util() {
     this->vnic_id = PDS_MAX_VNIC + 1;
     this->vlan_tag = -1;
     this->mpls_slot = -1;
-    this->rsc_pool_id = -1;
-    this->src_dst_check = false;
+    this->rsc_pool_id = 0;
+    this->src_dst_check = true;
 }
 
 vnic_util::vnic_util(pds_vcn_id_t vcn_id, pds_vnic_id_t vnic_id,
@@ -58,7 +58,11 @@ vnic_util::create(void) {
     spec.wire_vlan = vlan_tag;
     spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
     spec.fabric_encap.val.mpls_tag = mpls_slot;
-    mac_str_to_addr((char *)vnic_mac.c_str(), spec.mac_addr);
+    if (mac_u64 != 0) {
+        MAC_UINT64_TO_ADDR(spec.mac_addr, mac_u64);
+    } else if (!vnic_mac.empty()) {
+        mac_str_to_addr((char *)vnic_mac.c_str(), spec.mac_addr);
+    }
     spec.rsc_pool_id = rsc_pool_id;
     spec.src_dst_check = src_dst_check;
     return pds_vnic_create(&spec);
@@ -76,19 +80,21 @@ vnic_util::read(pds_vnic_info_t *info, bool compare_spec) {
         return rv;
     }
     if (compare_spec) {
-#if 0
-        mac_addr_t mac;
-        mac_str_to_addr((char *)vnic_mac.c_str(), mac);
+        mac_addr_t mac = {0};
         SDK_ASSERT(vnic_id == info->spec.key.id);
         //SDK_ASSERT(vcn_id == info->spec.vcn.id);  //This is hw_id during read
         //SDK_ASSERT(sub_id == info->spec.subnet.id); //This is hw_id during read
         SDK_ASSERT(vlan_tag == info->spec.wire_vlan);
         SDK_ASSERT(PDS_ENCAP_TYPE_MPLSoUDP == info->spec.fabric_encap.type);
         SDK_ASSERT(mpls_slot == info->spec.fabric_encap.val.mpls_tag);
-        //SDK_ASSERT(memcmp(mac, info->spec.mac_addr, sizeof(mac)) == 0);
+        if (mac_u64 != 0) {
+            MAC_UINT64_TO_ADDR(mac, mac_u64);
+        } else if (!vnic_mac.empty()) {
+            mac_str_to_addr((char *)vnic_mac.c_str(), mac);
+        }
+        SDK_ASSERT(memcmp(mac, info->spec.mac_addr, sizeof(mac)) == 0);
         SDK_ASSERT(rsc_pool_id == info->spec.rsc_pool_id);
         SDK_ASSERT(src_dst_check == info->spec.src_dst_check);
-#endif
     }
     return rv;
 }
