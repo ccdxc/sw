@@ -45,7 +45,7 @@ packets:
 
     - packet:
         id          : SEND_FIRST # Base packet
-        payloadsize : ref://testcase/packets/id=BASE_PKT1/size
+        payloadsize : 1024
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :
@@ -78,7 +78,7 @@ packets:
 
     - packet:
         id          : SEND_MID # Base packet
-        payloadsize : ref://testcase/packets/id=BASE_PKT2/size
+        payloadsize : 1024
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :
@@ -145,7 +145,7 @@ packets:
 
     - packet:
         id          : WRITE_FIRST # Base packet
-        payloadsize : ref://testcase/packets/id=BASE_PKT1/size
+        payloadsize : 1024
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         encaps      :
@@ -182,7 +182,7 @@ packets:
 
     - packet:
         id          : WRITE_MID # Base packet
-        payloadsize : ref://testcase/packets/id=BASE_PKT2/size
+        payloadsize : 1024
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :
@@ -285,7 +285,7 @@ packets:
                 data    : None
 
     - packet:
-        id          : NAK # Base packet
+        id          : ACK1 # Base packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
@@ -313,23 +313,23 @@ packets:
              bth:
                  opcode  : 17 # Acknowledge
                  destqp  : ref://testcase/config/rdmasession/lqp/id
-                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=3 #(NAK second message)
+                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=2
              aeth:
-                syndrome : 96 #  (0110 0000 - PKT seq error)
+                syndrome : 14
                 msn      : callback://rdma/rdma/GetPktMsn/ack_num=0
              payload:
                  data    : None
 
     - packet:
-         id          : READ_RESP_ONLY    # Receive packet
-         payloadsize : ref://testcase/packets/id=BASE_PKT3/size
-         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
-         icrc        : True
-         encaps      :
-             - ref://factory/packets/id=ENCAP_QTAG
-         headers     :
-             # Add all possible headers, the final headers will be selected
-             # based on the Flow.
+        id          : ACK2 # Base packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
              eth:
                  src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
                  dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
@@ -347,14 +347,14 @@ packets:
                  sport   : ref://testcase/config/rdmasession/session/iflow/sport
                  dport   : ref://testcase/config/rdmasession/session/iflow/dport
              bth:
-                 opcode  : 16
+                 opcode  : 17 # Acknowledge
                  destqp  : ref://testcase/config/rdmasession/lqp/id
-                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=6
+                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=5
              aeth:
-                syndrome : 14 # TODO - credits
-                msn      : callback://rdma/rdma/GetPktMsn/ack_num=2
+                syndrome : 14
+                msn      : callback://rdma/rdma/GetPktMsn/ack_num=1
              payload:
-                 data    : ref://testcase/packets/id=BASE_PKT3/rawbytes
+                 data    : None
 
 buffers:
     - buffer:
@@ -393,26 +393,6 @@ buffers:
                - size    : ref://testcase/packets/id=BASE_PKT2/size
                  data    : ref://testcase/packets/id=BASE_PKT2/rawbytes
 
-               - size    : ref://testcase/packets/id=BASE_PKT3/size
-                 data    : ref://testcase/packets/id=BASE_PKT3/rawbytes
-
-    - buffer:
-        id      : READ_BUF
-        template: ref://factory/templates/id=RDMA_BUFFER
-        fields:
-           slab    : callback://rdma/rdma/GetNewSlab
-           offset  : 0
-           segments:
-               - size    : ref://testcase/packets/id=BASE_PKT3/size
-                 data    : None
-
-    - buffer:
-        id      : EXP_READ_BUF
-        template: ref://factory/templates/id=RDMA_BUFFER
-        fields:
-           slab    : None
-           offset  : 0
-           segments:
                - size    : ref://testcase/packets/id=BASE_PKT3/size
                  data    : ref://testcase/packets/id=BASE_PKT3/rawbytes
 
@@ -455,45 +435,22 @@ descriptors:
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=SEND_BUF
 
     - descriptor:
-        id      : READ_DESC
+        id      : INV_OP_DESC
         template: ref://factory/templates/id=DESC_RDMA_SQ
         fields:
-            op_type : 3  # OP_TYPE_READ
-            wrid    : 8
-            num_sges: 1
-
-            read    :
-                va    : ref://testcase/pvtdata/read_va
-                len   : ref://testcase/pvtdata/read_dma_len
-                r_key : ref://testcase/pvtdata/read_rkey
-
-            sges:
-                - va  : ref://testcase/buffers/id=READ_BUF/address
-                  len : ref://testcase/buffers/id=READ_BUF/size
-                  l_key: callback://rdma/rdma/GetMrSlabLkey/id=READ_BUF
+            op_type : 13  # unsupported op_tpe
+            wrid    : ref://testcase/pvtdata/wrid
 
     - descriptor:
-        id      : EXP_CQ_DESC1
+        id      : EXP_ERR_CQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            msn:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
+            wrid: ref://testcase/pvtdata/wrid
             qid: ref://testcase/config/rdmasession/lqp/id
-            #op_type: 0
-            status : 0 # CQ_STATUS_SUCCESS
+            status : 2 # CQ_STATUS_LOCAL_QP_OPER_ERR
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
-            error  : 0
-            type   : 2 #CQE_TYPE_SEND_MSN
-
-    - descriptor:
-        id      : EXP_CQ_DESC2
-        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
-        fields:
-            msn: callback://rdma/rdma/GetCQMsn/sq_wqe_num=1
-            qid: ref://testcase/config/rdmasession/lqp/id
-            status : 11  #CQ_STATUS_RETRY_EXCEEDED
-            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1
             error  : 1
-            type   : 2 #CQE_TYPE_SEND_MSN
+            type   : 3 #CQE_TYPE_SEND_NPG
 
     - descriptor:
         id      : EXP_RQ_FLUSH_CQ_DESC
@@ -502,9 +459,33 @@ descriptors:
             wrid   : 0
             qid: ref://testcase/config/rdmasession/lqp/id
             status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
-            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=2
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
             error  : 1
-            smac: callback://rdma/rdma/GetZeroMAC
+            smac   : callback://rdma/rdma/GetZeroMAC
+
+    - descriptor:
+        id      : EXP_CQ_DESC1
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            msn:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            #op_type: 3 # OP_TYPE_READ
+            status : 0 # CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1
+            error  : 0
+            type   : 2 #CQE_TYPE_SEND_MSN
+
+    - descriptor:
+        id      : EXP_CQ_DESC2
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            msn:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=1
+            qid: ref://testcase/config/rdmasession/lqp/id
+            #op_type: 3 # OP_TYPE_READ
+            status : 0 # CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=2
+            error  : 0
+            type   : 2 #CQE_TYPE_SEND_MSN
 
 session:
     - step:
@@ -519,7 +500,7 @@ session:
                     ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
 
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=READ_DESC
+                    object  : ref://testcase/descriptors/id=INV_OP_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
 
             doorbell:
@@ -553,15 +534,16 @@ session:
                     object  : ref://testcase/packets/id=WRITE_LAST
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
-                - packet:
-                    object  : ref://testcase/packets/id=READ_REQ
-                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_ERR_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
 
-    - step:
+    - step: # ACK for SEND and WRITE
         trigger:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=NAK
+                    object  : ref://testcase/packets/id=ACK1
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
         expect:
@@ -570,13 +552,24 @@ session:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC1
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
 
+    - step: # READ Response Receive
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=ACK2
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+        expect:
+            descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC2
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
 
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_RQ_FLUSH_CQ_DESC
-                    ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+
+
 
     #set CI for CQ ring to that of proxy CI in DB data
     - step:
@@ -588,5 +581,6 @@ session:
                     upd : 0x4 #Set CI
 
         expect:
+
 
 

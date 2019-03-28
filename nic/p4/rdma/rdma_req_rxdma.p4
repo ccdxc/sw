@@ -405,6 +405,7 @@ header_type req_rx_sqcb1_to_compl_feedback_info_t {
     fields {
         status                           : 8;
         err_qp_instantly                 : 1;
+        ssn                              : 24;
     }
 }
 
@@ -1520,6 +1521,7 @@ action req_rx_completion_feedback_process () {
     // stage to stage
     modify_field(t2_s2s_sqcb1_to_compl_feedback_info_scr.status, t2_s2s_sqcb1_to_compl_feedback_info.status);
     modify_field(t2_s2s_sqcb1_to_compl_feedback_info_scr.err_qp_instantly, t2_s2s_sqcb1_to_compl_feedback_info.err_qp_instantly);
+    modify_field(t2_s2s_sqcb1_to_compl_feedback_info_scr.ssn, t2_s2s_sqcb1_to_compl_feedback_info.ssn);
 
 }
 

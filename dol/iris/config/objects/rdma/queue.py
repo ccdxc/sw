@@ -352,7 +352,7 @@ class RdmaSQstate(Packet):
         LEShortField("c_index2", 0),
         LEShortField("p_index3", 0),
         LEShortField("c_index3", 0),
-        LEShortField("sqd_cindex", 0),
+        ShortField("sqd_cindex", 0),
         XByteField("sqcb0_rsvd1", 0),
 
         XByteField("phy_base_addr_8", 0),

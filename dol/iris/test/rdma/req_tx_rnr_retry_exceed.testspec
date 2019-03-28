@@ -518,7 +518,7 @@ descriptors:
             wrid   : 0
             qid: ref://testcase/config/rdmasession/lqp/id
             status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
-            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=2
             error  : 1
             smac: callback://rdma/rdma/GetZeroMAC
 

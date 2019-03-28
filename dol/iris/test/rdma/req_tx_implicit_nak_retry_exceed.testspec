@@ -378,7 +378,7 @@ descriptors:
             msn: callback://rdma/rdma/GetCQMsn/sq_wqe_num=1
             qid: ref://testcase/config/rdmasession/lqp/id
             status : 11  #CQ_STATUS_RETRY_EXCEEDED
-            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1
             error  : 1
             type   : 2 #CQE_TYPE_SEND_MSN
 
