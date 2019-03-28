@@ -25,7 +25,7 @@ if [[ -f /sysconfig/config0/post_disable ]]; then
     echo "Skipping Power On Self Test (POST)"
 else
     echo "Running Power On Self Test (POST) ..."
-    /nic/bin/diag_test post 2>&1 | tee /var/log/post_report_`date +"%Y%m%d-%T"`.txt
+    /nic/bin/diag_test post 2>&1 | tee /var/log/pensando/post_report_`date +"%Y%m%d-%T"`.txt
 fi
 
 cd /
