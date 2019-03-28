@@ -159,7 +159,7 @@ func (m *Cluster) Clone(into interface{}) (interface{}, error) {
 func (m *Cluster) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Cluster"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
@@ -270,7 +270,7 @@ func (m *Host) Clone(into interface{}) (interface{}, error) {
 func (m *Host) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Host"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
@@ -414,7 +414,7 @@ func (m *Node) Clone(into interface{}) (interface{}, error) {
 func (m *Node) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Node"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}

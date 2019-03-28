@@ -53,7 +53,7 @@ func (m *Network) Clone(into interface{}) (interface{}, error) {
 func (m *Network) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Network"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

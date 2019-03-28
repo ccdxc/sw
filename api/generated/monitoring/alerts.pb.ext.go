@@ -91,7 +91,7 @@ func (m *Alert) Clone(into interface{}) (interface{}, error) {
 func (m *Alert) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Alert"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
@@ -120,7 +120,7 @@ func (m *AlertDestination) Clone(into interface{}) (interface{}, error) {
 func (m *AlertDestination) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "AlertDestination"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
@@ -194,7 +194,7 @@ func (m *AlertPolicy) Clone(into interface{}) (interface{}, error) {
 func (m *AlertPolicy) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "AlertPolicy"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

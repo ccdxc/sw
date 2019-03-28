@@ -58,7 +58,7 @@ func (m *Workload) Clone(into interface{}) (interface{}, error) {
 func (m *Workload) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Workload"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

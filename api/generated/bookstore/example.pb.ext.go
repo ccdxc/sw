@@ -577,7 +577,7 @@ func (m *Book) Clone(into interface{}) (interface{}, error) {
 func (m *Book) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Book"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
@@ -802,7 +802,7 @@ func (m *Customer) Clone(into interface{}) (interface{}, error) {
 func (m *Customer) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Customer"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
@@ -922,7 +922,7 @@ func (m *Order) Clone(into interface{}) (interface{}, error) {
 func (m *Order) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Order"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
@@ -1088,7 +1088,7 @@ func (m *Publisher) Clone(into interface{}) (interface{}, error) {
 func (m *Publisher) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Publisher"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
@@ -1229,7 +1229,7 @@ func (m *Store) Clone(into interface{}) (interface{}, error) {
 func (m *Store) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Store"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}

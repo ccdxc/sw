@@ -188,7 +188,7 @@ func (m *MirrorSession) Clone(into interface{}) (interface{}, error) {
 func (m *MirrorSession) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "MirrorSession"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

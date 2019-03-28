@@ -90,11 +90,11 @@ func (m *{{getStr 0}}) Clone(into interface{}) (interface{}, error) {
 func (m *{{getStr 0}}) Defaults(ver string) bool { {{$msg := .}}{{if isSpecStatusMessage .}}
 	var ret bool
 	m.Kind = "{{.Name}}" {{if isTenanted .}}
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}{{else}}
-    ret = m.Tenant != "" && m.Namespace != ""
+    ret = m.Tenant != "" || m.Namespace != ""
     if ret {
 	m.Tenant, m.Namespace = "", ""
 	}{{end}}{{end}}{{with index $defaults.Map (getStr 0)}}{{if eq (len .Fields) 0}}

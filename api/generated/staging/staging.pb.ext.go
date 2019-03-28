@@ -103,7 +103,7 @@ func (m *Buffer) Clone(into interface{}) (interface{}, error) {
 func (m *Buffer) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Buffer"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
@@ -179,7 +179,7 @@ func (m *ClearAction) Clone(into interface{}) (interface{}, error) {
 func (m *ClearAction) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "ClearAction"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
@@ -255,7 +255,7 @@ func (m *CommitAction) Clone(into interface{}) (interface{}, error) {
 func (m *CommitAction) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "CommitAction"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

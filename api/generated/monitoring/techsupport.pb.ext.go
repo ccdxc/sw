@@ -99,7 +99,7 @@ func (m *TechSupportRequest) Clone(into interface{}) (interface{}, error) {
 func (m *TechSupportRequest) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "TechSupportRequest"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}

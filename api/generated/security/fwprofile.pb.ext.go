@@ -58,7 +58,7 @@ func (m *FirewallProfile) Clone(into interface{}) (interface{}, error) {
 func (m *FirewallProfile) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "FirewallProfile"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

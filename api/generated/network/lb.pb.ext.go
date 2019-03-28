@@ -74,7 +74,7 @@ func (m *LbPolicy) Clone(into interface{}) (interface{}, error) {
 func (m *LbPolicy) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "LbPolicy"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

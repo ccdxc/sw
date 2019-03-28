@@ -81,7 +81,7 @@ func (m *Certificate) Clone(into interface{}) (interface{}, error) {
 func (m *Certificate) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Certificate"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

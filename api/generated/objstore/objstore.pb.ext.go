@@ -70,7 +70,7 @@ func (m *Bucket) Clone(into interface{}) (interface{}, error) {
 func (m *Bucket) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Bucket"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
@@ -139,7 +139,7 @@ func (m *Object) Clone(into interface{}) (interface{}, error) {
 func (m *Object) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Object"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

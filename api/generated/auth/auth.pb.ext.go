@@ -194,7 +194,7 @@ func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 func (m *AuthenticationPolicy) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "AuthenticationPolicy"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
@@ -608,7 +608,7 @@ func (m *Role) Clone(into interface{}) (interface{}, error) {
 func (m *Role) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Role"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
@@ -636,7 +636,7 @@ func (m *RoleBinding) Clone(into interface{}) (interface{}, error) {
 func (m *RoleBinding) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "RoleBinding"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
@@ -773,7 +773,7 @@ func (m *User) Clone(into interface{}) (interface{}, error) {
 func (m *User) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "User"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

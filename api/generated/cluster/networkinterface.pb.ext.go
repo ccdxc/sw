@@ -80,7 +80,7 @@ func (m *NetworkInterface) Clone(into interface{}) (interface{}, error) {
 func (m *NetworkInterface) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "NetworkInterface"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}

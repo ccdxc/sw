@@ -110,7 +110,7 @@ func (m *Rollout) Clone(into interface{}) (interface{}, error) {
 func (m *Rollout) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Rollout"
-	ret = m.Tenant != "" && m.Namespace != ""
+	ret = m.Tenant != "" || m.Namespace != ""
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}

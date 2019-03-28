@@ -99,7 +99,7 @@ func (m *FlowExportPolicy) Clone(into interface{}) (interface{}, error) {
 func (m *FlowExportPolicy) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "FlowExportPolicy"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
@@ -176,7 +176,7 @@ func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
 func (m *FwlogPolicy) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "FwlogPolicy"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
@@ -255,7 +255,7 @@ func (m *StatsPolicy) Clone(into interface{}) (interface{}, error) {
 func (m *StatsPolicy) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "StatsPolicy"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}

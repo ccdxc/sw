@@ -53,7 +53,7 @@ func (m *Endpoint) Clone(into interface{}) (interface{}, error) {
 func (m *Endpoint) Defaults(ver string) bool {
 	var ret bool
 	m.Kind = "Endpoint"
-	ret = m.Tenant != "default" && m.Namespace != "default"
+	ret = m.Tenant != "default" || m.Namespace != "default"
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
