@@ -27,8 +27,12 @@ tests:
       svc_chains: 1
       repeat: 1
       validations:
-        - size_compare:
+        - retcode_compare:
             idx: 1
+            retcode: 0
+            svc_retcodes: 0
+        - size_compare:
+            idx: 2
             file1: '1_encrypted.bin'
             val: '$2block'
   - test:
@@ -36,7 +40,16 @@ tests:
       svc_chains: 2
       repeat: 1
       validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
         - size_compare:
             idx: 2
             file1: '2_decrypted.bin'
             val: '$2block'
+        - data_compare:
+            idx: 3
+            file1: '2_decrypted.bin'
+            pattern: aaabbbaaabbb
+            len: '$2block'

@@ -75,15 +75,14 @@ static struct test_testcase default_testcase = {
 };
 
 /* service defaults */
-static char default_iv[16] = "";
 static struct pnso_service default_svcs[PNSO_SVC_TYPE_MAX] = {
 	{ .svc_type = PNSO_SVC_TYPE_NONE },
 	{ .svc_type = PNSO_SVC_TYPE_ENCRYPT, .u.crypto_desc = {
 		.algo_type = PNSO_CRYPTO_TYPE_XTS,
-		.key_desc_idx = 1, .iv_addr = (uint64_t) default_iv } },
+		.key_desc_idx = 1, .iv_addr = 0 } },
 	{ .svc_type = PNSO_SVC_TYPE_DECRYPT, .u.crypto_desc = {
 		.algo_type = PNSO_CRYPTO_TYPE_XTS,
-		.key_desc_idx = 1, .iv_addr = (uint64_t) default_iv } },
+		.key_desc_idx = 1, .iv_addr = 0 } },
 	{ .svc_type = PNSO_SVC_TYPE_COMPRESS, .u.cp_desc = {
 		.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A,
 		.hdr_fmt_idx = 1,
