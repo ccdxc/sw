@@ -121,7 +121,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	log.Infof("%s is running {%+v}", globals.Citadel, srv)
+	log.Infof("=== %s is running {%+v}", globals.Citadel, srv)
 
 	// Creating debug instance
 	dbg := debug.New(srv.Debug)

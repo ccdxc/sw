@@ -188,40 +188,62 @@ func testQueryingFwlogs() {
 				return false
 			}
 			return true
-		}, 60, 1).Should(BeTrue(), "Citadel failed to return expected amount of results")
+		}, 180, 2).Should(BeTrue(), "Citadel failed to return expected amount of results")
 
-		resp, err := tc.Fwlogs(ctx, query)
-		Expect(err).Should(BeNil())
-		// verify results
-		Expect(resp.Tenant).To(Equal(globals.DefaultTenant))
-		Expect(len(resp.Results)).To(Equal(5))
+		Eventually(func() bool {
+			resp, err := tc.Fwlogs(ctx, query)
+			if err != nil {
+				log.Errorf("Fwlog query returned err %v", err)
+				return false
+			}
 
-		log.Infof("++++++[0] %+v", resp.Results[0].Logs)
+			// verify results
+			Expect(resp.Tenant).To(Equal(globals.DefaultTenant))
+			Expect(len(resp.Results)).To(Equal(5))
 
-		Expect(resp.Results[0].StatementID).To(Equal(int32(0)))
-		Expect(len(resp.Results[0].Logs)).To(Equal(20))
-		resLog := resp.Results[0].Logs
-		reverse(resLog)
-		Expect(logs).Should(Equal(resLog))
+			log.Infof("++++++[0] %+v", resp.Results[0].Logs)
+			Expect(resp.Results[0].StatementID).To(Equal(int32(0)))
 
-		log.Infof("++++++[1] %+v", resp.Results[1].Logs)
+			if len(resp.Results[0].Logs) != 20 {
+				log.Errorf("mismatch in query results, expected 20, got %d", len(resp.Results[0].Logs))
+				return false
+			}
 
-		Expect(resp.Results[1].StatementID).To(Equal(int32(1)))
-		Expect(len(resp.Results[1].Logs)).To(Equal(20))
-		Expect(logs).Should(Equal(resp.Results[1].Logs))
+			resLog := resp.Results[0].Logs
+			reverse(resLog)
+			Expect(logs).Should(Equal(resLog))
 
-		log.Infof("++++++[2] %+v", resp.Results[2].Logs)
+			log.Infof("++++++[1] %+v", resp.Results[1].Logs)
+			Expect(resp.Results[1].StatementID).To(Equal(int32(1)))
+			if len(resp.Results[1].Logs) != 20 {
+				log.Errorf("mismatch in query results, expected 20, got %d", len(resp.Results[1].Logs))
+				return false
+			}
+			Expect(logs).Should(Equal(resp.Results[1].Logs))
 
-		Expect(resp.Results[2].StatementID).To(Equal(int32(2)))
-		Expect(len(resp.Results[2].Logs)).To(Equal(12))
+			log.Infof("++++++[2] %+v", resp.Results[2].Logs)
+			Expect(resp.Results[2].StatementID).To(Equal(int32(2)))
+			if len(resp.Results[2].Logs) != 12 {
+				log.Errorf("mismatch in query results, expected 12, got %d", len(resp.Results[2].Logs))
+				return false
+			}
 
-		log.Infof("++++++[3] %+v", resp.Results[3].Logs)
-		Expect(resp.Results[3].StatementID).To(Equal(int32(3)))
-		Expect(len(resp.Results[3].Logs)).To(Equal(2))
+			log.Infof("++++++[3] %+v", resp.Results[3].Logs)
+			Expect(resp.Results[3].StatementID).To(Equal(int32(3)))
+			if len(resp.Results[3].Logs) != 2 {
+				log.Errorf("mismatch in query results, expected 2, got %d", len(resp.Results[3].Logs))
+				return false
+			}
 
-		log.Infof("++++++[4] %+v", resp.Results[4].Logs)
-		Expect(resp.Results[4].StatementID).To(Equal(int32(4)))
-		Expect(len(resp.Results[4].Logs)).To(Equal(0))
+			log.Infof("++++++[4] %+v", resp.Results[4].Logs)
+			Expect(resp.Results[4].StatementID).To(Equal(int32(4)))
+			if len(resp.Results[4].Logs) != 0 {
+				log.Errorf("mismatch in query results, expected 0, got %d", len(resp.Results[3].Logs))
+				return false
+			}
+
+			return true
+		}, 180, 2).Should(BeTrue(), "Citadel failed to return expected amount of results")
 	}
 	verifyLogs()
 
@@ -229,6 +251,26 @@ func testQueryingFwlogs() {
 	log.Info("Restarting citadel...")
 	_, err = ts.tu.KillContainer(globals.Citadel)
 	Expect(err).To(BeNil())
+
+	nodesList, err := ts.tu.APIClient.ClusterV1().Node().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	Expect(err).Should(BeNil())
+
+	for _, node := range nodesList {
+		nodeName := node.GetName()
+		Eventually(func() string {
+			return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[nodeName], globals.Citadel)
+		}, 120, 1).ShouldNot(BeEmpty(), globals.Citadel, " container not running on ", ts.tu.NameToIPMap[nodeName])
+	}
+
+	Eventually(func() string {
+		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods --no-headers"), "\n")
+		for _, line := range out {
+			if !strings.Contains(line, "Running") {
+				return line
+			}
+		}
+		return ""
+	}, 120, 1).Should(BeEmpty(), "All pods should be in Running state")
 
 	verifyLogs()
 }

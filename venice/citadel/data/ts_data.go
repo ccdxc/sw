@@ -315,7 +315,7 @@ func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq
 func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tproto.QueryResp, error) {
 	var resp tproto.QueryResp
 
-	dn.logger.Debugf("%s Received ExecuteQuery req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received ExecuteQuery req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
 	val, ok := dn.tshards.Load(req.ReplicaID)
