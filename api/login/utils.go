@@ -17,6 +17,7 @@ import (
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -109,9 +110,7 @@ func stringToSlice(val string) (ret []string) {
 func NewPermission(tenant, resourceGroup, resourceKind, resourceNamespace, resourceNames, actions string) auth.Permission {
 	perm := auth.Permission{}
 	perm.Defaults("all")
-	if tenant != "" {
-		perm.ResourceTenant = tenant
-	}
+	perm.ResourceTenant = tenant
 	perm.ResourceGroup = resourceGroup
 	perm.ResourceKind = resourceKind
 	if resourceNamespace != "" {
@@ -216,6 +215,20 @@ func ValidatePerm(permission auth.Permission) error {
 	default:
 		if s.Kind2APIGroup(permission.ResourceKind) != permission.ResourceGroup {
 			return fmt.Errorf("invalid resource kind [%q] and API group [%q]", permission.ResourceKind, permission.ResourceGroup)
+		}
+		ok, err := s.IsClusterScoped(permission.ResourceKind)
+		if err != nil {
+			log.Infof("unknown resource kind [%q], err: %v", permission.ResourceKind, err)
+		}
+		if ok && permission.ResourceTenant != "" {
+			return fmt.Errorf("tenant should be empty in permission for cluster scoped resource kind [%q]", permission.ResourceKind)
+		}
+		ok, err = s.IsTenantScoped(permission.ResourceKind)
+		if err != nil {
+			log.Infof("unknown resource kind [%q], err: %v", permission.ResourceKind, err)
+		}
+		if ok && permission.ResourceTenant == "" {
+			return fmt.Errorf("tenant should not be empty in permission for tenant scoped resource kind [%q]", permission.ResourceKind)
 		}
 	}
 	return nil

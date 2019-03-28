@@ -154,7 +154,7 @@ func TestTelemetryOperationsHook(t *testing.T) {
 				},
 			},
 			expectedOperations: []authz.Operation{
-				authz.NewOperation(authz.NewResource("testTenant",
+				authz.NewOperation(authz.NewResource("",
 					string(apiclient.GroupCluster), string(cluster.KindNode),
 					"", ""),
 					auth.Permission_Read.String()),

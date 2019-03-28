@@ -134,6 +134,34 @@ func TestPermissionAllows(t *testing.T) {
 				auth.Permission_Create.String()),
 			expected: false,
 		},
+		{
+			name: "matching cluster scoped resource kind",
+			permission: auth.Permission{
+				ResourceTenant:    "default",
+				ResourceGroup:     string(apiclient.GroupAuth),
+				ResourceKind:      "",
+				ResourceNamespace: ResourceNamespaceAll,
+				Actions:           []string{auth.Permission_AllActions.String()},
+			},
+			operation: NewOperation(
+				NewResource("", string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "def"),
+				auth.Permission_Read.String()),
+			expected: true,
+		},
+		{
+			name: "shouldn't match cluster scoped resource kind",
+			permission: auth.Permission{
+				ResourceTenant:    "testtenant",
+				ResourceGroup:     string(apiclient.GroupAuth),
+				ResourceKind:      "",
+				ResourceNamespace: ResourceNamespaceAll,
+				Actions:           []string{auth.Permission_AllActions.String()},
+			},
+			operation: NewOperation(
+				NewResource("", string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "def"),
+				auth.Permission_Read.String()),
+			expected: false,
+		},
 	}
 	for _, test := range tests {
 		Assert(t, test.expected == permissionAllows(test.permission, test.operation), fmt.Sprintf("[%v] test failed", test.name))

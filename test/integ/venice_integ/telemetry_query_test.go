@@ -191,9 +191,8 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 	Assert(c, strings.HasPrefix(err.Error(), "Status:(403)"), "Unauthorized query didn't return 403")
 
 	role.Spec.Permissions = append(role.Spec.Permissions, auth.Permission{
-		ResourceTenant: globals.DefaultTenant,
-		ResourceGroup:  string(apiclient.GroupCluster),
-		ResourceKind:   string(cluster.KindNode),
+		ResourceGroup: string(apiclient.GroupCluster),
+		ResourceKind:  string(cluster.KindNode),
 		Actions: []string{
 			"Read",
 		},
@@ -211,9 +210,8 @@ func (it *veniceIntegSuite) TestMetricsQueryAuth(c *C) {
 
 	role.Spec.Permissions = []auth.Permission{
 		auth.Permission{
-			ResourceTenant: globals.DefaultTenant,
-			ResourceGroup:  string(apiclient.GroupCluster),
-			ResourceKind:   string(cluster.KindNode),
+			ResourceGroup: string(apiclient.GroupCluster),
+			ResourceKind:  string(cluster.KindNode),
 			Actions: []string{
 				"Read",
 			},

@@ -590,3 +590,65 @@ func TestFailedOpsInCommitBuffer(t *testing.T) {
 	_, err = tinfo.restcl.StagingV1().Buffer().Commit(ctx, &ca)
 	Assert(t, err != nil, "expected error while committing buffer with weak password user")
 }
+
+func TestClusterScopedAuthz(t *testing.T) {
+	// create default tenant
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
+	// create user with Host access
+	const (
+		testhost    = "testhost"
+		clusterrole = "cluster-role"
+		clusterrb   = "cluster-rb"
+	)
+	MustCreateTestUser(tinfo.apicl, testhost, testPassword, globals.DefaultTenant)
+	defer MustDeleteUser(tinfo.apicl, testhost, globals.DefaultTenant)
+	MustCreateRole(tinfo.apicl, "cluster-role", globals.DefaultTenant,
+		login.NewPermission("", string(apiclient.GroupCluster), string(cluster.KindHost), authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()))
+	defer MustDeleteRole(tinfo.apicl, clusterrole, globals.DefaultTenant)
+	MustCreateRoleBinding(tinfo.apicl, clusterrb, globals.DefaultTenant, clusterrole, []string{testhost}, nil)
+	defer MustDeleteRoleBinding(tinfo.apicl, clusterrb, globals.DefaultTenant)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: testhost, Password: testPassword, Tenant: globals.DefaultTenant})
+	AssertOk(t, err, "error creating logged in context for testhost user")
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.ClusterV1().Host().List(ctx, &api.ListWatchOptions{})
+		return err == nil, err
+	}, "expected testhost user to retrieve Host list")
+
+	// creating tenant scoped permission for cluster scoped resource kind should fail validation
+	role := &auth.Role{}
+	role.Defaults("all")
+	role.Spec.Permissions = []auth.Permission{login.NewPermission(globals.DefaultTenant, string(apiclient.GroupCluster), string(cluster.KindHost), authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String())}
+	_, err = tinfo.restcl.AuthV1().Role().Create(ctx, role)
+	Assert(t, err != nil, "permission for cluster scoped resource kind shouldn't have tenant")
+
+	// shouldn't be able to create cluster scoped permissions for non-default tenant user
+	const testTenant = "testtenant"
+	// create testtenant and admin user
+	MustCreateTenant(tinfo.apicl, testTenant)
+	defer MustDeleteTenant(tinfo.apicl, testTenant)
+	MustCreateTestUser(tinfo.apicl, testUser, testPassword, testTenant)
+	defer MustDeleteUser(tinfo.apicl, testUser, testTenant)
+	MustUpdateRoleBinding(tinfo.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testUser}, nil)
+	defer MustUpdateRoleBinding(tinfo.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, nil, nil)
+	ctx, err = NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: testUser, Password: testPassword, Tenant: testTenant})
+	AssertOk(t, err, "error creating logged in context for testtenant admin user")
+	role = &auth.Role{}
+	role.Defaults("all")
+	role.Tenant = testTenant
+	role.Spec.Permissions = []auth.Permission{login.NewPermission("", string(apiclient.GroupCluster), string(cluster.KindHost), authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String())}
+	_, err = tinfo.restcl.AuthV1().Role().Create(ctx, role)
+	Assert(t, err != nil, "non-default tenant user cannot have permissions for cluster scoped resource kind")
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, adminCred)
+	AssertOk(t, err, "error creating logged in context for admin user")
+	_, err = tinfo.restcl.AuthV1().Role().Create(ctx, role)
+	Assert(t, err != nil, "roles in non-default tenant cannot have permissions for cluster scoped resource kind")
+}

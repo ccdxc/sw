@@ -45,8 +45,15 @@ func metricOperations(ctx context.Context, req *telemetry_query.MetricsQueryList
 	operations, _ := apigwpkg.OperationsFromContext(ctx)
 	for _, query := range req.Queries {
 		s := runtime.GetDefaultScheme()
+		var resourceTenant string
+		ok, _ := s.IsClusterScoped(query.Kind)
+		if ok {
+			resourceTenant = ""
+		} else {
+			resourceTenant = req.Tenant
+		}
 		resource := authz.NewResource(
-			req.Tenant,
+			resourceTenant,
 			s.Kind2APIGroup(query.Kind),
 			query.Kind,
 			"",
