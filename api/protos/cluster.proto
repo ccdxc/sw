@@ -91,7 +91,7 @@ message ClusterStatus {
     // Date and Time at which the source code was built
     string BuildDate                        = 5 [(gogoproto.jsontag) = "build-date,omitempty"];
     // AuthBootstrapped when set to true indicates that auth has been bootstrapped in cluster
-    bool AuthBootstrapped                   = 6 [(gogoproto.jsontag) = "auth-bootstrapped,omitempty"];
+    bool AuthBootstrapped                   = 6 [(gogoproto.jsontag) = "auth-bootstrapped"];
 }
 
 // ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster
