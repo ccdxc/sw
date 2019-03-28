@@ -22,8 +22,9 @@ const (
 
 // operation implements authz.Operation interface
 type operation struct {
-	resource Resource
-	action   string
+	resource    Resource
+	action      string
+	auditAction string
 }
 
 func (op *operation) GetResource() Resource {
@@ -34,11 +35,16 @@ func (op *operation) GetAction() string {
 	return op.action
 }
 
+func (op *operation) GetAuditAction() string {
+	return op.auditAction
+}
+
 // NewOperation returns an instance of Operation
 func NewOperation(resource Resource, action string) Operation {
 	return &operation{
-		resource: resource,
-		action:   action,
+		resource:    resource,
+		action:      action,
+		auditAction: action,
 	}
 }
 
@@ -58,9 +64,20 @@ func getActionFromOper(in apiintf.APIOperType) string {
 
 // NewAPIServerOperation returns an instance of Operation given the APIServer Oper type
 func NewAPIServerOperation(resource Resource, action apiintf.APIOperType) Operation {
+	pAction := getActionFromOper(action)
 	return &operation{
-		resource: resource,
-		action:   getActionFromOper(action),
+		resource:    resource,
+		action:      pAction,
+		auditAction: pAction,
+	}
+}
+
+// NewAuditOperation returns an instance of Operation with potentially a different action string for auditing
+func NewAuditOperation(resource Resource, action, auditAction string) Operation {
+	return &operation{
+		resource:    resource,
+		action:      action,
+		auditAction: auditAction,
 	}
 }
 

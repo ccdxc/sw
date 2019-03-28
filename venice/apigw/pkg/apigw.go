@@ -793,7 +793,7 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 			User:        &api.ObjectRef{Kind: string(auth.KindUser), Namespace: user.Namespace, Tenant: user.Tenant, Name: user.Name, URI: user.SelfLink},
 			Resource:    &api.ObjectRef{Kind: resource.GetKind(), Namespace: resource.GetNamespace(), Tenant: resource.GetTenant(), Name: resource.GetName(), URI: reqURI},
 			ClientIPs:   clientIPs,
-			Action:      ops[0].GetAction(),
+			Action:      ops[0].GetAuditAction(),
 			Outcome:     outcome.String(),
 			RequestURI:  reqURI,
 			GatewayNode: os.Getenv("HOSTNAME"),

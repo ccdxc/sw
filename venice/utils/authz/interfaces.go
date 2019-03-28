@@ -29,6 +29,9 @@ type Operation interface {
 
 	// GetAction returns action that need to be performed on a resource group or resource type or a specific resource
 	GetAction() string
+
+	// GetAuditAction returns action for auditing purpose. It will be different from permission action for example for change and reset password.
+	GetAuditAction() string
 }
 
 // Resource represents an object or API endpoint resource on which authorization for an action needs to be checked
