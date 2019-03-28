@@ -912,6 +912,11 @@ ionic_en_uplink_mtu_set(vmk_AddrCookie driver_data,               // IN
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle; 
 
+        if (uplink_handle->is_mgmt_nic) {
+                ionic_warn("MTU of mnic shouldn't be changed.");
+                return VMK_FAILURE;
+        }
+
         struct ionic_admin_ctx ctx = {
 //                .work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
                 .cmd.mtu_set = {
