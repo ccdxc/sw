@@ -4270,6 +4270,21 @@ capri_tm_get_xoff_threshold (uint32_t ctx)
     return (xoff_threshold << 9);
 }
 
+sdk_ret_t
+capri_tm_set_reserved_min (uint32_t reserved_min)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    pbc_csr.port_0.cfg_account_pg_0.read();
+    pbc_csr.port_0.cfg_account_pg_0.reserved_min(reserved_min);
+    pbc_csr.port_0.cfg_account_pg_0.write();
+    pbc_csr.port_1.cfg_account_pg_0.read();
+    pbc_csr.port_1.cfg_account_pg_0.reserved_min(reserved_min);
+    pbc_csr.port_1.cfg_account_pg_0.write();
+    return SDK_RET_OK;
+}
+
 } // namespace capri
 } // namespace platform
 } // namespace sdk

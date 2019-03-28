@@ -12,6 +12,7 @@
 #include "nic/sdk/platform/sensor/sensor.hpp"
 #include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/apollo/api/impl/capri_impl.hpp"
 #include "nic/apollo/core/trace.hpp"
 
@@ -70,6 +71,9 @@ capri_impl::asic_init(asic_cfg_t *asic_cfg) {
 
     /**< stash the config, in case we need it at later point in time */
     asic_cfg_ = *asic_cfg;
+
+    // set the reserved min for uplink ports
+    sdk::platform::capri::capri_tm_set_reserved_min(200);
     return SDK_RET_OK;
 }
 
