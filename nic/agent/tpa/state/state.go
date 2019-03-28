@@ -252,7 +252,13 @@ func (s *PolicyState) getL2SegID(tenant, namespace, address string) (*netproto.N
 }
 
 func convertToHalIPAddr(src string) (*halproto.IPAddress, string, error) {
-	netIP := net.ParseIP(src)
+	netIP, _, err := net.ParseCIDR(src)
+	if err == nil {
+		src = netIP.String()
+	} else {
+		netIP = net.ParseIP(src)
+	}
+
 	if netIP == nil {
 		// treat it as hostname and resolve
 		s, err := net.LookupHost(src)

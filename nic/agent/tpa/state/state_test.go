@@ -1030,11 +1030,20 @@ func TestHalIPAddr(t *testing.T) {
 	_, _, err := convertToHalIPAddr("test")
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid ip didn't fail"))
 
-	_, _, err = convertToHalIPAddr("google.com")
+	_, _, err = convertToHalIPAddr("jobd.pensando.io")
 	tu.AssertOk(t, err, fmt.Sprintf("failed to look up hostname"))
 
 	_, _, err = convertToHalIPAddr("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
 	tu.AssertOk(t, err, fmt.Sprintf("failed to parse ipv6"))
+
+	_, s, err := convertToHalIPAddr("2.2.2.2/24")
+	tu.AssertOk(t, err, fmt.Sprintf("failed to parse CIDR"))
+	tu.Assert(t, s == "2.2.2.2", "invalid addr", s)
+
+	_, s, err = convertToHalIPAddr("2.2.2.2")
+	tu.AssertOk(t, err, fmt.Sprintf("failed to parse ipv4 addr"))
+	tu.Assert(t, s == "2.2.2.2", "invalid addr", s)
+
 }
 
 func TestTpaDebug(t *testing.T) {
