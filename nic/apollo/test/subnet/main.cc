@@ -42,7 +42,7 @@ protected:
         params.cfg_file = api_test::g_cfg_file;
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
-        
+
         pds_batch_params_t batch_params = {0};
         vcn_util vcn_obj(1, "10.0.0.0/8");
 

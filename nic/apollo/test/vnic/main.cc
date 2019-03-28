@@ -23,6 +23,7 @@
 
 const char *g_cfg_file = "hal.json";
 int g_batch_epoch = 1;    // running batch epoch
+constexpr int k_max_vnic = PDS_MAX_VNIC;
 
 namespace api_test {
 
@@ -76,20 +77,19 @@ vnic_stepper_seed_init (int seed_base, vnic_stepper_seed_t *seed)
 /// [ Create SetMax, Delete SetMax ] - Read
 TEST_F(vnic_test, vnic_workflow_1) {
     pds_batch_params_t batch_params = {0};
-    uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
     vnic_stepper_seed_init(1, &seed);
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, k_max_vnic) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, k_max_vnic) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        &seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed, k_max_vnic, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create, delete and create max VNICs in the same batch
@@ -98,32 +98,29 @@ TEST_F(vnic_test, vnic_workflow_1) {
 /// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
 TEST_F(vnic_test, vnic_workflow_2) {
     pds_batch_params_t batch_params = {0};
-    uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
     vnic_stepper_seed_init(1, &seed);
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, k_max_vnic) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, k_max_vnic) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, k_max_vnic) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        &seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed, k_max_vnic, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, k_max_vnic) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
 
-/// \brief Create Set1, Set2, Delete Set1, Create Set3 in same batch
-/// The set1 vnic should be de-duped and set2 and set3 should be programmed
-/// in the hardware
+/// \brief Create, delete some and create another set of TEPs in the same batch
 /// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
 TEST_F(vnic_test, vnic_workflow_3) {
     pds_batch_params_t batch_params = {0};
@@ -136,7 +133,7 @@ TEST_F(vnic_test, vnic_workflow_3) {
     vnic_stepper_seed_init(40, &seed2);
     vnic_stepper_seed_init(70, &seed3);
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_create(&seed1, num_vnics) == sdk::SDK_RET_OK);
@@ -152,12 +149,17 @@ TEST_F(vnic_test, vnic_workflow_3) {
     ASSERT_TRUE(vnic_util::many_read(
         &seed3, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_delete(&seed2, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_delete(&seed3, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_read(
+        &seed2, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_read(
+        &seed3, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create and delete VNIC in two batches
@@ -166,27 +168,26 @@ TEST_F(vnic_test, vnic_workflow_3) {
 /// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
 TEST_F(vnic_test, vnic_workflow_4) {
     pds_batch_params_t batch_params = {0};
-    uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
     vnic_stepper_seed_init(1, &seed);
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, k_max_vnic) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        &seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed, k_max_vnic, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, k_max_vnic) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        &seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed, k_max_vnic, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create and delete mix and match of VNIC in two batches
@@ -202,7 +203,7 @@ TEST_F(vnic_test, vnic_workflow_5) {
     vnic_stepper_seed_init(40, &seed2);
     vnic_stepper_seed_init(70, &seed3);
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_create(&seed1, num_vnics) == sdk::SDK_RET_OK);
@@ -227,102 +228,107 @@ TEST_F(vnic_test, vnic_workflow_5) {
     ASSERT_TRUE(vnic_util::many_read(
         &seed3, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_delete(&seed2, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_delete(&seed3, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_read(
+        &seed2, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_read(
+        &seed3, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create maximum number of VCINs in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
 TEST_F(vnic_test, vnic_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
-    uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
     vnic_stepper_seed_init(1, &seed);
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, k_max_vnic) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        &seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed, k_max_vnic, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(&seed, k_max_vnic) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_INVALID_OP);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        &seed, num_vnics, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed, k_max_vnic, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, k_max_vnic) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_read(
+        &seed, k_max_vnic, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create more than maximum number of VNICs supported.
 /// [ Create SetMax+1] - Read
-TEST_F(vnic_test, vnic_workflow_neg_2) {
+TEST_F(vnic_test, DISABLED_vnic_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
-    uint32_t num_vnics = 1025;
     vnic_stepper_seed_t seed = {};
 
     vnic_stepper_seed_init(1, &seed);
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_create(
+        &seed, k_max_vnic + 1) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(vnic_util::many_read(
-        &seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed, k_max_vnic + 1,
+        sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Read of a non-existing VNIC should return entry not found.
 /// Read NonEx
 TEST_F(vnic_test, vnic_workflow_neg_3a) {
-    uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
     vnic_stepper_seed_init(1, &seed);
 
-    // Trigger
+    // trigger
     ASSERT_TRUE(vnic_util::many_read(
-        &seed, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+        &seed, k_max_vnic, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Deletion of a non-existing VNICs should fail.
 /// [Delete NonEx]
 TEST_F(vnic_test, vnic_workflow_neg_3b) {
     pds_batch_params_t batch_params = {0};
-    uint32_t num_vnics = 1024;
     vnic_stepper_seed_t seed = {};
 
     vnic_stepper_seed_init(1, &seed);
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(vnic_util::many_delete(&seed, num_vnics) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(vnic_util::many_delete(&seed, k_max_vnic) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
 /// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
-// NOTE: to pass this test case we need rollback support in the infra
-TEST_F(vnic_test, DISABLED_vnic_workflow_neg_4) {
+TEST_F(vnic_test, vnic_workflow_neg_4) {
     pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed1 = {};
     vnic_stepper_seed_t seed2 = {};
@@ -331,7 +337,7 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_4) {
     vnic_stepper_seed_init(10, &seed1);
     vnic_stepper_seed_init(40, &seed2);
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_create(&seed1, num_vnics) == sdk::SDK_RET_OK);
@@ -351,16 +357,19 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_4) {
     ASSERT_TRUE(vnic_util::many_read(
         &seed2, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vnic_util::many_delete(&seed1, num_vnics) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(vnic_util::many_read(
+        &seed1, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create a VNICs with an id which is not within the range.
-TEST_F(vnic_test, DISABLED_vnic_workflow_corner_case_4) {}
+TEST_F(vnic_test, vnic_workflow_corner_case_4) {}
 
 /// @}
 }    // namespace api_test

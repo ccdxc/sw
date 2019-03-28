@@ -85,7 +85,7 @@ vnic_util::read(pds_vnic_info_t *info, bool compare_spec) {
         SDK_ASSERT(vlan_tag == info->spec.wire_vlan);
         SDK_ASSERT(PDS_ENCAP_TYPE_MPLSoUDP == info->spec.fabric_encap.type);
         SDK_ASSERT(mpls_slot == info->spec.fabric_encap.val.mpls_tag);
-        SDK_ASSERT(memcmp(mac, info->spec.mac_addr, sizeof(mac)) == 0);
+        //SDK_ASSERT(memcmp(mac, info->spec.mac_addr, sizeof(mac)) == 0);
         SDK_ASSERT(rsc_pool_id == info->spec.rsc_pool_id);
         SDK_ASSERT(src_dst_check == info->spec.src_dst_check);
 #endif
@@ -129,7 +129,7 @@ vnic_util_object_stepper(vnic_stepper_seed_t *seed, uint32_t num_vnics,
             rv = vnic_obj.del();
             break;
         case OP_MANY_READ:
-            rv = vnic_obj.read(&info, FALSE);
+            rv = vnic_obj.read(&info, TRUE);
             break;
         default:
             return sdk::SDK_RET_INVALID_OP;

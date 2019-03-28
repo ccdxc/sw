@@ -67,11 +67,9 @@ TEST_F(tep_test, tep_workflow1) {
         PDS_TEP_TYPE_WORKLOAD, encap) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // verify all num_teps entries are NOT programmed
-    ASSERT_TRUE(tep_util::many_read(k_max_tep, tep_first_ip_str,
-                                    PDS_TEP_TYPE_WORKLOAD, encap,
-                                    sdk::SDK_RET_ENTRY_NOT_FOUND) ==
-                sdk::SDK_RET_OK);
+    ASSERT_TRUE(tep_util::many_read(
+        k_max_tep, tep_first_ip_str, PDS_TEP_TYPE_WORKLOAD, encap,
+        sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create, delete and create max TEPs in the same batch
@@ -258,6 +256,10 @@ TEST_F(tep_test, tep_workflow_neg_1) {
         PDS_TEP_TYPE_WORKLOAD, encap) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
+    ASSERT_TRUE(tep_util::many_read(
+        k_max_tep, tep_first_ip_str, PDS_TEP_TYPE_WORKLOAD, encap,
+        sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(tep_util::many_create(k_max_tep, tep_first_ip_str,
@@ -337,6 +339,7 @@ TEST_F(tep_test, tep_workflow_neg_4) {
     ASSERT_TRUE(tep_util::many_create(num_teps, set1_first_ip_str,
         PDS_TEP_TYPE_WORKLOAD, encap) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
     ASSERT_TRUE(tep_util::many_read(
         num_teps, set1_first_ip_str, PDS_TEP_TYPE_WORKLOAD, encap,
         sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
