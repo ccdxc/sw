@@ -46,13 +46,10 @@ tests:
             idx: 2
             file1: '1_encrypted.bin'
             type: ne
-            #pattern: 0x00
             pattern: ababababababababababababababababababababababababababababababababababababab1234
-            #offset: eof
-            #len: eob
             len: 8192
         - size_compare:
-            idx: 2
+            idx: 3
             type: eq
             file1: '1_encrypted.bin'
             val: 8192 
@@ -78,3 +75,9 @@ tests:
             idx: 3
             file1: '2_chksum_per_block.bin'
             val: 16
+        - data_compare:
+            idx: 4
+            type: eq
+            file1: '2_decrypted.bin'
+            pattern: ababababababababababababababababababababababababababababababababababababab1234
+            len: 8192

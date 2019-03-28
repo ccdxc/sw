@@ -3,8 +3,10 @@ svc_chains:
       idx: 1
       #description: "Encrypt"
       input:
-        pattern: aaabbbaaabbb
+        random: 94252
+        random_len: 0
         len: '$2block'
+        output_file : 'origin.bin'
       ops:
         - encrypt:
             key_idx: 1
@@ -50,6 +52,6 @@ tests:
             val: '$2block'
         - data_compare:
             idx: 3
-            file1: '2_decrypted.bin'
-            pattern: aaabbbaaabbb
+            file1: 'origin.bin'
+            file2: '2_decrypted.bin'
             len: '$2block'

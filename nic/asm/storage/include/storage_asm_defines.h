@@ -400,6 +400,10 @@
 
 #define SEQ_KIVEC10_INTR_ADDR                   \
     k.seq_kivec10_intr_addr
+#define SEQ_KIVEC10_NUM_ALT_DESCS               \
+    k.seq_kivec10_num_alt_descs
+#define SEQ_KIVEC10_ALT_DESCS_SELECT            \
+    k.seq_kivec10_alt_descs_select
     
 /*
  * MPU stages

@@ -80,6 +80,7 @@ typedef struct {
     uint16_t hdr_version;           // CP header version
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
     uint8_t  pad_boundary_shift;// log2(pad block length)
+    uint8_t  num_alt_descs;
     uint32_t data_len_from_desc   :1,	// use desc data_len rather than output_data_len
              status_dma_en        :1,	// enable PDMA of status_addr0 to status_addr1
     // NOTE: intr_en and next_doorbell_en can be enabled together.

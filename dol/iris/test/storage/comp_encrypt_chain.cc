@@ -324,6 +324,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
             encrypt_setup(1, 0, chain_params);
         }
     }
+    chain_params.num_alt_descs = chain_params.push_spec.barco_num_descs;
 
 
     // encryption will use direct Barco push action

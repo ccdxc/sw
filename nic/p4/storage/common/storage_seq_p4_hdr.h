@@ -143,6 +143,9 @@ header_type seq_comp_status_desc0_t {
     rate_limit_src_en: 1;   // source rate limiting applicable (e.g., PCIe src)
     rate_limit_dst_en: 1;   // (PDMA) destination rate limiting applicable
     rate_limit_en   : 1;    // overall rate limiting enable
+    rsvd0           : 25;
+    num_alt_descs   : 5;    // number of alternate descriptors 
+    rsvd1           : 3;
   }
 }
 
@@ -513,8 +516,7 @@ header_type seq_kivec5_t {
     pad_buf_addr        : 34;   // pad buffer in HBM
     data_len            : 17;   // Length of compression data (either from descriptor or 
                                 // from the compression status)
-    alt_data_len        : 17;   // Length of compression data (either from descriptor or 
-                                // from the compression status)
+    alt_data_len        : 17;   // Length of alternate data
     status_dma_en       : 1;    // 1 => DMA status, 0 => don't DMA status
     next_db_en          : 1;
     intr_en             : 1;
@@ -634,6 +636,8 @@ header_type seq_kivec9_t {
 header_type seq_kivec10_t {
   fields {
       intr_addr        : 64;   // Interrupt assert address
+      num_alt_descs    : 5;    // number of alternate descriptors 
+      alt_descs_select : 1;
   }
 }
 
@@ -797,6 +801,8 @@ header_type seq_kivec10_t {
   
 #define SEQ_KIVEC10_USE(scratch, kivec)                                 \
   modify_field(scratch.intr_addr, kivec.intr_addr);                     \
+  modify_field(scratch.num_alt_descs, kivec.num_alt_descs);             \
+  modify_field(scratch.alt_descs_select, kivec.alt_descs_select);       \
 
 // Macros for ASM param addresses (hardcoded in P4)
 #define seq_barco_chain_action_start	    0x82000000

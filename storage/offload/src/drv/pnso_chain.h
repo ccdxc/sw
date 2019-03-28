@@ -241,7 +241,8 @@ struct service_info {
 	uint16_t hdr_fmt_idx;
 
 	bool tags_updated;
-	uint32_t si_num_tags;		/* for tracking # of hash or checksum */
+	uint16_t si_num_tags;		/* for tracking # of hash or checksum */
+	uint16_t si_num_bof_tags;
 	uint32_t si_num_bytes;
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */

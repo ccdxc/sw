@@ -13,7 +13,7 @@ svc_chains:
             hdr_fmt_idx: 1
             threshold_delta: 7168
             output_file: '%test_id%_compressed.bin'
-            output_len: 8192
+            #output_len: 8192
         - chksum:
             algo_type: 'madler32'
             output_file: '%test_id%_cksum_full.bin'
@@ -31,7 +31,7 @@ svc_chains:
             hdr_fmt_idx: 1
             threshold_delta: 7168
             output_file: '%test_id%_compressed.bin'
-            output_len: 8192
+            #output_len: 8192
         - chksum:
             algo_type: 'madler32'
             flags: 'per_block'

@@ -401,6 +401,7 @@ possible_chain_alt_desc:
                 SEQ_KIVEC4_BARCO_DESC_SIZE      // delay slot
     add         r_alt_desc_addr, r_alt_desc_addr, SEQ_KIVEC4_BARCO_DESC_ADDR
     phvwr       p.seq_kivec4_barco_desc_addr, r_alt_desc_addr
+    phvwr       p.seq_kivec10_alt_descs_select, 1
     tblwr.l	l_data_len, SEQ_KIVEC5_ALT_DATA_LEN
     SEQ_METRICS_SET(alt_descs_taken)
     

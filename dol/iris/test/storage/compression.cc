@@ -496,6 +496,8 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
                                     chain_params.intr_en);
     STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, next_db_action_barco_push,
                                     chain_params.next_db_action_barco_push);
+    STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, num_alt_descs,
+                                    chain_params.num_alt_descs);
     /*
      * There's really no rate limiting in model but we'll enable all
      * possible rate limiting modes to exercise P4+ code.

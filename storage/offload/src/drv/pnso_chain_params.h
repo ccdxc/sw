@@ -136,6 +136,7 @@ struct cpdc_chain_params {
 
 	uint8_t ccp_status_offset_0;
 	uint8_t ccp_pad_boundary_shift;
+	uint8_t ccp_num_alt_descs;
 
 	struct cpdc_chain_params_command ccp_cmd;
 	struct rate_limit_control ccp_rl_control;

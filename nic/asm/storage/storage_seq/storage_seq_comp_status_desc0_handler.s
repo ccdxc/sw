@@ -41,7 +41,8 @@ storage_seq_comp_status_desc0_handler_start:
    phvwr        p.{seq_kivec5_status_dma_en...seq_kivec5_rate_limit_en}, \
    	        d.{status_dma_en...rate_limit_en}
    bbeq         d.next_db_en, 0, intr_check
-   phvwr	p.seq_kivec10_intr_addr, d.intr_addr    // delay slot
+   phvwrpair	p.seq_kivec10_intr_addr, d.intr_addr,   \
+                p.seq_kivec10_num_alt_descs, d.num_alt_descs    // delay slot
 
    // if doorbell is actually a Barco push action, handle accordingly
    bbeq		d.next_db_action_barco_push, 0, next_db_ring

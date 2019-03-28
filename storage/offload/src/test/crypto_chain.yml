@@ -1,10 +1,12 @@
 svc_chains:
   - svc_chain:
       idx: 1
-      #description: "Encrypt"
+      #description: "Encrypt+Decrypt chaining"
       input:
-        pattern: aaabbbaaabbb
+        random: 25263
+        random_len: 0
         len: '$1block'
+        output_file : 'origin.bin'
       ops:
         - encrypt:
             key_idx: 1
@@ -21,16 +23,20 @@ tests:
       repeat: 64
       batch_depth: 32
       validations:
-        - size_compare:
+        - retcode_compare:
             idx: 1
+            retcode: 0
+            svc_retcodes: 0,0
+        - size_compare:
+            idx: 2
             file1: '1_encrypted.bin'
             val: '$1block'
         - size_compare:
-            idx: 2
+            idx: 3
             file1: '1_decrypted.bin'
             val: '$1block'
         - data_compare:
-            idx: 1
-            file1: '1_decrypted.bin'
+            idx: 4
+            file1: 'origin.bin'
+            file2: '1_decrypted.bin'
             len: '$1block'
-            pattern: aaabbbaaabbb

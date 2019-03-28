@@ -51,6 +51,7 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("%30s: %d", "si_desc_flags", svc_info->si_desc_flags);
 
 	OSAL_LOG_DEBUG("%30s: %d", "si_num_tags", svc_info->si_num_tags);
+	OSAL_LOG_DEBUG("%30s: %d", "si_num_bof_tags", svc_info->si_num_bof_tags);
 	OSAL_LOG_DEBUG("%30s: %d", "si_num_bytes", svc_info->si_num_bytes);
 
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_desc",

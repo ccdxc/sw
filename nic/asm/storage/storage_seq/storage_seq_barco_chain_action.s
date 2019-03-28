@@ -24,7 +24,7 @@ struct phv_ p;
 #define r_pi                        r3  // producer index
 #define r_xfers0_len                r4  // transfer length before wrap around
 #define r_xfers1_len                r5  // transfer length after wrap around
-#define r_num_xfers0                r6  // # of descs to transfer before wrap around
+#define r_num_descs                 r6  // # of descs to transfer
 #define r_desc_addr                 r7  // starting descriptor address to transfer
 
 %%
@@ -35,17 +35,18 @@ storage_seq_barco_chain_action:
     // Note that d.p_ndx is a shadow copy of the HW ring producer index.
     add         r_pi, d.p_ndx, r0
     
-    // Break into two DMA transfers if SEQ_KIVEC4_BARCO_NUM_DESCS causes
+    // Break into two DMA transfers if NUM_DESCS causes
     // p_ndx to wrap around
     sll         r_avail_slots, 1, SEQ_KIVEC4_BARCO_RING_SIZE
     sub         r_avail_slots, r_avail_slots, r_pi
-    add         r_num_xfers0, SEQ_KIVEC4_BARCO_NUM_DESCS, r0
+    seq         c3, SEQ_KIVEC10_ALT_DESCS_SELECT, 1
+    cmov        r_num_descs, c3, SEQ_KIVEC10_NUM_ALT_DESCS, SEQ_KIVEC4_BARCO_NUM_DESCS
 if0:    
-    ble         r_num_xfers0, r_avail_slots, endif0
-    sll         r_xfers0_len, r_num_xfers0, SEQ_KIVEC4_BARCO_DESC_SIZE  // delay slot
+    ble         r_num_descs, r_avail_slots, endif0
+    sll         r_xfers0_len, r_num_descs, SEQ_KIVEC4_BARCO_DESC_SIZE  // delay slot
 
     sll         r_xfers0_len, r_avail_slots, SEQ_KIVEC4_BARCO_DESC_SIZE
-    sub         r_xfers1_len, r_num_xfers0, r_avail_slots
+    sub         r_xfers1_len, r_num_descs, r_avail_slots
     sll         r_xfers1_len, r_xfers1_len, SEQ_KIVEC4_BARCO_DESC_SIZE
     add         r_desc_addr, SEQ_KIVEC4_BARCO_DESC_ADDR, r_xfers0_len
 
@@ -82,8 +83,8 @@ endif2:
                                       r_xfers0_len, dma_m2m_14)
     DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_ring_addr,
                                       r_xfers0_len, dma_m2m_15)
-    SEQ_METRICS_VAL_SET(hw_desc_xfers, SEQ_KIVEC4_BARCO_NUM_DESCS)
-    mincr       r_pi, SEQ_KIVEC4_BARCO_RING_SIZE, SEQ_KIVEC4_BARCO_NUM_DESCS
+    SEQ_METRICS_VAL_SET(hw_desc_xfers, r_num_descs)
+    mincr       r_pi, SEQ_KIVEC4_BARCO_RING_SIZE, r_num_descs
     
     // Need to word swap before writing back as the p_ndx is little endian
     tblwr.f.e   d.p_ndx, r_pi

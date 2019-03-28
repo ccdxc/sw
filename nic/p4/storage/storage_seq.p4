@@ -530,7 +530,8 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
 				     status_offset0, status_dma_en,
                                      next_db_en, intr_en,
 				     next_db_action_barco_push, rate_limit_src_en,
-				     rate_limit_dst_en, rate_limit_en) {
+				     rate_limit_dst_en, rate_limit_en,
+				     rsvd0, num_alt_descs, rsvd1) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC1_USE(seq_kivec1_scratch, seq_kivec1)
@@ -559,6 +560,9 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_comp_status_desc0_scratch.rate_limit_src_en, rate_limit_src_en);
   modify_field(seq_comp_status_desc0_scratch.rate_limit_dst_en, rate_limit_dst_en);
   modify_field(seq_comp_status_desc0_scratch.rate_limit_en, rate_limit_en);
+  modify_field(seq_comp_status_desc0_scratch.rsvd0, rsvd0);
+  modify_field(seq_comp_status_desc0_scratch.num_alt_descs, num_alt_descs);
+  modify_field(seq_comp_status_desc0_scratch.rsvd1, rsvd1);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec4.barco_ring_addr, seq_comp_status_desc0_scratch.next_db_addr);
@@ -574,6 +578,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_kivec5.rate_limit_src_en, seq_comp_status_desc0_scratch.rate_limit_src_en);
   modify_field(seq_kivec5.rate_limit_dst_en, seq_comp_status_desc0_scratch.rate_limit_dst_en);
   modify_field(seq_kivec5.rate_limit_en, seq_comp_status_desc0_scratch.rate_limit_en);
+  modify_field(seq_kivec10.num_alt_descs, seq_comp_status_desc0_scratch.num_alt_descs);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.
@@ -741,6 +746,7 @@ action seq_barco_chain_action(p_ndx) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC4_USE(seq_kivec4_scratch, seq_kivec4)
+  SEQ_KIVEC10_USE(seq_kivec10_scratch, seq_kivec10)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(barco_ring_scratch.p_ndx, p_ndx);

@@ -220,6 +220,7 @@ decompress_sub_chain_from_cpdc(struct service_info *svc_info,
         svc_rate_limit_control_eval(svc_info, &cpdc_chain->ccp_rl_control);
 	cpdc_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	cpdc_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
+	cpdc_chain->ccp_num_alt_descs = 1;
 
 	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,
 				   &cpdc_chain->ccp_ring_spec,

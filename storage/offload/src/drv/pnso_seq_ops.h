@@ -38,14 +38,12 @@ struct sequencer_ops {
 	pnso_error_t (*setup_hash_chain_params)(
 			struct cpdc_chain_params *chain_params,
 			struct service_info *svc_info,
-			struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
-			uint32_t num_hash_blks);
+			struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl);
 
 	pnso_error_t (*setup_chksum_chain_params)(
 			struct cpdc_chain_params *chain_params,
 			struct service_info *svc_info,
-			struct cpdc_desc *chksum_desc, struct cpdc_sgl *sgl,
-			uint32_t num_chksum_blks);
+			struct cpdc_desc *chksum_desc, struct cpdc_sgl *sgl);
 
 	pnso_error_t (*setup_cpdc_chain_status_desc)(struct service_info *svc_info);
 

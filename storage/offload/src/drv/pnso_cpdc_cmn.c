@@ -607,7 +607,6 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 	pnso_error_t err;
 	struct cpdc_desc *desc, *bof_desc;
 	struct cpdc_sgl *sgl, *bof_sgl;
-	uint32_t num_tags;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -623,12 +622,12 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 		}
 		svc_info->si_pb_sgl = sgl;
 
-		num_tags = cpdc_fill_per_block_desc(svc_info, algo_type,
+		svc_info->si_num_tags = cpdc_fill_per_block_desc(svc_info, algo_type,
 				svc_info->si_block_size,
 				svc_info->si_src_blist.len,
 				&svc_info->si_src_blist, svc_info->si_pb_sgl,
 				desc, fill_desc_fn);
-		if (num_tags == 0) {
+		if (svc_info->si_num_tags == 0) {
 			err = EINVAL;
 			OSAL_LOG_ERROR("failed to setup per-block desc! svc_type: %d err: %d",
 					svc_info->si_type, err);
@@ -646,20 +645,17 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 			}
 			svc_info->si_pb_bof_sgl = bof_sgl;
 
-			bof_desc =
-				(struct cpdc_desc *) ((char *) desc +
-				((sizeof(struct cpdc_desc) * num_tags)));
-
-			num_tags = cpdc_fill_per_block_desc(svc_info,
+			bof_desc = &desc[svc_info->si_num_tags];
+			svc_info->si_num_bof_tags = cpdc_fill_per_block_desc(svc_info,
 					algo_type, svc_info->si_block_size,
 					svc_info->si_bof_blist.len,
 					&svc_info->si_bof_blist,
 					svc_info->si_pb_bof_sgl,
 					bof_desc, fill_desc_fn);
-			if (num_tags == 0) {
+			if (svc_info->si_num_bof_tags == 0) {
 				err = EINVAL;
 				OSAL_LOG_ERROR("failed to setup bypass onfail per-block desc! svc_type: %d num_tags: %d desc: 0x" PRIx64 " bof_desc: 0x" PRIx64 " err: %d",
-					svc_info->si_type, num_tags,
+					svc_info->si_type, svc_info->si_num_bof_tags,
 					(uint64_t) desc, (uint64_t) bof_desc,
 					err);
 				goto out;
@@ -667,7 +663,7 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 		}
 
 		OSAL_LOG_DEBUG("svc_type: %d num_tags: %d desc: 0x" PRIx64 " bof_desc: 0x" PRIx64,
-				svc_info->si_type, num_tags,
+				svc_info->si_type, svc_info->si_num_tags,
 				(uint64_t) desc, (uint64_t) bof_desc);
 	} else {
 		err = cpdc_update_service_info_src_sgl(svc_info);
@@ -705,10 +701,10 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 		}
 
 		svc_info->si_num_bytes += svc_info->si_src_blist.len;
-		num_tags = 1;
+		svc_info->si_num_tags = 1;
+                svc_info->si_num_bof_tags = 1;
 	}
-	svc_info->si_num_tags = num_tags;
-	cpdc_update_batch_tags(svc_info, num_tags);
+	cpdc_update_batch_tags(svc_info, svc_info->si_num_tags);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");

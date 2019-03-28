@@ -203,6 +203,8 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 			chain_params->ccp_data_len);
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_alt_data_len",
 			chain_params->ccp_alt_data_len);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_num_alt_descs",
+			chain_params->ccp_num_alt_descs);
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_hdr_version",
 			chain_params->ccp_hdr_version);
 
@@ -469,6 +471,7 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc0->intr_data = htonl(chain_params->ccp_intr_data);
 	desc0->status_len = htons(chain_params->ccp_status_len);
 	desc0->status_offset = chain_params->ccp_status_offset_0;
+	desc0->num_alt_descs = chain_params->ccp_num_alt_descs;
 
 	if (cmd->ccpc_next_db_action_ring_push) {
 		desc0->next_db.addr = cpu_to_be64(ring_spec->rs_ring_addr);
@@ -1048,8 +1051,7 @@ out:
 static pnso_error_t
 hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 		struct service_info *svc_info,
-		struct cpdc_desc *desc, struct cpdc_sgl *sgl,
-		uint32_t num_blks)
+		struct cpdc_desc *desc, struct cpdc_sgl *sgl)
 {
 	pnso_error_t err = EINVAL;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
@@ -1069,7 +1071,8 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	ring_spec->rs_pndx_size =
 		(uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
 	ring_spec->rs_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
-	ring_spec->rs_num_descs = num_blks;
+	ring_spec->rs_num_descs = svc_info->si_num_tags;
+	chain_params->ccp_num_alt_descs = svc_info->si_num_bof_tags;
 
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
 	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 1;

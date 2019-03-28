@@ -54,7 +54,8 @@ struct seq_cpdc_status_desc0 {
 	uint16_t		status_len;
 	uint8_t			status_offset;
 	struct seq_cpdc_options0 options;
-	uint8_t			rsvd0;
+	uint8_t			rsvd1           : 3,
+				num_alt_descs   : 5;
 }  __attribute__((__packed__));
 
 struct seq_cpdc_options1 {
@@ -174,14 +175,12 @@ pnso_error_t seq_setup_cp_pad_chain_params(struct service_info *svc_info,
 
 pnso_error_t seq_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 		struct service_info *svc_info,
-		struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
-		uint32_t num_hash_blks);
+		struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl);
 
 pnso_error_t seq_setup_chksum_chain_params(
 		struct cpdc_chain_params *chain_params,
 		struct service_info *svc_info,
-		struct cpdc_desc *chksum_desc, struct cpdc_sgl *sgl,
-		uint32_t num_chksum_blks);
+		struct cpdc_desc *chksum_desc, struct cpdc_sgl *sgl);
 
 pnso_error_t seq_setup_cpdc_chain_status_desc(struct service_info *svc_info);
 
