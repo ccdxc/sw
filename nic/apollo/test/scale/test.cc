@@ -38,6 +38,7 @@ typedef struct test_params_s {
         uint64_t device_mac;
         uint32_t device_gw_ip;
         pds_encap_t fabric_encap;
+        bool dual_stack;
     };
     // TEP config
     struct {
@@ -218,9 +219,10 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
 #endif
     }
 
-    rv = create_v6_route_tables(num_teps, num_vcns, num_subnets,
-                     num_routes, tep_pfx, route_pfx, v6_route_pfx);
-
+    if (g_test_params.dual_stack) {
+        rv = create_v6_route_tables(num_teps, num_vcns, num_subnets,
+                         num_routes, tep_pfx, route_pfx, v6_route_pfx);
+    }
     return rv;
 }
 
@@ -290,35 +292,37 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     g_flow_test_obj->add_local_ep(pds_mapping.key.vcn.id,
                                                   pds_mapping.key.ip_addr);
 #endif
-                    // V6 mapping
-                    pds_v6_mapping = pds_mapping;
-                    pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
-                    pds_v6_mapping.key.ip_addr.addr.v6_addr =
-                           g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
-                    CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
-                                                    pds_mapping.key.ip_addr.addr.v4_addr);
-                    // no need of v6 to v6 NAT
-                    pds_v6_mapping.public_ip_valid = false;
-                    if (natpfx) {
-                        pds_v6_mapping.public_ip.addr.v6_addr = v6_natpfx->addr.addr.v6_addr;
-                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.public_ip.addr.v6_addr,
-                                                        pds_mapping.public_ip.addr.v4_addr);
-                    }
+                    if (g_test_params.dual_stack) {
+                        // V6 mapping
+                        pds_v6_mapping = pds_mapping;
+                        pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
+                        pds_v6_mapping.key.ip_addr.addr.v6_addr = 
+                               g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
+                                                        pds_mapping.key.ip_addr.addr.v4_addr);
+                        // no need of v6 to v6 NAT
+                        pds_v6_mapping.public_ip_valid = false;
+                        if (natpfx) {
+                            pds_v6_mapping.public_ip.addr.v6_addr = v6_natpfx->addr.addr.v6_addr;
+                            CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.public_ip.addr.v6_addr,
+                                                            pds_mapping.public_ip.addr.v4_addr);
+                        }
 #ifdef TEST_GRPC_APP
-                    rv = create_mapping_grpc(&pds_v6_mapping);
-                    if (rv != SDK_RET_OK) {
-                        SDK_ASSERT(0);
-                        return rv;
-                    }
+                        rv = create_mapping_grpc(&pds_v6_mapping);
+                        if (rv != SDK_RET_OK) {
+                            SDK_ASSERT(0);
+                            return rv;
+                        }
 #else
-                    rv = pds_mapping_create(&pds_v6_mapping);
-                    if (rv != SDK_RET_OK) {
-                        SDK_ASSERT(0);
-                        return rv;
-                    }
-                    g_flow_test_obj->add_local_ep(pds_mapping.key.vcn.id,
-                                                  pds_v6_mapping.key.ip_addr);
+                        rv = pds_mapping_create(&pds_v6_mapping);
+                        if (rv != SDK_RET_OK) {
+                            SDK_ASSERT(0);
+                            return rv;
+                        }
+                        g_flow_test_obj->add_local_ep(pds_mapping.key.vcn.id,
+                                                      pds_v6_mapping.key.ip_addr);
 #endif
+                    }
                 }
                 vnic_key++;
             }
@@ -376,27 +380,30 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                 g_flow_test_obj->add_remote_ep(pds_mapping.key.vcn.id,
                                                pds_mapping.key.ip_addr);
 #endif
-                // V6 mapping
-                pds_v6_mapping = pds_mapping;
-                pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
-                pds_v6_mapping.key.ip_addr.addr.v6_addr =
-                      g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
-                CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
-                                                pds_mapping.key.ip_addr.addr.v4_addr);
-                pds_v6_mapping.tep.ip_addr = teppfx->addr.addr.v4_addr + v6_tep_offset;
+                if (g_test_params.dual_stack) {
+                    // V6 mapping
+                    pds_v6_mapping = pds_mapping;
+                    pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
+                    pds_v6_mapping.key.ip_addr.addr.v6_addr =
+                          g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
+                    CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
+                                                    pds_mapping.key.ip_addr.addr.v4_addr);
+                    pds_v6_mapping.tep.ip_addr = teppfx->addr.addr.v4_addr + v6_tep_offset;
 #ifdef TEST_GRPC_APP
-                rv = create_mapping_grpc(&pds_v6_mapping);
-                if (rv != SDK_RET_OK) {
-                    return rv;
-                }
+                    rv = create_mapping_grpc(&pds_v6_mapping);
+                    if (rv != SDK_RET_OK) {
+                        return rv;
+                    }
 #else
-                rv = pds_mapping_create(&pds_v6_mapping);
-                if (rv != SDK_RET_OK) {
-                    return rv;
-                }
-                g_flow_test_obj->add_remote_ep(pds_mapping.key.vcn.id,
-                                               pds_v6_mapping.key.ip_addr);
+                    rv = pds_mapping_create(&pds_v6_mapping);
+                    if (rv != SDK_RET_OK) {
+                        return rv;
+                    }
+                    g_flow_test_obj->add_remote_ep(pds_mapping.key.vcn.id,
+                                                   pds_v6_mapping.key.ip_addr);
 #endif
+                }
+
                 tep_offset++;
                 tep_offset %= num_teps;
                 tep_offset = tep_offset ? tep_offset : 3;
@@ -748,6 +755,12 @@ create_objects (void)
                 } else {
                     g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
                 }
+
+                g_test_params.dual_stack = false;
+                if (!obj.second.get<std::string>("dual-stack").compare("true")) {
+                    g_test_params.dual_stack = true;
+                }
+
                 // If env var is set, it overrides the json value
                 if (getenv("APOLLO_TEST_TEP_ENCAP")) {
                     tep_encap_env = getenv("APOLLO_TEST_TEP_ENCAP");
@@ -884,13 +897,17 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    // create V6 flows
-    ret = create_flows(g_test_params.num_tcp, g_test_params.num_udp,
-                       g_test_params.num_icmp, g_test_params.sport_base,
-                       g_test_params.dport_base, true);
-    if (ret != SDK_RET_OK) {
-        return ret;
+    
+    if (g_test_params.dual_stack) {
+        // create V6 flows
+        ret = create_flows(g_test_params.num_tcp, g_test_params.num_udp,
+                           g_test_params.num_icmp, g_test_params.sport_base,
+                           g_test_params.dport_base, true);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
+
     // create V4 flows
     ret = create_flows(g_test_params.num_tcp, g_test_params.num_udp,
                        g_test_params.num_icmp, g_test_params.sport_base,
