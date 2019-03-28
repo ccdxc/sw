@@ -153,6 +153,8 @@ func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 		log.Infof("Nothing to update.")
 		return nil
 	}
+	// Use the ID that was previously allocated.
+	nt.Status.NetworkID = existingNetwork.Status.NetworkID
 
 	// find the corresponding vrf for the network
 	vrf, err := na.ValidateVrf(existingNetwork.Tenant, existingNetwork.Namespace, existingNetwork.Spec.VrfName)
