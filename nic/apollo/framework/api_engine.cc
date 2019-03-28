@@ -526,7 +526,7 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // 4. called set_hw_dirty()
         // so, now we have to undo these actions
         if (obj_ctxt->hw_dirty) {
-            api_obj->program_config(obj_ctxt);  // TODO: don't see a need for this !!
+            //api_obj->program_config(obj_ctxt);  // TODO: don't see a need for this !!
             obj_ctxt->hw_dirty = 0;
         }
         if (obj_ctxt->cloned_obj) {

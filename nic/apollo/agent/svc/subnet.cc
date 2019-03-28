@@ -68,6 +68,7 @@ subnet_proto_spec_to_api_spec (const pds::SubnetSpec &proto_spec,
     api_spec->key.id = proto_spec.id();
     api_spec->vcn.id = proto_spec.vpcid();
     ipv4pfx_proto_spec_to_api_spec(proto_spec.v4prefix(), &api_spec->v4_pfx);
+    ippfx_proto_spec_to_api_spec(proto_spec.v6prefix(), &api_spec->v6_pfx);
     api_spec->v4_vr_ip = proto_spec.ipv4virtualrouterip();
     api_spec->v6_vr_ip.af = IP_AF_IPV6;
     memcpy(api_spec->v6_vr_ip.addr.v6_addr.addr8,

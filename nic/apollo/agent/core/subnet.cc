@@ -13,8 +13,8 @@ static inline sdk_ret_t
 subnet_create_validate (pds_subnet_spec_t *spec)
 {
     pds_vcn_spec_t *vpc_spec;
-    //ip_addr_t vpc_ip_hi, vpc_ip_lo;
-    //ip_addr_t subnet_ip_hi, subnet_ip_lo;
+    ip_addr_t vpc_ip_hi, vpc_ip_lo;
+    ip_addr_t subnet_ip_hi, subnet_ip_lo;
     mac_addr_t zero_mac = {0};
 
     // verify VCN exists
@@ -23,20 +23,35 @@ subnet_create_validate (pds_subnet_spec_t *spec)
         return SDK_RET_INVALID_ARG;
     }
 
-#if 0
-    // IP prefix for subnet must be within VPC prefix
-    if (!ip_prefix_is_equal(&spec->pfx, &vpc_spec->pfx)) {
-        ip_prefix_ip_low(&spec->pfx, &subnet_ip_lo);
-        ip_prefix_ip_high(&spec->pfx, &subnet_ip_hi);
-        ip_prefix_ip_low(&vpc_spec->pfx, &vpc_ip_lo);
-        ip_prefix_ip_high(&vpc_spec->pfx, &vpc_ip_hi);
-        if (!((ip_addr_is_equal(&vpc_ip_lo, &subnet_ip_lo) || ip_addr_is_lessthan(&vpc_ip_lo, &subnet_ip_lo)) && 
-              (ip_addr_is_equal(&vpc_ip_hi, &subnet_ip_hi) || ip_addr_is_greaterthan(&vpc_ip_hi, &subnet_ip_hi)))) {
-            PDS_TRACE_VERBOSE("Subnet Create IP Prefix invalid")
+    // IPv4 prefix for subnet must be within VPC prefix
+    if (!ipv4_prefix_is_equal(&spec->v4_pfx, &vpc_spec->v4_pfx)) {
+        ipv4_prefix_ip_low(&spec->v4_pfx, &subnet_ip_lo);
+        ipv4_prefix_ip_high(&spec->v4_pfx, &subnet_ip_hi);
+        ipv4_prefix_ip_low(&vpc_spec->v4_pfx, &vpc_ip_lo);
+        ipv4_prefix_ip_high(&vpc_spec->v4_pfx, &vpc_ip_hi);
+        if (!((ip_addr_is_equal(&vpc_ip_lo, &subnet_ip_lo) ||
+               ip_addr_is_lessthan(&vpc_ip_lo, &subnet_ip_lo)) &&
+              (ip_addr_is_equal(&vpc_ip_hi, &subnet_ip_hi) ||
+               ip_addr_is_greaterthan(&vpc_ip_hi, &subnet_ip_hi)))) {
+            PDS_TRACE_VERBOSE("Subnet Create IPv4 Prefix invalid")
             return SDK_RET_INVALID_ARG;
         }
     }
-#endif
+
+    // IPv6 prefix for subnet must be within VPC prefix
+    if (!ip_prefix_is_equal(&spec->v6_pfx, &vpc_spec->v6_pfx)) {
+        ip_prefix_ip_low(&spec->v6_pfx, &subnet_ip_lo);
+        ip_prefix_ip_high(&spec->v6_pfx, &subnet_ip_hi);
+        ip_prefix_ip_low(&vpc_spec->v6_pfx, &vpc_ip_lo);
+        ip_prefix_ip_high(&vpc_spec->v6_pfx, &vpc_ip_hi);
+        if (!((ip_addr_is_equal(&vpc_ip_lo, &subnet_ip_lo) ||
+               ip_addr_is_lessthan(&vpc_ip_lo, &subnet_ip_lo)) &&
+              (ip_addr_is_equal(&vpc_ip_hi, &subnet_ip_hi) ||
+               ip_addr_is_greaterthan(&vpc_ip_hi, &subnet_ip_hi)))) {
+            PDS_TRACE_VERBOSE("Subnet Create IPv6 Prefix invalid")
+            return SDK_RET_INVALID_ARG;
+        }
+    }
 
     // validate VR IP
     if (spec->v4_vr_ip == 0) {

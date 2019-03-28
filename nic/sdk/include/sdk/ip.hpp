@@ -367,8 +367,18 @@ ip_prefix_is_equal (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
     if (!ip_prefix1 || !ip_prefix2) {
         return false;
     }
+    return std::memcmp(ip_prefix1, ip_prefix2, sizeof(ip_prefix_t)) ?
+               false : true;
+}
 
-    return std::memcmp(ip_prefix1, ip_prefix2, sizeof(ip_prefix_t)) ? false : true;
+static inline bool
+ipv4_prefix_is_equal (ipv4_prefix_t *ip_prefix1, ipv4_prefix_t *ip_prefix2)
+{
+    if (!ip_prefix1 || !ip_prefix2) {
+        return false;
+    }
+    return std::memcmp(ip_prefix1, ip_prefix2, sizeof(ipv4_prefix_t)) ?
+               false : true;
 }
 
 static inline ipv4_addr_t
@@ -445,6 +455,22 @@ ipv6_mask_to_prefix_len (ipv6_addr_t *v6_addr)
         }
     }
     return prefix_len;
+}
+
+// given an IPv4 prefix, return the lowest IP in the range
+static inline void
+ipv4_prefix_ip_low (ipv4_prefix_t *pfx, ip_addr_t *ipaddr)
+{
+    ipaddr->af = IP_AF_IPV4;
+    ipaddr->addr.v4_addr = pfx->v4_addr & ipv4_prefix_len_to_mask(pfx->len);
+}
+
+// given an IP prefix, return the highest IP in the range
+static inline void
+ipv4_prefix_ip_high (ipv4_prefix_t *pfx, ip_addr_t *ipaddr)
+{
+    ipaddr->af = IP_AF_IPV4;
+    ipaddr->addr.v4_addr = pfx->v4_addr | ~ipv4_prefix_len_to_mask(pfx->len);
 }
 
 // given an IP prefix, return the lowest IP in the range
