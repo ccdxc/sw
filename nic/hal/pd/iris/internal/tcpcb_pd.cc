@@ -234,16 +234,23 @@ p4pd_add_or_del_tcp_rx_tcp_cc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(!del) {
         data.u.tcp_cc_d.cc_algo = TCP_CC_ALGO_NEW_RENO;
         data.u.tcp_cc_d.smss = htons(tcpcb_pd->tcpcb->smss);
-        data.u.tcp_cc_d.smss_squared = htonl(tcpcb_pd->tcpcb->smss *
-                tcpcb_pd->tcpcb->smss);
         data.u.tcp_cc_d.snd_cwnd = htonl(tcpcb_pd->tcpcb->snd_cwnd);
         data.u.tcp_cc_d.snd_ssthresh = htonl(tcpcb_pd->tcpcb->snd_ssthresh);
         data.u.tcp_cc_d.max_win = TCP_MAX_WIN << tcpcb_pd->tcpcb->snd_wscale;
         data.u.tcp_cc_d.snd_wscale = tcpcb_pd->tcpcb->snd_wscale;
         // 'L' value for ABC : Appropriate Byte Counting
         data.u.tcp_cc_d.abc_l_var = tcpcb_pd->tcpcb->abc_l_var;
-        data.u.tcp_cc_d.smss_times_abc_l = htonl(tcpcb_pd->tcpcb->smss *
+        if(data.u.tcp_cc_d.cc_algo == TCP_CC_ALGO_NEW_RENO) {
+            data.u.tcp_cc_new_reno_d.smss_times_abc_l = htonl(tcpcb_pd->tcpcb->smss *
                 data.u.tcp_cc_d.abc_l_var);
+            data.u.tcp_cc_new_reno_d.smss_squared = htonl(tcpcb_pd->tcpcb->smss *
+                tcpcb_pd->tcpcb->smss);
+        }
+        if(data.u.tcp_cc_d.cc_algo == TCP_CC_ALGO_CUBIC) {
+            data.u.tcp_cc_cubic_d.t_last_cong = 1;  //should be current 10us snapshot
+            data.u.tcp_cc_cubic_d.min_rtt_ticks = 0;
+            data.u.tcp_cc_cubic_d.mean_rtt_ticks = 1;
+        }
     }
 
     HAL_TRACE_DEBUG("Received snd_cwnd: {}", tcpcb_pd->tcpcb->snd_cwnd);

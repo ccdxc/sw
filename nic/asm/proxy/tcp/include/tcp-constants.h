@@ -119,5 +119,25 @@
 #define TCP_CCF_FAST_RECOVERY                   (1 << TCP_CCF_FAST_RECOVERY_BIT)
 #define TCP_CCF_CONG_RECOVERY                   (1 << TCP_CCF_CONG_RECOVERY_BIT)
 
-
+/* TCP Cubic */
+/* Number of bits of precision for fixed point math calcs. */
+#define    CUBIC_SHIFT        8
+#define    CUBIC_SHIFT_4        32
+/* 0.5 << CUBIC_SHIFT. */
+#define    RENO_BETA        128
+/* ~0.8 << CUBIC_SHIFT. */
+#define    CUBIC_BETA        204
+/* ~0.2 << CUBIC_SHIFT. */
+#define    ONE_SUB_CUBIC_BETA    51
+/* 3 * ONE_SUB_CUBIC_BETA. */
+#define    THREE_X_PT2        153
+/* (2 << CUBIC_SHIFT) - ONE_SUB_CUBIC_BETA. */
+#define    TWO_SUB_PT2        461
+/* ~0.4 << CUBIC_SHIFT. */
+#define    CUBIC_C_FACTOR        122
+/* CUBIC fast convergence factor: ~0.9 << CUBIC_SHIFT. */
+#define    CUBIC_FC_FACTOR        230
+/* Don't trust s_rtt until this many rtt samples have been taken. */
+#define    CUBIC_MIN_RTT_SAMPLES    8
+#define CUBIC_HZ 100000
 #endif /* #ifndef CONSTANTS_H */

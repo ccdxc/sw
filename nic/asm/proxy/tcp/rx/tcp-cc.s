@@ -18,13 +18,14 @@ struct s4_t0_tcp_rx_tcp_cc_d d;
 %%
     .param          tcp_rx_fc_stage_start
     .param          tcp_cc_new_reno
+    .param          tcp_cc_cubic
     .param          TCP_PROXY_STATS
     .align
 tcp_rx_cc_stage_start:
     bbeq            k.common_phv_ooq_tx2rx_pkt, 1, tcp_rx_cc_stage_end
     add r1, d.cc_algo, r0
     .brbegin
-        br r1[0:0]
+        br r1[1:0]
         nop
         .brcase TCP_CC_ALGO_NONE
             // Error
@@ -32,6 +33,13 @@ tcp_rx_cc_stage_start:
             nop
         .brcase TCP_CC_ALGO_NEW_RENO
             j tcp_cc_new_reno
+            nop
+        .brcase TCP_CC_ALGO_CUBIC
+            j tcp_cc_cubic
+            nop
+        .brcase 3 
+            // Error
+            b tcp_rx_cc_stage_end
             nop
     .brend
 

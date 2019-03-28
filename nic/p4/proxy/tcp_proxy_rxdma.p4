@@ -51,6 +51,8 @@
 #define rx_table_s3_t2_action ooo_qbase_sem_idx
 
 #define rx_table_s4_t0_action tcp_cc
+#define rx_table_s4_t0_action1 tcp_cc_new_reno
+#define rx_table_s4_t0_action2 tcp_cc_cubic
 #define rx_table_s4_t2_action ooo_qbase_alloc
 
 #define rx_table_s5_t0_action tcp_fc
@@ -216,6 +218,7 @@ header_type tcp_rtt_d_t {
         rtt_seq                 : 32;
         rto                     : 16;
         ts_ganularity_us        : 16;
+        rtt_updated             : 32;
         ts_shift                : 8;
         backoff                 : 4;
     }
@@ -224,7 +227,7 @@ header_type tcp_rtt_d_t {
 #define RTT_D_PARAMS                                            \
     srtt_us, seq_rtt_us, ca_rtt_us, curr_ts, rtt_min, rttvar_us,\
     mdev_us, mdev_max_us, rtt_seq, rto, ts_ganularity_us,       \
-    ts_shift, backoff
+    rtt_updated, ts_shift, backoff
 
 #define GENERATE_RTT_D                                          \
     modify_field(tcp_rtt_d.srtt_us, srtt_us);                   \
@@ -238,6 +241,7 @@ header_type tcp_rtt_d_t {
     modify_field(tcp_rtt_d.rtt_seq, rtt_seq);                   \
     modify_field(tcp_rtt_d.rto, rto);                           \
     modify_field(tcp_rtt_d.ts_ganularity_us, ts_ganularity_us); \
+    modify_field(tcp_rtt_d.rtt_updated, rtt_updated); \
     modify_field(tcp_rtt_d.ts_shift, ts_shift);                 \
     modify_field(tcp_rtt_d.backoff, backoff);                   \
 
@@ -280,43 +284,91 @@ header_type ooo_book_keeping_t {
 // offset 0 (TCP_TCB_CC_SND_CWND_OFFSET)
 
 #define CC_D_PARAMS \
-        snd_cwnd, cc_algo, smss, smss_squared,  smss_times_abc_l, snd_ssthresh, \
-        max_win, abc_bytes_acked, abc_l_var, snd_wscale, cc_flags, t_flags, \
-        ip_tos_ecn_received
+         snd_cwnd, smss, abc_bytes_acked, snd_ssthresh, \
+         max_win, cc_algo, abc_l_var, snd_wscale, cc_flags, \
+         ip_tos_ecn_received, t_flags
 
 #define GENERATE_CC_D \
     modify_field(tcp_cc_d.snd_cwnd, snd_cwnd); \
-    modify_field(tcp_cc_d.cc_algo, cc_algo); \
     modify_field(tcp_cc_d.smss, smss); \
-    modify_field(tcp_cc_d.smss_squared, smss_squared); \
-    modify_field(tcp_cc_d.smss_times_abc_l, smss_times_abc_l); \
+    modify_field(tcp_cc_d.abc_bytes_acked, abc_bytes_acked); \
     modify_field(tcp_cc_d.snd_ssthresh, snd_ssthresh); \
     modify_field(tcp_cc_d.max_win, max_win); \
-    modify_field(tcp_cc_d.abc_bytes_acked, abc_bytes_acked); \
+    modify_field(tcp_cc_d.cc_algo, cc_algo); \
     modify_field(tcp_cc_d.abc_l_var, abc_l_var); \
-    modify_field(tcp_cc_d.snd_wscale, snd_wscale); \
+    modify_field(tcp_cc_d.snd_wscale, snd_wscale); \ 
     modify_field(tcp_cc_d.cc_flags, cc_flags); \
+    modify_field(tcp_cc_d.ip_tos_ecn_received, ip_tos_ecn_received); \
     modify_field(tcp_cc_d.t_flags, t_flags); \
-    modify_field(tcp_cc_d.ip_tos_ecn_received, ip_tos_ecn_received);
+
+#define TCP_CC_COMMON_FIELDS \
+        snd_cwnd                : 32;\
+        smss                    : 16;\
+        abc_bytes_acked         : 16;\
+        snd_ssthresh            : 32;\
+        max_win                 : 32;\
+        cc_algo                 : 8;\
+        abc_l_var               : 8;\
+        snd_wscale              : 8;\
+        cc_flags                : 8;\
+        ip_tos_ecn_received     : 1;\
+        t_flags                 : 31;\
 
 // d for stage 4 table 0
 header_type tcp_cc_d_t {
     fields {
-        snd_cwnd                : 32;
-        cc_algo                 : 8;
-        smss                    : 16;
-        smss_squared            : 32;
-        smss_times_abc_l        : 32;
-        snd_ssthresh            : 32;
-        max_win                 : 32;
-        abc_bytes_acked         : 32;
-        abc_l_var               : 8;
-        snd_wscale              : 8;
-        cc_flags                : 8;
-        t_flags                 : 8;
-        ip_tos_ecn_received     : 1;
+        TCP_CC_COMMON_FIELDS
     }
 }
+
+#define CC_NEW_RENO_D_PARAMS \
+       CC_D_PARAMS, smss_squared, smss_times_abc_l
+
+#define GENERATE_CC_NEW_RENO_D \
+    GENERATE_CC_D \
+    modify_field(tcp_cc_new_reno_d.smss_squared, smss_squared); \
+    modify_field(tcp_cc_new_reno_d.smss_times_abc_l, smss_times_abc_l); \
+
+// d for stage 4 table 0
+header_type tcp_cc_new_reno_d_t {
+    fields {
+        TCP_CC_COMMON_FIELDS
+        smss_squared            : 32;
+        smss_times_abc_l        : 32;
+    }
+}
+
+#define CC_CUBIC_D_PARAMS \
+       CC_D_PARAMS, cubic_K, sum_rtt_ticks, max_cwnd, prev_max_cwnd, num_cong_events, min_rtt_ticks, \
+       mean_rtt_ticks, epoch_ack_count, t_last_cong
+
+#define GENERATE_CC_CUBIC_D \
+    GENERATE_CC_D \
+    modify_field(tcp_cc_cubic_d.cubic_K, cubic_K); \
+    modify_field(tcp_cc_cubic_d.sum_rtt_ticks, sum_rtt_ticks);\
+    modify_field(tcp_cc_cubic_d.max_cwnd, max_cwnd);\
+    modify_field(tcp_cc_cubic_d.prev_max_cwnd, prev_max_cwnd);\
+    modify_field(tcp_cc_cubic_d.num_cong_events, num_cong_events);\
+    modify_field(tcp_cc_cubic_d.min_rtt_ticks, min_rtt_ticks);\
+    modify_field(tcp_cc_cubic_d.mean_rtt_ticks, mean_rtt_ticks);\
+    modify_field(tcp_cc_cubic_d.epoch_ack_count, epoch_ack_count);\
+    modify_field(tcp_cc_cubic_d.t_last_cong, t_last_cong);
+
+//d for cubic stage 4 table 0
+header_type tcp_cc_cubic_d_t {
+    fields {
+        TCP_CC_COMMON_FIELDS
+        cubic_K                 : 64;                              
+        sum_rtt_ticks           : 32;  //may need to be 64b 
+        max_cwnd                : 32;
+        prev_max_cwnd           : 32;
+        num_cong_events         : 32;
+        min_rtt_ticks           : 32;
+        mean_rtt_ticks          : 32;
+        epoch_ack_count         : 32;
+        t_last_cong             : 32;  //time resolution bits 
+    }
+} 
 
 // d for stage 4 table 2
 header_type ooq_alloc_d_t {
@@ -428,6 +480,8 @@ header_type to_stage_4_phv_t {
         snd_wnd                 : 16;
         cc_ack_signal           : 8;
         cc_flags                : 8;
+        t_srtt                  : 32;
+        srtt_valid              : 1;
     }
 }
 
@@ -554,6 +608,10 @@ metadata tcp_rtt_d_t tcp_rtt_d;
 metadata read_rnmdr_d_t read_rnmdr_d;
 @pragma scratch_metadata
 metadata tcp_cc_d_t tcp_cc_d;
+@pragma scratch_metadata
+metadata tcp_cc_new_reno_d_t tcp_cc_new_reno_d;
+@pragma scratch_metadata
+metadata tcp_cc_cubic_d_t tcp_cc_cubic_d;
 @pragma scratch_metadata
 metadata tcp_fc_d_t tcp_fc_d;
 @pragma scratch_metadata
@@ -1029,6 +1087,8 @@ action tcp_cc(CC_D_PARAMS) {
     modify_field(to_s4_scratch.snd_wnd, to_s4.snd_wnd);
     modify_field(to_s4_scratch.cc_ack_signal, to_s4.cc_ack_signal);
     modify_field(to_s4_scratch.cc_flags, to_s4.cc_flags);
+    modify_field(to_s4_scratch.t_srtt, to_s4.t_srtt);
+    modify_field(to_s4_scratch.srtt_valid, to_s4.srtt_valid);
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -1038,7 +1098,42 @@ action tcp_cc(CC_D_PARAMS) {
     // d for stage 4 tcp-cc
     GENERATE_CC_D
 }
+action tcp_cc_new_reno (CC_NEW_RENO_D_PARAMS) {
+    // k + i for stage 4
+    
+    // from to_stage
+    modify_field(to_s4_scratch.bytes_acked, to_s4.bytes_acked);
+    modify_field(to_s4_scratch.snd_wnd, to_s4.snd_wnd);
+    modify_field(to_s4_scratch.cc_ack_signal, to_s4.cc_ack_signal);
+    modify_field(to_s4_scratch.cc_flags, to_s4.cc_flags);
+    modify_field(to_s4_scratch.t_srtt, to_s4.t_srtt);
+    modify_field(to_s4_scratch.srtt_valid, to_s4.srtt_valid);
 
+    // from ki global
+    GENERATE_GLOBAL_K
+
+
+    // d for stage 4 tcp-cc-new-reno
+    GENERATE_CC_NEW_RENO_D
+}
+
+action tcp_cc_cubic (CC_CUBIC_D_PARAMS) {
+    // k + i for stage 4
+
+    // from to_stage
+    modify_field(to_s4_scratch.bytes_acked, to_s4.bytes_acked);
+    modify_field(to_s4_scratch.snd_wnd, to_s4.snd_wnd);
+    modify_field(to_s4_scratch.cc_ack_signal, to_s4.cc_ack_signal);
+    modify_field(to_s4_scratch.cc_flags, to_s4.cc_flags);
+    modify_field(to_s4_scratch.t_srtt, to_s4.t_srtt);
+    modify_field(to_s4_scratch.srtt_valid, to_s4.srtt_valid);
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // d for stage 4 tcp-cc-cubic
+    GENERATE_CC_CUBIC_D
+}
 /*
  * Stage 4 table 2 action
  */

@@ -122,6 +122,7 @@
 // CC algo
 #define TCP_CC_ALGO_NONE                    0
 #define TCP_CC_ALGO_NEW_RENO                1
+#define TCP_CC_ALGO_CUBIC                   2
 
 // Feedback packet rx2tx
 #define TCP_TX2RX_FEEDBACK_OOO_PKT          1

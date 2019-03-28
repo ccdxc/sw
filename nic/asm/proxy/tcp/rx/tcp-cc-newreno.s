@@ -12,7 +12,7 @@
 
 struct phv_ p;
 struct s4_t0_tcp_rx_k_ k;
-struct s4_t0_tcp_rx_tcp_cc_d d;
+struct s4_t0_tcp_rx_tcp_cc_new_reno_d d;
 
 
 %%

@@ -220,10 +220,17 @@ first_rtt_measure:
 tcp_rtt_estimator_done:
     /* r1 -> srtt */
     /* tp->rtt.srtt_us = max(1U, srtt) */
+    add         r2, d.rtt_updated, r0
+    addi        r2, r2, 1
+    sle         c2, r2, 7
+    phvwr.c2    p.to_s4_srtt_valid, 1 
+    tblwr       d.rtt_updated, r2
     addi        r5,r0,1
     slt         c1, r1, r5
     tblwr.c1    d.srtt_us, r5
     tblwr.!c1   d.srtt_us, r1
+    phvwr.c1    p.to_s4_t_srtt, r5
+    phvwr.!c1   p.to_s4_t_srtt, r1
     nop
     
     
