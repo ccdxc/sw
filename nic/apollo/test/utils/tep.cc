@@ -18,39 +18,43 @@ pds_encap_t default_encap = {PDS_ENCAP_TYPE_VXLAN, 0};
 tep_util::tep_util() {
     this->ip_str = "0.0.0.0";
     this->type = PDS_TEP_TYPE_NONE;
+    this->nat = false;
 }
 
 tep_util::tep_util(std::string ip_str) {
     this->ip_str = ip_str;
     this->type = PDS_TEP_TYPE_NONE;
+    this->nat = false;
 }
 
-tep_util::tep_util(std::string ip_str, pds_tep_type_t type, pds_encap_t encap) {
+tep_util::tep_util(std::string ip_str, pds_tep_type_t type,
+                   pds_encap_t encap, bool nat) {
     this->ip_str = ip_str;
     this->type = type;
     this->encap = encap;
+    this->nat = nat;
 }
 
 tep_util::~tep_util() {}
 
 static inline sdk::sdk_ret_t
-tep_util_object_stepper(std::string pfxstr, pds_tep_type_t type,
+tep_util_object_stepper(std::string ip_str, pds_tep_type_t type,
                         pds_encap_t encap, uint32_t num_tep, utils_op_t op,
                         sdk_ret_t expected_result = sdk::SDK_RET_OK) {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    ip_prefix_t ip_pfx;
+    ip_addr_t ip_addr;
 
-    SDK_ASSERT(str2ipv4pfx((char *)pfxstr.c_str(), &ip_pfx) == 0);
+    extract_ip_addr(ip_str.c_str(), &ip_addr);
 
     for (uint32_t idx = 1; idx <= num_tep; ++idx) {
-        tep_util tep_obj(ippfx2str(&ip_pfx), type, encap);
+        tep_util tep_obj(ipaddr2str(&ip_addr), type, encap);
         switch (op) {
         case OP_MANY_CREATE:
             rv = tep_obj.create();
             break;
         case OP_MANY_READ:
             pds_tep_info_t info;
-            rv = tep_obj.read(&info, FALSE);
+            rv = tep_obj.read(&info);
             break;
         case OP_MANY_DELETE:
             rv = tep_obj.del();
@@ -62,7 +66,7 @@ tep_util_object_stepper(std::string pfxstr, pds_tep_type_t type,
             return rv;
         }
         // Increment IPv4 address by 1 for next TEP
-        ip_pfx.addr.addr.v4_addr += 1;
+        ip_addr.addr.v4_addr += 1;
     }
 
     return sdk::SDK_RET_OK;
@@ -132,31 +136,50 @@ sdk::sdk_ret_t
 tep_util::read(pds_tep_info_t *info, bool compare_spec) {
     sdk_ret_t rv;
     pds_tep_key_t key;
-    ip_prefix_t ip_pfx;
+    ip_addr_t ip_addr;
 
-    SDK_ASSERT(str2ipv4pfx((char *)this->ip_str.c_str(), &ip_pfx) == 0);
+    extract_ip_addr(this->ip_str.c_str(), &ip_addr);
     memset(&key, 0, sizeof(pds_tep_key_t));
     memset(info, 0, sizeof(pds_tep_info_t));
-    key.ip_addr = ip_pfx.addr.addr.v4_addr;
+    key.ip_addr = ip_addr.addr.v4_addr;
 
     if ((rv = pds_tep_read(&key, info)) != sdk::SDK_RET_OK)
         return rv;
 
     if (compare_spec) {
-        // TODO: Temporary untill p4pd_entry_read() works for directmap
+        // dump for debug
         debug_dump_tep_info(info);
         // validate tep ip
-        if (strcmp(this->ip_str.c_str(),
-                   ipv4addr2str(info->spec.key.ip_addr))) {
-            // TODO: what error to return
+        if (ip_addr.addr.v4_addr != info->spec.key.ip_addr) {
             return sdk::SDK_RET_ERR;
         }
         // validate tep type
         if (this->type != info->spec.type) {
             return sdk::SDK_RET_ERR;
         }
-        // validate tep encap
+        // validate tep encap type
         if (this->encap.type != info->spec.encap.type) {
+            return sdk::SDK_RET_ERR;
+        }
+        // validate tep encap value
+        switch (this->encap.type) {
+        case PDS_ENCAP_TYPE_MPLSoUDP:
+            // validate dst slot id
+            if (this->encap.val.mpls_tag != info->spec.encap.val.mpls_tag) {
+                return sdk::SDK_RET_ERR;
+            }
+            break;
+        case PDS_ENCAP_TYPE_VXLAN:
+            // validate vni
+            if (this->encap.val.vnid != info->spec.encap.val.vnid) {
+                return sdk::SDK_RET_ERR;
+            }
+            break;
+        default:
+            break;
+        }
+        // validate NAT
+        if (this->nat != info->spec.nat) {
             return sdk::SDK_RET_ERR;
         }
     }

@@ -229,6 +229,7 @@ tep_impl::fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
             nh_tx_data->action_u.nexthop_tx_nexthop_info.dst_slot_id;
         spec->key.ip_addr = tep_tx_data->tep_tx_vxlan_action.dipo;
     }
+    spec->nat = nh_tx_data->action_u.nexthop_tx_nexthop_info.snat_required;
 }
 
 sdk_ret_t

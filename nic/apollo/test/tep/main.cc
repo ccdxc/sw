@@ -55,7 +55,7 @@ protected:
 /// [ Create SetMax, Delete SetMax ] - Read
 TEST_F(tep_test, tep_workflow1) {
     pds_batch_params_t batch_params = {0};
-    std::string tep_first_ip_str = "50.50.1.1/8";
+    std::string tep_first_ip_str = "50.50.1.1";
     pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     // trigger
@@ -78,7 +78,7 @@ TEST_F(tep_test, tep_workflow1) {
 /// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
 TEST_F(tep_test, tep_workflow2) {
     pds_batch_params_t batch_params = {0};
-    std::string tep_first_ip_str = "50.50.1.1/8";
+    std::string tep_first_ip_str = "50.50.1.1";
     pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     // trigger
@@ -108,9 +108,9 @@ TEST_F(tep_test, tep_workflow2) {
 /// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
 TEST_F(tep_test, tep_workflow3) {
     pds_batch_params_t batch_params = {0};
-    std::string set1_first_ip_str = "10.10.1.1/8";
-    std::string set2_first_ip_str = "20.20.1.1/8";
-    std::string set3_first_ip_str = "30.30.1.1/8";
+    std::string set1_first_ip_str = "10.10.1.1";
+    std::string set2_first_ip_str = "20.20.1.1";
+    std::string set3_first_ip_str = "30.30.1.1";
     pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     // trigger
@@ -157,7 +157,7 @@ TEST_F(tep_test, tep_workflow3) {
 /// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
 TEST_F(tep_test, tep_workflow4) {
     pds_batch_params_t batch_params = {0};
-    std::string tep_first_ip_str = "50.50.1.1/8";
+    std::string tep_first_ip_str = "50.50.1.1";
     pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     // trigger
@@ -186,9 +186,9 @@ TEST_F(tep_test, tep_workflow4) {
 /// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
 TEST_F(tep_test, tep_workflow5) {
     pds_batch_params_t batch_params = {0};
-    std::string set1_first_ip_str = "10.10.1.1/8";
-    std::string set2_first_ip_str = "20.20.1.1/8";
-    std::string set3_first_ip_str = "30.30.1.1/8";
+    std::string set1_first_ip_str = "10.10.1.1";
+    std::string set2_first_ip_str = "20.20.1.1";
+    std::string set3_first_ip_str = "30.30.1.1";
     pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     // trigger
@@ -246,7 +246,7 @@ TEST_F(tep_test, tep_workflow5) {
 /// [ Create SetMax ] - [ Create SetMax ] - Read
 TEST_F(tep_test, tep_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
-    std::string tep_first_ip_str = "50.50.1.1/8";
+    std::string tep_first_ip_str = "50.50.1.1";
     pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     // trigger
@@ -287,7 +287,7 @@ TEST_F(tep_test, tep_workflow_neg_1) {
 /// [ Create SetMax+1 ] - Read
 TEST_F(tep_test, tep_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
-    std::string tep_first_ip_str = "50.50.1.1/8";
+    std::string tep_first_ip_str = "50.50.1.1";
     pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     // trigger
@@ -307,7 +307,7 @@ TEST_F(tep_test, tep_workflow_neg_2) {
 /// Read NonEx, [ Delete NonExMax ]
 TEST_F(tep_test, tep_workflow_neg_3) {
     pds_batch_params_t batch_params = {0};
-    std::string tep_invalid_ip_str = "150.150.1.1/8";
+    std::string tep_invalid_ip_str = "150.150.1.1";
     pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
     // trigger
@@ -330,8 +330,8 @@ TEST_F(tep_test, tep_workflow_neg_4) {
     pds_batch_params_t batch_params = {0};
     uint32_t num_teps = 10;
     pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
-    std::string set1_first_ip_str = "50.50.1.1/8";
-    std::string set2_first_ip_str = "60.60.1.1/8";
+    std::string set1_first_ip_str = "50.50.1.1";
+    std::string set2_first_ip_str = "60.60.1.1";
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;

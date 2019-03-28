@@ -25,6 +25,7 @@ public:
     std::string ip_str;           ///< TEP IP
     pds_tep_type_t type;          ///< TEP type
     pds_encap_t encap;            ///< TEP encap
+    bool nat;                     ///< NAT state
 
     /// \brief default constructor
     tep_util();
@@ -33,7 +34,8 @@ public:
     tep_util(std::string ip_str);
 
     /// \brief parameterized constructor
-    tep_util(std::string ip_str, pds_tep_type_t type, pds_encap_t encap);
+    tep_util(std::string ip_str, pds_tep_type_t type,
+             pds_encap_t encap, bool nat=FALSE);
 
     /// \brief destructor
     ~tep_util();

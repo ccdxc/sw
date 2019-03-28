@@ -14,15 +14,12 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
-#include "nic/apollo/test/utils/mapping.hpp"
-#include "nic/apollo/test/utils/device.hpp"
 #include "nic/apollo/test/utils/vcn.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
-#include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 
 const char *g_cfg_file = "hal.json";
-int g_batch_epoch = 1;    // running batch epoch
+static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 constexpr int k_max_vnic = PDS_MAX_VNIC;
 
 namespace api_test {
