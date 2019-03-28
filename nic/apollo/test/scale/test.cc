@@ -135,9 +135,25 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subne
         }
 
 #ifdef TEST_GRPC_APP
+        printf("V6-Route table: %d\n", i);
         rv = create_route_table_grpc(&v6route_table);
         if (rv != SDK_RET_OK) {
             return rv;
+        }
+        // Batching: push leftover objects
+        rv = create_route_table_grpc(NULL);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+        rv = batch_commit_grpc();
+        if (rv != SDK_RET_OK) {
+            printf("%s: Batch commit failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        rv = batch_start_grpc();
+        if (rv != SDK_RET_OK) {
+            printf("%s: Batch start failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
         }
 #else
         rv = pds_route_table_create(&v6route_table);
@@ -191,7 +207,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
             route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
         }
 #ifdef TEST_GRPC_APP
-        printf("Route table: %d\n", i);
+        printf("V4-Route table: %d\n", i);
         rv = create_route_table_grpc(&route_table);
         if (rv != SDK_RET_OK) {
             return rv;
