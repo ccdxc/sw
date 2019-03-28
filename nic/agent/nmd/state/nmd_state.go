@@ -526,6 +526,7 @@ func (n *NMD) StartRestServer() error {
 	t2.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileGetHandler))
 	t2.HandleFunc(NaplesInfoURL, httputils.MakeHTTPHandler(n.NaplesInfoGetHandler))
 	t2.HandleFunc(CmdEXECUrl, n.NaplesCmdExecHandler)
+	t2.HandleFunc(NaplesVersionURL, httputils.MakeHTTPHandler(NaplesVersionGetHandler))
 	t2.HandleFunc("/api/{*}", unknownAction)
 	t2.HandleFunc("/debug/pprof/", pprof.Index)
 	t2.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -851,4 +852,9 @@ func (n *NMD) updateLocatTimeZone() error {
 	}
 
 	return nil
+}
+
+// NaplesVersionGetHandler is the REST handler for Naples Profiles GET
+func NaplesVersionGetHandler(r *http.Request) (interface{}, error) {
+	return GetNaplesSoftwareInfo()
 }

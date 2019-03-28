@@ -31,10 +31,27 @@ message FwVersion {
 }
 
 // Naples Software object
-message NaplesSoftwareVersion {
+message NaplesInstalledSoftware {
     UbootFw Uboot = 1 [(gogoproto.jsontag) = "uboot,omitempty"];
     FwVersion MainFwA = 2 [(gogoproto.jsontag) = "mainfwa,omitempty"];
     FwVersion MainFwB = 3 [(gogoproto.jsontag) = "mainfwb,omitempty"];
     GoldFw GoldFw = 4 [(gogoproto.jsontag) = "goldfw,omitempty"];
     ImageInfo DiagFw = 5 [(gogoproto.jsontag) = "diagfw,omitempty"];
+}
+
+message NaplesRunningSoftware {
+    UbootFw Uboot = 1 [(gogoproto.jsontag) = "uboot,omitempty"];
+    FwVersion MainFwA = 2 [(gogoproto.jsontag) = "mainfwa,omitempty"];
+    FwVersion MainFwB = 3 [(gogoproto.jsontag) = "mainfwb,omitempty"];
+}
+
+message NaplesSoftwareVersionInfo {
+    string RunningFw            = 1 [(gogoproto.jsontag) = "running-fw,omitempty"];
+    string RunningFwVersion     = 2 [(gogoproto.jsontag) = "running-fw-version,omitempty"];
+    string StartupFw            = 3 [(gogoproto.jsontag) = "startup-fw,omitempty"];
+    string StartupFwVersion     = 4 [(gogoproto.jsontag) = "startup-fw-version,omitempty"];
+    string RunningUbootVersion  = 6 [(gogoproto.jsontag) = "running-uboot,omitempty"];
+    string StartupUbootVersion  = 7 [(gogoproto.jsontag) = "startup-uboot,omitempty"];
+
+    NaplesInstalledSoftware InstalledImages = 8 [(gogoproto.jsontag) = "all-installed-fw,omitempty"];
 }

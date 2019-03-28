@@ -42,6 +42,9 @@ const (
 	// NaplesInfoURL is the URL to GET smartnic object
 	NaplesInfoURL = "/api/v1/naples/info/"
 
+	// NaplesVersionURL is the URL to GET all software version info from Naples
+	NaplesVersionURL = "/api/v1/naples/version/"
+
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped
 	// at 30min.

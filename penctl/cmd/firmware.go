@@ -87,46 +87,19 @@ func init() {
 
 func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = false
-	firmware := ""
-	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
-		Opts:       strings.Join([]string{"-r"}, ""),
-	}
-	resp, err := restGetWithBody(v, "cmd/v1/naples/")
+	resp, err := restGet("api/v1/naples/version/")
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp), `\n`, "\n", -1)
-		firmware = s
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-
-	v = &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
-		Opts:       strings.Join([]string{"-l"}, ""),
-	}
-
-	resp, err = restGetWithBody(v, "cmd/v1/naples/")
+	var prettyJSON bytes.Buffer
+	err = json.Indent(&prettyJSON, resp, "", "\t")
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	if len(resp) > 3 {
-		var m map[string]interface{}
-		json.Unmarshal(resp, &m)
-		m["active"] = firmware
-		newData, _ := json.Marshal(m)
-		var prettyJSON bytes.Buffer
-		json.Indent(&prettyJSON, newData, "", "\t")
-		fmt.Println(string(prettyJSON.Bytes()))
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
+
+	fmt.Println(string(prettyJSON.Bytes()))
 
 	return nil
 }
