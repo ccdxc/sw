@@ -4,6 +4,8 @@
 #include <libgen.h>
 #include "lib/catalog/catalog.hpp"
 #include "platform/fru/fru.hpp"
+#include "platform/pal/include/pal_types.h"
+#include "platform/pal/include/pal.h"
 #include "include/sdk/mem.hpp"
 #include "lib/utils/utils.hpp"
 #include "include/sdk/if.hpp"
@@ -519,6 +521,9 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
         return SDK_RET_ERR;
     }
 
+    std::string val = prop_tree.get<std::string>("cpld_id", "");
+    catalog_db_.cpld_id = strtoul(val.c_str(), NULL, 16);
+
     catalog_db_.form_factor = prop_tree.get<std::string>("form_factor", "");
     catalog_db_.num_pcie_lanes = prop_tree.get<uint32_t>("num_pcie_lanes", 0);
     catalog_db_.emmc_size = prop_tree.get<uint32_t>("emmc_size", 0);
@@ -584,9 +589,37 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name, p
     sdk_ret_t  ret;
     void       *mem;
     catalog    *new_catalog = NULL;
+    int pal_platform;
 
-    if (catalog_file_name.empty())
-    {
+    //If user didn't provide platfrm then we try to determine platform through pal
+    if (platform == platform_type_t::PLATFORM_TYPE_NONE) {
+        pal_platform = pal_get_env();
+
+        switch (pal_platform) {
+            case PAL_ENV_ASIC:
+                platform = platform_type_t::PLATFORM_TYPE_HW;
+                break;
+            case PAL_ENV_HAPS:
+                platform = platform_type_t::PLATFORM_TYPE_HAPS;
+                break;
+            case PAL_ENV_ZEBU:
+                platform = platform_type_t::PLATFORM_TYPE_ZEBU;
+                break;
+            default:
+                platform = platform_type_t::PLATFORM_TYPE_SIM;
+                break;
+        }
+    }
+
+    if (catalog_file_path.empty()) {
+        if (char* env = std::getenv("CATALOG_PATH"))
+            catalog_file_path = env;
+        else
+            catalog_file_path = DEFAULT_CATALOG_PATH;
+    }
+
+    if (catalog_file_name.empty()) {
+
         if (platform == platform_type_t::PLATFORM_TYPE_HW) {
             std::string part_num(32, '\0');
             std::string part_id;
@@ -605,7 +638,7 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name, p
             }
         }
         else if (platform == platform_type_t::PLATFORM_TYPE_SIM ||
-                 platform == platform_type_t::PLATFORM_TYPE_MOCK) {
+                platform == platform_type_t::PLATFORM_TYPE_MOCK) {
             catalog_file_name = "/catalog.json";
         }
     }

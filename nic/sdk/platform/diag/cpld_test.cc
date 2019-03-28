@@ -1,6 +1,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include "lib/pal/pal.hpp"
 #include "cpld_test.h"
+#include "platform/fru/fru.hpp"
+#include "lib/catalog/catalog.hpp"
+#include "include/sdk/platform.hpp"
 
 namespace sdk {
 namespace platform {
@@ -80,17 +83,20 @@ void cpld_test_usage(test_mode_e mode)
 
 int cpld_verify_id_test()
 {
-    int read_val, ret_val;
-    read_val = sdk::lib::pal_get_cpld_id();
+    int read_val, ret_val, expected_cpld_id;
+    sdk::lib::catalog *ctlg = sdk::lib::catalog::factory();
 
-    if (read_val == NAPLES_CPLD_ID)
+    expected_cpld_id = ctlg->cpld_id();
+
+    read_val = sdk::lib::pal_get_cpld_id();
+    if (read_val == expected_cpld_id)
     {
-        SDK_TRACE_PRINT("CPLD ID: 0x%x, Rev: 0x%x", read_val, sdk::lib::pal_get_cpld_rev());
+        SDK_TRACE_INFO("CPLD ID: 0x%x, Rev: 0x%x", read_val, sdk::lib::pal_get_cpld_rev());
         ret_val = 0;
     }
     else
     {
-        SDK_TRACE_ERR("Wrong CPLD ID: 0x%x : Expected: 0x%x", read_val, NAPLES_CPLD_ID);
+        SDK_TRACE_ERR("Wrong CPLD ID: 0x%x : Expected: 0x%x", read_val, expected_cpld_id);
         ret_val = -1;
     }
 

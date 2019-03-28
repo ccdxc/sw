@@ -46,7 +46,7 @@ int usage(int argc, char* argv[]);
 Logger CreateLogger(const char* log_name) {
 
     char log_path[64] = {0};
-    snprintf(log_path, sizeof(log_path), "/var/log/%s", log_name);
+    snprintf(log_path, sizeof(log_path), "/var/log/pensando/%s", log_name);
 
     auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
         (log_path, 1*1024*1024, 3);

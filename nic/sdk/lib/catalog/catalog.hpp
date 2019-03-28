@@ -22,6 +22,7 @@ using boost::property_tree::ptree;
 #define SERDES_SBUS_START  34
 #define MAX_PORT_SPEEDS    8
 #define MAX_BO_MODES       4
+#define DEFAULT_CATALOG_PATH    "/nic/conf/"
 
 typedef enum card_id_e {
     CARD_ID_NAPLES100,
@@ -107,6 +108,7 @@ typedef struct catalog_s {
     uint64_t                 cores_mask;                        // mask of all control/data cores
     std::string              form_factor;                       // Form factor of the card
     uint32_t                 num_pcie_lanes;                    // Number of PCIe lanes on card
+    uint32_t                 cpld_id;                           // CPLD ID on this card
     uint32_t                 emmc_size;                         // eMMC size on card
     uint32_t                 memory_size;                       // Total Memory on card
     uint32_t                 num_asics;                         // number of asics on the board
@@ -135,10 +137,8 @@ typedef struct catalog_s {
 
 class catalog {
 public:
-    static catalog *factory(
-                std::string catalog_file_path,
-                std::string catalog_file,
-                platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM);
+    static catalog *factory(std::string catalog_file_path="", std::string catalog_file_name="", platform_type_t platform = platform_type_t::PLATFORM_TYPE_NONE);
+
     static void destroy(catalog *clog);
     static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
     static int logical_port_to_phy_port(uint32_t logical_port);
@@ -162,6 +162,7 @@ public:
     platform_type_t platform_type(void) const {
         return catalog_db_.platform_type;
     }
+    uint32_t cpld_id() { return catalog_db_.cpld_id; }
     bool access_mock_mode(void) { return catalog_db_.access_mock_mode; }
     uint32_t max_mpu_per_stage(void) const {
         return catalog_db_.max_mpu_per_stage;

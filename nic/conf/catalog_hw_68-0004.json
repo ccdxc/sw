@@ -1,5 +1,6 @@
 {
     "card_id" : "680004",
+    "cpld_id" : "0x12",
     "max_mpu_per_stage" : "4",
     "mpu_trace_size" : "2048",
     "cores_mask": "0xf",

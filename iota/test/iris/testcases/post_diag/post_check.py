@@ -15,9 +15,9 @@ def Trigger(tc):
     api.Logger.info("Starting POST check for %s" % (tc.cmd_descr))
 
     #ignore RTC and Local temperature as of now until DavidV fix the i2c bus issue
-    cmd = "! grep FAIL /var/log/post_report*.txt | grep -v Local | grep -v RTC"
-    cmd1 = "grep PASS /var/log/post_report*.txt"
-    cmd2 = "cat /var/log/post.*.log"
+    cmd = "! grep FAIL /var/log/pensando/post_report*.txt | grep -v Local | grep -v RTC"
+    cmd1 = "grep PASS /var/log/pensando/post_report*.txt"
+    cmd2 = "cat /var/log/pensando/post.*.log"
 
     if w1.IsNaples() or w2.IsNaples():
         if w1.IsNaples():
