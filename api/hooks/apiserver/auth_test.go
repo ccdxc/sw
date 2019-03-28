@@ -63,7 +63,7 @@ func TestHashPassword(t *testing.T) {
 			in: struct {
 				Test string
 			}{"testing"},
-			result: false,
+			result: true,
 			err:    errInvalidInputType,
 		},
 		{
@@ -135,7 +135,7 @@ func TestHashPassword(t *testing.T) {
 				},
 			},
 			existing: nil,
-			result:   false,
+			result:   true,
 			err:      errEmptyPassword,
 		},
 		{
@@ -194,7 +194,7 @@ func TestHashPassword(t *testing.T) {
 				},
 			},
 			existing: nil,
-			result:   false,
+			result:   true,
 			err:      k8serrors.NewAggregate([]error{password.ErrInsufficientSymbols}),
 		},
 	}
@@ -414,7 +414,7 @@ func TestGenerateSecret(t *testing.T) {
 		{
 			name: "incorrect object type",
 			in:   struct{ name string }{"testing"},
-			ok:   false,
+			ok:   true,
 			err:  true,
 		},
 		{
@@ -985,7 +985,7 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 					"",
 					auth.Permission_AllActions.String()),
 			},
-			result: false,
+			result: true,
 			err:    errInvalidInputType,
 		},
 		{
@@ -1053,7 +1053,7 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 					"",
 					auth.Permission_AllActions.String()),
 			},
-			result: false,
+			result: true,
 			err:    status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")),
 		},
 		{
@@ -1075,7 +1075,7 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 					"",
 					auth.Permission_AllActions.String()),
 			},
-			result: false,
+			result: true,
 			err:    status.Errorf(codes.Internal, "no user in context"),
 		},
 		{
@@ -1102,7 +1102,7 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 				},
 			},
 			allowedPerms: []auth.Permission{},
-			result:       false,
+			result:       true,
 			err:          status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")),
 		},
 		{
@@ -1129,7 +1129,7 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 				},
 			},
 			allowedPerms: nil,
-			result:       false,
+			result:       true,
 			err:          status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")),
 		},
 		{
@@ -1163,7 +1163,7 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 					"",
 					auth.Permission_AllActions.String()),
 			},
-			result: false,
+			result: true,
 			err:    kvstore.NewKeyNotFoundError("/venice/config/auth/roles/default/TestRole", 0),
 		},
 	}
@@ -1289,7 +1289,7 @@ func TestAdminRoleCheck(t *testing.T) {
 			name:   "super admin role",
 			in:     *testSuperAdminRole,
 			out:    *testSuperAdminRole,
-			result: false,
+			result: true,
 			err:    errAdminRoleUpdateNotAllowed,
 		},
 		{
@@ -1303,7 +1303,7 @@ func TestAdminRoleCheck(t *testing.T) {
 			name:   "incorrect object type",
 			in:     struct{ name string }{"testing"},
 			out:    struct{ name string }{"testing"},
-			result: false,
+			result: true,
 			err:    errInvalidInputType,
 		},
 	}
@@ -1348,7 +1348,7 @@ func TestAdminRoleBindingCheck(t *testing.T) {
 			in:     *adminRoleBinding,
 			oper:   apiintf.DeleteOper,
 			out:    *adminRoleBinding,
-			result: false,
+			result: true,
 			err:    errAdminRoleBindingDeleteNotAllowed,
 		},
 		{
@@ -1364,7 +1364,7 @@ func TestAdminRoleBindingCheck(t *testing.T) {
 			in:     struct{ name string }{"testing"},
 			oper:   apiintf.DeleteOper,
 			out:    struct{ name string }{"testing"},
-			result: false,
+			result: true,
 			err:    errInvalidInputType,
 		},
 		{
@@ -1380,7 +1380,7 @@ func TestAdminRoleBindingCheck(t *testing.T) {
 			in:     *incorrectAdminRoleBinding,
 			oper:   apiintf.UpdateOper,
 			out:    *incorrectAdminRoleBinding,
-			result: false,
+			result: true,
 			err:    errAdminRoleBindingRoleUpdateNotAllowed,
 		},
 	}

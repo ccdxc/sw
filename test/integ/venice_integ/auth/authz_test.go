@@ -555,3 +555,38 @@ func TestCommitBuffer(t *testing.T) {
 	MustDeleteRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", globals.DefaultTenant)
 	MustDeleteRole(tinfo.apicl, "NetworkAdminRole", globals.DefaultTenant)
 }
+
+func TestFailedOpsInCommitBuffer(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+
+	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "error creating logged in context")
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.StagingV1().Buffer().Create(ctx, &staging.Buffer{ObjectMeta: api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant}})
+		return err == nil, nil
+	}, fmt.Sprintf("unable to create staging buffer, err: %v", err))
+	defer tinfo.restcl.StagingV1().Buffer().Delete(ctx, &api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant})
+	stagecl, err := apiclient.NewStagedRestAPIClient(tinfo.apiGwAddr, "TestBuffer")
+	AssertOk(t, err, "error creating staging client")
+	defer stagecl.Close()
+	// stage user with weak password
+	MustCreateUserWithCtx(ctx, stagecl, "testuser2", "weakpassword", globals.DefaultTenant)
+	AssertEventually(t, func() (bool, interface{}) {
+		buf, err := tinfo.restcl.StagingV1().Buffer().Get(ctx, &api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant})
+		return err == nil && buf.Status.ValidationResult == "FAILED", buf
+	}, "GET of staging buffer should have FAILED validation status")
+	ca := staging.CommitAction{}
+	ca.Name = "TestBuffer"
+	ca.Tenant = globals.DefaultTenant
+	_, err = tinfo.restcl.StagingV1().Buffer().Commit(ctx, &ca)
+	Assert(t, err != nil, "expected error while committing buffer with weak password user")
+}

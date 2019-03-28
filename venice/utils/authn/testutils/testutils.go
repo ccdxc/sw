@@ -126,7 +126,7 @@ func NewLoggedInContextWithTimeout(ctx context.Context, apiGW string, in *auth.P
 }
 
 // CreateTestUser creates a test user
-func CreateTestUser(apicl apiclient.Services, username, password, tenant string) (*auth.User, error) {
+func CreateTestUser(ctx context.Context, apicl apiclient.Services, username, password, tenant string) (*auth.User, error) {
 	// user object
 	user := &auth.User{}
 	user.Defaults("all")
@@ -141,7 +141,7 @@ func CreateTestUser(apicl apiclient.Services, username, password, tenant string)
 	var err error
 	var createdUser *auth.User
 	if !testutils.CheckEventually(func() (bool, interface{}) {
-		createdUser, err = apicl.AuthV1().User().Create(context.Background(), user)
+		createdUser, err = apicl.AuthV1().User().Create(ctx, user)
 		// 409 is returned when user already exists. 401 when auth is already bootstrapped.
 		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") || strings.HasPrefix(err.Error(), "Status:(401)") {
 			return true, nil
@@ -156,7 +156,16 @@ func CreateTestUser(apicl apiclient.Services, username, password, tenant string)
 
 // MustCreateTestUser creates testuser and panics if fails
 func MustCreateTestUser(apicl apiclient.Services, username, password, tenant string) *auth.User {
-	u, err := CreateTestUser(apicl, username, password, tenant)
+	u, err := CreateTestUser(context.TODO(), apicl, username, password, tenant)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in CreateTestUser", err))
+	}
+	return u
+}
+
+// MustCreateUserWithCtx creates user and panics if fails
+func MustCreateUserWithCtx(ctx context.Context, apicl apiclient.Services, username, password, tenant string) *auth.User {
+	u, err := CreateTestUser(ctx, apicl, username, password, tenant)
 	if err != nil {
 		panic(fmt.Sprintf("error %s in CreateTestUser", err))
 	}

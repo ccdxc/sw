@@ -111,16 +111,16 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 	r, ok := i.(cluster.Tenant)
 	if !ok {
 		cl.logger.ErrorLog("method", "createDefaultRoles", "msg", fmt.Sprintf("API server hook to create default roles called for invalid object type [%#v]", i))
-		return i, false, errors.New("invalid input type")
+		return i, true, errors.New("invalid input type")
 	}
 	if oper != apiintf.CreateOper {
 		cl.logger.ErrorLog("method", "createDefaultRoles", "msg", fmt.Sprintf("API server hook to create default roles called for invalid API Operation [%s]", oper))
-		return i, false, errors.New("invalid input type")
+		return i, true, errors.New("invalid input type")
 	}
 	cl.logger.DebugLog("method", "createDefaultRoles", "msg", fmt.Sprintf("API server hook called to create default roles for tenant [%v]", r.Name))
 
 	if err := cl.validateTenantConfig(r); err != nil {
-		return i, false, err
+		return i, true, err
 	}
 
 	allowedTenant := r.GetName()
@@ -141,14 +141,14 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 	adminRole.APIVersion = apiSrv.GetVersion()
 	adminRole.SelfLink = adminRole.MakeURI("configs", adminRole.APIVersion, "auth")
 	if err := txn.Create(adminRole.MakeKey("auth"), adminRole); err != nil {
-		return r, false, err
+		return r, true, err
 	}
 	// create tenant admin role binding
 	adminRoleBinding := login.NewRoleBinding(globals.AdminRoleBinding, r.GetName(), globals.AdminRole, "", "")
 	adminRoleBinding.APIVersion = apiSrv.GetVersion()
 	adminRoleBinding.SelfLink = adminRoleBinding.MakeURI("configs", adminRole.APIVersion, "auth")
 	if err := txn.Create(adminRoleBinding.MakeKey("auth"), adminRoleBinding); err != nil {
-		return r, false, err
+		return r, true, err
 	}
 	return r, true, nil
 }
@@ -158,11 +158,11 @@ func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Inter
 	r, ok := i.(cluster.Tenant)
 	if !ok {
 		cl.logger.ErrorLog("method", "deleteDefaultRoles", "msg", fmt.Sprintf("API server hook to delete default roles called for invalid object type [%#v]", i))
-		return i, false, errors.New("invalid input type")
+		return i, true, errors.New("invalid input type")
 	}
 	if oper != apiintf.DeleteOper {
 		cl.logger.ErrorLog("method", "deleteDefaultRoles", "msg", fmt.Sprintf("API server hook to delete default roles called for invalid API Operation [%s]", oper))
-		return i, false, errors.New("invalid input type")
+		return i, true, errors.New("invalid input type")
 	}
 	cl.logger.DebugLog("method", "deleteDefaultRoles", "msg", fmt.Sprintf("API server hook called to delete default roles for tenant [%v]", r.Name))
 
@@ -178,13 +178,13 @@ func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Inter
 		auth.Permission_AllActions.String())).MakeKey("auth")
 	if err := txn.Delete(adminRoleKey); err != nil {
 		cl.logger.ErrorLog("method", "deleteDefaultRoles", "msg", "error adding delete admin role to transaction", "error", err)
-		return r, false, err
+		return r, true, err
 	}
 	// get admin role binding key
 	adminRoleBindingKey := login.NewRoleBinding(globals.AdminRoleBinding, r.GetName(), globals.AdminRole, "", "").MakeKey("auth")
 	if err := txn.Delete(adminRoleBindingKey); err != nil {
 		cl.logger.ErrorLog("method", "deleteDefaultRoles", "msg", "error adding delete admin role binding to transaction", "error", err)
-		return r, false, err
+		return r, true, err
 	}
 	return r, true, nil
 }
@@ -194,7 +194,7 @@ func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.I
 	r, ok := i.(cluster.Cluster)
 	if !ok {
 		cl.logger.Errorf("API server hook to check bootstrap flag called for invalid object type [%#v]", i)
-		return i, false, errors.New("invalid input type")
+		return i, true, errors.New("invalid input type")
 	}
 	cl.logger.Infof("API server hook called to check bootstrap flag for cluster")
 
@@ -207,7 +207,7 @@ func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.I
 		cur := &cluster.Cluster{}
 		if err := kv.Get(ctx, key, cur); err != nil {
 			cl.logger.Errorf("Error getting cluster with key [%s] in API server checkAuthBootstrapFlag pre-commit hook for create/update cluster", key)
-			return r, false, err
+			return r, true, err
 		}
 		if cur.Status.AuthBootstrapped {
 			r.Status.AuthBootstrapped = true
@@ -221,7 +221,7 @@ func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.I
 		return r, true, nil
 	default:
 		cl.logger.Errorf("API server hook to check bootstrap flag called for invalid API Operation [%s]", oper)
-		return i, false, errors.New("invalid input type")
+		return i, true, errors.New("invalid input type")
 	}
 }
 
@@ -273,7 +273,7 @@ func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstor
 	r, ok := i.(cluster.Cluster)
 	if !ok {
 		cl.logger.ErrorLog("method", "populateExistingTLSConfig", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
-		return i, false, errors.New("invalid input type")
+		return i, true, errors.New("invalid input type")
 	}
 
 	switch oper {
@@ -283,13 +283,13 @@ func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstor
 			cl.logger.ErrorLog("method", "populateExistingTLSConfig",
 				"msg", fmt.Sprintf("error getting cluster with key [%s] in API server pre-commit hook for update cluster", key),
 				"error", err)
-			return r, false, err
+			return r, true, err
 		}
 		r.Spec.Certs = cur.Spec.Certs
 		// decrypt key as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty key in that case
 		if err := cur.ApplyStorageTransformer(context.Background(), false); err != nil {
 			cl.logger.ErrorLog("method", "populateExistingTLSConfig", "msg", "error decrypting key field", "error", err)
-			return r, false, err
+			return r, true, err
 		}
 		r.Spec.Key = cur.Spec.Key
 		// Add a comparator for CAS
@@ -298,7 +298,7 @@ func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstor
 		return r, true, nil
 	default:
 		cl.logger.ErrorLog("method", "populateExistingTLSConfig", "msg", fmt.Sprintf("API server hook to set TLS Config called for invalid API Operation [%s]", oper))
-		return i, false, errors.New("invalid input type")
+		return i, true, errors.New("invalid input type")
 	}
 }
 

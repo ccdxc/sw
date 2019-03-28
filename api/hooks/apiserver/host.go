@@ -93,7 +93,7 @@ func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Inter
 	host, ok := i.(cluster.Host)
 	if !ok {
 		cl.logger.ErrorLog("method", "checkHostToSmartNICReferences", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
-		return i, false, fmt.Errorf("Invalid input type")
+		return i, true, fmt.Errorf("Invalid input type")
 	}
 
 	if oper == apiintf.DeleteOper {
@@ -103,11 +103,11 @@ func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Inter
 	conflicts, err := cl.getHostSmartNICConflicts(ctx, &host, kvs)
 	if err != nil {
 		log.Errorf("Error performing pre-commit check for Host object %s: %v", host.Name, err)
-		return i, false, fmt.Errorf("Internal error during pre-commit check for Host object %s", host.Name)
+		return i, true, fmt.Errorf("Internal error during pre-commit check for Host object %s", host.Name)
 	}
 
 	if len(conflicts) > 0 {
-		return i, false, cl.errHostSmartNICConflicts(host.Name, conflicts)
+		return i, true, cl.errHostSmartNICConflicts(host.Name, conflicts)
 	}
 
 	// Note that there is still a chance that by the time this transaction commits,

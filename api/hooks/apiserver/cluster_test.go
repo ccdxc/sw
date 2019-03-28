@@ -268,7 +268,7 @@ func TestCreateDefaultRoles(t *testing.T) {
 				Test string
 			}{"testing"},
 			txnEmpty: true,
-			result:   false,
+			result:   true,
 			err:      true,
 		},
 		{
@@ -310,7 +310,7 @@ func TestCreateDefaultRoles(t *testing.T) {
 				},
 			},
 			txnEmpty: true,
-			result:   false,
+			result:   true,
 			err:      true,
 		},
 	}
@@ -361,7 +361,7 @@ func TestDeleteDefaultRoles(t *testing.T) {
 				Test string
 			}{"testing"},
 			txnEmpty: true,
-			result:   false,
+			result:   true,
 			err:      true,
 		},
 		{
@@ -403,7 +403,7 @@ func TestDeleteDefaultRoles(t *testing.T) {
 				},
 			},
 			txnEmpty: true,
-			result:   false,
+			result:   true,
 			err:      true,
 		},
 	}
@@ -464,7 +464,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 			out: struct {
 				Test string
 			}{"testing"},
-			result: false,
+			result: true,
 			err:    fmt.Errorf("invalid input type"),
 		},
 		{
@@ -578,7 +578,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 					AuthBootstrapped: true,
 				},
 			},
-			result: false,
+			result: true,
 			err:    fmt.Errorf("invalid input type"),
 		},
 	}
@@ -723,7 +723,7 @@ func TestPopulateExistingTLSConfig(t *testing.T) {
 			out: struct {
 				Test string
 			}{"testing"},
-			result: false,
+			result: true,
 			err:    fmt.Errorf("invalid input type"),
 		},
 		{
@@ -773,7 +773,7 @@ func TestPopulateExistingTLSConfig(t *testing.T) {
 					Name: "testCluster",
 				},
 			},
-			result: false,
+			result: true,
 			err:    fmt.Errorf("invalid input type"),
 		},
 		{
@@ -792,7 +792,7 @@ func TestPopulateExistingTLSConfig(t *testing.T) {
 					Name: "testCluster",
 				},
 			},
-			result: false,
+			result: true,
 			err:    kvstore.NewKeyNotFoundError("/venice/config/cluster/cluster/Singleton", 0),
 		},
 	}

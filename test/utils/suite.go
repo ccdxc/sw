@@ -258,7 +258,7 @@ func (tu *TestUtils) SetupAuth() {
 		}
 	}
 	// create user is only allowed after auth policy is created and local auth is enabled
-	_, err = testutils.CreateTestUser(apicl, tu.User, tu.Password, globals.DefaultTenant)
+	_, err = testutils.CreateTestUser(context.TODO(), apicl, tu.User, tu.Password, globals.DefaultTenant)
 	if err != nil {
 		// 409 is returned when user already exists. 401 when auth is already bootstrapped. we are ok with that
 		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {

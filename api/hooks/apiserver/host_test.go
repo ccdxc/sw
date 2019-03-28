@@ -160,9 +160,9 @@ func TestHostObjectPreCommitHooks(t *testing.T) {
 		logger: log.SetConfig(log.GetDefaultConfig("Host-Hooks-Preommit-Test")),
 	}
 	_, result, err := hooks.hostPreCommitHook(context.TODO(), nil, nil, "", apiintf.UpdateOper, false, nil)
-	Assert(t, result == false && err != nil, "hostPreCommitHook did not return error with invalid parameters")
+	Assert(t, result == true && err != nil, "hostPreCommitHook did not return error with invalid parameters")
 	_, result, err = hooks.hostPreCommitHook(context.TODO(), nil, nil, "key", apiintf.UpdateOper, false, "")
-	Assert(t, result == false && err != nil, "hostPreCommitHook did not return error with invalid parameters")
+	Assert(t, result == true && err != nil, "hostPreCommitHook did not return error with invalid parameters")
 
 	schema := runtime.GetDefaultScheme()
 	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: []string{""}, Codec: runtime.NewJSONCodec(schema)}

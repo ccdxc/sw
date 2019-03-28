@@ -64,7 +64,7 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 	s.logger.DebugLog("msg", "AuthHook called to hash password")
 	r, ok := i.(auth.User)
 	if !ok {
-		return i, false, errInvalidInputType
+		return i, true, errInvalidInputType
 	}
 
 	// don't save password for external user
@@ -80,39 +80,40 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 	case apiintf.CreateOper:
 		// password is a required field when local user is created
 		if r.Spec.GetPassword() == "" {
-			return r, false, errEmptyPassword
+			return r, true, errEmptyPassword
 		}
 		// validate password
 		pc := password.NewPolicyChecker()
 		if err := k8serrors.NewAggregate(pc.Validate(r.Spec.GetPassword())); err != nil {
 			s.logger.ErrorLog("method", "hashPassword", "msg", "password validation failed", "error", err)
-			return r, false, err
+			return r, true, err
 		}
 		// get password hasher
 		hasher := password.GetPasswordHasher()
 		// generate hash
 		passwdhash, err := hasher.GetPasswordHash(r.Spec.GetPassword())
 		if err != nil {
-			s.logger.Errorf("error creating password hash: %v", err)
-			return r, false, errCreatingPasswordHash
+			s.logger.ErrorLog("method", "hashPassword", "msg", "creating password hash failed", "error", err)
+			return r, true, errCreatingPasswordHash
 		}
 		r.Spec.Password = passwdhash
-		s.logger.InfoLog("msg", "Created password hash", "user", r.GetName())
+		s.logger.InfoLog("method", "hashPassword", "msg", "created password hash", "user", r.GetName(), "tenant", r.GetTenant())
 	case apiintf.UpdateOper:
 		cur := &auth.User{}
 		if err := kv.Get(ctx, key, cur); err != nil {
-			s.logger.Errorf("error getting user with key [%s] in API server hashPassword pre-commit hook for update cluster", key)
-			return r, false, err
+			s.logger.ErrorLog("method", "hashPassword",
+				"msg", fmt.Sprintf("error getting user with key [%s] in API server hashPassword pre-commit hook for update cluster", key), "error", err)
+			return r, true, err
 		}
 		// decrypt password as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty password in that case
 		if err := cur.ApplyStorageTransformer(context.Background(), false); err != nil {
-			s.logger.Errorf("error decrypting password field: %v", err)
-			return r, false, err
+			s.logger.ErrorLog("method", "hashPassword", "msg", "decrypting password field failed", "error", err)
+			return r, true, err
 		}
 		r.Spec.Password = cur.Spec.Password
 		// add a comparator for CAS
 		if !dryRun {
-			s.logger.Infof("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion)
+			s.logger.DebugLog("method", "hashPassword", "msg", fmt.Sprintf("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion))
 			txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", cur.ResourceVersion))
 		}
 	default:
@@ -297,18 +298,18 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 
 // generateSecret is a pre-commmit hook to generate secret when authentication policy is created or updated
 func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
-	s.logger.DebugLog("msg", "AuthHook called to generate JWT secret")
+	s.logger.DebugLog("method", "generateSecret", "msg", "AuthHook called to generate JWT secret")
 	r, ok := i.(auth.AuthenticationPolicy)
 	if !ok {
-		return i, false, errInvalidInputType
+		return i, true, errInvalidInputType
 	}
 	secret, err := authn.CreateSecret(128)
 	if err != nil {
-		s.logger.Errorf("Error generating secret, Err: %v", err)
-		return r, false, err
+		s.logger.ErrorLog("method", "generateSecret", "msg", "error generating secret", "error", err)
+		return r, true, err
 	}
 	r.Spec.Secret = secret
-	s.logger.InfoLog("msg", "Generated JWT Secret")
+	s.logger.InfoLog("method", "generateSecret", "msg", "Generated JWT Secret")
 	return r, true, nil
 }
 
@@ -342,14 +343,14 @@ func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Int
 	s.logger.DebugLog("msg", "AuthHook called to check privilege escalation")
 	r, ok := i.(auth.RoleBinding)
 	if !ok {
-		return i, false, errInvalidInputType
+		return i, true, errInvalidInputType
 	}
 	cluster := &cluster.Cluster{}
 	if err := kv.Get(ctx, cluster.MakeKey("cluster"), cluster); err != nil {
 		s.logger.ErrorLog("method", "privilegeEscalationCheck",
 			"msg", "error getting cluster with key",
 			"error", err)
-		return i, false, err
+		return i, true, err
 	}
 	// check authorization only if request is coming from API Gateway and auth has been bootstrapped
 	if ctxutils.GetPeerID(ctx) == globals.APIGw && cluster.Status.AuthBootstrapped {
@@ -359,24 +360,24 @@ func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Int
 			s.logger.ErrorLog("method", "privilegeEscalationCheck",
 				"msg", fmt.Sprintf("error getting role with key [%s]", roleKey),
 				"error", err)
-			return i, false, err
+			return i, true, err
 		}
 		userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
 		if !ok {
 			s.logger.ErrorLog("method", "privilegeEscalationCheck", "msg", "no user in grpc metadata")
-			return i, false, status.Errorf(codes.Internal, "no user in context")
+			return i, true, status.Errorf(codes.Internal, "no user in context")
 		}
 		user := &auth.User{ObjectMeta: *userMeta}
 		// check if user is authorized to create the role binding
 		authorizer, err := authzgrpc.NewAuthorizer(ctx)
 		if err != nil {
 			s.logger.ErrorLog("method", "privilegeEscalationCheck", "msg", "error creating grpc authorizer", "error", err)
-			return i, false, status.Error(codes.Internal, err.Error())
+			return i, true, status.Error(codes.Internal, err.Error())
 		}
 		ops := login.GetOperationsFromPermissions(role.Spec.Permissions)
 		ok, _ = authorizer.IsAuthorized(user, ops...)
 		if !ok {
-			return i, false, status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", r.GetTenant(), r.GetName()))
+			return i, true, status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", r.GetTenant(), r.GetName()))
 		}
 		s.logger.InfoLog("method", "privilegeEscalationCheck", "msg", "success")
 	}
@@ -419,10 +420,10 @@ func (s *authHooks) adminRoleCheck(ctx context.Context, kv kvstore.Interface, tx
 	s.logger.DebugLog("msg", "AuthHook called to prevent admin role create, update, delete")
 	obj, ok := in.(auth.Role)
 	if !ok {
-		return in, false, errInvalidInputType
+		return in, true, errInvalidInputType
 	}
 	if obj.Name == globals.AdminRole {
-		return in, false, errAdminRoleUpdateNotAllowed
+		return in, true, errAdminRoleUpdateNotAllowed
 	}
 	return in, true, nil
 }
@@ -432,16 +433,16 @@ func (s *authHooks) adminRoleBindingCheck(ctx context.Context, kv kvstore.Interf
 	s.logger.DebugLog("msg", "AuthHook called to prevent admin role binding delete")
 	obj, ok := in.(auth.RoleBinding)
 	if !ok {
-		return in, false, errInvalidInputType
+		return in, true, errInvalidInputType
 	}
 	if obj.Name == globals.AdminRoleBinding {
 		switch oper {
 		case apiintf.UpdateOper:
 			if obj.Spec.Role != globals.AdminRole {
-				return in, false, errAdminRoleBindingRoleUpdateNotAllowed
+				return in, true, errAdminRoleBindingRoleUpdateNotAllowed
 			}
 		case apiintf.DeleteOper:
-			return in, false, errAdminRoleBindingDeleteNotAllowed
+			return in, true, errAdminRoleBindingDeleteNotAllowed
 		}
 	}
 	return in, true, nil
