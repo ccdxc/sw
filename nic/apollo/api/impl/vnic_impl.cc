@@ -257,15 +257,15 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
     // program security policy block's base address
     if (v4_policy) {
         addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("Egress IPv4 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr1,
-                                addr, 5);
+        //PDS_TRACE_DEBUG("Egress IPv4 policy root addr 0x%llx", addr);
+        //MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr1,
+                                //addr, 5);
     }
     if (v6_policy) {
         addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("Egress IPv6 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v6addr1,
-                                addr, 5);
+        //PDS_TRACE_DEBUG("Egress IPv6 policy root addr 0x%llx", addr);
+        //MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v6addr1,
+                                //addr, 5);
     }
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1_valid = true;
@@ -315,20 +315,20 @@ vnic_impl::activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
     if (v4_policy) {
         addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr1,
-                                addr, 5);
+        //MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr1,
+                                //addr, 5);
     } else {
         // TODO: hack - pls don't commit
         addr = security_policy_impl_db()->security_policy_region_addr();
         PDS_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr1,
-                                addr, 5);
+        //MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr1,
+                                //addr, 5);
     }
     if (v6_policy) {
         addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("Ingress IPv6 policy root addr 0x%llx", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v6addr1,
-                                addr, 5);
+        //MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v6addr1,
+                                //addr, 5);
     }
     vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1 = epoch;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1_valid = true;

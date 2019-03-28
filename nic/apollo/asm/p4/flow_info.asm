@@ -13,7 +13,7 @@ struct phv_         p;
 flow_info:
     crestore        [c7-c1], r0, 0xFF
     seq             c1, k.control_metadata_flow_index, r0
-    seq.c1          c2, k.p4_to_rxdma_header_sacl_base_addr, r0
+    seq             c2, k.p4_to_rxdma_header_sacl_base_addr, r0
     setcf           c3, [!c1 | c2]
     nop.c1.e
     phvwr.c3        p.p4_to_rxdma_header_sacl_bypass, 1
