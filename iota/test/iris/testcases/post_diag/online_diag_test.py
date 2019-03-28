@@ -14,11 +14,11 @@ def Trigger(tc):
             (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
     api.Logger.info("Starting Online Diags for %s" % (tc.cmd_descr))
 
-    cmd1 = "LD_LIBRARY_PATH=/platform/lib:/nic/lib /nic/bin/diag_test online &> /var/log/online_diags_report.txt"
+    cmd1 = "LD_LIBRARY_PATH=/platform/lib:/nic/lib /nic/bin/diag_test online &> /var/log/pensando/online_diags_report.txt"
     #ignore RTC and Local temperature as of now until DavidV fix the i2c bus issue
-    cmd2 = "! grep FAIL /var/log/online_diags_report.txt | grep -v Local | grep -v RTC"
-    cmd3 = "grep PASS /var/log/online_diags_report.txt"
-    cmd4 = "cat /var/log/online-diags.*.log"
+    cmd2 = "! grep FAIL /var/log/pensando/online_diags_report.txt | grep -v Local | grep -v RTC"
+    cmd3 = "grep PASS /var/log/pensando/online_diags_report.txt"
+    cmd4 = "cat /var/log/pensando/online-diags.*.log"
 
     if w1.IsNaples() or w2.IsNaples():
         if w1.IsNaples():
