@@ -307,7 +307,22 @@ apollo_impl::ingress_to_rxdma_init_(void) {
  */
 sdk_ret_t
 apollo_impl::egress_drop_stats_init_(void) {
-    return SDK_RET_OK;
+    sdk_ret_t                      ret;
+    p4e_drop_stats_swkey_t         key = { 0 };
+    p4e_drop_stats_swkey_mask_t    key_mask = { 0 };
+    p4e_drop_stats_actiondata_t    data = { 0 };
+
+    for (uint32_t i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
+        key.control_metadata_p4e_drop_reason = ((uint32_t)1 << i);
+        key_mask.control_metadata_p4e_drop_reason_mask = 0xFFFFFFFF;
+        data.action_id = P4E_DROP_STATS_P4E_DROP_STATS_ID;
+        ret =
+            apollo_impl_db()->egress_drop_stats_tbl()->insert_withid(&key,
+                                                                     &key_mask,
+                                                                     &data, i);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
+    return ret;
 }
 
 /**
