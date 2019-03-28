@@ -76,19 +76,6 @@ vcn_util::read(pds_vcn_info_t *info, bool compare_spec)
 sdk::sdk_ret_t
 vcn_util::update(pds_vcn_spec_t *vcn_spec)
 {
-#if 0
-    pds_vcn_key_t pds_vcn_key;
-    pds_vcn_spec_t updated_vcn;
-
-    memset(&pds_vcn_key, 0, sizeof(pds_vcn_key_t));
-    pds_vcn_key.id = vcn_spec->key.id;
-
-    pds_vcn_delete(&pds_vcn_key);
-
-    updated_vcn.key.id = vcn_spec->key.id;
-    updated_vcn.type = vcn_spec->type;
-    updated_vcn.pfx = vcn_spec->pfx;
-#endif
     return (pds_vcn_update(vcn_spec));
 }
 

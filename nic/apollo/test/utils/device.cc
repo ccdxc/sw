@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <iostream>
 #include "nic/apollo/test/utils/device.hpp"
 
 namespace api_test {
@@ -55,19 +56,28 @@ device_util::read(pds_device_info_t *info,  bool compare_spec) {
         return rv;
     }
 
+    std::cout << "Device IP : " << ipv4addr2str(info->spec.device_ip_addr)
+              << " Device MAC : " << macaddr2str(info->spec.device_mac_addr)
+              << " Gateway IP : " << ipv4addr2str(info->spec.gateway_ip_addr)
+              << std::endl;
+
     if (compare_spec) {
-        if (this->device_ip_str.compare(ipv4addr2str(info->spec.device_ip_addr)) != 0) {
+        if (this->device_ip_str.compare(
+                ipv4addr2str(info->spec.device_ip_addr)) != 0) {
             return SDK_RET_ERR;
         }
 
-        if (this->mac_addr_str.compare(macaddr2str(info->spec.device_mac_addr)) !=0) {
+        if (this->mac_addr_str.compare(
+                macaddr2str(info->spec.device_mac_addr)) !=0) {
             return SDK_RET_ERR;
         }
 
-        if (this->gateway_ip_str.compare(ipv4addr2str(info->spec.gateway_ip_addr)) != 0) {
+        if (this->gateway_ip_str.compare(
+                ipv4addr2str(info->spec.gateway_ip_addr)) != 0) {
             return SDK_RET_ERR;
         }
     }
+
     return sdk::SDK_RET_OK;
 }
 

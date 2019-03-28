@@ -7,6 +7,7 @@
 /// This file contains the all device test cases
 ///
 //----------------------------------------------------------------------------
+
 #include <getopt.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
@@ -46,124 +47,114 @@ protected:
 };
 
 //----------------------------------------------------------------------------
-// Device test cases utility routines
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
 // Device test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup Device
+/// \defgroup DEVICE_TEST
 /// @{
 
 /// \brief Create and delete a device in the same batch
 /// The operation should be de-duped by framework and effectively
 /// a NO-OP from hardware perspective
+/// [ Create, Delete ] - Read
 TEST_F(device_test, device_workflow_1) {
     pds_batch_params_t batch_params = {0};
     pds_device_info_t info;
-    device_util device_obj(k_device_ip_str, k_mac_addr_str,
-                                   k_gateway_ip_str);
+    device_util device_obj(k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
 
-    // Trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
+    // trigger
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // Verify with read
-    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create, delete and create a device in the same batch
 /// The operation should be program and unprogram device in hardware
 /// and return successful afetr create
-// TODO: this test fails because register reads in CAPRI_MOCK_MODE returns 0s
+/// [ Create - Delete - Create ] - Read
 TEST_F(device_test, DISABLED_device_workflow_2) {
     pds_batch_params_t batch_params = {0};
     pds_device_info_t info;
-    device_util device_obj(k_device_ip_str, k_mac_addr_str,
-                                   k_gateway_ip_str);
+    device_util device_obj(k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
 
-    // Trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
+    // trigger
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // Verify with read
-    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_OK);
 
-    // Teardown
-    batch_params.epoch = ++api_test::g_batch_epoch;
+    // cleanup
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create and delete device in different batches
 /// The hardware should create device correctly
 /// and return entry not found after delete
-// TODO: this test fails because register reads in CAPRI_MOCK_MODE returns 0s
-TEST_F(device_test, DISABLED_device_workflow_4) {
+/// [ Create ] - Read - [ Delete ] - Read
+TEST_F(device_test, device_workflow_4) {
     pds_batch_params_t batch_params = {0};
     pds_device_info_t info;
-    device_util device_obj(k_device_ip_str, k_mac_addr_str,
-                                   k_gateway_ip_str);
+    device_util device_obj(k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
 
-    // Trigger: create a device in first batch
-    batch_params.epoch = ++api_test::g_batch_epoch;
+    // trigger
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // Verify with read
-    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_OK);
 
-    // Trigger: delete a device in next batch
-    batch_params.epoch = ++api_test::g_batch_epoch;
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // Verify with read
-    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create and recreate device in two batches
 /// The hardware should program device correctly in case of
 /// first create and return error in second create operation
-// TODO: this test fails because register reads in CAPRI_MOCK_MODE returns 0s
-TEST_F(device_test, DISABLED_device_workflow_neg_1) {
+/// [ Create ] - [ Create ] - Read
+TEST_F(device_test, device_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
+    device_util device_obj(k_device_ip_str, k_mac_addr_str, k_gateway_ip_str);
     pds_device_info_t info;
-    device_util device_obj(k_device_ip_str, k_mac_addr_str,
-                                   k_gateway_ip_str);
 
-    // Trigger: create a device in first batch
-    batch_params.epoch = ++api_test::g_batch_epoch;
+    // trigger
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    // Verify with read
-    ASSERT_TRUE(device_obj.read(&info, true) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_OK);
 
-    // Trigger: create a device gaain in next batch
-    batch_params.epoch = ++api_test::g_batch_epoch;
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk:: SDK_RET_OK);
 
-    // Teardown
-    batch_params.epoch = ++api_test::g_batch_epoch;
+    // cleanup
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Read a device without creating it
@@ -172,19 +163,20 @@ TEST_F(device_test, device_workflow_neg_3a) {
     device_util device_obj;
     pds_device_info_t info;
 
-    // Trigger
-    ASSERT_TRUE(device_obj.read(&info, false) == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    // trigger
+    ASSERT_TRUE(device_obj.read(&info) == sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Delete a device without creating it
 /// The hardware should return entry not found
 TEST_F(device_test, device_workflow_neg_3b) {
     pds_batch_params_t batch_params = {0};
+    device_util device_obj;
 
-    // Trigger
-    batch_params.epoch = ++api_test::g_batch_epoch;
+    // trigger
+    batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(device_util::del() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 }

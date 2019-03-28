@@ -42,7 +42,7 @@ public:
     /// \brief Read device
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_device_info_t *info, bool compare_spec);
+    sdk_ret_t read(pds_device_info_t *info, bool compare_spec = false);
 
     /// \brief Update device
     ///
@@ -52,8 +52,7 @@ public:
     /// \brief Delete device
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t del(void);
-
+    sdk_ret_t del(void);
 };
 
 }    // namespace api_test

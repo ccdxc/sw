@@ -55,15 +55,14 @@ protected:
 /// The operation should be de-duped by framework and is
 /// a NO-OP from hardware perspective
 /// [ Create SetMax, Delete SetMax ] - Read
-TEST_F(vcn, vcn_workflow_1)
-{
+TEST_F(vcn, vcn_workflow_1) {
     pds_batch_params_t batch_params = {0};
     pds_vcn_key_t key = {};
     std::string vcn_start_addr = "10.0.0.0/16";
 
     key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key, vcn_start_addr, k_max_vcn,
@@ -85,7 +84,7 @@ TEST_F(vcn, vcn_workflow_2) {
     pds_vcn_key_t key = {};
     std::string vcn_start_addr = "10.0.0.0/16";
 
-    // Trigger
+    // trigger
     key.id = 1;
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
@@ -99,7 +98,7 @@ TEST_F(vcn, vcn_workflow_2) {
     ASSERT_TRUE(vcn_util::many_read(
         key, k_max_vcn, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key, k_max_vcn) == sdk::SDK_RET_OK);
@@ -126,7 +125,7 @@ TEST_F(vcn, vcn_workflow_3) {
     key2.id = 40;
     key3.id = 70;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key1, vcn_start_addr1, num_vcns,
@@ -145,7 +144,7 @@ TEST_F(vcn, vcn_workflow_3) {
     ASSERT_TRUE(vcn_util::many_read(
         key3, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key2, num_vcns) == sdk::SDK_RET_OK);
@@ -169,7 +168,7 @@ TEST_F(vcn, vcn_workflow_4) {
 
     key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key, vcn_start_addr, k_max_vcn,
@@ -202,7 +201,7 @@ TEST_F(vcn, vcn_workflow_5) {
     key2.id = 40;
     key3.id = 70;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key1, vcn_start_addr1, num_vcns,
@@ -230,7 +229,7 @@ TEST_F(vcn, vcn_workflow_5) {
     ASSERT_TRUE(vcn_util::many_read(
         key3, num_vcns, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key2, num_vcns) == sdk::SDK_RET_OK);
@@ -252,7 +251,7 @@ TEST_F(vcn, vcn_workflow_neg_1) {
 
     key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key, vcn_start_addr, k_max_vcn,
@@ -272,7 +271,7 @@ TEST_F(vcn, vcn_workflow_neg_1) {
     ASSERT_TRUE(vcn_util::many_read(
         key, k_max_vcn, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key, k_max_vcn) == sdk::SDK_RET_OK);
@@ -291,7 +290,7 @@ TEST_F(vcn, vcn_workflow_neg_2) {
 
     key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key, vcn_start_addr, k_max_vcn + 1,
@@ -310,7 +309,7 @@ TEST_F(vcn, vcn_workflow_neg_3a) {
 
     key.id = 1;
 
-    // Trigger
+    // trigger
     ASSERT_TRUE(vcn_util::many_read(
         key, k_max_vcn, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
@@ -323,7 +322,7 @@ TEST_F(vcn, vcn_workflow_neg_3b) {
 
     key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key, k_max_vcn) == sdk::SDK_RET_OK);
@@ -343,7 +342,7 @@ TEST_F(vcn, vcn_workflow_neg_4) {
     key1.id = 10;
     key2.id = 40;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_create(key1, vcn_start_addr1, num_vcns,
@@ -365,7 +364,7 @@ TEST_F(vcn, vcn_workflow_neg_4) {
     ASSERT_TRUE(vcn_util::many_read(
         key2, num_vcns, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(vcn_util::many_delete(key1, num_vcns) == sdk::SDK_RET_OK);
