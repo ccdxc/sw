@@ -861,85 +861,6 @@ class Checksum:
         self.InsertCsumObjReferenceInParseState(parser)
 
 
-    def CsumParserPayloadLenUpdateInstrGenerate(self, parse_state, sram,\
-                                                ohi_instr_inst,         \
-                                                ohi_inst_allocator,     \
-                                                mux_inst_allocator,     \
-                                                mux_idx_allocator):
-        '''
-        When option length has to be decremented from phdr, this
-        function is used to update OHI slot with computed length.
-        '''
-        gen_ohi_instr, ohi_id, calfldobj = \
-                        parse_state.csum_payloadlen_ohi_instr_gen
-        ncc_assert(gen_ohi_instr)
-        ncc_assert(ohi_id != -1)
-        ncc_assert(calfldobj)
-        #len_local_var_str is parser local variable that captures payloadLen. In
-        #each option parsing state, payloadLen is updated to decrement by
-        #option header size.
-        len_local_var_str = calfldobj.l4_verify_len_field
-
-        #check if len_local_var_str is src_reg in a capri_expr for which mux_inst
-        #has been allocated. Use that expr and reallocate mux_instr. By trying to
-        #reallocate, it is expected to get same mux_instruction-id that was
-        #already assigned for expression computation.
-        for mux_instr in mux_inst_allocator:
-            if not mux_instr: continue
-            flat_expr_str, flat_expr_wo_const_str, capri_expr = mux_instr
-            if not capri_expr: continue
-            if not capri_expr.src_reg: continue
-            if not isinstance(capri_expr.src_reg, tuple) and \
-                capri_expr.src_reg.hfname == len_local_var_str:
-                mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, capri_expr)
-                #Build OHI instr to load result into OHI-Slot.
-                select          = 3 # ohi[slot_num] = mux_inst_data[muxsel]
-                mux_sel         = mux_inst_id
-                index           = 0
-
-                log_str = ParserCalField._build_ohi_instr(sram, ohi_instr_inst,\
-                                                          select, mux_sel, \
-                                                          index, ohi_id)
-                calfldobj.ParserCsumObjAddLog(log_str)
-                ohi_instr_inst += 1
-                return ohi_instr_inst
-        #Len_Local_Var is not in list of expressions. One possibility in that
-        #len local variable is loaded from packet field. For this case, check
-        #if the variable is in lookup reg with type = LKP_REG_PKT/REG_LOAD/REG_UPDATE
-        for lkp_reg in parse_state.lkp_regs:
-            for k, fld in lkp_reg.flds.items():
-                cf, _, _ = fld
-                if cf.hfname == len_local_var_str:
-                    #Get muxid that is already allocated 
-                    mux_id = mux_idx_alloc(mux_idx_allocator, (lkp_reg.pkt_off/8))
-                    #Since OHI slot can only be loaded from mux_instr data, 
-                    #allocate mux_instr and save mux
-                    mux_instr_id, _ = mux_inst_alloc(mux_inst_allocator, None)
-                    mask        = 0xFFFF
-                    shift_left  = 0
-                    shift_val   = 0
-                    add_sub     = 0
-                    add_sub_val = 0
-                    load_mux_pkt = 0
-                    log_str = ParserCalField._build_mux_instr(sram, 0, \
-                                    mux_instr_id, mux_id,\
-                                    mask, add_sub, add_sub_val, shift_val,\
-                                    shift_left, load_mux_pkt, 0)
-                    #Build OHI instr to load result into OHI-Slot.
-                    select          = 3 # ohi[slot_num] = mux_inst_data[muxsel]
-                    mux_sel         = mux_instr_id
-                    index           = 0
-
-                    log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst,\
-                                                               select, mux_sel,\
-                                                               index, ohi_id)
-                    calfldobj.ParserCsumObjAddLog(log_str)
-                    ohi_instr_inst += 1
-                    return ohi_instr_inst
-
-        return ohi_instr_inst
-
-
     def CsumParserPhdrOffsetInstrGenerate(self, parse_state, sram, 
                                           ohi_instr_inst, ohi_inst_allocator,\
                                           mux_idx_allocator, \
@@ -964,61 +885,6 @@ class Checksum:
             ohi_instr_inst += 1
         return ohi_instr_inst
 
-    def CsumParserPayloadLenGenerate(self, parse_state, sram, ohi_instr_inst,\
-                                     ohi_inst_allocator, mux_idx_allocator, \
-                                     mux_inst_allocator, reuse_mux_idx_id):
-        '''
-        if pseudo hdr type is v4
-         - Use OHI instr to capture payload len into ohi slot 
-        if pseudo hdr type is v6
-         - Use lkp reg instr to store payload len
-        '''
-        log_str = ''
-        ncc_assert(parse_state.phdr_type != '')
-        if parse_state.phdr_type == 'v4':
-            ncc_assert(reuse_mux_idx_id != -1)
-            mux_sel_ihl = reuse_mux_idx_id
-            #Allocate mux idx instr to load totalLen
-            index       = 2 # 2nd byte in hdr
-            mux_sel_totalLen = ParserCalField.mux_idx_allocate(mux_idx_allocator, index)
-            log_str = ParserCalField._build_mux_idx(sram, mux_sel_totalLen, index)
-            # Compute totalLen  - ihl * 4
-            mux_instr_sel_PayloadLen = ParserCalField.mux_inst_allocate(\
-                                                   mux_inst_allocator, None)
-            index       = 0
-            mask        = 0x0F00
-            shift_left  = 0
-            shift_val   = 6
-            add_sub     = 0
-            add_sub_val = 0
-            load_mux_pkt = 1
-            log_str += ParserCalField._build_mux_instr(sram, 1, \
-                            mux_instr_sel_PayloadLen, mux_sel_ihl,\
-                            mask, add_sub, add_sub_val, shift_val,\
-                            shift_left, load_mux_pkt, mux_sel_totalLen)
-            #Save totalLen - ihl*4 in OHI slot
-            ncc_assert(parse_state.totalLen_ohi_id != -1)
-            select  = 3 # Load mux_instr_data into OHI
-            na      = 0 # NA
-            log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst,\
-                                             select, mux_instr_sel_PayloadLen,\
-                                             na, parse_state.totalLen_ohi_id)
-            ohi_instr_inst += 1
-        elif parse_state.phdr_type == 'v6':
-            #In case of v6 with option parsing, each option parsing state will
-            # adjust payload len. If any v6 state is loading PayloadLen from
-            # packet into variable, generate OHI instruction to load it.
-            self.CsumParserPayloadLenUpdateInstrGenerate(parse_state, sram, \
-                                                         ohi_instr_inst,    \
-                                                         ohi_inst_allocator, \
-                                                         mux_inst_allocator,\
-                                                         mux_idx_allocator)
-        else:
-            ncc_assert(0)
-
-        self.CalFldListAddLog(log_str)
-
-        return ohi_instr_inst
 
     def _CsumFindCalFldObjMatchingPhdr(self, parse_state, parse_states_in_path):
         '''
@@ -1073,7 +939,8 @@ class Checksum:
                                  parse_state, sram, ohi_instr_inst,     \
                                  ohi_inst_allocator, mux_idx_allocator, \
                                  mux_inst_allocator, l4len_mux_instr_id,\
-                                 l4len_mux_idx_id, hdrlen_mux_idx_id):
+                                 l4len_mux_idx_id, hdrlen_mux_idx_id,   \
+                                 hdrlen_expr, l4len_expr):
         '''
          The parser state (branch to) where header is extracted, fill in
          parser sram with ohi instructions so as to build checksum related
@@ -1114,7 +981,7 @@ class Checksum:
                                        mux_inst_allocator, l4len_mux_instr_id,\
                                        l4len_mux_idx_id, hdrlen_mux_idx_id,   \
                                        log_str, l4_calfldobj, phdr_parse_state,\
-                                        phdr_calfldobj)
+                                       phdr_calfldobj, hdrlen_expr, l4len_expr)
             processed_calfld_objs.append(l4_calfldobj)
 
         #When multiple headers are extracted in a parse state and more than
@@ -1128,7 +995,8 @@ class Checksum:
                                        ohi_inst_allocator, mux_idx_allocator,     \
                                        mux_inst_allocator, l4len_mux_instr_id,    \
                                        l4len_mux_idx_id, hdrlen_mux_idx_id,       \
-                                       log_str, calfldobj, None, None)
+                                       log_str, calfldobj, None, None,            \
+                                       hdrlen_expr, l4len_expr)
 
         return ohi_instr_inst
 
@@ -1139,7 +1007,7 @@ class Checksum:
                                        mux_inst_allocator, l4len_mux_instr_id,\
                                        l4len_mux_idx_id, hdrlen_mux_idx_id,   \
                                        log_str, calfldobj, phdr_parse_state,  \
-                                       phdr_calfldobj):
+                                       phdr_calfldobj, hdrlen_expr, l4len_expr):
 
         if calfldobj == None:
             ncc_assert(0)
@@ -1203,7 +1071,15 @@ class Checksum:
             # Target doesn't support it; Instead target only takes
             # (start-offset, size) to compute checksum.
 
-            if (l4len_mux_instr_id != -1) and \
+            mux_instr_generated = False
+            for allocated_mux_instr in mux_inst_allocator:
+                if allocated_mux_instr:
+                    _, _, _expr = allocated_mux_instr
+                    if _expr == hdrlen_expr:
+                        mux_instr_generated = True
+                        break
+
+            if not mux_instr_generated and (l4len_mux_instr_id != -1) and \
                (l4len_mux_idx_id != -1) and \
                (hdrlen_mux_idx_id != -1) :
                 index       = 0

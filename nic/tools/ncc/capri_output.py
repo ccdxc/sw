@@ -2083,7 +2083,7 @@ def _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs,        
                                                ohi_inst_allocator, mux_idx_allocator,\
                                                mux_inst_allocator, \
                                                csum_l4len_mux_instr_id, csum_l4len_mux_idx_id, \
-                                               csum_hdrlen_mux_idx_id)
+                                               csum_hdrlen_mux_idx_id, csum_hdrlen_expr, csum_l4len_expr)
     elif nxt_cs.phdr_offset_ohi_id != -1:
         # Case where parse state is moving into ipv4/ipv6
         # and ipv4 hdr is not part of header checksum verification
