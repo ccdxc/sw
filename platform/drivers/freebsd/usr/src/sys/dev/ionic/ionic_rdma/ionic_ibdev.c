@@ -4332,6 +4332,21 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 	}
 }
 
+static bool ionic_qp_cur_state_is_ok(enum ib_qp_state q_state,
+				     enum ib_qp_state attr_state)
+{
+	if (q_state == attr_state)
+		return true;
+
+	if (attr_state == IB_QPS_ERR)
+		return true;
+
+	if (attr_state == IB_QPS_SQE)
+		return q_state == IB_QPS_RTS || q_state == IB_QPS_SQD;
+
+	return false;
+}
+
 static int ionic_check_modify_qp(struct ionic_qp *qp, struct ib_qp_attr *attr,
 				 int mask)
 {
@@ -4339,6 +4354,10 @@ static int ionic_check_modify_qp(struct ionic_qp *qp, struct ib_qp_attr *attr,
 		attr->cur_qp_state : qp->state;
 	enum ib_qp_state next_state = (mask & IB_QP_STATE) ?
 		attr->qp_state : cur_state;
+
+	if ((mask & IB_QP_CUR_STATE) &&
+	    !ionic_qp_cur_state_is_ok(qp->state, attr->cur_qp_state))
+		return -EINVAL;
 
 	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask,
 				IB_LINK_LAYER_ETHERNET))
