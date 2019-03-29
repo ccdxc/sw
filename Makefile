@@ -398,6 +398,7 @@ e2e-naples:
 
 naples-firmware: 
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 clean
+	$(MAKE) ws-tools
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 firmware
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
 

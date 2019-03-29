@@ -1110,7 +1110,7 @@ port_led_blink (uint32_t key, port_args_t *port_args) {
     int phy_port = sdk::lib::catalog::logical_port_to_phy_port(key);
 
     mac_metrics_old = delphi::objects::MacMetrics::Find(key);
-    if (mac_metrics_old != NULL) {
+    if (mac_metrics_old != nullptr) {
         if (mac_metrics_old->frames_rx_all()->Get() != port_args->stats_data[port::MacStatsType::FRAMES_RX_ALL] ||
             mac_metrics_old->frames_tx_all()->Get() != port_args->stats_data[port::MacStatsType::FRAMES_TX_ALL]) {
                 blink = LED_COLOR_GREEN;
@@ -1132,6 +1132,9 @@ port_led_blink (uint32_t key, port_args_t *port_args) {
         } else {
             sdk::lib::pal_qsfp_set_led(phy_port, blink, pal_led_frequency_t::LED_FREQUENCY_2HZ);
         }
+
+        // release memory
+        delphi::objects::MacMetrics::Release(mac_metrics_old);
     }
 }
 

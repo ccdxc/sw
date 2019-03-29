@@ -251,6 +251,7 @@ public:
       {{end}}
 	static delphi::error Publish({{$msgName | ToLower}}_t *mptr);
 	static {{$msgName}}Ptr Find();
+        static void Release({{$msgName}}Ptr ptr);
     {{end}}
     {{$fields := .Fields}}
     {{range $fields}}
@@ -274,6 +275,7 @@ public:
           {{end}}
 	static delphi::error Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
 	static {{$msgName}}Ptr Find({{$pkgName}}::{{.GetCppTypeName}} key);
+        static void Release({{$msgName}}Ptr ptr);
         {{else}}
     {{$msgName}}({{.GetCppTypeName}} key, char *ptr);
     {{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
@@ -287,6 +289,7 @@ public:
           {{end}}
 	static delphi::error Publish({{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
 	static {{$msgName}}Ptr Find({{.GetCppTypeName}} key);
+        static void Release({{$msgName}}Ptr ptr);
         {{end}}
       {{end}}
 
@@ -714,6 +717,15 @@ delphi::error {{$msgName}}::Publish({{$msgName | ToLower}}_t *mptr) {
       {{end}}
 }
 
+// Release release the metrics object memory
+void {{$msgName}}::Release({{$msgName}}Ptr ptr) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    tbl->Release(ptr->Raw());
+}
 
     {{end}}
     {{$fields := .Fields}}
@@ -764,6 +776,16 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
           {{end}}
 }
 
+// Release release the metrics object memory
+void {{$msgName}}::Release({{$msgName}}Ptr ptr) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    tbl->Release(ptr->Raw());
+}
+
         {{else}}
 // Publish publishes a metric atomically
 delphi::error {{$msgName}}::Publish({{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr) {
@@ -804,6 +826,16 @@ delphi::error {{$msgName}}::Publish({{.GetCppTypeName}} key, {{$msgName | ToLowe
     // return an instance of {{$msgName}}
     return make_shared<{{$msgName}}>(key, shmptr);
           {{end}}
+}
+
+// Release release the metrics object memory
+void {{$msgName}}::Release({{$msgName}}Ptr ptr) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    tbl->Release(ptr->Raw());
 }
 
         {{end}} 
