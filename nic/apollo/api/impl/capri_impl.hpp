@@ -46,10 +46,8 @@ public:
      */
     virtual sdk_ret_t monitor(void) override;
 
-    /**
-     * @brief    set the core frequency with the given value
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief    set the core frequency with the given value
+    /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t set_frequency(pds_clock_freq_t freq) override;
 
     /**

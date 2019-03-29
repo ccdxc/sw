@@ -14,6 +14,9 @@
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 
+/// \defgroup PDS_VCN VCN API
+/// @{
+
 typedef enum pds_clock_freq_e {
     PDS_CLOCK_FREQUENCY_833  = 0,
     PDS_CLOCK_FREQUENCY_900  = 1,
@@ -40,6 +43,8 @@ sdk_ret_t pds_clock_frequency_update(pds_clock_freq_t freq);
 sdk_ret_t pds_get_system_temperature(pds_system_temperature_t *temp);
 sdk_ret_t pds_get_system_power(pds_system_power_t *pow);
 
-} // namespace debug
+}    // namespace debug
+
+/// \@}
 
 #endif    // __INCLUDE_API_PDS_DEBUG_HPP__

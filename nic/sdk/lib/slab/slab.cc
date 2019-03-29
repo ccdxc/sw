@@ -85,8 +85,8 @@ slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
     }
 
 #if SDK_DEBUG
-    SDK_TRACE_DEBUG("SLAB_DBG name: %s, slab_id: %u, elem_sz: %u,"
-                    " elems_per_block: %u, size %u\n",
+    SDK_TRACE_DEBUG("slab name %s, slab id %u, elem sz %u, "
+                    "elems per block %u, size %u",
                     name, slab_id, elem_sz, elems_per_block,
                     sizeof(slab));
 #endif
@@ -172,18 +172,18 @@ slab::alloc_block_(void)
     slab_emeta_t    *emeta;
     uint8_t         *ptr;
 
-#if SDK_DEBUG
-    SDK_TRACE_DEBUG("Allocating block from slab %s, id: %u\n",
-                    name_, slab_id_);
+#ifdef SDK_DEBUG
+    SDK_TRACE_DEBUG("Allocating block from slab %s, id %u", name_, slab_id_);
 #endif
 
     if (mmgr_) {
         block = (slab_block_t *)mmgr_->alloc(raw_block_sz_, 4, true);
     } else {
-        block = (slab_block_t *)SDK_MALLOC(SDK_MEM_ALLOC_LIB_SLAB, raw_block_sz_);
+        block = (slab_block_t *)SDK_MALLOC(SDK_MEM_ALLOC_LIB_SLAB,
+                                           raw_block_sz_);
     }
     if (block == NULL) {
-        SDK_TRACE_ERR("Failed to allocate block for slab %s, id %u\n",
+        SDK_TRACE_ERR("Failed to allocate block for slab %s, id %u",
                       name_, slab_id_);
         return NULL;
     }
@@ -262,8 +262,8 @@ slab::alloc(void)
     }
 
 #if SDK_DEBUG
-    SDK_TRACE_DEBUG("Alloc called for slab %s, id: %u ret-elem: 0x%x block: 0x%x\n",
-                    name_, slab_id_, elem, block);
+    SDK_TRACE_DEBUG("Alloc called for slab %s, id %u ret elem 0x%x "
+                    "block 0x%x", name_, slab_id_, elem, block);
 #endif
     return elem;
 
@@ -301,7 +301,7 @@ slab::free_(void *elem)
     }
 
 #if SDK_DEBUG
-    SDK_TRACE_DEBUG("Free called for slab %s, id: %u elem: 0x%x block: 0x%x\n",
+    SDK_TRACE_DEBUG("Free called for slab %s, id %u elem 0x%x block 0x%x",
                     name_, slab_id_, elem, block);
 #endif
 
@@ -328,6 +328,9 @@ slab::free_(void *elem)
                 SDK_FREE(SDK_MEM_ALLOC_LIB_SLAB, block);
             }
             this->num_blocks_--;
+#ifdef SDK_DEBUG
+            SDK_TRACE_DEBUG("Free block to slab %s, id %u", name_, slab_id_);
+#endif
         }
     } else {
         // this elem doesn't belong to any of this slab's active blocks
