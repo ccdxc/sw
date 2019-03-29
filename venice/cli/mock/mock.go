@@ -219,7 +219,7 @@ func (tinfo *Info) createMiscObjects() {
 			},
 			Status: cluster.SmartNICStatus{
 				AdmissionPhase: "ADMITTED",
-				PrimaryMAC:     fmt.Sprintf("00ae.dd%x%x.%x%x.%x%x", i, i, i, i, i, i),
+				PrimaryMAC:     fmt.Sprintf("00:ae.dd:%x%x:%x%x:%x%x", i, i, i, i, i, i),
 			},
 		}
 
@@ -245,7 +245,7 @@ func (tinfo *Info) createMiscObjects() {
 				HomingHostName:     fmt.Sprintf("esx-lab2-1%d", i),
 				IPv4Address:        fmt.Sprintf("31.31.0.%d", i),
 				IPv4Gateway:        "31.31.0.254",
-				MacAddress:         fmt.Sprintf("00ae.cd%x%x.%x%x.%x%x", i, i, i, i, i, i),
+				MacAddress:         fmt.Sprintf("00.ae.cd.%x%x.%x%x.%x%x", i, i, i, i, i, i),
 				EndpointState:      "up",
 				SecurityGroups:     []string{"core-svcs", "lab-22"},
 				MicroSegmentVlan:   111,

@@ -78,8 +78,8 @@ func TestGetKvs(t *testing.T) {
 	wObj.ObjectMeta.Tenant = "default"
 	wObj.Spec.HostName = "esxi-343"
 	wObj.Spec.Interfaces = []workload.WorkloadIntfSpec{
-		{MACAddress: "0011.2244.5566", MicroSegVlan: 23, ExternalVlan: 100},
-		{MACAddress: "0011.3344.5566", MicroSegVlan: 33, ExternalVlan: 200}}
+		{MACAddress: "00.11.22.44.55.66", MicroSegVlan: 23, ExternalVlan: 100},
+		{MACAddress: "00.11.33.44.55.66", MicroSegVlan: 33, ExternalVlan: 200}}
 
 	metaKvs := make(map[string]cliField)
 	specKvs := make(map[string]cliField)
@@ -96,7 +96,7 @@ func TestGetKvs(t *testing.T) {
 	if !reflect.DeepEqual(specKvs["host-name"].values, []string{"esxi-343"}) {
 		t.Fatalf("unable to get specKvs %+v", specKvs)
 	}
-	if !reflect.DeepEqual(specKvs["mac-address"].values, []string{"0011.2244.5566", "0011.3344.5566"}) {
+	if !reflect.DeepEqual(specKvs["mac-address"].values, []string{"00.11.22.44.55.66", "00.11.33.44.55.66"}) {
 		t.Fatalf("unable to get specKvs %+v", specKvs)
 	}
 	if !reflect.DeepEqual(specKvs["micro-seg-vlan"].values, []string{"23", "33"}) {
@@ -124,7 +124,7 @@ func TestGetKvsSmartNIC(t *testing.T) {
 		},
 		Status: cluster.SmartNICStatus{
 			AdmissionPhase: "ADMITTED",
-			PrimaryMAC:     "00ae.ed33.3333",
+			PrimaryMAC:     "00:ae:ed:33:33:33",
 		},
 	}
 
@@ -141,7 +141,7 @@ func TestGetKvsSmartNIC(t *testing.T) {
 	if !reflect.DeepEqual(objKvs["admission-phase"].values, []string{"ADMITTED"}) {
 		t.Fatalf("unable to get objKvs %+v", objKvs)
 	}
-	if !reflect.DeepEqual(objKvs["primary-mac"].values, []string{"00ae.ed33.3333"}) {
+	if !reflect.DeepEqual(objKvs["primary-mac"].values, []string{"00:ae:ed:33:33:33"}) {
 		t.Fatalf("unable to get objKvs %+v", objKvs)
 	}
 }
@@ -177,9 +177,9 @@ func TestGetAllKvs(t *testing.T) {
 		Spec: workload.WorkloadSpec{
 			HostName: "node021",
 			Interfaces: []workload.WorkloadIntfSpec{
-				{MACAddress: "1111.1111.1111", ExternalVlan: 11, MicroSegVlan: 1000},
-				{MACAddress: "2222.2222.2222", ExternalVlan: 22, MicroSegVlan: 2000},
-				{MACAddress: "3333.3333.3333", ExternalVlan: 33, MicroSegVlan: 3000},
+				{MACAddress: "11:11:11:11:11:11", ExternalVlan: 11, MicroSegVlan: 1000},
+				{MACAddress: "22:22:22:22:22:22", ExternalVlan: 22, MicroSegVlan: 2000},
+				{MACAddress: "33:33:33:33:33:33", ExternalVlan: 33, MicroSegVlan: 3000},
 			},
 		},
 	}
@@ -192,7 +192,7 @@ func TestGetAllKvs(t *testing.T) {
 		Spec: workload.WorkloadSpec{
 			HostName: "node021",
 			Interfaces: []workload.WorkloadIntfSpec{
-				{MACAddress: "4444.4444.4444", ExternalVlan: 11, MicroSegVlan: 4000},
+				{MACAddress: "44:44:44:44:44:44", ExternalVlan: 11, MicroSegVlan: 4000},
 			},
 		},
 	}

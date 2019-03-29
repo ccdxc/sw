@@ -728,7 +728,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 		},
 		Spec: cluster.SmartNICSpec{},
 		Status: cluster.SmartNICStatus{
-			PrimaryMAC: "0001.0203.0405",
+			PrimaryMAC: "00:01:02:03:04:05",
 		},
 	}
 
@@ -745,7 +745,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 		Spec: cluster.HostSpec{
 			SmartNICs: []cluster.SmartNICID{
 				{
-					MACAddress: "0001.0203.0405",
+					MACAddress: "00:01:02:03:04:05",
 				},
 			},
 		},
@@ -767,7 +767,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 			HostName: "testHost",
 			Interfaces: []workload.WorkloadIntfSpec{
 				{
-					MACAddress:   "0001.0203.0405",
+					MACAddress:   "00:01:02:03:04:05",
 					MicroSegVlan: 100,
 					ExternalVlan: 1,
 				},
@@ -793,8 +793,8 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error deleting the workload")
 
 	// verify endpoint is gone from the database
-	_, ok = nw.FindEndpoint("testWorkload-0001.0203.0405")
-	Assert(t, (ok == false), "Deleted endpoint still found in network db", "testWorkload-0001.0203.0405")
+	_, ok = nw.FindEndpoint("testWorkload-00:01:02:03:04:05")
+	Assert(t, (ok == false), "Deleted endpoint still found in network db", "testWorkload-00:01:02:03:04:05")
 }
 
 func TestHostCreateDelete(t *testing.T) {
@@ -814,7 +814,7 @@ func TestHostCreateDelete(t *testing.T) {
 		Spec: cluster.HostSpec{
 			SmartNICs: []cluster.SmartNICID{
 				{
-					MACAddress: "0001.0203.0405",
+					MACAddress: "00:01:02:03:04:05",
 				},
 			},
 		},
@@ -853,7 +853,7 @@ func TestSmartNicCreateDelete(t *testing.T) {
 			Name: "testSmartNIC",
 		},
 		Status: cluster.SmartNICStatus{
-			PrimaryMAC: "0001.0203.0405",
+			PrimaryMAC: "00:01:02:03:04:05",
 		},
 	}
 
@@ -864,9 +864,9 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	// verify we can find the endpoint associated with the smartNic
 	foundSmartNIC, err := stateMgr.FindSmartNIC("default", "testSmartNIC")
 	AssertOk(t, err, "Could not find the smartNic")
-	Assert(t, (foundSmartNIC.SmartNIC.Status.PrimaryMAC == "0001.0203.0405"), "smartNic params did not match")
+	Assert(t, (foundSmartNIC.SmartNIC.Status.PrimaryMAC == "00:01:02:03:04:05"), "smartNic params did not match")
 
-	foundSmartNIC, err = stateMgr.FindSmartNICByMacAddr("0001.0203.0405")
+	foundSmartNIC, err = stateMgr.FindSmartNICByMacAddr("00:01:02:03:04:05")
 	AssertOk(t, err, "Could not find the smartNic")
 
 	// delete the smartNic

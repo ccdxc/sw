@@ -745,7 +745,7 @@ func createNetwork(baseURL string) error {
 			IPv4Subnet:  "10.0.0.0/16",
 			IPv4Gateway: "10.0.2.1",
 			VlanID:      100,
-			RouterMAC:   "0022.0A00.0201",
+			RouterMAC:   "00:22:0A:00:02:01",
 		},
 	}
 
@@ -869,7 +869,7 @@ func createEndpoint(baseURL string) error {
 			InterfaceType: "uplink",
 			Interface:     "uplink128",
 			IPv4Address:   "10.0.2.1/16",
-			MacAddress:    "0022.0A00.0201",
+			MacAddress:    "00:22:0A:00:02:01",
 			NodeUUID:      "GWUUID",
 		},
 	}
@@ -886,7 +886,7 @@ func createEndpoint(baseURL string) error {
 			InterfaceType: "uplink",
 			Interface:     "uplink129",
 			IPv4Address:   "10.0.2.1/16",
-			MacAddress:    "0022.0A00.0201",
+			MacAddress:    "00:22:0A:00:02:01",
 			NodeUUID:      "GWUUID",
 		},
 	}
@@ -903,7 +903,7 @@ func createEndpoint(baseURL string) error {
 			InterfaceType: "uplink",
 			Interface:     "uplink129",
 			IPv4Address:   "20.1.1.1/16",
-			MacAddress:    "0022.1401.0101",
+			MacAddress:    "00:22:14:01:01:01",
 			NodeUUID:      "GWUUID",
 		},
 	}

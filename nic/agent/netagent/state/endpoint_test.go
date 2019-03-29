@@ -46,7 +46,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -156,7 +156,7 @@ func TestLocalEndpointUpdate(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			NodeUUID:     ag.NodeUUID,
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -209,7 +209,7 @@ func TestEndpointUpdate(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -302,7 +302,7 @@ func TestEndpointConcurrency(t *testing.T) {
 					EndpointUUID: "testEndpointUUID",
 					WorkloadUUID: "testWorkloadUUID",
 					NetworkName:  "default",
-					MacAddress:   "4242.4242.4242",
+					MacAddress:   "42:42:42:42:42:42",
 				},
 			}
 
@@ -372,7 +372,7 @@ func TestLocalEndpointPointingToAnyLif(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			NodeUUID:     ag.NodeUUID,
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		}}
 
 	// create the endpoint
@@ -419,7 +419,7 @@ func TestLocalEndpointPointingToPredefinedLIF(t *testing.T) {
 			InterfaceType: "lif",
 			Interface:     "lif1",
 			NodeUUID:      ag.NodeUUID,
-			MacAddress:    "4242.4242.4242",
+			MacAddress:    "42:42:42:42:42:42",
 		},
 	}
 
@@ -465,7 +465,7 @@ func TestRemoteEndpointPointingToAnyUplink(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			NodeUUID:     "different-uuid-than-agent",
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -513,7 +513,7 @@ func TestRemoteEndpointPointingToPredefinedUplink(t *testing.T) {
 			InterfaceType: "uplink",
 			Interface:     "uplink128",
 			NodeUUID:      "some-different-uuid-than-agent",
-			MacAddress:    "4242.4242.4242",
+			MacAddress:    "42:42:42:42:42:42",
 		},
 	}
 
@@ -580,7 +580,7 @@ func TestRemoteEndpointPointingToLocalTunnel(t *testing.T) {
 			InterfaceType: "tunnel",
 			Interface:     "public-tunnel",
 			NodeUUID:      "remote",
-			MacAddress:    "4242.4242.4242",
+			MacAddress:    "42:42:42:42:42:42",
 		},
 	}
 
@@ -658,7 +658,7 @@ func TestRemoteEndpointPointingToRemoteTunnel(t *testing.T) {
 			Interface:     "public-ns/public-tunnel",
 			InterfaceType: "tunnel",
 			NodeUUID:      "remote",
-			MacAddress:    "4242.4242.4242",
+			MacAddress:    "42:42:42:42:42:42",
 		},
 	}
 
@@ -704,7 +704,7 @@ func TestFindLocalEndpoint(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			NodeUUID:     ag.NodeUUID,
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -758,7 +758,7 @@ func TestEndpointCreateOnNonExistentNamespace(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -805,7 +805,7 @@ func TestRemoteEndpointOnNonExistentInterface(t *testing.T) {
 			NetworkName:  "default",
 			Interface:    "bad-interface",
 			NodeUUID:     "remote",
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -852,7 +852,7 @@ func TestNonExistentEndpointUpdate(t *testing.T) {
 			NetworkName:  "default",
 			Interface:    "bad-interface",
 			NodeUUID:     ag.NodeUUID,
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -899,7 +899,7 @@ func TestRemoteEndpointOnNonExistentRemoteTunnel(t *testing.T) {
 			NetworkName:  "default",
 			Interface:    "remoteNS/nonExistentRemoteNatPool",
 			NodeUUID:     "remote",
-			MacAddress:   "4242.4242.4242",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
