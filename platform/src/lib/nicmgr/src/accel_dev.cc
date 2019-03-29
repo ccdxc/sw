@@ -661,6 +661,9 @@ AccelDev::_DevcmdCryptoKeyUpdate(void *req,
     key_accum->num_key_parts = std::min(key_accum->num_key_parts + 1,
                                         (uint32_t)CMD_CRYPTO_KEY_PART_MAX);
     if (cmd->trigger_update) {
+        if (!dev_api) {
+            return ACCEL_RC_ERROR;
+        }
         ret_val = dev_api->crypto_key_index_upd(cmd->key_index,
                            (crypto_key_type_t)crypto_key_type_tbl[cmd->key_type],
                            &key_accum->key_data[0][0],

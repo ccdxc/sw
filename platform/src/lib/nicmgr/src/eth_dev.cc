@@ -29,6 +29,7 @@
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
+#include "nicmgr_utils.hpp"
 
 #include "logger.hpp"
 #include "eth_if.h"
@@ -822,6 +823,9 @@ Eth::_CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_PORT_CONFIG_SET", spec->name);
 
+    if (!dev_api) {
+        return (IONIC_RC_ERROR);
+    }
     ret = dev_api->port_set_config(spec->uplink_port_num,
                                    (port_config_t *)&cmd->config);
     if (ret != SDK_RET_OK) {

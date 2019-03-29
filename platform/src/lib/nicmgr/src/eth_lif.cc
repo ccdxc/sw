@@ -33,7 +33,6 @@
 #include "eth_lif.hpp"
 #include "adminq.hpp"
 
-
 // ----------------------------------------------------------------------------
 // Mac address to string
 // ----------------------------------------------------------------------------
@@ -316,6 +315,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         state = LIF_STATE_INITING;
 
+        DEVAPI_CHECK
         rs = dev_api->lif_create(&hal_lif_info_);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Failed to create LIF", hal_lif_info_.name);
@@ -326,6 +326,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         cosA = 1;
         // cosB = QosClass::GetTxTrafficClassCos(spec->qos_group, spec->uplink_port_num);
+        DEVAPI_CHECK
         dev_api->qos_get_txtc_cos(spec->qos_group, spec->uplink_port_num, &cosB);
         if (cosB < 0) {
             NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
@@ -336,6 +337,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         ctl_cosA = 1;
         // ctl_cosB = QosClass::GetTxTrafficClassCos("CONTROL", spec->uplink_port_num);
+        DEVAPI_CHECK
         dev_api->qos_get_txtc_cos("CONTROL", spec->uplink_port_num, &ctl_cosB);
         if (ctl_cosB < 0) {
             NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
@@ -542,6 +544,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     lif->UpdateName(std::to_string(lif->GetHwLifId()));
     lif->Reset();
 #endif
+    DEVAPI_CHECK
     dev_api->lif_upd_name(hal_lif_info_.lif_id,
                           std::to_string(hal_lif_info_.lif_id));
     dev_api->lif_reset(hal_lif_info_.lif_id);
@@ -1212,6 +1215,7 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 #endif
         port_config_t port_config = {0};
         port_status_t port_status = {0};
+        DEVAPI_CHECK
         dev_api->port_get_config(spec->uplink_port_num, &port_config);
         dev_api->port_get_status(spec->uplink_port_num, &port_status);
         notify_block->link_status = port_status.status;
@@ -1304,6 +1308,7 @@ EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
 
     bool vlan_strip = cmd->wanted & comp->supported & ETH_HW_VLAN_RX_STRIP;
     bool vlan_insert = cmd->wanted & comp->supported & ETH_HW_VLAN_TX_TAG;
+    DEVAPI_CHECK
     ret = dev_api->lif_upd_vlan_offload(hal_lif_info_.lif_id,
                                         vlan_strip, vlan_insert);
 #if 0
@@ -1348,6 +1353,7 @@ EthLif::_CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data
     nd_name = cmd->nd_name;
     dev_name = cmd->dev_name;
 
+    DEVAPI_CHECK
     dev_api->lif_upd_name(hal_lif_info_.lif_id, nd_name);
     // lif->UpdateName(nd_name);
 
@@ -1561,6 +1567,7 @@ EthLif::_CmdSetMode(void *req, void *req_data, void *resp, void *resp_data)
     ret = lif->UpdateReceiveMode(broadcast, all_multicast, promiscuous);
     if (ret != HAL_IRISC_RET_SUCCESS) {
 #endif
+    DEVAPI_CHECK
     ret = dev_api->lif_upd_rx_mode(hal_lif_info_.lif_id,
                                    broadcast, all_multicast, promiscuous);
     if (ret != SDK_RET_OK) {
@@ -1602,6 +1609,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
             hal_lif_info_.name, macaddr2str(mac_addr));
 
         // ret = lif->AddMac(mac_addr);
+        DEVAPI_CHECK
         ret = dev_api->lif_add_mac(hal_lif_info_.lif_id, mac_addr);
 
         if (ret != SDK_RET_OK) {
@@ -1622,6 +1630,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Add RX_FILTER_MATCH_VLAN vlan {}",
                       hal_lif_info_.name, vlan);
         // ret = lif->AddVlan(vlan);
+        DEVAPI_CHECK
         ret = dev_api->lif_add_vlan(hal_lif_info_.lif_id, vlan);
         if (ret != SDK_RET_OK) {
             NIC_LOG_WARN("{}: Failed Add Vlan:{}. ret: {}", hal_lif_info_.name, vlan, ret);
@@ -1643,6 +1652,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
                       hal_lif_info_.name, macaddr2str(mac_addr), vlan);
 
         // ret = lif->AddMacVlan(mac_addr, vlan);
+        DEVAPI_CHECK
         ret = dev_api->lif_add_macvlan(hal_lif_info_.lif_id,
                                        mac_addr, vlan);
         if (ret != SDK_RET_OK) {
@@ -1690,14 +1700,14 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC mac {}",
                       hal_lif_info_.name,
                       macaddr2str(mac_addr));
-        // lif->DelMac(mac_addr);
+        DEVAPI_CHECK
         dev_api->lif_del_mac(hal_lif_info_.lif_id, mac_addr);
         mac_addrs.erase(cmd->filter_id);
     } else if (vlans.find(cmd->filter_id) != vlans.end()) {
         vlan = vlans[cmd->filter_id];
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_VLAN vlan {}",
                      hal_lif_info_.name, vlan);
-        // lif->DelVlan(vlan);
+        DEVAPI_CHECK
         dev_api->lif_del_vlan(hal_lif_info_.lif_id, vlan);
         vlans.erase(cmd->filter_id);
     } else if (mac_vlans.find(cmd->filter_id) != mac_vlans.end()) {
@@ -1706,7 +1716,7 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         vlan = std::get<1>(mac_vlan);
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC_VLAN mac {} vlan {}",
                      hal_lif_info_.name, macaddr2str(mac_addr), vlan);
-        // lif->DelMacVlan(mac_addr, vlan);
+        DEVAPI_CHECK
         dev_api->lif_del_macvlan(hal_lif_info_.lif_id, mac_addr, vlan);
         mac_vlans.erase(cmd->filter_id);
     } else {
@@ -2140,6 +2150,9 @@ void
 EthLif::LinkEventHandler(port_status_t *evd)
 {
     if (spec->uplink_port_num != evd->id) {
+        return;
+    }
+    if (!dev_api) {
         return;
     }
 

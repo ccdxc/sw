@@ -627,7 +627,7 @@ AccelLif::AccelLif(AccelDev& accel_dev,
 
     /*
      * If multiple accel LIFs are supported in the future, make an
-     * allocator for allocating PAL memory for qinfo/rmetrics below. 
+     * allocator for allocating PAL memory for qinfo/rmetrics below.
      */
     cmb_qinfo_addr = pd->mp_->start_addr(STORAGE_QINFO_HBM_HANDLE);
     cmb_qinfo_size = pd->mp_->size(STORAGE_QINFO_HBM_HANDLE);
@@ -770,7 +770,7 @@ AccelLif::accel_rgroup_find_create(uint32_t ring_handle,
 /*
  * LIF State Machine Actions
  */
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_null_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_LOG();
@@ -778,7 +778,7 @@ AccelLif::accel_lif_null_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_eagain_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_LOG();
@@ -786,7 +786,7 @@ AccelLif::accel_lif_eagain_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_reject_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_ERR_LOG();
@@ -794,7 +794,7 @@ AccelLif::accel_lif_reject_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_create_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_LOG();
@@ -844,7 +844,7 @@ AccelLif::accel_lif_create_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_destroy_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_LOG();
@@ -859,6 +859,11 @@ AccelLif::accel_lif_hal_up_action(accel_lif_event_t event)
     cosA = 1;
     cosB = 0;
     ctl_cosA = 1;
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
+        return ACCEL_LIF_EV_NULL;
+    }
     dev_api->qos_get_txtc_cos("CONTROL", 1, &ctl_cosB);
     if (ctl_cosB < 0) {
         NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
@@ -892,6 +897,11 @@ AccelLif::accel_lif_init_action(accel_lif_event_t event)
     ACCEL_LIF_FSM_LOG();
 
     fsm_ctx.reset_destroy = false;
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
+        return ACCEL_LIF_EV_NULL;
+    }
     if (dev_api->lif_create(&hal_lif_info_) != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to create LIF", LifNameGet());
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
@@ -917,7 +927,7 @@ AccelLif::accel_lif_init_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_reset_action(accel_lif_event_t event)
 {
     int64_t                 qstate_addr;
@@ -968,7 +978,7 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_WAIT_SEQ_QUEUE_QUIESCE;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_seq_quiesce_action(accel_lif_event_t event)
 {
     int64_t                 qstate_addr;
@@ -1040,7 +1050,7 @@ AccelLif::accel_lif_seq_quiesce_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_RGROUP_RESET;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_rgroup_quiesce_action(accel_lif_event_t event)
 {
     uint64_t    quiesce_time;
@@ -1080,7 +1090,7 @@ AccelLif::accel_lif_rgroup_quiesce_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_RGROUP_RESET;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_rgroup_reset_action(accel_lif_event_t event)
 {
     int     ret_val;
@@ -1122,6 +1132,11 @@ AccelLif::accel_lif_rgroup_reset_action(accel_lif_event_t event)
      */
     fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
     if (fsm_ctx.reset_destroy) {
+        if (!dev_api) {
+            NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+            fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
+            return ACCEL_LIF_EV_NULL;
+        }
         if (dev_api->lif_destroy(LifIdGet()) == SDK_RET_OK) {
             qmetrics_fini();
             accel_ring_info_del_all();
@@ -1136,7 +1151,7 @@ AccelLif::accel_lif_rgroup_reset_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_SEQ_QUEUE_PRE_INIT;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_adminq_init_action(accel_lif_event_t event)
 {
     adminq_init_cmd_t   *cmd = (adminq_init_cmd_t *)fsm_ctx.devcmd.req;
@@ -1227,7 +1242,7 @@ AccelLif::accel_lif_adminq_init_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_seq_queue_init_action(accel_lif_event_t event)
 {
     seq_queue_init_cmd_t   *cmd = (seq_queue_init_cmd_t *)fsm_ctx.devcmd.req;
@@ -1243,7 +1258,7 @@ AccelLif::accel_lif_seq_queue_init_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_seq_queue_batch_init_action(accel_lif_event_t event)
 {
     seq_queue_batch_init_cmd_t *batch_cmd =
@@ -1283,7 +1298,7 @@ AccelLif::accel_lif_seq_queue_batch_init_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_seq_queue_control_action(accel_lif_event_t event)
 {
     seq_queue_control_cmd_t *cmd = (seq_queue_control_cmd_t *)fsm_ctx.devcmd.req;
@@ -1298,7 +1313,7 @@ AccelLif::accel_lif_seq_queue_control_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_seq_queue_batch_control_action(accel_lif_event_t event)
 {
     seq_queue_batch_control_cmd_t *batch_cmd =
@@ -1310,7 +1325,7 @@ AccelLif::accel_lif_seq_queue_batch_control_action(accel_lif_event_t event)
     enable_sense = event == ACCEL_LIF_EV_SEQ_QUEUE_BATCH_ENABLE;
     ACCEL_LIF_FSM_LOG();
     NIC_LOG_DEBUG("{}: qtype {} qid {} mum_queues {} enable {}",
-                  LifNameGet(), batch_cmd->qtype, batch_cmd->qid, 
+                  LifNameGet(), batch_cmd->qtype, batch_cmd->qid,
                   batch_cmd->num_queues, enable_sense);
     cmd.opcode = enable_sense ? CMD_OPCODE_SEQ_QUEUE_ENABLE :
                                 CMD_OPCODE_SEQ_QUEUE_DISABLE;
@@ -1318,7 +1333,7 @@ AccelLif::accel_lif_seq_queue_batch_control_action(accel_lif_event_t event)
     cmd.qtype = batch_cmd->qtype;
 
     for (i = 0; i < batch_cmd->num_queues; i++) {
-        fsm_ctx.devcmd.status = 
+        fsm_ctx.devcmd.status =
                 _DevcmdSeqQueueSingleControl(&cmd, enable_sense);
         if (fsm_ctx.devcmd.status != ACCEL_RC_SUCCESS) {
             break;
@@ -1328,7 +1343,7 @@ AccelLif::accel_lif_seq_queue_batch_control_action(accel_lif_event_t event)
     return ACCEL_LIF_EV_NULL;
 }
 
-accel_lif_event_t 
+accel_lif_event_t
 AccelLif::accel_lif_crypto_key_update_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_LOG();
@@ -1372,7 +1387,7 @@ AccelLif::accel_lif_state_machine(accel_lif_event_t event)
 }
 
 static void
-accel_lif_state_machine_build(void) 
+accel_lif_state_machine_build(void)
 {
     accel_lif_state_event_t    **fsm_entry;
     accel_lif_state_event_t    *state_event;
@@ -1482,13 +1497,13 @@ AccelLif::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
         return ACCEL_RC_ERROR;
     }
 
-    if (desc0_pgm_name && 
+    if (desc0_pgm_name &&
         pd->get_pc_offset(desc0_pgm_name, NULL, NULL, &desc0_pgm_pc)) {
         NIC_LOG_ERR("Failed to get base for program {}", desc0_pgm_name);
         return ACCEL_RC_ERROR;
     }
 
-    if (desc1_pgm_name && 
+    if (desc1_pgm_name &&
         pd->get_pc_offset(desc1_pgm_name, NULL, NULL, &desc1_pgm_pc)) {
         NIC_LOG_ERR("Failed to get base for program {}", desc1_pgm_name);
         return ACCEL_RC_ERROR;
@@ -1690,6 +1705,10 @@ AccelLif::accel_rgroup_add(void)
 {
     int     ret_val;
 
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return -1;
+    }
     ret_val = dev_api->accel_rgroup_add(LifNameGet(), cmb_rmetrics_addr,
                                         cmb_rmetrics_size);
     if (ret_val != SDK_RET_OK) {
@@ -1704,6 +1723,10 @@ AccelLif::accel_rgroup_add(void)
 void
 AccelLif::accel_rgroup_del(void)
 {
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return;
+    }
     if (dev_api->accel_rgroup_del(LifNameGet()) != SDK_RET_OK) {
         NIC_LOG_ERR("{}: failed to delete ring group", LifNameGet());
     }
@@ -1717,6 +1740,10 @@ AccelLif::accel_rgroup_rings_add(void)
 {
     int     ret_val;
 
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return -1;
+    }
     ret_val = dev_api->accel_rgroup_ring_add(LifNameGet(), accel_ring_vec);
     if (ret_val != SDK_RET_OK) {
         NIC_LOG_ERR("{}: failed to add ring vector", LifNameGet());
@@ -1730,6 +1757,10 @@ AccelLif::accel_rgroup_rings_add(void)
 void
 AccelLif::accel_rgroup_rings_del(void)
 {
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return;
+    }
     if (dev_api->accel_rgroup_ring_del(LifNameGet(),
                                        accel_ring_vec) != SDK_RET_OK) {
         NIC_LOG_ERR("{}: failed to delete ring vector", LifNameGet());
@@ -1744,6 +1775,10 @@ AccelLif::accel_rgroup_reset_set(bool reset_sense)
 {
     int     ret_val;
 
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return -1;
+    }
     ret_val = dev_api->accel_rgroup_reset_set(LifNameGet(),
                                     ACCEL_SUB_RING_ALL, reset_sense);
     if (ret_val != SDK_RET_OK) {
@@ -1761,6 +1796,10 @@ AccelLif::accel_rgroup_enable_set(bool enable_sense)
 {
     int     ret_val;
 
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return -1;
+    }
     ret_val = dev_api->accel_rgroup_enable_set(LifNameGet(),
                                     ACCEL_SUB_RING_ALL, enable_sense);
     if (ret_val != SDK_RET_OK) {
@@ -1779,6 +1818,10 @@ AccelLif::accel_rgroup_pndx_set(uint32_t val,
 {
     int     ret_val;
 
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return -1;
+    }
     ret_val = dev_api->accel_rgroup_pndx_set(LifNameGet(),
                                     ACCEL_SUB_RING_ALL, val, conditional);
     if (ret_val != SDK_RET_OK) {
@@ -1811,6 +1854,10 @@ AccelLif::accel_rgroup_rinfo_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return -1;
+    }
     ret_val = dev_api->accel_rgroup_info_get(LifNameGet(), ACCEL_SUB_RING_ALL,
                              accel_rgroup_rinfo_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "rinfo");
@@ -1841,6 +1888,10 @@ AccelLif::accel_rgroup_rindices_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return -1;
+    }
     ret_val = dev_api->accel_rgroup_indices_get(LifNameGet(), ACCEL_SUB_RING_ALL,
                              accel_rgroup_rindices_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "indices");
@@ -1871,6 +1922,10 @@ AccelLif::accel_rgroup_rmetrics_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return -1;
+    }
     ret_val = dev_api->accel_rgroup_metrics_get(LifNameGet(), ACCEL_SUB_RING_ALL,
                              accel_rgroup_rmetrics_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "metrics");

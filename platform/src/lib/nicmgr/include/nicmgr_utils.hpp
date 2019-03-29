@@ -17,4 +17,11 @@
 #define	strbase(type, addr, field) \
 	((type *)((char *)(addr) - fldoff(type, field)))
 
+#define DEVAPI_CHECK                                                    \
+    if (!dev_api) {                                                     \
+        NIC_LOG_ERR("{}: Uninitialized devapi", hal_lif_info_.name);    \
+        return (IONIC_RC_ERROR);                                        \
+    }
+
+
 #endif /* __NICMGR_UTILS_HPP__ */
