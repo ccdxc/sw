@@ -1,0 +1,14 @@
+[Unit]
+Description=Pensando system Initialization service
+Documentation=https://pensando.io
+After=docker.service
+Wants=docker.service
+Before=livesys-late.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/penservice.sh
+
+[Install]
+WantedBy=multi-user.target

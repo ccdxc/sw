@@ -27,6 +27,7 @@ cd /venice-bin/pxe
 livecd-iso-to-pxeboot /venice-bin/pen-install.iso
 
 cd /
+mkdir -p /venice-bin/venice-install
 
 # after the iso got created we need to edit the iso. Start by copying the contents of iso to /iso directory
 # we mount at a temp location and copy because mounting of iso is done ro
@@ -36,18 +37,47 @@ mount /venice-bin/pen-install.iso /t
 cp -a /t/* /iso
 umount /t
 
-mkdir -p /venice-bin/venice-install
+cd /t
+unsquashfs /iso/LiveOS/squashfs.img
+mkdir /t2
+mount /t/squashfs-root/LiveOS/ext3fs.img /t2
+
+# now update the squashfs as needed
+cd /t2
+for i in etc/ usr/
+do
+    cp -fa /pen/$i .
+done
+
+systemctl --root=/t2 enable docker
+systemctl --root=/t2 enable penservice
+systemctl --root=/t2 enable penservice-early
+
+# now put back the squashfs
+cd /
+dd if=/dev/zero of=/t2/zeros bs=1M || :
+sync
+rm -f /t2/zeros
+umount /t2
+rm -f /iso/LiveOS/squashfs.img
+mksquashfs /t/squashfs-root /iso/LiveOS/squashfs.img -comp xz
+
+#also keep a copy so that we can do pxe-install
 cp /iso/LiveOS/squashfs.img /venice-bin/venice-install/squashfs.img
 cp /iso/isolinux/vmlinuz0 /venice-bin/venice-install/vmlinuz0
 cp /iso/isolinux/initrd0.img /venice-bin/venice-install/initrd0.img
+
 
 #copy my copy of isolinux.cfg
 cp /pen/isolinux.cfg /iso/isolinux/isolinux.cfg || :
 # our own grub.cfg indicating that EFI is not supported
 cp /pen/grub-efi.cfg /iso/EFI/BOOT/grub.cfg || :
 
-#cp /pen/PEN-VERSION /iso/LiveOS/PEN-VERSION || :
-#cp /pen/venice-cleaninstall.sh /iso/LiveOS/venice-cleaninstall.sh || :
+# this creates a full-fledged installation dvd with venice and naples
+cp /pen/PEN-VERSION /iso/LiveOS/PEN-VERSION || :
+cp /pen/venice-cleaninstall.sh /iso/LiveOS/venice-cleaninstall.sh || :
+cp /venice-bin/venice.tgz /iso/LiveOS/venice.tgz || :
+cp /nic/naples_fw.tar /iso/LiveOS/naples_fw.tar || :
 
 #finally create the iso back with our custom isolinux and grub
 cd /iso

@@ -58,7 +58,8 @@ copyRemoteFile() {
     curl --progress-bar -SL "$1" -o "$2"
 }
 
-
+systemctl stop docker
+systemctl disable docker
 # this will delete everything from /dev/sda
 /usr/sbin/wipefs -a $device
 LC_ALL=C /sbin/parted --script $device mklabel gpt
@@ -166,6 +167,14 @@ menuentry ${VERSION} {
 EOF
 
 umount $TGTMNT1
+
+
+# generate a unique /etc/machine-id file
+TGTMNT3=$(mktemp -d /tmp/tgttmp.XXXXXX)
+mkdir -p ${TGTMNT3}/copy-fs/
+mount -L ${label3} $TGTMNT3
+systemd-machine-id-setup --root=${TGTMNT3}/copy-fs/
+umount ${TGTMNT3}
 
 fsck -f ${device}2 || :
 fsck -f ${device}3 || :

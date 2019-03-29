@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# live: Init script for live image
+#
+# chkconfig: 345 00 99
+# description: Init script for live image.
+### BEGIN INIT INFO
+# X-Start-Before: display-manager
+### END INIT INFO
+
+. /etc/init.d/functions
+
+if ! strstr "`cat /proc/cmdline`" rd.live.image || [ "$1" != "start" ]; then
+    exit 0
+fi
+
+if [ -e /.liveimg-configured ] ; then
+    configdone=1
+fi
+
+exists() {
+    which $1 >/dev/null 2>&1 || return
+    $*
+}
+
+#/usr/local/bin/penservice-early.sh
+
+# make it so that we don't do writing to the overlay for things which
+# are just tmpdirs/caches
+mount -t tmpfs -o mode=0755 varcacheyum /var/cache/yum
+mount -t tmpfs vartmp /var/tmp
+[ -x /sbin/restorecon ] && /sbin/restorecon /var/cache/yum /var/tmp >/dev/null 2>&1
+
+if [ -n "$configdone" ]; then
+  exit 0
+fi
+
+# Remove root password lock
+passwd -d root > /dev/null
+(echo centos ; echo centos)|passwd root --stdin
+
+# turn off firstboot for livecd boots
+#systemctl --no-reload disable firstboot-text.service 2> /dev/null || :
+#systemctl --no-reload disable firstboot-graphical.service 2> /dev/null || :
+#systemctl stop firstboot-text.service 2> /dev/null || :
+#systemctl stop firstboot-graphical.service 2> /dev/null || :
+
+# don't enable the gnome-settings-daemon packagekit plugin
+#gsettings set org.gnome.settings-daemon.plugins.updates active 'false' || :
+
+# Mark things as configured
+touch /.liveimg-configured
+
+# add static hostname to work around xauth bug
+# https://bugzilla.redhat.com/show_bug.cgi?id=679486
+#echo "localhost" > /etc/hostname
+#
+# Fixing default locale to us
+localectl set-keymap us
+localectl set-x11-keymap us
+
