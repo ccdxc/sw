@@ -176,6 +176,26 @@ private:
      */
     static void sort_mpu_programs_(std::vector<std::string>& programs);
 
+    /*
+     * @brief    apollo specific rxdma symbols init function
+     * @param[in] program information
+     */
+    static uint32_t rxdma_symbols_init_(void **p4plus_symbols,
+                                        platform_type_t platform_type);
+
+    /*
+     * @brief    apollo specific txdma symbols init function
+     * @param[in] program information
+     */
+    static uint32_t txdma_symbols_init_(void **p4plus_symbols,
+                                        platform_type_t platform_type);
+
+    /**
+     * @brief    init routine to initialize p4plus tables
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t p4plus_table_init_(void);
+
 private:
     pipeline_cfg_t      pipeline_cfg_;
 };

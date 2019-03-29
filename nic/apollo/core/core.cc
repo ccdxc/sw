@@ -195,12 +195,12 @@ thread_create (const char *name, uint32_t thread_id,
 
 // spawn all the necessary threads
 sdk_ret_t
-thread_spawn (pds_state *state)
+thread_periodic_spawn (pds_state *state)
 {
     sdk::lib::thread    *new_thread;
 
     // spawn periodic thread that does background tasks
-    new_thread = 
+    new_thread =
         thread_create(std::string("periodic").c_str(),
             THREAD_ID_PERIODIC,
             sdk::lib::THREAD_ROLE_CONTROL,
@@ -213,6 +213,13 @@ thread_spawn (pds_state *state)
                             "Periodic thread create failure");
     new_thread->start(new_thread);
 
+    return SDK_RET_OK;
+}
+sdk_ret_t
+thread_nicmgr_spawn (pds_state *state)
+{
+    sdk::lib::thread    *new_thread;
+
     if ((state->platform_type() != platform_type_t::PLATFORM_TYPE_SIM) &&
         (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL)) {
         // spawn nicmgr thread
@@ -220,7 +227,7 @@ thread_spawn (pds_state *state)
             thread_create("nicmgr", THREAD_ID_NICMGR,
                 sdk::lib::THREAD_ROLE_CONTROL,
                 0x0,    // use all control cores
-                nicmgr::nicmgr_thread_start,
+                nicmgr::nicmgrapi::nicmgr_thread_start,
                 sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                 sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                 NULL);

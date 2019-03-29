@@ -16,4 +16,10 @@ ifconfig lo up
     #$NIC_DIR/tools/start-agent.sh
 #fi
 
+insmod /nic/bin/ionic_mnic.ko &> /var/log/pensando/ionic_mnic_load.log
+[[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnic driver!" && exit 1
+
+insmod /nic/bin/mnet.ko &> /var/log/pensando/mnet_load.log
+[[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnet driver!" && exit 1
+
 echo "Launched all applications ..."

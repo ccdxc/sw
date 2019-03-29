@@ -4,7 +4,7 @@
 typedef struct asicpd_scheduler_lif_params_s_ {
     uint32_t lif_id;
     uint32_t tx_sched_table_offset;
-    uint32_t tx_sched_num_table_entries; 
+    uint32_t tx_sched_num_table_entries;
     uint32_t total_qcount;
     uint32_t hw_lif_id;
     uint16_t cos_bmp;
@@ -24,5 +24,5 @@ sdk_ret_t asicpd_tx_policer_program(asicpd_scheduler_lif_params_t *lif);
 }   // namespace asic
 }   // namespace sdk
 
-using namespace sdk::platform::capri;
-#endif 
+using namespace sdk::asic::pd;
+#endif

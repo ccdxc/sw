@@ -19,6 +19,9 @@ namespace impl {
 
 using sdk::platform::devapi;
 
+#define DEVAPI_IMPL_ADMIN_COS 1
+
+
 /// \defgroup PDS_DEVAPI_IMPL - dev api implementation
 /// \ingroup PDS_DEVAPI
 /// @{
@@ -56,10 +59,11 @@ public:
     virtual sdk_ret_t uplink_destroy(pds_ifindex_t ifidx) {
         return SDK_RET_INVALID_OP;
     }
+
     // port APIs
     virtual sdk_ret_t port_get_status(uint32_t port_num,
                                       port_status_t *status) override;
-    virtual sdk_ret_t port_get_config(uint32_t port_num,
+    virtual sdk_ret_t port_get_config(pds_ifindex_t ifidx,
                                       port_config_t *config) override;
     virtual sdk_ret_t port_set_config(uint32_t port_num,
                                       port_config_t *config) override;
@@ -67,6 +71,10 @@ public:
 private:
     devapi_impl() {}
     ~devapi_impl() {}
+
+    sdk_ret_t lif_program_tx_scheduler_(lif_info_t *info);
+    uint16_t lif_get_cos_bmp_(lif_info_t *info);
+    uint32_t lif_get_qcount_(lif_info_t *info);
 };
 
 /// \@}
