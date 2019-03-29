@@ -31,6 +31,7 @@ var Topologies = map[string]*Topology{
 	"5Venice_Nodes":       &topo5VeniceNodes,
 	"1Venice_2NaplesSim":  &topo1Venice2NaplesSim,
 	"1Venice_2Naples":     &topo1Venice2Naples,
+	"1Venice_1Naples":     &topo1Venice1Naples,
 	"3Venice_1Naples":     &topo3Venice1Naples,
 	"3Venice_2Naples":     &topo3Venice2Naples,
 	"1Venice_ScaleNaples": &topo1VeniceScaleNaples,
@@ -205,6 +206,29 @@ var topo3Venice1Naples = Topology{
 		},
 		{
 			NodeName:    "venice3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
+// one venice node and one Naples baremetal nodes
+var topo1Venice1Naples = Topology{
+	NaplesImage:   "../nic/naples_fw.tar",
+	VeniceImage:   "../bin/venice.tgz",
+	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
+	WorkloadImage: "build-130",
+	NumVlans:      10, // FIXME: what should this be??
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "venice1",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_VENICE,
 			HostOS:      "linux",

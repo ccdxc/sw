@@ -91,6 +91,19 @@ func (r *TelemetryClient) Fwlogs(ctx context.Context, ql *telemetry_query.Fwlogs
 	return ret, nil
 }
 
+// CheckIPAddrInFwlog checks ip address in the fwlog query result
+func (r *TelemetryClient) CheckIPAddrInFwlog(ips []string, res []*telemetry_query.FwlogsQueryResult) bool {
+	for _, r := range res {
+		for _, l := range r.Logs {
+			if l.Dest == ips[0] && l.Src == ips[1] {
+				return true
+			}
+		}
+	}
+	log.Infof("failed to find %+v in fwlog", ips)
+	return false
+}
+
 // Metrics makes a metrics query and returns the Query Response
 func (r *TelemetryClient) Metrics(ctx context.Context, ql *telemetry_query.MetricsQueryList) (*MetricsQueryResponse, error) {
 	path := "/telemetry/v1/metrics"

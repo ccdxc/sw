@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"testing"
 
-	telemetry_query "github.com/pensando/sw/api/generated/telemetry_query"
+	"github.com/pensando/sw/api/generated/telemetry_query"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -213,4 +213,25 @@ func TestFwlogs(t *testing.T) {
 				fmt.Sprintf("expected returned object %v, got %v, [%s] test failed", c.queryResponse, resp, c.name))
 		}
 	}
+}
+func TestCheckIPAddrInFwlog(t *testing.T) {
+	iplist := []string{"192.168.1.1", "192.168.1.2"}
+
+	r := &telemetry_query.FwlogsQueryResult{
+		Logs: []*telemetry_query.Fwlog{
+			{
+				Src:  iplist[1],
+				Dest: iplist[0],
+			},
+		},
+	}
+
+	client, err := NewTelemetryClient("http://127.0.0.1:")
+	AssertOk(t, err, "Failed to create telemetry client")
+
+	ok := client.CheckIPAddrInFwlog(iplist, []*telemetry_query.FwlogsQueryResult{r})
+	Assert(t, ok == true, "failed to find ip addr", iplist)
+
+	ok = client.CheckIPAddrInFwlog(iplist, []*telemetry_query.FwlogsQueryResult{})
+	Assert(t, ok != true, "matched with invalid addr", iplist)
 }
