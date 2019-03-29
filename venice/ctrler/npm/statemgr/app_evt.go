@@ -117,7 +117,9 @@ func convertApp(aps *AppState) *netproto.App {
 					})
 			}
 		case "TFTP":
+			app.Spec.ALG.TFTP = &netproto.TFTP{}
 		case "RTSP":
+			app.Spec.ALG.RTSP = &netproto.RTSP{}
 		}
 	}
 
