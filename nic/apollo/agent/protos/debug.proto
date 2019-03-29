@@ -13,6 +13,22 @@ import "types.proto";
 
 service DebugSvc {
   rpc ClockFrequencyUpdate (ClockFrequencyRequest) returns (ClockFrequencyResponse) {}
+  rpc SystemTemperatureGet (types.Empty) returns (SystemTemperatureGetResponse) {}
+  rpc SystemPowerGet (types.Empty) returns (SystemPowerGetResponse) {}
+}
+
+message SystemTemperatureGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  uint32          DieTemp   = 2;
+  uint32          LocalTemp = 3;
+  uint32          HbmTemp   = 4;
+}
+
+message SystemPowerGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  uint32          Pin       = 2;
+  uint32          Pout1     = 3;
+  uint32          Pout2     = 4;
 }
 
 message ClockFrequencyRequest {

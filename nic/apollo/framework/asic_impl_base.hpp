@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
+#include "nic/apollo/api/include/pds_debug.hpp"
 
 namespace api {
 namespace impl {
@@ -42,8 +43,29 @@ public:
         return SDK_RET_OK;
     }
 
-    /// \brief    dump all the debug information to given file
-    /// \param[in]    fp File handle
+    /// \brief    set the core frequency with the given value
+    /// \param[in] freq    clock frequency to set
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t set_frequency(pds_clock_freq_t freq) {
+        return SDK_RET_ERR;
+    }
+
+    /// \brief    get the system temperature
+    /// \param[out] temp    system temperature to be read
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t get_system_temperature(pds_system_temperature_t *temp) {
+        return SDK_RET_ERR;
+    }
+
+    /// \brief     get the system power
+    /// \param[out] pow    system power to be read
+    /// \return     SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t get_system_power(pds_system_power_t *pow) {
+        return SDK_RET_ERR;
+    }
+
+    /// \brief Dump all the debug information to given file
+    /// \param[in] fp File handle
     virtual void debug_dump(FILE *fp) {}
 };
 

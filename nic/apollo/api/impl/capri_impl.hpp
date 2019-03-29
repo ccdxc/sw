@@ -9,8 +9,8 @@
 #define __CAPRI_IMPL_HPP__
 
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/apollo/framework/asic_impl_base.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "nic/apollo/framework/asic_impl_base.hpp"
 
 namespace api {
 namespace impl {
@@ -45,6 +45,24 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t monitor(void) override;
+
+    /**
+     * @brief    set the core frequency with the given value
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t set_frequency(pds_clock_freq_t freq) override;
+
+    /**
+     * @brief    get the system temperature
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t get_system_temperature(pds_system_temperature_t *temp) override;
+
+    /**
+     * @brief    get the system power
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t get_system_power(pds_system_power_t *pow) override;
 
     /**
      * @brief    dump all the debug information to given file

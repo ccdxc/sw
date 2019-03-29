@@ -15,6 +15,7 @@
 #include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/svc/port.hpp"
+#include "nic/apollo/agent/svc/debug.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/test/flow_test/flow_test.hpp"
@@ -40,6 +41,7 @@ svc_reg (void)
     RouteSvcImpl      route_svc;
     VnicSvcImpl       vnic_svc;
     MappingSvcImpl    mapping_svc;
+    DebugSvcImpl      debug_svc;
     PortSvcImpl       port_svc;
 
     // do gRPC initialization
@@ -62,6 +64,7 @@ svc_reg (void)
     server_builder->RegisterService(&vnic_svc);
     server_builder->RegisterService(&mapping_svc);
     server_builder->RegisterService(&port_svc);
+    server_builder->RegisterService(&debug_svc);
 
     PDS_TRACE_INFO("gRPC server listening on ... {}",
                    g_grpc_server_addr.c_str());

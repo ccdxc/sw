@@ -9,8 +9,10 @@
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/sensor/sensor.hpp"
+#include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/capri_impl.hpp"
+#include "nic/apollo/core/trace.hpp"
 
 namespace api {
 namespace impl {
@@ -108,6 +110,95 @@ capri_impl::dump_tm_debug_stats_(FILE *fp, tm_pb_debug_stats_t *debug_stats)
             debug_stats->buffer_stats.drop_counts[sdk::platform::capri::BUFFER_INVALID_PORT_DROP]);
     fprintf(fp, "    invalid output queue drop : %u\n",
             debug_stats->buffer_stats.drop_counts[sdk::platform::capri::BUFFER_INVALID_OUTPUT_QUEUE_DROP]);
+}
+
+static inline pen_adjust_index_t
+pds_clock_frequency_to_perf_id (pds_clock_freq_t freq)
+{
+    switch(freq) {
+    case PDS_CLOCK_FREQUENCY_833:
+        return PEN_PERF_ID0;
+        break;
+    case PDS_CLOCK_FREQUENCY_900:
+        return PEN_PERF_ID1;
+        break;
+    case PDS_CLOCK_FREQUENCY_957:
+        return PEN_PERF_ID2;
+        break;
+    case PDS_CLOCK_FREQUENCY_1033:
+        return PEN_PERF_ID3;
+        break;
+    case PDS_CLOCK_FREQUENCY_1100:
+        return PEN_PERF_ID4;
+        break;
+    default:
+        return PEN_PERF_ID0;
+        break;
+    }
+}
+
+/**
+ * @brief    set clock frequency
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+capri_impl::set_frequency (pds_clock_freq_t freq) {
+    pen_adjust_index_t perf_id;
+    pen_adjust_perf_status_t ret;
+
+    perf_id = pds_clock_frequency_to_perf_id(freq);
+    ret = cap_top_adjust_perf(0, 0, perf_id, PEN_PERF_SET);
+    if (ret != PEN_PERF_SUCCESS) {
+        PDS_TRACE_ERR("Clock frequency set failure, err %u", ret);
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    get system temperature
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+capri_impl::get_system_temperature (pds_system_temperature_t *temp) {
+    int rv;
+    sdk::platform::sensor::system_temperature_t temperature;
+
+    // read the temperatures
+    rv = sdk::platform::sensor::read_temperatures(&temperature);
+    if (rv == 0) {
+        temp->dietemp = temperature.dietemp;
+        temp->localtemp = temperature.localtemp/1000;
+        temp->hbmtemp = temperature.hbmtemp;
+    } else {
+        PDS_TRACE_ERR("Temperature reading failed");
+        return SDK_RET_ERR;
+    }
+
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    get system power
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+capri_impl::get_system_power (pds_system_power_t *pow) {
+    int rv;
+    sdk::platform::sensor::system_power_t power;
+
+    // read the power
+    rv = sdk::platform::sensor::read_powers(&power);
+    if (rv == 0) {
+        pow->pin = power.pin/1000000;
+        pow->pout1 = power.pout1/1000000;
+        pow->pout2 = power.pout2/1000000;
+    } else {
+        PDS_TRACE_ERR("Power reading failed");
+        return SDK_RET_ERR;
+    }
+
+    return SDK_RET_OK;
 }
 
 /**
