@@ -153,7 +153,7 @@ TEST_F(mapping_test, mapping_create) {
     subnet_util sub(vcn_id, sub_id, sub_cidr);
     sub.vr_ip = sub_vr_ip;
     sub.vr_mac = sub_vr_mac;
-    sub.v4_route_table = rt_id;
+    sub.v4_route_table.id = rt_id;
     ASSERT_TRUE(sub.create() == SDK_RET_OK);
 
     // Create vnic

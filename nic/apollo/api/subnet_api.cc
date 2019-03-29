@@ -54,8 +54,18 @@ pds_subnet_status_fill (subnet_entry *entry, pds_subnet_status_t *status)
 static inline sdk::sdk_ret_t
 pds_subnet_spec_fill (subnet_entry *entry, pds_subnet_spec_t *spec)
 {
+    pds_vcn_key_t vcn = {};
+
+    vcn = entry->vcn();
+    spec->vcn.id = vcn.id;
     spec->v4_route_table = entry->v4_route_table();
+    spec->v6_route_table = entry->v6_route_table();
+    spec->ing_v4_policy = entry->ing_v4_policy();
+    spec->ing_v6_policy = entry->ing_v6_policy();
+    spec->egr_v4_policy = entry->egr_v4_policy();
+    spec->egr_v6_policy = entry->egr_v6_policy();
     memcpy(&spec->vr_mac, entry->vr_mac(), sizeof(mac_addr_t));
+
     return SDK_RET_OK;
 }
 

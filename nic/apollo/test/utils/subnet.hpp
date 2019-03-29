@@ -21,10 +21,10 @@ namespace api_test {
 class subnet_util {
 public:
     /// \brief constructor
+    subnet_util(pds_subnet_id_t id);
     subnet_util(pds_vcn_id_t vcn_id, pds_subnet_id_t id, std::string cidr_str);
     subnet_util(pds_vcn_id_t vcn_id, pds_subnet_id_t id, std::string cidr_str,
-                uint32_t, uint32_t);
-    subnet_util(pds_subnet_id_t id);
+                uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
 
     /// \brief destructor
     ~subnet_util();
@@ -35,8 +35,12 @@ public:
     std::string cidr_str;
     std::string vr_ip;
     std::string vr_mac;
-    pds_route_table_id_t v4_route_table;    /// Route table id
-    pds_route_table_id_t v6_route_table;    /// Route table id
+    pds_route_table_key_t v4_route_table;    /// Route table id
+    pds_route_table_key_t v6_route_table;    /// Route table id
+    pds_policy_key_t ing_v4_policy;
+    pds_policy_key_t ing_v6_policy;
+    pds_policy_key_t egr_v4_policy;
+    pds_policy_key_t egr_v6_policy;
 
     /// \brief Create subnet
     ///
@@ -83,6 +87,10 @@ public:
     /// \param[in] num_subnets number of VCNs to be deleted
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(pds_subnet_key_t key, uint32_t num_subnets);
+
+private:
+    void __init();
+
 };
 
 }    // namespace api_test

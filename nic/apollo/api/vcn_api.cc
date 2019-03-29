@@ -54,6 +54,7 @@ pds_vcn_status_fill (vcn_entry *entry, pds_vcn_status_t *status)
 static inline sdk::sdk_ret_t
 pds_vcn_spec_fill (vcn_entry *entry, pds_vcn_spec_t *spec)
 {
+    // Nothing to fill for vcn
     return SDK_RET_OK;
 }
 
