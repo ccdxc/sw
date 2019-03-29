@@ -259,7 +259,7 @@ func startEventReader(shmName string, evtsDispatcher events.Dispatcher, logger l
 	var err error
 
 	for i := 0; i < 10; i++ {
-		if evtsReader, err = NewEventReader(shmName, 50*time.Millisecond, logger, WithEventsDispatcher(evtsDispatcher)); err == nil {
+		if evtsReader, err = NewEventReader("", shmName, 50*time.Millisecond, logger, WithEventsDispatcher(evtsDispatcher)); err == nil {
 			break
 		}
 		log.Errorf("failed to open shared memory, retrying..")

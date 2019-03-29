@@ -130,6 +130,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		if n.evtServices.running {
 			n.logger.Infof("changing mode to {%s}", networkMode)
 			n.evtServices.startNetworkModeServices()
+			n.evtServices.setSmartNicName(obj.SmartNicName)
 			return
 		}
 		n.evtServices.start(networkMode)
@@ -138,6 +139,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			n.logger.Infof("changing mode to {%s}", hostMode)
 			n.evtServices.stopNetworkModeServices()
 			n.evtServices.resolverClient.UpdateServers([]string{})
+			n.evtServices.setSmartNicName(obj.SmartNicName)
 			return
 		}
 		n.evtServices.start(hostMode)
@@ -362,4 +364,8 @@ func (e *evtServices) stop() {
 		e.agentStore = nil
 	}
 	e.running = false
+}
+
+func (e *evtServices) setSmartNicName(name string) {
+	e.shmReader.SetSmartNicName(name)
 }

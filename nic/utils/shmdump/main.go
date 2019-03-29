@@ -47,7 +47,7 @@ func main() {
 
 	switch *messageType {
 	case event:
-		eventsShmReader, err := reader.NewEventReader(*filepath, 5*time.Second, logger)
+		eventsShmReader, err := reader.NewEventReader("", *filepath, 5*time.Second, logger)
 		if err != nil {
 			fmt.Println(err)
 			return

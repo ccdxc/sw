@@ -33,6 +33,7 @@ type Reader struct {
 	stop           sync.Once             // to stop the reader
 	logger         log.Logger            // logger
 	wg             sync.WaitGroup        // for the file watchers
+	name           string                // smart nic name
 }
 
 // NewReader creates a new shm events reader
@@ -164,7 +165,8 @@ func (r *Reader) startEvtsReader(shmPath string) {
 		existingRdr.Stop()
 	}
 
-	eRdr, err := NewEventReader(shmPath, r.pollDelay, r.logger, WithEventsDispatcher(r.evtsDispatcher))
+	eRdr, err := NewEventReader(r.name, shmPath, r.pollDelay, r.logger,
+		WithEventsDispatcher(r.evtsDispatcher))
 	if err != nil {
 		r.logger.Errorf("failed to create reader for shm: %s, err: %v", shmPath, err)
 		return
@@ -185,4 +187,12 @@ func (r *Reader) isEventsFile(filename string) bool {
 	}
 
 	return ok
+}
+
+// SetSmartNicName sets the name of the smart nic for sending it to venice
+func (r *Reader) SetSmartNicName(name string) {
+	r.name = name
+	for _, evrdr := range r.evtReaders {
+		evrdr.SetSmartNicName(name)
+	}
 }
