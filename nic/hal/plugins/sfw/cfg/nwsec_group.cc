@@ -1366,7 +1366,7 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
 
     HAL_TRACE_DEBUG("---------------------- API Start ---------------------");
 
-    nwsec_spec_dump(&spec);
+    //nwsec_spec_dump(&spec);
 
     ret = validate_nwsec_policy_create(spec, res);
 
@@ -1548,7 +1548,7 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
     SecurityPolicyKeyHandle kh = spec.key_or_handle();
 
     HAL_TRACE_DEBUG("---------------------- API Start-------------------");
-    nwsec_spec_dump(&spec);
+    //nwsec_spec_dump(&spec);
 
     ret = validate_nwsec_policy_update(spec, res);
     if (ret != HAL_RET_OK) {
