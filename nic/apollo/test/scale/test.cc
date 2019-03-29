@@ -55,11 +55,11 @@ typedef struct test_params_s {
     struct {
         uint32_t num_rules;
     };
-    // vcn config
+    // vpc config
     struct {
-        uint32_t num_vcns;
-        ip_prefix_t vcn_pfx;
-        ip_prefix_t v6_vcn_pfx;
+        uint32_t num_vpcs;
+        ip_prefix_t vpc_pfx;
+        ip_prefix_t v6_vpc_pfx;
         uint32_t num_subnets;
     };
     // vnic config
@@ -96,11 +96,11 @@ test_params_t g_test_params = { 0 };
 // create route tables
 //------------------------------------------------------------------------------
 sdk_ret_t
-create_v6_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                      uint32_t num_routes, ip_prefix_t *tep_pfx,
                      ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx)
 {
-    uint32_t ntables = num_vcns * num_subnets;
+    uint32_t ntables = num_vpcs * num_subnets;
     uint32_t tep_offset = 3;
     uint32_t v6rtnum = 0;
     pds_route_table_spec_t v6route_table;
@@ -174,11 +174,11 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subne
 }
 
 sdk_ret_t
-create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                      uint32_t num_routes, ip_prefix_t *tep_pfx,
                      ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx)
 {
-    uint32_t ntables = num_vcns * num_subnets;
+    uint32_t ntables = num_vpcs * num_subnets;
     uint32_t tep_offset = 3;
     uint32_t rtnum = 0;
     pds_route_table_spec_t route_table;
@@ -236,7 +236,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     }
 
     if (g_test_params.dual_stack) {
-        rv = create_v6_route_tables(num_teps, num_vcns, num_subnets,
+        rv = create_v6_route_tables(num_teps, num_vpcs, num_subnets,
                          num_routes, tep_pfx, route_pfx, v6_route_pfx);
     }
     return rv;
@@ -247,7 +247,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
 // 2. create 1023 remote mappings per VCN
 //------------------------------------------------------------------------------
 sdk_ret_t
-create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                  uint32_t num_vnics, uint32_t num_ip_per_vnic,
                  ip_prefix_t *teppfx, ip_prefix_t *natpfx, ip_prefix_t *v6_natpfx,
                  uint32_t num_remote_mappings)
@@ -260,10 +260,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     uint32_t tep_offset = 0, v6_tep_offset = 0;
 
     // ensure a max. of 32 IPs per VNIC
-    SDK_ASSERT(num_vcns * num_subnets * num_vnics * num_ip_per_vnic <=
+    SDK_ASSERT(num_vpcs * num_subnets * num_vnics * num_ip_per_vnic <=
                (32 * 1024));
     // create local vnic IP mappings first
-    for (uint32_t i = 1; i <= num_vcns; i++) {
+    for (uint32_t i = 1; i <= num_vpcs; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
@@ -271,7 +271,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     pds_mapping.key.vcn.id = i;
                     pds_mapping.key.ip_addr.af = IP_AF_IPV4;
                     pds_mapping.key.ip_addr.addr.v4_addr =
-                        (g_test_params.vcn_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                        (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
                     pds_mapping.subnet.id = (i - 1) * num_subnets + j;
                     if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
@@ -312,8 +312,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                         // V6 mapping
                         pds_v6_mapping = pds_mapping;
                         pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
-                        pds_v6_mapping.key.ip_addr.addr.v6_addr = 
-                               g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
+                        pds_v6_mapping.key.ip_addr.addr.v6_addr =
+                               g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
                         CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
                                                         pds_mapping.key.ip_addr.addr.v4_addr);
                         // no need of v6 to v6 NAT
@@ -354,8 +354,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
 #endif
 
     // create remote mappings
-    SDK_ASSERT(num_vcns * num_remote_mappings <= (1 << 20));
-    for (uint32_t i = 1; i <= num_vcns; i++) {
+    SDK_ASSERT(num_vpcs * num_remote_mappings <= (1 << 20));
+    for (uint32_t i = 1; i <= num_vpcs; i++) {
         tep_offset = 3;
         v6_tep_offset = tep_offset + num_teps / 2;
         for (uint32_t j = 1; j <= num_subnets; j++) {
@@ -365,7 +365,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                 pds_mapping.key.vcn.id = i;
                 pds_mapping.key.ip_addr.af = IP_AF_IPV4;
                 pds_mapping.key.ip_addr.addr.v4_addr =
-                    (g_test_params.vcn_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                    (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
                 pds_mapping.subnet.id = (i - 1) * num_subnets + j;
                 if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
@@ -401,7 +401,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     pds_v6_mapping = pds_mapping;
                     pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
                     pds_v6_mapping.key.ip_addr.addr.v6_addr =
-                          g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
+                          g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
                     CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
                                                     pds_mapping.key.ip_addr.addr.v4_addr);
                     pds_v6_mapping.tep.ip_addr = teppfx->addr.addr.v4_addr + v6_tep_offset;
@@ -443,18 +443,18 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
 
 // MAC address is encoded like below:
 // bits 0-10 have vnic number in the subnet
-// bits 11-21 have subnet number in the vcn
-// bits 22-32 have vcn number
+// bits 11-21 have subnet number in the vpc
+// bits 22-32 have vpc number
 sdk_ret_t
-create_vnics (uint32_t num_vcns, uint32_t num_subnets,
+create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
               uint32_t num_vnics, uint16_t vlan_start)
 {
     sdk_ret_t rv = SDK_RET_OK;
     pds_vnic_spec_t pds_vnic;
     uint16_t vnic_key = 1;
 
-    SDK_ASSERT(num_vcns * num_subnets * num_vnics <= 1024);
-    for (uint32_t i = 1; i <= (uint64_t)num_vcns; i++) {
+    SDK_ASSERT(num_vpcs * num_subnets * num_vnics <= 1024);
+    for (uint32_t i = 1; i <= (uint64_t)num_vpcs; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 memset(&pds_vnic, 0, sizeof(pds_vnic));
@@ -505,8 +505,8 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
 // VCN prefix is /8, subnet id is encoded in next 10 bits (making it /18 prefix)
 // leaving LSB 14 bits for VNIC IPs
 sdk_ret_t
-create_subnets (uint32_t vcn_id, uint32_t num_vcns,
-                uint32_t num_subnets, ipv4_prefix_t *vcn_pfx)
+create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
+                uint32_t num_subnets, ipv4_prefix_t *vpc_pfx)
 {
     sdk_ret_t rv;
     pds_subnet_spec_t pds_subnet;
@@ -515,9 +515,9 @@ create_subnets (uint32_t vcn_id, uint32_t num_vcns,
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&pds_subnet, 0, sizeof(pds_subnet));
-        pds_subnet.key.id = (vcn_id - 1) * num_subnets + i;
-        pds_subnet.vcn.id = vcn_id;
-        pds_subnet.v4_pfx = *vcn_pfx;
+        pds_subnet.key.id = (vpc_id - 1) * num_subnets + i;
+        pds_subnet.vcn.id = vpc_id;
+        pds_subnet.v4_pfx = *vpc_pfx;
         pds_subnet.v4_pfx.v4_addr =
             (pds_subnet.v4_pfx.v4_addr) | ((i - 1) << 14);
         pds_subnet.v4_pfx.len = 18;
@@ -525,7 +525,7 @@ create_subnets (uint32_t vcn_id, uint32_t num_vcns,
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
                            (uint64_t)pds_subnet.v4_vr_ip);
         pds_subnet.v6_route_table.id =
-            route_table_id + (num_subnets * num_vcns);
+            route_table_id + (num_subnets * num_vpcs);
         pds_subnet.v4_route_table.id = route_table_id++;
         pds_subnet.egr_v4_policy.id = id++;
 #ifdef TEST_GRPC_APP
@@ -544,13 +544,13 @@ create_subnets (uint32_t vcn_id, uint32_t num_vcns,
 }
 
 sdk_ret_t
-create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
+create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets)
 {
     sdk_ret_t rv;
     pds_vcn_spec_t pds_vcn;
 
-    SDK_ASSERT(num_vcns <= 1024);
-    for (uint32_t i = 1; i <= num_vcns; i++) {
+    SDK_ASSERT(num_vpcs <= 1024);
+    for (uint32_t i = 1; i <= num_vpcs; i++) {
         memset(&pds_vcn, 0, sizeof(pds_vcn));
         pds_vcn.type = PDS_VCN_TYPE_TENANT;
         pds_vcn.key.id = i;
@@ -568,7 +568,7 @@ create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
         }
 #endif
         for (uint32_t j = 1; j <= num_subnets; j++) {
-            rv = create_subnets(i, num_vcns, j, &pds_vcn.v4_pfx);
+            rv = create_subnets(i, num_vpcs, j, &pds_vcn.v4_pfx);
             if (rv != SDK_RET_OK) {
                 return rv;
             }
@@ -651,7 +651,7 @@ create_device_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
 }
 
 sdk_ret_t
-create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
+create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                         uint32_t num_rules, uint32_t ip_af, bool ingress)
 {
 #ifndef TEST_GRPC_APP
@@ -668,8 +668,8 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
     policy.af = ip_af;
     policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;
     policy.num_rules = num_rules;
-    policy.rules = (rule_t *)malloc(num_rules * sizeof(rule_t));
-    for (uint32_t i = 1; i <= num_vcns; i++) {
+    policy.rules = (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_POLICY_RULES, num_rules * sizeof(rule_t));
+    for (uint32_t i = 1; i <= num_vpcs; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
             memset(policy.rules, 0, num_rules * sizeof(rule_t));
             policy.key.id = policy_id++;
@@ -677,7 +677,7 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
                 rule = &policy.rules[k];
                 rule->stateful = false;
                 rule->match.l3_match.ip_proto = 17;    // UDP
-                rule->match.l3_match.ip_pfx = g_test_params.vcn_pfx;
+                rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
                 rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
                     rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
                     ((j - 1) << 14) | (k << 4);
@@ -690,7 +690,7 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
             }
             rv = pds_policy_create(&policy);
             if (rv != SDK_RET_OK) {
-                printf("Failed to create security policy, vcn %u, subnet %u, "
+                printf("Failed to create security policy, vpc %u, subnet %u, "
                        "err %u\n", i, j, rv);
                 return rv;
             }
@@ -800,19 +800,19 @@ create_objects (void)
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.tep_pfx) == 0);
             } else if (kind == "route-table") {
                 g_test_params.num_routes = std::stol(obj.second.get<std::string>("count"));
-                g_test_params.num_vcns = std::stol(obj.second.get<std::string>("num_vcns", "1"));
+                g_test_params.num_vpcs = std::stol(obj.second.get<std::string>("num_vpcs", "1"));
                 pfxstr = obj.second.get<std::string>("prefix-start");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.route_pfx) == 0);
                 pfxstr = obj.second.get<std::string>("v6-prefix-start");
                 assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_route_pfx) == 0);
             } else if (kind == "security-policy") {
                 g_test_params.num_rules = std::stol(obj.second.get<std::string>("count"));
-            } else if (kind == "vcn") {
-                g_test_params.num_vcns = std::stol(obj.second.get<std::string>("count"));
+            } else if (kind == "vpc") {
+                g_test_params.num_vpcs = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
-                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.vcn_pfx) == 0);
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.vpc_pfx) == 0);
                 pfxstr = obj.second.get<std::string>("v6-prefix");
-                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_vcn_pfx) == 0);
+                assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_vpc_pfx) == 0);
                 g_test_params.num_subnets = std::stol(obj.second.get<std::string>("subnets"));
             } else if (kind == "vnic") {
                 g_test_params.num_vnics = std::stol(obj.second.get<std::string>("count"));
@@ -862,7 +862,7 @@ create_objects (void)
         return ret;
     }
     // create route tables
-    ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vcns,
+    ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
                               g_test_params.num_subnets, g_test_params.num_routes,
                               &g_test_params.tep_pfx, &g_test_params.route_pfx,
                               &g_test_params.v6_route_pfx);
@@ -870,42 +870,42 @@ create_objects (void)
         return ret;
     }
     // create security policies
-    ret = create_security_policy(g_test_params.num_vcns, g_test_params.num_subnets,
+    ret = create_security_policy(g_test_params.num_vpcs, g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV4, false);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 #if 0
-    ret = create_security_policy(g_test_params.num_vcns, g_test_params.num_subnets,
+    ret = create_security_policy(g_test_params.num_vpcs, g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV4, true);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    ret = create_security_policy(g_test_params.num_vcns, g_test_params.num_subnets,
+    ret = create_security_policy(g_test_params.num_vpcs, g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV6, false);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    ret = create_security_policy(g_test_params.num_vcns, g_test_params.num_subnets,
+    ret = create_security_policy(g_test_params.num_vpcs, g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV6, true);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 #endif
-    // create vcns and subnets
-    ret = create_vcns(g_test_params.num_vcns, &g_test_params.vcn_pfx,
+    // create vpcs and subnets
+    ret = create_vpcs(g_test_params.num_vpcs, &g_test_params.vpc_pfx,
                       g_test_params.num_subnets);
     if (ret != SDK_RET_OK) {
         return ret;
     }
     // create vnics
-    ret = create_vnics(g_test_params.num_vcns, g_test_params.num_subnets,
+    ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
                        g_test_params.num_vnics, g_test_params.vlan_start);
     if (ret != SDK_RET_OK) {
         return ret;
     }
     // create mappings
-    ret = create_mappings(g_test_params.num_teps, g_test_params.num_vcns,
+    ret = create_mappings(g_test_params.num_teps, g_test_params.num_vpcs,
                           g_test_params.num_subnets, g_test_params.num_vnics,
                           g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
                           &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
@@ -913,7 +913,7 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    
+
     if (g_test_params.dual_stack) {
         // create V6 flows
         ret = create_flows(g_test_params.num_tcp, g_test_params.num_udp,

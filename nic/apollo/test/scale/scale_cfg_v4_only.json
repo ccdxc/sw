@@ -30,14 +30,14 @@
         },
         {
             "_comment_" : "All VCNs have same prefix",
-            "kind" : "vcn",
+            "kind" : "vpc",
             "count" : "1024",
             "prefix" : "2.0.0.0/8",
             "v6-prefix" : "2019::/96",
             "subnets" : "1"
         },
         {
-            "_comment_" : "per vcn, per subnet vnic scale",
+            "_comment_" : "per vpc, per subnet vnic scale",
             "kind" : "vnic",
             "count" : "1",
             "vlan-start" : "1"
