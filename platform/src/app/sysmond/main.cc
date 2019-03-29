@@ -10,9 +10,45 @@ extern int configurablefrequency();
 extern monfunc_t __start_monfunclist[];
 extern monfunc_t __stop_monfunclist[];
 
+systemled_t currentstatus = {UKNOWN_STATE, LED_COLOR_NONE};
+
 static void monitorsystem() {
     for (monfunc_t *c = __start_monfunclist; c < __stop_monfunclist; c++) {
         c->func();
+    }
+    return;
+}
+
+void
+sysmgrsystemled (systemled_t led) {
+
+    //Check if already at max warning level.
+    if (led.event >= currentstatus.event) {
+        return;
+    }
+    switch (led.event) {
+        case CRITICAL_EVENT:
+            currentstatus.event = CRITICAL_EVENT;
+            currentstatus.color = LED_COLOR_YELLOW;
+            pal_system_set_led(LED_COLOR_YELLOW, LED_FREQUENCY_0HZ);
+            break;
+        case NON_CRITICAL_EVENT:
+            currentstatus.event = NON_CRITICAL_EVENT;
+            currentstatus.color = LED_COLOR_YELLOW;
+            pal_system_set_led(LED_COLOR_YELLOW, LED_FREQUENCY_0HZ);
+            break;
+        case PROCESS_CRASHED_EVENT:
+            currentstatus.event = PROCESS_CRASHED_EVENT;
+            currentstatus.color = LED_COLOR_YELLOW;
+            pal_system_set_led(LED_COLOR_YELLOW, LED_FREQUENCY_0HZ);
+            break;
+        case EVERYTHING_WORKING:
+            currentstatus.event = EVERYTHING_WORKING;
+            currentstatus.color = LED_COLOR_GREEN;
+            pal_system_set_led(LED_COLOR_GREEN, LED_FREQUENCY_0HZ);
+            break;
+        default:
+            return;
     }
     return;
 }
@@ -34,6 +70,7 @@ void initializeLogger() {
 int
 main(int argc, char *argv[])
 {
+    systemled_t led;
     //initialize the logger
     initializeLogger();
 
@@ -62,8 +99,8 @@ main(int argc, char *argv[])
     pthread_t delphi_thread;
     pthread_create(&delphi_thread, NULL, delphi_thread_run, reinterpret_cast<void *>(&sdk));
 
-    //Set LED to green.
-    pal_system_set_led(LED_COLOR_GREEN, LED_FREQUENCY_0HZ);
+    led.event = EVERYTHING_WORKING;
+    sysmgrsystemled(led);
 
     while (1) {
         // Dont block context switches, let the process sleep for some time

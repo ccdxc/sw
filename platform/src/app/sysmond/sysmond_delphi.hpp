@@ -25,4 +25,6 @@ class SysmondService : public delphi::Service,
 
         virtual delphi::error OnSysmgrSystemStatusUpdate(
             delphi::objects::SysmgrSystemStatusPtr obj);
+
+        virtual void SocketClosed();
 };
