@@ -9,8 +9,8 @@ namespace utils {
 namespace logger {
 
 const auto LOG_FILENAME = "nicmgr.log";
-const auto LOG_MAX_FILESIZE = 10*1024*1024; // 10 MiB
-const auto LOG_MAX_FILES = 10;
+const auto LOG_MAX_FILESIZE = 2*1024*1024; // 2 MiB
+const auto LOG_MAX_FILES = 5;
 const auto LOG_OVERFLOW_POLICY = spdlog::async_overflow_policy::discard_log_msg;
 const auto LOG_PATTERN = "%L [%Y-%m-%d %H:%M:%S.%e%z] %v";
 
