@@ -12,9 +12,9 @@ typedef std::shared_ptr<spdlog::logger> Logger;
 
 const auto INFO_LOG_FILENAME = "/var/log/pensando/asicerrord.log";
 const auto ERR_LOG_FILENAME = "/obfl/asicerrord_err.log";
-const auto LOG_MAX_FILESIZE = 10*1024*1024;
+const auto LOG_MAX_FILESIZE = 1*1024*1024;
 const auto ERR_LOG_MAX_FILESIZE = 1*1024*1024;
-const auto LOG_MAX_FILES = 10;
+const auto LOG_MAX_FILES = 5;
 
 // GetLogger returns the current logger instance
 Logger GetLogger();

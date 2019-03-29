@@ -6,7 +6,7 @@
 #include "nic/utils/trace/trace.hpp"
 
 const auto LOG_FILENAME = "/var/log/pensando/sysmond.log";
-const auto LOG_MAX_FILESIZE = 2*1024*1024;
+const auto LOG_MAX_FILESIZE = 1*1024*1024;
 const auto LOG_MAX_FILES = 5;
 extern ::utils::log *g_trace_logger;
 
