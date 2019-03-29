@@ -578,23 +578,23 @@ def CheckFruInfo(n):
     naples_fru = GetNaplesFruJson(n)
     penctl_fru = GetPenctlFruJson(n)
 
-    if penctl_fru["manufacturing-date"] != naples_fru["Manufacturing date"]:
+    if penctl_fru["manufacturing-date"] != naples_fru["manufacturing-date"]:
         api.types.status.FAILURE
-    if penctl_fru["manufacturer"] != naples_fru["Manufacturer"]:
+    if penctl_fru["manufacturer"] != naples_fru["manufacturer"]:
         api.types.status.FAILURE
-    if penctl_fru["product-name"] != naples_fru["Product Name"]:
+    if penctl_fru["product-name"] != naples_fru["product-name"]:
         api.types.status.FAILURE
-    if penctl_fru["serial-number"] != naples_fru["Serial Number"]:
+    if penctl_fru["serial-number"] != naples_fru["serial-number"]:
         api.types.status.FAILURE
-    if penctl_fru["part-number"] != naples_fru["Part Number"]:
+    if penctl_fru["part-number"] != naples_fru["part-number"]:
         api.types.status.FAILURE
-    if penctl_fru["board-id"] != naples_fru["Board Id Number"]:
+    if penctl_fru["board-id"] != naples_fru["board-id"]:
         api.types.status.FAILURE
-    if penctl_fru["change-level"] != naples_fru["Engineering Change level"]:
+    if penctl_fru["change-level"] != naples_fru["engineering-change-level"]:
         api.types.status.FAILURE
-    if penctl_fru["number-mac-addresses"] != naples_fru["NumMac Address"]:
+    if penctl_fru["number-mac-addresses"] != naples_fru["num-mac-address"]:
         api.types.status.FAILURE
-    if penctl_fru["mac-string"] != naples_fru["Mac Address"]:
+    if penctl_fru["mac-string"] != naples_fru["mac-address"]:
         api.types.status.FAILURE
 
     api.types.status.SUCCESS

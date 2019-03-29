@@ -1,11 +1,11 @@
 {
-    "Manufacturing date": "1539734400",
-    "Manufacturer": "PENSANDO SYSTEMS INC.",
-    "Product Name": "NAPLES 100",
-    "Serial Number": "FLM18440006",
-    "Part Number": "68-0003-02 01",
-    "Engineering Change level": "00",
-    "Board Id Number": "1000",
-    "NumMac Address": "24",
-    "Mac Address": "00:ae:cd:00:11:40"
+    "manufacturing-date": "1539734400",
+    "manufacturer": "PENSANDO SYSTEMS INC.",
+    "product-name": "NAPLES 100",
+    "serial-number": "FLM18440006",
+    "part-number": "68-0003-02 01",
+    "engineering-change-level": "00",
+    "board-id": "0001",
+    "num-mac-address": "24",
+    "mac-address": "00:ae:cd:00:11:40"
 }

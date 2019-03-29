@@ -877,7 +877,7 @@ func (naples *naplesHwNode) getHwUUID(in *iota.Node) (uuid string, err error) {
 		return "", errors.Errorf("Error reading %s file", naplesHwUUIDFile)
 	}
 
-	if val, ok := deviceJSON["Mac Address"]; ok {
+	if val, ok := deviceJSON["mac-address"]; ok {
 		return val.(string), nil
 	}
 

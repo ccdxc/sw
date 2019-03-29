@@ -18,15 +18,15 @@
 #define FRU_SIZE 256
 
 //Predefined Keys
-#define MANUFACTURERDATE_KEY "Manufacturing date"
-#define MANUFACTURER_KEY "Manufacturer"
-#define PRODUCTNAME_KEY "Product Name"
-#define SERIALNUMBER_KEY "Serial Number"
-#define PARTNUM_KEY "Part Number"
-#define BOARDID_KEY "Board Id Number"
-#define ENGCHANGELEVEL_KEY "Engineering Change level"
-#define NUMMACADDR_KEY "NumMac Address"
-#define MACADDRESS_KEY "Mac Address"
+#define MANUFACTURERDATE_KEY "manufacturing-date"
+#define MANUFACTURER_KEY "manufacturer"
+#define PRODUCTNAME_KEY "product-name"
+#define SERIALNUMBER_KEY "serial-number"
+#define PARTNUM_KEY "part-number"
+#define BOARDID_KEY "board-id"
+#define ENGCHANGELEVEL_KEY "engineering-change-level"
+#define NUMMACADDR_KEY "num-mac-address"
+#define MACADDRESS_KEY "mac-address"
 
 typedef struct common_fru_area
 {

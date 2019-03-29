@@ -92,16 +92,16 @@ static uint8_t createfile(fru_data_t *fru)
              , fru->boardfru.partnum);
     output.put(PARTNUM_KEY, partnum);
 
-    snprintf(engchangelevel, sizeof(engchangelevel), "%d%d"
-             , fru->boardfru.engchangelevel[0]
-             , fru->boardfru.engchangelevel[1]);
+    snprintf(engchangelevel, sizeof(engchangelevel), "%d"
+             , (fru->boardfru.engchangelevel[1] << 8 |
+                fru->boardfru.engchangelevel[0]));
     output.put(ENGCHANGELEVEL_KEY, engchangelevel);
 
-    snprintf(boardid, sizeof(boardid), "%d%d%d%d"
-             , fru->boardfru.boardid[0]
-             , fru->boardfru.boardid[1]
-             , fru->boardfru.boardid[2]
-             , fru->boardfru.boardid[3]);
+    snprintf(boardid, sizeof(boardid), "%d"
+             , (fru->boardfru.boardid[3] << 24 |
+               fru->boardfru.boardid[2] << 16 |
+               fru->boardfru.boardid[1] << 8 |
+               fru->boardfru.boardid[0]));
     output.put(BOARDID_KEY, boardid);
 
     snprintf(nmacaddr, sizeof(nmacaddr), "%d",
@@ -128,7 +128,7 @@ static int initFru()
     fru_data_t *fru;
     uint32_t nretry = MAX_FRU_RETRIES;
 
-    buffer = (uint8_t*)malloc(FRU_SIZE);
+    buffer = (uint8_t *)calloc(1,FRU_SIZE);
 
     pal_fru_read(buffer, FRU_SIZE, nretry);
     fru = (fru_data_t *)buffer;

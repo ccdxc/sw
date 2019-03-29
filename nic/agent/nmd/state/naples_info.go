@@ -213,15 +213,15 @@ func ReadFruFromJSON() *nmd.NaplesFru {
 	}
 
 	return &nmd.NaplesFru{
-		ManufacturingDate: dat["Manufacturing date"].(string),
-		Manufacturer:      dat["Manufacturer"].(string),
-		ProductName:       dat["Product Name"].(string),
-		SerialNum:         dat["Serial Number"].(string),
-		PartNum:           dat["Part Number"].(string),
-		BoardId:           dat["Engineering Change level"].(string),
-		EngChangeLevel:    dat["Board Id Number"].(string),
-		NumMacAddr:        dat["NumMac Address"].(string),
-		MacStr:            dat["Mac Address"].(string),
+		ManufacturingDate: dat["manufacturing-date"].(string),
+		Manufacturer:      dat["manufacturer"].(string),
+		ProductName:       dat["product-name"].(string),
+		SerialNum:         dat["serial-number"].(string),
+		PartNum:           dat["part-number"].(string),
+		BoardId:           dat["engineering-change-level"].(string),
+		EngChangeLevel:    dat["board-id"].(string),
+		NumMacAddr:        dat["num-mac-address"].(string),
+		MacStr:            dat["mac-address"].(string),
 	}
 }
 
