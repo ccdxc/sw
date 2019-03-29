@@ -8,8 +8,7 @@ export PENLOG_LOCATION="."
 
 pushd ${TOPDIR}
 
-make delphi_hub.bin sysmgr.bin sysmgr_scheduler_test.gtest \
-     sysmgr_watchdog_test.gtest sysmgr_example.bin
+make delphi_hub.bin sysmgr.bin sysmgr_example.bin
 RET=$?
 if [ $RET -ne 0 ]
 then
@@ -19,13 +18,13 @@ fi
 
 popd
 
-${BUILD_DIR}/bin/sysmgr_scheduler_test && ${BUILD_DIR}/bin/sysmgr_watchdog_test
-RET=$?
-if [ $RET -ne 0 ]
-then
-    echo "UT failed"
-    exit $RET
-fi
+# ${BUILD_DIR}/bin/sysmgr_scheduler_test && ${BUILD_DIR}/bin/sysmgr_watchdog_test
+# RET=$?
+# if [ $RET -ne 0 ]
+# then
+#     echo "UT failed"
+#     exit $RET
+# fi
 
 pushd /usr/src/github.com/pensando/sw/nic/sysmgr/goexample && go build && popd
 
@@ -50,12 +49,10 @@ runtest () {
     done
 }
 
-runtest 10s test.json "example2 -> started"
+runtest 10s test.json "Service example2 started"
 
-runtest 10s test-exit-code.json "example2 -> Exited normally with code: 12" \
+runtest 10s test-exit-code.json "Service example2 Exited normally with code: 12" \
         "ProcessStatus example2, .*, 4, Exited normally with code: 12"
 
-runtest 60s test-critical-watchdog.json "Expired watchdog process: example2" \
-        "sysmgr: Fault"
-
-runtest 60s test-switch-root.json "Reloading..."
+runtest 60s test-critical-watchdog.json "Service example2 timed out" \
+        "System in fault mode"

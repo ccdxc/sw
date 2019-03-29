@@ -15,6 +15,7 @@ class events_recorder {
 public:
     // initialize events recorder; shm_name, shm_size, component, event types descriptor, logger
     static events_recorder* init(const char *, int, const char *, const ::google::protobuf::EnumDescriptor*, Logger);
+    static events_recorder* init(const char *, int, int, const char *, const ::google::protobuf::EnumDescriptor*, Logger);
 
     // tear down events recorder
     void deinit();

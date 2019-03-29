@@ -1,93 +1,54 @@
-#ifndef __SERVICE_H__
-#define __SERVICE_H__
+#ifndef __SERVICE_HPP__
+#define __SERVICE_HPP__
 
 #include <list>
+#include <map>
 #include <memory>
-#include <set>
-#include <string>
-#include <vector>
 
-#include <sys/types.h>
+#include "child_watcher.hpp"
+#include "service_spec.hpp"
+#include "service_watcher.hpp"
+#include "timer_watcher.hpp"
 
-using namespace std;
-
-enum service_status
+enum service_dep_kind
 {
-    WAITING,
-    READY,
-    STARTING,
-    FAILED_TO_START,
-    RUNNING,
-    DIED,
+    SERVICE_DEP_SERVICE,
+    SERVICE_DEP_FILE,
 };
 
-class Service
+class ServiceDep
 {
-  public:
+public:
+    static std::shared_ptr<ServiceDep> create(ServiceSpecDepPtr spec);
+    enum service_dep_kind kind;
+    std::string           service_name;
+    std::string           file_name;
+    bool                  isMet;
+};
+typedef std::shared_ptr<ServiceDep> ServiceDepPtr;
+
+class Service : public std::enable_shared_from_this<Service>,
+		public ServiceReactor,
+		public ChildReactor,
+		public TimerReactor
+{
+private:
+    ServiceSpecPtr spec;
+    std::list<ServiceDepPtr> dependencies;
+    ChildWatcherPtr child_watcher;
+    TimerWatcherPtr timer_watcher;
     pid_t pid;
-    const string name;
-    const string command;
-    const bool is_restartable;
-    const bool is_watchdog_disabled;
-    const bool is_critical;
-
-    Service(string name, string command, bool restartable,
-	    bool watchdog_disabled, bool is_critical) :
-       name(name), 
-       command(command), is_restartable(restartable),
-       is_watchdog_disabled(watchdog_disabled),
-       is_critical(is_critical)
-    {
-        status = WAITING;
-        pid = 0;
-    }
-
-    void set_status(enum service_status status)
-    {
-        this->status = status;
-    }
-
-    enum service_status get_status()
-    {
-        return this->status;
-    }
-
-    void add_depenency(weak_ptr<Service> service)
-    {
-        this->dependencies.insert(service);
-    }
-
-    void remove_dependency(weak_ptr<Service> service)
-    {
-        this->dependencies.erase(service);
-    }
-
-    void add_dependee(weak_ptr<Service> service)
-    {
-        this->dependees.push_back(service);
-    }
-
-    size_t dependenies_count()
-    {
-        return this->dependencies.size();
-    }
-
-    list<shared_ptr<Service> > get_dependees()
-    {
-        auto l = list<shared_ptr<Service> >();
-        for (auto w: this->dependees)
-        {
-            l.push_back(w.lock());
-        }
-        return l;
-    }
-
-  private:
-    set<weak_ptr<Service>, std::owner_less<std::weak_ptr<Service> > > dependencies;
-    list<weak_ptr<Service> > dependees;
-    enum service_status status;
+    void check_dep_and_launch();
+    void start_heartbeat();
+    void launch();
+public:
+    static std::shared_ptr<Service> create(ServiceSpecPtr spec);
+    virtual void on_service_start(std::string name);
+    virtual void on_service_stop(std::string name);
+    virtual void on_service_heartbeat(std::string name);
+    virtual void on_child(pid_t pid);
+    virtual void on_timer();
 };
+typedef std::shared_ptr<Service> ServicePtr;
 
-typedef set<shared_ptr<Service>, std::owner_less<std::shared_ptr<Service> > > ServiceSet;
-
-#endif
+#endif // __SERVICE_HPP__

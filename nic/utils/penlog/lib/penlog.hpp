@@ -22,6 +22,7 @@ namespace penlog {
     public:
         const std::string name;
     public:
+	std::shared_ptr<spdlog::logger> get_spd();
         Logger(const std::string &name);
         void spd_init(sinkptr sink, spdlog::level::level_enum level);
         template<typename... Args>

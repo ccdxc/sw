@@ -6,31 +6,73 @@
 }, {
     "name": "hal",
     "command": "/naples/nic/bin/hal -c hal.json",
-    "dependencies": ["delphi"],
+    "dependencies": [
+	{
+	    "kind": "service",
+	    "service-name": "delphi"
+	}
+    ],
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "netagent",
     "command": "/naples/nic/bin/netagent -datapath hal",
-    "dependencies": ["delphi", "hal"],
+    "dependencies": [
+	{
+	    "kind": "service",
+	    "service-name": "delphi"
+	},
+	{
+	    "kind": "service",
+	    "service-name": "hal"
+	}
+    ],
     "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "nmd",
     "command": "/naples/nic/bin/nmd -hostif lo -standalone=false -mode host",
-    "dependencies": ["delphi"],
+    "dependencies": [
+	{
+	    "kind": "service",
+	    "service-name": "delphi"
+	}
+    ],
     "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "tmagent",
     "command": "/naples/nic/bin/tmagent",
-    "dependencies": ["delphi", "hal"],
+    "dependencies": [
+	{
+	    "kind": "service",
+	    "service-name": "delphi"
+	},
+	{
+	    "kind": "service",
+	    "service-name": "hal"
+	}
+    ],
     "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "nevtsproxy",
     "command": "/naples/nic/bin/nevtsproxy",
-    "dependencies": ["delphi",  "hal"],
+    "dependencies": [
+	{
+	    "kind": "service",
+	    "service-name": "delphi"
+	},
+	{
+	    "kind": "service",
+	    "service-name": "hal"
+	}
+    ],
     "flags": ["no_watchdog", "non_critical", "restartable"]
 }, {
     "name": "upgrade",
     "command": "/naples/nic/bin/upgrade",
-    "dependencies": ["delphi"],
+    "dependencies": [
+	{
+	    "kind": "service",
+	    "service-name": "delphi"
+	}
+    ],
     "flags": ["no_watchdog", "non_critical"]
 }]

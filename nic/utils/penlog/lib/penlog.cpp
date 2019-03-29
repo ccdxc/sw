@@ -67,3 +67,8 @@ void Logger::set_level(spdlog::level::level_enum level)
     this->level = level;
     this->spd->set_level(level);
 }
+
+std::shared_ptr<spdlog::logger> Logger::get_spd()
+{
+    return this->spd;
+}

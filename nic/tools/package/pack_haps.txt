@@ -46,6 +46,8 @@ nic/build/aarch64/iris/lib/libipc.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libagent_api.so                          /nic/lib/
 nic/build/aarch64/iris/lib/libevents_queue.so                       /nic/lib/
 nic/build/aarch64/iris/lib/libevents_recorder.so                    /nic/lib/
+nic/build/aarch64/iris/lib/libeventproto.so                         /nic/lib/
+nic/build/aarch64/iris/lib/libsysmgreventsproto.so                  /nic/lib/
 nic/build/aarch64/iris/lib/libasicpd.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libsdkasicrw.so                          /nic/lib/
 nic/build/aarch64/iris/lib/libsdkasicpd.so                          /nic/lib/

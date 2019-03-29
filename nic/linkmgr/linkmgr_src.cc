@@ -129,7 +129,7 @@ linkmgr_logger_init (void)
     logger =
         ::utils::log::factory("linkmgr", 0x1, ::utils::log_mode_sync,
                               false, logfile.c_str(),
-                              TRACE_FILE_SIZE_DEFAULT,
+	                      5 << 20, // size(5MB)
                               1 /* number of files */,
                               ::utils::trace_debug,
                               ::utils::log_none);

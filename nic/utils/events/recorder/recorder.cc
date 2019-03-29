@@ -17,9 +17,21 @@
 
 #define EVENT_SIZE(evt) evt.ByteSizeLong()
 
-// initialize the events recorder; size is defaulted to SHM_SIZE if undefined (shm_size = 0)
-events_recorder* events_recorder::init(const char* shm_name, int shm_size, const char *component,
-                                       const ::google::protobuf::EnumDescriptor* event_types_descriptor, Logger logger)
+// initialize the events recorder; size is defaulted to SHM_SIZE
+// if undefined (shm_size = 0)
+events_recorder* events_recorder::init(const char* shm_name, int shm_size,
+    const char *component,
+    const ::google::protobuf::EnumDescriptor* event_types_descriptor,
+    Logger logger)
+{
+    return init(shm_name, shm_size, SHM_BUF_SIZE, component,
+	event_types_descriptor, logger);
+}
+
+events_recorder* events_recorder::init(const char* shm_name, int shm_size,
+    int seg_size, const char *component,
+    const ::google::protobuf::EnumDescriptor* event_types_descriptor,
+    Logger logger)
 {
     if (logger == nullptr) {
         return nullptr;
@@ -33,7 +45,8 @@ events_recorder* events_recorder::init(const char* shm_name, int shm_size, const
     logger->info("{}: initializing events recorder...", abs_shm_name);
 
     if (!event_types_descriptor) {
-        logger->error("{}: event_types enum descriptor is required for event recorder", abs_shm_name);
+        logger->error("{}: event_types enum descriptor is "
+	    "required for event recorder", abs_shm_name);
         return nullptr;
     }
 
@@ -42,7 +55,8 @@ events_recorder* events_recorder::init(const char* shm_name, int shm_size, const
     }
 
     // create events queue
-    events_queue *evts_queue = events_queue::init(abs_shm_name.c_str(), shm_size, SHM_BUF_SIZE, logger);
+    events_queue *evts_queue = events_queue::init(abs_shm_name.c_str(),
+	shm_size, seg_size, logger);
     if (!evts_queue) {
         logger->error("{}: failed to create events queue", abs_shm_name);
         return nullptr;
@@ -65,12 +79,17 @@ void events_recorder::deinit()
 }
 
 // construct and record event in the shared memory queue
-int events_recorder::event(events::Severity severity, const int type, const char* kind, const ::google::protobuf::Message& key, const char* msg...)
+int events_recorder::event(events::Severity severity, const int type,
+    const char* kind, const ::google::protobuf::Message& key,
+    const char* msg...)
 {
     // this ensures the event type belongs to given descriptor
-    const std::string event_type_str = ::google::protobuf::internal::NameOfEnum(this->event_types_descriptor, type);
+    const std::string event_type_str =
+	::google::protobuf::internal::NameOfEnum(this->event_types_descriptor,
+	    type);
     if (event_type_str.empty()) {
-        this->logger_->error("{}: event type {} does not exist", this->queue_->get_name(), type);
+        this->logger_->error("{}: event type {} does not exist",
+	    this->queue_->get_name(), type);
         return -1;
     }
 
@@ -112,12 +131,15 @@ int events_recorder::write_event(events::Event evt)
         return this->queue_->write_msg_size(buf, size);
     }
 
-    this->logger_->error("{}: requested buffer size {} not available", this->queue_->get_name(), size);
+    this->logger_->error("{}: requested buffer size {} not available",
+	this->queue_->get_name(), size);
     return -1;
 }
 
 // convert protobuf message to ::google::protobuf::Any*
-::google::protobuf::Any *events_recorder::toAny(const ::google::protobuf::Message& key) {
+::google::protobuf::Any *events_recorder::toAny(
+    const ::google::protobuf::Message& key)
+{
     ::google::protobuf::Any *obj_key = ::google::protobuf::Any().New();
     obj_key->PackFrom(key);
 
