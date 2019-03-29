@@ -34,11 +34,19 @@ class RfcConstants:
 
 # Pre-calculated RFC Block sizes indexed by keysize
 LpmBlockSizes = {
-    16: 64+(32*64),
-    24: 64+(16*64)+(16*16*64),
-    32: 64+(16*64)+(16*16*64),
-    64: (64+(8*64)+(8*8*64)+(8*8*8*64)),
-    128: (64+(4*64)+(4*4*64)+(4*4*4*64)+(4*4*4*4*64)+(4*4*4*4*4*64)),
+    16: (1+32)*64,
+    24: (1+16+16*16)*64,
+    32: (1+16+16*16)*64,
+    64: (1+(8)+(8*8)+(8*8*8))*64,
+    128: (1+(4)+(4*4)+(4*4*4)+(4*4*4*4)+(4*4*4*4*4))*64,
+}
+
+LpmPackingFactor = {
+    16: 32,
+    24: 16,
+    32: 16,
+    64: 8,
+    128: 4,
 }
 
 class Dict2Object(object):
@@ -81,6 +89,11 @@ def ParseParams():
     Params.nat.count = UnitStr2Value(Params.nat.count)
     return
 
+def RoundPowN(value, n):
+    if value:
+        return math.pow(n, math.ceil(math.log(value,n)))
+    return 0
+
 def RoundPow2(value):
     if value:
         return math.pow(2, math.ceil(math.log(value,2)))
@@ -115,7 +128,8 @@ def ValueToXB(value_bits):
 
 def CalculateLpmMemory(fldsize, count):
     # Block size is in Bytes and represents a 1K block
-    return LpmBlockSizes[fldsize] * count / 1024 * 8
+    multiplier = RoundPowN(math.ceil(float(count) / 1024), LpmPackingFactor[fldsize])
+    return LpmBlockSizes[fldsize] * multiplier * 8
 
 def CalculateRfcTableMemory(nbits, result_size):
     #pdb.set_trace()
@@ -135,14 +149,14 @@ def CalculatePolicyMemory(ip_field_size, count):
     # Phase0 LPM for Dport
     mem += CalculateLpmMemory(FieldSizes.dport + FieldSizes.proto,
                               RfcConstants.max_dport_proto_classes)
-  
+
     # Phase1 Table
     mem += CalculateRfcTableMemory(RfcConstants.p1_nbits,
-                                   RfcConstants.p1_result_size) 
+                                   RfcConstants.p1_result_size)
 
     # Phase2 Table
     mem += CalculateRfcTableMemory(RfcConstants.p2_nbits,
-                                   RfcConstants.p2_result_size) 
+                                   RfcConstants.p2_result_size)
     return mem * count / 1024
 
 def CalculateRouteTableMemory():
@@ -159,7 +173,7 @@ def CalculateRouteTableMemory():
     print("----------------------------------------------------------")
     print("[ a] - Number of Route Tables         : %-10s %-10s" % (ValueToX(Params.route_tables.count), ValueToX(Params.route_tables.count)))
     print("[ b] - Number of Routes               : %-10s %-10s" % (ValueToX(Params.route_tables.routes.ipv4), ValueToX(Params.route_tables.routes.ipv6)))
-    print("[ c] - LPM Memory (1 VPC)             : %-10s %-10s" % (ValueToXB(ipv4_routes_memory), ValueToXB(ipv6_routes_memory)))      
+    print("[ c] - LPM Memory (1 VPC)             : %-10s %-10s" % (ValueToXB(ipv4_routes_memory), ValueToXB(ipv6_routes_memory)))
     print("[T1] - Total LPM Memory (a*c)         : %-10s %-10s\n" % (ValueToXB(total_ipv4_routes_memory), ValueToXB(total_ipv6_routes_memory)))
     return total
 
@@ -238,7 +252,7 @@ def CalculateTepMemory():
     print("TEP Table Memory Calculation")
     print("----------------------------------------------------")
     print("[ a] - Count                          : %s" % ValueToX(count))
-    print("[T5] - Total TEP Memory               : %s\n" % ValueToXB(memory)) 
+    print("[T5] - Total TEP Memory               : %s\n" % ValueToXB(memory))
     return memory
 
 def CalculateNatMemory():
@@ -251,7 +265,7 @@ def CalculateNatMemory():
     print("NAT Table Memory Calculation")
     print("----------------------------------------------------")
     print("[ a] - Count                          : %s" % ValueToX(count))
-    print("[T6] - Total NAT Memory               : %s\n" % ValueToXB(memory)) 
+    print("[T6] - Total NAT Memory               : %s\n" % ValueToXB(memory))
     return memory
 
 parser = argparse.ArgumentParser(description='Memory Calculator')

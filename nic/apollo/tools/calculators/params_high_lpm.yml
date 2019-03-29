@@ -14,20 +14,20 @@ policy_tables:
         egress : 0
 
 route_tables:
-    count: 1K
+    count: 128
     routes:
-        ipv4: 3K
-        ipv6: 3K
+        ipv4: 22K
+        ipv6: 22K
     nexthops: 1K
 
 flows:
     count : 2M
 
 mappings:
-    locals: 
+    locals:
         ipv4: 32K
         ipv6: 32K
-    remotes: 
+    remotes:
         instances: 2
         ipv4: 512K
         ipv6: 512K
