@@ -7,6 +7,8 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/agent/trace.hpp"
 
+extern bool g_pds_mock_mode;
+
 namespace core {
 
 static inline sdk_ret_t
@@ -71,7 +73,7 @@ subnet_create_validate (pds_subnet_spec_t *spec)
 sdk_ret_t
 subnet_create (pds_subnet_key_t *key, pds_subnet_spec_t *spec)
 {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
 
     if (agent_state::state()->find_in_subnet_db(key) != NULL) {
         PDS_TRACE_ERR("Failed to create subnet %u, subnet already exists", spec->key.id);
@@ -80,10 +82,13 @@ subnet_create (pds_subnet_key_t *key, pds_subnet_spec_t *spec)
     if ((ret = subnet_create_validate(spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to create subnet %u, err %u", spec->key.id, ret);
         return ret;
-    }
-    if ((ret = pds_subnet_create(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to create subnet %u, err %u", spec->key.id, ret);
-        return ret;
+    } 
+    
+    if (!g_pds_mock_mode) {
+        if ((ret = pds_subnet_create(spec)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to create subnet %u, err %u", spec->key.id, ret);
+            return ret;
+        }
     }
     if ((ret = agent_state::state()->add_to_subnet_db(key, spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add subnet %u to db, err %u", spec->key.id, ret);
@@ -101,9 +106,11 @@ subnet_delete (pds_subnet_key_t *key)
         PDS_TRACE_ERR("Failed to find subnet %u in db", key->id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    if ((ret = pds_subnet_delete(key)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete subnet %u, err %u", key->id, ret);
-        return ret;
+    if (!g_pds_mock_mode) {
+        if ((ret = pds_subnet_delete(key)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to delete subnet %u, err %u", key->id, ret);
+            return ret;
+        }
     }
     if (agent_state::state()->del_from_subnet_db(key) == false) {
         PDS_TRACE_ERR("Failed to delete subnet %u from db", key->id);
@@ -115,7 +122,7 @@ subnet_delete (pds_subnet_key_t *key)
 sdk_ret_t
 subnet_get (pds_subnet_key_t *key, pds_subnet_info_t *info)
 {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;;
     pds_subnet_spec_t *spec;
 
     spec = agent_state::state()->find_in_subnet_db(key);
@@ -124,19 +131,23 @@ subnet_get (pds_subnet_key_t *key, pds_subnet_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     memcpy(&info->spec, spec, sizeof(pds_subnet_spec_t));
-    ret = pds_subnet_read(key, info);
+    if (!g_pds_mock_mode) {
+        ret = pds_subnet_read(key, info);
+    }
     return ret;
 }
 
 static inline sdk_ret_t
 subnet_get_all_cb (pds_subnet_spec_t *spec, void *ctxt)
 {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_subnet_info_t info;
     subnet_db_cb_ctxt_t *cb_ctxt = (subnet_db_cb_ctxt_t *)ctxt;
 
     memcpy(&info.spec, spec, sizeof(pds_subnet_spec_t));
-    ret = pds_subnet_read(&spec->key, &info);
+    if (!g_pds_mock_mode) {
+        ret = pds_subnet_read(&spec->key, &info);
+    }
     if (ret == SDK_RET_OK) {
         cb_ctxt->cb(&info, cb_ctxt->ctxt);
     }

@@ -27,6 +27,8 @@ using grpc::ServerContext;
 using grpc::Status;
 flow_test *g_flow_test_obj;
 std::string g_grpc_server_addr;
+bool g_pds_mock_mode = false;
+
 #define GRPC_API_PORT    9999
 
 static void
@@ -144,6 +146,11 @@ main (int argc, char **argv)
         cfg_path = std::string("./");
     } else {
         cfg_path += "/";
+    }
+
+    // Set the env vars
+    if (std::getenv("PDS_MOCK_MODE")) {
+        g_pds_mock_mode = true;
     }
 
     // make sure the cfg file exists

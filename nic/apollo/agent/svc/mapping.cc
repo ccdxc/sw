@@ -12,6 +12,8 @@
 extern flow_test *g_flow_test_obj;
 #endif
 
+extern bool g_pds_mock_mode;
+
 // Build VPC API spec from protobuf spec
 static inline void
 pds_agent_mapping_api_spec_fill (pds_mapping_spec_t *api_spec,
@@ -58,8 +60,10 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
                                                api_spec.key.ip_addr);
             }
 #endif
-            if (pds_mapping_create(&api_spec) != sdk::SDK_RET_OK)
-                return Status::CANCELLED;
+            if (!g_pds_mock_mode) {
+                if (pds_mapping_create(&api_spec) != sdk::SDK_RET_OK)
+                    return Status::CANCELLED;
+            }
         }
     }
     return Status::OK;

@@ -5,6 +5,8 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/route.hpp"
 
+extern bool g_pds_mock_mode;
+
 namespace core {
 
 sdk_ret_t
@@ -13,8 +15,10 @@ route_table_create (pds_route_table_key_t *key, pds_route_table_spec_t *spec)
     if (agent_state::state()->find_in_route_table_db(key) != NULL) {
         return SDK_RET_ENTRY_EXISTS;
     }
-    if (pds_route_table_create(spec) != SDK_RET_OK) {
-        return SDK_RET_ERR;
+    if (!g_pds_mock_mode) {
+        if (pds_route_table_create(spec) != sdk::SDK_RET_OK) {
+            return sdk::SDK_RET_ERR;
+        }
     }
     if (agent_state::state()->add_to_route_table_db(key, spec) != SDK_RET_OK) {
         return SDK_RET_ERR;
@@ -31,8 +35,10 @@ route_table_delete (pds_route_table_key_t *key)
     if (spec == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    if (pds_route_table_delete(key) != SDK_RET_OK) {
-        return SDK_RET_ERR;
+    if (!g_pds_mock_mode) {
+        if (pds_route_table_delete(key) != sdk::SDK_RET_OK) {
+            return sdk::SDK_RET_ERR;
+        }
     }
     if (spec->routes) {
         SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, spec->routes);

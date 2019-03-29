@@ -7,6 +7,8 @@
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
 
+extern bool g_pds_mock_mode;
+
 // Populate proto buf spec from device API spec
 static inline void
 device_api_spec_to_proto_spec (const pds_device_spec_t *api_spec,
@@ -59,7 +61,7 @@ Status
 DeviceSvcImpl::DeviceCreate(ServerContext *context,
                             const pds::DeviceRequest *proto_req,
                             pds::DeviceResponse *proto_rsp) {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_device_spec_t *api_spec;
 
     if (proto_req == NULL) {
@@ -72,7 +74,9 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
         return Status::OK;
     }
     pds_agent_device_api_spec_fill(proto_req->request(), api_spec);
-    ret = pds_device_create(api_spec);
+    if (!g_pds_mock_mode) {
+        ret = pds_device_create(api_spec);
+    }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
@@ -81,7 +85,7 @@ Status
 DeviceSvcImpl::DeviceDelete(ServerContext *context,
                             const types::Empty *empty,
                             pds::DeviceDeleteResponse *proto_rsp) {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_device_spec_t *api_spec;
 
     api_spec = core::agent_state::state()->device();
@@ -90,7 +94,9 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
         return Status::OK;
     }
     memset(api_spec, 0, sizeof(pds_device_spec_t));
-    ret = pds_device_delete();
+    if (!g_pds_mock_mode) {
+        ret = pds_device_delete();
+    }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
@@ -99,7 +105,7 @@ Status
 DeviceSvcImpl::DeviceGet(ServerContext *context,
                          const types::Empty *empty,
                          pds::DeviceGetResponse *proto_rsp) {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_device_spec_t *api_spec;
     pds_device_info_t info;
 
@@ -109,7 +115,9 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
         return Status::OK;
     }
     memcpy(&info.spec, api_spec, sizeof(pds_device_spec_t));
-    ret = pds_device_read(&info);
+    if (!g_pds_mock_mode) {
+        ret = pds_device_read(&info);
+    }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     if (ret != sdk::SDK_RET_OK) {
         return Status::OK;
