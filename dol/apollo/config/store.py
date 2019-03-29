@@ -24,23 +24,23 @@ class ApolloConfigStore:
     def GetDevice(self):
         return self.device
 
-    def GetTunnelsVxlan(self):
-        vxlan_tunnels = []
-        for tun in self.tunnels.GetAllInList():
-            if tun.IsVxlan(): vxlan_tunnels.append(tun)
-        return vxlan_tunnels
+    def IsDeviceEncapTypeMPLS(self):
+        return self.device.IsEncapTypeMPLS()
 
-    def GetTunnelsMplsOverUdp2(self):
-        mpls_tunnels = []
-        for tun in self.tunnels.GetAllInList():
-            if tun.IsMplsOverUdp2(): mpls_tunnels.append(tun)
-        return mpls_tunnels
+    def IsDeviceEncapTypeVXLAN(self):
+        return self.device.IsEncapTypeVXLAN()
 
-    def GetTunnelsMplsOverUdp1(self):
-        mpls_tunnels = []
+    def GetWorkloadTunnels(self):
+        tunnels = []
         for tun in self.tunnels.GetAllInList():
-            if tun.IsMplsOverUdp1(): mpls_tunnels.append(tun)
-        return mpls_tunnels
+            if tun.IsWorkload(): tunnels.append(tun)
+        return tunnels
+
+    def GetIgwTunnels(self):
+        tunnels = []
+        for tun in self.tunnels.GetAllInList():
+            if tun.IsIgw(): tunnels.append(tun)
+        return tunnels
 
     def GetTrunkingUplinks(self):
         return self.trunks.GetAllInList()

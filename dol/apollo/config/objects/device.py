@@ -25,6 +25,7 @@ class DeviceObject(base.ConfigObjectBase):
         self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
         self.MACAddr = spec.macaddress
         self.IP = str(self.IPAddr) # For testspec
+        self.EncapType = utils.GetEncapType(spec.encap)
 
         ################# PRIVATE ATTRIBUTES OF SWITCH OBJECT #####################
         self.__spec = spec
@@ -34,8 +35,9 @@ class DeviceObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Device1|IPAddr:%s|GatewayAddr:%s|MAC:%s" %\
-               (self.IPAddr, self.GatewayAddr, self.MACAddr.get())
+        return "Device1|IPAddr:%s|GatewayAddr:%s|MAC:%s|Encap:%s" %\
+               (self.IPAddr, self.GatewayAddr, self.MACAddr.get(),
+               utils.GetEncapTypeString(self.EncapType))
 
     def GetGrpcCreateMessage(self):
         grpcmsg = device_pb2.DeviceRequest()
@@ -45,6 +47,16 @@ class DeviceObject(base.ConfigObjectBase):
         grpcmsg.Request.GatewayIP.V4Addr = int(self.GatewayAddr)
         grpcmsg.Request.MACAddr = self.MACAddr.getnum()
         return grpcmsg
+
+    def IsEncapTypeMPLS(self):
+        if self.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:
+            return True
+        return False
+
+    def IsEncapTypeVXLAN(self):
+        if self.EncapType == types_pb2.ENCAP_TYPE_VXLAN:
+            return True
+        return False
 
     def Show(self):
         logger.info("Device Object: %s" % self)

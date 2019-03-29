@@ -29,8 +29,10 @@ def GetInvalidMPLSTag(testcase, packet, args=None):
     return next(resmgr.InvalidMplsSlotIdAllocator)
 
 def __get_packet_encap_impl(obj, args):
-    if obj.Encap == types_pb2.ENCAP_TYPE_MPLSoUDP:
+    if obj.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:
         encap = 'ENCAP_MPLS2'
+    elif obj.EncapType == types_pb2.ENCAP_TYPE_VXLAN:
+        encap = 'ENCAP_VXLAN'
     else:
         assert 0
     return infra_api.GetPacketTemplate(encap)
@@ -38,7 +40,7 @@ def __get_packet_encap_impl(obj, args):
 # This can be called for packets to switch or from switch
 def GetPacketEncapFromMapping(testcase, packet, args=None):
     encaps = []
-    encaps.append(__get_packet_encap_impl(testcase.config.remotemapping, args))
+    encaps.append(__get_packet_encap_impl(testcase.config.localmapping, args))
     return encaps
 
 

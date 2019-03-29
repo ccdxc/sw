@@ -33,6 +33,8 @@ RemoteMplsInternetTunAllocator = None
 RemoteMplsVnicTunAllocator = None
 PublicIpAddressAllocator = ipaddress.IPv4Network('200.0.0.0/24').hosts()
 PublicIpv6AddressAllocator = ipaddress.IPv6Network('eeee:0:0:0::/64').hosts()
+IGWVxlanIdAllocator = iter(irange(50001, 51024))
+VxlanIdAllocator = iter(irange(80001, 81024))
 
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'
@@ -66,13 +68,13 @@ def CreateIpv6AddrPool(subnet):
 
 def CreateMplsInternetTunnels():
     global RemoteMplsInternetTunAllocator
-    objs = Store.GetTunnelsMplsOverUdp1()
+    objs = Store.GetIgwTunnels()
     if len(objs) != 0:
         RemoteMplsInternetTunAllocator = utils.rrobiniter(objs)
 
 def CreateMplsVnicTunnels():
     global RemoteMplsVnicTunAllocator
-    objs = Store.GetTunnelsMplsOverUdp2()
+    objs = Store.GetWorkloadTunnels()
     if len(objs) != 0:
         RemoteMplsVnicTunAllocator = utils.rrobiniter(objs)
 
@@ -80,6 +82,11 @@ def CreateMplsVnicTunnels():
 def  CreateRemoteVnicMplsSlotAllocator():
     mplsbase = 20000
     return iter(irange(mplsbase,mplsbase + 1027)) # 1M Remote Mappings/1022 Teps
+
+# The below function will be called for every Remote TEP
+def  CreateRemoteVnicVxlanIdAllocator():
+    vxlanbase = 30000
+    return iter(irange(vxlanbase,vxlanbase + 1027)) # 1M Remote Mappings/1022 Teps
 
 # Starts VPC prefixes from 10/8 to 42/8
 VPC_V4_PREFIX_BASE=10

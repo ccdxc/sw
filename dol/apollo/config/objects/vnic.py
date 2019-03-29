@@ -23,7 +23,7 @@ class VnicObject(base.ConfigObjectBase):
         self.MACAddr =  resmgr.VnicMacAllocator.get()
         self.VlanId = next(resmgr.VnicVlanIdAllocator)
         self.MplsSlot = next(resmgr.VnicMplsSlotIdAllocator)
-        self.Encap = utils.GetEncapType(spec.encap)
+        self.Vnid = next(resmgr.VxlanIdAllocator)
         self.SourceGuard = False
         c = getattr(spec, 'srcguard', None)
         if c != None:
@@ -52,8 +52,11 @@ class VnicObject(base.ConfigObjectBase):
         spec.MACAddress = self.MACAddr.getnum()
         spec.ResourcePoolId = 0 # TODO, Need to allocate and use
         spec.SourceGuardEnable = self.SourceGuard
-        spec.Encap.type = self.Encap
-        spec.Encap.value.MPLSTag  = self.MplsSlot # TODO vxlan support
+        spec.Encap.type = Store.GetDevice().EncapType
+        if Store.IsDeviceEncapTypeMPLS():
+            spec.Encap.value.MPLSTag  = self.MplsSlot
+        else:
+            spec.Encap.value.Vnid = self.Vnid
         return grpcmsg
 
     def Show(self):

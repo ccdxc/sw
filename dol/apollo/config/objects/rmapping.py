@@ -22,9 +22,9 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.GID('RemoteMapping%d'%self.MappingId)
         self.SUBNET = parent
         self.MACAddr = resmgr.RemoteMappingMacAllocator.get()
-        self.Encap = utils.GetEncapType(spec.encap)
         self.TunIPAddr = tunobj.RemoteIPAddr
         self.MplsSlot =  next(tunobj.RemoteVnicMplsSlotIdAllocator)
+        self.Vnid = next(tunobj.RemoteVnicVxlanIdAllocator)
         if ipversion == utils.IP_VERSION_6:
             self.IPAddr = parent.AllocIPv6Address();
             self.AddrFamily = 'IPV6'
@@ -55,8 +55,11 @@ class RemoteMappingObject(base.ConfigObjectBase):
         spec.SubnetId = self.SUBNET.SubnetId
         spec.TunnelId = int(self.TunIPAddr)
         spec.MACAddr = self.MACAddr.getnum()
-        spec.Encap.type = self.Encap
-        spec.Encap.value.MPLSTag  = self.MplsSlot
+        spec.Encap.type =  Store.GetDevice().EncapType
+        if Store.IsDeviceEncapTypeMPLS():
+            spec.Encap.value.MPLSTag  = self.MplsSlot
+        else:
+            spec.Encap.value.Vnid  = self.Vnid
         return grpcmsg
 
     def Show(self):
