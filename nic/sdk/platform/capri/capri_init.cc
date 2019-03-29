@@ -208,6 +208,13 @@ capri_cache_init (capri_cfg_t *cfg)
 }
 
 
+static sdk_ret_t
+capri_prd_init()
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pr_csr_t &pr_csr = cap0.pr.pr;
+    cap_pt_csr_t &pt_csr = cap0.pt.pt;
+
 /*
  * ASIC teams wants to disable Error recovery of Seq ID check pRDMA,
  * as this recovery path is not tested thoroughly, and we might be
@@ -215,16 +222,32 @@ capri_cache_init (capri_cfg_t *cfg)
  * Disabling from SDK for now, but Helen will commit this
  * into prd_asic_init api called from SDK, then this will be removed
  */
-static sdk_ret_t
-capri_prd_init()
-{
-    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
-    cap_pr_csr_t &pr_csr = cap0.pr.pr;
-
     pr_csr.prd.cfg_ctrl.read();
     pr_csr.prd.cfg_ctrl.pkt_phv_sync_err_recovery_en(0);
     pr_csr.prd.cfg_ctrl.write();
     SDK_TRACE_DEBUG("Disabled pkt_phv_sync_err_recovery_en in pr_prd_cfg_ctrl");
+
+
+/*
+ * Workaround for TxDMA stuck on recirc issue -
+ * If a recirc packet hits PDMA when the pipeline is full, the pipeline gets stuck 
+ * since there is an XOFF from stage0 preventing the recirc packet from re-entering 
+ * the pipeline. This XOFF to recirc packet will in-turn back-pressure the pipeline 
+ * resulting in a deadlock. Workaround for this is to bring down the max-number-of-phv 
+ * setting in P4+ thereby creating more room in pipeline. 
+ * Programming it to 84 in both TxDMA/RxDMA for now which is holding up for RDMA. 
+ * ASIC team is working on the right number to tune this.
+ */
+
+    pr_csr.prd.cfg_xoff.read();
+    pr_csr.prd.cfg_xoff.numphv_thresh(84);
+    pr_csr.prd.cfg_xoff.write();
+
+    pt_csr.ptd.cfg_xoff.read();
+    pt_csr.ptd.cfg_xoff.numphv_thresh(84);
+    pt_csr.ptd.cfg_xoff.write();
+    SDK_TRACE_DEBUG("Programmed numphv_thresh to 84 in pr_prd_cfg_xoff/pt_ptd_cfg_xoff");
+    
     return SDK_RET_OK;
 }
 
