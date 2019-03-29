@@ -336,47 +336,62 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   }
 
   deleteUser_with_staging( deletedUser: AuthUser) {
-      this.createStagingBuffer().subscribe(
-        responseBuffer => {
-          const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
-          const buffername = createdBuffer.meta.name;
-          const observables: Observable<any>[] = [];
-          observables.push(this._authService.DeleteUser(deletedUser.meta.name, buffername));
-          const username = deletedUser.meta.name;
-          this.authRoleBindings.forEach((rolebinding) => {
-            this.rolebindingUpdateMap[rolebinding.meta.name] = false;
-            const observable = this.removeUserFromRolebing(rolebinding, username, buffername);
-            if (observable != null) {
-              observables.push(observable);
-            }
-          });
-          forkJoin(observables).subscribe(results => {
-            const isAllOK = Utility.isForkjoinResultAllOK(results);
-            if (isAllOK) {
-              this.commitStagingBuffer(buffername).subscribe(
-                responseCommitBuffer => {
-                  this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' User ' + deletedUser.meta.name);
-                  this.creationUserFormClose(true);
+    const msgFailedToDeleteUser = 'Failed to delete user';
+    this.createStagingBuffer().subscribe(
+      responseBuffer => {
+        const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
+        const buffername = createdBuffer.meta.name;
+        const observables: Observable<any>[] = [];
+        // update all role-bindings which have references to deletd-user
+        const username = deletedUser.meta.name;
+        this.authRoleBindings.forEach((rolebinding) => {
+          this.rolebindingUpdateMap[rolebinding.meta.name] = false;
+          const observable = this.removeUserFromRolebing(rolebinding, username, buffername);
+          if (observable != null) {
+            observables.push(observable);
+          }
+        });
+        forkJoin(observables).subscribe(results => {
+          const isAllOK = Utility.isForkjoinResultAllOK(results);
+          if (isAllOK) {
+             // delete user after rele-binding update done
+            this._authService.DeleteUser(deletedUser.meta.name, buffername).subscribe (
+                (deleteUserResponse) => {
+                  this.commitStagingBuffer(buffername).subscribe(
+                    responseCommitBuffer => {
+                      this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' User ' + deletedUser.meta.name);
+                      this.creationUserFormClose(true);
+                    },
+                    error => {
+                      // ('Fail to commit Buffer');
+                      this.invokeRESTErrorToaster('Failed to commit Buffer', error);
+                    }
+                  );
                 },
-                error => {
-                  console.error('Fail to commit Buffer');
-                  this.invokeRESTErrorToaster('Failed to commit Buffer', error);
+                (error) => {
+                  // ('Fail to delete user');
+                  this.invokeRESTErrorToaster('Failed to commit buffer when deleting user ', error);
+                  this.deleteStagingBuffer(buffername, msgFailedToDeleteUser, false);
                 }
-              );
-            } else {
-              this.deleteStagingBuffer(buffername, 'Failed to delete user ' + deletedUser.meta.name);
-            }
-          },
-          (error) => {
-            this.invokeRESTErrorToaster('Failed to commit buffer when deleting user ', error);
-            this.deleteStagingBuffer(buffername, 'Failed to delete user', false);
-          });
+            );
+          } else {
+            // ('Fail to update role-binding');
+            this.deleteStagingBuffer(buffername, msgFailedToDeleteUser + ' ' + deletedUser.meta.name);
+          }
         },
-        error => {
-          this.invokeRESTErrorToaster('Create Buffer Failed When Deleting User ' + deletedUser.meta.name, error);
-        }
-      );
-  }
+        (error) => {
+          this.invokeRESTErrorToaster('Failed to commit buffer when deleting user ', error);
+          this.deleteStagingBuffer(buffername, msgFailedToDeleteUser, false);
+        });
+      },
+      error => {
+        // ('Fail to create buffer');
+        this.invokeRESTErrorToaster('Create Buffer Failed When Deleting User ' + deletedUser.meta.name, error);
+      }
+    );
+}
+
+
 
   deleteStagingBuffer(buffername: string, reason: string, isToshowToaster: boolean = true) {
     this.stagingService.DeleteBuffer(buffername).subscribe(

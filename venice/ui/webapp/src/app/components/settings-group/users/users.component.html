@@ -115,7 +115,7 @@
                 <div class="usertemplate-div-card-icon-buttons-div" *ngIf="!isRoleEditMode(role)">
                     <div class="usertemplate-div-card-icon-div-edit" *ngIf="showEditRoleButton(role)">
                         <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button">
-                            <mat-icon [matTooltip]="'Update Role'" Save user changeclass="usertemplate-div-card-icon-button" (click)="onEditRole($event, role)">edit</mat-icon>
+                            <mat-icon [matTooltip]="'Update Role'" class="usertemplate-div-card-icon-button" (click)="onEditRole($event, role)">edit</mat-icon>
                         </button>
                     </div>
                     <div class="usertemplate-div-card-icon-div-delete" *ngIf="showDeleteRoleButton(role)">

@@ -16,6 +16,7 @@ import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec, Tele
 import { ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 @Component({
   selector: 'app-naplesdetail',
@@ -83,8 +84,9 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     private _route: ActivatedRoute,
     protected clusterService: ClusterService,
     protected metricsqueryService: MetricsqueryService,
+    protected UIConfigService: UIConfigsService
   ) {
-    super(_controllerService, null);
+    super(_controllerService, UIConfigService);
   }
 
   ngOnInit() {

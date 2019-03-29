@@ -108,14 +108,17 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
    *        create buffer
    *        if (success)
    *           add user
-   *           add “joeblow” to  operator_rolebinding.user[] list
-   *           add “joeblow” to  support_rolebinding.user[] list
+   *            if (success)
+   *                add “joeblow” to  operator_rolebinding.user[] list
+   *                add “joeblow” to  support_rolebinding.user[] list
+   *
    *          if (success)
    *             commit buffer
    *           else
    *             delete buffer
    */
   addUser_with_staging() {
+    const msgFailToAddUser = 'Failed to create user';
     const newUser = this.newAuthUser.getFormGroupValues();
     this.createStagingBuffer().subscribe(
       responseBuffer => {
@@ -123,43 +126,47 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
         const buffername = createdBuffer.meta.name;
         const observables: Observable<any>[] = [];
         const username = newUser.meta.name;
-        observables.push(this._authService.AddUser(newUser, buffername));
-        this.selectedRolebindingsForUsers.forEach((rolebinding) => {
-          this.rolebindingUpdateMap[rolebinding.meta.name] = false;
-          const observabe = this.addUserToRolebindings(rolebinding, username, buffername);
-          if (observabe) {
-            observables.push(observabe);
-          }
-        });
-        forkJoin(observables).subscribe(results => {
-          const isAllOK = Utility.isForkjoinResultAllOK(results);
-          if (isAllOK) {
-            this.commitStagingBuffer(buffername).subscribe(
-              responseCommitBuffer => {
-                this.invokeSuccessToaster('Successful', ACTIONTYPE.CREATE + ' User ' + newUser.meta.name);
-                this.formClose.emit(true);
-              },
-              error => {
-                console.error('Failed to commit Buffer', error);
-                this.invokeRESTErrorToaster('Failed to commit buffer when adding user ', error);
+        // we have to wait user is created before updating role-binding
+        this._authService.AddUser(newUser, buffername).subscribe(
+          (user) => {
+            this.selectedRolebindingsForUsers.forEach((rolebinding) => {
+              this.rolebindingUpdateMap[rolebinding.meta.name] = false;
+              const observabe = this.addUserToRolebindings(rolebinding, username, buffername);
+              if (observabe) {
+                observables.push(observabe);
+              }
+            });
+            forkJoin(observables).subscribe(results => {
+              const isAllOK = Utility.isForkjoinResultAllOK(results);
+              if (isAllOK) {
+                this.commitStagingBuffer(buffername).subscribe(
+                  responseCommitBuffer => {
+                    this.invokeSuccessToaster('Successful', ACTIONTYPE.CREATE + ' User ' + newUser.meta.name);
+                    this.formClose.emit(true);
+                  },
+                  error => {
+                    console.error('Failed to commit Buffer', error);
+                    this.invokeRESTErrorToaster('Failed to commit buffer when adding user ', error);
+                  }
+                );
+              } else {
+                this.deleteStagingBuffer(buffername, msgFailToAddUser);
+              }
+            },
+              (error) => {
+                this.deleteStagingBuffer(buffername, msgFailToAddUser);
               }
             );
-          } else {
-            this.deleteStagingBuffer(buffername, 'Failed to add user');
-          }
-        },
+          },
           (error) => {
-            this.invokeRESTErrorToaster('Failed to commit buffer when adding user ', error);
-            this.deleteStagingBuffer(buffername, 'Failed to add user', false);
+                this.deleteStagingBuffer(buffername, msgFailToAddUser);
+
           }
         );
       },
       this.restErrorHandler('Failed to create commit buffer when adding user')
     );
   }
-
-
-
 
   /**
    * Override super.api(..)
