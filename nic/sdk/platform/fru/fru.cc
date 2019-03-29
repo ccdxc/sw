@@ -134,7 +134,7 @@ static int initFru()
     fru = (fru_data_t *)buffer;
     if (validatefru(fru) == FALSE) {
         // unable to validate FRU exiting
-        cout << "Unable to validate FRU, exiting." << endl;
+        SDK_TRACE_DEBUG("Unable to validate FRU, exiting.");
         return -1;
     }
 
@@ -153,7 +153,7 @@ static int readfile(string Filename)
         boost::property_tree::read_json(Filename, input);
     }
     catch (std::exception const &ex) {
-        cout << ex.what() << endl;
+        SDK_TRACE_DEBUG("%s",ex.what());
         return -1;
     }
     return 0;

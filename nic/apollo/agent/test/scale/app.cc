@@ -197,7 +197,6 @@ batch_start_grpc (void)
     populate_batch_spec(&spec, &params);
     
     /* Batch start */
-    printf("%s: Batch start\n", __FUNCTION__);
     ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);
     if (!ret_status.ok()) {
         printf("%s: failed!\n", __FUNCTION__);
@@ -216,14 +215,12 @@ batch_commit_grpc (void)
     types::Empty        response;
     Status              ret_status;
 
-    printf("%s: Batch commit START\n", __FUNCTION__);
     /* Batch commit */
     ret_status = g_batch_stub_->BatchCommit(&commit_context, empty_spec, &response);
     if (!ret_status.ok()) {
         printf("%s: Batch commit failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    printf("%s: Batch commit DONE!\n", __FUNCTION__);
     return SDK_RET_OK;
 }
 

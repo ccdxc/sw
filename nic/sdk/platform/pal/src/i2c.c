@@ -30,13 +30,13 @@ static int pal_i2c_read(const uint8_t *buffer, uint32_t size,
 
     snprintf(filename, 64, "%s%d", I2C_NODE, bus);
     if ((fd = open(filename, O_RDWR)) < 0) {
-        printf("Failed to open the i2c bus, try again.\n");
+        pal_mem_trace("Failed to open the i2c bus, try again.\n");
         return -1;
     }
 
     for (i = 0; i < nretry; i++) {
         if (ioctl(fd, I2C_SLAVE_FORCE, slaveaddr) < 0) {
-            printf("Failed to acquire bus access and/or talk to slave.\n");
+            pal_mem_trace("Failed to acquire bus access and/or talk to slave.\n");
             continue;
         }
         msgs[0].addr = slaveaddr;
@@ -53,7 +53,7 @@ static int pal_i2c_read(const uint8_t *buffer, uint32_t size,
         msgset[0].nmsgs = 2;
 
         if (ioctl(fd, I2C_RDWR, &msgset) < 0) {
-            printf("ioctl(I2C_RDWR) in i2c_read_offset failed\n");
+            pal_mem_trace("ioctl(I2C_RDWR) in i2c_read_offset failed\n");
             continue;
         }
         close(fd);
@@ -80,13 +80,13 @@ static int pal_i2c_write(const uint8_t *buffer, uint32_t size,
 
     snprintf(filename, 64, "%s%d", I2C_NODE, bus);
     if ((fd = open(filename, O_RDWR)) < 0) {
-        printf("Failed to open the i2c bus, try again.\n");
+        pal_mem_trace("Failed to open the i2c bus, try again.\n");
         return -1;
     }
 
     for (i = 0; i < nretry; i++) {
         if (ioctl(fd, I2C_SLAVE_FORCE, slaveaddr) < 0) {
-            printf("Failed to acquire bus access and/or talk to slave.\n");
+            pal_mem_trace("Failed to acquire bus access and/or talk to slave.\n");
             continue;
         }
     
@@ -99,7 +99,7 @@ static int pal_i2c_write(const uint8_t *buffer, uint32_t size,
         msgset[0].nmsgs = 1;
 
         if (ioctl(fd, I2C_RDWR, &msgset) < 0) {
-            printf("ioctl(I2C_RDWR) in i2c_write failed\n");
+            pal_mem_trace("ioctl(I2C_RDWR) in i2c_write failed\n");
             continue;
         }
 
@@ -113,7 +113,7 @@ static int pal_i2c_write(const uint8_t *buffer, uint32_t size,
 int pal_fru_read(const uint8_t *buffer, uint32_t size, uint32_t nretry)
 {
     if (size != FRU_SIZE) {
-        printf("Buffer is not of the right size \n");
+        pal_mem_trace("Buffer is not of the right size \n");
         return -1;
     }
     return pal_i2c_read(buffer, FRU_SIZE, 0, nretry, I2C_BUS, FRU_SLAVE_ADDRESS);

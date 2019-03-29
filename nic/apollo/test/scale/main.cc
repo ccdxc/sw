@@ -389,6 +389,7 @@ TEST_F(scale_test, scale_test_create)
 #ifdef SIM
     send_packet();
 #endif
+    printf("DONE pushing configs!\n");
 
     if (g_daemon_mode) {
         printf("Entering forever loop ...\n");

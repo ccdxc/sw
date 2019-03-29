@@ -2,5 +2,6 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = libsdkfru.so
+MODULE_SOLIBS = logger
 MODULE_ARCH = aarch64
 include ${MKDEFS}/post.mk

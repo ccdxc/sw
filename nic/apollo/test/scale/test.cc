@@ -135,7 +135,6 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subne
         }
 
 #ifdef TEST_GRPC_APP
-        printf("V6-Route table: %d\n", i);
         rv = create_route_table_grpc(&v6route_table);
         if (rv != SDK_RET_OK) {
             return rv;
@@ -207,7 +206,6 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
         }
 #ifdef TEST_GRPC_APP
-        printf("V4-Route table: %d\n", i);
         rv = create_route_table_grpc(&route_table);
         if (rv != SDK_RET_OK) {
             return rv;
