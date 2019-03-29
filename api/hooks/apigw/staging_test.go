@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/staging"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
 	"github.com/pensando/sw/venice/globals"
@@ -105,6 +106,14 @@ func TestStagingUserContextHookRegistration(t *testing.T) {
 		prof, err := svc.GetServiceProfile(method)
 		AssertOk(t, err, "error getting service profile for method [%s]", method)
 		Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre-call hooks [%d] for method [%s]", len(prof.PreCallHooks()), method))
+	}
+	ids := []serviceID{
+		{"Buffer", apiintf.GetOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		AssertOk(t, err, "error getting service profile for [%s] [%s]", id.kind, id.action)
+		Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre-call hooks [%d] for [%s] [%s] profile", len(prof.PreCallHooks()), id.kind, id.action))
 	}
 	// test error
 	svc = mocks.NewFakeAPIGwService(l, true)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/staging"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -58,6 +59,7 @@ func (s *stagingHooks) userContext(ctx context.Context, in interface{}) (context
 	s.logger.DebugLog("msg", "APIGw userContext pre-call hook called for staging buffer commit")
 	switch in.(type) {
 	case *staging.CommitAction:
+	case *staging.Buffer:
 	default:
 		return ctx, in, true, errors.New("invalid input type")
 	}
@@ -84,6 +86,16 @@ func (s *stagingHooks) registerUserContextHook(svc apigw.APIGatewayService) erro
 	methods := []string{"Commit"}
 	for _, method := range methods {
 		prof, err := svc.GetServiceProfile(method)
+		if err != nil {
+			return err
+		}
+		prof.AddPreCallHook(s.userContext)
+	}
+	ids := []serviceID{
+		{"Buffer", apiintf.GetOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
 		if err != nil {
 			return err
 		}

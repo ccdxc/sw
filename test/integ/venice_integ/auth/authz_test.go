@@ -539,6 +539,11 @@ func TestCommitBuffer(t *testing.T) {
 			"",
 			auth.Permission_AllActions.String()))
 	MustCreateRoleBindingWithCtx(ctx, stagecl, "NetworkAdminRoleBinding", globals.DefaultTenant, "NetworkAdminRole", []string{testUser}, nil)
+	var buf *staging.Buffer
+	AssertEventually(t, func() (bool, interface{}) {
+		buf, err = tinfo.restcl.StagingV1().Buffer().Get(ctx, &api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant})
+		return err == nil && buf.Status.ValidationResult != "FAILED", err
+	}, fmt.Sprintf("expected buffer validation to succeed: %#v", buf))
 	ca := staging.CommitAction{}
 	ca.Name = "TestBuffer"
 	ca.Tenant = globals.DefaultTenant
