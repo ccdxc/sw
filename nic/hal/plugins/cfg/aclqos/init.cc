@@ -212,6 +212,27 @@ hal_eplearn_acl_config_init (void)
         spec.Clear();
         match = spec.mutable_match();
         action = spec.mutable_action();
+        *action = arp_action;
+        spec.mutable_key_or_handle()->set_acl_id(acl_id++);
+        spec.set_priority(priority++);
+
+        match->mutable_eth_selector()->set_eth_type(ETH_TYPE_RARP);
+        match->mutable_eth_selector()->set_eth_type_mask(0xffff);
+        match->mutable_internal_key()->set_flow_miss(true);
+        match->mutable_internal_mask()->set_flow_miss(true);
+        match->mutable_internal_key()->set_no_drop(true);
+        match->mutable_internal_mask()->set_no_drop(true);
+
+        ret = hal::acl_create(spec, &rsp);
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
+            return ret;
+        }
+    }
+
+    {
+        spec.Clear();
+        match = spec.mutable_match();
+        action = spec.mutable_action();
         *action = dhcp_action;
         spec.mutable_key_or_handle()->set_acl_id(acl_id++);
         spec.set_priority(priority++);

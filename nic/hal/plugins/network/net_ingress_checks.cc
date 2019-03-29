@@ -61,10 +61,13 @@ update_src_if(fte::ctx_t&ctx)
     if_t *sif;
 
     if (broadcast_pkt || 
-        (hal::g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED && mcast_dmac)) {
+        ((hal::g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED)
+          && mcast_dmac)) {
         return HAL_RET_OK;
     }
 
+    // Drop Multicast packets 
+    // for smart switch mode
     if (mcast_dmac) {
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
         flowupd.action = session::FLOW_ACTION_DROP;

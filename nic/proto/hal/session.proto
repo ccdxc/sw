@@ -132,15 +132,19 @@ message FlowInfo {
   FlowAction                         flow_action                  = 1;     // flow action(s)
   uint32                             flow_age                     = 2;     // Flow Age
   uint32                             time_to_age                  = 3;     // Remaining timeout for flow aging to kick in
-  NatType                            nat_type                     = 4;     // NAT mode
-  types.IPAddress                    nat_sip                      = 5;     // source IP to NAT to
-  uint32                             nat_sport                    = 6;     // source port to NAT to
-  types.IPAddress                    nat_dip                      = 7;     // destination IP to NAT to
-  uint32                             nat_dport                    = 8;     // dstination port to NAT to
-  fixed64                            nat_dmac                     = 9;     // For DSR
-  FlowTCPState                       tcp_state                    = 10;     // TCP state, if any
-  repeated kh.MirrorSessionKeyHandle ing_mirror_sessions          = 11  [(gogoproto.moretags) = "venice:constraints={range:0-7}"]; // list of mirror destinations
-  repeated kh.MirrorSessionKeyHandle egr_mirror_sessions          = 12 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];// list of mirror destinations
+  uint64                             last_packet_seen_time        = 4;     // Last packet seen by P4 in nano seconds
+  NatType                            nat_type                     = 5;     // NAT mode
+  types.IPAddress                    nat_sip                      = 6;     // source IP to NAT to
+  uint32                             nat_sport                    = 7;     // source port to NAT to
+  types.IPAddress                    nat_dip                      = 8;     // destination IP to NAT to
+  uint32                             nat_dport                    = 9;     // dstination port to NAT to
+  fixed64                            nat_dmac                     = 10;    // For DSR
+  FlowTCPState                       tcp_state                    = 11;    // TCP state, if any
+  FlowTCPState                       hal_tcp_state                = 12;    // TCP state in hal
+  bool                               source_lif_check_enable      = 13;    // Is expected source lif check programmed ?
+  uint32                             expected_source_lif          = 14;    // Expected source lif for the flow. 
+  repeated kh.MirrorSessionKeyHandle ing_mirror_sessions          = 15  [(gogoproto.moretags) = "venice:constraints={range:0-7}"]; // list of mirror destinations
+  repeated kh.MirrorSessionKeyHandle egr_mirror_sessions          = 16 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];// list of mirror destinations
 }
 
 message ConnTrackExceptions {

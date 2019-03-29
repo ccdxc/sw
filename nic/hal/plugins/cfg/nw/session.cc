@@ -430,21 +430,6 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
         session->dep_handle = dep->hal_handle;
     }
 
-    dllist_reset(&session->sif_session_lentry);
-    if (sif) {
-        SDK_SPINLOCK_LOCK(&sif->slock);
-        // sdk::lib::dllist_add(&sif->session_list_head, &session->sif_session_lentry);
-        SDK_SPINLOCK_UNLOCK(&sif->slock);
-    }
-
-    dllist_reset(&session->dif_session_lentry);
-    if (dif && sif != dif) {
-        SDK_SPINLOCK_LOCK(&dif->slock);
-        // sdk::lib::dllist_add(&dif->session_list_head,
-        //                  &session->dif_session_lentry);
-        SDK_SPINLOCK_UNLOCK(&dif->slock);
-    }
-
     return HAL_RET_OK;
 }
 
@@ -727,6 +712,9 @@ session_state_to_session_get_response (session_t *session,
     age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
+ 
+    response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_last_packet_seen_time(session_state->iflow_state.last_pkt_ts);
 
     // Flow remaining inactivity timeout
     session_timeout = session_aging_timeout(session, session->iflow, session->rflow);
@@ -743,7 +731,19 @@ session_state_to_session_get_response (session_t *session,
 
     // TCP state
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
-              mutable_flow_info()->set_tcp_state(session_state->iflow_state.state); 
+              mutable_flow_info()->set_tcp_state(session_state->iflow_state.state);
+    response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_hal_tcp_state(session->iflow->state);
+
+    response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_source_lif_check_enable(
+                (session->iflow->pgm_attrs.expected_src_lif_en)?true:false);
+
+    if (session->iflow->pgm_attrs.expected_src_lif_en) {
+        response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_expected_source_lif(
+                   session->iflow->pgm_attrs.expected_src_lif);
+    }
 
     flow_state_to_flow_stats_response(&session->iflow->stats, &session_state->iflow_state,
          response->mutable_stats()->mutable_initiator_flow_stats());
@@ -759,6 +759,8 @@ session_state_to_session_get_response (session_t *session,
         age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
         response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
+        response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+           mutable_flow_info()->set_last_packet_seen_time(session_state->rflow_state.last_pkt_ts);
         // Flow remaining inactivity timeout
         if (!session_timeout) {
             response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
@@ -774,6 +776,18 @@ session_state_to_session_get_response (session_t *session,
         // TCP state
         response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_tcp_state(session_state->rflow_state.state);
+        response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_hal_tcp_state(session->rflow->state);
+
+        response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_source_lif_check_enable(
+                (session->rflow->pgm_attrs.expected_src_lif_en)?true:false);
+
+        if (session->rflow->pgm_attrs.expected_src_lif_en) {
+            response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+                 mutable_flow_info()->set_expected_source_lif(
+                           session->rflow->pgm_attrs.expected_src_lif);
+        }
 
         flow_state_to_flow_stats_response(&session->rflow->stats, &session_state->rflow_state,
                 response->mutable_stats()->mutable_responder_flow_stats());
@@ -2447,14 +2461,10 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
         return;
     }
 
-    HAL_TRACE_DEBUG("Session handle: {} IFlow State: {}", session_handle, state.iflow_state.state);
+    HAL_TRACE_DEBUG("Session handle: {} IFlow State: {}", 
+                     session_handle, state.iflow_state.state);
 
     session->tcp_cxntrack_timer = NULL;
-
-    if (session->iflow)
-        session->iflow->state = state.iflow_state.state;
-    if (session->rflow)
-        session->rflow->state = state.rflow_state.state;
 
     // If we havent received bidir FIN by now then we go ahead and cleanup
     // the session

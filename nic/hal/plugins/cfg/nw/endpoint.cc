@@ -16,6 +16,7 @@
 #include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
+#include "nic/include/fte.hpp"
 
 namespace hal {
 
@@ -1138,22 +1139,19 @@ ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
     dllist_ctxt_t                   *curr, *next;
     hal_handle_id_list_entry_t      *entry = NULL;
     session_t                       *session = NULL;
-    ep_fte_event_t                  fte_event;
     hal_ret_t                       ret = HAL_RET_OK;
 
-    memset(&fte_event, 0, sizeof(ep_fte_event_t));
-
-    fte_event.type          = EP_FTE_EVENT_IF_CHANGE;
-    fte_event.old_if_handle = ep->if_handle;
-    fte_event.new_if_handle = new_if_handle;
-
+    HAL_TRACE_DEBUG("Received IF change notification for ep: {}", ep->hal_handle);
+ 
     // Walk though session list and call FTE provided API
     dllist_for_each_safe(curr, next, &ep->session_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        HAL_TRACE_DEBUG("Session: {}", entry->handle_id);
         session = find_session_by_handle(entry->handle_id);
-        HAL_ABORT(session != NULL);
-        // TODO: vmotion: Call FTE API to handle
-        // ret = fte_handle_if_change(session, ep, &fte_event);
+        SDK_ASSERT(session != NULL);
+        // TODO: Walk few more at a time to converge
+        // faster
+        ret = fte::session_update_async(session);
     }
 
     return ret;
@@ -1251,6 +1249,25 @@ ep_copy_ip_list (ep_t *dst_ep, ep_t *src_ep)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+ep_copy_session_list (ep_t *dst_ep, ep_t *src_ep)
+{
+    dllist_ctxt_t                   *curr, *next;
+    hal_handle_id_list_entry_t      *entry = NULL;
+
+    sdk::lib::dllist_reset(&dst_ep->session_list_head);
+    // Walk though session list and call FTE provided API
+    dllist_for_each_safe(curr, next, &src_ep->session_list_head) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        HAL_TRACE_DEBUG("copying to clone session handle {}", entry->handle_id);
+        // Remove from list
+        sdk::lib::dllist_del(&entry->dllist_ctxt);
+        sdk::lib::dllist_add(&dst_ep->session_list_head, &entry->dllist_ctxt);
+    }
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // After all hw programming is done
 //  1. Free original PI & PD endpoint
@@ -1281,6 +1298,9 @@ endpoint_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_copy_ip_list(ep_clone, ep);
     endpoint_update_pi_with_iplist(ep_clone, app_ctxt->add_iplist,
                                    app_ctxt->del_iplist);
+
+    // Copy the session list
+    ep_copy_session_list(ep_clone, ep);
 
     // Free PD
     pd::pd_ep_mem_free_args_init(&pd_ep_args);

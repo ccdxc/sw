@@ -130,7 +130,7 @@ static void
 process_tcp_close(fte::ctx_t& ctx)
 {
     const fte::cpu_rxhdr_t  *cpu_rxhdr = ctx.cpu_rxhdr();
-    uint8_t                  tcp_flags;
+     int8_t                  tcp_flags;
     session::FlowTCPState    state;
     hal::flow_role_t         role = (ctx.is_flow_swapped())?\
                          hal::FLOW_ROLE_RESPONDER:hal::FLOW_ROLE_INITIATOR;
@@ -159,9 +159,11 @@ process_tcp_close(fte::ctx_t& ctx)
                  ctx.session()->iflow->state == session::FLOW_TCP_STATE_FIN_RCVD) ||
 		(role == hal::FLOW_ROLE_INITIATOR &&
                  ctx.session()->rflow->state == session::FLOW_TCP_STATE_FIN_RCVD))) {
-            // Update the initiator 
-            role = hal::FLOW_ROLE_INITIATOR;
             state = session::FLOW_TCP_STATE_BIDIR_FIN_RCVD;
+            if (role == hal::FLOW_ROLE_INITIATOR) 
+                session_set_tcp_state(ctx.session(), hal::FLOW_ROLE_RESPONDER, state);
+            else
+                session_set_tcp_state(ctx.session(), hal::FLOW_ROLE_INITIATOR, state);
     } else {
         return;
     }
