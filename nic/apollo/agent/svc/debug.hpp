@@ -17,6 +17,8 @@ using pds::ClockFrequencyResponse;
 using types::Empty;
 using pds::SystemTemperatureGetResponse;
 using pds::SystemPowerGetResponse;
+using pds::TraceRequest;
+using pds::TraceResponse;
 
 class DebugSvcImpl final : public DebugSvc::Service {
 public:
@@ -27,6 +29,8 @@ public:
                                 pds::SystemTemperatureGetResponse *rsp) override;
     Status SystemPowerGet(ServerContext *context, const Empty *req,
                           pds::SystemPowerGetResponse *rsp) override;
+    Status TraceUpdate(ServerContext *context, const pds::TraceRequest *req,
+                       pds::TraceResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

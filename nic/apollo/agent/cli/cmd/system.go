@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	clockFreq uint32
+	clockFreq  uint32
+	traceLevel string
 )
 
 var systemDebugCmd = &cobra.Command{
@@ -33,14 +34,97 @@ var systemShowCmd = &cobra.Command{
 	Run:   systemShowCmdHandler,
 }
 
+var traceDebugCmd = &cobra.Command{
+	Use:   "trace",
+	Short: "set debug trace level",
+	Long:  "set debug trace level",
+	Run:   traceDebugCmdHandler,
+}
+
 func init() {
 	debugCmd.AddCommand(systemDebugCmd)
-	systemDebugCmd.Flags().Uint32VarP(&clockFreq, "clock-frequency", "c", 0, "Specify clock-frequency (Allowed: 833, 1100)")
+	systemDebugCmd.Flags().Uint32VarP(&clockFreq, "clock-frequency", "c", 0, "Specify clock-frequency (Allowed: 833, 900, 957, 1033, 1100)")
 	systemDebugCmd.MarkFlagRequired("clock-frequency")
 
 	showCmd.AddCommand(systemShowCmd)
 	systemShowCmd.Flags().Bool("power", false, "Show system power information")
 	systemShowCmd.Flags().Bool("temperature", false, "Show system power information")
+
+	debugCmd.AddCommand(traceDebugCmd)
+	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level (Allowed: none, error, debug)")
+}
+
+func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewDebugSvcClient(c)
+
+	var traceReq *pds.TraceRequest
+
+	if cmd.Flags().Changed("level") {
+		if isTraceLevelValid(traceLevel) != true {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+		traceReq = &pds.TraceRequest{
+			TraceLevel: inputToTraceLevel(traceLevel),
+		}
+	} else {
+		fmt.Printf("Argument required. Set level using '--level ...' flag\n")
+		return
+	}
+
+	// HAL call
+	resp, err := client.TraceUpdate(context.Background(), traceReq)
+	if err != nil {
+		fmt.Printf("Set trace level failed. %v\n", err)
+		return
+	}
+
+	// Print Trace Level
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+
+	fmt.Printf("Trace level set to %-12s\n", resp.GetTraceLevel())
+}
+
+func isTraceLevelValid(level string) bool {
+	switch level {
+	case "none":
+		return true
+	case "error":
+		return true
+	case "debug":
+		return true
+	default:
+		return false
+	}
+}
+
+func inputToTraceLevel(level string) pds.TraceLevel {
+	switch level {
+	case "none":
+		return pds.TraceLevel_TRACE_LEVEL_NONE
+	case "error":
+		return pds.TraceLevel_TRACE_LEVEL_ERROR
+	case "debug":
+		return pds.TraceLevel_TRACE_LEVEL_DEBUG
+	default:
+		return pds.TraceLevel_TRACE_LEVEL_NONE
+	}
 }
 
 func systemShowCmdHandler(cmd *cobra.Command, args []string) {

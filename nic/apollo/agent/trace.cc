@@ -42,4 +42,14 @@ trace_deinit (void)
     return;
 }
 
+//------------------------------------------------------------------------------
+// change trace level
+//------------------------------------------------------------------------------
+void
+trace_update (utils::trace_level_e trace_level)
+{
+    g_trace_logger->set_trace_level(trace_level);
+    return;
+}
+
 }    // namespace core

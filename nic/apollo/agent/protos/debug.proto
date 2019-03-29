@@ -15,6 +15,22 @@ service DebugSvc {
   rpc ClockFrequencyUpdate (ClockFrequencyRequest) returns (ClockFrequencyResponse) {}
   rpc SystemTemperatureGet (types.Empty) returns (SystemTemperatureGetResponse) {}
   rpc SystemPowerGet (types.Empty) returns (SystemPowerGetResponse) {}
+  rpc TraceUpdate (TraceRequest) returns (TraceResponse) {}
+}
+
+enum TraceLevel {
+  TRACE_LEVEL_NONE  = 0;    // no tracing at all
+  TRACE_LEVEL_ERROR = 1;    // enable tracing only for error messages
+  TRACE_LEVEL_DEBUG = 2;    // enable tracing only for debug messages
+}
+
+message TraceRequest {
+  TraceLevel trace_level = 1;    // trace level to set to
+}
+
+message TraceResponse {
+  types.ApiStatus ApiStatus  = 1;
+  TraceLevel      TraceLevel = 2;    // current trace level
 }
 
 message SystemTemperatureGetResponse {

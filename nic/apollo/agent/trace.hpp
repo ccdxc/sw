@@ -32,6 +32,8 @@ trace_level (void)
     return utils::trace_none;
 }
 
+void trace_update(utils::trace_level_e trace_level);
+
 }    // namespace core
 
 //------------------------------------------------------------------------------

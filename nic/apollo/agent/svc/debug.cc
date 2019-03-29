@@ -76,3 +76,30 @@ DebugSvcImpl::SystemPowerGet(ServerContext *context, const Empty *proto_req,
     proto_rsp->set_pout2(pow.pout2);
     return Status::OK;
 }
+
+Status
+DebugSvcImpl::TraceUpdate(ServerContext *context, const pds::TraceRequest *proto_req,
+                          pds::TraceResponse *proto_rsp) {
+    utils::trace_level_e trace_level;
+
+    switch (proto_req->trace_level()) {
+    case pds::TRACE_LEVEL_NONE:
+        trace_level = utils::trace_none;
+        break;
+    case pds::TRACE_LEVEL_DEBUG:
+        trace_level = utils::trace_debug;
+        break;
+    case pds::TRACE_LEVEL_ERROR:
+        trace_level = utils::trace_err;
+        break;
+    default:
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+        break;
+    }
+
+    core::trace_update(trace_level);
+    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    proto_rsp->set_tracelevel(proto_req->trace_level());
+    return Status::OK;
+}
