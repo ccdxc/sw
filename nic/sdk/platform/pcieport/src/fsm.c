@@ -209,6 +209,7 @@ pcieport_linkup(pcieport_t *p)
         return;
     }
     pcieport_set_crs(p, p->crs);
+    pcieport_config_linkup(p);
     pcieport_update_linkinfo(p);
     pcieport_event_linkup(p, ++p->stats.linkup);
 

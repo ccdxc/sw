@@ -107,7 +107,6 @@ typedef struct catalog_s {
     uint32_t                 mpu_trace_size;                    // MPU trace size
     uint64_t                 cores_mask;                        // mask of all control/data cores
     std::string              form_factor;                       // Form factor of the card
-    uint32_t                 num_pcie_lanes;                    // Number of PCIe lanes on card
     uint32_t                 cpld_id;                           // CPLD ID on this card
     uint32_t                 emmc_size;                         // eMMC size on card
     uint32_t                 memory_size;                       // Total Memory on card
@@ -121,6 +120,12 @@ typedef struct catalog_s {
     catalog_fp_port_t        fp_ports[MAX_FP_PORTS];            // per port information
     mac_profile_t            mac_profiles[MAC_MODE_MAX];        // MAC profiles
     mac_profile_t            mgmt_mac_profiles[MAC_MODE_MAX];   // MGMT MAC profiles
+
+    // pcie parameters
+    uint8_t                  pcie_hostport_mask;                // host ports enabled
+    uint8_t                  pcie_gen;                          // pcie speed gen 1-4
+    uint8_t                  pcie_width;                        // pcie lane width 1-16
+    uint16_t                 pcie_subdeviceid;                  // pcie subdevice id
 
     // serdes parameters
     aacs_info_t              aacs_info;                         // avago aacs info
@@ -202,6 +207,12 @@ public:
     uint32_t     glbl_mode_mgmt(mac_mode_t mac_mode);
     uint32_t     ch_mode_mgmt(mac_mode_t mac_mode, uint32_t ch);
 
+    // pcie configs
+    uint8_t      pcie_hostport_mask(void) { return catalog_db_.pcie_hostport_mask; }
+    uint8_t      pcie_gen(void) { return catalog_db_.pcie_gen; }
+    uint8_t      pcie_width(void) { return catalog_db_.pcie_width; }
+    uint16_t     pcie_subdeviceid(void) { return catalog_db_.pcie_subdeviceid; }
+
     // serdes configs
     uint32_t     jtag_id(void) { return catalog_db_.serdes_jtag_id;  }
     uint32_t     num_sbus_rings(void) { return catalog_db_.num_sbus_rings;  }
@@ -274,6 +285,9 @@ private:
     sdk_ret_t populate_mac_ch_profile(ch_profile_t *ch_profile,
                                       std::string  profile_str,
                                       ptree        &prop_tree);
+
+    // populate pcie settings
+    sdk_ret_t populate_pcie(ptree &prop_tree);
 
     // populate serdes configs
     sdk_ret_t populate_serdes(char *dir_name, ptree &prop_tree);

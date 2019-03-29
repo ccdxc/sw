@@ -5,7 +5,6 @@
     "mpu_trace_size" : "2048",
     "cores_mask": "0xf",
     "form_factor": "FHHL",
-    "num_pcie_lanes": "16",
     "emmc_size": "8",
     "memory_size": "8",
     "num_asics" : "1",
@@ -29,6 +28,13 @@
             ]
         }
     ],
+
+    "pcie" : {
+	"hostport_mask" : "0x1",
+	"gen"           : "4",
+	"width"         : "16",
+	"subdeviceid"   : "4000"
+    },
 
     "serdes" : {
         "fw"             : "serdes.0x1087_244D.rom",

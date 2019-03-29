@@ -88,6 +88,40 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
     }
 }
 
+/*
+ * Fill in VENDOR, SUBVENDOR, and SUBDEVICE ids from
+ * our configured defaults, if no values were provided.
+ */
+static void
+pciehw_cfg_set_default_ids(pciehcfg_t *pcfg, cfgspace_t *cs)
+{
+    const pciemgr_params_t *params = pciehw_get_params();
+
+    if (cfgspace_readw(cs, PCI_VENDOR_ID) == 0x0000) {
+        cfgspace_setw(cs, PCI_VENDOR_ID, params->vendorid);
+    }
+    if (cfgspace_get_headertype(cs) == 0) {
+        /* headertype == 0, normal device endpoints */
+        if (cfgspace_readw(cs, PCI_SUBSYSTEM_VENDOR_ID) == 0x0000) {
+            cfgspace_setw(cs, PCI_SUBSYSTEM_VENDOR_ID, params->subvendorid);
+        }
+        if (cfgspace_readw(cs, PCI_SUBSYSTEM_ID) == 0x0000) {
+            cfgspace_setw(cs, PCI_SUBSYSTEM_ID, params->subdeviceid);
+        }
+    } else {
+        /* headertype == 1, bridge devices */
+        const u_int8_t subsys = cfgspace_findcap(cs, PCI_CAP_ID_SSVID);
+        if (subsys) {
+            if (cfgspace_readw(cs, subsys + 0x4) == 0x0000) {
+                cfgspace_setw(cs, subsys + 0x4, params->subvendorid);
+            }
+            if (cfgspace_readw(cs, subsys + 0x6) == 0x0000) {
+                cfgspace_setw(cs, subsys + 0x6, params->subdeviceid);
+            }
+        }
+    }
+}
+
 int
 pciehw_cfg_finalize(pciehdev_t *pdev)
 {
@@ -99,12 +133,14 @@ pciehw_cfg_finalize(pciehdev_t *pdev)
     cfgspace_t cs;
     u_int16_t cfgsz;
 
+    pciehcfg_get_cfgspace(pcfg, &cs);
+    pciehw_cfg_set_default_ids(pcfg, &cs);
+
     /*
      * Init config space contents from device config space.
      * Init config reset contents from device config space.
      * Init config write mask from device config space.
      */
-    pciehcfg_get_cfgspace(pcfg, &cs);
     cfgsz = cfgspace_size(&cs);
     assert(cfgsz <= PCIEHW_CFGSZ);
     pciehw_memcpy(phwmem->cfgcur[hwdevh], cs.cur, cfgsz); /* config space */

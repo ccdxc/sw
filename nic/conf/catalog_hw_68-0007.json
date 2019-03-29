@@ -4,8 +4,7 @@
     "max_mpu_per_stage" : "4",
     "mpu_trace_size" : "2048",
     "cores_mask": "0xf",
-    "form_factor": "HH",
-    "num_pcie_lanes": "16",
+    "form_factor": "HH3/4L",
     "emmc_size": "8",
     "memory_size": "8",
     "num_asics" : "1",
@@ -29,6 +28,13 @@
             ]
         }
     ],
+
+    "pcie" : {
+	"hostport_mask" : "0x1",
+	"gen"           : "4",
+	"width"         : "16",
+	"subdeviceid"   : "4003"
+    },
 
     "serdes" : {
         "fw"             : "serdes.0x1087_244D.rom",

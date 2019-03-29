@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #ifndef __PCIEHDEVICES_H__
@@ -16,6 +16,9 @@ struct pciehdev_s;
 typedef struct pciehdev_s pciehdev_t;
 
 typedef struct pciehdevice_resources_s {
+    u_int16_t vendorid;         /* default vendorid */
+    u_int16_t subvendorid;      /* default subvendorid */
+    u_int16_t subdeviceid;      /* default subdeviceid */
     u_int32_t fnn:1;
     u_int8_t port;              /* pcie port id */
     u_int32_t lifb;             /* lif id base */

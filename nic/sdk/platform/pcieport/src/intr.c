@@ -144,7 +144,7 @@ pcieport_poweron(pcieport_t *p)
 #ifdef __aarch64__
     pciesys_loginfo("port%d: poweron\n", p->port);
 #endif
-    r = pcieport_config(p);
+    r = pcieport_config_powerup(p);
     if (r) pciesys_logwarn("%d: poweron config failed: %d\n", p->port, r);
 }
 

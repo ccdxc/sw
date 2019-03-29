@@ -14,7 +14,8 @@
 int pcieport_onetime_init(pcieport_info_t *pi, pciemgr_initmode_t initmode);
 int pcieport_onetime_portinit(pcieport_t *p);
 void pcieport_intr_init(pcieport_t *p);
-int pcieport_config(pcieport_t *p);
+int pcieport_config_powerup(pcieport_t *p);
+int pcieport_config_linkup(pcieport_t *p);
 void pcieport_fsm(pcieport_t *p, pcieportev_t ev);
 void pcieport_fsm_init(pcieport_t *p, pcieportst_t st);
 int pcieport_tgt_marker_rx_wait(pcieport_t *p);

@@ -20,6 +20,7 @@
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 
 #include "pciemgrd_impl.hpp"
 
@@ -282,6 +283,11 @@ pciemgrd_param_ull(const char *name, const u_int64_t def)
     return getenv_override_ull("pciemgrd", name, def);
 }
 
+/*
+ * These overrides are separated here and called by the main loop
+ * *after* the logger initialization any setting overrides can be
+ * included in the log.
+ */
 void
 pciemgrd_params(pciemgrenv_t *pme)
 {
@@ -302,39 +308,52 @@ pciemgrd_params(pciemgrenv_t *pme)
 #endif /* PCIEMGRD_GOLD */
 }
 
+void
+pciemgrd_catalog_defaults(pciemgrenv_t *pme)
+{
+    /* on asic single port, on haps 2 ports enabled */
+    pme->enabled_ports = pal_is_asic() ? 0x1 : 0x5;
+
+    pciemgr_params_t *params = &pme->params;
+    params->vendorid = PCI_VENDOR_ID_PENSANDO;
+    params->subvendorid = params->vendorid;
+    params->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
+
+#ifndef PCIEMGRD_GOLD
+#ifdef __aarch64__
+    sdk::lib::catalog *catalog = sdk::lib::catalog::factory();
+    if (catalog != NULL) {
+        pme->enabled_ports  = catalog->pcie_hostport_mask();
+        params->cap_gen     = catalog->pcie_gen();
+        params->cap_width   = catalog->pcie_width();
+        params->subdeviceid = catalog->pcie_subdeviceid();
+        sdk::lib::catalog::destroy(catalog);
+    } else {
+        pciesys_logerror("no catalog\n");
+    }
+#endif /* __aarch64__ */
+#endif /* PCIEMGRD_GOLD */
+}
+
 int
 main(int argc, char *argv[])
 {
     pciemgrenv_t *pme = pciemgrenv_get();
-    pciemgr_params_t *p = &pme->params;
+    pciemgr_params_t *params = &pme->params;
     int r, opt;
 
     pme->interactive = 1;
     pme->reboot_on_hostdn = pal_is_asic() ? 1 : 0;
+    pme->poll_port = 1;
+    pme->poll_dev = 0;
 
-    p->strict_crs = 1;
-    p->fake_bios_scan = 1;
-    p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
+    params->strict_crs = 1;
 
     /*
-     * For aarch64 we can inherit a system in case we get restarted on
+     * For aarch64 we can inherit a system in which we get restarted on
      * a running system (mostly for testing).
      * For x86_64 we want to FORCE_INIT to reinitialize hw/shmem on startup.
-     */
-#ifdef __aarch64__
-    p->initmode = INHERIT_OK;
-#else
-    p->initmode = FORCE_INIT;
-#endif
-
-#ifndef PCIEMGRD_GOLD
-    if (upgrade_in_progress()) {
-        p->restart = 1;
-        p->initmode = INHERIT_OK;
-    }
-#endif
-
-    /*
+     *
      * On "real" ARM systems the upstream port bridge
      * is in hw and our first virtual device is bus 0 at 00:00.0.
      *
@@ -342,22 +361,34 @@ main(int argc, char *argv[])
      * at 00:00.0 so our first virtual device is bus 1 at 01:00.0.
      */
 #ifdef __aarch64__
-    p->first_bus = 0;
+    params->initmode = INHERIT_OK;
+    params->first_bus = 0;
 #else
-    p->first_bus = 1;
+    params->initmode = FORCE_INIT;
+    params->first_bus = 1;
+    params->fake_bios_scan = 1;         /* simulate bios scan to set bdf's */
 #endif
 
-    /* on asic single port, on haps 2 ports enabled */
-    pme->enabled_ports = pal_is_asic() ? 0x1 : 0x5;
-    pme->poll_port = 1;
-    pme->poll_dev = 0;
+#ifndef PCIEMGRD_GOLD
+    if (upgrade_in_progress()) {
+        params->restart = 1;
+        params->initmode = INHERIT_OK;
+    }
+#endif
+
+    /*
+     * Get the catalog defaults.
+     * For testing, cmdline args can override below if desired.
+     */
+    pciemgrd_catalog_defaults(pme);
+
     while ((opt = getopt(argc, argv, "b:Cde:FGiI:P:V:D:rR:")) != -1) {
         switch (opt) {
         case 'b':
-            p->first_bus = strtoul(optarg, NULL, 0);
+            params->first_bus = strtoul(optarg, NULL, 0);
             break;
         case 'C':
-            p->compliance = 1;
+            params->compliance = 1;
             break;
         case 'd':
             pme->interactive = 0;
@@ -366,7 +397,7 @@ main(int argc, char *argv[])
             pme->enabled_ports = strtoul(optarg, NULL, 0);
             break;
         case 'F':
-            p->fake_bios_scan = 0;
+            params->fake_bios_scan = 0;
             break;
         case 'G':
             pme->gold = 1;
@@ -376,34 +407,35 @@ main(int argc, char *argv[])
             break;
         case 'I':
             if (strcmp(optarg, "inherit_only") == 0) {
-                p->initmode = INHERIT_ONLY;
+                params->initmode = INHERIT_ONLY;
             } else if (strcmp(optarg, "inherit_ok") == 0) {
-                p->initmode = INHERIT_OK;
+                params->initmode = INHERIT_OK;
             } else if (strcmp(optarg, "force_init") == 0) {
-                p->initmode = FORCE_INIT;
+                params->initmode = FORCE_INIT;
             } else {
                 printf("bad -I arg: inherit|inherit_ok|force_init\n");
                 exit(1);
             }
             break;
         case 'P':
-            if (!parse_linkspec(optarg, &p->cap_gen, &p->cap_width)) {
+            if (!parse_linkspec(optarg,
+                                &params->cap_gen, &params->cap_width)) {
                 printf("bad pcie spec: want gen%%dx%%d, got %s\n", optarg);
                 exit(1);
             }
             break;
         case 'r':
-            p->restart = 1;
-            p->initmode = INHERIT_OK;
+            params->restart = 1;
+            params->initmode = INHERIT_OK;
             break;
         case 'R':
             pme->reboot_on_hostdn = strtoul(optarg, NULL, 0);
             break;
         case 'V':
-            p->subvendorid = strtoul(optarg, NULL, 0);
+            params->subvendorid = strtoul(optarg, NULL, 0);
             break;
         case 'D':
-            p->subdeviceid = strtoul(optarg, NULL, 0);
+            params->subdeviceid = strtoul(optarg, NULL, 0);
             break;
         case '?':
         default:

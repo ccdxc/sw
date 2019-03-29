@@ -447,6 +447,23 @@ catalog::parse_serdes_file(std::string& serdes_file)
 }
 
 sdk_ret_t
+catalog::populate_pcie(ptree &prop_tree)
+{
+    std::string s;
+
+    catalog_db_.pcie_gen   = prop_tree.get<std::uint8_t>("pcie.gen", 0);
+    catalog_db_.pcie_width = prop_tree.get<std::uint8_t>("pcie.width", 0);
+
+    s = prop_tree.get<std::string>("pcie.hostport_mask", "");
+    catalog_db_.pcie_hostport_mask = strtoul(s.c_str(), NULL, 16);
+
+    s = prop_tree.get<std::string>("pcie.subdeviceid", "");
+    catalog_db_.pcie_subdeviceid = strtoul(s.c_str(), NULL, 16);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 catalog::populate_serdes(char *dir_name, ptree &prop_tree)
 {
     std::string jtag_id = prop_tree.get<std::string>("serdes.jtag_id", "");
@@ -525,7 +542,6 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
     catalog_db_.cpld_id = strtoul(val.c_str(), NULL, 16);
 
     catalog_db_.form_factor = prop_tree.get<std::string>("form_factor", "");
-    catalog_db_.num_pcie_lanes = prop_tree.get<uint32_t>("num_pcie_lanes", 0);
     catalog_db_.emmc_size = prop_tree.get<uint32_t>("emmc_size", 0);
     catalog_db_.memory_size = prop_tree.get<uint32_t>("memory_size", 0);
 
@@ -544,6 +560,8 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
     populate_mgmt_mac_profiles(prop_tree);
 
     populate_mac_profiles(prop_tree);
+
+    populate_pcie(prop_tree);
 
     populate_serdes(dirname((char*)catalog_file.c_str()), prop_tree);
 

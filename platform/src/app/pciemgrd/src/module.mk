@@ -7,6 +7,9 @@ MODULE_SOLIBS   := pciemgr_if pciemgr pciemgrutils pciehdevices pcieport \
 		   pcietlp intrutils cfgspace pal misc evutils \
 		   delphisdk utils upgrade_app upgradeproto \
 		   sdkpal logger sysmgr upgradeutils pciemgrproto
+ifeq ($(ARCH),aarch64)
+MODULE_SOLIBS   += catalog sdkfru
+endif
 MODULE_ARLIBS    = delphishm
 MODULE_INCS     := ${MODULE_SRC_DIR}/../include \
 		   ${BLD_PROTOGEN_DIR}

@@ -308,7 +308,6 @@ pcieport_config_host(pcieport_t *p)
     pcieport_mac_k_rx_cred(p);
     pcieport_mac_k_pexconf(p);
     pcieport_mac_k_pciconf(p);
-    pcieport_mac_set_ids(p);
 
     pcieport_poweron_script(p);
 
@@ -348,7 +347,7 @@ pcieport_config_rc(pcieport_t *p)
 }
 
 int
-pcieport_config(pcieport_t *p)
+pcieport_config_powerup(pcieport_t *p)
 {
     int r;
 
@@ -360,4 +359,11 @@ pcieport_config(pcieport_t *p)
         r = pcieport_config_rc(p);
     }
     return r;
+}
+
+int
+pcieport_config_linkup(pcieport_t *p)
+{
+    pcieport_mac_set_ids(p);
+    return 0;
 }
