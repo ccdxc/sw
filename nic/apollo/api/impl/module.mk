@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdsapi_impl.so
 MODULE_PIPELINE = apollo
-MODULE_SOLIBS   = lpmitree rfc
+MODULE_SOLIBS   = lpmitree rfc sensor
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}
 include ${MKDEFS}/post.mk

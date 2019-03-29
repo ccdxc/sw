@@ -47,7 +47,7 @@ static void
 checktemperature(void)
 {
     uint8_t key = 0;
-    uint32_t ret;
+    int ret;
     sdk::platform::sensor::system_temperature_t temperature;
 
     ret = sdk::platform::sensor::read_temperatures(&temperature);

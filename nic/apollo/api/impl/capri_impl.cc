@@ -8,6 +8,8 @@
 
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/platform/sensor/sensor.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/capri_impl.hpp"
 
 namespace api {
@@ -106,6 +108,38 @@ capri_impl::dump_tm_debug_stats_(FILE *fp, tm_pb_debug_stats_t *debug_stats)
             debug_stats->buffer_stats.drop_counts[sdk::platform::capri::BUFFER_INVALID_PORT_DROP]);
     fprintf(fp, "    invalid output queue drop : %u\n",
             debug_stats->buffer_stats.drop_counts[sdk::platform::capri::BUFFER_INVALID_OUTPUT_QUEUE_DROP]);
+}
+
+/**
+ * @brief    monitor the asic
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+capri_impl::monitor (void) {
+    int rv;
+    sdk::platform::sensor::system_power_t power;
+    sdk::platform::sensor::system_temperature_t temperature;
+
+    // read the temperatures
+    rv = sdk::platform::sensor::read_temperatures(&temperature);
+    if (rv == 0) {
+        PDS_TRACE_DEBUG("Die temperature is %uC, local temperature is %uC",
+                        temperature.dietemp, temperature.localtemp/1000);
+        PDS_TRACE_DEBUG("HBM temperature is %uC", temperature.hbmtemp);
+    } else {
+        PDS_TRACE_ERR("Temperature reading failed");
+    }
+
+    // read the power
+    rv = sdk::platform::sensor::read_powers(&power);
+    if (rv == 0) {
+        PDS_TRACE_DEBUG("Power of pin is %uW", power.pin/1000000);
+        PDS_TRACE_DEBUG("Power of pout1 is %uW", power.pout1/1000000);
+        PDS_TRACE_DEBUG("Power of pout2 is %uW", power.pout2/1000000);
+    } else {
+        PDS_TRACE_ERR("Power reading failed");
+    }
+    return SDK_RET_OK;
 }
 
 /**

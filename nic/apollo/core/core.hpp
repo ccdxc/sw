@@ -14,6 +14,7 @@
 #include <signal.h>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/sdk/lib/periodic/periodic.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 namespace core {
@@ -42,7 +43,7 @@ sdk_ret_t parse_pipeline_config(string pipeline, pds_state *state);
 
 typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 sdk_ret_t sig_init(int signal, sig_handler_t sig_handler);
-sdk_ret_t schedule_timers(void);
+sdk_ret_t schedule_timers(sdk::lib::twheel_cb_t sysmon_cb);
 
 }    // namespace core
 

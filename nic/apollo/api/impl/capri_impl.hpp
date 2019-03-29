@@ -41,6 +41,12 @@ public:
     virtual sdk_ret_t asic_init(asic_cfg_t *asic_cfg) override;
 
     /**
+     * @brief    monitor the asic
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t monitor(void) override;
+
+    /**
      * @brief    dump all the debug information to given file
      * @param[in] fp    file handle
      */

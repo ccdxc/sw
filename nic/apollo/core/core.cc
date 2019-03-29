@@ -13,7 +13,6 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
-#include "nic/sdk/lib/periodic/periodic.hpp"
 #include "nic/apollo/nicmgr/nicmgr.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
@@ -115,25 +114,24 @@ parse_global_config (string pipeline, string cfg_file, pds_state *state)
     return SDK_RET_OK;
 }
 
+#if 0
 static void
 session_age_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
 }
-
-static void
-sysmon_cb (void *timer, uint32_t timer_id, void *ctxt)
-{
-}
+#endif
 
 sdk_ret_t
-schedule_timers (void)
+schedule_timers (sdk::lib::twheel_cb_t sysmon_cb)
 {
-    void    *aging_timer, *sysmon_timer;
+    //void    *aging_timer, *sysmon_timer;
+    void *sysmon_timer;
 
     while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
 
+#if 0
     // start periodic timer for aging sessions
     aging_timer = sdk::lib::timer_schedule(
                       TIMER_ID_SESSION_AGE,
@@ -145,6 +143,7 @@ schedule_timers (void)
     }
     PDS_TRACE_DEBUG("Started periodic session aging timer with %us intvl",
                     SESSION_AGE_SCAN_INTVL);
+#endif
 
     // start periodic timer for scanning system interrupts, temparature, power
     // etc.

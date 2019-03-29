@@ -85,6 +85,12 @@ sig_handler (int sig, siginfo_t *info, void *ptr)
     debug::system_dump("/tmp/debug.info");
 }
 
+static void
+sysmon_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    impl_base::asic_impl()->monitor();
+}
+
 }    // namespace api
 
 /**
@@ -162,7 +168,7 @@ pds_init (pds_init_params_t *params)
     core::sig_init(SIGUSR1, api::sig_handler);
 
     // schedule all global timers
-    core::schedule_timers();
+    core::schedule_timers(api::sysmon_cb);
 
     return SDK_RET_OK;
 }

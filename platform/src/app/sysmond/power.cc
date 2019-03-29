@@ -12,7 +12,7 @@ static void
 checkpower(void)
 {
     uint8_t key = 0;
-    uint32_t ret;
+    int ret;
     sdk::platform::sensor::system_power_t power;
 
     ret = sdk::platform::sensor::read_powers(&power);
@@ -23,7 +23,7 @@ checkpower(void)
         asicpower.pout1 = power.pout1 / 1000000;
         TRACE_INFO(GetLogger(), "Power of {:s} is : {:d}W",
                    "pout1", asicpower.pout1);
-        asicpower.pout2 = asicpower.pout2 / 1000000;
+        asicpower.pout2 = power.pout2 / 1000000;
         TRACE_INFO(GetLogger(), "Power of {:s} is : {:d}W",
                    "pout2", asicpower.pout2);
 
