@@ -18,7 +18,7 @@ def Main(args):
             wl_pair_type = netagent_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
     else:
         workload_pairs = netagent_api.GetAllowAllWorkloadPairs(
-            wl_pair_type = netagent_api.WORKLOAD_PAIR_TYPE_ANY)
+            wl_pair_type = netagent_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
 
 
     if len(workload_pairs) == 0:

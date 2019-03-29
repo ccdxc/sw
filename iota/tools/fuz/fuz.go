@@ -209,35 +209,62 @@ func main() {
 }
 
 func worker(id int, jobs <-chan net.Conn) {
-	for c := range jobs {
-		bytesReceived := 0
-		bytesSent := 0
+	workingConns := []net.Conn{}
 
-		for {
-			// read a line, write a line
-			in, err := bufio.NewReader(c).ReadString('\n')
-			if err != nil {
-				if err != io.EOF {
-					printMsg(err.Error())
-				}
+	bytesReceived := 0
+	bytesSent := 0
+	for true {
+		for true {
+			breakup := false
+			select {
+			case c := <-jobs:
+				printMsg(fmt.Sprintf("client %s connected\n", c.RemoteAddr().String()))
+				workingConns = append(workingConns, c)
+			case <-time.After(20 * time.Millisecond):
+				breakup = true
+			}
+			if breakup {
 				break
 			}
-			bytesReceived += len(in)
-			len, err := c.Write([]byte(in))
-			bytesSent += len
-			runtime.Gosched()
 		}
 
-		printMsg(fmt.Sprintf("client %s closing\n", c.RemoteAddr().String()))
-		//updateStats()
-		c.Close()
+		if len(workingConns) == 0 {
+			time.Sleep(10 * time.Millisecond)
+			continue
+		}
+		newWorkingConns := []net.Conn{}
+		for _, wc := range workingConns {
+			wc.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
+			in, err := bufio.NewReader(wc).ReadString('\n')
+			if err != nil {
+				if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+					//socket timeout, add it for later
+				} else {
+					if err != io.EOF {
+						printMsg(err.Error())
+					}
+					//Connection done, no need to add it to working connection
+					wc.Close()
+				}
+			} else {
+				bytesReceived += len(in)
+				len, _ := wc.Write([]byte(in))
+				bytesSent += len
+			}
+
+			if err == nil || (err != io.EOF && (err.(net.Error).Timeout())) {
+				newWorkingConns = append(newWorkingConns, wc)
+			}
+		}
+		workingConns = newWorkingConns
+
 	}
 }
 
 func runServer(proto string, connDatas []*connectionData,
 	done chan<- error) {
 	waitCh := make(chan error)
-	workers := runtime.GOMAXPROCS(0) * 120
+	workers := runtime.GOMAXPROCS(0) - 2
 	jobs := make(chan net.Conn, 16384)
 	for w := 1; w <= workers; w++ {
 		go worker(w, jobs)
@@ -261,17 +288,7 @@ func runServer(proto string, connDatas []*connectionData,
 					continue
 				}
 				connData.ClientIPPort = c.RemoteAddr().String()
-
-				in, err := bufio.NewReader(c).ReadString('\n')
-				if err != nil || in != helloString {
-					printMsg(fmt.Sprintf("client %s did not send hello \n", c.RemoteAddr().String()))
-					c.Close()
-					break
-				} else {
-					c.Write([]byte(in))
-					printMsg(fmt.Sprintf("client %s connected\n", c.RemoteAddr().String()))
-				}
-				//connData := connData
+				printMsg(fmt.Sprintf("client %s accepted\n", c.RemoteAddr().String()))
 				jobs <- c
 			}
 		}()
@@ -339,35 +356,6 @@ func runClient(proto string, connDatas []*connectionData, conns, rate, cps, dura
 				defer conn.Close()
 
 				connData.ClientIPPort = conn.LocalAddr().String()
-				ch := make(chan error)
-				go func() { // this goroutime still exist even when timeout
-
-					_, err = fmt.Fprintf(conn, helloString)
-					if err != nil {
-						msg = fmt.Errorf("error '%s' writin to socket", err)
-						ch <- msg
-					} else {
-						readData, err := bufio.NewReader(conn).ReadString('\n')
-						if err != nil || readData != helloString {
-							msg = fmt.Errorf("Server did not send hello %v", err)
-							ch <- msg
-						} else {
-							ch <- nil
-						}
-
-					}
-				}()
-				select {
-				case <-ch:
-					if msg != nil {
-						updateStats()
-						return
-					}
-				case <-time.After(time.Duration(60) * time.Second):
-					msg = fmt.Errorf("Timeout on reading from server")
-					updateStats()
-					return
-				}
 				printMsg(fmt.Sprintf("Established connection to : %s\n", connData.ServerIPPort))
 				for ticks := duration; ticks > 0; ticks-- {
 					written, err := fmt.Fprintf(conn, randomBytes)
