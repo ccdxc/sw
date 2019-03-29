@@ -154,50 +154,88 @@ func ipsecDecryptShowCmdHandler(cmd *cobra.Command, args []string) {
 func showIpsecEncryptSA(resp *halproto.IpsecSAEncryptGetResponse) {
 	spec := resp.GetSpec()
 
-	fmt.Printf("%-30s : %-6d\n", "authentication_algorithm", spec.AuthenticationAlgorithm)
-	fmt.Printf("%-30s : %-6s\n", "authentication_key", spec.GetAuthenticationKey().GetKey())
-	fmt.Printf("%-30s : %-6d\n", "encryption_algorithm", spec.EncryptionAlgorithm)
-	fmt.Printf("%-30s : %-6s\n", "encryption_key", spec.GetEncryptionKey().GetKey())
-	fmt.Printf("%-30s : %-6s\n", "local_gateway_ip", utils.IPAddrToStr(spec.LocalGatewayIp))
-	fmt.Printf("%-30s : %-6s\n", "remote_gateway_ip", utils.IPAddrToStr(spec.RemoteGatewayIp))
-	fmt.Printf("%-30s : %-6d\n", "spi", spec.Spi)
-	fmt.Printf("%-30s : %-6d\n", "tep_vrf", spec.GetTepVrf().GetVrfId())
-	fmt.Printf("%-30s : %-6d\n", "salt", spec.Salt)
-	fmt.Printf("%-30s : %-6d\n", "iv", spec.Iv)
-	fmt.Printf("%-30s : %-6d\n", "key_index", spec.KeyIndex)
-	fmt.Printf("%-30s : %-6d\n", "seq_no", spec.SeqNo)
+	switch spec.AuthenticationAlgorithm {
+	case 1:
+		fmt.Printf("%-30s : %-6s\n", "Authentication Algorithm", "AUTHENTICATION_AES_GCM")
+	case 2:
+		fmt.Printf("%-30s : %-6s\n", "Authentication Algorithm", "AUTHENTICATION_AES_CCM")
+	case 3:
+		fmt.Printf("%-30s : %-6s\n", "Authentication Algorithm", "AUTHENTICATION_HMAC")
+	case 4:
+		fmt.Printf("%-30s : %-6s\n", "Authentication Algorithm", "AUTHENTICATION_AES_CBC_SHA")
+	}
+	fmt.Printf("%-30s : %-6s\n", "Authentication Key", spec.GetAuthenticationKey().GetKey())
+	switch spec.EncryptionAlgorithm {
+	case 1:
+		fmt.Printf("%-30s : %-6s\n", "Encryption Algorithm", "AUTHENTICATION_AES_GCM")
+	case 2:
+		fmt.Printf("%-30s : %-6s\n", "Encryption Algorithm", "AUTHENTICATION_AES_CCM")
+	case 3:
+		fmt.Printf("%-30s : %-6s\n", "Encryption Algorithm", "AUTHENTICATION_HMAC")
+	case 4:
+		fmt.Printf("%-30s : %-6s\n", "Encryption Algorithm", "AUTHENTICATION_AES_CBC_SHA")
+	}
+	fmt.Printf("%-30s : %-6s\n", "Encryption Key", spec.GetEncryptionKey().GetKey())
+	fmt.Printf("%-30s : %-6s\n", "Local GatewayIP", utils.IPAddrToStr(spec.LocalGatewayIp))
+	fmt.Printf("%-30s : %-6s\n", "Remote GatewayIP", utils.IPAddrToStr(spec.RemoteGatewayIp))
+	fmt.Printf("%-30s : %-6d\n", "SPI", spec.Spi)
+	fmt.Printf("%-30s : %-6d\n", "Tunnel Vrf", spec.GetTepVrf().GetVrfId())
+	fmt.Printf("%-30s : %-6d\n", "Salt", spec.Salt)
+	fmt.Printf("%-30s : %-6d\n", "IV", spec.Iv)
+	fmt.Printf("%-30s : %-6d\n", "Key Index", spec.KeyIndex)
+	fmt.Printf("%-30s : %-6d\n", "SeqNo", spec.SeqNo)
 	//fmt.Printf("%-30s : %-6d\n", "total_rx_pkts", spec.TotalRxPkts)
 	//fmt.Printf("%-30s : %-6d\n", "total_rx_drops", spec.TotalRxDrops)
-	fmt.Printf("%-30s : %-6d\n", "total_pkts", spec.TotalPkts)
+	fmt.Printf("%-30s : %-6d\n", "Total Pkts", spec.TotalPkts)
+	fmt.Printf("%-30s : %-6d\n", "Total Bytes", spec.TotalBytes)
 	//fmt.Printf("%-30s : %-6d\n", "total_drops", spec.TotalDrops)
 }
 
 func showIpsecDecryptSA(resp *halproto.IpsecSADecryptGetResponse) {
 	spec := resp.GetSpec()
 
-	fmt.Printf("%-30s : %-6d\n", "authentication_algorithm", spec.AuthenticationAlgorithm)
-	fmt.Printf("%-30s : %-6s\n", "authentication_key", spec.GetAuthenticationKey().GetKey())
-	fmt.Printf("%-30s : %-6d\n", "decryption_algorithm", spec.DecryptionAlgorithm)
-	fmt.Printf("%-30s : %-6s\n", "decryption_key", spec.GetDecryptionKey().GetKey())
-	fmt.Printf("%-30s : %-6d\n", "rekey_dec_algorithm", spec.RekeyDecAlgorithm)
-	fmt.Printf("%-30s : %-6s\n", "rekey_decryption_key", spec.GetRekeyDecryptionKey().GetKey())
-	fmt.Printf("%-30s : %-6s\n", "rekey_authentication_key", spec.GetRekeyAuthenticationKey().GetKey())
-	fmt.Printf("%-30s : %-6d\n", "spi", spec.Spi)
-	fmt.Printf("%-30s : %-6d\n", "key_index", spec.KeyIndex)
+	switch spec.AuthenticationAlgorithm {
+	case 1:
+		fmt.Printf("%-30s : %-6s\n", "Authentication Algorithm", "AUTHENTICATION_AES_GCM")
+	case 2:
+		fmt.Printf("%-30s : %-6s\n", "Authentication Algorithm", "AUTHENTICATION_AES_CCM")
+	case 3:
+		fmt.Printf("%-30s : %-6s\n", "Authentication Algorithm", "AUTHENTICATION_HMAC")
+	case 4:
+		fmt.Printf("%-30s : %-6s\n", "Authentication Algorithm", "AUTHENTICATION_AES_CBC_SHA")
+	}
+	fmt.Printf("%-30s : %-6s\n", "Authentication Key", spec.GetAuthenticationKey().GetKey())
+	switch spec.DecryptionAlgorithm {
+	case 1:
+		fmt.Printf("%-30s : %-6s\n", "DecryptionAlgorithm", "AUTHENTICATION_AES_GCM")
+	case 2:
+		fmt.Printf("%-30s : %-6s\n", "DecryptionAlgorithm", "AUTHENTICATION_AES_CCM")
+	case 3:
+		fmt.Printf("%-30s : %-6s\n", "DecryptionAlgorithm", "AUTHENTICATION_HMAC")
+	case 4:
+		fmt.Printf("%-30s : %-6s\n", "DecryptionAlgorithm", "AUTHENTICATION_AES_CBC_SHA")
+	}
+	fmt.Printf("%-30s : %-6s\n", "Decryption Key", spec.GetDecryptionKey().GetKey())
+	//fmt.Printf("%-30s : %-6d\n", "rekey_dec_algorithm", spec.RekeyDecAlgorithm)
+	//fmt.Printf("%-30s : %-6s\n", "Rekey Decryption Key", spec.GetRekeyDecryptionKey().GetKey())
+	//fmt.Printf("%-30s : %-6s\n", "Rekey Authentication Key", spec.GetRekeyAuthenticationKey().GetKey())
+	fmt.Printf("%-30s : %-6d\n", "SPI", spec.Spi)
+	fmt.Printf("%-30s : %-6d\n", "Key Index", spec.KeyIndex)
 	if spec.RekeyActive == 1 {
-		fmt.Printf("%-30s : %-6s\n", "rekey_active", "True")
-		fmt.Printf("%-30s : %-6d\n", "rekey_spi", spec.RekeySpi)
-		fmt.Printf("%-30s : %-6d\n", "new_key_index", spec.NewKeyIndex)
+		fmt.Printf("%-30s : %-6s\n", "Rekey Active", "True")
+		fmt.Printf("%-30s : %-6d\n", "Rekey SPI", spec.RekeySpi)
+		fmt.Printf("%-30s : %-6d\n", "New Key Index", spec.NewKeyIndex)
 	} else {
 		fmt.Printf("%-30s : %-6s\n", "rekey_active", "False")
 	}
-	fmt.Printf("%-30s : %-6d\n", "tep_vrf", spec.GetTepVrf().GetVrfId())
-	fmt.Printf("%-30s : %-6d\n", "salt", spec.Salt)
-	fmt.Printf("%-30s : %-6d\n", "expected_seq_no", spec.SeqNo)
-	fmt.Printf("%-30s : %-6d\n", "seq_no_bmp", spec.SeqNoBmp)
+	fmt.Printf("%-30s : %-6d\n", "Tunnel Vrf", spec.GetTepVrf().GetVrfId())
+	fmt.Printf("%-30s : %-6d\n", "Salt", spec.Salt)
+	fmt.Printf("%-30s : %-6d\n", "Expected Seq No", spec.SeqNo)
+	//fmt.Printf("%-30s : %-6d\n", "seq_no_bmp", spec.SeqNoBmp)
 	//fmt.Printf("%-30s : %-6d\n", "total_rx_pkts", spec.TotalRxPkts)
 	//fmt.Printf("%-30s : %-6d\n", "total_rx_drops", spec.TotalRxDrops)
-	fmt.Printf("%-30s : %-6d\n", "total_pkts", spec.TotalPkts)
+	fmt.Printf("%-30s : %-6d\n", "Total Pkts", spec.TotalPkts)
+	fmt.Printf("%-30s : %-6d\n", "Total Bytes", spec.TotalBytes)
 	//fmt.Printf("%-30s : %-6d\n", "total_drops", spec.TotalDrops)
 }
 
