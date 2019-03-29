@@ -1,7 +1,7 @@
 # Test Spec
 selectors:
     root: ref://store/templates/id=FLOW
-    maxlimits: 1
+    maxlimits: 5
     flow: filter://any
     route: filter://any
 

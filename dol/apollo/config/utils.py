@@ -24,9 +24,7 @@ class rrobiniter:
 def GetFilteredObjects(objs, maxlimits):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
         return objs
-    # TEMP Hack to workaround route table issue PR#10834
-    return objs[0:maxlimits]
-    #return choices(objs, k = maxlimits)
+    return choices(objs, k = maxlimits)
 
 def GetTunnelType(e):
     if e == 'internet-gateway':

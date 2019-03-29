@@ -6,6 +6,7 @@ from infra.common.objects import Ipv6Address
 from infra.common.objects import MacAddressBase
 import infra.api.api as infra_api
 import types_pb2 as types_pb2
+import apollo.config.resmgr as resmgr
 
 def __get_packet_template_impl(obj, args):
     template = 'ETH'
@@ -23,6 +24,9 @@ def __get_host_from_route_impl(obj):
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
     return __get_host_from_route_impl(testcase.config.route)
+
+def GetInvalidMPLSTag(testcase, packet, args=None):
+    return next(resmgr.InvalidMplsSlotIdAllocator)
 
 def __get_packet_encap_impl(obj, args):
     if obj.Encap == types_pb2.ENCAP_TYPE_MPLSoUDP:

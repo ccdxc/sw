@@ -58,6 +58,14 @@ class FlowMapObjectHelper:
     def __init__(self):
         return
 
+    def __is_lmapping_match(self, routetblobj, lobj):
+        if lobj.AddrFamily == 'IPV4':
+            return lobj.AddrFamily == routetblobj.AddrFamily and\
+               lobj.VNIC.SUBNET.V4RouteTableId == routetblobj.RouteTblId
+        if lobj.AddrFamily == 'IPV6':
+            return lobj.AddrFamily == routetblobj.AddrFamily and\
+               lobj.VNIC.SUBNET.V6RouteTableId == routetblobj.RouteTblId
+
     def GetMatchingConfigObjects(self, selectors):
         objs = []
         fwdmode = None
@@ -83,10 +91,10 @@ class FlowMapObjectHelper:
 
         if fwdmode == 'IGW':
             for lobj in lmapping.GetMatchingObjects(mapsel):
-                for route_obj in routetable.GetMatchingObjects(mapsel):
-                    if lobj.AddrFamily != route_obj.AddrFamily:
+                for routetblobj in routetable.GetMatchingObjects(mapsel):
+                    if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
-                    obj = FlowMapObject(lobj, None, fwdmode, route_obj)
+                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj)
                     objs.append(obj)
         else:
             for lobj in lmapping.GetMatchingObjects(mapsel):

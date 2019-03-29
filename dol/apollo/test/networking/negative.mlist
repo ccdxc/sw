@@ -73,3 +73,15 @@ modules:
         spec    : remote2local_dsttag_invalid.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : IGW_IPV4_UDP_ENCAP_INVDSTTAG
+        spec    : igw2local_dsttag_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+
+    - module:
+        name    : IGW_IPV6_UDP_ENCAP_INVDSTTAG
+        spec    : igw2local_dsttag_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING

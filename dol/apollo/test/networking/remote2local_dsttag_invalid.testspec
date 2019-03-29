@@ -44,7 +44,7 @@ packets:
                 label   : ref://testcase/config/remotemapping/MplsSlot
                 ttl     : 0
             mpls:
-                label   : 50000 #ref://testcase/config/localmapping/VNIC/MplsSlot
+                label   : callback://networking/packets/GetInvalidMPLSTag
                 ttl     : 0
 
   

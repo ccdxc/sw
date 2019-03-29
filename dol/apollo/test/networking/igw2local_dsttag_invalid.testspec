@@ -1,53 +1,49 @@
 # Test Spec
-# This test case covers all invalid test cases
 selectors:
     root: ref://store/templates/id=FLOW
-    maxlimits: 4
+    maxlimits: 5
     flow: filter://any
+    route: filter://any
 
 packets:
     - packet:
-        id          : BASE_PKT # Base packet
+        id          : BASE_PKT # Base Packet from internet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
         headers     :
             ipv4:
+                src     : callback://networking/packets/GetUsableHostFromRoute
                 dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
                 ttl     : 64
             ipv6:
+                src     : callback://networking/packets/GetUsableHostFromRoute
                 dst     : ref://testcase/config/localmapping/IP
-                src     : ref://testcase/config/remotemapping/IP
                 hlim    : 64
-            tcp:
+            udp:
                 sport   : 100
                 dport   : 200
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
-
     - packet:
-        id          : FROM_SWITCH_PKT # Input packet
+        id          : FROM_SWITCH_PKT # Input packet from network
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        encaps      :
+            - ref://factory/packets/id=ENCAP_MPLS
         headers     :
             outereth:
-                dst     : ref://testcase/config/devicecfg/MACAddr
                 src     : 00:02:0b:0a:0d:0e
+                dst     : ref://testcase/config/devicecfg/MACAddr
             outeripv4:
+                src     : ref://testcase/config/route/TunIP
                 dst     : ref://testcase/config/devicecfg/IP
-                src     : ref://testcase/config/remotemapping/TunIP
                 ttl     : 64
                 tos     : 0
                 id      : 0
-            outermpls:
+            mpls:
                 label   : callback://networking/packets/GetInvalidMPLSTag
                 ttl     : 0
-            mpls:
-                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
-                ttl     : 0
 
-  
 trigger:
     packets:
         - packet:
@@ -59,4 +55,3 @@ expect:
         - packet:
             object  : None
             port    : ref://testcase/config/hostport
-
