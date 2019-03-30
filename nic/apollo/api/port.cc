@@ -6,9 +6,9 @@
  * @brief   This file handles port operations
  */
 
-#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/linkmgr/port.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/event.hpp"
@@ -218,15 +218,23 @@ if_walk_port_get_cb (void *entry, void *ctxt)
     port_get_cb_ctxt_t *cb_ctxt = (port_get_cb_ctxt_t *)ctxt;
     uint64_t stats_data[MAX_MAC_STATS];
     port_args_t port_info;
+    int phy_port;
 
     memset(&port_info, 0, sizeof(port_info));
     port_info.stats_data = stats_data;
     ret = sdk::linkmgr::port_get(intf->if_info(), &port_info);
     if (ret != sdk::SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to get port %u info", intf->key());
+        PDS_TRACE_ERR("Failed to get port %u info, err %u", intf->key(), ret);
         return false;
     }
     port_info.port_num = intf->key();
+    phy_port = sdk::lib::catalog::ifindex_to_phy_port(port_info.port_num);
+    if (phy_port != -1) {
+        ret = sdk::platform::xcvr_get(phy_port - 1, &port_info.xcvr_event_info);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to get xcvr for port %u, err %u", phy_port, ret);
+        }
+    }
     cb_ctxt->port_get_cb(&port_info, cb_ctxt->ctxt);
     return false;
 }

@@ -7,8 +7,8 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -41,10 +41,108 @@ var portStatsShowCmd = &cobra.Command{
 	Run:   portShowCmdHandler,
 }
 
+var portStatusShowCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show port status",
+	Long:  "show port status",
+	Run:   portShowStatusCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
 	portStatsShowCmd.Flags().Uint32VarP(&portID, "id", "i", 0, "Specify Port ID")
+	portShowCmd.AddCommand(portStatusShowCmd)
+	portStatusShowCmd.Flags().Uint32VarP(&portID, "id", "i", 0, "Specify Port ID")
+}
+
+func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewPortSvcClient(c)
+
+	var req *pds.PortGetRequest
+	if cmd.Flags().Changed("id") {
+		// Get specific Port
+		req = &pds.PortGetRequest{
+			PortId: []uint32{portID},
+		}
+	} else {
+		// Get all Ports
+		req = &pds.PortGetRequest{
+			PortId: []uint32{},
+		}
+	}
+
+	// PDS call
+	respMsg, err := client.PortGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	printPortStatusHeader()
+
+	// Print Ports
+	for _, resp := range respMsg.Response {
+		printPortStatus(resp)
+	}
+}
+
+func printPortStatusHeader() {
+	hdrLine := strings.Repeat("-", 46)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-12s%-10s%-14s\n",
+		"PortNum", "AdminState", "OperState", "Transceiver")
+	fmt.Println(hdrLine)
+}
+
+func printPortStatus(resp *pds.Port) {
+	adminState := resp.GetSpec().GetAdminState()
+	operStatus := resp.GetStatus().GetLinkStatus().GetOperState()
+	xcvrStatus := resp.GetStatus().GetXcvrStatus()
+
+	adminStateStr := strings.Replace(adminState.String(), "PORT_ADMIN_STATE_", "", -1)
+	operStatusStr := strings.Replace(operStatus.String(), "PORT_OPER_STATUS_", "", -1)
+	xcvrPortNum := xcvrStatus.GetPort()
+	xcvrState := xcvrStatus.GetState()
+	xcvrPid := xcvrStatus.GetPid()
+	xcvrStateStr := "-"
+	xcvrPidStr := "-"
+	xcvrStr := ""
+	if xcvrPortNum > 0 && (strings.Compare(xcvrState.String(), "65535") != 0) {
+		// Strip XCVR_STATE_ from the state
+		xcvrStateStr = strings.Replace(strings.Replace(xcvrState.String(), "XCVR_STATE_", "", -1), "_", "-", -1)
+		// Strip XCVR_PID_ from the pid
+		xcvrPidStr = strings.Replace(strings.Replace(xcvrPid.String(), "XCVR_PID_", "", -1), "_", "-", -1)
+	}
+
+	if strings.Compare(xcvrStateStr, "SPROM-READ") == 0 {
+		xcvrStr = xcvrPidStr
+	} else {
+		xcvrStr = xcvrStateStr
+	}
+
+	fmt.Printf("%-10s%-12s%-10s%-14s\n",
+		ifIndexToPortIdStr(resp.GetSpec().GetPortId()),
+		adminStateStr, operStatusStr,
+		xcvrStr)
 }
 
 func portShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -104,21 +202,21 @@ func printPortStatsHeader() {
 }
 
 func ifIndexToSlot(ifIndex uint32) uint32 {
-    return (ifIndex >> IfSlotShift) & IfSlotMask
+	return (ifIndex >> IfSlotShift) & IfSlotMask
 }
 
 func ifIndexToParentPort(ifIndex uint32) uint32 {
-    return (ifIndex >> IfParentPortShift) & IfParentPortMask
+	return (ifIndex >> IfParentPortShift) & IfParentPortMask
 }
 
 func ifIndexToChildPort(ifIndex uint32) uint32 {
-    return ifIndex & IfChildPortMask
+	return ifIndex & IfChildPortMask
 }
 
 func ifIndexToPortIdStr(ifIndex uint32) string {
-    slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
-    parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
-    return "Eth " + slotStr + "/" + parentPortStr
+	slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
+	parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
+	return "Eth " + slotStr + "/" + parentPortStr
 }
 
 func printPortStats(resp *pds.Port) {

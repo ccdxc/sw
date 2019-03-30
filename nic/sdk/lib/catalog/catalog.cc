@@ -859,6 +859,12 @@ catalog::ifindex_to_logical_port(uint32_t ifindex)
 }
 
 uint32_t
+catalog::ifindex_to_phy_port(uint32_t ifindex)
+{
+    return IFINDEX_TO_PARENT_PORT(ifindex);
+}
+
+uint32_t
 catalog::logical_port_to_ifindex(uint32_t logical_port)
 {
     uint32_t parent = ((logical_port - 1)/MAX_PORT_LANES) + 1;

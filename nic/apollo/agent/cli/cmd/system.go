@@ -51,7 +51,7 @@ func init() {
 	systemShowCmd.Flags().Bool("temperature", false, "Show system power information")
 
 	debugCmd.AddCommand(traceDebugCmd)
-	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level (Allowed: none, error, debug)")
+	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level (Allowed: none, error, warn, info, debug, verbose)")
 }
 
 func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
@@ -109,6 +109,12 @@ func isTraceLevelValid(level string) bool {
 		return true
 	case "debug":
 		return true
+	case "warn":
+		return true
+	case "info":
+		return true
+	case "verbose":
+		return true
 	default:
 		return false
 	}
@@ -122,6 +128,12 @@ func inputToTraceLevel(level string) pds.TraceLevel {
 		return pds.TraceLevel_TRACE_LEVEL_ERROR
 	case "debug":
 		return pds.TraceLevel_TRACE_LEVEL_DEBUG
+	case "warn":
+		return pds.TraceLevel_TRACE_LEVEL_WARN
+	case "info":
+		return pds.TraceLevel_TRACE_LEVEL_INFO
+	case "verbose":
+		return pds.TraceLevel_TRACE_LEVEL_VERBOSE
 	default:
 		return pds.TraceLevel_TRACE_LEVEL_NONE
 	}

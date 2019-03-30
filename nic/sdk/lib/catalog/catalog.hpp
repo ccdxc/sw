@@ -148,6 +148,7 @@ public:
     static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
     static int logical_port_to_phy_port(uint32_t logical_port);
     static uint32_t ifindex_to_logical_port(uint32_t ifindex);
+    static uint32_t ifindex_to_phy_port(uint32_t ifindex);
     static uint32_t logical_port_to_ifindex(uint32_t logical_port);
     uint32_t ifindex_to_tm_port(uint32_t ifindex);
 

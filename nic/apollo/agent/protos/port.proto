@@ -162,11 +162,98 @@ message PortStats {
   repeated MgmtMacStats MgmtMacStats = 2;
 }
 
+// PortAdminState specifies if the port is enabled (admin up) or disabled (admin down)
+enum PortAdminState {
+  PORT_ADMIN_STATE_NONE = 0;   // port admin state not configured
+  PORT_ADMIN_STATE_DOWN = 1;   // port is admin disabled
+  PORT_ADMIN_STATE_UP   = 2;   // port is admin enabled
+}
+
+enum PortXcvrState {
+  XCVR_STATE_REMOVED        = 0;
+  XCVR_STATE_INSERTED       = 1;
+  XCVR_STATE_PENDING        = 2;
+  XCVR_STATE_SPROM_READ     = 3;
+  XCVR_STATE_SPROM_READ_ERR = 4;
+}
+
+enum PortXcvrPid {
+  XCVR_PID_UNKNOWN          = 0;
+
+  // CU
+  XCVR_PID_QSFP_100G_CR4    = 1;
+  XCVR_PID_QSFP_40GBASE_CR4 = 2;
+  XCVR_PID_SFP_25GBASE_CR_S = 3;
+  XCVR_PID_SFP_25GBASE_CR_L = 4;
+  XCVR_PID_SFP_25GBASE_CR_N = 5;
+
+  // Fiber
+  XCVR_PID_QSFP_100G_AOC    = 50;
+  XCVR_PID_QSFP_100G_ACC    = 51;
+  XCVR_PID_QSFP_100G_SR4    = 52;
+  XCVR_PID_QSFP_100G_LR4    = 53;
+  XCVR_PID_QSFP_100G_ER4    = 54;
+  XCVR_PID_QSFP_40GBASE_ER4 = 55;
+  XCVR_PID_QSFP_40GBASE_SR4 = 56;
+  XCVR_PID_QSFP_40GBASE_LR4 = 57;
+  XCVR_PID_QSFP_40GBASE_AOC = 58;
+  XCVR_PID_SFP_25GBASE_SR   = 59;
+  XCVR_PID_SFP_25GBASE_LR   = 60;
+  XCVR_PID_SFP_25GBASE_ER   = 61;
+  XCVR_PID_SFP_25GBASE_AOC  = 62;
+  XCVR_PID_SFP_10GBASE_SR   = 63;
+  XCVR_PID_SFP_10GBASE_LR   = 64;
+  XCVR_PID_SFP_10GBASE_LRM  = 65;
+  XCVR_PID_SFP_10GBASE_ER   = 66;
+  XCVR_PID_SFP_10GBASE_AOC  = 67;
+  XCVR_PID_SFP_10GBASE_CU   = 68;
+}
+
+enum CableType {
+  CABLE_TYPE_NONE   = 0;
+  CABLE_TYPE_COPPER = 1;
+  CABLE_TYPE_FIBER  = 2;
+}
+
+// PortOperState reflects the current status of the port
+enum PortOperState {
+  PORT_OPER_STATUS_NONE = 0;
+  PORT_OPER_STATUS_UP   = 1;    // port is linked up
+  PORT_OPER_STATUS_DOWN = 2;    // port link status is down
+}
+
+// PortSpeed specifies the speed of the port
+enum PortSpeed {
+  PORT_SPEED_NONE = 0;     // port speed not configured
+  PORT_SPEED_1G   = 1;     // port speed is 1Gbps
+  PORT_SPEED_10G  = 2;     // port speed is 10Gbps
+  PORT_SPEED_25G  = 3;     // port speed is 25Gbps
+  PORT_SPEED_40G  = 4;     // port speed is 40Gbps
+  PORT_SPEED_50G  = 5;     // port speed is 50Gbps
+  PORT_SPEED_100G = 6;     // port speed is 100Gbps
+}
+
+message PortLinkStatus {
+  PortOperState OperState = 1;    // operational state of port
+  PortSpeed     PortSpeed = 2;    // operational speed of the port
+}
+
 message PortSpec {
-  uint32 PortId = 1;
+  uint32         PortId     = 1;
+  PortAdminState AdminState = 2;
+}
+
+message PortXcvrStatus {
+  int32         Port      = 1;
+  PortXcvrState State     = 2;
+  PortXcvrPid   Pid       = 3;
+  CableType     CableType = 4;
+  bytes         XcvrSprom = 5;
 }
 
 message PortStatus {
+  PortLinkStatus LinkStatus = 1;    // operational link status
+  PortXcvrStatus XcvrStatus = 2;    // transceiver status
 }
 
 message Port {
@@ -181,5 +268,5 @@ message PortGetRequest {
 
 message PortGetResponse {
   types.ApiStatus ApiStatus = 1;
-  repeated Port Response    = 2;
+  repeated Port   Response  = 2;
 }

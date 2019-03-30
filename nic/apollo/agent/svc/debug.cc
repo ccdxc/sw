@@ -92,6 +92,15 @@ DebugSvcImpl::TraceUpdate(ServerContext *context, const pds::TraceRequest *proto
     case pds::TRACE_LEVEL_ERROR:
         trace_level = utils::trace_err;
         break;
+    case pds::TRACE_LEVEL_WARN:
+        trace_level = utils::trace_warn;
+        break;
+    case pds::TRACE_LEVEL_INFO:
+        trace_level = utils::trace_info;
+        break;
+    case pds::TRACE_LEVEL_VERBOSE:
+        trace_level = utils::trace_verbose;
+        break;
     default:
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
