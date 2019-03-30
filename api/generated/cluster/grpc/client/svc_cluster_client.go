@@ -630,7 +630,7 @@ func (a *restObjClusterV1Cluster) Allowed(oper apiintf.APIOperType) bool {
 	case apiintf.GetOper:
 		return true
 	case apiintf.DeleteOper:
-		return true
+		return false
 	case apiintf.ListOper:
 		return false
 	case apiintf.WatchOper:

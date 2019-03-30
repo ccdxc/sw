@@ -28,15 +28,6 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'GetCluster') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Delete Cluster object */
-  public DeleteCluster(stagingID: string = ""):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/cluster';
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXDeleteCall(url, 'DeleteCluster') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** Update Cluster object */
   public UpdateCluster(body: IClusterCluster, stagingID: string = ""):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/cluster';

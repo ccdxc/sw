@@ -151,43 +151,6 @@ func request_ClusterV1_AutoAddTenant_0(ctx context.Context, marshaler runtime.Ma
 }
 
 var (
-	filter_ClusterV1_AutoDeleteCluster_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_ClusterV1_AutoDeleteCluster_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &Cluster{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoDeleteCluster_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoDeleteCluster(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
 	filter_ClusterV1_AutoDeleteHost_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -1467,34 +1430,6 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
-	mux.Handle("DELETE", pattern_ClusterV1_AutoDeleteCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_ClusterV1_AutoDeleteCluster_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_ClusterV1_AutoDeleteCluster_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	mux.Handle("DELETE", pattern_ClusterV1_AutoDeleteHost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2314,8 +2249,6 @@ var (
 
 	pattern_ClusterV1_AutoAddTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"tenants"}, ""))
 
-	pattern_ClusterV1_AutoDeleteCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"cluster"}, ""))
-
 	pattern_ClusterV1_AutoDeleteHost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"hosts", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoDeleteNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"nodes", "O.Name"}, ""))
@@ -2373,8 +2306,6 @@ var (
 	forward_ClusterV1_AutoAddNode_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoAddTenant_0 = runtime.ForwardResponseMessage
-
-	forward_ClusterV1_AutoDeleteCluster_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoDeleteHost_0 = runtime.ForwardResponseMessage
 

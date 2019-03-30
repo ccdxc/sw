@@ -2226,7 +2226,8 @@ func makeURIClusterV1AutoAddTenantCreateOper(in *Tenant) string {
 
 //
 func makeURIClusterV1AutoDeleteClusterDeleteOper(in *Cluster) string {
-	return fmt.Sprint("/configs/cluster/v1", "/cluster")
+	return ""
+
 }
 
 //
@@ -2412,24 +2413,7 @@ func (r *EndpointsClusterV1RestClient) AutoGetCluster(ctx context.Context, in *C
 
 // AutoDeleteCluster CRUD method for Cluster
 func (r *EndpointsClusterV1RestClient) AutoDeleteCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
-	path := makeURIClusterV1AutoDeleteClusterDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespClusterV1AutoDeleteCluster(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Cluster), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListCluster CRUD method for Cluster

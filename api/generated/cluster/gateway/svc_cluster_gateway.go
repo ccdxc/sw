@@ -1039,8 +1039,6 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.CreateOper)
 
-	e.svcProf["AutoDeleteCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.DeleteOper)
-
 	e.svcProf["AutoDeleteHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.DeleteOper)

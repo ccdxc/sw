@@ -52,7 +52,7 @@ service ClusterV1 {
 
     option (venice.apiRestService) = {
         Object: "Cluster"
-        Method: ["put", "get", "delete", "watch"]
+        Method: ["put", "get", "watch"]
     };
 
     // Action to set auth bootstrap flag once cluster has been bootstrapped with needed auth objects. Once set it cannot be unset.

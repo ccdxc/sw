@@ -242,57 +242,6 @@
           "cluster/v1"
         ]
       },
-      "delete": {
-        "summary": "Delete Cluster object",
-        "operationId": "DeleteCluster",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/clusterCluster"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "tags": [
-          "cluster/v1"
-        ]
-      },
       "put": {
         "summary": "Update Cluster object",
         "operationId": "UpdateCluster",

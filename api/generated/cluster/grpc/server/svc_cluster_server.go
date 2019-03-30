@@ -287,7 +287,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoDeleteCluster = srv.AddMethod("AutoDeleteCluster",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoDeleteCluster")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteHost = srv.AddMethod("AutoDeleteHost",
