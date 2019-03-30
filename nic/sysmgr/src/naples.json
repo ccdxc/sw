@@ -55,7 +55,7 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["no_watchdog", "non_critical", "restartable"]
     },
     {
 	"name": "asicerrord",
@@ -80,11 +80,11 @@
 		"service-name": "delphi"
 	    }
 	],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["no_watchdog", "non_critical", "restartable"]
     },
     {
 	"name": "tmagent",
-	"command": "/nic/bin/tmagent -hostif lo",
+	"command": "/nic/bin/tmagent",
 	"dependencies": [
 	    {
 		"kind": "service",
@@ -94,7 +94,7 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["no_watchdog", "non_critical", "restartable"]
     },
     {
 	"name": "nevtsproxy",
