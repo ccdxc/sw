@@ -31,9 +31,9 @@ def makeNaplesFRU(containerIndex):
     fruSrcFile = os.path.join(src_dir, "nic/agent/nmd/state/example-configs/fru.json")
     with open(fruSrcFile, 'r') as f:
         fru = json.load(f)
-        macAddr = fru['Mac Address']
+        macAddr = fru['mac-address']
         newMac = macAddr[:-2] + str(int(macAddr[-2:]) + containerIndex)
-        fru['Mac Address'] = newMac
+        fru['mac-address'] = newMac
         return json.dumps(fru)
 
 def runCommand(cmd, ignore_error=False):

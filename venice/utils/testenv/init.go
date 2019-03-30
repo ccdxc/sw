@@ -19,5 +19,7 @@ func init() {
 		// Tests can instantiate a custom TLS provider and set it using
 		// testenv.SetTestModeTLSProvider()
 		EnableRpckitTestMode()
+
+		EnableLogToStdout()
 	}
 }

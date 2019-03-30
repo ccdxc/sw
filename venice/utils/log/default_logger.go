@@ -9,6 +9,8 @@ import (
 	"sync"
 
 	kitlevel "github.com/go-kit/kit/log/level"
+
+	"github.com/pensando/sw/venice/utils/testenv"
 )
 
 // singleton is singleton Instance
@@ -31,14 +33,16 @@ func createSingleton() {
 
 // GetDefaultConfig returns default log config object
 func GetDefaultConfig(module string) *Config {
-
+	// Default production has stdout set to false.
+	// Tests have stdout set to true so that we can debug issues in jobd runs when tests are invoked as 'go test ...'
+	stdoutLog := testenv.GetLogToStdout()
 	return &Config{
 		Module:      module,
 		Format:      LogFmt,
 		Filter:      AllowInfoFilter,
 		Debug:       false,
 		CtxSelector: ContextAll,
-		LogToStdout: true,
+		LogToStdout: stdoutLog,
 		LogToFile:   false,
 		FileCfg:     FileConfig{},
 	}
