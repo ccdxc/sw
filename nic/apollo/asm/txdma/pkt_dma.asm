@@ -26,8 +26,8 @@ pkt_dma:
     phvwr       p.payload_dma_dma_cmd_size, \
                     k.{p4_to_txdma_header_payload_len_sbit0_ebit5, \
                        p4_to_txdma_header_payload_len_sbit6_ebit13}
-    phvwri      p.{payload_dma_dma_cmd_pkt_eop...payload_dma_dma_cmd_type}, \
-                    (1 << 4) | CAPRI_DMA_COMMAND_MEM_TO_PKT
+    phvwri      p.{payload_dma_dma_cmd_cache...payload_dma_dma_cmd_type}, \
+                    (1 << 4) | (1 << 6) | CAPRI_DMA_COMMAND_MEM_TO_PKT
 
     // mem2pkt has an implicit fence. all subsequent dma is blocked
     // update the rxdma copy of cindex once every 16 pkts
