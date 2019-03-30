@@ -92,18 +92,27 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printTunnelHeader() {
-	hdrLine := strings.Repeat("-", 54)
+	hdrLine := strings.Repeat("-", 60)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-6s%-10s%-16s%-16s\n",
-		"ID", "VpcID", "EncapType", "LocalIP", "RemoteIP")
+	fmt.Printf("%-6s%-6s%-16s%-16s%-16s\n",
+		"ID", "VpcID", "Encap", "LocalIP", "RemoteIP")
 	fmt.Println(hdrLine)
 }
 
 func printTunnel(tunnel *pds.Tunnel) {
 	spec := tunnel.GetSpec()
-	fmt.Printf("%-6d%-6d%-10s%-16s%-16s\n",
+	encapStr := strings.Replace(spec.GetEncap().GetType().String(), "ENCAP_TYPE_", "", -1)
+	switch spec.GetEncap().GetType() {
+	case pds.EncapType_ENCAP_TYPE_DOT1Q:
+		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVlanId())
+	case pds.EncapType_ENCAP_TYPE_MPLSoUDP:
+		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetMPLSTag())
+	case pds.EncapType_ENCAP_TYPE_VXLAN:
+		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVnid())
+	}
+	fmt.Printf("%-6d%-6d%-16s%-16s%-16s\n",
 		spec.GetId(), spec.GetVPCId(),
-		strings.Replace(strings.Replace(spec.GetEncap().String(), "TUNNEL_ENCAP_", "", -1), "_", "-", -1),
+		encapStr,
 		utils.IPAddrToStr(spec.GetLocalIP()),
 		utils.IPAddrToStr(spec.GetRemoteIP()))
 }
