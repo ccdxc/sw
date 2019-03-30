@@ -56,7 +56,7 @@ message SystemPowerGetResponse {
 message ClockFrequencyRequest {
   meta.TypeMeta TypeMeta       = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
   meta.ObjMeta  ObjMeta        = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  uint32        ClockFrequency = 3; 
+  uint32        ClockFrequency = 3;
 }
 
 message ClockFrequencyResponse {
