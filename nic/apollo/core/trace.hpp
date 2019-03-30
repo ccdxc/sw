@@ -15,7 +15,7 @@
 
 extern sdk_logger::trace_cb_t    g_trace_cb;
 static void inline
-register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
+register_trace_cb (sdk_logger::trace_cb_t  trace_cb)
 {
     g_trace_cb = trace_cb;
 }

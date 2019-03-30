@@ -11,6 +11,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "nic/include/trace.hpp"
 #include "nic/apollo/framework/asic_impl_base.hpp"
 
 namespace api {
@@ -46,7 +47,7 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t monitor(void) override;
-    
+
     /**
      * @brief    set the core frequency with the given value
      * @return    SDK_RET_OK on success, failure status code on error
@@ -106,7 +107,8 @@ private:
     void dump_tm_debug_stats_(FILE *fp, tm_pb_debug_stats_t *debug_stats);
 
 private:
-    asic_cfg_t           asic_cfg_;
+    asic_cfg_t      asic_cfg_;
+    ::utils::log    *obfl_logger_;
 };
 
 }    // namespace impl

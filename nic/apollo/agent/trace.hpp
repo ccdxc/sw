@@ -51,7 +51,7 @@ void trace_update(utils::trace_level_e trace_level);
     if (likely(core::trace_logger()) &&                                        \
         (core::trace_level() >= utils::trace_err)) {                           \
         core::trace_logger()->error("[{}:{}] " fmt, __func__, __LINE__,        \
-                              ##__VA_ARGS__);                                  \
+                                    ##__VA_ARGS__);                            \
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
@@ -66,7 +66,7 @@ void trace_update(utils::trace_level_e trace_level);
     if (likely(core::trace_logger()) &&                                        \
         (core::trace_level() >= utils::trace_warn)) {                          \
         core::trace_logger()->warn("[{}:{}] " fmt, __func__, __LINE__,         \
-                             ##__VA_ARGS__);                                   \
+                                   ##__VA_ARGS__);                             \
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
@@ -81,7 +81,7 @@ void trace_update(utils::trace_level_e trace_level);
     if (likely(core::trace_logger()) &&                                        \
         (core::trace_level() >= utils::trace_info)) {                          \
         core::trace_logger()->info("[{}:{}] " fmt, __func__, __LINE__,         \
-                             ##__VA_ARGS__);                                   \
+                                   ##__VA_ARGS__);                             \
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
@@ -96,7 +96,7 @@ void trace_update(utils::trace_level_e trace_level);
     if (likely(core::trace_logger()) &&                                        \
         (core::trace_level() >= utils::trace_debug)) {                         \
         core::trace_logger()->debug("[{}:{}] " fmt, __func__, __LINE__,        \
-                              ##__VA_ARGS__);                                  \
+                                    ##__VA_ARGS__);                            \
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
@@ -110,7 +110,7 @@ void trace_update(utils::trace_level_e trace_level);
 #define PDS_TRACE_VERBOSE(fmt, ...)                                            \
     if (likely(core::trace_logger())) {                                        \
         core::trace_logger()->trace("[{}:{}] " fmt, __func__, __LINE__,        \
-                              ##__VA_ARGS__);                                  \
+                                    ##__VA_ARGS__);                            \
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
@@ -124,7 +124,7 @@ void trace_update(utils::trace_level_e trace_level);
     if (likely(core::trace_logger() &&                                         \
                (core::trace_level() >= utils::trace_err) && (cond))) {         \
         core::trace_logger()->error("[{}:{}] "  fmt,  __func__, __LINE__,      \
-                              ##__VA_ARGS__);                                  \
+                                    ##__VA_ARGS__);                            \
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
@@ -132,7 +132,7 @@ void trace_update(utils::trace_level_e trace_level);
     if (likely(core::trace_logger() &&                                         \
                (core::trace_level() >= utils::trace_warn) && (cond))) {        \
         core::trace_logger()->warn("[{}:{}] "  fmt, __func__, __LINE__,        \
-                             ##__VA_ARGS__);                                   \
+                                   ##__VA_ARGS__);                             \
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
@@ -140,7 +140,7 @@ void trace_update(utils::trace_level_e trace_level);
     if (likely(core::trace_logger() &&                                         \
                (core::trace_level() >= utils::trace_info) && (cond))) {        \
         core::trace_logger()->info("[{}:{}] "  fmt, __func__, __LINE__,        \
-                             ##__VA_ARGS__);                                   \
+                                   ##__VA_ARGS__);                             \
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
@@ -148,7 +148,7 @@ void trace_update(utils::trace_level_e trace_level);
     if (likely(core::trace_logger() &&                                         \
                (core::trace_level() >= utils::trace_debug) && (cond))) {       \
         core::trace_logger()->debug("[{}:{}] "  fmt, __func__, __LINE__,       \
-                                        ##__VA_ARGS__);                        \
+                                    ##__VA_ARGS__);                            \
         core::trace_logger()->flush();                                         \
     }                                                                          \
 

@@ -14,11 +14,24 @@
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/impl/capri_impl.hpp"
 #include "nic/apollo/core/trace.hpp"
 
 namespace api {
 namespace impl {
+
+#define OBFL_LOG_DEBUG(fmt, ...)                                       \
+{                                                                      \
+    obfl_logger_->logger()->debug(fmt, ##__VA_ARGS__);                 \
+    obfl_logger_->logger()->flush();                                   \
+}
+
+#define OBFL_LOG_ERR(fmt, ...)                                         \
+{                                                                      \
+    obfl_logger_->logger()->error(fmt, ##__VA_ARGS__);                 \
+    obfl_logger_->logger()->flush();                                   \
+}
 
 /**
  * @defgroup PDS_ASIC_IMPL - asic wrapper implementation
@@ -32,6 +45,13 @@ namespace impl {
  */
 sdk_ret_t
 capri_impl::init_(void) {
+    if (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
+        obfl_logger_ =
+            utils::log::factory("obfl", api::g_pds_state.control_cores_mask(),
+                                utils::log_mode_sync, false,
+                                "/obfl/asicmon.log", (1 << 20), 5,
+                                utils::trace_debug, utils::log_none);
+    }
     return SDK_RET_OK;
 }
 
@@ -238,21 +258,21 @@ capri_impl::monitor (void) {
     // read the temperatures
     rv = sdk::platform::sensor::read_temperatures(&temperature);
     if (rv == 0) {
-        PDS_TRACE_DEBUG("Die temperature is %uC, local temperature is %uC",
-                        temperature.dietemp, temperature.localtemp/1000);
-        PDS_TRACE_DEBUG("HBM temperature is %uC", temperature.hbmtemp);
+        OBFL_LOG_DEBUG("Die temperature is {}C, local temperature is {}C,"
+                       " HBM temperature is {}C", temperature.dietemp,
+                       temperature.localtemp/1000, temperature.hbmtemp);
     } else {
-        PDS_TRACE_ERR("Temperature reading failed");
+        OBFL_LOG_ERR("Temperature reading failed");
     }
 
     // read the power
     rv = sdk::platform::sensor::read_powers(&power);
     if (rv == 0) {
-        PDS_TRACE_DEBUG("Power of pin is %uW", power.pin/1000000);
-        PDS_TRACE_DEBUG("Power of pout1 is %uW", power.pout1/1000000);
-        PDS_TRACE_DEBUG("Power of pout2 is %uW", power.pout2/1000000);
+        OBFL_LOG_DEBUG("Power of pin is {}W, pout1 is {}W, pout2 is {}W",
+                       power.pin/1000000, power.pout1/1000000,
+                       power.pout2/1000000);
     } else {
-        PDS_TRACE_ERR("Power reading failed");
+        OBFL_LOG_ERR("Power reading failed");
     }
     return SDK_RET_OK;
 }
