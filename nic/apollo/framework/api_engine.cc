@@ -459,9 +459,9 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         if (api_obj->stateless()) {
             // destroy cloned object as it is not needed anymore
             if (obj_ctxt->cloned_obj->stateless()) {
-                api_base::soft_delete(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
                 PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
                                   api_obj->key2str().c_str());
+                api_base::soft_delete(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
             }
         }
         api_base::soft_delete(obj_ctxt->obj_id, api_obj);
@@ -476,14 +476,15 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
 sdk_ret_t
 api_engine::activate_config_stage_(void) {
     sdk_ret_t                     ret;
+    obj_ctxt_t                    octxt;
     dirty_obj_list_t::iterator    next_it;
 
     batch_ctxt_.stage = API_BATCH_STAGE_CONFIG_ACTIVATE;
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
              it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
-        ret = activate_config_(it, it->first,
-                               &batch_ctxt_.dirty_obj_map[it->first]);
+        octxt = batch_ctxt_.dirty_obj_map[it->first];
+        ret = activate_config_(it, it->first, &octxt);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return SDK_RET_OK;
