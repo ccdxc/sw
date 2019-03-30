@@ -171,7 +171,7 @@ pds_init (pds_init_params_t *params)
     core::sig_init(SIGUSR1, api::sig_handler);
 
     // schedule all global timers
-    core::schedule_timers(api::sysmon_cb);
+    core::schedule_timers(&api::g_pds_state, api::sysmon_cb);
 
     return SDK_RET_OK;
 }

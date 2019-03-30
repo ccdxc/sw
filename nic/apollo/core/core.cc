@@ -122,7 +122,7 @@ session_age_cb (void *timer, uint32_t timer_id, void *ctxt)
 #endif
 
 sdk_ret_t
-schedule_timers (sdk::lib::twheel_cb_t sysmon_cb)
+schedule_timers (pds_state *state, sdk::lib::twheel_cb_t sysmon_cb)
 {
     //void    *aging_timer, *sysmon_timer;
     void *sysmon_timer;
@@ -145,19 +145,20 @@ schedule_timers (sdk::lib::twheel_cb_t sysmon_cb)
                     SESSION_AGE_SCAN_INTVL);
 #endif
 
-    // start periodic timer for scanning system interrupts, temparature, power
-    // etc.
-    sysmon_timer = sdk::lib::timer_schedule(
-                       TIMER_ID_SYSTEM_SCAN,
-                       SYSTEM_SCAN_INTVL * TIME_MSECS_PER_SEC,
-                       nullptr, sysmon_cb, true);
-    if (sysmon_timer == NULL) {
-        PDS_TRACE_ERR("Failed to start system monitoring timer\n");
-        return SDK_RET_ERR;
+    if (state->platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
+        // start periodic timer for scanning system interrupts, temparature,
+        // power etc.
+        sysmon_timer = sdk::lib::timer_schedule(
+                           TIMER_ID_SYSTEM_SCAN,
+                           SYSTEM_SCAN_INTVL * TIME_MSECS_PER_SEC,
+                           nullptr, sysmon_cb, true);
+        if (sysmon_timer == NULL) {
+            PDS_TRACE_ERR("Failed to start system monitoring timer\n");
+            return SDK_RET_ERR;
+        }
+        PDS_TRACE_DEBUG("Started periodic system scan timer with %us intvl",
+                        SYSTEM_SCAN_INTVL);
     }
-    PDS_TRACE_DEBUG("Started periodic system scan timer with %us intvl",
-                    SYSTEM_SCAN_INTVL);
-
     return SDK_RET_OK;
 }
 
