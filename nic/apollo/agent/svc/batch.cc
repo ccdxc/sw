@@ -29,6 +29,7 @@ BatchSvcImpl::BatchStart(ServerContext *context,
         if (ret != sdk::SDK_RET_OK) {
             return Status::CANCELLED;
         }
+        return Status::OK;
     }
 #endif
 
