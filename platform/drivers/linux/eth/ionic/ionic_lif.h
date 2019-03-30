@@ -127,6 +127,7 @@ enum lif_state_flags {
 	LIF_SW_DEBUG_STATS,
 	LIF_UP,
 	LIF_LINK_CHECK_NEEDED,
+	LIF_QUEUE_RESET,
 
 	/* leave this as last */
 	LIF_STATE_SIZE
@@ -229,6 +230,7 @@ int ionic_intr_alloc(struct lif *lif, struct intr *intr);
 void ionic_intr_free(struct lif *lif, int index);
 int ionic_open(struct net_device *netdev);
 int ionic_stop(struct net_device *netdev);
+int ionic_reset_queues(struct lif *lif);
 
 struct lif *ionic_netdev_lif(struct net_device *netdev);
 

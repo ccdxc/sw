@@ -228,8 +228,14 @@ int ionic_db_page_num(struct lif *lif, int pid)
 void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index)
 {
+	u32 credits;
+
 	intr->index = index;
 	intr->ctrl = idev->intr_ctrl + index;
+
+	/* clear the credits by writing the current value back */
+	credits = 0xffff & ioread32(intr_to_credits(intr->ctrl));
+	ionic_intr_return_credits(intr, credits, false, true);
 }
 
 void ionic_intr_mask_on_assertion(struct intr *intr)

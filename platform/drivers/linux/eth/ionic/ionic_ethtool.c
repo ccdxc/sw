@@ -515,6 +515,9 @@ static int ionic_set_ringparam(struct net_device *netdev,
 	    (ring->rx_pending == lif->nrxq_descs))
 		return 0;
 
+	while (test_and_set_bit(LIF_QUEUE_RESET, lif->state))
+		usleep_range(200, 400);
+
 	running = test_bit(LIF_UP, lif->state);
 	if (running)
 		ionic_stop(netdev);
@@ -524,6 +527,7 @@ static int ionic_set_ringparam(struct net_device *netdev,
 
 	if (running)
 		ionic_open(netdev);
+	clear_bit(LIF_QUEUE_RESET, lif->state);
 
 	return 0;
 }
@@ -556,6 +560,9 @@ static int ionic_set_channels(struct net_device *netdev,
 	if (ch->combined_count == lif->nxqs)
 		return 0;
 
+	while (test_and_set_bit(LIF_QUEUE_RESET, lif->state))
+		usleep_range(200, 400);
+
 	running = test_bit(LIF_UP, lif->state);
 	if (running)
 		ionic_stop(netdev);
@@ -564,6 +571,7 @@ static int ionic_set_channels(struct net_device *netdev,
 
 	if (running)
 		ionic_open(netdev);
+	clear_bit(LIF_QUEUE_RESET, lif->state);
 
 	return 0;
 }
@@ -832,6 +840,17 @@ static int ionic_get_module_eeprom(struct net_device *netdev,
 	return 0;
 }
 
+static int ionic_nway_reset(struct net_device *netdev)
+{
+	struct lif *lif = netdev_priv(netdev);
+	int err = 0;
+
+	if (netif_running(netdev))
+		err = ionic_reset_queues(lif);
+
+	return err;
+}
+
 static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_drvinfo		= ionic_get_drvinfo,
 	.get_link		= ethtool_op_get_link,
@@ -859,6 +878,7 @@ static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_pauseparam		= ionic_get_pauseparam,
 	.set_pauseparam		= ionic_set_pauseparam,
 	.set_link_ksettings	= ionic_set_link_ksettings,
+	.nway_reset		= ionic_nway_reset,
 };
 
 void ionic_ethtool_set_ops(struct net_device *netdev)

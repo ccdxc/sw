@@ -284,6 +284,32 @@ int ionic_stop(struct net_device *netdev)
 	return ionic_lif_stop(lif);
 }
 
+int ionic_reset_queues(struct lif *lif)
+{
+	bool running;
+	int err = 0;
+
+	/* Put off the next watchdog timeout */
+#ifdef HAVE_NETIF_TRANS_UPDATE
+	netif_trans_update(lif->netdev);
+#else
+	lif->netdev->trans_start = jiffies;
+#endif
+
+	while (test_and_set_bit(LIF_QUEUE_RESET, lif->state))
+		usleep_range(100, 200);
+
+	running = netif_running(lif->netdev);
+	if (running)
+		err = ionic_stop(lif->netdev);
+	if (!err && running)
+		ionic_open(lif->netdev);
+
+	clear_bit(LIF_QUEUE_RESET, lif->state);
+
+	return err;
+}
+
 static bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info)
 {
 	struct admin_comp *comp = cq_info->cq_desc;
@@ -796,7 +822,6 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 			.mtu = new_mtu,
 		},
 	};
-	bool running;
 	int err;
 
 	if (new_mtu < IONIC_MIN_MTU || new_mtu > IONIC_MAX_MTU) {
@@ -804,17 +829,12 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 		return -EINVAL;
 	}
 
-	running = netif_running(netdev);
-
-	if (running)
-		ionic_stop(netdev);
-
 	err = ionic_adminq_post_wait(lif, &ctx);
-	if (!err)
-		netdev->mtu = new_mtu;
+	if (err)
+		return err;
 
-	if (running)
-		ionic_open(netdev);
+	netdev->mtu = new_mtu;
+	err = ionic_reset_queues(lif);
 
 	return err;
 }
@@ -823,14 +843,20 @@ static void ionic_tx_timeout_work(struct work_struct *ws)
 {
 	struct lif *lif = container_of(ws, struct lif, tx_timeout_work);
 	struct ionic_dev *idev = &lif->ionic->idev;
+	int err;
 
+	netdev_info(lif->netdev, "Tx Timeout recovery\n");
+
+	/* Let the fw know we saw a problem */
 	mutex_lock(&lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_hang_notify(idev);
-	ionic_dev_cmd_wait(lif->ionic, devcmd_timeout);
+	err = ionic_dev_cmd_wait(lif->ionic, devcmd_timeout);
 	mutex_unlock(&lif->ionic->dev_cmd_lock);
+	if (err)
+		return;
 
-	// TODO implement reset and re-init queues and so on
-	// TODO to get interface back on its feet
+	/* Tear down and rebuild the Tx and Rx queues */
+	ionic_reset_queues(lif);
 }
 
 static void ionic_tx_timeout(struct net_device *netdev)
