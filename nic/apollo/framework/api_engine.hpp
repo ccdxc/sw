@@ -187,9 +187,11 @@ private:
     /// epoch in this stage NOTE: NO failures must happen in this stage
     ///
     /// \param[in] api_obj API object being processed
-    /// \param[in] obj_ctxt Transient information maintained to process the API
+    /// \param[in] it    iterator position of api obj to be deleted
+    /// \param[in] obj_ctxt    transient information maintained to process API
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+    sdk_ret_t activate_config_(dirty_obj_list_t::iterator it,
+                               api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
     /// \brief Abort all changes made to an object, rollback to its prev state
     /// NOTE: this is not expected to fail and also epoch is not activated if
@@ -224,7 +226,6 @@ private:
     sdk_ret_t activate_config_stage_(void);
 
     /// \brief Add given api object to dirty list of the API batch
-    ///
     /// \param[in] api_obj API object being processed
     /// \param[in] obj_ctxt Transient information maintained to process the API
     void add_to_dirty_list_(api_base *api_obj, obj_ctxt_t obj_ctxt) {
@@ -234,8 +235,7 @@ private:
     }
 
     /// \brief Del given api object from dirty list of the API batch
-    ///
-    /// \param[in] it Iterator position of api obj to be deleted
+    /// \param[in] it iterator position of api obj to be deleted
     /// \param[in] api_obj API object being processed
     void del_from_dirty_list_(dirty_obj_list_t::iterator it,
                               api_base *api_obj) {

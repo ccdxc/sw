@@ -391,7 +391,8 @@ error:
 }
 
 sdk_ret_t
-api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+api_engine::activate_config_(dirty_obj_list_t::iterator it,
+                             api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t    ret;
 
     switch (obj_ctxt->api_op) {
@@ -400,6 +401,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // object is created and (eventually) deleted in the same batch
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         api_obj->del_from_db();
+        del_from_dirty_list_(it, api_obj);
         api_obj->delay_delete();
         break;
 
@@ -411,6 +413,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                                        obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         obj_ctxt->hw_dirty = 0;
+        del_from_dirty_list_(it, api_obj);
         if (api_obj->stateless()) {
             // destroy this object as it is not needed anymore
             PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
@@ -432,6 +435,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                                        obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         api_obj->del_from_db();
+        del_from_dirty_list_(it, api_obj);
         api_obj->delay_delete();
         if (obj_ctxt->cloned_obj) {
             obj_ctxt->cloned_obj->delay_delete();
@@ -451,6 +455,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // enqueue the current (i.e., old) object for delay deletion, note that
         // the current obj is already deleted from the s/w db and swapped with
         // cloned_obj when update_db() was called on cloned_obj above
+        del_from_dirty_list_(it, api_obj);
         if (api_obj->stateless()) {
             // destroy cloned object as it is not needed anymore
             if (obj_ctxt->cloned_obj->stateless()) {
@@ -465,7 +470,6 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     default:
         return sdk::SDK_RET_INVALID_OP;
     }
-
     return SDK_RET_OK;
 }
 
@@ -478,10 +482,9 @@ api_engine::activate_config_stage_(void) {
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
              it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
-        ret = activate_config_(it->first,
+        ret = activate_config_(it, it->first,
                                &batch_ctxt_.dirty_obj_map[it->first]);
         SDK_ASSERT(ret == SDK_RET_OK);
-        del_from_dirty_list_(it, it->first);
     }
     return SDK_RET_OK;
 }
