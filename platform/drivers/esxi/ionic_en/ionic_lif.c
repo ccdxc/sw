@@ -1852,9 +1852,7 @@ ionic_lif_rss_setup(struct lif *lif)
         VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data;
         vmk_uint16 ind_tbl_value;
-//	struct net_device *netdev = lif->netdev;
-//	struct device *dev = lif->ionic->dev;
-	unsigned int i;
+        unsigned int i;
 
 	size_t tbl_size = sizeof(*lif->rss_ind_tbl) * RSS_IND_TBL_SIZE;
 	static const u8 toeplitz_symmetric_key[] = {
@@ -1868,9 +1866,7 @@ ionic_lif_rss_setup(struct lif *lif)
         priv_data = IONIC_CONTAINER_OF(lif->ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
-//	lif->rss_ind_tbl = dma_alloc_coherent(dev, tbl_size,
-//					      &lif->rss_ind_tbl_pa,
-//					      GFP_KERNEL);
+
         lif->rss_ind_tbl = ionic_dma_zalloc_align(ionic_driver.heap_id,
                                                   priv_data->dma_engine_coherent,
                                                   tbl_size,
@@ -1886,7 +1882,7 @@ ionic_lif_rss_setup(struct lif *lif)
 	/* Fill indirection table with 'default' values */
 
 	for (i = 0; i < RSS_IND_TBL_SIZE; i++) {
-                ind_tbl_value = (i % DRSS) +
+                ind_tbl_value = (i % lif->uplink_handle->DRSS) +
                                 priv_data->uplink_handle.max_rx_normal_queues;
 		lif->rss_ind_tbl[i] = ind_tbl_value;
         }
@@ -1979,7 +1975,7 @@ static void ionic_lif_deinit(struct lif *lif)
 
 	ionic_lif_stats_stop(lif);
 	if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH &&
-            (!lif->uplink_handle->is_mgmt_nic) && DRSS) {
+            (!lif->uplink_handle->is_mgmt_nic) && lif->uplink_handle->DRSS) {
                 ionic_lif_rss_teardown(lif);
         }
 
@@ -2185,7 +2181,7 @@ ionic_get_features(struct lif *lif)
 		},
 	};
 
-        if (DRSS) {
+        if (lif->uplink_handle->DRSS) {
                 ctx.cmd.features.wanted |= ETH_HW_RX_HASH;
         }
 
@@ -2613,7 +2609,7 @@ ionic_lif_init(struct lif *lif)
         
 	if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH &&
             (!lif->uplink_handle->is_mgmt_nic)) {
-                if (DRSS) {
+                if (lif->uplink_handle->DRSS) {
         		status = ionic_lif_rss_setup(lif);
 	        	if (status != VMK_OK) {
                                 ionic_err("ionic_lif_rss_setup() failed, status: %s",
@@ -2659,7 +2655,7 @@ err_out_rxqs_deinit:
 
 stats_start_err:
         if (lif->uplink_handle->hw_features & ETH_HW_RX_HASH &&
-            (!lif->uplink_handle->is_mgmt_nic) && DRSS) {
+            (!lif->uplink_handle->is_mgmt_nic) && lif->uplink_handle->DRSS) {
                 ionic_lif_rss_teardown(lif);
         }
 

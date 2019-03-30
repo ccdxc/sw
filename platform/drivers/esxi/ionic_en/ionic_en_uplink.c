@@ -153,7 +153,16 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
                                         tx_stats->wake, tx_stats->stop,
                                         tx_stats->clean);
         }
-        
+
+        stat_buf += vmk_Sprintf((char *) stat_buf,
+                                "\n Number of RSS queues=%d, "
+                                "ntxq_descs=%d, nrxq_descs=%d, "
+                                "log_level=%d, vlan_tx_insert=%d, "
+                                "vlan_rx_strip=%d",
+                                uplink_handle->DRSS, ntxq_descs, nrxq_descs,
+                                log_level, vlan_tx_insert,
+                                vlan_rx_strip);
+
         vmk_SemaUnlock(&uplink_handle->stats_binary_sema);
 
         return VMK_OK;
@@ -168,10 +177,14 @@ static VMK_ReturnStatus
 ionic_en_queue_get_rss_params(vmk_AddrCookie driver_data,
                               vmk_UplinkQueueRSSParams *rss_params)
 {
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
+
         ionic_dbg("ionic_en_queue_get_rss_params() called");
 
         rss_params->numRSSPools = 1;
-        rss_params->numRSSQueuesPerPool = DRSS;
+        rss_params->numRSSQueuesPerPool = uplink_handle->DRSS;
 
         rss_params->rssHashKeySize = RSS_HASH_KEY_SIZE;
         rss_params->rssIndTableSize = RSS_IND_TBL_SIZE;
@@ -767,9 +780,9 @@ ionic_en_get_tx_ring_from_qid(struct ionic_en_uplink_handle *uplink_handle,   //
                                   q_type, shared_q_data_idx, tx_ring_idx);
                 }
         } else {
-                ionic_warn("Invalid uplink qid, shared_q_data_idx: %u,"
-                           "q_type: %u, tx_ring_idx: %u",
-                           shared_q_data_idx, q_type, tx_ring_idx);
+                ionic_dbg("Invalid uplink qid, shared_q_data_idx: %u,"
+                          "q_type: %u, tx_ring_idx: %u",
+                          shared_q_data_idx, q_type, tx_ring_idx);
         }
 
         return tx_ring;
@@ -828,7 +841,7 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
         tx_ring = ionic_en_get_tx_ring_from_qid(uplink_handle,
                                                 vmk_qid);
         if (VMK_UNLIKELY(!tx_ring)) {
-                ionic_warn("ionic_en_get_tx_ring_from_qid() failed.");
+                ionic_dbg("ionic_en_get_tx_ring_from_qid() failed.");
                 goto tx_ring_err;
         }
  
@@ -2077,14 +2090,16 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                                              nrxqs_per_lif,
                                              &expected_max_tx_queues,
                                              &expected_max_rx_queues);
+        uplink_handle->DRSS = DRSS;
 
-        if (DRSS > expected_max_rx_queues) {
-                DRSS = expected_max_rx_queues;
+        if (uplink_handle->DRSS > expected_max_rx_queues) {
+                uplink_handle->DRSS = expected_max_rx_queues;
         }
 
         if (!uplink_handle->is_mgmt_nic) {
-                uplink_handle->max_rx_rss_queues = DRSS? IONIX_MAX_NUM_RX_RSS_QUEUE : 0;
-                uplink_handle->rx_rings_per_rss_queue = DRSS;
+                uplink_handle->max_rx_rss_queues = uplink_handle->DRSS?
+                                                   IONIX_MAX_NUM_RX_RSS_QUEUE : 0;
+                uplink_handle->rx_rings_per_rss_queue = uplink_handle->DRSS;
         }
 
         priv_data->ionic.ntxqs_per_lif = expected_max_tx_queues;
@@ -2094,7 +2109,8 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
 
         if (uplink_handle->max_rx_rss_queues) {
                 uplink_handle->max_rx_queues   = expected_max_rx_queues -
-                                                 uplink_handle->max_rx_rss_queues * DRSS + 1;
+                                                 uplink_handle->max_rx_rss_queues *
+                                                 uplink_handle->DRSS + 1;
         } else {
                 uplink_handle->max_rx_queues   = expected_max_rx_queues;
         }
@@ -2135,7 +2151,7 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                 queue_data->supportedFeatures = VMK_UPLINK_QUEUE_FEAT_NONE;
         
                 if (uplink_q_info->maxRxQueues == uplink_q_info->maxTxQueues &&
-                    DRSS == 0) {
+                    uplink_handle->DRSS == 0) {
                         queue_data->supportedFeatures |= VMK_UPLINK_QUEUE_FEAT_PAIR;
                 }
 
