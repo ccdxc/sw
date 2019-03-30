@@ -6,11 +6,8 @@
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/trace.hpp"
-
-#if 0
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 extern flow_test *g_flow_test_obj;
-#endif
 
 extern bool g_pds_mock_mode;
 
@@ -52,7 +49,7 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
 #if 0
             // TODO: Adding this here since there is no proto defs for
             // flows. This needs to be cleaned up
-            if (api_spec.tep.ip_addr == 0x01000001u) {
+            if (api_spec.tep.ip_addr == 0x01000002u) {
                 g_flow_test_obj->add_local_ep(api_spec.key.vcn.id,
                                               api_spec.key.ip_addr);
             } else {

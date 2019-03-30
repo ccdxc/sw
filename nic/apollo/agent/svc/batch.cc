@@ -14,8 +14,28 @@ BatchSvcImpl::BatchStart(ServerContext *context,
     pds_batch_params_t api_batch_params = {0};
 
     api_batch_params.epoch = proto_spec->epoch();
-    if (pds_batch_start(&api_batch_params) == sdk::SDK_RET_OK) {
-        return Status::OK;
+
+#if 1
+    // TODO: Adding this here since there is no proto defs for
+    // flows. This needs to be cleaned up
+    sdk_ret_t ret;
+    if (api_batch_params.epoch == PDS_EPOCH_INVALID) {
+        ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, false);
+        if (ret != sdk::SDK_RET_OK) {
+            return Status::CANCELLED;
+        }
+ 
+        ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, true);
+        if (ret != sdk::SDK_RET_OK) {
+            return Status::CANCELLED;
+        }
+    }
+#endif
+
+    if (api_batch_params.epoch != PDS_EPOCH_INVALID) {
+        if (pds_batch_start(&api_batch_params) == sdk::SDK_RET_OK) {
+            return Status::OK;
+        }
     }
     return Status::CANCELLED;
 }

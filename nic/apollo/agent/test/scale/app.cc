@@ -229,10 +229,26 @@ test_app_push_configs (void)
 {
     BatchStatus         status;
     Status              ret_status;
+    BatchSpec           spec;
+    ClientContext       start_context;
+    pds_batch_params_t  params;
 
     /* Create objects */
     create_objects();
+
+#if 1
+    // TODO: Temp change to push batch start and create flows here
+    params.epoch = 0;
+    populate_batch_spec(&spec, &params);
     
+    /* Batch start */
+    ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);
+    if (!ret_status.ok()) {
+        printf("%s: failed!\n", __FUNCTION__);
+        return SDK_RET_ERR;
+    }
+#endif
+
     return SDK_RET_OK;
 }
 
