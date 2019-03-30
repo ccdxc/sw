@@ -94,7 +94,7 @@ func (sm *SysModel) DefaultSGPolicy() *SGPolicyCollection {
 
 // Restore is a very context specific function, which restores permit any any policy
 func (spc *SGPolicyCollection) Restore() error {
-	return spc.AddRule("any", "any", "", "PERMIT").Commit()
+	return spc.AddRule("any", "any", "0-65535", "PERMIT").Commit()
 }
 
 // AddRule adds a rule to the policy
@@ -120,14 +120,20 @@ func (spc *SGPolicyCollection) AddRule(fromIP, toIP, port, action string) *SGPol
 		params := strings.Split(port, "/")
 		if len(params) == 1 {
 			pstr := strings.ToLower(params[0])
+
 			if pstr == "tcp" || pstr == "udp" || pstr == "icmp" {
 				rproto = pstr
 			} else {
-				_, err := strconv.Atoi(pstr)
-				if err != nil {
+				rproto = "tcp"
+				// Check if port is a hypen separted range.
+				components := strings.Split(pstr, "-")
+				if len(components) ==  2 {
+					rport = pstr
+				} else if _, err := strconv.Atoi(pstr); err != nil{
 					spc.err = fmt.Errorf("Invalid port number: %v", port)
 					return spc
 				}
+
 				rproto = "tcp"
 				rport = pstr
 			}

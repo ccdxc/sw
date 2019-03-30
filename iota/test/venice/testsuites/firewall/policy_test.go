@@ -64,7 +64,7 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 
 	// add allow all rule for workload followed by deny all rule
 	spc = spc.AddRuleForWorkloadCombo(workloadPairs, fromIP, toIP, proto, port, "PERMIT")
-	spc = spc.AddRule("any", "any", "", "DENY")
+	spc = spc.AddRule("any", "any", "0-65535", "DENY")
 	err := spc.Commit()
 	if err != nil {
 		return err
@@ -159,7 +159,7 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 
 	// add deny rule for workload followed by allow all rule
 	spc = spc.AddRuleForWorkloadCombo(workloadPairs, fromIP, toIP, proto, port, "DENY")
-	spc = spc.AddRule("any", "any", "", "PERMIT")
+	spc = spc.AddRule("any", "any", "0-65535", "PERMIT")
 	err := spc.Commit()
 	if err != nil {
 		return err

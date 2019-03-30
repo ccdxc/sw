@@ -89,6 +89,10 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 		if len(r.Apps) != 0 && len(r.ProtoPorts) != 0 {
 			return fmt.Errorf("Can not have both app and protocol/port in rule: %v", r)
 		}
+		// error out on a rule which is missing proto-ports and a valid app
+		if len(r.ProtoPorts) == 0 && len(r.Apps) == 0 {
+			return fmt.Errorf("proto-ports are mandatory, when the rules don't refer to an App")
+		}
 		for _, pp := range r.ProtoPorts {
 			protoNum, err := strconv.Atoi(pp.Protocol)
 			if err == nil {
@@ -133,6 +137,9 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 						return fmt.Errorf("Invalid port range format: %v", prange)
 					}
 				}
+			} else if s.isProtocolTCPorUDP(pp.Protocol) {
+				// Reject empty ports only on non icmp protocol
+				return fmt.Errorf("ports are mandatory. Use 0-65535 if the intent is to allow all")
 			}
 		}
 	}
@@ -353,4 +360,8 @@ func registerSGPolicyHooks(svc apiserver.Service, logger log.Logger) {
 func init() {
 	apisrv := apisrvpkg.MustGetAPIServer()
 	apisrv.RegisterHooksCb("security.SecurityV1", registerSGPolicyHooks)
+}
+
+func (s *securityHooks) isProtocolTCPorUDP(protocol string) bool {
+	return strings.ToLower(protocol) == "6" || strings.ToLower(protocol) == "tcp" || strings.ToLower(protocol) == "17" || strings.ToLower(protocol) == "udp"
 }

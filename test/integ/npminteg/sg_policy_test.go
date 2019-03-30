@@ -133,13 +133,17 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 	// if not present create the default tenant
 	it.CreateTenant("default")
+	protoPorts := []security.ProtoPort{{
+		Protocol: "TCP",
+		Ports:    "80",
+	}}
 	// sg policy refering an app that doesnt exist
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testpolicy",
+			Name:      c.TestName(),
 		},
 		Spec: security.SGPolicySpec{
 			AttachTenant: true,
@@ -158,10 +162,15 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
 	Assert(c, err != nil, "sgpolicy create with invalid app reference didnt fail")
 
-	// create sg policy without app
+	// create sg policy without app it should fail as it doesn't have valid ports
 	sgp.Spec.Rules[0].Apps = []string{}
 	_, err = it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
-	AssertOk(c, err, "error creating sg policy")
+	Assert(c, err != nil, "sg policy with no apps and no proto ports must fail")
+
+	// create a valid sg policy with ports
+	sgp.Spec.Rules[0].ProtoPorts = protoPorts
+	_, err = it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	AssertOk(c, err, "sgpolicy create must succeed with valid proto ports and no app")
 
 	// try updating the policy with invalid app
 	sgp.Spec.Rules[0].Apps = []string{"invalid"}
@@ -192,6 +201,8 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 
 	// refer the app from sg policy
 	sgp.Spec.Rules[0].Apps = []string{"icmp-app"}
+	// clear up protoPorts
+	sgp.Spec.Rules[0].ProtoPorts = nil
 	_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
 	AssertOk(c, err, "Error updating sgpolicy with reference to icmp app")
 

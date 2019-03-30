@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pensando/sw/api"
@@ -13,7 +14,7 @@ import (
 // #################### Happy Path Tests ####################
 func TestSGPolicyCreateAtTenant(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -55,7 +56,7 @@ func TestSGPolicyCreateAtTenant(t *testing.T) {
 
 func TestSGPolicyCreateAtSGs(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -114,7 +115,7 @@ func TestSGPolicyCreateAtSGs(t *testing.T) {
 
 func TestAttachGroupsWithFromAddresses(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -158,7 +159,7 @@ func TestAttachGroupsWithFromAddresses(t *testing.T) {
 // #################### Corner Case Tests ####################
 func TestBothAttachmentPoints(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -199,9 +200,206 @@ func TestBothAttachmentPoints(t *testing.T) {
 	Assert(t, len(errs) != 0, "sg policy creates specifying both tenant and sg level must fail")
 }
 
+func TestEmptyPortsInRules(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "sg policy creates specifying empty ports must fail")
+}
+
+func TestEmptyProtoPorts(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "sg policy creates specifying empty ports must fail")
+}
+
+func TestEmptyFromIPAddresses(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			Action:        "PERMIT",
+			ToIPAddresses: []string{"192.168.1.1/16"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "sg policy creates specifying empty from addresses must fail when it is being attached to tenant")
+	fmt.Println(errs)
+}
+
+func TestEmptyToIPAddresses(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"192.168.1.1/16"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "sg policy creates specifying empty from addresses must fail when it is being attached to tenant")
+	fmt.Println(errs)
+}
+
+func TestEmptyFromAndToIPAddresses(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			Action: "PERMIT",
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	errs := s.validateSGPolicy(sgp, "v1", false)
+	Assert(t, len(errs) != 0, "sg policy creates specifying empty from addresses must fail when it is being attached to tenant")
+}
+
 func TestMissingAttachmentPoint(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -242,7 +440,7 @@ func TestMissingAttachmentPoint(t *testing.T) {
 
 func TestInvalidAppProto(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -288,7 +486,7 @@ func TestInvalidAppProto(t *testing.T) {
 
 func TestAppProtoBoth(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -325,55 +523,9 @@ func TestAppProtoBoth(t *testing.T) {
 	Assert(t, err != nil, "sg policy created with both app and proto")
 }
 
-func TestAppPortEmpty(t *testing.T) {
-	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &securityHooks{
-		svc:    mocks.NewFakeService(),
-		logger: log.GetNewLogger(logConfig),
-	}
-	// create sg policy
-	rules := []security.SGRule{
-		{
-			ProtoPorts: []security.ProtoPort{
-				{
-					Protocol: "tcp",
-					Ports:    "",
-				},
-				{
-					Protocol: "udp",
-					Ports:    "53",
-				},
-				{
-					Protocol: "tcp",
-					Ports:    "8000",
-				},
-			},
-			Action:          "PERMIT",
-			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
-			ToIPAddresses:   []string{"192.168.1.1/16"},
-		},
-	}
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testpolicy",
-		},
-		Spec: security.SGPolicySpec{
-			AttachTenant: true,
-			Rules:        rules,
-		},
-	}
-
-	errs := s.validateSGPolicy(sgp, "v1", false)
-	Assert(t, len(errs) == 0, "sg policy creates with empty port should suceed")
-}
-
 func TestProtocolNumbers(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -429,7 +581,7 @@ func TestProtocolNumbers(t *testing.T) {
 
 func TestInvalidAppPortNonInteger(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -475,7 +627,7 @@ func TestInvalidAppPortNonInteger(t *testing.T) {
 
 func TestRulePortRanges(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -618,7 +770,7 @@ func TestRulePortRanges(t *testing.T) {
 
 func TestInvalidAppPortInvalidPortRange(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -691,7 +843,7 @@ func TestInvalidAppPortInvalidPortRange(t *testing.T) {
 
 func TestAttachTenantWithMissingToAndFromAddresses(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -771,7 +923,7 @@ func TestAttachTenantWithMissingToAndFromAddresses(t *testing.T) {
 
 func TestInvalidIPAddressOctet(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -814,7 +966,7 @@ func TestInvalidIPAddressOctet(t *testing.T) {
 
 func TestInvalidIPAddressCIDR(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -856,7 +1008,7 @@ func TestInvalidIPAddressCIDR(t *testing.T) {
 
 func TestInvalidIPAddressRange(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -919,7 +1071,7 @@ func TestInvalidIPAddressRange(t *testing.T) {
 
 func TestInvalidKeyword(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -961,7 +1113,7 @@ func TestInvalidKeyword(t *testing.T) {
 
 func TestAttachGroupsWithInvalidIPAddresses(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -1003,7 +1155,7 @@ func TestAttachGroupsWithInvalidIPAddresses(t *testing.T) {
 
 func TestAppWithMultipleSeparators(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -1045,7 +1197,7 @@ func TestAppWithMultipleSeparators(t *testing.T) {
 
 func TestAppWithInvalidProtocol(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
@@ -1087,7 +1239,7 @@ func TestAppWithInvalidProtocol(t *testing.T) {
 
 func TestInvalidObjType(t *testing.T) {
 	t.Parallel()
-	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	logConfig := log.GetDefaultConfig(t.Name())
 	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),

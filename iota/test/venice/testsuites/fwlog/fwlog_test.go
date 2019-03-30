@@ -46,7 +46,7 @@ var _ = Describe("fwlog tests", func() {
 		ts.model.SGPolicy("default-policy").Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()).ShouldNot(HaveOccurred())
+		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "0-65535", "PERMIT").Commit()).ShouldNot(HaveOccurred())
 
 		// verify policy was propagated correctly
 		Eventually(func() error {
