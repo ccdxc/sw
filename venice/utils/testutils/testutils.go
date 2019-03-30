@@ -246,11 +246,11 @@ func CheckEventually(eval Evaluator, intervals ...string) bool {
 
 // CreateFruJSON Creates the fru.json file for Mock test cases.
 func CreateFruJSON(MacAddress string) error {
-	fru := `{"Manufacturing date": "1539734400", "Manufacturer": "PENSANDO SYSTEMS INC.",
-                  "Product Name": "NAPLES 100", "Serial Number": "FLM18440006",
-                  "Part Number": "68-0003-02 01", "Engineering Change level": "00",
-                  "Board Id Number": "1000", "NumMac Address": "24",
-                  "Mac Address": "%s"
+	fru := `{"manufacturing-date": "1539734400", "manufacturer": "PENSANDO SYSTEMS INC.",
+                  "product-name": "NAPLES 100", "serial-number": "FLM18440006",
+                  "part-number": "68-0003-02 01", "engineering-change-level": "00",
+                  "board-id": "1000", "num-mac-address": "24",
+                  "mac-address": "%s"
                 }`
 
 	fru = fmt.Sprintf(fru, MacAddress)
