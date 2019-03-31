@@ -51,10 +51,10 @@ def Verify(tc):
 
     for i in range(0, len(tc.naples_status_after)):
         if tc.controller_ip_penctl_after[i] != tc.venice_ips[0] \
-           or tc.naples_status_after[i] != "VENICE_REGISTRATION_DONE":
+           or tc.naples_status_after[i] != "VENICE_UNREACHABLE":
                api.Logger.info("{}th iteration FAILED - CNTRL EXPECTED {} RECEIVED {} \
                                      - STATUS BEFORE EXPECTED [REBOOT_PENDING] RECEIVED [{}]] \
-                                     - STATUS AFTER EXPECTED [VENICE_REGISTRATION_DONE] RECEIVED [{}]".format(i,\
+                                     - STATUS AFTER EXPECTED [VENICE_UNREACHABLE] RECEIVED [{}]".format(i,\
                                                                                         tc.venice_ips[i],\
                                                                                         tc.controller_ip_penctl_after[i],\
                                                                                         tc.naples_status_before[i], \

@@ -244,7 +244,8 @@ func readAndParseLease(leaseFile string) ([]string, error) {
 	return nil, nil
 }
 
-func (c *IPClient) updateDelphiNaplesObject() error {
+// UpdateDelphiNaplesObject updates the delphi object
+func (c *IPClient) UpdateDelphiNaplesObject() error {
 	// Set up appropriate mode
 	var naplesMode delphiProto.NaplesStatus_Mode
 
@@ -361,22 +362,17 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 		c.nmdState.config.Status.SmartNicName = macStr
 	}
 
-	// TODO : Reenable these lines
-	// Disable any updates to Naples Admission once Naples has been admitted into a Venice Cluster.
-	// if c.nmdState.config.Status.Phase == cluster.SmartNICStatus_ADMITTED {
-	//		log.Infof("Naples already addmitted into Venice Cluster.")
-	//	return errors.New("Cannot change Naples mode as Naples is already admitted into the cluster.")
-	//}
-
 	log.Infof("Updating Naples Status.")
 	log.Infof("Current Spec : %v", c.nmdState.config.Spec)
 	log.Infof("Current Status : %v", c.nmdState.config.Status)
+	c.UpdateTransitionPhase()
 
 	if c.nmdState.config.Status.Mode == nmd.MgmtMode_NETWORK.String() {
 		log.Info("Currently Naples is Network Managed")
 		if c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK.String() {
 			log.Info("Moving Naples to Network managed mode. Updating CMD Client.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
+			c.nmdState.config.Status.Controllers = controllers
 
 			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
 			c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
@@ -390,9 +386,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 				log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
 			}
 
-			// TODO : Remove Auto-admit
-			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
-
 			go func() {
 				c.nmdState.Add(1)
 				defer c.nmdState.Done()
@@ -403,32 +396,8 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 				}
 			}()
 
-			// TODO : Reenable these lines
 			//c.waitForRegistration()
 
-			// Reflect reboot pending state only if the nic is admitted.
-			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
-				c.nmdState.config.Status.Controllers = controllers
-				if c.isDynamic && len(c.nmdState.config.Spec.Controllers) != 0 {
-					// In dynamic mode, the spec will be empty and on reboot we need to ensure that it doesn't have stale controllers picked up from boltdb
-					log.Info("Clearing out old controller IPs in spec.")
-					c.nmdState.config.Spec.Controllers = []string{}
-				}
-
-				if !checkRebootTmpExist() {
-					if c.nmdState.config.Status.TransitionPhase == nmd.NaplesStatus_REBOOT_PENDING.String() {
-						// Previously it was set to reboot pending. We need to clear it
-						log.Infof("Clearing out previous reboot pending state.")
-						c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
-					} else if c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String() {
-						log.Infof("Current Transition Phase is %v", c.nmdState.config.Status.TransitionPhase)
-						c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_REBOOT_PENDING.String()
-						createRebootTmpFile()
-					}
-				}
-			} else {
-				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
-			}
 		} else if c.nmdState.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
 			log.Info("Moving Naples to Host managed mode.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_HOST.String()
@@ -454,15 +423,14 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 			// c.nmdState.StopClassicMode(false)
 			log.Info("Moving Naples to Network managed mode.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
+			c.nmdState.config.Status.Controllers = controllers
 
 			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
 			c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
+
 			if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
 				log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
 			}
-
-			// TODO : Remove Auto-admit
-			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 
 			go func() {
 				c.nmdState.Add(1)
@@ -474,32 +442,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 				}
 			}()
 
-			// wait for registration
-			// TODO : Uncomment this section
-			//c.waitForRegistration()
-			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
-				c.nmdState.config.Status.Controllers = controllers
-				if c.isDynamic && len(c.nmdState.config.Spec.Controllers) != 0 {
-					// In dynamic mode, the spec will be empty and on reboot we need to ensure that it doesn't have stale controllers picked up from boltdb
-					log.Info("Clearing out old controller IPs in spec.")
-					c.nmdState.config.Spec.Controllers = []string{}
-				}
-
-				if !checkRebootTmpExist() {
-					if c.nmdState.config.Status.TransitionPhase == nmd.NaplesStatus_REBOOT_PENDING.String() {
-						// Previously it was set to reboot pending. We need to clear it
-						log.Infof("Clearing out previous reboot pending state.")
-						c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
-					} else if c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String() {
-						log.Infof("Current Transition Phase is %v", c.nmdState.config.Status.TransitionPhase)
-						c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_REBOOT_PENDING.String()
-						createRebootTmpFile()
-					}
-				}
-			} else {
-				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
-			}
-
 		} else {
 			log.Info("Starting NMD REST server.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_HOST.String()
@@ -510,9 +452,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 			}
 		}
 	}
-
-	// Update smart NIc
-	//c.nmdState.UpdateNaplesInfoFromConfig()
 
 	// Persist HAL Configuration
 	if !c.isMock {
@@ -529,14 +468,32 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 		return err
 	}
 
-	// Update Naples Status Delphi Object
-	err = c.updateDelphiNaplesObject()
-	if !c.isMock && err != nil {
-		log.Errorf("Error updating Delphi NaplesStatus object. Err: %v", err)
-		return err
+	return nil
+}
+
+// UpdateTransitionPhase updates nmd transition state
+func (c *IPClient) UpdateTransitionPhase() {
+	if c.isDynamic && len(c.nmdState.config.Spec.Controllers) != 0 {
+		// In dynamic mode, the spec will be empty and on reboot we need to ensure that it doesn't have stale controllers picked up from boltdb
+		log.Info("Clearing out old controller IPs in spec.")
+		c.nmdState.config.Spec.Controllers = []string{}
 	}
 
-	return nil
+	if !checkRebootTmpExist() {
+		if c.nmdState.config.Status.TransitionPhase == nmd.NaplesStatus_REBOOT_PENDING.String() {
+			// Previously it was set to reboot pending. We need to clear it
+			log.Infof("Clearing out previous reboot pending state.")
+			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
+			} else {
+				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
+			}
+		} else if c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String() {
+			log.Infof("Current Transition Phase is %v", c.nmdState.config.Status.TransitionPhase)
+			c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_REBOOT_PENDING.String()
+			createRebootTmpFile()
+		}
+	}
 }
 
 func (c *IPClient) watchLeaseEvents() {
@@ -849,7 +806,7 @@ func (c *IPClient) Update() error {
 // On a timeout, it doesn't stop nmd's control loop, but only updates the transition phase.
 func (c *IPClient) waitForRegistration() {
 	registrationDone := make(chan bool, 1)
-	ticker := time.NewTicker(time.Second * 10)
+	ticker := time.NewTicker(time.Second * 1)
 	timeout := time.After(nicRegistrationWaitTime)
 
 	for {

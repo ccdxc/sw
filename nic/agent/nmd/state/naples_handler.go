@@ -110,6 +110,7 @@ func (n *NMD) StartManagedMode() error {
 	log.Info("Starting Managed Mode")
 
 	n.modeChange.Lock()
+
 	if n.cmd == nil {
 		// create the CMD client
 		cmdClient, err := cmdif.NewCmdClient(n, n.cmdRegURL, n.resolverClient)
@@ -191,18 +192,32 @@ func (n *NMD) StartManagedMode() error {
 			//
 			if err != nil {
 
-				// Rule #1 - continue retry at regular interval
+				// Rule #1 - continue retry at regular interval and mark current transition phase as VENICE_UNREACHABLE only if the current state is not REBOOT_PENDING.
+				// There is a preference between different transition phases.
+				// If the reboot is not done, then we need to reflect that a reboot is pending for the mode change to take effect.
+				// Set this to VENICE_UNREACHABLE only if the current status is not reboot pending
+				if !checkRebootTmpExist() {
+					n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_UNREACHABLE.String()
+				}
+
 				log.Errorf("Error registering nic, mac: %s err: %+v", mac, err)
+
 			} else {
 				resp := msg.AdmissionResponse
 				if resp == nil {
 					log.Errorf("Protocol error: no AdmissionResponse in message, mac: %s", mac)
+					if !checkRebootTmpExist() {
+						n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_UNREACHABLE.String()
+					}
 				}
 				log.Infof("Received register response, phase: %+v", resp.Phase)
+
 				switch resp.Phase {
 
 				case cmd.SmartNICStatus_REJECTED.String():
-
+					if !checkRebootTmpExist() {
+						n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
+					}
 					// Rule #2 - abort retry, clear registration status flag
 					log.Errorf("Invalid NIC, Admission rejected, mac: %s reason: %s", mac, resp.Reason)
 					n.setRegStatus(false)
@@ -210,6 +225,9 @@ func (n *NMD) StartManagedMode() error {
 
 				case cmd.SmartNICStatus_PENDING.String():
 
+					if !checkRebootTmpExist() {
+						n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
+					}
 					// Rule #3 - needs slower exponential retry
 					// Cap the retry interval at 30mins
 					if 2*n.nicRegInterval <= nicRegMaxInterval {
@@ -257,6 +275,18 @@ func (n *NMD) StartManagedMode() error {
 
 					// Rule #4 - registration is success, clear registration status
 					// and move on to next stage
+					// Update NMD Transition phase to admitted
+					n.config.Status.AdmissionPhase = cmd.SmartNICStatus_ADMITTED.String()
+					n.IPClient.UpdateDelphiNaplesObject()
+					err = n.store.Write(&n.config)
+					if err != nil {
+						log.Errorf("Error persisting the naples config in Bolt DB during a successful admission err: %+v", err)
+					}
+					// If the NAPLES is not in reboot pending, clear the state
+					if !checkRebootTmpExist() {
+						n.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
+					}
+
 					log.Infof("NIC admitted into cluster, mac: %s", mac)
 					n.setRegStatus(false)
 					n.nicRegInterval = n.nicRegInitInterval
