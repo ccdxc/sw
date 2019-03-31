@@ -134,11 +134,11 @@ var _ = Describe("events test", func() {
 				return err
 			}
 
-			if ts.tu.NumNaplesHosts != int(res.TotalHits()) {
-				return fmt.Errorf("could not find `NICAdmitted` events")
+			if ts.tu.NumNaplesHosts < int(res.TotalHits()) {
+				return fmt.Errorf("got only %d `NICAdmitted` events while expecting atleast %d events", int(res.TotalHits()), ts.tu.NumNaplesHosts)
 			}
 			return nil
-		}, 100, 1).Should(BeNil(), "could not find `NICAdmitted` events in elasticsearch")
+		}, 100, 1).Should(BeNil(), "could not find enough number of `NICAdmitted` events in elasticsearch")
 	})
 
 	AfterEach(func() {
