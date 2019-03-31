@@ -36,7 +36,6 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
     'actions': Array<AuthPermission_actions> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'resource-tenant': {
-            default: 'default',
             description:  'ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant to which role object belongs. Exception are roles in &quot;default&quot; tenant. Role in &quot;default&quot; tenant can include permissions for resources in other tenants. Specifying &quot;_All_&quot; will match all tenants.',
             required: false,
             type: 'string'
