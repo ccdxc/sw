@@ -4,7 +4,10 @@ package state
 
 import (
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 
 	gogoproto "github.com/gogo/protobuf/types"
 
@@ -51,7 +54,6 @@ func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath string) 
 			Mode: mode,
 		},
 	}
-
 	_, err = emdb.Read(&c)
 
 	// Blank slate. Persist config and do init stuff
@@ -152,7 +154,11 @@ func (na *Nagent) createDefaultVrf() error {
 			VrfType: "CUSTOMER",
 		},
 	}
-	return na.CreateVrf(&defVrf)
+	err := na.CreateVrf(&defVrf)
+	if err != nil && strings.Contains(err.Error(), halproto.ApiStatus_API_STATUS_EXISTS_ALREADY.String()) {
+		return nil
+	}
+	return err
 }
 
 func (na *Nagent) validateMeta(kind string, oMeta api.ObjectMeta) error {

@@ -5,10 +5,12 @@ package state
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/utils/log"
@@ -287,6 +289,9 @@ func (na *Nagent) createPortsAndUplinks(ports []*netproto.Port) error {
 
 	if err := na.Datapath.CreatePort(ports...); err != nil {
 		log.Errorf("Failed to create Ports in Datapath. Err: %v", err)
+		if strings.Contains(err.Error(), halproto.ApiStatus_API_STATUS_EXISTS_ALREADY.String()) {
+			return nil
+		}
 		return fmt.Errorf("failed to create Ports in Datapath. Err: %v", err)
 	}
 
