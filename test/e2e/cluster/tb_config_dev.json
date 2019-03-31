@@ -13,7 +13,7 @@
     "Password":       "Pensando0$",
     "AuthMethod":     "LOCAL",
     "Radius": {
-        "URL": "10.11.100.101:1812",
+        "URL": "10.11.100.102:1812",
         "NasID": "Venice",
         "NasSecret": "testing123",
         "User": "radiususer",

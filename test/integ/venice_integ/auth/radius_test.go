@@ -14,7 +14,7 @@ import (
 
 func getACSConfig() *RadiusConfig {
 	return &RadiusConfig{
-		URL:        "10.11.100.101:1812",
+		URL:        "10.11.100.102:1812",
 		NasID:      "Venice",
 		NasSecret:  "testing123",
 		User:       "radiususer",
@@ -26,7 +26,7 @@ func getACSConfig() *RadiusConfig {
 
 func getACSNoGroupUserConfig() *RadiusConfig {
 	return &RadiusConfig{
-		URL:        "10.11.100.101:1812",
+		URL:        "10.11.100.102:1812",
 		NasID:      "Venice",
 		NasSecret:  "testing123",
 		User:       "nogroup",
