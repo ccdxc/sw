@@ -41,13 +41,14 @@ struct rx_filter {
 #define RX_FILTER_HLISTS_MASK	(RX_FILTER_HLISTS - 1)
 
 struct rx_filters {
+	bool init;
 #ifdef __FreeBSD__
 	struct mtx mtx;
 #else
 	spinlock_t lock;
 #endif
 	struct hlist_head by_hash[RX_FILTER_HLISTS];	/* by skb hash */
-	struct hlist_head by_id[RX_FILTER_HLISTS];		/* by filter_id */
+	struct hlist_head by_id[RX_FILTER_HLISTS];	/* by filter_id */
 };
 
 #ifdef __FreeBSD__

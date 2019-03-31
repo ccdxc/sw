@@ -27,6 +27,7 @@
 #include <linux/etherdevice.h>
 #include <linux/interrupt.h>
 #include <linux/if_ether.h>
+#include <sys/mutex.h>
 
 #include "ionic.h"
 #include "ionic_lif.h"
@@ -65,6 +66,7 @@ int ionic_rx_filters_init(struct lif *lif)
 		INIT_HLIST_HEAD(&lif->rx_filters.by_id[i]);
 	}
 
+	lif->rx_filters.init = true;
 	return 0;
 }
 
@@ -74,6 +76,9 @@ void ionic_rx_filters_deinit(struct lif *lif)
 	struct hlist_node *tmp;
 	struct rx_filter *f;
 	unsigned int i;
+
+	if (!lif->rx_filters.init)
+		return;
 
 	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	for (i = 0; i < RX_FILTER_HLISTS; i++) {

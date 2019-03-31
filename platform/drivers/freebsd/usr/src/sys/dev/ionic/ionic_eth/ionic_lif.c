@@ -103,7 +103,7 @@ static void ionic_rxq_enable(struct rxque *rxq)
 
 	err = ionic_q_enable_disable(rxq->lif, rxq->qid, rxq->qtype, true /* enable */);
 	if (err)
-		IONIC_QUE_WARN(rxq, "failed to enabled, err: %d\n", err);
+		IONIC_QUE_WARN(rxq, "failed to enable, err: %d\n", err);
 }
 
 static void ionic_rxq_disable(struct rxque *rxq)
@@ -112,7 +112,7 @@ static void ionic_rxq_disable(struct rxque *rxq)
 
 	err = ionic_q_enable_disable(rxq->lif, rxq->qid, rxq->qtype, false /* disable */);
 	if (err)
-		IONIC_QUE_WARN(rxq, "failed to dsable, err: %d\n", err);
+		IONIC_QUE_WARN(rxq, "failed to disable, err: %d\n", err);
 }
 
 static void ionic_txq_enable(struct txque *txq)
@@ -121,7 +121,7 @@ static void ionic_txq_enable(struct txque *txq)
 
 	err = ionic_q_enable_disable(txq->lif, txq->qid, txq->qtype, true /* enable */);
 	if (err)
-		IONIC_QUE_WARN(txq, "failed to enabled, err: %d\n", err);
+		IONIC_QUE_WARN(txq, "failed to enable, err: %d\n", err);
 }
 
 static void ionic_txq_disable(struct txque *txq)
@@ -130,7 +130,7 @@ static void ionic_txq_disable(struct txque *txq)
 
 	err = ionic_q_enable_disable(txq->lif, txq->qid, txq->qtype, false /* disable */);
 	if (err)
-		IONIC_QUE_WARN(txq, "failed to dsable, err: %d\n", err);
+		IONIC_QUE_WARN(txq, "failed to disable, err: %d\n", err);
 }
 
 /* Calculate mbuf pool size based on MTU. */
@@ -154,7 +154,7 @@ static void ionic_read_notify_block(struct lif* lif)
 {
 	struct notify_block *nb = lif->notifyblock;
 
-	if (nb == NULL || lif == NULL)
+	if (nb == NULL)
 		return;
 
 	if (nb->eid < lif->last_eid)
@@ -166,7 +166,6 @@ static void ionic_read_notify_block(struct lif* lif)
 	lif->link_error_bits = nb->link_error_bits;
 	lif->phy_type = nb->phy_type;
 	lif->autoneg_status = nb->autoneg_status;
-
 }
 
 static void ionic_open(struct lif *lif)
@@ -290,9 +289,6 @@ int ionic_adminq_clean(struct adminq* adminq, int limit)
 			adminq->ctx_ring[cmd_index] = NULL;
 		}
 
-		IONIC_QUE_INFO(adminq, "comp :%d cmd start: %d cmd stop: %d status %d\n",
-			comp_index, cmd_index, comp->comp_index, comp->status);
-
 		if (comp->status) {
 			IONIC_QUE_ERROR(adminq, "failed for opcode: %d status: %d\n",
 				cmd->opcode, comp->status);
@@ -304,7 +300,6 @@ int ionic_adminq_clean(struct adminq* adminq, int limit)
 		print_hex_dump_debug("admin comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			     comp, sizeof(struct admin_comp), true);
 #endif
-
 		adminq->comp_index = IONIC_MOD_INC(adminq, comp_index);
 		adminq->tail_index = IONIC_MOD_INC(adminq, tail_index);
 		/* Roll over condition, flip color. */
@@ -329,7 +324,8 @@ static irqreturn_t ionic_adminq_isr(int irq, void *data)
 
 	processed = ionic_adminq_clean(adminq, adminq->num_descs);
 
-	IONIC_QUE_INFO(adminq, "processed %d/%d\n", processed, ionic_intr_credits(&adminq->intr));
+	IONIC_QUE_INFO(adminq, "processed %d/%d\n", processed,
+		ionic_intr_credits(&adminq->intr));
 
 	ionic_intr_return_credits(&adminq->intr, processed, true, true);
 	IONIC_ADMIN_UNLOCK(adminq);
@@ -1698,6 +1694,9 @@ ionic_lif_stats_stop(struct lif *lif)
 	};
 	int err;
 
+	if (lif->lif_stats == NULL)
+		return;
+
 	IONIC_NETDEV_INFO(netdev, "lif_stats STOP\n");
 
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -1706,11 +1705,9 @@ ionic_lif_stats_stop(struct lif *lif)
 		return;
 	}
 
-	if (lif->lif_stats) {
-		ionic_dma_free(lif->ionic, &lif->stats_dma);
-		lif->lif_stats = NULL;
-		lif->lif_stats_pa = 0;
-	}
+	ionic_dma_free(lif->ionic, &lif->stats_dma);
+	lif->lif_stats = NULL;
+	lif->lif_stats_pa = 0;
 }
 
 int
@@ -2824,6 +2821,7 @@ err_out_notifyq_deinit:
 err_out_adminq_deinit:
 	ionic_lif_adminq_deinit(lif);
 err_out_rx_filters_deinit:
+	ionic_rx_filters_deinit(lif);
 
 	if (lif->vlan_attach != NULL)
 		EVENTHANDLER_DEREGISTER(vlan_config, lif->vlan_attach);
