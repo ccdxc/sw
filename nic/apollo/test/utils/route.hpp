@@ -16,7 +16,7 @@
 
 namespace api_test {
 
-/// route test utility class
+/// Route test utility class
 class route_util {
 public:
     // Test parameters
@@ -25,14 +25,14 @@ public:
     pds_nh_type_t nh_type;   ///< nexthop type
     pds_vcn_id_t vcn_id;     ///< vcn id
 
-    /// \brief default constructor
+    /// \brief Constructor
     route_util();
 
-    /// \brief destructor
+    /// \brief Destructor
     ~route_util();
 };
 
-/// route table test utility class
+/// Route tbl test utility class
 class route_table_util {
 public:
     // Test parameters
@@ -43,18 +43,18 @@ public:
     ip_addr_t first_nh_ip;
     route_util *routes;
 
-    /// \brief default constructor
+    /// \brief Constructor
     route_table_util();
 
-    /// \brief parameterized constructor
+    /// \brief Parameterized constructor
     route_table_util(pds_route_table_id_t id);
 
-    /// \brief parameterized constructor
+    /// \brief Parameterized constructor
     route_table_util(pds_route_table_id_t id, std::string first_route_pfx_str,
-                     std::string first_nh_ip_str, uint8_t af=IP_AF_IPV4,
+                     std::string first_nh_ip_str, uint8_t af = IP_AF_IPV4,
                      uint32_t num_routes=1);
 
-    /// \brief destructor
+    /// \brief Destructor
     ~route_table_util();
 
     /// \brief Create route table

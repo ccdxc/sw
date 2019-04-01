@@ -84,7 +84,7 @@ TEST_F(subnet, subnet_workflow_1) {
     key.id = 1;
     vcn_key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key, vcn_key, subnet_start_addr,
@@ -109,7 +109,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_2) {
     key.id = 1;
     vcn_key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key, vcn_key, subnet_start_addr,
@@ -122,7 +122,7 @@ TEST_F(subnet, DISABLED_subnet_workflow_2) {
     ASSERT_TRUE(subnet_util::many_read(
         key, k_max_subnet, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, k_max_subnet) == sdk::SDK_RET_OK);
@@ -150,7 +150,7 @@ TEST_F(subnet, subnet_workflow_3) {
     key2.id = 40;
     key3.id = 70;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1,
@@ -169,7 +169,7 @@ TEST_F(subnet, subnet_workflow_3) {
     ASSERT_TRUE(subnet_util::many_read(
         key3, num_subnets, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key2, num_subnets) == sdk::SDK_RET_OK);
@@ -195,7 +195,7 @@ TEST_F(subnet, subnet_workflow_4) {
     key.id = 1;
     vcn_key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
@@ -230,7 +230,7 @@ TEST_F(subnet, subnet_workflow_5) {
     key3.id = 70;
     vcn_key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1,
@@ -258,7 +258,7 @@ TEST_F(subnet, subnet_workflow_5) {
     ASSERT_TRUE(subnet_util::many_read(
         key3, num_subnets, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key2, num_subnets) == sdk::SDK_RET_OK);
@@ -282,7 +282,7 @@ TEST_F(subnet, subnet_workflow_neg_1) {
     key.id = 1;
     vcn_key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
@@ -302,7 +302,7 @@ TEST_F(subnet, subnet_workflow_neg_1) {
     ASSERT_TRUE(subnet_util::many_read(
         key, k_max_subnet, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, k_max_subnet) == sdk::SDK_RET_OK);
@@ -326,7 +326,7 @@ TEST_F(subnet, subnet_workflow_neg_2) {
     key.id = 1;
     vcn_key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(
@@ -345,7 +345,7 @@ TEST_F(subnet, subnet_workflow_neg_3a) {
 
     key.id = 1;
 
-    // Trigger
+    // trigger
     ASSERT_TRUE(subnet_util::many_read(
         key, k_max_subnet, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
@@ -361,7 +361,7 @@ TEST_F(subnet, subnet_workflow_neg_3b) {
     key.id = 1;
     vcn_key.id = 1;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, k_max_subnet) == sdk::SDK_RET_OK);
@@ -383,7 +383,7 @@ TEST_F(subnet, subnet_workflow_neg_4) {
     key1.id = 10;
     key2.id = 40;
 
-    // Trigger
+    // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1,
@@ -405,7 +405,7 @@ TEST_F(subnet, subnet_workflow_neg_4) {
     ASSERT_TRUE(subnet_util::many_read(
         key2, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 
-    // Cleanup
+    // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) == sdk::SDK_RET_OK);

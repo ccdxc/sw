@@ -74,7 +74,6 @@ TEST_F(vcn, vcn_workflow_1) {
         key, k_max_vcn, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
-#if 0
 /// \brief Create, delete and create max VCNs in the same batch
 /// Create and delete should be de-deduped by framework and subsequent create
 /// should result in successful creation
@@ -107,7 +106,6 @@ TEST_F(vcn, vcn_workflow_2) {
     ASSERT_TRUE(vcn_util::many_read(
         key, k_max_vcn, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
-#endif
 
 /// \brief Create Set1, Set2, Delete Set1, Create Set3 in same batch
 /// The set1 vcn should be de-duped and set2 and set3 should be programmed

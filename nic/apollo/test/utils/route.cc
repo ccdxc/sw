@@ -25,14 +25,12 @@ route_table_util::route_table_util() {
     this->id = 0;
     this->af = 0;
     this->num_routes = 0;
-    this->routes = new route_util[0];
 }
 
 route_table_util::route_table_util(pds_route_table_id_t id) {
     this->id = id;
     this->af = 0;
     this->num_routes = 0;
-    this->routes = new route_util[0];
 }
 
 route_table_util::route_table_util(pds_route_table_id_t id,
@@ -69,7 +67,8 @@ route_table_util::route_table_util(pds_route_table_id_t id,
 }
 
 route_table_util::~route_table_util() {
-    delete[] this->routes;
+    if (this->num_routes)
+        delete[] this->routes;
 }
 
 sdk::sdk_ret_t
@@ -81,12 +80,15 @@ route_table_util::create() {
     spec.key.id = this->id;
     spec.af = this->af;
     spec.num_routes = this->num_routes;
-    spec.routes = (pds_route_t *)malloc((this->num_routes * sizeof(pds_route_t)));
-    for (i = 0; i < this->num_routes; ++i) {
-        spec.routes[i].prefix = this->routes[i].ip_pfx;
-        spec.routes[i].nh_ip = this->routes[i].nh_ip;
-        spec.routes[i].nh_type = this->routes[i].nh_type;
-        spec.routes[i].vcn_id = this->routes[i].vcn_id;
+    if (spec.num_routes) {
+        spec.routes = (pds_route_t *)malloc(
+            (this->num_routes * sizeof(pds_route_t)));
+        for (i = 0; i < this->num_routes; ++i) {
+            spec.routes[i].prefix = this->routes[i].ip_pfx;
+            spec.routes[i].nh_ip = this->routes[i].nh_ip;
+            spec.routes[i].nh_type = this->routes[i].nh_type;
+            spec.routes[i].vcn_id = this->routes[i].vcn_id;
+        }
     }
     return (pds_route_table_create(&spec));
 }
