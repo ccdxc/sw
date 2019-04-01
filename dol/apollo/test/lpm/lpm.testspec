@@ -3,8 +3,7 @@ selectors:
     root: ref://store/templates/id=ROUTE
     maxlimit: None
     flow: filter://any
-    route: filter://AddrFamily=IPV4
-    local_mapping: filter://AddrFamily=IPV4
+    route: filter://any
 
 packets:
     - packet:

@@ -32,7 +32,7 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     : 2
+        - count     : 10
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -51,8 +51,9 @@ vpc:
           rmap:
             - count : 2
       routetbl:
-             - type: specific
+             - type: specific # route table with disjoint routes
                count : 1.   # always 1 if routes specified by user
+               routetype: disjoint
                v4routes:
                    - '10.10.0.0\16'
                    - '11.11.0.0\16'
@@ -60,7 +61,28 @@ vpc:
                    - '1000::\64'
                    - '1001::\64'
 
-             - type: adjacent
+             - type: specific # route table with left overlap routes
+               routetype: left_overlap
+               v4routes:
+                   - '10.10.0.0\16'
+                   - '10.10.0.0\24'
+               v6routes:
+                   - '1000::\64'
+                   - '1000::\96'
+
+             - type: specific # route table with multiple left overlap routes
+               routetype: multiple_left_overlap
+               v4routes:
+                   - '10.0.0.0\8'
+                   - '10.0.0.0\24'
+                   - '10.0.0.0\16'
+               v6routes:
+                   - '1000::\64'
+                   - '1000::\96'
+                   - '1000::\80'
+
+             - type: base
+               routetype: adjacent
                count : 2
                v4base: '64.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
                v4prefixlen : 28
@@ -69,7 +91,8 @@ vpc:
                v6prefixlen : 96
                nv6routes   : 10
 
-             - type: adjacent
+             - type: base
+               routetype: adjacent
                count : 1
                v4base: '65.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
                v4prefixlen : 28
@@ -78,11 +101,17 @@ vpc:
                v6prefixlen : 96
                nv6routes   : 10
 
-             - type: overlap
-               count : 2
+             - type: base
+               routetype: fulloverlap
+               count : 1
                v4base: '66.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
                v4prefixlen: 24
-               nv4routes   : 10
+               nv4routes   : 256
                v6base: '2002::\64' # TEMP Infra issue and will reverse this in test logic
                v6prefixlen: 120
-               nv6routes   : 10
+               nv6routes   : 256
+
+             - type: specific # route table with empty routes
+               routetype: disjoint
+               v4routes:
+               v6routes:

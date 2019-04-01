@@ -9,9 +9,37 @@ feature:
 
 modules:
     - module:
-        name    : IPV4_UDP_QTAG
+        name    : IPV4_UDP_QTAG_ADJACENT
         spec    : lpm.testspec
-    
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=adjacent
+
     - module:
-        name    : IPV6_UDP_QTAG
+        name    : IPV6_UDP_QTAG_ADJACENT
         spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=adjacent
+
+    - module:
+        name    : IPV4_UDP_QTAG_DISJOINT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=disjoint
+
+    - module:
+        name    : IPV6_UDP_QTAG_DISJOINT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=disjoint
+
+    - module:
+        name    : IPV4_UDP_QTAG_FULL_OVERLAP
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap
+
+    - module:
+        name    : IPV6_UDP_QTAG_FULL_OVERLAP
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=fulloverlap
