@@ -37,8 +37,8 @@
         typeof(b) _var2 = (b);                                             \
         _var1 < _var2 ? _var1 : _var2; })
 
-//#define IONIC_ALIGN(ptr,n)                        (((ptr)+(n)-1) & ~((n)-1))  
 #define IONIC_ALIGN(x,a)                            (((x)+(a)-1)&~((x)+(a)-1-(x)))
+#define IONIC_HEX_DUMP_SIZE                         64
 
 inline int
 ionic_ilog2(vmk_uint64 num);

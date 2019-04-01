@@ -190,11 +190,13 @@ ionic_hex_dump(char *desc,                                         // IN
                void *addr,                                         // IN
                vmk_uint32 len)                                     // IN
 {
-        vmk_uint32 i;
+        vmk_uint32 i, offset;
+        vmk_ByteCount out_len;
         unsigned char *pc = (unsigned char*)addr;
+        char hexdump[IONIC_HEX_DUMP_SIZE];
 
         if (desc != NULL) {
-                ionic_print ("%s:\n", desc);
+                ionic_print ("%s, len: %d", desc, len);
         }
 
         if (len == 0) {
@@ -206,17 +208,30 @@ ionic_hex_dump(char *desc,                                         // IN
                 return;
         }
 
+        offset = 0;
+        out_len = 0;
+        vmk_Memset(hexdump,
+                   0,
+                   sizeof(char) * IONIC_HEX_DUMP_SIZE);
+
         for (i = 0; i < len; i++) {
-                if ((i % 16) == 0) {
-                        ionic_print ("\n");
+                if ((i % 16) == 0 && i != 0) {
+                        ionic_print ("%s", hexdump);
+                        vmk_Memset(hexdump, 0, offset);
+                        offset = 0;
                 }
-                ionic_print (" %02x", pc[i]);
-        }
 
-        while ((i % 16) != 0) {
-                ionic_print ("   ");
-                i++;
-        }
+                vmk_StringFormat(hexdump + offset,
+                                 IONIC_HEX_DUMP_SIZE - offset,
+                                 &out_len,
+                                 " %02x",
+                                 pc[i]);
+                                 
+                offset += out_len;                         
 
-        ionic_print("\n");
+                if (i == len - 1) {
+                        ionic_print ("%s", hexdump);
+                }
+
+        }
 }

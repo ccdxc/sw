@@ -15,7 +15,7 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 
 	vmk_Memcpy(&ctx->comp, comp, sizeof(*comp));
 
-        ionic_hex_dump("comp admin queue command:",
+        ionic_hex_dump("comp admin queue command",
                        &ctx->comp,
                        sizeof(ctx->comp));
 
@@ -44,7 +44,7 @@ ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 
 	vmk_Memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
 
-        ionic_hex_dump("post admin queue command:",
+        ionic_hex_dump("post admin queue command",
                        &ctx->cmd,
                        sizeof(ctx->cmd));
 

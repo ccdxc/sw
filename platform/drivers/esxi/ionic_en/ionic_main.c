@@ -359,7 +359,7 @@ ionic_dev_cmd_work(vmk_AddrCookie data)
 //        spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
         vmk_SpinlockUnlock(ionic->cmd_lock);
 
-        ionic_hex_dump("post admin dev command:",
+        ionic_hex_dump("post admin dev command",
                        &ctx->cmd,
                        sizeof(ctx->cmd));
 
@@ -392,7 +392,7 @@ ionic_dev_cmd_work(vmk_AddrCookie data)
                         goto err_out;
         }
 
-        ionic_hex_dump("comp admin dev command:",
+        ionic_hex_dump("comp admin dev command",
                        &ctx->comp, sizeof(ctx->comp));
 
 err_out:

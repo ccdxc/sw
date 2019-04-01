@@ -43,19 +43,27 @@ static const char *const ionic_verbosity_Levels[] = {
                 __FUNCTION__,                                         \
                 ##args)
 
-#define ionic_err(fmt, args...)                                                \
+#define ionic_LogLevelHexDump(urgency, logLevel, fmt, args...)        \
+   vmk_LogLevel(urgency,                                              \
+                ionic_driver.log_component,                           \
+                (logLevel),                                           \
+                "<%s> " fmt "\n",                                     \
+                ionic_verbosity_Levels[logLevel],                     \
+                ##args)
+
+#define ionic_err(fmt, args...)                                                    \
    ionic_LogLevel(VMK_LOG_URGENCY_ALERT, IONIC_LOG_LEVEL_ERR, fmt, ##args)
 
-#define ionic_warn(fmt, args...)                                               \
+#define ionic_warn(fmt, args...)                                                   \
    ionic_LogLevel(VMK_LOG_URGENCY_WARNING, IONIC_LOG_LEVEL_WARN, fmt, ##args)
 
-#define ionic_info(fmt, args...)                                               \
+#define ionic_info(fmt, args...)                                                   \
    ionic_LogLevel(VMK_LOG_URGENCY_NORMAL, IONIC_LOG_LEVEL_INFO, fmt, ##args)
 
-#define ionic_dbg(fmt, args...)                                                \
+#define ionic_dbg(fmt, args...)                                                    \
    ionic_LogLevel(VMK_LOG_URGENCY_DEBUG, IONIC_LOG_LEVEL_DBG, fmt, ##args);
 
-#define ionic_print(fmt, args...)                                              \
-   ionic_LogLevel(VMK_LOG_URGENCY_DEBUG, IONIC_LOG_LEVEL_DBG, fmt, ##args);    \
+#define ionic_print(fmt, args...)                                                  \
+   ionic_LogLevelHexDump(VMK_LOG_URGENCY_DEBUG, IONIC_LOG_LEVEL_DBG, fmt, ##args); \
 
 #endif /* End of _IONIC_LOG_H_ */
