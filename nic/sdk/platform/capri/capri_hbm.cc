@@ -230,32 +230,40 @@ capri_hbm_cache_program_region (mpartition_region_t *reg,
     cap_pics_csr_t & pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, inst_id);
     if (slave) {
         pics_csr.picc.filter_addr_lo_s.data[filter_idx].read();
-        pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6); //28 MSB bits only
+        pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(
+            g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6);
         pics_csr.picc.filter_addr_lo_s.data[filter_idx].write();
 
+        assert((reg->size & 0x3F) == 0);
         pics_csr.picc.filter_addr_hi_s.data[filter_idx].read();
-        pics_csr.picc.filter_addr_hi_s.data[filter_idx].value((g_capri_state_pd->mempartition()->addr(reg->start_offset) +
-                                                 (reg->size)) >> 6);
+        pics_csr.picc.filter_addr_hi_s.data[filter_idx].value(
+            (g_capri_state_pd->mempartition()->addr(reg->start_offset) +
+             (reg->size - 64)) >> 6);
         pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
 
         pics_csr.picc.filter_addr_ctl_s.value[filter_idx].read();
-        // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so dont enable this Invalidate&Fill) + Invalidate+Send
+        // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so don't
+        // enable this Invalidate&Fill) + Invalidate+Send
         pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xd);
         pics_csr.picc.filter_addr_ctl_s.value[filter_idx].write();
     }
 
     if (master) {
         pics_csr.picc.filter_addr_lo_m.data[filter_idx].read();
-        pics_csr.picc.filter_addr_lo_m.data[filter_idx].value(g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6); //28 MSB bits only
+        pics_csr.picc.filter_addr_lo_m.data[filter_idx].value(
+            g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6);
         pics_csr.picc.filter_addr_lo_m.data[filter_idx].write();
 
         pics_csr.picc.filter_addr_hi_m.data[filter_idx].read();
-        pics_csr.picc.filter_addr_hi_m.data[filter_idx].value((g_capri_state_pd->mempartition()->addr(reg->start_offset) +
-                                                 (reg->size )) >> 6);
+        assert((reg->size & 0x3F) == 0);
+        pics_csr.picc.filter_addr_hi_m.data[filter_idx].value(
+            (g_capri_state_pd->mempartition()->addr(reg->start_offset) +
+             (reg->size - 64)) >> 6);
         pics_csr.picc.filter_addr_hi_m.data[filter_idx].write();
 
         pics_csr.picc.filter_addr_ctl_m.value[filter_idx].read();
-        // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so dont enable this Invalidate&Fill) + Invalidate+Send
+        // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so don't
+        // enable this Invalidate&Fill) + Invalidate+Send
         pics_csr.picc.filter_addr_ctl_m.value[filter_idx].value(0xd);
         pics_csr.picc.filter_addr_ctl_m.value[filter_idx].write();
     }
