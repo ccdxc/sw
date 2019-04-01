@@ -4,9 +4,6 @@ meta:
     nics        : [ pensando, intel, mellanox, broadcom ]
     targetcount : 6000
 
-# Bugs and TODOs:
-# - PS-347: Enable 512 batch_depth after it is fixed.
-
 aliases:
     - &STORAGE_TEST_DIR storage/offload/src/test
     - &INPUT_LEN_2K 2048
@@ -23,6 +20,7 @@ aliases:
     - &BATCH_DEPTH_ITER_LIST_ZERO_PAD [ 1, 16, 31, 32, 33, 64 ]
     - &BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD_256 [ 128, 256 ]
     - &BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD [ 128, 256, 512 ]
+    - &BATCH_DEPTH_LARGE_ITER_LIST_HASH_CHKSUM [ 128, 255, 511 ]
     - &MODE_ITER_LIST [ sync, poll, async ]
     - &CPDC_TEST_YML cpdc.yml
     - &CP_FAIL_TEST_YML cp_fail.yml
@@ -148,7 +146,6 @@ testcases:
             cpflags     : *CPFLAGS_WITH_HEADER_ZERO_PAD
             dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
 
-    # PS-344
     -   name: CpDcWHdrZp4K8KLbd
         testcase    : testcases.storage.ymltest2
         iterators   :
@@ -177,7 +174,6 @@ testcases:
             cpflags     : *CPFLAGS_DEFAULT
             dcflags     : *DCFLAGS_DEFAULT
 
-    # PS-360
     -   name: CpDc16K32KLbd
         testcase    : testcases.storage.ymltest2
         iterators   :
@@ -304,7 +300,6 @@ testcases:
 
     -   name        : Hash4K8KSha2_256
         testcase    : testcases.storage.ymltest2
-        ignore      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
@@ -333,13 +328,12 @@ testcases:
 
     -   name        : Hash16K32KSha2_256
         testcase    : testcases.storage.ymltest2
-        ignore      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+            inputlen    : [ *INPUT_LEN_16K ]
         args    :
             wait        : '0.5'
             flags       : '0'
@@ -348,14 +342,12 @@ testcases:
 
     -   name        : Hash16K32KSha2_256Pb
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+            inputlen    : [ *INPUT_LEN_16K ]
         args    :
             wait        : '0.5'
             flags       : 'per_block'
@@ -364,7 +356,6 @@ testcases:
 
     -   name        : Hash4K8KLbdSha2_256
         testcase    : testcases.storage.ymltest2
-        ignore      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
@@ -379,8 +370,6 @@ testcases:
 
     -   name        : Hash4K8KLbdSha2_256Pb
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
@@ -395,13 +384,12 @@ testcases:
 
     -   name        : Hash16K32KLbdSha2_256
         testcase    : testcases.storage.ymltest2
-        ignore      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
             mode        : *MODE_ITER_LIST
-            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+            inputlen    : [ *INPUT_LEN_16K ]
         args    :
             wait        : '0.75'
             flags       : '0'
@@ -410,14 +398,12 @@ testcases:
 
     -   name        : Hash16K32KLbdSha2_256Pb
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
-            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_HASH_CHKSUM
             mode        : *MODE_ITER_LIST
-            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+            inputlen    : [ *INPUT_LEN_16K ]
         args    :
             wait        : '0.75'
             flags       : 'per_block'
@@ -454,13 +440,12 @@ testcases:
 
     -   name        : Csum16K32KCrc32c
         testcase    : testcases.storage.ymltest2
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+            inputlen    : [ *INPUT_LEN_16K ]
         args    :
             wait        : '0.5'
             flags       : '0'
@@ -469,14 +454,12 @@ testcases:
 
     -   name        : Csum16K32KCrc32cPb
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+            inputlen    : [ *INPUT_LEN_16K ]
         args    :
             wait        : '0.5'
             flags       : 'per_block'
@@ -485,7 +468,6 @@ testcases:
 
     -   name        : Csum4K8KLbdCrc32c
         testcase    : testcases.storage.ymltest2
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
@@ -500,8 +482,6 @@ testcases:
 
     -   name        : Csum4K8KLbdCrc32cPb
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
@@ -514,16 +494,14 @@ testcases:
             algo        : 'crc32c'
             test        : *CHKSUM_TEST_YML
 
-
     -   name        : Csum16K32KLbdCrc32c
         testcase    : testcases.storage.ymltest2
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
             mode        : *MODE_ITER_LIST
-            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+            inputlen    : [ *INPUT_LEN_16K ]
         args    :
             wait        : '0.75'
             flags       : '0'
@@ -532,14 +510,12 @@ testcases:
 
     -   name        : Csum16K32KLbdCrc32cPb
         testcase    : testcases.storage.ymltest2
-        enable      : False
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
-            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_HASH_CHKSUM
             mode        : *MODE_ITER_LIST
-            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+            inputlen    : [ *INPUT_LEN_16K ]
         args    :
             wait        : '0.75'
             flags       : 'per_block'
