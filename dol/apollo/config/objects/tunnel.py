@@ -34,7 +34,7 @@ class TunnelObject(base.ConfigObjectBase):
                 self.RemoteVnicMplsSlotIdAllocator = resmgr.CreateRemoteVnicMplsSlotAllocator()
                 self.RemoteVnicVxlanIdAllocator = resmgr.CreateRemoteVnicVxlanIdAllocator()
             else :
-                if parent.EncapType ==  types_pb2.ENCAP_TYPE_MPLSoUDP:
+                if parent.IsEncapTypeMPLS():
                     self.EncapValue = next(resmgr.IGWMplsSlotIdAllocator)
                 else:
                     self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
@@ -45,19 +45,16 @@ class TunnelObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s" %\
-               (self.Id,self.LocalIPAddr, self.RemoteIPAddr, utils.GetTunnelTypeString(self.Type))
+        return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s|EncapValue:%d" %\
+               (self.Id,self.LocalIPAddr, self.RemoteIPAddr,
+               utils.GetTunnelTypeString(self.Type), self.EncapValue)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = tunnel_pb2.TunnelRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.Id
         spec.VPCId = 0 # TODO: Create Substrate VPC
-        spec.Encap.type = Store.GetDevice().EncapType
-        if Store.IsDeviceEncapTypeMPLS():
-            spec.Encap.value.MPLSTag = self.EncapValue
-        else:
-            spec.Encap.value.Vnid = self.EncapValue
+        utils.GetRpcEncap(self.EncapValue, self.EncapValue, spec.Encap)
         spec.Type = self.Type
         spec.LocalIP.Af = types_pb2.IP_AF_INET
         spec.LocalIP.V4Addr = int(self.LocalIPAddr)

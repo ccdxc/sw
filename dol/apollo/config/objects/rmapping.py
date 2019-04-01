@@ -55,18 +55,15 @@ class RemoteMappingObject(base.ConfigObjectBase):
         spec.SubnetId = self.SUBNET.SubnetId
         spec.TunnelId = int(self.TunIPAddr)
         spec.MACAddr = self.MACAddr.getnum()
-        spec.Encap.type =  Store.GetDevice().EncapType
-        if Store.IsDeviceEncapTypeMPLS():
-            spec.Encap.value.MPLSTag  = self.MplsSlot
-        else:
-            spec.Encap.value.Vnid  = self.Vnid
+        utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
         return grpcmsg
 
     def Show(self):
         logger.info("RemoteMapping object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- IPAddr:%s|TunIPAddr:%s|MAC:%s" %\
-                (str(self.IPAddr), str(self.TunIPAddr), self.MACAddr))
+        logger.info("- IPAddr:%s|TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d" %\
+                (str(self.IPAddr), str(self.TunIPAddr), self.MACAddr,
+                self.MplsSlot, self.Vnid))
         return
 
     def SetupTestcaseConfig(self, obj):

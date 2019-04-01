@@ -1,4 +1,5 @@
 # Test Spec
+# This test case covers all invalid test cases
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 4
@@ -46,24 +47,12 @@ packets:
                 label   : ref://testcase/config/remotemapping/MplsSlot
                 ttl     : 0
             mpls:
-                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
+                label   : callback://networking/packets/GetInvalidMPLSTag
                 ttl     : 0
             vxlan:
-                vni     : ref://testcase/config/localmapping/VNIC/Vnid
-
-    - packet:
-        id          : TO_HOST_PKT # Expected packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
-        headers     :
-            eth:
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
-
+                #vni     : ref://testcase/config/localmapping/VNIC/Vnid
+                vni      : callback://networking/packets/GetInvalidVnid
+  
 trigger:
     packets:
         - packet:
@@ -73,5 +62,6 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=TO_HOST_PKT
+            object  : None
             port    : ref://testcase/config/hostport
+

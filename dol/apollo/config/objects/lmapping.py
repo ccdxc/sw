@@ -35,7 +35,6 @@ class LocalMappingObject(base.ConfigObjectBase):
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # for testspec
-        self.EncapType = Store.GetDevice().EncapType # For testspec
         if self.PublicIPAddr is not None:
             self.PublicIP = str(self.PublicIPAddr) # for testspec
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
@@ -58,9 +57,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         spec.VnicId = self.VNIC.VnicId
         spec.TunnelId = int(Store.GetDevice().IPAddr)
         spec.MACAddr = self.VNIC.MACAddr.getnum()
-        spec.Encap.type = Store.GetDevice().EncapType
-        if Store.IsDeviceEncapTypeMPLS():
-            spec.Encap.value.MPLSTag  = self.VNIC.MplsSlot
+        utils.GetRpcEncap(self.VNIC.MplsSlot, self.VNIC.Vnid, spec.Encap)
         spec.PublicIP.Af = types_pb2.IP_AF_NONE
         if self.PublicIPAddr is not None:
             utils.GetRpcIPAddr(self.PublicIPAddr, spec.PublicIP)

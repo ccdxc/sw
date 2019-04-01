@@ -11,6 +11,9 @@ packets:
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
         headers     :
+            eth:
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
             ipv4:
                 dst     : ref://testcase/config/localmapping/IP
                 src     : ref://testcase/config/remotemapping/IP
@@ -46,7 +49,8 @@ packets:
             mpls:
                 label   : ref://testcase/config/localmapping/VNIC/MplsSlot
                 ttl     : 0
-
+            vxlan:
+                vni     : ref://testcase/config/localmapping/VNIC/Vnid
   
 trigger:
     packets:

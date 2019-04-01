@@ -148,9 +148,13 @@ jobd/dol/gft/rdma_l2l: ${JOBD_PREREQS}
 #jobd/dol/agent/up2up: ${JOBD_PREREQS}
 #	${NICDIR}/run.py ${COVERAGE_OPTS} --topo agentup2up --feature agentup2up
 
-.PHONY: jobd/dol/apollo/networking
-jobd/dol/apollo/networking: ${JOBD_PREREQS}
+.PHONY: jobd/dol/apollo/oci/networking
+jobd/dol/apollo/oci/networking: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo oci --feature networking
+
+.PHONY: jobd/dol/apollo/msft/networking
+jobd/dol/apollo/msft/networking: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo msft --feature networking
 
 .PHONY: jobd/dol/apollo/lpm
 jobd/dol/apollo/lpm: ${JOBD_PREREQS}

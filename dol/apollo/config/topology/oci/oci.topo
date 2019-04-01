@@ -21,9 +21,9 @@ device:
     macaddress  : macaddr/0002.0100.0001
     encap       : mplsoudp
     tunnel      :
-        - count : 1
+        - count : 32
           type  : internet-gateway
-        - count : 1
+        - count : 32
           type  : workload
 
 vpc:

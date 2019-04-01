@@ -30,10 +30,13 @@ def GetUsableHostFromRoute(testcase, packet, args=None):
 def GetInvalidMPLSTag(testcase, packet, args=None):
     return next(resmgr.InvalidMplsSlotIdAllocator)
 
+def GetInvalidVnid(testcase, packet, args=None):
+    return next(resmgr.InvalidVxlanIdAllocator)
+
 def __get_packet_encap_impl(obj, args):
-    if obj.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:
+    if obj.IsEncapTypeMPLS():
         encap = 'ENCAP_MPLS2'
-    elif obj.EncapType == types_pb2.ENCAP_TYPE_VXLAN:
+    elif obj.IsEncapTypeVXLAN():
         encap = 'ENCAP_VXLAN'
     else:
         assert 0
@@ -42,20 +45,26 @@ def __get_packet_encap_impl(obj, args):
 # This can be called for packets to switch or from switch
 def GetPacketEncapFromMapping(testcase, packet, args=None):
     encaps = []
-    encaps.append(__get_packet_encap_impl(testcase.config.localmapping, args))
+    encaps.append(__get_packet_encap_impl(testcase.config.devicecfg, args))
     return encaps
 
 
-def __get_packet_srcmac_impl(fwdmode, robj, lobj, args):
-    if fwdmode == 'L2':
-        return robj.MACAddr
-    else:
+def __get_packet_srcmac_impl(fwdmode, dobj, robj, lobj, args):
+    if dobj.IsEncapTypeMPLS():
+        if fwdmode == 'L2':
+            return robj.MACAddr
+        else:
+            return lobj.VNIC.SUBNET.VirtualRouterMACAddr
+    elif dobj.IsEncapTypeVXLAN():
         return lobj.VNIC.SUBNET.VirtualRouterMACAddr
+    else:
+        assert 0
 
 # This can be called for packets to host from switch
 def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
     return __get_packet_srcmac_impl(testcase.config.root.FwdMode,
-            testcase.config.remotemapping, testcase.config.localmapping, args)
+            testcase.config.devicecfg, testcase.config.remotemapping,
+            testcase.config.localmapping, args)
 
 def __get_ip_localmapping_impl(localmapping):
     if hasattr(localmapping, "PublicIP"):

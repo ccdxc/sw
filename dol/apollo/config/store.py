@@ -30,6 +30,9 @@ class ApolloConfigStore:
     def IsDeviceEncapTypeVXLAN(self):
         return self.device.IsEncapTypeVXLAN()
 
+    def GetDeviceEncapType(self):
+        return self.device.EncapType
+
     def GetWorkloadTunnels(self):
         tunnels = []
         for tun in self.tunnels.GetAllInList():

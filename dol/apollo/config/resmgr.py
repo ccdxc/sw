@@ -33,6 +33,7 @@ PublicIpAddressAllocator = ipaddress.IPv4Network('200.0.0.0/24').hosts()
 PublicIpv6AddressAllocator = ipaddress.IPv6Network('eeee:0:0:0::/64').hosts()
 IGWVxlanIdAllocator = iter(irange(50001, 51024))
 VxlanIdAllocator = iter(irange(80001, 81024))
+InvalidVxlanIdAllocator = iter(irange(10001,12000))
 
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'

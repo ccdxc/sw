@@ -24,6 +24,9 @@ def AddPacketEncapQinQ(pkt, encap):
     return
 
 def AddPacketEncapVxlan(pkt, encap):
+    if pkt.hdrsorder[1] == 'qtag':
+        pkt.headers.eth.fields.type = pkt.headers.qtag.fields.type
+        pkt.hdrsorder.pop(1)
     pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'vxlan'] + pkt.hdrsorder
     return
 

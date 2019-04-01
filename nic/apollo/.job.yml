@@ -15,8 +15,15 @@ targets:
     sub-area:
     feature:
 
-  apollo/dol/networking:
-    commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/networking"]
+  apollo/dol/oci/networking:
+    commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/oci/networking"]
+    owners: ["email:vikasd@pensando.io", "email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
+  apollo/dol/msft/networking:
+    commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/msft/networking"]
     owners: ["email:vikasd@pensando.io", "email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
     area:
     sub-area:

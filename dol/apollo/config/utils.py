@@ -4,6 +4,7 @@ from random import choices
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 from infra.common.logging import logger
+from apollo.config.store import Store
 
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
@@ -92,3 +93,11 @@ def GetRpcIPAddr(srcaddr, dstaddr):
     else:
         dstaddr.Af = types_pb2.IP_AF_INET
         dstaddr.V4Addr = int(srcaddr)
+
+
+def GetRpcEncap(mplsslot, vxlanid, encap):
+    encap.type = Store.GetDeviceEncapType()
+    if Store.IsDeviceEncapTypeMPLS():
+         encap.value.MPLSTag  = mplsslot
+    else:
+         encap.value.Vnid  = vxlanid

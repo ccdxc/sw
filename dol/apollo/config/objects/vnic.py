@@ -52,18 +52,14 @@ class VnicObject(base.ConfigObjectBase):
         spec.MACAddress = self.MACAddr.getnum()
         spec.ResourcePoolId = 0 # TODO, Need to allocate and use
         spec.SourceGuardEnable = self.SourceGuard
-        spec.Encap.type = Store.GetDevice().EncapType
-        if Store.IsDeviceEncapTypeMPLS():
-            spec.Encap.value.MPLSTag  = self.MplsSlot
-        else:
-            spec.Encap.value.Vnid = self.Vnid
+        utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
         return grpcmsg
 
     def Show(self):
-        logger.info("- VNIC object:", self)
-        logger.info(" - %s" % repr(self))
-        logger.info(" - Vlan:%d|Mpls:%d|MAC:%s|SourceGuard:%s"\
-             % (self.VlanId, self.MplsSlot, self.MACAddr, str(self.SourceGuard)))
+        logger.info("VNIC object:", self)
+        logger.info("- %s" % repr(self))
+        logger.info("- Vlan:%d|Mpls:%d|Vxlan:%d|MAC:%s|SourceGuard:%s"\
+             % (self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard)))
         return
 
     def SetupTestcaseConfig(self, obj):

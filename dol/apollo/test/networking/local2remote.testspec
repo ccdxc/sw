@@ -51,6 +51,8 @@ packets:
             mpls:
                 label   : ref://testcase/config/remotemapping/MplsSlot
                 ttl     : 0
+            vxlan:
+                vni     : ref://testcase/config/remotemapping/Vnid
 
 
 trigger:

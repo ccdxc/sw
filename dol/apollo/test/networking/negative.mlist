@@ -74,6 +74,13 @@ modules:
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
 
+
+    - module:
+        name    : L2_IPV4_TCP_ENCAP_INVVXLANID
+        spec    : remote2local_vnid_invalid.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
     - module:
         name    : IGW_IPV4_UDP_ENCAP_INVDSTTAG
         spec    : igw2local_dsttag_invalid.testspec
@@ -85,3 +92,4 @@ modules:
         spec    : igw2local_dsttag_invalid.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+

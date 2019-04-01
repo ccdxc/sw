@@ -51,23 +51,32 @@ vpc:
           rmap:
             - count : 2
       routetbl:
-             - type: adjacent
+             - type: base
+               routetype: adjacent
                count : 2
                v4base: '64.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
                v4prefixlen : 28
+               nv4routes   : 10
                v6base: '2000::\64' # TEMP Infra issue and will reverse this in test logic
                v6prefixlen : 96
+               nv6routes   : 10
 
-             - type: adjacent
+             - type: base
+               routetype: adjacent
                count : 1
                v4base: '65.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
                v4prefixlen : 28
+               nv4routes   : 10
                v6base: '2001::\64' # TEMP Infra issue and will reverse this in test logic
                v6prefixlen : 96
+               nv6routes   : 10
 
-             - type: overlap
+             - type: base
+               routetype: overlap
                count : 256
                v4base: '66.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
                v4prefixlen: 24
+               nv4routes   : 10
                v6base: '2000::\64' # TEMP Infra issue and will reverse this in test logic
                v6prefixlen: 120
+               nv6routes   : 10
