@@ -2,6 +2,9 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.6.1.
 
+## Building for use with webapp
+Run "npm run pack" to generate the tgz file (sw/venice/ui/web-app-framework/dist/web-app-framework-0.0.0.tgz). Then in webapp, run npm install ../web-app-framework/dist/web-app-framework-0.0.0.tgz.
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
