@@ -54,10 +54,6 @@ public:
      */
     virtual sdk_ret_t set_frequency(pds_clock_freq_t freq) override;
 
-    /// \brief    set the core frequency with the given value
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t set_frequency(pds_clock_freq_t freq) override;
-
     /**
      * @brief    get the system temperature
      * @return    SDK_RET_OK on success, failure status code on error
@@ -77,8 +73,8 @@ public:
     virtual sdk_ret_t llc_setup(sdk::asic::pd::llc_counters_t *llc_args) override;
 
     /**
-     * @brief      LLC Get
-     * @return      SDK_RET_OK on success, failure status code on error
+     * @brief    LLC Get
+     * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t llc_get(sdk::asic::pd::llc_counters_t *llc_args) override;
 
@@ -107,7 +103,7 @@ private:
     void dump_tm_debug_stats_(FILE *fp, tm_pb_debug_stats_t *debug_stats);
 
 private:
-    asic_cfg_t      asic_cfg_;
+    asic_cfg_t           asic_cfg_;
     ::utils::log    *obfl_logger_;
 };
 

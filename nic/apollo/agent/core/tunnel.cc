@@ -5,19 +5,19 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/tunnel.hpp"
 
-extern bool g_pds_mock_mode;
-
 namespace core {
 
 sdk_ret_t
 tep_create (uint32_t key, pds_tep_spec_t *spec)
 {
+    sdk_ret_t ret;
+    
     if (agent_state::state()->find_in_tep_db(key) != NULL) {
         return sdk::SDK_RET_ENTRY_EXISTS;
     }
-    if (!g_pds_mock_mode) {
-        if (pds_tep_create(spec) != sdk::SDK_RET_OK) {
-            return sdk::SDK_RET_ERR;
+    if (!agent_state::state()->pds_mock_mode()) {
+        if ((ret = pds_tep_create(spec)) != sdk::SDK_RET_OK) {
+            return ret;
         }
     }
     if (agent_state::state()->add_to_tep_db(key, spec) != sdk::SDK_RET_OK) {
@@ -29,15 +29,16 @@ tep_create (uint32_t key, pds_tep_spec_t *spec)
 sdk_ret_t
 tep_delete (uint32_t key)
 {
+    sdk_ret_t ret;
     pds_tep_spec_t *spec;
 
     spec = agent_state::state()->find_in_tep_db(key);
     if (spec == NULL) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
-    if (!g_pds_mock_mode) {
-        if (pds_tep_delete(&spec->key) != sdk::SDK_RET_OK) {
-            return sdk::SDK_RET_ERR;
+    if (!agent_state::state()->pds_mock_mode()) {
+        if ((ret = pds_tep_delete(&spec->key)) != sdk::SDK_RET_OK) {
+            return ret;
         }
     }
     if (agent_state::state()->del_from_tep_db(key) == false) {
@@ -49,7 +50,7 @@ tep_delete (uint32_t key)
 sdk_ret_t
 tep_get (uint32_t key, pds_tep_info_t *info)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
     pds_tep_spec_t *spec;
 
     spec = agent_state::state()->find_in_tep_db(key);
@@ -57,7 +58,7 @@ tep_get (uint32_t key, pds_tep_info_t *info)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     memcpy(&info->spec, spec, sizeof(pds_tep_spec_t));
-    if (!g_pds_mock_mode) {
+    if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_tep_read(&spec->key, info);
     }
     return ret;
@@ -66,12 +67,12 @@ tep_get (uint32_t key, pds_tep_info_t *info)
 static inline sdk_ret_t
 tep_get_all_cb (pds_tep_spec_t *spec, void *ctxt)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
     pds_tep_info_t info;
     tep_db_cb_ctxt_t *cb_ctxt = (tep_db_cb_ctxt_t *)ctxt;
 
     memcpy(&info.spec, spec, sizeof(pds_tep_spec_t));
-    if (!g_pds_mock_mode) {
+    if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_tep_read(&spec->key, &info);
     }
     if (ret == SDK_RET_OK) {

@@ -3,13 +3,12 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 extern flow_test *g_flow_test_obj;
-
-extern bool g_pds_mock_mode;
 
 // Build VPC API spec from protobuf spec
 static inline void
@@ -46,7 +45,8 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
         for (int i = 0; i < proto_req->request_size(); i++) {
             pds_mapping_spec_t api_spec = {0};
             pds_agent_mapping_api_spec_fill(&api_spec, proto_req->request(i));
-#if 0
+
+#ifdef PDS_FLOW_TEST
             // TODO: Adding this here since there is no proto defs for
             // flows. This needs to be cleaned up
             if (api_spec.tep.ip_addr == 0x01000002u) {
@@ -57,7 +57,8 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
                                                api_spec.key.ip_addr);
             }
 #endif
-            if (!g_pds_mock_mode) {
+            
+            if (!core::agent_state::state()->pds_mock_mode()) {
                 if (pds_mapping_create(&api_spec) != sdk::SDK_RET_OK)
                     return Status::CANCELLED;
             }

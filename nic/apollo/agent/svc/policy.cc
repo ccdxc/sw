@@ -3,6 +3,7 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
 
@@ -10,8 +11,6 @@
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 extern flow_test *g_flow_test_obj;
 #endif
-
-extern bool g_pds_mock_mode;
 
 // Build policy API spec from protobuf spec
 static inline void
@@ -29,7 +28,7 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
         for (int i = 0; i < proto_req->request_size(); i ++) {
             pds_policy_spec_t api_spec; 
             pds_agent_policy_api_spec_fill(proto_req->request(i), &api_spec);
-            if (!g_pds_mock_mode) {
+            if (!core::agent_state::state()->pds_mock_mode()) {
                 if (pds_policy_create(&api_spec) != sdk::SDK_RET_OK)
                     return Status::CANCELLED;
             }

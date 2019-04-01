@@ -6,8 +6,6 @@
 #include "nic/apollo/agent/core/vpc.hpp"
 #include "nic/apollo/agent/trace.hpp"
 
-extern bool g_pds_mock_mode;
-
 namespace core {
 
 static inline sdk_ret_t
@@ -32,7 +30,7 @@ vpc_create_validate (pds_vcn_spec_t *spec)
 sdk_ret_t
 vpc_create (pds_vcn_key_t *key, pds_vcn_spec_t *spec)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
 
     if (agent_state::state()->find_in_vpc_db(key) != NULL) {
         PDS_TRACE_ERR("Failed to create vpc %u, vpc exists already", spec->key.id);
@@ -42,7 +40,7 @@ vpc_create (pds_vcn_key_t *key, pds_vcn_spec_t *spec)
         PDS_TRACE_ERR("Failed to create vpc %u, err %u", spec->key.id, ret);
         return ret;
     }
-    if (!g_pds_mock_mode) {
+    if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vcn_create(spec)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create vpc %u, err %u", spec->key.id, ret);
             return ret;
@@ -68,7 +66,7 @@ vpc_delete (pds_vcn_key_t *key)
         PDS_TRACE_ERR("Failed to delete vpc %u, vpc not found", key->id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    if (!g_pds_mock_mode) {
+    if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vcn_delete(key)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete vpc %u, err %u", key->id, ret);
             return ret;
@@ -87,7 +85,7 @@ vpc_delete (pds_vcn_key_t *key)
 sdk_ret_t
 vpc_get (pds_vcn_key_t *key, pds_vcn_info_t *info)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
     pds_vcn_spec_t *spec;
 
     spec = agent_state::state()->find_in_vpc_db(key);
@@ -97,7 +95,7 @@ vpc_get (pds_vcn_key_t *key, pds_vcn_info_t *info)
     }
 
     memcpy(&info->spec, spec, sizeof(pds_vcn_spec_t));
-    if (!g_pds_mock_mode) {
+    if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_vcn_read(key, info);
     }
     return ret;
@@ -106,12 +104,12 @@ vpc_get (pds_vcn_key_t *key, pds_vcn_info_t *info)
 static inline sdk_ret_t
 vpc_get_all_cb (pds_vcn_spec_t *spec, void *ctxt)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
     pds_vcn_info_t info;
     vpc_db_cb_ctxt_t *cb_ctxt = (vpc_db_cb_ctxt_t *)ctxt;
 
     memcpy(&info.spec, spec, sizeof(pds_vcn_spec_t));
-    if (!g_pds_mock_mode) {
+    if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_vcn_read(&spec->key, &info);
     }
     if (ret == SDK_RET_OK) {

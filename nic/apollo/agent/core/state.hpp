@@ -138,6 +138,9 @@ public:
     pds_vcn_id_t substrate_vpc_id(void) { return cfg_db_->substrate_vpc_id(); }
     void substrate_vpc_id_set(pds_vcn_id_t id) { return cfg_db_->substrate_vpc_id_set(id); }
     void substrate_vpc_id_reset(void) { return cfg_db_->substrate_vpc_id_set(PDS_VCN_ID_INVALID); }
+    
+    bool pds_mock_mode(void) const { return pds_mock_mode_;  }
+    void pds_mock_mode_set(bool val) { pds_mock_mode_ = val; }
 
 private:
     void cleanup(void);
@@ -149,6 +152,7 @@ private:
 
 private:
     cfg_db  *cfg_db_;
+    bool    pds_mock_mode_;
 };
 
 }    // namespace core

@@ -15,7 +15,7 @@ BatchSvcImpl::BatchStart(ServerContext *context,
 
     api_batch_params.epoch = proto_spec->epoch();
 
-#if 1
+#ifdef PDS_FLOW_TEST
     // TODO: Adding this here since there is no proto defs for
     // flows. This needs to be cleaned up
     sdk_ret_t ret;
