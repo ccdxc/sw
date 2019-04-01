@@ -1961,6 +1961,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.host",
+            "description": "The name of the host this SmartNIC is plugged into.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4547,6 +4554,10 @@
         "smartNicSku": {
           "type": "string",
           "title": "SmartNIC SKU"
+        },
+        "host": {
+          "type": "string",
+          "title": "The name of the host this SmartNIC is plugged into"
         }
       },
       "title": "SmartNICStatus contains current status of a SmartNIC"

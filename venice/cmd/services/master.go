@@ -6,8 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/venice/utils"
-
 	gogotypes "github.com/gogo/protobuf/types"
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
@@ -24,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/types"
 	k8stypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/elastic/curator"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -224,6 +223,7 @@ func NewMasterService(options ...MasterOption) types.MasterService {
 	m.cfgWatcherSvc.SetNodeEventHandler(m.handleNodeEvent)
 	m.cfgWatcherSvc.SetClusterEventHandler(m.handleClusterEvent)
 	m.cfgWatcherSvc.SetSmartNICEventHandler(m.handleSmartNICEvent)
+	m.cfgWatcherSvc.SetHostEventHandler(m.handleHostEvent)
 
 	return &m
 }
@@ -542,7 +542,10 @@ func performQuorumDefrag(start bool) {
 // handleSmartNIC handles SmartNIC updates
 func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.SmartNIC) {
 
-	log.Debugf("SmartNIC update: nic: %+v event: %v", *nic, et)
+	log.Infof("SmartNIC update: nic: %+v event: %v", *nic, et)
+
+	var oldNIC *cmd.SmartNIC
+	isLeader := env.LeaderService != nil && env.LeaderService.IsLeader()
 
 	switch et {
 	case kvstore.Created:
@@ -554,15 +557,13 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 
 		// Initiate NIC registration only in cases where Phase is unknown or empty
 		// For Naples initiated case, the phase will be set to REGISTERING initially
-		if nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "" {
+		if isLeader && (nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "") {
 			go env.NICService.InitiateNICRegistration(nic)
 		}
 
-		return
-
 	case kvstore.Updated:
 
-		if nic.Spec.Admit == false && nic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() {
+		if isLeader && (nic.Spec.Admit == false && nic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String()) {
 			log.Infof("De-admitting NIC: %+v", nic)
 			// NIC has been de-admitted by user. Reset status, as it is no longer part of the cluster, and
 			// change phase to pending. NIC will try to register again and if user sets admit=true it will
@@ -576,27 +577,35 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 			if err != nil {
 				log.Errorf("Error updating smartnic {%+v} in StateMgr. Err: %v", nic, err)
 			}
-			// update ApiServer
-			apiClient := m.cfgWatcherSvc.APIClient()
-			_, err = apiClient.SmartNIC().Update(context.Background(), nic)
+
+			// A de-admitted NIC is equivalent to a deleted NIC from Host pairing point of view
+			nicUpdates, hostUpdates, err := env.StateMgr.UpdateHostPairingStatus(kvstore.Deleted, nic, nil)
 			if err != nil {
-				log.Errorf("Error updating smartnic {%+v} in ApiServer. Err: %v", nic, err)
+				log.Errorf("Error updating NIC - Host pairing: %v", err)
 			}
+			// Add the NIC to nicUpdates to make sure that the Status update propagates back to ApiServer
+			nicUpdates = append(nicUpdates, nic)
+			m.sendNICHostUpdates(nicUpdates, hostUpdates)
 			return
 		}
 
-		err := env.StateMgr.UpdateSmartNIC(nic)
+		oldNICState, err := env.StateMgr.FindSmartNIC(nic.Tenant, nic.Name)
+		if err != nil {
+			log.Errorf("Error getting old SmartNIC object {%+v}. Err: %v", nic.ObjectMeta, err)
+			// try to continue anyway
+		} else {
+			oldNIC = &(*oldNICState.SmartNIC) // make a copy before updating
+		}
+		err = env.StateMgr.UpdateSmartNIC(nic)
 		if err != nil {
 			log.Errorf("Error updating smartnic {%+v}. Err: %v", nic, err)
 		}
 
 		// Initiate NIC registration only in cases where Phase is unknown or empty
 		// For Naples initiated case, the phase will be set to REGISTERING initially
-		if nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "" {
+		if isLeader && (nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "") {
 			go env.NICService.InitiateNICRegistration(nic)
 		}
-
-		return
 
 	case kvstore.Deleted:
 		env.NICService.DeleteNicFromRetryDB(nic)
@@ -604,6 +613,119 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 		if err != nil {
 			log.Errorf("Error deleting smartnic %s|%s. Err: %v", nic.Tenant, nic.Name, err)
 		}
-		return
+	}
+
+	if isLeader {
+		nicUpdates, hostUpdates, err := env.StateMgr.UpdateHostPairingStatus(et, nic, oldNIC)
+		if err != nil {
+			log.Errorf("Error updating NIC - Host pairing: %v", err)
+		}
+
+		m.sendNICHostUpdates(nicUpdates, hostUpdates)
+	}
+}
+
+// handleHostEvent handles Host updates
+func (m *masterService) handleHostEvent(et kvstore.WatchEventType, host *cmd.Host) {
+	log.Infof("Host update: host: %+v event: %v", *host, et)
+
+	var oldHost *cmd.Host
+	isLeader := env.LeaderService != nil && env.LeaderService.IsLeader()
+
+	switch et {
+	case kvstore.Created:
+		err := env.StateMgr.CreateHost(host)
+		if err != nil {
+			log.Errorf("Error creating host {%+v}. Err: %v", host, err)
+		}
+
+	case kvstore.Updated:
+		oldHostState, err := env.StateMgr.FindHost(host.Tenant, host.Name)
+		if err != nil {
+			log.Errorf("Error getting old host {%+v}. Err: %v", host.ObjectMeta, err)
+			// try to continue
+		} else {
+			oldHost = oldHostState.Host
+		}
+
+		err = env.StateMgr.UpdateHost(host)
+		if err != nil {
+			log.Errorf("Error updating host {%+v}. Err: %v", host, err)
+		}
+
+	case kvstore.Deleted:
+		err := env.StateMgr.DeleteHost(host.Tenant, host.Name)
+		if err != nil {
+			log.Errorf("Error deleting host %s|%s. Err: %v", host.Tenant, host.Name, err)
+		}
+	}
+
+	// if we are leader we also recompute the NIC/Host pairings, otherwise we will update
+	// them as we receive them from ApiServer
+	if isLeader {
+		nicUpdates, hostUpdates, err := env.StateMgr.UpdateNICPairingStatus(et, host, oldHost)
+		if err != nil {
+			log.Errorf("Error updating NIC - Host pairing: %v", err)
+		}
+
+		// Go through all the NICs that have been affected by this event.
+		// If we find a NIC that is no longer paired with any host,
+		// see if it can be paired with one of the existing hosts
+		for _, n := range nicUpdates {
+			if n.Status.Host == "" {
+				moreNICUpdates, moreHostUpdates, err := env.StateMgr.UpdateHostPairingStatus(kvstore.Created, n, nil)
+				if err != nil {
+					log.Errorf("Error updating NIC - Host pairing: %v", err)
+				}
+				nicUpdates = append(nicUpdates, moreNICUpdates...)
+				hostUpdates = append(hostUpdates, moreHostUpdates...)
+			}
+		}
+
+		m.sendNICHostUpdates(nicUpdates, hostUpdates)
+	}
+}
+
+func (m *masterService) sendNICHostUpdates(nicUpdates []*cmd.SmartNIC, hostUpdates []*cmd.Host) {
+	apiClient := m.cfgWatcherSvc.APIClient()
+
+	updMap := make(map[string]bool) // map to dedup notifications for same object
+	for _, upd := range nicUpdates {
+		if _, dup := updMap[upd.Name]; !dup {
+			// make sure to hold the lock while sending updates
+			nicState, err := env.StateMgr.FindSmartNIC(upd.Tenant, upd.Name)
+			if err != nil {
+				log.Infof("Skipping update for deleted SmartNIC: %s", upd.Name)
+				// object must have been deleted, continue
+				continue
+			}
+			nicState.Lock()
+			_, err = apiClient.SmartNIC().Update(context.Background(), upd)
+			if err != nil {
+				log.Errorf("Error updating smartnic {%+v} in ApiServer. Err: %v", upd, err)
+			}
+			log.Infof("Sent update for NIC {%+v} to ApiServer", upd)
+			nicState.Unlock()
+		}
+	}
+
+	updMap = make(map[string]bool) // reset the map
+	for _, upd := range hostUpdates {
+		if _, dup := updMap[upd.Name]; !dup {
+			// make sure to hold the lock while sending updates
+			hostState, err := env.StateMgr.FindHost(upd.Tenant, upd.Name)
+			if err != nil {
+				log.Infof("Skipping update for deleted Host: %s", upd.Name)
+				// object must have been deleted, continue
+				continue
+			}
+			hostState.Lock()
+			_, err = apiClient.Host().Update(context.Background(), upd)
+			if err != nil {
+				log.Errorf("Error updating Host {%+v} in ApiServer. Err: %v", upd, err)
+			}
+			log.Infof("Sent update for Host {%+v} to ApiServer", upd)
+			hostState.Unlock()
+		}
 	}
 }

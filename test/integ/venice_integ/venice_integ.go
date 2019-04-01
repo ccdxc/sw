@@ -52,11 +52,13 @@ import (
 	"github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
+	cmdapi "github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/cache"
 	cmdenv "github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	cmdauth "github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
+	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
@@ -76,6 +78,7 @@ import (
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/elastic"
+	esmock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
@@ -275,20 +278,21 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	}
 	cmdenv.UnauthRPCServer = rpcServer
 
+	cmdenv.StateMgr = cache.NewStatemgr()
 	// create and register the RPC handler for SmartNIC service
 	it.smartNICServer, err = smartnic.NewRPCServer(it,
 		smartnic.HealthWatchInterval,
 		smartnic.DeadInterval,
 		globals.NmdRESTPort,
-		cache.NewStatemgr(),
+		cmdenv.StateMgr,
 		it)
+	cmdenv.NICService = it.smartNICServer
 
 	if err != nil {
 		log.Fatalf("Error creating Smart NIC server: %v", err)
 	}
 	grpc.RegisterSmartNICRegistrationServer(rpcServer.GrpcServer, it.smartNICServer)
 	rpcServer.Start()
-	cmdenv.NICService = it.smartNICServer
 
 	// create node watcher
 	node := &cluster.Node{
@@ -300,6 +304,20 @@ func (it *veniceIntegSuite) launchCMDServer() {
 		},
 	}
 	nodewatcher.NewNodeWatcher(it.ctx, node, it.resolverClient, 10, it.logger)
+
+	// Start CMD config watcher
+	cmdenv.Logger = it.logger
+	cmdenv.QuorumNodes = []string{"localhost"}
+	l := mock.NewLeaderService("testMaster")
+	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
+	cw := cmdapi.NewCfgWatcherService(it.logger, it.apiSrvAddr, cmdenv.StateMgr)
+	cmdenv.MasterService = cmdsvc.NewMasterService(
+		cmdsvc.WithLeaderSvcMasterOption(l),
+		cmdsvc.WithSystemdSvcMasterOption(s),
+		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),
+		cmdsvc.WithCfgWatcherMasterOption(cw),
+		cmdsvc.WithElasticCuratorSvcrOption(esmock.NewMockCurator()))
+	cw.Start()
 
 	// start CMD auth server
 	go cmdauth.RunAuthServer(cmdAuthServer, nil)

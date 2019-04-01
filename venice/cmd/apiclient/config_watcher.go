@@ -51,11 +51,13 @@ type CfgWatcherService struct {
 	clusterWatcher  kvstore.Watcher // Cluster object watcher
 	nodeWatcher     kvstore.Watcher // Node endpoint watcher
 	smartNICWatcher kvstore.Watcher // SmartNIC object watcher
+	hostWatcher     kvstore.Watcher // Host object watcher
 
 	// Event handlers
 	nodeEventHandler     types.NodeEventHandler
 	clusterEventHandler  types.ClusterEventHandler
 	smartNICEventHandler types.SmartNICEventHandler
+	hostEventHandler     types.HostEventHandler
 }
 
 // SetNodeEventHandler sets handler for Node events
@@ -71,6 +73,11 @@ func (k *CfgWatcherService) SetClusterEventHandler(ch types.ClusterEventHandler)
 // SetSmartNICEventHandler sets handler for SmartNIC events
 func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICEventHandler) {
 	k.smartNICEventHandler = snicHandler
+}
+
+// SetHostEventHandler sets handler for Host events
+func (k *CfgWatcherService) SetHostEventHandler(hostHandler types.HostEventHandler) {
+	k.hostEventHandler = hostHandler
 }
 
 // apiClient creates a client to API server
@@ -210,6 +217,7 @@ func (k *CfgWatcherService) stopWatchers() {
 	k.clusterWatcher.Stop()
 	k.nodeWatcher.Stop()
 	k.smartNICWatcher.Stop()
+	k.hostWatcher.Stop()
 }
 
 // runUntilCancel implements the config Watcher service.
@@ -276,6 +284,24 @@ func (k *CfgWatcherService) runUntilCancel() {
 		}
 	}
 
+	// Init Host watcher
+	k.hostWatcher, err = k.svcsClient.ClusterV1().Host().Watch(k.ctx, &opts)
+	ii = 0
+	for err != nil {
+		select {
+		case <-time.After(time.Second):
+			k.hostWatcher, err = k.svcsClient.ClusterV1().Host().Watch(k.ctx, &opts)
+			ii++
+			if ii%10 == 0 {
+				k.logger.Errorf("Waiting for Host watch to succeed for %v seconds", ii)
+			}
+
+		case <-k.ctx.Done():
+			k.stopWatchers()
+			return
+		}
+	}
+
 	// Handle config watcher events
 	for {
 		select {
@@ -330,6 +356,24 @@ func (k *CfgWatcherService) runUntilCancel() {
 			if k.smartNICEventHandler != nil {
 				k.smartNICEventHandler(event.Type, snic)
 			}
+
+		case event, ok := <-k.hostWatcher.EventChan():
+			if !ok {
+				// restart this routine.
+				k.stopWatchers()
+				go k.runUntilCancel()
+				return
+			}
+			k.logger.Debugf("cfgWatcher Received %+v", event)
+			host, ok := event.Object.(*cmd.Host)
+			if !ok {
+				k.logger.Infof("Host Watcher failed to get Host Object")
+				break
+			}
+			if k.hostEventHandler != nil {
+				k.hostEventHandler(event.Type, host)
+			}
+
 		case <-k.ctx.Done():
 			k.stopWatchers()
 			return

@@ -91,6 +91,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"fw-major-ver":         api.CLIInfo{Path: "Status.SystemInfo.BiosInfo.FwMajorVersion", Skip: false, Insert: "", Help: ""},
 			"fw-minor-ver":         api.CLIInfo{Path: "Status.SystemInfo.BiosInfo.FwMinorVersion", Skip: false, Insert: "", Help: ""},
 			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"host":                 api.CLIInfo{Path: "Status.Host", Skip: false, Insert: "", Help: ""},
 			"hostname":             api.CLIInfo{Path: "Spec.Hostname", Skip: false, Insert: "", Help: ""},
 			"interfaces":           api.CLIInfo{Path: "Status.Interfaces", Skip: false, Insert: "", Help: ""},
 			"ip-address":           api.CLIInfo{Path: "Status.IPConfig.IPAddress", Skip: false, Insert: "", Help: ""},
@@ -184,6 +185,8 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"SmartNICVersion": api.Field{Name: "SmartNICVersion", CLITag: api.CLIInfo{ID: "smartNicVersion", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smartNicVersion", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"SmartNICSku": api.Field{Name: "SmartNICSku", CLITag: api.CLIInfo{ID: "smartNicSku", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smartNicSku", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Host": api.Field{Name: "Host", CLITag: api.CLIInfo{ID: "host", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

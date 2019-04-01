@@ -227,123 +227,6 @@ func (s *RPCServer) GetCluster() (*cluster.Cluster, error) {
 	return clusterObjs[0], nil
 }
 
-// ListHosts fetches all Host objects
-func (s *RPCServer) ListHosts() ([]*cluster.Host, error) {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return nil, errAPIServerDown
-	}
-
-	opts := api.ListWatchOptions{}
-	hostObjList, err := cl.Host().List(context.Background(), &opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return hostObjList, nil
-}
-
-// GetHost fetches the Host object based on object meta
-func (s *RPCServer) GetHost(om api.ObjectMeta) (*cluster.Host, error) {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return nil, errAPIServerDown
-	}
-
-	hostObj, err := cl.Host().Get(context.Background(), &om)
-	if err != nil || hostObj == nil {
-		return nil, perror.NewNotFound("Host", om.Name)
-	}
-
-	return hostObj, nil
-}
-
-// CreateHost creates the Host object based on object meta
-func (s *RPCServer) CreateHost(host *cluster.Host) (*cluster.Host, error) {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return nil, errAPIServerDown
-	}
-
-	host.Defaults("v1")
-	host.TypeMeta = api.TypeMeta{Kind: "Host"}
-
-	hostObj, err := cl.Host().Create(context.Background(), host)
-	if err != nil || hostObj == nil {
-		log.Errorf("Host create failed, host: %+v error: %+v", host, err)
-		return nil, perror.NewNotFound("Host", host.Name)
-	}
-
-	return hostObj, nil
-}
-
-// UpdateHost updates the list of Nics in spec of Host object
-func (s *RPCServer) UpdateHost(nic *cluster.SmartNIC, add bool) (*cluster.Host, error) {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return nil, errAPIServerDown
-	}
-
-	listObj, err := s.ListHosts()
-	if err != nil {
-		return nil, err
-	}
-
-	for ii := range listObj {
-		host := listObj[ii]
-		for ii := range host.Spec.SmartNICs {
-			mac := host.Spec.SmartNICs[ii].MACAddress
-			name := host.Spec.SmartNICs[ii].Name
-			if name == nic.Name || mac == nic.Name {
-				if add {
-					log.Debugf("Adding %v to Host: %v", nic.Name, host.Name)
-					// A NIC may register multiple times, so only add if it is not already present
-					found := false
-					for ii := range host.Status.AdmittedSmartNICs {
-						if host.Status.AdmittedSmartNICs[ii] == nic.Name {
-							found = true
-							break
-						}
-					}
-					if !found {
-						host.Status.AdmittedSmartNICs = append(host.Status.AdmittedSmartNICs, nic.Name)
-					}
-				} else {
-					log.Debugf("Deleting %v from Host: %v", nic.Name, host.Name)
-					for ii := range host.Status.AdmittedSmartNICs {
-						if host.Status.AdmittedSmartNICs[ii] == nic.Name {
-							host.Status.AdmittedSmartNICs = append(host.Status.AdmittedSmartNICs[:ii], host.Status.AdmittedSmartNICs[ii+1:]...)
-							break
-						}
-					}
-				}
-				host, err = cl.Host().Update(context.Background(), host)
-				return host, err
-			}
-		}
-	}
-
-	log.Debugf("Did not find Host for %v", nic.Name)
-	// TODO: If the Host object is added later, it's status should be updated
-	return nil, nil
-}
-
-// DeleteHost deletes the Host object based on object meta name
-func (s *RPCServer) DeleteHost(om api.ObjectMeta) error {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return errAPIServerDown
-	}
-
-	_, err := cl.Host().Delete(context.Background(), &om)
-	if err != nil {
-		log.Errorf("Error deleting Host object name:%s err: %v", om.Name, err)
-		return err
-	}
-
-	return nil
-}
-
 // GetSmartNIC fetches the SmartNIC object based on object meta
 func (s *RPCServer) GetSmartNIC(om api.ObjectMeta) (*cluster.SmartNIC, error) {
 	cl := s.ClientGetter.APIClient()
@@ -463,16 +346,10 @@ func (s *RPCServer) DeleteSmartNIC(om api.ObjectMeta) error {
 		return errAPIServerDown
 	}
 
-	nic, err := cl.SmartNIC().Delete(context.Background(), &om)
+	_, err := cl.SmartNIC().Delete(context.Background(), &om)
 	if err != nil {
 		log.Errorf("Error deleting smartNIC object name:%s err: %v", om.Name, err)
 		return err
-	}
-
-	// Update the Host
-	_, err = s.UpdateHost(nic, false)
-	if err != nil {
-		return errors.Wrapf(err, "Error updating Host object, mac: %s", nic.ObjectMeta.Name)
 	}
 
 	return nil
@@ -629,6 +506,10 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			}
 		} else {
 			// NIC object is already present.
+			// Re-initialize status
+			nicObj.Status = req.GetNic().Status
+			// clear out host pairing so that it will be recomputed
+			nicObj.Status.Host = ""
 			if nicObj.Spec.Admit == true {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 			} else {
@@ -640,12 +521,6 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 				log.Errorf("Error updating smartNIC object: %+v err: %v status: %v", nicObj, err, status)
 				return intErrResp, errors.Wrapf(err, "Error updating smartNIC object")
 			}
-		}
-
-		// Update the Host
-		_, err = s.UpdateHost(&nic, true)
-		if err != nil {
-			return intErrResp, errors.Wrapf(err, "Error creating or updating Host object, mac: %s", nic.ObjectMeta.Name)
 		}
 
 		okResp := &grpc.RegisterNICResponse{

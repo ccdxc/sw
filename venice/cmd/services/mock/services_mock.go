@@ -678,6 +678,9 @@ func (c *CfgWatcherService) SetClusterEventHandler(hdlr types.ClusterEventHandle
 // SetSmartNICEventHandler sets the handler to handle events related to SmartNIC object
 func (c *CfgWatcherService) SetSmartNICEventHandler(types.SmartNICEventHandler) {}
 
+// SetHostEventHandler sets the handler to handle events related to Host object
+func (c *CfgWatcherService) SetHostEventHandler(types.HostEventHandler) {}
+
 // APIClient returns a valid interface once the APIServer is good and
 // accepting requests
 func (c *CfgWatcherService) APIClient() cmd.ClusterV1Interface { return &c.DummyAPIClient }

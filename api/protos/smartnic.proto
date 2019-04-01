@@ -162,6 +162,9 @@ message SmartNICStatus {
 
     // SmartNIC SKU
     string SmartNICSku                      = 9 [(gogoproto.jsontag) = "smartNicSku,omitempty"];
+
+    // The name of the host this SmartNIC is plugged into
+    string Host                             = 10 [(gogoproto.jsontag) = "host,omitempty"];
 }
 
 // SmartNICCondition describes the state of a SmartNIC at a certain point.

@@ -440,6 +440,7 @@ func (it *veniceIntegSuite) TestTechSupportLabelBasedSelection(c *C) {
 	for _, n := range smartNICNodes {
 		err := it.createSmartNICNode(ctx, n)
 		AssertOk(c, err, fmt.Sprintf("Error creating SmartNIC node %+v", n))
+		defer it.deleteSmartNICNode(ctx, &n.ObjectMeta)
 	}
 
 	for _, agent := range agents {

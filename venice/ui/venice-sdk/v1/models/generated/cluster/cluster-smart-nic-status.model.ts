@@ -22,6 +22,7 @@ export interface IClusterSmartNICStatus {
     'interfaces'?: Array<string>;
     'smartNicVersion'?: string;
     'smartNicSku'?: string;
+    'host'?: string;
 }
 
 
@@ -43,6 +44,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     'interfaces': Array<string> = null;
     'smartNicVersion': string = null;
     'smartNicSku': string = null;
+    'host': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admission-phase': {
             enum: ClusterSmartNICStatus_admission_phase_uihint,
@@ -80,6 +82,10 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             type: 'string'
         },
         'smartNicSku': {
+            required: false,
+            type: 'string'
+        },
+        'host': {
             required: false,
             type: 'string'
         },
@@ -176,6 +182,13 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         } else {
             this['smartNicSku'] = null
         }
+        if (values && values['host'] != null) {
+            this['host'] = values['host'];
+        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('host')) {
+            this['host'] = ClusterSmartNICStatus.propInfo['host'].default;
+        } else {
+            this['host'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -192,6 +205,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
                 'interfaces': CustomFormControl(new FormControl(this['interfaces']), ClusterSmartNICStatus.propInfo['interfaces']),
                 'smartNicVersion': CustomFormControl(new FormControl(this['smartNicVersion']), ClusterSmartNICStatus.propInfo['smartNicVersion']),
                 'smartNicSku': CustomFormControl(new FormControl(this['smartNicSku']), ClusterSmartNICStatus.propInfo['smartNicSku']),
+                'host': CustomFormControl(new FormControl(this['host']), ClusterSmartNICStatus.propInfo['host']),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterSmartNICCondition>('conditions', this['conditions'], ClusterSmartNICCondition);
@@ -229,6 +243,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             this._formGroup.controls['interfaces'].setValue(this['interfaces']);
             this._formGroup.controls['smartNicVersion'].setValue(this['smartNicVersion']);
             this._formGroup.controls['smartNicSku'].setValue(this['smartNicSku']);
+            this._formGroup.controls['host'].setValue(this['host']);
         }
     }
 }
