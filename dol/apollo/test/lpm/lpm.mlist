@@ -1,4 +1,4 @@
-# Feature Test Modules List
+# Feature LPM Modules List
 feature:
     id          : lpm
     sub         : lpm
@@ -9,37 +9,217 @@ feature:
 
 modules:
     - module:
-        name    : IPV4_UDP_QTAG_ADJACENT
+        name    : IPV4_ADJACENT_ROUTE
         spec    : lpm.testspec
         iterate :
             - route : filter://AddrFamily=IPV4,RouteType=adjacent
 
     - module:
-        name    : IPV6_UDP_QTAG_ADJACENT
+        name    : IPV6_ADJACENT_ROUTE
         spec    : lpmv6.testspec
         iterate :
             - route : filter://AddrFamily=IPV6,RouteType=adjacent
 
     - module:
-        name    : IPV4_UDP_QTAG_DISJOINT
+        name    : IPV4_DISJOINT_ROUTE
         spec    : lpm.testspec
         iterate :
             - route : filter://AddrFamily=IPV4,RouteType=disjoint
 
     - module:
-        name    : IPV6_UDP_QTAG_DISJOINT
+        name    : IPV6_DISJOINT_ROUTE
         spec    : lpmv6.testspec
         iterate :
             - route : filter://AddrFamily=IPV6,RouteType=disjoint
 
     - module:
-        name    : IPV4_UDP_QTAG_FULL_OVERLAP
+        name    : IPV4_FULL_OVERLAP_ROUTE
         spec    : lpm.testspec
         iterate :
             - route : filter://AddrFamily=IPV4,RouteType=fulloverlap
 
     - module:
-        name    : IPV6_UDP_QTAG_FULL_OVERLAP
+        name    : IPV6_FULL_OVERLAP_ROUTE
         spec    : lpmv6.testspec
         iterate :
             - route : filter://AddrFamily=IPV6,RouteType=fulloverlap
+
+    - module:
+        name    : IPV4_LEFT_OVERLAP_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=left_overlap
+
+    - module:
+        name    : IPV6_LEFT_OVERLAP_ROUTE
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=left_overlap
+
+    - module:
+        name    : IPV4_MULTIPLE_LEFT_OVERLAP_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=multiple_left_overlap
+    
+    - module:
+        name    : IPV6_MULTIPLE_LEFT_OVERLAP_ROUTE
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=multiple_left_overlap
+    
+    - module:
+        name    : IPV4_RIGHT_OVERLAP_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=right_overlap
+    
+    - module:
+        name    : IPV6_RIGHT_OVERLAP_ROUTE
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=right_overlap
+    
+    - module:
+        name    : IPV4_MULTIPLE_RIGHT_OVERLAP_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=multiple_right_overlap
+    
+    - module:
+        name    : IPV6_MULTIPLE_RIGHT_OVERLAP_ROUTE
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=multiple_right_overlap
+
+    - module:
+        name    : IPV4_ADJACENT_ROUTE_MAX
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=adjacent_max
+
+    - module:
+        name    : IPV6_ADJACENT_ROUTE_MAX
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=adjacent_max
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_MAX
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap_max
+
+    - module:
+        name    : IPV6_FULL_OVERLAP_ROUTE_MAX
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=fulloverlap_max
+
+    - module:
+        name    : IPV4_ADJACENT_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=adjacent_with_default
+
+    - module:
+        name    : IPV6_ADJACENT_ROUTE_WITH_DEFAULT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=adjacent_with_default
+
+    - module:
+        name    : IPV4_DISJOINT_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=disjoint_with_default
+
+    - module:
+        name    : IPV6_DISJOINT_ROUTE_WITH_DEFAULT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=disjoint_with_default
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap_with_default
+
+    - module:
+        name    : IPV6_FULL_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=fulloverlap_with_default
+
+    - module:
+        name    : IPV4_LEFT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=left_overlap_with_default
+
+    - module:
+        name    : IPV6_LEFT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=left_overlap_with_default
+
+    - module:
+        name    : IPV4_MULTIPLE_LEFT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=multiple_left_overlap_with_default
+
+    - module:
+        name    : IPV6_MULTIPLE_LEFT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=multiple_left_overlap_with_default
+
+    - module:
+        name    : IPV4_RIGHT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=right_overlap_with_default
+
+    - module:
+        name    : IPV6_RIGHT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=right_overlap_with_default
+
+    - module:
+        name    : IPV4_MULTIPLE_RIGHT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=multiple_right_overlap_with_default
+
+    - module:
+        name    : IPV6_MULTIPLE_RIGHT_OVERLAP_ROUTE_WITH_DEFAULT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=multiple_right_overlap_with_default
+
+    - module:
+        name    : IPV4_ADJACENT_ROUTE_MAX_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=adjacent_max_with_default
+
+    - module:
+        name    : IPV6_ADJACENT_ROUTE_MAX_WITH_DEFAULT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=adjacent_max_with_default
+
+    - module:
+        name    : IPV4_FULL_OVERLAP_ROUTE_MAX_WITH_DEFAULT
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=fulloverlap_max_with_default
+
+    - module:
+        name    : IPV6_FULL_OVERLAP_ROUTE_MAX_WITH_DEFAULT
+        spec    : lpmv6.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=fulloverlap_max_with_default

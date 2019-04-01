@@ -3,7 +3,7 @@
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 4
-    flow: filter://any
+    flow: filter://HasDefaultRoute=False
 
 packets:
     - packet:

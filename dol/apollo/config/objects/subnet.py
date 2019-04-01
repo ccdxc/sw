@@ -33,7 +33,8 @@ class SubnetObject(base.ConfigObjectBase):
         self.IngV6SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
         self.EgV4SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
         self.EgV6SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
-
+        self.V4RouteTable = route.client.GetRouteV4Table(parent.VPCId, self.V4RouteTableId)
+        self.V6RouteTable = route.client.GetRouteV6Table(parent.VPCId, self.V6RouteTableId)
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
         self.__ip_address_pool[0] = resmgr.CreateIpv6AddrPool(self.IPPrefix[0])

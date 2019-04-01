@@ -31,13 +31,17 @@ class RouteObject(base.ConfigObjectBase):
         self.VPCId = parent.VPCId
         self.Label = 'NETWORKING'
         self.RouteType = routetype # used for lpm route cases
+        if 'default' in routetype:
+            self.HasDefaultRoute = True
+        else:
+            self.HasDefaultRoute = False
         ##########################################################################
         self.Show()
         return
 
     def __repr__(self):
-        return "RouteTblID:%d|VPCId:%d|NumRoutes:%d|AddrFamily:%s|RouteType:%s|NextHop:%s" %\
-               (self.RouteTblId, self.VPCId, len(self.routes),
+        return "RouteTblID:%d|VPCId:%d|NumRoutes:%d|HasDefaultRoute:%d|AddrFamily:%s|RouteType:%s|NextHop:%s" %\
+               (self.RouteTblId, self.VPCId, len(self.routes), self.HasDefaultRoute,
                 self.AddrFamily, self.RouteType, str(self.TunIPAddr))
 
     def GetGrpcCreateMessage(self):
@@ -82,6 +86,18 @@ class RouteObjectClient:
 
     def Objects(self):
         return self.__objs
+
+    def GetRouteV4Table(self, vpcid, routetblid):
+        for routetbl in self.__v4objs[vpcid]:
+            if routetbl.RouteTblId == routetblid:
+                return routetbl
+        return None
+
+    def GetRouteV6Table(self, vpcid, routetblid):
+        for routetbl in self.__v6objs[vpcid]:
+            if routetbl.RouteTblId == routetblid:
+                return routetbl
+        return None
 
     def GetRouteV4TableId(self, vpcid):
         if len(self.__v4objs[vpcid]) == 0:
@@ -180,24 +196,27 @@ class RouteObjectClient:
             v6prefixlen = routetbl_spec_obj.v6prefixlen
             v4base = __get_first_subnet(ipaddress.ip_network(routetbl_spec_obj.v4base.replace('\\', '/')), v4prefixlen)
             v6base = __get_first_subnet(ipaddress.ip_network(routetbl_spec_obj.v6base.replace('\\', '/')), v6prefixlen)
+            # get user specified routes if any for 'base' routetbltype
+            user_specified_v4routes = __get_user_specified_routes(routetbl_spec_obj.v4routes)
+            user_specified_v6routes = __get_user_specified_routes(routetbl_spec_obj.v6routes)
             for i in range(routetablecount):
                 if 'adjacent' in routetype:
                     if __is_v4stack():
-                        routes = __get_adjacent_routes(v4base, v4routecount)
+                        routes = user_specified_v4routes + __get_adjacent_routes(v4base, v4routecount)
                         __add_v4routetable(routes, routetype)
                         v4base = __get_next_subnet(routes[-1])
                     if __is_v6stack():
-                        routes = __get_adjacent_routes(v6base, v6routecount)
+                        routes = user_specified_v6routes + __get_adjacent_routes(v6base, v6routecount)
                         __add_v6routetable(routes, routetype)
                         v6base = __get_next_subnet(routes[-1])
 
                 elif 'overlap' in routetype:
                     if __is_v4stack():
-                        routes = __get_overlap(routetbl_spec_obj.v4base, v4base, v4routecount)
+                        routes = user_specified_v4routes + __get_overlap(routetbl_spec_obj.v4base, v4base, v4routecount)
                         __add_v4routetable(routes, routetype)
                         v4base = __get_next_subnet(routes[-1])
                     if __is_v6stack():
-                        routes = __get_overlap(routetbl_spec_obj.v6base, v6base, v6routecount)
+                        routes = user_specified_v6routes + __get_overlap(routetbl_spec_obj.v6base, v6base, v6routecount)
                         __add_v6routetable(routes, routetype)
                         v6base = __get_next_subnet(routes[-1])
 

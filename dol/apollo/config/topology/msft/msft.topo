@@ -60,6 +60,8 @@ vpc:
                v6base: '2000::\64' # TEMP Infra issue and will reverse this in test logic
                v6prefixlen : 96
                nv6routes   : 10
+               v4routes:
+               v6routes:
 
              - type: base
                routetype: adjacent
@@ -70,6 +72,8 @@ vpc:
                v6base: '2001::\64' # TEMP Infra issue and will reverse this in test logic
                v6prefixlen : 96
                nv6routes   : 10
+               v4routes:
+               v6routes:
 
              - type: base
                routetype: overlap
@@ -80,3 +84,6 @@ vpc:
                v6base: '2000::\64' # TEMP Infra issue and will reverse this in test logic
                v6prefixlen: 120
                nv6routes   : 10
+               v4routes:
+               v6routes:
+

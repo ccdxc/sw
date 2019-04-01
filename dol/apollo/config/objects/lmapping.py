@@ -27,11 +27,13 @@ class LocalMappingObject(base.ConfigObjectBase):
             self.IPAddr = parent.SUBNET.AllocIPv6Address();
             if (hasattr(spec, 'public')):
                 self.PublicIPAddr = next(resmgr.PublicIpv6AddressAllocator)
+            self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute # For testspec
         else:
             self.AddrFamily = 'IPV4'
             self.IPAddr = parent.SUBNET.AllocIPv4Address();
             if (hasattr(spec, 'public')):
                 self.PublicIPAddr = next(resmgr.PublicIpAddressAllocator)
+            self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute # For testspec
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # for testspec

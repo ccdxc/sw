@@ -28,9 +28,11 @@ class RemoteMappingObject(base.ConfigObjectBase):
         if ipversion == utils.IP_VERSION_6:
             self.IPAddr = parent.AllocIPv6Address();
             self.AddrFamily = 'IPV6'
+            self.HasDefaultRoute = self.SUBNET.V6RouteTable.HasDefaultRoute # For testspec
         else:
             self.IPAddr = parent.AllocIPv4Address();
             self.AddrFamily = 'IPV4'
+            self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute # For testspec
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # For testspec
