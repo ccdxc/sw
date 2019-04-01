@@ -166,13 +166,6 @@ export NIC_HAL_GTEST_LDLIBS := ${NIC_HAL_ALL_LDLIBS}
 export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=
 
 # ==========================================================================
-#                        Apollo Specific Defs
-# ==========================================================================
-export NIC_APOLLO_NICMGR_LIBS := nicmgr_apollo rdmamgr_apollo mnet evutils \
-                                 pciemgr_if pciemgr pciemgrutils \
-                                 pciehdevices pcietlp cfgspace intrutils misc
-
-# ==========================================================================
 #                        Pipeline Specific Defs
 # ==========================================================================
 iris_DEFS       := -DIRIS

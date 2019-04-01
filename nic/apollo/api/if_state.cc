@@ -11,7 +11,6 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/api/if_state.hpp"
-#include "nic/apollo/core/trace.hpp"
 
 namespace api {
 
@@ -42,7 +41,6 @@ if_state::alloc(void) {
 
 sdk_ret_t
 if_state::insert(if_entry *intf) {
-    PDS_TRACE_DEBUG("Inserting IF 0x%x", intf->key_);
     return if_ht_->insert_with_key(&intf->key_, intf, &intf->ht_ctxt_);
 }
 

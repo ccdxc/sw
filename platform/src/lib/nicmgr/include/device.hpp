@@ -2,8 +2,8 @@
 * Copyright (c) 2018, Pensando Systems Inc.
 */
 
-#ifndef __NICMGR_DEVICE_HPP__
-#define __NICMGR_DEVICE_HPP__
+#ifndef __DEVICE_HPP__
+#define __DEVICE_HPP__
 
 #include "pal_compat.hpp"
 #include "logger.hpp"
@@ -66,4 +66,4 @@ class Device {
         enum DeviceType type;
 };
 
-#endif /* __NICMGR_DEVICE_HPP__ */
+#endif /* __DEVICE_HPP__ */

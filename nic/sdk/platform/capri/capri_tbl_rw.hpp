@@ -34,15 +34,6 @@ typedef enum {
                                       P4PLUS_CACHE_INVALIDATE_TXDMA
 } p4plus_cache_action_t;
 
-typedef struct p4plus_prog_s {
-    int stageid;
-    int stage_tableid;
-    int stage_tableid_off;
-    const char *control;
-    const char *prog_name;
-    p4pd_pipeline_t pipe;
-} p4plus_prog_t;
-
 int capri_table_rw_init(capri_cfg_t *capri_cfg);
 int capri_p4plus_table_rw_init(void);
 
@@ -139,7 +130,6 @@ void capri_program_table_mpu_pc(int tableid, bool gress, int stage, int stage_ta
                            uint64_t capri_table_asm_err_offset,
                            uint64_t capri_table_asm_base);
 
-int capri_p4plus_table_init(p4plus_prog_t *prog, platform_type_t platform_type);
 
 int capri_p4plus_table_init(platform_type_t platform_type,
                             int stage_apphdr, int stage_tableid_apphdr,
@@ -173,6 +163,5 @@ using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_ACTION_NONE;
 using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA;
 using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA;
 using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_BOTH;
-using sdk::platform::capri::p4plus_prog_t;
-
+ 
 #endif

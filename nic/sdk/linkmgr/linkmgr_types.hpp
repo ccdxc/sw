@@ -5,7 +5,6 @@
 
 #include <atomic>
 #include "include/sdk/types.hpp"
-#include "include/sdk/base.hpp"
 
 namespace sdk {
 namespace linkmgr {

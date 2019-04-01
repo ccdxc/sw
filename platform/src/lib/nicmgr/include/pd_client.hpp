@@ -18,12 +18,10 @@
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
 
-#ifndef APOLLO
 #include "common_rxdma_actions_p4pd.h"
 #include "common_rxdma_actions_p4pd_table.h"
 #include "common_txdma_actions_p4pd.h"
 #include "common_txdma_actions_p4pd_table.h"
-#endif
 
 // Maximum number of queue per LIF
 #define ETH_RSS_MAX_QUEUES                  (128)
@@ -118,18 +116,19 @@ public:
     int p4plus_txdma_init_tables();
     int pd_state_init();
 
-#ifndef APOLLO
     int p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
             uint32_t hw_lif_id, uint8_t rss_type, uint8_t *rss_key);
     int p4pd_common_p4plus_rxdma_rdma_params_table_entry_get(
             uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data);
+
     int p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
             uint32_t hw_lif_id, uint8_t index, uint8_t qid);
     int p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
             uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata_t *data);
+
     int p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
             uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data);
-#endif
+
     int eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type,
                         uint8_t *rss_key, uint8_t *rss_indir,
                         uint16_t num_queues);

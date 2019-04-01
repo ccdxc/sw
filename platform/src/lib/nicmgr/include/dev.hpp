@@ -13,6 +13,8 @@
 
 #include "nic/include/globals.hpp"
 
+#include "platform/src/lib/devapi_iris/devapi_iris.hpp"
+
 #include "platform/capri/capri_tbl_rw.hpp"
 
 #include "pal_compat.hpp"

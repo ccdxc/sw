@@ -70,7 +70,7 @@ read_programs(const char *handle, char *pathname, mpu_pgm_sort_t sort_func)
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        SDK_TRACE_ERR("Invalid handle: %s", handle);
+        SDK_TRACE_ERR("Invalid handle");
         return -1;
     }
 
@@ -507,7 +507,7 @@ p4_program_to_base_addr(const char *handle,
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        SDK_TRACE_ERR("Invalid handle: %s", handle);
+        SDK_TRACE_ERR("Invalid handle");
         return SDK_RET_ERR;
     }
     program_info = ctx->program_info;

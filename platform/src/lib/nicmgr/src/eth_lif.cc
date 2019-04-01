@@ -18,14 +18,12 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/p4/common/defines.h"
 
-#ifndef APOLLO
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
-#include "platform/src/app/nicmgrd/src/delphic.hpp"
-#endif
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "platform/src/app/nicmgrd/src/delphic.hpp"
 
 #include "logger.hpp"
 #include "eth_if.h"
@@ -213,7 +211,6 @@ EthLif::EthLif(devapi *dev_api,
     NIC_LOG_INFO("{}: stats_mem_addr: {:#x}",
         hal_lif_info_.name, stats_mem_addr);
 
-#ifndef APOLLO
     auto lif_stats =
         delphi::objects::LifMetrics::NewLifMetrics(hal_lif_info_.lif_id, stats_mem_addr);
     if (lif_stats == NULL) {
@@ -221,7 +218,6 @@ EthLif::EthLif(devapi *dev_api,
             hal_lif_info_.name);
         throw;
     }
-#endif
 
     // Notify Queue
     notify_block_addr = pd->nicmgr_mem_alloc(sizeof(struct notify_block));
@@ -297,7 +293,9 @@ status_code_t
 EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
+    int ret;
     uint64_t addr;
+    edma_qstate_t dq_qstate = {0};
 
     NIC_LOG_DEBUG("{}: LIF_INIT", hal_lif_info_.name);
 
@@ -327,7 +325,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_INFO("{}: created", hal_lif_info_.name);
 
         cosA = 1;
-        cosB = 0;
+        // cosB = QosClass::GetTxTrafficClassCos(spec->qos_group, spec->uplink_port_num);
         DEVAPI_CHECK
         dev_api->qos_get_txtc_cos(spec->qos_group, spec->uplink_port_num, &cosB);
         if (cosB < 0) {
@@ -338,7 +336,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         }
 
         ctl_cosA = 1;
-        ctl_cosB = 0;
+        // ctl_cosB = QosClass::GetTxTrafficClassCos("CONTROL", spec->uplink_port_num);
         DEVAPI_CHECK
         dev_api->qos_get_txtc_cos("CONTROL", spec->uplink_port_num, &ctl_cosB);
         if (ctl_cosB < 0) {
@@ -356,8 +354,6 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         }
     }
 
-#ifndef APOLLO
-    int ret;
     // Reset RSS configuration
     rss_type = LIF_RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
@@ -368,7 +364,6 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Unable to program hw for RSS HASH", ret);
         return (IONIC_RC_ERROR);
     }
-#endif
 
     // Clear PC to drop all traffic
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
@@ -425,7 +420,6 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
     // Initialize the EDMA queue
     uint8_t off;
-    edma_qstate_t dq_qstate = {0};
     if (pd->get_pc_offset("txdma_stage0.bin", "edma_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: edma_stage0");
         return (IONIC_RC_ERROR);
@@ -523,6 +517,7 @@ EthLif::FreeUpMacVlanFilters()
 status_code_t
 EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
 {
+    int ret;
     uint64_t addr;
 
     NIC_LOG_DEBUG("{}: LIF_RESET", hal_lif_info_.name);
@@ -557,8 +552,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     FreeUpVlanFilters();
     FreeUpMacVlanFilters();
 
-#ifndef APOLLO
-    int ret;
+
     // Reset RSS configuration
     rss_type = LIF_RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
@@ -569,7 +563,6 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Unable to program hw for RSS HASH", ret);
         return (IONIC_RC_ERROR);
     }
-#endif
 
     // Clear PC to drop all traffic
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
@@ -633,6 +626,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     int64_t addr, nicmgr_qstate_addr;
     struct adminq_init_cmd *cmd = (struct adminq_init_cmd *)req;
     struct adminq_init_comp *comp = (struct adminq_init_comp *)resp;
+    admin_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_ADMINQ_INIT: "
         "queue_index {} ring_base {:#x} ring_size {} intr_index {}",
@@ -683,7 +677,6 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     uint8_t off;
-    admin_qstate_t qstate = {0};
     if (pd->get_pc_offset("txdma_stage0.bin", "adminq_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
         return (IONIC_RC_ERROR);
@@ -720,7 +713,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     comp->qid = cmd->index;
     comp->qtype = ETH_QTYPE_ADMIN;
 
-    NIC_LOG_DEBUG("{}: qid {} qtype {}, adminq_off: {}", hal_lif_info_.name, comp->qid, comp->qtype, off);
+    NIC_LOG_DEBUG("{}: qid {} qtype {}", hal_lif_info_.name, comp->qid, comp->qtype);
     return (IONIC_RC_SUCCESS);
 }
 
@@ -1126,6 +1119,8 @@ status_code_t
 EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
+    uint64_t host_ring_base;
+    notify_qstate_t qstate = {0};
     struct notifyq_init_cmd *cmd = (struct notifyq_init_cmd *)req;
     struct notifyq_init_comp *comp = (struct notifyq_init_comp *)resp;
 
@@ -1173,8 +1168,6 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     notify_ring_head = 0;
 
     uint8_t off;
-    uint64_t host_ring_base;
-    notify_qstate_t qstate = {0};
     if (pd->get_pc_offset("txdma_stage0.bin", "notify_stage0", &off, NULL) < 0) {
         NIC_LOG_ERR("Failed to resolve program: txdma_stage0.bin label: notify_stage0");
         return (IONIC_RC_ERROR);
@@ -1241,10 +1234,8 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     comp->qid = cmd->index;
     comp->qtype = ETH_QTYPE_SVC;
 
-    NIC_LOG_INFO("{}: qid {} qtype {} status: {}, speed: {}",
-                 hal_lif_info_.name,
-                 comp->qid, comp->qtype, notify_block->link_status,
-                 notify_block->link_speed);
+    NIC_LOG_INFO("{}: qid {} qtype {}", hal_lif_info_.name,
+        comp->qid, comp->qtype);
 
     return (IONIC_RC_SUCCESS);
 }
@@ -1822,6 +1813,7 @@ EthLif::_CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data
 status_code_t
 EthLif::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
 {
+    int ret;
     struct rss_hash_set_cmd *cmd = (struct rss_hash_set_cmd *)req;
     //rss_hash_set_comp *comp = (struct rss_hash_set_comp *)resp;
 
@@ -1836,15 +1828,12 @@ EthLif::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: CMD_OPCODE_RSS_HASH_SET: type {:#x} key {} table {}",
         hal_lif_info_.name, rss_type, rss_key, rss_indir);
 
-#ifndef APOLLO
-    int ret;
     ret = pd->eth_program_rss(hal_lif_info_.lif_id, rss_type, rss_key, rss_indir,
                               spec->rxq_count);
     if (ret != 0) {
         NIC_LOG_DEBUG("{}: Unable to program hw for RSS HASH", ret);
         return (IONIC_RC_ERROR);
     }
-#endif
 
     return IONIC_RC_SUCCESS;
 }
@@ -1854,6 +1843,7 @@ EthLif::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rss_indir_set_cmd *cmd = (struct rss_indir_set_cmd *)req;
     //rss_indir_set_comp *comp = (struct rss_indir_set_comp *)resp;
+    int ret;
     uint64_t rss_indir_base, req_db_addr, addr;
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
@@ -1934,15 +1924,12 @@ EthLif::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
         }
     }
 
-#ifndef APOLLO
-    int ret;
     ret = pd->eth_program_rss(hal_lif_info_.lif_id, rss_type, rss_key, rss_indir,
                           spec->rxq_count);
     if (ret != 0) {
         NIC_LOG_ERR("{}: Unable to program hw for RSS INDIR", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
-#endif
 
     return (IONIC_RC_SUCCESS);
 }

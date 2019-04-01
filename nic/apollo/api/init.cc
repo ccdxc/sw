@@ -157,15 +157,12 @@ pds_init (pds_init_params_t *params)
     api::asic_global_config_init(params, &asic_cfg);
     SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
-    // spin periodic thread. have to be before linkmgr init
-    core::thread_periodic_spawn(&api::g_pds_state);
+    // spin all necessary threads in the system
+    core::thread_spawn(&api::g_pds_state);
 
     // trigger linkmgr initialization
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     SDK_ASSERT(api::create_ports() == SDK_RET_OK);
-
-    // spin nicmgr thread. have to be after linkmgr init
-    core::thread_nicmgr_spawn(&api::g_pds_state);
 
     // initialize all the signal handlers
     core::sig_init(SIGUSR1, api::sig_handler);

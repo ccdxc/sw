@@ -19,18 +19,16 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/p4/common/defines.h"
 
-#ifndef APOLLO
 #include "gen/proto/nicmgr/nicmgr.pb.h"
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
 #include "gen/proto/common/nicmgr_status_msgs.pb.h"
 #include "gen/proto/common/nicmgr_status_msgs.delphi.hpp"
-#include "platform/src/app/nicmgrd/src/delphic.hpp"
-#endif
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "platform/src/app/nicmgrd/src/delphic.hpp"
 #include "nicmgr_utils.hpp"
 
 #include "logger.hpp"
@@ -38,6 +36,19 @@
 #include "eth_dev.hpp"
 #include "rdma_dev.hpp"
 #include "pd_client.hpp"
+
+using namespace std;
+using namespace nicmgr;
+using namespace nicmgr_status_msgs;
+
+using nicmgr::EthDeviceInfo;
+using nicmgr::MacAddrVlans;
+using nicmgr::MacAddrs;
+using nicmgr::Vlans;
+using nicmgr::LifInfo;
+using nicmgr::QstateAddr;
+using nicmgr_status_msgs::EthDeviceHostDownStatusMsg;
+using nicmgr_status_msgs::EthDeviceHostUpStatusMsg;
 
 extern class pciemgr *pciemgr;
 
@@ -917,15 +928,15 @@ Eth::SetHalClient(devapi *dapi)
     }
 }
 
-lif_type_t
+types::LifType
 Eth::ConvertDevTypeToLifType(EthDevType dev_type)
 {
     switch(dev_type) {
-        case ETH_HOST: return sdk::platform::LIF_TYPE_HOST;
-        case ETH_HOST_MGMT: return sdk::platform::LIF_TYPE_HOST_MANAGEMENT;
-        case ETH_MNIC_OOB_MGMT: return sdk::platform::LIF_TYPE_MNIC_OOB_MANAGEMENT;
-        case ETH_MNIC_INTERNAL_MGMT: return sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT;
-        case ETH_MNIC_INBAND_MGMT: return sdk::platform::LIF_TYPE_MNIC_INBAND_MANAGEMENT;
-        default: return sdk::platform::LIF_TYPE_NONE;
+        case ETH_HOST: return types::LIF_TYPE_HOST;
+        case ETH_HOST_MGMT: return types::LIF_TYPE_HOST_MANAGEMENT;
+        case ETH_MNIC_OOB_MGMT: return types::LIF_TYPE_MNIC_OOB_MANAGEMENT;
+        case ETH_MNIC_INTERNAL_MGMT: return types::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT;
+        case ETH_MNIC_INBAND_MGMT: return types::LIF_TYPE_MNIC_INBAND_MANAGEMENT;
+        default: return types::LIF_TYPE_NONE;
     }
 }

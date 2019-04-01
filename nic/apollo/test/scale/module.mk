@@ -9,7 +9,7 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl pdstestutils \
                   sdkp4 sdkp4utils sdkcapri_csrint sdkcapri_asicrw_if sdkcapri \
                   sdkplatformutils sdkxcvrdriver sdkasicpd lpmitree \
                   rfc bm_allocator sdklinkmgr sdklinkmgrcsr \
-                  memhash ${NIC_APOLLO_NICMGR_LIBS}
+                  memhash
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
                    ${NIC_CAPSIM_LDLIBS} \
                    AAPL

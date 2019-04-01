@@ -14,11 +14,6 @@
 #include "rdma_dev.hpp"
 #include "nicmgr_init.hpp"
 
-#ifdef APOLLO
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd_table.h"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd_table.h"
-#endif
-
 using namespace sdk::platform::capri;
 using namespace sdk::platform::utils;
 
@@ -35,24 +30,12 @@ const static char *kRdmaHBMBarLabel = "rdma-hbm-bar";
 const static uint32_t kRdmaBarAllocUnit = 8 * 1024 * 1024;
 #endif
 
-#ifdef APOLLO
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_APOLLO_RXDMA_TBL_ID_INDEX_MIN
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_APOLLO_RXDMA_TBL_ID_INDEX_MAX
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_APOLLO_TXDMA_TBL_ID_INDEX_MIN
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_APOLLO_TXDMA_TBL_ID_INDEX_MAX
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN P4_APOLLO_RXDMA_TBL_ID_TBLMIN
-#define P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX P4_APOLLO_RXDMA_TBL_ID_TBLMAX
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN P4_APOLLO_TXDMA_TBL_ID_TBLMIN
-#define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX P4_APOLLO_TXDMA_TBL_ID_TBLMAX
-#endif
-
 const static char *kNicmgrHBMLabel = "nicmgr";
 const static uint32_t kNicmgrAllocUnit = 64;
 
 const static char *kDevcmdHBMLabel = "devcmd";
 const static uint32_t kDevcmdAllocUnit = 4096;
 
-#ifndef APOLLO
 static uint8_t *memrev(uint8_t *block, size_t elnum)
 {
     uint8_t *s, *t, tmp;
@@ -64,7 +47,6 @@ static uint8_t *memrev(uint8_t *block, size_t elnum)
     }
     return block;
 }
-#endif
 
 #if 0
 static uint32_t
@@ -101,15 +83,6 @@ PdClient::p4plus_rxdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#ifdef APOLLO
-    p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "apollo/capri_rxdma_table_map.json",
-            .p4pd_pgm_name       = "apollo",
-            .p4pd_rxdma_pgm_name = "p4plus",
-            .p4pd_txdma_pgm_name = "p4plus",
-            .cfg_path            = hal_cfg_path_.c_str(),
-    };
-#else
     p4pd_cfg_t                 p4pd_cfg = {
             .table_map_cfg_file  = "iris/capri_p4_rxdma_table_map.json",
             .p4pd_pgm_name       = "iris",
@@ -117,7 +90,6 @@ PdClient::p4plus_rxdma_init_tables()
             .p4pd_txdma_pgm_name = "p4plus",
             .cfg_path            = hal_cfg_path_.c_str(),
     };
-#endif
 
     memset(&tinfo, 0, sizeof(tinfo));
 
@@ -168,15 +140,6 @@ PdClient::p4plus_txdma_init_tables()
     uint32_t                   tid;
     p4pd_table_properties_t    tinfo;
     p4pd_error_t               rc;
-#ifdef APOLLO
-    p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "apollo/capri_txdma_table_map.json",
-        .p4pd_pgm_name       = "apollo",
-        .p4pd_rxdma_pgm_name = "p4plus",
-        .p4pd_txdma_pgm_name = "p4plus",
-        .cfg_path            = hal_cfg_path_.c_str(),
-    };
-#else
     p4pd_cfg_t                 p4pd_cfg = {
         .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
         .p4pd_pgm_name       = "iris",
@@ -184,7 +147,6 @@ PdClient::p4plus_txdma_init_tables()
         .p4pd_txdma_pgm_name = "p4plus",
         .cfg_path            = hal_cfg_path_.c_str(),
     };
-#endif
 
     memset(&tinfo, 0, sizeof(tinfo));
 
@@ -456,14 +418,10 @@ PdClient::create_dirs() {
 
 void PdClient::init(void)
 {
-    hal::hal_cfg_t hal_cfg;
-#ifdef APOLLO
-    std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
-#else
-    std::string mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
-#endif
-
     int ret;
+    hal::hal_cfg_t hal_cfg;
+    std::string mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
+
     NIC_LOG_DEBUG("Loading p4plus RxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
     ret = p4plus_rxdma_init_tables();
     assert(ret == 0);
@@ -499,11 +457,9 @@ void PdClient::init(void)
     }
 
     hal_cfg.cfg_path = hal_cfg_path_;
-#ifndef APOLLO
     NIC_LOG_DEBUG("Initializing table rw ...");
     ret = capri_p4plus_table_rw_init();
     assert(ret == 0);
-#endif
 
     rdma_mgr_ = rdma_manager_init(mp_, lm_);
 
@@ -744,7 +700,6 @@ int PdClient::program_qstate(struct queue_info* queue_info,
     return 0;
 }
 
-#ifndef APOLLO
 int
 PdClient::p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
         uint32_t hw_lif_id, uint8_t rss_type, uint8_t *rss_key)
@@ -767,6 +722,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
     if (pd_err != P4PD_SUCCESS) {
         assert(0);
     }
+
     return 0;
 }
 
@@ -858,13 +814,11 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
 
     return 0;
 }
-#endif
 
 int
 PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_key, uint8_t *rss_indir,
                 uint16_t num_queues)
 {
-#ifndef APOLLO
     assert(hw_lif_id < MAX_LIFS);
     assert(num_queues < ETH_RSS_MAX_QUEUES);
 
@@ -879,7 +833,6 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_ke
     }
 
     p4pd_common_p4plus_rxdma_rss_params_table_entry_add(hw_lif_id, rss_type, rss_key);
-#endif
 
     return 0;
 }

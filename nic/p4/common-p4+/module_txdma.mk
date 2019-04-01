@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = common_p4plus_txdma.p4bin
-MODULE_PIPELINE = iris gft
+#MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/common_txdma_actions.p4
 MODULE_NCC_OPTS = --p4-plus --pd-gen --asm-out --no-ohi \
                   --two-byte-profile --fe-flags="-I${TOPDIR} -I${SDKDIR}" \

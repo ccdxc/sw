@@ -7,7 +7,6 @@ nic/conf/catalog_hw_68-0003.json                                  /nic/conf/
 nic/conf/catalog_hw_68-0005.json                                  /nic/conf/
 nic/conf/serdes_68-0003.json                                      /nic/conf/
 nic/conf/serdes_68-0005.json                                      /nic/conf/
-nic/conf/$PIPELINE/device.json                                    /nic/conf/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE.so                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_rxdma.so          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_txdma.so          /nic/lib/
@@ -66,18 +65,6 @@ nic/build/$ARCH/$PIPELINE/lib/liblpmitree.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librfc.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblfq.so                           /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libnicmgr_apollo.so                 /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libmnet.so                          /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/librdmamgr_apollo.so                /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciemgr_if.so                    /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciemgr.so                       /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciemgrutils.so                  /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciehdevices.so                  /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpcietlp.so                       /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                      /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
-
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4pasm/                             /nic/conf/$PIPELINE/p4plus_bin/
 nic/build/$ARCH/$PIPELINE/pgm_bin/                                /nic/conf/$PIPELINE/pgm_bin/
@@ -155,7 +142,3 @@ nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/agent                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/testapp                             /nic/bin/
-
-# Drivers
-platform/drivers/linux/eth/ionic/ionic_mnic.ko                    /nic/bin/
-platform/drivers/linux/mnet/mnet.ko                               /nic/bin/

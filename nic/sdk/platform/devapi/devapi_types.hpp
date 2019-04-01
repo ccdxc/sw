@@ -80,13 +80,13 @@ typedef enum fwd_mode_e {
 } fwd_mode_t;
 
 typedef struct port_config_s {
-    uint32_t    speed;      // Mbps
+    uint32_t    speed;
     uint32_t    mtu;
-    uint8_t     state;      // 0: down, 1: up
+    uint8_t     state;
     uint8_t     an_enable;
-    uint8_t     fec_type;   // TODO: port_fec_type_t
-    uint8_t     pause_type; // TODO: port_pause_type_t
-    uint8_t     loopback_mode; // TODO: port_loopback_mode_t
+    uint8_t     fec_type;
+    uint8_t     pause_type;
+    uint8_t     loopback_mode;
 } __PACK__ port_config_t;
 
 typedef struct xcvr_status_s {
@@ -159,7 +159,6 @@ using sdk::platform::mac_t;
 using sdk::platform::vlan_t;
 using sdk::platform::lif_queue_info_t;
 using sdk::platform::lif_info_t;
-using sdk::platform::lif_type_t;
 using sdk::platform::fwd_mode_t;
 using sdk::platform::port_config_t;
 using sdk::platform::port_status_t;

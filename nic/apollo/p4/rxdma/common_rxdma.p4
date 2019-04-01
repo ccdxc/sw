@@ -981,5 +981,6 @@ control common_p4plus_stage0 {
         apply(common_p4plus_stage0_app_header_table_offset_64);
     } else {
         apply(common_p4plus_stage0_app_header_table);
+        apply(common_p4plus_stage0_app_header_ext_table);
     }
 }

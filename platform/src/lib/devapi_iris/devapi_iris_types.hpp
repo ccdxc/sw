@@ -4,7 +4,7 @@
 #ifndef __DEVAPI_IRIS_TYPES_HPP__
 #define __DEVAPI_IRIS_TYPES_HPP__
 
-#include "nic/sdk/platform/devapi/devapi_types.hpp"
+#include "devapi_types.hpp"
 #include "gen/proto/kh.grpc.pb.h"
 
 namespace iris {

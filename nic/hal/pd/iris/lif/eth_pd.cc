@@ -131,7 +131,6 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     return HAL_RET_OK;
 }
 
-#ifndef APOLLO
 hal_ret_t
 p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
     uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata_t *data)
@@ -159,7 +158,6 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
 
     return HAL_RET_OK;
 }
-#endif
 
 }    // namespace pd
 }    // namespace hal
