@@ -21,7 +21,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/log"
-	conv "github.com/pensando/sw/venice/utils/strconv"
 )
 
 const dhclientConfStr string = "timeout 3600; request subnet-mask, broadcast-address, time-offset, routers, domain-name, domain-name-servers, host-name, netbios-name-servers, netbios-scope, vendor-encapsulated-options; send vendor-class-identifier \"Pensando\";"
@@ -345,22 +344,7 @@ func (c *IPClient) updateNaplesStatusIP(ipaddress string, defaultGW string, dnsS
 func (c *IPClient) updateNaplesStatus(controllers []string) error {
 	log.Infof("Found Controllers: %v", controllers)
 
-	var macStr string
-	var err error
-	if macStr, err = conv.ParseMacAddr(c.nmdState.config.Status.Fru.MacStr); err != nil {
-		log.Errorf("Failed to parse mac address. Err : %v", err)
-		return err
-	}
-
-	if len(c.nmdState.config.Spec.Hostname) != 0 {
-		hostName, err := conv.ParseMacAddr(c.nmdState.config.Spec.Hostname)
-		if err != nil {
-			hostName = c.nmdState.config.Spec.Hostname
-		}
-		c.nmdState.config.Status.SmartNicName = fmt.Sprintf("%s-%s", hostName, macStr)
-	} else {
-		c.nmdState.config.Status.SmartNicName = macStr
-	}
+	c.nmdState.config.Status.SmartNicName = c.nmdState.config.Status.Fru.MacStr
 
 	log.Infof("Updating Naples Status.")
 	log.Infof("Current Spec : %v", c.nmdState.config.Spec)
@@ -462,7 +446,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 	}
 
 	// Persist bolt db.
-	err = c.nmdState.store.Write(&c.nmdState.config)
+	err := c.nmdState.store.Write(&c.nmdState.config)
 	if err != nil {
 		log.Errorf("Error persisting the naples config in Bolt DB, err: %+v", err)
 		return err

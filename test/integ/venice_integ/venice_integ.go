@@ -225,7 +225,7 @@ func (it *veniceIntegSuite) CheckNICVersionForAdmission(nicSku string, nicVersio
 
 // getNaplesMac returns naples mac for a naples instance
 func (it *veniceIntegSuite) getNaplesMac(nidx int) string {
-	return fmt.Sprintf("00:AE:CD:01:%02d:01", nidx)
+	return fmt.Sprintf("00ae.cd01.%02d01", nidx)
 }
 
 func (it *veniceIntegSuite) createHostObjects() {

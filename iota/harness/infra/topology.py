@@ -2,6 +2,7 @@
 import os
 import pdb
 import sys
+import re
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -16,6 +17,12 @@ import iota.harness.infra.testcase as testcase
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
+
+def formatMac(mac: str) -> str:
+    mac = re.sub('[.:-]', '', mac).lower()  # remove delimiters and convert to lower case
+    mac = ''.join(mac.split())  # remove whitespaces
+    mac = ".".join(["%s" % (mac[i:i+4]) for i in range(0, 12, 4)])
+    return mac
 
 def GetNodePersonalityByNicType(nic_type):
     if nic_type in ['pensando', 'naples']:
@@ -234,6 +241,7 @@ class Node(object):
         self.__uuid = resp.node_uuid
         if self.IsNaples():
             self.__host_intfs = resp.naples_config.host_intfs
+            self.__uuid = formatMac(self.__uuid)
             Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
         elif self.IsThirdParty():
             if GlobalOptions.dryrun:

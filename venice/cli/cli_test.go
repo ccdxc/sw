@@ -51,7 +51,7 @@ func TestCreate(t *testing.T) {
 	veniceLogin()
 
 	veniceCLI("create host dc12_rack3_bm4  --mac-address 00:01:02:03:04:05")
-	out := veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00:f0:0d:f0:0d:d0 --external-vlan 66 --micro-seg-vlan 3333 TestCreateVm")
+	out := veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66 --micro-seg-vlan 3333 TestCreateVm")
 	obj := &workload.Workload{}
 	out = veniceCLI("read workload -j TestCreateVm")
 	obj = &workload.Workload{}
@@ -66,8 +66,8 @@ func TestCreate(t *testing.T) {
 	}
 	if len(obj.Spec.Interfaces) != 2 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "00:de:ed:de:ed:d0", ExternalVlan: 55, MicroSegVlan: 2222},
-			{MACAddress: "00:f0:0d:f0:0d:d0", ExternalVlan: 66, MicroSegVlan: 3333}}) {
+			{MACAddress: "00de.edde.edd0", ExternalVlan: 55, MicroSegVlan: 2222},
+			{MACAddress: "00f0.0df0.0dd0", ExternalVlan: 66, MicroSegVlan: 3333}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 }
@@ -77,8 +77,8 @@ func TestUpdate(t *testing.T) {
 
 	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
 	veniceCLI("create host dc12_rack4_bm4 --mac-address 00:01:02:03:05:05")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00:f0:0d:f0:0d:d0 --external-vlan 66  --micro-seg-vlan 3333 TestUpdateVm")
-	out := veniceCLI("update workload --host-name dc12_rack4_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 44 --micro-seg-vlan 1111 --mac-address 00:f0:0d:f0:0d:d0 --external-vlan 22  --micro-seg-vlan 2222 TestUpdateVm")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66  --micro-seg-vlan 3333 TestUpdateVm")
+	out := veniceCLI("update workload --host-name dc12_rack4_bm4 --mac-address 00de.edde.edd0 --external-vlan 44 --micro-seg-vlan 1111 --mac-address 00f0.0df0.0dd0 --external-vlan 22  --micro-seg-vlan 2222 TestUpdateVm")
 
 	out = veniceCLI("read workload -j TestUpdateVm")
 	obj := &workload.Workload{}
@@ -93,8 +93,8 @@ func TestUpdate(t *testing.T) {
 	}
 	if len(obj.Spec.Interfaces) != 2 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "00:de:ed:de:ed:d0", ExternalVlan: 44, MicroSegVlan: 1111},
-			{MACAddress: "00:f0:0d:f0:0d:d0", ExternalVlan: 22, MicroSegVlan: 2222}}) {
+			{MACAddress: "00de.edde.edd0", ExternalVlan: 44, MicroSegVlan: 1111},
+			{MACAddress: "00f0.0df0.0dd0", ExternalVlan: 22, MicroSegVlan: 2222}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 }
@@ -103,7 +103,7 @@ func TestPatch(t *testing.T) {
 	veniceLogin()
 
 	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00:f0:0d:f0:0d:d0 --external-vlan 66  --micro-seg-vlan 3333 TestPatchVm")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66  --micro-seg-vlan 3333 TestPatchVm")
 
 	out := veniceCLI("read workload -j TestPatchVm")
 	obj := &workload.Workload{}
@@ -124,20 +124,20 @@ func TestPatch(t *testing.T) {
 	}
 	if len(obj.Spec.Interfaces) != 2 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "00:de:ed:de:ed:d0", ExternalVlan: 55, MicroSegVlan: 2222},
-			{MACAddress: "00:f0:0d:f0:0d:d0", ExternalVlan: 66, MicroSegVlan: 3333}}) {
+			{MACAddress: "00de.edde.edd0", ExternalVlan: 55, MicroSegVlan: 2222},
+			{MACAddress: "00f0.0df0.0dd0", ExternalVlan: 66, MicroSegVlan: 3333}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 
 	// patching on arrays needs more support to specify the index that is being patched
 	// when index is not specified it updates the first index
-	veniceCLI("patch workload --mac-address 00:de:ed:de:ed:d0 --external-vlan 77 TestPatchVm")
+	veniceCLI("patch workload --mac-address 00de.edde.edd0 --external-vlan 77 TestPatchVm")
 	out = veniceCLI("read workload -j TestPatchVm")
 	if err := lookForJSON(out, obj); err != nil {
 		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
 	}
 	for ii := range obj.Spec.Interfaces {
-		if obj.Spec.Interfaces[ii].MACAddress == "00:de:ed:de:ed:d0" {
+		if obj.Spec.Interfaces[ii].MACAddress == "00de.edde.edd0" {
 			if obj.Spec.Interfaces[ii].ExternalVlan != 77 {
 				t.Fatalf("invalid Interfaces update: %+v", obj.Spec.Interfaces)
 			}
@@ -149,14 +149,14 @@ func TestRead(t *testing.T) {
 	veniceLogin()
 
 	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key1=val1 --label key2=val2 --mac-address 00:de:ed:de:ed:d0 -external-vlan 55 --micro-seg-vlan 2222 --mac-address 00:f0:0d:f0:0d:d0 --external-vlan 66  --micro-seg-vlan 3333 TestReadVm1")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key2=val2 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2223 TestReadVm2")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key1=val1 --label key3=val3 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2224 TestReadVm3")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key1=val1 --label key2=val2 --mac-address 00de.edde.edd0 -external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66  --micro-seg-vlan 3333 TestReadVm1")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key2=val2 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestReadVm2")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key1=val1 --label key3=val3 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2224 TestReadVm3")
 	out := veniceCLI("read workload")
 	if !matchLineFields(out, []string{"dc12_rack3_bm4", "TestReadVm1"}) {
 		t.Fatalf("error finding a specific record: %s", out)
 	}
-	if !matchLineFields(out, []string{"TestReadVm2", "00:de:ed:de:ed:d0", "55", "dc12_rack3_bm4", "2223"}) {
+	if !matchLineFields(out, []string{"TestReadVm2", "00de.edde.edd0", "55", "dc12_rack3_bm4", "2223"}) {
 		t.Fatalf("error finding a specific record: %s", out)
 	}
 
@@ -178,9 +178,9 @@ func TestDelete(t *testing.T) {
 	veniceLogin()
 
 	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2223 TestDeleteVm1")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 77 --micro-seg-vlan 2224 TestDeleteVm2")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 88 --micro-seg-vlan 2225 TestDeleteVm3")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestDeleteVm1")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 77 --micro-seg-vlan 2224 TestDeleteVm2")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 88 --micro-seg-vlan 2225 TestDeleteVm3")
 	out := veniceCLI("delete workload TestDeleteVm1")
 	fmt.Printf("out = \n%s\n", out)
 	out = veniceCLI("read workload -j TestDeleteVm1")
@@ -201,7 +201,7 @@ func TestEdit(t *testing.T) {
 	veniceLogin()
 
 	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
-	veniceCLI("create workload --label key1=val1 --label key2=val2 --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2223 TestEditVm")
+	veniceCLI("create workload --label key1=val1 --label key2=val2 --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestEditVm")
 	// change the editor to cat and replace
 	oldEditor := os.Getenv("VENICE_EDITOR")
 	os.Setenv("VENICE_EDITOR", "sed -i s/55/77/g")
@@ -223,7 +223,7 @@ func TestEdit(t *testing.T) {
 	}
 	if len(obj.Spec.Interfaces) != 1 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "00:de:ed:de:ed:d0", ExternalVlan: 77, MicroSegVlan: 2223}}) {
+			{MACAddress: "00de.edde.edd0", ExternalVlan: 77, MicroSegVlan: 2223}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 
@@ -243,9 +243,9 @@ func TestUpdateFromFile(t *testing.T) {
 		Spec: workload.WorkloadSpec{
 			HostName: "node021",
 			Interfaces: []workload.WorkloadIntfSpec{
-				{MACAddress: "11:11:11:11:11:11", ExternalVlan: 11, MicroSegVlan: 1000},
-				{MACAddress: "22:22:22:22:22:22", ExternalVlan: 22, MicroSegVlan: 2000},
-				{MACAddress: "33:33:33:33:33:33", ExternalVlan: 33, MicroSegVlan: 3000},
+				{MACAddress: "1111.1111.1111", ExternalVlan: 11, MicroSegVlan: 1000},
+				{MACAddress: "2222.2222.2222", ExternalVlan: 22, MicroSegVlan: 2000},
+				{MACAddress: "3333.3333.3333", ExternalVlan: 33, MicroSegVlan: 3000},
 			},
 		},
 	}
@@ -276,9 +276,9 @@ func TestUpdateFromFile(t *testing.T) {
 	}
 	if len(obj.Spec.Interfaces) != 3 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "11:11:11:11:11:11", ExternalVlan: 11, MicroSegVlan: 1000},
-			{MACAddress: "22:22:22:22:22:22", ExternalVlan: 22, MicroSegVlan: 2000},
-			{MACAddress: "33:33:33:33:33:33", ExternalVlan: 33, MicroSegVlan: 3000}}) {
+			{MACAddress: "1111.1111.1111", ExternalVlan: 11, MicroSegVlan: 1000},
+			{MACAddress: "2222.2222.2222", ExternalVlan: 22, MicroSegVlan: 2000},
+			{MACAddress: "3333.3333.3333", ExternalVlan: 33, MicroSegVlan: 3000}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 }
@@ -287,7 +287,7 @@ func TestLabel(t *testing.T) {
 	veniceLogin()
 
 	veniceCLI("create host r2d2 --mac-address 00:01:02:03:07:05")
-	veniceCLI("create workload --label key1=val1 --host-name r2d2 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2223 TestLabelVm")
+	veniceCLI("create workload --label key1=val1 --host-name r2d2 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestLabelVm")
 
 	out := veniceCLI("label workload --update-label key1=val2 TestLabelVm")
 
@@ -306,7 +306,7 @@ func TestLabel(t *testing.T) {
 	}
 	if len(obj.Spec.Interfaces) != 1 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "00:de:ed:de:ed:d0", ExternalVlan: 55, MicroSegVlan: 2223}}) {
+			{MACAddress: "00de.edde.edd0", ExternalVlan: 55, MicroSegVlan: 2223}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 }
@@ -353,9 +353,9 @@ func TestBashCompletion(t *testing.T) {
 	veniceLogin()
 
 	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:08:05")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00:f0:0d:f0:0d:d0 --external-vlan 66  --micro-seg-vlan 3333 TestBashCompletionVm1")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2223 TestBashCompletionVm2")
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2224 TestBashCompletionContainer3")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66  --micro-seg-vlan 3333 TestBashCompletionVm1")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestBashCompletionVm2")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2224 TestBashCompletionContainer3")
 
 	out := veniceCLI("read workload --gbc")
 	if !matchLineFields(out, []string{"TestBashCompletionVm1", "TestBashCompletionVm2", "TestBashCompletionContainer3"}) {
@@ -523,13 +523,13 @@ meta:
 spec:
   host-name: bm576
   interfaces:
-    - mac-address: "11:11:11:11:11:11"
+    - mac-address: "1111.1111.1111"
       external-vlan: 11
       micro-seg-vlan: 1000
-    - mac-address: "22:22:22:22:22:22"
+    - mac-address: "2222.2222.2222"
       external-vlan: 22
       micro-seg-vlan: 2000
-    - mac-address: "33:33:33:33:33:33"
+    - mac-address: "3333.3333.3333"
       external-vlan: 33
       micro-seg-vlan: 3000
 
@@ -556,9 +556,9 @@ spec:
 	}
 	if len(obj.Spec.Interfaces) != 3 || !reflect.DeepEqual(obj.Spec.Interfaces,
 		[]workload.WorkloadIntfSpec{
-			{MACAddress: "11:11:11:11:11:11", ExternalVlan: 11, MicroSegVlan: 1000},
-			{MACAddress: "22:22:22:22:22:22", ExternalVlan: 22, MicroSegVlan: 2000},
-			{MACAddress: "33:33:33:33:33:33", ExternalVlan: 33, MicroSegVlan: 3000}}) {
+			{MACAddress: "1111.1111.1111", ExternalVlan: 11, MicroSegVlan: 1000},
+			{MACAddress: "2222.2222.2222", ExternalVlan: 22, MicroSegVlan: 2000},
+			{MACAddress: "3333.3333.3333", ExternalVlan: 33, MicroSegVlan: 3000}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 }
