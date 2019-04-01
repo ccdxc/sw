@@ -130,7 +130,19 @@ func (dp *DelphiDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netprot
 }
 
 // UpdateNetwork updates a network in datapath
-func (dp *DelphiDatapath) UpdateNetwork(nw *netproto.Network, vrf *netproto.Vrf) error {
+func (dp *DelphiDatapath) UpdateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error {
+	var ifKeyHandles []*halproto.InterfaceKeyHandle
+
+	for _, uplink := range uplinks {
+		ifKeyHandle := halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uplink.Status.InterfaceID,
+			},
+		}
+
+		ifKeyHandles = append(ifKeyHandles, &ifKeyHandle)
+	}
+
 	// build l2 segment data
 	seg := &halproto.L2SegmentSpec{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
@@ -148,6 +160,7 @@ func (dp *DelphiDatapath) UpdateNetwork(nw *netproto.Network, vrf *netproto.Vrf)
 			EncapType:  halproto.EncapType_ENCAP_TYPE_VXLAN,
 			EncapValue: nw.Spec.VlanID,
 		},
+		IfKeyHandle: ifKeyHandles,
 	}
 
 	err := dp.delphiClient.SetObject(seg)

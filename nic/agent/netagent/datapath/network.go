@@ -175,12 +175,24 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 }
 
 // UpdateNetwork updates a network in datapath
-func (hd *Datapath) UpdateNetwork(nw *netproto.Network, vrf *netproto.Vrf) error {
+func (hd *Datapath) UpdateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, vrf *netproto.Vrf) error {
 	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
 	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
 	// TODO Remove Global Locking
 	hd.Lock()
 	defer hd.Unlock()
+	var ifKeyHandles []*halproto.InterfaceKeyHandle
+	// build InterfaceKey Handle with all the uplinks
+	for _, uplink := range uplinks {
+		ifKeyHandle := halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uplink.Status.InterfaceID,
+			},
+		}
+
+		ifKeyHandles = append(ifKeyHandles, &ifKeyHandle)
+	}
+
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
@@ -198,6 +210,7 @@ func (hd *Datapath) UpdateNetwork(nw *netproto.Network, vrf *netproto.Vrf) error
 			EncapType:  halproto.EncapType_ENCAP_TYPE_VXLAN,
 			EncapValue: nw.Spec.VlanID,
 		},
+		IfKeyHandle: ifKeyHandles,
 	}
 	segReq := halproto.L2SegmentRequestMsg{
 		Request: []*halproto.L2SegmentSpec{&seg},

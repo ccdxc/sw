@@ -386,7 +386,7 @@ func (ds *delphidpTestSuite) TestDelphiNetwork(t *C) {
 		return (len(ntlist) == 1), ntlist
 	}, "invalid number of networks")
 
-	err = ds.datapath.UpdateNetwork(&nt, vrf)
+	err = ds.datapath.UpdateNetwork(&nt,[]*netproto.Interface{&intf}, vrf)
 	AssertOk(t, err, "Error updating network in delphi")
 
 	// delete the network

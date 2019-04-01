@@ -163,7 +163,9 @@ func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 		return err
 	}
 
-	err = na.Datapath.UpdateNetwork(nt, vrf)
+	uplinks := na.getUplinks()
+
+	err = na.Datapath.UpdateNetwork(nt, uplinks, vrf)
 	key := na.Solver.ObjectKey(nt.ObjectMeta, nt.TypeMeta)
 	na.Lock()
 	na.NetworkDB[key] = nt
