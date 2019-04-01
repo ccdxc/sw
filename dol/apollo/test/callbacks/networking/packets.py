@@ -1,5 +1,6 @@
 # /usr/bin/python3
 import pdb
+from random import choice
 from infra.api.objects import PacketHeader
 from infra.common.objects import IpAddress
 from infra.common.objects import Ipv6Address
@@ -20,7 +21,8 @@ def GetPacketTemplateFromMapping(testcase, packet, args=None):
     return __get_packet_template_impl(testcase.config.localmapping, args)
 
 def __get_host_from_route_impl(obj):
-    return str(next(obj.Prefix.hosts()))
+    prefix = choice(obj.routes)
+    return str(next(prefix.hosts()))
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
     return __get_host_from_route_impl(testcase.config.route)

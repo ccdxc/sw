@@ -21,10 +21,12 @@ class rrobiniter:
                 self.iterator = iter(self.objs)
                 continue
 
-def GetFilteredObjects(objs, maxlimits):
+def GetFilteredObjects(objs, maxlimits, random=True):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
         return objs
-    return choices(objs, k = maxlimits)
+    if random:
+        return choices(objs, k = maxlimits)
+    return objs[0:maxlimits]
 
 def GetTunnelType(e):
     if e == 'internet-gateway':
@@ -65,6 +67,14 @@ def GetEncapTypeString(e):
         logger.error("ERROR: Invalid/Unknown Encap: %s" % e)
         sys.exit(1)
         return None
+
+def GetRpcIPAddrFamily(ip_version):
+    if ip_version == IP_VERSION_6:
+        return types_pb2.IP_AF_INET6
+    elif ip_version == IP_VERSION_4:
+        return types_pb2.IP_AF_INET
+    else:
+        return types_pb2.IP_AF_NONE
 
 def GetRpcIPPrefix(srcpfx, dstpfx):
     dstpfx.Len = srcpfx.prefixlen

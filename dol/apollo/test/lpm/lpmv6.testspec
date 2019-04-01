@@ -21,7 +21,7 @@ packets:
                 vlan    : ref://testcase/config/local_mapping/VNIC/VlanId
             ipv6:
                 src     : ref://testcase/config/local_mapping/IP
-                dst     : ref://testcase/config/route/TestDestination
+                dst     : callback://networking/packets/GetUsableHostFromRoute
                 hlim    : 64
             udp:
                 sport   : 100

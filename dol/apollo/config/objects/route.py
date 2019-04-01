@@ -14,54 +14,52 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 class RouteObject(base.ConfigObjectBase):
-    def __init__(self, parent, prefix, tunobj):
+    def __init__(self, parent, af, routes, tunobj):
         super().__init__()
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
-        if prefix.version == 6:
+        if af == utils.IP_VERSION_6:
             self.RouteTblId = next(resmgr.V6RouteTableIdAllocator)
-            self.Prefix = prefix
             self.AddrFamily = 'IPV6'
         else:
             self.RouteTblId = next(resmgr.V4RouteTableIdAllocator)
-            self.Prefix = prefix
             self.AddrFamily = 'IPV4'
         self.GID('RouteTbl%d'%self.RouteTblId)
+        self.routes = routes
         self.Tunnel = tunobj
         self.TunIPAddr = tunobj.RemoteIPAddr
         self.TunIP = str(self.TunIPAddr)
         self.VPCId = parent.VPCId
         self.Label = 'NETWORKING'
-        #assert nroutes == 1 # TODO -- Walking thru count moved to client code
-        self.TestDestination = str(next(self.Prefix.hosts()))
         ##########################################################################
-
         self.Show()
         return
 
     def __repr__(self):
-        return "RouteTblID:%d|VPCId:%d|Prefix:%s|AddrFamily:%s|NextHop:%s" %\
-               (self.RouteTblId, self.VPCId, str(self.Prefix),
+        return "RouteTblID:%d|VPCId:%d|NumRoutes:%d|AddrFamily:%s|NextHop:%s" %\
+               (self.RouteTblId, self.VPCId, len(self.routes),
                 self.AddrFamily, str(self.TunIPAddr))
 
     def GetGrpcCreateMessage(self):
         grpcmsg = route_pb2.RouteTableRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.RouteTblId
-        rtspec = spec.Routes.add()
-        utils.GetRpcIPPrefix(self.Prefix, rtspec.Prefix)
-        spec.AF = rtspec.Prefix.Addr.Af
-        rtspec.NextHop.Af = types_pb2.IP_AF_INET
-        rtspec.NextHop.V4Addr = int(self.TunIPAddr)
-        rtspec.VPCId = self.VPCId
+        spec.AF = utils.GetRpcIPAddrFamily(self.AddrFamily)
+        for route in self.routes:
+            rtspec = spec.Routes.add()
+            utils.GetRpcIPPrefix(route, rtspec.Prefix)
+            rtspec.NextHop.Af = types_pb2.IP_AF_INET
+            rtspec.NextHop.V4Addr = int(self.TunIPAddr)
+            rtspec.VPCId = self.VPCId
         return grpcmsg
 
     def Show(self):
         logger.info("RouteTbl object:", self)
         logger.info("- %s" % repr(self))
+        for route in self.routes:
+            logger.info("-- %s" % str(route))
         return
 
     def SetupTestcaseConfig(self, obj):
-        print(self.TestDestination)
         obj.local_mapping = self.l_obj
         obj.route = self
         obj.hostport = 1
@@ -96,10 +94,17 @@ class RouteObjectClient:
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
+        stack = parent.Stack
         self.__v4objs[vpcid] = []
         self.__v6objs[vpcid] = []
         self.__v4iter[vpcid] = None
         self.__v6iter[vpcid] = None
+
+        if resmgr.RemoteMplsInternetTunAllocator == None:
+            logger.info("Skipping route creation as there are no Internet tunnels")
+            return
+
+        tunobj = self.__internet_tunnel_get()
 
         def __get_next_subnet(ip):
             if ip.version == 4:
@@ -125,47 +130,73 @@ class RouteObjectClient:
                 return (ip)
             return
 
-        def __is_v4stack(stack):
+        def __is_v4stack():
             if stack == "dual" or stack == 'ipv4':
                 return True
             return False
 
-        def __is_v6stack(stack):
+        def __is_v6stack():
             if stack == "dual" or stack == 'ipv6':
                 return True
             return False
 
-        if resmgr.RemoteMplsInternetTunAllocator == None:
-            logger.info("Skipping route creation as there are no Internet tunnels")
-            return
-
-        routes = []
-        for route_spec_obj in vpc_spec_obj.routetbl:
-            stack = parent.Stack
-            count = route_spec_obj.count
-            if route_spec_obj.type == 'adjacent':
-                if __is_v4stack(stack):
-                    v4base = __get_first_subnet(ipaddress.ip_network(route_spec_obj.v4base.replace('\\', '/')), route_spec_obj.v4prefixlen)
-                    routes += __get_adjacent_routes(v4base, count)
-                if __is_v6stack(stack):
-                    v6base = __get_first_subnet(ipaddress.ip_network(route_spec_obj.v6base.replace('\\','/')), route_spec_obj.v6prefixlen)
-                    routes += __get_adjacent_routes(v6base, count)
-            if route_spec_obj.type == 'overlap':
-                if __is_v4stack(stack):
-                    v4base = __get_first_subnet(ipaddress.ip_network(route_spec_obj.v4base.replace('\\','/')), route_spec_obj.v4prefixlen)
-                    routes += __get_overlap(v4base, count)
-                if __is_v6stack(stack):
-                    v6base = __get_first_subnet(ipaddress.ip_network(route_spec_obj.v6base.replace('\\','/')), route_spec_obj.v6prefixlen)
-                    routes += __get_overlap(v6base, count)
-
-        tunobj = self.__internet_tunnel_get()
-        for route in routes:
-            obj = RouteObject(parent, route, tunobj)
-            if route.version == 6:
-                self.__v6objs[vpcid].append(obj)
-            if route.version == 4:
-                self.__v4objs[vpcid].append(obj)
+        def __add_v4routetable(v4routes):
+            obj = RouteObject(parent, utils.IP_VERSION_4, v4routes, tunobj)
+            self.__v4objs[vpcid].append(obj)
             self.__objs.append(obj)
+
+        def __add_v6routetable(v6routes):
+            obj = RouteObject(parent, utils.IP_VERSION_6, v6routes, tunobj)
+            self.__v6objs[vpcid].append(obj)
+            self.__objs.append(obj)
+
+        def __add_user_specified_routetable(routetablespec):
+            if __is_v4stack():
+                routes = []
+                for route in routetablespec.v4routes:
+                    v4route = ipaddress.ip_network(route.replace('\\', '/'))
+                    routes.append(v4route)
+                __add_v4routetable(routes)
+
+            if __is_v6stack():
+                routes = []
+                for route in routetablespec.v6routes:
+                    v6route = ipaddress.ip_network(route.replace('\\', '/'))
+                    routes.append(v6route)
+                __add_v6routetable(routes)
+
+        for routetbl_spec_obj in vpc_spec_obj.routetbl:
+            routetbltype = routetbl_spec_obj.type
+            if routetbltype == "specific":
+                __add_user_specified_routetable(routetbl_spec_obj)
+                continue
+            routetablecount = routetbl_spec_obj.count
+            v4routecount = routetbl_spec_obj.nv4routes
+            v6routecount = routetbl_spec_obj.nv6routes
+            v4prefixlen = routetbl_spec_obj.v4prefixlen
+            v6prefixlen = routetbl_spec_obj.v6prefixlen
+            v4base = __get_first_subnet(ipaddress.ip_network(routetbl_spec_obj.v4base.replace('\\', '/')), v4prefixlen)
+            v6base = __get_first_subnet(ipaddress.ip_network(routetbl_spec_obj.v6base.replace('\\','/')), v6prefixlen)
+            for i in range(routetablecount):
+                if routetbltype == 'adjacent':
+                    if __is_v4stack():
+                        routes = __get_adjacent_routes(v4base, v4routecount)
+                        __add_v4routetable(routes)
+                        v4base = __get_next_subnet(routes[-1])
+                    if __is_v6stack():
+                        routes = __get_adjacent_routes(v6base, v6routecount)
+                        __add_v6routetable(routes)
+                        v6base = __get_next_subnet(routes[-1])
+
+                if routetbltype == 'overlap':
+                    if __is_v4stack():
+                        routes = __get_overlap(v4base, v4routecount)
+                        __add_v4routetable(routes)
+                        v4base = __get_next_subnet(routes[-1])
+                    if __is_v6stack():
+                        routes = __get_overlap(v6base, v6routecount)
+                        __add_v6routetable(routes)
+                        v6base = __get_next_subnet(routes[-1])
 
         if len(self.__v6objs[vpcid]) != 0:
             self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
