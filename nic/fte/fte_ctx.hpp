@@ -643,7 +643,10 @@ public:
     }
 
     bool ignore_session_create() const { return ignore_session_create_; }
-    void set_ignore_session_create(bool val) { ignore_session_create_ = val; }
+    void set_ignore_session_create(bool val) { 
+        ignore_session_create_ = val;
+        ipc_logging_disable_ = val;
+    }
 
     hal::vrf_t *svrf() const { return svrf_; }
     hal::vrf_t *dvrf() const { return dvrf_; }

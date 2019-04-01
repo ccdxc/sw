@@ -381,6 +381,7 @@ sfw_exec(ctx_t& ctx)
                     // queue as the flow doesnt really exist.
                     ctx.register_completion_handler(net_sfw_generate_reject_pkt);
                     ctx.set_ignore_session_create(true);
+                    ctx.set_ipc_logging_disable(false);
                 } else {
                     flow_update_t flowupd = {type: FLOWUPD_AGING_INFO};
                     flowupd.aging_info.idle_timeout = match_rslt.idle_timeout;
