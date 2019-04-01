@@ -48,6 +48,7 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define PHYS_STATE_DOWN 3
 
 #define ionic_set_ecn(tos) (((tos) | 2u) & ~1u)
+#define ionic_clear_ecn(tos) ((tos) & ~3u)
 
 /* XXX remove this section for release */
 static bool ionic_xxx_pgtbl = true;
@@ -1549,7 +1550,8 @@ static int ionic_dealloc_pd(struct ib_pd *ibpd)
 
 static int ionic_build_hdr(struct ionic_ibdev *dev,
 			   struct ib_ud_header *hdr,
-			   const struct rdma_ah_attr *attr)
+			   const struct rdma_ah_attr *attr,
+			   bool want_ecn)
 {
 	const struct ib_global_route *grh;
 #ifndef HAVE_AH_ATTR_CACHED_GID
@@ -1620,7 +1622,6 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 
 	if (net == RDMA_NETWORK_IPV4) {
 		hdr->eth.type = cpu_to_be16(ETH_P_IP);
-		hdr->ip4.tos = ionic_set_ecn(grh->traffic_class);
 		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
 		hdr->ip4.ttl = grh->hop_limit;
 		hdr->ip4.tot_len = 65535;
@@ -1630,9 +1631,13 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 		hdr->ip4.saddr = *(const __be32 *)(sgid.raw + 12);
 #endif
 		hdr->ip4.daddr = *(const __be32 *)(grh->dgid.raw + 12);
+
+		if (want_ecn)
+			hdr->ip4.tos = ionic_set_ecn(grh->traffic_class);
+		else
+			hdr->ip4.tos = ionic_clear_ecn(grh->traffic_class);
 	} else {
 		hdr->eth.type = cpu_to_be16(ETH_P_IPV6);
-		hdr->grh.traffic_class = ionic_set_ecn(grh->traffic_class);
 		hdr->grh.flow_label = cpu_to_be32(grh->flow_label);
 		hdr->grh.hop_limit = grh->hop_limit;
 #ifdef HAVE_AH_ATTR_CACHED_GID
@@ -1641,6 +1646,13 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 		hdr->grh.source_gid = sgid;
 #endif
 		hdr->grh.destination_gid = grh->dgid;
+
+		if (want_ecn)
+			hdr->grh.traffic_class =
+				ionic_set_ecn(grh->traffic_class);
+		else
+			hdr->grh.traffic_class =
+				ionic_clear_ecn(grh->traffic_class);
 	}
 
 	if (vlan != 0xffff) {
@@ -1650,7 +1662,7 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 		hdr->eth.type = cpu_to_be16(ETH_P_8021Q);
 	}
 
-	hdr->udp.sport = cpu_to_be16(49152); /* XXX hardcode val */
+	hdr->udp.sport = cpu_to_be16(IONIC_ROCE_UDP_SPORT);
 	hdr->udp.dport = cpu_to_be16(ROCE_V2_UDP_DPORT);
 
 	return 0;
@@ -1737,7 +1749,7 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 		goto err_hdr;
 	}
 
-	rc = ionic_build_hdr(dev, hdr, attr);
+	rc = ionic_build_hdr(dev, hdr, attr, false);
 	if (rc)
 		goto err_buf;
 
@@ -3594,7 +3606,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 			goto err_hdr;
 		}
 
-		rc = ionic_build_hdr(dev, hdr, &attr->ah_attr);
+		rc = ionic_build_hdr(dev, hdr, &attr->ah_attr, true);
 		if (rc)
 			goto err_buf;
 
@@ -4428,6 +4440,10 @@ static int ionic_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 		rc = -EINVAL;
 		goto err_qp;
 	}
+
+	if (mask & IB_QP_AV)
+		qp->dcqcn_profile =
+			ionic_dcqcn_select_profile(dev, &attr->ah_attr);
 
 	if ((mask & IB_QP_MAX_QP_RD_ATOMIC) && attr->max_rd_atomic) {
 		WARN_ON(ionic_put_res(dev, &qp->rrq_res));
@@ -6447,6 +6463,8 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_kill_rdma_admin(dev);
 
+	ionic_dcqcn_destroy(dev);
+
 	ib_unregister_device(&dev->ibdev);
 
 	ionic_destroy_rdma_admin(dev);
@@ -6873,6 +6891,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 #endif
 	if (rc)
 		goto err_register;
+
+	/* XXX: prof_count from device */
+	ionic_dcqcn_init(dev, 4);
 
 	list_add(&dev->driver_ent, &ionic_ibdev_list);
 

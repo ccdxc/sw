@@ -33,6 +33,10 @@
 #ifndef IONIC_KCOMPAT
 #define IONIC_KCOMPAT
 
+#include <linux/sysfs.h>
+#include <rdma/ib_verbs.h>
+
+#define rdma_ah_attr ib_ah_attr
 #define rdma_ah_read_grh(attr) (&(attr)->grh)
 
 static inline void rdma_ah_set_sl(struct ib_ah_attr *attr, u8 sl)
@@ -77,5 +81,59 @@ static inline void rdma_ah_set_dgid_raw(struct ib_ah_attr *attr, void *dgid)
  * format in the buffer @buf.
  */
 int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
+
+static inline int kstrtobool(const char *s, bool *res)
+{
+	int rc, val;
+
+	rc = kstrtoint(s, 0, &val);
+
+	if (!rc)
+		*res = val;
+
+	return rc;
+}
+
+extern const struct sysfs_ops kobj_sysfs_ops;
+
+static inline int
+sysfs_create_group_check_name(struct kobject *kobj,
+			      const struct attribute_group *grp)
+{
+	struct attribute **attr;
+
+	if (grp->name) {
+		sysfs_create_group(kobj, grp);
+	} else {
+		for (attr = grp->attrs; *attr; ++attr)
+			sysfs_create_file(kobj, *attr);
+	}
+
+	return 0;
+}
+#define sysfs_create_group sysfs_create_group_check_name
+
+static inline int
+sysfs_remove_group_check_name(struct kobject *kobj,
+			      const struct attribute_group *grp)
+{
+	struct attribute **attr;
+
+	if (grp->name) {
+		sysfs_remove_group(kobj, grp);
+	} else {
+		for (attr = grp->attrs; *attr; ++attr)
+			sysfs_remove_file(kobj, *attr);
+	}
+
+	return 0;
+}
+#define sysfs_remove_group sysfs_remove_group_check_name
+
+int sysfs_create_groups(struct kobject *kobj,
+			const struct attribute_group **groups);
+
+void sysfs_remove_groups(struct kobject *kobj,
+			 const struct attribute_group **groups);
 
 #endif

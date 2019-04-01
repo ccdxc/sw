@@ -966,6 +966,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 		seq_printf(s, "rq_flush:\t%d\n", qp->rq_flush);
 	}
 
+	seq_printf(s, "dcqcn_profile:\t%d\n", qp->dcqcn_profile);
+
 	return 0;
 }
 

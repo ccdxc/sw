@@ -884,6 +884,9 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 		ionic_bool(ctx, parent, &qp->rq_flush,
 			   "rq_flush", "RQ Flush");
 	}
+
+	ionic_int(ctx, parent, &qp->dcqcn_profile,
+		  "dcqcn_profile", "DCQCN Profile");
 }
 
 void ionic_dbgfs_rm_qp(struct ionic_qp *qp)

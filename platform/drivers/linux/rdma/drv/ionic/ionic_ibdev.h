@@ -34,6 +34,9 @@
 
 #define IONIC_CQ_GRACE		100
 
+#define IONIC_ROCE_UDP_SPORT	28272
+
+struct dcqcn_root;
 struct ionic_aq;
 struct ionic_cq;
 struct ionic_eq;
@@ -128,6 +131,8 @@ struct ionic_ibdev {
 	size_t			stats_size;
 	char			*stats_buf;
 	const char		**stats_hdrs;
+
+	struct dcqcn_root	*dcqcn;
 
 	struct dentry		*debug;
 	struct dentry		*debug_ah;
@@ -327,6 +332,8 @@ struct ionic_qp {
 	struct ionic_tbl_res	rsq_res;
 	struct ionic_tbl_res	rrq_res;
 
+	int			dcqcn_profile;
+
 	struct dentry		*debug;
 };
 
@@ -503,5 +510,10 @@ static inline bool ionic_ibop_is_local(enum ib_wr_opcode op)
 
 void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
 void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
+
+int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count);
+void ionic_dcqcn_destroy(struct ionic_ibdev *dev);
+int ionic_dcqcn_select_profile(struct ionic_ibdev *dev,
+			       struct rdma_ah_attr *attr);
 
 #endif /* IONIC_IBDEV_H */

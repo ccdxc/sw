@@ -241,3 +241,63 @@ int roce_ud_header_unpack(void *buf, struct ib_ud_header *header)
 
 	return 0;
 }
+
+static ssize_t kobj_attr_show(struct kobject *kobj, struct attribute *attr,
+			      char *buf)
+{
+	struct kobj_attribute *kattr;
+	ssize_t ret = -EIO;
+
+	kattr = container_of(attr, struct kobj_attribute, attr);
+	if (kattr->show)
+		ret = kattr->show(kobj, kattr, buf);
+	return ret;
+}
+
+static ssize_t kobj_attr_store(struct kobject *kobj, struct attribute *attr,
+			       const char *buf, size_t count)
+{
+	struct kobj_attribute *kattr;
+	ssize_t ret = -EIO;
+
+	kattr = container_of(attr, struct kobj_attribute, attr);
+	if (kattr->store)
+		ret = kattr->store(kobj, kattr, buf, count);
+	return ret;
+}
+
+const struct sysfs_ops kobj_sysfs_ops = {
+	.show	= kobj_attr_show,
+	.store	= kobj_attr_store,
+};
+
+int sysfs_create_groups(struct kobject *kobj,
+			const struct attribute_group **groups)
+{
+	int error = 0;
+	int i;
+
+	if (!groups)
+		return 0;
+
+	for (i = 0; groups[i]; i++) {
+		error = sysfs_create_group(kobj, groups[i]);
+		if (error) {
+			while (--i >= 0)
+				sysfs_remove_group(kobj, groups[i]);
+			break;
+		}
+	}
+	return error;
+}
+
+void sysfs_remove_groups(struct kobject *kobj,
+			 const struct attribute_group **groups)
+{
+	int i;
+
+	if (!groups)
+		return;
+	for (i = 0; groups[i]; i++)
+		sysfs_remove_group(kobj, groups[i]);
+}

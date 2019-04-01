@@ -62,6 +62,7 @@
 
 #define IONIC_CQ_GRACE		100
 
+struct dcqcn_root;
 struct ionic_aq;
 struct ionic_cq;
 struct ionic_eq;
@@ -157,6 +158,8 @@ struct ionic_ibdev {
 	size_t			stats_size;
 	char			*stats_buf;
 	const char		**stats_hdrs;
+
+	struct dcqcn_root	*dcqcn;
 
 	struct sysctl_ctx_list	debug_ctx;
 	struct sysctl_oid	*debug;
@@ -356,6 +359,8 @@ struct ionic_qp {
 	struct ionic_tbl_res	rsq_res;
 	struct ionic_tbl_res	rrq_res;
 
+	int			dcqcn_profile;
+
 	struct sysctl_ctx_list	debug_ctx;
 	struct sysctl_oid	*debug;
 };
@@ -547,5 +552,10 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 		return IB_MTU_512;
 	return IB_MTU_256;
 }
+
+int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count);
+void ionic_dcqcn_destroy(struct ionic_ibdev *dev);
+int ionic_dcqcn_select_profile(struct ionic_ibdev *dev,
+			       struct rdma_ah_attr *attr);
 
 #endif /* IONIC_IBDEV_H */

@@ -1607,7 +1607,7 @@ static void ether_addr_copy(void *dst, const void *src)
 
 static int ionic_build_hdr(struct ionic_ibdev *dev,
 			   struct ib_ud_header *hdr,
-			   const struct ib_ah_attr *attr)
+			   const struct rdma_ah_attr *attr)
 {
 	const struct ib_global_route *grh;
 	struct ib_gid_attr sgid_attr;
@@ -1686,7 +1686,7 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 }
 
 static int ionic_set_ah_attr(struct ionic_ibdev *dev,
-			     struct ib_ah_attr *ah_attr,
+			     struct rdma_ah_attr *ah_attr,
 			     void *hdr_buf, int sgid_index)
 
 {
@@ -1735,7 +1735,7 @@ err_hdr:
 static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 				  struct ionic_ah *ah,
 				  struct ionic_pd *pd,
-				  struct ib_ah_attr *attr)
+				  struct rdma_ah_attr *attr)
 {
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
@@ -1823,7 +1823,7 @@ err_hdr:
 static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 			       struct ionic_ah *ah,
 			       struct ionic_pd *pd,
-			       struct ib_ah_attr *attr)
+			       struct rdma_ah_attr *attr)
 {
 	switch (dev->rdma_version) {
 	case 1:
@@ -1837,7 +1837,7 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 
 static int ionic_v1_query_ah_cmd(struct ionic_ibdev *dev,
 				 struct ionic_ah *ah,
-				 struct ib_ah_attr *ah_attr)
+				 struct rdma_ah_attr *ah_attr)
 {
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
@@ -1890,7 +1890,7 @@ err_buf:
 
 static int ionic_query_ah_cmd(struct ionic_ibdev *dev,
 			      struct ionic_ah *ah,
-			      struct ib_ah_attr *ah_attr)
+			      struct rdma_ah_attr *ah_attr)
 {
 	switch (dev->rdma_version) {
 	case 1:
@@ -1953,7 +1953,7 @@ static int ionic_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid)
 }
 
 static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
-				     struct ib_ah_attr *attr,
+				     struct rdma_ah_attr *attr,
 				     struct ib_udata *udata)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
@@ -2012,7 +2012,7 @@ err_ah:
 }
 
 static int ionic_query_ah(struct ib_ah *ibah,
-			  struct ib_ah_attr *ah_attr)
+			  struct rdma_ah_attr *ah_attr)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibah->device);
 	struct ionic_ah *ah = to_ionic_ah(ibah);
@@ -4392,6 +4392,10 @@ static int ionic_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 		goto err_qp;
 	}
 
+	if (mask & IB_QP_AV)
+		qp->dcqcn_profile =
+			ionic_dcqcn_select_profile(dev, &attr->ah_attr);
+
 	if ((mask & IB_QP_MAX_QP_RD_ATOMIC) && attr->max_rd_atomic) {
 		WARN_ON(ionic_put_res(dev, &qp->rrq_res));
 
@@ -6343,6 +6347,8 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_kill_rdma_admin(dev);
 
+	ionic_dcqcn_destroy(dev);
+
 	ib_unregister_device(&dev->ibdev);
 
 	ionic_destroy_rdma_admin(dev);
@@ -6737,6 +6743,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	rc = ib_register_device(ibdev, NULL);
 	if (rc)
 		goto err_register;
+
+	/* XXX: prof_count from device */
+	ionic_dcqcn_init(dev, 4);
 
 	list_add(&dev->driver_ent, &ionic_ibdev_list);
 
