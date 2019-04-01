@@ -8,8 +8,8 @@
               [lastUpdateTime]="lastUpdateTime"
               [cardState]="cardState"
               >
-<div fxFlex fxLayout="column">
-  <div class="herocard-foreground-content" fxFlex fxLayout="row" fxLayoutAlign="start start">
+<div fxFlex="grow" fxLayout="column">
+  <div class="herocard-foreground-content" fxFlex="grow" fxLayout="row" fxLayoutAlign="start start">
     <!-- First stat -->
     <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="40%" fxLayout="row" fxLayoutAlign="start start">
       <div fxFlex="28px"></div>
@@ -53,7 +53,7 @@
       </div>
     </div>
   </div>
-  <div fxFlex="75px" fxLayout="row" class="herocard-south">
+  <div fxFlex="56px" fxLayout="row" class="herocard-south">
     <div [@fade] fxFlex fxLayout="row" fxLayoutAlign="center center" 
           *ngIf="cardState === cardStates.READY && showGraph" class="herocard-chart">
       <pw-plotly-chart fxFlex="none"
