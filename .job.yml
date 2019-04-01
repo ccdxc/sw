@@ -16,6 +16,7 @@ references:
   - nic/apollo
   - nic/sdk
   - dol
+  - dol/apollo
   - venice
   - api
   - platform
@@ -53,4 +54,4 @@ dependencies:
   venice: test/ci_targets/e2e
   #test: test/ci_targets/e2e
   nic/apollo: nic
-  #nic: nic/apollo
+  dol/apollo: nic/apollo
