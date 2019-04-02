@@ -33,7 +33,7 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    if tc.before_reboot_status != "REBOOT_PENDING" \
+    if tc.before_reboot_status != "VENICE_UNREACHABLE" \
        or tc.after_first_reboot_status != "VENICE_UNREACHABLE" \
        or tc.after_second_reboot_status != "VENICE_UNREACHABLE":
           api.Logger.info("Test Failed. STATUS - BEFORE {} AFTER FIRST REBOOT {} AFTER SECOND REBOOT {}".format(tc.before_reboot_status, \

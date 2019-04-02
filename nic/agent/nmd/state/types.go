@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	nicRegistrationWaitTime = time.Duration(time.Second * 10)
+	nicRegistrationWaitTime = time.Duration(time.Minute * 5)
 	clusterTrustRootsFile   = "/tmp/clusterTrustRoots.pem"
 )
 

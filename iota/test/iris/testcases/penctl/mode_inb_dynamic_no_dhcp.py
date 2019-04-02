@@ -40,12 +40,12 @@ def Trigger(tc):
 
 def Verify(tc):
     for i in range(0, len(tc.naples_status_after)):
-        if tc.after_reboot_status != "VENICE_UNREACHABLE":
-            api.Logger.info("Post reboot, the status is not VENICE_UNREACHABLE it is {}".format(tc.after_reboot_status)):
+        if tc.after_reboot_status != "DHCP_SENT":
+            api.Logger.info("Post reboot, the status is not DHCP_SENT it is {}".format(tc.after_reboot_status)):
             return api.types.status.FAILURE
             
-        if tc.naples_status_after[i] != "VENICE_UNREACHABLE":
-            api.Logger.info("{}th iteration FAILED - - STATUS AFTER EXPECTED [VENICE_UNREACHABLE] RECEIVED [{}]".\
+        if tc.naples_status_after[i] != "DHCP_SENT":
+            api.Logger.info("{}th iteration FAILED - - STATUS AFTER EXPECTED [VENICE_REGISTRATION_DONE] RECEIVED [{}]".\
             format(i, tc.naples_status_after[i]))
             return api.types.status.FAILURE
 
