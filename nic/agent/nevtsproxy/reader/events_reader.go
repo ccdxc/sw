@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/utils/ntranslate"
 	// to register key/handles with protobuf; this is needed to convert any to protobuf message
 	_ "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	_ "github.com/pensando/sw/nic/sysmgr/events_proto"
 )
 
 // Events reader implementation internally uses shared memory reader (shm/reader.go)

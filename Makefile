@@ -24,6 +24,7 @@ venice/orch venice/cmd/grpc/server/certificates/certapi \
 venice/ctrler/evtsmgr/rpcserver/protos \
 venice/evtsproxy/rpcserver/evtsproxyproto \
 nic/agent/nmd/protos nic/agent/netagent/protos \
+nic/sysmgr/events_proto \
 venice/utils/authn/radius                      \
 venice/ctrler/rollout/rpcserver/protos \
 venice/utils/objstore/client/mock \
