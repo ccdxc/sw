@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, ViewEncapsulation, SimpleChanges } from '@angular/core';
-import { FormArray, Validators, FormGroup, AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
+import { FormArray, Validators, FormGroup, AbstractControl, ValidatorFn, ValidationErrors, FormControl } from '@angular/forms';
 import { required } from '@sdk/v1/utils/validators';
 import { UsersComponent } from '../users.component';
 import { Animations } from '@app/animations';
@@ -43,6 +43,7 @@ import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging'
 export class NewroleComponent extends UsersComponent implements OnInit, OnDestroy, OnChanges {
 
   static KINDOPTIONS = 'kindOptions';
+  static RESOURCE_TENANT = null;
   static ACTIONOPTIONS_ALL = 'AllActions';
   static _ALL_ = '_All_';
 
@@ -327,6 +328,32 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     }
     permission[NewroleComponent.KINDOPTIONS].length = 0;
     permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
+
+    this.setPermissionInputOnGroupChange($event.value, permission);
+  }
+
+  setPermissionInputOnGroupChange(value: string , permission: FormControl) {
+    if (this.isPermissionGroupNotOfTenantScope(value)) {
+      // If it is not tenant scope, we set permission['resource-tenant'] to blank and disable data input;
+      permission[NewroleComponent.RESOURCE_TENANT] = permission.get('resource-tenant').value;
+      permission['controls']['resource-tenant'].setValue('');
+      permission.get('resource-tenant').disable();
+    } else {
+      permission.get('resource-tenant').enable();  // enable data input.
+      if ( !Utility.isEmpty(permission[NewroleComponent.RESOURCE_TENANT])) {
+        permission['controls']['resource-tenant'].setValue(permission[NewroleComponent.RESOURCE_TENANT]);
+      }
+    }
+  }
+
+  /**
+   * A helper function to determine if selected permission group/kink value is of tenant scope.
+   * @param groupValue
+   * @param kindValue
+   */
+  isPermissionGroupNotOfTenantScope(groupValue: string, kindValue: string = null): boolean {
+    // TODO: wait for code-gen code. This is hard coded.
+    return (groupValue === 'cluster') ;
   }
 
   /**

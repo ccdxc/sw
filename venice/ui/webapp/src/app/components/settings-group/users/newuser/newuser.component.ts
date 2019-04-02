@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, ViewEncapsulation } from '@angular/core';
-import { Validators, ValidationErrors } from '@angular/forms';
+import { ValidationErrors } from '@angular/forms';
 import { Observable, forkJoin } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 import { UsersComponent, ACTIONTYPE } from '../users.component';
 import { Animations } from '@app/animations';
@@ -120,52 +121,45 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   addUser_with_staging() {
     const msgFailToAddUser = 'Failed to create user';
     const newUser = this.newAuthUser.getFormGroupValues();
-    this.createStagingBuffer().subscribe(
-      responseBuffer => {
-        const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
-        const buffername = createdBuffer.meta.name;
-        const observables: Observable<any>[] = [];
-        const username = newUser.meta.name;
-        // we have to wait user is created before updating role-binding
-        this._authService.AddUser(newUser, buffername).subscribe(
-          (user) => {
-            this.selectedRolebindingsForUsers.forEach((rolebinding) => {
-              this.rolebindingUpdateMap[rolebinding.meta.name] = false;
-              const observabe = this.addUserToRolebindings(rolebinding, username, buffername);
-              if (observabe) {
-                observables.push(observabe);
-              }
-            });
-            forkJoin(observables).subscribe(results => {
-              const isAllOK = Utility.isForkjoinResultAllOK(results);
-              if (isAllOK) {
-                this.commitStagingBuffer(buffername).subscribe(
-                  responseCommitBuffer => {
-                    this.invokeSuccessToaster('Successful', ACTIONTYPE.CREATE + ' User ' + newUser.meta.name);
-                    this.formClose.emit(true);
-                  },
-                  error => {
-                    console.error('Failed to commit Buffer', error);
-                    this.invokeRESTErrorToaster('Failed to commit buffer when adding user ', error);
-                  }
-                );
+    let createdBuffer: StagingBuffer = null;  // responseBuffer.body as StagingBuffer;
+    let buffername = null; // createdBuffer.meta.name;
+    const observables: Observable<any>[] = [];
+    const username = newUser.meta.name;
+    this.createStagingBuffer() // invoke REST call (A)
+      .pipe(
+        switchMap(responseBuffer => {  // get server response from (A))
+          createdBuffer = responseBuffer.body as StagingBuffer;
+          buffername = createdBuffer.meta.name;
+          return this._authService.AddUser(newUser, buffername).pipe(
+            switchMap(user => {
+              this.selectedRolebindingsForUsers.forEach((rolebinding) => {
+                this.rolebindingUpdateMap[rolebinding.meta.name] = false;
+                const observabe = this.addUserToRolebindings(rolebinding, username, buffername);
+                if (observabe) {
+                  observables.push(observabe);
+                }
+              });
+              if (observables.length > 0) {
+              // Update all role-binding - add newly created usernam to selected role-binding
+              return this.invokeForkJoin(observables, buffername, 'Failed to add user using forkJoin.', 'Failed to add user.');
               } else {
-                this.deleteStagingBuffer(buffername, msgFailToAddUser);
+                return this.commitStagingBuffer(buffername);
               }
-            },
-              (error) => {
-                this.deleteStagingBuffer(buffername, msgFailToAddUser);
-              }
-            );
-          },
-          (error) => {
-                this.deleteStagingBuffer(buffername, msgFailToAddUser);
-
-          }
-        );
-      },
-      this.restErrorHandler('Failed to create commit buffer when adding user')
-    );
+            })
+          );
+        })
+      ).subscribe(
+        // We are getting response for (B)
+        (responseCommitBuffer) => {
+          this.invokeSuccessToaster('Successful', ACTIONTYPE.CREATE + ' User ' + newUser.meta.name);
+          this.creationRoleFormClose(true);
+        },
+        (error) => {
+          // any error in (A) (B) or (C), error will land here
+          this.invokeRESTErrorToaster(msgFailToAddUser, error);
+          this.deleteStagingBuffer(buffername, msgFailToAddUser);
+        }
+      );
   }
 
   /**

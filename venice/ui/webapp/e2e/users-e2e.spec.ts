@@ -35,8 +35,8 @@ describe('venice-ui RBAC management', () => {
             'permissions': [
               {
                 'resource-tenant': 'default',
-                'resource-group': 'Cluster',
-                'resource-kind': 'Tenant',
+                'resource-group': 'Monitoring',
+                'resource-kind': 'All',
                 'actions': [
                   'All Actions'
                 ]
