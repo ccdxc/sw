@@ -38,6 +38,7 @@ static int ionic_lif_rss_setup(struct lif *lif);
 static void ionic_lif_set_netdev_info(struct lif *lif);
 static int ionic_intr_remaining(struct ionic *ionic);
 static int ionic_set_nic_features(struct lif *lif, netdev_features_t features);
+static int ionic_notifyq_clean(struct lif *lif, int budget);
 
 
 static void ionic_lif_deferred_work(struct work_struct *work)
@@ -324,7 +325,15 @@ static bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info)
 
 static int ionic_adminq_napi(struct napi_struct *napi, int budget)
 {
-	return ionic_napi(napi, budget, ionic_adminq_service, NULL, NULL);
+	struct lif *lif = napi_to_cq(napi)->lif;
+	int n_work = 0;
+	int a_work = 0;
+
+	if (likely(lif->notifyqcq && lif->notifyqcq->flags & QCQ_F_INITED))
+		n_work = ionic_notifyq_clean(lif, budget);
+	a_work = ionic_napi(napi, budget, ionic_adminq_service, NULL, NULL);
+
+	return max(n_work, a_work);
 }
 
 static void ionic_link_status_check(struct lif *lif)
@@ -365,7 +374,7 @@ static void ionic_link_status_check(struct lif *lif)
 	 */
 }
 
-static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info)
+static bool ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info)
 {
 	union notifyq_comp *comp = cq_info->cq_desc;
 	struct net_device *netdev;
@@ -382,7 +391,7 @@ static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info)
 
 	lif->last_eid = comp->event.eid;
 
-	dev_dbg(&netdev->dev, "notifyq event:\n");
+	dev_dbg(lif->ionic->dev, "notifyq event:\n");
 	dynamic_hex_dump("event ", DUMP_PREFIX_OFFSET, 16, 1,
 			 comp, sizeof(*comp), true);
 
@@ -427,21 +436,21 @@ static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info)
 	return true;
 }
 
-static int ionic_notifyq_napi(struct napi_struct *napi, int budget)
+static int ionic_notifyq_clean(struct lif *lif, int budget)
 {
-	struct qcq *qcq = container_of(napi, struct qcq, napi);
-	struct lif *lif = qcq->q.lif;
-	struct cq *cq = &qcq->cq;
-	int napi_return;
-	void *reg;
-	u32 val;
+	struct cq *cq = &lif->notifyqcq->cq;
+	int work_done;
 
-	napi_return = ionic_napi(napi, budget, ionic_notifyq_cb, NULL, NULL);
+	work_done = ionic_cq_service(cq, budget, ionic_notifyq_service,
+				     NULL, NULL);
+	if (work_done)
+		ionic_intr_return_credits(cq->bound_intr, work_done,
+					  false, true);
 
-	/* if we ran out of budget, there are more events
+	/* If we ran out of budget, there are more events
 	 * to process and napi will reschedule us soon
 	 */
-	if (napi_return == budget)
+	if (work_done == budget)
 		goto return_to_napi;
 
 	/* After outstanding events are processed we can check on
@@ -462,18 +471,8 @@ static int ionic_notifyq_napi(struct napi_struct *napi, int budget)
 		}
 	}
 
-	/* We check the interrupt credits to be sure we've returned
-	 * enough, in case we missed a few events in an overflow.
-	 */
-	reg = intr_to_credits(cq->bound_intr->ctrl);
-	val = ioread32(reg) & 0xFFFF;
-	if (val) {
-		netdev_info(lif->netdev, "returning %d nq credits\n", val);
-		ionic_intr_return_credits(cq->bound_intr, val, true, true);
-	}
-
 return_to_napi:
-	return napi_return;
+	return work_done;
 }
 
 #ifdef HAVE_VOID_NDO_GET_STATS64
@@ -1505,13 +1504,16 @@ static int ionic_qcqs_alloc(struct lif *lif)
 		return err;
 
 	if (is_master_lif(lif) && lif->ionic->nnqs_per_lif) {
-		flags = QCQ_F_INTR | QCQ_F_NOTIFYQ;
+		flags = QCQ_F_NOTIFYQ;
 		err = ionic_qcq_alloc(lif, 0, "notifyq", flags, NOTIFYQ_LENGTH,
 				      sizeof(struct notifyq_cmd),
 				      sizeof(union notifyq_comp),
 				      0, lif->kern_pid, &lif->notifyqcq);
 		if (err)
 			goto err_out_free_adminqcq;
+
+		/* Let the notifyq ride on the adminq interrupt */
+		ionic_link_qcq_interrupts(lif->adminqcq, lif->notifyqcq);
 	}
 
 	q_list_size = sizeof(*lif->txqcqs) * lif->nxqs;
@@ -1961,12 +1963,8 @@ static void ionic_lif_deinit(struct lif *lif)
 	ionic_lif_stats_stop(lif);
 	ionic_rx_filters_deinit(lif);
 
-	if (lif->notifyqcq) {
-		napi_disable(&lif->notifyqcq->napi);
-		ionic_lif_qcq_deinit(lif, lif->notifyqcq);
-	}
-
 	napi_disable(&lif->adminqcq->napi);
+	ionic_lif_qcq_deinit(lif, lif->notifyqcq);
 	ionic_lif_qcq_deinit(lif, lif->adminqcq);
 }
 
@@ -2054,7 +2052,6 @@ int ionic_lif_notifyq_init(struct lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
 	struct qcq *qcq = lif->notifyqcq;
-	struct napi_struct *napi = &qcq->napi;
 	struct queue *q = &qcq->q;
 	int err;
 
@@ -2063,7 +2060,7 @@ int ionic_lif_notifyq_init(struct lif *lif)
 		.cmd.notifyq_init.opcode = CMD_OPCODE_NOTIFYQ_INIT,
 		.cmd.notifyq_init.index = q->index,
 		.cmd.notifyq_init.pid = q->pid,
-		.cmd.notifyq_init.intr_index = qcq->intr.index,
+		.cmd.notifyq_init.intr_index = lif->adminqcq->intr.index,
 		.cmd.notifyq_init.lif_index = lif->index,
 		.cmd.notifyq_init.ring_size = ilog2(q->num_descs),
 		.cmd.notifyq_init.ring_base = q->base_pa,
@@ -2082,21 +2079,7 @@ int ionic_lif_notifyq_init(struct lif *lif)
 	/* preset the callback info */
 	q->info[0].cb_arg = lif;
 
-	netif_napi_add(lif->netdev, napi, ionic_notifyq_napi,
-		       NAPI_POLL_WEIGHT);
-
-	err = ionic_request_irq(lif, qcq);
-	if (err) {
-		netdev_warn(lif->netdev, "notifyq irq request failed: %d\n", err);
-		netif_napi_del(napi);
-		return err;
-	}
-
 	qcq->flags |= QCQ_F_INITED;
-
-	/* Enabling interrupts on notifyq from here on... */
-	napi_enable(napi);
-	ionic_intr_mask(&lif->notifyqcq->intr, false);
 
 	err = ionic_debugfs_add_qcq(lif, qcq);
 	if (err)
