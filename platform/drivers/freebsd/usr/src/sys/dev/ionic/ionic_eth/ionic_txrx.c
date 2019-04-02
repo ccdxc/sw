@@ -195,17 +195,6 @@ static void ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
 	ipv6 = ionic_is_rx_ipv6(comp->pkt_type);
 	m->m_pkthdr.csum_flags = 0;
 
-	/* XXX: for debug only. */
-	if ((comp->csum_ip_ok || comp->csum_ip_bad) && ipv6)
-		IONIC_NETDEV_ERROR(ifp, "csum ip is set(%d:%d) for IPv6 packet\n",
-			comp->csum_ip_ok, comp->csum_ip_bad);
-	if ((comp->csum_tcp_ok || comp->csum_tcp_bad) && !ionic_is_rx_tcp(comp->pkt_type))
-		IONIC_NETDEV_ERROR(ifp, "csum TCP is set(%d:%d) for non-TCP packet\n",
-			comp->csum_tcp_ok, comp->csum_tcp_bad);
-	if ((comp->csum_udp_ok || comp->csum_udp_bad) && !ionic_is_rx_tcp(comp->pkt_type))
-		IONIC_NETDEV_ERROR(ifp, "csum UDP is set(%d:%d) for non-UDP packet\n",
-			comp->csum_udp_ok, comp->csum_udp_bad);
-
 	if ((if_getcapenable(ifp) & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6)) == 0)
 		return;
 
@@ -461,9 +450,14 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 		stats->alloc_err++;
 		return (ENOMEM);
 	}
+	/*
+	 * Set the size for:
+	 * 1. Non-SGL
+	 * 2. First mbuf of SGL.
+	 */
 	m->m_pkthdr.len = m->m_len = size;
 	/*
-	 * Set the size of mbuf for non-SG path.
+	 * Set the size of reste of mbuf for non-SG path.
 	 */
 	if (ionic_rx_sg_size) {
 		rxbuf->sg_buf_len = ionic_rx_sg_size;
@@ -480,6 +474,7 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 			m->m_pkthdr.len += size;
 		}
 	}
+
 	IONIC_RX_TRACE(rxq, "m(%p) len: %d/%d flags: 0x%x\n", m, m->m_len, len, m->m_flags);
 
 	error = bus_dmamap_load_mbuf_sg(rxq->buf_tag, rxbuf->dma_map, m, seg, &nsegs, BUS_DMA_NOWAIT);
@@ -1510,10 +1505,63 @@ ionic_intr_sysctl(SYSCTL_HANDLER_ARGS)
         return (err);
 }
 
+/*
+ * Allow user to set flow control:
+ * 0 - No flow control
+ * 1 - Link level
+ * 2 - Priority Flow Control
+ */
+static int
+ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif;
+	struct notify_block *nb;
+        struct port_config pc;
+	int error, fc;
+
+	lif = oidp->oid_arg1;
+	/* Not allowed to change for mgmt interface. */
+	if (lif->ionic->is_mgmt_nic)
+		return (EINVAL);
+
+	nb = lif->notifyblock;
+	if (nb == NULL)
+		return (EIO);
+
+	error = sysctl_handle_int(oidp, &fc, 0, req);
+	if ((error) || (req->newptr == NULL))
+		return (error);
+
+	pc = nb->port_config;
+
+	switch(fc) {
+	case 0:
+		pc.pause_type = PORT_PAUSE_TYPE_NONE;
+		break;
+	case 1:
+		pc.pause_type = PORT_PAUSE_TYPE_LINK;
+		break;
+	case 2:
+		pc.pause_type = PORT_PAUSE_TYPE_PFC;
+		break;
+	default:
+		if_printf(lif->netdev, "Invalid flow control: %d value\n", fc);
+		return (EIO);
+	}
+
+	if (nb->port_config.pause_type != pc.pause_type)
+		error = ionic_port_config(lif->ionic, &pc);
+
+	return (error);
+}
+
+/*
+ * Print various media details.
+ */
 static int
 ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif* lif;
+	struct lif *lif;
 	struct notify_block *nb;
 	struct xcvr_status *xcvr;
 	struct qsfp_sprom_data *qsfp;
@@ -1555,44 +1603,44 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 			xcvr->state, xcvr->phy, xcvr->pid);
 
 	switch (xcvr->pid) {
-		case XCVR_PID_QSFP_100G_CR4:
-		case XCVR_PID_QSFP_40GBASE_CR4:
-		case XCVR_PID_QSFP_100G_AOC:
-		case XCVR_PID_QSFP_100G_ACC:
-		case XCVR_PID_QSFP_100G_SR4:
-		case XCVR_PID_QSFP_100G_LR4:
-		case XCVR_PID_QSFP_100G_ER4:
-		case XCVR_PID_QSFP_40GBASE_ER4:
-		case XCVR_PID_QSFP_40GBASE_SR4:
-		case XCVR_PID_QSFP_40GBASE_LR4:
-		case XCVR_PID_QSFP_40GBASE_AOC:
-			qsfp = (struct qsfp_sprom_data *)xcvr->sprom;
+	case XCVR_PID_QSFP_100G_CR4:
+	case XCVR_PID_QSFP_40GBASE_CR4:
+	case XCVR_PID_QSFP_100G_AOC:
+	case XCVR_PID_QSFP_100G_ACC:
+	case XCVR_PID_QSFP_100G_SR4:
+	case XCVR_PID_QSFP_100G_LR4:
+	case XCVR_PID_QSFP_100G_ER4:
+	case XCVR_PID_QSFP_40GBASE_ER4:
+	case XCVR_PID_QSFP_40GBASE_SR4:
+	case XCVR_PID_QSFP_40GBASE_LR4:
+	case XCVR_PID_QSFP_40GBASE_AOC:
+		qsfp = (struct qsfp_sprom_data *)xcvr->sprom;
 
-			sbuf_printf(sb, "    QSFP vendor: %s P/N: %s S/N: %s\n",
-				qsfp->vendor_name, qsfp->vendor_pn, qsfp->vendor_sn);
-			break;
+		sbuf_printf(sb, "    QSFP vendor: %s P/N: %s S/N: %s\n",
+			qsfp->vendor_name, qsfp->vendor_pn, qsfp->vendor_sn);
+		break;
 
-		case XCVR_PID_SFP_25GBASE_CR_S:
-		case XCVR_PID_SFP_25GBASE_CR_L:
-		case XCVR_PID_SFP_25GBASE_CR_N:
-		case XCVR_PID_SFP_25GBASE_SR:
-		case XCVR_PID_SFP_25GBASE_LR:
-		case XCVR_PID_SFP_25GBASE_ER:
-		case XCVR_PID_SFP_25GBASE_AOC:
-		case XCVR_PID_SFP_10GBASE_SR:
-		case XCVR_PID_SFP_10GBASE_LR:
-		case XCVR_PID_SFP_10GBASE_LRM:
-		case XCVR_PID_SFP_10GBASE_ER:
-		case XCVR_PID_SFP_10GBASE_AOC:
-		case XCVR_PID_SFP_10GBASE_CU:
-			sfp = (struct sfp_sprom_data *)xcvr->sprom;
-			sbuf_printf(sb, "    SFP vendor: %s P/N: %s S/N: %s\n",
-				sfp->vendor_name, sfp->vendor_pn, sfp->vendor_sn);
-			break;
+	case XCVR_PID_SFP_25GBASE_CR_S:
+	case XCVR_PID_SFP_25GBASE_CR_L:
+	case XCVR_PID_SFP_25GBASE_CR_N:
+	case XCVR_PID_SFP_25GBASE_SR:
+	case XCVR_PID_SFP_25GBASE_LR:
+	case XCVR_PID_SFP_25GBASE_ER:
+	case XCVR_PID_SFP_25GBASE_AOC:
+	case XCVR_PID_SFP_10GBASE_SR:
+	case XCVR_PID_SFP_10GBASE_LR:
+	case XCVR_PID_SFP_10GBASE_LRM:
+	case XCVR_PID_SFP_10GBASE_ER:
+	case XCVR_PID_SFP_10GBASE_AOC:
+	case XCVR_PID_SFP_10GBASE_CU:
+		sfp = (struct sfp_sprom_data *)xcvr->sprom;
+		sbuf_printf(sb, "    SFP vendor: %s P/N: %s S/N: %s\n",
+			sfp->vendor_name, sfp->vendor_pn, sfp->vendor_sn);
+		break;
 
-		default:
-			sbuf_printf(sb, "    unknown media\n");
-			break;
+	default:
+		sbuf_printf(sb, "    unknown media\n");
+		break;
 	}
 
         err = sbuf_finish(sb);
@@ -1918,13 +1966,17 @@ ionic_setup_device_stats(struct lif *lif)
 			ionic_intr_coal_handler, "IU", "Interrupt coalescing timeout in usecs");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "filters",
 			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
-			ionic_filter_sysctl, "A", "Miscellenious media details");
+			ionic_filter_sysctl, "A", "Print MAC filter list");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "media_status",
 			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
 			ionic_media_sysctl, "A", "Miscellenious media details");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "intr_status",
 			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
 			ionic_intr_sysctl, "A", "Interrupt details");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "flow_ctrl",
+			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			ionic_flow_ctrl_sysctl, "I",
+			"Set flow control - 0(off), 1(link), 2(pfc)");
 
 	ionic_setup_hw_stats(lif, ctx, child);
 	ionic_adminq_sysctl(lif, ctx, child);
@@ -2170,6 +2222,11 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 	case SIOCSIFMTU:
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFMTU (Set Interface MTU)\n");
+		if (lif->ionic->is_mgmt_nic) {
+			if_printf(ifp, "MTU change not allowed\n");
+			error = EINVAL;
+			break;
+		}
 		IONIC_CORE_LOCK(lif);
 		error = ionic_change_mtu(ifp, ifr->ifr_mtu);
 		if (error) {

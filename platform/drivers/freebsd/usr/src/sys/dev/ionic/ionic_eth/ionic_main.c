@@ -36,6 +36,56 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR("Anish Gupta <anish@pensando.io>");
 MODULE_VERSION(ionic, 1);
 
+static const char *ionic_error_to_str(enum status_code code)
+{
+        switch (code) {
+        case IONIC_RC_SUCCESS:
+                return "IONIC_RC_SUCCESS";
+        case IONIC_RC_EVERSION:
+                return "IONIC_RC_EVERSION";
+        case IONIC_RC_EOPCODE:
+                return "IONIC_RC_EOPCODE";
+        case IONIC_RC_EIO:
+                return "IONIC_RC_EIO";
+        case IONIC_RC_EPERM:
+                return "IONIC_RC_EPERM";
+        case IONIC_RC_EQID:
+                return "IONIC_RC_EQID";
+        case IONIC_RC_EQTYPE:
+                return "IONIC_RC_EQTYPE";
+        case IONIC_RC_ENOENT:
+                return "IONIC_RC_ENOENT";
+        case IONIC_RC_EINTR:
+                return "IONIC_RC_EINTR";
+        case IONIC_RC_EAGAIN:
+                return "IONIC_RC_EAGAIN";
+        case IONIC_RC_ENOMEM:
+                return "IONIC_RC_ENOMEM";
+        case IONIC_RC_EFAULT:
+                return "IONIC_RC_EFAULT";
+        case IONIC_RC_EBUSY:
+                return "IONIC_RC_EBUSY";
+        case IONIC_RC_EEXIST:
+                return "IONIC_RC_EEXIST";
+        case IONIC_RC_EINVAL:
+                return "IONIC_RC_EINVAL";
+        case IONIC_RC_ENOSPC:
+                return "IONIC_RC_ENOSPC";
+        case IONIC_RC_ERANGE:
+                return "IONIC_RC_ERANGE";
+        case IONIC_RC_BAD_ADDR:
+                return "IONIC_RC_BAD_ADDR";
+        case IONIC_RC_DEV_CMD:
+                return "IONIC_RC_DEV_CMD";
+        case IONIC_RC_ERROR:
+                return "IONIC_RC_ERROR";
+        case IONIC_RC_ERDMA:
+                return "IONIC_RC_ERDMA";
+        default:
+                return "IONIC_RC_UNKNOWN";
+        }
+}
+
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 	bool timeout)
 {
@@ -62,6 +112,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 		{ CMD_OPCODE_LIF_STATS_STOP, "CMD_OPCODE_LIF_STATS_STOP" },
 		{ CMD_OPCODE_RSS_HASH_SET, "CMD_OPCODE_RSS_HASH_SET" },
 		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
+		{ CMD_OPCODE_PORT_CONFIG_SET, "CMD_OPCODE_PORT_CONFIG_SET" },
 	};
 	int list_len = ARRAY_SIZE(cmds);
 	struct cmds *cmd = cmds;
@@ -76,8 +127,8 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 	}
 
 	if (ctx->comp.comp.status || timeout) {
-		IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %d %s\n", ctx->cmd.cmd.opcode,
-			name, ctx->comp.comp.status, timeout ? "(timeout)" : "");
+		IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %s %s\n", ctx->cmd.cmd.opcode,
+			name, ionic_error_to_str(ctx->comp.comp.status), timeout ? "(timeout)" : "");
 		return ctx->comp.comp.status;
 	}
 
@@ -114,8 +165,6 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 	do {
 
 		done = ionic_dev_cmd_done(idev);
-	//	IONIC_INFO("DEVCMD wait %ld secs (%ld jiffies)\n",
-	//		       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
 #ifdef HAPS
 		if (done)
 			IONIC_INFO("DEVCMD done took %ld secs (%ld jiffies)\n",
@@ -145,8 +194,8 @@ static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
 	status = ionic_dev_cmd_status(idev);
 
 	if (status) {
-		IONIC_ERROR("DEVCMD(%d) failed, status: 0x%x\n",
-					idev->dev_cmd->cmd.cmd.opcode, status);
+		IONIC_ERROR("DEVCMD(%d) failed, status: %s\n",
+			idev->dev_cmd->cmd.cmd.opcode, ionic_error_to_str(status));
 		return (EIO);
 	}
 
@@ -161,6 +210,21 @@ int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 	if (err)
 		return err;
 	return ionic_dev_cmd_check_error(idev);
+}
+
+int ionic_port_config(struct ionic *ionic, struct port_config *pc)
+{
+        struct ionic_dev *idev = &ionic->idev;
+
+        idev = &ionic->idev;
+        IONIC_INFO(ionic->dev, "port_config state=0x%x speed=0x%x mtu=0x%x an_enable=0x%x"
+		" fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
+                pc->state, pc->speed, pc->mtu, pc->an_enable,
+                pc->fec_type, pc->pause_type, pc->loopback_mode);
+
+	ionic_dev_cmd_port_config(idev, pc);
+
+	return ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 }
 
 int ionic_set_dma_mask(struct ionic *ionic)

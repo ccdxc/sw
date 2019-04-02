@@ -2594,15 +2594,56 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 static int
 ionic_media_change(struct ifnet *ifp)
 {
-	struct lif* lif = ifp->if_softc;
+	struct lif *lif = ifp->if_softc;
 	struct ifmedia *ifm = &lif->media;
+	struct notify_block *nb;
+        struct port_config pc;
+
+	nb = lif->notifyblock;
+	if (nb == NULL)
+		return (EIO);
+
+	pc = nb->port_config;
 
 	if (IFM_TYPE(ifm->ifm_media) != IFM_ETHER)
 		return (EINVAL);
 
-	if_printf(ifp, "Changing speed is not supported\n");
+	if (lif->ionic->is_mgmt_nic)
+		return (ENODEV);
 
-	return (ENODEV);
+       switch (IFM_SUBTYPE(ifm->ifm_media)) {
+	case IFM_AUTO:
+	case IFM_100G_CR4:
+	case IFM_100G_SR4:
+	case IFM_100G_LR4:
+		pc.speed = IONIC_SPEED_100G;
+		pc.an_enable = 1;
+		break;
+	case IFM_40G_CR4:
+	case IFM_40G_SR4:
+	case IFM_40G_LR4:
+		pc.speed = IONIC_SPEED_40G;
+		pc.an_enable = 0;
+		break;
+	case IFM_25G_CR:
+	case IFM_25G_SR:
+	case IFM_25G_LR:
+	case IFM_25G_AOC:
+		pc.speed = IONIC_SPEED_25G;
+		pc.an_enable = 0;
+		break;
+	case IFM_10G_SR:
+	case IFM_10G_LR:
+	case IFM_10G_LRM:
+	case IFM_10G_ER:
+		pc.speed = IONIC_SPEED_10G;
+		pc.an_enable = 0;
+		break;
+	default:
+		pc.speed = 0;
+	}
+
+	return ionic_port_config(lif->ionic, &pc);
 }
 
 static void ionic_lif_set_netdev_info(struct lif *lif)
