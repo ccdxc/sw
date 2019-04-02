@@ -217,6 +217,7 @@ class NaplesNode(Node):
             runCommand("""docker exec -d {} /netagent -datapath mock -disabletsa &""".format(self.name))
             runCommand("""docker exec -d {} /tmagent """.format(self.name))
             runCommand("""docker exec -d {} /nevtsproxy &""".format(self.name))
+            runCommand("""docker exec -d {} /fwgen  & """.format(self.name))
 
 def initCluster(nodeAddr, quorumNodes, clustervip):
     postUrl = 'http://' + nodeAddr + ':9001/api/v1/cluster'

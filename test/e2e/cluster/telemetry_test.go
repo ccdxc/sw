@@ -7,13 +7,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/influxdata/influxdb/client/v2"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	client "github.com/influxdata/influxdb/client/v2"
-
 	"github.com/pensando/sw/api"
-	telemetry_query "github.com/pensando/sw/api/generated/telemetry_query"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/telemetry_query"
+	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/nic/agent/tmagent/state/fwgen/fwevent"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/telemetryclient"
@@ -256,10 +258,9 @@ func testQueryingFwlogs() {
 	Expect(err).Should(BeNil())
 
 	for _, node := range nodesList {
-		nodeName := node.GetName()
 		Eventually(func() string {
-			return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[nodeName], globals.Citadel)
-		}, 120, 1).ShouldNot(BeEmpty(), globals.Citadel, " container not running on ", ts.tu.NameToIPMap[nodeName])
+			return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[node.GetName()], globals.Citadel)
+		}, 120, 1).ShouldNot(BeEmpty(), globals.Citadel, " container not running on ", ts.tu.NameToIPMap[node.GetName()])
 	}
 
 	Eventually(func() string {
@@ -275,7 +276,7 @@ func testQueryingFwlogs() {
 	verifyLogs()
 }
 
-var _ = Describe("telemetry test", func() {
+var _ = Describe("telemetry tests", func() {
 	It("telemetry Node data", func() {
 		testQueryingMetrics("Node")
 	})
@@ -287,6 +288,194 @@ var _ = Describe("telemetry test", func() {
 	})
 	It("telemetry Fwlogs query ", func() {
 		testQueryingFwlogs()
+	})
+
+	Context("on restarting citadel service", func() {
+		It("fwlog query should succeed", func() {
+			nodesList, err := ts.tu.APIClient.ClusterV1().Node().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+			Expect(err).Should(BeNil())
+
+			if len(nodesList) == 1 || len(ts.tu.NaplesNodeIPs) == 0 {
+				Skip("skip citadel restart test on single node cluster")
+			}
+
+			for _, node := range nodesList {
+				nodeName := node.GetName()
+				Eventually(func() string {
+					return ts.tu.GetContainerOnNode(ts.tu.NameToIPMap[nodeName], globals.Citadel)
+				}, 120, 1).ShouldNot(BeEmpty(), globals.Citadel, " container not running on ", ts.tu.NameToIPMap[nodeName])
+			}
+
+			Eventually(func() string {
+				out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods --no-headers"), "\n")
+				for _, line := range out {
+					if !strings.Contains(line, "Running") {
+						return line
+					}
+				}
+				return ""
+			}, 120, 1).Should(BeEmpty(), "All pods should be in Running state")
+
+			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+			apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			smartnics := map[string]int{}
+			Eventually(func() bool {
+				ctx := ts.tu.NewLoggedInContext(context.Background())
+				snic, err := apiClient.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
+				if err != nil {
+					By(fmt.Sprintf("failed to get smartnics %v", err))
+					return false
+				}
+
+				if len(snic) != len(ts.tu.NaplesNodes) {
+					By(fmt.Sprintf("invalid num. of smartnics, got %d, expected %d", len(snic), len(ts.tu.NaplesNodes)))
+					return false
+				}
+				for i, s := range snic {
+					smartnics[s.Name] = i
+				}
+				return true
+			}, 120, 2).Should(BeTrue())
+
+			stime := &api.Timestamp{}
+			err = stime.Parse(time.Now().Format(time.RFC3339Nano))
+			Expect(err).Should(BeNil())
+
+			for _, naple := range ts.tu.NaplesNodes {
+				By(fmt.Sprintf("trigger fwlog in NIC container %s", naple))
+				st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naple, fwevent.Cmd(100)))
+				Expect(st == "null").Should(BeTrue())
+			}
+			time.Sleep(time.Second)
+
+			By("verify fwlogs before the test")
+			for smartnic := range smartnics {
+				By(fmt.Sprintf("verify fwlog fron smartnic: %v", smartnic))
+				Eventually(func() bool {
+					apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+					tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
+					Expect(err).Should(BeNil())
+
+					// fwlog
+					fwQuery := &telemetry_query.FwlogsQueryList{
+						Tenant:    globals.DefaultTenant,
+						Namespace: globals.DefaultNamespace,
+						Queries: []*telemetry_query.FwlogsQuerySpec{
+							{
+								ReporterIDs: []string{smartnic},
+								StartTime:   stime,
+							},
+						},
+					}
+
+					ctx := ts.tu.NewLoggedInContext(context.Background())
+					res, err := tc.Fwlogs(ctx, fwQuery)
+					if err != nil {
+						By(fmt.Sprintf("failed to get fwlog, %s", err))
+						return false
+					}
+
+					if len(res.Results) != 1 || len(res.Results[0].Logs) == 0 {
+						By(fmt.Sprintf("didn't match query result, len(Results): %d, len(Results[0].Logs):%d",
+							len(res.Results), len(res.Results[0].Logs)))
+						return false
+					}
+					By(fmt.Sprintf("smartnic %s reported fwlog \u2714", smartnic))
+					return true
+				}, 180, 2).Should(BeTrue())
+			}
+
+			for _, vnode := range nodesList {
+				By(fmt.Sprintf("restart venice node: %v", vnode.GetName()))
+				Eventually(func() error {
+					return ts.tu.KillContainerOnNodeByName(ts.tu.NameToIPMap[vnode.GetName()], globals.Citadel)
+				}, 60, 2).Should(Succeed())
+
+				for smartnic := range smartnics {
+					By(fmt.Sprintf("verify fwlog fron smartnic: %v", smartnic))
+					Eventually(func() bool {
+						apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+						tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
+						Expect(err).Should(BeNil())
+
+						// fwlog
+						fwQuery := &telemetry_query.FwlogsQueryList{
+							Tenant:    globals.DefaultTenant,
+							Namespace: globals.DefaultNamespace,
+							Queries: []*telemetry_query.FwlogsQuerySpec{
+								{
+									ReporterIDs: []string{smartnic},
+									StartTime:   stime,
+								},
+							},
+						}
+
+						ctx := ts.tu.NewLoggedInContext(context.Background())
+						res, err := tc.Fwlogs(ctx, fwQuery)
+						if err != nil {
+							By(fmt.Sprintf("failed to get fwlog, %s", err))
+							return false
+						}
+
+						if len(res.Results) != 1 || len(res.Results[0].Logs) == 0 {
+							By(fmt.Sprintf("didn't match query result, len(Results): %d, len(Results[0].Logs):%d",
+								len(res.Results), len(res.Results[0].Logs)))
+							return false
+						}
+
+						By(fmt.Sprintf("smartnic %s reported %d fwlogs \u2714", smartnic, len(res.Results[0].Logs)))
+						return true
+					}, 180, 2).Should(BeTrue())
+
+					Eventually(func() bool {
+						apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+						tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
+						Expect(err).Should(BeNil())
+
+						// metrics
+						mquery := &telemetry_query.MetricsQueryList{
+							Tenant:    globals.DefaultTenant,
+							Namespace: globals.DefaultNamespace,
+							Queries: []*telemetry_query.MetricsQuerySpec{
+								{
+									TypeMeta: api.TypeMeta{
+										Kind: "SmartNIC",
+									},
+									StartTime: stime,
+									Selector: &labels.Selector{
+										Requirements: []*labels.Requirement{
+											{
+												Key:      "reporterID",
+												Operator: labels.Operator_equals.String(),
+												Values:   []string{smartnic},
+											},
+										},
+									},
+								},
+							},
+						}
+
+						ctx := ts.tu.NewLoggedInContext(context.Background())
+						mres, err := tc.Metrics(ctx, mquery)
+						if err != nil {
+							By(fmt.Sprintf("failed to get metrics, %s", err))
+							return false
+						}
+
+						if len(mres.Results) != 1 || len(mres.Results[0].Series) == 0 {
+							By(fmt.Sprintf("didn't match query result, len(Results): %d, len(Results[0].Series):%d",
+								len(mres.Results), len(mres.Results[0].Series)))
+							return false
+						}
+
+						By(fmt.Sprintf("smartnic %s reported metrics \u2714", smartnic))
+						return true
+					}, 120, 2).Should(BeTrue())
+				}
+			}
+		})
 	})
 })
 
