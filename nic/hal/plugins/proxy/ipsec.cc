@@ -17,6 +17,15 @@ is_dst_local_ep(hal::if_t *intf) {
     return (intf != NULL && intf->if_type == intf::IF_TYPE_ENIC);
 }
 
+static inline void
+update_flow_qos (fte::flow_update_t *flowupd)
+{
+    // For uplink-uplink, QOS needs to be updated based on ipsec flow
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH) {
+        flowupd->fwding.update_qos = true;
+    }
+}
+
 static inline fte::pipeline_action_t
 update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
@@ -248,18 +257,19 @@ ipsec_process_initiator_plain_flow(fte::ctx_t&ctx)
             flowupd.fwding.qid = rule_cfg->action.sa_action_enc_handle;
             flowupd.fwding.qtype = 0;
             flowupd.fwding.qid_en = true;
-            flowupd.fwding.lport = args.lport_id; 
+            flowupd.fwding.lport = args.lport_id;
+            update_flow_qos(&flowupd);
             HAL_TRACE_DEBUG("Updating encrypt result qid {}, lport {}", flowupd.fwding.qid, flowupd.fwding.lport);
         }
         ctx.set_l3_tunnel_flow(TRUE);
         ret = ctx.update_flow(flowupd);
         ctx.set_feature_status(ret);
-        ipsec_info->vrf = ctx.key().dvrf_id; 
+        ipsec_info->vrf = ctx.key().dvrf_id;
         ipsec_info->action = IPSEC_PLUGIN_RFLOW_ACTION_DO_NOTHING;
         HAL_TRACE_DEBUG("Reverse Flow params: vrf {} action {}", ipsec_info->vrf, ipsec_info->action);
         return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
     }
-    return fte::PIPELINE_CONTINUE; 
+    return fte::PIPELINE_CONTINUE;
 }
 
 static inline fte::pipeline_action_t
@@ -272,19 +282,20 @@ ipsec_process_post_encrypt_esp_flow(fte::ctx_t&ctx)
     pd::pd_func_args_t                pd_func_args = {0};
 
     ipsec_info = (ipsec_info_t*) ctx.feature_state();
-    ipsec_info->vrf = ctx.key().dvrf_id; 
+    ipsec_info->vrf = ctx.key().dvrf_id;
     ipsec_info->action = IPSEC_PLUGIN_RFLOW_ACTION_DECRYPT;
- 
-    vrf_t *vrf = vrf_lookup_by_id(ipsec_info->vrf); 
+
+    vrf_t *vrf = vrf_lookup_by_id(ipsec_info->vrf);
     vrf_args.vrf = vrf;
     pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
     flowupd.lkp_info.vrf_hwid = vrf_args.lkup_id;
+    update_flow_qos(&flowupd);
     HAL_TRACE_DEBUG("Got vrf-hw-id as {:#x}", flowupd.lkp_info.vrf_hwid);
     ret = ctx.update_flow(flowupd);
     ctx.set_feature_status(ret);
     HAL_TRACE_DEBUG("Return Value {} Reverse Flow params: vrf {} action {}", ret, ipsec_info->vrf, ipsec_info->action);
-    return fte::PIPELINE_CONTINUE; 
+    return fte::PIPELINE_CONTINUE;
 }
 
 static inline fte::pipeline_action_t
@@ -342,6 +353,7 @@ ipsec_process_uplink_esp_flow(fte::ctx_t&ctx)
             flowupd.fwding.qtype = 1;
             flowupd.fwding.qid_en = true;
             flowupd.fwding.lport = args.lport_id; 
+            update_flow_qos(&flowupd);
             HAL_TRACE_DEBUG("Updating decrypt result qid {}, lport {}", flowupd.fwding.qid, flowupd.fwding.lport);
             ret = ctx.update_flow(flowupd);
             ctx.set_feature_status(ret);
@@ -353,7 +365,6 @@ ipsec_process_uplink_esp_flow(fte::ctx_t&ctx)
     }
     return fte::PIPELINE_CONTINUE; 
 }
-  
 
 static inline fte::pipeline_action_t
 ipsec_process_post_decrypt_flow(fte::ctx_t&ctx)
@@ -372,6 +383,7 @@ ipsec_process_post_decrypt_flow(fte::ctx_t&ctx)
     pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
     flowupd.lkp_info.vrf_hwid = vrf_args.lkup_id;
+    update_flow_qos(&flowupd);
     HAL_TRACE_DEBUG("Got vrf-hw-id as {:#x}", flowupd.lkp_info.vrf_hwid);
     ctx.set_l3_tunnel_flow(TRUE);
     ret = ctx.update_flow(flowupd);
@@ -411,6 +423,7 @@ ipsec_process_rflow(fte::ctx_t&ctx)
         pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
         hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
         flowupd.lkp_info.vrf_hwid = vrf_args.lkup_id;
+        update_flow_qos(&flowupd);
         HAL_TRACE_DEBUG("Got vrf-hw-id as {:#x}", flowupd.lkp_info.vrf_hwid);
         ret = ctx.update_flow(flowupd);
         ctx.set_feature_status(ret);
@@ -459,6 +472,7 @@ ipsec_process_rflow(fte::ctx_t&ctx)
             ctx.set_l3_tunnel_flow(TRUE);
             flowupd.fwding.qid_en = true;
             flowupd.fwding.lport = args.lport_id; 
+            update_flow_qos(&flowupd);
             ret = ctx.update_flow(flowupd);
             HAL_TRACE_DEBUG("fwding info: qid_en {} qid {} qtype {} lport {}", 
                             flowupd.fwding.qid_en, flowupd.fwding.qid, flowupd.fwding.qtype, flowupd.fwding.lport);

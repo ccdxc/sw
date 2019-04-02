@@ -4,14 +4,12 @@
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
 using qos::QosClassStatusEpd;
 
 namespace hal {
 namespace pd {
-
-#define QOS_QUEUE_DEFAULT 0
-#define QOS_COS_DEFAULT   0
 
 typedef struct pd_qos_iq_s {
     bool valid;
@@ -1566,8 +1564,8 @@ pd_qos_class_get_qos_class_id (pd_func_args_t *pd_func_args)
     pd_qos_class_t *pd_qos_class;
     pd_qos_class_get_qos_class_id_args_t *q_args = pd_func_args->pd_qos_class_get_qos_class_id;
     pd_func_args_t pd_func_args1 = {0};
-    tm_port_t      dest_port;
-    uint32_t       group = 0;
+    tm_port_t dest_port = 0;
+    uint32_t group = 0;
     pd_if_get_tm_oport_args_t args;
 
     qos_class_t *qos_class = q_args->qos_class;

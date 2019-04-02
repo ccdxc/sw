@@ -267,6 +267,7 @@ typedef struct fwding_info_s {
     hal::ep_t *dep;
     hal::if_t *dif;
     hal::l2seg_t *dl2seg;
+    bool update_qos;
 } fwding_info_t;
 
 std::ostream& operator<<(std::ostream& os, const fwding_info_t& val);
@@ -810,6 +811,8 @@ private:
                               const header_rewrite_info_t& header);
     hal_ret_t update_for_snat(hal::flow_role_t role,
                               const header_rewrite_info_t& header);
+    hal_ret_t update_flow_qos_class_id(flow_t *flow,
+                                       hal::flow_pgm_attrs_t *flow_attrs);
 
     static void swap_flow_key(const hal::flow_key_t &key, hal::flow_key_t *rkey);
 

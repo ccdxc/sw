@@ -9,6 +9,7 @@
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
 #define LOG_SIZE(ev) ev.ByteSizeLong()
 #define TYPE_TO_LG_SZ(type, sz_) {                                    \
@@ -476,6 +477,37 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
         fw_log(logger_, t_fwlg);
 }
 
+//------------------------------------------------------------------------------
+// Update qos_class_id for flows if applicable
+//------------------------------------------------------------------------------
+hal_ret_t
+ctx_t::update_flow_qos_class_id(flow_t *flow,
+                                hal::flow_pgm_attrs_t *flow_attrs)
+{
+    // TODO specific for ipsec smart-switch mode
+    if (flow->fwding().update_qos == true) {
+        // Packet entering P4 from uplink:
+        //      initiator: use DEFAULT UPLINK_IQ
+        //      responder: use DEFAULT QUEUE
+        // Packet entering P4 from DMA:
+        //      initiator: use DEFAULT QUEUE
+        //      responder: use DEFAULT UPLINK_IQ
+        if (direction() == hal::FLOW_DIR_FROM_UPLINK) {
+            if (flow_attrs->role == hal::FLOW_ROLE_INITIATOR) {
+                flow_attrs->qos_class_id = CAPRI_TM_P4_UPLINK_IQ_OFFSET;
+            } else {
+                flow_attrs->qos_class_id = QOS_QUEUE_DEFAULT;
+            }
+        } else {
+            if (flow_attrs->role == hal::FLOW_ROLE_INITIATOR) {
+                flow_attrs->qos_class_id = QOS_QUEUE_DEFAULT;
+            } else {
+                flow_attrs->qos_class_id = CAPRI_TM_P4_UPLINK_IQ_OFFSET;
+            }
+        }
+    }
+    return HAL_RET_OK;
+}
 
 //------------------------------------------------------------------------------
 // Create/update session and flow table entries in hardware
@@ -524,6 +556,8 @@ ctx_t::update_flow_table()
 
         iflow->to_config(iflow_cfg, iflow_attrs);
         iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
+
+        update_flow_qos_class_id(iflow, &iflow_attrs);
 
         iflow_attrs.vrf_hwid = (flow_lkupid_)?flow_lkupid_:iflow_attrs.vrf_hwid;
         if (!iflow_attrs.vrf_hwid) {
@@ -624,6 +658,8 @@ ctx_t::update_flow_table()
 
         rflow->to_config(rflow_cfg, rflow_attrs);
         rflow_cfg.role = rflow_attrs.role = hal::FLOW_ROLE_RESPONDER;
+
+        update_flow_qos_class_id(rflow, &rflow_attrs);
 
         rflow_attrs.use_vrf = (use_vrf_)?1:0;
 

@@ -44,7 +44,7 @@ using sdk::lib::indexer;
 #define CAPRI_TM_BUS_WIDTH             512
 
 #define CAPRI_TM_BUFFER_ISLAND_0_CELL_COUNT 8192
-#define CAPRI_TM_BUFFER_ISLAND_1_CELL_COUNT 5120 
+#define CAPRI_TM_BUFFER_ISLAND_1_CELL_COUNT 5120
 
 #define CAPRI_TM_INVALID_Q            -1
 
@@ -73,7 +73,7 @@ using sdk::lib::indexer;
 // For recirc, oq 31 (TM_P4_IG_RECIRC_QUEUE) is used in P4-ig and oq 29 is used in P4-eg
 //
 // Offset at which the uplink queues start at P4-ig
-#define CAPRI_TM_P4_UPLINK_IQ_OFFSET          24 
+#define CAPRI_TM_P4_UPLINK_IQ_OFFSET          24
 // Offset at which the uplink queues start at P4-eg
 #define CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET   16
 // Offset at which the oqs for rxdma only classes start
@@ -87,6 +87,9 @@ using sdk::lib::indexer;
  */
 #define CAPRI_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT      (CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 0)
 #define CAPRI_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT  (CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 1) 
+
+#define QOS_QUEUE_DEFAULT 0
+#define QOS_COS_DEFAULT   0
 
 typedef uint32_t tm_port_t;
 typedef int32_t tm_q_t;
