@@ -33,12 +33,12 @@ export class IPUtility {
    * Returns true if the ip is valid
    * Does not allow submasks
    */
-  public static isValidIP(ip: string) {
-    if (ip == null || ip.length === 0) {
+  public static isValidIP(ip: string): boolean {
+    if (ip == null || ip.length === 0 || ip.indexOf('/') >= 0) {
       return false;
     }
-    // Can't end in a dot
-    if (ip[ip.length - 1] === '.') {
+    // Can't begin or end in a dot
+    if (ip[0] === '.' || ip[ip.length - 1] === '.') {
       return false;
     }
     const ipParts = ip.split('.');
@@ -61,7 +61,7 @@ export class IPUtility {
     if (control.value == null || control.value.length === 0) {
       return null;
     }
-    return !IPUtility.isValidIP(control.value) ? { validIP: { message: 'Must be a valid IP' } } : null;
+    return !IPUtility.isValidIP(control.value) ? { validIP: { message: 'Must be a valid IP in dot notation' } } : null;
   }
 
   /**

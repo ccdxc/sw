@@ -113,10 +113,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   creator = 'pensando';
 
 
-  sourceIpFormControl: FormControl = CustomFormControl(new FormControl('', [
+  sourceIpFormControl: FormControl = CustomFormControl(new FormControl('', [IPUtility.isValidIPValidator
   ]), { description: "Value must be in dot notation" });
 
-  destIpFormControl: FormControl = CustomFormControl(new FormControl('', [
+  destIpFormControl: FormControl = CustomFormControl(new FormControl('', [IPUtility.isValidIPValidator
   ]), { description: "Value must be in dot notation" });
 
   portFormControl: FormControl = CustomFormControl(new FormControl('', [
