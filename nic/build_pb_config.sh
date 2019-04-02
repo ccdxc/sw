@@ -1,23 +1,22 @@
 #! /bin/bash -e
 
-set -e 
-set -x
-set -o pipefail
+set -exo pipefail
 
 cd `dirname $0`
 cd `/bin/pwd`
+
 export NIC_DIR=$PWD
-echo "NIC_DIR = $NIC_DIR"
-export ASIC_SRC=$NIC_DIR/asic
+export ASIC_SRC=$NIC_DIR/sdk/asic_repo/asic
 export ASIC_GEN=$NIC_DIR/asic_gen
-echo "ASIC_SRC = $ASIC_SRC"
-echo "ASIC_GEN = $ASIC_GEN"
 export PATH=$ASIC_SRC/common/tools/bin/:$PATH
+
+echo "NIC_DIR:  $NIC_DIR"
+echo "ASIC_SRC: $ASIC_SRC"
+echo "ASIC_GEN: $ASIC_GEN"
 echo $PATH
 
 rm -rf $ASIC_GEN
 cd $ASIC_SRC
-git submodule update --init
 cd $ASIC_SRC/capri/verif/top/test
 gen_rtl -j4 -n -v -m sam.pf include_field_cntrl=True | tee build.log
 

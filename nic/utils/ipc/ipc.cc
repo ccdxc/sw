@@ -5,13 +5,12 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
-#include <inttypes.h>
+#include <cinttypes>
 #include <errno.h>
 #include "nic/utils/ipc/ipc.hpp"
 #include "nic/utils/ipc/constants.h"
 #include "lib/logger/logger.hpp"
 
-#define __STDC_FORMAT_MACROS
 #define ALIGN_64_MASK 0xfffffffffffffff8
 #define ROUND_DOWN4(x) ((uint32_t)(x) & 0xfffffffc)
 

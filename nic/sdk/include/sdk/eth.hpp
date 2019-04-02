@@ -4,7 +4,7 @@
 #define __ETH_HPP__
 
 #include <stdio.h>
-#include <inttypes.h>
+#include <cinttypes>
 #include <ostream>
 
 #define L2_MIN_HDR_LEN                                 14

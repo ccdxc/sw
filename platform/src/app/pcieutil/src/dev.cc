@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
-#include <inttypes.h>
+#include <cinttypes>
 
 #include "nic/sdk/platform/pciemgr/include/pciehw.h"
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"

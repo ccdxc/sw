@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <inttypes.h>
+#include <cinttypes>
 #include "include/sdk/mem.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/utils/mpart_rsvd.hpp"

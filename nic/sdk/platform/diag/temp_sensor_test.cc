@@ -182,7 +182,7 @@ int hbm_temp_test()
 diag_ret_e temp_sensor_test(test_mode_e mode, int argc, char* argv[])
 {
     int arg_option;
-    int index, retval;
+    int index, retval = 0;
     struct option* option;
 
     /** test flags */

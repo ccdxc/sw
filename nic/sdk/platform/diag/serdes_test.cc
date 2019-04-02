@@ -106,7 +106,7 @@ static int run_serdes_bist_test(uint32_t sbus)
 diag_ret_e serdes_test(test_mode_e mode, int argc, char* argv[])
 {
     int arg_option, sbus = -1;
-    int index, retval;
+    int index, retval = 0;
     char prbs_pattern[8] ="PRBS31";
     struct option* option;
 

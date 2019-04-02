@@ -10,7 +10,7 @@ MODULE_SOLIBS   := devapi_iris halproto indexer
 #                   ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \
 #                   commonproto nicmgrproto halproto \
 #                   delphisdk upgrade upgrade_app upgradeutils sysmgr \
-#                   sdkcapri_csrint sdkcapri_asicrw_if \
+#                   sdkcapri_asicrw_if \
 #                   sdkasicpd pdcapri pdcommon hal_mock \
 #                   sdkp4 sdkp4utils p4pd_common_p4plus_rxdma sdkxcvrdriver \
 #                   p4pd_common_p4plus_txdma p4pd_${PIPELINE} \

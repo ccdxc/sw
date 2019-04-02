@@ -1,17 +1,25 @@
 #! /bin/bash -e
+
+set -exo pipefail
+
 cd `dirname $0`
 cd `/bin/pwd`
+
 export NIC_DIR=$PWD
-echo "NIC_DIR = $NIC_DIR"
-export ASIC_SRC=$NIC_DIR/asic
+export ASIC_SRC=$NIC_DIR/sdk/asic_repo/asic
 export ASIC_GEN=$NIC_DIR/asic_gen
-export COVFILE=$NIC_DIR/coverage/bullseye_model.cov
-BULLSEYE_PATH=/home/asic/tools/eda/bullseye/bin
-echo "ASIC_SRC = $ASIC_SRC"
-echo "ASIC_GEN = $ASIC_GEN"
 export PATH=$ASIC_SRC/common/tools/bin/:$PATH
+export COVFILE=$NIC_DIR/coverage/bullseye_model.cov
+
+BULLSEYE_PATH=/home/asic/tools/eda/bullseye/bin
+
+echo "NIC_DIR:  $NIC_DIR"
+echo "ASIC_SRC: $ASIC_SRC"
+echo "ASIC_GEN: $ASIC_GEN"
 echo $PATH
+
 cd $ASIC_SRC/capri/model/cap_top
+
 if [ $# -eq 0 ]; then
     echo "Starting ASIC build"
     gen_rtl -n -v NOSKNOBS_PATH=1 OPT=-O2 -j$(grep -c processor /proc/cpuinfo)
@@ -28,8 +36,13 @@ else
     echo "Invalid args. Use --coverage or --clean"
     exit
 fi
+
 $NIC_DIR/sdk/model_sim/cp_asic_bins.sh
-cd $NIC_DIR/asic/capri/model/capsim-master
-make
-make ARCH=aarch64
+
+# TODO build capsim-master. Required?
+# cd $ASIC_SRC/capri/model/capsim-master
+# make
+# make ARCH=aarch64
+
+# change dir back to NIC
 cd $NIC_DIR

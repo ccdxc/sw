@@ -7,7 +7,7 @@
 #ifndef __SDK_TYPES_HPP__
 #define __SDK_TYPES_HPP__
 
-#include <inttypes.h>
+#include <cinttypes>
 
 #define XCVR_SPROM_SIZE 256
 

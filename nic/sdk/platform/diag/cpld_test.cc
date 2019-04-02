@@ -106,7 +106,7 @@ int cpld_verify_id_test()
 
 diag_ret_e cpld_test(test_mode_e mode, int argc, char* argv[])
 {
-    int index, retval, cpld_read_id_test = 0, cpld_test_all = 0;
+    int index, retval = 0, cpld_read_id_test = 0, cpld_test_all = 0;
     struct option* option;
 
     if(mode == OFFLINE_DIAG)
@@ -164,7 +164,7 @@ diag_ret_e cpld_test(test_mode_e mode, int argc, char* argv[])
        retval = cpld_verify_id_test();
        LOG_TEST_RESULT("CPLD ID Verify test", retval);
    }
-   
+
    return (retval ? TEST_PASS : TEST_FAIL); 
 }
 

@@ -8,7 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <inttypes.h>
+#include <cinttypes>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>

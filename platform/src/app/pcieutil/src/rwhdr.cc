@@ -9,7 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <getopt.h>
-#include <inttypes.h>
+#include <cinttypes>
 
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"

@@ -12,38 +12,6 @@ export NIC_CSR_FLAGS := -Wno-unused-function -Wno-unused-variable \
     -Wno-sign-compare -Wno-maybe-uninitialized -Wno-uninitialized \
     -Wno-unused-but-set-variable -fno-asynchronous-unwind-tables
 
-export NIC_CSR_INCS := ${SDKDIR}/third-party/asic/capri/model/cap_top \
-    ${SDKDIR}/third-party/asic/capri/model/utils \
-    ${SDKDIR}/third-party/asic/capri/model/cap_prd \
-    ${SDKDIR}/third-party/asic/capri/model/cap_ptd \
-    ${SDKDIR}/third-party/asic/capri/model/cap_psp \
-    ${SDKDIR}/third-party/asic/capri/model/cap_ppa \
-    ${SDKDIR}/third-party/asic/capri/model/cap_te \
-    ${SDKDIR}/third-party/asic/capri/model/cap_mpu \
-    ${SDKDIR}/third-party/asic/capri/model/cap_pic \
-    ${SDKDIR}/third-party/asic/capri/model/cap_pcie \
-    ${SDKDIR}/third-party/asic/capri/model/cap_npv \
-    ${SDKDIR}/third-party/asic/capri/model/cap_txs \
-    ${SDKDIR}/third-party/asic/capri/model/cap_pb \
-    ${SDKDIR}/third-party/asic/capri/model/cap_wa \
-    ${SDKDIR}/third-party/asic/capri/model/cap_ms \
-    ${SDKDIR}/third-party/asic/capri/model/cap_em \
-    ${SDKDIR}/third-party/asic/capri/model/cap_mc \
-    ${SDKDIR}/third-party/asic/capri/model/cap_he \
-    ${SDKDIR}/third-party/asic/capri/model/cap_dpa \
-    ${SDKDIR}/third-party/asic/capri/model/cap_sema \
-    ${SDKDIR}/third-party/asic/capri/model/cap_intr \
-    ${SDKDIR}/third-party/asic/capri/model/cap_mx \
-    ${SDKDIR}/third-party/asic/capri/model/cap_bx \
-    ${SDKDIR}/third-party/asic/capri/model/cap_ap \
-    ${SDKDIR}/third-party/asic/capri/model/cap_he/readonly \
-    ${SDKDIR}/third-party/asic/ip/verif/pcpp \
-    ${SDKDIR}/third-party/asic/capri/design/common/gen \
-    ${SDKDIR}/third-party/asic/capri/verif/apis \
-    ${SDKDIR}/model_sim/include \
-    ${SDKDIR}/third-party/asic/capri/model/cap_top/csr_defines
-
-
 export SDK_THIRD_PARTY_INCLUDES := \
        ${SDKDIR}/third-party/googletest-release-1.8.0/googletest/include \
        ${SDKDIR}/third-party/libev/include \
@@ -53,4 +21,42 @@ export SDK_THIRD_PARTY_INCLUDES := \
        ${SDKDIR}/third-party/gmp/include \
        ${SDKDIR}/third-party/ncurses/include
 
+export SDK_THIRDPARTY_CAPRI_LDLIBS := sdkcapri_csrint
+
 export THIRD_PARTY_INCLUDES := ${SDK_THIRD_PARTY_INCLUDES}
+
+export ASIC_SRC := ${SDKDIR}/asic_repo/asic
+
+export ASIC_INCL_DIR := ${SDKDIR}/third-party/asic
+
+export NIC_CSR_INCS := ${ASIC_INCL_DIR}/capri/model/cap_top \
+    ${ASIC_INCL_DIR}/capri/model/utils \
+    ${ASIC_INCL_DIR}/capri/model/cap_prd \
+    ${ASIC_INCL_DIR}/capri/model/cap_ptd \
+    ${ASIC_INCL_DIR}/capri/model/cap_psp \
+    ${ASIC_INCL_DIR}/capri/model/cap_ppa \
+    ${ASIC_INCL_DIR}/capri/model/cap_te \
+    ${ASIC_INCL_DIR}/capri/model/cap_mpu \
+    ${ASIC_INCL_DIR}/capri/model/cap_pic \
+    ${ASIC_INCL_DIR}/capri/model/cap_pcie \
+    ${ASIC_INCL_DIR}/capri/model/cap_npv \
+    ${ASIC_INCL_DIR}/capri/model/cap_txs \
+    ${ASIC_INCL_DIR}/capri/model/cap_pb \
+    ${ASIC_INCL_DIR}/capri/model/cap_wa \
+    ${ASIC_INCL_DIR}/capri/model/cap_ms \
+    ${ASIC_INCL_DIR}/capri/model/cap_em \
+    ${ASIC_INCL_DIR}/capri/model/cap_mc \
+    ${ASIC_INCL_DIR}/capri/model/cap_he \
+    ${ASIC_INCL_DIR}/capri/model/cap_dpa \
+    ${ASIC_INCL_DIR}/capri/model/cap_sema \
+    ${ASIC_INCL_DIR}/capri/model/cap_intr \
+    ${ASIC_INCL_DIR}/capri/model/cap_mx \
+    ${ASIC_INCL_DIR}/capri/model/cap_bx \
+    ${ASIC_INCL_DIR}/capri/model/cap_ap \
+    ${ASIC_INCL_DIR}/capri/model/cap_he/readonly \
+    ${ASIC_INCL_DIR}/ip/verif/pcpp \
+    ${ASIC_INCL_DIR}/capri/design/common/gen \
+    ${ASIC_INCL_DIR}/capri/verif/apis \
+    ${SDKDIR}/model_sim/include \
+    ${ASIC_INCL_DIR}/capri/model/cap_top/csr_defines
+

@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <inttypes.h>
+#include <cinttypes>
 
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "platform/src/app/pciemgrd/src/pciemgrd_impl.hpp"

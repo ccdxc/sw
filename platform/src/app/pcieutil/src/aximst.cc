@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
-#include <inttypes.h>
+#include <cinttypes>
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"

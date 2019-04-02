@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
-#include <inttypes.h>
+#include <cinttypes>
 
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"

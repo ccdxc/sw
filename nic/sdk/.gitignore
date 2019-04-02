@@ -13,7 +13,11 @@ build
 third-party/avago/fw
 third-party/locale
 third-party/dpdk
-third-party/asic
+third-party/asic/x86_64
+third-party/asic/aarch64
+third-party/asic/include
+third-party/asic/capri
+third-party/asic/ip
 third-party/libev
 third-party/boost
 third-party/sknobs

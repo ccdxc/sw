@@ -1,8 +1,9 @@
 #! /bin/bash
 cd `dirname $0`
 MODEL_SIM_DIR=$PWD
-ASIC_SRC=$MODEL_SIM_DIR/../../asic/
-ASIC_GEN=$MODEL_SIM_DIR/../../asic_gen/
+NIC_DIR=$MODEL_SIM_DIR/../../
+export ASIC_SRC=$NIC_DIR/sdk/asic_repo/asic
+export ASIC_GEN=$NIC_DIR/asic_gen
 echo "ASIC_SRC = $ASIC_SRC"
 echo "ASIC_GEN = $ASIC_GEN"
 
@@ -29,11 +30,11 @@ cp -v $ASIC_SRC/capri/model/capsim-gen/lib/libisa.a libs/libisa.a
 cp -v $ASIC_SRC/capri/model/capsim-gen/lib/libcapisa.a libs/libcapisa.a
 cp -v $ASIC_SRC/capri/model/capsim-gen/lib/libmpuobj.a libs/libmpuobj.a
 
-cp -v $ASIC_SRC/capri/model/cap_te/cap_te_csr.json ../tools/ncc/csr_json/
-cp -v $ASIC_SRC/capri/model/cap_ppa/cap_ppa_decoders.json ../tools/ncc/csr_json/
-cp -v $ASIC_SRC/capri/model/cap_ppa/cap_ppa_csr.json ../tools/ncc/csr_json/
-cp -v $ASIC_SRC/capri/model/cap_pic/cap_pict_csr.json ../tools/ncc/csr_json/
-cp -v $ASIC_SRC/capri/model/cap_pic/cap_pics_csr.json ../tools/ncc/csr_json/
-cp -v $ASIC_SRC/capri/model/cap_dpa/cap_dpr_csr.json ../tools/ncc/csr_json/
-cp -v $ASIC_SRC/capri/model/cap_dpa/cap_dpp_csr.json ../tools/ncc/csr_json/
-cp -v $ASIC_SRC/capri/design/common/cap_addr.json ../tools/ncc/csr_json/
+cp -v $ASIC_SRC/capri/model/cap_te/cap_te_csr.json $NIC_DIR/tools/ncc/csr_json/
+cp -v $ASIC_SRC/capri/model/cap_ppa/cap_ppa_decoders.json $NIC_DIR/tools/ncc/csr_json/
+cp -v $ASIC_SRC/capri/model/cap_ppa/cap_ppa_csr.json $NIC_DIR/tools/ncc/csr_json/
+cp -v $ASIC_SRC/capri/model/cap_pic/cap_pict_csr.json $NIC_DIR/tools/ncc/csr_json/
+cp -v $ASIC_SRC/capri/model/cap_pic/cap_pics_csr.json $NIC_DIR/tools/ncc/csr_json/
+cp -v $ASIC_SRC/capri/model/cap_dpa/cap_dpr_csr.json $NIC_DIR/tools/ncc/csr_json/
+cp -v $ASIC_SRC/capri/model/cap_dpa/cap_dpp_csr.json $NIC_DIR/tools/ncc/csr_json/
+cp -v $ASIC_SRC/capri/design/common/cap_addr.json $NIC_DIR/tools/ncc/csr_json/

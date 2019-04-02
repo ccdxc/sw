@@ -163,7 +163,7 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
     cap_psp_csr_t       &psp_pt_csr = cap0.pt.pt.psp, &psp_pr_csr = cap0.pr.pr.psp;
     uint64_t            txs_sched_hbm_base_addr;
     uint16_t            dtdm_lo_map, dtdm_hi_map;
-    uint32_t            control_cos;
+    uint32_t            control_cos = 0;
 
     txs_csr.cfw_timer_glb.read();
     txs_csr.cfw_timer_glb.ftmr_enable(0);

@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
-#include <inttypes.h>
+#include <cinttypes>
 #include <sys/time.h>
 
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"

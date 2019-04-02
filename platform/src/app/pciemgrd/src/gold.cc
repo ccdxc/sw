@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
-#include <inttypes.h>
+#include <cinttypes>
 #include <sys/types.h>
 
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <inttypes.h>
+#include <cinttypes>
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>

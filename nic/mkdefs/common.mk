@@ -75,8 +75,7 @@ export NIC_HAL_UTILS_SOLIBS := bitmap block_list nat eventmgr \
 
 export NIC_HAL_PD_SOLIBS_x86_64 := model_client
 export NIC_HAL_PD_SOLIBS_aarch64 :=
-export NIC_HAL_PD_SOLIBS := sdkcapri_csrint \
-       sdkcapri_asicrw_if pdcapri pdcommon sdkp4 \
+export NIC_HAL_PD_SOLIBS := sdkcapri_asicrw_if pdcapri pdcommon sdkp4 \
        pd_${PIPELINE} sdkasicpd asicpd pd_acl_tcam pd_met pdaccel \
        ${NIC_HAL_PD_SOLIBS_${ARCH}}
 export NIC_CAPSIM_LDLIBS := mpuobj capisa isa sknobs
@@ -106,6 +105,21 @@ export NIC_elektra_P4PD_SOLIBS := p4pd_elektra
 export NIC_hello_P4PD_SOLIBS := p4pd_hello
 
 # ==========================================================================
+#                           Third-party Libs
+# ==========================================================================
+export NIC_THIRDPARTY_LKL_LDLIBS := lkl
+export NIC_THIRDPARTY_SSL_LDLIBS := ssl crypto
+export NIC_THIRDPARTY_GOOGLE_LDLIBS := :libprotobuf.so.14 grpc++_reflection \
+       grpc++ grpc_unsecure grpc++_unsecure
+export NIC_THIRDPARTY_PACKET_PARSER_LDLIBS := packet_parser
+export SDK_THIRDPARTY_CAPRI_LDLIBS := sdkcapri_csrint
+
+# ==========================================================================
+#                           Apollo GTEST common LDLIBS
+# ==========================================================================
+export apollo_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
+
+# ==========================================================================
 #                           P4PD CLI Libs
 # ==========================================================================
 export CLI_P4PD_INCS := ${NIC_DIR}/hal/third-party/google/include \
@@ -114,23 +128,16 @@ export CLI_P4PD_INCS := ${NIC_DIR}/hal/third-party/google/include \
                         /usr/include/python3.4m
 export CLI_P4PD_FLAGS := -Wl,--allow-multiple-definition -Wno-sign-compare
 export CLI_iris_P4PD_LDLIBS := :libprotobuf.so.14 grpc++_reflection grpc++ grpc_unsecure grpc++_unsecure rt ev
-export CLI_apollo_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS}
+export CLI_apollo_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
+                                 ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 export CLI_iris_P4PD_SOLIBS := halproto sdkp4utils delphisdk
 export CLI_apollo_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                                  ${NIC_SDK_SOLIBS} \
                                  ${NIC_HAL_PD_SOLIBS_${ARCH}} \
-                                 sdkp4 sdkp4utils sdkcapri_csrint \
+                                 sdkp4 sdkp4utils \
                                  sdkcapri_asicrw_if sdkcapri \
                                  sdkplatformutils sdkasicpd memhash \
                                  bm_allocator pal
-# ==========================================================================
-#                           Third-party Libs
-# ==========================================================================
-export NIC_THIRDPARTY_LKL_LDLIBS := lkl
-export NIC_THIRDPARTY_SSL_LDLIBS := ssl crypto
-export NIC_THIRDPARTY_GOOGLE_LDLIBS := :libprotobuf.so.14 grpc++_reflection \
-       grpc++ grpc_unsecure grpc++_unsecure
-export NIC_THIRDPARTY_PACKET_PARSER_LDLIBS := packet_parser
 
 # ==========================================================================
 #                        HAL Binary/Gtest Libs
@@ -151,7 +158,8 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_LINKMGR_SOLIBS} \
                                ${NIC_SDK_SOLIBS} \
                                pal agent_api delphisdk haldelphi halsysmgr \
-                               nicmgrproto commonproto haldelphiutils ftestatsproto
+                               nicmgrproto sdkcapri_asicrw_if commonproto haldelphiutils \
+							   ftestatsproto
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \
@@ -159,6 +167,7 @@ export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_PACKET_PARSER_LDLIBS} \
                                ${NIC_CAPSIM_LDLIBS} \
                                ${NIC_LINKMGR_LDLIBS} \
+                               ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                                ${NIC_COMMON_LDLIBS}
 
 export NIC_HAL_GTEST_SOLIBS := ${NIC_HAL_ALL_SOLIBS} haltestutils

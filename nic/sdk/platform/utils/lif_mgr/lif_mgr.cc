@@ -38,8 +38,8 @@ lif_mgr::factory(uint32_t num_lifs, mpartition *mp, const char *kHBMLabel)
 sdk_ret_t
 lif_mgr::init_(uint32_t num_lifs, mpartition *mp, const char *kHBMLabel)
 {
-    uint64_t hbm_addr;
-    uint32_t size;
+    uint64_t hbm_addr = 0;
+    uint32_t size = 0;
     uint32_t num_units;
 
     num_lifs_ = num_lifs;
