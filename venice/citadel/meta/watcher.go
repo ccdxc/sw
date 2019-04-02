@@ -7,7 +7,6 @@ package meta
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"sync"
 	"time"
 
@@ -38,7 +37,6 @@ func NewWatcher(instID string, cfg *ClusterConfig) (*Watcher, error) {
 	// kvstore config
 	config := store.Config{
 		Type:        cfg.MetastoreType,
-		Servers:     strings.Split(cfg.MetastoreURL, ","),
 		Credentials: cfg.MetaStoreTLSConfig,
 		Codec:       runtime.NewJSONCodec(s),
 	}
@@ -54,7 +52,7 @@ func NewWatcher(instID string, cfg *ClusterConfig) (*Watcher, error) {
 	}
 
 	// start the watching thread
-	go watcher.runWatcherLoop(ctx)
+	go watcher.runWatcherLoop(ctx, cfg)
 
 	return &watcher, nil
 }
@@ -86,8 +84,9 @@ func (w *Watcher) Stop() error {
 }
 
 // runWatcherLoop run watcher loop till stopped
-func (w *Watcher) runWatcherLoop(ctx context.Context) {
+func (w *Watcher) runWatcherLoop(ctx context.Context, cfg *ClusterConfig) {
 	for {
+		w.kvsConfig.Servers = getMetastoreURLs(cfg)
 		w.runWatcher(ctx)
 
 		// check if watcher is stopped

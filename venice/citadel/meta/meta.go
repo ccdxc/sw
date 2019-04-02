@@ -5,9 +5,15 @@ package meta
 import (
 	"context"
 	"errors"
-	"strings"
 	"sync"
 	"time"
+
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/rpckit"
+
+	"github.com/pensando/sw/venice/utils/resolver"
 
 	"crypto/tls"
 
@@ -119,21 +125,21 @@ type NodeList struct {
 
 // ClusterConfig config parameters
 type ClusterConfig struct {
-	EnableKstore        bool          // enable key-value store
-	EnableTstore        bool          // enable time-series store
-	EnableKstoreMeta    bool          // enable kstore metadata mgr (used for testing purposes)
-	EnableTstoreMeta    bool          // enable tstore metadata mgr (used for testing purposes)
-	MetastoreType       string        // metadata store type
-	MetastoreURL        string        // metadata store URL
-	MetaStoreTLSConfig  *tls.Config   // tls config for kv store
-	NumShards           uint32        // number of shards in shardmap
-	DesiredReplicas     uint32        // desired number of replicas
-	NodeTTL             uint64        // TTL for the node keepalives
-	DeadInterval        time.Duration // duration after which we declare a node as dead
-	RebalanceInterval   time.Duration // rebalance interval
-	RebalanceDelay      time.Duration // delay before starting rebalance loop
-	RetentionPeriod     time.Duration // how long TSDB keeps the data
-	RetentionPolicyName string        // retention policy name in TSDB
+	EnableKstore        bool               // enable key-value store
+	EnableTstore        bool               // enable time-series store
+	EnableKstoreMeta    bool               // enable kstore metadata mgr (used for testing purposes)
+	EnableTstoreMeta    bool               // enable tstore metadata mgr (used for testing purposes)
+	MetastoreType       string             // metadata store type
+	MetaStoreTLSConfig  *tls.Config        // tls config for kv store
+	NumShards           uint32             // number of shards in shardmap
+	DesiredReplicas     uint32             // desired number of replicas
+	NodeTTL             uint64             // TTL for the node keepalives
+	DeadInterval        time.Duration      // duration after which we declare a node as dead
+	RebalanceInterval   time.Duration      // rebalance interval
+	RebalanceDelay      time.Duration      // delay before starting rebalance loop
+	RetentionPeriod     time.Duration      // how long TSDB keeps the data
+	RetentionPolicyName string             // retention policy name in TSDB
+	ResolverClient      resolver.Interface // resolver client
 }
 
 // metaclient api provided by meta data mgr
@@ -173,7 +179,6 @@ func DefaultClusterConfig() *ClusterConfig {
 		EnableKstoreMeta:    true,
 		EnableTstoreMeta:    true,
 		MetastoreType:       store.KVStoreTypeMemkv,
-		MetastoreURL:        "",
 		MetaStoreTLSConfig:  metaStoreTLSConfig,
 		NumShards:           DefaultShardCount,
 		DesiredReplicas:     DefaultReplicaCount,
@@ -490,7 +495,7 @@ func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, er
 	// connect to kvstore
 	config := store.Config{
 		Type:        cfg.MetastoreType,
-		Servers:     strings.Split(cfg.MetastoreURL, ","),
+		Servers:     getMetastoreURLs(cfg),
 		Credentials: cfg.MetaStoreTLSConfig,
 		Codec:       runtime.NewJSONCodec(runtime.NewScheme()),
 	}
@@ -515,7 +520,7 @@ func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, er
 func DestroyClusterState(cfg *ClusterConfig, clusterType string) error {
 	config := store.Config{
 		Type:        cfg.MetastoreType,
-		Servers:     strings.Split(cfg.MetastoreURL, ","),
+		Servers:     getMetastoreURLs(cfg),
 		Credentials: cfg.MetaStoreTLSConfig,
 		Codec:       runtime.NewJSONCodec(runtime.NewScheme()),
 	}
@@ -526,4 +531,40 @@ func DestroyClusterState(cfg *ClusterConfig, clusterType string) error {
 	defer kvs.Close()
 
 	return kvs.Delete(context.Background(), ClusterMetastoreURL+clusterType, nil)
+}
+
+const apiServerRetry = 300
+
+func getMetastoreURLs(cfg *ClusterConfig) []string {
+	if cfg.MetastoreType != store.KVStoreTypeEtcd {
+		return []string{""}
+	}
+
+	for i := 0; i < apiServerRetry; i++ {
+		// create a grpc client
+		apicl, err := apiclient.NewGrpcAPIClient(globals.Citadel, globals.APIServer, log.WithContext("pkg", globals.Citadel+"-grpc"), rpckit.WithBalancer(balancer.New(cfg.ResolverClient)))
+		if err == nil {
+			defer apicl.Close()
+			log.Infof("connected to %s", globals.APIServer)
+			cluster, err := apicl.ClusterV1().Cluster().List(context.Background(), &api.ListWatchOptions{})
+			if err == nil {
+				// pick the first entry, singleton object
+				for _, c := range cluster {
+					var kvstore []string
+					for _, q := range c.Spec.QuorumNodes {
+						kvstore = append(kvstore, q+":"+globals.KVStoreClientPort)
+					}
+					log.Infof("kvstore : %+v", kvstore)
+					return kvstore
+				}
+			}
+			log.Errorf("failed to get cluster info %s", err)
+		} else {
+			log.Errorf("failed to connect to %s, %s", globals.APIServer, err)
+		}
+		time.Sleep(time.Second)
+	}
+	log.Fatalf("failed to connect to %v", globals.APIServer)
+
+	return nil
 }

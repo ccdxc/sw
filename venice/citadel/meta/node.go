@@ -4,7 +4,6 @@ package meta
 
 import (
 	"context"
-	"strings"
 	"sync"
 	"time"
 
@@ -42,7 +41,6 @@ func NewNode(cfg *ClusterConfig, nodeUUID, nodeURL string) (*Node, error) {
 	// kvstore config
 	config := store.Config{
 		Type:        cfg.MetastoreType,
-		Servers:     strings.Split(cfg.MetastoreURL, ","),
 		Credentials: cfg.MetaStoreTLSConfig,
 		Codec:       runtime.NewJSONCodec(s),
 	}
@@ -192,6 +190,7 @@ func (l *Node) runElectionLoop(ctx context.Context) {
 	defer l.waitGrp.Done()
 	// run election loop forever
 	for {
+		l.kvsConfig.Servers = getMetastoreURLs(l.clusterCfg)
 		l.runElection(ctx)
 
 		// check if we are stopped

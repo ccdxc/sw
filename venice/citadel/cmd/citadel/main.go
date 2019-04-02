@@ -3,16 +3,16 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
-
-	"errors"
-	"time"
 
 	"github.com/pensando/sw/venice/citadel/broker"
 	"github.com/pensando/sw/venice/citadel/collector"
@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 const maxRetry = 120
@@ -32,13 +33,13 @@ const maxRetry = 120
 func main() {
 	// command line flags
 	var (
-		kvstoreURL      = flag.String("kvstore", "", "KVStore URL where etcd is accessible")
 		nodeURL         = flag.String("url", "", "listen URL where citadel's gRPC server runs")
 		httpURL         = flag.String("http", "127.0.0.1:"+globals.CitadelHTTPPort, "HTTP server URL where citadel's REST api is available")
 		queryURL        = flag.String("query-url", ":"+globals.CitadelQueryRPCPort, "HTTP server URL where citadel's metrics query api is available")
 		nodeUUID        = flag.String("uuid", "", "Node UUID (unique identifier for this citadel instance)")
 		dbPath          = flag.String("db", "/var/lib/pensando/citadel/", "DB path where citadel's data will be stored")
 		queryDbPath     = flag.String("queryDb", "", "query DB path for query aggregation")
+		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs of the form 'ip:port'")
 		collectorURL    = flag.String("collector-url", fmt.Sprintf(":%s", globals.CollectorRPCPort), "listen URL where citadel metrics collector's gRPC server runs")
 		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Citadel)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
@@ -68,7 +69,7 @@ func main() {
 	logger := log.GetNewLogger(logConfig)
 
 	// get host name and use that for node url & uuid
-	if *nodeURL == "" || *nodeUUID == "" || *kvstoreURL == "" {
+	if *nodeURL == "" || *nodeUUID == "" {
 		// read my host name
 		hostname, err := os.Hostname()
 		if err != nil {
@@ -83,17 +84,12 @@ func main() {
 		if *nodeUUID == "" {
 			nodeUUID = &hostname
 		}
-
-		if *kvstoreURL == "" {
-			ku := hostname + ":" + globals.KVStoreClientPort
-			kvstoreURL = &ku
-		}
 	}
 
 	// cluster config
 	cfg := meta.DefaultClusterConfig()
 	cfg.MetastoreType = store.KVStoreTypeEtcd
-	cfg.MetastoreURL = *kvstoreURL
+	cfg.ResolverClient = resolver.New(&resolver.Config{Name: globals.Citadel, Servers: strings.Split(*resolverURLs, ",")})
 
 	// create the data node
 	dn, err := data.NewDataNode(cfg, *nodeUUID, *nodeURL, *dbPath, *queryDbPath, logger)
