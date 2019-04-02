@@ -343,11 +343,12 @@ header_type req_tx_sqcb0_to_sqcb2_info_t {
         current_sge_offset               :   32;
         update_credits                   :    1;
         bktrack                          :    1;
-        pt_base_addr                     :   32;
+        pt_base_addr                     :   40;
         op_type                          :    4;
         sq_in_hbm                        :    1;
+        skip_pt                          :    1;
         spec_enable                      :    1;
-        pad                              :   38;
+        pad                              :   29;
     }
 }
 
@@ -381,7 +382,8 @@ header_type req_tx_sqcb_write_back_info_t {
         non_packet_wqe                   :    1;
         credit_check_failed              :    1;
         drop_phv                         :    1;
-        rsvd                             :    4;
+        drop_bktrack                     :    1;
+        rsvd                             :    3;
         op_info                          :   64;
     }
 }
@@ -968,6 +970,7 @@ action req_tx_bktrack_sqcb2_process () {
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.pt_base_addr, t0_s2s_sqcb0_to_sqcb2_info.pt_base_addr);
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.op_type, t0_s2s_sqcb0_to_sqcb2_info.op_type);
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.sq_in_hbm, t0_s2s_sqcb0_to_sqcb2_info.sq_in_hbm);
+    modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.skip_pt, t0_s2s_sqcb0_to_sqcb2_info.skip_pt);
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.spec_enable, t0_s2s_sqcb0_to_sqcb2_info.spec_enable);
     modify_field(t0_s2s_sqcb0_to_sqcb2_info_scr.pad, t0_s2s_sqcb0_to_sqcb2_info.pad);
 }
@@ -1316,6 +1319,7 @@ action req_tx_bktrack_write_back_process () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.non_packet_wqe, t0_s2s_sqcb_write_back_info.non_packet_wqe);
     modify_field(t0_s2s_sqcb_write_back_info_scr.credit_check_failed, t0_s2s_sqcb_write_back_info.credit_check_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.drop_phv, t0_s2s_sqcb_write_back_info.drop_phv);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.drop_bktrack, t0_s2s_sqcb_write_back_info.drop_bktrack);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 

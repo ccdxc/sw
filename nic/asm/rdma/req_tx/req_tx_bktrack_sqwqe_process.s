@@ -159,7 +159,7 @@ read_or_sge_bktrack:
     // wqe_start_psn and tx_psn set to rexmit_psn as wqe's va
     // is modified to start from the rexmit_psn. if there's retransmission
     // again, then it should use this rexmit_psn as the wqe_start_psn
-    add           r1, K_REXMIT_PSN, r0 
+    add.c5         r1, K_REXMIT_PSN, r0 
     bcf           [c5], sqcb_writeback
     // set bktrack_in_progress to false
     setcf         c6, [!c0] //BD-slot
@@ -170,10 +170,35 @@ read_or_sge_bktrack:
                   CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_offset), r3
     phvwr         CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, msg_psn), r3
 
-
-    b            sqcb_writeback
     // set empty_rrq to true as bktrack is completed
     setcf          c7, [c0] // Branch Delay Slot
+
+    phvwr          p.common.p4_intr_global_drop, 1
+    
+    phvwr     CAPRI_PHV_FIELD(TO_S3_BT_P, wqe_addr), r5
+    phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r5
+    phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S7_BT_WB_P, wqe_addr), r5
+    
+    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tx_psn), K_REXMIT_PSN, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, ssn), r6
+    // Assume send and copy imm_data, inv_key. These fields are looked into
+    // only if op_type is send/write, imm_data and inv_key are union members
+    phvwr     CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, imm_data_or_inv_key), d.base.imm_data
+    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, op_type), d.base.op_type, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, sq_cindex), r4
+    phvwr.c6  CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, bktrack_in_progress), 1
+    
+    phvwr    CAPRI_PHV_FIELD(TO_S7_BT_WB_P, wqe_start_psn), r1
+    
+    SQCB2_ADDR_GET(r5)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_write_back_process, r5)
+    
+    phvwr.c6     CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, bktrack_in_progress), 1
+    phvwr.c5     CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_offset), r3
+    phvwrpair    CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, num_sges), d.base.num_sges, CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, sq_c_index), r4
+    phvwr.c7     CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, empty_rrq_bktrack), 1
+    
+    SQCB0_ADDR_GET(r5)
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r5)
+
 
 sge_bktrack:
     mfspr        r7, spr_mpuid

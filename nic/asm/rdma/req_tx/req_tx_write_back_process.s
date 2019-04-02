@@ -40,7 +40,7 @@ req_tx_write_back_process:
 
 write_back:
     seq           c4, d.spec_enable, 0
-    tblwr         d.busy, CAPRI_KEY_FIELD(IN_P, busy)
+    tblwr.c4      d.busy, CAPRI_KEY_FIELD(IN_P, busy)
     tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
     bcf           [!c4], skip_in_progress_update
     tblwr         d.fence, 0  //BD-slot
@@ -123,8 +123,8 @@ poll_fail:
 
 credit_check_fail:
 rate_enforce_fail:
-    tblwr       d.dcqcn_rl_failure, 1
-    tblwr       d.busy, 0
+    tblwr           d.dcqcn_rl_failure, 1
+    tblwr           d.busy, 0
     // fall-through
 
 drop_phv:

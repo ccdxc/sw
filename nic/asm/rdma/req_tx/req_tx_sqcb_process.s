@@ -426,9 +426,11 @@ sq_bktrack1:
                   CAPRI_PHV_RANGE(SQCB0_TO_SQCB2_P, current_sge_id, current_sge_offset), d.{current_sge_id, num_sges, current_sge_offset}
         phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, update_credits), 0, \
                   CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, bktrack), 1
-        phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, pt_base_addr), d.pt_base_addr, \
+        phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, pt_base_addr), d.phy_base_addr, \
                   CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, sq_in_hbm), d.sq_in_hbm
-        phvwr     CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, spec_enable), d.spec_enable
+        phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, skip_pt), d.skip_pt, \
+                  CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, spec_enable), d.spec_enable
+
         
         tblwr          d.bktrack_in_progress, 1
 

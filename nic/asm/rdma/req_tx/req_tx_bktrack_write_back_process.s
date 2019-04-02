@@ -33,6 +33,9 @@ req_tx_bktrack_write_back_process:
      bbeq          CAPRI_KEY_FIELD(IN_P, drop_phv), 1, exit
      tblwr         d.busy, 0 // Branch Delay Slot
 
+     bbeq          CAPRI_KEY_FIELD(IN_P, drop_bktrack), 1, drop_bktrack
+     nop           // Branch Delay Slot
+
      seq           c4, d.spec_enable, 1
      bcf           [c4], skip_in_progress_update
      tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress) //BD-Slot
@@ -117,3 +120,8 @@ bubble_to_next_stage:
 end:
    nop.e
    nop
+
+drop_bktrack:
+     tblwr    SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
+     phvwr.e  p.common.p4_intr_global_drop, 1
+     CAPRI_SET_TABLE_0_VALID(0)

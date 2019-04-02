@@ -24,7 +24,7 @@ struct sqcb2_t d;
 #define K_NUM_SGES     CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit5, num_sges_sbit6_ebit7) 
 #define K_SQ_C_INDEX   CAPRI_KEY_RANGE(IN_P, sq_c_index_sbit0_ebit7, sq_c_index_sbit8_ebit15)
 #define K_SQ_P_INDEX   CAPRI_KEY_RANGE(IN_P, sq_p_index_sbit0_ebit7, sq_p_index_sbit8_ebit15)
-#define K_PT_BASE_ADDR CAPRI_KEY_RANGE(IN_P, pt_base_addr_sbit0_ebit3, pt_base_addr_sbit28_ebit31)
+#define K_PT_BASE_ADDR CAPRI_KEY_RANGE(IN_P, pt_base_addr_sbit0_ebit3, pt_base_addr_sbit36_ebit39)
 #define K_OP_TYPE      CAPRI_KEY_FIELD(IN_P, op_type)
 #define K_CURRENT_SGE_ID   CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit5, current_sge_id_sbit6_ebit7) 
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit5, current_sge_offset_sbit30_ebit31) 
@@ -44,6 +44,10 @@ req_tx_bktrack_sqcb2_process:
     CAPRI_RESET_TABLE_0_ARG() // Branch Delay Slot
 
     bbeq           CAPRI_KEY_FIELD(IN_P, bktrack_in_progress), 1, trigger_bktrack
+
+    // If its a spurious bktrack, unset busy and consume bktrack event (set cindex to pindex)
+    scwle24        c1, d.tx_psn, d.rexmit_psn // Branch Delay Slot
+    bcf            [c1], drop_bktrack
 
     seq            c1, d.rnr_timeout, 0 // Branch Delay Slot
     bcf            [c1], check_err_retry
@@ -91,17 +95,24 @@ trigger_bktrack:
     phvwr     CAPRI_PHV_FIELD(SQ_BKTRACK_P, op_type), d.curr_op_type
     phvwr     CAPRI_PHV_FIELD(SQ_BKTRACK_P, spec_enable), CAPRI_KEY_FIELD(IN_P, spec_enable)
 
+    seq            c3, CAPRI_KEY_FIELD(IN_P, skip_pt), 1
     seq            c2, CAPRI_KEY_FIELD(IN_P, sq_in_hbm), 1 
     seq            c1, K_WQE_ADDR, r0
-    bcf.!c2        [c1],  bktrack_sqpt
-    phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), d.tx_psn // Branch Delay Slot
+    setcf          c4, [c2 | c3]
+
+    bcf.!c4        [c1],  bktrack_sqpt
+    phvwr          CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), d.tx_psn // Branch Delay Slot
 
     bcf            [!c1], wqe_bktrack
     add            r2, r0, K_WQE_ADDR // Branch Delay Slot
     
     sll            r2, K_SQ_C_INDEX, CAPRI_KEY_FIELD(IN_TO_S_P, log_wqe_size)
     //pt_base_addr is overloaded with sq_hbm_base_addr
-    add            r2, r2, K_PT_BASE_ADDR, HBM_SQ_BASE_ADDR_SHIFT
+    add.c2         r2, r2, K_PT_BASE_ADDR, HBM_SQ_BASE_ADDR_SHIFT
+
+    add.c3         r2, r2, K_PT_BASE_ADDR, PHY_BASE_ADDR_SHIFT
+    or.c3          r2, r2, 1, 63
+    or.c3          r2, r2, K_GLOBAL_LIF, 52
 
 wqe_bktrack:
     seq           c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1
@@ -170,3 +181,9 @@ exit:
     SQCB0_ADDR_GET(r1)
     phvwr          CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, drop_phv), 1
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bktrack_write_back_process, r1)
+
+drop_bktrack:
+    SQCB0_ADDR_GET(r1)
+    phvwr          CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, drop_bktrack), 1
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bktrack_write_back_process, r1)
+
