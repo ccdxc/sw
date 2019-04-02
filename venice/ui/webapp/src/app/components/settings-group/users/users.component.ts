@@ -389,11 +389,11 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     ).subscribe(
       (responseCommitBuffer) => {
         this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' User ' + deletedUser.meta.name);
-        this.creationRoleFormClose(true);
+        this.getData(); // refresh data after deleting object
       },
       (error) => {
         this.invokeRESTErrorToaster(msgFailedToDeleteUser, error);
-        this.deleteStagingBuffer(buffername, msgFailedToDeleteUser);
+        this.deleteStagingBuffer(buffername, msgFailedToDeleteUser, false);
       }
     );
   }
@@ -480,7 +480,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         // We are getting response for (C)
         (responseCommitBuffer) => {
           this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' Role ' + deletedRole.meta.name);
-          this.creationRoleFormClose(true);
+          this.getData(); // refresh data after deleting object
         },
         (error) => {
           // any error in (A) (B) or (C), error will land here
@@ -536,7 +536,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       (data) => {
         // refresh roles list
         this.invokeSuccessToaster('Delete Successful', 'Deleted relebinding ' + rolebinding.meta.name);
-        this.getData();
+        this.getData(); // refresh data after deleting object
       },
       this.restErrorHandler('Delete Role-binding Failed')
     );

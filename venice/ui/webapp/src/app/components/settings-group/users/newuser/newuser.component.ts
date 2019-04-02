@@ -152,12 +152,12 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
         // We are getting response for (B)
         (responseCommitBuffer) => {
           this.invokeSuccessToaster('Successful', ACTIONTYPE.CREATE + ' User ' + newUser.meta.name);
-          this.creationRoleFormClose(true);
+          this.formClose.emit(true);
         },
         (error) => {
           // any error in (A) (B) or (C), error will land here
           this.invokeRESTErrorToaster(msgFailToAddUser, error);
-          this.deleteStagingBuffer(buffername, msgFailToAddUser);
+          this.deleteStagingBuffer(buffername, msgFailToAddUser, false);
         }
       );
   }
