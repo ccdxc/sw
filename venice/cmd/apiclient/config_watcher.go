@@ -247,6 +247,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 			return
 		}
 	}
+	k.logger.Infof("Node config watcher established, client: %p", k.svcsClient)
 
 	// Init Cluster watcher
 	k.clusterWatcher, err = k.svcsClient.ClusterV1().Cluster().Watch(k.ctx, &opts)
@@ -265,6 +266,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 			return
 		}
 	}
+	k.logger.Infof("Cluster config watcher established, client: %p", k.svcsClient)
 
 	// Init SmartNIC watcher
 	k.smartNICWatcher, err = k.svcsClient.ClusterV1().SmartNIC().Watch(k.ctx, &opts)
@@ -283,6 +285,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 			return
 		}
 	}
+	k.logger.Infof("SmartNIC config watcher established, client: %p", k.svcsClient)
 
 	// Init Host watcher
 	k.hostWatcher, err = k.svcsClient.ClusterV1().Host().Watch(k.ctx, &opts)
@@ -301,6 +304,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 			return
 		}
 	}
+	k.logger.Infof("Host config watcher established, client: %p", k.svcsClient)
 
 	// Handle config watcher events
 	for {
@@ -308,6 +312,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 		case event, ok := <-k.clusterWatcher.EventChan():
 			if !ok {
 				// restart this routine.
+				log.Errorf("Error receiving from cluster watch channel, restarting all watchers")
 				k.stopWatchers()
 				go k.runUntilCancel()
 				return
@@ -326,6 +331,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 		case event, ok := <-k.nodeWatcher.EventChan():
 			if !ok {
 				// restart this routine.
+				log.Errorf("Error receiving from node watch channel, restarting all watchers")
 				k.stopWatchers()
 				go k.runUntilCancel()
 				return
@@ -343,6 +349,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 		case event, ok := <-k.smartNICWatcher.EventChan():
 			if !ok {
 				// restart this routine.
+				log.Errorf("Error receiving from smartNIC watch channel, restarting all watchers")
 				k.stopWatchers()
 				go k.runUntilCancel()
 				return
@@ -360,6 +367,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 		case event, ok := <-k.hostWatcher.EventChan():
 			if !ok {
 				// restart this routine.
+				log.Errorf("Error receiving from host watch channel, restarting all watchers")
 				k.stopWatchers()
 				go k.runUntilCancel()
 				return

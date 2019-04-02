@@ -707,12 +707,11 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				AssertOk(t, err, fmt.Sprintf("Error getting NIC object for mac:%s", tc.mac))
 				Assert(t, nicObj.ObjectMeta.Name == tc.mac,
 					fmt.Sprintf("Got incorrect smartNIC object, expected: %s obtained: %s", nicObj.ObjectMeta.Name, tc.mac))
-
-				if len(nicObj.Status.Conditions) == 0 || nicObj.Status.Conditions[0].Type != tc.condition.Type || nicObj.Status.Conditions[0].Status != cmd.ConditionStatus_UNKNOWN.String() {
-					t.Logf("Testcase: %s,  Condition expected:\n%+v\nobtained:%+v", tc.name, cmd.ConditionStatus_UNKNOWN, nicObj.Status.Conditions)
+				if nicObj.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() &&
+					(len(nicObj.Status.Conditions) == 0 || nicObj.Status.Conditions[0].Type != tc.condition.Type || nicObj.Status.Conditions[0].Status != cmd.ConditionStatus_UNKNOWN.String()) {
+					t.Logf("Testcase: %s, Phase: %s, Condition expected:\n%+v\nobtained:%+v", tc.name, nicObj.Status.AdmissionPhase, cmd.ConditionStatus_UNKNOWN, nicObj.Status.Conditions)
 					return false, nil
 				}
-
 				return true, nil
 			}
 			AssertEventually(t, f4, fmt.Sprintf("Failed to verify NIC health status going to UNKNOWN"))

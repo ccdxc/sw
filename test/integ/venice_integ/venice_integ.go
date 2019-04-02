@@ -317,6 +317,8 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	cmdenv.Logger = it.logger
 	cmdenv.QuorumNodes = []string{"localhost"}
 	l := mock.NewLeaderService("testMaster")
+	l.LeaderID = "testMaster"
+	cmdenv.LeaderService = l
 	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := cmdapi.NewCfgWatcherService(it.logger, it.apiSrvAddr, cmdenv.StateMgr)
 	cmdenv.MasterService = cmdsvc.NewMasterService(
@@ -403,7 +405,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 
 			// Verify NIC is admitted
 			if nic.Status.AdmissionPhase != pencluster.SmartNICStatus_ADMITTED.String() {
-				log.Errorf("NIC is not admitted")
+				log.Errorf("NIC is not admitted, phase: %s", nic.Status.AdmissionPhase)
 				return false, nil
 			}
 

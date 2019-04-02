@@ -55,23 +55,27 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	venicetestutils "github.com/pensando/sw/venice/utils/testutils"
 	ventrace "github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 const (
-	smartNICServerURL = "localhost:0"
-	resolverURLs      = ":" + globals.CMDResolverPort
-	minAgents         = 1
-	maxAgents         = 5000
-	nicRegIntvl       = 1 * time.Second
-	nicUpdIntvl       = 1 * time.Second
+	smartNICRegURL  = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
+	smartNICUpdURL  = "localhost:" + globals.CMDSmartNICUpdatesPort
+	smartNICAuthURL = "localhost:" + globals.CMDGRPCAuthPort
+	resolverURLs    = ":" + globals.CMDResolverPort
+	minAgents       = 1
+	maxAgents       = 5000
+	nicRegIntvl     = 1 * time.Second
+	nicUpdIntvl     = 1 * time.Second
+	nicDeadIntvl    = 3 * time.Second
 )
 
 var (
 	numNaples   = flag.Int("num-naples", 100, fmt.Sprintf("Number of Naples instances [%d..%d]", minAgents, maxAgents))
-	cmdRegURL   = flag.String("cmd-reg-url", smartNICServerURL, "CMD Registration URL")
-	cmdUpdURL   = flag.String("cmd-upd-url", smartNICServerURL, "CMD Updates URL")
+	cmdRegURL   = flag.String("cmd-reg-url", smartNICRegURL, "CMD Registration URL")
+	cmdUpdURL   = flag.String("cmd-upd-url", smartNICUpdURL, "CMD Updates URL")
 	resolverURL = flag.String("resolver-url", resolverURLs, "Resolver URLs")
 	mode        = flag.String("mode", "host", "Naples mode, host or network")
 	rpcTrace    = flag.Bool("rpc-trace", false, "Enable gRPC tracing")
@@ -109,7 +113,7 @@ func (t testInfo) CheckNICVersionForAdmission(nicSku string, nicVersion string) 
 }
 
 func getSmartNICMAC(index int) string {
-	return fmt.Sprintf("44:44:44:44:%02x:%02x", index/256, index%256)
+	return fmt.Sprintf("00ae.cd01.%02d01", index)
 }
 
 func getHost(index int) *pencluster.Host {
@@ -156,10 +160,11 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 	// create and register the RPC handler for SmartNIC service
 	tInfo.smartNICServer, err = smartnic.NewRPCServer(tInfo,
 		smartnic.HealthWatchInterval,
-		smartnic.DeadInterval,
+		nicDeadIntvl,
 		globals.NmdRESTPort,
 		cmdenv.StateMgr,
 		tInfo)
+	cmdenv.NICService = tInfo.smartNICServer
 
 	if err != nil {
 		fmt.Printf("Error creating Smart NIC server: %v", err)
@@ -171,6 +176,18 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 
 	// Also create a mock resolver
 	rs := mock.NewResolverService()
+	nicUpdatesSi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.CmdNICUpdatesSvc,
+		},
+		Service: globals.CmdNICUpdatesSvc,
+		Node:    "localhost",
+		URL:     smartNICUpdURL,
+	}
+	rs.AddServiceInstance(&nicUpdatesSi)
 	resolverHandler := service.NewRPCHandler(rs)
 	resolverServer, err := rpckit.NewRPCServer(globals.Cmd, *resolverURL, rpckit.WithTracerEnabled(true))
 	if err != nil {
@@ -197,6 +214,8 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 	cmdenv.Logger = tInfo.l
 	cmdenv.QuorumNodes = []string{"localhost"}
 	l := mock.NewLeaderService("testMaster")
+	l.LeaderID = "testMaster"
+	cmdenv.LeaderService = l
 	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := cmdapi.NewCfgWatcherService(tInfo.l, "localhost:"+tInfo.apiServerPort, cmdenv.StateMgr)
 	cmdenv.MasterService = cmdsvc.NewMasterService(
@@ -212,6 +231,8 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 
 // Create NMD and Agent
 func createNMD(t *testing.T, dbPath, priMac, restURL, mgmtMode string) (*nmdInfo, error) {
+
+	venicetestutils.CreateFruJSON(priMac)
 
 	// create a platform agent
 	pa, err := platform.NewNaplesPlatformAgent()
@@ -259,7 +280,21 @@ func createNMD(t *testing.T, dbPath, priMac, restURL, mgmtMode string) (*nmdInfo
 	// Ensure the NMD's rest server is started
 	nmdHandle := ag.GetNMD()
 	nmdHandle.CreateMockIPClient(nil)
-	nmdHandle.UpdateMgmtIP()
+
+	// Fake IPConfig
+	ipConfig := &pencluster.IPConfig{
+		IPAddress: "1.2.3.4",
+	}
+
+	cfg := nmdHandle.GetNaplesConfig()
+	cfg.Spec.Controllers = []string{"localhost"}
+	cfg.Spec.NetworkMode = proto.NetworkMode_INBAND.String()
+	cfg.Spec.IPConfig = ipConfig
+	cfg.Spec.MgmtVlan = 0
+	cfg.Spec.Hostname = priMac
+
+	nmdHandle.SetNaplesConfig(cfg.Spec)
+	nmdHandle.IPClient.Update()
 
 	return ni, err
 }
@@ -275,14 +310,19 @@ func stopNMD(t *testing.T, i *nmdInfo) {
 }
 
 func TestCreateNMDs(t *testing.T) {
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
 	// Init tsdb
 	ctx, cancel := context.WithCancel(context.Background())
 	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &rmock.ResolverClient{}})
 	defer cancel()
 
+	// This test was initially designed to run multiple NMDs in parallel
+	// Currently this is not possible any more because multiple calls to createNMD
+	// will cause issues due to concurrent access to fru.json. There are also
+	// conflicts related to multiple instances of NMD trying to bind to the same port
+	// for the REST server.
+	// TODO: find workarounds for the issues above and re-enable the test as parallel
+	*numNaples = 1
 	for i := 1; i <= *numNaples; {
-
 		// Testgroup to run sub-tests in parallel, bounded by runtime.NumCPU
 		t.Run("testgroup", func(t *testing.T) {
 
@@ -357,7 +397,7 @@ func TestCreateNMDs(t *testing.T) {
 							Spec: proto.NaplesSpec{
 								Mode:        proto.MgmtMode_NETWORK.String(),
 								NetworkMode: proto.NetworkMode_OOB.String(),
-								Controllers: []string{*cmdRegURL},
+								Controllers: []string{"localhost"},
 								Hostname:    priMac,
 								PrimaryMAC:  priMac,
 							},
@@ -399,7 +439,7 @@ func TestCreateNMDs(t *testing.T) {
 
 						// Verify NIC is admitted
 						if nic.Status.AdmissionPhase != pencluster.SmartNICStatus_ADMITTED.String() {
-							log.Errorf("NIC is not admitted")
+							log.Errorf("NIC is not admitted, %+v", nic)
 							return false, nil
 						}
 
@@ -408,15 +448,9 @@ func TestCreateNMDs(t *testing.T) {
 							log.Errorf("Update NIC is not in progress")
 							return false, nil
 						}
-
-						// Verify REST server is not up
-						if nm.GetRestServerStatus() == true {
-							log.Errorf("REST server is still up")
-							return false, nil
-						}
 						return true, nil
 					}
-					AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("10ms"), string("60s"))
+					AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("100ms"), string("60s"))
 
 					// Validate SmartNIC object is created
 					f5 := func() (bool, interface{}) {
@@ -432,7 +466,7 @@ func TestCreateNMDs(t *testing.T) {
 
 						return true, nil
 					}
-					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
+					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("100ms"), string("30s"))
 
 					// Validate Host object is created
 					f6 := func() (bool, interface{}) {
@@ -445,6 +479,7 @@ func TestCreateNMDs(t *testing.T) {
 							log.Errorf("Failed to GET Host object:%s, %v", host.Name, err)
 							return false, nil
 						}
+						log.Infof("Host object: %+v", host)
 						for ii := range hostObj.Status.AdmittedSmartNICs {
 							if hostObj.Status.AdmittedSmartNICs[ii] == priMac {
 								return true, nil
@@ -452,7 +487,7 @@ func TestCreateNMDs(t *testing.T) {
 						}
 						return false, nil
 					}
-					AssertEventually(t, f6, "Failed to verify creation of required Host object", string("10ms"), string("30s"))
+					AssertEventually(t, f6, "Failed to verify creation of required Host object", string("100ms"), string("30s"))
 
 					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
 						tcName, priMac, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
@@ -473,24 +508,24 @@ func checkHealthStatus(t *testing.T, meta *api.ObjectMeta, admPhase string) {
 		cmdObj, err := cmdenv.StateMgr.FindSmartNIC(meta.Tenant, meta.Name)
 		AssertOk(t, err, "Failed to retrieve NIC from local cache")
 
-		for _, nicObj := range []*pencluster.SmartNIC{apiSrvObj, cmdObj.SmartNIC} {
+		for index, nicObj := range []*pencluster.SmartNIC{apiSrvObj, cmdObj.SmartNIC} {
 			if nicObj.Status.AdmissionPhase != admPhase {
-				log.Errorf("NIC not in expected admission phase. Have: %s, want: %s", nicObj.Status.AdmissionPhase, admPhase)
+				log.Errorf("NIC not in expected admission phase. Have: %s, want: %s, index: %d", nicObj.Status.AdmissionPhase, admPhase, index)
 				return false, nil
 			}
 			if admPhase == pencluster.SmartNICStatus_ADMITTED.String() {
 				if len(nicObj.Status.Conditions) == 0 {
-					log.Errorf("NIC Object does not have any condition, nic:%s, %v", meta.Name, nicObj.Status)
+					log.Errorf("NIC Object does not have any condition, nic:%s, %v, index: %d", meta.Name, nicObj.Status, index)
 					return false, nil
 				}
 				hc := nicObj.Status.Conditions[0]
 				if hc.Type != "HEALTHY" || hc.Status != "TRUE" || hc.LastTransitionTime == "" {
-					log.Errorf("NIC Object is not healthy, name:%s, %+v", meta.Name, nicObj.Status)
+					log.Errorf("NIC Object is not healthy, name:%s, %+v, index: %d", meta.Name, nicObj.Status, index)
 					return false, nil
 				}
 			} else {
 				if len(nicObj.Status.Conditions) != 0 {
-					log.Errorf("NIC %s is not in ADMITTED state but has conditions: %v", meta.Name, nicObj.Status)
+					log.Errorf("NIC %s is not in ADMITTED state but has conditions: %+v, index: %d ", meta.Name, nicObj.Status, index)
 					return false, nil
 				}
 			}
@@ -554,7 +589,6 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 // TestNICReadmit tests the flow in which a NIC is first admitted, then explicitly de-amitted and the re-admitted.
 // Changes are posted to CMD which in turn propagates them to the agent.
 func TestNICReadmit(t *testing.T) {
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
 	ctx, cancel := context.WithCancel(context.Background())
 	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &rmock.ResolverClient{}})
 	defer cancel()
@@ -592,11 +626,6 @@ func TestNICReadmit(t *testing.T) {
 			log.Errorf("Failed to switch to managed mode")
 			return false, nil
 		}
-		// Verify REST server is not up
-		if nmd.GetRestServerStatus() == true {
-			log.Errorf("REST server is still up")
-			return false, nil
-		}
 		return true, nil
 	}
 	AssertEventually(t, f1, "Failed to verify mode is in Managed Mode", "500ms", "10s")
@@ -627,8 +656,8 @@ func TestNICReadmit(t *testing.T) {
 	_, err = tInfo.apiClient.ClusterV1().Cluster().Update(context.Background(), clusterObj)
 	AssertOk(t, err, "Error updating cluster object")
 
-	// The setNICState function sets the NIC state in ApiServer
-	setNICState := func(admit bool) {
+	// The setNICAdmitState function sets the NIC state in ApiServer
+	setNICAdmitState := func(admit bool) {
 		nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 		AssertOk(t, err, "Error getting NIC from ApiServer")
 		nicObj.Spec.Admit = admit
@@ -636,25 +665,42 @@ func TestNICReadmit(t *testing.T) {
 		AssertOk(t, err, "Error updating NIC in ApiServer")
 	}
 
+	// Verify that Status info (except phase, host and conditions) does not change in apiServer as NIC gets admitted/de-admitted
+	validateStatus := func(refObj *pencluster.SmartNIC) {
+		obj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
+		AssertOk(t, err, "Error getting NIC from ApiServer")
+		eq := runtime.FilterUpdate(obj.Status, refObj.Status, []string{"Conditions", "AdmissionPhase", "Host"}, nil)
+		Assert(t, eq, "NIC immutable information should not change with admission status. Have:\n%+v, want:\n%+v", obj.Status, refObj.Status)
+	}
+
+	refObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
+	AssertOk(t, err, "Error getting reference object")
+
 	for i := 0; i < 10; i++ {
 		// De-admit NIC. NMD is supposed to receive a notification and go back to "pending" state.
-		setNICState(false)
+		setNICAdmitState(false)
 
 		// Verify that NMD responds to de-admission (stop watchers, stop sending updates, restart registration loop)
 		checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
 
-		// Verify health updates are NOT received on CMD
-		time.Sleep(2 * nicUpdIntvl)
+		// Verify health updates are NOT received on CMD and the NIC is not marked as UNKNOWN
+		time.Sleep(2 * nicDeadIntvl)
 		checkHealthStatus(t, &meta, pencluster.SmartNICStatus_PENDING.String())
 
+		// Verify that status information was preserved
+		validateStatus(refObj)
+
 		// Re-admit NIC. NMD should get admitted the next registration attempt
-		setNICState(true)
+		setNICAdmitState(true)
 
 		// Verify that NIC gets readmitted, NMD exits registration loop and starts sending updates again
 		checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
 
 		// Verify health updates are received on CMD
 		checkHealthStatus(t, &meta, pencluster.SmartNICStatus_ADMITTED.String())
+
+		// Verify that status information was preserved
+		validateStatus(refObj)
 	}
 }
 

@@ -542,10 +542,10 @@ func performQuorumDefrag(start bool) {
 // handleSmartNIC handles SmartNIC updates
 func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.SmartNIC) {
 
-	log.Infof("SmartNIC update: nic: %+v event: %v", *nic, et)
-
 	var oldNIC *cmd.SmartNIC
 	isLeader := env.LeaderService != nil && env.LeaderService.IsLeader()
+
+	log.Infof("SmartNIC update: isLeader: %v, nic: %+v event: %v", isLeader, *nic, et)
 
 	switch et {
 	case kvstore.Created:
@@ -565,12 +565,12 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 
 		if isLeader && (nic.Spec.Admit == false && nic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String()) {
 			log.Infof("De-admitting NIC: %+v", nic)
-			// NIC has been de-admitted by user. Reset status, as it is no longer part of the cluster, and
-			// change phase to pending. NIC will try to register again and if user sets admit=true it will
-			// be re-admitted
-			nic.Status = cmd.SmartNICStatus{
-				AdmissionPhase: cmd.SmartNICStatus_PENDING.String(),
-			}
+			// NIC has been de-admitted by user.
+			// Set admission phase to PENDING and reset condtions, as the card is no longer part
+			// of the cluster and will not send any update.
+			nic.Status.AdmissionPhase = cmd.SmartNICStatus_PENDING.String()
+			nic.Status.Conditions = []cmd.SmartNICCondition{}
+
 			// update cache so that agent gets notified right away,
 			// even if we fail to propagate the update back to ApiServer
 			err := env.StateMgr.UpdateSmartNIC(nic)
@@ -627,10 +627,11 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 
 // handleHostEvent handles Host updates
 func (m *masterService) handleHostEvent(et kvstore.WatchEventType, host *cmd.Host) {
-	log.Infof("Host update: host: %+v event: %v", *host, et)
 
 	var oldHost *cmd.Host
 	isLeader := env.LeaderService != nil && env.LeaderService.IsLeader()
+
+	log.Infof("Host update: isLeader: %v, host: %+v event: %v", isLeader, *host, et)
 
 	switch et {
 	case kvstore.Created:

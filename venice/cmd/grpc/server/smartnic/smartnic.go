@@ -39,8 +39,8 @@ const (
 
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped
-	// at 30min.
-	nicRegMaxInterval = (30 * 60)
+	// at 2 min.
+	nicRegMaxInterval = (2 * 60)
 
 	// Subject for a valid platform certificate
 	platformCertOrg            = "Pensando Systems"
@@ -496,6 +496,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			} else {
 				nic.Spec.Admit = false
 				nic.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+				nicObj.Status.Conditions = []cluster.SmartNICCondition{}
 			}
 			nic.ObjectMeta.SelfLink = nic.MakeKey("cluster")
 			nicObj, err = cl.SmartNIC().Create(context.Background(), &nic)
@@ -514,6 +515,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 			} else {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+				nicObj.Status.Conditions = []cluster.SmartNICCondition{}
 			}
 			nicObj, err = cl.SmartNIC().Update(context.Background(), nicObj)
 			if err != nil {
@@ -737,34 +739,36 @@ func (s *RPCServer) MonitorHealth() {
 			for _, nicState := range nicStates {
 				nicState.Lock()
 				nic := nicState.SmartNIC
-				for i := 0; i < len(nic.Status.Conditions); i++ {
-					condition := nic.Status.Conditions[i]
-					// Inspect HEALTH condition with status that is marked healthy or unhealthy (i.e not unknown)
-					if condition.Type == cluster.SmartNICCondition_HEALTHY.String() && condition.Status != cluster.ConditionStatus_UNKNOWN.String() {
-						// parse the last reported time
-						t, err := time.Parse(time.RFC3339, condition.LastTransitionTime)
-						if err != nil {
-							log.Errorf("Failed parsing last transition time for NIC health, nic: %+v, err: %v", nic, err)
+				if nic.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+					for i := 0; i < len(nic.Status.Conditions); i++ {
+						condition := nic.Status.Conditions[i]
+						// Inspect HEALTH condition with status that is marked healthy or unhealthy (i.e not unknown)
+						if condition.Type == cluster.SmartNICCondition_HEALTHY.String() && condition.Status != cluster.ConditionStatus_UNKNOWN.String() {
+							// parse the last reported time
+							t, err := time.Parse(time.RFC3339, condition.LastTransitionTime)
+							if err != nil {
+								log.Errorf("Failed parsing last transition time for NIC health, nic: %+v, err: %v", nic, err)
+								break
+							}
+							// if the time elapsed since last health update is over
+							// the deadInterval, update the Health status to unknown
+							if err == nil && time.Since(t) > s.DeadIntvl {
+								// update the nic health status to unknown
+								log.Infof("Updating NIC health to unknown, nic: %s DeadIntvl:%d", nic.Name, s.DeadIntvl)
+								lastUpdateTime := nic.Status.Conditions[i].LastTransitionTime
+								nic.Status.Conditions[i].Status = cluster.ConditionStatus_UNKNOWN.String()
+								nic.Status.Conditions[i].LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
+								nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)
+								// push the update back to ApiServer
+								_, err := cl.SmartNIC().Update(context.Background(), nic)
+								if err != nil {
+									log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
+								}
+								recorder.Event(cluster.NICHealthUnknown, evtsapi.SeverityLevel_WARNING,
+									fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nic.Name, cluster.ConditionStatus_UNKNOWN.String()), nil)
+							}
 							break
 						}
-						// if the time elapsed since last health update is over
-						// the deadInterval, update the Health status to unknown
-						if err == nil && time.Since(t) > s.DeadIntvl {
-							// update the nic health status to unknown
-							log.Infof("Updating NIC health to unknown, nic: %s DeadIntvl:%d", nic.Name, s.DeadIntvl)
-							lastUpdateTime := nic.Status.Conditions[i].LastTransitionTime
-							nic.Status.Conditions[i].Status = cluster.ConditionStatus_UNKNOWN.String()
-							nic.Status.Conditions[i].LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
-							nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)
-							// push the update back to ApiServer
-							_, err := cl.SmartNIC().Update(context.Background(), nic)
-							if err != nil {
-								log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
-							}
-							recorder.Event(cluster.NICHealthUnknown, evtsapi.SeverityLevel_WARNING,
-								fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nic.Name, cluster.ConditionStatus_UNKNOWN.String()), nil)
-						}
-						break
 					}
 				}
 				nicState.Unlock()
