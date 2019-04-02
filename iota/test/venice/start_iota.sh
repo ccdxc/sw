@@ -7,5 +7,5 @@ fi
 
 pkill iota_server
 cd $GOPATH/src/github.com/pensando/sw/iota
-bin/server/iota_server > server.log 2>&1 &
+VENICE_DEV=1 bin/server/iota_server > server.log 2>&1 &
 echo "Started IOTA Server: in " $PWD " with log file server.log"

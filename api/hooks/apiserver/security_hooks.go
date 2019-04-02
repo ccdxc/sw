@@ -14,7 +14,7 @@ import (
 )
 
 // TODO Add this in the proto definition to easily validate
-var supportedProtocols = []string{"tcp", "udp", "icmp"}
+var supportedProtocols = []string{"tcp", "udp", "icmp", "any"}
 
 type securityHooks struct {
 	svc    apiserver.Service

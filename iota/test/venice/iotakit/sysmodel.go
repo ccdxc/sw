@@ -123,33 +123,6 @@ func (sm *SysModel) CleanupAllConfig() error {
 	log.Infof("Cleanup: hosts %d, sgpolicy %d workloads %d hosts %d networks %d",
 		len(veniceHosts), len(veniceSGPolicies), len(veniceWorkloads), len(veniceHosts), len(veniceNetworks))
 
-	// get all iota configs
-	gwlm := &iota.WorkloadMsg{
-		ApiResponse: &iota.IotaAPIResponse{},
-		WorkloadOp:  iota.Op_GET,
-	}
-	topoClient := iota.NewTopologyApiClient(sm.tb.iotaClient.Client)
-	getResp, err := topoClient.GetWorkloads(context.Background(), gwlm)
-	if err != nil {
-		err = fmt.Errorf("Cleanup config failed, topo svc returned error. Err: %v", err)
-		log.Errorf("%s", err)
-		return err
-	} else if getResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		err = fmt.Errorf("Cleanup config failed, Invalid API response: %+v.", getResp.ApiResponse)
-		log.Errorf("%s", err)
-		return err
-	}
-
-	// delete iota workloads
-	getResp.WorkloadOp = iota.Op_DELETE
-	delResp, err := topoClient.DeleteWorkloads(context.Background(), getResp)
-	log.Debugf("Got get workload resp: %+v, err: %v", delResp, err)
-	if err != nil {
-		err = fmt.Errorf("Failed to delete old workload in iota. Err: %v", err)
-		log.Errorf("%s", err)
-		return err
-	}
-
 	// delete venice objects
 	for _, obj := range veniceSGPolicies {
 		if err := sm.tb.DeleteSGPolicy(obj); err != nil {

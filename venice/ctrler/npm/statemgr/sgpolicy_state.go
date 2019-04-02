@@ -76,13 +76,15 @@ func convertRules(veniceRules []security.SGRule, sgPolicyKey string) (agentRules
 // convertAppConfig converts venice app information to port protocol for agent
 func convertAppConfig(apps []string, protoPorts []security.ProtoPort) (agentAppConfigs []*netproto.AppConfig) {
 	for _, pp := range protoPorts {
-		portRanges := strings.Split(pp.Ports, ",")
-		for _, prange := range portRanges {
-			c := netproto.AppConfig{
-				Protocol: pp.Protocol,
-				Port:     prange,
+		if pp.Protocol != "" && pp.Protocol != "any" {
+			portRanges := strings.Split(pp.Ports, ",")
+			for _, prange := range portRanges {
+				c := netproto.AppConfig{
+					Protocol: pp.Protocol,
+					Port:     prange,
+				}
+				agentAppConfigs = append(agentAppConfigs, &c)
 			}
-			agentAppConfigs = append(agentAppConfigs, &c)
 		}
 	}
 	return
